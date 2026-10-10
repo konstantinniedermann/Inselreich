@@ -11,7 +11,7 @@ wie empfohlen, Auflagen B1–B3); `docs/ideen.md` I-031, I-035; [Hauptspec](2026
 Anhänge: [01 Rechenbeispiele und Erwartungswerte](2026-10-10-m13-e1-edikte-design/anhang-01-rechenbeispiele.md) ·
 [02 Save v11](2026-10-10-m13-e1-edikte-design/anhang-02-save-v11.md) ·
 [03 Seed-Läufe B1/B3](2026-10-10-m13-e1-edikte-design/anhang-03-seed-laeufe.md) ·
-[04 Zuordnung R452](2026-10-10-m13-e1-edikte-design/anhang-04-zuordnung-r452.md).
+[04 Zuordnung R452](2026-10-10-m13-e1-edikte-design/anhang-04-zuordnung-r452.md) · [05 Doku-Folgen](2026-10-10-m13-e1-edikte-design/anhang-05-doku-folgen.md).
 
 Kennzeichnung: **Setzung Spec** (hier ergänzt, im Vorschlag nicht festgelegt), **[Tech]** (Umsetzungsdetail; lead-tech
 entscheidet im Plan, die Spec legt nur das prüfbare Verhalten fest).
@@ -47,7 +47,9 @@ Kette». Beide Teile teilen nur den Save-Sprung auf v11 (O10) und sind sonst una
 
 - Denkmal (Etappe E2, eigene Spec; O7, O8, O11 und Auflage B3 «Denkmal-Dauer» gehören dorthin);
 - Edikte je Insel, mehr als ein aktives Edikt, frei einstellbare Edikt-Werte, Wechselgebühr (O9: erst nach Playtest);
-- Controller-Strategie mit Edikt oder Stilllegung (`tests/sim/controller.ts`, `merchantsController.ts` unverändert);
+- Controller-Strategie mit Edikt oder Stilllegung: Strategie der Controller unverändert, nur Aufrufe mechanisch an
+  `buyPrice(world, good, n)` angepasst (`tests/sim/controller.ts`, `merchantsController.ts`, `balance-upgrade.test.ts`,
+  `trade.test.ts`; R455 T-B1);
 - Wertänderungen an bestehenden Defs (`TAX_LEVELS`, `TIERS`, `GOODS`, `BUILDING_DEFS`, Fest, `GROWTH_INTERVAL`);
 - Handel H1 (Sättigungs-Erholung); Chronik-Einträge für Edikt oder Stilllegung; neue Statusmarke oder Grafik;
 - automatisches Stilllegen bei «Lager voll» (I-035: nimmt die Wahl weg); Stilllegen von Diensten, Häusern, Kontor;
@@ -179,8 +181,7 @@ Importkreise entstehen.] Keine neue Laufzeit-Abhängigkeit, kein RNG-Zugriff, `s
 - **Wechsel Wohlfahrt → anderes Edikt** mitten im Aufstieg: Wartezeit und Takt gelten ab dem nächsten Tick neu; die
   bereits erfüllte Zeit (`satisfiedSince`) bleibt, ein Haus kann also durch den Wechsel länger warten.
 - **Leere Insel / keine Häuser:** Steuerabzug wirkt auf 0; Sparen spart nur Unterhalt.
-- **Zyklisches Umschalten** (Sparen ↔ Handel für Zukauf-Blöcke): erlaubt, gebunden an Einkaufsvolumen, ≈ 3,6 % des
-  Einkommens (Rechnung B.6); kein Dauer-Exploit, keine Wechselgebühr (O9).
+- **Zyklisches Umschalten:** erlaubt, ≈ 3,6 % des Einkommens (Rechnung B.6), keine Wechselgebühr (O9).
 
 ## 6. Baseline, Balancing und Auflagen
 
@@ -200,13 +201,13 @@ nur neue Konstanten.
 
 **Auflagen R452:**
 
-- **B1 Wohlfahrt per Simulation belegen:** AK-E1-16 (Pfadzeiten, exakt), AK-E1-17 (Seed-Lauf «reich»), AK-E1-18
-  (Seed-Lauf «Welle», Kern), AK-E1-11 (Schrumpfen als Preis). Aufbau und Grenzen: Anhang 03. Fällt AK-E1-18 durch,
+- **B1 Wohlfahrt per Simulation belegen:** AK-M13E1-16 (Pfadzeiten, exakt), AK-M13E1-17 (Seed-Lauf «reich»), AK-M13E1-18
+  (Seed-Lauf «Welle», Kern), AK-M13E1-11 (Schrumpfen als Preis). Aufbau und Grenzen: Anhang 03. Fällt AK-M13E1-18 durch,
   greift der Rückfall O3 (§12, P-1).
-- **B2 Wirkung im Endzustand bewusst klein:** AK-E1-20 mit Welt Phase c: Sparen +244 je 600 Ticks (4,3 % der
+- **B2 Wirkung im Endzustand bewusst klein:** AK-M13E1-20 mit Welt Phase c: Sparen +244 je 600 Ticks (4,3 % der
   Bilanz), Handel +144 bei 48 Stein Zukauf, Wohlfahrt −528 stationär (Anhang 01 F). README sagt es in einem Satz
-  (§11).
-- **B3 Baseline:** AK-E1-21 (Referenzlauf ohne Edikt 6750 / 11 500 Ticks, Balancing-Test grün). Der Denkmal-Teil
+  (Anhang 05).
+- **B3 Baseline:** AK-M13E1-21 (Referenzlauf ohne Edikt 6750 / 11 500 Ticks, Balancing-Test grün). Der Denkmal-Teil
   von B3 gehört zur Spec E2.
 
 **Befund zur Rechnung:** §12 P-2 (Messwerte ohne Amtsstube; Pfadzeit 800 statt 790, Anhang 01 E).
@@ -293,7 +294,9 @@ reason !== null` ausser bei `'Zu wenig Geld'` (Knopf bleibt klickbar mit Klasse 
 - **S6 Übriges:** Ausbau (`upgradeBuilding`) und Abriss wie heute, das Flag bleibt bzw. verschwindet mit dem Gebäude.
   Ein stillgelegter Betrieb kann brennen (Brandziel unverändert, §6 d); das Flag bleibt, nach dem Ausfall ist er
   wieder `'paused'`. Ketten laufen leer: Eine stillgelegte Schäferei lässt die Weberei nach Verbrauch der Wolle mit
-  `'waitingInput'` stehen. Freischaltungen zählen den Betrieb weiter als gebaut.
+  `'waitingInput'` stehen. Freischaltungen zählen den Betrieb weiter als gebaut. Ein stillgelegter Betrieb erscheint
+  **nicht** in der Problemliste (`problemList`, I-042/REL-17), auch nicht als «nicht angebunden»: bewusster Zustand,
+  kein Lärm (R455 Q-B3).
 - **S7 Save:** Flag `paused?: true` und Zustand `'paused'` in v11 (Anhang 02 C5–C7).
 
 ### 8.2 UI
@@ -310,36 +313,40 @@ reason !== null` ausser bei `'Zu wenig Geld'` (Knopf bleibt klickbar mit Klasse 
 
 Datei `tests/sim/pause.test.ts`, Welt `createWorld(3, { unlockAll: true })`, Gebäude roh eingesetzt und angebunden.
 
-- **AK-STL-01** Fischer läuft: `setPaused(w, id, true)` → ok, `paused === true`, `state === 'paused'`; zweiter
+- **AK-M13STL-01** Fischer läuft: `setPaused(w, id, true)` → ok, `paused === true`, `state === 'paused'`; zweiter
   Aufruf → `'Schon stillgelegt'`; `setPaused(w, id, false)` → ok, kein Schlüssel `paused`, `state === 'ok'`;
   erneut → `'Läuft bereits'`.
-- **AK-STL-02** Gründe und Unversehrtheit: Id 9999 → `'Gebäude nicht gefunden'`; Wohnhaus, Kapelle, Kontor,
+- **AK-M13STL-02** Gründe und Unversehrtheit: Id 9999 → `'Gebäude nicht gefunden'`; Wohnhaus, Kapelle, Kontor,
   Amtsstube, Markt → `'Nur Betriebe lassen sich stilllegen'`; `paused` `'ja'` / `1` / `undefined` →
   `'Ungültiger Wert'`. Für `id` ∈ {−1, 0, 1.5, `NaN`, `'2'`} × `paused` ∈ {`true`, `false`, `'x'`}: nie eine
   Ausnahme, bei `ok: false` `serialize(w)` unverändert, RNG-Zustand gleich.
-- **AK-STL-03** Produktion ruht: Fischer mit `progress 5`, stillgelegt bei Tick 1000; nach 100 Schritten `progress
+- **AK-M13STL-03** Produktion ruht: Fischer mit `progress 5`, stillgelegt bei Tick 1000; nach 100 Schritten `progress
 === 5`, Nahrung im Lager unverändert, `state === 'paused'`, `eff` gesunken (< Startwert). Weberei stillgelegt mit
   5 Wolle im Lager: nach 100 Schritten weiter 5 Wolle. Anfahren → der Fischer produziert ab dem nächsten Schritt.
-- **AK-STL-04** Unterhalt: Welt aus Anhang 01 B Zeile 1 → `totalUpkeep 55`; Glashütte still → 43; mit Sparen und
+- **AK-M13STL-04** Unterhalt: Welt aus Anhang 01 B Zeile 1 → `totalUpkeep 55`; Glashütte still → 43; mit Sparen und
   wirkender Amtsstube → 34; nach 100 × `tickEconomy` ab `upkeepCarry 0` sinkt `money` um genau 34. `buildingUpkeep`:
   Fischer 5 → 3, Werkzeugmacher 25 → 13, Glashütte Stufe 2 33 → 17, Stufe 3 43 → 22.
-- **AK-STL-05** Bilanz und Kette: 2 Fischer, einer still → `goodsBalance(w).food.produced` = Rate eines Fischers;
+- **AK-M13STL-05** Bilanz und Kette: 2 Fischer, einer still → `goodsBalance(w).food.produced` = Rate eines Fischers;
   Schäferei still, Weberei läuft, Wolle im Lager 2 → nach Verbrauch `state === 'waitingInput'` an der Weberei,
   `goodsBalance(w).wool.produced === 0`.
-- **AK-STL-06** Brand: stillgelegter Betrieb wird über `beginCrisis` gezielt angezündet → `state === 'burning'`,
+- **AK-M13STL-06** Brand: stillgelegter Betrieb wird über `beginCrisis` gezielt angezündet → `state === 'burning'`,
   `paused === true`; nach dem Ausfall (`outageUntil` erreicht) `state === 'paused'`, nicht `'ok'`. Brandziel bei
   gleicher Lage gleich mit und ohne Flag (`fireTarget` liefert dieselbe Id).
-- **AK-STL-07** Ausbau eines stillgelegten Fischers → ok, Stufe 2, `paused` bleibt; Abriss → Erstattung wie bei
+- **AK-M13STL-07** Ausbau eines stillgelegten Fischers → ok, Stufe 2, `paused` bleibt; Abriss → Erstattung wie bei
   einem laufenden Fischer (`refundCost(paidCost(b))`).
-- **AK-STL-08** Anbindung: stillgelegter Betrieb, Weg entfernt → nach `recomputeConnectivity` `state === 'paused'`;
+- **AK-M13STL-08** Anbindung: stillgelegter Betrieb, Weg entfernt → nach `recomputeConnectivity` `state === 'paused'`;
   Anfahren ohne Anbindung → `state === 'notConnected'`.
-- **AK-STL-09** UI-Helfer (`tests/ui/`): Zustandstext für `'paused'` «Stillgelegt — halber Unterhalt»;
+- **AK-M13STL-09** UI-Helfer (`tests/ui/`): Zustandstext für `'paused'` «Stillgelegt — halber Unterhalt»;
   Unterhaltszeile einer stillgelegten Glashütte «Unterhalt 78 / min»; Knopf-Text «Stilllegen» / «Wieder anfahren»;
   `friendlyReason('Nur Betriebe lassen sich stilllegen')` wörtlich; `statusMarkOf('paused') === null`.
-- **AK-STL-10** Browser (1280×720, 1920×1080): Fischer anklicken → Knopf «Stilllegen»; Klick → Zustand
+- **AK-M13STL-10** Browser (1280×720, 1920×1080): Fischer anklicken → Knopf «Stilllegen»; Klick → Zustand
   «Stillgelegt — halber Unterhalt», Unterhaltszeile halbiert, Unterhalt in der Kopfzeile sinkt; Nahrungs-Trend der
   Kopfzeile fällt um die Rate des Fischers; Klick «Wieder anfahren» → «In Betrieb». Wohnhaus und Kapelle zeigen keinen
   Knopf. Screenshot `.studio/qa/m13-e1/stl-10-<b>x<h>.png`.
+
+- **AK-M13STL-11** Problemliste (`tests/ui/problems.test.ts`): Fischer mit `state 'waitingInput'` erscheint in
+  `problemList`; nach `setPaused(w, id, true)` fehlt er; stillgelegt und ohne Anbindung (`state 'paused'`,
+  `connected false`) fehlt er ebenfalls. Nach dem Anfahren ohne Anbindung erscheint er wieder als «nicht angebunden».
 
 ## 9. Save v11 (gemeinsam)
 
@@ -350,7 +357,7 @@ Datei `tests/sim/pause.test.ts`, Welt `createWorld(3, { unlockAll: true })`, Geb
 - **R9.3** Ladeprüfung C1–C7 (Anhang 02 C); Verstoss → `'Beschädigter Spielstand'`.
 - **R9.4** Inkompatible Stände werden **mit Hinweis abgewiesen, nie ein Absturz**: `version` > 11 →
   `'Unbekannte Version'`, kein JSON → `'Ungültiges Format'`; das laufende Spiel bleibt unverändert, die UI zeigt den
-  Grund (Verfassung §3, Test AK-E1-26 und Browser AK-E1-41).
+  Grund (Verfassung §3, Test AK-M13E1-26 und Browser AK-M13E1-41).
 - **R9.5** Hash-Pins über `foldBackToV10` (Anhang 02 D); Fixtures nach Anhang 02 E.
 
 ## 10. Abnahmekriterien Edikte
@@ -361,128 +368,125 @@ genannt. Erwartungswerte: Anhang 01.
 
 ### 10.1 Vitest Sim
 
-- **AK-E1-01** `createWorld`: `edict === null`, `edictLockedUntil === 0`; `Object.keys(w).slice(-2)` =
+- **AK-M13E1-01** `createWorld`: `edict === null`, `edictLockedUntil === 0`; `Object.keys(w).slice(-2)` =
   `['edict', 'edictLockedUntil']`; `version === 11`.
-- **AK-E1-02** Def-Test nach §4 (alle Bedingungen), Werte `EDICT_COST 600`, `EDICT_LOCK 3000`, Tabelle §4.
-- **AK-E1-03** Ablauf: `setEdict(w, 'saving')` → ok, `money 400`, `edict 'saving'`, Sperre 4000. Tick 3999
+- **AK-M13E1-02** Def-Test nach §4 (alle Bedingungen), Werte `EDICT_COST 600`, `EDICT_LOCK 3000`, Tabelle §4.
+- **AK-M13E1-03** Ablauf: `setEdict(w, 'saving')` → ok, `money 400`, `edict 'saving'`, Sperre 4000. Tick 3999
   `setEdict(w, 'trade')` → `'Edikt-Sperrzeit'`. Tick 4000 mit `money 400` → `'Zu wenig Geld'`; mit `money 600` → ok,
   `money 0`, Sperre 7000. Tick 7000 `setEdict(w, null)` → ok, `money 0`, `edict null`, Sperre 10 000.
-- **AK-E1-04** Gründe und Reihenfolge: `'x'`, `3`, `{}` → `'Ungültiges Edikt'`; `won = false` → `'Erst nach dem
+- **AK-M13E1-04** Gründe und Reihenfolge: `'x'`, `3`, `{}` → `'Ungültiges Edikt'`; `won = false` → `'Erst nach dem
 Bürger-Ziel'` (auch ohne Amtsstube); ohne Amtsstube → `'Braucht eine Amtsstube'`; Amtsstube brennt → `'Amtsstube
 wirkt nicht'`; gleiches Edikt → `'Edikt bereits aktiv'` (auch in der Sperre); `null` ohne Edikt → `'Kein Edikt
 aktiv'`; `money −50` und `'trade'` → `'Zu wenig Geld'`, `null` mit `money −50` bei erlassenem Edikt nach Ablauf der Sperre → ok.
-- **AK-E1-05** Werfen nie: `setEdict` mit `id` ∈ {`null`, `undefined`, `''`, `'saving'`, `'trade'`, `'welfare'`,
+- **AK-M13E1-05** Werfen nie: `setEdict` mit `id` ∈ {`null`, `undefined`, `''`, `'saving'`, `'trade'`, `'welfare'`,
   `'x'`, 0, `NaN`, `[]`} in Welten mit und ohne `won`, mit und ohne Amtsstube liefert immer ein `Result`; bei `ok:
 false` ist `serialize(w)` unverändert; RNG-Zustand in allen Fällen gleich.
-- **AK-E1-06** Steuer «gemischt» (Anhang 01 A.1): `taxUnits` keins 133 860, Sparen 125 796, Wohlfahrt 128 100,
+- **AK-M13E1-06** Steuer «gemischt» (Anhang 01 A.1): `taxUnits` keins 133 860, Sparen 125 796, Wohlfahrt 128 100,
   Handel 133 860; `effectiveTaxPct(w, 4)` bei Kaufleute «hoch» mit Sparen 108.
-- **AK-E1-07** Steuer verbucht: Welt A.1, 100 × `tickTaxes` ab `taxCarry 0`, `money 0` → keins 669 / 6000, Sparen
+- **AK-M13E1-07** Steuer verbucht: Welt A.1, 100 × `tickTaxes` ab `taxCarry 0`, `money 0` → keins 669 / 6000, Sparen
   628 / 19 600, Wohlfahrt 640 / 10 000 (`money` / `taxCarry`). Welt A.2 → 1760 / 1636 / 1672.
-- **AK-E1-08** Unterhalt (Anhang 01 B): Welt Zeile 1 → `totalUpkeep` keins 55, Sparen 44; Zeile 3 (mit Schiff) 70 /
+- **AK-M13E1-08** Unterhalt (Anhang 01 B): Welt Zeile 1 → `totalUpkeep` keins 55, Sparen 44; Zeile 3 (mit Schiff) 70 /
   56; nach 100 × `tickEconomy` ab `upkeepCarry 0` mit Sparen `money` −44, `stats.upkeep 44`. Handel und Wohlfahrt
   → 55.
-- **AK-E1-09** Kaufpreis mit Handel: `buyPrice(w, 'food', 1) 7`, `('food', 10) 64`, `('glass', 10) 400`, `('spice',
-  1. 32`; ohne Edikt `('food', 10) 80`. `buy(w, 'food', 10)`mit Handel senkt`money` um 64. Handel erlassen,
-     Amtsstube brennt → 80.
-- **AK-E1-10** Arbitrage je Gut (Anhang 01 C): für alle `GOOD_IDS` und n ∈ {1, 10, 100} mit Handel `buyPrice(w, g, n)
-  > n × ⌊buy × ORDER_PREMIUM⌋`(Güter mit Auftrag) und`> sellPrice(w′, g, n)`in einer Welt w′ mit Boom auf g und`sellPct[g] = 100`. Tabellenwerte n = 1 exakt.
-- **AK-E1-11** Takt (Anhang 01 G): Pionierhaus 1 Einwohner, erfüllt, ab Tick 2000: keins → 4 Einwohner bei 2150,
+- **AK-M13E1-09** Kaufpreis mit Handel (Anhang 01 C): Nahrung 1 Stück → 7, Nahrung 10 → 64, Glas 10 → 400, Gewürz
+  1 Stück → 32 (`buyPrice(w, g, n)`); ohne Edikt Nahrung 10 → 80. `buy(w, 'food', 10)` mit Handel senkt `money` um 64. Handel erlassen, Amtsstube brennt: Nahrung 10 → 80.
+- **AK-M13E1-10** Arbitrage je Gut (Anhang 01 C): für alle `GOOD_IDS` und n ∈ {1, 10, 100} gilt mit Handel
+  `buyPrice(w, g, n)` grösser als n × Auftragsprämie (Güter mit Auftrag) und grösser als `sellPrice(w′, g, n)` in einer
+  Welt w′ mit Boom auf g und `sellPct[g] = 100`; die Tabellenwerte für n = 1 exakt.
+- **AK-M13E1-11** Takt (Anhang 01 G): Pionierhaus 1 Einwohner, erfüllt, ab Tick 2000: keins → 4 Einwohner bei 2150,
   3 bei 2149; Wohlfahrt → 4 bei 2120, 3 bei 2119. Kaufleute-Haus 20, Nahrung 0 ab 2000: bei 2400 keins 12,
   Wohlfahrt 10. Erlass bei 2010 → erster Wachstumsschritt 2040. `growthInterval` mit brennender Amtsstube 50.
-- **AK-E1-12** Stapelregel: Siedlerhaus voll, Dienste und Waren da, `satisfiedSince = tick − 100`; Grund nennt die
+- **AK-M13E1-12** Stapelregel: Siedlerhaus voll, Dienste und Waren da, `satisfiedSince = tick − 100`; Grund nennt die
   Wartezeit aus Anhang 01 D für jede der acht Zeilen (z. B. normal + Wohlfahrt «Bedürfnisse noch nicht 200 Ticks
   erfüllt», niedrig + Fest + Wohlfahrt «… 150 …», mit Defizit 300; hoch + Wohlfahrt «Steuer zu hoch»).
-- **AK-E1-13** Ruhe: Sparen erlassen, Amtsstube `outageUntil` gesetzt → `taxUnits`, `totalUpkeep`, `buyPrice`,
+- **AK-M13E1-13** Ruhe: Sparen erlassen, Amtsstube `outageUntil` gesetzt → `taxUnits`, `totalUpkeep`, `buyPrice`,
   `growthInterval`, Wartezeit gleich wie ohne Edikt; `edict` und Sperre unverändert; nach Ende des Ausfalls wieder
   Sparen-Werte. Gleiches bei nicht angebundener Amtsstube.
-- **AK-E1-14** Abriss: Sparen erlassen bei Tick 1000 (Sperre 4000), `demolish` der Amtsstube bei 2000 → `edict
+- **AK-M13E1-14** Abriss: Sparen erlassen bei Tick 1000 (Sperre 4000), `demolish` der Amtsstube bei 2000 → `edict
 null`, Sperre 4000, Geld = vorher + Gebäude-Erstattung (keine 600). Neue Amtsstube bei 2500, `setEdict(w,
 'trade')` → `'Edikt-Sperrzeit'`; bei 4000 → ok.
-- **AK-E1-15** Freischaltung: `won = false` → abgelehnt; nach `won = true` ok. Ein v10-Stand mit `won true` (Anhang
+- **AK-M13E1-15** Freischaltung: `won = false` → abgelehnt; nach `won = true` ok. Ein v10-Stand mit `won true` (Anhang
   02 E) lädt und erlaubt `setEdict` sofort.
-- **AK-E1-16** Pfadzeiten (B1 analytisch, Anhang 01 E): ein Haus ab t0 = 2000 unter den Bedingungen dort; Tick, an
+- **AK-M13E1-16** Pfadzeiten (B1 analytisch, Anhang 01 E): ein Haus ab t0 = 2000 unter den Bedingungen dort; Tick, an
   dem es Stufe 4 mit 20 Einwohnern ist: keins 3200, keins + P/S «niedrig» 2950, Wohlfahrt 2880, Wohlfahrt + P/S
   «niedrig» 2800; Zwischenstufen nach der Tabelle. Vor jedem Aufstieg `upgradeDeficit(w, b) === null` (Vorbedingung
   im Test geprüft).
-- **AK-E1-17** Seed-Lauf «reich» (B1, Anhang 03 C): Wohlfahrt erreicht `wonMerchants` echt früher als K′; K′ ≤ 8000.
-- **AK-E1-18** Seed-Lauf «Welle» (B1 Kern, Anhang 03 D): alle vier Abnahmen dort erfüllt (W je Haus ≥ 250 Ticks
+  Für AK-M13E1-17 bis 19 gilt Anhang 03 A: Messwerte als Festwerte in der Testdatei vor dem Merge, Verfehlen einer
+  Grenze relativ zu K′ ist Pflicht-Rulingpunkt; Timeout je AK und Zeitreserve-Regel; Phase 1/2 einmal je Datei.
+
+- **AK-M13E1-17** Seed-Lauf «reich» (B1, Anhang 03 C): Wohlfahrt erreicht `wonMerchants` echt früher als K′; K′ ≤ 8000.
+- **AK-M13E1-18** Seed-Lauf «Welle» (B1 Kern, Anhang 03 D): alle vier Abnahmen dort erfüllt (W je Haus ≥ 250 Ticks
   früher voll, `money(W) − money(K) > 0`, `money(W) > money(S)`, kein Schrumpfen).
-- **AK-E1-19** Seed-Lauf «arm» (Anhang 03 B): Sparen und Handel je K′ − 600 ≤ Tick ≤ K′ − 100; Wohlfahrt `null` oder
+- **AK-M13E1-19** Seed-Lauf «arm» (Anhang 03 B): Sparen und Handel je K′ − 600 ≤ Tick ≤ K′ − 100; Wohlfahrt `null` oder
   später als K′.
-- **AK-E1-20** Endzustand (B2, Anhang 01 F): 600 Schritte (`tickTaxes` + `tickEconomy`) ab Überträgen 0 → Bilanz
+- **AK-M13E1-20** Endzustand (B2, Anhang 01 F): 600 Schritte (`tickTaxes` + `tickEconomy`) ab Überträgen 0 → Bilanz
   keins 5640, Sparen 5884 (+244), Wohlfahrt 5112 (−528), Handel 5640; `buyPrice(w, 'stone', 48)` mit Handel 576 gegen 720. Testname nennt «bewusst klein».
 
 ### 10.2 Vitest Baseline und Save
 
-- **AK-E1-21** Baseline (B3, Anhang 03 E): `balance.test.ts` grün und `git diff main -- tests/sim/balance.test.ts`
-  leer; `balance-merchants.test.ts` Pins 6750 / 11 500 unverändert grün; `e0Pins.ts`, `e1Pins.ts` ohne Diff.
-- **AK-E1-22** Hash-Pins: alle Tests über `CHAIN_HASHES`, `V6_FORMS` oder feste JSON-Formen laufen mit
-  `foldBackToV8(foldBackToV9(foldBackToV10(…)))` grün, ohne Pin-Wert zu ändern. Helfer-Test: v11 ohne Edikt →
+- **AK-M13E1-21** Baseline (B3, Anhang 03 E): `balance.test.ts` (6750, Grenze 7500) und `balance-merchants.test.ts`
+  (6750 / 11 500) grün; `git diff main -- 'tests/sim/balance*.test.ts' tests/sim/e0Pins.ts tests/sim/e1Pins.ts` leer,
+  einzige Ausnahme der mechanische `buyPrice(world, …)`-Aufruf in `balance-upgrade.test.ts` (T-B1). Controller-Strategie
+  unverändert.
+- **AK-M13E1-22** Hash-Pins: alle Tests über `CHAIN_HASHES`, `V6_FORMS` oder feste JSON-Formen laufen grün, ohne
+  Pin-Wert zu ändern; `foldBackToV9` faltet einen v11-Stand selbst zuerst über `foldBackToV10` (Anhang 02 D). Helfer-Test: v11 ohne Edikt →
   Schlüssel ohne `edict`, `edictLockedUntil`, `version 10`, `JSON.stringify` gleich einem v10-Stand; mit `edict
 'trade'`, mit Sperre 1, mit Gebäude `paused` → wirft.
-- **AK-E1-23** Rundlauf v11 (Anhang 02 F) → `deserialize(serialize(w))` ok und tief gleich.
-- **AK-E1-24** Migration v10 → v11 und Kette v1 … v10 (Anhang 02 F) → ok, `version 11`, `edict null`, Sperre 0.
-- **AK-E1-25** Ladeprüfung: Fälle 25a–25h aus Anhang 02 F mit genau dem dort genannten Ergebnis, ohne Ausnahme.
-- **AK-E1-26** Inkompatibel: `version 12` → `'Unbekannte Version'`; abgeschnittener Text → `'Ungültiges Format'`;
+- **AK-M13E1-23** Rundlauf v11 (Anhang 02 F) → `deserialize(serialize(w))` ok und tief gleich.
+- **AK-M13E1-24** Migration v10 → v11 und Kette v1 … v10 (Anhang 02 F) → ok, `version 11`, `edict null`, Sperre 0.
+- **AK-M13E1-25** Ladeprüfung: Fälle 25a–25h aus Anhang 02 F mit genau dem dort genannten Ergebnis, ohne Ausnahme.
+- **AK-M13E1-26** Inkompatibel: `version 12` → `'Unbekannte Version'`; abgeschnittener Text → `'Ungültiges Format'`;
   `friendlyReason` liefert für beide einen nicht leeren Hinweistext (`tests/ui/hints.test.ts`).
 
 ### 10.3 Vitest UI (reine Helfer, `tests/ui/`)
 
-- **AK-E1-27** `edictEffectText`: die drei Texte aus 7.1 wörtlich; `edictWhenText` je Edikt nicht leer.
-- **AK-E1-28** `edictCardState`: `won false` → alle `disabled`, `reason 'Erst nach dem Bürger-Ziel'`; Sparen aktiv →
+- **AK-M13E1-27** `edictEffectText`: die drei Texte aus 7.1 wörtlich; `edictWhenText` je Edikt nicht leer.
+- **AK-M13E1-28** `edictCardState`: `won false` → alle `disabled`, `reason 'Erst nach dem Bürger-Ziel'`; Sparen aktiv →
   Sparen `active`, `buttonText 'Aufheben'`; in der Sperre andere Karten `disabled`, `reason 'Edikt-Sperrzeit'`;
   `money 100` → `disabled false`, `reason 'Zu wenig Geld'`; ohne Sperre und mit Geld → `reason null`,
   `buttonText 'Erlassen (600)'`.
-- **AK-E1-29** `edictLockText`: Rest 3000 → «wieder änderbar in 5:00»; 450 → «wieder änderbar in 45 s»; 0 → `''`.
+- **AK-M13E1-29** `edictLockText`: Rest 3000 → «wieder änderbar in 5:00»; 450 → «wieder änderbar in 45 s»; 0 → `''`.
   `friendlyReason('Edikt-Sperrzeit')` bei Rest 450 → «Edikt erst in 45 s wieder änderbar».
-- **AK-E1-30** `edictStatusLine`: «Kein Edikt»; «Edikt: Handel»; Amtsstube brennt → «Edikt Handel ruht: Amtsstube
+- **AK-M13E1-30** `edictStatusLine`: «Kein Edikt»; «Edikt: Handel»; Amtsstube brennt → «Edikt Handel ruht: Amtsstube
   wirkt nicht».
-- **AK-E1-31** Handel-Anzeige: Stückpreis Nahrung 7 statt 8; Knopftext «10 Nahrung kaufen für 64 Geld» [Tech: an den
+- **AK-M13E1-31** Handel-Anzeige: Stückpreis Nahrung 7 statt 8; Knopftext «10 Nahrung kaufen für 64 Geld» [Tech: an den
   heutigen Wortlaut angepasst]; ohne Edikt unverändert gegen heute.
-- **AK-E1-32** `taxButtonTitle` mit Sparen → endet auf « · Edikt: Sparen»; ohne Edikt gleich wie heute;
+- **AK-M13E1-32** `taxButtonTitle` mit Sparen → endet auf « · Edikt: Sparen»; ohne Edikt gleich wie heute;
   `tierTaxPerMinute` Kaufleute 4 × 20 erfüllt «normal» mit Sparen → 9820 (statt 10 560).
-- **AK-E1-33** Haus-Text «Aufstieg in höchstens 4 s» mit Wohlfahrt, «… 5 s» ohne.
+- **AK-M13E1-33** Haus-Text «Aufstieg in höchstens 4 s» mit Wohlfahrt, «… 5 s» ohne.
 
 ### 10.4 Browser (qa-playtester, Headless-Chrome)
 
 Screenshots unter `.studio/qa/m13-e1/`, Dateiname `<ak>-<breite>x<höhe>.png`, 1280×720 und 1920×1080. Testwelt:
 Spielstand mit Ziel 1 erreicht, aktive Amtsstube, Geld ≥ 2000 (Playtest-Stand nach Vorschlag §12).
 
-- **AK-E1-34** Amtsstuben-Panel: Abschnitt «Edikt» mit drei Karten untereinander (Sparen, Handel, Wohlfahrt), je
+- **AK-M13E1-34** Amtsstuben-Panel: Abschnitt «Edikt» mit drei Karten untereinander (Sparen, Handel, Wohlfahrt), je
   Name, Wirkung, «lohnt, wenn …», Knopf «Erlassen (600)»; kein waagrechtes Scrollen (`scrollWidth ≤ clientWidth`).
-- **AK-E1-35** Stand vor Ziel 1: Karten blass, Zeile «Erst nach dem Bürger-Ziel», Klick ohne Wirkung.
-- **AK-E1-36** Klick «Erlassen (600)» bei Sparen: Geld −600, Karte hervorgehoben mit «Aufheben», Zeile «wieder
+- **AK-M13E1-35** Stand vor Ziel 1: Karten blass, Zeile «Erst nach dem Bürger-Ziel», Klick ohne Wirkung.
+- **AK-M13E1-36** Klick «Erlassen (600)» bei Sparen: Geld −600, Karte hervorgehoben mit «Aufheben», Zeile «wieder
   änderbar in 5:00» zählt herunter, Klick auf Handel → Meldung «Edikt erst in … wieder änderbar»; Unterhalt der
   Kopfzeile sinkt.
-- **AK-E1-37** Nach Ablauf (Zeitraffer) «Aufheben»: Meldung «Edikt aufgehoben — wieder änderbar in 5:00», Status «Kein
+- **AK-M13E1-37** Nach Ablauf (Zeitraffer) «Aufheben»: Meldung «Edikt aufgehoben — wieder änderbar in 5:00», Status «Kein
   Edikt», Geld unverändert.
-- **AK-E1-38** Handel erlassen: Kontor-Panel zeigt Stückpreise −20 % (Nahrung 7, Glas 40), Kauf von 10 Nahrung kostet 64.
-- **AK-E1-39** Amtsstube abreissen und neu bauen: Status «Kein Edikt», Sperrzeile mit Restzeit sichtbar.
-- **AK-E1-40** Fenster 800×600: Panel ohne Überlappung, keine Konsolenfehler («stürzt nicht ab»).
-- **AK-E1-41** Laden eines Slots mit `version 12`: Hinweis «Unbekannte Version» (Wortlaut über `friendlyReason`),
+- **AK-M13E1-38** Handel erlassen: Kontor-Panel zeigt Stückpreise −20 % (Nahrung 7, Glas 40), Kauf von 10 Nahrung kostet 64.
+- **AK-M13E1-39** Amtsstube abreissen und neu bauen: Status «Kein Edikt», Sperrzeile mit Restzeit sichtbar.
+- **AK-M13E1-40** Fenster 800×600: Panel ohne Überlappung, keine Konsolenfehler («stürzt nicht ab»).
+- **AK-M13E1-41** Laden eines Slots mit `version 12`: Hinweis «Unbekannte Version» (Wortlaut über `friendlyReason`),
   das laufende Spiel läuft weiter, keine Konsolenfehler.
 
 ## 11. Doku-Folgen
 
-- **README:** Abschnitt «Edikte» unter Amtsstube (Tabelle der drei Edikte mit Wirkung und Preis, 600 Geld, 5 min
-  Sperre, Aufheben kostenlos, ruht ohne wirkende Amtsstube, Stapelregel in einem Satz «nie unter 15 s») und ein Satz
-  zu B2: «Im späten Spiel sind Edikte eine Feinsteuerung von wenigen Prozent; spürbar werden sie beim Zukauf und bei
-  vielen neuen Häusern.» Abschnitt Betriebe: «Stilllegen» (halber Unterhalt, keine Erzeugung, Kette läuft leer).
-  Kontor: Preise mit Handel.
-- **`docs/arc42.md`:** Bausteine (`edicts.ts`, `defs/edicts.ts`), Tick-Ablauf (Wachstumstakt aus `growthInterval`),
-  Persistenz (Version 11, `migrateV10ToV11`, Prüfung C1–C7, Kette v1 … v11).
-- **ADR:** keine nötig (keine Abhängigkeit, Save-Versionierung nach bestehendem Muster).
+README (Edikte, Stilllegen, Kontor-Preise, B2-Satz) und `docs/arc42.md` (Bausteine, Tick-Ablauf, Persistenz v11):
+[Anhang 05](2026-10-10-m13-e1-edikte-design/anhang-05-doku-folgen.md). Kein ADR nötig.
 
 ## 12. Offene Punkte (mit Empfehlung)
 
-- **P-1 Rückfall Wohlfahrt (O3):** entschieden, ausgelöst nur durch AK-E1-18. Empfehlung: Fällt der Seed-Lauf
+- **P-1 Rückfall Wohlfahrt (O3):** entschieden, ausgelöst nur durch AK-M13E1-18. Empfehlung: Fällt der Seed-Lauf
   durch, zuerst prüfen, ob `topUp` oder Plätze die Welle verzerren (Anhang 03 D), dann Ruling L0 «zwei Edikte».
-- **P-2 Messwerte ohne Amtsstube** (Befund §6): Die Grenzen in Anhang 03 sind relativ zu K′ gefasst. Empfehlung:
-  `lead-design` trägt im Vorschlag-Anhang D.1 einen Hinweis nach; kein Einfluss auf Regeln.
-- **P-3 Kartenanordnung:** untereinander statt nebeneinander (Setzung U-2). Empfehlung: so lassen; erst bei einer
-  breiteren Panel-Spalte neu prüfen.
-- **P-4 Statusmarke «stillgelegt»:** bewusst keine (Scope). Empfehlung: nach Playtest entscheiden, ob Spieler
-  stillgelegte Betriebe auf der Karte suchen; dann eigenes S-Paket in `src/render/statusMarks.ts`.
+- **P-2 Messwerte ohne Amtsstube** (Befund §6): Grenzen relativ zu K′. Empfehlung: `lead-design` ergänzt einen
+  Hinweis im Vorschlag-Anhang D.1.
+- **P-3 Karten untereinander** (Setzung U-2). Empfehlung: so lassen.
+- **P-4 Keine Statusmarke «stillgelegt».** Empfehlung: nach Playtest entscheiden (S-Paket `statusMarks.ts`).
 - **P-5 Feinwerte nach Playtest:** Edikt-Werte, Preis und Sperre stehen in `defs/edicts.ts` und `timing.ts`;
   Wechselgebühr 1500 nur, falls der Playtest Umschalt-Takt zeigt (O9). Jede Änderung braucht ein Ruling und lässt
   den Balancing-Test grün.
@@ -498,6 +502,5 @@ Denkmal-Teil von B3 (Spec E2).
 
 ## 14. Grössenschätzung
 
-Gesamt **M + S** (Vorschlag §9): M13-E1-SIM (Edikte, Save v11, `foldBackToV10`, Seed-Läufe, Stilllegen als eigener
-Task im selben Save-Sprung) und M13-E1-UI (Edikt-Abschnitt, Kontor-Preise, Tooltips, Stilllegen-Knopf, README,
-arc42). Risiko mittel: Save und Hash-Pins (`foldBackToV10`), Seed-Lauf «Welle» (B1, Rückfall vorbereitet).
+**M + S** (Vorschlag §9): M13-E1-SIM (Edikte, Save v11, Seed-Läufe, Stilllegen im selben Save-Sprung) und
+M13-E1-UI. Risiko mittel: Save und Hash-Pins, Seed-Lauf «Welle» (Rückfall vorbereitet).

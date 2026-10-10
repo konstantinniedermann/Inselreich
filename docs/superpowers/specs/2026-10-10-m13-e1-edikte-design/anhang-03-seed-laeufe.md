@@ -1,7 +1,7 @@
 # Anhang 03 · Seed-Läufe für die Auflagen B1 und B3 (Spec M13-E1)
 
-Gehört zu [Spec M13-E1 Edikte und Betrieb stilllegen](../2026-10-10-m13-e1-edikte-design.md), AK-E1-17 bis
-AK-E1-19 und AK-E1-21. Neue Testdatei `tests/sim/balance-edicts.test.ts`; sie nutzt `runMerchants` aus
+Gehört zu [Spec M13-E1 Edikte und Betrieb stilllegen](../2026-10-10-m13-e1-edikte-design.md), AK-M13E1-17 bis
+AK-M13E1-19 und AK-M13E1-21. Neue Testdatei `tests/sim/balance-edicts.test.ts`; sie nutzt `runMerchants` aus
 `tests/sim/merchantsController.ts`, ändert den Controller aber **nicht** (er wählt nie ein Edikt, Vorschlag §7).
 
 ## A. Gemeinsamer Aufbau
@@ -21,14 +21,27 @@ AK-E1-19 und AK-E1-21. Neue Testdatei `tests/sim/balance-edicts.test.ts`; sie nu
 - Messgrösse: Tick von `wonMerchants` (`t.wonMerchantsTick`) bzw. `null`.
 
 Referenz **K′** = Variante «keins mit Amtsstube». K′ kann wegen des Amtsstuben-Unterhalts später als 11 500 liegen;
-alle Vergleiche gehen gegen K′, nicht gegen den Pin 11 500 (der gilt nur ohne Amtsstube, AK-E1-21).
+alle Vergleiche gehen gegen K′, nicht gegen den Pin 11 500 (der gilt nur ohne Amtsstube, AK-M13E1-21).
 
 Hinweis zur Herkunft: Die Messwerte des Vorschlags (Anhang 01 D.1: 11 200 / 7640 / 7700) stammen aus einer
-Laufzeit-Änderung der Defs **ohne** Amtsstube. Sie sind Erwartung, nicht Pin. Der erste grüne Lauf pinnt die
-gemessenen Werte im Test; liegt ein Wert ausserhalb der Grenzen unten, meldet der Umsetzer an `lead-design`, statt
-Grenzen zu verschieben.
+Laufzeit-Änderung der Defs **ohne** Amtsstube. Sie sind Erwartung, nicht Pin.
 
-## B. Lauf «arm» (AK-E1-19)
+**Festwerte (R455 T-B2/Q-B4c):** Vor dem Merge stehen die gemessenen Werte (K′, Sparen, Handel, Wohlfahrt je Lauf,
+`fullTick[i]` und `money` der Welle) als Festwerte (`const`) in `balance-edicts.test.ts`, und der Test prüft sie mit
+`toBe` **zusätzlich** zu den Grenzen unten. Verfehlt ein Wert eine Grenze relativ zu K′, ist das ein
+**Pflicht-Rulingpunkt**: Der Umsetzer stoppt und meldet die Werte an `lead-design`; Grenzen und Festwerte ändert nur
+ein Ruling L0, nie der Umsetzer.
+
+**Laufzeit (R455 T-B3/Q-B2):**
+
+- Phase 1 (bis `won`) und Phase 2 von K′ (bis `wonMerchants`, Ausgang der Welle) laufen **einmal je Datei** in
+  `beforeAll`; jede Variante startet aus einer Kopie `deserialize(serialize(stand))`. Kein Test rechnet Phase 1 neu.
+- Timeout je Seed-AK: AK-M13E1-17 10 000 ms, AK-M13E1-18 15 000 ms, AK-M13E1-19 15 000 ms; `beforeAll` 15 000 ms.
+- Zeitreserve-Regel: lokal unter `CI=true` gemessen (`make test`, `.studio/zeitreserve.json`) braucht jeder dieser
+  Tests und der `beforeAll` höchstens 50 % seines Timeouts. Liegt ein Wert darüber, wird der Lauf geteilt (eine Datei
+  je Lauf) statt das Timeout zu erhöhen.
+
+## B. Lauf «arm» (AK-M13E1-19)
 
 Kein Zusatzgeld. Varianten K′, Sparen, Handel, Wohlfahrt.
 
@@ -42,7 +55,7 @@ Kein Zusatzgeld. Varianten K′, Sparen, Handel, Wohlfahrt.
 Lesart: Sparen und Handel verkürzen Ziel 2 spürbar, aber nicht stark (≤ 600 Ticks = 12,6 % der 4750 Ticks nach
 Ziel 1); Wohlfahrt kostet bei knappem Geld (Preisseite, B.4 Szenario a).
 
-## C. Lauf «reich» (AK-E1-17, Auflage B1 Seed-Lauf 1)
+## C. Lauf «reich» (AK-M13E1-17, Auflage B1 Seed-Lauf 1)
 
 Wie B, aber am Ende von Phase 1 erhält jede Variante +20 000 Geld (vor Amtsstube und Edikt). Varianten K′ und
 Wohlfahrt.
@@ -55,7 +68,7 @@ Wohlfahrt.
 Lesart: Ist Geld nicht knapp, beschleunigt der Takt 40 den Weg zu 60 Kaufleuten; die Wartezeit allein könnte das
 nicht (Vorschlag B.3, Wohlfahrt A bleibt bei 7700).
 
-## D. Lauf «Welle» (AK-E1-18, Auflage B1 Seed-Lauf 2, Kern)
+## D. Lauf «Welle» (AK-M13E1-18, Auflage B1 Seed-Lauf 2, Kern)
 
 Der Controller baut keine neuen Häuser; die Welle setzt der Test selbst.
 
@@ -91,9 +104,10 @@ Wohlfahrt 5 Punkte auf die ganze Steuer (Phase b ≈ 1530 bis ≈ 3290 je 100 Ti
 meldet die Messwerte an `lead-design`; L0 entscheidet per Ruling über den Rückfall «zwei Edikte» (Sparen, Handel),
 ohne Wohlfahrt (Spec §12, P-1).
 
-## E. Baseline (AK-E1-21, Auflage B3)
+## E. Baseline (AK-M13E1-21, Auflage B3)
 
 Ohne jede Änderung am Test: `balance.test.ts` (Sieg 6750, Grenze 7500) und `balance-merchants.test.ts` (6750 /
-11 500) laufen grün; `git diff main -- tests/sim/balance.test.ts tests/sim/balance-merchants.test.ts
-tests/sim/e0Pins.ts tests/sim/e1Pins.ts` zeigt höchstens die Umstellung auf `foldBackToV10` (Anhang 02 D), keinen
-geänderten Pin-Wert.
+11 500) laufen grün. `git diff main -- 'tests/sim/balance*.test.ts' tests/sim/e0Pins.ts tests/sim/e1Pins.ts` ist
+**leer** (R455 Q-B4b); die neue Datei `balance-edicts.test.ts` ist kein Diff an bestehenden Dateien. Einzige
+Ausnahme ist die mechanische Anpassung des `buyPrice`-Aufrufs in `balance-upgrade.test.ts` an die neue Signatur
+(R455 T-B1), ohne geänderten Erwartungswert. Die Rückfaltung bleibt durch `foldBackToV9` gekapselt (Anhang 02 D).

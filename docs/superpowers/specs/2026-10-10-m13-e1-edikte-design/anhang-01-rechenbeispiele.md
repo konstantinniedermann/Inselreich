@@ -5,12 +5,12 @@ den Defs auf `main` 08079e66 (`TIERS`, `TAX_LEVELS`, `GOODS`, `BUILDING_DEFS`, `
 Werten aus Spec §4. Zeit: 100 Ticks = 10 s, 600 Ticks = 1 min. `TAX_UNIT` 2, `TAX_CARRY_DIVISOR` 20 000,
 `UPKEEP_INTERVAL` 100.
 
-## A. Steuer mit Edikt (AK-E1-06, AK-E1-07)
+## A. Steuer mit Edikt (AK-M13E1-06, AK-M13E1-07)
 
 Regel: `effectiveTaxPct(w, t) = taxPct(effectiveTaxLevel(w, t), t) − edictTaxPoints(w)`; Sparen 7, Wohlfahrt 5,
 Handel und «keins» 0 Punkte. Basis je Haus = Einwohner × `TIERS[t].tax` × (erfüllt ? 2 : 1).
 
-### A.1 Welt «gemischt» (gleiche Häuser wie AK-T02 der Spec Steuer je Stufe)
+### A.1 Welt «gemischt» (gleiche Häuser wie I-028:AK-T02)
 
 | Haus                           | Basis | Satz keins | Satz Sparen | Satz Wohlfahrt |
 | ------------------------------ | ----- | ---------- | ----------- | -------------- |
@@ -34,7 +34,7 @@ Probe: Summe der Basen 1152; 133 860 − 7 × 1152 = 125 796; 133 860 − 5 × 1
 Basis 4 × 20 × 22 × 2 = 3520. `taxUnits`: keins 352 000, Sparen 327 360, Wohlfahrt 334 400. Geld nach 100 Ticks:
 1760 / 1636 (Übertrag 16 000) / 1672 (Übertrag 0).
 
-## B. Unterhalt mit Edikt und Stilllegung (AK-E1-08, AK-STL-04)
+## B. Unterhalt mit Edikt und Stilllegung (AK-M13E1-08, AK-M13STL-04)
 
 Regel: je Gebäude `buildingUpkeep(b)` = `upkeepOf(b)`, stillgelegt `⌈upkeepOf(b) × 50 / 100⌉`; Summe S über alle
 Gebäude plus `ships.length × SHIP.upkeep`; mit wirkendem Edikt `upkeepPct < 100`: `⌊S × upkeepPct / 100⌋`.
@@ -58,7 +58,7 @@ Halber Unterhalt je Betrieb (aufgerundet, Ersparnis nie mehr als die Hälfte):
 | 20                | 10          | Brennerei                        | Brennerei 26 → 13, 34 → 17 |
 | 25                | 13          | Werkzeugmacher, Glashütte        | Glashütte 33 → 17, 43 → 22 |
 
-## C. Kaufpreise mit «Handel» und Arbitrage (AK-E1-09, AK-E1-10)
+## C. Kaufpreise mit «Handel» und Arbitrage (AK-M13E1-09, AK-M13E1-10)
 
 Regel: `buyPrice(w, g, n) = ⌈n × GOODS[g].buy × buyPct / 100⌉` mit wirkendem Handel (`buyPct` 80), sonst
 `n × GOODS[g].buy` (bitgleich). Prämie `⌊buy × ORDER_PREMIUM⌋` (0,75); höchster Verkauf je Stück
@@ -81,7 +81,7 @@ Bei n Stück gilt `buyPrice > n × Prämie` und `buyPrice > sellPrice(Boom, n)`,
 `0,8 × buy > 1,5 × sell` für jede Ware (kleinster Abstand Nahrung n = 10: 64 gegen 60). Mit Abrunden statt Aufrunden
 läge Nahrung, Wolle und Zuckerrohr bei n = 1 auf Marge 0 (6, 9, 9).
 
-## D. Aufstiegs-Wartezeit, Stapelregel (AK-E1-12)
+## D. Aufstiegs-Wartezeit, Stapelregel (AK-M13E1-12)
 
 `waitBase = max(TAX_LEVELS.low.upgradeWait, min(base, Fest ? 150, Wohlfahrt ? 200))` für `base ≠ null`; danach
 `× UPGRADE_DEFICIT_WAIT_FACTOR` (2), wenn das Haus dämpft. `base = null` («hoch») bleibt `null`.
@@ -100,7 +100,7 @@ läge Nahrung, Wolle und Zuckerrohr bei n = 1 auf Marge 0 (6, 9, 9).
 Grundtext im Status: `Bedürfnisse noch nicht {wait} Ticks erfüllt` bzw. `Steuer zu hoch`. Aufstiege werden nur an
 Wachstumstakten geprüft: Mit Takt 40 wirkt Wartezeit 200 genau (5 Takte), Wartezeit 150 wie 160 (4 Takte).
 
-## E. Pfadzeiten Pionier → volles Kaufmannshaus (AK-E1-16, Auflage B1 analytisch)
+## E. Pfadzeiten Pionier → volles Kaufmannshaus (AK-M13E1-16, Auflage B1 analytisch)
 
 Testwelt: ein Haus, eingesetzt bei Tick t0 (Vielfaches von 200, also von 40 und 50), Stufe 1, 1 Einwohner,
 `satisfiedSince = t0`; ab Tick t0 + 1 alle Bedürfnisse, Dienste und Aufstiegskosten dauernd vorhanden, kein Defizit
@@ -118,7 +118,7 @@ Herleitung Zeile 4: P füllt 1 → 4 bis t0+120, Wartezeit 150 erfüllt ab t0+15
 in 160 Ticks (bis t0+320), Wartezeit 150 ab t0+310 → t0+320; B füllt 8 → 15 in 280 Ticks, Wartezeit 200 → t0+600;
 K füllt 15 → 20 in 200 Ticks → t0+800. Der Vorschlag rechnete 150 + 160 + 280 + 200 = 790 ohne Takt-Raster.
 
-## F. Endzustand, Auflage B2 (AK-E1-20)
+## F. Endzustand, Auflage B2 (AK-M13E1-20)
 
 Welt A.2 (Steuer 1760 je 100 Ticks) plus Kontor, Amtsstube und 32 Schulen (nominaler Unterhalt 820, Zeile 4 in B),
 aktive Amtsstube, 600 Ticks ab beiden Überträgen 0:
@@ -136,7 +136,7 @@ Bilanz nach Zukauf (5040, Vorschlag A.1). Kein Edikt bringt im Endzustand mehr a
 klein** (Auflage B2). Im Endzustand ist das Edikt eine Feinsteuerung; die spürbare Wahl liegt im Zukauf (Handel,
 später Denkmal E2) und in Ausbauwellen (Wohlfahrt, Abschnitt E).
 
-## G. Takt und Schrumpfen (AK-E1-11)
+## G. Takt und Schrumpfen (AK-M13E1-11)
 
 - Wachsen: Pionierhaus 1 Einwohner, erfüllt, ab t0 = 2000: Takt 50 → 2 / 3 / 4 Einwohner bei 2050 / 2100 / 2150;
   Takt 40 → bei 2040 / 2080 / 2120. Zwischen den Takten keine Änderung.

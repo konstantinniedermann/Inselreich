@@ -59,9 +59,11 @@ bitgleich (I-028-Muster). Regeln:
 rückfaltbar`.
 4. Ausgabe: alle v10-Schlüssel in v10-Reihenfolge, ohne `edict` und `edictLockedUntil`, `version: 10`.
 
-Umstellung: jede Stelle `foldBackToV8(foldBackToV9(x))` wird `foldBackToV8(foldBackToV9(foldBackToV10(x)))`
-(heute in `tests/sim/save.test.ts`, `balance-crises.test.ts`, `goal3.test.ts`, `seaGolden.test.ts`, `helpers.ts`);
-`CHAIN_HASHES` und `V6_FORMS` bleiben wertgleich. Kein Pin-Wert ändert sich.
+Einbindung (R455 Q-B4b, Diff in `balance*.test.ts` leer): `foldBackToV9(x)` ruft bei `x.version === 11` zuerst
+`foldBackToV10(x)` auf und faltet dann wie heute. Damit bleiben die Aufrufer `foldBackToV8(foldBackToV9(x))` in
+`balance-crises.test.ts`, `save.test.ts`, `goal3.test.ts`, `seaGolden.test.ts` unverändert; `CHAIN_HASHES` und
+`V6_FORMS` bleiben wertgleich, kein Pin-Wert ändert sich. Der Helfer-Test (AK-M13E1-22) ruft `foldBackToV10` auch
+direkt.
 
 ## E. Fixtures und Szenario-Stände
 
@@ -73,19 +75,19 @@ Umstellung: jede Stelle `foldBackToV8(foldBackToV9(x))` wird `foldBackToV8(foldB
 
 ## F. Erwartungswerte für die Save-AK
 
-| AK        | Eingabe                                                                   | Ergebnis                                         |
-| --------- | ------------------------------------------------------------------------- | ------------------------------------------------ |
-| AK-E1-23  | v11 mit `edict 'trade'`, `edictLockedUntil 4000`, Fischer `paused: true`  | Rundlauf ok, tief gleich, Fischer `state` gleich |
-| AK-E1-24  | v10-Stand (`won true`), v1 … v9-Fixtures                                  | ok, `version 11`, `edict null`, Sperre 0         |
-| AK-E1-25a | `edict: 'tax'`                                                            | `'Beschädigter Spielstand'`                      |
-| AK-E1-25b | `edictLockedUntil` −1 / 1,5 / `'300'` / fehlt in v11                      | `'Beschädigter Spielstand'`                      |
-| AK-E1-25c | `edict: 'saving'` mit `won: false`                                        | `'Beschädigter Spielstand'`                      |
-| AK-E1-25d | `edict: 'saving'` ohne Amtsstube                                          | `'Beschädigter Spielstand'`                      |
-| AK-E1-25e | `paused: false`; `paused: 1`; `paused: true` an Wohnhaus, Kapelle, Kontor | `'Beschädigter Spielstand'`                      |
-| AK-E1-25f | Fischer `state: 'paused'` ohne `paused`                                   | `'Beschädigter Spielstand'`                      |
-| AK-E1-25g | Fischer `paused: true`, `state: 'burning'` mit gültigem `outageUntil`     | ok                                               |
-| AK-E1-25h | v10-Stand mit `edict: 'x'` (Migration lässt ihn stehen)                   | `'Beschädigter Spielstand'`                      |
-| AK-E1-26  | `version: 12`; Text `{"version": 11` (abgeschnitten)                      | `'Unbekannte Version'`; `'Ungültiges Format'`    |
+| AK           | Eingabe                                                                   | Ergebnis                                         |
+| ------------ | ------------------------------------------------------------------------- | ------------------------------------------------ |
+| AK-M13E1-23  | v11 mit `edict 'trade'`, `edictLockedUntil 4000`, Fischer `paused: true`  | Rundlauf ok, tief gleich, Fischer `state` gleich |
+| AK-M13E1-24  | v10-Stand (`won true`), v1 … v9-Fixtures                                  | ok, `version 11`, `edict null`, Sperre 0         |
+| AK-M13E1-25a | `edict: 'tax'`                                                            | `'Beschädigter Spielstand'`                      |
+| AK-M13E1-25b | `edictLockedUntil` −1 / 1,5 / `'300'` / fehlt in v11                      | `'Beschädigter Spielstand'`                      |
+| AK-M13E1-25c | `edict: 'saving'` mit `won: false`                                        | `'Beschädigter Spielstand'`                      |
+| AK-M13E1-25d | `edict: 'saving'` ohne Amtsstube                                          | `'Beschädigter Spielstand'`                      |
+| AK-M13E1-25e | `paused: false`; `paused: 1`; `paused: true` an Wohnhaus, Kapelle, Kontor | `'Beschädigter Spielstand'`                      |
+| AK-M13E1-25f | Fischer `state: 'paused'` ohne `paused`                                   | `'Beschädigter Spielstand'`                      |
+| AK-M13E1-25g | Fischer `paused: true`, `state: 'burning'` mit gültigem `outageUntil`     | ok                                               |
+| AK-M13E1-25h | v10-Stand mit `edict: 'x'` (Migration lässt ihn stehen)                   | `'Beschädigter Spielstand'`                      |
+| AK-M13E1-26  | `version: 12`; Text `{"version": 11` (abgeschnitten)                      | `'Unbekannte Version'`; `'Ungültiges Format'`    |
 
 Jeder Fall: `deserialize` wirft nicht; ein Fall «fehlt in v11» meint einen Stand mit `version: 11`, dem der Schlüssel
 fehlt (die Migration läuft nur für v10).
