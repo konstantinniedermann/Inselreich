@@ -218,11 +218,25 @@ describe('Silhouetten-Cache (AK-S5, AK-S6)', () => {
     }
     expect(kinds.size).toBeGreaterThanOrEqual(3);
   });
-  it('Erstes Rastern aller Inseln ist schnell (Fake, Richtwert <= 5 ms ohne Canvas)', () => {
+  it('Erstes Rastern: ein Lauf je Insel, ein fillRect je Landstreifen (Zähler statt Uhr)', () => {
     const w = createWorld(7);
-    const cache = createSilhouetteCache(fakeFactory());
-    const t0 = performance.now();
+    const logs: FakeCtx[] = [];
+    const cache = createSilhouetteCache(fakeFactory(logs));
     w.islands.forEach((s) => cache.get(s, 0.1));
-    expect(performance.now() - t0).toBeLessThan(50);
+    expect(cache.rasterCount).toBe(w.islands.length);
+    let runs = 0,
+      land = 0;
+    for (const s of w.islands)
+      for (let y = 0; y < s.height; y++) {
+        const isLand = (x: number) => s.tiles[y * s.width + x]!.terrain !== 'water';
+        for (let x = 0; x < s.width; x++)
+          if (isLand(x)) {
+            land++;
+            if (x === 0 || !isLand(x - 1)) runs++;
+          }
+      }
+    const fills = logs.reduce((n, l) => n + l.events.filter((e) => e.op === 'fillRect').length, 0);
+    expect(fills).toBe(runs);
+    expect(fills).toBeLessThan(land);
   });
 });
