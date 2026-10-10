@@ -4929,3 +4929,15 @@ Regelbezug: Nutzerauftrag; R424, R445, R464, R429 · Kosten bei Irrtum: Vorarbei
 (≈ 1 Lead-Start je Paket).
 
 Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-10 · ADR: —
+
+## R476 · 2026-10-10 · Kurzdesign UI-TASTEN angenommen (I-056, I-057)
+
+Ruling: Kurzdesign `lead-design` (Handoff `.studio/handoffs/2026-10-10-lead-design-design-ui-tasten.md`, AK-UT-01…12)
+angenommen. Entscheide nach Empfehlung: (1) `Backspace` reisst zusätzlich zu `Entf` ab (Mac ohne Entf-Taste; Browser
+navigieren mit Backspace nicht mehr zurück). (2) Der Browser-Dialog «Seite speichern» wird bei `Strg`/`Cmd`+`S` immer
+unterdrückt, auch wenn die Taste gerade nichts tut. (3) Keine Bestätigung beim Abriss per Taste (wie Knopf «Abreissen»;
+Wirkung nur bei offenem Panel, ein Gebäude). Weiter mit Plan durch `lead-tech` (Stufe leicht), danach kombiniertes Gate.
+
+Regelbezug: STUDIO.md Ablauf Stufe leicht Schritt 2–4, R474 · Kosten bei Irrtum: eine Tastenzuordnung zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-ui-tasten · ADR: —
