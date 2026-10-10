@@ -56,10 +56,14 @@ export function needsForeignIsland(g: GoodId): boolean {
   );
 }
 
+/** Satzende „gründe ein Kontor auf einer Gewürzinsel“ (Fremdgut). */
+function foundKontorHint(g: GoodId): string {
+  return `gründe ein Kontor auf einer ${GOODS[g].name}insel`;
+}
+
 /** Satz für ein Gut von einer fernen Insel: kaufen oder ein Kontor gründen; nie ein Betrieb mit Taste. */
 function foreignGoodHint(g: GoodId): string {
-  const name = GOODS[g].name;
-  return `kaufe es am Kontor oder gründe ein Kontor auf einer ${name}insel`;
+  return `kaufe es am Kontor oder ${foundKontorHint(g)}`;
 }
 
 /** Satz zu einem fehlenden Gut, oder null, wenn Erzeuger und Vorstufe stehen (dann weiterschalten). */
@@ -201,16 +205,11 @@ export function remedyText(w: World, b: Building): string | null {
     const d = houseDiagnosis(w, b)[0];
     if (!d) return null;
     if (d.kind === 'supply') return `Baue einen ${nk('market')} in der Nähe`;
-    if (d.kind === 'service') {
-      const id = SERVICE_BUILDING[d.service];
-      return `${nm(id)} fehlt: baue ${nk(id)} in Reichweite`;
-    }
+    if (d.kind === 'service') return `Baue ${nk(SERVICE_BUILDING[d.service])} in Reichweite`;
     const g = GOODS[d.good].name;
-    if (needsForeignIsland(d.good)) return `${g} fehlt: ${foreignGoodHint(d.good)}`;
+    if (needsForeignIsland(d.good)) return `Kaufe ${g} am Kontor oder ${foundKontorHint(d.good)}`;
     const p = producerOf(d.good)!;
-    return has(w, p)
-      ? `${g} fehlt: baue mehr ${nm(p)} oder kaufe ${g} am Kontor`
-      : `${g} fehlt: baue ${nk(p)}`;
+    return has(w, p) ? `Baue mehr ${nm(p)} oder kaufe ${g} am Kontor` : `Baue ${nk(p)}`;
   }
   if (b.outageUntil !== undefined)
     return `Läuft nach dem Brand von selbst wieder; eine ${nk('firestation')} in der Nähe schützt`;
