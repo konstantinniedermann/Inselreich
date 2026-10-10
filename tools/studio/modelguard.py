@@ -14,7 +14,7 @@ import re
 import sys
 from collections.abc import Mapping
 
-MODE = "warn"  # Startzustand (R428 E2): nur Event; "deny" setzt TOOL-AKTIVIERUNG
+MODE = "deny"  # aktiv seit TOOL-AKTIVIERUNG (ADR-014, R428); Startzustand war "warn"
 AGENT_TOOLS = ("Agent", "Task")
 SKIP_TYPES = {"fork"}
 SECTION = "## Modellwahl"

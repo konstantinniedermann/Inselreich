@@ -136,9 +136,11 @@ class HookTest(unittest.TestCase):
             (events[0]["kind"], events[0]["persona"]), ("model_guard", "lead-qa")
         )
 
-    def test_warn_mode_is_default_event_only(self):
-        self.assertEqual(modelguard.MODE, "warn")
-        code, out, events = self.run_hook(self.payload(**self.OVER))
+    def test_deny_mode_is_default(self):
+        self.assertEqual(modelguard.MODE, "deny")
+
+    def test_warn_mode_event_only(self):
+        code, out, events = self.run_hook(self.payload(**self.OVER), "warn")
         self.assertEqual((code, out, events[0]["mode"]), (0, "", "warn"))
 
     def test_task_tool_name_is_checked(self):
