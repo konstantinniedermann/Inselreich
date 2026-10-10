@@ -5139,3 +5139,22 @@ Regelbezug: gates.md Gate Spec, R483, R487 · Kosten bei Irrtum: Denkmal billige
 (nur Denkmal-Ware).
 
 Entscheider: L0 · Anlass: Gate-Urteile Spec M13-E2 · ADR: —
+
+## R490 · 2026-10-10 · Gate Spec I-048: BEDENKEN (lead-qa B1–B9, lead-tech B1–B4) → Spec-Nachtrag, dann Plan
+
+Ruling: Beide Urteile BEDENKEN, kein ZURÜCK (`.studio/handoffs/2026-10-10-lead-qa-GATE-SPEC-I048.md`,
+`…-lead-tech-GATE-SPEC-I048.md`). **B1 Denkmal-Zukauf:** Es bleibt bei **R489** (zahlt den gültigen Aufschlag, hebt
+ihn nicht) entgegen der lead-tech-Empfehlung (A): Variante A würde die gerade gegatete M13-E2-Rechnung (64 200 Geld,
+`balance-monument`) in I-048 Schritt B rückwirkend um ≈ 30 % verschieben und beide Pakete koppeln; die Ausnahme steht
+in README und Spec, Z3 nennt sie, ein AK prüft „Denkmal-Zukauf hebt `buyPct` nicht“. `balance-monument.test.ts` kommt in
+die Liste der Balancing-Tests (§6). **B2:** R487 P-1 wird erweitert: Rezept-Tests gegen alte Fixtures (v6, v6-locks, v7,
+v8 in `save.test.ts`) laufen in eigener Datei mit den alten Werten per `vi.mock` (Muster `tests/ui/levelReads.test.ts`);
+§6 ordnet jeden roten Test einer Klasse zu (neu messen / alte Werte). AK-ZK-08/-21 dagegen als reine Kernfunktion mit
+`rise`/`cap`-Parametern ohne Mock (qa B3). **B3:** P-4 präzisiert: v12 wird nur geteilt, wenn zwischen dem Merge von
+M13-E2-SIM und I-048 kein Release liegt (Plan prüft beim Start, L0 im Merge-Gate), sonst v13; die Rückfaltung kennt
+`buyPct` in jedem Fall. Spec-Nachtrag `lead-design`: qa B1, B2, B3, B6, B9, tech B1 (Ausnahme), B2-Regel §6, B4
+(Namenskonflikt `buyPct`/Edikt-Faktor auflösen, `sellPctText` als AK). Plan: qa B4, B5, B7, B8; tech B3.
+
+Regelbezug: gates.md Gate Spec, R487, R489 · Kosten bei Irrtum: Denkmal in Hochpreisphasen günstiger als Normalkauf.
+
+Entscheider: L0 · Anlass: Gate-Urteile Spec I-048 · ADR: —
