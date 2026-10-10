@@ -13,3 +13,8 @@
 - [ ] **Prüfen:** `test_log`, `make studio-lint`.
 
 **Commit:** `fix: log.py package überschreibt den Titel eines bestehenden Pakets nicht mehr`
+
+## Nacharbeit Gate Plan (R478, B7)
+
+- [ ] **Zusatztests:** ID kommt nur in `blocked_by` eines anderen Pakets vor -> gilt als neu (Titel Pflicht); `T1` trifft nicht `T10` (Feldvergleich, nicht Teilstring); Hinweis «Titel unverändert» auf stderr **nur** bei Unterdrückung (nicht bei neuem Paket, nicht mit `--retitle`).
+- [ ] **`model.on_package` ohne `title`:** `model.py` gehört Umsetzer A, B **liest nur**. Beleg im Bericht: bestehender Test in `test_model.py` (Fundstelle, model.py ≈ Z. 831 prüft Felder) bzw. Befund -> Controller -> L0, falls keiner existiert.

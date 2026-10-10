@@ -13,3 +13,10 @@
 - [ ] **Prüfen:** `test_testrun`, `make studio-lint`; kein Gesamtlauf.
 
 **Commit:** `fix: testrun eskaliert auf SIGKILL, meldet Ctrl-C-Abbruch und sieht ungetrackte Dateien`
+
+## Nacharbeit Gate Plan (R478, B1, B2, B3, B10; ersetzt die Zeile «Prozessgruppe nur, wenn der Test zeigt»)
+
+- [ ] **B1 Prozessgruppe verbindlich:** Rot-Test: Kind startet Enkel (SIGTERM-ignorierend); nach Eskalation sind Kind **und** Enkel tot. Umsetzung `start_new_session=True` + `os.killpg` (Eskalation SIGTERM -> Frist -> SIGKILL auf die Gruppe). Der `KeyboardInterrupt`-Zweig ruft ebenfalls `killpg` (Ctrl-C erreicht die neue Gruppe nicht mehr). Test: Ctrl-C-Pfad tötet den Enkel. Fallback «nur Kind» nur mit Begründung -> Controller -> L0.
+- [ ] **B2 ohne feste Schlafzeit:** `test_sigterm_ignoring_child_is_killed` und der Ctrl-C-Test: Kind meldet Bereitschaft (Handler gesetzt) per Datei/Pipe, erst dann `terminate` bzw. Interrupt. Zusätzlich Test Exit-Code 128+SIGINT (AK-TB5-09) und: die Testsperre wird nach Abbruch/Kill freigegeben.
+- [ ] **B3 `test_aborted`:** Test, dass ein Lager mit `test_aborted` durch `build_state`, `flake_suspects` (`efficiency.py` ≈ Z. 697) und Metriken (`metrics.py` ≈ Z. 408) dasselbe Ergebnis liefert wie ohne das Ereignis. Test: `_record_aborted` schluckt Schreibfehler und maskiert den `KeyboardInterrupt` nicht. **Eigentum:** B fasst `model.py`, `efficiency.py`, `metrics.py` nicht an (gehören A bzw. dem Controller); Befund -> Controller -> L0.
+- [ ] **B10 Diff-Hash:** Test, dass ignorierte Dateien (`.gitignore`) nicht einfliessen. Im Bericht erwähnen: ungetrackte Dateien verändern die Flake-Vergleichsbasis einmalig.

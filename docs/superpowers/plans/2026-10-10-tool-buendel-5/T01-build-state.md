@@ -14,3 +14,9 @@
 - [ ] **Prüfen:** `python3 -m unittest tools.studio.tests.test_model` bzw. gezielt die neue Klasse und `make studio-lint`; Exit-Codes nennen.
 
 **Commit:** `refactor: build_state sortiert einmal, claim_budgets einmal je Aufbau`
+
+## Nacharbeit Gate Plan (R478, B5)
+
+- [ ] **Golden-Fixture erweitern (vor dem Umbau, auf altem Code grün):** (i) unsortierte Eingabe liefert dasselbe Ergebnis wie die sortierte; (ii) inkrementelles Fortschreiben: `budget_view` zwischen Ereignissen korrekt, Cache nach neuem Start-/Budget-Ereignis ungültig (Test: Ereignis anhängen, `budget_view` ändert sich wie beim Neuaufbau).
+- [ ] **AK-TB5-02 testen:** Zähler für Sortierungen der Knoten (Wrapper) und Test, dass aufsteigende Events nicht neu sortiert werden.
+- [ ] **Messzahlen** vorher/nachher ins Ledger (`.superpowers/sdd/tool-buendel-5/ledger.md`) und in den Bericht. Verfehlt T01 nach einer weiteren Runde das Ziel <= 1,0 s: **Stopp, Meldung an L0** (kein offenes «nächste Funktion»).
