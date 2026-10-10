@@ -164,7 +164,7 @@ Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 4
 
 ### I-013 · verworfen · Verschleiss und Instandhaltung — R238 (Pflegen dominiert immer, reine Werkzeug-Senke; das Problem „Werkzeug ohne Entscheidung" geht ins nächste Wirtschafts-Brainstorming)
 
-### I-014 · geparkt · Sturm auf See
+### I-014 · eingeplant · Sturm auf See
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik: Wetter wirkt auf Seewege und verlangt eine Abwägung; **M12-Baustein E4** (Schiffe und Routen); Pfad `README.md` (Sturm betrifft nur Fischer, Holzfäller, Schäferei, Zuckerrohr)
 - Spielerwirkung: „Der Spieler sieht bei einer Sturmwarnung am Schiff auf der Route «Hafen anlaufen» (Fahrt pausiert 30 s, Ladung sicher) und entscheidet zwischen Zeitverlust und dem Risiko, 20 % der Ladung (z. B. 2 von 10 Gewürz) zu verlieren."
@@ -177,24 +177,26 @@ Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 4
   («bei Sturm anlegen / weiterfahren»). Bei 2 von 10 Gewürz (≈ 80 Geld) gegen 30 s ist die Wahl im späten Spiel
   belanglos; trägt erst mit grösseren Ladungen. Baustein nach E4, nicht gepitcht.
 - Entscheid: R238 → geparkt bis nach dem v9-Merge (E4 Schiffe und Routen); Fassung als Daueranweisung je Route prüfen
+- Entscheid: R486 (O5, O9) → als eigener Baustein gestrichen; eingeplant nur als M14-E3 «Routenrisiko», gekoppelt an M14-E1 (allein tote Option, Rechnung M14-Anhang 01 B.3); nur Sturm, keine Piraten, kein Kampf
 - Zusammengefasst (IDEEN-06): I-054 «Piraten bedrohen Routen» (Scout B) — Überfall statt Sturm als Routenverlust mit Gegenmittel (Route umlegen, Ladung klein halten, Begleitschiff); gleiche Stelle im Code und gleiche Abwägung, darum hier. Ohne Kampf; ein Seekampf wäre eine eigene Frage an L0 (M12 §10 schliesst Piraten und Kampf aus).
 
-### I-015 · neu · Seefahrt-Leitsätze
+### I-015 · eingeplant · Seefahrt-Leitsätze
 
 - Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: Playtest 2026-10-06 (REL-05, wörtlich: „kein freies schiff für den transport von gewürzen zur hauptinsel. keine hilfe wie ich ein schiff bauen/kaufen/bekommen könnte“); Pfade `src/ui/guide.ts` (C.11, Z. 158–160: Leitsatz endet bei „Gründe ein Kontor auf einer Insel mit Gewürz“), `src/ui/ships.ts:118` und `src/ui/app.ts:507` (Grund „Kein freies Schiff“ ohne Weg), `src/ui/ships.ts` `buyShipView`, `README.md` Z. 368–379; Folgepaket (2) aus R274b (state.md) enthält schon „Heimatkontor-Klick → Schiffe direkt“
 - Spielerwirkung: „Der Spieler liest nach Kontor II im Leitsatz «Kaufe ein Handelsschiff im Heimatkontor», danach «Lege eine Route: Gewürz von <Insel> heim», und der Grund «Kein freies Schiff» nennt den Weg (kaufen oder Route lösen)."
 - Grösse: S · Risiko: keins (nur Texte und Schrittbedingungen in `src/ui/`; mit Folgepaket (2) R274b abstimmen, nicht doppeln)
 - Raster: offen
 - Verwandt: I-019
-- Entscheid: offen
+- Entscheid: R486 → eingeplant in M14-E2 «Werft und Seefahrt-Führung»
 
-### I-016 · geparkt · Werft
+### I-016 · eingeplant · Werft
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik (nur Mechanik, ADR-006): Schiffe entstehen in einem Küstengebäude statt per Knopf; Playtest 2026-10-06 („oder eine werft?“); heute Kauf im Kontor-Panel der Heimat (`src/ui/ships.ts` `buyShipView`)
 - Spielerwirkung: „Der Spieler baut eine Werft an der Küste, bestellt dort ein Schiff, sieht es nach einer Bauzeit vom Stapel laufen und weiss damit, wo Schiffe herkommen."
 - Grösse: M · Risiko: Save (neues Gebäude, Auftrag mit Restzeit im Weltzustand, Migration mit Standardwert); Baseline prüfen, falls der Controller Schiffe kauft
 - Raster: offen
 - Entscheid: R448 → geparkt bis Archipel-Brainstorming (mit I-036, I-038)
+- Entscheid: R486 (O4) → eingeplant in M14-E2 «Werft und Seefahrt-Führung»; die Werft ergänzt den Schiffskauf am Kontor (Controller und Baseline unberührt)
 
 ### I-017 · neu · Auftragsreihe Seefahrt
 
@@ -214,7 +216,7 @@ Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 4
 - Doppelung: keine; stärkere Fassung von I-017. Nur als Frage an L0, ob Erzählung zum Spiel passt, nicht als Richtungswechsel.
 - Entscheid: offen
 
-### I-019 · neu · Schiffsangebot am Kontor
+### I-019 · eingeplant · Schiffsangebot am Kontor
 
 - Bereich: Bedienung/Grafik · Säule: Wirtschaft, Steuern und Handel · Quelle: Playtest 2026-10-06 (REL-05, wörtlich: „ist aber schlecht versteckt im menu. -> wie wärs wenn ein schiff auftaucht vor meinem kontor welches mit einem gelben "!" markiert ist als hinweis das man es anklicken kann. dieses könnte man dann kaufen.“); Pfade `src/render/ship.ts` (`shipTile`, `drawShip`), `src/render/shipLane.ts`, `src/ui/ships.ts` `buyShipView`; Genre-Mechanik: Hinweismarke am Objekt statt Menüeintrag
 - Spielerwirkung: „Der Spieler sieht, sobald Seefahrt frei ist und ein Schiff kaufbar wäre, ein Angebotsschiff mit gelbem «!» vor dem Heimatkontor, klickt es an und landet direkt im Kauf."
@@ -222,7 +224,7 @@ Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 4
 - Raster: offen
 - Doppelung: I-015 (Leitsätze) führt per Text, diese Idee per Bild; zusammen lesbar, nicht doppeln. I-016 (Werft) würde den Kaufort verlegen; dann zöge die Marke zur Werft. Folgepaket (2) R274b („Heimatkontor-Klick → Schiffe direkt“) ist die Klick-Hälfte; Abstimmung nötig.
 - Verwandt: I-015, I-016
-- Entscheid: offen
+- Entscheid: R486 → eingeplant in M14-E2 «Werft und Seefahrt-Führung» (Marke zieht ggf. zur Werft)
 
 ### I-020 · neu · Berge und Klippen mit Höhe
 
@@ -344,10 +346,11 @@ Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 4
 - Bewertung lead-design: Spass 3 → 2 (Seefahrt erst nach dem Bürger-Ziel, also Fortgeschrittene), Risiko 2 → 1 (Wracks aus dem Render in die Sim heben berührt Weltgenerierung und Baseline). **Entartung umgekehrt:** 300 Geld bei ≈ 12 000/min im Spätspiel ist bedeutungslos; die Beute müsste ein knappes Gut sein (Gewürz, Glas) oder etwas freischalten, sonst ist es Kulisse. Kandidat für dasselbe Brainstorming wie I-038.
 - Nutzen/Aufwand: kleiner Nutzen in dieser Fassung · M · ≈ 2 Pakete (≈ 150 Tools)
 - Entscheid: R448 → geparkt bis Archipel-Brainstorming (mit I-038, I-016; Beute als knappes Gut fassen)
+- Entscheid: R486 → bleibt geparkt; Kandidat für M14-E4 (optional, nach E1, Beute als knappes Gut)
 
 ### I-037 · verworfen · Leuchtturm gegen Sturm — IDEEN-06 Streichung lead-design (Bestätigung im Runden-Ruling): tote Option (≈ 6 % Sturmverlust), nur Kulisse; Pool-Obergrenze 40 (R445)
 
-### I-038 · geparkt · Erkundungsfahrt
+### I-038 · eingeplant · Erkundungsfahrt
 
 - Bereich: Inhalt · Säule: Insel besiedeln (Archipel) · Quelle: Genre-Mechanik (Entdeckung per Schiff); IDEEN-05 Scout B; Pfade `README.md` Z. 355 (zwei feste Fremdinseln), `src/sim/defs/sea.ts` (`ISLANDS`)
 - Spielerwirkung: „Der Spieler schickt ein Schiff auf Erkundung und entdeckt nach der Fahrt eine dritte Fremdinsel mit eigenem Merkmal, die vorher auf der Seekarte fehlt."
@@ -359,6 +362,7 @@ Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 4
 - Bewertung lead-design: Spass 3 → 2 (spätes Spiel). Grösster Inhalts-Hebel der Runde für die Säule „Insel besiedeln", aber Meilenstein-Grösse. Lohnt nur, wenn die neue Insel etwas bietet, das es heute nicht gibt (neues Gut oder Merkmal); sonst ist es „mehr Insel". Baustein für ein Archipel-Meilenstein-Brainstorming zusammen mit I-036 und I-016 (Werft).
 - Nutzen/Aufwand: hoher Nutzen für Langzeitspieler · L (M-Teil möglich) · Meilenstein, ≈ 4–6 Pakete
 - Entscheid: R448 → geparkt bis Archipel-Brainstorming (mit I-036, I-016)
+- Entscheid: R486 (O6) → Teilfassung eingeplant in M14-E1 «Inselcharakter»: dritte Fremdinsel, sichtbar ab Seefahrt statt erkundet; Erkundung als Mechanik bleibt draussen (höchstens M14-E4)
 
 ### I-039 · eingeplant · Denkmal als Wahlziel (Ausbau von I-030)
 
@@ -417,7 +421,7 @@ Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 4
 
 ### I-046 · verworfen · Überlauf-Ausfuhr — IDEEN-06 Scout A; Streichung lead-design (Bestätigung im Runden-Ruling): Ware, die bei vollem Lager verfiele, ginge automatisch zum halben Preis ans Kontor. Entartet zur passiven Einnahme (Holzfäller ≈ 40 Geld/min Überlauf gegen 30 Unterhalt) und nimmt dem Zustand «Lager voll» die Entscheidung; die Antwort auf Überschuss ist Stilllegen (I-035) oder Verkauf von Hand.
 
-### I-047 · bewertet · Stammkunde (Liefervertrag)
+### I-047 · eingeplant · Stammkunde (Liefervertrag)
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik (Dauerabnahme gegen Festpreis, nur Mechanik, ADR-006); IDEEN-06 Scout A; Pfade `src/sim/orders.ts` (Aufträge einmalig), `src/sim/defs/goods.ts` (`ORDER_PREMIUM`, Sättigung)
 - Spielerwirkung: „Der Spieler nimmt nach einem erfüllten Auftrag das Angebot «Stammkunde: 12 Rum alle 3 min zu 130 %» an und wägt feste Abnahme gegen Verkauf am freien Markt ab."
@@ -428,6 +432,7 @@ Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 4
 - Bewertung lead-design (IDEEN-06): Spass 3 → 2: Die Bindung trägt erst für Fortgeschrittene, die Rum im Überschuss haben; im ersten Spiel bleibt sie unsichtbar. Mit I-006 und I-029 als ein Handels-Baustein denken, nicht einzeln einplanen.
 - Nutzen/Aufwand: mittlerer Nutzen (Planbarkeit im Mittelspiel) · M · ≈ 2 Pakete (Rechnung `design-economy-designer` ≈ 40 Tools, Sim+Panel ≈ 150 Tools)
 - Entscheid: Empfehlung parken bis Handels-Brainstorming (mit I-006, I-029); Ruling IDEEN-06 offen
+- Entscheid: R486 (O3) → eingeplant als Paket nach I-048, nur in der Fassung mit Gewicht (≈ 25 % der Erzeugung zu 120 %, M14-Anhang 01 C.1); I-029 und I-006 bleiben geparkt
 
 ### I-048 · bewertet · Zukauf-Aufschlag (Kaufsättigung)
 
@@ -456,7 +461,7 @@ Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 4
 - Nutzen/Aufwand: mittlerer Nutzen (Frühspiel-Engpass Holz lösbar ohne Abriss) · S · ≈ 1 Häppchen (≈ 90 Tools, Sim + Panel)
 - Entscheid: Empfehlung einplanen mit der nächsten Save-Änderung (v12); Ruling IDEEN-06 offen
 
-### I-050 · bewertet · Arbeitskräfte
+### I-050 · geparkt · Arbeitskräfte
 
 - Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: Genre-Mechanik (Wohnraum liefert Arbeit, nur Mechanik); IDEEN-06 Scout A; Beobachtung: Betriebe laufen unabhängig von der Bevölkerung, die Stufen haben ausser Steuer keine Rolle
 - Spielerwirkung: „Der Spieler plant Wohn- und Gewerbeviertel gegeneinander: Jeder Betrieb braucht Arbeiter aus Häusern in Reichweite, und ein aufgestiegenes Haus liefert weniger Arbeiter als ein Pionierhaus."
@@ -467,6 +472,7 @@ Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 4
 - Bewertung lead-design (IDEEN-06): **kein Säulenwechsel** (vertieft die Säule Bevölkerung, ändert weder Genre noch Titel), aber ein Umbau der Kernschleife im Umfang eines Meilensteins. Trägt nur, wenn Aufstieg und Arbeit echt konkurrieren; sonst reine Mehrarbeit.
 - Nutzen/Aufwand: hoher Nutzen, sehr hoher Aufwand · L · Meilenstein (≥ 5 Pakete, Baseline-Neumessung)
 - Entscheid: Empfehlung parken bis Meilenstein-Brainstorming nach M13 (mit I-032); Ruling IDEEN-06 offen
+- Entscheid: R486 (O2) → geparkt als M15-Kandidat (Richtung A «Hände und Häuser»); vorher Spike «Regel W mit Reichweite im Controller-Lauf», erst nach einem M13-Playtest
 
 ### I-051 · bewertet · Park als Wohnwert
 
@@ -496,7 +502,7 @@ Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 4
 
 ### I-054 · zusammengefasst · Piraten bedrohen Routen — IDEEN-06 Scout B, in I-014 (Sturm auf See) aufgegangen (gleiche Stelle: Verlust auf der Route mit Gegenmittel; ohne Kampf)
 
-### I-055 · bewertet · Fischreiche Insel
+### I-055 · geparkt · Fischreiche Insel
 
 - Bereich: Inhalt · Säule: Insel besiedeln · Quelle: Genre-Mechanik (Inselcharakter); IDEEN-06 Scout B; Lücke in `src/sim/defs/sea.ts` (`IslandTrait` kennt nur `spice` und `mountain`)
 - Spielerwirkung: „Der Spieler sieht auf der Seekarte, dass eine Insel fischreich ist, und gründet dort ein Kontor, um Nahrung für die Heimat zu holen."
@@ -507,6 +513,7 @@ Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 4
 - Bewertung lead-design (IDEEN-06): Passung 2 → 3 (Säule Insel besiedeln direkt), Aufwand 3 → 2 (Weltgenerierung plus Baseline-Neumessung). Trägt erst mit mehr Inseln, sonst eine Variante der Gewürzinsel.
 - Nutzen/Aufwand: mittlerer Nutzen (Grund für eine zweite Kolonie) · S–M · ≈ 1–2 Pakete
 - Entscheid: Empfehlung parken bis Archipel-Brainstorming (mit I-038, I-036, I-016); Ruling IDEEN-06 offen
+- Entscheid: R486 (O9) → als eigener Baustein gestrichen; geparkt nur als Teil von Richtung A (Fischinsel rechnerisch tot: 2,65 gegen 2,0 Geld je Nahrung, M14-Anhang 01 B.1)
 
 ### I-056 · bewertet · Entf-Taste reisst Markiertes ab
 
