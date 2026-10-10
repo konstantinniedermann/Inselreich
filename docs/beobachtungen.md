@@ -294,3 +294,19 @@ Raster) ist bereits benannt (R327).
 
 - **Fundort:** `src/ui/hints.ts`, `src/sim/placement.ts`. Mit Bau- oder Weg-Werkzeug über einem bestehenden Haus zeigt das Schild „Kein Bauland — nur auf Land bauen“; der Geisterbau liegt auf der NW-Nachbarkachel. Die Wortwahl kann irreführend sein (das Land ist Bauland, nur belegt). Ursprung: Playtest T06 (REL-15). Einschätzung: niedrig.
 - **Trigger für eine Neubewertung:** Spieler melden Verwirrung über das Schild.
+
+### 2026-10-10 · REL-15 (R440): `dispose` bricht `islandMenuAbort` nicht ab
+
+- **Fundort:** `src/ui/app.ts:1294-1316`: nach einem fehlgeschlagenen Start halten zwei `document`-Listener die alte Welt fest. Ursprung: Final-Review REL-15 (opus). Einschätzung: niedrig; `islandMenuAbort?.abort()` in `dispose` ergänzen, Test analog `tests/ui/hud.test.ts`.
+
+### 2026-10-10 · REL-15 (R440): `seekarte.mjs` mit fest verdrahtetem Rand
+
+- **Fundort:** `tools/render-qa/seekarte.mjs` `markPixel`: `12 * d` statt `SEA_MAP_PAD`. Ursprung: Final-Review REL-15. Einschätzung: niedrig; bricht still, wenn sich der Rand der Seekarte ändert.
+
+### 2026-10-10 · REL-15 (R440): Kontor-Marke auf der Seekarte bei 1280×720 sehr klein
+
+- **Fundort:** `src/render/seaMap.ts` (4 × 4 CSS-px, E4 R437), Bild `.studio/qa/REL-15/kandidat/seekarte/seekarte-1280x720-dpr1.png`. Ursprung: Playtest REL-15. Einschätzung: niedrig; Urteil `lead-art`, falls ein Playtest die Marke übersieht.
+
+### 2026-10-10 · REL-15 (R440): QA-Artefakte ohne Grösse im Namen, getImageData-Hinweis
+
+- **Fundort:** `.studio/qa/REL-15/kandidat/b6-*.png` (1920×1080 überschreibt 1280×720); Konsole beim Seekarten-Lauf „Multiple readback operations using getImageData“ (vermutlich `seekarte.mjs`). Ursprung: Release-Check REL-15. Einschätzung: niedrig; Namensschema `<fall>-<breite>x<höhe>` im Playtester-Briefing, `willReadFrequently` im QA-Skript.
