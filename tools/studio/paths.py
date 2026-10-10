@@ -42,6 +42,7 @@ def worktree_root(start: Path | None = None) -> Path | None:
 
 
 def studio_home() -> Path:
+    # nur für Tests (R378)
     override = os.environ.get("STUDIO_HOME")
     return Path(override) if override else repo_root() / ".studio"
 
@@ -51,12 +52,14 @@ def events_file() -> Path:
 
 
 def docs_dir() -> Path:
+    # nur für Tests (R378)
     override = os.environ.get("STUDIO_DOCS")
     return Path(override) if override else repo_root() / "docs" / "studio"
 
 
 def worktree_docs_dir(start: Path | None = None) -> Path:
     """Studio-Doku des aufrufenden Worktrees (Schreibziel); sonst wie ``docs_dir``."""
+    # STUDIO_DOCS: nur für Tests (R378)
     override = os.environ.get("STUDIO_DOCS")
     if override:
         return Path(override)
