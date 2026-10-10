@@ -256,7 +256,7 @@ describe('L5 Zeichner: Grenzen und Form', () => {
     expect(decorShadow(item('palm'))).toBeNull();
   });
 
-  it('Zoomschwellen und Fern-Pfad: Wrack, Felsen und Eiland ab 0,25, Palme ab 0,5', () => {
+  it('Zoomschwellen: Meeresfels ab 0,25; Wrack, Eiland und Palme ab 0,5 (REL-07)', () => {
     resetDecorCache();
     setDecorCanvasFactory(() => {
       const { ctx } = fakeCtx();

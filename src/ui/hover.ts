@@ -51,6 +51,11 @@ export function hoverVisible(s: HoverState): boolean {
   );
 }
 
+/** Cursor-Schild sichtbar? Nur mit Hinweis und solange keine Mouse-over-Karte offen ist (R435, UI-HOVER-SCHILD). */
+export function cursorHintVisible(hasHint: boolean, cardShown: boolean): boolean {
+  return hasHint && !cardShown;
+}
+
 const OFFSET = 16;
 
 /** Position der Karte am Zeiger; klappt an den Fensterrändern um, bleibt im Fenster. */

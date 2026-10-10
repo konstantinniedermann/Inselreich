@@ -214,6 +214,7 @@ Raster) ist bereits benannt (R327).
 
 - **Fundort:** Haus-Panel (`src/ui/inspect.ts`), Playtest `.studio/qa/REL-14/z2-ware-fehlt.png`, `z2b-dienst.png`. Unter „Mangel: Nahrung fehlt“ steht die Hilfszeile „Nahrung fehlt: baue Fischerhütte (F)“ (bei Dienst: „Kapelle fehlt: baue Kapelle (K) in Reichweite“). Besteht schon vor REL-14; keine „Fehlt:“-Zeile, widerspricht dem Chip nicht.
 - **Einschätzung:** Mangel wird zweimal genannt (Liste und Hilfszeile). Nur bei Bedarf kürzen; Entscheid `lead-design`.
+- **Erledigt durch REL-15 (R435):** Die Abhilfe eines Wohnhauses beginnt mit dem Verb („Baue Kapelle (K) in Reichweite“); die Mangel-Liste bleibt im Wortlaut R424. Commit b1f26bc.
 
 ### 2026-10-09 · TOOL-BUENDEL: `make studio-lint` auf main rot
 
@@ -238,14 +239,17 @@ Raster) ist bereits benannt (R327).
 ### 2026-10-09 · REL-14 (R430): Dienst-Mangel «fehlt in Reichweite» in der Aufstiegsliste
 
 - **Fundort:** `src/sim/population.ts:156`: die Aufstiegsliste nennt den Dienst-Mangel als «fehlt in Reichweite». Ursprung: REL-14 Merge (R430). Einschätzung: Urteil `lead-design`, ob der Wortlaut zum neuen Inspektor-Klartext passt.
+- **Abgehakt (R435):** siehe Eintrag „Dienst-Mangel «fehlt in Reichweite» bleibt“ unten.
 
 ### 2026-10-09 · REL-14 (R430): Testtitel «ab 0,25» veraltet
 
 - **Fundort:** `tests/render/decorSea.test.ts:259`: der Testtitel nennt «ab 0,25», der Titel passt nicht mehr zum Verhalten nach REL-14 (Fern-Code entfernt). Ursprung: REL-14 (R430). Einschätzung: niedrig, Trivial-Fix (Titel anpassen, Test unverändert).
+- **Erledigt durch REL-15:** Titel angepasst, Commit 59025e9.
 
 ### 2026-10-09 · REL-14 (R430): Hover-Karte verdeckt Cursor-Hinweis
 
 - **Fundort:** Playtest REL-14: die Hover-Karte verdeckt den Cursor-Hinweis. Ursprung: REL-14 Playtest. Einschätzung: niedrig bis mittel, Kosmetik der UI; Entscheid `lead-design`.
+- **Erledigt durch REL-15 (R435):** Das Schild weicht der Karte (`cursorHintVisible`), Commit e9dfa65.
 
 ### 2026-10-09 · R429-Risiko: `zeitreserve-push` verwirft die Messung bei Last > 4
 
@@ -270,3 +274,23 @@ Raster) ist bereits benannt (R327).
 ### 2026-10-10 · TOOL-AKTIVIERUNG: haiku-Zeile der Modelltabelle per Kopfzeile nicht erfüllbar
 
 - **Fundort:** `tools/studio/modelguard.py` (Regex `\(([^)]*)\)`): die Einsatz-Bezeichnung der haiku-Zeile in `STUDIO.md` enthält selbst Klammern; der Parser schneidet an der ersten schliessenden Klammer ab. Ursprung: TOOL-AKTIVIERUNG (studio-coach). Einschätzung: niedrig; wirkt nicht, weil für `haiku` nie eine Kopfzeile erzwungen wird. Tabellenzeile ohne Klammern formulieren oder Parser anpassen.
+
+### 2026-10-10 · Dienst-Mangel «fehlt in Reichweite» bleibt (abgehakt, R435)
+
+- **Fundort:** `src/sim/population.ts` (Aufstiegsliste), `src/ui/hints.ts` (Regex), `src/ui/guide.ts`. Urteil `lead-design`: Der Satz beginnt mit „Kapelle fehlt“ und gehört zur Wortfamilie R424/R427; „in Reichweite“ trägt die Information „steht schon, aber zu weit weg“, die das Panel nur dort zeigt. Ursprung: REL-14 (R430), Kurzdesign REL-15. Einschätzung: abgehakt.
+- **Trigger für eine Neubewertung:** Ein Playtest meldet, dass Spieler „fehlt“ und „fehlt in Reichweite“ für zwei verschiedene Zustände halten.
+
+### 2026-10-10 · REL-15: UI-SEEKARTE-NACHZUG erledigt, Rest dpr-Wechsel bei offener Karte
+
+- **Fundort:** `src/ui/hud.ts` (`bindIslandMenu`), `src/render/seaMap.ts`. Erledigt: Kontor-Marke über dem Hafenpunkt und × dpr, Zeittest als Zähler, Szenen-Helfer `tools/render-qa/seekarte.mjs`. Der Teil „Layout und Cache über einen Weltwechsel“ war nicht erreichbar (Laden und „Neue Insel“ bauen die Kopfzeile über `restart` neu); behoben ist stattdessen das Leck der zwei `document`-Listener, die je Neustart die alte Welt hielten. Rest: Wechselt die dpr bei offener Karte (Fenster auf anderen Bildschirm), bleiben Leinwand und Marke bis zum nächsten Öffnen auf der alten dpr, stimmig zueinander. Ursprung: REL-15 (Gate-Entscheide E2, E6). Einschätzung: niedrig.
+- **Trigger für eine Neubewertung:** Ein Spieler meldet eine unscharfe oder zu kleine Seekarte nach einem Bildschirmwechsel.
+
+### 2026-10-10 · REL-15 (R437 B4): `seaMap.test.ts` steht in ZEITTESTS ohne Uhr
+
+- **Fundort:** `vite.config.ts` (Liste `ZEITTESTS`, Zeile 11: `'tests/render/seaMap.test.ts'`); `make zeittests` (Makefile) prüft nur, dass jede Datei mit `performance.now(`/`Date.now(` in der Liste steht und jeder Eintrag eine Datei hat, nicht den Umkehrschluss. Nach T03 (Branch `fix/rel-15-see`, b52e690) misst der Test keine Zeit mehr (Zähler statt Uhr); der Eintrag ist überflüssig und lässt die Datei unnötig seriell laufen. Ursprung: REL-15 T03. Einschätzung: niedrig.
+- **Trigger für eine Neubewertung:** Nächste Aufräumrunde der Zeittests.
+
+### 2026-10-10 · REL-15 (Playtest T06): Bau-/Weg-Werkzeug über Haus zeigt „Kein Bauland“
+
+- **Fundort:** `src/ui/hints.ts`, `src/sim/placement.ts`. Mit Bau- oder Weg-Werkzeug über einem bestehenden Haus zeigt das Schild „Kein Bauland — nur auf Land bauen“; der Geisterbau liegt auf der NW-Nachbarkachel. Die Wortwahl kann irreführend sein (das Land ist Bauland, nur belegt). Ursprung: Playtest T06 (REL-15). Einschätzung: niedrig.
+- **Trigger für eine Neubewertung:** Spieler melden Verwirrung über das Schild.

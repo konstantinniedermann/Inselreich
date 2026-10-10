@@ -84,6 +84,7 @@ import {
   hoverInfo,
   hoverPosition,
   hoverVisible,
+  cursorHintVisible,
 } from './hover';
 import { highlightShip, homeKontorPanel, lossMessages, shipHover, type ShipActions } from './ships';
 import { targetTile } from './target';
@@ -99,6 +100,7 @@ import {
   newlyConnected,
   placementHint,
   unconnectedIds,
+  type Hint,
   type ReasonCtx,
 } from './hints';
 import { resolveLogClick } from './logTarget';
@@ -884,36 +886,40 @@ function launch(
   };
   input = bindInput(canvas, state, onAction);
 
-  // Cursor-Hinweis: Schild am Zeiger mit dem Grund; Zielkachel ausserhalb der Karte = kein Hover = kein Schild
+  // Cursor-Hinweis: Schild am Zeiger mit dem Grund; Zielkachel ausserhalb der Karte = kein Hover = kein Schild;
+  // weicht der Mouse-over-Karte (R435)
   const hintEl = document.createElement('div');
   hintEl.className = 'cursor-hint';
   hintEl.hidden = true;
   document.body.appendChild(hintEl);
   let hintFor: string | null = null;
-  const updateHint = (force: boolean): void => {
+  let hintNow: Hint | null = null;
+  const updateHint = (force: boolean, cardShown: boolean): void => {
     const pos = input?.pointerClient() ?? null;
     const hover = state.hover;
     if (!hover || !pos || isModalOpen()) {
       hintEl.hidden = true;
       hintFor = null;
+      hintNow = null;
       return;
     }
     const key = hintKey(hover);
     if (force || key !== hintFor) {
       hintFor = key;
-      const h = placementHint(
+      hintNow = placementHint(
         world,
         hover.tool ?? state.tool,
         hover.x,
         hover.y,
         hover.island ?? state.activeIsland,
       );
-      hintEl.hidden = h === null;
-      if (h) {
-        hintEl.textContent = h.text;
-        hintEl.className = `cursor-hint cursor-hint--${h.tone}`;
+      if (hintNow) {
+        hintEl.textContent = hintNow.text;
+        hintEl.className = `cursor-hint cursor-hint--${hintNow.tone}`;
       }
     }
+    // Erscheint die Mouse-over-Karte, weicht das Schild (R435)
+    hintEl.hidden = !cursorHintVisible(hintNow !== null, cardShown);
     if (hintEl.hidden) return;
     const p = hintPosition(
       pos.x,
@@ -1269,8 +1275,8 @@ function launch(
       perf?.renderDone(performance.now() - t0);
       layers.frameDone();
       updateMoney(hudEl, world);
-      updateHint(frame % HUD_EVERY_FRAMES === 0);
       updateHoverCard(fx, t0);
+      updateHint(frame % HUD_EVERY_FRAMES === 0, !hoverEl.hidden);
       if (frame % HUD_EVERY_FRAMES === 0) refresh();
       frame += 1;
       rafId = requestAnimationFrame(loop);

@@ -20,9 +20,10 @@ export interface MapDot {
   y: number;
 }
 
-/** Darstellungszustand der Karte (nur UI). */
+/** Darstellungszustand der Karte (nur UI); `dpr` = Gerätepixel je CSS-Pixel der Leinwand beim Öffnen. */
 export interface MapUi {
   hover: number | null;
+  dpr: number;
 }
 
 /** Gerasterte Land-Maske einer Insel in Draufsicht, `r` Pixel je Kachel. */
@@ -50,6 +51,12 @@ export const COLORS = {
   kontor: '#ffffff',
   hover: '#ffe08a',
 } as const;
+
+/** Grössen in CSS-Pixeln, gezeichnet × dpr: Radius Schiffspunkt, Kantenlänge Kontor-Marke. */
+export const DOT_R = 3;
+export const MARK = 4;
+/** Luft zwischen Marke und Hafenpunkt (CSS-Pixel). */
+const MARK_GAP = 1;
 
 /** Karten-Pixel eines Punkts in Archipel-Kacheln. */
 export function tileToMap(l: MapLayout, tx: number, ty: number): { x: number; y: number } {
@@ -175,7 +182,7 @@ export function createSilhouetteCache(factory: RasterFactory = domRaster): Silho
   return cache;
 }
 
-/** Zeichnet die Karte: Wasser, Fahrlinien, Silhouetten, Kontor-Marken, Hover-Rahmen, Schiffspunkte. Schreibt nie in die Welt. */
+/** Zeichnet die Karte: Wasser, Fahrlinien, Silhouetten, Kontor-Marken, Hover-Rahmen, Schiffspunkte. Grössen × `ui.dpr`. Schreibt nie in die Welt. */
 export function drawSeaMap(
   ctx: CanvasRenderingContext2D,
   world: World,
@@ -183,13 +190,14 @@ export function drawSeaMap(
   cache: SilhouetteCache,
   ui: MapUi,
 ): void {
+  const px = ui.dpr;
   ctx.fillStyle = COLORS.water;
   ctx.fillRect(0, 0, l.w, l.h);
 
   // Fahrlinien: je verschiedener Route genau ein Linienzug
   const seen = new Set<string>();
   ctx.strokeStyle = COLORS.lane;
-  ctx.lineWidth = 1;
+  ctx.lineWidth = px;
   for (const ship of world.ships) {
     const r = ship.route;
     if (!r) continue;
@@ -218,19 +226,21 @@ export function drawSeaMap(
     ctx.restore();
   }
 
-  // Kontor-Marke am Anker
+  // Kontor-Marke über dem Anker, damit der Hafenpunkt sie nicht verdeckt
   ctx.fillStyle = COLORS.kontor;
+  const s = MARK * px;
+  const lift = (DOT_R + MARK_GAP) * px + s / 2; // Mitte der Marke über dem Anker
   for (const isl of world.islands) {
     if (isl.kontorId === null) continue;
     const m = tileToMap(l, isl.ox + isl.anchor.x + 0.5, isl.oy + isl.anchor.y + 0.5);
-    ctx.fillRect(m.x - 2, m.y - 2, 4, 4);
+    ctx.fillRect(m.x - s / 2, m.y - lift - s / 2, s, s);
   }
 
   // Hover: Rahmen um das Inselrechteck
   const hv = ui.hover !== null ? world.islands[ui.hover] : undefined;
   if (hv) {
     ctx.strokeStyle = COLORS.hover;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 * px;
     ctx.beginPath();
     const c = [
       tileToMap(l, hv.ox, hv.oy),
@@ -247,11 +257,11 @@ export function drawSeaMap(
   // Schiffspunkte
   ctx.fillStyle = COLORS.dot;
   ctx.strokeStyle = COLORS.dotEdge;
-  ctx.lineWidth = 1;
+  ctx.lineWidth = px;
   for (const d of mapDots(world)) {
     const m = tileToMap(l, d.x, d.y);
     ctx.beginPath();
-    ctx.arc(m.x, m.y, 3, 0, Math.PI * 2);
+    ctx.arc(m.x, m.y, DOT_R * px, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   }

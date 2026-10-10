@@ -147,9 +147,7 @@ describe('taxEffect und remedyText (AK-UX-10)', () => {
     lj.state = 'ok';
     expect(remedyText(w, lj)).toBeNull();
     setHouse(house, 1, 2, []);
-    expect(remedyText(w, house)).toBe(
-      'Nahrung fehlt: baue mehr Fischerhütte oder kaufe Nahrung am Kontor',
-    );
+    expect(remedyText(w, house)).toBe('Baue mehr Fischerhütte oder kaufe Nahrung am Kontor');
   });
 });
 
@@ -162,13 +160,13 @@ describe('remedyText, übrige Tabellenzeilen (AK-UX-10)', () => {
   it('AK-UX-10 Wohnhaus service', () => {
     const { w, house } = uxWorld();
     setHouse(house, 2, 4, ['food', 'cloth']);
-    expect(remedyText(w, house)).toBe('Kapelle fehlt: baue Kapelle (K) in Reichweite');
+    expect(remedyText(w, house)).toBe('Baue Kapelle (K) in Reichweite');
   });
   it('AK-UX-10 Wohnhaus good ohne vorhandenen Erzeuger', () => {
     const { w, house, fisher } = uxWorld();
     delete w.buildings[fisher.id];
     setHouse(house, 1, 2, []);
-    expect(remedyText(w, house)).toBe('Nahrung fehlt: baue Fischerhütte (F)');
+    expect(remedyText(w, house)).toBe('Baue Fischerhütte (F)');
   });
   it('AK-UX-10 storageFull ohne Abnehmer, Stufe braucht das Gut', () => {
     const { w, fisher } = uxWorld();
@@ -290,9 +288,7 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
     const remedy = remedyText(w, house);
     expect(remedy).not.toBeNull();
     expect(remedy).not.toContain('()');
-    expect(remedy).toBe(
-      'Gewürz fehlt: kaufe es am Kontor oder gründe ein Kontor auf einer Gewürzinsel',
-    );
+    expect(remedy).toBe('Kaufe Gewürz am Kontor oder gründe ein Kontor auf einer Gewürzinsel');
   });
   it('AK-U2-08 (f) Hebel 40, won false, 45 Bürger, sonst wie (b) → Satz aus (b)', () => {
     const w = citizenWorld();
@@ -469,5 +465,42 @@ describe('M12 E2 UI Inseln: Hilfe-Schritt Kontor auf Gewürzinsel (C.11)', () =>
     expect(nextStep(w)).toBe(C11);
     addDirect(w, 'kontor2');
     expect(nextStep(w)).not.toBe(C11);
+  });
+});
+
+describe('REL-15 Abhilfe eines Wohnhauses ohne Vorspann (R435)', () => {
+  it('kein „fehlt:“, Satz beginnt gross, über alle Diagnose-Arten', () => {
+    const texts: string[] = [];
+    const supply = uxWorld();
+    supply.house.x = supply.kx + 40; // ausserhalb jeder Versorgung
+    texts.push(remedyText(supply.w, supply.house)!);
+    const service = uxWorld();
+    setHouse(service.house, 2, 4, ['food', 'cloth']); // Siedler ohne Kapelle
+    texts.push(remedyText(service.w, service.house)!);
+    const withProducer = uxWorld();
+    setHouse(withProducer.house, 1, 2, []); // Nahrung fehlt, Fischerhütte steht
+    texts.push(remedyText(withProducer.w, withProducer.house)!);
+    const noProducer = uxWorld();
+    delete noProducer.w.buildings[noProducer.fisher.id];
+    setHouse(noProducer.house, 1, 2, []);
+    texts.push(remedyText(noProducer.w, noProducer.house)!);
+    const w = citizenWorld();
+    w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    for (const id of ['glassworks', 'quarry', 'lumberjack'] as const) addDirect(w, id);
+    const h = Object.values(w.buildings).find((b) => b.house)!;
+    setHouse(h, 4, 20, ['food', 'cloth', 'rum', 'glass']); // nur Gewürz unerfüllt
+    texts.push(remedyText(w, h)!);
+    expect(texts).toEqual([
+      'Baue einen Marktplatz (M) in der Nähe',
+      'Baue Kapelle (K) in Reichweite',
+      'Baue mehr Fischerhütte oder kaufe Nahrung am Kontor',
+      'Baue Fischerhütte (F)',
+      'Kaufe Gewürz am Kontor oder gründe ein Kontor auf einer Gewürzinsel',
+    ]);
+    for (const t of texts) {
+      expect(t).not.toContain('fehlt:');
+      expect(t.charAt(0)).toBe(t.charAt(0).toUpperCase());
+    }
   });
 });
