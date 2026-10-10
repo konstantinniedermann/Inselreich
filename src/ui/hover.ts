@@ -74,7 +74,7 @@ export function hoverPosition(
   };
 }
 
-const HOUSE_TITLES: Record<Tier, string> = {
+export const HOUSE_TITLES: Record<Tier, string> = {
   1: 'Pionierhaus',
   2: 'Siedlerhaus',
   3: 'Bürgerhaus',
