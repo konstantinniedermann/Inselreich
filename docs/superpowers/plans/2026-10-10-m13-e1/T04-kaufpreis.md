@@ -5,7 +5,7 @@ Strang sim · Worktree `.worktrees/m13-e1-sim` · Umsetzer `tech-sim-engineer` (
 **Files:**
 
 - Modify: `src/sim/trade.ts` (`buyPrice`, Aufruf in `buy`), `tests/sim/edicts.test.ts` (neuer `describe`)
-- **Mechanisch**, nur `buyPrice(x, n)` → `buyPrice(w, x, n)` ohne jede andere Änderung: `tests/sim/trade.test.ts` (Z. 88), `tests/sim/controller.ts` (Z. 181, 191–193), `tests/sim/merchantsController.ts` (Z. 141, 160, 176, 223), `tests/sim/balance-upgrade.test.ts` (Z. 23, R456: einzige Ausnahme vom leeren `balance*`-Diff), `src/ui/app.ts` (`tradeCtx`, Z. 813: `buyPrice(world, good, n)`), `src/ui/trade.ts` (Z. 105 und Z. 158: `buyPrice(world, good, n)`). Danach berührt der Sim-Strang `src/ui/` nicht mehr (Entscheid E3).
+- **Mechanisch**, nur `buyPrice(x, n)` → `buyPrice(w, x, n)` ohne jede andere Änderung: `tests/sim/trade.test.ts` (Z. 88), `tests/sim/controller.ts` (Z. 181, 191–193), `tests/sim/merchantsController.ts` (Z. 141, 160, 176, 223), `tests/sim/balance-upgrade.test.ts` (Z. 23, R456: einzige Ausnahme vom leeren `balance*`-Diff), `src/ui/app.ts` (`tradeCtx`, nach REL-17 ≈ Z. 838–840, per Symbolsuche `grep -n tradeCtx` finden: `buyPrice(world, good, n)`), `src/ui/trade.ts` (Z. 105 und Z. 158: `buyPrice(world, good, n)`). Danach berührt der Sim-Strang `src/ui/` nicht mehr (Entscheid E3).
 - Lesen: `src/sim/orders.ts` (`orderUnitReward`, `GOODS[g].order`), `src/sim/defs/crises.ts` (`BOOM_PCT`), `tests/sim/crises.test.ts` (Boom-Objekt)
 
 ## Schnittstelle

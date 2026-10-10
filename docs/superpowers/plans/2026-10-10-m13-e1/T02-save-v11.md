@@ -38,6 +38,7 @@ npx vitest run tests/sim/save-v11.test.ts tests/sim/save.test.ts tests/sim/scena
 npx tsc --noEmit; echo EXIT=$?
 make lint; echo EXIT=$?
 git diff main -- tests/sim/e0Pins.ts tests/sim/e1Pins.ts tests/sim/seePins.ts 'tests/sim/balance*.test.ts'; echo EXIT=$?   # leer
+git diff -U0 main -- tests/sim/save.test.ts   # R460 A1: genau die drei Version/Index-Zeilen (Z. 137, 400, 558); kein Wert in CHAIN_HASHES/V6_FORMS
 ```
 
 - [ ] **Schritt 3: Commit.** `feat: Save v11 mit Edikt- und Stilllegungsfeldern (M13-E1 T02)`.
