@@ -110,6 +110,11 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 - **Arbeiter** nur per Benachrichtigung abwarten, kein Polling; `run_in_background: false` als Boolean; Controller mit Blocker
   `waiting` und Fortsetzung per `SendMessage` (Handbuch 1.39).
 
+## Laufend (Session 2cfa57e0)
+
+- REL-18 Push (R472) durch `production-integrator`; parallel `studio-coach` (R471 V1/V2, fällige Retros) und `lead-design`
+  (M13-E2 Spec). Keine Umsetzer bis `zeitreserve-push` Exit 0.
+
 ## Parallele Sessions
 
 Keine aktive L0-Session ausser dieser.
