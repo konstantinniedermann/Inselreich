@@ -4910,3 +4910,22 @@ Säulenwechsel.
 Regelbezug: R445, gates.md Gate Ideen-Runde · Kosten bei Irrtum: ein kleines Bedien-Häppchen umsonst geplant.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-ideen-06 · ADR: —
+
+## R475 · 2026-10-10 · Nutzerauftrag: Studio-Deckel ausschöpfen, Leerlauf mit Design/Spec/Plan füllen
+
+Ruling: Auslegung von „jetzt laufen wieder sehr wenige Agenten gleichzeitig … falls nicht produktiv gearbeitet werden kann,
+spawne Agenten, die Brainstorming machen oder Specs/Pläne für neue Features schreiben“ als **Dauerauftrag**: (1) L0 hält
+den Studio-Deckel (≤ 8 Agenten, R424) bei grüner Limit-Ampel möglichst voll. (2) Ist Umsetzung blockiert (z. B. Push-Gate
+R464, fehlendes Gate), füllt L0 freie Plätze mit testfreier Vorarbeit: Brainstorming, Specs, Kurzdesigns, Pläne,
+Asset-Scouting, Werkzeug-Pläne — in Reihenfolge der Priorisierung aus den Ideen-Rulings. (3) Vorarbeit landet als Datei
+auf main (Spec/Plan/Vorschlag), Gates entscheidet L0 wie bisher; ohne Gate keine Umsetzung. (4) Die Regel „höchstens eine
+Ideen-Runde je Session“ (R445) bleibt; weitere Plätze gehen an Specs und Pläne bereits bewerteter Ideen. Sofort belegt:
+I-048 Zukauf-Aufschlag (Spec, mit Wirtschaftsrechnung inkl. Befund Verkaufssättigung), I-049 Sperrbestand (Kurzdesign),
+TOOL-BUENDEL-5 (Plan aus den Werkzeug-Kandidaten in `docs/beobachtungen.md`), Denkmal-Sprite (nur Scouting und
+Lizenzprüfung, Einbau nach Spec und Push), M14-Brainstorming (Richtungsvorschlag nach M13). Handbuch-Minor (STUDIO.md
+Limits und Sessiongrösse) setzt der `studio-coach` im nächsten Coach-Start um (R429).
+
+Regelbezug: Nutzerauftrag; R424, R445, R464, R429 · Kosten bei Irrtum: Vorarbeit für Ideen, die später geparkt werden
+(≈ 1 Lead-Start je Paket).
+
+Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-10 · ADR: —
