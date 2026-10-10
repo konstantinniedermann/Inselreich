@@ -5225,3 +5225,17 @@ den Plänen M13-E2 und I-048; Umsetzung erst nach Abschluss M13 (R486).
 Regelbezug: gates.md Gate Spec, R486 · Kosten bei Irrtum: eine Inselzuordnung nachjustieren.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-m14-e1 · ADR: —
+
+## R496 · 2026-10-10 · Gate Merge UI-TASTEN: OK, lokaler Merge; Release REL-19 in der nächsten Session
+
+Ruling: `feat/ui-tasten` @ `c4b6d9e2` abgenommen (T01 BEDENKEN→Fix, T02–T04 OK, Playtest T05 ZURÜCK→Fix `1b847042`
+→OK in Strg und Meta bei 1280 und 1920, Final-Review opus OK; `make check` Exit 0, `src/sim`-Diff leer; 10 von 13
+Starts). Das eingesparte T01-Delta-Review (Controller prüfte selbst) wird hingenommen, ist aber kein Muster. Merge lokal
+durch `production-integrator`. **Release REL-19** „Tasten, Aufräumen, Werkzeug“ = UI-TASTEN + AUFRAEUM-01 +
+TOOL-BUENDEL-5: Push wegen R335 (ein Push je Session, REL-18 schon gepusht) und Limit-Ampel gelb in der **nächsten
+Session** als erster Schritt, mit `make push-check` sofern TOOL-PUSH-CHECK vorher fertig ist, sonst nach Handbuch 1.45.
+Screenshots unter `.worktrees/ui-tasten/.studio/qa/ui-tasten/` vor dem Wegräumen des Worktrees sichern.
+
+Regelbezug: gates.md Gate Merge Release, R335, R476, R479, R488 · Kosten bei Irrtum: ein Revert.
+
+Entscheider: L0 · Anlass: Bericht Controller UI-TASTEN · ADR: —
