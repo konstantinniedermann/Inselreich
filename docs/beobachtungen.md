@@ -219,22 +219,27 @@ Raster) ist bereits benannt (R327).
 ### 2026-10-09 · TOOL-BUENDEL: `make studio-lint` auf main rot
 
 - **Fundort:** `make studio-lint` (`uvx ruff`, ungepinnt) meldet auf `main` 28 Ruff-Altfehler, z. B. UP017 (`timezone.utc`). Worker prüfen nur ihre eigenen Dateien. Ursprung: TOOL-BUENDEL T01–T05. Einschätzung: niedrig bis mittel; Ruff-Version pinnen und Altfehler in einem Werkzeug-Paket beheben.
+- **Erledigt (TOOL-BUENDEL-2, 177f12e9):** Ruff 0.17.0 gepinnt, 28 Altfehler behoben.
 
 ### 2026-10-09 · TOOL-BUENDEL: Testschalter in `paths.py` ohne Kommentar
 
 - **Fundort:** `tools/studio/paths.py` (Zeilen ca. 36 und 45): `STUDIO_HOME` und `STUDIO_DOCS` sind Testschalter ohne Kommentar «nur für Tests» (R378). Ursprung: TOOL-BUENDEL. Einschätzung: niedrig, Trivial-Fix (ein Kommentar je Schalter; studio-coach, da `tools/studio/`).
+- **Erledigt (TOOL-BUENDEL-2, 920539a1):** Testschalter kommentiert (T03).
 
 ### 2026-10-09 · TOOL-BUENDEL: Probe-Event `commit_rejected` im Haupt-Log
 
 - **Fundort:** `.studio/events.jsonl` im Hauptcheckout enthält ein Probe-Ereignis `commit_rejected` aus dem Echtlauf der Ablehnung. Ursprung: TOOL-BUENDEL T01. Einschätzung: niedrig; verfälscht höchstens die Zählung ablehnender Commits, beim nächsten `make studio-archive` erledigt.
+- **Bleibt (TOOL-BUENDEL-2):** bis zum nächsten `make studio-archive`; das Event-Log ist append-only, kein Eingriff. Seit T04 erzeugt ein Event ohne Session keine Schein-Session.
 
 ### 2026-10-09 · TOOL-BUENDEL: Ampelzeile mit bereinigtem Steuerungsanteil im Dashboard
 
 - **Fundort:** Dashboard (`tools/studio/dashboard/`); `tools/studio/efficiency.py` liefert `steuerung_bereinigt` bisher nur als Textzeile der Metriken (E-049). Ursprung: TOOL-BUENDEL T05 (Review R428 qa B3, E-038). Einschätzung: Nachfolgepunkt; Ampelzeile mit dem bereinigten Wert neben der Rohzeile, Paket-Kandidat für `lead-production`.
+- **Bleibt (TOOL-BUENDEL-2):** Ampel erst nach Bewertung E-049 (sonst Vorfälle aus einer unbewerteten Messgrösse über `effort.py`). Trigger: E-049 übernommen.
 
 ### 2026-10-09 · TOOL-BUENDEL: `metrics.py --session latest` schreibt ins Hauptcheckout
 
 - **Fundort:** `tools/studio/metrics.py --session latest` schreibt nach `docs/studio/metriken/` des Hauptcheckouts, auch wenn es aus einem Worktree läuft. Ursprung: TOOL-BUENDEL T05. Einschätzung: niedrig bis mittel; Zielpfad aus dem Worktree ableiten (studio-coach, da `tools/studio/`).
+- **Erledigt (TOOL-BUENDEL-2, aebfc1ee):** Schreibziel über `paths.worktree_docs_dir` (T03).
 
 ### 2026-10-09 · REL-14 (R430): Dienst-Mangel «fehlt in Reichweite» in der Aufstiegsliste
 
@@ -254,26 +259,32 @@ Raster) ist bereits benannt (R327).
 ### 2026-10-09 · R429-Risiko: `zeitreserve-push` verwirft die Messung bei Last > 4
 
 - **Fundort:** `make zeitreserve-push` / `make check`. Ist die Last beim Start von `make check` grösser als 4, verwirft `zeitreserve-push` die Messung (Exit 2 «nicht belastbar»); `make check` muss dann neu laufen. Ursprung: R429. Einschätzung: bekanntes Risiko, kein Fehler; vor dem Push `make messfenster` prüfen.
+- **Erledigt (TOOL-BUENDEL-2, aa7bbf3d):** `--push` bewertet nur `loadStart` (T05); den Handbuch-Schritt „warten, bis die Last ≤ 4“ streicht der studio-coach (Index E6).
 
 ### 2026-10-09 · TOOL-BUENDEL: Git-Hook blockiert den Commit ohne `python3`
 
 - **Fundort:** `tools/githooks/pre-commit:7`: fehlt `python3` im PATH, endet der Hook mit Exit 127 und blockiert den Commit, obwohl alle anderen Fehler den Commit zulassen. Ursprung: TOOL-BUENDEL T01 (Final-Review). Einschätzung: niedrig; vor dem `exec` mit `command -v python3` prüfen und sonst mit Hinweis `exit 0`.
+- **Erledigt (TOOL-BUENDEL-2, b91db729):** Hook lässt ohne `python3` zu (T04).
 
 ### 2026-10-09 · TOOL-BUENDEL: Schein-Session «manual» im Dashboard
 
 - **Fundort:** `tools/studio/precommit.py:68`: ohne `CLAUDE_CODE_SESSION_ID` setzt `record` die session_id «manual» und legt im Dashboard eine Schein-Session an. Ursprung: TOOL-BUENDEL T01 (Final-Review). Einschätzung: niedrig; Ereignis ohne Session führen oder Dashboard-Modell «manual» ausblenden (studio-coach).
+- **Erledigt (TOOL-BUENDEL-2, a57ca780):** `model.MANUAL_SESSION` (T04).
 
 ### 2026-10-09 · TOOL-BUENDEL: Testlücke bei `ps`-Fehler in der Testsperre
 
 - **Fundort:** `tests/tools/testlock.test.ts`: kein Test belegt, dass ein `ps`-Fehler (`TESTLOCK_PS_FIXTURE` zeigt auf eine fehlende Datei) nichts ändert. Ursprung: TOOL-BUENDEL T02 (Final-Review). Einschätzung: niedrig; ein Test ergänzt die Fehlerrichtung ab.
+- **Erledigt (TOOL-BUENDEL-2, 82f00bc8):** Test für `ps`-Fehler (T05).
 
 ### 2026-10-09 · Retro c64c0775: Ampelzeile «Persona-Starts» zählt nur `general-purpose`
 
 - **Fundort:** `tools/studio/efficiency.py` (Ampelzeile Persona-Starts auf opus): typisierte Persona-Starts fehlen in der Zählung. Ursprung: Kurz-Retro Session c64c0775 (ausserhalb Scope). Einschätzung: niedrig; mit der Ampelzeile E-038 in TOOL-AKTIVIERUNG oder TOOL-E049-PHASE mitnehmen.
+- **Bleibt (TOOL-BUENDEL-2):** an studio-coach; Definition in `verbesserung.md` (Ruling nötig), typisierte Starts über der Frontmatter sind mit Kopfzeile erlaubt. Vorschlag: Ampel aus `model_guard`-Events zählen. Trigger: nächste Retro.
 
 ### 2026-10-10 · TOOL-AKTIVIERUNG: haiku-Zeile der Modelltabelle per Kopfzeile nicht erfüllbar
 
 - **Fundort:** `tools/studio/modelguard.py` (Regex `\(([^)]*)\)`): die Einsatz-Bezeichnung der haiku-Zeile in `STUDIO.md` enthält selbst Klammern; der Parser schneidet an der ersten schliessenden Klammer ab. Ursprung: TOOL-AKTIVIERUNG (studio-coach). Einschätzung: niedrig; wirkt nicht, weil für `haiku` nie eine Kopfzeile erzwungen wird. Tabellenzeile ohne Klammern formulieren oder Parser anpassen.
+- **Erledigt (TOOL-BUENDEL-2, 9bd39b04):** Parser liest bis zur letzten Klammer (T04).
 
 ### 2026-10-10 · Dienst-Mangel «fehlt in Reichweite» bleibt (abgehakt, R435)
 
@@ -310,3 +321,15 @@ Raster) ist bereits benannt (R327).
 ### 2026-10-10 · REL-15 (R440): QA-Artefakte ohne Grösse im Namen, getImageData-Hinweis
 
 - **Fundort:** `.studio/qa/REL-15/kandidat/b6-*.png` (1920×1080 überschreibt 1280×720); Konsole beim Seekarten-Lauf „Multiple readback operations using getImageData“ (vermutlich `seekarte.mjs`). Ursprung: Release-Check REL-15. Einschätzung: niedrig; Namensschema `<fall>-<breite>x<höhe>` im Playtester-Briefing, `willReadFrequently` im QA-Skript.
+
+### 2026-10-10 · TOOL-BUENDEL-2: Hook-Zeile für Python < 3.11 ohne eigenen Test
+
+- **Fundort:** `tools/githooks/pre-commit:8`, `tools/studio/precommit.py` (`PYTHON_MIN`): das stille Zulassen bei Python < 3.11 hat keinen eigenen Test. Ursprung: TOOL-BUENDEL-2. Einschätzung: niedrig; Test mit simuliertem älterem Python ergänzen.
+
+### 2026-10-10 · TOOL-BUENDEL-2: `efficiency.scan` verliert ein `tool_result` nach `since`
+
+- **Fundort:** `tools/studio/efficiency.py` `scan(path, since)`: liegt das `tool_use` vor `since` und das zugehörige `tool_result` danach, fehlt das Ergebnis in der Leseauswertung. Ursprung: TOOL-BUENDEL-2 (T03). Einschätzung: niedrig; Zuordnung über die `tool_use`-Id auch für Einträge vor `since` führen.
+
+### 2026-10-10 · TOOL-BUENDEL-2: Metrikdatei bei rotem T03-Lauf im Hauptrepo statt im Worktree
+
+- **Fundort:** `tools/studio/metrics.py` / `paths.py`: bei einem roten Lauf von T03 wurde eine Metrikdatei im Hauptrepo (`docs/studio/metriken/`) statt im Worktree geschrieben. Ursprung: TOOL-BUENDEL-2 (T03). Einschätzung: niedrig; Zielpfad nach `aebfc1ee` (`worktree_docs_dir`) prüfen, Datei im Hauptrepo nicht committen.
