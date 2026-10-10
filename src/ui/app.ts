@@ -53,6 +53,7 @@ import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../
 import { cameraBounds, islandView } from '../render/archipel';
 import { activeIsland, islandRects } from './activeIsland';
 import { jumpTarget, nextIsland } from './islandJump';
+import { cutOffIds, newlyCut, runProblemJump, type ProblemCursor } from './problems';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
 import { createIslandLayers, idleSchedule } from './islandLayers';
@@ -89,7 +90,7 @@ import {
 } from './hover';
 import { highlightShip, homeKontorPanel, lossMessages, shipHover, type ShipActions } from './ships';
 import { targetTile } from './target';
-import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
+import { bindInput, hintKey, strokeEndNotice, type InputAction, type InputBinding } from './input';
 import { clearForest, plantForest } from '../sim/forest';
 import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../sim/tax';
 import { lockedTierFor } from './taxView';
@@ -109,7 +110,7 @@ import { renderEventLog, updateEventLog } from './eventLogView';
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
 import { crisisLogEntries, crisisLogVisible, pushLog, type LogEntry } from './crisisLog';
-import { bindMessages, closeClosableToast, showMessage } from './messages';
+import { bindMessages, closeClosableToast, replaceMessage, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
 import { parseDevParams } from './devParams';
@@ -425,6 +426,26 @@ function launch(
     centerOn(state.cam, t.x, t.y, clampView(), bounds);
     refresh();
   };
+
+  /** Problem-Sprung (I-042): Cursor nur in der Closure, nie im Spielstand. */
+  let problemCursor: ProblemCursor | null = null;
+  const jumpToProblem = (dir: 1 | -1): void =>
+    runProblemJump(
+      {
+        world,
+        activeIsland: () => state.activeIsland,
+        getCursor: () => problemCursor,
+        setCursor: (c) => {
+          problemCursor = c;
+        },
+        cancelPointerAction: () => input?.cancelPointerAction(),
+        centerOn: (x, y) => centerOn(state.cam, x, y, clampView(), bounds),
+        openPanel: (id) => setPanel({ kind: 'inspect', id }), // E1: kein selectTool
+        refresh,
+        message: (t) => replaceMessage('problem', t),
+      },
+      dir,
+    );
 
   const actions: HudActions = {
     jumpToIsland,
@@ -750,6 +771,8 @@ function launch(
   // Geld-Fehler beim Strassen-Ziehen nur einmal pro Zug melden; jede Aktion ausserhalb eines Zugs setzt zurück
   let dragMoneyToastShown = false;
   let dragForestFailureShown = false;
+  /** Abriss-Zug (I-041): Anbindung vor dem Zug, besuchte und entfernte Wegkacheln. */
+  let stroke: { before: Set<number>; tiles: number; removed: number; island: number } | null = null;
   const forestCost = (tool: { kind: 'clearForest' | 'plantForest' }): Cost =>
     tool.kind === 'clearForest' ? CLEAR_FOREST_COST : PLANT_FOREST_COST;
   const showRoadFailure = (
@@ -790,7 +813,11 @@ function launch(
       jumpToIsland(HOME);
     } else if (h.kind === 'islandCycle') {
       jumpToIsland(nextIsland(state.activeIsland, world.islands.length));
-    } else {
+    } else if (h.kind === 'problemNext') {
+      jumpToProblem(1);
+    } else if (h.kind === 'problemPrev') {
+      jumpToProblem(-1);
+    } else if (h.kind === 'pause') {
       setSpeed(afterPause(state.speed, lastSpeed).speed);
     }
     refresh();
@@ -842,6 +869,12 @@ function launch(
     if (a.type === 'dragEnd') {
       dragMoneyToastShown = false;
       dragForestFailureShown = false;
+      if (stroke !== null) {
+        const n = strokeEndNotice(newlyCut(stroke.before, world), stroke.removed, stroke.tiles);
+        if (n?.kind === 'warn') showMessage(n.text, 'warn');
+        else if (n?.kind === 'error') showRoadFailure(n.reason, false, stroke.island);
+        stroke = null;
+      }
       return;
     }
     if (!a.dragging) {
@@ -890,6 +923,16 @@ function launch(
         // Ziehen: eine Meldung je Zug mit dem ersten Grund (Spec K5)
         dragForestFailureShown = true;
         showError(friendlyReason(world, r.reason, { cost: forestCost(tool), island: a.island }));
+      }
+    } else if (tool.kind === 'demolish' && a.dragging) {
+      // Abriss-Zug: je Kachel nur ein Weg; Gebäude und Boden ohne Weg still überspringen (AK-R17-13)
+      stroke ??= { before: cutOffIds(world), tiles: 0, removed: 0, island: a.island };
+      stroke.tiles++;
+      if (tile?.buildingId == null && tile?.road === true) {
+        if (removeRoad(world, a.x, a.y, a.island).ok) {
+          stroke.removed++;
+          sound.play('demolish');
+        }
       }
     } else if (tile?.buildingId != null) {
       const r = demolishBuilding(tile.buildingId);

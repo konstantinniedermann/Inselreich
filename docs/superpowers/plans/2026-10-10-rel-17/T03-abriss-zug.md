@@ -1,6 +1,6 @@
 # T03 · Abriss-Zug und Trenn-Warnung
 
-Strang UI · Worktree `.worktrees/rel-17` · Umsetzer `tech-ui-engineer` (sonnet, Fortsetzung per SendMessage) · AK-R17-12…16 (`ak.md`) · blocked-by T01, T02 (Review OK; T02 teilt `app.ts`) · Grösse M (≈ 25 Tools)
+Strang UI · Worktree `.worktrees/rel-17` · Umsetzer `tech-ui-engineer` (sonnet, Fortsetzung per SendMessage) · AK-R17-12…16 (`ak.md`) · blocked-by T01, T02 (Review OK; T02 teilt `app.ts`). Zeilenangaben unten stammen aus der Planzeit (vor REL-16-Merge): Stellen per grep neu finden · Grösse M (≈ 25 Tools)
 
 **Files:**
 
@@ -43,7 +43,7 @@ npx vitest run tests/ui/input.test.ts; echo EXIT=$?   # rot: demolish false, Hel
 - In einem Abriss-Zug meldet **jede** Kachel `dragging: true` — Maus-Erstkachel (Z. 307), Touch-Erstkachel (Z. 365), Touch-Tippen in `endDrag` (Z. 429–435) und die Folgekacheln. Umsetzung: kleiner lokaler Helfer `strokeTile(island, x, y, dragging)` → `onAction({ …, dragging: d.demolish || dragging })`. Weg, Roden, Aufforsten bleiben byte-gleich im Verhalten.
 - Folgekacheln (Z. 368): `pickTarget(state.world, state.cam, strokePickTool(state.tool), p.sx, p.sy)`; Erstkachel per Maus ebenfalls mit `strokePickTool` (ohne Gebäude-Treffer ist das dieselbe Bodenkachel).
 - `updateHover`: läuft ein Abriss-Zug (`drag?.demolish && drag.road && !drag.panning`), Pick mit `strokePickTool` und `ok = tileAt(...)?.road === true`; sonst unverändert.
-- `cancelPointerAction` sendet schon `dragEnd` für `drag.road` (Z. 235–238): gilt damit auch für `Esc`, Rechtsklick (`cancel` → `selectTool` → `cancelPointerAction`) und `.` (T02). Nichts ändern, im Review bestätigen.
+- `cancelPointerAction` sendet schon `dragEnd` für `drag.road` (per grep): gilt damit auch für `pointercancel` (`onPointerCancel`), `Esc`, Rechtsklick (`cancel` → `selectTool` → `cancelPointerAction`) und `.` (T02). **Lücke `blur` (B3):** `onBlur` leert heute nur `keys`/`spaceDown`; ein laufender Zug bliebe offen und `stroke` in `app.ts` hinge. Deshalb in `onBlur` zusätzlich `if (drag !== null) cancelPointerAction();` (Weg/Roden/Aufforsten senden dann ebenfalls `dragEnd`, harmlos: setzt nur `dragMoneyToastShown` zurück). Test zuerst (rot): Block `REL-17 Abriss-Zug`, `it('pointercancel und blur beenden den Zug mit dragEnd')` — falls `bindInput` ohne DOM nicht startbar ist, als Quelltext-Test auf `input.ts` (`onBlur` enthält `cancelPointerAction`, `onPointerCancel` ebenso) mit Begründung im Testkommentar; im Review bestätigen.
 
 ## Teil C · Wirkung in `app.ts` (AK-R17-13, 15)
 
@@ -64,6 +64,8 @@ Erstattung und Konnektivität bleiben in `removeRoad` (Sim, unverändert). `refr
 
 **Quelltext-Test (rot vorher)** wie AK-R16-06 in `tests/ui/input.test.ts`: `it('AK-R17-13/15 Abriss-Zug in app.ts (Quelltext)')` — `app.ts` enthält `strokeEndNotice(newlyCut(stroke.before, world)` im `dragEnd`-Zweig und `stroke = null` danach; im Zweig `tool.kind === 'demolish' && a.dragging` steht `removeRoad` und kein `demolishBuilding`. Testkommentar wie dort.
 
+**Rückfall (B2):** Lässt sich „Weg-Zug + `.`“ oder „Abriss-Zug + `.`“ im Browser nicht herstellen, ist der Rückfall auf den Quelltext-/Vitest-Beleg nur als begründete Ausnahme im Playtest-Report zulässig (T05 Schritt 8 bleibt verbindlich).
+
 ## Prüfbefehle
 
 ```bash
@@ -78,4 +80,4 @@ make lint; echo EXIT=$?
 
 ## Bericht
 
-Je AK Testname und Rot-Ausgabe; Liste der geänderten Stellen in `input.ts` mit Zeilen; Bestätigung, dass `road`/`clearForest`/`plantForest` bei `demolish === false` denselben `dragging`-Wert wie vorher senden; Exit-Codes; `git diff --stat main...HEAD`. AK-R17-13, 16 belegt erst T05 im Browser.
+Je AK Testname und Rot-Ausgabe; Liste der geänderten Stellen in `input.ts` mit Zeilen; Bestätigung, dass `pointercancel` und `blur` den Zug mit `dragEnd` beenden (kein hängender `stroke`), dass `road`/`clearForest`/`plantForest` bei `demolish === false` denselben `dragging`-Wert wie vorher senden; Exit-Codes; `git diff --stat main...HEAD`. AK-R17-13, 16 belegt erst T05 im Browser.

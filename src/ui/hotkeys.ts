@@ -34,6 +34,10 @@ export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
 export const ISLAND_HOME_KEY = '0';
 export const ISLAND_CYCLE_KEY = '9';
 
+/** Problem-Sprung (I-042, REL-17): `.` nächstes, `,` voriges Problem. */
+export const PROBLEM_NEXT_KEY = '.';
+export const PROBLEM_PREV_KEY = ',';
+
 export const SPEED_KEYS: Partial<Record<string, 1 | 2 | 4>> = { '1': 1, '2': 2, '3': 4 };
 
 export type HotkeyAction =
@@ -43,7 +47,9 @@ export type HotkeyAction =
   | { kind: 'upgrade' }
   | { kind: 'help' }
   | { kind: 'islandHome' }
-  | { kind: 'islandCycle' };
+  | { kind: 'islandCycle' }
+  | { kind: 'problemNext' }
+  | { kind: 'problemPrev' };
 
 /**
  * Wirkung einer Taste, oder `null` (Modifier gedrückt, Formularfeld, Pan-Taste, Esc, unbekannt).
@@ -57,6 +63,8 @@ export function hotkeyAction(
 ): HotkeyAction | null {
   if (inFormField || mods.ctrl || mods.meta || mods.alt) return null;
   const k = key.toLowerCase();
+  if (k === PROBLEM_NEXT_KEY) return { kind: 'problemNext' };
+  if (k === PROBLEM_PREV_KEY) return { kind: 'problemPrev' };
   // Umschalt+U = Ausbau; Gross-U ohne Umschalt (Feststelltaste) bleibt Schule (Spec C-2)
   if (k === 'u' && mods.shift === true) return { kind: 'upgrade' };
   // Inselsprung nur mit der Seefahrt, sonst stumm (M12 E2)
@@ -160,6 +168,8 @@ export function hotkeyList(world: World): { key: string; label: string }[] {
     ...speeds,
     { key: 'P', label: 'Pause / weiter' },
     { key: '?', label: 'Hilfe' },
+    { key: PROBLEM_NEXT_KEY, label: 'Nächstes Problem anspringen' },
+    { key: PROBLEM_PREV_KEY, label: 'Voriges Problem anspringen' },
     ...upgrade,
     ...islands,
     ...NAV_KEYS,

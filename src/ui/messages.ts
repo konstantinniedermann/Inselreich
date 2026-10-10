@@ -99,6 +99,19 @@ export function showMessage(
   if (text === lastText && now - lastAt < DEDUPE_MS) return;
   lastText = text;
   lastAt = now;
+  appendToast(box, text, kind, sticky, closable, action);
+}
+
+/** Toast aufbauen und anhängen (gemeinsam für `showMessage` und `replaceMessage`); */
+function appendToast(
+  parent: HTMLElement,
+  text: string,
+  kind: 'info' | 'error' | 'warn',
+  sticky: boolean,
+  closable: boolean,
+  action?: { label: string; onClick: () => void },
+  slot?: string,
+): void {
   const toast = document.createElement('div');
   toast.className = `toast ${kind}`;
   toast.append(...decorateNames(text));
@@ -120,14 +133,26 @@ export function showMessage(
     toast.classList.add('toast--closable');
     toast.addEventListener('click', () => toast.remove());
   }
-  box.appendChild(toast);
+  if (slot !== undefined) toast.dataset.slot = slot;
+  parent.appendChild(toast);
   if (!sticky) setTimeout(() => toast.remove(), 3000);
-  if (box.children.length > MAX_TOASTS) {
-    const oldest = Array.from(box.children).find(
+  if (parent.children.length > MAX_TOASTS) {
+    const oldest = Array.from(parent.children).find(
       (c) => c !== toast && !(c as HTMLElement).dataset.sticky,
     );
     oldest?.remove();
   }
+}
+
+/** Meldung mit festem Platz: ersetzt den Toast desselben `slot` (kein Dedupe; R449, I-042). */
+export function replaceMessage(
+  slot: string,
+  text: string,
+  kind: 'info' | 'error' | 'warn' = 'info',
+): void {
+  if (!box) return;
+  box.querySelector(`[data-slot="${slot}"]`)?.remove();
+  appendToast(box, text, kind, false, false, undefined, slot);
 }
 
 /** Entfernt den jüngsten schliessbaren Toast; wahr, wenn einer da war (Esc schliesst zuerst ihn). */

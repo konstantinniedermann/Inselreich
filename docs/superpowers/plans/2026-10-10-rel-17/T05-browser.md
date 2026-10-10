@@ -1,6 +1,6 @@
 # T05 · Browser-Check am Kandidaten (Release-Check REL-17)
 
-Prüfer `qa-playtester` (sonnet), gestartet im `lead-qa`-Start „Gate Merge + Release-Check“ (R429 V3, Entscheid E9) · Kandidat `.worktrees/integrate` (nur lesen) · AK-R17-10, 11, 13–16, 18 (`ak.md`) · blocked-by T04 und Kandidat gebaut (`make check` grün)
+Prüfer `qa-playtester` (sonnet), gestartet im `lead-qa`-Start „Gate Merge + Release-Check“ (R429 V3, Entscheid E9) · Kandidat `.worktrees/integrate` (nur lesen) · AK-R17-10 (Wirkung), 11, 12, 13–16, 18 (`ak.md`; 12 und 14 über die Schritte 6 und 7) · blocked-by T04 und Kandidat gebaut (`make check` grün)
 
 **Ziel:** `.`/`,` führen der Reihe nach zu jedem Problem und öffnen das Panel, ohne das Werkzeug zu wechseln; der Abriss-Zug nimmt nur Wege und warnt bei Trennung. Kein Code ändern; Befunde an den Auftraggeber.
 
@@ -19,7 +19,7 @@ DOM-Sonden: Meldung `document.querySelectorAll('.toast[data-slot="problem"]')` (
 - [ ] **Schritt 5: stumm.** Menü offen (Modal) → `.` ohne Wirkung; `Strg+.` ohne Wirkung.
 - [ ] **Schritt 6: Abriss-Zug (AK-R17-13, 16).** Gerader Weg von ≥ 6 Kacheln, in der Mitte ein Gebäude direkt auf der Zuglinie (oder Zuglinie quer durch einen Gebäude-Footprint). Taste `X`, Druck auf einer Wegkachel, ziehen über die ganze Linie. Erwartet: alle Wegkacheln weg, Gebäude steht, Geld + 2 je Kachel (vorher/nachher berichten), keine Sammelmeldung; während des Zugs zeigt die Vorschau die Bodenkachel (Screenshot mitten im Zug `s6-zug.png`). Dann Druck auf eine Gebäudehülle: nur dieses Gebäude fällt (Meldung „… abgerissen · zurück …“), kein Weg daneben (AK-R17-14). Klick auf leeres Gras: Fehler „Hier liegt kein Weg“ (E5). Leertaste halten + Ziehen: schwenkt, reisst nichts ab.
 - [ ] **Schritt 7: Trenn-Warnung (AK-R17-15).** Angebundene Weberei mit einem Weg zum Kontor: einzelne Wegkachel per Klick abreissen → genau eine Meldung „Abriss trennt 1 Gebäude vom Kontor“; danach `.` → „Problem 1 von m: Weberei nicht angebunden“. Zweiter Fall im Zug über zwei Abzweige → „Abriss trennt 2 Gebäude vom Kontor“. `Esc` mitten im Zug: Zug endet, Abgerissenes bleibt, Warnung erscheint. Screenshot `s7-warnung.png`.
-- [ ] **Schritt 8: `.` mitten im Zug (E6, Review Focus 5).** Weg-Werkzeug, Zug beginnen, Maustaste halten, `.` drücken, Maus weiterbewegen und loslassen. Erwartet: kein Weg zwischen alter und neuer Kameraposition; dasselbe mit dem Abriss-Zug (keine Wege entlang der Sprunglinie entfernt). Geld vorher/nachher.
+- [ ] **Schritt 8: `.` mitten im Zug (E6, Review Focus 5).** Weg-Werkzeug, Zug beginnen, Maustaste halten, `.` drücken, Maus weiterbewegen und loslassen. **Verbindlich beide Fälle, je einzeln berichten:** (a) „Weg-Zug + `.`“: kein Weg zwischen alter und neuer Kameraposition; (b) „Abriss-Zug + `.`“: keine Wege entlang der Sprunglinie entfernt, Zug beendet, Trenn-Auswertung erschienen, falls getrennt. Geld vorher/nachher. Rückfall auf Quelltext nur als begründete Ausnahme im Report (B2, R453). Zusätzlich (B3): `Alt+Tab`/Fokusverlust (CDP `Page.setWebLifecycleState` bzw. `window.dispatchEvent(new Event("blur"))`) mitten im Abriss-Zug beendet ihn, danach reisst ein Mausklick nichts nach.
 - [ ] **Schritt 9: Konsole (AK-R17-18).** Keine Fehler oder Warnungen aus `src/` im ganzen Lauf.
 
 ## Bericht (Playtest-Report)

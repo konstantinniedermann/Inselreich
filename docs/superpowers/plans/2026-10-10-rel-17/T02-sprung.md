@@ -1,10 +1,10 @@
 # T02 · Tasten `.`/`,`, Sprung und ersetzende Meldung
 
-Strang UI · Worktree `.worktrees/rel-17` · Umsetzer `tech-ui-engineer` (sonnet, Fortsetzung per SendMessage) · AK-R17-08…11 (`ak.md`) · blocked-by T01 (Review OK) · Grösse S (≈ 20 Tools)
+Strang UI · Worktree `.worktrees/rel-17` · Umsetzer `tech-ui-engineer` (sonnet, Fortsetzung per SendMessage) · AK-R17-08, 09, 11 und die Verdrahtung von AK-R17-10 (`ak.md`) · blocked-by T01 (Review OK) · Grösse S (≈ 20 Tools)
 
 **Files:**
 
-- Modify: `src/ui/hotkeys.ts` (`HotkeyAction`, `hotkeyAction`, `hotkeyList`), `tests/ui/hotkeys.test.ts`, `src/ui/messages.ts` (neue Funktion `replaceMessage`), `src/ui/app.ts` (Importe, neuer `jumpToProblem` neben `jumpToIsland` Z. 420–426, `onHotkey` Z. 771–791)
+- Modify: `src/ui/hotkeys.ts` (`HotkeyAction`, `hotkeyAction`, `hotkeyList`), `tests/ui/hotkeys.test.ts`, `src/ui/messages.ts` (neue Funktion `replaceMessage`), `src/ui/app.ts` (Importe, neuer `jumpToProblem` neben `jumpToIsland`, `onHotkey`; Zeilen per grep, sie haben sich durch REL-16 verschoben)
 - Nicht ändern: `src/ui/input.ts` (`e.repeat` wird schon in Z. 505 ignoriert), `src/ui/problems.ts` (T01), `dispose` in `app.ts` (REL-16), `src/ui/hints.ts`
 
 ## Teil A · Tasten (AK-R17-08, 09)
@@ -39,34 +39,37 @@ export function replaceMessage(
 
 Ablauf: `if (!box) return;` → `box.querySelector('[data-slot="' + slot + '"]')?.remove()` → Toast wie `showMessage` (nicht sticky, 3 s) mit `toast.dataset.slot = slot` → MAX_TOASTS-Regel wie bisher. `lastText`/`lastAt` nicht anfassen. Kein Vitest möglich (`tests/ui/` ohne DOM): Beleg im Browser (T05 Schritt 2) und im Review; die bestehenden Aufrufer von `showMessage` bleiben byte-gleich im Verhalten.
 
-## Teil C · Sprung in `app.ts` (AK-R17-10, Entscheide E1, E3, E6)
+## Teil C · Verdrahtung in `app.ts` (AK-R17-10, Entscheide E1, E3, E6)
 
-Neben `jumpToIsland`:
+Der Ablauf ist `runProblemJump` (T01, Vitest über Fakes). `app.ts` verdrahtet nur. Neben `jumpToIsland` (per grep `const jumpToIsland` finden):
 
 ```ts
 /** Problem-Sprung (I-042): Cursor nur in der Closure, nie im Spielstand. */
 let problemCursor: ProblemCursor | null = null;
-const jumpToProblem = (dir: 1 | -1): void => {
-  input?.cancelPointerAction(); // E6: ein Weg- oder Abriss-Zug endet sauber (dragEnd)
-  const step = problemStep(world, problemCursor, state.activeIsland, dir);
-  if (step === null) {
-    problemCursor = null;
-    replaceMessage('problem', NO_PROBLEM_TEXT);
-    return; // Kamera und Panel bleiben
-  }
-  centerOn(state.cam, step.problem.at.x, step.problem.at.y, clampView(), bounds);
-  setPanel({ kind: 'inspect', id: step.problem.id }); // E1: Werkzeug bleibt, kein selectTool
-  refresh(); // aktive Insel folgt der Kamera
-  problemCursor = { ...step.cursor, landed: state.activeIsland };
-  replaceMessage('problem', problemMessage(step.index, step.count, step.problem));
-};
+const jumpToProblem = (dir: 1 | -1): void =>
+  runProblemJump(
+    {
+      world,
+      activeIsland: () => state.activeIsland,
+      getCursor: () => problemCursor,
+      setCursor: (c) => {
+        problemCursor = c;
+      },
+      cancelPointerAction: () => input?.cancelPointerAction(),
+      centerOn: (x, y) => centerOn(state.cam, x, y, clampView(), bounds),
+      openPanel: (id) => setPanel({ kind: 'inspect', id }), // E1: kein selectTool
+      refresh,
+      message: (t) => replaceMessage('problem', t),
+    },
+    dir,
+  );
 ```
 
-`landed` ist die **nach** `refresh()` berechnete aktive Insel (nicht `problem.island`): klemmt `centerOn` am Rand, bleibt der Umlauf trotzdem stabil.
+(Namen `world`, `input`, `clampView`, `bounds` wie in `jumpToIsland`; Typen nach dem Quelltext anpassen, ohne die Reihenfolge im Ablauf zu berühren.)
 
-`onHotkey`: zwei Zweige `problemNext` → `jumpToProblem(1)`, `problemPrev` → `jumpToProblem(-1)` **vor** dem bisherigen `else`; das `else` (Pause) wird zu `else if (h.kind === 'pause')`, damit eine neue Aktion nie still als Pause endet. Das abschliessende `refresh()` in `onHotkey` bleibt (doppeltes `refresh` ist harmlos, ≈ 1 Aufruf je Tastendruck).
+`onHotkey` (per grep `const onHotkey`): zwei Zweige `problemNext` → `jumpToProblem(1)`, `problemPrev` → `jumpToProblem(-1)` **vor** dem bisherigen `else`; das `else` (Pause) wird zu `else if (h.kind === 'pause')`, damit eine neue Aktion nie still als Pause endet. Das abschliessende `refresh()` in `onHotkey` bleibt.
 
-**Quelltext-Test (rot vorher)**, Präzedenz AK-R16-06 (REL-16, `readFileSync` auf `app.ts`, typisiert in `tests/ui/node-shim.d.ts`): Ergänzung in `tests/ui/hotkeys.test.ts`, `it('AK-R17-10 jumpToProblem: Reihenfolge und kein Werkzeugwechsel (Quelltext)')` — Block ab `const jumpToProblem` bis zum ersten `\n  };` herausschneiden; erwartet `indexOf('cancelPointerAction') < indexOf('centerOn') < indexOf('setPanel') < indexOf('refresh()') < indexOf('landed: state.activeIsland')`, `replaceMessage` zweimal, kein `selectTool(`. Testkommentar: `app.ts` braucht DOM und ist in Vitest nicht startbar. Wirkung im Spiel belegt T05 Schritte 1–5.
+**Kleiner Quelltext-Test** (rot vorher, `readFileSync` auf `app.ts`, typisiert in `tests/ui/node-shim.d.ts`, Präzedenz AK-R16-06) in `tests/ui/hotkeys.test.ts`: `app.ts` enthält `runProblemJump(` und `replaceMessage('problem'`; der Block ab `const jumpToProblem` bis zum ersten `\n    dir,\n  );` enthält kein `selectTool(`. Die Reihenfolge selbst prüft T01, nicht dieser Test.
 
 ## Prüfbefehle
 
@@ -84,4 +87,4 @@ Kurzer Sichtlauf ist **nicht** Teil des Tasks (Browser erst in T05).
 
 ## Bericht
 
-Je AK Testname und Rot-Ausgabe, Diff von AK-U1-03 (eine Zeile), Exit-Codes, `git diff --stat main...HEAD`; Hinweis, welche AK erst T05 belegt (10, 11).
+Je AK Testname und Rot-Ausgabe, Diff von AK-U1-03 (eine Zeile), Exit-Codes, `git diff --stat main...HEAD`; Hinweis: AK-R17-10 belegt T01 (`runProblemJump`), die Wirkung im Spiel und AK-R17-11 belegt T05.

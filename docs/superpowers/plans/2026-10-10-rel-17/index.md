@@ -10,7 +10,7 @@
 
 Prozessstufe leicht · Meilenstein REL-17 · Paket UI-PROBLEM-SPRUNG · Planbasis `main` @ `9a3483a1` · Format E-010: dieser Index, [ak.md](ak.md) (AK-R17-01…20 mit Zuordnung zum Kurzdesign) und je Task eine Datei ≤ 10 KB. Arbeiter und Reviewer lesen nur ihre Task-Datei und die dort genannten AK aus `ak.md`.
 
-**blocked-by: REL-16-Merge.** Die Umsetzung startet erst, wenn REL-16 auf `main` liegt (R449, Dateimatrix E-019); der Worktree zweigt danach von `main` ab.
+**REL-16 ist auf `main` gemergt (`915d87c5`)**; der Worktree `.worktrees/rel-17` (Branch `feat/rel-17`) zweigt davon ab. Planbasis `9a3483a1` ist damit überholt, alle Zeilenangaben in den Task-Dateien sind per grep neu zu finden (R453 B4).
 
 ## Global Constraints
 
@@ -25,13 +25,13 @@ Prozessstufe leicht · Meilenstein REL-17 · Paket UI-PROBLEM-SPRUNG · Planbasi
 
 1. **Problem-Liste (A, T01):** `problemList(world, anchor)` sammelt Probleme in vier Klassen (Kurzdesign „Problem-Klassen“), sortiert nach Klasse, Anker-Insel zuerst, übrige Inseln nach Index, Abstand des Sprungpunkts zu `jumpTarget(world, insel)`, Gebäude-ID. `problemStep(world, cursor, activeIsland, dir)` liefert das nächste/vorige Problem samt „n von m“ und neuem Cursor; `cutOffIds`/`newlyCut` liefern die Menge „nicht angebunden“ für Klasse 1 und die Trenn-Warnung (eine Quelle).
 2. **Anker gegen Pendeln (Entscheid E3):** „Aktive Insel zuerst“ mit der Insel zum Tastendruck würde nach jedem Inselwechsel neu sortieren und zwischen zwei Inseln pendeln. Der Cursor merkt die Anker-Insel des Umlaufs und die Insel nach dem Sprung (`landed`); weicht die aktive Insel beim nächsten Druck ab (Spieler hat selbst geschwenkt), beginnt ein neuer Umlauf ab der dann aktiven Insel.
-3. **Sprung (B, T02):** `hotkeyAction` liefert `problemNext`/`problemPrev`; `app.ts` bricht eine laufende Zeigeraktion ab (E6), zentriert per `centerOn` auf die Footprint-Mitte in Archipel-Kacheln, öffnet `setPanel({ kind: 'inspect', id })` **ohne** Werkzeugwechsel (E1), ruft `refresh()` (aktive Insel folgt) und zeigt eine ersetzende Meldung über `replaceMessage('problem', …)` in `messages.ts` (E7).
+3. **Sprung (B, T01/T02):** der Ablauf ist die reine Funktion `runProblemJump(deps, dir)` in `problems.ts` (R453 B1, Vitest über Fakes); `hotkeyAction` liefert `problemNext`/`problemPrev`; `app.ts` bricht eine laufende Zeigeraktion ab (E6), zentriert per `centerOn` auf die Footprint-Mitte in Archipel-Kacheln, öffnet `setPanel({ kind: 'inspect', id })` **ohne** Werkzeugwechsel (E1), ruft `refresh()` (aktive Insel folgt) und zeigt eine ersetzende Meldung über `replaceMessage('problem', …)` in `messages.ts` (E7).
 4. **Abriss-Zug (C, T03):** `isDragPaintTool` nimmt `demolish` auf; trifft der Druck eine Gebäudehülle, bleibt es ein Einzelabriss (kein Zug). Im Zug pickt `input.ts` die Bodenkachel (`strokePickTool`) und meldet jede Kachel mit `dragging: true`; `app.ts` ruft dort nur `removeRoad`, überspringt Gebäude und leere Kacheln still und wertet am `dragEnd` die Trenn-Warnung bzw. den reinen Klick auf leeren Boden aus (`strokeEndNotice`, E5). Klang je Kachel `sound.play('demolish')`, schon gedrosselt (`THROTTLE_MS.demolish` 80 ms, `src/audio/sound.ts`), kein Eingriff in `src/audio/`.
 5. **Doku (D, T04):** README (Tastentabelle, Abriss, „Wann eine Aktion wirkt“), arc42 (Ebene 2 `src/ui/`, Ziel je Werkzeug), Beobachtungen, Entwurf der Release-Notiz für `state.md` (trägt L0 ein).
 
 ## Strang, Worktree, Datei-Ownership
 
-Ein Strang, ein Umsetzer (`tech-ui-engineer`), ein Worktree `.worktrees/rel-17`, Branch `feat/rel-17-problem-sprung` (von `main` nach dem Merge von REL-16).
+Ein Strang, ein Umsetzer (`tech-ui-engineer`), ein Worktree `.worktrees/rel-17`, Branch `feat/rel-17` (von `main` @ `915d87c5`, nach dem Merge von REL-16).
 
 Dateien (alle exklusiv beim einen Umsetzer):
 
@@ -41,18 +41,18 @@ Dateien (alle exklusiv beim einen Umsetzer):
 - T04: `README.md`, `docs/arc42.md`, `docs/beobachtungen.md`
 - T05, T06: keine (Browser-Lauf mit Ablage `.studio/qa/REL-17/`, Review)
 
-T02 und T03 teilen `src/ui/app.ts` und laufen deshalb nacheinander im selben Baum mit demselben Umsetzer (SendMessage). **Berührungspunkte mit REL-16** (Plan `docs/superpowers/plans/2026-10-10-rel-16/`, T01/T02): REL-16 ändert in `app.ts` `showRoadFailure` (Z. ~754, neuer optionaler Parameter `at`), den Bau-Fehler (Z. ~853), den Aufruf nach `placeRoad` (Z. ~861) und `dispose` (Z. ~1294–1318); dazu `hints.ts` (`ReasonCtx.at`) und `hud.ts`. REL-17 ändert in `app.ts` Importe, das Umfeld von `jumpToIsland` (Z. 420–426, neuer `jumpToProblem`), die Zug-Flags (Z. 749–752, **neben** `showRoadFailure`), `onHotkey` (Z. 771–791), den `dragEnd`-Zweig (Z. 836) und den Abriss-Zweig (Z. 877–884, **drei Zeilen unter** dem `placeRoad`-Aufruf); `dispose`, `hints.ts`, `hud.ts` bleiben unberührt. Nebeneinanderliegende Hunks → Stapeln nötig, deshalb blocked-by; der Abriss-Pfad nutzt `showRoadFailure` ohne `at`, verträglich mit der neuen Signatur.
+T02 und T03 teilen `src/ui/app.ts` und laufen deshalb nacheinander im selben Baum mit demselben Umsetzer (SendMessage). **Berührungspunkte mit REL-16** (seit `915d87c5` auf `main`, `app.ts`-Zeilen Stand nach Merge; vor dem Editieren per grep prüfen): REL-16 hat `showRoadFailure` (≈ Z. 755, optionaler Parameter `at`), den Bau-Fehler, den Aufruf nach `placeRoad` und `dispose` (≈ Z. 1311) geändert; dazu `hints.ts`, `hud.ts`. REL-17 ändert in `app.ts` Importe, das Umfeld von `jumpToIsland` (≈ Z. 422, neuer `jumpToProblem`), die Zug-Flags (≈ Z. 751, **neben** `showRoadFailure`), `onHotkey` (≈ Z. 777), den `dragEnd`-Zweig (≈ Z. 842) und den Abriss-Zweig (≈ Z. 895); `dispose`, `hints.ts`, `hud.ts` bleiben unberührt. Der Abriss-Pfad nutzt `showRoadFailure` ohne `at`, verträglich mit der neuen Signatur. **Doku-Überschneidung:** `README.md`, `docs/arc42.md` und `docs/beobachtungen.md` hat REL-16 ebenfalls geändert; T04 arbeitet auf dem gemergten Stand und hängt in `beobachtungen.md` nur an.
 
 ## Tasks
 
-| ID  | Titel                                       | Datei                                  | AK (`ak.md`)     | Strang | blocked-by    | Modell | Grösse         |
-| --- | ------------------------------------------- | -------------------------------------- | ---------------- | ------ | ------------- | ------ | -------------- |
-| T01 | Reiner Helfer `problems.ts` (TDD)           | [T01-problems.md](T01-problems.md)     | 01–07            | UI     | REL-16-Merge  | sonnet | M (≈ 25 Tools) |
-| T02 | Tasten `.`/`,`, Sprung, ersetzende Meldung  | [T02-sprung.md](T02-sprung.md)         | 08–11            | UI     | T01           | sonnet | S (≈ 20 Tools) |
-| T03 | Abriss-Zug und Trenn-Warnung                | [T03-abriss-zug.md](T03-abriss-zug.md) | 12–16            | UI     | T01, T02      | sonnet | M (≈ 25 Tools) |
-| T04 | Doku und Release-Notiz-Entwurf              | [T04-doku.md](T04-doku.md)             | 17               | UI     | T03           | sonnet | S (≈ 10 Tools) |
-| T05 | Browser-Check am Kandidaten (Release-Check) | [T05-browser.md](T05-browser.md)       | 10, 11, 13–16,18 | –      | T04, Kandidat | sonnet | 1 Lauf         |
-| T06 | Final-Review `opus` über den Kandidaten     | [T06-final.md](T06-final.md)           | 01–20            | –      | T05           | opus   | 1 Review       |
+| ID  | Titel                                       | Datei                                  | AK (`ak.md`)                | Strang | blocked-by         | Modell | Grösse         |
+| --- | ------------------------------------------- | -------------------------------------- | --------------------------- | ------ | ------------------ | ------ | -------------- |
+| T01 | Reiner Helfer `problems.ts` (TDD)           | [T01-problems.md](T01-problems.md)     | 01–07, 10                   | UI     | – (REL-16 gemergt) | sonnet | M (≈ 25 Tools) |
+| T02 | Tasten `.`/`,`, Sprung, ersetzende Meldung  | [T02-sprung.md](T02-sprung.md)         | 08, 09, 11 (+10 verdrahtet) | UI     | T01                | sonnet | S (≈ 20 Tools) |
+| T03 | Abriss-Zug und Trenn-Warnung                | [T03-abriss-zug.md](T03-abriss-zug.md) | 12–16                       | UI     | T01, T02           | sonnet | M (≈ 25 Tools) |
+| T04 | Doku und Release-Notiz-Entwurf              | [T04-doku.md](T04-doku.md)             | 17                          | UI     | T03                | sonnet | S (≈ 10 Tools) |
+| T05 | Browser-Check am Kandidaten (Release-Check) | [T05-browser.md](T05-browser.md)       | 10, 11–16, 18               | –      | T04, Kandidat      | sonnet | 1 Lauf         |
+| T06 | Final-Review `opus` über den Kandidaten     | [T06-final.md](T06-final.md)           | 01–20                       | –      | T05                | opus   | 1 Review       |
 
 Reihenfolge: T01 → T02 → T03 → T04 im Strang (Umsetzer `tech-ui-engineer` → `qa-code-reviewer` sonnet → Fix-Runde per SendMessage bis OK; T02–T04 setzen Umsetzer und Reviewer per SendMessage fort). Danach `git merge main` im Worktree, `make check` einmal durch den Controller, `log.py result`, Häppchen release-reif. T05 und T06 laufen im Release (Gate Merge Release, Schritte 3 und 4) am Kandidaten (Entscheid E9).
 

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { createWorld } from '../../src/sim/world';
@@ -238,6 +239,8 @@ describe('M10 Tastenliste nach Freischaltung', () => {
       '3',
       'P',
       '?',
+      '.',
+      ',',
       ...NAV_KEYS.map((n) => n.key),
     ]);
     const all = hotkeyList(createWorld(3, { crisisLevel: 'normal', unlockAll: true })).map(
@@ -380,5 +383,43 @@ describe('TASTEN-KOMFORT Pipette (Teil B)', () => {
       key: 'Strg/Cmd + Klick auf Gebäude',
       label: 'Gebäudetyp als Bauwerkzeug (Pipette)',
     });
+  });
+});
+
+describe('REL-17 Tasten . und , (AK-R17-08, 09)', () => {
+  it('AK-R17-08 . → problemNext, , → problemPrev, mit und ohne Seefahrt', () => {
+    for (const sea of [false, true]) {
+      expect(hotkeyAction('.', NONE, false, sea)).toEqual({ kind: 'problemNext' });
+      expect(hotkeyAction(',', NONE, false, sea)).toEqual({ kind: 'problemPrev' });
+    }
+  });
+  it('AK-R17-08 stumm bei Formularfeld, Strg, Cmd, Alt', () => {
+    for (const key of ['.', ',']) {
+      expect(hotkeyAction(key, NONE, true)).toBeNull();
+      expect(hotkeyAction(key, { ...NONE, ctrl: true }, false)).toBeNull();
+      expect(hotkeyAction(key, { ...NONE, meta: true }, false)).toBeNull();
+      expect(hotkeyAction(key, { ...NONE, alt: true }, false)).toBeNull();
+    }
+  });
+  it('AK-R17-09 hotkeyList: . und , je einmal, direkt nach ?', () => {
+    const list = hotkeyList(createWorld(3));
+    const keys = list.map((e) => e.key);
+    expect(keys.filter((k) => k === '.')).toHaveLength(1);
+    expect(keys.filter((k) => k === ',')).toHaveLength(1);
+    const q = keys.indexOf('?');
+    expect(keys.indexOf('.')).toBe(q + 1);
+    expect(keys.indexOf(',')).toBe(q + 2);
+    expect(list[q + 1]).toEqual({ key: '.', label: 'Nächstes Problem anspringen' });
+    expect(list[q + 2]).toEqual({ key: ',', label: 'Voriges Problem anspringen' });
+  });
+  it('AK-R17-10 Verdrahtung: app.ts ruft runProblemJump und replaceMessage, ohne selectTool', () => {
+    const src = readFileSync('src/ui/app.ts', 'utf8');
+    expect(src).toContain('runProblemJump(');
+    expect(src).toContain("replaceMessage('problem'");
+    const from = src.indexOf('const jumpToProblem');
+    expect(from).toBeGreaterThanOrEqual(0);
+    const end = src.indexOf('\n      dir,\n    );', from);
+    expect(end).toBeGreaterThan(from);
+    expect(src.slice(from, end)).not.toContain('selectTool(');
   });
 });
