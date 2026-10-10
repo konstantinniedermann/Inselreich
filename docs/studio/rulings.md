@@ -4699,3 +4699,21 @@ Regelbezug: STUDIO.md Ablauf Stufe leicht; R448 (3), R459 · Kosten bei Irrtum: 
 neue Zeilenstände nachgeführt werden (gering).
 
 Entscheider: L0 · Anlass: Kurzdesign lead-design UI-GUT-CHIP · ADR: —
+
+## R462 · 2026-10-10 · Kombiniertes Gate UI-GUT-CHIP: BEDENKEN → Nacharbeit ohne Zweitprüfung
+
+Ruling: Plan `docs/superpowers/plans/2026-10-10-ui-gut-chip/` (`ae5a46cf`, T01–T08) mit Nacharbeit frei (Urteil
+`lead-qa` `.studio/handoffs/2026-10-10-lead-qa-GATE-UI-GUT-CHIP.md`). **B1** T08 (Browser-Lauf) vor das Branch-Review
+ziehen: das opus-Review über die Branch läuft als letzter Schritt nach allen Browser-Fixes. **B2** `stepKeyTarget` und
+das Löschen des Fokus beim Inselwechsel verbindlich als reine Funktionen in `goodFocus.ts` mit Vitest (Ownership-Ausnahme
+T06 angenommen); T08 ergänzt Esc bei offenem Toast und Problem-Sprung auf andere Insel. **B3** zuerst `signalFocus` in
+`SIGNAL_NAMES` aufnehmen; besteht es Kontrast/Palette nicht, eigener ΔE-Test gegen Terrain und Sprites; dazu Test
+CSS-Wert = Palette-Wert. **B4** T08 Punkt 2 um Leertaste und `.`/`,` bei Chip-Tastaturfokus. **B6** `git diff` auf
+`src/sim` leer auch im Branch-Review; **B7** Randfall leeres Lager als Test. **B5, B8, B9** angenommen ohne Änderung
+(Index-Grösse ohne Grenze, Budget bleibt 21 Starts, Parallelität 1). Nacharbeit durch die Plan-Instanz; Umsetzung bleibt
+blockiert bis zum Merge des M13-E1-UI-Strangs (R461).
+
+Regelbezug: gates.md Kombiniertes Gate (Stufe leicht); STUDIO.md Ablauf Stufe leicht Schritt 6 · Kosten bei Irrtum:
+späte Nachreviews im Strang.
+
+Entscheider: L0 · Anlass: Urteil lead-qa GATE-UI-GUT-CHIP · ADR: —
