@@ -2509,5 +2509,185 @@ class BudgetKeyHeaderTest(unittest.TestCase):
         self.assertEqual(rows["M13-E1"]["used"], 0)
 
 
+def golden_events():
+    """Mehrere Leads (gleiche und andere Rolle), vier Freigaben, Kinder vor und nach Freigaben."""
+    return [
+        *lead_node(1, SA, "L1"),
+        *worker(5, SA, "L1", "W0", stop_at=6),
+        grant(10, SA, "plan-A", 4, 1),
+        grant(12, SA, "impl-B", 6, 2),
+        *lead_node(14, SA, "L2"),
+        *worker(20, SA, "L1", "W1", stop_at=25),
+        *worker(30, SA, "L2", "W2", stop_at=35),
+        grant(40, SA, "gate-C", 2, 1),
+        *lead_node(42, SA, "L3", lead="lead-qa"),
+        grant(41, SA, "qa-D", 3, 1, lead="lead-qa"),
+        *worker(50, SA, "L3", "W3", stop_at=55),
+        *lead_node(60, SA, "L4"),
+        *worker(65, SA, "L4", "W4", stop_at=70),
+        *worker(66, SA, "L4", "W5", stop_at=72),
+    ]
+
+
+def golden_view(state):
+    return {"budgets": state["budgets"], "lead_phases": state["lead_phases"]}
+
+
+GOLDEN_VIEW = {
+    "budgets": [
+        {
+            "lead": "lead-qa",
+            "phase": "qa-D",
+            "session_id": "baff17bb",
+            "granted": 3,
+            "parallel": 1,
+            "used": 1,
+            "parallel_used": 1,
+            "overrun": False,
+            "model_mix": {"sonnet": 1},
+        },
+        {
+            "lead": "lead-tech",
+            "phase": "gate-C",
+            "session_id": "baff17bb",
+            "granted": 2,
+            "parallel": 1,
+            "used": 2,
+            "parallel_used": 2,
+            "overrun": True,
+            "model_mix": {"sonnet": 2},
+        },
+        {
+            "lead": "lead-tech",
+            "phase": "impl-B",
+            "session_id": "baff17bb",
+            "granted": 6,
+            "parallel": 2,
+            "used": 1,
+            "parallel_used": 1,
+            "overrun": False,
+            "model_mix": {"sonnet": 1},
+        },
+        {
+            "lead": "lead-tech",
+            "phase": "plan-A",
+            "session_id": "baff17bb",
+            "granted": 4,
+            "parallel": 1,
+            "used": 1,
+            "parallel_used": 1,
+            "overrun": False,
+            "model_mix": {"sonnet": 1},
+        },
+    ],
+    "lead_phases": {
+        "baff17bb:L2": "plan-A",
+        "baff17bb:L4": "impl-B",
+        "baff17bb:L3": "qa-D",
+    },
+}
+
+
+class BuildStateOptimizationTest(unittest.TestCase):
+    def test_build_state_unchanged_by_optimization(self):
+        state = build(golden_events(), now=2000, session="all")
+        self.assertEqual(golden_view(state), GOLDEN_VIEW)
+
+    def test_unsorted_input_same_result(self):
+        events = golden_events()
+        shuffled = events[::-1]
+        self.assertEqual(
+            golden_view(build(shuffled, now=2000, session="all")),
+            golden_view(build(events, now=2000, session="all")),
+        )
+
+    def test_incremental_append_changes_view(self):
+        events = golden_events()
+        before = build(events, now=2000, session="all")
+        extra = [grant(80, SA, "impl-E", 5, 1), *worker(85, SA, "L4", "W6", stop_at=90)]
+        for cut in range(len(extra) + 1):
+            grown = events + extra[:cut]
+            fresh = golden_view(build(grown, now=2000, session="all"))
+            if cut == 0:
+                self.assertEqual(fresh, golden_view(before))
+            else:
+                self.assertNotEqual(fresh, golden_view(before))
+        # Builder inkrementell: view, Ereignis, view -> wie Neuaufbau
+        builder = model._Builder(MODELS, T0 + 2000, None)
+        for e in sorted(events, key=lambda e: model.parse_ts(e["ts"])):
+            builder.apply(e)
+        builder.claim_budgets()
+        first = builder.budget_view()
+        for e in extra:
+            builder.apply(e)
+        second = builder.budget_view()
+        self.assertNotEqual(first, second)
+        fresh = build(events + extra, now=2000, session="all")["budgets"]
+        self.assertEqual(second, fresh)
+
+    def test_claim_budgets_called_once(self):
+        calls = []
+        original = model._Builder.compute_claims
+
+        def counting(self):
+            calls.append(1)
+            return original(self)
+
+        with unittest.mock.patch.object(model._Builder, "compute_claims", counting):
+            build(golden_events(), now=2000, session="all")
+        self.assertEqual(len(calls), 1)
+
+    def sort_calls(self, events):
+        """Laengen der Event- und Knoten-Sortierungen waehrend build_state."""
+        real_sorted = sorted
+        event_sorts = []
+        node_sorts = []
+
+        def counting(iterable, *a, **kw):
+            items = list(iterable)
+            first = items[0] if items else None
+            if isinstance(first, tuple):  # (Zeit, Event)-Paare
+                first = first[1]
+            if isinstance(first, dict) and "ts" in first and "t" not in first:
+                event_sorts.append(len(items))
+            if items and isinstance(items[0], dict) and "children" in items[0]:
+                node_sorts.append(len(items))
+            return real_sorted(items, *a, **kw)
+
+        with unittest.mock.patch.object(model, "sorted", counting, create=True):
+            build(events, now=2000, session="all")
+        return event_sorts, node_sorts
+
+    def test_sorted_events_not_resorted(self):
+        events = sorted(golden_events(), key=lambda e: model.parse_ts(e["ts"]))
+        event_sorts, _ = self.sort_calls(events)
+        self.assertEqual(event_sorts, [])
+
+    def test_nodes_sorted_once_per_claim(self):
+        _, node_sorts = self.sort_calls(golden_events())
+        self.assertLessEqual(len(node_sorts), 1)
+
+
+class PeakParallelTest(unittest.TestCase):
+    @staticmethod
+    def reference(spans):
+        return max(
+            (sum(1 for s, e in spans if s <= a < e) for a, _ in spans), default=0
+        )
+
+    def test_matches_quadratic_reference(self):
+        cases = [
+            [],
+            [(1, 5)],
+            [(1, 5), (5, 9)],
+            [(1, 5), (1, 5), (2, 3)],
+            [(4, 2), (1, 5), (3, 3)],
+            [(0, 10), (1, 2), (2, 3), (2.5, 9), (9, 12)],
+        ]
+        for spans in cases:
+            with self.subTest(spans=spans):
+                self.assertEqual(model._peak_parallel(spans), self.reference(spans))
+
+
 if __name__ == "__main__":
     unittest.main()

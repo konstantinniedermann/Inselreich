@@ -10,8 +10,10 @@ import contextlib
 import json
 import re
 import threading
+from bisect import bisect_right
 from collections import Counter
 from datetime import UTC, datetime
+from itertools import pairwise
 from pathlib import Path
 
 import effort
@@ -214,6 +216,7 @@ class _Builder:
         self.current_ts = ""
         self.budgets: dict[tuple[str, str, str], dict] = {}
         self.claims: dict[tuple[str, str, str], str] = {}
+        self.claims_valid = False
         self.board: dict[str, dict] = {}
         self.decisions: dict[str, dict] = {}
         self.chronicle: list[dict] = []
@@ -458,6 +461,7 @@ class _Builder:
 
     def apply(self, event: dict) -> None:
         self.index += 1
+        self.claims_valid = False
         self.current_ts = str(event.get("ts") or "")
         ts = parse_ts(event.get("ts"))
         sid = str(event.get("session_id") or "unbekannt")
@@ -808,14 +812,25 @@ class _Builder:
         return {lead_key: key[1] for key, lead_key in self.claims.items()}
 
     def claim_budgets(self) -> None:
-        """Jede Freigabe gehoert dem ersten danach gestarteten, noch freien Lead."""
+        """Jede Freigabe gehoert dem ersten danach gestarteten, noch freien Lead.
+
+        Das Ergebnis haengt nur von Knoten und Freigaben ab; ``apply`` macht es
+        ungueltig, bis dahin wird es nicht neu berechnet.
+        """
+        if not self.claims_valid:
+            self.compute_claims()
+            self.claims_valid = True
+
+    def compute_claims(self) -> None:
         self.claims = {}
         taken: set[str] = set()
+        by_role: dict[str, list[dict]] = {}
+        for lead in sorted(self.nodes.values(), key=lambda n: n["started"]):
+            by_role.setdefault(lead["role"], []).append(lead)
         for key, grant in sorted(self.budgets.items(), key=lambda kv: kv[1]["since"]):
-            for lead in sorted(self.nodes.values(), key=lambda n: n["started"]):
+            for lead in by_role.get(grant["lead"], ()):
                 if (
-                    lead["role"] == grant["lead"]
-                    and lead["key"] not in taken
+                    lead["key"] not in taken
                     and lead["started"] >= grant["since"]
                     and grant["session_id"] in ("", lead["session_id"])
                 ):
@@ -1229,10 +1244,7 @@ class _Builder:
                 else:
                     end = c["stopped"] if c["stopped"] is not None else self.now
                     spans.append((c["started"], end))
-            spans.sort()
-            peak = 0
-            for start, _ in spans:
-                peak = max(peak, sum(1 for s, e in spans if s <= start < e))
+            peak = _peak_parallel(spans)
             used = len(children)
             rows.append(
                 {
@@ -1335,6 +1347,24 @@ def _collapse_feed(feed: list[dict], heartbeats: bool) -> list[dict]:
     return sorted(rows, key=lambda f: f["t"], reverse=True)
 
 
+def _peak_parallel(spans: list[tuple[float, float]]) -> int:
+    """Hoechste Zahl gleichzeitig laufender Spannen (Start einschliesslich, Ende ausgeschlossen)."""
+    starts = sorted(a for a, _ in spans)
+    ends = sorted(max(a, b) for a, b in spans)
+    return max(
+        (bisect_right(starts, a) - bisect_right(ends, a) for a in starts), default=0
+    )
+
+
+def _in_time_order(events: list[dict]) -> list[dict]:
+    """Events nach Zeit; schluessel einmal je Event, bereits aufsteigende Folge bleibt."""
+    keyed = [(parse_ts(e.get("ts")), e) for e in events if isinstance(e, dict)]
+    ascending = all(a[0] <= b[0] for a, b in pairwise(keyed))
+    if not ascending:
+        keyed = sorted(keyed, key=lambda pair: pair[0])
+    return [event for _, event in keyed]
+
+
 def build_state(
     events: list[dict],
     now: float,
@@ -1347,10 +1377,7 @@ def build_state(
 ) -> dict:
     builder = _Builder(agent_models, now, agent_names)
     builder.ampel_sessions = ampel_sessions or []
-    ordered = sorted(
-        (e for e in events if isinstance(e, dict)), key=lambda e: parse_ts(e.get("ts"))
-    )
-    for event in ordered:
+    for event in _in_time_order(events):
         # ein kaputtes Event darf nie den ganzen Stand kippen
         with contextlib.suppress(Exception):
             builder.apply(event)
