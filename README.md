@@ -58,7 +58,7 @@ schneller. Mengen pro Zeit stehen «pro Minute» (`/ min`).
   die Wirkung der Steuerstufe (bei unterschiedlichen Reglern «Steuer gemischt: P niedrig · S normal · …») und aufklappbar die **Kartenzeichen** (Bedeutung der Symbole auf der Karte).
 - **Cursor-Hinweis:** Beim Bauen, Wegbauen, Abreissen und Auswählen hängt ein kleines Schild am Zeiger. Es
   sagt, ob der Standort passt («Baubar · wird an den Kontor angebunden», «Baubar · danach mit Weg (R) zum
-  Kontor verbinden») oder warum nicht, was ein Abriss zurückgibt und — bei der Auswahl — den Zustand des
+  Kontor verbinden») oder warum nicht (über Wasser oder Gebirge nennt es das Gelände, «Kein Bauland: Gebirge», über einem Gebäude oder Weg, was dort steht, «Platz belegt: Wohnhaus»; dieselbe Meldung erscheint beim Klick), was ein Abriss zurückgibt und — bei der Auswahl — den Zustand des
   Gebäudes unter dem Zeiger. Bei der Auswahl ersetzt die Mouse-over-Karte das Schild, sobald sie erscheint; ein Kachelwechsel, Ziehen oder ein anderes Werkzeug bringen das Schild sofort zurück. Über leerem Boden und bei offener Karte erscheint kein Schild.
 - **Esc-Reihenfolge:** Eine offene Karte schliesst zuerst (bei gestapelten Karten die oberste). Sonst
   legt `Esc` das Werkzeug ab, schliesst die Einträge-Leiste der Bauleiste und das Panel und führt zurück zur

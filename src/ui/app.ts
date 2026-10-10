@@ -65,6 +65,7 @@ import {
   renderNoticeStack,
   updateHud,
   updateMoney,
+  unbindIslandMenu,
   updateNoticeStack,
   type HudActions,
 } from './hud';
@@ -751,8 +752,13 @@ function launch(
   let dragForestFailureShown = false;
   const forestCost = (tool: { kind: 'clearForest' | 'plantForest' }): Cost =>
     tool.kind === 'clearForest' ? CLEAR_FOREST_COST : PLANT_FOREST_COST;
-  const showRoadFailure = (reason: string, dragging: boolean, island: number): void => {
-    const text = friendlyReason(world, reason, { cost: ROAD_COST_OBJ, island });
+  const showRoadFailure = (
+    reason: string,
+    dragging: boolean,
+    island: number,
+    at?: { x: number; y: number; w: number; h: number },
+  ): void => {
+    const text = friendlyReason(world, reason, { cost: ROAD_COST_OBJ, island, at });
     if (!dragging) {
       showError(text);
     } else if ((reason === 'Kein Geld' || reason === 'Zu wenig Geld') && !dragMoneyToastShown) {
@@ -850,7 +856,18 @@ function launch(
       const before = unconnectedIds(world);
       const r = placeBuilding(world, tool.defId, a.x, a.y, a.island);
       if (!r.ok)
-        showError(friendlyReason(world, r.reason, { defId: tool.defId, island: a.island }));
+        showError(
+          friendlyReason(world, r.reason, {
+            defId: tool.defId,
+            island: a.island,
+            at: {
+              x: a.x,
+              y: a.y,
+              w: BUILDING_DEFS[tool.defId].w,
+              h: BUILDING_DEFS[tool.defId].h,
+            },
+          }),
+        );
       else {
         sound.playBuild(buildSoundKey(tool) ?? 'build');
         reportConnections(before);
@@ -858,7 +875,7 @@ function launch(
     } else if (tool.kind === 'road') {
       const before = unconnectedIds(world);
       const r = placeRoad(world, a.x, a.y, a.island);
-      if (!r.ok) showRoadFailure(r.reason, a.dragging, a.island);
+      if (!r.ok) showRoadFailure(r.reason, a.dragging, a.island, { x: a.x, y: a.y, w: 1, h: 1 });
       else {
         sound.playBuild(buildSoundKey(tool) ?? 'road');
         reportConnections(before);
@@ -1313,6 +1330,7 @@ function launch(
     hoverEl.remove();
     noticeStack.remove();
     unbindMessages();
+    unbindIslandMenu(hudEl);
     hudEl.replaceChildren();
     navEl.replaceChildren();
     panelEl.replaceChildren();

@@ -19,7 +19,7 @@ import { TAX_LEVELS, TIERS } from '../../src/sim/defs/tiers';
 import { TAX_SWITCH_LOCK, UPGRADE_WAIT } from '../../src/sim/defs/timing';
 import { createRng } from '../../src/sim/rng';
 import type { Building, BuildingDefId, GoodId, TaxLevel, World } from '../../src/sim/types';
-import { home, createWorld, idx } from '../../src/sim/world';
+import { HOME, home, createWorld, idx, tileAt } from '../../src/sim/world';
 import type { Tool } from '../../src/render/renderer';
 import {
   REASON_TABLE,
@@ -247,7 +247,7 @@ describe('placementHint (AK-UX-04)', () => {
     const { w, kx, ky, fisher } = uxWorld();
     expect(placementHint(w, { kind: 'build', defId: 'lumberjack' }, kx + 7, ky)).toEqual({
       tone: 'bad',
-      text: 'Kein Bauland — nur auf Land bauen',
+      text: 'Kein Bauland: Wasser',
     });
     expect(placementHint(w, { kind: 'select' }, fisher.x, fisher.y)).toEqual({
       tone: 'info',
@@ -554,5 +554,60 @@ describe('REL-14 Haus-Hinweis ohne „versorgt“ (A6)', () => {
     expect(placementHint(w, { kind: 'select' }, far.x, far.y)?.text).toMatch(
       / · ausserhalb der Versorgung$/,
     );
+  });
+});
+
+describe('Schild nennt Gelände und Belegung (REL-16)', () => {
+  it('AK-R16-01 Wasser im Grundriss: Kein Bauland: Wasser', () => {
+    const { w, kx, ky } = uxWorld();
+    expect(tileAt(home(w), kx + 7, ky)?.terrain).toBe('water');
+    expect(placementHint(w, { kind: 'build', defId: 'lumberjack' }, kx + 7, ky)).toEqual({
+      tone: 'bad',
+      text: 'Kein Bauland: Wasser',
+    });
+  });
+
+  it('AK-R16-01 Gebirge: Haus und Weg nennen Gebirge', () => {
+    const { w, kx, ky } = uxWorld();
+    home(w).tiles[idx(home(w), kx + 12, ky + 6)]!.terrain = 'mountain';
+    expect(placementHint(w, { kind: 'build', defId: 'house' }, kx + 12, ky + 6)).toEqual({
+      tone: 'bad',
+      text: 'Kein Bauland: Gebirge',
+    });
+    expect(placementHint(w, { kind: 'road' }, kx + 12, ky + 6)).toEqual({
+      tone: 'bad',
+      text: 'Kein Bauland: Gebirge',
+    });
+  });
+
+  it('AK-R16-01 gemischt: Wasser und Gebirge in fester Reihenfolge', () => {
+    const { w, kx, ky } = uxWorld();
+    home(w).tiles[idx(home(w), kx + 12, ky + 6)]!.terrain = 'mountain';
+    home(w).tiles[idx(home(w), kx + 13, ky + 7)]!.terrain = 'water';
+    expect(
+      friendlyReason(w, 'Kein Bauland', {
+        island: HOME,
+        at: { x: kx + 12, y: ky + 6, w: 2, h: 2 },
+      }),
+    ).toBe('Kein Bauland: Wasser und Gebirge');
+  });
+
+  it('AK-R16-02 belegt: Gebäudename bzw. Weg', () => {
+    const { w, kx, ky, fisher } = uxWorld();
+    expect(placementHint(w, { kind: 'build', defId: 'house' }, fisher.x, fisher.y)).toEqual({
+      tone: 'bad',
+      text: 'Platz belegt: Fischerhütte',
+    });
+    expect(placeRoad(w, kx + 5, ky + 5).ok).toBe(true);
+    expect(placementHint(w, { kind: 'road' }, kx + 5, ky + 5)).toEqual({
+      tone: 'bad',
+      text: 'Platz belegt: Weg',
+    });
+  });
+
+  it('AK-R16-03 ohne Grundriss bleiben die alten Texte', () => {
+    const { w } = uxWorld();
+    expect(friendlyReason(w, 'Kein Bauland')).toBe('Kein Bauland — nur auf Land bauen');
+    expect(friendlyReason(w, 'Bereits bebaut')).toBe('Hier steht schon ein Gebäude oder Weg');
   });
 });

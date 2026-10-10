@@ -335,6 +335,12 @@ const seaMapRedraw = new WeakMap<HTMLElement, () => void>();
 /** Abmeldung der Dokument-Listener des Inselmenüs je Kopfzeile: ein Neustart bindet neu, der alte Satz fällt weg. */
 const islandMenuAbort = new WeakMap<HTMLElement, AbortController>();
 
+/** Meldet die Dokument-Listener des Inselmenüs dieser Kopfzeile ab (Ende eines Spiels, `dispose`). */
+export function unbindIslandMenu(header: HTMLElement): void {
+  islandMenuAbort.get(header)?.abort();
+  islandMenuAbort.delete(header);
+}
+
 /**
  * Knopf „Inseln": Klick 1 öffnet das Popover (Seekarte über der Liste, beides beim Öffnen aufgebaut, nicht je Tick),
  * Klick auf Land der Karte oder auf einen Listeneintrag springt und schliesst. Wasser tut nichts; ein Klick daneben

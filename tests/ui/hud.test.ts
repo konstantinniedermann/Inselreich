@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { deriveUnlocks } from '../../src/sim/unlocks';
 import { STORAGE_CAP } from '../../src/sim/defs/goods';
@@ -9,6 +10,7 @@ import {
   balanceText,
   balanceView,
   bindIslandMenu,
+  unbindIslandMenu,
   chipRole,
   chipView,
   moneyView,
@@ -275,5 +277,63 @@ describe('Inselmenü: Dokument-Listener (REL-15, R437 B1)', () => {
     const permanent = regs.filter((r) => r.opts?.signal === undefined);
     expect(active.length + permanent.length).toBe(2);
     for (const r of first) expect(r.opts?.signal?.aborted).toBe(true);
+  });
+
+  const setup = () => {
+    const regs: Reg[] = [];
+    vi.stubGlobal('document', {
+      addEventListener: (type: string, _fn: unknown, opts?: { signal?: AbortSignal }) =>
+        regs.push({ type, opts }),
+      removeEventListener: () => {},
+    });
+    const el = () => ({ addEventListener: () => {}, contains: () => false, hidden: true });
+    const box = { ...el(), querySelector: () => el() };
+    const header = {
+      querySelector: (sel: string) => (sel === '.hud-islands' ? box : null),
+    } as unknown as HTMLElement;
+    return { regs, header, state: { world: createWorld(3) } as never, actions: {} as never };
+  };
+
+  it('unbindIslandMenu bricht alle Dokument-Listener der Kopfzeile ab', () => {
+    const { regs, header, state, actions } = setup();
+    bindIslandMenu(header, state, actions);
+    expect(regs.length).toBeGreaterThan(0);
+    unbindIslandMenu(header);
+    for (const r of regs) expect(r.opts?.signal?.aborted).toBe(true);
+  });
+
+  it('unbindIslandMenu ohne Binden und zweimal wirft nicht', () => {
+    const { header, state, actions } = setup();
+    expect(() => {
+      unbindIslandMenu(header);
+      unbindIslandMenu(header);
+    }).not.toThrow();
+    bindIslandMenu(header, state, actions);
+    expect(() => {
+      unbindIslandMenu(header);
+      unbindIslandMenu(header);
+    }).not.toThrow();
+  });
+
+  it('nach unbind bindet ein neues Spiel wieder', () => {
+    const { regs, header, state, actions } = setup();
+    bindIslandMenu(header, state, actions);
+    unbindIslandMenu(header);
+    bindIslandMenu(header, state, actions);
+    const active = regs.filter((r) => r.opts?.signal !== undefined && !r.opts.signal.aborted);
+    const permanent = regs.filter((r) => r.opts?.signal === undefined);
+    expect(active.length + permanent.length).toBe(2);
+  });
+
+  // app.ts braucht das DOM und ist in Vitest (Node) nicht startbar: Quelltext prüfen (AK-R16-06).
+  it('dispose meldet das Inselmenü ab (Quelltext, AK-R16-06)', () => {
+    const src = readFileSync('src/ui/app.ts', 'utf8');
+    const start = src.indexOf('const dispose = (): void => {');
+    expect(start).toBeGreaterThan(-1);
+    const block = src.slice(start, src.indexOf('\n  };', start));
+    expect(block).toContain('unbindIslandMenu(hudEl)');
+    expect(block.indexOf('unbindIslandMenu(hudEl)')).toBeLessThan(
+      block.indexOf('hudEl.replaceChildren()'),
+    );
   });
 });
