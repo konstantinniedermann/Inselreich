@@ -1,7 +1,7 @@
 // goodFocus.ts — rein: Erzeuger und Verbraucher eines Guts auf einer Insel und die Meldungen M1–M3 (I-043); nicht im Spielstand.
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS } from '../sim/defs/goods';
-import { missingInputs } from '../sim/queries';
+import { goodRole, missingInputs } from '../sim/queries';
 import type { Building, GoodId, World } from '../sim/types';
 import { buildLock } from '../sim/unlocks';
 import { jumpTarget } from './islandJump';
@@ -26,8 +26,7 @@ export function focusList(world: World, island: number, good: GoodId): FocusEntr
   for (const b of Object.values(world.buildings)) {
     if (b.island !== island || b.house || b.defId === 'kontor') continue;
     const def = BUILDING_DEFS[b.defId];
-    const role: FocusRole | null =
-      def.produces === good ? 'producer' : def.consumes?.includes(good) ? 'consumer' : null;
+    const role: FocusRole | null = goodRole(def, good);
     if (role === null) continue;
     const at = spot(world, b);
     out.push({
@@ -84,11 +83,6 @@ export function focusReduce(state: FocusState, e: FocusEvent): FocusState {
   if (e.kind === 'clear') return null;
   if (state !== null && state.good === e.good && state.island === e.island) return null;
   return { good: e.good, island: e.island };
-}
-
-/** `true`, wenn nach dem Toggle gesprungen werden soll (Fokus an: neu oder anderes Gut/Insel). */
-export function toggleStartsJump(before: FocusState, e: FocusEvent): boolean {
-  return focusReduce(before, e) !== null;
 }
 
 export interface FocusDeps {

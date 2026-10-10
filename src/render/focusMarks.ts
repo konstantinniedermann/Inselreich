@@ -1,6 +1,7 @@
 // focusMarks.ts — Konturen um Erzeuger (durchgezogen) und Verbraucher (gestrichelt) des Gut-Fokus (I-043).
 // Liest nur die Frame-Welt, schreibt nie in die Welt. Kein Puls, keine Zeitabhängigkeit.
 import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { goodRole } from '../sim/queries';
 import type { Building, GoodId, World } from '../sim/types';
 import type { Camera, TileRange } from './camera';
 import { homeBuildings } from './homeBuildings';
@@ -43,8 +44,9 @@ export function drawFocusMarks(
     if (b.house || b.defId === 'house' || b.defId === 'kontor') continue;
     if (b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1) continue;
     const def = BUILDING_DEFS[b.defId];
-    if (def.produces === focus.good) producers.push(b);
-    else if (def.consumes?.includes(focus.good)) consumers.push(b);
+    const role = goodRole(def, focus.good);
+    if (role === 'producer') producers.push(b);
+    else if (role === 'consumer') consumers.push(b);
   }
   let n = 0;
   ctx.save();

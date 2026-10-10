@@ -13,7 +13,6 @@ import {
   runFocusToggle,
   shouldClearFocus,
   stepKeyTarget,
-  toggleStartsJump,
   type FocusDeps,
   type FocusState,
 } from '../../src/ui/goodFocus';
@@ -195,7 +194,7 @@ function fake(w: World, island = 0): Fake {
 }
 
 describe('UI-GUT-CHIP Zustand (AK-GC-07, B2)', () => {
-  it('focusReduce / toggleStartsJump', () => {
+  it('focusReduce', () => {
     const on = focusReduce(null, { kind: 'toggle', good: 'wood', island: 0 });
     expect(on).toEqual({ good: 'wood', island: 0 });
     expect(focusReduce(on, { kind: 'toggle', good: 'wood', island: 0 })).toBeNull();
@@ -204,10 +203,6 @@ describe('UI-GUT-CHIP Zustand (AK-GC-07, B2)', () => {
       island: 0,
     });
     expect(focusReduce(on, { kind: 'clear' })).toBeNull();
-    const t = { kind: 'toggle', good: 'wood', island: 0 } as const;
-    expect(toggleStartsJump(null, t)).toBe(true);
-    expect(toggleStartsJump(on, { ...t, good: 'tools' })).toBe(true);
-    expect(toggleStartsJump(on, t)).toBe(false);
   });
 
   it('B2 stepKeyTarget, shouldClearFocus', () => {
