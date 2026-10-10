@@ -16,7 +16,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
 Reihenfolge der Wartenden auf einen freien Platz (R375): E-038 (frühestens 2026-10-22), E-048,
-E-050, E-049, E-044; E-054 (Plan-Modell, Retro c64c0775 V1) hinter E-044.
+E-050, E-049, E-044; E-054 (Plan-Modell, Retro c64c0775 V1) hinter E-044; E-055 (Budget-Warnung, Retro c64c0775-b V1) danach.
 
 ---
 
@@ -348,6 +348,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Anpassung vorgeschlagen (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md) V1): Die Modelltabelle sieht sonnet für Controller, lead-qa-Gate-Urteile, lead-production und Kurz-Retro schon vor; in fb37ceac liefen 10 von 13 Lead-/Coach-Starts trotzdem auf opus. Mechanik neu: (a) `metriken/richtwerte.md` Spalte „Modell“ → „gemessen auf“; (b) Werkzeug TOOL-MODELL-GUARD prüft typisierte Persona-Starts gegen das Frontmatter (opus nur mit Tabellen-Ausnahme in der Kopfzeile `Modell:`), Ampelzeile zählt sie mit. Messgrösse zusätzlich: Starts über der Tabelle ≤ 1 je Session (Ausgang 10). Der Stichtag 2026-10-22 entfällt (E-027 abgeschlossen, R350). Status bis zum Ruling unverändert.
 - Start: 2026-10-09 (R420, Handbuch 1.36); der Stichtag 2026-10-22 entfällt. Werkzeug-Paket TOOL-MODELL-GUARD folgt; bis dahin zählt die Messung die Starts per Hand aus den Spawn-Events. Das Einsatzmodell bestimmt die Modelltabelle in STUDIO.md, nicht die Spalte in `richtwerte.md`.
 - Datenpunkt 1 von 3, S-2026-10-09-c64c0775 (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md) B3): 0 von 40 Starts über der Tabelle (Ausgang 10 von 13); opus-Anteil 68,4 % (Schwelle ≤ 60 % verfehlt); Gegenprobe Review-Runden 1,00, Erstabnahme 100 % erfüllt. `modelguard` ab Merge im Modus `warn`, die Wirkung kommt bisher von der Kopfzeile. Weiter beobachten.
+- Datenpunkt 2 von 3, S-2026-10-10-c64c0775 (Retro [session-c64c0775-b-ende](retros/2026-10-10-session-c64c0775-b-ende.md) B5): 0 von 39 Starts über der Tabelle (erfüllt); opus-Anteil 66,5 % (verfehlt); Steuerung bereinigt 37,6 % (≤ 40 % erfüllt), roh 68,7 %; Review-Runden 1,00, Erstabnahme 100 % erfüllt. `modelguard` `deny` seit 1.38: 0 Blockaden, 0 Fehlalarme. Weiter beobachten.
 
 ## E-039 · übernommen (R315) · Vergleichsart im Perf-Artefakt
 
@@ -454,6 +455,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: 2026-10-09 (R420, Handbuch 1.36): Bereinigung nach der Briefing-Zeile „Budget: keins“ statt nach Paketname; Gegenprobe roh = bereinigt + herausgerechnete Lead-Instanzen. Umsetzung in `efficiency.py` als eigenes Werkzeug-Paket.
 - Datenpunkt 1 von 3, S-2026-10-09-c64c0775 (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md) B2): roh 71,7 %, bereinigt 69,6 %, herausgerechnet 2,0 Punkte (2 von 14 Lead-Instanzen); Gegenprobe roh = bereinigt + herausgerechnet erfüllt. Der Filter trifft die Plan-Instanzen (35,4 %) nicht. Anpassung vorgeschlagen (Retro V2): Klassen und Bereinigung nach Freigabephase `plan-*`, `design-*`, `gate-*` plus „Budget: keins“; Ausgang bereinigt ≈ 30 %. Status bis zum Ruling unverändert.
 - Anpassung umgesetzt (R433 V2, TOOL-BUENDEL-2, 319fa8bc): herausgerechnet werden Lead-Instanzen mit Freigabephase `plan-*`/`design-*`/`gate-*` (Zuordnung `claim_budgets`) oder „Budget: keins“; die Zeile nennt den Anteil je Grund. Rohzeile und Klassen unverändert (Entscheid E1 im Plan); Messgrösse ‚Klasse Design/Spec/Plan > 0‘ gelesen als ‚herausgerechnet Plan > 0 bei Plan-Instanzen‘. Zählung der Datenpunkte beginnt mit der ersten Session nach dem Merge neu; Frist 2026-11-19 unverändert.
+- Datenpunkt 1 von 3 nach der Anpassung, S-2026-10-10-c64c0775 (Retro [session-c64c0775-b-ende](retros/2026-10-10-session-c64c0775-b-ende.md) B2): roh 68,7 %, bereinigt 37,6 %, herausgerechnet 31,1 Punkte (Plan 16,2, Design 1,7, Gate 0,0, nur Budget keins 13,2; 5 von 11 Lead-Instanzen); Gegenprobe erfüllt. Weiter beobachten.
 
 ## E-050 · laufend · Fortsetzung nach Pause als frische Instanz (Umsetzer)
 
@@ -466,6 +468,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: –
 - Ruling: R420 (Start 2026-10-09, Handbuch 1.36)
 - Datenpunkt 1 von 3, S-2026-10-09-c64c0775 (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md)): 0 Umsetzer-Neuschreibungen > 20k in 8 Umsetzer-Instanzen (Schwelle ≤ 0,2 erfüllt); Gegenprobe Review-Runden 1,00 erfüllt. Einschränkung: kurze Läufe (Kontext Mittel 38k) lassen die 40k-Schwelle kaum greifen; Fix-Runde T07 lief als frische Instanz.
+- Datenpunkt 2 von 3, S-2026-10-10-c64c0775 (Retro [session-c64c0775-b-ende](retros/2026-10-10-session-c64c0775-b-ende.md)): 0 Umsetzer-Neuschreibungen > 20k nach Turn-Ende in 6 Umsetzer-Instanzen (eine nach Bash/Agent, nicht gezählt); Review-Runden 1,00 erfüllt. Kontext Mittel 36k, Schwelle greift kaum.
 
 ## E-051 · übernommen als Werkzeug (R375, R380) · Werkzeug-Riegel für volle Testläufe
 
@@ -511,3 +514,15 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Modelltabelle (Zeile „Tech-Lead beim Plan“) und `lead-tech.md` auf die Fassung vor der Änderung.
 - Dateien: `docs/studio/STUDIO.md` (Modellwahl), `.claude/agents/lead-tech.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
 - Ruling: –
+
+## E-055 · vorgeschlagen · Warnung bei Lead-Start mit Budgetzeile ohne Freigabe
+
+- Hypothese: Wenn der Spawn-Hook bei einem Lead-Start, dessen Kopfzeile „Budget: n …“ (n > 0) lautet, im Session-Log keine Zeile `kind: budget` derselben Rolle findet und eine Warnung ausgibt (`warn`, kein Blocken), entstehen keine Budget-Vorfälle „ohne Freigabe“ mehr (Retro [session-c64c0775-b-ende](retros/2026-10-10-session-c64c0775-b-ende.md) B1; R440).
+- Messgrösse: 0 Budget-Vorfälle „ohne Freigabe“ oder „n von m“ durch fehlende Freigabezeile in 3 Sessions (Ausgang 1 in c64c0775-b); Gegenprobe: 0 Fehlwarnungen bei „Budget: keins“ und bei Folge-Controllern (R433 V3 b).
+- Messbarkeit: Das Dashboard zählt unverändert; die Warnung ist nur zusätzliche Ausgabe.
+- Zeitraum: 3 Sessions nach dem Merge, höchstens bis 2026-11-19; Start bei freiem Platz oder als Werkzeug ohne Platz (Entscheid L0, wie E-051).
+- Rückfall: Hook-Zweig entfernen (`git revert`).
+- Dateien: `tools/studio/hook.py`, `tools/studio/tests/`
+- Ruling: –
+- Start: –
+- Bewertung: –
