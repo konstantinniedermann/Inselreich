@@ -3,14 +3,20 @@ import io
 import json
 import os
 import signal
+import subprocess
 import sys
 import tempfile
 import threading
 import time
 import unittest
 from pathlib import Path
+from typing import ClassVar
 from unittest import mock
 
+import efficiency
+import metrics
+import model
+import paths as paths_module
 import testrun
 
 UNITTEST_OUT = """\
@@ -167,7 +173,7 @@ class RunTest(unittest.TestCase):
             code, _, err = self.run_main(["--suite", "studio"], py("pass"))
         self.assertEqual(code, 130)
         self.assertNotIn("Traceback", err)
-        self.assertEqual(self.events(), [])
+        self.assertEqual([e["kind"] for e in self.events()], ["test_aborted"])
 
     def test_ctrl_c_stops_child(self):
         ready = self.home.parent / "ready"
@@ -189,10 +195,254 @@ class RunTest(unittest.TestCase):
         self.assertNotIn("Traceback", err)
         self.assertLess(time.monotonic() - began, 10)
 
+    # --- Eskalation, Prozessgruppe, Abbruch-Ereignis (T05) -------------------
+
+    def spawn_stubborn_family(self):
+        """Kind und Enkel ignorieren SIGTERM; meldet Bereitschaft per Datei."""
+        base = self.home.parent
+        base.mkdir(parents=True, exist_ok=True)
+        ready = base / "ready"
+        grandchild = (
+            "import signal, time, pathlib; signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+            f"pathlib.Path({str(base / 'gready')!r}).write_text(str(__import__('os').getpid())); "
+            "time.sleep(60)"
+        )
+        child = (
+            "import os, signal, subprocess, sys, time, pathlib; "
+            "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+            f"subprocess.Popen([sys.executable, '-c', {grandchild!r}]); "
+            f"g = pathlib.Path({str(base / 'gready')!r}); "
+            "\nwhile not g.exists() or not g.read_text(): time.sleep(0.01)\n"
+            f"pathlib.Path({str(ready)!r}).write_text(f'{{os.getpid()}} {{g.read_text()}}'); "
+            "time.sleep(60)"
+        )
+        return ready, py(child)
+
+    def interrupt_when_ready(self, ready, sig=signal.SIGINT):
+        def wait_then_signal():
+            while not ready.exists() or not ready.read_text().count(" "):
+                time.sleep(0.01)
+            os.kill(os.getpid(), sig)
+
+        threading.Thread(target=wait_then_signal, daemon=True).start()
+
+    def assert_dead(self, pids):
+        for pid in pids:
+            for _ in range(300):
+                try:
+                    os.kill(pid, 0)
+                except ProcessLookupError:
+                    break
+                time.sleep(0.01)
+            else:
+                os.kill(pid, signal.SIGKILL)  # Aufräumen, dann Test rot
+                self.fail(f"Prozess {pid} lebt noch")
+
+    def test_sigterm_ignoring_family_is_killed_on_ctrl_c(self):
+        ready, child = self.spawn_stubborn_family()
+        self.interrupt_when_ready(ready)
+        with mock.patch.object(testrun, "GRACE", 0.3):
+            began = time.monotonic()
+            code, _, err = self.run_main(["--suite", "studio"], child)
+        self.assertEqual(code, 128 + signal.SIGINT)
+        self.assertNotIn("Traceback", err)
+        self.assertLess(time.monotonic() - began, 10)
+        self.assert_dead([int(x) for x in ready.read_text().split()])
+
+    def test_terminate_signal_stops_family_and_exits_130(self):
+        ready, child = self.spawn_stubborn_family()
+        self.interrupt_when_ready(ready, signal.SIGTERM)
+        previous = signal.getsignal(signal.SIGTERM)
+        with mock.patch.object(testrun, "GRACE", 0.3):
+            code, _, _ = self.run_main(["--suite", "studio"], child)
+        self.assertEqual(code, 130)
+        self.assertEqual(signal.getsignal(signal.SIGTERM), previous)
+        self.assert_dead([int(x) for x in ready.read_text().split()])
+        self.assertEqual([e["kind"] for e in self.events()], ["test_aborted"])
+
+    def test_child_gets_own_process_group(self):
+        code, out, _ = self.run_main(
+            ["--suite", "studio"], py("import os; print(os.getpgrp() == os.getpid())")
+        )
+        self.assertEqual(code, 0)
+        self.assertIn("True", out)
+
+    def test_keyboard_interrupt_records_aborted(self):
+        with mock.patch.object(testrun, "_run", side_effect=KeyboardInterrupt):
+            code, _, _ = self.run_main(["--suite", "vitest"], py("pass"))
+        self.assertEqual(code, 130)
+        (event,) = self.events()
+        self.assertEqual(event["kind"], "test_aborted")
+        self.assertEqual(event["suite"], "vitest")
+        self.assertEqual(event["source"], "make")
+        for field in ("commit", "diff", "ts", "session_id"):
+            self.assertIn(field, event)
+        self.assertNotIn("names", event)
+
+    def test_aborted_not_written_in_ci(self):
+        with (
+            mock.patch.dict(os.environ, {"CI": "true"}),
+            mock.patch.object(testrun, "_run", side_effect=KeyboardInterrupt),
+        ):
+            self.run_main(["--suite", "studio"], py("pass"))
+        self.assertEqual(self.events(), [])
+
+    def test_record_aborted_swallows_write_errors(self):
+        with mock.patch.object(paths_module, "append_event", side_effect=OSError("x")):
+            testrun._record_aborted("studio")  # wirft nicht
+        with (
+            mock.patch.object(testrun, "_run", side_effect=KeyboardInterrupt),
+            mock.patch.object(paths_module, "append_event", side_effect=OSError("x")),
+        ):
+            code, _, err = self.run_main(["--suite", "studio"], py("pass"))
+        self.assertEqual(code, 130)  # KeyboardInterrupt bleibt Abbruch, nicht Fehler
+        self.assertIn("testrun:", err)
+
     def test_missing_command_does_not_raise(self):
         code, _, err = self.run_main(["--suite", "studio"], ["/nicht/vorhanden"])
         self.assertNotEqual(code, 0)
         self.assertIn("testrun:", err)
+
+
+class AbortedEventConsumersTest(unittest.TestCase):
+    """B3: test_aborted ändert weder Zustand, Flake-Verdacht noch Metriken."""
+
+    BASE: ClassVar[tuple] = (
+        {
+            "kind": "session_start",
+            "ts": "2026-09-30T12:00:00.000Z",
+            "session_id": "s1",
+            "agent_id": "main",
+            "source": "hook",
+            "status": "idle",
+        },
+        {
+            "kind": "test_failed",
+            "ts": "2026-09-30T12:00:01.000Z",
+            "session_id": "s1",
+            "agent_id": "",
+            "source": "make",
+            "suite": "studio",
+            "commit": "abc",
+            "diff": "d1",
+            "names": ["K.test_a"],
+            "exit": 1,
+            "load": 1.0,
+        },
+        {
+            "kind": "test_passed",
+            "ts": "2026-09-30T12:00:03.000Z",
+            "session_id": "s1",
+            "agent_id": "",
+            "source": "make",
+            "suite": "studio",
+            "commit": "abc",
+            "diff": "d1",
+        },
+    )
+    ABORTED: ClassVar[dict] = {
+        "kind": "test_aborted",
+        "ts": "2026-09-30T12:00:02.000Z",
+        "session_id": "s1",
+        "agent_id": "",
+        "source": "make",
+        "suite": "studio",
+        "commit": "abc",
+        "diff": "d1",
+    }
+
+    def with_aborted(self):
+        return [*self.BASE, self.ABORTED]
+
+    def test_build_state_unchanged_except_feed_line(self):
+        now = 1_790_000_000.0
+        plain = model.build_state(self.BASE, now, {}, "all")
+        extra = model.build_state(self.with_aborted(), now, {}, "all")
+        feed = extra.pop("feed")
+        self.assertEqual(
+            [line["kind"] for line in plain.pop("feed")],
+            [line["kind"] for line in feed if line["kind"] != "test_aborted"],
+        )
+        self.assertEqual(
+            json.dumps(plain, sort_keys=True), json.dumps(extra, sort_keys=True)
+        )
+
+    def test_flake_suspects_unchanged(self):
+        self.assertEqual(
+            efficiency.flake_suspects(self.with_aborted()),
+            efficiency.flake_suspects(self.BASE),
+        )
+        self.assertEqual(efficiency.flake_suspects(self.BASE), ["K.test_a"])
+
+    def test_aborted_between_red_and_green_keeps_suspect(self):
+        self.assertIn("K.test_a", efficiency.flake_suspects(self.with_aborted()))
+
+    def test_metrics_flakes_unchanged(self):
+        self.assertEqual(
+            metrics._with_flakes({}, self.with_aborted()),
+            metrics._with_flakes({}, self.BASE),
+        )
+
+    def test_only_aborted_is_not_measured(self):
+        self.assertIsNone(metrics._with_flakes({}, [self.ABORTED])["flakes"])
+
+
+class DiffHashTest(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.repo = Path(tmp.name)
+        self.git("init", "-q")
+        self.git(
+            "-c",
+            "user.name=t",
+            "-c",
+            "user.email=t@t",
+            "commit",
+            "-q",
+            "--allow-empty",
+            "-m",
+            "i",
+        )
+        previous = os.getcwd()
+        os.chdir(self.repo)
+        self.addCleanup(os.chdir, previous)
+
+    def git(self, *args):
+        subprocess.run(["git", *args], cwd=self.repo, check=True, capture_output=True)
+
+    def test_clean_tree_is_empty_and_stable(self):
+        self.assertEqual(testrun._diff_hash(), "")
+
+    def test_diff_hash_sees_untracked_file(self):
+        before = testrun._diff_hash()
+        (self.repo / "neu.txt").write_text("a", "utf-8")
+        created = testrun._diff_hash()
+        self.assertNotEqual(before, created)
+        self.assertEqual(testrun._diff_hash(), created)  # ohne Änderung stabil
+        (self.repo / "neu.txt").write_text("abc", "utf-8")  # Grösse
+        self.assertNotEqual(testrun._diff_hash(), created)
+
+    def test_diff_hash_sees_mtime_change(self):
+        file = self.repo / "neu.txt"
+        file.write_text("a", "utf-8")
+        first = testrun._diff_hash()
+        stat = file.stat()
+        os.utime(file, ns=(stat.st_atime_ns, stat.st_mtime_ns + 5_000_000_000))
+        self.assertNotEqual(testrun._diff_hash(), first)
+
+    def test_ignored_files_do_not_count(self):
+        (self.repo / ".gitignore").write_text("*.log\n", "utf-8")
+        self.git("add", ".gitignore")
+        self.git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "g")
+        before = testrun._diff_hash()
+        (self.repo / "x.log").write_text("laut", "utf-8")
+        self.assertEqual(testrun._diff_hash(), before)
+
+    def test_tracked_diff_hash_format_unchanged(self):
+        (self.repo / "t.txt").write_text("a", "utf-8")
+        self.git("add", "t.txt")
+        self.assertRegex(testrun._diff_hash(), r"^[0-9a-f]{12}$")
 
 
 if __name__ == "__main__":
