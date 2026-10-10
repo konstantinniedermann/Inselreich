@@ -172,6 +172,7 @@ class MetricsTest(unittest.TestCase):
         )
         with mock.patch.object(metrics.actions, "render", return_value=""):
             code, out = self.run_cli("--efficiency")
+        self.assertEqual(code, 0)
         flake = next(x for x in out.splitlines() if "Flake-Verdacht)" in x)
         self.assertIn("nicht gemessen", flake)
 
