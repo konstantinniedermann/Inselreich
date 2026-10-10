@@ -10,6 +10,7 @@ Strang See · Worktree `.worktrees/rel-15-see` · Branch `fix/rel-15-see` · Ums
 - Modify: `src/ui/hud.ts` (`bindIslandMenu` Z. 340–431)
 - Test: `tests/render/seaMapDraw.test.ts` (Helfer `draw` Z. 17–23, Aufruf Z. 47, neuer Block am Dateiende)
 - Test: `tests/render/seaMap.test.ts` (Test Z. 221–227 ersetzen)
+- Test: `tests/ui/hud.test.ts` (neuer Block Listener-Leck, R437 B1)
 
 **Interfaces:** Produces `export interface MapUi { hover: number | null; dpr: number }`, `export const DOT_R = 3`, `export const MARK = 4` (CSS-Pixel) in `src/render/seaMap.ts`. `drawSeaMap(ctx, world, l, cache, ui: MapUi)` behält die Signatur; einziger Produktiv-Aufrufer ist `hud.ts`.
 
@@ -90,8 +91,10 @@ it('Erstes Rastern: ein Lauf je Insel, ein fillRect je Landstreifen (Zähler sta
 });
 ```
 
-Run: `npx vitest run tests/render/seaMapDraw.test.ts tests/render/seaMap.test.ts; echo EXIT=$?`
-Expected: FAIL im neuen Block (Import `DOT_R`/`MARK` fehlt; Marke 4 × 4 auf dem Anker, Striche 1), der Zählertest grün (er ersetzt nur die Uhr), `EXIT=1`.
+`tests/ui/hud.test.ts` (R437 B1, rot vor dem Fix): `bindIslandMenu` in `src/ui/hud.ts` dafür mit `export` versehen (Name unverändert). Ohne DOM-Umgebung: `vi.stubGlobal('document', fakeDoc)` mit aufzeichnendem `addEventListener(type, fn, opts)` und `removeEventListener`; `header` als Fake, dessen `querySelector` für `.hud-islands`, `[data-field="islands"]`, `.island-pop`, `.island-list` und `canvas.sea-map` je ein Fake-Element mit leerem `addEventListener`, `contains`, `hidden` liefert (`box` enthält die übrigen). Test: `bindIslandMenu(header, state, actions)` zweimal mit demselben `header` (Zustand aus `createWorld`); Erwartung: von den aufgezeichneten `document`-Anmeldungen (`pointerdown`, `keydown`) sind nach dem zweiten Binden genau 2 aktiv, wobei „aktiv“ = `opts?.signal` vorhanden und nicht `aborted` (ohne `signal` zählt die Anmeldung als dauerhaft aktiv, also vorher 4, rot); die Signale des ersten Bindens sind `aborted`. Aufräumen: `vi.unstubAllGlobals()` in `afterEach`.
+
+Run: `npx vitest run tests/render/seaMapDraw.test.ts tests/render/seaMap.test.ts tests/ui/hud.test.ts; echo EXIT=$?`
+Expected: FAIL im neuen Block (und im Listener-Test) (Import `DOT_R`/`MARK` fehlt; Marke 4 × 4 auf dem Anker, Striche 1), der Zählertest grün (er ersetzt nur die Uhr), `EXIT=1`.
 
 - [ ] **Schritt 2: `src/render/seaMap.ts`**
 
@@ -158,7 +161,7 @@ c) dpr der Leinwand merken und weitergeben: `let mapDpr = 1;` neben `let layout`
 
 - [ ] **Schritt 4: Grün bestätigen**
 
-Run: `npx vitest run tests/render/seaMapDraw.test.ts tests/render/seaMap.test.ts tests/ui/seaMapView.test.ts tests/ui/hud.test.ts; echo EXIT=$?` → PASS, `EXIT=0`
+Run: `npx vitest run tests/render/seaMapDraw.test.ts tests/render/seaMap.test.ts tests/ui/seaMapView.test.ts tests/ui/hud.test.ts; echo EXIT=$?` → PASS (inkl. Listener-Test), `EXIT=0`
 Run: `grep -n "performance.now" tests/render/seaMap.test.ts; echo EXIT=$?` → keine Treffer, `EXIT=1`
 Run: `grep -n "signal: menuAbort.signal" src/ui/hud.ts; echo EXIT=$?` → genau 2 Treffer, `EXIT=0`
 Run: `npx tsc --noEmit; echo EXIT=$?` → `EXIT=0`
@@ -167,7 +170,7 @@ Run: `make lint; echo EXIT=$?` → `EXIT=0`
 - [ ] **Schritt 5: Commits (zwei)**
 
 ```bash
-git add src/render/seaMap.ts src/ui/hud.ts tests/render/seaMapDraw.test.ts
+git add src/render/seaMap.ts src/ui/hud.ts tests/render/seaMapDraw.test.ts tests/ui/hud.test.ts
 git commit -m "fix: Seekarte Kontor-Marke über dem Hafenpunkt, Grössen x dpr, Listener abmelden (UI-SEEKARTE-NACHZUG)"
 git add tests/render/seaMap.test.ts
 git commit -m "test: Silhouetten-Rastern per Zähler statt Uhr (UI-SEEKARTE-NACHZUG)"
@@ -177,4 +180,4 @@ git commit -m "test: Silhouetten-Rastern per Zähler statt Uhr (UI-SEEKARTE-NACH
 
 - `seaMap.ts` bleibt rein (nur `domRaster` mit DOM); keine Farbänderung; Reihenfolge der Ebenen unverändert (AK-S7-Test grün).
 - `hud.ts`: der Listener-Satz eines alten Bindens wird beim neuen Binden abgebrochen; `mapDpr` statt Live-dpr.
-- Der Beleg „kein Leck“ im Browser kommt in T07 (C7) über den Helfer aus T04.
+- Der Listener-Test in `hud.test.ts` war vor dem Fix rot (Beleg im Bericht des Umsetzers). Der Browser-Beleg „kein Leck“ (Zweitbeleg) kommt in T07 (C7) über den Helfer aus T04.

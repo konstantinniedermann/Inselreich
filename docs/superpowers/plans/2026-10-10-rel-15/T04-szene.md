@@ -68,11 +68,11 @@ Ablauf: Zahl `n0` lesen (Soll 1; 0 → NICHT BESTANDEN „Probe greift nicht“)
 
 Hilfsfunktionen `mouse`, `clickAt`, `key` aus der Vorlage übernehmen (Prettier-Format). Keine absoluten Pfade; Ausgabeordner per `mkdirSync(out, { recursive: true })`.
 
-- [ ] **Schritt 3: Lauf gegen den Worktree** (Browser-Lauf, vorher `pgrep -fl "Chrome|chromium"`; studioweit ≤ 2 zugleich)
+- [ ] **Schritt 3: Lauf gegen den Worktree** (Browser-Lauf mit festen Ports **5491** (Hauptlauf) und **5591** (Gegenprobe), R437 B2: 5291 gehört T06, 5391 T07; vorher `pgrep -fl "Chrome|chromium"`; studioweit ≤ 2 zugleich)
 
 Run: `node tools/render-qa/seekarte.mjs --help; echo EXIT=$?` → Hilfetext, `EXIT=0`
-Run: `node tools/render-qa/seekarte.mjs --size 1280x720 --dpr 1 --leck --out .studio/qa/REL-15/t04; echo EXIT=$?` → alle Zeilen BESTANDEN, `EXIT=0`
-Gegenprobe Leck (zeigt, dass die Probe greift): `node tools/render-qa/seekarte.mjs --root <Hauptcheckout> --size 1280x720 --dpr 1 --leck --port 5391 --out .studio/qa/REL-15/t04-main; echo EXIT=$?` → Zeile „Listener-Leck“ NICHT BESTANDEN mit `n2 = 3`, `EXIT=1` (erwartet; `main`-Stand ohne T03). Hinweis: der Hauptcheckout hat das Skript nicht; `--root` zeigt nur, wessen Vite und Quellen geladen werden, das Skript läuft aus dem Worktree.
+Run: `node tools/render-qa/seekarte.mjs --size 1280x720 --dpr 1 --leck --port 5491 --out .studio/qa/REL-15/t04; echo EXIT=$?` → alle Zeilen BESTANDEN, `EXIT=0`
+Gegenprobe Leck (zeigt, dass die Probe greift): `node tools/render-qa/seekarte.mjs --root <Hauptcheckout> --size 1280x720 --dpr 1 --leck --port 5591 --out .studio/qa/REL-15/t04-main; echo EXIT=$?` → Zeile „Listener-Leck“ NICHT BESTANDEN mit `n2 = 3`, `EXIT=1` (erwartet; `main`-Stand ohne T03). Hinweis: der Hauptcheckout hat das Skript nicht; `--root` zeigt nur, wessen Vite und Quellen geladen werden, das Skript läuft aus dem Worktree.
 
 - [ ] **Schritt 4: README-Zeile** in `tools/render-qa/README.md`, Tabelle „Skripte“ nach `smoke.mjs`:
 
