@@ -1,6 +1,6 @@
 // E-032 / R270: Prüfschritt `make zeitreserve` erkennt Tests ohne CI-Reserve.
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -170,10 +170,14 @@ describe('zeitreserve CLI bei Last (Push-Gate, R338)', () => {
     expect(p.stderr).toContain('nicht belastbar');
   });
 
-  it('--push bei Last > 4: kein Ergebnis, Exit 2 mit Meldung', () => {
+  it('--push bei aktueller Last 9: harte Prüfung, Verstoss gibt Exit 1 (R438 V3)', () => {
     const p = run('9', '--push');
-    expect(p.status).toBe(2);
-    expect(p.stderr).toContain('nicht belastbar, Last 9.0 > 4, warten');
+    expect(p.status).toBe(1);
+    expect(p.stderr).not.toContain('warten');
+  });
+
+  it('Kopfkommentar von check.ts nennt keine Last während des Laufs mehr', () => {
+    expect(readFileSync(check, 'utf8')).not.toContain('während des Laufs');
   });
 
   it('--push bei Last <= 4: harte Prüfung, Verstoss gibt Exit 1', () => {
@@ -232,41 +236,50 @@ describe('zeitreserve CLI --push mit Metadaten (R353 P1)', () => {
     writeFileSync(p, JSON.stringify(content));
     return p;
   };
-  const run = (path: string, ...flags: string[]) =>
+  const run = (path: string, flags: string[] = [], load = '1') =>
     spawnSync('node', [check, path, ...flags], {
       encoding: 'utf8',
       env: {
         ...nodeEnv,
         GITHUB_ACTIONS: undefined,
-        ZEITRESERVE_FAKE_LOAD: '1',
+        ZEITRESERVE_FAKE_LOAD: load,
         ZEITRESERVE_FAKE_HEAD: 'abc',
       },
     });
   const meta = { commit: 'abc', loadStart: 1, loadEnd: 1, loadMax: 1, timings: ok };
 
   it('passende Messung: Exit 0', () => {
-    expect(run(file('ok.json', meta), '--push').status).toBe(0);
+    expect(run(file('ok.json', meta), ['--push']).status).toBe(0);
+  });
+
+  it('passende Messung bei aktueller Last 9: Exit 0 (R438 V3)', () => {
+    expect(run(file('ok9.json', meta), ['--push'], '9').status).toBe(0);
+  });
+
+  it('hohe Last vor dem Lauf bleibt Exit 2 auch bei aktueller Last 1', () => {
+    const p = run(file('load1.json', { ...meta, loadStart: 9, loadMax: 9 }), ['--push'], '1');
+    expect(p.status).toBe(2);
   });
 
   it('alter Commit: Exit 2 nicht belastbar', () => {
-    const p = run(file('old.json', { ...meta, commit: 'zzz' }), '--push');
+    const p = run(file('old.json', { ...meta, commit: 'zzz' }), ['--push']);
     expect(p.status).toBe(2);
     expect(p.stderr).toContain('nicht belastbar');
   });
 
   it('hohe Last vor dem Lauf: Exit 2', () => {
-    const p = run(file('load.json', { ...meta, loadStart: 9, loadMax: 9 }), '--push');
+    const p = run(file('load.json', { ...meta, loadStart: 9, loadMax: 9 }), ['--push']);
     expect(p.status).toBe(2);
     expect(p.stderr).toContain('Last vor dem Lauf 9');
   });
 
   it('hohe Eigenlast bei ruhigem Start: Exit 0 (R394)', () => {
-    const p = run(file('eigen.json', { ...meta, loadEnd: 9, loadMax: 9 }), '--push');
+    const p = run(file('eigen.json', { ...meta, loadEnd: 9, loadMax: 9 }), ['--push']);
     expect(p.status).toBe(0);
   });
 
   it('Array-Format: Exit 2 statt Absturz', () => {
-    const p = run(file('arr.json', ok), '--push');
+    const p = run(file('arr.json', ok), ['--push']);
     expect(p.status).toBe(2);
     expect(p.stderr).toContain('alten Format');
   });
