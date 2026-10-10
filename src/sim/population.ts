@@ -19,7 +19,7 @@ import { budgetFrom, dampsOn, deficitGood, goodsBalance, upgradeDelta, type Budg
 import { buildCoverage, distance, serviceBuildings, type Coverage } from './coverage';
 import { inSupplyRange } from './supply';
 import { effectiveTaxPct } from './edicts';
-import { effectiveTaxLevel, goodLockActive, taxPct, upgradeStopActive } from './townhall';
+import { effectiveTaxLevel, goodLockActive, upgradeStopActive } from './townhall';
 import { center, islandOf } from './world';
 
 export { GROWTH_INTERVAL, UPGRADE_WAIT } from './defs/timing';
