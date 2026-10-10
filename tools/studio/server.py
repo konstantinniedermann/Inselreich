@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import sys
+import threading
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -28,11 +29,24 @@ DASHBOARD = Path(__file__).resolve().parent / "dashboard"
 HOST = "127.0.0.1"
 ARCHIVE_SUFFIXES = {".md", ".jsonl", ".txt"}
 STATE_LIMITS_MAX_AGE = 3600
+STATE_CACHE_MAX_AGE = 2.0
+STATE_CACHE_KEYS = 8
+STATE_BUILD_DUTY = 30  # Aufbau höchstens alle 30 × Aufbaudauer (~3 % CPU)
+STATE_THROTTLE_MAX = 90.0
 
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(
-        self, *args, store, agents, inactive_after, dashboard, docs, archive, **kwargs
+        self,
+        *args,
+        store,
+        agents,
+        inactive_after,
+        dashboard,
+        docs,
+        archive,
+        cache,
+        **kwargs,
     ):
         self.store = store
         self.agents = agents
@@ -40,6 +54,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.dashboard = dashboard
         self.docs = docs
         self.archive = archive
+        self.cache = cache
         super().__init__(*args, directory=str(dashboard), **kwargs)
 
     def host_allowed(self) -> bool:
@@ -69,10 +84,18 @@ class Handler(SimpleHTTPRequestHandler):
                     self.send_error(404)
                     return
             serve_static()
+        except (BrokenPipeError, ConnectionResetError):
+            return  # Client hat getrennt: nichts mehr zu senden, kein Trace
         except (ValueError, OSError):
-            self.send_error(404)
+            self.send_error_quietly(404)
         except Exception:  # noqa: BLE001 — Server muss oben bleiben
-            self.send_error(500)
+            self.send_error_quietly(500)
+
+    def send_error_quietly(self, code: int) -> None:
+        try:
+            self.send_error(code)
+        except OSError:
+            pass  # Socket schon tot
 
     def do_GET(self):
         self.route(super().do_GET)
@@ -103,7 +126,40 @@ class Handler(SimpleHTTPRequestHandler):
         if self.command != "HEAD":
             self.wfile.write(body)
 
-    def send_state(self, session: str, heartbeats: bool = True) -> None:
+    def events_stamp(self) -> tuple[int, int]:
+        try:
+            info = self.store.path.stat()
+        except OSError:
+            return (0, 0)
+        return (info.st_mtime_ns, info.st_size)
+
+    def state_body(self, session: str, heartbeats: bool) -> bytes:
+        """Zustand als JSON, zwischengespeichert je (session, heartbeats) (T01).
+
+        Treffer, solange der Eintrag höchstens STATE_CACHE_MAX_AGE alt ist und die
+        Events-Datei unverändert; Wiederaufbau höchstens alle STATE_BUILD_DUTY ×
+        Aufbaudauer, damit ein teurer Aufbau den Server nicht dauerhaft auslastet.
+        """
+        key = (session, heartbeats, *self.events_stamp())
+        with self.cache["lock"]:
+            now = clock.timestamp()
+            entries = self.cache["entries"]
+            hit = entries.get(key[:2])
+            if hit and reusable(hit, key, now):
+                return hit["body"]
+            body = self.build_state_body(session, heartbeats)
+            done = clock.timestamp()
+            if len(entries) >= STATE_CACHE_KEYS:
+                entries.clear()
+            entries[key[:2]] = {
+                "key": key,
+                "ts": done,
+                "cost": max(0.0, done - now),
+                "body": body,
+            }
+            return body
+
+    def build_state_body(self, session: str, heartbeats: bool) -> bytes:
         state = build_state(
             self.store.events(),
             clock.timestamp(),
@@ -116,7 +172,10 @@ class Handler(SimpleHTTPRequestHandler):
         )
         state["docs"] = bundle(self.docs, self.agents)
         state["limits"] = limits_state(clock.timestamp())
-        body = json.dumps(state, ensure_ascii=False).encode("utf-8")
+        return json.dumps(state, ensure_ascii=False).encode("utf-8")
+
+    def send_state(self, session: str, heartbeats: bool = True) -> None:
+        body = self.state_body(session, heartbeats)
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
@@ -134,6 +193,16 @@ class Handler(SimpleHTTPRequestHandler):
 
     def log_message(self, format, *args):
         return
+
+
+def reusable(hit: dict, key: tuple, now: float) -> bool:
+    age = now - hit["ts"]
+    if age < 0:
+        return False
+    throttle = min(STATE_THROTTLE_MAX, hit["cost"] * STATE_BUILD_DUTY)
+    if age < throttle:
+        return True
+    return hit["key"] == key and age <= STATE_CACHE_MAX_AGE
 
 
 def limits_state(now: float) -> dict | None:
@@ -163,6 +232,7 @@ def make_server(
         dashboard=dashboard.resolve(),
         docs=docs if docs is not None else docs_dir(),
         archive=archive if archive is not None else archive_dir(),
+        cache={"lock": threading.Lock(), "entries": {}},
     )
     return ThreadingHTTPServer((HOST, port), handler)
 

@@ -13,7 +13,6 @@ import re
 import shlex
 import subprocess
 import sys
-import time
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
@@ -232,7 +231,7 @@ def archive_text(folder: str, filename: str, text: str) -> str:
 
 
 def stamp() -> str:
-    return time.strftime("%Y%m%d-%H%M%S", time.gmtime())
+    return clock.now().strftime("%Y%m%d-%H%M%S")
 
 
 def _spawn_extras(event: dict, payload: dict) -> None:

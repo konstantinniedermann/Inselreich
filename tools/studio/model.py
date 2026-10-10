@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import re
 import threading
 from collections import Counter
 from datetime import UTC, datetime
@@ -168,6 +169,11 @@ class EventStore:
 def _package(event: dict) -> str:
     """Paket-ID; alte Events tragen ``package`` statt ``package_id``."""
     return str(event.get("package_id") or event.get("package") or "")
+
+
+def _package_token(text: str) -> str:
+    """Phasenname einer Paket-Kopfzeile: bis Leerraum, Gedankenstrich, Doppelpunkt, Klammer."""
+    return re.split(r"[\s\u2014\u2013:(]", text.strip(), maxsplit=1)[0]
 
 
 def _estimate(value: object) -> dict | None:
@@ -777,7 +783,8 @@ class _Builder:
         ]
         if not candidates:
             return None
-        names = {child["package"], lead_node["package"]} - {""}
+        packages = {child["package"], lead_node["package"]} - {""}
+        names = packages | {_package_token(p) for p in packages}
         for grant in candidates:
             if grant["phase"] in names:
                 return (grant["lead"], grant["phase"], grant["session_id"])

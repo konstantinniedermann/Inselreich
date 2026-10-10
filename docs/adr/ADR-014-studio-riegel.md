@@ -51,8 +51,9 @@ geschützt; Arbeiter können die Datei nicht ändern, und die Modellregel ist Ha
 - `make hooks` ist einmal je Klon nötig (Worktrees teilen die Git-Konfiguration).
 - Die Testsuite pinnt das Tabellenformat (`tools/studio/tests/test_modelguard.py`); eine Formatänderung der Tabelle
   in `STUDIO.md` macht `make studio-test` rot und muss den Parser mitführen.
-- Im Modus `warn` hat der Guard keine Wirkung auf den Start; erst `deny` (TOOL-AKTIVIERUNG) lehnt ab. Abgelehnte
-  Starts erschienen dann als `spawn`-Ereignis ohne Kind, wie bisher bei Ablehnungen durch `guard.py`.
+- Der Guard läuft im Modus `deny` (`MODE` in `tools/studio/modelguard.py`, aktiv seit TOOL-AKTIVIERUNG, R428; Startzustand
+  war `warn`) und lehnt abweichende Starts ab. Abgelehnte Starts erscheinen als `spawn`-Ereignis ohne Kind, wie bisher
+  bei Ablehnungen durch `guard.py`.
 - Der Hook `pre-commit` ersetzt nicht die CI-Prüfung und nicht die Pflichtzeile `make docs-check` im Briefing.
 
 ## Nachtrag 2026-10-10 (TOOL-BUENDEL-3)

@@ -157,29 +157,17 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
 
 - **Fundort:** `src/ui/hints.ts:66-71`, `src/ui/hints.ts:69`, `src/ui/app.ts:878`, `tests/ui/hints.test.ts`. Beobachtung: (1) Mischfall Grundriss mit Weg und Gebäude zeigt immer das Gebäude („Gebäude vor Weg“ per R454 entschieden), kein Test dafür; (2) AK-R16-03 (Klick-Meldung mit Ortsangabe) hat keinen Unit-Test — entfernt man `at` beim Weg-Klick, bleiben alle Tests grün; der Test „AK-R16-03“ prüft eigentlich AK-R16-04; (3) `world.buildings[id]!.defId` bricht bei einer ID ohne Gebäude (in gültiger Welt nicht erreichbar), Vorschlag `?.` mit altem Text als Rückfall; (4) `GROUND_NAMES[t]!` liesse sich als Paar-Array ohne Non-null-Assertion schreiben. Ursprung: Final-Review/Release-Check REL-16 (lead-qa). Einschätzung: niedrig, Trivial-Fix-Kandidat beim nächsten Eingriff in `hints.ts` (REL-17 berührt `app.ts`).
 
-### 2026-10-10 · REL-16 (R454): render-qa-Werkzeug, Konsolenfilter und Kamera-Ruhe
-
-- **Fundort:** `tools/render-qa/sitzung.mjs` (Konsolenfilter), Playtest REL-16. Beobachtung: (1) Headless-Warnung „AudioContext was not allowed to start“ erscheint je Grösse 15-mal aus `src/audio/` und sollte vom Konsolenfilter ausgenommen werden; (2) `tileCenter` nach `centerOn` schwankt zwischen Läufen (Y 349,8 oder 370,8) — nach 1,5 s ist die Kamera evtl. noch nicht ruhig; das Schild traf trotzdem die richtige Kachel. Ursprung: Release-Check REL-16 (qa-playtester). Einschätzung: niedrig, Werkzeug-Kandidat.
-
 ### 2026-10-10 · REL-17: Randfälle von Problem-Sprung und Abriss-Zug
 
 - **Fundort:** `src/ui/app.ts` (Log-Klick über `resolveLogClick`, `onAction`), `src/ui/problems.ts`, `src/ui/hints.ts`, `src/ui/input.ts`. Beobachtung: (a) Log-Klick auf Fremdinseln zentriert auf Inselkacheln ohne `ox`/`oy`, der Problem-Sprung rechnet mit Archipel-Kacheln; prüfen, ob Krisen auf Fremdinseln vorkommen. (b) `unconnectedIds` (`hints.ts`) zählt die Amtsstube mit, `cutOffIds` (`problems.ts`) nicht (`needsConnection`); bei I-043 vereinheitlichen. (c) Weg-Zug und Tasten `0`/`9`: ein Inselsprung mitten im Zug bricht den Zug nicht ab (nur `.`/`,` tun das); prüfen. (d) Touch-Schwelle ungeprüft: AK-R17-16 verlangt „Touch-Schwelle wie Weg“ für den Abriss-Zug; es gibt keinen Touch-Beleg (Desktop-first, kein Touch-Lauf in T05). (e) `Esc` und Rechtsklick beenden einen laufenden Weg- oder Abriss-Zug nicht, solange ein schliessbarer Toast offen ist (`closeClosableToast` → `return` in `app.ts`); seit dem Weg-Zug so, kein Regress. (f) `onBlur` beendet jetzt auch Weg-, Roden- und Aufforsten-Züge (Absicht, harmlos: setzt nur `dragMoneyToastShown` zurück). (g) Die Abriss-Zug-Vorschau (`updateHover`) hat keinen Vitest-Beleg, nur den Browser. Ursprung: Planung und Reviews REL-17. Einschätzung: niedrig; (a), (b) und (c) bei I-043 bzw. dem nächsten Eingriff prüfen.
 
-### 2026-10-10 · TOOL-BUENDEL-3 (R457): Restpunkte Uhr, Flake-Matching, Testlauf-Wrapper
+### 2026-10-10 · TOOL-BUENDEL-3 (R457): Restpunkt Flake-Matching
 
-- **Fundort:** `tools/studio/hook.py:235`, `tools/studio/clock.py`, `tools/studio/tests/test_metrics.py:278`, `tools/studio/testrun.py`, `budgetwarn` (Import aus `modelguard`). Beobachtung: (1) `hook.py` nutzt `time.gmtime()` an der gemeinsamen Uhr vorbei, die Lint-Warnung erkennt `time.monotonic` nicht; (2) `TickingClock` im HOTFIX-Test zählt Sekunden hoch und wirft ab dem 60. `now()`-Aufruf `ValueError` — heute nicht erreicht, aber fragil (auf `clock.frozen` umstellen); (3) `testrun.py` zeigt bei Ctrl-C einen Traceback, Exit bei Signal 256−N statt 128+N; (4) `budgetwarn` importiert private Helfer `_header`/`_persona` aus `modelguard`; (5) Flake-Matching erfasst ungetrackte Dateien nicht, bei Sammelfehlern bleibt `names` leer; (6) ADR-014 „Konsequenzen“ nennt veralteten Modus `warn`; (7) `clock.py` 63 statt ≤ 50 Zeilen (Plan-Grenze widersprach der Spec). Ursprung: Controller 2 / Final-Review TOOL-BUENDEL-3. Einschätzung: niedrig, Kandidaten für das nächste Werkzeug-Bündel.
+- **Fundort:** Flake-Matching im Testlauf-Wrapper (`tools/studio/testrun.py`). Beobachtung: Das Flake-Matching erfasst ungetrackte Dateien nicht; bei Sammelfehlern bleibt `names` leer. Zurückgestellt, TOOL-BUENDEL-4 hat es nicht umgesetzt. Die übrigen Punkte (Uhr, `TickingClock`, Ctrl-C-Exit, private Helfer, ADR-014-Modus) sind in TOOL-BUENDEL-4 erledigt; die Plan-Grenze für `clock.py` war ein Planfehler (Grenze war Planfehler, geschlossen). Ursprung: Controller 2 / Final-Review TOOL-BUENDEL-3. Einschätzung: niedrig, Kandidat für ein späteres Werkzeug-Bündel.
 
 ### 2026-10-10 · REL-17 (R458): niedrige Befunde aus Review und Playtest
 
 - **Fundort:** `src/ui/problems.ts`, `src/ui/hints.ts`, `src/ui/app.ts`, `src/ui/input.ts`, Playtest REL-17. Beobachtung: (1) Review B2: `problems.ts:85` Klasse 4 ohne eindeutigen Sortierschlüssel. (2) Review B4: drei Randfälle ohne Test. (3) Playtest 1: Das Schild im Abriss-Zug zeigt über Gebäuden rot „Abreissen: Weberei …“ (`hints.ts` 327–336). (4) Playtest 2: AK-R17-16 sagt „grün“, die Vorschau malt `HOVER_BAD`. (5) Ausserhalb Scope: Ein Weg direkt hinter einer Gebäudehülle lässt sich nicht als Zug-Start drücken. (6) Das Weberei-Panel läuft bei 1280×720 unten aus dem Bild. (7) Toter `else`-Zweig `removeRoad`/`showRoadFailure` im Abriss-Zweig von `app.ts`. (8) `HOUSE_TITLES` zieht `problems.ts` über `hover` in unnötige Abhängigkeiten. Ursprung: REL-17. Erste Einschätzung: alle niedrig, nichts blockierend; (3)/(4) bei einer Nacharbeit der Abriss-Vorschau gemeinsam klären, (8) bei I-043 lösen.
-
-### 2026-10-10 · Dashboard-Server läuft dauerhaft auf 100 % CPU; `make studio` meldet Fehlstart trotz Start
-
-- **Fundort:** `tools/studio/server.py` (Prozess seit 2026-10-01 mit 334 CPU-Minuten), `make studio` / `make studio-stop`, `.studio/server.log` (`BrokenPipeError` in `socketserver.write`). Beobachtung: (1) Der Server belegt einen Kern voll, auch direkt nach einem Neustart (102 % nach 5 s, Dashboard-Tab offen) — vermutlich eine Schleife ohne Warten im Ereignis-Strom bzw. nach abgebrochener Verbindung; das hebt den 1-min-Load um rund 1 und verzögert Messläufe (Grenze Load ≤ 4, R329). (2) `make studio` meldete „startet nicht“, obwohl der Server lief (Prüfung zu früh); ein zweiter Aufruf scheitert dann mit `Address already in use`. Ursprung: L0, Session-Start nach 2cfa57e0. Einschätzung: mittel (wirkt auf jede Messung), Kandidat für das nächste Werkzeug-Bündel, vorgezogen.
-
-### 2026-10-10 · Budget-Zuordnung: Paket-Kopfzeile mit Zusatz fällt auf jüngste Freigabe
-
-- **Fundort:** `tools/studio/model.py` `budget_key` (Namenstreffer nur bei exakter Phase), Briefing-Kopfzeile `Paket: M13-E1 — UI-Strang, Tasks T09–T12`. Beobachtung: Der zweite parallele Controller (C) traf die Freigabe „M13-E1“ nicht per Name, die Freigabe war schon von Controller A beansprucht; der Rückfall wählte die jüngste Freigabe derselben Rolle (`UI-GUT-CHIP`, 1 Start) → Ampel „Budget von lead-tech überschritten: 2 von 1“, obwohl das Paketbudget 36 frei hat. Ursprung: L0, Session 5a00a316. Einschätzung: niedrig; L0 schreibt bis zum Fix nur die reine Paket-ID in `Paket:`; Werkzeug-Kandidat: Präfix-Treffer der Phase in der Kopfzeile (`M13-E1 …` → `M13-E1`) oder mehrere Leads je Freigabe erlauben (R433).
 
 ### 2026-10-10 · M13-E1 (T13): Restpunkte aus Sim- und UI-Strang
 
@@ -188,3 +176,19 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
 ### 2026-10-10 · M13-E1 (T14): Befunde des Browser-Laufs
 
 - **Fundort:** `.studio/qa/m13-e1/`, `src/ui/edictView.ts:51`, Kontor-Spaltenkopf «Kaufen», `--parchment-muted`, Seitenbreite bei 800 px. Beobachtung: (1) Spec-Widerspruch AK-M13E1-36 («Klick auf Handel → Meldung») gegen U-4/§Karten (`disabled` in der Sperre, Info nur als Sperrzeile und Tooltip); Umsetzung folgt dem Entwurf, an lead-design: AK-36 anpassen oder Meldung nachrüsten. (2) Kontor: «Kaufen» und «Edikt Handel: −20 %» im Spaltenkopf ohne Trenner (liest sich «KAUFENEDIKT»), niedrig. (3) «lohnt, wenn …» mit geringem Kontrast (`--parchment-muted`), niedrig. (4) Stillgelegter Betrieb zeigt weiter «Ausstoss 15 / min» (nominal), niedrig. (5) Unterhalt stillgelegt 30 → 18 pro Minute (60 %, Aufrunden nach Anhang 01), README sagt «halber Unterhalt»; Wortlaut prüfen. (6) Bei 800×600 scrollt die Seite waagrecht (Mindestbreite ≈ 880 px), nicht von M13-E1 verursacht. (7) `border-style: dashed` bei `.edict-card.locked` stört nicht, behalten. Ursprung: M13-E1 T14. Einschätzung: keine Blocker.
+
+### 2026-10-10 · TOOL-BUENDEL-4: `build_state` kostet ≈ 2,7 s bei 67k Events
+
+- **Fundort:** `tools/studio/model.py` `build_state` (budget_view/claim_budgets 2,7 s, `sorted` 2,1 s unter dem Profiler, 67k Ereignisse). Beobachtung: Der Server drosselt den Wiederaufbau deshalb auf das 30-Fache der Aufbaudauer (max. 90 s); das Dashboard kann bis ≈ 80 s veraltet sein. Ursprung: TOOL-BUENDEL-4 (Umsetzer A, T01). Erste Einschätzung: mittel; eine Optimierung in `model.py` (inkrementell oder ohne wiederholtes Sortieren) machte die Drosselung überflüssig.
+
+### 2026-10-10 · TOOL-BUENDEL-4: `testrun` sendet nur SIGTERM, Ctrl-C ohne Ereignis
+
+- **Fundort:** `tools/studio/testrun.py` (`proc.terminate()`). Beobachtung: Es sendet nur SIGTERM; ein Kind, das es ignoriert, blockiert den Abbruch. Ctrl-C schreibt kein Ereignis. Ursprung: TOOL-BUENDEL-4 (Umsetzer A, T05). Erste Einschätzung: niedrig; Eskalation auf SIGKILL nach Frist und ein Abbruch-Ereignis wären klein.
+
+### 2026-10-10 · TOOL-BUENDEL-4: `start.sh` meldet «läuft bereits» für jeden HTTP-Server am Port
+
+- **Fundort:** `tools/studio/start.sh`. Beobachtung: Jeder HTTP-Server, der am Port antwortet, gilt als laufendes Dashboard (auch ein fremder). Ursprung: TOOL-BUENDEL-4 (Umsetzer A, T02). Erste Einschätzung: niedrig; die Antwort auf eine Studio-Kennung (z. B. `/api/state`-Schlüssel) prüfen.
+
+### 2026-10-10 · TOOL-BUENDEL-4: Worktree-`start.sh` ohne `STUDIO_HOME` greift auf `.studio` des Hauptrepos zu
+
+- **Fundort:** `tools/studio/start.sh` im Worktree. Beobachtung: Ohne gesetztes `STUDIO_HOME` liest und schreibt ein im Worktree gestartetes Dashboard die `.studio`-Daten des Hauptrepos. Ursprung: TOOL-BUENDEL-4 (Umsetzer A, T02). Erste Einschätzung: niedrig; so gewollt für Echtdaten, aber bei Tests nur mit `STUDIO_HOME=<tmp>` starten.

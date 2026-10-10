@@ -31,20 +31,31 @@ if [ "${1:-}" = "stop" ]; then
   exit 0
 fi
 
-if running; then
+# Bereit = HTTP-Antwort auf "/" (statische Datei, billig; /api/state rechnet den ganzen Zustand).
+answers() {
+  python3 -c "import urllib.request; urllib.request.urlopen('${URL}', timeout=3)" 2>/dev/null
+}
+
+if running || answers; then
   echo "Studio-Dashboard läuft bereits: $URL"
   exit 0
 fi
 rm -f "$PID_FILE"
 
 nohup python3 "$DIR/server.py" --port "$PORT" >"$STUDIO_DIR/server.log" 2>&1 &
-echo $! >"$PID_FILE"
-for _ in $(seq 1 20); do
-  if python3 -c "import urllib.request; urllib.request.urlopen('${URL}api/state', timeout=1)" 2>/dev/null; then
+PID=$!
+echo "$PID" >"$PID_FILE"
+for _ in $(seq 1 60); do
+  if ! kill -0 "$PID" 2>/dev/null; then
+    rm -f "$PID_FILE"
+    echo "Studio-Dashboard startet nicht — siehe $STUDIO_DIR/server.log" >&2
+    exit 1
+  fi
+  if answers; then
     echo "Studio-Dashboard: $URL"
     exit 0
   fi
   sleep 0.25
 done
-echo "Studio-Dashboard startet nicht — siehe $STUDIO_DIR/server.log" >&2
+echo "Studio-Dashboard antwortet noch nicht (Prozess läuft, PID $PID) — später 'make studio' erneut" >&2
 exit 1

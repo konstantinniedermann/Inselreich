@@ -284,6 +284,60 @@ describe('zeitreserve CLI --push mit Metadaten (R353 P1)', () => {
     expect(p.stderr).toContain('alten Format');
   });
 
+  it('ohne --push: gibt loadStart aus', () => {
+    const p = run(file('ls.json', { ...meta, loadStart: 2.1 }));
+    expect(p.status).toBe(0);
+    expect(p.stdout).toContain('zeitreserve: loadStart 2.1');
+    expect(p.stdout).not.toContain('für Push nicht belastbar');
+  });
+
+  it('loadStart > 4: Zusatz, Exit unverändert', () => {
+    const p = run(file('ls7.json', { ...meta, loadStart: 7.4, loadMax: 7.4 }));
+    expect(p.status).toBe(0);
+    expect(p.stdout).toContain(
+      'zeitreserve: loadStart 7.4 — für Push nicht belastbar, make check ruhig wiederholen',
+    );
+  });
+
+  it('fehlendes loadStart (altes Format): loadStart unbekannt', () => {
+    const p = run(file('lsx.json', { ...meta, loadStart: undefined }));
+    expect(p.stdout).toContain('zeitreserve: loadStart unbekannt');
+  });
+
+  it('--push mit fehlender Messung: Exit 2, nie 0', () => {
+    expect(run(join(dir, 'gibtsnicht.json'), ['--push']).status).toBe(2);
+  });
+
+  it('--push mit leerer Messung: Exit 2', () => {
+    const p = join(dir, 'leer.json');
+    writeFileSync(p, '');
+    expect(run(p, ['--push']).status).toBe(2);
+  });
+
+  it('--push mit halb geschriebener Messung: Exit 2', () => {
+    const p = join(dir, 'halb.json');
+    writeFileSync(p, JSON.stringify(meta).slice(0, 40));
+    expect(run(p, ['--push']).status).toBe(2);
+  });
+
+  it('--push mit loadStart 7.4: Exit 2', () => {
+    const p = run(file('p74.json', { ...meta, loadStart: 7.4, loadMax: 7.4 }), ['--push']);
+    expect(p.status).toBe(2);
+  });
+
+  it('Makefile: zeitreserve-push läuft ohne Testsperre', () => {
+    const mk = readFileSync(new URL('../../Makefile', import.meta.url).pathname, 'utf8').split(
+      '\n',
+    );
+    const i = mk.findIndex((l) => l.startsWith('zeitreserve-push:'));
+    expect(i).toBeGreaterThan(-1);
+    const rezept: string[] = [];
+    for (let j = i + 1; j < mk.length && mk[j]!.startsWith('\t'); j++) rezept.push(mk[j]!);
+    expect(rezept.length).toBeGreaterThan(0);
+    expect(rezept.join('\n')).not.toContain('TESTLOCK');
+    expect(mk[i]).toContain('ohne Testsperre');
+  });
+
   it('lockerer Modus liest beide Formate wie bisher', () => {
     expect(run(file('ok2.json', meta)).status).toBe(0);
     expect(run(file('arr2.json', ok)).status).toBe(0);

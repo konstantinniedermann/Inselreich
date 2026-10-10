@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-10 · Handbuch 1.44
+
+- Anlass: TOOL-BUENDEL-4 T03 entfernt `$(TESTLOCK)` von `make zeitreserve-push`; Handbuch an Ist-Stand angeglichen (AK-TB4-16)
+- Datenbasis: Auftrag TOOL-BUENDEL-4-T08, Commit c60edb41
+- Ruling: R465 (B2), R438 (V3)
+- Änderungen: Lastregel: `zeitreserve-push` aus der Sperr-Aufzählung entfernt; Push-Ablauf: `zeitreserve-push` liest nur `.studio/zeitreserve.json`, läuft ohne Testsperre, bewertet nur `measurementProblem`; `make check` gibt immer `zeitreserve: loadStart <x>` aus
+
 ## 2026-10-10 · Handbuch 1.43
 
 - Anlass: Prozess-Aussensicht REL-16/REL-17, V1; Vorlagenzeile E-058 (R459 V2)

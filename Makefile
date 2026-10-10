@@ -29,8 +29,8 @@ test: ## Tests ausführen (Vitest; schreibt .studio/zeitreserve.json); studiowei
 zeitreserve: ## CI-Reserve prüfen (lokal × 4, R270; und geschätzte Runner-Zeit lokal × 3, E-043); nach make test
 	node tools/zeitreserve/check.ts
 
-zeitreserve-push: ## Streng vor dem Push (R338): Messung mit Commit = HEAD und Last vor dem Lauf <= 4 (R394), sonst Exit 2 "nicht belastbar"; aktuelle Last zählt nicht (R438 V3); nach make test; mit Testsperre
-	@node $(TESTLOCK) node tools/zeitreserve/check.ts --push
+zeitreserve-push: ## Streng vor dem Push (R338): Messung mit Commit = HEAD und Last vor dem Lauf <= 4 (R394), sonst Exit 2 "nicht belastbar"; aktuelle Last zählt nicht (R438 V3); nach make test; ohne Testsperre (liest nur die Messung)
+	@node tools/zeitreserve/check.ts --push
 
 check-ci-perf: ## Nur die Perf-Budget-Tests mit CI=true (ersetzt den zweiten vollen Lauf CI=true make check, R353); schreibt kein zeitreserve.json
 	CI=true npx vitest run $$(grep -rl perfBudget tests --include='*.test.ts')
