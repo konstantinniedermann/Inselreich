@@ -65,6 +65,7 @@ import {
   renderNoticeStack,
   updateHud,
   updateMoney,
+  unbindIslandMenu,
   updateNoticeStack,
   type HudActions,
 } from './hud';
@@ -1329,6 +1330,7 @@ function launch(
     hoverEl.remove();
     noticeStack.remove();
     unbindMessages();
+    unbindIslandMenu(hudEl);
     hudEl.replaceChildren();
     navEl.replaceChildren();
     panelEl.replaceChildren();
