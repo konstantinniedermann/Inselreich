@@ -7,9 +7,8 @@ import { houseDiagnosis, missingInputs } from '../sim/queries';
 import { needsConnection } from '../sim/roads';
 import type { Building, GoodId, World } from '../sim/types';
 import { center, HOME } from '../sim/world';
-import { HOUSE_TITLES } from './hover';
 import { jumpTarget } from './islandJump';
-import { diagnosisText, goodList } from './texts';
+import { diagnosisText, goodList, HOUSE_TITLES } from './texts';
 
 export type ProblemClass = 1 | 2 | 3 | 4;
 /** Sortierschlüssel: [Klasse, Inselrang (Anker = -1, sonst Index), Abstand, Gebäude-ID]. */
@@ -36,7 +35,7 @@ const isBurning = (b: Building): boolean => b.outageUntil !== undefined || b.sta
 const isCutOff = (b: Building): boolean =>
   needsConnection(b.defId) && !b.connected && b.paused !== true;
 
-function compareSort(a: ProblemSort, b: ProblemSort): number {
+export function compareSort(a: ProblemSort, b: ProblemSort): number {
   for (let i = 0; i < 4; i++) {
     const d = a[i]! - b[i]!;
     if (d !== 0) return d;
@@ -47,7 +46,7 @@ function compareSort(a: ProblemSort, b: ProblemSort): number {
 const joinNames = (names: readonly string[]): string =>
   names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} und ${names.at(-1)}`;
 
-function spot(world: World, b: Building): { x: number; y: number } {
+export function spot(world: World, b: Building): { x: number; y: number } {
   const isl = world.islands[b.island]!;
   const c = center(BUILDING_DEFS[b.defId], b.x, b.y);
   return { x: isl.ox + c.cx, y: isl.oy + c.cy };
@@ -160,21 +159,16 @@ export function problemList(world: World, anchor: number): Problem[] {
   return out.sort((a, b) => compareSort(a.sort, b.sort));
 }
 
-/** Nächster bzw. vorheriger Eintrag; `index` ist 1-basiert. `null` = keine Probleme. */
-export function problemStep(
-  world: World,
+/** Gemeinsamer Umlauf über eine sortierte Liste; `index` ist 1-basiert. `null` = leere Liste. */
+export function stepList<T extends { key: string; sort: ProblemSort }>(
+  listFor: (anchor: number) => readonly T[],
   cursor: ProblemCursor | null,
   activeIsland: number,
   dir: 1 | -1,
-): {
-  problem: Problem;
-  index: number;
-  count: number;
-  cursor: Omit<ProblemCursor, 'landed'>;
-} | null {
+): { item: T; index: number; count: number; cursor: Omit<ProblemCursor, 'landed'> } | null {
   const cur = cursor !== null && cursor.landed !== activeIsland ? null : cursor;
   const anchor = cur?.anchor ?? activeIsland;
-  const list = problemList(world, anchor);
+  const list = listFor(anchor);
   const m = list.length;
   if (m === 0) return null;
   let i: number;
@@ -196,13 +190,24 @@ export function problemStep(
       }
     }
   }
-  const problem = list[i]!;
-  return {
-    problem,
-    index: i + 1,
-    count: m,
-    cursor: { key: problem.key, sort: problem.sort, anchor },
-  };
+  const item = list[i]!;
+  return { item, index: i + 1, count: m, cursor: { key: item.key, sort: item.sort, anchor } };
+}
+
+/** Nächster bzw. vorheriger Eintrag; `index` ist 1-basiert. `null` = keine Probleme. */
+export function problemStep(
+  world: World,
+  cursor: ProblemCursor | null,
+  activeIsland: number,
+  dir: 1 | -1,
+): {
+  problem: Problem;
+  index: number;
+  count: number;
+  cursor: Omit<ProblemCursor, 'landed'>;
+} | null {
+  const s = stepList((a) => problemList(world, a), cursor, activeIsland, dir);
+  return s === null ? null : { problem: s.item, index: s.index, count: s.count, cursor: s.cursor };
 }
 
 export const problemMessage = (index: number, count: number, p: Problem): string =>

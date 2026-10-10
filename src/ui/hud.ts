@@ -19,6 +19,7 @@ import { taxButtonTitle, taxSummaryText } from './taxView';
 import { goalTexts } from './goal';
 import type { IconId } from './icons';
 import { islandList } from './islandJump';
+import { focusList } from './goodFocus';
 import { createSilhouetteCache, drawSeaMap, mapLayout, type MapLayout } from '../render/seaMap';
 import {
   SEA_MAP_H,
@@ -164,6 +165,15 @@ export interface HudActions {
   deliverOrder(): void;
   /** Springt mit der Kamera zur Insel `index` (Knopf „Inseln", M12 E2). */
   jumpToIsland(index: number): void;
+  /** Lager-Chip geklickt: schaltet den Gut-Fokus um (I-043). */
+  toggleGoodFocus(good: GoodId): void;
+  /** Das Gut mit aktivem Fokus, sonst `null`. */
+  focusedGood(): GoodId | null;
+}
+
+/** Nach einem Mausklick gibt der Chip den Fokus ab (Leertaste = Schwenken); Tastatur behält ihn. */
+export function shouldBlurAfterClick(detail: number): boolean {
+  return detail > 0;
 }
 
 function gameButton(label: string, onClick: (btn: HTMLButtonElement) => void): HTMLButtonElement {
@@ -223,10 +233,16 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     }
     const stockRow = header.querySelector('.stock-row');
     for (const good of GOOD_IDS) {
-      const chip = document.createElement('span');
+      const chip = document.createElement('button');
+      chip.type = 'button';
       chip.className = 'chip';
       chip.dataset.good = good;
       chip.dataset.field = `stock-${good}`;
+      chip.addEventListener('click', (ev) => {
+        if (shouldBlurAfterClick(ev.detail)) chip.blur();
+        actions.toggleGoodFocus(good);
+        updateHud(header, state, actions);
+      });
       stockRow?.appendChild(chip);
     }
     const speedBox = header.querySelector('.hud-speed');
@@ -299,8 +315,12 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       const hide = stockChipHidden(world, good, island);
       if (chip.hidden !== hide) chip.hidden = hide;
       chip.classList.toggle('negative', b.net <= -TREND_EPS);
-      const tip = stockTooltip(world, good, island);
-      if (chip.title !== tip) chip.title = tip;
+      if (!hide) {
+        const tip = stockTooltip(world, good, island);
+        if (chip.title !== tip) chip.title = tip;
+      }
+      const pressed = String(actions.focusedGood() === good);
+      if (chip.getAttribute('aria-pressed') !== pressed) chip.setAttribute('aria-pressed', pressed);
     }
   }
   const tax = taxView(world);
@@ -560,12 +580,40 @@ export function balanceText(stats: { taxes: number; upkeep: number }): {
   };
 }
 
+/** Häuser auf der Insel, deren Stufe das Gut braucht (`TIERS[tier].needs`). */
+export function houseConsumers(world: World, island: number, good: GoodId): number {
+  let n = 0;
+  for (const b of Object.values(world.buildings)) {
+    if (b.island === island && b.house && TIERS[b.house.tier].needs[good] !== undefined) n++;
+  }
+  return n;
+}
+
+/** Zeile 2 des Lager-Tooltips: was ein Klick zeigt, plus Hauszusatz. */
+function focusLine(world: World, good: GoodId, island: number): string {
+  const list = focusList(world, island, good);
+  const producers = list.filter((e) => e.role === 'producer').length;
+  const consumers = list.length - producers;
+  let line = 'Noch kein Erzeuger';
+  if (producers > 0) {
+    line = `Klick: ${producers} Erzeuger`;
+    if (consumers > 0) line += ` und ${consumers} Verbraucher`;
+    line += ' zeigen';
+  }
+  const houses = houseConsumers(world, island, good);
+  if (houses > 0) {
+    line += ` · ${houses === 1 ? '1 Haus verbraucht' : `${houses} Häuser verbrauchen`} ${GOODS[good].name}`;
+  }
+  return line;
+}
+
 export function stockTooltip(world: World, good: GoodId, island: number = HOME): string {
   const b = goodsBalance(world, island)[good];
   const pm = (x: number): number => perMinute(x, GOODS_BALANCE_TICKS);
   return (
     `${GOODS[good].name} ${world.islands[island]!.stock[good]} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +
-    `(Erzeugung ${pm(b.produced)} / min, Verbrauch ${pm(b.consumed)} / min)`
+    `(Erzeugung ${pm(b.produced)} / min, Verbrauch ${pm(b.consumed)} / min)\n` +
+    focusLine(world, good, island)
   );
 }
 

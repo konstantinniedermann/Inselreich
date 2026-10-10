@@ -13,6 +13,8 @@ import {
   unbindIslandMenu,
   chipRole,
   chipView,
+  houseConsumers,
+  shouldBlurAfterClick,
   moneyView,
   popChipView,
   balanceTooltip,
@@ -32,6 +34,8 @@ import { home, createWorld } from '../../src/sim/world';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import type { Tier } from '../../src/sim/types';
 import { houseNearKontor, placeTownhall, setAllTax } from '../sim/helpers';
+import { uxWorld } from './worlds';
+import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
 import { GOODS_BALANCE_TICKS, perMinute, signedNum } from '../../src/ui/time';
 
 describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
@@ -58,7 +62,8 @@ describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
     const pm = (x: number): number => perMinute(x, GOODS_BALANCE_TICKS);
     expect(stockTooltip(w, 'wood')).toBe(
       `Holz ${home(w).stock.wood} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +
-        `(Erzeugung ${pm(b.produced)} / min, Verbrauch ${pm(b.consumed)} / min)`,
+        `(Erzeugung ${pm(b.produced)} / min, Verbrauch ${pm(b.consumed)} / min)\n` +
+        'Noch kein Erzeuger',
     );
   });
   it('AK-UX-07 speedTooltip', () => {
@@ -335,5 +340,57 @@ describe('Inselmenü: Dokument-Listener (REL-15, R437 B1)', () => {
     expect(block.indexOf('unbindIslandMenu(hudEl)')).toBeLessThan(
       block.indexOf('hudEl.replaceChildren()'),
     );
+  });
+});
+
+/** Klont ein Gebäude unter neuer ID auf dieselbe Insel (nur für die Zählung in focusList). */
+function clone(w: World, from: Building, defId: BuildingDefId, n: number): void {
+  for (let i = 0; i < n; i++) {
+    const id = 9000 + Object.keys(w.buildings).length;
+    w.buildings[id] = { ...from, id, defId, house: undefined };
+  }
+}
+const line2 = (w: World, good: GoodId): string => stockTooltip(w, good).split('\n')[1]!;
+
+describe('I-043 Chip-Tooltip, Zeile 2 (AK-GC-10)', () => {
+  it('AK-GC-10 Erzeuger und Verbraucher', () => {
+    const { w, fisher } = uxWorld();
+    clone(w, fisher, 'lumberjack', 3);
+    clone(w, fisher, 'toolmaker', 1);
+    expect(line2(w, 'wood')).toBe('Klick: 3 Erzeuger und 1 Verbraucher zeigen');
+  });
+  it('AK-GC-10 Einzahl Erzeuger und Verbraucher', () => {
+    const { w, fisher } = uxWorld();
+    clone(w, fisher, 'lumberjack', 1);
+    clone(w, fisher, 'toolmaker', 1);
+    expect(line2(w, 'wood')).toBe('Klick: 1 Erzeuger und 1 Verbraucher zeigen');
+  });
+  it('AK-GC-10 nur Erzeuger', () => {
+    const { w, fisher } = uxWorld();
+    clone(w, fisher, 'lumberjack', 2);
+    expect(line2(w, 'wood')).toBe('Klick: 2 Erzeuger zeigen');
+  });
+  it('AK-GC-10 kein Erzeuger, auch wenn Verbraucher existieren', () => {
+    const { w, fisher } = uxWorld();
+    clone(w, fisher, 'toolmaker', 2);
+    expect(line2(w, 'wood')).toBe('Noch kein Erzeuger');
+  });
+  it('AK-GC-10 Hauszusatz mit Mehrzahl, Einzahl und ohne', () => {
+    const { w, house } = uxWorld();
+    house.house!.tier = 1;
+    expect(houseConsumers(w, 0, 'food')).toBe(1);
+    expect(line2(w, 'food')).toBe('Klick: 1 Erzeuger zeigen · 1 Haus verbraucht Nahrung');
+    clone(w, house, 'house', 2);
+    for (const b of Object.values(w.buildings)) {
+      if (b.defId === 'house') b.house = { ...house.house! };
+    }
+    expect(houseConsumers(w, 0, 'food')).toBe(3);
+    expect(line2(w, 'food')).toBe('Klick: 1 Erzeuger zeigen · 3 Häuser verbrauchen Nahrung');
+    expect(houseConsumers(w, 0, 'cloth')).toBe(0);
+    expect(line2(w, 'cloth')).toBe('Noch kein Erzeuger');
+  });
+  it('AK-GC-14 Mausklick gibt den Fokus ab, Tastatur nicht', () => {
+    expect(shouldBlurAfterClick(1)).toBe(true);
+    expect(shouldBlurAfterClick(0)).toBe(false);
   });
 });

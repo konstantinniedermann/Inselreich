@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   PALETTE,
@@ -142,5 +143,16 @@ describe('H-R10 AK-d Helfer für Licht und Schatten (additiv)', () => {
     const s = rgbOfCss(toShade(PALETTE.wallLime, 0.2));
     const w = rgbOf(PALETTE.wallLime);
     expect(s[0]).toBeLessThan(w[0]);
+  });
+});
+
+describe('Gut-Fokus Farbe (R462 B3)', () => {
+  it('signalFocus (eigene Abgrenzung in focusColor.test.ts) ist gleich dem Chip-Rahmen in style.css', () => {
+    expect(SIGNAL_NAMES).not.toContain('signalFocus');
+    const css = readFileSync('src/style.css', 'utf8');
+    const m =
+      /\.chip\[aria-pressed=['"]true['"]\]\s*\{[^}]*?border-color:\s*(#[0-9a-fA-F]{6})/.exec(css);
+    expect(m).not.toBeNull();
+    expect(m![1]!.toLowerCase()).toBe(PALETTE.signalFocus.toLowerCase());
   });
 });

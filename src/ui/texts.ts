@@ -3,9 +3,16 @@ import { GOODS } from '../sim/defs/goods';
 import { SERVICE_BUILDING } from '../sim/population';
 import { refundCost } from '../sim/economy';
 import { effectiveRefund, type Diagnosis } from '../sim/queries';
-import type { Building, Cost, GoodId, World } from '../sim/types';
+import type { Building, Cost, GoodId, Tier, World } from '../sim/types';
 import { paidCost } from '../sim/upgrade';
 import { formatGameTime } from './time';
+
+export const HOUSE_TITLES: Record<Tier, string> = {
+  1: 'Pionierhaus',
+  2: 'Siedlerhaus',
+  3: 'Bürgerhaus',
+  4: 'Kaufmannshaus',
+};
 
 /** Text zu einer Diagnose (dieselbe Quelle wie das Kartensymbol). */
 export function diagnosisText(d: Diagnosis): string {

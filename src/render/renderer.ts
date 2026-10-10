@@ -75,6 +75,7 @@ import {
 } from './overlays';
 import { drawErrandLoad, errandsFrom, tickClock, walkersLeft, type ErrandPose } from './errands';
 import { drawProgressRings } from './ring';
+import { drawFocusMarks, type FocusFx } from './focusMarks';
 import { drawStatusMarks } from './statusMarks';
 import { PALETTE, SHADOW, rgbaOf } from './palette';
 import { LIGHT_COLORS, mixRgb } from './light';
@@ -180,6 +181,8 @@ export interface RenderFx {
   archipelView?: ArchipelView;
   /** Aktive Insel (Standard 0): Mouse-over, Auswahl und Signale gehören ihr. */
   activeIsland?: number;
+  /** Gut-Fokus (I-043): Konturen um Erzeuger und Verbraucher des Guts; `null`/fehlt = aus. */
+  focus?: FocusFx | null;
 }
 
 /** Bodenebenen der Inseln; `get` darf im Notfall synchron rastern, `null` lässt die Insel in diesem Frame aus. */
@@ -1029,6 +1032,10 @@ export function render(
   drawStatusMarks(ctx, av, acam, range, fx.timeMs, reduce);
   drawProgressRings(ctx, av, acam, range, tickClock(av, fx.timeMs).frac);
   if (import.meta.env.DEV) collectBadges(av, acam, range);
+
+  // Gut-Fokus: Konturen auf der Fokus-Insel, unter der Auswahl-Kontur
+  const ff = fx.focus ? frames.find((f) => f.island === fx.focus!.island) : undefined;
+  if (ff) drawFocusMarks(ctx, ff, fx.focus ?? null, { footprint: footprintPath, hull: hullPath });
 
   // Auswahl: das Gebäude hebt sich in der Ansicht seiner Insel ab (Id in der Kopie gleich)
   const selB = selectedId === null ? undefined : world.buildings[selectedId];

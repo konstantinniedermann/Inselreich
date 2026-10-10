@@ -123,29 +123,29 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 
 ### Tastatur und Maus
 
-| Eingabe                | Wirkung                                                                          |
-| ---------------------- | -------------------------------------------------------------------------------- |
-| WASD / Pfeiltasten     | Karte verschieben                                                                |
-| Leertaste antippen     | Pause an/aus (wie `P`)                                                           |
-| Leertaste halten       | Mit gedrückter linker Maustaste die Karte verschieben                            |
-| `Esc` oder Rechtsklick | Zurück zum Werkzeug «Auswahl», Panel zu (`Esc` auch bei Knopffokus)              |
-| Mausrad                | Zoomen                                                                           |
-| `P`                    | Pause an/aus (setzt danach das letzte Tempo fort)                                |
-| `Umschalt` + `U`       | Markiertes Gebäude ausbauen (wie «Ausbauen», erst nach der Freischaltung)        |
-| `Cmd`/`Strg` + Klick   | Gebäudetyp unter dem Zeiger als Bauwerkzeug wählen (Pipette)                     |
-| `1` / `2` / `3`        | Tempo 1× / 2× / 4× (hebt die Pause auf)                                          |
-| `R` / `X`              | Weg / Abriss                                                                     |
-| `H` / `M` / `K` / `U`  | Wohnhaus / Marktplatz / Kapelle / Schule                                         |
-| `F` / `L` / `B` / `G`  | Fischerhütte / Holzfäller / Steinbruch / Schäferei                               |
-| `V` / `Z` / `N` / `T`  | Weberei / Zuckerrohrplantage / Brennerei / Werkzeugmacher                        |
-| `E`                    | Feuerwache                                                                       |
-| `I`                    | Amtsstube (erst ab U3, höchstens eine)                                           |
-| `C` / `Q`              | Roden / Aufforsten (erst ab U2)                                                  |
-| `Y`                    | Jagdhütte (erst ab U2); die Rinderfarm hat keine Taste                           |
-| `?`                    | Hilfe (Karte mit Legende und Freischaltungen)                                    |
-| `.` / `,`              | Zum nächsten / vorigen Problem springen (öffnet das Info-Panel, Werkzeug bleibt) |
-| `J` / `O`              | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                                 |
-| `0` / `9`              | Kamera zur Heimat / zur nächsten Insel (erst mit der Seefahrt)                   |
+| Eingabe                | Wirkung                                                                                                                                   |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| WASD / Pfeiltasten     | Karte verschieben                                                                                                                         |
+| Leertaste antippen     | Pause an/aus (wie `P`)                                                                                                                    |
+| Leertaste halten       | Mit gedrückter linker Maustaste die Karte verschieben                                                                                     |
+| `Esc` oder Rechtsklick | Zurück zum Werkzeug «Auswahl», Panel zu, löscht auch die Lager-Markierung (`Esc` auch bei Knopffokus)                                     |
+| Mausrad                | Zoomen                                                                                                                                    |
+| `P`                    | Pause an/aus (setzt danach das letzte Tempo fort)                                                                                         |
+| `Umschalt` + `U`       | Markiertes Gebäude ausbauen (wie «Ausbauen», erst nach der Freischaltung)                                                                 |
+| `Cmd`/`Strg` + Klick   | Gebäudetyp unter dem Zeiger als Bauwerkzeug wählen (Pipette)                                                                              |
+| `1` / `2` / `3`        | Tempo 1× / 2× / 4× (hebt die Pause auf)                                                                                                   |
+| `R` / `X`              | Weg / Abriss                                                                                                                              |
+| `H` / `M` / `K` / `U`  | Wohnhaus / Marktplatz / Kapelle / Schule                                                                                                  |
+| `F` / `L` / `B` / `G`  | Fischerhütte / Holzfäller / Steinbruch / Schäferei                                                                                        |
+| `V` / `Z` / `N` / `T`  | Weberei / Zuckerrohrplantage / Brennerei / Werkzeugmacher                                                                                 |
+| `E`                    | Feuerwache                                                                                                                                |
+| `I`                    | Amtsstube (erst ab U3, höchstens eine)                                                                                                    |
+| `C` / `Q`              | Roden / Aufforsten (erst ab U2)                                                                                                           |
+| `Y`                    | Jagdhütte (erst ab U2); die Rinderfarm hat keine Taste                                                                                    |
+| `?`                    | Hilfe (Karte mit Legende und Freischaltungen)                                                                                             |
+| `.` / `,`              | Zum nächsten / vorigen Problem springen (öffnet das Info-Panel, Werkzeug bleibt); bei aktiver Lager-Markierung durch die Gebäude des Guts |
+| `J` / `O`              | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                                                                                          |
+| `0` / `9`              | Kamera zur Heimat / zur nächsten Insel (erst mit der Seefahrt)                                                                            |
 
 Die Werkzeugtasten wirken nur ohne Strg, Cmd oder Alt; Gross- und Kleinschreibung ist egal. Ausnahmen sind `Umschalt` + `U` (Ausbau; `U` allein bleibt die Schule) und `Cmd`/`Strg` + Linksklick auf ein Gebäude (Pipette; auf dem Mac ist `Cmd` + Klick der Hauptweg, `Strg` + Klick geht auch). Die Pipette wirkt in jedem Werkzeug, beim Kontor meldet sie, dass es sich nicht nachbauen lässt. Leertaste halten und Ziehen hat Vorrang vor der Pipette. Dieselbe
 Werkzeugtaste bei schon aktivem Werkzeug schaltet zurück zur Auswahl. Der Tooltip in der Bauleiste
@@ -279,6 +279,15 @@ Im Panel der Amtsstube erlässt du **ein** Edikt zur Zeit. Es wirkt nur, solange
   Bilanz mit Trendpfeil (↑ / → / ↓, negative Bilanz hervorgehoben). Die Chips «Glas» und «Kaufleute» erscheinen erst nach der Freischaltung der Stufe 4 oder sobald es Glas bzw. Kaufleute gibt. Der Tooltip nennt Bilanz, Erzeugung und
   Verbrauch je Minute. Gerechnet wird nominal aus den angebundenen Betrieben und dem Bedarf der
   versorgten Häuser; Handel, Aufträge und Aufstiege zählen nicht mit.
+- **Gut markieren (Lager-Chip):** Ein Klick auf einen Chip der Lagerleiste (oder `Enter` / Leertaste, wenn der Chip den
+  Tastaturfokus hat) markiert auf der aktiven Insel die Erzeuger des Guts mit einer durchgezogenen und die
+  Verbraucher-Betriebe mit einer gestrichelten Kontur (höchstens 40 Gebäude gleichzeitig). Die Karte springt zum
+  ersten Erzeuger, das Info-Panel ist offen, und die Meldung nennt ihn, z. B. «Holz 1 von 4: Holzfäller (Erzeuger) · …».
+  Solange die Markierung aktiv ist, gehen `.` / `,` die Gebäude des Guts durch (sonst die Problemliste). Ein zweiter
+  Klick auf denselben Chip, `Esc`, Rechtsklick oder ein Wechsel der aktiven Insel löscht die Markierung. Häuser werden
+  nicht markiert; der Tooltip des Chips nennt ihre Zahl («… Häuser verbrauchen Nahrung»). Gibt es noch keinen Erzeuger, sagt
+  die Meldung es und nennt die baubaren Typen («Noch kein Erzeuger für Holz — Bauen: …»). Die Markierung ist reiner
+  Anzeigezustand und steht nicht im Spielstand.
 - **Baukosten:** Geld und teils Holz, Werkzeug oder Stein; sie stehen in der Bauleiste.
 - **Anbindung:** Betriebe, Marktplatz, Kapelle, Schule und Feuerwache arbeiten nur, wenn ein Weg an sie grenzt,
   der über Wege mit dem Kontor verbunden ist. Nicht angebundene Gebäude tragen einen roten Punkt.

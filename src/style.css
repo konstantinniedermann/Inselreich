@@ -298,6 +298,20 @@ body {
   font-size: 13px;
   white-space: nowrap;
 }
+button.chip {
+  font: inherit;
+  font-size: 13px;
+  color: inherit;
+  cursor: pointer;
+}
+.chip[aria-pressed='true'] {
+  border-color: #00c8ff;
+  box-shadow: 0 0 0 1px #00c8ff;
+}
+.chip:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
 .card .chip {
   background: var(--parchment-edge);
   border-color: var(--wood);
