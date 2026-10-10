@@ -12,6 +12,7 @@ from pathlib import Path
 from unittest import mock
 
 import metrics
+import paths
 import studio_docs
 
 import tests.test_efficiency as eff
@@ -174,15 +175,27 @@ class MetricsTest(unittest.TestCase):
         old = Path.cwd()
         os.chdir(wt)
         self.addCleanup(os.chdir, old)
+        base = Path(self.tmp.name).resolve()
+        seen: list[Path] = []
+        real_read_version = studio_docs.read_version
+
+        def spy(path):
+            seen.append(Path(path))
+            return real_read_version(path)
+
         buffer = io.StringIO()
         with (
             mock.patch.dict(os.environ),
             contextlib.redirect_stdout(buffer),
             mock.patch.object(metrics, "format_markdown", lambda path: None),
+            mock.patch.object(paths, "repo_root", lambda start=None: base),
+            mock.patch.object(studio_docs, "read_version", spy),
         ):
             os.environ.pop("STUDIO_DOCS")
             code = metrics.main(["--session", "s1"])
         self.assertEqual(code, 0)
+        self.assertTrue(seen)
+        self.assertTrue(all(str(p).startswith(str(base)) for p in seen))
         self.assertTrue(
             (wt / "docs" / "studio" / "metriken" / "S-2026-09-30-s1.md").exists()
         )
