@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.43 · Stand: 2026-10-10 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.44 · Stand: 2026-10-10 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -364,7 +364,7 @@ Regeln dazu:
   weder Index noch Arbeitsbaum, kein Push); Konflikte gehen vor dem Start an den Production-Lead (§6), seriell durch `production-integrator` im
   Worktree `.worktrees/integrate` (Merges bleiben lokal; der gebündelte Push erfolgt von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
   je Branch `git merge --no-ff --no-commit`, `make check` — grün: committen, rot: `git merge --abort` und
-  melden. Kein Push je Merge (N-98, R335): höchstens ein Push je Session, nach Abschluss des zu pushenden Stands (nicht zwingend am Session-Ende, R421; siehe „Session-Start und -Ende“), immer gezielt per `git push origin <geprüfter Hash>:main`, und erst nach grünem `make zeitreserve-push` (bewertet seit TOOL-BUENDEL-2 nur `loadStart` aus `make check`: bei Load > 4 Exit 2 „nicht belastbar“, dann `make check` ruhig wiederholen; R338, R438 V3). Ablauf (R429): `npx tsc --noEmit`, `make lint`, `make zeittests`, `make conflicts` (schneller Abbruch, R398, R410), dann, sobald der 1-min-Load ≤ 4 ist (abwarten, sonst endet `make zeitreserve-push` mit Exit 2, R394/R450), `make check` (schreibt über `npm test` die Messdatei `.studio/zeitreserve.json` mit Commit = HEAD und `loadStart`; kein separates `make test`), `make zeitreserve-push` (R394/R396), `make check-ci-perf`. Steht ein Push an, startet L0 keine Umsetzer und Controller, bis `make zeitreserve-push` Exit 0 meldet; Gates, Kurzdesigns und Pläne ohne Testläufe dürfen parallel laufen (R464). Danach CI (`gh run list --branch main --limit 3`; nur bei Code-Pushes
+  melden. Kein Push je Merge (N-98, R335): höchstens ein Push je Session, nach Abschluss des zu pushenden Stands (nicht zwingend am Session-Ende, R421; siehe „Session-Start und -Ende“), immer gezielt per `git push origin <geprüfter Hash>:main`, und erst nach grünem `make zeitreserve-push` (bewertet seit TOOL-BUENDEL-2 nur `loadStart` aus `make check`: bei Load > 4 Exit 2 „nicht belastbar“, dann `make check` ruhig wiederholen; R338, R438 V3). `make zeitreserve-push` liest nur die Messung `.studio/zeitreserve.json`, läuft ohne Testsperre und bewertet nur `measurementProblem`, nicht die aktuelle Last (R438 V3, R465 B2); `make check` gibt immer `zeitreserve: loadStart <x>` aus. Ablauf (R429): `npx tsc --noEmit`, `make lint`, `make zeittests`, `make conflicts` (schneller Abbruch, R398, R410), dann, sobald der 1-min-Load ≤ 4 ist (abwarten, sonst endet `make zeitreserve-push` mit Exit 2, R394/R450), `make check` (schreibt über `npm test` die Messdatei `.studio/zeitreserve.json` mit Commit = HEAD und `loadStart`; kein separates `make test`), `make zeitreserve-push` (R394/R396), `make check-ci-perf`. Steht ein Push an, startet L0 keine Umsetzer und Controller, bis `make zeitreserve-push` Exit 0 meldet; Gates, Kurzdesigns und Pläne ohne Testläufe dürfen parallel laufen (R464). Danach CI (`gh run list --branch main --limit 3`; nur bei Code-Pushes
   erwartbar, N-98), enthält der Push ein Release, Pages per `gh workflow run Pages --ref main` (bei roter CI nur, wenn ausschliesslich Studio-Werkzeuge (`tools/studio`) rot sind und alle Spiel-Tests grün, R450) und
   `python3 tools/studio/ci.py`. CI rot → Behebung hat Vorrang, Ad-hoc-Retro. Konflikt: stoppen (§6).
 
@@ -426,7 +426,7 @@ Parallelitätsgrenzen je Budget sind Richtwerte, keine Deckel.
 - Echtzeit-Proben höchstens 1 Minute, dazu ein Lauf bei 4× Tempo.
 - **Lastregel (R249 (3), R250, E-030):** Rote Zeittests (`perfBudget`) und Browser-Messungen gelten
   nur ohne parallele `vitest`- oder `make check`-Läufe anderer Worktrees; das erzwingt seit R375/R376 das Werkzeug
-  `tools/testlock/testlock.ts`: `make check`, `make test` und `make zeitreserve-push` nehmen eine repo-weite Sperre
+  `tools/testlock/testlock.ts`: `make check` und `make test` nehmen eine repo-weite Sperre
   (`<git-common-dir>/studio-testlock`) und brechen bei belegter Sperre oder 1-min-Load > 8 mit Meldung `testlock: ABBRUCH` und Exit ≠ 0 ab
   (kein Warten; gezielte `npx vitest run <datei>` bleiben frei, auf CI inaktiv); der Bericht nennt den Last-Zustand. **Lastgrenze (R329, E-045):** Perf- und
   Ruckel-Messungen gelten nur bei 1-min-Load ≤ 4; `uptime` vor und nach dem Lauf steht im Beleg. Eine Schwelle wird erst
