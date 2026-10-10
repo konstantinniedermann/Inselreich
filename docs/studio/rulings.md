@@ -5031,3 +5031,18 @@ Review prüft die Annahme von `compute_claims` (Knotenfelder ändern sich nur in
 Regelbezug: R478, R465 B3 (Stopp-Regel) · Kosten bei Irrtum: Dashboard bleibt einige Sekunden träger als geplant.
 
 Entscheider: L0 · Anlass: Stopp-Meldung Controller TOOL-BUENDEL-5 · ADR: —
+
+## R483 · 2026-10-10 · Spec M13-E2 Denkmal eingereicht; P-1…P-3 entschieden, Gate Spec startet
+
+Ruling: Spec `docs/superpowers/specs/2026-10-10-m13-e2-denkmal-design.md` (`b908ca7a`, AK-M13E2-01…48, 7 Anhänge) geht
+ins Gate Spec (`lead-tech` Machbarkeit/Save, `lead-qa` Testbarkeit; nacheinander, sobald Plätze frei sind, R424). Entscheide
+nach Empfehlung: **P-1** Ab begonnenem Abschnitt 1 verlangt der Abriss des Denkmals eine Bestätigung (Knopf und Taste
+gleich) — bewusste Ausnahme zu R476 (3), weil bis zu 18 000 Geld plus Ware auf dem Spiel stehen; UI-TASTEN bleibt ohne
+Bestätigung für alle übrigen Gebäude. **P-2** Bauplatz wird beim Abriss wie üblich zur Hälfte erstattet (250 Geld),
+Abschnitts-Geld und -Ware nicht. **P-3** Lauf C (Auflage B3) in eigens aufgebauter Welt statt K′; verfehlt er 4704–8736
+Ticks, ist das ein Pflicht-Rulingpunkt. Art: prozedurale „Feuersäule“ (Art-Vorschlag `4dca6a39`), Bildstufe aus dem
+ganzzahligen Sim-Feld. Save v12; M13-E2-SIM vor I-049-Sim (R477, R481).
+
+Regelbezug: gates.md Gate Spec, R452, R466, R476, R477 · Kosten bei Irrtum: ein Bestätigungsdialog zu viel oder zu wenig.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-m13-e2 · ADR: —
