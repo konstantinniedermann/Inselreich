@@ -49,7 +49,36 @@ export type HotkeyAction =
   | { kind: 'islandHome' }
   | { kind: 'islandCycle' }
   | { kind: 'problemNext' }
-  | { kind: 'problemPrev' };
+  | { kind: 'problemPrev' }
+  | { kind: 'demolishSelected' }
+  | { kind: 'save' };
+
+/** Tasten für „markiertes Gebäude abreissen" (KeyboardEvent.key, klein). */
+export const DEMOLISH_KEYS: readonly string[] = ['delete', 'backspace'];
+
+type Mods = { ctrl: boolean; meta: boolean; alt: boolean; shift?: boolean };
+
+/** Reine Tastenform Strg/Cmd+S (ohne Alt, ohne Umschalt), unabhängig von Feld und Modal. */
+export function isSaveChord(key: string, mods: Mods): boolean {
+  return key.toLowerCase() === 's' && (mods.ctrl || mods.meta) && !mods.alt && mods.shift !== true;
+}
+
+/**
+ * Entscheidung für einen keydown: `act` = Aktion ausführen, `preventDefault` = Browser-Standard
+ * unterdrücken. Entf und Strg/Cmd+S sind bei laufendem Zug bzw. Wiederholung stumm, aber abgefangen.
+ */
+export function keyDownVerdict(
+  hot: HotkeyAction | null,
+  dragActive: boolean,
+  repeat: boolean,
+  saveChord: boolean,
+): { act: boolean; preventDefault: boolean } {
+  if (hot === null) return { act: false, preventDefault: saveChord };
+  const intercepted = hot.kind === 'demolishSelected' || hot.kind === 'save' || saveChord;
+  if (repeat) return { act: false, preventDefault: intercepted };
+  if (hot.kind === 'demolishSelected' && dragActive) return { act: false, preventDefault: true };
+  return { act: true, preventDefault: intercepted };
+}
 
 /**
  * Wirkung einer Taste, oder `null` (Modifier gedrückt, Formularfeld, Pan-Taste, Esc, unbekannt).
@@ -57,12 +86,16 @@ export type HotkeyAction =
  */
 export function hotkeyAction(
   key: string,
-  mods: { ctrl: boolean; meta: boolean; alt: boolean; shift?: boolean },
+  mods: Mods,
   inFormField: boolean,
   seafaring = false,
 ): HotkeyAction | null {
-  if (inFormField || mods.ctrl || mods.meta || mods.alt) return null;
+  if (inFormField) return null;
   const k = key.toLowerCase();
+  if (isSaveChord(key, mods)) return { kind: 'save' };
+  if (DEMOLISH_KEYS.includes(k) && !mods.ctrl && !mods.meta && !mods.alt)
+    return { kind: 'demolishSelected' };
+  if (mods.ctrl || mods.meta || mods.alt) return null;
   if (k === PROBLEM_NEXT_KEY) return { kind: 'problemNext' };
   if (k === PROBLEM_PREV_KEY) return { kind: 'problemPrev' };
   // Umschalt+U = Ausbau; Gross-U ohne Umschalt (Feststelltaste) bleibt Schule (Spec C-2)
@@ -118,6 +151,8 @@ export const NAV_KEYS: readonly { key: string; label: string }[] = [
   { key: 'Mausrad', label: 'Zoomen' },
   { key: 'Esc', label: 'Werkzeug ablegen, Karte schliessen' },
   { key: 'Rechtsklick', label: 'Werkzeug ablegen' },
+  { key: 'Entf / Rücktaste', label: 'Markiertes Gebäude abreissen' },
+  { key: 'Strg/Cmd + S', label: 'Spiel speichern' },
 ];
 
 export function toolName(tool: Tool): string {
@@ -178,14 +213,23 @@ export function hotkeyList(world: World): { key: string; label: string }[] {
 
 export const NO_SELECTION_TEXT = 'Kein Gebäude markiert';
 
-/** Ziel von Umschalt+U: das Gebäude des offenen Info-Panels, sonst Meldung. */
-export function upgradeTarget(
-  panel: PanelState,
-  world: World,
-): { ok: true; id: number } | { ok: false; reason: string } {
+export type TargetResult = { ok: true; id: number } | { ok: false; reason: string };
+
+/** Das Gebäude des offenen Info-Panels, sonst Meldung (Quelle für Ausbau und Abriss per Taste). */
+export function markedBuilding(panel: PanelState, world: World): TargetResult {
   if (panel.kind === 'inspect' && world.buildings[panel.id] !== undefined)
     return { ok: true, id: panel.id };
   return { ok: false, reason: NO_SELECTION_TEXT };
+}
+
+/** Ziel von Umschalt+U. */
+export function upgradeTarget(panel: PanelState, world: World): TargetResult {
+  return markedBuilding(panel, world);
+}
+
+/** Ziel von Entf / Rücktaste. */
+export function demolishTarget(panel: PanelState, world: World): TargetResult {
+  return markedBuilding(panel, world);
 }
 
 export type CategoryEvent = { kind: 'toggle'; category: Category } | { kind: 'tool'; tool: Tool };
