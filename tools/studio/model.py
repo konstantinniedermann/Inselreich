@@ -178,6 +178,13 @@ def _package_token(text: str) -> str:
     return re.split(r"[\s\u2014\u2013:(]", text.strip(), maxsplit=1)[0]
 
 
+def _grant_names(lead_node: dict, child: dict | None = None) -> set[str]:
+    """Namen, unter denen eine Freigabe zu Lead (und Kind) passt: Kopfzeile und ihr Phasenname."""
+    packages = {lead_node["package"]} | ({child["package"]} if child else set())
+    packages -= {""}
+    return packages | {_package_token(p) for p in packages}
+
+
 def _estimate(value: object) -> dict | None:
     """Schätzung nur mit echten Zahlen (keine Strings, keine Bools)."""
     if not isinstance(value, dict):
@@ -787,8 +794,7 @@ class _Builder:
         ]
         if not candidates:
             return None
-        packages = {child["package"], lead_node["package"]} - {""}
-        names = packages | {_package_token(p) for p in packages}
+        names = _grant_names(lead_node, child)
         for grant in candidates:
             if grant["phase"] in names:
                 return (grant["lead"], grant["phase"], grant["session_id"])
@@ -827,16 +833,21 @@ class _Builder:
         by_role: dict[str, list[dict]] = {}
         for lead in sorted(self.nodes.values(), key=lambda n: n["started"]):
             by_role.setdefault(lead["role"], []).append(lead)
-        for key, grant in sorted(self.budgets.items(), key=lambda kv: kv[1]["since"]):
-            for lead in by_role.get(grant["lead"], ()):
-                if (
-                    lead["key"] not in taken
-                    and lead["started"] >= grant["since"]
-                    and grant["session_id"] in ("", lead["session_id"])
-                ):
-                    self.claims[key] = lead["key"]
-                    taken.add(lead["key"])
-                    break
+        grants = sorted(self.budgets.items(), key=lambda kv: kv[1]["since"])
+        for by_name in (True, False):  # erst Kopfzeile Paket:, dann Zeitregel
+            for key, grant in grants:
+                if key in self.claims:
+                    continue
+                for lead in by_role.get(grant["lead"], ()):
+                    if (
+                        lead["key"] not in taken
+                        and lead["started"] >= grant["since"]
+                        and grant["session_id"] in ("", lead["session_id"])
+                        and (not by_name or grant["phase"] in _grant_names(lead))
+                    ):
+                        self.claims[key] = lead["key"]
+                        taken.add(lead["key"])
+                        break
 
     def on_package(self, event, ts, sid):
         key = _package(event)

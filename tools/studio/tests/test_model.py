@@ -2689,5 +2689,96 @@ class PeakParallelTest(unittest.TestCase):
                 self.assertEqual(model._peak_parallel(spans), self.reference(spans))
 
 
+def lead_with_package(t, session, aid, package=""):
+    """Lead, dessen Spawn die Kopfzeile Paket: traegt."""
+    return [
+        spawn(t, "main", "lead-tech", session=session, package=package),
+        start(t + 0.1, aid, "lead-tech", session=session),
+    ]
+
+
+class ClaimByPackageNameTest(unittest.TestCase):
+    """Die Kopfzeile Paket: bindet die gleichnamige Freigabe vor der Zeitregel (T02)."""
+
+    def phases(self, events):
+        return build(events, now=2000, session="all")["lead_phases"]
+
+    def test_claim_prefers_name_over_time(self):
+        events = [
+            grant(1, SA, "plan-A", 4, 1),
+            grant(2, SA, "plan-B", 4, 1),
+            *lead_with_package(10, SA, "LB", package="plan-B"),
+            *lead_with_package(11, SA, "LA", package="plan-A \u2014 Zusatz"),
+        ]
+        self.assertEqual(
+            self.phases(events),
+            {f"{SA}:LA": "plan-A", f"{SA}:LB": "plan-B"},
+        )
+
+    def test_claim_name_needs_delimiter(self):
+        events = [
+            grant(1, SA, "plan-X", 4, 1),
+            grant(2, SA, "plan-X-b", 4, 1),
+            *lead_with_package(10, SA, "L1", package="plan-X-b"),
+            *lead_with_package(11, SA, "L2"),
+        ]
+        self.assertEqual(
+            self.phases(events),
+            {f"{SA}:L1": "plan-X-b", f"{SA}:L2": "plan-X"},
+        )
+
+    def test_claim_without_name_unchanged(self):
+        events = [
+            grant(1, SA, "plan-A", 4, 1),
+            grant(2, SA, "plan-B", 4, 1),
+            *lead_with_package(10, SA, "L1", package="other"),
+            *lead_with_package(11, SA, "L2"),
+        ]
+        self.assertEqual(
+            self.phases(events),
+            {f"{SA}:L1": "plan-A", f"{SA}:L2": "plan-B"},
+        )
+
+    def test_same_package_first_lead_binds_second_falls_back(self):
+        events = [
+            grant(1, SA, "plan-A", 4, 1),
+            grant(2, SA, "impl-Z", 4, 1),
+            *lead_with_package(10, SA, "L1", package="plan-A"),
+            *lead_with_package(11, SA, "L2", package="plan-A"),
+        ]
+        self.assertEqual(
+            self.phases(events),
+            {f"{SA}:L1": "plan-A", f"{SA}:L2": "impl-Z"},
+        )
+
+    def test_name_hit_in_other_session_does_not_bind(self):
+        events = [
+            grant(1, SB, "plan-A", 4, 1),
+            grant(2, SA, "impl-Z", 4, 1),
+            *lead_with_package(10, SA, "L1", package="plan-A"),
+        ]
+        self.assertEqual(self.phases(events), {f"{SA}:L1": "impl-Z"})
+
+    def test_name_hit_before_grant_does_not_bind(self):
+        events = [
+            grant(1, SA, "early", 4, 1),
+            *lead_with_package(5, SA, "L1", package="plan-B"),
+            grant(10, SA, "plan-B", 4, 1),
+        ]
+        self.assertEqual(self.phases(events), {f"{SA}:L1": "early"})
+
+    def test_phase_lookup_for_metrics_follows_header(self):
+        """efficiency schlaegt Leads ueber «<session>:<agent>» in lead_phases nach."""
+        events = [
+            grant(1, SA, "plan-A", 4, 1),
+            grant(2, SA, "plan-B", 4, 1),
+            *lead_with_package(10, SA, "LB", package="plan-B"),
+            *lead_with_package(11, SA, "LA", package="plan-A"),
+        ]
+        phases = self.phases(events)
+        self.assertEqual(phases.get(f"{SA}:LA"), "plan-A")
+        self.assertEqual(phases.get(f"{SA}:LB"), "plan-B")
+
+
 if __name__ == "__main__":
     unittest.main()
