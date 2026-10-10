@@ -167,6 +167,26 @@ class MetricsTest(unittest.TestCase):
             naive, datetime.fromisoformat("2026-10-10T06:30:00").astimezone()
         )
 
+    def test_default_out_is_worktree(self):
+        wt = Path(self.tmp.name).resolve() / "wt"
+        wt.mkdir()
+        (wt / ".git").write_text("gitdir: /irgendwo/.git/worktrees/wt\n", "utf-8")
+        old = Path.cwd()
+        os.chdir(wt)
+        self.addCleanup(os.chdir, old)
+        buffer = io.StringIO()
+        with (
+            mock.patch.dict(os.environ),
+            contextlib.redirect_stdout(buffer),
+            mock.patch.object(metrics, "format_markdown", lambda path: None),
+        ):
+            os.environ.pop("STUDIO_DOCS")
+            code = metrics.main(["--session", "s1"])
+        self.assertEqual(code, 0)
+        self.assertTrue(
+            (wt / "docs" / "studio" / "metriken" / "S-2026-09-30-s1.md").exists()
+        )
+
     def test_missing_transcript_is_not_measured(self):
         self.run_cli("--session", "s1")
         text = (self.out / "S-2026-09-30-s1.md").read_text(encoding="utf-8")

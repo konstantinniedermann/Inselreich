@@ -493,7 +493,7 @@ def main(argv: list[str] | None = None) -> int:
     kennung, raw = result
     if args.milestone and raw["agents"] == 0:
         print(f"studio-metrics: keine Datensätze für {kennung}", file=sys.stderr)
-    folder = args.out or paths.docs_dir() / "metriken"
+    folder = args.out or paths.worktree_docs_dir() / "metriken"
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{kennung}.md"
     path.write_text(render(raw), encoding="utf-8")
