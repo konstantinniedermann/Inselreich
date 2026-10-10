@@ -112,10 +112,12 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend (Session 2cfa57e0)
 
-- REL-18 Push (R472) durch `production-integrator`; keine Umsetzer bis `zeitreserve-push` Exit 0.
-- Vorarbeit (R475, Deckel voll): M13-E2 Spec (`lead-design`), UI-TASTEN Kurzdesign (I-056/I-057, R474), I-048 Spec
-  Zukauf-Aufschlag, I-049 Kurzdesign Sperrbestand, TOOL-BUENDEL-5 Plan (`lead-tech`), Denkmal-Art-Vorschlag (`lead-art`),
-  M14-Brainstorming. Erledigt: Handbuch 1.45 (R473), IDEEN-06 (R474).
+- REL-18 live (R480). Umsetzung: UI-TASTEN (R479, `.worktrees/ui-tasten`), TOOL-BUENDEL-5 (R478/R482/R484, `.worktrees/b5`),
+  AUFRAEUM-01 (R485, `.worktrees/aufraeum-01`, Merge vor M13-E2-SIM).
+- Gates: Spec M13-E2 (lead-qa BEDENKEN B1–B9, lead-tech läuft; danach Spec-Nachtrag lead-design), Spec I-048 (R487, lead-tech +
+  lead-qa laufen). I-049 Plan frei, blockiert bis M13-E2-SIM (R481).
+- Vorarbeit: Spec M14-E1 „Inselcharakter“ (R486 Richtung B). Prozess-Aussensicht REL-18 läuft.
+- Reihenfolge Save: M13-E2 v12 (I-049, I-048 fahren mit, wenn selbes Release).
 
 ## Parallele Sessions
 
