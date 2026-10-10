@@ -1,4 +1,4 @@
-// problems.ts — rein: Problem-Liste, Umlauf und Sprungablauf für die Tasten Q/E (I-042, REL-17); nicht im Spielstand.
+// problems.ts — rein: Problem-Liste, Umlauf und Sprungablauf für die Tasten `.`/`,` (I-042, REL-17); nicht im Spielstand.
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS } from '../sim/defs/goods';
 import { islandName } from '../sim/islands';
