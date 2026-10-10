@@ -4717,3 +4717,16 @@ Regelbezug: gates.md Kombiniertes Gate (Stufe leicht); STUDIO.md Ablauf Stufe le
 späte Nachreviews im Strang.
 
 Entscheider: L0 · Anlass: Urteil lead-qa GATE-UI-GUT-CHIP · ADR: —
+
+## R463 · 2026-10-10 · Push REL-16, REL-17, HOTFIX-CI-01, TOOL-BUENDEL-3: live
+
+Ruling: Push `c282def0..a9f5336e` per geprüftem Hash (Integrator, Worktree `.worktrees/integrate`): `tsc`, `lint`,
+`zeittests`, `conflicts` Exit 0; `make check` Exit 0 (Wiederholung bei Load < 3), `make zeitreserve-push` Exit 0 (Last 3,1,
+2912 Tests, 0 ohne Reserve; davor zweimal Exit 2 „nicht belastbar“), `make check-ci-perf` Exit 0. CI `38055866019` **grün**
+(HOTFIX-CI-01 wirkt), Pages `38056273377` grün. REL-16 und REL-17 live. Die nach dem Push entstandenen Doku-Commits
+(R460–R462, Beobachtungen, Plan UI-GUT-CHIP) bleiben lokal bis zum nächsten Push (R335: einer je Studio-Session; dieser
+Push zählt für Session 5a00a316). Prozess-Aussensicht REL-16/REL-17 folgt (ein Start `studio-process-coach`).
+
+Regelbezug: STUDIO.md Push-Gate (R429, Handbuch 1.42), R335 · Kosten bei Irrtum: keine (Stand grün geprüft).
+
+Entscheider: L0 · Anlass: Bericht production-integrator PUSH-2026-10-10b · ADR: —
