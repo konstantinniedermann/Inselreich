@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   PAN_PX_PER_S,
   exceedsDrag,
@@ -14,7 +14,10 @@ import {
   spaceKeyRole,
   pointerInRect,
   visibleViewHeight,
+  bindInput,
+  type InputAction,
 } from '../../src/ui/input';
+import type { GameState } from '../../src/ui/app';
 import { clampToRect, worldToScreen } from '../../src/render/camera';
 import { project } from '../../src/render/iso';
 import { targetTile } from '../../src/ui/target';
@@ -22,6 +25,9 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { tileAt } from '../../src/sim/world';
 import { uxWorld } from './worlds';
 import type { Camera } from '../../src/render/camera';
+
+const modalFlag = vi.hoisted(() => ({ open: false }));
+vi.mock('../../src/ui/modal', () => ({ isModalOpen: () => modalFlag.open }));
 
 describe('panDelta (Q2, AK-U1a-02)', () => {
   it('Q2: 960 Pixel je Sekunde bei Zoom 1', () => {
@@ -222,5 +228,178 @@ describe('REL-17 Abriss-Zug (AK-R17-12…16)', () => {
     const zBlock = src.slice(z, src.indexOf('\n    } else', z));
     expect(zBlock).toContain('removeRoad');
     expect(zBlock).not.toContain('demolishBuilding');
+  });
+});
+
+// UI-TASTEN T02: bindInput mit Fake-Fenster (Vitest läuft in Node, ohne DOM).
+describe('UI-TASTEN keydown-Verdrahtung (AK-UT-05, 06, 10)', () => {
+  class FakeEl {
+    tagName = 'BODY';
+    isContentEditable = false;
+  }
+  class FakeInput extends FakeEl {
+    override tagName = 'INPUT';
+  }
+  type Handler = (e: unknown) => void;
+  const listeners = new Map<string, Handler[]>();
+  const fakeWindow = {
+    addEventListener: (t: string, h: Handler) => listeners.set(t, [...(listeners.get(t) ?? []), h]),
+    removeEventListener: (t: string, h: Handler) =>
+      listeners.set(
+        t,
+        (listeners.get(t) ?? []).filter((x) => x !== h),
+      ),
+  };
+  const canvasHandlers = new Map<string, Handler>();
+  const fakeCanvas = {
+    ownerDocument: { getElementById: () => null },
+    clientWidth: 800,
+    clientHeight: 600,
+    getBoundingClientRect: () => ({ left: 0, top: 0, right: 800, bottom: 600 }),
+    addEventListener: (t: string, h: Handler) => canvasHandlers.set(t, h),
+    removeEventListener: () => {},
+    setPointerCapture: () => {},
+    releasePointerCapture: () => {},
+  };
+
+  function setup(tool: GameState['tool'] = { kind: 'select' }): {
+    actions: InputAction[];
+    press: (init: Record<string, unknown>) => { defaultPrevented: boolean };
+    binding: ReturnType<typeof bindInput>;
+  } {
+    vi.stubGlobal('window', fakeWindow);
+    vi.stubGlobal('HTMLElement', FakeEl);
+    vi.stubGlobal('HTMLInputElement', FakeInput);
+    vi.stubGlobal('HTMLTextAreaElement', class {});
+    vi.stubGlobal('HTMLSelectElement', class {});
+    const { w } = uxWorld();
+    const state = {
+      world: w,
+      cam: { x: 0, y: 0, zoom: 1 },
+      tool,
+      hover: null,
+    } as unknown as GameState;
+    const actions: InputAction[] = [];
+    const binding = bindInput(fakeCanvas as unknown as HTMLCanvasElement, state, (a) =>
+      actions.push(a),
+    );
+    const press = (init: Record<string, unknown>): { defaultPrevented: boolean } => {
+      const e = {
+        key: 'x',
+        ctrlKey: false,
+        metaKey: false,
+        altKey: false,
+        shiftKey: false,
+        repeat: false,
+        timeStamp: 0,
+        target: new FakeEl(),
+        defaultPrevented: false,
+        preventDefault() {
+          this.defaultPrevented = true;
+        },
+        ...init,
+      };
+      for (const h of listeners.get('keydown') ?? []) h(e);
+      return e;
+    };
+    return { actions, press, binding };
+  }
+
+  afterEach(() => {
+    listeners.clear();
+    canvasHandlers.clear();
+    modalFlag.open = false;
+    vi.unstubAllGlobals();
+  });
+
+  it('onKeyDown nutzt keyDownVerdict (kein Inline-Duplikat, Quelltext)', () => {
+    const src = readFileSync('src/ui/input.ts', 'utf8');
+    const a = src.indexOf('const onKeyDown = ');
+    const body = src.slice(a, src.indexOf('\n  };', a));
+    expect(body).toContain('keyDownVerdict(');
+    expect(body).not.toContain('!e.repeat');
+  });
+
+  it('Entf ohne Zug löst demolishSelected aus, preventDefault gesetzt', () => {
+    const { actions, press } = setup();
+    expect(press({ key: 'Delete' }).defaultPrevented).toBe(true);
+    expect(actions).toEqual([{ type: 'hotkey', action: { kind: 'demolishSelected' } }]);
+  });
+
+  it('Entf mit repeat löst nichts aus (UT-06), Browser-Standard bleibt unterdrückt', () => {
+    const { actions, press } = setup();
+    expect(press({ key: 'Delete', repeat: true }).defaultPrevented).toBe(true);
+    expect(actions).toEqual([]);
+  });
+
+  it('Entf im laufenden Abriss-Zug löst nichts aus (UT-05)', () => {
+    const { actions, press, binding } = setup({ kind: 'demolish' });
+    canvasHandlers.get('pointerdown')!({
+      button: 0,
+      pointerType: 'mouse',
+      pointerId: 1,
+      clientX: 5,
+      clientY: 5,
+      ctrlKey: false,
+      metaKey: false,
+      preventDefault() {},
+    });
+    expect(binding.isDragging()).toBe(true);
+    actions.length = 0;
+    expect(press({ key: 'Delete' }).defaultPrevented).toBe(true);
+    expect(actions).toEqual([]);
+  });
+
+  it('Strg+S im Modal: defaultPrevented ohne Aktion (UT-10)', () => {
+    modalFlag.open = true;
+    const { actions, press } = setup();
+    expect(press({ key: 's', ctrlKey: true }).defaultPrevented).toBe(true);
+    expect(press({ key: 'S', metaKey: true }).defaultPrevented).toBe(true);
+    expect(actions).toEqual([]);
+  });
+
+  it('Strg+S im Textfeld: defaultPrevented ohne Aktion (UT-10)', () => {
+    const { actions, press } = setup();
+    expect(press({ key: 's', ctrlKey: true, target: new FakeInput() }).defaultPrevented).toBe(true);
+    expect(actions).toEqual([]);
+  });
+
+  it('Strg+S sonst: save-Aktion, kein Browser-Dialog', () => {
+    const { actions, press } = setup();
+    expect(press({ key: 's', ctrlKey: true }).defaultPrevented).toBe(true);
+    expect(actions).toEqual([{ type: 'hotkey', action: { kind: 'save' } }]);
+  });
+});
+
+// app.ts braucht das DOM und ist in Vitest (Node) nicht startbar: Quelltext prüfen (B5, ein Codeweg je Wirkung).
+describe('UI-TASTEN app.ts Verdrahtung (Quelltext, B5)', () => {
+  const src = readFileSync('src/ui/app.ts', 'utf8');
+  const block = (start: string, end: string): string => {
+    const a = src.indexOf(start);
+    expect(a).toBeGreaterThan(-1);
+    return src.slice(a, src.indexOf(end, a));
+  };
+
+  it('Abreissen-Knopf und Entf teilen demolishFromPanel(id)', () => {
+    expect(src).toContain('demolish: (id) => demolishFromPanel(id),');
+    const fn = block('const demolishFromPanel = ', '\n  };');
+    expect(fn).toContain('demolishBuilding(id)');
+    expect(fn).toContain("sound.play('demolish')");
+    expect(fn).toContain("setPanel({ kind: 'none' })");
+    const hk = block("h.kind === 'demolishSelected'", '} else if');
+    expect(hk).toContain('demolishTarget(state.panel, world)');
+    expect(hk).toContain('demolishFromPanel(t.id)');
+    expect(hk).toContain('showError(t.reason)');
+  });
+
+  it('Menü-Speichern und Strg/Cmd+S teilen saveManual()', () => {
+    expect(src).toContain('save: () => saveManual(),');
+    const fn = block('const saveManual = ', '\n  };');
+    expect(fn).toContain('saveToStorage(world)');
+    expect(fn).toContain("showMessage('Gespeichert')");
+    expect(fn).toContain("showMessage(r.reason, 'error')");
+    expect(fn).not.toContain('sound.play');
+    const hk = block("h.kind === 'save'", '} else if');
+    expect(hk).toContain('saveManual()');
   });
 });

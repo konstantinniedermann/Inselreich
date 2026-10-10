@@ -801,14 +801,15 @@ export function renderInspect(
   if (kontor !== null) {
     addLine(panel, `Lagerkapazität ${STORAGE_CAP} je Gut`);
     addButton(buttons, 'Handeln', () => actions.openTrade());
-    if (kontor.demolish) addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish');
+    if (kontor.demolish)
+      addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', 'Entf');
   } else if (b.defId === 'townhall') {
     renderTownhall(panel, actions);
     addRemedy(panel);
     addLine(panel, '', 'upkeep');
     addLine(panel, '', 'fire-protection');
     if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
-    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish');
+    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', 'Entf');
   } else {
     if (b.house) {
       renderHouse(panel, b);
@@ -822,7 +823,7 @@ export function renderInspect(
     if (def.service === 'faith') addButton(buttons, '', () => actions.holdFeast(id), 'feast');
     if (needsConnection(b.defId)) addConnectButton(buttons, id, actions);
     if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
-    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish');
+    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', 'Entf');
   }
   panel.appendChild(buttons);
   if (kontor !== null) renderShipSection(panel, world, b.island, actions.ships);

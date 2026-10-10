@@ -12,6 +12,10 @@ import {
   hotkeyAction,
   hotkeyLabel,
   hotkeyList,
+  demolishTarget,
+  isSaveChord,
+  keyDownVerdict,
+  markedBuilding,
   nextOpenCategory,
   NO_SELECTION_TEXT,
   toolName,
@@ -421,5 +425,117 @@ describe('REL-17 Tasten . und , (AK-R17-08, 09)', () => {
     const end = src.indexOf('\n      dir,\n    );', from);
     expect(end).toBeGreaterThan(from);
     expect(src.slice(from, end)).not.toContain('selectTool(');
+  });
+});
+
+describe('UI-TASTEN T01 (AK-UT-01, 02, 07, 11, 12)', () => {
+  const SH = { ...NONE, shift: true };
+  const DEL = { kind: 'demolishSelected' };
+
+  it('AK-UT-01 Entf und Rücktaste ohne Modifier → demolishSelected', () => {
+    expect(hotkeyAction('Delete', NONE, false)).toEqual(DEL);
+    expect(hotkeyAction('Backspace', NONE, false)).toEqual(DEL);
+    expect(hotkeyAction('Delete', SH, false)).toEqual(DEL);
+  });
+  it('AK-UT-01 Entf stumm mit Strg, Cmd, Alt, in Feld oder Modal', () => {
+    for (const key of ['Delete', 'Backspace']) {
+      expect(hotkeyAction(key, { ...NONE, ctrl: true }, false)).toBeNull();
+      expect(hotkeyAction(key, { ...NONE, meta: true }, false)).toBeNull();
+      expect(hotkeyAction(key, { ...NONE, alt: true }, false)).toBeNull();
+      expect(hotkeyAction(key, NONE, true)).toBeNull();
+    }
+  });
+
+  it('AK-UT-02 markedBuilding und demolishTarget', () => {
+    const w = createWorld(3, { crisisLevel: 'normal' });
+    const id = Number(Object.keys(w.buildings)[0]);
+    const fail = { ok: false, reason: 'Kein Gebäude markiert' };
+    expect(markedBuilding({ kind: 'inspect', id }, w)).toEqual({ ok: true, id });
+    expect(demolishTarget({ kind: 'inspect', id }, w)).toEqual({ ok: true, id });
+    for (const f of [markedBuilding, demolishTarget]) {
+      expect(f({ kind: 'none' }, w)).toEqual(fail);
+      expect(f({ kind: 'trade', island: 0 }, w)).toEqual(fail);
+      expect(f({ kind: 'inspect', id: 987654 }, w)).toEqual(fail);
+    }
+    expect(upgradeTarget({ kind: 'inspect', id }, w)).toEqual({ ok: true, id });
+  });
+
+  it('AK-UT-07 Strg/Cmd+S → save, auch Gross-S', () => {
+    expect(hotkeyAction('s', { ...NONE, ctrl: true }, false)).toEqual({ kind: 'save' });
+    expect(hotkeyAction('S', { ...NONE, meta: true }, false)).toEqual({ kind: 'save' });
+    expect(hotkeyAction('s', { ...NONE, ctrl: true, alt: true }, false)).toBeNull();
+    expect(hotkeyAction('s', { ...NONE, ctrl: true, shift: true }, false)).toBeNull();
+    expect(hotkeyAction('s', { ...NONE, meta: true, alt: true }, false)).toBeNull();
+    expect(hotkeyAction('s', { ...NONE, meta: true, shift: true }, false)).toBeNull();
+    expect(hotkeyAction('s', { ...NONE, ctrl: true }, true)).toBeNull();
+  });
+  it('AK-UT-07 isSaveChord nur Strg/Cmd+S ohne Alt/Umschalt, unabhängig vom Feld', () => {
+    expect(isSaveChord('s', { ...NONE, ctrl: true })).toBe(true);
+    expect(isSaveChord('S', { ...NONE, ctrl: true })).toBe(true);
+    expect(isSaveChord('s', { ...NONE, meta: true })).toBe(true);
+    expect(isSaveChord('s', { ...NONE, ctrl: true, alt: true })).toBe(false);
+    expect(isSaveChord('s', { ...NONE, ctrl: true, shift: true })).toBe(false);
+    expect(isSaveChord('s', NONE)).toBe(false);
+    expect(isSaveChord('a', { ...NONE, ctrl: true })).toBe(false);
+  });
+
+  it('AK-UT-11 S allein bleibt Schwenken; Strg/Cmd+S ist kein Pan-Wert', () => {
+    expect(hotkeyAction('s', NONE, false)).toBeNull();
+    expect(hotkeyAction('S', SH, false)).toBeNull();
+    expect(hotkeyAction('s', { ...NONE, ctrl: true }, false)).not.toEqual({ kind: 'pan' });
+  });
+
+  it('AK-UT-11 (B4) bisherige Tabelle unverändert, mit und ohne Modifier', () => {
+    for (const [k, tool] of Object.entries(TOOL_HOTKEYS)) {
+      expect(hotkeyAction(k, NONE, false)).toEqual({ kind: 'tool', tool });
+      expect(hotkeyAction(k, { ...NONE, ctrl: true }, false)).toBeNull();
+      expect(hotkeyAction(k, { ...NONE, meta: true }, false)).toBeNull();
+      expect(hotkeyAction(k, { ...NONE, alt: true }, false)).toBeNull();
+      expect(hotkeyAction(k, NONE, true)).toBeNull();
+    }
+    expect(hotkeyAction('1', NONE, false)).toEqual({ kind: 'speed', speed: 1 });
+    expect(hotkeyAction('2', NONE, false)).toEqual({ kind: 'speed', speed: 2 });
+    expect(hotkeyAction('3', NONE, false)).toEqual({ kind: 'speed', speed: 4 });
+    expect(hotkeyAction('p', NONE, false)).toEqual({ kind: 'pause' });
+    expect(hotkeyAction('?', NONE, false)).toEqual({ kind: 'help' });
+    expect(hotkeyAction('.', NONE, false)).toEqual({ kind: 'problemNext' });
+    expect(hotkeyAction(',', NONE, false)).toEqual({ kind: 'problemPrev' });
+    expect(hotkeyAction('U', SH, false)).toEqual({ kind: 'upgrade' });
+    expect(hotkeyAction('0', NONE, false, true)).toEqual({ kind: 'islandHome' });
+    expect(hotkeyAction('9', NONE, false, true)).toEqual({ kind: 'islandCycle' });
+    expect(hotkeyAction('0', NONE, false)).toBeNull();
+    expect(hotkeyAction('a', NONE, false)).toBeNull();
+    expect(hotkeyAction('Escape', NONE, false)).toBeNull();
+  });
+
+  it('AK-UT-12 hotkeyList nennt Entf und Strg/Cmd + S immer, auch ohne Freischaltung', () => {
+    const list = hotkeyList(createWorld(3, { crisisLevel: 'normal' }));
+    expect(list).toContainEqual({
+      key: 'Entf / Rücktaste',
+      label: 'Markiertes Gebäude abreissen',
+    });
+    expect(list).toContainEqual({ key: 'Strg/Cmd + S', label: 'Spiel speichern' });
+    const keys = list.map((e) => e.key);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it('keyDownVerdict (UT-05/06/10)', () => {
+    const quiet = { act: false, preventDefault: false };
+    expect(keyDownVerdict(null, false, false, false)).toEqual(quiet);
+    expect(keyDownVerdict(null, true, true, false)).toEqual(quiet);
+    const del = { kind: 'demolishSelected' } as const;
+    const save = { kind: 'save' } as const;
+    expect(keyDownVerdict(del, true, false, false)).toEqual({ act: false, preventDefault: true });
+    expect(keyDownVerdict(del, false, true, false)).toEqual({ act: false, preventDefault: true });
+    expect(keyDownVerdict(del, false, false, false)).toEqual({ act: true, preventDefault: true });
+    expect(keyDownVerdict(save, false, false, true)).toEqual({ act: true, preventDefault: true });
+    expect(keyDownVerdict(save, false, true, true)).toEqual({ act: false, preventDefault: true });
+    expect(keyDownVerdict(null, false, false, true)).toEqual({ act: false, preventDefault: true });
+    const pause = { kind: 'pause' } as const;
+    expect(keyDownVerdict(pause, true, false, false)).toEqual({ act: true, preventDefault: true });
+    expect(keyDownVerdict(pause, false, true, false)).toEqual({ act: false, preventDefault: true });
+    const tool = { kind: 'tool', tool: { kind: 'road' } } as const;
+    expect(keyDownVerdict(tool, false, true, false)).toEqual({ act: false, preventDefault: true });
+    expect(keyDownVerdict(tool, false, false, false)).toEqual({ act: true, preventDefault: true });
   });
 });

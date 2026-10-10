@@ -1,5 +1,6 @@
 // Gemeinsame Modalkarten: ein Stapel, ein Tasten-Listener (Capture), Fokusfalle (Spec L2).
 // Keine Regeln: nur Darstellung und Bedienung.
+import { isSaveChord } from './hotkeys';
 
 export interface ModalOptions {
   host: HTMLElement;
@@ -80,6 +81,9 @@ function onKey(e: KeyboardEvent): void {
   const top = stack[stack.length - 1];
   if (!top) return;
   e.stopImmediatePropagation(); // Spiel-Hotkeys, WASD, Pfeile, Leertaste-Ziehen ruhen (Spec L2)
+  // Der Browser-Dialog «Seite speichern» bleibt auch hier unterdrückt (input.ts sieht die Taste nicht mehr)
+  if (isSaveChord(e.key, { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, shift: e.shiftKey }))
+    e.preventDefault();
   if (e.key === 'Escape') {
     e.preventDefault();
     // RF-1: nur die Einträge, die im Stapel nach Esc fehlen (die oberste Karte), werden geschlossen

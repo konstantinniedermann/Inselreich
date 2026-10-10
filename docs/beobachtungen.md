@@ -243,3 +243,11 @@ Der gestärkte Test `tests/ui/goodFocus.test.ts` (AK-GC-08) belegt die Trennung 
 ### 2026-10-10 · TOOL-BUENDEL-5 (Final-Review): `testrun` Restfenster beim zweiten Ctrl-C und Testlücke
 
 - **Fundort:** `tools/studio/testrun.py` (`_run`, `except KeyboardInterrupt` vor `_ignore_interrupts()`), `tools/studio/tests/test_testrun.py`, `tools/studio/log.py` (`_package_exists`). Beobachtung: (1) Ein zweites Ctrl-C in den Mikrosekunden zwischen Eintritt in den `except`-Zweig und `_ignore_interrupts()` überspringt `_stop_group`; die Gruppe läuft dann verwaist (Abhilfe: `signal.pthread_sigmask`). (2) Kein Test prüft, dass der SIGINT-Handler nach dem Doppel-Interrupt wiederhergestellt ist (`signal.getsignal` vorher/nachher). (3) Der Vorfilter in `_package_exists` sucht die ID als JSON-Rohtext; eine nicht-ASCII-ID würde escaped geschrieben und gälte als neu. Ursprung: TOOL-BUENDEL-5, Final-Review. Einschätzung: niedrig (Fenster Mikrosekunden, IDs heute ASCII); Sammelkandidat für das nächste Werkzeug-Bündel.
+
+### 2026-10-10 · UI-TASTEN: Laden-Liste im offenen Menü aktualisiert sich nach «Speichern» nicht
+
+- **Fundort:** Menü «Laden»-Liste (`src/ui/menu.ts`), Playtest T05 (`.studio/qa/ui-tasten/17-menue-nach-speichern-liste-nicht-aktualisiert`). Beobachtung: Nach «Speichern» bei offenem Menü zeigt die Liste weiter den Stand vom Öffnen; vermutlich schon vor UI-TASTEN so. Ursprung: Playtest UI-TASTEN. Einschätzung: niedrig, rein kosmetisch.
+
+### 2026-10-10 · UI-TASTEN: Final-Review-Hinweise (niedrig)
+
+- **Fundort:** `src/ui/modal.ts` (importiert `hotkeys.ts` für `isSaveChord`, zieht `sim/defs` mit), Tooltip «Entf» am Abreissen-Knopf (Mac ohne Entf-Taste), `keyDownVerdict` (sperrt nur den Abriss-Zug). Beobachtung: `isSaveChord` könnte in ein kleines reines Modul; Tooltip könnte «Entf / Rücktaste» nennen. Ursprung: Final-Review UI-TASTEN. Einschätzung: alle niedrig.

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SAVE_VERSION, deserialize, serialize } from '../../src/sim/save';
 import { ok, type World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
@@ -9,6 +9,7 @@ import {
   autosaveOnHide,
   listSavesFrom,
   loadNotice,
+  saveToStorage,
   storageProblem,
   type StorageLike,
 } from '../../src/ui/storage';
@@ -163,5 +164,21 @@ describe('M12 E2 UI Lade-Meldung', () => {
     expect(loadNotice(first)).not.toBeNull();
     const again = deserialize(serialize((first as { world: World }).world));
     expect(loadNotice(again)).toBeNull();
+  });
+});
+
+describe('saveToStorage Fehlerweg (AK-UT-09)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('AK-UT-09: setItem wirft -> Speichern fehlgeschlagen, kein Wurf', () => {
+    vi.stubGlobal('localStorage', {
+      setItem() {
+        throw new Error('QuotaExceededError');
+      },
+    });
+    expect(saveToStorage(createWorld(3))).toEqual({
+      ok: false,
+      reason: 'Speichern fehlgeschlagen',
+    });
   });
 });

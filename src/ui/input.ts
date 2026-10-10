@@ -9,7 +9,7 @@ import { makeVisibleHeight } from './cameraView';
 import { shipAt } from '../render/shipLane';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
-import { hotkeyAction, type HotkeyAction } from './hotkeys';
+import { hotkeyAction, isSaveChord, keyDownVerdict, type HotkeyAction } from './hotkeys';
 import { isModalOpen } from './modal';
 import { pickTarget, type IslandTile } from './islandTools';
 import { createSpaceTap } from './spaceTap';
@@ -556,17 +556,23 @@ export function bindInput(
       spaceKeyRole(target, modal, { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey }) === 'ignore'
     )
       spaceTap.blur(); // A-9: Erkennung verwerfen
+    const mods = { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, shift: e.shiftKey };
     const hot = hotkeyAction(
       e.key,
-      { ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, shift: e.shiftKey },
+      mods,
       isTextField(e.target) || modal,
       functionLock(state.world, 'seafaring') === null,
     );
-    if (hot) {
-      if (!e.repeat) onAction({ type: 'hotkey', action: hot });
-      e.preventDefault();
-      return;
-    }
+    // Strg/Cmd+S unterdrückt den Browser-Dialog auch in Feld und Modal (dort ohne Aktion)
+    const verdict = keyDownVerdict(
+      hot,
+      drag?.demolish === true,
+      e.repeat,
+      isSaveChord(e.key, mods),
+    );
+    if (verdict.act && hot) onAction({ type: 'hotkey', action: hot });
+    if (verdict.preventDefault) e.preventDefault();
+    if (hot) return;
     if (!panKeyAllowed(target, modal)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();

@@ -96,7 +96,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   Grundfläche ist grün, wenn der Standort passt, sonst rot; der Grund erscheint als Meldung. Nicht
   bezahlbare Gebäude sind gedämpft mit gestrichelter Kante dargestellt, ein Klick nennt den Grund.
 - **Abriss:** Werkzeug wählen, dann auf einen Gebäudekörper klicken (reisst dieses Gebäude ab) oder über Wege
-  ziehen (reisst nur Wege ab, Gebäude bleiben stehen) — oder im Info-Panel «Abreissen».
+  ziehen (reisst nur Wege ab, Gebäude bleiben stehen) — oder im Info-Panel «Abreissen» (Knopf oder Taste `Entf` / `Rücktaste` für das markierte Gebäude).
 - **Wann eine Aktion wirkt:** Mit der Maus wirken Bauen, Weg und Abriss sofort beim Drücken, auf dem Ziel
   unter dem Zeiger (der Abriss-Zug über Wege wirkt wie der Weg-Zug sofort je Kachel); die **Auswahl** erst beim Loslassen und nur, wenn der Zeiger nie weiter als 4 Pixel vom
   Druckpunkt wegwanderte (sonst war es ein Schwenken). Auf Touch beim Loslassen, aber auf der Kachel, auf die der Finger zuerst getippt hat — und nur, wenn
@@ -132,6 +132,8 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 | Mausrad                | Zoomen                                                                                                                                    |
 | `P`                    | Pause an/aus (setzt danach das letzte Tempo fort)                                                                                         |
 | `Umschalt` + `U`       | Markiertes Gebäude ausbauen (wie «Ausbauen», erst nach der Freischaltung)                                                                 |
+| `Entf` / `Rücktaste`   | Markiertes Gebäude abreissen (wie «Abreissen» im Info-Panel)                                                                              |
+| `Strg`/`Cmd` + `S`     | Spiel speichern (wie Menü → «Speichern»)                                                                                                  |
 | `Cmd`/`Strg` + Klick   | Gebäudetyp unter dem Zeiger als Bauwerkzeug wählen (Pipette)                                                                              |
 | `1` / `2` / `3`        | Tempo 1× / 2× / 4× (hebt die Pause auf)                                                                                                   |
 | `R` / `X`              | Weg / Abriss                                                                                                                              |
@@ -147,7 +149,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 | `J` / `O`              | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                                                                                          |
 | `0` / `9`              | Kamera zur Heimat / zur nächsten Insel (erst mit der Seefahrt)                                                                            |
 
-Die Werkzeugtasten wirken nur ohne Strg, Cmd oder Alt; Gross- und Kleinschreibung ist egal. Ausnahmen sind `Umschalt` + `U` (Ausbau; `U` allein bleibt die Schule) und `Cmd`/`Strg` + Linksklick auf ein Gebäude (Pipette; auf dem Mac ist `Cmd` + Klick der Hauptweg, `Strg` + Klick geht auch). Die Pipette wirkt in jedem Werkzeug, beim Kontor meldet sie, dass es sich nicht nachbauen lässt. Leertaste halten und Ziehen hat Vorrang vor der Pipette. Dieselbe
+Die Werkzeugtasten wirken nur ohne Strg, Cmd oder Alt; Gross- und Kleinschreibung ist egal. Ausnahmen sind `Strg`/`Cmd` + `S` (Speichern; der Browser-Dialog «Seite speichern» wird im Spiel unterdrückt, Varianten mit `Umschalt` oder `Alt` bleiben dem Browser), `Umschalt` + `U` (Ausbau; `U` allein bleibt die Schule) und `Cmd`/`Strg` + Linksklick auf ein Gebäude (Pipette; auf dem Mac ist `Cmd` + Klick der Hauptweg, `Strg` + Klick geht auch). Die Pipette wirkt in jedem Werkzeug, beim Kontor meldet sie, dass es sich nicht nachbauen lässt. Leertaste halten und Ziehen hat Vorrang vor der Pipette. Dieselbe
 Werkzeugtaste bei schon aktivem Werkzeug schaltet zurück zur Auswahl. Der Tooltip in der Bauleiste
 nennt die Taste; alle Kürzel stehen auch im Menü unter «Tastenkürzel». Bei offener Karte (Start, Menü,
 Einstellungen) sind alle Kürzel stumm. Auf einem fokussierten Knopf aktiviert die Leertaste den Knopf.
@@ -571,7 +573,7 @@ Boom verkaufen lohnt sich nie, und ein Auftrag bringt je Einheit immer mehr als 
 ## Speichern, Laden, Neue Insel
 
 - **Speichern:** Menü → «Speichern» legt den Spielstand im Browser ab (ein Speicherplatz, nur in diesem
-  Browser).
+  Browser). `Strg`/`Cmd` + `S` speichert auf demselben Weg in denselben Platz.
 - **Autosave:** Alle 2 Minuten laufenden Spiels (Pause zählt nicht) speichert das Spiel zusätzlich in
   einen eigenen Autosave-Platz, und beim Verlassen oder Schliessen der Seite ein weiteres Mal (still, nur
   wenn das Spiel schon begonnen hat). Scheitert das periodische Speichern, erscheint einmal eine Meldung;
