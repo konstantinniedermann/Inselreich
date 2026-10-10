@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-10 · Handbuch 1.41
+
+- Anlass: Nutzerauftrag, freie Kapazität für Ideen-Runden nutzen
+- Datenbasis: Auftrag HB-IDEEN-KAPAZ, `docs/studio/rulings.md` R445
+- Ruling: R445
+- Änderungen: Discovery-Strang und Gate Ideen-Runde: zusätzlicher Auslöser bei freier Kapazität, breite Runde mit bis 3 Scouts (≤ 160 Tools), Rangliste mit Nutzen/Aufwand, L0 priorisiert
+
 ## 2026-10-10 · Handbuch 1.40
 
 - Anlass: Auftrag L0 nach TOOL-BUENDEL-2 (`zeitreserve-push` bewertet nur `loadStart`)

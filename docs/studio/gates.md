@@ -236,10 +236,12 @@ Häppchen mit disjunkten Dateien laufen parallel in eigenen Worktrees (§5.8).
 
 ## Gate Ideen-Runde
 
-Prüfen: `lead-design` (Bewertung nach Raster in `docs/ideen.md`, Pitch ≤ 2 Ideen) · entscheidet **L0**.
+Prüfen: `lead-design` (Bewertung nach Raster in `docs/ideen.md`, Pitch ≤ 2 Ideen; bei breiter Runde vollständige Rangliste mit Nutzen/Aufwand je Idee) · entscheidet **L0**.
 
 **Auslöser:** Bericht von `lead-design` zu einer Runde `IDEEN-nn` (nach einem Release- oder
-Meilenstein-Merge, spätestens jede zweite Session; höchstens eine Runde je Session).
+Meilenstein-Merge, spätestens jede zweite Session) oder freie Kapazität im Studio-Deckel und im
+Nutzungslimit (R445); höchstens eine Runde je Session. Normale Runden liefern Pitch ≤ 2, eine breite Runde
+(bis 3 Scouts) die Rangliste; L0 priorisiert im Ruling nach Nutzen/Aufwand.
 
 **Ein Ruling je Runde** mit je Idee **einplanen** (S: Häppchen im Studio-Platz des nächsten Releases,
 M/L: Baustein fürs nächste Meilenstein-Brainstorming), **parken** (bis Anlass) oder **verwerfen**

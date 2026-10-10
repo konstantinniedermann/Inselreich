@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.40 · Stand: 2026-10-10 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.41 · Stand: 2026-10-10 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -371,7 +371,11 @@ Regeln dazu:
 - **Discovery-Strang (E-027, R208):** `lead-design` verantwortet Ideen-Runden (`IDEEN-nn`) nach jedem
   Release- oder Meilenstein-Merge, spätestens jede zweite Session; Pool `docs/ideen.md`, ein Studio-Platz
   je Release, je Runde ≤ 2 Starts und ≤ 80 Tools, ein Ruling je Runde ([gates.md](gates.md#gate-ideen-runde));
-  Säulenwechsel → Warteschlange. Details: Persona `design-idea-scout`, `docs/ideen.md`.
+  Säulenwechsel → Warteschlange. Zusätzlicher Auslöser: bei freier Kapazität im Studio-Deckel und im
+  Nutzungslimit (Nutzerauftrag, R445), weiterhin höchstens eine Runde je Session. Eine solche breite
+  Runde setzt bis zu 3 Scouts parallel mit je einem Schwerpunkt ein (zusammen ≤ 160 Tools); `lead-design`
+  liefert eine vollständige Rangliste mit Nutzen/Aufwand, L0 priorisiert. Details: Persona
+  `design-idea-scout`, `docs/ideen.md`.
 
 ## Autonomie
 
