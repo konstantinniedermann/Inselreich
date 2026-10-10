@@ -4644,3 +4644,20 @@ Regelbezug: gates.md Gate Merge Release (Konflikte: Eigentümer holt main per Me
 Irrtum: Revert-Merge vor dem Push.
 
 Entscheider: L0 · Anlass: Urteil lead-qa REL-17 · ADR: —
+
+## R459 · 2026-10-10 · Kurz-Retro 2cfa57e0 angenommen; E-050 behalten, E-054 startet; Ampel Steuerung abgedeckt
+
+Ruling: Retro `docs/studio/retros/2026-10-10-session-2cfa57e0-ende.md` (`b6213ffb`) angenommen. **V4:** E-050 mit
+Datenpunkt 3 von 3 **behalten**; der frei werdende Platz geht an **E-054 „Pläne auf sonnet“** ab der nächsten Studio-Session
+(erster Fall: nächster Plan nach M13-E1). **E-038** Urteil „angepasst“ (opus-Schwelle zweimal verfehlt; Anpassung macht der
+Coach beim nächsten Start). **V2/E-058** als Vorlagenzeile ohne Experiment-Platz: Integrator-Briefings nennen `make check`
+und `make check-ci-perf` mit Exit-Code; Umsetzung (Briefing-Vorlage, Persona-Klarstellung) durch den studio-coach in der
+nächsten Studio-Session, bis dahin nennt L0 beides im Briefing. **V1/E-056** und **V3/E-057** eingereiht (warten auf
+Platz). Messaufträge M1 (Last bei Merge-Läufen, Frist 2026-10-23) und M2 (Weg des Spec-Autor-Starts, Frist 2026-11-19).
+Die vom Hook gemeldete Ad-hoc-Retro „Steuerungsanteil zwei Sessions rot“ ist durch diese Retro abgedeckt (Hebel E-054
+startet jetzt, R316 dritte Retro in Folge erfüllt).
+
+Regelbezug: STUDIO.md Verbesserungsschleife (R316), §10.2 Verfassung · Kosten bei Irrtum: ein Experiment-Platz falsch
+belegt; Ad-hoc-Retro nachholen.
+
+Entscheider: L0 · Anlass: Kurz-Retro Session 2cfa57e0, Ampel-Hinweis · ADR: —
