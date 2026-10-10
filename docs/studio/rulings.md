@@ -5072,3 +5072,34 @@ AUFRAEUM-01 vor M13-E2-SIM (beide berühren evtl. `src/sim/edicts.ts`). Start, s
 Regelbezug: gates.md Kombiniertes Gate (Stufe leicht), R475 · Kosten bei Irrtum: eine Fix-Runde.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-aufraeum-01 · ADR: —
+
+## R486 · 2026-10-10 · Gate Brainstorming M14: Richtung B „Archipel mit Wert“
+
+Ruling: Vorschlag `docs/superpowers/specs/2026-10-10-m14-brainstorming.md` (`db6b1a84`, mit Rechnung Anhang 01) angenommen;
+Selbstprüfung lead-design OK, L0-Prüfung (Säulen, Wahl statt Klick, Scope) ohne Einwand. Entscheide O1–O9 nach Empfehlung:
+**O1** Richtung **B** (Säule Insel besiedeln), erstes Release Epic E1 „Inselcharakter“. **O2** A „Hände und Häuser“ ist
+M15-Kandidat, Spike der Arbeiter-Regel erst nach einem M13-Playtest. **O3** C kein Meilenstein; I-047 nur als Paket nach
+I-048 in der Fassung 25 % zu 120 %, I-029/I-006 geparkt. **O4** Werft ergänzt den Schiffskauf. **O5** Routenrisiko nur
+Sturm, keine Piraten, kein Kampf (§5.3 unberührt). **O6** dritte Insel sichtbar ab Seefahrt. **O7** Gebirge+ und
+fruchtbar, Werte mit `design-economy-designer` in der Spec, Auflage Heimat-Gebirge. **O8** Reihenfolge: M13-E2 →
+I-048 → M14-E1; M14-E2-ART parallel möglich. **O9** I-055 und I-014 als eigene Bausteine gestrichen (I-055 nur in A,
+I-014 nur gekoppelt an E1). M14 startet als Meilenstein erst nach Abschluss M13; die Spec M14-E1 darf als Vorarbeit
+(R475) vorher entstehen. Statuspflege in `docs/ideen.md` durch `lead-design` beim nächsten Start dort.
+
+Regelbezug: gates.md Gate Brainstorming, Verfassung §5.3, R445, R475 · Kosten bei Irrtum: eine Spec in falscher Richtung.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-m14-richtung · ADR: —
+
+## R487 · 2026-10-10 · Spec I-048 Zukauf-Aufschlag eingereicht; P-1…P-4 entschieden, Gate Spec
+
+Ruling: Spec `docs/superpowers/specs/2026-10-10-i048-zukauf-aufschlag-design.md` (`2813627a`, AK-ZK-01…28) geht ins Gate
+Spec (`lead-tech`, `lead-qa`). Entscheide: **P-1** Neumessung der Balancing-Szenarien in Schritt B ist **erlaubt**
+(Baseline-Änderung, Grenzen 7500/9000 Ticks und Geld > 0 bleiben); reisst eine Grenze, zuerst `BUY_RISE` 2 → 1, sonst
+Stopp an L0. **P-2** Verkaufserholung 10 → 20 Ticks mitnehmen. **P-3** Beschriftung «Preis» → «Verkauf» im Handelsdialog.
+**P-4** Save: landen I-048 und M13-E2 im selben Release, teilen sie den v12-Sprung (wie I-049, R477); sonst nächste freie.
+Reihenfolge nach R486 O8: nach M13-E2. Decision D-I048-1 damit gelöst.
+
+Regelbezug: gates.md Gate Spec, Balancing-Regel (CLAUDE.md Test-Strategie), R474, R477 · Kosten bei Irrtum: eine
+Baseline-Neumessung mehr.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-i048-zukauf · ADR: —
