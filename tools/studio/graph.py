@@ -6,7 +6,7 @@ P21–P25, P31–P38). Reine Funktionen ohne Zugriff auf Dateien oder Uhrzeit.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 GRAPH_ROWS = 300
 PAUSE_GAP = 300.0
@@ -21,7 +21,7 @@ def short(text: object, limit: int = MESSAGE_TEXT_MAX) -> str:
 
 
 def clock(t: float) -> str:
-    return datetime.fromtimestamp(t, timezone.utc).astimezone().strftime("%H:%M")
+    return datetime.fromtimestamp(t, UTC).astimezone().strftime("%H:%M")
 
 
 class Layout:

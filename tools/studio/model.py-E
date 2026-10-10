@@ -63,7 +63,7 @@ PUBLIC = (
 
 def parse_ts(value: object) -> float:
     try:
-        return datetime.fromisoformat(str(value)).timestamp()
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
     except ValueError:
         return 0.0
 

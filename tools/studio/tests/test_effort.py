@@ -1,10 +1,10 @@
 import unittest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import effort
 import model
 
-T0 = datetime(2026, 9, 30, 12, 0, tzinfo=timezone.utc).timestamp()
+T0 = datetime(2026, 9, 30, 12, 0, tzinfo=UTC).timestamp()
 MODELS = {
     "lead-qa": "opus",
     "qa-code-reviewer": "sonnet",
@@ -15,9 +15,7 @@ MODELS = {
 
 
 def ts(offset):
-    stamp = datetime.fromtimestamp(T0 + offset, timezone.utc).isoformat(
-        timespec="milliseconds"
-    )
+    stamp = datetime.fromtimestamp(T0 + offset, UTC).isoformat(timespec="milliseconds")
     return stamp.replace("+00:00", "Z")
 
 

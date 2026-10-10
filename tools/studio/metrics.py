@@ -8,7 +8,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import actions
@@ -357,7 +357,7 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
     models = model.read_agent_models(paths.agents_dir())
     handbook = studio_docs.read_version(paths.docs_dir() / "STUDIO.md")
     created = datetime.now().astimezone().isoformat(timespec="seconds")
-    now = datetime.now(timezone.utc).timestamp()
+    now = datetime.now(UTC).timestamp()
     if args.milestone:
         state = model.build_state(events, now, models, "all")
         state = _milestone_state(state, events, args.milestone)
@@ -440,7 +440,7 @@ def _session_start(events: list[dict]):
         return None
     sid = max(stamped, key=lambda e: model.parse_ts(e["ts"]))["session_id"]
     first = min(model.parse_ts(e["ts"]) for e in stamped if e["session_id"] == sid)
-    return datetime.fromtimestamp(first, timezone.utc)
+    return datetime.fromtimestamp(first, UTC)
 
 
 def format_markdown(path: Path) -> None:

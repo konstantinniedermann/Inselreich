@@ -68,7 +68,7 @@ def usage(now: datetime | None = None, runner=None) -> tuple[float, float] | Non
 
 
 def _ts(value: str) -> datetime:
-    return datetime.fromisoformat(value)
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
 def session_minutes(since: datetime, runner=None) -> int | None:

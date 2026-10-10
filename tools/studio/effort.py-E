@@ -402,7 +402,7 @@ def parse_ampel_session(ident: str, text: str) -> dict | None:
     if not created or not agents:
         return None
     try:
-        when = datetime.fromisoformat(created.group(1))
+        when = datetime.fromisoformat(created.group(1).replace("Z", "+00:00"))
         stamp = when.timestamp()
     except ValueError:
         return None

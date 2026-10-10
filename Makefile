@@ -49,8 +49,10 @@ build: ## Typprüfung + Produktions-Build
 studio-test: ## Tests der Studio-Werkzeuge (Python unittest)
 	python3 -m unittest discover -s tools/studio/tests -t tools/studio
 
-studio-lint: ## Ruff über tools/studio (via uvx; vor Commits an tools/studio, nicht Teil von check)
-	uvx ruff check tools/studio && uvx ruff format --check tools/studio
+RUFF = uvx ruff@0.17.0
+
+studio-lint: ## Ruff über tools/studio (gepinnt, via uvx; vor Commits an tools/studio, nicht Teil von check)
+	$(RUFF) check tools/studio && $(RUFF) format --check tools/studio
 
 studio: ## Studio-Dashboard starten (gibt die URL aus)
 	@bash tools/studio/start.sh

@@ -901,7 +901,7 @@ SESSION_BREAK_MIN = 240  # längere Pausen gelten als Sitzungspause, nicht als L
 
 def _parse_ts(text: object) -> datetime | None:
     try:
-        return datetime.fromisoformat(str(text))
+        return datetime.fromisoformat(str(text).replace("Z", "+00:00"))
     except ValueError:
         return None
 

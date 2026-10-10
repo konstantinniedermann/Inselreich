@@ -24,7 +24,9 @@ MODELS = {
 
 
 def ts(offset):
-    stamp = datetime.fromtimestamp(T0 + offset, UTC).isoformat(timespec="milliseconds")
+    stamp = datetime.fromtimestamp(T0 + offset, UTC).isoformat(
+        timespec="milliseconds"
+    )
     return stamp.replace("+00:00", "Z")
 
 
@@ -2317,7 +2319,10 @@ class GraphFixtureTest(unittest.TestCase):
             ],
         )
         self.assertEqual([r["kind"] for r in rows[:3]].count("pause"), 0)
-        stamps = [datetime.fromisoformat(e["ts"]).timestamp() for e in events]
+        stamps = [
+            datetime.fromisoformat(e["ts"].replace("Z", "+00:00")).timestamp()
+            for e in events
+        ]
         latest = max(
             stamp
             for stamp, e in zip(stamps[:-2], events[:-2])
