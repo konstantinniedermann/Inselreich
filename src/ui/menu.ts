@@ -49,18 +49,23 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
     el.textContent = text;
     return el;
   };
-  const btn = (label: string, onClick: (b: HTMLButtonElement) => void): HTMLButtonElement => {
+  const btn = (
+    label: string,
+    onClick: (b: HTMLButtonElement) => void,
+    title?: string,
+  ): HTMLButtonElement => {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'btn';
     b.textContent = label;
+    if (title) b.title = title;
     b.addEventListener('click', () => onClick(b));
     return b;
   };
   const title = document.createElement('h2');
   title.textContent = 'Menü';
   // Speichern
-  const save = btn('Speichern', () => a.save());
+  const save = btn('Speichern', () => a.save(), 'Strg/Cmd + S');
   // Laden: Slot-Liste, ein Klick lädt (pausiert, Task 4)
   const loadBox = document.createElement('div');
   const saves = a.listSaves();

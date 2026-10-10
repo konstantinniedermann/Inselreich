@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   kontorActions,
+  renderInspect,
+  type InspectActions,
   lockMatrix,
   needIcons,
   burningText,
@@ -491,5 +493,66 @@ describe('M13-E1 upkeepText stillgelegt (AK-M13STL-09)', () => {
     expect(upkeepText(g)).toBe('Unterhalt 150 / min');
     expect(setPaused(w, g.id, true).ok).toBe(true);
     expect(upkeepText(g)).toBe('Unterhalt 78 / min');
+  });
+});
+
+/** Minimaler DOM-Ersatz: merkt Kinder, `title`, `textContent`; unbekannte Aufrufe sind folgenlos. */
+interface FakeEl {
+  tag: string;
+  title?: string;
+  textContent?: string;
+  dataset: Record<string, string>;
+  children: FakeEl[];
+}
+function fakeEl(tag: string): FakeEl {
+  const real: FakeEl = { tag, title: undefined, dataset: {}, children: [] };
+  const any = (): unknown =>
+    new Proxy(() => any(), {
+      get: (_t, k) => (k === Symbol.toPrimitive ? () => '' : any()),
+      apply: () => any(),
+    });
+  return new Proxy(real, {
+    get(t, k) {
+      if (k in t) return Reflect.get(t, k);
+      if (k === Symbol.toPrimitive) return () => '';
+      if (k === 'appendChild' || k === 'append')
+        return (...c: FakeEl[]) => {
+          t.children.push(...c);
+          return c[0];
+        };
+      if (k === 'replaceChildren')
+        return (...c: FakeEl[]) => {
+          t.children = c;
+        };
+      if (k === 'addEventListener' || k === 'setAttribute') return () => {};
+      if (k === 'querySelector') return () => null;
+      if (k === 'querySelectorAll') return () => [];
+      return any();
+    },
+  });
+}
+function allButtons(e: FakeEl): FakeEl[] {
+  return [
+    ...(e.tag === 'button' ? [e] : []),
+    ...(Array.isArray(e.children) ? e.children : []).flatMap(allButtons),
+  ];
+}
+
+describe('UI-TASTEN Tooltip «Entf» am Abreissen-Knopf (AK-UT-12)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const noActions = new Proxy({}, { get: () => () => {} }) as unknown as InspectActions;
+  const demolishTitle = (w: World, id: number): string | undefined => {
+    vi.stubGlobal('document', { createElement: fakeEl, createTextNode: () => fakeEl('#text') });
+    const panel = fakeEl('div');
+    renderInspect(panel as unknown as HTMLElement, w, id, noActions);
+    return allButtons(panel).find((b) => b.dataset.field === 'demolish')?.title;
+  };
+  it('Wohnhaus, Betrieb und Fern-Kontor tragen title «Entf»', () => {
+    const { w, house, fisher } = uxWorld();
+    expect(demolishTitle(w, house.id)).toBe('Entf');
+    expect(demolishTitle(w, fisher.id)).toBe('Entf');
+    const far = { ...w.buildings[home(w).kontorId]!, id: 9999, defId: 'kontor2' as const };
+    w.buildings[far.id] = far;
+    expect(demolishTitle(w, far.id)).toBe('Entf');
   });
 });
