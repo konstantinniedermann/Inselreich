@@ -4865,3 +4865,19 @@ im Briefing. E-054 läuft (2 von 3 Datenpunkten).
 Regelbezug: STUDIO.md Verbesserungsschleife, R316 · Kosten bei Irrtum: ein Experiment-Platz falsch belegt.
 
 Entscheider: L0 · Anlass: Kurz-Retro Session 5a00a316 · ADR: —
+
+## R472 · 2026-10-10 · REL-18 „Edikte, Stilllegen, Gut-Chip“: Gate Merge Release und Push-Auftrag
+
+Ruling: Release **REL-18** umfasst genau die drei lokal gemergten, je einzeln gegateten Stränge M13-E1 (R467, Final-Review
+opus T15), UI-GUT-CHIP I-043 (R470, Branch-Review opus T09, Playtest T08) und TOOL-BUENDEL-4 (R469, Final-Review) sowie
+die Studio-Doku bis `62488410`. Kein weiterer Strang im Kandidaten, daher gilt das opus-Review über den Kandidaten als
+erfolgt (R470). **Gate Merge Release: bestanden.** `production-integrator` führt den Push-Ablauf nach Handbuch 1.44
+(STUDIO.md Merges/Push, R429) aus dem Hauptcheckout-Stand `62488410` aus: `tsc`, `lint`, `zeittests`, `conflicts`,
+Load ≤ 4 abwarten, `make check`, `make zeitreserve-push`, `make check-ci-perf`, `git push origin 62488410:main`, CI
+prüfen, `gh workflow run Pages --ref main`, `ci.py`. Bis `zeitreserve-push` Exit 0 startet L0 keine Umsetzer oder
+Controller (R464, Messauftrag M3); Design, Spec und Studio-Doku ohne Testläufe laufen parallel.
+
+Regelbezug: gates.md Gate Merge Release; STUDIO.md Stufe leicht Schritt 7, R335, R464 · Kosten bei Irrtum: ein Hotfix
+nach dem Push.
+
+Entscheider: L0 · Anlass: Session-Start, Fortsetzung state.md Punkt 0 · ADR: —
