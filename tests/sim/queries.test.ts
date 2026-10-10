@@ -15,6 +15,7 @@ import {
   crisisView,
   effectiveRefund,
   goalView,
+  goodRole,
   goodsBalance,
   houseDiagnosis,
   layoutKey,
@@ -580,5 +581,30 @@ describe('M8 Abfragen', () => {
     home(w).stock.wool = 0;
     expect(missingInputs(w, direct(w, 'weaver', true))).toEqual(['wool']);
     expect(missingInputs(w, direct(w, 'fisher', true))).toEqual([]);
+  });
+});
+
+describe('goodRole', () => {
+  const producer = Object.values(BUILDING_DEFS).find((d) => d.produces && !d.consumes)!;
+  const consumer = Object.values(BUILDING_DEFS).find((d) => d.consumes?.length)!;
+
+  it('nennt den Erzeuger', () => {
+    expect(goodRole(producer, producer.produces!)).toBe('producer');
+  });
+
+  it('nennt den Verbraucher', () => {
+    const good = consumer.consumes![0]!;
+    expect(good).not.toBe(consumer.produces);
+    expect(goodRole(consumer, good)).toBe('consumer');
+  });
+
+  it('Erzeuger gewinnt, wenn das Gut auch verbraucht wird', () => {
+    const both = { ...producer, consumes: [producer.produces!] };
+    expect(goodRole(both, producer.produces!)).toBe('producer');
+  });
+
+  it('liefert null ohne Bezug zum Gut', () => {
+    const other = GOOD_IDS.find((g) => g !== producer.produces)!;
+    expect(goodRole(producer, other)).toBeNull();
   });
 });

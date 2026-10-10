@@ -10,6 +10,7 @@ import {
   WIN_MERCHANTS,
   WIN_SPICE_HOLD,
   WIN_SPICE_MERCHANTS,
+  TAX_LEVELS,
 } from '../../src/sim/defs/tiers';
 import {
   EDICT_LOCK,
@@ -20,7 +21,6 @@ import {
 } from '../../src/sim/defs/timing';
 import { EDICTS, EDICT_COST, EDICT_IDS, EDICT_UNLOCK } from '../../src/sim/defs/edicts';
 import { PAUSED_UPKEEP_PCT } from '../../src/sim/defs/buildings';
-import { TAX_LEVELS } from '../../src/sim/defs/tiers';
 import { LEVELS } from '../../src/sim/defs/levels';
 import { SERVICE_BUILDING, SERVICE_IDS } from '../../src/sim/population';
 import { sellPrice } from '../../src/sim/trade';

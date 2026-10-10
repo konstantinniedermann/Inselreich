@@ -1,7 +1,7 @@
 // edictView.ts — rein, DOM-frei: Texte und Kartenzustand der Edikte (M13-E1, Spec 7.1). Alle Zahlen aus Defs und Sim-Abfragen.
 import { EDICTS, EDICT_COST } from '../sim/defs/edicts';
 import { GROWTH_INTERVAL } from '../sim/defs/timing';
-import { activeEdict, edictReason } from '../sim/edicts';
+import { activeEdict, edictReason, edictsUnlocked } from '../sim/edicts';
 import type { EdictId, World } from '../sim/types';
 import { formatGameTime } from './time';
 
@@ -37,6 +37,7 @@ export function edictLockText(w: World): string {
 
 export interface EdictCard {
   active: boolean;
+  unlocked: boolean;
   disabled: boolean;
   reason: string | null;
   buttonText: string;
@@ -48,6 +49,7 @@ export function edictCardState(w: World, id: EdictId): EdictCard {
   const reason = edictReason(w, active ? null : id);
   return {
     active,
+    unlocked: edictsUnlocked(w),
     disabled: reason !== null && reason !== 'Zu wenig Geld',
     reason,
     buttonText: active ? 'Aufheben' : `Erlassen (${EDICT_COST})`,

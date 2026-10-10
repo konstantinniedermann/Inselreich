@@ -6,6 +6,7 @@ import {
   activeEdict,
   activeEdictDef,
   edictReason,
+  edictsUnlocked,
   edictTaxPoints,
   effectiveTaxPct,
   growthInterval,
@@ -585,5 +586,15 @@ describe('M13-E1 Takt und Wartezeit', () => {
     expect(house.house!.inhabitants).toBe(20);
     expect(reached).toEqual(expected.slice(0, 3));
     expect(w.tick - 2000).toBe(expected[3]);
+  });
+});
+
+describe('edictsUnlocked', () => {
+  it('ist erst nach der Freischaltung (EDICT_UNLOCK) wahr', () => {
+    const w = createWorld(3, { unlockAll: true });
+    w.won = false;
+    expect(edictsUnlocked(w)).toBe(false);
+    w.won = true;
+    expect(edictsUnlocked(w)).toBe(true);
   });
 });
