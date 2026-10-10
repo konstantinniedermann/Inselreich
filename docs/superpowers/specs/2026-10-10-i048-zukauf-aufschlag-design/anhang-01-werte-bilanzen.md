@@ -183,6 +183,7 @@ Endzustand-Beispiel Kaufmann, alle Güter selbst erzeugt, nur Gewürz gekauft (d
 | `balance-crises`                     | Boom schwächer, Zukauf teurer                                                                                                                                                               | ja                   |
 | `balance-edicts`                     | Edikt Handel relativ stärker                                                                                                                                                                | ja                   |
 | `balance-upgrade`, `unlock-timeline` | nur betroffen, wenn der Controller läuft                                                                                                                                                    | prüfen               |
+| `balance-monument` (M13-E2, R490)    | Denkmal-Zukauf hebt den Anteil nicht (i); Wirkung nur über Handkäufe und Verkäufe des Controllers im selben Lauf                                                                            | ja (Klasse N)        |
 | `balance-flow`                       | ohne Handel                                                                                                                                                                                 | voraussichtlich nein |
 
 ▶ **Empfehlung: zwei Schritte, kein dauerhafter Schalter.**
@@ -217,6 +218,28 @@ der Regressionsschutz prüfte dann ein Spiel, das niemand spielt.
 - **Bau- und Ausbaukosten** bleiben unberührt. Aufschlag fällt nur an, wenn fehlende Ware am Kontor gekauft wird.
 - **Handelsaufträge:** Prämie aus `GOODS[g].buy`, ohne Aufschlag (d).
 - **Save:** `buyPct` je Gut, ganzzahlig 100…160. Ein Wert ausserhalb wird mit Hinweis abgewiesen, ohne Absturz,
-  dazu ein Test. **Migration v11 → v12:** alle 100. Neue Güter später mit `??= 100`.
+  dazu ein Test. **Migration** aus der Vorversion (v12 geteilt oder v13, Spec §8): alle 100. Neue Güter später mit `??= 100`.
 - **Boom** wirkt nur auf den Verkauf. **I-006** (Sonderangebot, Anteil < 100) nicht gleichzeitig einplanen, sonst
   bricht der Boden 100 der Erholung.
+
+## i) Denkmal-Zukauf (Nachtrag R490, lead-design)
+
+▶ Setzung R489/R490 B1: Der Denkmal-Zukauf (M13-E2 R7) zahlt `buyPrice(w, g, 1)` mit gültigem Anteil und Edikt, hebt
+`buyPct` aber nicht.
+
+| Fall (Vollzukauf Denkmal, Fixkosten 18 000)       | Warenwert       | gesamt          | Bemerkung                                               |
+| ------------------------------------------------- | --------------- | --------------- | ------------------------------------------------------- |
+| Anteil 100, ohne Edikt                            | 46 200          | 64 200          | M13-E2 AK-11/-12, README bleibt                         |
+| Anteil 100, Edikt Handel                          | 36 960          | 54 960          | M13-E2                                                  |
+| Anteil dauerhaft 160 (nur bei Handkauf > 30/min)  | 73 920          | 91 920          | Obergrenze, theoretisch                                 |
+| Variante «hebt» (tech B1 A, verworfen), geschätzt | ≈ 67 000–74 000 | ≈ 85 000–92 000 | nicht gemessen; verschiebt `balance-monument` um ≈ 30 % |
+
+- Der Zug kauft je Gut höchstens 60 Stück je Minute (`MONUMENT_PULL_TICKS` 10), also über der Schwelle 30/min. Mit
+  «hebt» liefe jeder Denkmal-Zukauf auf den Deckel, und normale Käufe derselben Güter (Stein, Werkzeug, Glas, Gewürz)
+  würden für die ganze Bauzeit teurer: eine Rückkopplung des Wahlziels auf das Grundspiel.
+- Mit «hebt nicht» bleibt das Denkmal rechenbar; die Kosten der Ausnahme sind die Hochpreisphase (Denkmal kauft bei
+  Anteil 100 dauerhaft billiger als ein Spieler, der von Hand nachkauft). Ausnutzen ausgeschlossen: Denkmal-Ware ist
+  nicht verkäuflich.
+- Handkauf und Denkmal am selben Gut: Der Handkauf hebt den Anteil, das Denkmal zahlt mit (Stein bei Anteil 120: 18
+  statt 15 je Stück, mit Edikt 15 statt 12). Wer also gleichzeitig baut und das Denkmal füttert, spürt den Aufschlag
+  doppelt; das ist gewollt (ein Markt je Gut für den Preis).
