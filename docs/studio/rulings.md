@@ -4546,3 +4546,22 @@ Controller erreicht Ziel 3 nicht) trägt `lead-design` beim nächsten Start nach
 Regelbezug: gates.md Gate Brainstorming; R448; Verfassung §5.3 · Kosten bei Irrtum: Spec-Nacharbeit; kein Code betroffen.
 
 Entscheider: L0 · Anlass: Bericht lead-design M13-BRAINSTORM · ADR: —
+
+## R453 · 2026-10-10 · Kombiniertes Gate REL-17: BEDENKEN → Nacharbeit, Umsetzung nach REL-16-Merge
+
+Ruling: Kurzdesign (R449) und Plan `docs/superpowers/plans/2026-10-10-rel-17/` (`10ebab84`, `956e4737`) frei. Urteil
+`lead-qa` BEDENKEN B1–B5, nichts blockierend. Nacharbeit durch den Controller **vor T01**, ohne Zweitprüfung: **B1**
+Sprung-Ablauf als reine Funktion `runProblemJump(deps, dir)` in `src/ui/problems.ts` mit Vitest über protokollierende
+Fakes (Reihenfolge, kein `selectTool`, `landed` nach `refresh`, Meldung); AK-R17-10 prüft diese Funktion statt einer
+Quelltext-Reihenfolge; **B3** T03/T06 nennen `pointercancel` und `blur` ausdrücklich (kein hängender `stroke`: `dragEnd`
+oder verwerfen) als Prüfpunkt; **B2** T05 Schritt 8 verbindlich mit „Abriss-Zug + `.`“ und „Weg-Zug + `.`“, Rückfall-Klausel
+in T03 nur als Ausnahme mit Begründung; **B4** Berührungspunkt-Text korrigieren, Zeilen nach dem REL-16-Merge per grep neu
+finden, Doku-Überschneidung README/arc42/beobachtungen nennen; **B5** T05-Kopf um AK-R17-12/14 ergänzen, Touch-Schwelle aus
+AK-R17-16 als ungeprüft nach `docs/beobachtungen.md`; T05 startet vor dem Final-Review. **Entscheide E1–E9** wie empfohlen
+(u. a. E3 Anker-Insel im Cursor, E6 `.` bricht den Zug ab, E9 ein Browser-Lauf + opus-Review am Kandidaten).
+**Budget:** 13 Starts (lead-tech 11, lead-qa 2), Parallelität 1; Controller `lead-tech` (sonnet); Start erst nach dem
+lokalen Merge von REL-16 (`blocked-by`, `src/ui/app.ts`).
+
+Regelbezug: gates.md Kombiniertes Gate (Stufe leicht); R449 · Kosten bei Irrtum: Nacharbeit im Strang vor dem Kandidaten.
+
+Entscheider: L0 · Anlass: Urteil lead-qa GATE-PLAN-REL17 · ADR: —
