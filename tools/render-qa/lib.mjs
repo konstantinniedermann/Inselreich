@@ -175,3 +175,36 @@ export async function withBrowser(
     profiles.delete(profile);
   }
 }
+
+/** Headless-Chrome meldet je Grösse die Audio-Warnung aus `src/audio/`; sie ist erwartet und kein Befund. */
+export function istErwarteteWarnung(text) {
+  return /AudioContext was not allowed to start/.test(text);
+}
+
+/**
+ * Liest `lies()` im Abstand, bis `gleich` aufeinanderfolgende Lesungen (per JSON) gleich sind.
+ * Nach `maxMs` (also maxMs / abstandMs Lesungen) endet es mit der letzten Lesung und `ruhig: false`.
+ */
+export async function warteBisRuhig(
+  lies,
+  {
+    gleich = 3,
+    abstandMs = 100,
+    maxMs = 3000,
+    schlaf = (ms) => new Promise((r) => setTimeout(r, ms)),
+  } = {},
+) {
+  const maxLesungen = Math.max(gleich, Math.floor(maxMs / abstandMs));
+  let wert;
+  let letzte = null;
+  let serie = 0;
+  for (let n = 0; n < maxLesungen; n++) {
+    wert = await lies();
+    const s = JSON.stringify(wert);
+    serie = s === letzte ? serie + 1 : 1;
+    letzte = s;
+    if (serie >= gleich) return { wert, ruhig: true };
+    if (n < maxLesungen - 1) await schlaf(abstandMs);
+  }
+  return { wert, ruhig: false };
+}

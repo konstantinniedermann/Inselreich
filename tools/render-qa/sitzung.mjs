@@ -86,16 +86,18 @@ export async function session(
   fn,
 ) {
   root = resolve(root);
-  const { withBrowser } = await import(pathToFileURL(`${root}/tools/render-qa/lib.mjs`).href);
+  const { withBrowser, istErwarteteWarnung, warteBisRuhig } = await import(
+    pathToFileURL(`${root}/tools/render-qa/lib.mjs`).href
+  );
   return withBrowser(
     { root, width: w, height: h, dpr, vitePort: port, chromePort: cport },
     async (c) => {
       const msgs = [];
       c.on('Runtime.consoleAPICalled', (p) => {
-        if (['error', 'warning', 'assert'].includes(p.type))
-          msgs.push(
-            `[console.${p.type}] ` + p.args.map((a) => a.value ?? a.description ?? '').join(' '),
-          );
+        if (!['error', 'warning', 'assert'].includes(p.type)) return;
+        const text = p.args.map((a) => a.value ?? a.description ?? '').join(' ');
+        if (p.type === 'warning' && istErwarteteWarnung(text)) return; // nur Warnungen, nie Fehler
+        msgs.push(`[console.${p.type}] ` + text);
       });
       c.on('Runtime.exceptionThrown', (p) =>
         msgs.push(
@@ -103,6 +105,7 @@ export async function session(
         ),
       );
       c.on('Log.entryAdded', (p) => {
+        if (p.entry.level === 'warning' && istErwarteteWarnung(p.entry.text ?? '')) return;
         if (['error', 'warning'].includes(p.entry.level))
           msgs.push(`[log.${p.entry.level}] ${p.entry.text} ${p.entry.url ?? ''}`);
       });
@@ -139,7 +142,12 @@ export async function session(
           await c.ev(
             `window.__inselDev.setZoom(${zoom}); ${x == null ? `window.__inselDev.focus('archipel')` : `window.__inselDev.centerOn(${x}, ${y})`}; 1`,
           );
-          await sleep(wait);
+          if (x == null) await sleep(wait);
+          else {
+            // Kamera-Ruhe statt festem Warten (AK-TB4-14); Höchstdauer bleibt `wait`
+            const r = await warteBisRuhig(() => api.px(x, y), { maxMs: wait });
+            if (!r.ruhig) console.warn('[render-qa] Kamera nicht ruhig');
+          }
           for (let i = 0; i < 60 && !(await c.ev(`window.__inselDev.cachesReady()`)); i++)
             await sleep(500);
         },

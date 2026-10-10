@@ -68,7 +68,9 @@ const mainRepo = dirname(
 );
 const out = resolve(values.out ?? `${mainRepo}/.studio/qa/${values.paket}/smoke`);
 mkdirSync(out, { recursive: true });
-const { withBrowser, sleep } = await import(pathToFileURL(`${root}/tools/render-qa/lib.mjs`).href);
+const { withBrowser, sleep, warteBisRuhig } = await import(
+  pathToFileURL(`${root}/tools/render-qa/lib.mjs`).href
+);
 
 const SHIFT = 8;
 const CTRL = 2;
@@ -173,6 +175,11 @@ async function runSize(w, h) {
         c.ev(`document.querySelector('.hud-speed .btn.active')?.dataset.speed ?? null`);
       const pos = async (x, y) =>
         JSON.parse(await c.ev(`JSON.stringify(window.__inselDev.tileCenter(${x},${y}))`));
+      // Nach centerOn: Kamera-Ruhe statt festem Warten (AK-TB4-14); unruhig → Warnung, kein Abbruch
+      const ruhig = async (x, y, maxMs = 3000) => {
+        const r = await warteBisRuhig(() => pos(x, y), { maxMs });
+        if (!r.ruhig) console.warn('[render-qa] Kamera nicht ruhig');
+      };
       // Freie Bauplätze (nach Abstand zu (cx, cy)); `skip` = bereits benutzte Kacheln
       const spots = (id, cx, cy, extra = '0', n = 6, minD = 0) =>
         c
@@ -247,7 +254,7 @@ async function runSize(w, h) {
         await c.ev(
           `window.__inselDev.setZoom(1);window.__inselDev.centerOn(${home.x},${home.y});1`,
         );
-        await sleep(1500);
+        await ruhig(home.x, home.y);
         rec.shots.push(await shot('a-zoom1'));
         const p0 = await pos(home.x, home.y);
         await mouse('mousePressed', p0.x, p0.y, { button: 'middle', buttons: 4 });
@@ -262,7 +269,7 @@ async function runSize(w, h) {
         );
         rec.shots.push(await shot('a-geschwenkt'));
         await c.ev(`window.__inselDev.centerOn(${home.x},${home.y});1`);
-        await sleep(300);
+        await ruhig(home.x, home.y);
         const pc = await pos(home.x, home.y);
         await c.send('Input.dispatchMouseEvent', {
           type: 'mouseWheel',
@@ -403,7 +410,7 @@ async function runSize(w, h) {
         const [x, y, f] = sp[0];
         rec.notes.push(`Platz (${x},${y}), ${-f} Waldkacheln im Umkreis`);
         await c.ev(`window.__inselDev.centerOn(${x},${y});1`);
-        await sleep(1500);
+        await ruhig(x, y);
         const p = await pos(x, y);
         const n0 = (await snap()).n;
         await key('Escape');

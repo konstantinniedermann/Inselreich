@@ -130,3 +130,45 @@ describe('R419 Smoke-Etikett Save-Version', () => {
     expect(sv.saveVersionLabel(new URL('file:///gibt/es/nicht.ts'))).toBe('Save v?');
   });
 });
+
+describe('TB4 T06 render-qa Helfer', () => {
+  it('AK-TB4-13: istErwarteteWarnung erkennt nur die Audio-Warnung', async () => {
+    const { istErwarteteWarnung } = await load('lib.mjs');
+    expect(
+      istErwarteteWarnung('The AudioContext was not allowed to start. It must be resumed…'),
+    ).toBe(true);
+    expect(istErwarteteWarnung('Uncaught TypeError: x')).toBe(false);
+    expect(istErwarteteWarnung('')).toBe(false);
+  });
+
+  const lesefolge = (werte: unknown[]) => {
+    let n = 0;
+    return {
+      lies: () => werte[Math.min(n++, werte.length - 1)],
+      zaehler: () => n,
+    };
+  };
+  const schlaf = async () => {};
+
+  it('AK-TB4-14: A,B,B,B,B wird ruhig mit B', async () => {
+    const { warteBisRuhig } = await load('lib.mjs');
+    const f = lesefolge([{ y: 1 }, { y: 2 }, { y: 2 }, { y: 2 }, { y: 2 }]);
+    expect(await warteBisRuhig(f.lies, { schlaf })).toEqual({ wert: { y: 2 }, ruhig: true });
+  });
+
+  it('AK-TB4-14: immer wechselnd ist nicht ruhig nach maxMs/abstandMs Lesungen', async () => {
+    const { warteBisRuhig } = await load('lib.mjs');
+    let n = 0;
+    const r = await warteBisRuhig(() => n++, { schlaf, maxMs: 1000, abstandMs: 100 });
+    expect(r.ruhig).toBe(false);
+    expect(n).toBe(10);
+    expect(r.wert).toBe(9);
+  });
+
+  it('AK-TB4-14: sofort stabil liest genau `gleich` mal', async () => {
+    const { warteBisRuhig } = await load('lib.mjs');
+    const f = lesefolge([5]);
+    expect(await warteBisRuhig(f.lies, { schlaf, gleich: 3 })).toEqual({ wert: 5, ruhig: true });
+    expect(f.zaehler()).toBe(3);
+  });
+});
