@@ -20,7 +20,7 @@ function upgradeFishers(w: World): void {
     if (functionLock(w, lv === 1 ? 'upgrade2' : 'upgrade3') !== null) continue;
     const next = LEVELS.fisher![lv - 1]!;
     const missing = Math.max(0, next.cost.tools - home(w).stock.tools);
-    const toolPrice = missing > 0 ? buyPrice('tools', missing) : 0;
+    const toolPrice = missing > 0 ? buyPrice(w, 'tools', missing) : 0;
     if (w.money - next.cost.money - toolPrice < UPGRADE_RESERVE) continue;
     if (home(w).stock.wood < next.cost.wood) continue;
     if (missing > 0 && !buy(w, 'tools', missing).ok) continue;

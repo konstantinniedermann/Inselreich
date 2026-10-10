@@ -2,6 +2,7 @@ import { BOOM_PCT } from './defs/crises';
 import { GOODS, GOOD_IDS, SELL_DROP, SELL_FLOOR, STORAGE_CAP } from './defs/goods';
 import { SELL_RECOVERY_INTERVAL } from './defs/timing';
 import { addStock, takeStock } from './economy';
+import { activeEdictDef } from './edicts';
 import { goodLock } from './unlocks';
 import type { GoodId, Result, World } from './types';
 import { fail, ok } from './types';
@@ -9,8 +10,11 @@ import { islandName } from './islands';
 import { islandAt } from './placement';
 import { HOME } from './world';
 
-export function buyPrice(good: GoodId, n: number): number {
-  return n * GOODS[good].buy;
+/** Kaufpreis für n Stück; mit wirkendem Edikt Handel (`buyPct < 100`) über die Gesamtmenge aufgerundet (Spec R4). */
+export function buyPrice(world: World, good: GoodId, n: number): number {
+  const pct = activeEdictDef(world)?.buyPct ?? 100;
+  const base = n * GOODS[good].buy;
+  return pct < 100 ? Math.floor((base * pct + 99) / 100) : base;
 }
 
 /** Erlös für `n` Einheiten: Sättigung je Einheit, im Boom auf dieses Gut × BOOM_PCT %. Ohne Boom bitgleich zu M5. Rein. */
@@ -58,7 +62,7 @@ export function buy(world: World, good: GoodId, n: number, island: number = HOME
   }
 
   // Genug Geld?
-  const price = buyPrice(good, n);
+  const price = buyPrice(world, good, n);
   if (world.money < price) {
     return fail('Zu wenig Geld');
   }

@@ -138,7 +138,7 @@ function bathCovers(w: World, x: number, y: number): boolean {
 function buyFor(w: World, cost: Cost): boolean {
   const goods = ['wood', 'tools', 'stone'] as const;
   const missing = goods.map((g) => [g, Math.max(0, cost[g] - home(w).stock[g])] as const);
-  const price = missing.reduce((sum, [g, n]) => sum + buyPrice(g, n), 0);
+  const price = missing.reduce((sum, [g, n]) => sum + buyPrice(w, g, n), 0);
   if (w.money - price - cost.money < RESERVE) return false;
   for (const [g, n] of missing) if (n > 0) expect(buy(w, g, n).ok).toBe(true);
   return true;
@@ -157,7 +157,7 @@ function feedGlassworks(w: World): void {
   const want = FEED_PER_WORKS * count(w, 'glassworks');
   for (const g of ['stone', 'wood'] as const) {
     const n = want - home(w).stock[g];
-    if (n > 0 && w.money - buyPrice(g, n) >= RESERVE) expect(buy(w, g, n).ok).toBe(true);
+    if (n > 0 && w.money - buyPrice(w, g, n) >= RESERVE) expect(buy(w, g, n).ok).toBe(true);
   }
 }
 
@@ -173,7 +173,8 @@ function feedSpice(w: World): void {
   const need = Math.ceil(merchants(w) * TIERS[4].needs.spice!);
   const want = Math.min(SPICE_STOCK_MAX, Math.max(need, 1));
   const n = want - home(w).stock.spice;
-  if (n > 0 && w.money - buyPrice('spice', n) >= RESERVE) expect(buy(w, 'spice', n).ok).toBe(true);
+  if (n > 0 && w.money - buyPrice(w, 'spice', n) >= RESERVE)
+    expect(buy(w, 'spice', n).ok).toBe(true);
 }
 
 /**
@@ -220,7 +221,7 @@ function prepareUpgrade(w: World): void {
   const base = TIERS[3].upgradeCost!;
   const cost = { ...base, stone: base.stone + count(w, 'glassworks') };
   if (!buyFor(w, cost)) return;
-  if (home(w).stock.glass < 1 && w.money - buyPrice('glass', 1) - cost.money >= RESERVE)
+  if (home(w).stock.glass < 1 && w.money - buyPrice(w, 'glass', 1) - cost.money >= RESERVE)
     expect(buy(w, 'glass', 1).ok).toBe(true);
 }
 

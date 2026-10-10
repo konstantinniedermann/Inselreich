@@ -102,7 +102,7 @@ export function renderTrade(
     btn.dataset.n = String(n);
     btn.title = sellT
       ? sellT.title
-      : `${n} ${GOODS[good].name} kaufen für ${buyPrice(good, n)} Geld`;
+      : `${n} ${GOODS[good].name} kaufen für ${buyPrice(world, good, n)} Geld`;
     btn.addEventListener('click', () => {
       btn.blur();
       const r = op === 'buy' ? buy(world, good, n, island) : sell(world, good, n, island);
@@ -155,7 +155,7 @@ export function updateTrade(panel: HTMLElement, world: World, island: number = H
     const n = Number(btn.dataset.n);
     const unaffordable =
       btn.dataset.op === 'buy'
-        ? buyPrice(good, n) > world.money || stock[good] + n > STORAGE_CAP
+        ? buyPrice(world, good, n) > world.money || stock[good] + n > STORAGE_CAP
         : stock[good] < n;
     btn.classList.toggle('unaffordable', unaffordable);
     if (btn.dataset.op === 'sell') {
