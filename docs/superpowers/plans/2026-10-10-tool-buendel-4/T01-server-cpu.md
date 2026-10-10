@@ -17,20 +17,20 @@ Strang `tool` · Worktree `.worktrees/b4` · Branch `tool/b4` · Umsetzer A `tec
 
 - [ ] Server mit echtem `.studio` starten (`make studio`), Dashboard-Tab **nicht** öffnen: `ps -o %cpu,time -p $(cat .studio/server.pid)` zweimal im Abstand 10 s → Leerlauf-CPU notieren.
 - [ ] 20 Abrufe in Folge messen: `python3 -c "import time,urllib.request as u; t=time.time(); [u.urlopen('http://127.0.0.1:8765/api/state').read() for _ in range(20)]; print((time.time()-t)/20)"` → Sekunden je Abruf notieren. Dazu `wc -l .studio/events.jsonl` und Dateigrösse.
-- [ ] Ergebnis in den Task-Bericht (Zahlen, welche Hypothese stimmt). Ist je Abruf > 0,15 s: (a) bestätigt; ist der Leerlauf ohne Abrufe > 5 %: (b) oder eine dritte Ursache, dann `py-spy`/`sample <pid> 3` (macOS) ansehen und die Schleife benennen. `make studio-stop` danach.
+- [ ] Ergebnis **verbindlich ins Ledger** `.superpowers/sdd/tool-buendel-4/ledger.md` (Abschnitt «T01 Messung vorher»: Leerlauf-%CPU, Sekunden je Abruf, Zeilen/Grösse der Events, welche Hypothese stimmt); der Reviewer prüft die Zahlen dort. **Dritte Ursache** (weder (a) noch (b) erklärt die Last): Task stoppen, `waiting` loggen und an L0 melden, nicht selbst bauen (R465 B3). Ist je Abruf > 0,15 s: (a) bestätigt; ist der Leerlauf ohne Abrufe > 5 %: (b) oder eine dritte Ursache, dann `py-spy`/`sample <pid> 3` (macOS) ansehen und die Schleife benennen. `make studio-stop` danach.
 
 ## Schritt 2 · Test zuerst (rot): abgebrochene Verbindung (AK-TB4-02)
 
 - [ ] In `ServerTest`: `test_client_abort_keeps_server_responsive` — Roh-Socket auf den Testserver, `GET /api/state` senden, Socket sofort mit `SO_LINGER` (1, 0) schliessen (Reset) ohne zu lesen; danach normaler `urlopen`-Abruf antwortet 200 **und** `sys.stderr`/Handler-Fehlerausgabe bleibt leer (`unittest.mock.patch.object(ThreadingHTTPServer, "handle_error")` zählt Aufrufe: erwartet 0).
-- [ ] Rot erwartet, wenn (b) zutrifft (`handle_error` wird gerufen). Trifft es nicht zu, Test trotzdem behalten (Regression) und im Bericht «vorher schon grün» vermerken.
+- [ ] Rot erwartet, wenn (b) zutrifft (`handle_error` wird gerufen). Wird der Test trotz Fix in `route` rot, weil `finish()`/`flush` den Fehler auslösen: Ursache im Bericht klären (Überschreiben von `handle_error` für Verbindungsabbrüche ist zulässig), die Assertion **nicht** abschwächen. Trifft es nicht zu, Test trotzdem behalten (Regression) und im Bericht «vorher schon grün» vermerken.
 
 ## Schritt 3 · Beheben
 
 - [ ] In `Handler.route`: `except (BrokenPipeError, ConnectionResetError): return` **vor** `(ValueError, OSError)` (BrokenPipe ist ein OSError); `send_error` im `except Exception` selbst in `try/except OSError: pass` kapseln.
-- [ ] Trifft (a) zu (Schritt 1): Zustandscache im Handler-Konstruktor-Argument `cache` (ein `dict` aus `make_server`, geteilt zwischen Handlern, mit `threading.Lock`): Schlüssel `(session, heartbeats, events_path.stat().st_mtime_ns, events_path.stat().st_size)`, Wert `(clock.monotonic-Zeit, body_bytes)`; Treffer, wenn Schlüssel gleich und Alter ≤ 2 s. `limits` und `bundle` bleiben im Cache (gleiche 2 s); Uhr über `clock` (nicht `time`), `make studio-lint` prüft das. Test zuerst (rot): `test_state_cached_within_two_seconds` (zwei Abrufe, `build_state` per `mock.patch("server.build_state", wraps=…)` nur einmal gerufen; nach Anhängen eines Events an die Datei wieder gerufen) und `test_cache_key_includes_session`.
+- [ ] Trifft (a) zu **oder** dauert ein Abruf > 0,15 s (auch wenn (a) sonst verneint wird): Zustandscache im Handler-Konstruktor-Argument `cache` (ein `dict` aus `make_server`, geteilt zwischen Handlern, mit `threading.Lock`): Schlüssel `(session, heartbeats, events_path.stat().st_mtime_ns, events_path.stat().st_size)`, Wert `(clock.monotonic-Zeit, body_bytes)`; Treffer, wenn Schlüssel gleich und Alter ≤ 2 s. `limits` und `bundle` bleiben im Cache (gleiche 2 s); Uhr über `clock` (nicht `time`), `make studio-lint` prüft das. Test zuerst (rot): `test_state_cached_within_two_seconds` (zwei Abrufe, `build_state` per `mock.patch("server.build_state", wraps=…)` nur einmal gerufen; nach Anhängen eines Events an die Datei wieder gerufen) und `test_cache_key_includes_session`.
 - [ ] `make studio-lint` Exit 0, `make studio-test` Exit 0.
 
 ## Schritt 4 · Nachmessen und Commit
 
-- [ ] Messung aus Schritt 1 wiederholen, mit Tab offen (oder 5 Abrufe/s per Skript): CPU < 5 %. Zahlen in den Bericht (AK-TB4-01).
+- [ ] Messung aus Schritt 1 wiederholen, mit Tab offen (oder 5 Abrufe/s per Skript): CPU < 5 %. Zahlen ins Ledger (Abschnitt «T01 Messung nachher», AK-TB4-01).
 - [ ] `git add tools/studio/server.py tools/studio/tests/test_server.py && git commit -m "fix: Dashboard-Server ohne Dauerlast, Abbruch einer Verbindung bleibt still"`

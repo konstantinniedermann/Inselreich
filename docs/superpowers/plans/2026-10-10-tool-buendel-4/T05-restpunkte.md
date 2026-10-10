@@ -20,7 +20,7 @@ In `test_metrics.py` zählt `TickingClock` Sekunden hoch und wirft ab dem 60. `n
 
 ## (3) `testrun.py` bei Ctrl-C — AK-TB4-10
 
-Bei `KeyboardInterrupt` (SIGINT) heute Traceback; Exit bei Signal ist `256 − N` statt `128 + N`. Test zuerst (`test_testrun.py`, vorhandene Stub-Befehle des Moduls nutzen): Kindprozess endet per Signal 2 → Rückgabecode 130 (`128 + 2`) statt 254; `main()` fängt `KeyboardInterrupt` und gibt 130 ohne Traceback zurück (Kind beenden, Ereignis wie bei Abbruch). Umsetzen: `returncode < 0` → `128 + (-returncode)` an der Stelle, die den Code weitergibt (Z. ≈ 108 `return proc.returncode, lines`).
+Bei `KeyboardInterrupt` (SIGINT) heute Traceback; Exit bei Signal ist `256 − N` statt `128 + N`. Test zuerst (`test_testrun.py`, vorhandene Stub-Befehle des Moduls nutzen): Stub-Kind sendet sich selbst SIGINT (`os.kill(os.getpid(), signal.SIGINT)`) und meldet vorher ein Bereitschaftssignal (Zeile auf stdout bzw. Datei), der Test wartet darauf — **keine feste Schlafzeit** (R465 B5); Kindprozess endet per Signal 2 → Rückgabecode 130 (`128 + 2`) statt 254; `main()` fängt `KeyboardInterrupt` und gibt 130 ohne Traceback zurück (Kind beenden, Ereignis wie bei Abbruch). Umsetzen: `returncode < 0` → `128 + (-returncode)` an der Stelle, die den Code weitergibt (Z. ≈ 108 `return proc.returncode, lines`).
 
 ## (4) `budgetwarn` importiert Privates — AK-TB4-11
 
