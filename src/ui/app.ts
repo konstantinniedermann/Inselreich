@@ -53,7 +53,7 @@ import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../
 import { cameraBounds, islandView } from '../render/archipel';
 import { activeIsland, islandRects } from './activeIsland';
 import { jumpTarget, nextIsland } from './islandJump';
-import { runProblemJump, type ProblemCursor } from './problems';
+import { cutOffIds, newlyCut, runProblemJump, type ProblemCursor } from './problems';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
 import { createIslandLayers, idleSchedule } from './islandLayers';
@@ -90,7 +90,7 @@ import {
 } from './hover';
 import { highlightShip, homeKontorPanel, lossMessages, shipHover, type ShipActions } from './ships';
 import { targetTile } from './target';
-import { bindInput, hintKey, type InputAction, type InputBinding } from './input';
+import { bindInput, hintKey, strokeEndNotice, type InputAction, type InputBinding } from './input';
 import { clearForest, plantForest } from '../sim/forest';
 import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../sim/tax';
 import { lockedTierFor } from './taxView';
@@ -771,6 +771,8 @@ function launch(
   // Geld-Fehler beim Strassen-Ziehen nur einmal pro Zug melden; jede Aktion ausserhalb eines Zugs setzt zurück
   let dragMoneyToastShown = false;
   let dragForestFailureShown = false;
+  /** Abriss-Zug (I-041): Anbindung vor dem Zug, besuchte und entfernte Wegkacheln. */
+  let stroke: { before: Set<number>; tiles: number; removed: number; island: number } | null = null;
   const forestCost = (tool: { kind: 'clearForest' | 'plantForest' }): Cost =>
     tool.kind === 'clearForest' ? CLEAR_FOREST_COST : PLANT_FOREST_COST;
   const showRoadFailure = (
@@ -867,6 +869,12 @@ function launch(
     if (a.type === 'dragEnd') {
       dragMoneyToastShown = false;
       dragForestFailureShown = false;
+      if (stroke !== null) {
+        const n = strokeEndNotice(newlyCut(stroke.before, world), stroke.removed, stroke.tiles);
+        if (n?.kind === 'warn') showMessage(n.text, 'warn');
+        else if (n?.kind === 'error') showRoadFailure(n.reason, false, stroke.island);
+        stroke = null;
+      }
       return;
     }
     if (!a.dragging) {
@@ -915,6 +923,16 @@ function launch(
         // Ziehen: eine Meldung je Zug mit dem ersten Grund (Spec K5)
         dragForestFailureShown = true;
         showError(friendlyReason(world, r.reason, { cost: forestCost(tool), island: a.island }));
+      }
+    } else if (tool.kind === 'demolish' && a.dragging) {
+      // Abriss-Zug: je Kachel nur ein Weg; Gebäude und Boden ohne Weg still überspringen (AK-R17-13)
+      stroke ??= { before: cutOffIds(world), tiles: 0, removed: 0, island: a.island };
+      stroke.tiles++;
+      if (tile?.buildingId == null && tile?.road === true) {
+        if (removeRoad(world, a.x, a.y, a.island).ok) {
+          stroke.removed++;
+          sound.play('demolish');
+        }
       }
     } else if (tile?.buildingId != null) {
       const r = demolishBuilding(tile.buildingId);
