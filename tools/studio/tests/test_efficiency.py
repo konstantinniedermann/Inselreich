@@ -3,6 +3,7 @@ import json
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest import mock
 
@@ -12,12 +13,12 @@ import effort
 import metrics
 
 
-def assistant(mid, model, inp=0, cc5=0, cc1=0, cr=0, out=0, tools=()):
+def assistant(mid, model, inp=0, cc5=0, cc1=0, cr=0, out=0, tools=(), ts=None):
     content = [
         {"type": "tool_use", "id": tid, "name": name, "input": data}
         for tid, name, data in tools
     ]
-    return {
+    entry = {
         "type": "assistant",
         "message": {
             "id": mid,
@@ -35,6 +36,9 @@ def assistant(mid, model, inp=0, cc5=0, cc1=0, cr=0, out=0, tools=()):
             },
         },
     }
+    if ts:
+        entry["timestamp"] = ts
+    return entry
 
 
 def result(tid, content):
@@ -671,6 +675,75 @@ class PhaseAdjustTest(unittest.TestCase):
         data = self.build([("l1", self.PROMPT)], {"s1:l1": "plan-X"})
         self.assertEqual(data["lead_stats"]["rows"][0]["phase"], "plan-X")
         self.assertIn("plan-X", efficiency.render_rewrites(data))
+
+
+class SinceTest(unittest.TestCase):
+    EARLY = "2026-10-10T06:00:00Z"
+    LATE = "2026-10-10T07:00:00Z"
+    SINCE = datetime(2026, 10, 10, 6, 30, tzinfo=UTC)
+
+    def transcript(self, lead_prompt=None, times=(EARLY, LATE)):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        lines = [prompt(lead_prompt)] if lead_prompt else []
+        for index, when in enumerate(times):
+            lines.append(assistant(f"m{index}", "claude-opus-4", out=10, ts=when))
+        write(root / "s1.jsonl", lines)
+        return root / "s1.jsonl"
+
+    def test_only_calls_since_count(self):
+        main = self.transcript()
+        self.assertEqual(efficiency.compute([main])["calls"], 2)
+        self.assertEqual(efficiency.compute([main], since=self.SINCE)["calls"], 1)
+
+    def test_since_boundary_inclusive(self):
+        main = self.transcript(times=("2026-10-10T06:30:00Z",))
+        self.assertEqual(efficiency.compute([main], since=self.SINCE)["calls"], 1)
+
+    def test_reads_before_since_are_skipped(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        main = Path(tmp.name) / "s1.jsonl"
+        read = ("t1", "Read", {"file_path": "/r/docs/big.md"})
+        early = result("t1", "x" * 100)
+        early["timestamp"] = self.EARLY
+        write(
+            main,
+            [
+                assistant("m0", "claude-opus-4", out=1, tools=[read], ts=self.EARLY),
+                early,
+                assistant("m1", "claude-opus-4", out=1, ts=self.LATE),
+            ],
+        )
+        self.assertEqual(len(efficiency.compute([main])["top_reads"]), 1)
+        self.assertEqual(efficiency.compute([main], since=self.SINCE)["top_reads"], [])
+
+    def test_prompt_before_since_keeps_role(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        write(
+            root / "s1.jsonl", [assistant("m0", "claude-opus-4", out=1, ts=self.LATE)]
+        )
+        agent(
+            root,
+            "s1",
+            "w1",
+            {"agentType": "general-purpose"},
+            [
+                prompt("Persona: lead-tech\nPaket: P"),
+                assistant("w0", "claude-opus-4", out=1, ts=self.EARLY),
+                assistant("w1", "claude-opus-4", out=1, ts=self.LATE),
+            ],
+        )
+        data = efficiency.compute([root / "s1.jsonl"], since=self.SINCE)
+        self.assertEqual(data["lead_stats"]["rows"][0]["role"], "lead-tech")
+        self.assertEqual(data["lead_stats"]["rows"][0]["turns"], 1)
+
+    def test_instance_without_calls_since_drops_out(self):
+        main = self.transcript(times=(self.EARLY,))
+        self.assertIsNone(efficiency.compute([main], since=self.SINCE))
 
 
 if __name__ == "__main__":

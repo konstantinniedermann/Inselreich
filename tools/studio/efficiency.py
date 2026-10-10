@@ -182,8 +182,19 @@ def _first_prompt(entry: dict) -> str | None:
     return None
 
 
-def scan(path: Path) -> dict | None:
-    """Ein Transkript: Aufrufe (je Message-ID einmal), erster Prompt, Lese-Ergebnisse."""
+def _before(entry: dict, since: datetime | None) -> bool:
+    """Eintrag mit Zeitstempel vor ``since``; ohne Zeitstempel zählt er mit."""
+    if since is None:
+        return False
+    when = _entry_time(entry)
+    return when is not None and when < since.timestamp()
+
+
+def scan(path: Path, since: datetime | None = None) -> dict | None:
+    """Ein Transkript: Aufrufe (je Message-ID einmal), erster Prompt, Lese-Ergebnisse.
+
+    since: Einträge davor liefern weder Aufrufe noch Lese-Ergebnisse (der erste
+    Prompt wird immer gelesen)."""
     calls: dict[str, dict] = {}
     pending: dict[str, str] = {}
     reads: list[dict] = []
@@ -204,6 +215,8 @@ def scan(path: Path) -> dict | None:
         fresh = not (isinstance(content, list) and _only_results(content))
         if entry.get("type") == "user" and prompt is None and fresh:
             prompt = _first_prompt(entry)
+        if _before(entry, since):
+            continue
         if isinstance(content, list):
             _collect_tools(content, pending, reads)
         usage = message.get("usage")
@@ -428,26 +441,31 @@ def compute(
     mains: list[Path],
     persona_models: dict[str, str] | None = None,
     phases: dict[str, str] | None = None,
+    since: datetime | None = None,
 ) -> dict | None:
     """Kennzahlen über Haupttranskripte samt Subagenten; None = nicht gemessen.
 
     persona_models: Persona -> Modell aus der Frontmatter; ohne Eintrag oder bei
     «inherit» gilt ein Persona-Start nie als abweichend.
-    phases: Knotenschlüssel «<session>:<agent>» -> Phase der Freigabe (E-049)."""
+    phases: Knotenschlüssel «<session>:<agent>» -> Phase der Freigabe (E-049).
+    since: nur Aufrufe und Lesevorgänge ab diesem Zeitpunkt (inklusive)."""
     try:
-        return _compute(mains, persona_models or {}, phases or {})
+        return _compute(mains, persona_models or {}, phases or {}, since)
     except Exception:  # noqa: BLE001 - Messung darf nie abstürzen
         return None
 
 
 def _compute(
-    mains: list[Path], persona_models: dict[str, str], phases: dict[str, str]
+    mains: list[Path],
+    persona_models: dict[str, str],
+    phases: dict[str, str],
+    since: datetime | None = None,
 ) -> dict | None:
     instances: list[dict] = []
     reads: list[dict] = []
     sessions = 0
     for main in mains:
-        scanned = scan(main)
+        scanned = scan(main, since)
         if scanned is None:
             continue
         sessions += 1
@@ -456,7 +474,7 @@ def _compute(
         if first:
             instances.append(first)
         for path, meta in _files(main)[1:]:
-            raw = scan(path)
+            raw = scan(path, since)
             if raw is None:
                 continue
             kind = (meta or {}).get("agentType") or "general-purpose"

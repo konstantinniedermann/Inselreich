@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest import mock
 
@@ -96,6 +97,75 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(raw["agents"], 4)
         self.assertEqual(raw["quality"]["first_pass_rate"], 1.0)
         self.assertIsNone(raw["quality"]["ci_runs"])
+
+    SINCE = "2026-09-30T12:00:30Z"  # Events des scenario liegen vor und nach t=30 s
+
+    def since_day(self):
+        since = datetime.fromisoformat(self.SINCE)
+        return since.astimezone().strftime("%Y-%m-%d")
+
+    def test_since_filters_events_and_names_file(self):
+        code, _ = self.run_cli("--session", "s1", "--since", self.SINCE)
+        self.assertEqual(code, 0)
+        path = self.out / f"S-{self.since_day()}-s1.md"
+        text = path.read_text(encoding="utf-8")
+        self.assertIn("- Ab: 2026-09-30T12:00:30+00:00 (Studio-Session, R434)", text)
+        self.run_cli("--session", "s1")
+        plain = (self.out / "S-2026-09-30-s1.md").read_text(encoding="utf-8")
+        self.assertNotIn("- Ab:", plain)
+        self.assertIn("Agenten: 2,", text)  # a1 und a2 liegen vor t=30 s
+
+    def test_since_cost_is_delta(self):
+        extra = [
+            ev(
+                "usage",
+                20,
+                session_cost={"total_usd": 1.0, "models": {"m": {"usd": 1}}},
+            ),
+            ev(
+                "usage",
+                40,
+                session_cost={"total_usd": 3.5, "models": {"m": {"usd": 3}}},
+            ),
+        ]
+        write_events(self.home, scenario() + extra)
+        result = metrics.build(
+            metrics_args("s1", since=datetime.fromisoformat(self.SINCE))
+        )
+        cost = result[1]["session_cost"]
+        self.assertEqual(cost["total_usd"], 2.5)
+        self.assertEqual(cost["models"]["m"]["usd"], 2)
+
+    def test_cost_delta_rules(self):
+        self.assertEqual(
+            metrics._cost_delta({"a": 5, "b": None}, {"a": 2}), {"a": 3, "b": None}
+        )
+        self.assertEqual(metrics._cost_delta({"a": 5}, None), {"a": 5})
+        self.assertIsNone(metrics._cost_delta(None, {"a": 1}))
+
+    def test_since_invalid_exit_2(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as cm:
+            metrics.main(["--session", "latest", "--since", "gestern"])
+        self.assertEqual(cm.exception.code, 2)
+        self.assertIn("ungültiger Zeitpunkt", err.getvalue())
+
+    def test_since_with_milestone_rejected(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as cm:
+            metrics.main(["--milestone", "M9", "--since", self.SINCE])
+        self.assertEqual(cm.exception.code, 2)
+        self.assertIn("nur mit --session oder --efficiency", err.getvalue())
+
+    def test_parse_since_variants(self):
+        self.assertEqual(
+            metrics._parse_since("2026-10-10T06:30:00Z").isoformat(),
+            "2026-10-10T06:30:00+00:00",
+        )
+        naive = metrics._parse_since("2026-10-10T06:30:00")
+        self.assertEqual(
+            naive, datetime.fromisoformat("2026-10-10T06:30:00").astimezone()
+        )
 
     def test_missing_transcript_is_not_measured(self):
         self.run_cli("--session", "s1")
@@ -258,11 +328,20 @@ class PhasesTest(unittest.TestCase):
         )
 
     def args(self, **kw):
-        return argparse.Namespace(session="s1", milestone=None, out=None, **kw)
+        return argparse.Namespace(
+            session="s1", milestone=None, out=None, **{"since": None, **kw}
+        )
+
+    def test_phases_without_since(self):
+        result = metrics.build(self.args())
+        grund = result[1]["efficiency"]["steuerung_heraus_grund"]
+        self.assertGreater(grund["plan"], 0)
 
     def test_phases_from_unfiltered_events_with_since(self):
-        # Freigabe (t=10) liegt vor dem Lead-Start (t=100); kein früherer Kostenstand
-        result = metrics.build(self.args())
+        # Freigabe (t=10) vor since (t=50), Lead-Start (t=100) danach,
+        # kein früherer session_cost-Stand
+        since = datetime(2026, 9, 30, 12, 0, 50, tzinfo=UTC)
+        result = metrics.build(self.args(since=since))
         grund = result[1]["efficiency"]["steuerung_heraus_grund"]
         self.assertGreater(grund["plan"], 0)
 
@@ -280,8 +359,10 @@ class PhasesTest(unittest.TestCase):
         self.assertNotIn("Plan 0.0 %", line)
 
 
-def metrics_args(session=None, milestone=None):
-    return argparse.Namespace(session=session, milestone=milestone, out=None)
+def metrics_args(session=None, milestone=None, since=None):
+    return argparse.Namespace(
+        session=session, milestone=milestone, out=None, since=since
+    )
 
 
 @contextlib.contextmanager
