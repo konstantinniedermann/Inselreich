@@ -5195,3 +5195,18 @@ einschliesslich Nachtrag Plan I-049 (Fall K1, `dropZeroReserve`).
 Regelbezug: gates.md Gate Spec, R488 · Kosten bei Irrtum: ein Ausgangsstand im Browser-Check falsch gewählt.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-m13-e2-nachtrag · ADR: —
+
+## R494 · 2026-10-10 · Gate Merge TOOL-BUENDEL-5: OK, lokaler Merge nach AUFRAEUM-01
+
+Ruling: `tool/b5` @ `ff59778f` abgenommen (T01–T06, Batch-Reviews OK bzw. BEDENKEN→behoben, Final-Review opus OK;
+`studio-lint`, `studio-test` 661, `docs-check` Exit 0; 5 von 7 Starts). Messwerte: `build_state` 3,62 → 1,3 s (R482);
+CPU Leerlauf 1,5 % bei 30-facher Drosselung, die bleibt (R478). Ermessensentscheide des Controllers (Prozessgruppe
+verbindlich, SIGTERM/SIGHUP wie Ctrl-C, `--retitle` nur mit `--title`, Diff-Hash mit ungetrackten Dateien) bestätigt.
+Sonderfall `ac8af81e` (`Paket: M13-E1-T01` bindet Phase M13-E1 nicht): Regel bleibt — die Phase bindet nur bei exakter
+`Paket:`-ID oder Präfix `plan-`/`design-`/`gate-` (Handbuch 1.45); Task-IDs als `Paket:` sind künftig zu vermeiden
+(Briefing nennt das Paket, nicht den Task). Merge lokal durch `production-integrator` **nach** AUFRAEUM-01, seriell,
+kein Push.
+
+Regelbezug: gates.md Gate Merge Release, R478, R482, R484 · Kosten bei Irrtum: ein Revert im Werkzeug-Strang.
+
+Entscheider: L0 · Anlass: Bericht Controller TOOL-BUENDEL-5 · ADR: —
