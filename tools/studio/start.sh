@@ -31,14 +31,35 @@ if [ "${1:-}" = "stop" ]; then
   exit 0
 fi
 
-# Bereit = HTTP-Antwort auf "/" (statische Datei, billig; /api/state rechnet den ganzen Zustand).
-answers() {
-  python3 -c "import urllib.request; urllib.request.urlopen('${URL}', timeout=3)" 2>/dev/null
+# /api/ping: 0 = Studio-Dashboard, 3 = anderer HTTP-Server, 1 = keine Antwort.
+# Billig: kein Zustandsaufbau (anders als /api/state).
+probe() {
+  python3 - "$URL" 2>/dev/null <<'PY'
+import json, sys, urllib.error, urllib.request
+
+try:
+    with urllib.request.urlopen(sys.argv[1] + "api/ping", timeout=3) as response:
+        studio = json.load(response).get("studio") is True
+except (urllib.error.HTTPError, ValueError, AttributeError):
+    sys.exit(3)  # HTTP-Antwort, aber kein Studio
+except OSError:
+    sys.exit(1)
+sys.exit(0 if studio else 3)
+PY
 }
 
-if running || answers; then
+if running; then
   echo "Studio-Dashboard läuft bereits: $URL"
   exit 0
+fi
+status=0
+probe || status=$?
+if [ "$status" -eq 0 ]; then
+  echo "Studio-Dashboard läuft bereits: $URL"
+  exit 0
+elif [ "$status" -eq 3 ]; then
+  echo "Port ${PORT} belegt (kein Studio-Dashboard)" >&2
+  exit 1
 fi
 rm -f "$PID_FILE"
 
@@ -51,7 +72,7 @@ for _ in $(seq 1 60); do
     echo "Studio-Dashboard startet nicht — siehe $STUDIO_DIR/server.log" >&2
     exit 1
   fi
-  if answers; then
+  if probe; then
     echo "Studio-Dashboard: $URL"
     exit 0
   fi

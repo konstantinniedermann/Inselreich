@@ -121,6 +121,21 @@ class ServerTest(unittest.TestCase):
             self.assertEqual(self.get("/api/state")[0], 200)
             self.assertIs(spy.call_args.kwargs["heartbeats"], True)
 
+    def test_ping_returns_studio_marker(self):
+        status, ctype, body = self.get("/api/ping")
+        self.assertEqual(status, 200)
+        self.assertIn("application/json", ctype)
+        self.assertEqual(json.loads(body), {"studio": True})
+
+    def test_ping_builds_no_state(self):
+        with mock.patch.object(server, "build_state") as built:
+            self.get("/api/ping")
+        self.assertEqual(built.call_count, 0)
+
+    def test_ping_foreign_host_rejected(self):
+        status, _, _ = self.get("/api/ping", headers={"Host": "evil.example"})
+        self.assertEqual(status, 403)
+
     def test_index_served(self):
         status, _, body = self.get("/")
         self.assertEqual(status, 200)
@@ -246,6 +261,15 @@ class ServerTest(unittest.TestCase):
             self.append_event()
             self.get("/api/state")
             self.assertEqual(built.call_count, 1)
+
+    def test_throttle_bound(self):
+        """Aufbau von 1,3 s (69k Events): Wiederaufbau frühestens nach ~39 s, nie über 90 s."""
+        hit = {"ts": 0.0, "cost": 1.3, "key": ("a",), "body": b""}
+        self.assertTrue(server.reusable(hit, ("b",), 30.0))
+        self.assertFalse(server.reusable(hit, ("b",), 45.0))
+        slow = dict(hit, cost=500.0)
+        self.assertTrue(server.reusable(slow, ("b",), 89.0))
+        self.assertFalse(server.reusable(slow, ("b",), 91.0))
 
     def test_cache_key_includes_session(self):
         with mock.patch.object(
