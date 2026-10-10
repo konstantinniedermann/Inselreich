@@ -72,7 +72,7 @@ Hilfsfunktionen `mouse`, `clickAt`, `key` aus der Vorlage übernehmen (Prettier-
 
 Run: `node tools/render-qa/seekarte.mjs --help; echo EXIT=$?` → Hilfetext, `EXIT=0`
 Run: `node tools/render-qa/seekarte.mjs --size 1280x720 --dpr 1 --leck --port 5491 --out .studio/qa/REL-15/t04; echo EXIT=$?` → alle Zeilen BESTANDEN, `EXIT=0`
-Gegenprobe Leck (zeigt, dass die Probe greift): `node tools/render-qa/seekarte.mjs --root <Hauptcheckout> --size 1280x720 --dpr 1 --leck --port 5591 --out .studio/qa/REL-15/t04-main; echo EXIT=$?` → Zeile „Listener-Leck“ NICHT BESTANDEN mit `n2 = 3`, `EXIT=1` (erwartet; `main`-Stand ohne T03). Hinweis: der Hauptcheckout hat das Skript nicht; `--root` zeigt nur, wessen Vite und Quellen geladen werden, das Skript läuft aus dem Worktree.
+Gegenprobe Leck (zeigt, dass die Probe greift): `node tools/render-qa/seekarte.mjs --root <Hauptcheckout> --size 1280x720 --dpr 1 --leck --port 5591 --out .studio/qa/REL-15/t04-main; echo EXIT=$?` → Zeile „Listener-Leck“ NICHT BESTANDEN (gemessen: n0 = 2, n2 = 4), `EXIT=1` (erwartet; `main`-Stand ohne T03). Hinweis: der Hauptcheckout hat das Skript nicht; `--root` zeigt nur, wessen Vite und Quellen geladen werden, das Skript läuft aus dem Worktree.
 
 - [ ] **Schritt 4: README-Zeile** in `tools/render-qa/README.md`, Tabelle „Skripte“ nach `smoke.mjs`:
 
