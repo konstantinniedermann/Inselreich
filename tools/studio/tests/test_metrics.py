@@ -284,7 +284,9 @@ class MetricsTest(unittest.TestCase):
         with clock.frozen(ticking_clock()):
             for _ in range(100):
                 clock.now()
-            self.run_cli("--session", "s1")
+            code, printed = self.run_cli("--session", "s1")
+        self.assertEqual(code, 0)
+        self.assertEqual(printed, str(self.out / "S-2026-09-30-s1.md"))
 
     def test_second_run_overwrites(self):
         # Uhr springt zwischen den Läufen eine Sekunde weiter (Sekundengrenze in CI)
