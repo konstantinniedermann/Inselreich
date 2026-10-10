@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest import mock
 
@@ -27,6 +27,13 @@ def write_events(home: Path, events: list[dict]) -> None:
     home.mkdir(parents=True, exist_ok=True)
     lines = [json.dumps(e, ensure_ascii=False) for e in events]
     (home / "events.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def ticking_clock():
+    """Uhr, die bei jeder Ablesung eine Sekunde weiterspringt (kein Sekundenüberlauf)."""
+    ticks = iter(range(1, 100000))
+    start = datetime(2026, 9, 30, 12, 0, 0, tzinfo=UTC)
+    return lambda: start + timedelta(seconds=next(ticks))
 
 
 class MetricsTest(unittest.TestCase):
@@ -273,12 +280,15 @@ class MetricsTest(unittest.TestCase):
         text = (self.out / "S-2026-09-30-s1.md").read_text(encoding="utf-8")
         self.assertIn("≥", text)
 
+    def test_many_runs_with_ticking_clock(self):
+        with clock.frozen(ticking_clock()):
+            for _ in range(100):
+                clock.now()
+            self.run_cli("--session", "s1")
+
     def test_second_run_overwrites(self):
         # Uhr springt zwischen den Läufen eine Sekunde weiter (Sekundengrenze in CI)
-        ticks = iter(range(1, 1000))
-
-        def ticking():
-            return datetime(2026, 9, 30, 12, 0, next(ticks), tzinfo=UTC)
+        ticking = ticking_clock()
 
         self.run_cli("--session", "s1")
         path = self.out / "S-2026-09-30-s1.md"
