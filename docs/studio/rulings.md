@@ -4685,3 +4685,17 @@ Regelbezug: gates.md Gate Plan; STUDIO.md Umsetzung (≤ 4 Tasks je Controller-I
 Nacharbeit im Strang vor dem Final-Review; ein Browser-Lauf statt vier kann einen UI-Fehler spät finden (Teil-Wiederholung).
 
 Entscheider: L0 · Anlass: Urteile lead-qa und lead-production GATE-PLAN-M13-E1 · ADR: —
+
+## R461 · 2026-10-10 · Kurzdesign UI-GUT-CHIP (I-043) angenommen; Plan jetzt, Umsetzung nach M13-E1-UI
+
+Ruling: Kurzdesign `.studio/handoffs/2026-10-10-lead-design-UI-GUT-CHIP.md` (16 AK, AK-GC-01…16) angenommen. Offene
+Fragen wie empfohlen: **(1)** der erste Klick springt sofort zum ersten Erzeuger; **(2)** Häuser nicht in Liste und
+Markierung, nur im Tooltip gezählt; **(3)** kein Zähler-Knopf „⚠ n“; **(4)** Umsetzung erst nach dem Merge des
+M13-E1-UI-Strangs (T12 berührt `problems.ts`, `texts.ts`, `hover.ts`). Beobachtung REL-17 (8) `HOUSE_TITLES` geht in
+I-043 auf; (b) `unconnectedIds`/`cutOffIds` bleibt offen. **Plan jetzt** durch `lead-tech` auf **sonnet** als erster Fall
+von **E-054** (R459); kombiniertes Gate Spec/Plan durch L0 (Stufe leicht). Budget Plan: `lead-tech` 1, Phase UI-GUT-CHIP.
+
+Regelbezug: STUDIO.md Ablauf Stufe leicht; R448 (3), R459 · Kosten bei Irrtum: Plan muss nach dem M13-E1-UI-Merge auf
+neue Zeilenstände nachgeführt werden (gering).
+
+Entscheider: L0 · Anlass: Kurzdesign lead-design UI-GUT-CHIP · ADR: —
