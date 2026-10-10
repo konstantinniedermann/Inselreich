@@ -10,7 +10,9 @@ from __future__ import annotations
 import json
 import math
 import subprocess
-from datetime import UTC, datetime
+from datetime import datetime
+
+import clock
 
 NOT_RECORDED = "nicht erfasst"
 # (gelb über, rot über)
@@ -38,7 +40,7 @@ def _light(value: float, limits: tuple[int, int]) -> str:
 def usage(now: datetime | None = None, runner=None) -> tuple[float, float] | None:
     """(Repo-Minuten, Konto-Minuten) im laufenden Monat oder None, wenn nicht erfassbar."""
     run = runner or run_gh
-    now = now or datetime.now(UTC)
+    now = now or clock.now()
     try:
         login = run(["api", "user", "--jq", ".login"]).strip()
         name = run(["repo", "view", "--json", "name", "-q", ".name"]).strip()

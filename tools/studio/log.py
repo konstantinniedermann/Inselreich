@@ -10,8 +10,8 @@ import os
 import re
 import subprocess
 import sys
-from datetime import UTC, datetime
 
+import clock
 import studio_docs
 from paths import (
     append_event,
@@ -158,7 +158,7 @@ def queue_event(args: argparse.Namespace) -> dict | None:
             args.cost,
             args.blocks,
             args.source_role,
-            datetime.now().astimezone().date().isoformat(),
+            clock.now().astimezone().date().isoformat(),
         )
         event.update(action="add", question=args.question, blocks=args.blocks)
     return event
@@ -241,7 +241,7 @@ def archive() -> int:
         return 0
     target_dir = archive_dir() / "events"
     target_dir.mkdir(parents=True, exist_ok=True)
-    stamp = f"{datetime.now(UTC):%Y%m%d-%H%M%S}"
+    stamp = f"{clock.now():%Y%m%d-%H%M%S}"
     target = target_dir / f"events-{stamp}.jsonl"
     counter = 0
     while target.exists():

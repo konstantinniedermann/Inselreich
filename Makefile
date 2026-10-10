@@ -14,16 +14,17 @@ hooks: ## Git-Hooks aktivieren (core.hooksPath=tools/githooks: Prettier-Check be
 dev: ## Vite-Dev-Server starten
 	npm run dev
 
-zeittests: ## Prüfen, dass jeder Wandzeit-Test in ZEITTESTS (vite.config.ts) steht
+zeittests: ## ZEITTESTS (vite.config.ts) = genau die Tests mit Wandzeit-Aufruf (beide Richtungen)
 	@fail=0; for f in $$(grep -rlE 'performance\.now\(|Date\.now\(' tests --include='*.ts' | sort); do \
 	  grep -qF "'$$f'" vite.config.ts || { echo "Zeittest nicht in ZEITTESTS (vite.config.ts): $$f"; fail=1; }; \
 	done; \
-	for f in $$(grep -oE "'tests/[^']+\.test\.ts'" vite.config.ts | tr -d "'"); do \
+	for f in $$(sed -n '/^export const ZEITTESTS/,/^];/p' vite.config.ts | grep -oE "'tests/[^']+\.test\.ts'" | tr -d "'"); do \
 	  test -f "$$f" || { echo "ZEITTESTS-Eintrag ohne Datei (vite.config.ts): $$f"; fail=1; }; \
+	  grep -qE 'performance\.now\(|Date\.now\(' "$$f" || { echo "ZEITTESTS-Eintrag ohne Wandzeit-Aufruf (vite.config.ts): $$f"; fail=1; }; \
 	done; exit $$fail
 
-test: ## Tests ausführen (Vitest; schreibt .studio/zeitreserve.json); studioweite Sperre + Load <= 8 (R375)
-	@node $(TESTLOCK) npm test
+test: ## Tests ausführen (Vitest; schreibt .studio/zeitreserve.json); studioweite Sperre + Load <= 8 (R375); rot → Event test_failed (R450 V1)
+	@python3 tools/studio/testrun.py --suite vitest --skip-exit 3 -- node $(TESTLOCK) npm test
 
 zeitreserve: ## CI-Reserve prüfen (lokal × 4, R270; und geschätzte Runner-Zeit lokal × 3, E-043); nach make test
 	node tools/zeitreserve/check.ts
@@ -46,13 +47,13 @@ format: ## Code formatieren (Prettier)
 build: ## Typprüfung + Produktions-Build
 	npm run build
 
-studio-test: ## Tests der Studio-Werkzeuge (Python unittest)
-	python3 -m unittest discover -s tools/studio/tests -t tools/studio
+studio-test: ## Tests der Studio-Werkzeuge (Python unittest); rot → Event test_failed (R450 V1)
+	python3 tools/studio/testrun.py --suite studio -- python3 -m unittest discover -s tools/studio/tests -t tools/studio
 
 RUFF = uvx ruff@0.17.0
 
-studio-lint: ## Ruff über tools/studio (gepinnt, via uvx; vor Commits an tools/studio, nicht Teil von check)
-	$(RUFF) check tools/studio && $(RUFF) format --check tools/studio
+studio-lint: ## Ruff über tools/studio (gepinnt, via uvx; vor Commits an tools/studio, nicht Teil von check) und Warnung bei direktem Uhraufruf (R450 V2)
+	$(RUFF) check tools/studio && $(RUFF) format --check tools/studio && python3 tools/studio/clock.py --check tools/studio
 
 studio: ## Studio-Dashboard starten (gibt die URL aus)
 	@bash tools/studio/start.sh

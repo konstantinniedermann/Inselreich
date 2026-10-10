@@ -515,14 +515,14 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Modellwahl), `.claude/agents/lead-tech.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
 - Ruling: –
 
-## E-055 · vorgeschlagen · Warnung bei Lead-Start mit Budgetzeile ohne Freigabe
+## E-055 · übernommen als Werkzeug (R443, TOOL-BUENDEL-3) · Warnung bei Lead-Start mit Budgetzeile ohne Freigabe
 
 - Hypothese: Wenn der Spawn-Hook bei einem Lead-Start, dessen Kopfzeile „Budget: n …“ (n > 0) lautet, im Session-Log keine Zeile `kind: budget` derselben Rolle findet und eine Warnung ausgibt (`warn`, kein Blocken), entstehen keine Budget-Vorfälle „ohne Freigabe“ mehr (Retro [session-c64c0775-b-ende](retros/2026-10-10-session-c64c0775-b-ende.md) B1; R440).
 - Messgrösse: 0 Budget-Vorfälle „ohne Freigabe“ oder „n von m“ durch fehlende Freigabezeile in 3 Sessions (Ausgang 1 in c64c0775-b); Gegenprobe: 0 Fehlwarnungen bei „Budget: keins“ und bei Folge-Controllern (R433 V3 b).
 - Messbarkeit: Das Dashboard zählt unverändert; die Warnung ist nur zusätzliche Ausgabe.
 - Zeitraum: 3 Sessions nach dem Merge, höchstens bis 2026-11-19; Start bei freiem Platz oder als Werkzeug ohne Platz (Entscheid L0, wie E-051).
 - Rückfall: Hook-Zweig entfernen (`git revert`).
-- Dateien: `tools/studio/hook.py`, `tools/studio/tests/`
-- Ruling: –
-- Start: –
+- Dateien: `tools/studio/budgetwarn.py`, `tools/studio/modelguard.py`, `tools/studio/tests/`
+- Ruling: R443, Gate Merge TOOL-BUENDEL-3
+- Start: mit Merge
 - Bewertung: –

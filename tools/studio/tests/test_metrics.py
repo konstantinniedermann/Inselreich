@@ -11,7 +11,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from unittest import mock
 
+import clock
 import metrics
+import paths
 import studio_docs
 
 import tests.test_efficiency as eff
@@ -143,6 +145,38 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metrics._cost_delta({"a": 5}, None), {"a": 5})
         self.assertIsNone(metrics._cost_delta(None, {"a": 1}))
 
+    def test_efficiency_shows_flake_suspect(self):
+        eff.write(
+            self.transcripts / "s1.jsonl",
+            [eff.assistant("m1", "claude-opus-4", out=10)],
+        )
+        base = {"suite": "studio", "commit": "abc1234", "diff": ""}
+        write_events(
+            self.home,
+            [
+                *scenario(),
+                {
+                    **ev("test_failed", 1, source="make", names=["K.test_a"], **base),
+                },
+                ev("test_passed", 2, source="make", **base),
+            ],
+        )
+        with mock.patch.object(metrics.actions, "render", return_value=""):
+            code, out = self.run_cli("--efficiency")
+        self.assertEqual(code, 0)
+        self.assertIn("Flake-Verdacht: K.test_a", out)
+
+    def test_efficiency_flake_not_measured_without_test_events(self):
+        eff.write(
+            self.transcripts / "s1.jsonl",
+            [eff.assistant("m1", "claude-opus-4", out=10)],
+        )
+        with mock.patch.object(metrics.actions, "render", return_value=""):
+            code, out = self.run_cli("--efficiency")
+        self.assertEqual(code, 0)
+        flake = next(x for x in out.splitlines() if "Flake-Verdacht)" in x)
+        self.assertIn("nicht gemessen", flake)
+
     def test_since_invalid_exit_2(self):
         err = io.StringIO()
         with contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as cm:
@@ -174,15 +208,27 @@ class MetricsTest(unittest.TestCase):
         old = Path.cwd()
         os.chdir(wt)
         self.addCleanup(os.chdir, old)
+        base = Path(self.tmp.name).resolve()
+        seen: list[Path] = []
+        real_read_version = studio_docs.read_version
+
+        def spy(path):
+            seen.append(Path(path))
+            return real_read_version(path)
+
         buffer = io.StringIO()
         with (
             mock.patch.dict(os.environ),
             contextlib.redirect_stdout(buffer),
             mock.patch.object(metrics, "format_markdown", lambda path: None),
+            mock.patch.object(paths, "repo_root", lambda start=None: base),
+            mock.patch.object(studio_docs, "read_version", spy),
         ):
             os.environ.pop("STUDIO_DOCS")
             code = metrics.main(["--session", "s1"])
         self.assertEqual(code, 0)
+        self.assertTrue(seen)
+        self.assertTrue(all(str(p).startswith(str(base)) for p in seen))
         self.assertTrue(
             (wt / "docs" / "studio" / "metriken" / "S-2026-09-30-s1.md").exists()
         )
@@ -229,15 +275,10 @@ class MetricsTest(unittest.TestCase):
 
     def test_second_run_overwrites(self):
         # Uhr springt zwischen den Läufen eine Sekunde weiter (Sekundengrenze in CI)
-        class TickingClock(datetime):
-            ticks = 0
+        ticks = iter(range(1, 1000))
 
-            @classmethod
-            def now(cls, tz=None):
-                if tz is not None:
-                    return datetime.now(tz)
-                cls.ticks += 1
-                return datetime(2026, 9, 30, 12, 0, cls.ticks).astimezone()
+        def ticking():
+            return datetime(2026, 9, 30, 12, 0, next(ticks), tzinfo=UTC)
 
         self.run_cli("--session", "s1")
         path = self.out / "S-2026-09-30-s1.md"
@@ -250,7 +291,7 @@ class MetricsTest(unittest.TestCase):
                 if "erzeugt" not in line and '"created"' not in line
             ]
 
-        with mock.patch.object(metrics, "datetime", TickingClock):
+        with clock.frozen(ticking):
             self.run_cli("--session", "s1")
             first = path.read_text(encoding="utf-8")
             self.run_cli("--session", "s1")

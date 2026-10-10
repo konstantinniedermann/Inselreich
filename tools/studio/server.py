@@ -6,12 +6,12 @@ import argparse
 import json
 import os
 import sys
-import time
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
+import clock
 import limits
 from model import (
     INACTIVE_DEFAULT,
@@ -106,7 +106,7 @@ class Handler(SimpleHTTPRequestHandler):
     def send_state(self, session: str, heartbeats: bool = True) -> None:
         state = build_state(
             self.store.events(),
-            time.time(),
+            clock.timestamp(),
             read_agent_models(self.agents),
             session=session,
             inactive_after=self.inactive_after,
@@ -115,7 +115,7 @@ class Handler(SimpleHTTPRequestHandler):
             ampel_sessions=load_ampel_sessions(Path(self.docs) / "metriken"),
         )
         state["docs"] = bundle(self.docs, self.agents)
-        state["limits"] = limits_state(time.time())
+        state["limits"] = limits_state(clock.timestamp())
         body = json.dumps(state, ensure_ascii=False).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
