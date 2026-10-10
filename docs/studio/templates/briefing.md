@@ -11,8 +11,8 @@ und wird unverändert kopiert.
 Persona: <rolle>
 Paket: <id>
 Meilenstein: <id> (oder „ohne")
-Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <Starts>)   (ganzer Auftrag inkl. aller Unteraufträge; Tools aus docs/studio/metriken/richtwerte.md, Minuten ≈ Tools ÷ 6, nicht Menschenzeit)
-Modell: <opus|sonnet|haiku> (nur nennen, wenn abweichend von der Persona; dann auch im Agent-Aufruf)
+Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <Starts>)   (ganzer Auftrag inkl. aller Unteraufträge; Tools aus docs/studio/metriken/richtwerte.md, Leads schätzen in Tools, Minuten = Tools ÷ 6, nicht Menschenzeit)
+Modell: <alias> (<Einsatz>)   (Pflicht bei stärkerem Modell als die Persona, dann auch im Agent-Aufruf; Einsatz aus der Modelltabelle, STUDIO.md „Modellwahl“, z. B. `opus (Tech-Lead beim Plan)`, `opus (Final-Review)`, `sonnet (Controller in der Umsetzung)`, `sonnet (lead-qa-Gate-Urteile)`, `sonnet (Kurz-Retro)`)
 Budget: <n Starts / Parallelität k> (nur für Leads; Arbeiter: „keins, keine Agenten starten")
 Prozessstufe: <leicht|voll>
 

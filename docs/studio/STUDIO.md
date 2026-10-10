@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.37 · Stand: 2026-10-09 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.38 · Stand: 2026-10-10 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -62,7 +62,7 @@ Ebene höher — mit Empfehlung. L0 fragt den Nutzer nicht zurück (Abschnitt [A
   ein volles Briefing. Eine Fortsetzung zählt nicht als neuer Start.
 - **Leads nach dem Abschlussbericht ablösen (E-042, R319):** Ein Lead wird nach seinem
   Abschlussbericht nicht fortgesetzt. Er legt mit dem Bericht ein Handoff nach
-  [templates/uebergabe.md](templates/uebergabe.md) ab (`<Hauptrepo>/.studio/handoffs/<datum>-<lead>-<lead>.md`:
+  [templates/uebergabe.md](templates/uebergabe.md) ab (`<Hauptrepo>/.studio/handoffs/<datum>-<persona>-<Paket-ID>.md`:
   Stand, offene Punkte, Fundstellen); Fix-Runden, Gate-Rückfragen und Folgepakete startet L0 als
   **neuen** Lead mit Briefing und Handoff. Fortsetzen bleibt erlaubt, wenn der Lead-Kontext unter
   60k liegt oder seit seinem letzten Aufruf weniger als 5 min vergangen sind (Cache warm). Die
@@ -95,7 +95,7 @@ Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <S
 - `Schätzung` gilt für den ganzen Auftrag inklusive Unteraufträge; das Dashboard stellt sie dem
   Messwert gegenüber. Hauptgrösse sind Werkzeugaufrufe aus
   [metriken/richtwerte.md](metriken/richtwerte.md) (Median je Rolle, Modell, Plan-Art, summiert über
-  Starts inkl. Review und Fix-Runden); Minuten = Tools ÷ 4 bis 8 (E-001).
+  Starts inkl. Review und Fix-Runden); Leads schätzen in Tools, Minuten = Tools ÷ 6 (E-001, R433).
 - Die Kopfzeile nennt die **Tabellenzeile** in Klammern (z. B. `(Tabellenzeile: lead-tech opus
 Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davor (die Telemetrie
   liest die erste Angabe mit „Tools“ bzw. „min“).
@@ -141,6 +141,23 @@ Die Persona-Frontmatter legt das Standardmodell fest. Weicht ein Einsatz davon a
 Briefing-Kopfzeile `Modell:`. Ein Persona-Start als `general-purpose` braucht immer `model`
 (Guard, R167): Controller und Kurz-Retro `sonnet`, Tech-Lead beim Plan und Meilenstein-Retro `opus`.
 
+**Kopfzeile `Modell:` (R428, ADR-014).** Syntax: `Modell: <alias> (<Einsatz>)`. Das Werkzeug
+`tools/studio/modelguard.py` liest die Einsatz-Bezeichnungen aus der Spalte „Einsatz“ der Tabelle
+oben (getrennt durch Kommas ausserhalb von Klammern) und vergleicht die Angabe in der Klammer
+ohne Beachtung der Gross-/Kleinschreibung als Präfix. Der Alias vor der Klammer muss dem `model` des
+Agent-Aufrufs entsprechen. Die Kopfzeile ist Pflicht, sobald der Aufruf ein stärkeres Modell als das
+Frontmatter der Persona verlangt; sonst verweigert der Hook den Start (Modus `deny`). Zulässig
+sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final-Review des Pakets X)`):
+
+- `opus`: `Modell: opus (Design-Lead)`, `(Tech-Lead beim Plan)`, `(Spec-Autor)`, `(Lizenzprüfung)`,
+  `(Final-Review)`, `(Meilenstein-Retro)`
+- `sonnet`: `Modell: sonnet (Controller in der Umsetzung)`, `(lead-qa-Gate-Urteile)`,
+  `(lead-production)`, `(Task-Reviews)`, `(Kurz-Retro)`, `(Umsetzung)`, `(Recherche)`
+- `haiku`: `Modell: haiku (mechanische Prüfungen (Formatierung, Links, Listen abgleichen))`; die Kopfzeile
+  ist für `haiku` nie erzwungen, weil es die unterste Stufe ist.
+
+Ändert sich die Spalte „Einsatz“, ändern sich diese Bezeichnungen mit.
+
 ## Limits und Sessiongrösse
 
 - **Sensor (R68, R80):** `.studio/limits.json` (5-h-, Wochen- und Kontextwert), Details in
@@ -171,6 +188,7 @@ Briefing-Kopfzeile `Modell:`. Ein Persona-Start als `general-purpose` braucht im
   Stufe leicht: alles an `lead-tech`), z. B.
   `log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-UMSETZUNG`.
 
+- **Weitere Controller-Instanzen (R433):** Die Übergabe an eine weitere Controller-Instanz desselben Pakets bekommt keine eigene `log.py budget`-Zeile; sie zählt zum Budget des Pakets.
 - **Studio-Coach:** Der Coach bekommt je Retro 1 Start (Stabsstelle, ohne Arbeiter).
 - **Mehrbedarf:** vor dem Überschreiten per [templates/budgetantrag.md](templates/budgetantrag.md)
   an L0. Ohne Freigabe kein weiterer Start.
@@ -432,6 +450,10 @@ automatisch. Aufrufe: `log.py --help`, Abschnitt „Bericht und Logging" der Per
 `make studio-lint`.
 
 ## Session-Start und -Ende
+
+**Studio-Session (R434):** Eine Studio-Session reicht von der Start-Routine bis zur Ende-Routine
+(unten). Nach abgeschlossener Ende-Routine beginnt eine neue Studio-Session, auch bei gleicher
+Claude-Session-ID. „Höchstens ein Push je Session“ (R335) meint die Studio-Session.
 
 **Start** (ersetzt in diesem Repo die „wir starten"-Routine aus `../CLAUDE.md`, soweit sie
 nachfragen oder warten verlangt; Verfassung §1.4):

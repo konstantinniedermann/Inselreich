@@ -1,7 +1,7 @@
 # Vorlage: Übergabe
 
 Querabstimmung zwischen Leads oder Zwischenstand beim Pausieren. Ablage:
-`<Hauptrepo>/.studio/handoffs/<datum>-<von>-<an>.md` (gitignored; nicht im Worktree, Hauptrepo via
+`<Hauptrepo>/.studio/handoffs/<datum>-<persona>-<Paket-ID>.md` (gitignored; nicht im Worktree, Hauptrepo via
 `git rev-parse --git-common-dir`). Ergebnisse mit Bestand gehören danach in
 Spec, Plan oder Ruling.
 

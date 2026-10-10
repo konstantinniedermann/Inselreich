@@ -22,6 +22,48 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-10 · Persona lead-art 1.7
+
+- Anlass: Aktivierung Werkzeug-Bündel (ADR-014)
+- Datenbasis: `docs/studio/rulings.md` (R433 V3)
+- Ruling: R433
+- Änderungen: Handoff-Dateiname mit Paket-ID (`<datum>-lead-art-<Paket-ID>.md`)
+
+## 2026-10-10 · Persona lead-design 1.9
+
+- Anlass: Aktivierung Werkzeug-Bündel (ADR-014)
+- Datenbasis: `docs/studio/rulings.md` (R433 V3)
+- Ruling: R433
+- Änderungen: Handoff-Dateiname mit Paket-ID (`<datum>-lead-design-<Paket-ID>.md`)
+
+## 2026-10-10 · Persona lead-production 1.9
+
+- Anlass: Aktivierung Werkzeug-Bündel (ADR-014)
+- Datenbasis: `docs/studio/rulings.md` (R433 V3)
+- Ruling: R433
+- Änderungen: Handoff-Dateiname mit Paket-ID (`<datum>-lead-production-<Paket-ID>.md`)
+
+## 2026-10-10 · Persona lead-qa 1.9
+
+- Anlass: Aktivierung Werkzeug-Bündel (ADR-014)
+- Datenbasis: `docs/studio/rulings.md` (R433 V3)
+- Ruling: R433
+- Änderungen: Handoff-Dateiname mit Paket-ID (`<datum>-lead-qa-<Paket-ID>.md`)
+
+## 2026-10-10 · Persona lead-tech 1.11
+
+- Anlass: Aktivierung Werkzeug-Bündel (ADR-014)
+- Datenbasis: `docs/studio/rulings.md` (R433 V3)
+- Ruling: R433
+- Änderungen: Handoff-Dateiname mit Paket-ID (`<datum>-lead-tech-<Paket-ID>.md`)
+
+## 2026-10-10 · Handbuch 1.38
+
+- Anlass: Aktivierung des Werkzeug-Bündels (ADR-014), Auslegung Schätzung, Handoff, Studio-Session
+- Datenbasis: `docs/studio/rulings.md` (R428, R432, R433, R434), `tools/studio/modelguard.py`
+- Ruling: R428, R432, R433 (V3), R434
+- Änderungen: Kopfzeile `Modell: <alias> (<Einsatz>)` mit zulässigen Einsatz-Bezeichnungen (STUDIO.md Modellwahl, Briefing-Vorlage); Leads schätzen in Tools, Minuten = Tools ÷ 6; weitere Controller-Instanzen ohne eigene `log.py budget`-Zeile; Handoff-Name `<datum>-<persona>-<Paket-ID>.md` (STUDIO.md, Übergabe-Vorlage, fünf Lead-Personas); Begriff „Studio-Session“; `modelguard.py` im Modus `deny`, `make hooks` aktiv
+
 ## 2026-10-09 · Persona qa-code-reviewer 1.5
 
 - Anlass: Session-Retro fb37ceac V3
