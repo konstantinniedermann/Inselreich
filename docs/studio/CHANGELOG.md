@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-10 · Handbuch 1.42
+
+- Anlass: Retro REL-15 (mit Ad-hoc CI rot), Vorschlag V4
+- Datenbasis: `docs/studio/retros/2026-10-10-release-rel15-prozess.md`, `docs/studio/rulings.md` R450
+- Ruling: R450
+- Änderungen: Push-Ablauf (Merge): vor `make check` 1-min-Load ≤ 4 abwarten (R394); Pages-Deploy bei roter CI nur, wenn ausschliesslich Studio-Werkzeuge rot und alle Spiel-Tests grün
+
 ## 2026-10-10 · Handbuch 1.41
 
 - Anlass: Nutzerauftrag, freie Kapazität für Ideen-Runden nutzen
