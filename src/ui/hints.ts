@@ -40,7 +40,11 @@ export interface ReasonCtx {
   at?: { x: number; y: number; w: number; h: number };
 }
 
-const GROUND_NAMES: Partial<Record<Terrain, string>> = { water: 'Wasser', mountain: 'Gebirge' };
+/** Nicht bebaubares Gelände mit Anzeigename, in fester Reihenfolge. */
+const GROUND_PAIRS: readonly (readonly [Terrain, string])[] = [
+  ['water', 'Wasser'],
+  ['mountain', 'Gebirge'],
+];
 
 /** Kacheln des Grundrisses (Zeilen aussen, Spalten innen); nur lesen. */
 function footprint(world: World, c: ReasonCtx): Tile[] {
@@ -58,16 +62,17 @@ function footprint(world: World, c: ReasonCtx): Tile[] {
 
 function groundText(world: World, c: ReasonCtx): string | null {
   const found = new Set(footprint(world, c).map((t) => t.terrain));
-  const names = (['water', 'mountain'] as const)
-    .filter((t) => found.has(t))
-    .map((t) => GROUND_NAMES[t]!);
+  const names = GROUND_PAIRS.filter(([t]) => found.has(t)).map(([, name]) => name);
   return names.length ? `Kein Bauland: ${names.join(' und ')}` : null;
 }
 
 function occupantText(world: World, c: ReasonCtx): string | null {
   const tiles = footprint(world, c);
   const b = tiles.find((t) => t.buildingId !== null);
-  if (b) return `Platz belegt: ${BUILDING_DEFS[world.buildings[b.buildingId!]!.defId].name}`;
+  if (b) {
+    const defId = world.buildings[b.buildingId!]?.defId;
+    return defId ? `Platz belegt: ${BUILDING_DEFS[defId].name}` : 'Platz belegt';
+  }
   return tiles.some((t) => t.road) ? 'Platz belegt: Weg' : null;
 }
 
