@@ -169,8 +169,14 @@ describe('REL-17 problems (AK-R17-01…07)', () => {
     const k = kontorOf(w);
     const nearer = synth(w, 503, 'weaver', 0, k.x + 4, k.y);
     let ids = problemList(w, 0).map((p) => p.id);
-    expect(ids[0]).toBe(nearer.id);
-    expect(new Set(ids)).toEqual(new Set([far.id, near.id, nearer.id]));
+    const kc = center(BUILDING_DEFS.kontor, kontorOf(w).x, kontorOf(w).y);
+    const dist = (b: Building): number => {
+      const c = center(BUILDING_DEFS.weaver, b.x, b.y);
+      return Math.hypot(c.cx - kc.cx, c.cy - kc.cy);
+    };
+    const expected = [far, near, nearer].sort((a, b) => dist(a) - dist(b)).map((b) => b.id);
+    expect(new Set(expected).size).toBe(3);
+    expect(ids).toEqual(expected);
 
     // gleicher Abstand (Spiegelung um das Kontor): kleinere ID zuerst
     const w2 = newWorld();
@@ -186,7 +192,7 @@ describe('REL-17 problems (AK-R17-01…07)', () => {
     // Klasse vor Abstand
     const c1 = synth(w2, 700, 'weaver', 0, k2.x + 40, k2.y, 'ok');
     c1.connected = false;
-    expect(problemList(w2, 0)[0]!.id).toBe(700);
+    expect(problemList(w2, 0).map((p) => p.id)).toEqual([700, 605, 610]);
 
     ids = problemList(w, 0).map((p) => p.id);
     expect(problemList(w, 0)).toEqual(problemList(w, 0));

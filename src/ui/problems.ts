@@ -124,7 +124,9 @@ export function problemList(world: World, anchor: number): Problem[] {
       const what = goods.length > 0 ? goodList(goods) : 'Rohstoff';
       out.push(make(`b:${b.id}`, 2, b, `${def.name} wartet auf ${what}`));
     } else if (b.state === 'noService') {
-      const service = BUILDING_DEFS[SERVICE_BUILDING[def.requiresService!]].name;
+      const service = def.requiresService
+        ? BUILDING_DEFS[SERVICE_BUILDING[def.requiresService]].name
+        : 'Dienstgebäude';
       out.push(make(`b:${b.id}`, 2, b, `${def.name} braucht eine ${service} in Reichweite`));
     } else if (b.state === 'noForest') {
       out.push(make(`b:${b.id}`, 2, b, `${def.name}: kein freier Wald in der Nähe`));
