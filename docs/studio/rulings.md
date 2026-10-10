@@ -4341,3 +4341,19 @@ nachgetragen (L0-Versäumnis, an die Kurz-Retro).
 Regelbezug: gates.md Gate Merge Release; R335/R434 · Kosten bei Irrtum: Fix-Häppchen vor dem Push.
 
 Entscheider: L0 · Anlass: Release-Check lead-qa · ADR: —
+
+## R441 · 2026-10-10 · Gate Plan TOOL-BUENDEL-2: BEDENKEN → Nacharbeit, Umsetzung frei
+
+Ruling: Urteil `lead-qa` BEDENKEN B1–B4, nichts blockierend; Plan `3a1f38b`. Nacharbeit durch den Controller vor dem
+jeweiligen Task: **B1** `lead_phases` aus den ungefilterten Events bauen und Test für eine Session über `since` ohne
+früheren Kostenstand; **B2** Mindest-Python (≥ 3.11) in arc42 (T06), `precommit.py` und Hook lassen bei älterem Python still
+zu; **B3** T06 ohne eigenes Task-Review, ausdrücklich im Final-Review T07 (im Index als Abweichung vermerkt); **B4** Import
+von `MANUAL_SESSION` im `try` von `record`. **Entscheide:** E1–E6 wie empfohlen (E4 Ruff-Pin `uvx ruff@0.17.0` ist keine neue
+Abhängigkeit, dep-guard unberührt; E6 STUDIO.md-Zeile „warten, bis die Last ≤ 4“ streicht der studio-coach direkt nach dem
+Merge). **E7 abgelehnt:** Umsetzung startet jetzt; der nächste Push läuft per geprüftem Hash, das Bündel geht nach Gate
+Merge mit REL-15 hinaus. **AK-Nummern** AK-TB2-01…13 bestätigt. **Budget:** 12 Arbeiter-Starts (eine Zeile, R433 V3 b),
+Parallelität 2, Controller `sonnet`.
+
+Regelbezug: gates.md Gate Plan (Folgeplan R233 V2); Verfassung §7.2; R394 · Kosten bei Irrtum: Revert-Merge vor dem Push.
+
+Entscheider: L0 · Anlass: Gate Plan TOOL-BUENDEL-2 · ADR: —
