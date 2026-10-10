@@ -4765,3 +4765,20 @@ nur, solange kein Push ansteht (Handbuch 1.43, R464 V1).
 Regelbezug: gates.md Gate Plan; R380, R433, R438 V3, R464 · Kosten bei Irrtum: Nacharbeit im Strang.
 
 Entscheider: L0 · Anlass: Urteil lead-qa GATE-PLAN-TOOL-BUENDEL-4 · ADR: —
+
+## R466 · 2026-10-10 · M13-E1 bereit fürs Final-Review; Auslegung AK-M13E1-36, Seed-Randlage
+
+Ruling: UI-Strang `feat/m13-e1-ui` @ `bd26742b` (enthält Sim `2665350e`, `make check` Exit 0 bei Load 3,5; Playtest T14
+BEDENKEN ohne Blocker) geht ins Final-Review T15. **(1) AK-M13E1-36:** Der Spec-Text (U-4, `edictCardState` mit
+`disabled` und `reason`) geht dem AK-Wortlaut „Klick auf Handel → Meldung“ vor: gesperrte Karte, Sperrzeile mit Restzeit und
+Tooltip erfüllen den Zweck (der Spieler sieht, wann das Edikt wieder änderbar ist); AK gilt als erfüllt, der Wortlaut wird in
+der M13-E2-Spec berichtigt (Beobachtung). **(2) Seed-Randlage** Sparen/Handel „arm“ 11 200 = K′ − 600 (inklusive Grenze,
+Reserve 0): regelkonform, kein Pflicht-Stopp; `lead-design` nimmt die Randlage beim Balancing von M13-E2 auf. **(3)
+Unterhalt stillgelegt 30 → 18** im Playtest widerspricht `PAUSED_UPKEEP_PCT = 50` (⌈30 × 50 / 100⌉ = 15): T15 klärt mit
+Test, ob der Ausgangswert ein anderer war oder eine Wechselwirkung (Sparen, Stufe) falsch rechnet. **(4)** T15 macht eine
+Mutationsprobe für PLAN-M13-04 (Endfassung ohne eigenen Rot-Beleg) und reviewt die T13-Doku-Fixes `e6cb1ec4` mit.
+
+Regelbezug: gates.md Gate Merge; Verfassung §5 (Auslegung durch L0), R460 · Kosten bei Irrtum: (1) Spieler klickt auf
+gesperrte Karte ohne Meldung — gering, Tooltip vorhanden; (3) bei Rechenfehler Fix-Runde vor dem Merge.
+
+Entscheider: L0 · Anlass: Übergabe Controller D M13-E1 · ADR: —
