@@ -1,7 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { TAX_CARRY_DIVISOR, TAX_LEVELS, TAX_UNIT, TIERS, TIER_IDS } from './defs/tiers';
 import { GOODS } from './defs/goods';
-import { GROWTH_INTERVAL, UPGRADE_DEFICIT_WAIT_FACTOR } from './defs/timing';
+import { UPGRADE_DEFICIT_WAIT_FACTOR } from './defs/timing';
 import { feastActive } from './feast';
 import { checkAfford, pay, takeStock } from './economy';
 import type {
@@ -18,7 +18,7 @@ import type {
 import { budgetFrom, dampsOn, deficitGood, goodsBalance, upgradeDelta, type Budget } from './flow';
 import { buildCoverage, distance, serviceBuildings, type Coverage } from './coverage';
 import { inSupplyRange } from './supply';
-import { effectiveTaxPct } from './edicts';
+import { edictUpgradeWait, effectiveTaxPct, growthInterval } from './edicts';
 import { effectiveTaxLevel, goodLockActive, upgradeStopActive } from './townhall';
 import { center, islandOf } from './world';
 
@@ -120,7 +120,7 @@ function newNeeds(current: TierDef, next: TierDef): GoodId[] {
  * Prüft alle Aufstiegsbedingungen und nennt jede unerfüllte als deutschen Grund. Drückt der Aufstieg
  * ein Gut der Zielstufe ins Minus, gilt die Wartezeit `UPGRADE_DEFICIT_WAIT_FACTOR`-fach. Das Budget
  * kommt vom Wachstumstakt (`tickPopulation`); ohne Angabe (UI) wird es frisch gerechnet. Lager und
- * Brand zählen nicht (nominell, R115). Ein Fest der Kapelle (`feastActive`) kürzt die Wartezeit auf die der Stufe «niedrig».
+ * Brand zählen nicht (nominell, R115). Stapelregel (Spec R7): Fest und Edikt Wohlfahrt kürzen die Wartezeit, nie unter die der Stufe «niedrig»; «hoch» bleibt ohne Aufstieg.
  */
 export function upgradeStatus(
   world: World,
@@ -147,7 +147,10 @@ export function upgradeStatus(
       (g) => !dampsOn(world, b.island, g),
     );
   const festive = base !== null && feastActive(world, b);
-  const waitBase = festive ? Math.min(base, TAX_LEVELS.low.upgradeWait ?? base) : base;
+  const low = TAX_LEVELS.low.upgradeWait!;
+  const edictWait = edictUpgradeWait(world) ?? Infinity;
+  const waitBase =
+    base === null ? null : Math.max(low, Math.min(base, festive ? low : Infinity, edictWait));
   const wait = waitBase === null ? null : waitBase * (damped ? UPGRADE_DEFICIT_WAIT_FACTOR : 1);
   if (wait === null) reasons.push('Steuer zu hoch');
   else if (world.tick - house.satisfiedSince < wait)
@@ -204,7 +207,7 @@ export function houseCap(world: World, house: HouseState): number {
 
 /** Je Wachstumstakt einmal das Budget je Insel (`goodsBalance`, nur Inseln mit Häusern), danach je Haus in Id-Reihenfolge. */
 export function tickPopulation(world: World): void {
-  const growth = world.tick % GROWTH_INTERVAL === 0 && world.tick > 0;
+  const growth = world.tick % growthInterval(world) === 0 && world.tick > 0;
   const cov = buildCoverage(world);
   // Vor der Schleife: das Budget einer Insel gilt für den Stand vor allen Änderungen dieses Takts.
   const budgets = new Map<number, Budget>();

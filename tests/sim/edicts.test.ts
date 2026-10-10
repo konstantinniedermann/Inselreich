@@ -8,9 +8,11 @@ import {
   edictReason,
   edictTaxPoints,
   effectiveTaxPct,
+  growthInterval,
   setEdict,
 } from '../../src/sim/edicts';
-import { taxUnits, tickTaxes } from '../../src/sim/population';
+import { upgradeDeficit } from '../../src/sim/flow';
+import { taxUnits, tickPopulation, tickTaxes, upgradeStatus } from '../../src/sim/population';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { GOODS, GOOD_IDS } from '../../src/sim/defs/goods';
 import { orderUnitReward } from '../../src/sim/orders';
@@ -18,9 +20,24 @@ import { deserialize, serialize } from '../../src/sim/save';
 import { buy, buyPrice, sellPrice } from '../../src/sim/trade';
 import { recomputeConnectivity } from '../../src/sim/roads';
 import { paidCost } from '../../src/sim/upgrade';
-import type { Building, EdictId, GoodId, Tier, World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
-import { foldBackToV10, placeTownhall, putBuilding, setHouse } from './helpers';
+import type {
+  Building,
+  BuildingDefId,
+  EdictId,
+  GoodId,
+  TaxLevel,
+  Tier,
+  World,
+} from '../../src/sim/types';
+import { createWorld, home } from '../../src/sim/world';
+import {
+  foldBackToV10,
+  houseNearKontor,
+  placeService,
+  placeTownhall,
+  putBuilding,
+  setHouse,
+} from './helpers';
 import { shipLiteral } from './seaHelpers';
 
 /** Testwelt (Spec §10): freigeschaltet, gewonnen, Amtsstube, 1000 Geld, Tick 1000. */
@@ -376,5 +393,197 @@ describe('M13-E1 Steuer und Unterhalt', () => {
     const trade = withEdict(edictWorld(), 'trade');
     expect(buyPrice(trade, 'stone', 48)).toBe(576);
     expect(buyPrice(edictWorld(), 'stone', 48)).toBe(720);
+  });
+});
+
+describe('M13-E1 Takt und Wartezeit', () => {
+  const FILL: GoodId[] = ['food', 'cloth', 'rum', 'glass', 'spice', 'wood', 'tools', 'stone'];
+  const fill = (w: World, except: GoodId[] = []): void => {
+    for (const g of FILL) if (!except.includes(g)) home(w).stock[g] = 100;
+    w.money = 1_000_000;
+  };
+
+  /** Welt mit Haus am Kontor und Kapelle, Schule, Badehaus in Reichweite. */
+  const townWorld = (): { w: World; house: Building; chapel: Building } => {
+    const w = edictWorld();
+    const house = houseNearKontor(w);
+    const k = w.buildings[home(w).kontorId]!;
+    const chapel = placeService(w, 'chapel', k.x + 4, k.y);
+    const school = placeService(w, 'school', k.x + 6, k.y);
+    const bath = placeService(w, 'bathhouse', k.x + 8, k.y);
+    for (const s of [chapel, school, bath]) s.connected = true; // Platzieren setzt die Anbindung zurück
+    fill(w);
+    return { w, house, chapel };
+  };
+  const full = (b: Building, tier: Tier, n: number): void => {
+    setHouse(b, tier, n);
+    const h = b.house!;
+    for (const g of Object.keys(TIERS[tier].needs) as GoodId[]) h.satisfied[g] = true;
+    h.supplied = true;
+  };
+  /** Ein Tick der Bevölkerung (ohne Produktion und Krisen). */
+  const pop = (w: World, except: GoodId[] = []): void => {
+    fill(w, except);
+    w.tick++;
+    tickPopulation(w);
+  };
+  const runTo = (w: World, tick: number, except: GoodId[] = []): void => {
+    while (w.tick < tick) pop(w, except);
+  };
+
+  it('AK-M13E1-11 Wachsen: Takt 50 ohne, Takt 40 mit Wohlfahrt', () => {
+    for (const [id, at150, at149] of [
+      [null, 2150, 2149],
+      ['welfare', 2120, 2119],
+    ] as const) {
+      const { w, house } = townWorld();
+      w.tick = 2000;
+      full(house, 1, 1);
+      house.house!.satisfiedSince = 2000;
+      w.edict = id;
+      runTo(w, at149);
+      expect(house.house!.inhabitants).toBe(3);
+      runTo(w, at150);
+      expect(house.house!.inhabitants).toBe(4);
+    }
+  });
+
+  it('AK-M13E1-11 Schrumpfen: Kaufleute ohne Nahrung nach 400 Ticks', () => {
+    for (const [id, left] of [
+      [null, 12],
+      ['welfare', 10],
+    ] as const) {
+      const { w, house } = townWorld();
+      w.tick = 2000;
+      full(house, 4, 20);
+      w.edict = id;
+      home(w).stock.food = 0;
+      runTo(w, 2400, ['food']);
+      expect(house.house!.inhabitants).toBe(left);
+    }
+  });
+
+  it('AK-M13E1-11 Takt ist Phase des Ticks: Erlass bei 2010, erster Schritt 2040', () => {
+    const { w, house } = townWorld();
+    w.tick = 2000;
+    full(house, 1, 1);
+    house.house!.satisfiedSince = 2000;
+    runTo(w, 2010);
+    w.edictLockedUntil = 0;
+    expect(setEdict(w, 'welfare').ok).toBe(true);
+    runTo(w, 2039);
+    expect(house.house!.inhabitants).toBe(1);
+    runTo(w, 2040);
+    expect(house.house!.inhabitants).toBe(2);
+  });
+
+  it('AK-M13E1-11 growthInterval: 40 mit Wohlfahrt, 50 bei Ausfall oder ohne', () => {
+    const { w } = townWorld();
+    expect(growthInterval(w)).toBe(50);
+    w.edict = 'welfare';
+    expect(growthInterval(w)).toBe(40);
+    townhallOf(w).outageUntil = w.tick + 100;
+    expect(growthInterval(w)).toBe(50);
+  });
+
+  const D_ROWS: [string, TaxLevel, boolean, boolean, number | null][] = [
+    ['normal', 'normal', false, false, 300],
+    ['normal Wohlfahrt', 'normal', false, true, 200],
+    ['normal Fest', 'normal', true, false, 150],
+    ['normal Fest Wohlfahrt', 'normal', true, true, 150],
+    ['niedrig', 'low', false, false, 150],
+    ['niedrig Wohlfahrt', 'low', false, true, 150],
+    ['niedrig Fest Wohlfahrt', 'low', true, true, 150],
+    ['hoch Fest Wohlfahrt', 'high', true, true, null],
+  ];
+  const waitReason = (w: World, b: Building, budget?: Record<string, number>): string | undefined =>
+    upgradeStatus(w, b, budget).reasons.find(
+      (r) => r.startsWith('Bedürfnisse') || r === 'Steuer zu hoch',
+    );
+  const NO_DEFICIT = { food: 99, cloth: 99, rum: 99, glass: 99, wood: 99, tools: 99, stone: 99 };
+  const DEFICIT = { ...NO_DEFICIT, rum: -99 };
+
+  it.each(D_ROWS)('AK-M13E1-12 Stapelregel %s', (_n, level, feast, welfare, wait) => {
+    const { w, house, chapel } = townWorld();
+    full(house, 2, 8);
+    w.taxLevels[2] = level;
+    w.edict = welfare ? 'welfare' : null;
+    house.house!.satisfiedSince = w.tick - 100;
+    if (feast) {
+      chapel.feastAt = w.tick;
+    }
+    fill(w);
+    if (wait === null) {
+      expect(waitReason(w, house, NO_DEFICIT)).toBe('Steuer zu hoch');
+      return;
+    }
+    expect(waitReason(w, house, NO_DEFICIT)).toBe(`Bedürfnisse noch nicht ${wait} Ticks erfüllt`);
+    expect(waitReason(w, house, DEFICIT)).toBe(`Bedürfnisse noch nicht ${wait * 2} Ticks erfüllt`);
+  });
+
+  it('AK-M13E1-13 Ausfall oder Trennung: Wartezeit wie ohne Edikt, danach 200', () => {
+    for (const mode of ['outage', 'loose'] as const) {
+      const { w, house } = townWorld();
+      full(house, 2, 8);
+      house.house!.satisfiedSince = w.tick - 100;
+      w.edict = 'welfare';
+      const hall = townhallOf(w);
+      if (mode === 'outage') hall.outageUntil = w.tick + 100;
+      else hall.connected = false;
+      expect(growthInterval(w)).toBe(50);
+      expect(waitReason(w, house, NO_DEFICIT)).toBe('Bedürfnisse noch nicht 300 Ticks erfüllt');
+      if (mode === 'outage') delete hall.outageUntil;
+      else hall.connected = true;
+      expect(growthInterval(w)).toBe(40);
+      expect(waitReason(w, house, NO_DEFICIT)).toBe('Bedürfnisse noch nicht 200 Ticks erfüllt');
+      expect(w.edict).toBe('welfare');
+    }
+  });
+
+  /** Erzeuger roh und angebunden einsetzen, bis ein Aufstieg ins Kaufleute-Haus kein Defizit auslöst. */
+  const supplyProducers = (w: World, house: Building): void => {
+    const maker: Partial<Record<GoodId, BuildingDefId>> = {
+      food: 'fisher',
+      cloth: 'weaver',
+      rum: 'distillery',
+      glass: 'glassworks',
+    };
+    const saved = { tier: house.house!.tier, n: house.house!.inhabitants };
+    setHouse(house, 3, 15);
+    for (let i = 0; i < 40; i++) {
+      const d = upgradeDeficit(w, house);
+      if (d === null) break;
+      putBuilding(w, 0, maker[d.good]!, 4 + (i % 12) * 4, 40 + Math.floor(i / 12) * 4);
+    }
+    setHouse(house, saved.tier, saved.n);
+  };
+
+  const PATHS: [string, EdictId | null, TaxLevel, number[]][] = [
+    ['keins, alle normal', null, 'normal', [300, 600, 950, 1200]],
+    ['keins, P+S niedrig', null, 'low', [150, 350, 700, 950]],
+    ['Wohlfahrt, alle normal', 'welfare', 'normal', [200, 400, 680, 880]],
+    ['Wohlfahrt, P+S niedrig', 'welfare', 'low', [160, 320, 600, 800]],
+  ];
+  it.each(PATHS)('AK-M13E1-16 Pfadzeit %s', (_n, id, level, expected) => {
+    const { w, house } = townWorld();
+    w.tick = 2000;
+    w.edict = id;
+    w.taxLevels = { 1: level, 2: level, 3: 'normal', 4: 'normal' };
+    supplyProducers(w, house);
+    full(house, 1, 1);
+    house.house!.satisfiedSince = 2000;
+    const reached: number[] = [];
+    let tier = 1;
+    for (let i = 0; i < 1300 && !(tier === 4 && house.house!.inhabitants === 20); i++) {
+      if (tier < 4) expect(upgradeDeficit(w, house)).toBeNull();
+      pop(w);
+      if (house.house!.tier !== tier) {
+        tier = house.house!.tier;
+        reached.push(w.tick - 2000);
+      }
+    }
+    expect(house.house!.inhabitants).toBe(20);
+    expect(reached).toEqual(expected.slice(0, 3));
+    expect(w.tick - 2000).toBe(expected[3]);
   });
 });
