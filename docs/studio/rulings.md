@@ -4310,3 +4310,18 @@ Regelbezug: STUDIO.md Z. 46/67 (Arbeiter, Controller-Übergabe), ADR-007, R394, 
 zurück.
 
 Entscheider: L0 · Anlass: Release-Retro REL-14 · ADR: —
+
+## R439 · 2026-10-10 · TOOL-BUENDEL-2: Umfang und Plan
+
+Ruling: Ein Werkzeug-Paket bündelt alle offenen Werkzeug-Punkte, damit Plan und Gate nur einmal anfallen (Steuerung rot,
+R433): **TOOL-E049-PHASE** (R433 V2: Bereinigung nach Freigabephase `plan-*`/`design-*`/`gate-*`), **zeitreserve nur
+loadStart** inkl. Kopfkommentar `check.ts` (R438 V3), **`metrics.py --since`** (R438 V4 a) und die Beobachtungen
+`docs/beobachtungen.md` Z. 218–270: studio-lint rot, `paths.py`-Kommentar, Probe-Event `commit_rejected`, Ampelzeile
+bereinigter Steuerungsanteil, `metrics.py --session latest` im Worktree, Hook ohne `python3`, Schein-Session «manual»,
+Testlücke `ps`-Fehler, Ampelzeile Persona-Starts, haiku-Zeile der Modelltabelle. Plan `lead-tech` (opus, Tech-Lead beim
+Plan) jetzt parallel zum REL-15-Kandidaten (nur lesen), danach Gate Plan durch `lead-qa` allein (Folgeplan auf
+TOOL-BUENDEL, R233 V2; Ownership/Budget prüft L0). Punkte, die mehr als S sind, darf der Plan begründet auslagern.
+
+Regelbezug: gates.md Gate Plan (Folgeplan R233 V2); R433, R438 · Kosten bei Irrtum: ein Paket wird aufgeteilt.
+
+Entscheider: L0 · Anlass: Retros R433/R438, Beobachtungen · ADR: —
