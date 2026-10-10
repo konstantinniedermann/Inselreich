@@ -163,7 +163,7 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
 
 ### 2026-10-10 · TOOL-BUENDEL-3 (R457): Restpunkt Flake-Matching
 
-- **Fundort:** Flake-Matching im Testlauf-Wrapper (`tools/studio/testrun.py`). Beobachtung: Das Flake-Matching erfasst ungetrackte Dateien nicht; bei Sammelfehlern bleibt `names` leer. Zurückgestellt, TOOL-BUENDEL-4 hat es nicht umgesetzt. Die übrigen Punkte (Uhr, `TickingClock`, Ctrl-C-Exit, private Helfer, ADR-014-Modus) sind in TOOL-BUENDEL-4 erledigt; die Plan-Grenze für `clock.py` war ein Planfehler (Grenze war Planfehler, geschlossen). Ursprung: Controller 2 / Final-Review TOOL-BUENDEL-3. Einschätzung: niedrig, Kandidat für ein späteres Werkzeug-Bündel.
+- **Fundort:** Flake-Matching im Testlauf-Wrapper (`tools/studio/testrun.py`). Beobachtung: Bei Sammelfehlern (Import-/Ladefehler vor dem ersten Test) bleibt `names` leer. Ungetrackte Dateien fliessen seit TOOL-BUENDEL-5 in die Diff-Prüfsumme ein. Zurückgestellt, bewusst nicht Teil von TOOL-BUENDEL-5. Die übrigen Punkte (Uhr, `TickingClock`, Ctrl-C-Exit, private Helfer, ADR-014-Modus) sind in TOOL-BUENDEL-4 erledigt; die Plan-Grenze für `clock.py` war ein Planfehler (Grenze war Planfehler, geschlossen). Ursprung: Controller 2 / Final-Review TOOL-BUENDEL-3. Einschätzung: niedrig, Kandidat für ein späteres Werkzeug-Bündel.
 
 ### 2026-10-10 · REL-17 (R458): niedrige Befunde aus Review und Playtest
 
@@ -176,18 +176,6 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
 ### 2026-10-10 · M13-E1 (T14): Befunde des Browser-Laufs
 
 - **Fundort:** `.studio/qa/m13-e1/`, `src/ui/edictView.ts:51`, Kontor-Spaltenkopf «Kaufen», `--parchment-muted`, Seitenbreite bei 800 px. Beobachtung: (1) Spec-Widerspruch AK-M13E1-36 («Klick auf Handel → Meldung») gegen U-4/§Karten (`disabled` in der Sperre, Info nur als Sperrzeile und Tooltip); Umsetzung folgt dem Entwurf, an lead-design: AK-36 anpassen oder Meldung nachrüsten. (2) Kontor: «Kaufen» und «Edikt Handel: −20 %» im Spaltenkopf ohne Trenner (liest sich «KAUFENEDIKT»), niedrig. (3) «lohnt, wenn …» mit geringem Kontrast (`--parchment-muted`), niedrig. (4) Stillgelegter Betrieb zeigt weiter «Ausstoss 15 / min» (nominal), niedrig. (5) Unterhalt stillgelegt 30 → 18 pro Minute (60 %, Aufrunden nach Anhang 01), README sagt «halber Unterhalt»; Wortlaut prüfen. (6) Bei 800×600 scrollt die Seite waagrecht (Mindestbreite ≈ 880 px), nicht von M13-E1 verursacht. (7) `border-style: dashed` bei `.edict-card.locked` stört nicht, behalten. Ursprung: M13-E1 T14. Einschätzung: keine Blocker.
-
-### 2026-10-10 · TOOL-BUENDEL-4: `build_state` kostet ≈ 2,7 s bei 67k Events
-
-- **Fundort:** `tools/studio/model.py` `build_state` (budget_view/claim_budgets 2,7 s, `sorted` 2,1 s unter dem Profiler, 67k Ereignisse). Beobachtung: Der Server drosselt den Wiederaufbau deshalb auf das 30-Fache der Aufbaudauer (max. 90 s); das Dashboard kann bis ≈ 80 s veraltet sein. Ursprung: TOOL-BUENDEL-4 (Umsetzer A, T01). Erste Einschätzung: mittel; eine Optimierung in `model.py` (inkrementell oder ohne wiederholtes Sortieren) machte die Drosselung überflüssig.
-
-### 2026-10-10 · TOOL-BUENDEL-4: `testrun` sendet nur SIGTERM, Ctrl-C ohne Ereignis
-
-- **Fundort:** `tools/studio/testrun.py` (`proc.terminate()`). Beobachtung: Es sendet nur SIGTERM; ein Kind, das es ignoriert, blockiert den Abbruch. Ctrl-C schreibt kein Ereignis. Ursprung: TOOL-BUENDEL-4 (Umsetzer A, T05). Erste Einschätzung: niedrig; Eskalation auf SIGKILL nach Frist und ein Abbruch-Ereignis wären klein.
-
-### 2026-10-10 · TOOL-BUENDEL-4: `start.sh` meldet «läuft bereits» für jeden HTTP-Server am Port
-
-- **Fundort:** `tools/studio/start.sh`. Beobachtung: Jeder HTTP-Server, der am Port antwortet, gilt als laufendes Dashboard (auch ein fremder). Ursprung: TOOL-BUENDEL-4 (Umsetzer A, T02). Erste Einschätzung: niedrig; die Antwort auf eine Studio-Kennung (z. B. `/api/state`-Schlüssel) prüfen.
 
 ### 2026-10-10 · TOOL-BUENDEL-4: Worktree-`start.sh` ohne `STUDIO_HOME` greift auf `.studio` des Hauptrepos zu
 
@@ -205,10 +193,6 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
 
 - **Fundort:** `src/ui/goodFocus.ts:90`, `tests/ui/goodFocus.test.ts` (AK-GC-08), `src/ui/goodFocus.ts` `focusList` und `src/render/focusMarks.ts`. Beobachtung: (1) `toggleStartsJump` wird nur im Test benutzt (toter Export). (2) Der Test «Problem-Cursor unberührt» legt den Problem-Cursor je Aufruf neu an und belegt die Trennung in `app.ts` nur durch den Aufbau. (3) Die Regel, welche Gebäude zum Fokus gehören (Erzeuger/Verbraucher), steht zweimal: in `focusList` und in `drawFocusMarks` (Modulgrenze render ↛ ui); ein gemeinsamer Helfer in `src/render/` oder `src/sim/queries` wäre denkbar. (README-Beispiel «Häuser verbrauchen Holz» → «Nahrung» wurde als Trivial-Fix korrigiert.) Ursprung: Branch-Review T09. Einschätzung: alle niedrig.
 
-### 2026-10-10 · Board-Titel durch `log.py package` überschrieben
-
-- **Fundort:** Retro Studio-Session 5a00a316 B3 (d). Beobachtung: `log.py package` mit Platzhalter-Titel überschrieb den Titel eines bestehenden Pakets auf dem Board; L0 korrigierte sofort. Ursprung: Studio-Session 5a00a316. Einschätzung: Einzelfall; Werkzeugkandidat «Titel nur setzen, wenn das Paket neu ist oder `--title` explizit steht», Paket erst bei zweitem Fall.
-
 ### 2026-10-10 · Verkaufssättigung erholt sich schnell: Dauerverkauf Holz fast zum Vollpreis
 
 - **Fundort:** `src/sim/defs/` (Sättigung, Erholung 60 Punkte/min), Ideen-Runde IDEEN-06. Beobachtung: Dauerverkauf von Holz
@@ -219,3 +203,11 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
 ### 2026-10-10 · Weitere Beschleunigung von build_state als Werkzeug-Kandidat
 
 - **Fundort:** `tools/studio/model.py` (`_Builder.apply`, `result`: `_collapse_feed`, `layouts`, `budget_view`, `effort.incidents`). Beobachtung: Nach T01 braucht `build_state` bei 69k Events rund 1,3 s (vorher 3,6 s); `apply` etwa 0,8 s, `result` etwa 0,65 s, beide ohne einzelne Spitze. Ursprung: TOOL-BUENDEL-5 T01 (R482: 1,3 s akzeptiert). Einschätzung: niedrig; Kandidaten wären inkrementelles Fortschreiben des Stands statt Neuaufbau je Abruf und weniger `dict.get` in `touch`/`add_feed`; erst bei spürbarem Verzug im Dashboard angehen.
+
+### 2026-10-10 · TOOL-BUENDEL-5 (Review): Lead mit Paket bindet Freigabe nicht nach Präfix
+
+- **Fundort:** `tools/studio/model.py` (`claim_budgets`, `_grant_names`). Beobachtung: Ein Lead mit Paket `X-T01` bindet die Freigabe der Phase `X` nicht (Beispiel ac8af81e gegen a0e93925: Kosten des Controllers fehlen in der Phase M13-E1 der Metriken). Eine Regel «Präfix mit Trennzeichen als Zweitrang» wäre neues Verhalten. Ursprung: TOOL-BUENDEL-5, Review T02. Einschätzung: niedrig; Kandidat für ein späteres Werkzeug-Bündel, vorher als Regel entscheiden (L0).
+
+### 2026-10-10 · TOOL-BUENDEL-5 (Review): `lead_phases`/`budget_key` verlassen sich auf die Reihenfolge in `result`
+
+- **Fundort:** `tools/studio/model.py` (`lead_phases()`, `budget_key`). Beobachtung: Beide lesen `self.claims` und setzen voraus, dass `budget_view` in `result` zuerst läuft. Ein Aufruf von `claim_budgets()` am Anfang von `lead_phases()` wäre eine billige Absicherung. Ursprung: TOOL-BUENDEL-5, Review T01/T02. Einschätzung: niedrig; heute kein Fehler.
