@@ -4881,3 +4881,16 @@ Regelbezug: gates.md Gate Merge Release; STUDIO.md Stufe leicht Schritt 7, R335,
 nach dem Push.
 
 Entscheider: L0 · Anlass: Session-Start, Fortsetzung state.md Punkt 0 · ADR: —
+
+## R473 · 2026-10-10 · Handbuch 1.45 (R471 V1–V3) abgenommen; fällige Retros quittiert
+
+Ruling: `studio-coach` hat R471 umgesetzt (`e5563696`, Handbuch 1.45): Phasenpräfix `plan-`/`design-`/`gate-` in
+Freigaben, Pflichtzeile „Rulings schreibt nur L0“ in Briefing und Plan-Format, E-038 abgeschlossen (behalten), E-057
+läuft. Fällige Retros `budget:lead-qa:release-check-REL-14` und `ampel:steuerung:S-2026-10-10-2cfa57e0` sind durch Retro
+c64c0775-b B1/R440 bzw. 5a00a316 B2/R471 abgedeckt und quittiert (`a7906e29`). Abgenommen. Der rote Wert
+Actions-Minuten (970, rot ab 400) geht als Pflichtpunkt in die Prozess-Aussensicht nach REL-18; der Persona-Satz für
+E-057 in `.claude/agents/lead-*.md` folgt nur, wenn die Briefing-Zeile die Schwelle verfehlt.
+
+Regelbezug: STUDIO.md Verbesserungsschleife, R316, R471 · Kosten bei Irrtum: eine Vorlagenzeile zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach retro-r471-umsetzung · ADR: —
