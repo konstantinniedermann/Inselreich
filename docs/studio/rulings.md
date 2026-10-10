@@ -5158,3 +5158,16 @@ M13-E2-SIM und I-048 kein Release liegt (Plan prüft beim Start, L0 im Merge-Gat
 Regelbezug: gates.md Gate Spec, R487, R489 · Kosten bei Irrtum: Denkmal in Hochpreisphasen günstiger als Normalkauf.
 
 Entscheider: L0 · Anlass: Gate-Urteile Spec I-048 · ADR: —
+
+## R491 · 2026-10-10 · Gate Merge AUFRAEUM-01: OK, lokaler Merge
+
+Ruling: `chore/aufraeum-01` @ `273be889` (T01–T04, Task-Reviews OK, Final-Review opus OK, `make check` Exit 0 auf
+`9e5ff43d` mit 3072 Tests, danach nur Doku mit `docs-check` Exit 0; 9 von 12 Starts) ist release-reif. Nit `feat:`-Präfix
+in `36de27ec` bleibt (kein Rebase). Merge lokal durch `production-integrator` im Worktree `.worktrees/integrate` mit
+`git merge --no-ff`, `make check` (TOOL-TESTLOCK beachten), danach Hauptcheckout `git pull --ff-only` bzw. ff-Merge;
+kein Push (R335, nächster Push mit weiteren Häppchen). Damit ist die Reihenfolge AUFRAEUM-01 vor M13-E2-SIM (R485)
+erfüllt.
+
+Regelbezug: gates.md Gate Merge Release (Stufe leicht), R485 · Kosten bei Irrtum: ein Revert-Commit.
+
+Entscheider: L0 · Anlass: Bericht Controller AUFRAEUM-01 · ADR: —
