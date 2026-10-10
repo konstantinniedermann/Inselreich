@@ -4565,3 +4565,18 @@ lokalen Merge von REL-16 (`blocked-by`, `src/ui/app.ts`).
 Regelbezug: gates.md Kombiniertes Gate (Stufe leicht); R449 · Kosten bei Irrtum: Nacharbeit im Strang vor dem Kandidaten.
 
 Entscheider: L0 · Anlass: Urteil lead-qa GATE-PLAN-REL17 · ADR: —
+
+## R454 · 2026-10-10 · Gate Merge Release REL-16: OK
+
+Ruling: **OK** für `fix/rel-16-ui` @ `b9476044` (T01–T03). Final-Review opus OK, Browser-Lauf T04 vollständig (1280×720,
+1920×1080, Seed 7, 12 Screenshots unter `.studio/qa/REL-16/`, Leck-Probe bestanden, Smoke und Konsole sauber), alle
+AK-R16-01…10 belegt; Sim-Diff leer; `make check` grün (Controller, Load 2,4). Bedenken B1–B4 niedrig, nicht blockierend:
+**B1** entschieden „Gebäude vor Weg“ im Mischfall; B1–B3 und zwei render-qa-Punkte als Beobachtungen eingetragen; B4
+Mutationsproben ersetzen die fehlenden Rot-Belege. Merge lokal durch `production-integrator` (`--no-ff`, `make check`),
+Worktree danach entfernen; **Push mit der nächsten Studio-Session** (R335), zusammen mit HOTFIX-CI-01. Danach startet
+REL-17 (R453). Release-Notiz wie im Bericht (Neu: Bauschild nennt den Grund; Bitte testen: Bergfuss, Küste, über Häusern
+und Wegen; Inselmenü nach „Neue Insel“).
+
+Regelbezug: gates.md Gate Merge Release (Ein-Paket-Release, R429); R451 · Kosten bei Irrtum: Revert-Merge vor dem Push.
+
+Entscheider: L0 · Anlass: Urteil lead-qa REL-16 · ADR: —
