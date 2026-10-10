@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { PALETTE } from '../../src/render/palette';
 import { describe, expect, it } from 'vitest';
 
 const css = readFileSync('src/style.css', 'utf8');
@@ -57,7 +58,7 @@ describe('UI-Kontrast (AK-U2-02)', () => {
   });
 
   it('Grafik-Kontrast ≥ 3 : 1: Chip-Rahmen (Gut-Fokus) auf der Leiste', () => {
-    expect(contrast('#00c8ff', vars['--wood']!)).toBeGreaterThanOrEqual(3);
+    expect(contrast(PALETTE.signalFocus, vars['--wood']!)).toBeGreaterThanOrEqual(3);
   });
 
   it('Boom-Marke bleibt mit hidden verborgen', () => {

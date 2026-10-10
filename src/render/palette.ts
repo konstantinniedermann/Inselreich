@@ -42,13 +42,10 @@ export type PaletteName = keyof typeof PALETTE;
 /** Schlagschatten (Spec 4.2, `shadow`); kein Hex, deshalb nicht in `PALETTE`. */
 export const SHADOW = 'rgba(20,35,20,0.35)';
 
-export const SIGNAL_NAMES = [
-  'signalRed',
-  'signalYellow',
-  'signalWarn',
-  'signalOk',
-  'signalFocus',
-] as const;
+// `signalFocus` (Gut-Fokus, Cyan) steht bewusst NICHT in SIGNAL_NAMES: die Bestandstests verlangen dort ΔE ≥ 20
+// zu Tieren und Gelände (massif-l6: FALL_BAND 19,4; wildlife: Delfine 17,9). Stattdessen sichert
+// tests/render/focusColor.test.ts eine eigene Mindestdistanz zu Wasser-, Land-, Hüllen- und Sprite-Farben.
+export const SIGNAL_NAMES = ['signalRed', 'signalYellow', 'signalWarn', 'signalOk'] as const;
 export const SURFACE_NAMES = [
   'waterDeep',
   'waterMid',

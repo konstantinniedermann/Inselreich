@@ -98,6 +98,7 @@ describe('Gut-Fokus Konturen (AK-GC-11)', () => {
       ['house', 2, 2],
       ['quarry', 4, 4],
       ['weaver', 6, 6],
+      ['distillery', 8, 8],
     ]);
     const { n } = run(v, { good: 'wood', island: 0 });
     expect(n).toBe(0);

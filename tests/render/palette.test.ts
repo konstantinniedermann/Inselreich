@@ -147,8 +147,8 @@ describe('H-R10 AK-d Helfer für Licht und Schatten (additiv)', () => {
 });
 
 describe('Gut-Fokus Farbe (R462 B3)', () => {
-  it('signalFocus ist Signalfarbe und gleich dem Chip-Rahmen in style.css', () => {
-    expect(SIGNAL_NAMES).toContain('signalFocus');
+  it('signalFocus (eigene Abgrenzung in focusColor.test.ts) ist gleich dem Chip-Rahmen in style.css', () => {
+    expect(SIGNAL_NAMES).not.toContain('signalFocus');
     const css = readFileSync('src/style.css', 'utf8');
     const m =
       /\.chip\[aria-pressed=['"]true['"]\]\s*\{[^}]*?border-color:\s*(#[0-9a-fA-F]{6})/.exec(css);
