@@ -144,6 +144,37 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(metrics._cost_delta({"a": 5}, None), {"a": 5})
         self.assertIsNone(metrics._cost_delta(None, {"a": 1}))
 
+    def test_efficiency_shows_flake_suspect(self):
+        eff.write(
+            self.transcripts / "s1.jsonl",
+            [eff.assistant("m1", "claude-opus-4", out=10)],
+        )
+        base = {"suite": "studio", "commit": "abc1234", "diff": ""}
+        write_events(
+            self.home,
+            [
+                *scenario(),
+                {
+                    **ev("test_failed", 1, source="make", names=["K.test_a"], **base),
+                },
+                ev("test_passed", 2, source="make", **base),
+            ],
+        )
+        with mock.patch.object(metrics.actions, "render", return_value=""):
+            code, out = self.run_cli("--efficiency")
+        self.assertEqual(code, 0)
+        self.assertIn("Flake-Verdacht: K.test_a", out)
+
+    def test_efficiency_flake_not_measured_without_test_events(self):
+        eff.write(
+            self.transcripts / "s1.jsonl",
+            [eff.assistant("m1", "claude-opus-4", out=10)],
+        )
+        with mock.patch.object(metrics.actions, "render", return_value=""):
+            code, out = self.run_cli("--efficiency")
+        flake = next(x for x in out.splitlines() if "Flake-Verdacht)" in x)
+        self.assertIn("nicht gemessen", flake)
+
     def test_since_invalid_exit_2(self):
         err = io.StringIO()
         with contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as cm:

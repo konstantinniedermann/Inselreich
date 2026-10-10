@@ -778,3 +778,86 @@ class SinceTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_event(kind, ts, names=(), suite="studio", commit="abc1234", diff=""):
+    event = {"kind": kind, "ts": ts, "suite": suite, "commit": commit, "diff": diff}
+    if kind == "test_failed":
+        event["names"] = list(names)
+    return event
+
+
+class FlakeTest(Fixture):
+    T1, T2, T3 = "2026-10-10T08:00:00Z", "2026-10-10T08:05:00Z", "2026-10-10T08:10:00Z"
+
+    def test_flake_suspects_same_state_later_green(self):
+        events = [
+            test_event("test_failed", self.T1, ["B.test_b", "A.test_a"]),
+            test_event("test_passed", self.T2),
+        ]
+        self.assertEqual(efficiency.flake_suspects(events), ["A.test_a", "B.test_b"])
+
+    def test_flake_needs_same_diff(self):
+        events = [
+            test_event("test_failed", self.T1, ["A.test_a"], diff="aaaaaaaaaaaa"),
+            test_event("test_passed", self.T2, diff="bbbbbbbbbbbb"),
+        ]
+        self.assertEqual(efficiency.flake_suspects(events), [])
+
+    def test_flake_needs_same_suite_and_commit(self):
+        events = [
+            test_event("test_failed", self.T1, ["A.test_a"]),
+            test_event("test_passed", self.T2, suite="vitest"),
+            test_event("test_passed", self.T3, commit="def5678"),
+        ]
+        self.assertEqual(efficiency.flake_suspects(events), [])
+
+    def test_flake_green_before_red_not_counted(self):
+        events = [
+            test_event("test_passed", self.T1),
+            test_event("test_failed", self.T2, ["A.test_a"]),
+        ]
+        self.assertEqual(efficiency.flake_suspects(events), [])
+
+    def test_flake_names_without_duplicates(self):
+        events = [
+            test_event("test_failed", self.T1, ["A.test_a"]),
+            test_event("test_failed", self.T2, ["A.test_a"]),
+            test_event("test_passed", self.T3),
+        ]
+        self.assertEqual(efficiency.flake_suspects(events), ["A.test_a"])
+
+    def lights(self, flakes):
+        data = {**self.data, "flakes": flakes}
+        return efficiency.render_section(data).splitlines()
+
+    def test_lights_flake_not_measured_without_events(self):
+        line = next(x for x in self.lights(None) if "Flake-Verdacht" in x)
+        self.assertIn("nicht gemessen", line)
+        self.assertNotIn("Flake-Verdacht:", line)
+
+    def test_lights_flake_yellow_and_names(self):
+        lines = self.lights(["A.test_a"])
+        index = next(i for i, x in enumerate(lines) if "Flake-Verdacht)" in x)
+        self.assertTrue(lines[index].startswith("- GELB:"))
+        self.assertIn("gelb ≥ 1, rot ≥ 3", lines[index])
+        self.assertEqual(lines[index + 1], "  - Flake-Verdacht: A.test_a")
+
+    def test_lights_flake_green_with_zero(self):
+        lines = self.lights([])
+        line = next(x for x in lines if "Flake-Verdacht)" in x)
+        self.assertTrue(line.startswith("- GRÜN:"))
+
+    def test_lights_flake_red_and_name_limit(self):
+        names = [f"K.test_{i:02d}" for i in range(12)]
+        lines = self.lights(names)
+        index = next(i for i, x in enumerate(lines) if "Flake-Verdacht)" in x)
+        self.assertTrue(lines[index].startswith("- ROT:"))
+        self.assertIn("K.test_09", lines[index + 1])
+        self.assertNotIn("K.test_10", lines[index + 1])
+
+    def test_lights_without_flakes_key_is_not_measured(self):
+        data = {k: v for k, v in self.data.items() if k != "flakes"}
+        lines = efficiency.render_section(data).splitlines()
+        line = next(x for x in lines if "Flake-Verdacht)" in x)
+        self.assertIn("nicht gemessen", line)

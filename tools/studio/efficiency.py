@@ -45,6 +45,7 @@ THRESHOLDS = {
     "opus": {"gelb": 0.60, "rot": 0.80, "op": ">"},
     "persona_opus": {"gelb": 1, "rot": 5, "op": ">="},
     "largest_read": {"gelb": 40, "rot": 100, "op": ">"},  # KB (1 KB = 1024 Zeichen)
+    "flake": {"gelb": 1, "rot": 3, "op": ">="},  # Testnamen mit Flake-Verdacht
 }
 
 # Anzeigename je Ampelzeile: einzige Quelle für `_lights` und die Vorfall-Zuordnung
@@ -57,7 +58,9 @@ LIGHT_LABELS = {
     "opus": "opus-Anteil",
     "persona_opus": "Persona-Starts als general-purpose auf opus (Instanzen)",
     "largest_read": "Grösste gelesene Datei",
+    "flake": "Tests rot, beim gleichen Stand später grün (Flake-Verdacht)",
 }
+MAX_FLAKE_NAMES = 10
 LABEL_KEYS = {label: key for key, label in LIGHT_LABELS.items()}
 
 CLASSES = (
@@ -677,6 +680,33 @@ def _roles(instances: list[dict]) -> list[dict]:
     return sorted(rows, key=lambda r: -r["cost"])
 
 
+def _event_time(event: dict) -> float:
+    try:
+        return datetime.fromisoformat(str(event.get("ts"))).timestamp()
+    except ValueError:
+        return 0.0
+
+
+def _test_state(event: dict) -> tuple:
+    return (event.get("suite"), event.get("commit"), event.get("diff"))
+
+
+def flake_suspects(events: list[dict]) -> list[str]:
+    """Testnamen, die rot waren und beim gleichen Stand (Suite, Commit, Diff) später grün."""
+    ordered = sorted(
+        (e for e in events if e.get("kind") in ("test_failed", "test_passed")),
+        key=_event_time,
+    )
+    red: dict[tuple, set[str]] = {}
+    suspects: set[str] = set()
+    for event in ordered:
+        if event["kind"] == "test_failed":
+            red.setdefault(_test_state(event), set()).update(event.get("names") or [])
+        else:
+            suspects |= red.pop(_test_state(event), set())
+    return sorted(suspects)
+
+
 def ampel(key: str, value: float | None) -> str:
     if value is None:
         return NOT_MEASURED
@@ -711,6 +741,7 @@ def _table(head: list[str], rows: list[list[str]]) -> list[str]:
 
 def _lights(data: dict) -> list[str]:
     top = data["top_reads"][0]["chars"] / KB if data["top_reads"] else None
+    flakes = data.get("flakes")
     t = THRESHOLDS
     entries = [
         (
@@ -761,12 +792,20 @@ def _lights(data: dict) -> list[str]:
             NOT_MEASURED if top is None else f"{top:.1f} KB",
             f"gelb > {t['largest_read']['gelb']} KB, rot > {t['largest_read']['rot']} KB",
         ),
+        (
+            LIGHT_LABELS["flake"],
+            "flake",
+            NOT_MEASURED if flakes is None else str(len(flakes)),
+            f"gelb ≥ {t['flake']['gelb']}, rot ≥ {t['flake']['rot']}",
+        ),
     ]
-    values = {"largest_read": top}
+    values = {"largest_read": top, "flake": None if flakes is None else len(flakes)}
     out = []
     for label, key, shown, rule in entries:
         value = values[key] if key in values else _raw_value(data, key)
         out.append(f"- {ampel(key, value).upper()}: {label}: {shown} ({rule})")
+        if key == "flake" and flakes:
+            out.append(f"  - Flake-Verdacht: {', '.join(flakes[:MAX_FLAKE_NAMES])}")
     return out
 
 
