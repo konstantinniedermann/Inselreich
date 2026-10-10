@@ -53,6 +53,14 @@ import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../
 import { cameraBounds, islandView } from '../render/archipel';
 import { activeIsland, islandRects } from './activeIsland';
 import { jumpTarget, nextIsland } from './islandJump';
+import {
+  runFocusStep,
+  runFocusToggle,
+  shouldClearFocus,
+  stepKeyTarget,
+  type FocusDeps,
+  type FocusState,
+} from './goodFocus';
 import { cutOffIds, newlyCut, runProblemJump, type ProblemCursor } from './problems';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
@@ -451,10 +459,35 @@ function launch(
       dir,
     );
 
+  /** Gut-Fokus (I-043): Zustand nur in der Closure, nie im Spielstand. Neue Insel/Laden starten über `restart` eine frische Closure. */
+  let goodFocus: FocusState = null;
+  let focusCursor: ProblemCursor | null = null;
+  const clearGoodFocus = (): void => {
+    goodFocus = null;
+    focusCursor = null;
+  };
+  const focusDeps: FocusDeps = {
+    world,
+    activeIsland: () => state.activeIsland,
+    getFocus: () => goodFocus,
+    setFocus: (f) => {
+      goodFocus = f;
+    },
+    getCursor: () => focusCursor,
+    setCursor: (c) => {
+      focusCursor = c;
+    },
+    cancelPointerAction: () => input?.cancelPointerAction(),
+    centerOn: (x, y) => centerOn(state.cam, x, y, clampView(), bounds),
+    openPanel: (id) => setPanel({ kind: 'inspect', id }), // kein selectTool
+    refresh: () => refresh(),
+    message: (t) => replaceMessage('gut', t),
+  };
+
   const actions: HudActions = {
     jumpToIsland,
-    toggleGoodFocus: () => {}, // Platzhalter, T06 ersetzt
-    focusedGood: () => null,
+    toggleGoodFocus: (good) => runFocusToggle(focusDeps, good),
+    focusedGood: () => goodFocus?.good ?? null,
     setSpeed: (speed) => setSpeed(speed),
     settings: () => settings,
     setMuted: (muted) => {
@@ -716,6 +749,7 @@ function launch(
       state.activeIsland = active;
       renderBuildMenu(navEl, state, selectTool, toggleCategory);
     }
+    if (shouldClearFocus(goodFocus, active)) clearGoodFocus();
     const goal = goalBanners(state, world);
     applyGoalShown(state, goal.shown);
     for (const text of goal.texts) showMessage(text, 'info', true, true);
@@ -838,9 +872,11 @@ function launch(
     } else if (h.kind === 'islandCycle') {
       jumpToIsland(nextIsland(state.activeIsland, world.islands.length));
     } else if (h.kind === 'problemNext') {
-      jumpToProblem(1);
+      if (stepKeyTarget(goodFocus) === 'focus') runFocusStep(focusDeps, 1);
+      else jumpToProblem(1);
     } else if (h.kind === 'problemPrev') {
-      jumpToProblem(-1);
+      if (stepKeyTarget(goodFocus) === 'focus') runFocusStep(focusDeps, -1);
+      else jumpToProblem(-1);
     } else if (h.kind === 'pause') {
       setSpeed(afterPause(state.speed, lastSpeed).speed);
     }
@@ -885,6 +921,7 @@ function launch(
       return;
     }
     if (a.type === 'cancel') {
+      clearGoodFocus();
       if (closeClosableToast()) return;
       setPanel({ kind: 'none' });
       selectTool({ kind: 'select' });
@@ -1353,6 +1390,7 @@ function launch(
         fire: previewFire ?? inputs.render.fire,
         boom: preview.boom ?? inputs.render.boom,
         raster: preview.raster === true,
+        focus: goodFocus,
       };
       render(ctx, world, state.cam, layers, state.hover, state.selectedId, view, fx);
       if (connectPreview) drawPathPreview(ctx, state.cam, connectPreview);
