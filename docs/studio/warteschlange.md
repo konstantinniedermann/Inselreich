@@ -133,3 +133,13 @@ schliesst den Eintrag.
 - Blockiert: Pages-Deploy künftiger Releases, CI-Erfassung (ci.py)
 - Von: l0
 - Antwort: Nutzer 2026-10-08: einschalten mit den drei Sparregeln (paths-ignore Doku, Pages nur manuell beim Release, CI cancel-in-progress); R334
+
+## N-99 · offen · 2026-10-10 · Kenntnis: zweiter Push im selben Claude-Gespräch (R434)
+
+- Frage: Zur Kenntnis: Nach abgeschlossener Ende-Routine zählt 'mach weiter' im selben Claude-Gespräch als neue Studio-Session mit eigenem Push (R434). Einverstanden?
+- Empfehlung: Ja, belassen; künftig empfiehlt die Ende-Routine ein neues Claude-Gespräch (R438 V4 b)
+- Begründung: REL-14 war 14 min nach 'mach weiter' live; Risiko für die Push-Sparregel R335 gering
+- Kosten des Wartens: keine; ohne Antwort gilt R434 weiter
+- Blockiert: nichts
+- Von: l0
+- Antwort: –
