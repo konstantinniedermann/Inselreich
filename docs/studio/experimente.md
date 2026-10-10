@@ -16,7 +16,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
 Reihenfolge der Wartenden auf einen freien Platz (R375): E-038 (frühestens 2026-10-22), E-048,
-E-050, E-049, E-044; E-054 (Plan-Modell, Retro c64c0775 V1) hinter E-044; E-055 (Budget-Warnung, Retro c64c0775-b V1) danach.
+E-050, E-049, E-044; E-054 (Plan-Modell, Retro c64c0775 V1) hinter E-044; E-055 (Budget-Warnung, Retro c64c0775-b V1) danach; E-056 und E-057 (Retro 2cfa57e0 V1, V3) zuletzt; E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 ---
 
@@ -526,3 +526,33 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R443, Gate Merge TOOL-BUENDEL-3
 - Start: mit Merge
 - Bewertung: –
+
+## E-056 · vorgeschlagen (wartet auf Platz) · Beobachtungs-Einträge erst im letzten Commit nach `git merge main`
+
+- Hypothese: Wenn Stränge ihre Einträge in `docs/beobachtungen.md` erst als letzten Commit vor „bereit“ und nach `git merge main` schreiben, entstehen bei der Konfliktprobe keine Konflikte in dieser Datei (Retro [session-2cfa57e0-ende](retros/2026-10-10-session-2cfa57e0-ende.md) B3; R458).
+- Messgrösse: 0 Konflikte in `docs/beobachtungen.md` bei `git merge-tree` in 3 Merges, die die Datei berühren (Ausgang 3 Fälle, zuletzt R458); Gegenprobe: 0 verlorene Einträge.
+- Messbarkeit: Konfliktprobe und Diff der Datei bleiben unverändert lesbar.
+- Zeitraum: 3 Merges, höchstens bis 2026-11-19.
+- Rückfall: Pflichtzeile streichen; Eigentümer löst Konflikte wie bisher (R303, E-031).
+- Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/lead-tech.md` (nur nach Ruling)
+- Ruling: –
+
+## E-057 · vorgeschlagen (wartet auf Platz) · Grosse Dateien gezielt lesen
+
+- Hypothese: Wenn Briefings für Dateien über 30 KB (README, `docs/ideen.md`, Specs, Pläne) den benötigten Abschnitt oder Zeilenbereich nennen und Teillesen (`offset`/`limit`) vorschreiben, sinken die Lese-Ergebnisse über 30 KB und mit ihnen der Cache-Write-Anteil (Retro [session-2cfa57e0-ende](retros/2026-10-10-session-2cfa57e0-ende.md) Ampel; Pflichthebel R316).
+- Messgrösse: Lese-Ergebnisse > 30 KB je Session ≤ 2 (Ausgang 4) und Cache-Write-5-min-Anteil der Session ≤ 18 % (Ausgang 20,2 %) über 3 Sessions; Gegenprobe: Review-Runden im Mittel ≤ 1,5, Erstabnahme ≥ 90 %.
+- Messbarkeit: Liste „Grösste Lese-Ergebnisse“ und Kostenart der Metrik-Datei bleiben unverändert.
+- Zeitraum: 3 Sessions, höchstens bis 2026-11-19.
+- Rückfall: Pflichtzeile und Persona-Satz streichen.
+- Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/lead-*.md` (nur nach Ruling)
+- Ruling: –
+
+## E-058 · vorgeschlagen (Vorlagenzeile, kein Platz) · Integrator-Briefing nennt beide Prüfbefehle
+
+- Hypothese: Wenn die Pflichtzeile „Integrator“ `make check` und `make check-ci-perf` mit Exit-Code im Bericht nennt und die Persona klarstellt, dass sie auch bei schweigendem Briefing gilt, läuft der Perf-Lauf in jedem Merge (Retro [session-2cfa57e0-ende](retros/2026-10-10-session-2cfa57e0-ende.md) B4).
+- Messgrösse: 3 von 3 Integrator-Merge-Berichten nennen `make check-ci-perf` mit Exit-Code (Ausgang 0 von 3); Gegenprobe: Merge-Dauer des Integrators ≤ 8 min.
+- Messbarkeit: Die Berichte im Archiv bleiben die Quelle, die Zählung ändert sich nicht.
+- Zeitraum: 3 Merges, höchstens bis 2026-11-19.
+- Rückfall: Zeile und Persona-Satz streichen.
+- Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/production-integrator.md` (nur nach Ruling)
+- Ruling: –
