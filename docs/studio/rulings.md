@@ -4247,3 +4247,20 @@ Regelbezug: STUDIO.md Push (R335), Session-Start und -Ende; R429 V1 · Kosten be
 ≈ 5, Pages ≈ 1); Rücknahme durch einen Handbuch-Minor.
 
 Entscheider: L0 · Anlass: Nutzer „mach weiter“ nach Session-Ende · ADR: —
+
+## R435 · 2026-10-10 · Kurzdesign REL-15 angenommen; Umfang REL-15
+
+Ruling: Kurzdesign `lead-design` (Selbstprüfung OK) angenommen. **UI-INSPEKTOR-ABHILFE:** `remedyText`
+(`src/ui/guide.ts`) beginnt für Wohnhäuser mit dem Verb, ohne Vorspann „X fehlt:“ („Baue Fischerhütte (F)“, „Baue mehr
+Fischerhütte oder kaufe Nahrung am Kontor“, „Baue Kapelle (K) in Reichweite“, „Kaufe Gewürz am Kontor oder gründe ein
+Kontor auf einer Gewürzinsel“); Mangel-Liste bleibt im Wortlaut R424. **UI-HOVER-SCHILD:** Erscheint die Hover-Karte,
+verschwindet das Cursor-Schild; Kachelwechsel, Ziehen, Werkzeugwechsel oder Dialog bringen es sofort zurück; Regel als
+reiner Helfer testbar. **Dienst-Mangel „fehlt in Reichweite“** in der Aufstiegsliste bleibt (Information „zu weit weg“;
+Trigger: Playtest verwechselt die Zustände) — Abhaken-Eintrag in `docs/beobachtungen.md`. **REL-15** = diese zwei
+Häppchen plus **UI-SEEKARTE-NACHZUG** (R422, BEOB-AUSW-03) und als Trivial-Fixes der veraltete Testtitel
+`tests/render/decorSea.test.ts:259` sowie die Hilfszeilen-Beobachtung als erledigt. Plan `lead-tech` (opus), danach
+kombiniertes Gate.
+
+Regelbezug: STUDIO.md Ablauf Stufe leicht; R78 Desktop-first · Kosten bei Irrtum: ein Häppchen zurück vor dem Push.
+
+Entscheider: L0 · Anlass: Kurzdesign lead-design · ADR: —
