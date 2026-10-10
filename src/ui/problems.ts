@@ -35,7 +35,7 @@ const isBurning = (b: Building): boolean => b.outageUntil !== undefined || b.sta
 const isCutOff = (b: Building): boolean =>
   needsConnection(b.defId) && !b.connected && b.paused !== true;
 
-function compareSort(a: ProblemSort, b: ProblemSort): number {
+export function compareSort(a: ProblemSort, b: ProblemSort): number {
   for (let i = 0; i < 4; i++) {
     const d = a[i]! - b[i]!;
     if (d !== 0) return d;
@@ -46,7 +46,7 @@ function compareSort(a: ProblemSort, b: ProblemSort): number {
 const joinNames = (names: readonly string[]): string =>
   names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} und ${names.at(-1)}`;
 
-function spot(world: World, b: Building): { x: number; y: number } {
+export function spot(world: World, b: Building): { x: number; y: number } {
   const isl = world.islands[b.island]!;
   const c = center(BUILDING_DEFS[b.defId], b.x, b.y);
   return { x: isl.ox + c.cx, y: isl.oy + c.cy };
