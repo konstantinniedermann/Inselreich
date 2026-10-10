@@ -52,8 +52,8 @@ studio-test: ## Tests der Studio-Werkzeuge (Python unittest); rot → Event test
 
 RUFF = uvx ruff@0.17.0
 
-studio-lint: ## Ruff über tools/studio (gepinnt, via uvx; vor Commits an tools/studio, nicht Teil von check)
-	$(RUFF) check tools/studio && $(RUFF) format --check tools/studio
+studio-lint: ## Ruff über tools/studio (gepinnt, via uvx; vor Commits an tools/studio, nicht Teil von check) und Warnung bei direktem Uhraufruf (R450 V2)
+	$(RUFF) check tools/studio && $(RUFF) format --check tools/studio && python3 tools/studio/clock.py --check tools/studio
 
 studio: ## Studio-Dashboard starten (gibt die URL aus)
 	@bash tools/studio/start.sh
