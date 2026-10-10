@@ -23,8 +23,8 @@ zeittests: ## ZEITTESTS (vite.config.ts) = genau die Tests mit Wandzeit-Aufruf (
 	  grep -qE 'performance\.now\(|Date\.now\(' "$$f" || { echo "ZEITTESTS-Eintrag ohne Wandzeit-Aufruf (vite.config.ts): $$f"; fail=1; }; \
 	done; exit $$fail
 
-test: ## Tests ausführen (Vitest; schreibt .studio/zeitreserve.json); studioweite Sperre + Load <= 8 (R375)
-	@node $(TESTLOCK) npm test
+test: ## Tests ausführen (Vitest; schreibt .studio/zeitreserve.json); studioweite Sperre + Load <= 8 (R375); rot → Event test_failed (R450 V1)
+	@python3 tools/studio/testrun.py --suite vitest --skip-exit 3 -- node $(TESTLOCK) npm test
 
 zeitreserve: ## CI-Reserve prüfen (lokal × 4, R270; und geschätzte Runner-Zeit lokal × 3, E-043); nach make test
 	node tools/zeitreserve/check.ts
@@ -47,8 +47,8 @@ format: ## Code formatieren (Prettier)
 build: ## Typprüfung + Produktions-Build
 	npm run build
 
-studio-test: ## Tests der Studio-Werkzeuge (Python unittest)
-	python3 -m unittest discover -s tools/studio/tests -t tools/studio
+studio-test: ## Tests der Studio-Werkzeuge (Python unittest); rot → Event test_failed (R450 V1)
+	python3 tools/studio/testrun.py --suite studio -- python3 -m unittest discover -s tools/studio/tests -t tools/studio
 
 RUFF = uvx ruff@0.17.0
 
