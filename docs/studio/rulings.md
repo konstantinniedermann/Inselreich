@@ -4384,3 +4384,18 @@ und ist der erste Kandidat für den nächsten freien Platz.
 Regelbezug: STUDIO.md Verbesserungsschleife (R316), §10.2 Verfassung · Kosten bei Irrtum: eine Ad-hoc-Retro nachholen.
 
 Entscheider: L0 · Anlass: Kurz-Retro, Ampel-Hinweis · ADR: —
+
+## R444 · 2026-10-10 · BEOB-AUSW-04 angenommen; Auswahl REL-16 und TOOL-BUENDEL-3
+
+Ruling: Auswertung `847f2fd4` angenommen (27 Einträge: 11 erledigt, 9 abgehakt, 7 Kandidaten S). (1) **REL-16 „Ruhiges
+Bauschild, sauberer Neustart“** = ein S-Paket UI-REL16 (lead-tech): Bau-/Weg-Werkzeug über einem Haus zeigt nicht mehr
+„Kein Bauland“ (`src/ui/hints.ts`, `src/sim/placement.ts`), `dispose` bricht die `document`-Listener des Inselmenüs ab
+(`islandMenuAbort`, `src/ui/hud.ts`). Ein-Paket-Release: Gate Merge und Release-Check in einem `lead-qa`-Start. (2)
+**TOOL-BUENDEL-3** (lead-tech) = TOOL-BUDGET-WARN (R443 V1/E-055) plus die fünf Werkzeug-Kandidaten aus „Ausgewertet
+2026-10-10“; ein Werkzeug-Paket statt zwei spart einen Lead-Start und ein Gate. Beide starten erst nach dem Push
+PUSH-REL-15 (Zeitmessung, R329) und gehen mit dem Push der nächsten Studio-Session raus (R335). Weil der Posteingang
+keine weiteren Spielerthemen liefert, folgt nach REL-16 eine Ideen-Runde (Discovery-Strang, E-027).
+
+Regelbezug: STUDIO.md Auswahl/Discovery-Strang; R335, R443 · Kosten bei Irrtum: zwei S-Pakete umplanen, kein Code betroffen.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-AUSW-04 · ADR: —
