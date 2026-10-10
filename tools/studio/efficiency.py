@@ -194,7 +194,8 @@ def scan(path: Path, since: datetime | None = None) -> dict | None:
     """Ein Transkript: Aufrufe (je Message-ID einmal), erster Prompt, Lese-Ergebnisse.
 
     since: Einträge davor liefern weder Aufrufe noch Lese-Ergebnisse (der erste
-    Prompt wird immer gelesen)."""
+    Prompt wird immer gelesen). Ein Lesevorgang zählt, wenn sein Ergebnis ab
+    ``since`` eintrifft."""
     calls: dict[str, dict] = {}
     pending: dict[str, str] = {}
     reads: list[dict] = []
@@ -215,10 +216,11 @@ def scan(path: Path, since: datetime | None = None) -> dict | None:
         fresh = not (isinstance(content, list) and _only_results(content))
         if entry.get("type") == "user" and prompt is None and fresh:
             prompt = _first_prompt(entry)
-        if _before(entry, since):
-            continue
+        before = _before(entry, since)
         if isinstance(content, list):
-            _collect_tools(content, pending, reads)
+            _collect_tools(content, pending, None if before else reads)
+        if before:
+            continue
         usage = message.get("usage")
         if isinstance(usage, dict):
             _add_call(calls, message, entry, usage)
@@ -229,7 +231,8 @@ def _only_results(content: list) -> bool:
     return all(isinstance(b, dict) and b.get("type") == "tool_result" for b in content)
 
 
-def _collect_tools(content: list, pending: dict, reads: list) -> None:
+def _collect_tools(content: list, pending: dict, reads: list | None) -> None:
+    """Merkt Lese-Ziele; Ergebnisse zählen nur, wenn ``reads`` übergeben ist."""
     for block in content:
         if not isinstance(block, dict):
             continue
@@ -237,7 +240,7 @@ def _collect_tools(content: list, pending: dict, reads: list) -> None:
             target = _read_target(block.get("name"), block.get("input"))
             if target and isinstance(block.get("id"), str):
                 pending[block["id"]] = target
-        elif block.get("type") == "tool_result":
+        elif block.get("type") == "tool_result" and reads is not None:
             ident = block.get("tool_use_id")
             target = pending.get(ident) if isinstance(ident, str) else None
             if target:

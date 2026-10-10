@@ -719,6 +719,36 @@ class SinceTest(unittest.TestCase):
         self.assertEqual(len(efficiency.compute([main])["top_reads"]), 1)
         self.assertEqual(efficiency.compute([main], since=self.SINCE)["top_reads"], [])
 
+    def read_pair(self, use_at, result_at):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        main = Path(tmp.name) / "s1.jsonl"
+        read = ("t1", "Read", {"file_path": "docs/x.md"})
+        late = result("t1", "x" * 3000)
+        late["timestamp"] = result_at
+        write(
+            main,
+            [
+                assistant("m0", "claude-opus-4", out=1, tools=[read], ts=use_at),
+                late,
+                assistant("m1", "claude-opus-4", out=1, ts=self.LATE),
+            ],
+        )
+        return main
+
+    def test_since_read_result_after_boundary_counts(self):
+        main = self.read_pair("2026-10-10T06:00:00Z", "2026-10-10T06:45:00Z")
+        found = efficiency.scan(main, since=self.SINCE)
+        self.assertEqual(found["reads"], [{"path": "docs/x.md", "chars": 3000}])
+
+    def test_since_read_before_boundary_is_skipped(self):
+        main = self.read_pair("2026-10-10T06:00:00Z", "2026-10-10T06:10:00Z")
+        self.assertEqual(efficiency.scan(main, since=self.SINCE)["reads"], [])
+
+    def test_since_call_before_boundary_not_counted(self):
+        main = self.read_pair("2026-10-10T06:00:00Z", "2026-10-10T06:45:00Z")
+        self.assertEqual(len(efficiency.scan(main, since=self.SINCE)["calls"]), 1)
+
     def test_prompt_before_since_keeps_role(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
