@@ -4,9 +4,20 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-10 (Studio-Session 5a00a316, R460–R470; Ende: REL-16, REL-17 live; M13-E1, UI-GUT-CHIP (I-043), TOOL-BUENDEL-4 lokal auf main @ `f22317df`, Push offen; CI auf main grün)
+Stand: 2026-10-10 (Studio-Session f52039fc, R472–R496; Ende: REL-18 live; UI-TASTEN, AUFRAEUM-01, TOOL-BUENDEL-5 lokal auf main @ `4b3a3aac` = Release-Kandidat REL-19, Push offen; CI auf main grün)
 
 ## Release-Notizen
+
+**Release-Kandidat REL-19 „Tasten, Aufräumen, Werkzeug“ (lokal auf main, Push offen, nächste Session, R496):** UI-TASTEN
+(R476/R479/R496), AUFRAEUM-01 (R485/R491), TOOL-BUENDEL-5 (R478/R482/R484/R494). Kein Save-Wechsel (v11), Baseline
+unverändert. Opus-Final-Reviews je Strang erfolgt.
+
+- **Neu:** `Entf` oder `Rücktaste` reisst das Gebäude im offenen Info-Panel ab (wie «Abreissen»); `Strg`/`Cmd`+`S`
+  speichert in den manuellen Platz und unterdrückt den Browser-Dialog. Beide im Menü «Tastenkürzel». (vom Studio
+  vorgeschlagen, I-056/I-057)
+- **Bitte testen (nach dem Push):** (1) echtes `Cmd+S` auf macOS in Chrome und Safari; (2) `Entf` auf Kontor
+  (Heimatkontor bleibt, Fern-Kontor mit Route nennt den Grund); (3) gehaltene `Entf` reisst höchstens ein Gebäude ab;
+  (4) `Strg+S` bei offener Startkarte/Menü schreibt nichts.
 
 **REL-18 „Edikte, Stilllegen, Gut-Chip“ (live, R480)** — Push `a9f5336e..bfb6af44`, CI 38063457678, Pages 38063909955. M13-E1 (R467), UI-GUT-CHIP (R470), TOOL-BUENDEL-4
 (R469). Save **v11** (Migration v10→v11), Balancing-Baseline unverändert (nur `balance-upgrade.test.ts`, eine Zeile
@@ -67,27 +78,24 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen. Dauerauftrag R445: bei freier Kapazität eine breite Ideen-Runde (höchstens eine je Session).
-**Neues Claude-Gespräch empfohlen** (R438 V4 b).
+Keine Nutzer-Aufträge offen. Daueraufträge: R445 (Ideen-Runde bei freier Kapazität, max. eine je Session), **R475 (Deckel
+≤ 8 voll halten; blockierte Umsetzung → Specs/Pläne/Gates/Scouting)**. Neues Claude-Gespräch empfohlen (R438 V4 b).
 
-0. **Push** main (M13-E1, UI-GUT-CHIP, TOOL-BUENDEL-4, Doku; 72+ Commits) nach **Handbuch 1.44**: **keine Umsetzer starten,
-   bis `make zeitreserve-push` Exit 0** (R464 V1); `tsc`, `lint`, `zeittests`, `conflicts`, Load ≤ 4, `make check` (zeigt
-   `loadStart`), `make zeitreserve-push`, `make check-ci-perf`; `git push origin <geprüfter Hash>:main`; CI, `gh workflow run
-Pages --ref main` (Release: Paket-ID **REL-18** vergeben, Release-Notizen oben), `ci.py`. Danach Prozess-Aussensicht
-   REL-18 (`studio-process-coach`).
-1. **M13-E2** (I-039 „Denkmal als Wahlziel“, R452): Brainstorming/Spec mit `lead-design` (opus); dabei die Seed-Randlage
-   Sparen/Handel „arm“ = K′ − 600 (R466 (2)) und den AK-36-Wortlaut (R466 (1)) aufnehmen. Parallel möglich: Denkmal-Sprite
-   (`lead-art`, R452 O2) — erst nach dem Push.
-2. **Werkzeug-Kandidaten** in `docs/beobachtungen.md` (u. a. `model.py` schneller / Events kürzen — Dashboard bis 80 s alt,
-   R469; `testrun` Ctrl-C; `start.sh` fremder Server; Fokus-Regel doppelt `focusList`/`drawFocusMarks`). Auswertung, wenn
-   > 30 Einträge (Beobachtungs-Auswertung steht ohnehin an: Einträge seit 2026-10-10 zählen).
-3. **Retro R471:** `studio-coach` setzt V1 (Phasenpräfix `plan-`/`design-`/`gate-` in Budgetzeilen) und V2 („Rulings
-   schreibt nur L0“ in Plan-Vorlage und Briefing) um; E-057 startet; Messauftrag M3 beim Push.
-4. **Experimente:** E-054 hat 2 von 3 Datenpunkten (Retro 5a00a316); nächster Plan auf sonnet schliesst ab. Messaufträge M1
-   (Frist 2026-10-23), M2 (Frist 2026-11-19).
-5. **Aufräumen** (eigenes Ruling): gemergte Worktrees `.worktrees/b4`, `m13-e1-sim`, `m13-e1-ui`, `ui-gut-chip` erst nach dem
-   Push entfernen (`git worktree remove`, Branches bleiben).
-6. **Warteschlange N-99** (Kenntnis R434) offen; ohne Antwort gilt R434.
+0. **Push REL-19** (main @ `4b3a3aac` + Doku) nach Handbuch 1.45 als erstes, allein (R488: Push zuerst, dann Deckel
+   füllen); Integrator wartet auf CI mit `timeout 240 gh run watch` in Schleife (R488 V3); Pages-Deploy, `ci.py`.
+   Danach Prozess-Aussensicht REL-19.
+1. **Plan M13-E2** (`lead-tech`, opus) aus Spec `a39a1ccb` (gegatet R483/R489/R493; Plan-Punkte Anhang 08 E: Task
+   „Def-Kern“ zuerst, Szenario-Stände, A1–A6, Nachtrag Plan I-049 Fall K1). Dann Gate Plan, Umsetzung SIM/ART/UI.
+2. **Plan I-048** (`lead-tech`) aus Spec `12c98fd3` (gegatet R487/R490/R492), Merge erst nach M13-E2-SIM.
+3. **I-049** Plan gegatet (R481), Start nach Merge M13-E2-SIM.
+4. **Gate Spec M14-E1** (`ff2c2fd8`, R495; lead-tech + lead-qa); Umsetzung erst nach Abschluss M13 (R486).
+5. **Werkzeug:** Plan TOOL-PUSH-CHECK (R488 V1), V2-Ampel Actions-Konto-Prognose + V4 Produktivanteil (nächstes
+   Werkzeug-Bündel), V3-Persona-Zeile Integrator (`studio-coach`).
+6. **Kurzdesign-Kandidat** aus Playtest REL-18: «Nächster Schritt» übersieht akuten Nahrungsmangel (docs/beobachtungen.md).
+7. **Aufräumen** (eigenes Ruling): Worktrees `.worktrees/b4`, `m13-e1-sim`, `m13-e1-ui`, `ui-gut-chip`, `b5`,
+   `aufraeum-01`, `ui-tasten` sind gemergt — nach dem Push REL-19 entfernen (`git worktree remove`, Branches bleiben;
+   vorher Screenshots `.worktrees/ui-tasten/.studio/qa/ui-tasten/` sichern).
+8. Beobachtungs-Auswertung, sobald > 30 Einträge seit 2026-10-10.
 
 ## Aktuelles Projekt und Phase
 
@@ -110,14 +118,9 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 - **Arbeiter** nur per Benachrichtigung abwarten, kein Polling; `run_in_background: false` als Boolean; Controller mit Blocker
   `waiting` und Fortsetzung per `SendMessage` (Handbuch 1.39).
 
-## Laufend (Session 2cfa57e0)
+## Laufend
 
-- REL-18 live (R480). Umsetzung: UI-TASTEN (R479, `.worktrees/ui-tasten`), TOOL-BUENDEL-5 (R478/R482/R484, `.worktrees/b5`),
-  AUFRAEUM-01 (R485, `.worktrees/aufraeum-01`, Merge vor M13-E2-SIM).
-- Gates: Spec M13-E2 (lead-qa BEDENKEN B1–B9, lead-tech läuft; danach Spec-Nachtrag lead-design), Spec I-048 (R487, lead-tech +
-  lead-qa laufen). I-049 Plan frei, blockiert bis M13-E2-SIM (R481).
-- Vorarbeit: Spec M14-E1 „Inselcharakter“ (R486 Richtung B). Prozess-Aussensicht REL-18 läuft.
-- Reihenfolge Save: M13-E2 v12 (I-049, I-048 fahren mit, wenn selbes Release).
+- Nichts (Session-Ende f52039fc).
 
 ## Parallele Sessions
 
@@ -125,28 +128,25 @@ Keine aktive L0-Session ausser dieser.
 
 ## Seit letzter Session erledigt
 
-- REL-16, REL-17, HOTFIX-CI-01, TOOL-BUENDEL-3 live (R463), CI wieder grün; Prozess-Aussensicht REL-16/17 (R464) →
-  Handbuch 1.43 (kein Umsetzerstart während eines anstehenden Pushes).
-- M13-E1: Gate Plan (R460), Umsetzung Sim T01–T08 und UI T09–T14 mit vier Controllern, Final-Review opus (R466, R467), lokal
-  gemergt `b811aca2`.
-- I-043 UI-GUT-CHIP: Kurzdesign (R461), Plan auf sonnet (E-054), Gate (R462), Umsetzung T01–T09, Merge `84196941` (R470).
-- TOOL-BUENDEL-4: Plan auf sonnet, Gate (R465), Umsetzung, Merge `f8939b29` (R469); Dashboard-Server 100 % → 0 % CPU;
-  Handbuch 1.44.
-- Kurz-Retro 2026-10-10 (5a00a316).
+- REL-18 live (R480): Push `a9f5336e..bfb6af44`, CI/Pages grün; Playtest REL-18 OK; Prozess-Aussensicht (R488).
+- Handbuch 1.45 (R471/R473); fällige Retros quittiert.
+- Ideen-Runde IDEEN-06 (R474), 15 Ideen, Pool 37/40.
+- Gegatete Specs: M13-E2 Denkmal (R483/R489/R493), I-048 Zukauf-Aufschlag (R487/R490/R492); Art-Vorschlag Denkmal
+  „Feuersäule“ prozedural; M14-Richtung B (R486); Spec M14-E1 eingereicht (R495).
+- Umgesetzt und lokal gemergt: UI-TASTEN, AUFRAEUM-01, TOOL-BUENDEL-5 (REL-19-Kandidat). I-049 Plan gegatet (R481).
 
 ## Pausierte Pakete
 
-- Keine. Worktrees: Hauptcheckout, `.worktrees/integrate` (detached @ `84196941`), gemergt und aufräumbar nach dem Push:
-  `.worktrees/b4` (`tool/b4`), `.worktrees/m13-e1-sim`, `.worktrees/m13-e1-ui`, `.worktrees/ui-gut-chip` (Symlink
-  `node_modules`).
+- Keine. Worktrees: Hauptcheckout, `.worktrees/integrate` (detached auf main), gemergt und aufräumbar nach dem Push REL-19:
+  `.worktrees/b4`, `m13-e1-sim`, `m13-e1-ui`, `ui-gut-chip`, `b5`, `aufraeum-01`, `ui-tasten` (Symlink `node_modules`).
 - Branch `int/rel-07`, Alt-Branches (u. a. `fix/rel07-a-wood`, `feat/m7-fx`, gemergte `fix/…`, `feat/…`, `tool/…`),
   Remote `wip/r118a-render-aufraeumen` und `stash@{0}` bleiben bis Ruling.
 
 ## Budget
 
-Offen: keine Freigaben (Restbudgets M13-E1 ≈ 5, UI-GUT-CHIP 4, TOOL-BUENDEL-4 1 verfallen mit Session-Ende).
+Offen: keine Freigaben (Restbudgets verfallen mit Session-Ende).
 
 ## Offene Entscheide
 
 - Nutzer: N-99 (Kenntnis R434), ohne Antwort gilt R434.
-- L0: Release-Paket-ID und Umfang des Pushes (Vorschlag REL-18 = M13-E1 + I-043 + TOOL-BUENDEL-4).
+- L0: keine offen (REL-19-Umfang entschieden, R496).
