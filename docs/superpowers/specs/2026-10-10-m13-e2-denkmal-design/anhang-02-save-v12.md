@@ -50,17 +50,22 @@ Bewusst **nicht** geprüft: ein laufender Abschnitt mit allen Resten 0 (der näc
 Zweck: Hash-Pins und feste JSON-Formen bleiben bitgleich (Muster `foldBackToV10`, I-028). Regeln:
 
 1. Erlaubte Schlüssel = `V11_WORLD_KEYS` (die heutigen v11-Schlüssel in `createWorld`-Reihenfolge) plus `monument`,
-   `monumentDone`; jeder andere Schlüssel → Fehler `foldBackToV11: unbekannter Schlüssel <k>`.
+   `monumentDone`. Jeder andere Weltschlüssel wird **entfernt**, die Reihenfolge der übrigen bleibt (**Setzung
+   Nachtrag**, R489, tech B4; Beispiel `buyPct` aus I-048, qa B9b).
 2. `monument !== null` oder `monumentDone !== false` → Fehler `foldBackToV11: Denkmal nicht rückfaltbar`.
 3. Ein Gebäude mit `defId === 'monument'` → derselbe Fehler.
-4. Inseln: **Positivliste** `V11_ISLAND_KEYS` (die heutigen Schlüssel von `Island` in Erzeugungsreihenfolge). Jede
-   Insel wird auf diese Schlüssel in dieser Reihenfolge reduziert; Schlüssel, die es in v11 nicht gab, werden
-   verworfen (Beispiel `reserve` aus I-049, das auf v12 mitfährt, R477). Damit bleiben die Hash-Pins unverändert,
-   auch nachdem I-049 gemergt ist.
-5. Ausgabe: alle v11-Schlüssel in v11-Reihenfolge, `version: 11`.
+4. Inseln: **Positivliste** `V11_ISLAND_KEYS` (die heutigen Schlüssel von `Island` in Erzeugungsreihenfolge). Schlüssel
+   ausserhalb werden **entfernt, ohne Umordnen** der übrigen (Beispiel `reserve` aus I-049, R477). Grund: migrierte
+   Inseln (z. B. aus `migrateV7ToV8`, `{ kind, ...isl, ox, oy, anchor }`) haben eine andere Folge; ein Umordnen würde
+   Hash-Pins ändern.
+5. Ausgabe: die Eingabe ohne die entfernten Schlüssel und ohne `monument`, `monumentDone`, mit `version: 11`; sonst
+   unverändert, auch in der Reihenfolge.
+6. **Verschärfung durch die einführenden Pakete:** I-049 T03 (dann Eigentümer von `tests/sim/helpers.ts`) entfernt
+   `reserve` nur bei Neutralwert (alle 0), sonst Fehler (`dropZeroReserve`); I-048 tut dasselbe für `buyPct`
+   (Neutralwert alle 100). Der E2-Helfertest (AK-M13E2-22) nutzt nur Neutralwerte und übersteht beide Verschärfungen.
 
-Merge-Reihenfolge (R477, Lead-Nachtrag): M13-E2-SIM vor I-049-Sim. I-049 setzt auf v12 auf, erweitert nur
-`migrateV11ToV12` und die Ladeprüfung um `Island.reserve` und braucht dank Regel 4 keine eigene Rückfaltung.
+Merge-Reihenfolge (R477, R489): AUFRAEUM-01 → M13-E2-SIM → I-049-Sim / I-048-SIM. I-049 und I-048 setzen auf v12
+auf, erweitern `migrateV11ToV12` und die Ladeprüfung um ihren Schlüssel und verschärfen nur Regel 6 für ihn.
 
 Einbindung: `foldBackToV10(x)` ruft bei `x.version === 12` zuerst `foldBackToV11(x)` auf; `foldBackToV9` ruft wie
 heute `foldBackToV10` bei Version ≥ 11 [Tech: Bedingung von `=== 11` auf `>= 11` erweitern]. Die Aufrufer

@@ -46,7 +46,7 @@ Gehört zu [Spec M13-E2 Denkmal als Wahlziel](../2026-10-10-m13-e2-denkmal-desig
   Eintrag erzeugt.
 - **Klang:** `diffSoundEvents` bekommt `monumentDone` im Schnappschuss; Übergang false → true liefert das
   Glocken-Ereignis (Datei `public/audio/sfx/bell.mp3`) [Tech: Ereignisname].
-- **`monumentNeedsConfirm(w, id)`** (nur bei P-1): `w.monument !== null && id === w.monument.buildingId &&
+- **`monumentNeedsConfirm(w, id)`** (P-1, R483): `w.monument !== null && id === w.monument.buildingId &&
 (w.monument.running || w.monument.stage >= 1)`. Knopftext beim ersten Klick bzw. Tastendruck «Wirklich abreissen?
   Fortschritt geht verloren»; Meldung beim Abriss-Werkzeug «Denkmal nur im Panel abreissen».
 

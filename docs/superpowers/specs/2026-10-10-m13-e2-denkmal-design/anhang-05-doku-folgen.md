@@ -11,9 +11,9 @@ Gehört zu [Spec M13-E2 Denkmal als Wahlziel](../2026-10-10-m13-e2-denkmal-desig
   und Inselchronik. Ein Satz aus Lauf B (Anhang 03 C), z. B. «Ohne zusätzliche Betriebe wird schon der erste Abschnitt
   nicht fertig.» und ein Satz zur Dauer: «Voll zugekauft dauert der Bau 10 Minuten und kostet 64 200 Geld.»
 - **README, Inselchronik:** Zeile «Wahlziel» ergänzen.
-- **README, Bedienung:** Abriss-Bestätigung beim Denkmal (nur falls P-1 angenommen).
+- **README, Bedienung:** Abriss-Bestätigung beim Denkmal (P-1, R483).
 - **`docs/arc42.md`:** Bausteine (`src/sim/monument.ts`, `src/sim/defs/monument.ts`, `src/ui/monumentView.ts`, Bildstufe
-  in `src/render/`); Tick-Ablauf (`tickMonument` nach `tickEconomy`, vor `tickUnlocks`); Persistenz (Version 12,
+  in `src/render/`); Tick-Ablauf (`tickMonument` direkt nach `tickEconomy`, vor `checkWin`); Persistenz (Version 12,
   `migrateV11ToV12`, Prüfung V1–V9, Kette v1 … v12, Rückfaltung mit Insel-Positivliste); Abschnitt Obergrenzen
   (Effekt Abschluss-Moment unter `CAPS`).
 - **`docs/CREDITS.md`:** keine Änderung (prozedurales Sprite, bestehende Glocke).
