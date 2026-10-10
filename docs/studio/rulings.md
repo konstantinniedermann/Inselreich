@@ -4325,3 +4325,19 @@ TOOL-BUENDEL, R233 V2; Ownership/Budget prüft L0). Punkte, die mehr als S sind,
 Regelbezug: gates.md Gate Plan (Folgeplan R233 V2); R433, R438 · Kosten bei Irrtum: ein Paket wird aufgeteilt.
 
 Entscheider: L0 · Anlass: Retros R433/R438, Beobachtungen · ADR: —
+
+## R440 · 2026-10-10 · Gate Merge Release REL-15: OK
+
+Ruling: **OK** für REL-15 = Kandidat `b948706` (Basis `a274277`; Merges `7e3c909` See, `b948706` UI). Prüfliste: `make check`
+grün (135 s), `check-ci-perf` grün (53 s); Final-Review opus OK (16 Dateien, AK-R15-01…21, R437 B1–B5, E1–E6; kein
+Sim-/Save-Diff); Playtest am Kandidaten je UI-Task mit Screenshots (`.studio/qa/REL-15/kandidat/` a4, a4b, b5, b6,
+`seekarte/`), Smoke bei 1280×720 und 1920×1080 bestanden, Etikett „Save v10“, Konsole leer. Merge lokal nach `main` durch
+`production-integrator` (`--no-ff b948706`); **Push in der nächsten Studio-Session** (R335, der Push dieser war REL-14).
+Niedrige Befunde (dispose ohne `islandMenuAbort`, `12 * d` statt `SEA_MAP_PAD` in `seekarte.mjs`, Kontor-Marke klein bei
+1280×720, `b6-*`-Screenshots ohne Grösse im Namen, getImageData-Hinweis im QA-Skript) trägt L0 nach dem Merge in
+`docs/beobachtungen.md` ein. Budget-Hinweis „lead-qa 4 von 2“: Freigabezeile für den Release-Check fehlte und ist
+nachgetragen (L0-Versäumnis, an die Kurz-Retro).
+
+Regelbezug: gates.md Gate Merge Release; R335/R434 · Kosten bei Irrtum: Fix-Häppchen vor dem Push.
+
+Entscheider: L0 · Anlass: Release-Check lead-qa · ADR: —
