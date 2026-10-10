@@ -5046,3 +5046,16 @@ ganzzahligen Sim-Feld. Save v12; M13-E2-SIM vor I-049-Sim (R477, R481).
 Regelbezug: gates.md Gate Spec, R452, R466, R476, R477 · Kosten bei Irrtum: ein Bestätigungsdialog zu viel oder zu wenig.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-m13-e2 · ADR: —
+
+## R484 · 2026-10-10 · TOOL-BUENDEL-5 T02: 24 Phasen-Abweichungen akzeptiert, Fortsetzung frei
+
+Ruling: Entscheid D-tb5-t02: Die 24 von 263 abweichenden `lead_phases`-Einträgen auf Echtdaten (Stopp B4, > 10) werden
+**akzeptiert**: 20 sind Korrekturen früherer Zeit-Fehlzuordnungen (neue Phase = `Paket:` des Leads). Die vier Sonderfälle
+(`ac66898b`, `ac8af81e`, `a2e11902`: Phase entfällt; `aaf78c1e`: keine → M12-E0) prüft das Batch-Review einzeln; ist einer
+eine Verschlechterung, wird er mit Test als Fix-Runde behoben, kein Revert von `038b170d`. Die Liste (Lead, alt, neu)
+kommt ins Handoff. T04 und Umsetzer B laufen weiter. Historische Metriken älterer Sessions ändern sich damit rückwirkend
+leicht; die Retro-Ampel vergleicht ab jetzt mit der neuen Zuordnung.
+
+Regelbezug: R478 B4, R471 V1 · Kosten bei Irrtum: einzelne Lead-Phasen in alten Sessions falsch zugeordnet (nur Metrik).
+
+Entscheider: L0 · Anlass: Stopp-Meldung Controller TOOL-BUENDEL-5 · ADR: —
