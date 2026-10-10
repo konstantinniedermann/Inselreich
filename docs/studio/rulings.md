@@ -4833,3 +4833,19 @@ mit dem nächsten Push raus.
 Regelbezug: gates.md Gate Merge; R335, R465 · Kosten bei Irrtum: Dashboard zeigt bis 80 s alten Stand.
 
 Entscheider: L0 · Anlass: Übergabe lead-tech TOOL-BUENDEL-4, Bericht production-integrator · ADR: ADR-014 (Nachführung)
+
+## R470 · 2026-10-10 · Gate Merge UI-GUT-CHIP (I-043): OK, lokaler Merge
+
+Ruling: `feat/ui-gut-chip` @ `075edbaa` (T01–T09, main @ `f04cf2ed` eingemergt, einziger Konflikt `docs/beobachtungen.md`
+durch Anhängen beider Blöcke gelöst; `docs-check`, `tsc`, `lint`, `merge-tree` Exit 0; `make check` Exit 0 am Code-Stand
+`ff584840`, danach nur Doku und der Merge von main mit `tools/`/`docs/`). Branch-Review opus (T09) **OK**, Playtest T08 OK
+ohne Blocker; 17 von 21 Starts. `signalFocus` bleibt ausserhalb `SIGNAL_NAMES` (zwei Palette-Tests rot), eigener ΔE-Test
+(≥ 15) und Test CSS = Palette erfüllen R462 B3. Niedrige Befunde (u. a. Fokus-Regel doppelt in `focusList` und
+`drawFocusMarks`) in `docs/beobachtungen.md`. Merge lokal durch `production-integrator` mit vollem `make check`; Release
+gemeinsam mit M13-E1 und TOOL-BUENDEL-4 im nächsten Push (R335). Stufe leicht: das opus-Review über den Release-Kandidaten
+gilt mit T09 als erfolgt, sofern der Kandidat nur diese drei gegateten Stränge enthält.
+
+Regelbezug: gates.md Gate Merge Release; STUDIO.md Ablauf Stufe leicht Schritt 6–7, R462 · Kosten bei Irrtum: UI-Fix nach dem
+Merge.
+
+Entscheider: L0 · Anlass: Übergabe lead-tech UI-GUT-CHIP Controller B · ADR: —
