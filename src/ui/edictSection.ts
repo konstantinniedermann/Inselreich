@@ -66,7 +66,7 @@ function setText(e: HTMLElement, text: string): void {
 export function updateEdictSection(root: HTMLElement, w: World): void {
   const status = root.querySelector<HTMLElement>('[data-field="edict-status"]');
   const lock = root.querySelector<HTMLElement>('[data-field="edict-lock"]');
-  const unlocked = edictCardState(w, EDICT_IDS[0]!).reason !== NOT_YET;
+  const unlocked = edictCardState(w, EDICT_IDS[0]!).unlocked;
   if (status) setText(status, unlocked ? edictStatusLine(w) : NOT_YET);
   if (lock) {
     const text = unlocked ? edictLockText(w) : '';

@@ -39,10 +39,13 @@ export function edictUpgradeWait(w: World): number | null {
 const isEdictId = (id: unknown): id is EdictId =>
   typeof id === 'string' && Object.hasOwn(EDICTS, id);
 
+/** Edikte sind freigeschaltet (Weltflagge EDICT_UNLOCK). */
+export const edictsUnlocked = (w: World): boolean => w[EDICT_UNLOCK] === true;
+
 /** Grund, den setEdict liefern würde (Spec R2, Schritte 1–6), oder null; ändert nichts. */
 export function edictReason(w: World, id: unknown): string | null {
   if (id !== null && !isEdictId(id)) return 'Ungültiges Edikt';
-  if (w[EDICT_UNLOCK] !== true) return 'Erst nach dem Bürger-Ziel';
+  if (!edictsUnlocked(w)) return 'Erst nach dem Bürger-Ziel';
   if (!townhallActive(w)) return townhallReason(w);
   if (id === w.edict) return id === null ? 'Kein Edikt aktiv' : 'Edikt bereits aktiv';
   if (w.tick < w.edictLockedUntil) return 'Edikt-Sperrzeit';
