@@ -39,6 +39,10 @@ export interface FocusDeps {
   refresh(): void;
   message(text: string): void; // app.ts: replaceMessage('gut', text)
 }
+/** Routing von `.`/`,`: Gut-Liste bei aktivem Fokus, sonst Problemliste (AK-GC-08, R462 B2). */
+export function stepKeyTarget(focus: FocusState): 'focus' | 'problem';
+/** `true`, wenn der Fokus nach einem Inselwechsel zu löschen ist (AK-GC-07, R462 B2). */
+export function shouldClearFocus(focus: FocusState, activeIsland: number): boolean;
 export function runFocusToggle(deps: FocusDeps, good: GoodId): void;
 export function runFocusStep(deps: FocusDeps, dir: 1 | -1): void;
 ```
@@ -61,6 +65,9 @@ Hinweis: Das Löschen des Fokus bei Inselwechsel liegt in `app.ts` (T06). Der Sp
 
 - [ ] **Schritt 1: Roter Test** (Fake-Deps protokollieren Aufrufe in Reihenfolge, wie `problems.test.ts`):
   - AK-GC-07: `focusReduce`: gleicher Chip → `null`; anderes Gut → `{good, island}` direkt; `clear` → `null`; `toggleStartsJump` wahr bei Aus→An und Wechsel, falsch beim Ausschalten. Die Auslöser „Esc, Inselwechsel, Neue Insel/Laden → clear“ verdrahtet T06; hier nur der Reducer.
+  - **B2 verbindlich:** `stepKeyTarget(null) === 'problem'`, mit Fokus `'focus'`; `shouldClearFocus(null, n) === false`, `shouldClearFocus({good, island: 0}, 0) === false`, `shouldClearFocus({good, island: 0}, 1) === true`. `app.ts` (T06) ruft beide und enthält keine eigene Entscheidungslogik dazu.
+  - **B7:** leeres Lager (Bestand 0, roter Pfeil) bei Klick: gleiches Verhalten wie sonst (Liste unabhängig vom Bestand, Sprung bzw. M2); ein Testfall.
+  - AK-GC-12 zusätzlich: `serialize(world)` vor und nach der Folge identisch (R462 B6).
   - AK-GC-05/06: M2 mit Verbrauchern (Fokus an, kein `centerOn`, kein `openPanel`) und ohne alles (Fokus `null`, M2, weder `centerOn` noch `openPanel`, Cursor `null`).
   - Sprung: Toggle mit 4 Einträgen → `cancelPointerAction`, `centerOn(Eintrag 1)`, `openPanel(id)`, `refresh`, M1 „… 1 von 4: …“; zweiter Aufruf gleiches Gut → Fokus `null`, keine Meldung, kein `centerOn`.
   - AK-GC-08: `runFocusStep` `+1` durchläuft 1 → 2 → … → n → 1 (Umlauf), `-1` rückwärts; Problem-Cursor-Fake bleibt in allen Fällen ungerufen; nach Fokus-Ende liefert `runProblemJump` denselben Eintrag wie vor dem Fokus.
@@ -74,4 +81,4 @@ Hinweis: Das Löschen des Fokus bei Inselwechsel liegt in `app.ts` (T06). Der Sp
 
 ## Nicht in dieser Task
 
-DOM, `app.ts`, Hotkeys, Render.
+DOM, `app.ts`, Hotkeys, Render. (`stepKeyTarget` und `shouldClearFocus` sind hier Pflicht; T06 verdrahtet sie nur.)
