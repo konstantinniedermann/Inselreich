@@ -5121,3 +5121,21 @@ Regelbezug: STUDIO.md Verbesserungsschleife, Limits und Sessiongrösse, R316, R4
 zu viel.
 
 Entscheider: L0 · Anlass: Bericht studio-process-coach retro-rel-18; Limit-Ampel gelb · ADR: —
+
+## R489 · 2026-10-10 · Gate Spec M13-E2: BEDENKEN (lead-qa B1–B9, lead-tech B1–B5) → Spec-Nachtrag, dann Plan
+
+Ruling: Beide Urteile BEDENKEN, kein ZURÜCK (`.studio/handoffs/2026-10-10-lead-qa-GATE-SPEC-M13-E2.md`,
+`…-lead-tech-GATE-SPEC-M13-E2.md`). **Kopplung Denkmal-Zukauf ↔ I-048 (tech B1, qa-I-048 B1), L0 entscheidet:** Der
+Denkmal-Zukauf **zahlt** den jeweils gültigen Kaufaufschlag (über eine einzige Zukauf-Funktion in `trade.ts`), **hebt
+ihn aber nicht** — keine Rückkopplung auf normale Bauten, Denkmal-Summen bleiben rechenbar (64 200 / 54 960 Geld bei
+Kaufanteil 100), kein Ausnutzen möglich, weil Denkmal-Ware nicht verkäuflich ist. AK-11/-12 auf Kaufanteil 100
+festlegen; I-048 übernimmt die Setzung in Z3. Merge-Reihenfolge: AUFRAEUM-01 → M13-E2-SIM → I-049-Sim / I-048-SIM.
+Spec-Nachtrag durch `lead-design` zu qa B1–B7, B9b und tech B3, B4 (Rückfaltung: unbekannte Insel- und Weltschlüssel
+entfernen ohne Reihenfolgeänderung, abgeglichen mit I-049 `dropZeroReserve`), Krisen in Läufen A und C aus. In den Plan
+(lead-tech): qa B5, B8, B9a, tech B2 (Task „Def-Kern“ zuerst, Stränge zweigen davon ab), B5 (Nachtrag Plan I-049) und
+A1–A6. Kein Zweit-Gate auf die Spec; das Gate Plan prüft den Nachtrag mit.
+
+Regelbezug: gates.md Gate Spec, R483, R487 · Kosten bei Irrtum: Denkmal billiger als Normalkauf in Hochpreisphasen
+(nur Denkmal-Ware).
+
+Entscheider: L0 · Anlass: Gate-Urteile Spec M13-E2 · ADR: —
