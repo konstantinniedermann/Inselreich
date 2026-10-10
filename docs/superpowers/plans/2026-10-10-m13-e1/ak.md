@@ -63,6 +63,10 @@ Reviewer lesen die AK-Texte in der Spec nach (nur die in ihrer Task-Datei genann
 - **PLAN-M13-03 Kein Zufall:** `src/sim/edicts.ts` und `src/sim/pause.ts` importieren weder `./rng` noch nutzen sie
   `Math.random` (Quelltextprobe in T03 bzw. T07).
 
+- **PLAN-M13-04 Determinismus mit Stilllegen (R460 A2):** gleicher Seed, gleiche `setPaused`-Folge (an/aus, Brand
+  während Stilllegung, Abriss während Stilllegung) über mehrere tausend Ticks, zweimal → gleiches `serialize`; einmal
+  mit `deserialize(serialize(…))` mitten im Lauf (nach `setPaused`) → gleiches Endergebnis wie ohne Laden (T07).
+
 ## Spec-Regeln ohne eigene AK → Task
 
 R1–R2 T03 · R3 T05 · R4 T04 · R5, R7 T06 · R6 T03 · §8 S1–S6 T07 · S7, R9 T02 · U-1…U-6 T09/T10 · U-7…U-10 T11 ·

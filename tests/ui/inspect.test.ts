@@ -9,6 +9,7 @@ import {
   refundText,
   restView,
   upgradeOkText,
+  upkeepText,
   upgradeReasonTexts,
   levelText,
   refundLine,
@@ -19,6 +20,8 @@ import {
   UPGRADE_TITLE,
 } from '../../src/ui/inspect';
 import { upgradeView } from '../../src/ui/panelView';
+import { setEdict } from '../../src/sim/edicts';
+import { setPaused } from '../../src/sim/pause';
 import { upgradeBuilding } from '../../src/sim/upgrade';
 import { serialize } from '../../src/sim/save';
 import type { BuildingDefId, World } from '../../src/sim/types';
@@ -181,9 +184,19 @@ describe('Anzeige bei Brandausfall (QA-M6U1)', () => {
 
 describe('Inselchronik und Aufstiegszeilen (M7-UX Task 8)', () => {
   it('Aufstiegszeile ohne „Tick" (Spec L8)', () => {
-    expect(upgradeOkText()).toBe(
+    const { w } = uxWorld();
+    expect(upgradeOkText(w)).toBe(
       `✓ Bedingungen erfüllt — Aufstieg in höchstens ${formatGameTime(GROWTH_INTERVAL)}`,
     );
+  });
+  it('AK-M13E1-33 Aufstiegszeile ohne Edikt 5 s, mit Wohlfahrt 4 s', () => {
+    const w = createWorld(3, { unlockAll: true });
+    expect(upgradeOkText(w)).toBe('✓ Bedingungen erfüllt — Aufstieg in höchstens 5 s');
+    w.won = true;
+    placeTownhall(w);
+    w.money = 1000;
+    expect(setEdict(w, 'welfare').ok).toBe(true);
+    expect(upgradeOkText(w)).toBe('✓ Bedingungen erfüllt — Aufstieg in höchstens 4 s');
   });
   it('Aufstiegsgründe über friendlyReason mit Aufstiegskosten (Spec L3 Aufrufer)', () => {
     const { w, house } = uxWorld();
@@ -458,5 +471,25 @@ describe('TASTEN-KOMFORT Panel-Knöpfe (AK-TK-28, 30)', () => {
       'Diesen Gebäudetyp als Bauwerkzeug wählen (Strg/Cmd+Klick auf ein Gebäude)',
     );
     expect(UPGRADE_TITLE).toBe('Ausbauen (Umschalt+U)');
+  });
+});
+
+describe('M13-E1 upkeepText stillgelegt (AK-M13STL-09)', () => {
+  it('AK-M13STL-09 Glashütte läuft 150 / min, still 78 / min', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const g: Building = {
+      id: w.nextBuildingId++,
+      defId: 'glassworks',
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+      island: 0,
+    };
+    w.buildings[g.id] = g;
+    expect(upkeepText(g)).toBe('Unterhalt 150 / min');
+    expect(setPaused(w, g.id, true).ok).toBe(true);
+    expect(upkeepText(g)).toBe('Unterhalt 78 / min');
   });
 });

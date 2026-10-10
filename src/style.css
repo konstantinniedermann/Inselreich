@@ -1166,3 +1166,31 @@ body {
 .ships .negative:empty {
   display: none;
 }
+
+/* Amtsstube: Edikte (M13-E1) */
+.edict-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.edict-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--parchment-edge);
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+.edict-card.active {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold);
+}
+.edict-card.locked {
+  color: var(--parchment-muted);
+  border-style: dashed;
+}
+.edict-when {
+  color: var(--parchment-muted);
+}

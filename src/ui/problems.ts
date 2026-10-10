@@ -33,7 +33,8 @@ export const NO_PROBLEM_TEXT = 'Alles versorgt, kein Problem offen';
 
 const isBurning = (b: Building): boolean => b.outageUntil !== undefined || b.state === 'burning';
 /** Ein Prädikat für Klasse 1 und `cutOffIds`. */
-const isCutOff = (b: Building): boolean => needsConnection(b.defId) && !b.connected;
+const isCutOff = (b: Building): boolean =>
+  needsConnection(b.defId) && !b.connected && b.paused !== true;
 
 function compareSort(a: ProblemSort, b: ProblemSort): number {
   for (let i = 0; i < 4; i++) {

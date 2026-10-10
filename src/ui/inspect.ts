@@ -3,20 +3,21 @@ import { phaseAt, type Phase } from '../render/daynight';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, TIER_IDS } from '../sim/defs/tiers';
-import { GROWTH_INTERVAL } from '../sim/defs/timing';
 import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, upgradeStatus } from '../sim/population';
 import { LEVELS } from '../sim/defs/levels';
-import { upkeepOf, utilization } from '../sim/levels';
+import { buildingUpkeep, utilization } from '../sim/levels';
 import { paidCost } from '../sim/upgrade';
 import { effectiveRefund, goalView, houseDiagnosis } from '../sim/queries';
+import { growthInterval } from '../sim/edicts';
 import { townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { upgradeDeficit } from '../sim/flow';
+import { buildEdictSection, updateEdictSection } from './edictSection';
 import { feastView, houseFeastLine } from './feast';
 import { glassStoneHint } from './hints';
-import type { Building, BuildingDefId, GoodId, TaxLevel, Tier, World } from '../sim/types';
+import type { Building, BuildingDefId, EdictId, GoodId, TaxLevel, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
 import { deficitText, diagnosisText, refundText } from './texts';
 import { mapSigns, nextStep, remedyText, taxEffect } from './guide';
@@ -49,6 +50,7 @@ import {
   TILE_LAYOUT,
   statKeys,
   statTiles,
+  pauseButton,
   stateChip,
   supplyChip,
   tierPips,
@@ -91,6 +93,10 @@ export interface InspectActions {
   setTierTax(tier: Tier, level: TaxLevel): void;
   setGoodLock(tier: Tier, good: GoodId, locked: boolean): void;
   setUpgradeStop(tier: Tier, stopped: boolean): void;
+  /** Betrieb stilllegen oder anfahren; die Ablehnung zeigt der Aufrufer. */
+  setPaused(id: number, paused: boolean): void;
+  /** Amtsstube: Edikt erlassen, wechseln oder (null) aufheben; die Rückmeldung zeigt der Aufrufer. */
+  setEdict(id: EdictId | null): void;
   /** Betrieb mit dem Kontor verbinden; die Ablehnung zeigt der Aufrufer. */
   connect(id: number): void;
   /** Kapelle: Fest feiern; die Ablehnung zeigt der Aufrufer. */
@@ -164,8 +170,8 @@ export function refundLine(world: World, b: Building): string {
 }
 
 /** Aufstiegszeile bei erfüllten Bedingungen (Spec L8: Zeit statt „Tick"). */
-export function upgradeOkText(): string {
-  return `✓ Bedingungen erfüllt — Aufstieg in höchstens ${formatGameTime(GROWTH_INTERVAL)}`;
+export function upgradeOkText(w: World): string {
+  return `✓ Bedingungen erfüllt — Aufstieg in höchstens ${formatGameTime(growthInterval(w))}`;
 }
 
 /** Gründe, warum das Haus nicht aufsteigt, als Klartext mit Aufstiegskosten. */
@@ -536,7 +542,7 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
     panel,
     'upgrade-reasons',
     status.ok
-      ? [{ text: upgradeOkText(), ok: true }]
+      ? [{ text: upgradeOkText(world), ok: true }]
       : upgradeReasonTexts(world, b).map((text) => ({ text, ok: false })),
   );
   setOptionalLine(panel, 'deficit', deficitLine(world, b));
@@ -621,6 +627,7 @@ function renderTownhall(panel: HTMLElement, actions: InspectActions): void {
   }
   panel.append(grid);
   addLine(panel, '', 'tax-effect');
+  panel.append(buildEdictSection((id) => actions.setEdict(id)));
   const matrix = document.createElement('div');
   matrix.dataset.field = 'lock-matrix';
   panel.append(matrix);
@@ -667,6 +674,8 @@ function updateTownhall(panel: HTMLElement, world: World): void {
     setField(panel, `tax-lock-${t}`, text);
   }
   setField(panel, 'tax-effect', taxStatusLine(world));
+  const edictEl = panel.querySelector<HTMLElement>('[data-field="edict"]');
+  if (edictEl) updateEdictSection(edictEl, world);
 
   const matrixEl = panel.querySelector<HTMLElement>('[data-field="lock-matrix"]');
   const rows = lockMatrix(world);
@@ -735,13 +744,27 @@ export function kontorActions(defId: BuildingDefId): { trade: boolean; demolish:
 }
 
 /** Gerüst des Betriebs-Panels (Betriebe und Dienste): Kopf, Kennzahlen, Ausbau-Karte (Spec 5). */
-function renderBetrieb(panel: HTMLElement, b: Building, onUpgrade: () => void): void {
+function renderBetrieb(
+  panel: HTMLElement,
+  b: Building,
+  onUpgrade: () => void,
+  onPause: (paused: boolean) => void,
+): void {
   const def = BUILDING_DEFS[b.defId];
   const { head, row } = addHead(panel, b, def.name);
   const levels = LEVELS[b.defId];
   if (levels !== undefined) addLevelChip(row, 'level-chip', 'level', levels.length + 1);
   addToneChip(head, 'state-chip', 'state');
   addRemedy(head);
+  if (pauseButton(b) !== null) {
+    const btn = node('button', 'btn pause-btn', 'pause') as HTMLButtonElement;
+    btn.type = 'button';
+    btn.addEventListener('click', () => {
+      btn.blur();
+      onPause(btn.dataset.paused !== 'true');
+    });
+    panel.appendChild(btn);
+  }
   const stats = addStats(panel, statKeys(b.defId));
   if (progressView(b) !== null) {
     const bar = node('div', 'progress', 'progress-bar');
@@ -789,7 +812,13 @@ export function renderInspect(
   } else {
     if (b.house) {
       renderHouse(panel, b);
-    } else renderBetrieb(panel, b, () => actions.upgrade(id));
+    } else
+      renderBetrieb(
+        panel,
+        b,
+        () => actions.upgrade(id),
+        (paused) => actions.setPaused(id, paused),
+      );
     if (def.service === 'faith') addButton(buttons, '', () => actions.holdFeast(id), 'feast');
     if (needsConnection(b.defId)) addConnectButton(buttons, id, actions);
     if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
@@ -892,7 +921,7 @@ function updateUpgradeBox(panel: HTMLElement, world: World, b: Building): void {
 
 /** Unterhaltszeile des stehenden Betriebs (Stufe berücksichtigt). */
 export function upkeepText(b: Building): string {
-  return `Unterhalt ${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} / min`;
+  return `Unterhalt ${perMinute(buildingUpkeep(b), UPKEEP_INTERVAL)} / min`;
 }
 
 /** Setzt Anbinden-Knopf und Grundzeile; führt die Vorschau nach, solange der Knopf überfahren ist. */
@@ -985,6 +1014,14 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
 /** Führt Kopf, Kacheln und Balken des Betriebs-Panels nach (nur Texte und Attribute, G-3). */
 function updateBetrieb(panel: HTMLElement, world: World, b: Building): void {
   setToneChip(panel, 'state-chip', 'state', stateChip(world, b));
+  const pv = pauseButton(b);
+  const pauseEl = panel.querySelector<HTMLButtonElement>('[data-field="pause"]');
+  if (pv !== null && pauseEl) {
+    if (pauseEl.textContent !== pv.text) pauseEl.textContent = pv.text;
+    if (pauseEl.title !== pv.title) pauseEl.title = pv.title;
+    const flag = String(b.paused === true);
+    if (pauseEl.dataset.paused !== flag) pauseEl.dataset.paused = flag;
+  }
   setField(panel, 'level', levelText(b) ?? '');
   setPips(panel, 'level-chip', 'level', levelPips(b));
   setTiles(panel, statTiles(b));

@@ -1,4 +1,4 @@
-import { BUILDING_DEFS } from './defs/buildings';
+import { BUILDING_DEFS, PAUSED_UPKEEP_PCT } from './defs/buildings';
 import { LEVELS, type LevelDef } from './defs/levels';
 import { EFF_MAX, EFF_WINDOW } from './defs/timing';
 import type { Building } from './types';
@@ -13,6 +13,9 @@ export const cycleOf = (b: Building): number | undefined =>
 /** Unterhalt je 100 Ticks des stehenden Gebäudes. */
 export const upkeepOf = (b: Building): number =>
   levelDef(b)?.upkeep ?? BUILDING_DEFS[b.defId].upkeep;
+/** Unterhalt je 100 Ticks, wirksam: stillgelegt halb, aufgerundet (Spec S4). Einziger Leseort für die Summe. */
+export const buildingUpkeep = (b: Building): number =>
+  b.paused === true ? Math.ceil((upkeepOf(b) * PAUSED_UPKEEP_PCT) / 100) : upkeepOf(b);
 /** Auslastung in Promille 0 … 1000; `null` ohne `produces` (Spec 3.5). */
 export const utilization = (b: Building): number | null =>
   BUILDING_DEFS[b.defId].produces === undefined

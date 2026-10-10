@@ -8,6 +8,7 @@ import type { UnlockId } from '../../src/sim/types';
 import { MAP_SIGNS, nextStep, producerOf, remedyText, taxEffect } from '../../src/ui/guide';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { home, createWorld, idx } from '../../src/sim/world';
+import { setPaused } from '../../src/sim/pause';
 import { houseFar, placeTownhall, setAllTax, village } from '../sim/helpers';
 import { build, connectAll, setHouse, uxWorld } from './worlds';
 
@@ -138,7 +139,9 @@ describe('taxEffect und remedyText (AK-UX-10)', () => {
     home(w).tiles[idx(home(w), kx + 4, ky + 2)]!.terrain = 'forest'; // Testgelände: Wald im Radius 2
     const lj = build(w, 'lumberjack', kx + 3, ky + 1); // grenzt an den Weg (kx+3, ky): angebunden
     lj.state = 'storageFull';
-    expect(remedyText(w, lj)).toBe('Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)');
+    expect(remedyText(w, lj)).toBe(
+      'Verkaufe Holz am Kontor oder baue Werkzeugmacher (T) oder lege den Betrieb still',
+    );
     lj.outageUntil = w.tick + 10;
     expect(remedyText(w, lj)).toBe(
       'Läuft nach dem Brand von selbst wieder; eine Feuerwache (E) in der Nähe schützt',
@@ -172,14 +175,16 @@ describe('remedyText, übrige Tabellenzeilen (AK-UX-10)', () => {
     const { w, fisher } = uxWorld();
     fisher.connected = true;
     fisher.state = 'storageFull';
-    expect(remedyText(w, fisher)).toBe('Verkaufe Nahrung am Kontor oder baue weitere Wohnhäuser');
+    expect(remedyText(w, fisher)).toBe(
+      'Verkaufe Nahrung am Kontor oder baue weitere Wohnhäuser oder lege den Betrieb still',
+    );
   });
   it('AK-UX-10 storageFull ohne Abnehmer, kein Bedarf: nur Verkauf', () => {
     const { w, fisher } = uxWorld();
     fisher.defId = 'quarry'; // Zustandssetzung: Steinbruch (Stein: kein Abnehmer, keine Stufe braucht ihn)
     fisher.connected = true;
     fisher.state = 'storageFull';
-    expect(remedyText(w, fisher)).toBe('Verkaufe Stein am Kontor');
+    expect(remedyText(w, fisher)).toBe('Verkaufe Stein am Kontor oder lege den Betrieb still');
   });
 });
 
@@ -348,16 +353,20 @@ describe('M8 remedyText mit mehreren Inputs (AK-U2-09)', () => {
     const quarry = addDirect(w, 'quarry');
     quarry.state = 'storageFull';
     expect(w.won).toBe(false);
-    expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor'); // R151 W9: Glashütte gesperrt, kein Zusatz
+    expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor oder lege den Betrieb still'); // R151 W9: Glashütte gesperrt, kein Zusatz
     const beforeGoal = w.unlocked;
     w.won = true;
     w.unlocked = deriveUnlocks(w);
-    expect(remedyText(w, quarry)).toBe('Verkaufe Stein am Kontor oder baue Glashütte (O)'); // freigeschaltet
+    expect(remedyText(w, quarry)).toBe(
+      'Verkaufe Stein am Kontor oder baue Glashütte (O) oder lege den Betrieb still',
+    ); // freigeschaltet
     w.won = false;
     w.unlocked = beforeGoal;
     const lj = addDirect(w, 'lumberjack');
     lj.state = 'storageFull';
-    expect(remedyText(w, lj)).toBe('Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)');
+    expect(remedyText(w, lj)).toBe(
+      'Verkaufe Holz am Kontor oder baue Werkzeugmacher (T) oder lege den Betrieb still',
+    );
     const weaver = addDirect(w, 'weaver');
     weaver.state = 'waitingInput';
     home(w).stock.wool = 0;
@@ -409,7 +418,8 @@ describe('M10 nextStep und remedyText mit Amtsstube (Spec 12.3)', () => {
     return { w, b };
   };
   /** Erwartungswert heute (vor M10): Holz mit freiem Abnehmer, siehe AK-UX-10. */
-  const REMEDY_TODAY = 'Verkaufe Holz am Kontor oder baue Werkzeugmacher (T)';
+  const REMEDY_TODAY =
+    'Verkaufe Holz am Kontor oder baue Werkzeugmacher (T) oder lege den Betrieb still';
 
   it('AK-U2-02 Kassen-Satz je Stand; gespeichertes hoch ohne Amtsstube ohne Steuer-Satz; Abhilfen', () => {
     const broke = (ids: UnlockId[], townhall: boolean) => {
@@ -440,7 +450,7 @@ describe('M10 nextStep und remedyText mit Amtsstube (Spec 12.3)', () => {
     expect(remedyText(tm.w, tm.b)).toBe('Baue eine Schule (U) in Reichweite');
     const lj = lumberjackFull();
     lj.w.unlocked = ['U0', 'U2', 'U3', 'U4'];
-    expect(remedyText(lj.w, lj.b)).toBe('Verkaufe Holz am Kontor');
+    expect(remedyText(lj.w, lj.b)).toBe('Verkaufe Holz am Kontor oder lege den Betrieb still');
     lj.w.unlocked = [...UNLOCK_IDS];
     expect(remedyText(lj.w, lj.b)).toBe(REMEDY_TODAY);
   });
@@ -502,5 +512,26 @@ describe('REL-15 Abhilfe eines Wohnhauses ohne Vorspann (R435)', () => {
       expect(t).not.toContain('fehlt:');
       expect(t.charAt(0)).toBe(t.charAt(0).toUpperCase());
     }
+  });
+});
+
+describe('M13-E1 Leitfaden und Stilllegen (AK-M13STL-09)', () => {
+  it('storageFull endet auf «oder lege den Betrieb still»', () => {
+    const { w, fisher } = uxWorld();
+    fisher.connected = true;
+    fisher.state = 'storageFull';
+    expect(remedyText(w, fisher)).toBe(
+      'Verkaufe Nahrung am Kontor oder baue weitere Wohnhäuser oder lege den Betrieb still',
+    );
+    fisher.defId = 'quarry';
+    expect(remedyText(w, fisher)).toBe('Verkaufe Stein am Kontor oder lege den Betrieb still');
+  });
+  it('stillgelegt, auch ohne Anbindung: kein Hinweis', () => {
+    const { w, fisher } = uxWorld();
+    fisher.connected = false;
+    expect(setPaused(w, fisher.id, true).ok).toBe(true);
+    expect(remedyText(w, fisher)).toBeNull();
+    fisher.connected = true;
+    expect(remedyText(w, fisher)).toBeNull();
   });
 });

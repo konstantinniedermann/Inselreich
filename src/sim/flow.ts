@@ -31,7 +31,7 @@ export function goodsBalance(
         out[g].consumed += b.house.inhabitants * needs[g]!;
       continue;
     }
-    if (!b.connected) continue;
+    if (!b.connected || b.paused === true) continue;
     const def = BUILDING_DEFS[b.defId];
     const cycle = cycleOf(b);
     if (cycle === undefined) continue;

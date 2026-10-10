@@ -19,6 +19,7 @@ import {
   type HoverState,
 } from '../../src/ui/hover';
 import { protectedCount } from '../../src/ui/inspect';
+import { setPaused } from '../../src/sim/pause';
 import { diagnosisText } from '../../src/ui/texts';
 import { houseDiagnosis } from '../../src/sim/queries';
 import {
@@ -405,5 +406,30 @@ describe('UI-HOVER-SCHILD: Schild weicht der Karte (R435)', () => {
       expect(card({ restMs: 10_000, tool }), tool.kind).toBe(false);
       expect(cursorHintVisible(true, card({ restMs: 10_000, tool })), tool.kind).toBe(true);
     }
+  });
+});
+
+describe('M13-E1 Mouse-over stillgelegter Betrieb (AK-M13STL-09)', () => {
+  it('Zeile «Stillgelegt»; bei Brand «brennt»', () => {
+    const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
+    const k = w.buildings[home(w).kontorId]!;
+    const f: Building = {
+      id: w.nextBuildingId++,
+      defId: 'fisher',
+      x: k.x + 4,
+      y: k.y - 6,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+      island: 0,
+    };
+    w.buildings[f.id] = f;
+    forceGrass(w, f.x, f.y);
+    home(w).tiles[idx(home(w), f.x, f.y)]!.buildingId = f.id;
+    expect(setPaused(w, f.id, true).ok).toBe(true);
+    const none = { ship: false, animal: null };
+    expect(hoverInfo(w, f, 0, none)!.lines[0]).toBe('Stillgelegt');
+    f.outageUntil = w.tick + 100;
+    expect(hoverInfo(w, f, 0, none)!.lines[0]).toBe('brennt');
   });
 });

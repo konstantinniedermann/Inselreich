@@ -252,6 +252,24 @@ Im Menü «Neue Insel» schaltet **Alles frei** alle Schritte von Anfang an frei
 - **Symbole:** Kopfzeile, Bauleiste, Haus-Panel und Meldungen tragen kleine Symbole auf dunklen Chips; der
   bisherige Text bleibt als `aria-label` erhalten.
 
+#### Edikte
+
+Im Panel der Amtsstube erlässt du **ein** Edikt zur Zeit. Es wirkt nur, solange die Amtsstube wirkt (steht, angebunden, kein Brand).
+
+| Edikt     | Wirkung                                                             | Preis    |
+| --------- | ------------------------------------------------------------------- | -------- |
+| Sparen    | Unterhalt −20 % · Steuer −7 Punkte                                  | 600 Geld |
+| Handel    | Kaufpreise am Kontor −20 %                                          | 600 Geld |
+| Wohlfahrt | Wachstum alle 4 s statt 5 s · Aufstieg nach 20 s · Steuer −5 Punkte | 600 Geld |
+
+- **Freischaltung:** Die Karten sind gesperrt («Erst nach dem Bürger-Ziel»), bis du das Bürger-Ziel erreicht hast.
+- **Sperre:** Nach jedem Erlass, Wechsel oder Aufheben ist die Edikt-Wahl 5 Minuten gesperrt («Edikt-Sperrzeit»).
+- **Aufheben** kostet nichts, sperrt aber ebenfalls.
+- **Ruhen:** Ohne wirkende Amtsstube (Brand, kein Weg zur Amtsstube) ruht das Edikt; es bleibt gewählt und wirkt wieder, sobald die Amtsstube wirkt.
+- **Abriss:** Wer die Amtsstube abreisst, beendet das Edikt ohne Erstattung der 600 Geld; die Sperre bleibt.
+- **Stapelregel:** Fest, niedrige Steuer und Wohlfahrt verkürzen die Aufstiegs-Wartezeit nicht unter die der niedrigen Steuer (15 s); sie addieren sich nicht. Bei Mangel an einem Gut verdoppelt sich die Wartezeit weiter.
+- Im späten Spiel sind Edikte eine Feinsteuerung von wenigen Prozent; spürbar werden sie beim Zukauf und bei vielen neuen Häusern.
+
 ## Wirtschaft
 
 - **Start:** 5000 Geld, 40 Holz, 20 Werkzeug, 10 Stein, 20 Nahrung.
@@ -321,7 +339,7 @@ Schiffsabschnitt («Handeln» bleibt dort ein Knopf); sonst öffnet er direkt de
 | Kauf            | 10   | 40       | 15    | 8       | 12    | 30    | 12         | 40  | 50   | 40     |
 | Verkauf (100 %) | 4    | 15       | 6     | 3       | 5     | 12    | 5          | 18  | 20   | 12     |
 
-- **Kaufpreise sind fest.**
+- **Kaufpreise sind fest.** Mit dem Edikt Handel (Amtsstube) sinken sie um 20 % (über die ganze Menge aufgerundet).
 - **Verkaufssättigung:** Jede verkaufte Einheit senkt den Verkaufspreis dieses Guts um 1 Prozentpunkt,
   höchstens bis 30 %. Jede Sekunde erholt sich der Preis jedes Guts um 1 Prozentpunkt, bis 100 %.
   Rund 10 Einheiten je Gut und 10 Sekunden lassen sich also fast zum vollen Preis verkaufen; wer das
@@ -392,6 +410,14 @@ Einwohner und 10 s); es wächst nur auf Gewürzinseln und lässt sich am Kontor 
   der Tooltip nennt Steuern und Unterhalt je Minute; eine negative Bilanz ist hervorgehoben.
 - Geld darf negativ werden. Solange es negativ ist, sind Bauen, Kaufen und Aufstieg gesperrt, bis
   wieder Geld hereinkommt (Verkauf, Auftrag oder Steuern).
+
+### Stilllegen
+
+Im Betriebs-Panel legt der Knopf «Stilllegen» einen Betrieb still, der etwas erzeugt (Farmen, Werkstätten und so weiter; Wohnhäuser und Dienste nicht).
+
+- Ein stillgelegter Betrieb zahlt den **halben Unterhalt** (je Betrieb aufgerundet), erzeugt nichts und verbraucht nichts. Die Kette dahinter läuft leer.
+- «Wieder anfahren» (derselbe Knopf) startet ihn mit einem Klick, ohne Kosten.
+- Stillgelegte Betriebe stehen nicht in der Problemliste: Die Pause ist gewollt.
 
 ### Abriss
 
@@ -550,6 +576,7 @@ Boom verkaufen lohnt sich nie, und ein Auftrag bringt je Einheit immer mehr als 
 - **Neue Insel:** Menü → «Neue Insel» fragt zuerst «Neue Insel beginnen?» (Ja / Abbrechen), dann entsteht
   eine neue Insel mit Tempo 1× und der gewählten Krisenstufe. Der Autosave bleibt, bis der nächste ihn
   überschreibt. Die Kartennummer steht im Menü («Karte …»).
+- **Spielstand-Version 11** (Edikte und Stilllegen): Ältere Stände laden weiter und werden über die Migrationskette ergänzt (kein Edikt, nichts stillgelegt). Ein Stand aus einer neueren Version wird mit Hinweis («Unbekannte Version») abgewiesen; das laufende Spiel bleibt unverändert.
 - Spielstände vom Stand vor der Seefahrt (Version 8) lassen sich laden: Sie bekommen je Kaufmannshaus 10 Gewürz
   (höchstens 100) im Heimatlager als Übergang und eine einmalige Meldung.
 - Spielstände älterer Versionen (vor M5 bzw. vor M6) lassen sich laden und werden danach im neuen Format

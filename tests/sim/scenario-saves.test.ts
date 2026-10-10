@@ -42,6 +42,7 @@ const WON_AFTER_FIRST_TICK = new Set([
   'm8-glashuette-wartet', // Änderung S11: won true (Freischaltung der Glashütte)
   'm8-kaufleute-ohne-glas',
   'm11-stein', // M11 B1: won true (Freischaltung U6)
+  'm13-ziel1', // M13-E1: Stand nach Ziel 1
 ]);
 
 describe('Szenario-Saves', () => {
@@ -104,6 +105,8 @@ describe('Szenario-Saves', () => {
         'm10-amtsstube-aus',
         'm10-krise-bald',
         ...M11, // M11 B1
+        'm13-ziel1',
+        'm13-vor-ziel',
       ].sort(),
     );
   });

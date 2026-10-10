@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { canPlace, canPlaceRoad } from '../../src/sim/placement';
 import { checkAfford } from '../../src/sim/economy';
 import { demolish, placeRoad, removeRoad } from '../../src/sim/build';
+import { setPaused } from '../../src/sim/pause';
 import { upgradeBuilding } from '../../src/sim/upgrade';
 import { setTaxLevel } from '../../src/sim/tax';
 import { buy, sell } from '../../src/sim/trade';
@@ -48,6 +49,25 @@ import { perfBudget } from '../helpers/perfBudget';
 declare const process: { env: Record<string, string | undefined> };
 
 describe('friendlyReason (AK-UX-03)', () => {
+  it('AK-M13E1-29 Edikt-Gründe (U-6) und AK-M13E1-26 Ladegründe', () => {
+    const { w } = uxWorld();
+    w.tick = 1000;
+    w.edictLockedUntil = 1450;
+    expect(friendlyReason(w, 'Edikt-Sperrzeit')).toBe('Edikt erst in 45 s wieder änderbar');
+    w.edictLockedUntil = 1000;
+    expect(friendlyReason(w, 'Edikt-Sperrzeit')).toBe('Edikt-Sperrzeit');
+    for (const r of ['Erst nach dem Bürger-Ziel', 'Edikt bereits aktiv', 'Kein Edikt aktiv'])
+      expect(friendlyReason(w, r)).toBe(r);
+    expect(friendlyReason(w, 'Unbekannte Version')).toBe('Unbekannte Version');
+    expect(friendlyReason(w, 'Ungültiges Format')).toBe('Ungültiges Format');
+  });
+
+  it('Ungültiges Edikt (U-6): eigene Tabellenzeile, Text unverändert', () => {
+    const { w } = uxWorld();
+    expect(REASON_TABLE.some((row) => row.pattern.test('Ungültiges Edikt'))).toBe(true);
+    expect(friendlyReason(w, 'Ungültiges Edikt')).toBe('Ungültiges Edikt');
+  });
+
   it('AK-UX-03 Pflichtfälle aus der Spec', () => {
     const { w } = uxWorld();
     home(w).stock.wood = 1;
@@ -609,5 +629,36 @@ describe('Schild nennt Gelände und Belegung (REL-16)', () => {
     const { w } = uxWorld();
     expect(friendlyReason(w, 'Kein Bauland')).toBe('Kein Bauland — nur auf Land bauen');
     expect(friendlyReason(w, 'Bereits bebaut')).toBe('Hier steht schon ein Gebäude oder Weg');
+  });
+});
+
+describe('M13-E1 Stilllegen-Gründe (AK-M13STL-09, AK-UX-03)', () => {
+  it('vier neue Gründe: wörtlich und in der Tabelle', () => {
+    const { w, fisher, house } = uxWorld();
+    const covered = (r: string): boolean => REASON_TABLE.some((row) => row.pattern.test(r));
+    const got: string[] = [];
+    const grab = (id: number, v: unknown): void => {
+      const r = setPaused(w, id, v);
+      if (!r.ok) got.push(r.reason);
+    };
+    grab(fisher.id, 'ja');
+    grab(house.id, true);
+    grab(fisher.id, true);
+    grab(fisher.id, true);
+    grab(fisher.id, false);
+    grab(fisher.id, false);
+    expect(got).toEqual([
+      'Ungültiger Wert',
+      'Nur Betriebe lassen sich stilllegen',
+      'Schon stillgelegt',
+      'Läuft bereits',
+    ]);
+    for (const r of got) {
+      expect(covered(r), r).toBe(true);
+      expect(friendlyReason(w, r)).toBe(r);
+    }
+    expect(friendlyReason(w, 'Nur Betriebe lassen sich stilllegen')).toBe(
+      'Nur Betriebe lassen sich stilllegen',
+    );
   });
 });

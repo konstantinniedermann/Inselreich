@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
 import { home, createWorld } from '../../src/sim/world';
-import { boomGood, tradeRows, tradeTitle } from '../../src/ui/trade';
+import { setEdict } from '../../src/sim/edicts';
+import {
+  boomGood,
+  buyHeadNote,
+  buyTitle,
+  buyUnitText,
+  tradeRows,
+  tradeTitle,
+} from '../../src/ui/trade';
+import { placeTownhall } from '../sim/helpers';
 
 describe('boomGood (Marke nur am Boom-Gut)', () => {
   it('trifft genau das Boom-Gut, nach dem Boom keines', () => {
@@ -35,5 +44,25 @@ describe('M12 E2 UI Bauen und Handeln: Handel je Insel', () => {
     const w = createWorld(3);
     expect(tradeTitle(w, 0)).toBe('Handel am Kontor');
     expect(tradeTitle(w, 2)).toBe('Handel · Felsbucht');
+  });
+});
+
+describe('M13-E1 Kontor-Preise mit Edikt (AK-M13E1-31)', () => {
+  it('AK-M13E1-31 Einheitspreis, Titel und Kopfzeile mit und ohne Handel', () => {
+    const w = createWorld(3, { unlockAll: true });
+    w.won = true;
+    const th = placeTownhall(w);
+    w.money = 1000;
+    expect(buyUnitText(w, 'food')).toBe('8 Geld');
+    expect(buyTitle(w, 'food', 10)).toBe('10 Nahrung kaufen für 80 Geld');
+    expect(buyHeadNote(w)).toBe('');
+    expect(setEdict(w, 'trade').ok).toBe(true);
+    expect(buyUnitText(w, 'food')).toBe('7 Geld');
+    expect(buyTitle(w, 'food', 10)).toBe('10 Nahrung kaufen für 64 Geld');
+    expect(buyHeadNote(w)).toBe('Edikt Handel: −20 %');
+    th.outageUntil = w.tick + 1000;
+    expect(buyUnitText(w, 'food')).toBe('8 Geld');
+    expect(buyTitle(w, 'food', 10)).toBe('10 Nahrung kaufen für 80 Geld');
+    expect(buyHeadNote(w)).toBe('');
   });
 });
