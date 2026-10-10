@@ -4454,3 +4454,23 @@ Task-Review `qa-code-reviewer` OK; Konfliktprobe sauber; L0-Diffprüfung ohne Be
 Regelbezug: gates.md Gate Merge; R446 · Kosten bei Irrtum: Revert-Merge vor dem Push.
 
 Entscheider: L0 · Anlass: Bericht lead-tech HOTFIX-CI-01 · ADR: —
+
+## R448 · 2026-10-10 · Ideen-Runde IDEEN-05 entschieden (Priorisierung nach Nutzen/Aufwand)
+
+Ruling: Runde `42e3df01` angenommen (15 Ideen I-031…I-045, 3 Starts, ≈ 55 von 160 Tools). Priorisierung durch L0 nach
+Nutzen je Aufwand (R445): **(1) einplanen REL-17** als S-Bedien-Häppchen **UI-PROBLEM-SPRUNG** = I-042 „Nächstes Problem
+anspringen“ + I-041 „Wege abreissen durch Ziehen“ (höchster Nutzen je Aufwand, kein Save, keine Baseline; beide in
+`src/ui/input.ts`): Kurzdesign `lead-design` jetzt, Plan danach; REL-16 bleibt unverändert (schnelles Fehler-Release).
+**(2) einplanen als Bausteine M13 „Spätspiel mit Richtung“**: I-031 „Edikte der Amtsstube“ + I-039 „Denkmal als Wahlziel“
+(tiefste neue Entscheidung; Geld hat nach Stunde 1 keine Richtung). Brainstorming `lead-design` mit
+`design-economy-designer` jetzt parallel, Ergebnis ist ein Designvorschlag mit Rechnung (Stapel-Gefahr Steuer «niedrig» +
+Fest + Wohlfahrts-Edikt), noch keine Spec. **(3) einplanen nach REL-17**: I-043 „Gut-Chip zeigt Erzeuger und Verbraucher“
+(teilt die Sprung-Logik von I-042). **(4) geparkt:** I-035 „Betrieb stilllegen“ bis zur nächsten Save-Änderung (v11,
+dann mitnehmen); I-038, I-036, I-016 bis zu einem Archipel-Brainstorming; I-032, I-033, I-034, I-037, I-044, I-040, I-045
+bis Anlass (Begründungen im Bericht IDEEN-05). Keine Idee berührt Säule, Genre oder Titel (§5.3). Die
+Entscheid-Zeilen in `docs/ideen.md` trägt `lead-design` im Kurzdesign-Start nach.
+
+Regelbezug: gates.md Gate Ideen-Runde (breite Runde, R445) · Kosten bei Irrtum: Reihenfolge der nächsten Releases
+umstellen; kein Code betroffen.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-05 · ADR: —
