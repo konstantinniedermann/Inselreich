@@ -5171,3 +5171,14 @@ erfüllt.
 Regelbezug: gates.md Gate Merge Release (Stufe leicht), R485 · Kosten bei Irrtum: ein Revert-Commit.
 
 Entscheider: L0 · Anlass: Bericht Controller AUFRAEUM-01 · ADR: —
+
+## R492 · 2026-10-10 · Spec-Nachtrag I-048 abgenommen; Plan in der nächsten Session
+
+Ruling: Nachtrag `12c98fd3` (Spec 38,8 KB, AK-ZK-29…33, `buyQuote` als reine Kernfunktion, Klassen N/R in §6) und
+`1d724c5e` (Ideen-Status) abgenommen. Umbenennung `EdictDef.buyPct` → `buyFactorPct` bleibt im Umfang (eindeutige Namen,
+≈ 5 Tools). Spec I-048 ist damit gegatet (R487, R490). Plan durch `lead-tech` wegen Limit-Ampel gelb (R488) erst in der
+nächsten Session; Plan-Punkte stehen im Handoff `.studio/handoffs/2026-10-10-lead-design-design-i048-nachtrag.md`.
+
+Regelbezug: gates.md Gate Spec, R488 · Kosten bei Irrtum: eine Umbenennung zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-i048-nachtrag · ADR: —
