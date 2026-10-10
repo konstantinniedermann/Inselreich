@@ -5182,3 +5182,16 @@ nächsten Session; Plan-Punkte stehen im Handoff `.studio/handoffs/2026-10-10-le
 Regelbezug: gates.md Gate Spec, R488 · Kosten bei Irrtum: eine Umbenennung zurücknehmen.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-i048-nachtrag · ADR: —
+
+## R493 · 2026-10-10 · Spec-Nachtrag M13-E2 abgenommen; Plan in der nächsten Session
+
+Ruling: Nachtrag `a39a1ccb` (Spec 39,2 KB, Anhang 08 neu, AK-49 neu, Zwei-Klick-Helfer C1–C7, Rückfaltung mit
+Reihenfolgeerhalt) abgenommen; Spec M13-E2 ist gegatet (R483, R489). Entscheid zu Anhang 08 D: Die Ausgangsstände zu
+AK-43/-44 tragen `wonSpice = true` (Ziel-Chip zeigt das Denkmal erst nach Ziel 3) — so lassen, lead-qa bestätigt im Gate
+Plan. Plan durch `lead-tech` (opus, Tech-Lead beim Plan) wegen Limit-Ampel gelb (R488) in der nächsten Session als erstes;
+Plan-Punkte in Anhang 08 E und im Handoff `.studio/handoffs/2026-10-10-lead-design-design-m13-e2-nachtrag.md`,
+einschliesslich Nachtrag Plan I-049 (Fall K1, `dropZeroReserve`).
+
+Regelbezug: gates.md Gate Spec, R488 · Kosten bei Irrtum: ein Ausgangsstand im Browser-Check falsch gewählt.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-m13-e2-nachtrag · ADR: —
