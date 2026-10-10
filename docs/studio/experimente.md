@@ -16,7 +16,7 @@ Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
 Reihenfolge der Wartenden auf einen freien Platz (R375): E-038 (frühestens 2026-10-22), E-048,
-E-050, E-049, E-044; E-054 (Plan-Modell, Retro c64c0775 V1) hinter E-044; E-055 (Budget-Warnung, Retro c64c0775-b V1) danach; E-056 und E-057 (Retro 2cfa57e0 V1, V3) zuletzt; E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+E-049, E-044; E-054 läuft seit R459; E-055 (Budget-Warnung, Retro c64c0775-b V1) danach; E-056 und E-057 (Retro 2cfa57e0 V1, V3) zuletzt; E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 ---
 
@@ -458,7 +458,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Anpassung umgesetzt (R433 V2, TOOL-BUENDEL-2, 319fa8bc): herausgerechnet werden Lead-Instanzen mit Freigabephase `plan-*`/`design-*`/`gate-*` (Zuordnung `claim_budgets`) oder „Budget: keins“; die Zeile nennt den Anteil je Grund. Rohzeile und Klassen unverändert (Entscheid E1 im Plan); Messgrösse ‚Klasse Design/Spec/Plan > 0‘ gelesen als ‚herausgerechnet Plan > 0 bei Plan-Instanzen‘. Zählung der Datenpunkte beginnt mit der ersten Session nach dem Merge neu; Frist 2026-11-19 unverändert.
 - Datenpunkt 1 von 3 nach der Anpassung, S-2026-10-10-c64c0775 (Retro [session-c64c0775-b-ende](retros/2026-10-10-session-c64c0775-b-ende.md) B2): roh 68,7 %, bereinigt 37,6 %, herausgerechnet 31,1 Punkte (Plan 16,2, Design 1,7, Gate 0,0, nur Budget keins 13,2; 5 von 11 Lead-Instanzen); Gegenprobe erfüllt. Weiter beobachten.
 
-## E-050 · laufend · Fortsetzung nach Pause als frische Instanz (Umsetzer)
+## E-050 · behalten (R459) · Fortsetzung nach Pause als frische Instanz (Umsetzer)
 
 - Hypothese: Wenn ein Lead einen Umsetzer, dessen letzter Turn mehr als 5 min zurückliegt und dessen Kontext über 40k liegt, für Fix-Runde oder Folge-Task nicht per `SendMessage` fortsetzt, sondern eine neue Instanz mit Review-Befund, Commit-Stand und Dateiliste als Briefing startet, sinken die 5-min-Neuschreibungen der Umsetzer nach Turn-Ende, ohne dass Review-Runden steigen (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) B2; Pflicht-Hebel Cache-Write, Dauer-Rot).
 - Messgrösse: Umsetzer-Neuschreibungen > 20k nach Turn-Ende je Umsetzer-Instanz ≤ 0,2 über 3 Sessions mit Umsetzern (Ausgang S-2026-10-08-29c3791b: 7 in 12 Instanzen von art-rendering-engineer, tech-ui-engineer, tech-sim-engineer ≈ 0,58, Gewicht ≈ 350k). Gegenprobe: Cache-Write der Folgeinstanz gesamt kleiner als die ersetzte Neuschreibung (Stichprobe 3 Fälle aus `rewrite_stats` und Instanzdaten), Review-Runden im Mittel ≤ 2, Erstabnahme nicht schlechter.
@@ -470,6 +470,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R420 (Start 2026-10-09, Handbuch 1.36)
 - Datenpunkt 1 von 3, S-2026-10-09-c64c0775 (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md)): 0 Umsetzer-Neuschreibungen > 20k in 8 Umsetzer-Instanzen (Schwelle ≤ 0,2 erfüllt); Gegenprobe Review-Runden 1,00 erfüllt. Einschränkung: kurze Läufe (Kontext Mittel 38k) lassen die 40k-Schwelle kaum greifen; Fix-Runde T07 lief als frische Instanz.
 - Datenpunkt 2 von 3, S-2026-10-10-c64c0775 (Retro [session-c64c0775-b-ende](retros/2026-10-10-session-c64c0775-b-ende.md)): 0 Umsetzer-Neuschreibungen > 20k nach Turn-Ende in 6 Umsetzer-Instanzen (eine nach Bash/Agent, nicht gezählt); Review-Runden 1,00 erfüllt. Kontext Mittel 36k, Schwelle greift kaum.
+- Datenpunkt 3 von 3, S-2026-10-10-2cfa57e0 (Retro [session-2cfa57e0-ende](retros/2026-10-10-session-2cfa57e0-ende.md) V4): 0 Umsetzer-Neuschreibungen > 20k in 5 Umsetzer-Instanzen, Review-Runden 1,00. Urteil **behalten** (R459). Fortgeführter Nachtrag S-2026-10-10-5a00a316: 2 Neuschreibungen > 20k in 16 Umsetzer-Instanzen (tech-sim 1, tech-ui 1; ≈ 0,13 je Instanz, Schwelle ≤ 0,2 gehalten; Rollentabelle, nicht nach Turn-Ende getrennt).
 
 ## E-051 · übernommen als Werkzeug (R375, R380) · Werkzeug-Riegel für volle Testläufe
 
@@ -506,7 +507,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/zeitreserve/rule.ts`, `tools/zeitreserve/reporter.ts`, `tests/tools/` (Paket lead-tech, ≈ 15 Tools)
 - Ruling: –
 
-## E-054 · vorgeschlagen (wartet auf Platz) · Plan-Instanz bei Stufe leicht und Werkzeug-Paketen auf sonnet
+## E-054 · laufend (R459) · Plan-Instanz bei Stufe leicht und Werkzeug-Paketen auf sonnet
 
 - Hypothese: Wenn Pläne für Stufe-leicht-Häppchen und Werkzeug-Bündel (kein Architekturentscheid, kein Save, kein neuer Spielwert) von `lead-tech` auf sonnet statt opus geschrieben werden, sinkt das Kostengewicht der Plan-Instanz um den Modellfaktor (0,6), ohne dass die Gate-Plan-Befunde zunehmen (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md) B2; Ausgang `REL-14-PLAN` 1,38 M, `TOOL-BUENDEL` 2,01 M, zusammen 35,4 % der Session).
 - Messgrösse: Kostengewicht je Plan-Instanz ≤ 60 % des Ausgangs bei vergleichbarem Umfang und Steuerungsanteil bereinigt (E-049) ≤ 40 % über 3 Pläne; Gegenprobe: Gate-Plan-Befunde je Plan nicht über Ausgang (REL-14: 5, Bündel: 12, alle nicht blockierend) und 0 blockierende, Review-Runden im Mittel ≤ 2, Erstabnahme nicht unter 90 %.
@@ -514,7 +515,8 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Pläne, höchstens bis 2026-11-19; Start erst bei freiem Platz.
 - Rückfall: Modelltabelle (Zeile „Tech-Lead beim Plan“) und `lead-tech.md` auf die Fassung vor der Änderung.
 - Dateien: `docs/studio/STUDIO.md` (Modellwahl), `.claude/agents/lead-tech.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
-- Ruling: –
+- Ruling: R459 (Start 2026-10-10, erster Fall UI-GUT-CHIP R461, zweiter TOOL-BUENDEL-4 R464)
+- Datenpunkt 1 und 2 von 3, S-2026-10-10-5a00a316 (Retro [session-5a00a316-ende](retros/2026-10-10-session-5a00a316-ende.md) B1): Plan-Instanz `UI-GUT-CHIP` Gewicht 0,46 M in 25 Turns (≈ 33 % des Ausgangs REL-14-PLAN 1,38 M), `TOOL-BUENDEL-4` 0,23 M in 15 Turns (≈ 11 % von 2,01 M); Tools Plan + Nacharbeit 15 + 8 bzw. 11 + 4. Gate-Plan-Befunde 9 (UI-GUT-CHIP) und 6 (Bündel), je 0 blockierend, Nacharbeit ohne Zweitprüfung (R462, R465). Kostenschwelle ≤ 60 % je Plan erfüllt; die Befundzahl 9 liegt über dem Ausgang REL-14 (5), unter dem des Bündels (12) — Vergleichsbasis uneinheitlich, bei n = 2 kein Urteil. Vorbehalt Umfang: UI-GUT-CHIP Plan T01–T08, Bündel T01–T07 + T08; Umfang des Ausgangs nicht gegengeprüft. Messlücke: Steuerung bereinigt (E-049) war in dieser Session nicht auswertbar (Retro B2); opus-Anteil Session 37,0 % (Historie 71,1 %), durch den Modellwechsel allein nicht erklärbar (Session ohne Spec-Autor). Weiter beobachten, Datenpunkt 3 beim nächsten Plan.
 
 ## E-055 · übernommen als Werkzeug (R443, TOOL-BUENDEL-3) · Warnung bei Lead-Start mit Budgetzeile ohne Freigabe
 
