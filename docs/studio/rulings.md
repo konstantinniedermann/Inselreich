@@ -4972,3 +4972,18 @@ erfolgt (`bfb6af44`), R464 hindert den Start nicht mehr.
 Regelbezug: gates.md Gate Plan, R233 V2, R464, R465, R468 · Kosten bei Irrtum: eine Fix-Runde im Werkzeug-Strang.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-tool-buendel-5 · ADR: —
+
+## R479 · 2026-10-10 · Kombiniertes Gate UI-TASTEN: BEDENKEN → Nacharbeit im Controller, Umsetzung frei
+
+Ruling: Plan `docs/superpowers/plans/2026-10-10-ui-tasten.md` (`6cf3d40d`, T01–T06) mit Nacharbeit frei (Urteil
+`.studio/handoffs/2026-10-10-lead-qa-GATE-UI-TASTEN.md`, B1–B5). Der Controller (`lead-tech`, sonnet) arbeitet die
+Nacharbeit vor T01 in den Plan ein: **B1** Abzweig von aktuellem main, Dateimatrix-Zeilen zu UI-GUT-CHIP/M13-E1 und das
+Blocked-by in T01 entfallen; **B2** reiner Helfer (z. B. `keyDownVerdict`) mit Vitest für UT-05/06 Pflicht; **B3** T05-
+Schritte präzisiert (UT-10 Byte-Vergleich des manuellen Platzes, Control und Meta per CDP, `autoRepeat`, Randfälle);
+**B4** Final-Review zitiert leeren `src/sim`-Diff und `make check`; **B5** Schutz der zwei Refactorings benennen. L0-Prüfung
+Ownership/Budget: ein Baum `.worktrees/ui-tasten`, Branch `feat/ui-tasten`, keine Überschneidung mit TOOL-BUENDEL-5
+(`tools/studio/`); **13 Starts** freigegeben (Phase `ui-tasten`). Release gemeinsam mit weiteren release-reifen Häppchen.
+
+Regelbezug: gates.md Kombiniertes Gate (Stufe leicht), R476 · Kosten bei Irrtum: eine Fix-Runde im UI-Strang.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-ui-tasten · ADR: —
