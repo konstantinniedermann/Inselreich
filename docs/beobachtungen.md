@@ -219,3 +219,7 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
 ### 2026-10-10 · UI-TASTEN: Laden-Liste im offenen Menü aktualisiert sich nach «Speichern» nicht
 
 - **Fundort:** Menü «Laden»-Liste (`src/ui/menu.ts`), Playtest T05 (`.studio/qa/ui-tasten/17-menue-nach-speichern-liste-nicht-aktualisiert`). Beobachtung: Nach «Speichern» bei offenem Menü zeigt die Liste weiter den Stand vom Öffnen; vermutlich schon vor UI-TASTEN so. Ursprung: Playtest UI-TASTEN. Einschätzung: niedrig, rein kosmetisch.
+
+### 2026-10-10 · UI-TASTEN: Final-Review-Hinweise (niedrig)
+
+- **Fundort:** `src/ui/modal.ts` (importiert `hotkeys.ts` für `isSaveChord`, zieht `sim/defs` mit), Tooltip «Entf» am Abreissen-Knopf (Mac ohne Entf-Taste), `keyDownVerdict` (sperrt nur den Abriss-Zug). Beobachtung: `isSaveChord` könnte in ein kleines reines Modul; Tooltip könnte «Entf / Rücktaste» nennen. Ursprung: Final-Review UI-TASTEN. Einschätzung: alle niedrig.
