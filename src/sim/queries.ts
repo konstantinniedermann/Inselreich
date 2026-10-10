@@ -9,6 +9,7 @@ import { serviceBuildings } from './coverage';
 import { supplyBuildings } from './supply';
 import type {
   Building,
+  BuildingDef,
   BuildingDefId,
   Cost,
   CrisisKind,
@@ -24,6 +25,11 @@ import { center, HOME, home, idx, islandOf, tilesInRadius, type Pos } from './wo
 
 export type Diagnosis =
   { kind: 'supply' } | { kind: 'good'; good: GoodId } | { kind: 'service'; service: ServiceId };
+/** Rolle eines Gebäudetyps für ein Gut; der Erzeuger gewinnt, wenn beides zutrifft. */
+export function goodRole(def: BuildingDef, good: GoodId): 'producer' | 'consumer' | null {
+  if (def.produces === good) return 'producer';
+  return def.consumes?.includes(good) ? 'consumer' : null;
+}
 export type CoverageKind = 'supply' | ServiceId | 'fire';
 export type CrisisView =
   | { phase: 'none'; next: number | null }
