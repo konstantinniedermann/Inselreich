@@ -3,7 +3,7 @@ import { GOODS } from '../sim/defs/goods';
 import { LEVELS } from '../sim/defs/levels';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
-import { cycleOf, upkeepOf, utilization } from '../sim/levels';
+import { buildingUpkeep, cycleOf, upkeepOf, utilization } from '../sim/levels';
 import { isSupplied } from '../sim/population';
 import { missingInputs } from '../sim/queries';
 import { upgradeBuilding } from '../sim/upgrade';
@@ -64,6 +64,7 @@ const round1 = (x: number): number => Math.round(x * 10) / 10;
 /** Ton des Zustands; gleiche Prüfreihenfolge wie `stateInfo` (Anhang 01 A.1). */
 export function stateTone(b: Building): Tone {
   if (b.outageUntil !== undefined) return 'bad';
+  if (b.paused === true) return 'warn';
   if (!b.connected) return 'bad';
   if (BUILDING_DEFS[b.defId].produces === undefined) return 'ok';
   const state = b.state;
@@ -180,7 +181,7 @@ export function statTiles(b: Building): StatTile[] {
   tiles.push({
     key: 'upkeep',
     label: TILE_LAYOUT.upkeep.label,
-    value: `${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} / min`,
+    value: `${perMinute(buildingUpkeep(b), UPKEEP_INTERVAL)} / min`,
     sub: 'Geld',
   });
   return tiles;
@@ -331,4 +332,13 @@ export function upgradeView(world: World, b: Building): UpgradeView | null {
 /** Fortschrittsbalken in Prozent, bezogen auf den Zyklus der Stufe. */
 export function progressPct(b: Building): number {
   return Math.min(100, Math.round((b.progress / (cycleOf(b) ?? 1)) * 100));
+}
+
+/** Knopf «Stilllegen» / «Wieder anfahren»; nur für Betriebe mit Erzeugung (U-11). */
+export function pauseButton(b: Building): { text: string; title: string } | null {
+  if (BUILDING_DEFS[b.defId].produces === undefined) return null;
+  return {
+    text: b.paused === true ? 'Wieder anfahren' : 'Stilllegen',
+    title: 'Halber Unterhalt, keine Erzeugung',
+  };
 }

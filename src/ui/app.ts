@@ -95,6 +95,7 @@ import { clearForest, plantForest } from '../sim/forest';
 import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../sim/tax';
 import { lockedTierFor } from './taxView';
 import { setEdict } from '../sim/edicts';
+import { setPaused } from '../sim/pause';
 import { EDICT_COST } from '../sim/defs/edicts';
 import { edictSuccessText } from './edictView';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
@@ -654,6 +655,11 @@ function launch(
           connectPreview = tiles;
         },
         ships: shipActions,
+        setPaused: (id, paused) => {
+          const r = setPaused(world, id, paused);
+          if (!r.ok) showError(friendlyReason(world, r.reason));
+          refresh();
+        },
         setEdict: (id) => {
           const r = setEdict(world, id);
           if (r.ok) {

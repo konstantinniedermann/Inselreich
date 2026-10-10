@@ -1188,7 +1188,8 @@ body {
   box-shadow: 0 0 0 2px var(--gold);
 }
 .edict-card.locked {
-  opacity: 0.55;
+  color: var(--parchment-muted);
+  border-style: dashed;
 }
 .edict-when {
   color: var(--parchment-muted);

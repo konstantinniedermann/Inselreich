@@ -28,6 +28,10 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { LEVELS } from '../../src/sim/defs/levels';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { stateInfo } from '../../src/ui/texts';
+import { setPaused } from '../../src/sim/pause';
+import { pauseButton } from '../../src/ui/panelView';
+import { buildingUpkeep } from '../../src/sim/levels';
+import { UPKEEP_INTERVAL } from '../../src/sim/economy';
 import { perMinute, signedNum } from '../../src/ui/time';
 import type { Building, BuildingDefId, BuildingState, Tier, World } from '../../src/sim/types';
 import { setHouse, uxWorld } from './worlds';
@@ -387,5 +391,38 @@ describe('REL-14 Quelltext: alte Begriffe und Fehlt-Zeile entfernt', () => {
     // A2 (R427): Rückfall des Haus-Hinweises ist „zufrieden“; „versorgt N Häuser“ (Dienstgebäude, hover.ts) bleibt.
     expect(readFileSync('src/ui/hints.ts', 'utf8')).not.toContain("'versorgt'");
     expect(readFileSync('src/style.css', 'utf8')).not.toContain('first-missing');
+  });
+});
+
+describe('M13-E1 Stilllegen im Panel (AK-M13STL-09)', () => {
+  const w = createWorld(3, { unlockAll: true });
+  it('AK-M13STL-09 stateInfo und stateTone: stillgelegt mit Vorrang vor Anbindung, nach Ausfall', () => {
+    const f = put(w, 'fisher', { connected: false });
+    expect(setPaused(w, f.id, true).ok).toBe(true);
+    expect(stateInfo(f, w.tick)).toEqual({ text: 'Stillgelegt — halber Unterhalt', ok: false });
+    expect(stateTone(f)).toBe('warn');
+    f.outageUntil = w.tick + 100;
+    expect(stateInfo(f, w.tick).text).not.toBe('Stillgelegt — halber Unterhalt');
+    expect(stateTone(f)).toBe('bad');
+  });
+  it('AK-M13STL-09 pauseButton: Betrieb ja, Wohnhaus und Kapelle nein', () => {
+    const f = put(w, 'fisher');
+    expect(pauseButton(f)).toEqual({
+      text: 'Stilllegen',
+      title: 'Halber Unterhalt, keine Erzeugung',
+    });
+    expect(setPaused(w, f.id, true).ok).toBe(true);
+    expect(pauseButton(f)!.text).toBe('Wieder anfahren');
+    expect(pauseButton(put(w, 'house'))).toBeNull();
+    expect(pauseButton(put(w, 'chapel'))).toBeNull();
+  });
+  it('AK-M13STL-09 Kachel «Unterhalt» zeigt den wirksamen Unterhalt', () => {
+    const g = put(w, 'glassworks');
+    const tile = (): string => statTiles(g).find((t) => t.key === 'upkeep')!.value;
+    expect(tile()).toBe(`${perMinute(buildingUpkeep(g), UPKEEP_INTERVAL)} / min`);
+    const run = tile();
+    expect(setPaused(w, g.id, true).ok).toBe(true);
+    expect(tile()).not.toBe(run);
+    expect(tile()).toBe(`${perMinute(buildingUpkeep(g), UPKEEP_INTERVAL)} / min`);
   });
 });

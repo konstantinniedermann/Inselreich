@@ -217,3 +217,9 @@ describe('M11 Marke noForest (Spec 8)', () => {
     expect(isLit(BUILDING_DEFS.lumberjack, b)).toBe(false);
   });
 });
+
+describe('M13-E1 Zustand paused', () => {
+  it('AK-M13STL-09 statusMarkOf(paused) = null', () => {
+    expect(statusMarkOf('paused')).toBeNull();
+  });
+});

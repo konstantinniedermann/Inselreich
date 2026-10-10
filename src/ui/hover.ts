@@ -116,6 +116,7 @@ function houseInfo(world: World, b: Building): HoverInfo {
 /** Zustandszeile eines Betriebs oder Dienstes, der nicht arbeitet; `null`, wenn alles läuft. */
 function troubleLine(b: Building): string | null {
   if (b.outageUntil !== undefined || b.state === 'burning') return 'brennt';
+  if (b.paused === true) return 'Stillgelegt';
   if (!b.connected) return 'nicht angebunden';
   return null;
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { canPlace, canPlaceRoad } from '../../src/sim/placement';
 import { checkAfford } from '../../src/sim/economy';
 import { demolish, placeRoad, removeRoad } from '../../src/sim/build';
+import { setPaused } from '../../src/sim/pause';
 import { upgradeBuilding } from '../../src/sim/upgrade';
 import { setTaxLevel } from '../../src/sim/tax';
 import { buy, sell } from '../../src/sim/trade';
@@ -628,5 +629,36 @@ describe('Schild nennt Gelände und Belegung (REL-16)', () => {
     const { w } = uxWorld();
     expect(friendlyReason(w, 'Kein Bauland')).toBe('Kein Bauland — nur auf Land bauen');
     expect(friendlyReason(w, 'Bereits bebaut')).toBe('Hier steht schon ein Gebäude oder Weg');
+  });
+});
+
+describe('M13-E1 Stilllegen-Gründe (AK-M13STL-09, AK-UX-03)', () => {
+  it('vier neue Gründe: wörtlich und in der Tabelle', () => {
+    const { w, fisher, house } = uxWorld();
+    const covered = (r: string): boolean => REASON_TABLE.some((row) => row.pattern.test(r));
+    const got: string[] = [];
+    const grab = (id: number, v: unknown): void => {
+      const r = setPaused(w, id, v);
+      if (!r.ok) got.push(r.reason);
+    };
+    grab(fisher.id, 'ja');
+    grab(house.id, true);
+    grab(fisher.id, true);
+    grab(fisher.id, true);
+    grab(fisher.id, false);
+    grab(fisher.id, false);
+    expect(got).toEqual([
+      'Ungültiger Wert',
+      'Nur Betriebe lassen sich stilllegen',
+      'Schon stillgelegt',
+      'Läuft bereits',
+    ]);
+    for (const r of got) {
+      expect(covered(r), r).toBe(true);
+      expect(friendlyReason(w, r)).toBe(r);
+    }
+    expect(friendlyReason(w, 'Nur Betriebe lassen sich stilllegen')).toBe(
+      'Nur Betriebe lassen sich stilllegen',
+    );
   });
 });

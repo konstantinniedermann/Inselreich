@@ -100,6 +100,10 @@ export const REASON_TABLE: readonly ReasonRow[] = [
   { source: 'edicts', pattern: /^Edikt bereits aktiv$/, show: same },
   { source: 'edicts', pattern: /^Kein Edikt aktiv$/, show: same },
   { source: 'edicts', pattern: /^Ungültiges Edikt$/, show: same },
+  { source: 'pause', pattern: /^Ungültiger Wert$/, show: same },
+  { source: 'pause', pattern: /^Nur Betriebe lassen sich stilllegen$/, show: same },
+  { source: 'pause', pattern: /^Schon stillgelegt$/, show: same },
+  { source: 'pause', pattern: /^Läuft bereits$/, show: same },
   { source: 'upgrade', pattern: /^Kann nicht ausgebaut werden$/, show: same },
   { source: 'upgrade', pattern: /^Gebäude brennt$/, show: same },
   {

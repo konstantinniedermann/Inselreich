@@ -7,7 +7,7 @@ import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, upgradeStatus } from '../sim/population';
 import { LEVELS } from '../sim/defs/levels';
-import { upkeepOf, utilization } from '../sim/levels';
+import { buildingUpkeep, utilization } from '../sim/levels';
 import { paidCost } from '../sim/upgrade';
 import { effectiveRefund, goalView, houseDiagnosis } from '../sim/queries';
 import { growthInterval } from '../sim/edicts';
@@ -50,6 +50,7 @@ import {
   TILE_LAYOUT,
   statKeys,
   statTiles,
+  pauseButton,
   stateChip,
   supplyChip,
   tierPips,
@@ -92,6 +93,8 @@ export interface InspectActions {
   setTierTax(tier: Tier, level: TaxLevel): void;
   setGoodLock(tier: Tier, good: GoodId, locked: boolean): void;
   setUpgradeStop(tier: Tier, stopped: boolean): void;
+  /** Betrieb stilllegen oder anfahren; die Ablehnung zeigt der Aufrufer. */
+  setPaused(id: number, paused: boolean): void;
   /** Amtsstube: Edikt erlassen, wechseln oder (null) aufheben; die Rückmeldung zeigt der Aufrufer. */
   setEdict(id: EdictId | null): void;
   /** Betrieb mit dem Kontor verbinden; die Ablehnung zeigt der Aufrufer. */
@@ -741,13 +744,27 @@ export function kontorActions(defId: BuildingDefId): { trade: boolean; demolish:
 }
 
 /** Gerüst des Betriebs-Panels (Betriebe und Dienste): Kopf, Kennzahlen, Ausbau-Karte (Spec 5). */
-function renderBetrieb(panel: HTMLElement, b: Building, onUpgrade: () => void): void {
+function renderBetrieb(
+  panel: HTMLElement,
+  b: Building,
+  onUpgrade: () => void,
+  onPause: (paused: boolean) => void,
+): void {
   const def = BUILDING_DEFS[b.defId];
   const { head, row } = addHead(panel, b, def.name);
   const levels = LEVELS[b.defId];
   if (levels !== undefined) addLevelChip(row, 'level-chip', 'level', levels.length + 1);
   addToneChip(head, 'state-chip', 'state');
   addRemedy(head);
+  if (pauseButton(b) !== null) {
+    const btn = node('button', 'btn pause-btn', 'pause') as HTMLButtonElement;
+    btn.type = 'button';
+    btn.addEventListener('click', () => {
+      btn.blur();
+      onPause(btn.dataset.paused !== 'true');
+    });
+    panel.appendChild(btn);
+  }
   const stats = addStats(panel, statKeys(b.defId));
   if (progressView(b) !== null) {
     const bar = node('div', 'progress', 'progress-bar');
@@ -795,7 +812,13 @@ export function renderInspect(
   } else {
     if (b.house) {
       renderHouse(panel, b);
-    } else renderBetrieb(panel, b, () => actions.upgrade(id));
+    } else
+      renderBetrieb(
+        panel,
+        b,
+        () => actions.upgrade(id),
+        (paused) => actions.setPaused(id, paused),
+      );
     if (def.service === 'faith') addButton(buttons, '', () => actions.holdFeast(id), 'feast');
     if (needsConnection(b.defId)) addConnectButton(buttons, id, actions);
     if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
@@ -898,7 +921,7 @@ function updateUpgradeBox(panel: HTMLElement, world: World, b: Building): void {
 
 /** Unterhaltszeile des stehenden Betriebs (Stufe berücksichtigt). */
 export function upkeepText(b: Building): string {
-  return `Unterhalt ${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} / min`;
+  return `Unterhalt ${perMinute(buildingUpkeep(b), UPKEEP_INTERVAL)} / min`;
 }
 
 /** Setzt Anbinden-Knopf und Grundzeile; führt die Vorschau nach, solange der Knopf überfahren ist. */
@@ -991,6 +1014,14 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
 /** Führt Kopf, Kacheln und Balken des Betriebs-Panels nach (nur Texte und Attribute, G-3). */
 function updateBetrieb(panel: HTMLElement, world: World, b: Building): void {
   setToneChip(panel, 'state-chip', 'state', stateChip(world, b));
+  const pv = pauseButton(b);
+  const pauseEl = panel.querySelector<HTMLButtonElement>('[data-field="pause"]');
+  if (pv !== null && pauseEl) {
+    if (pauseEl.textContent !== pv.text) pauseEl.textContent = pv.text;
+    if (pauseEl.title !== pv.title) pauseEl.title = pv.title;
+    const flag = String(b.paused === true);
+    if (pauseEl.dataset.paused !== flag) pauseEl.dataset.paused = flag;
+  }
   setField(panel, 'level', levelText(b) ?? '');
   setPips(panel, 'level-chip', 'level', levelPips(b));
   setTiles(panel, statTiles(b));

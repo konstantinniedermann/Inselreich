@@ -213,6 +213,7 @@ export function remedyText(w: World, b: Building): string | null {
   }
   if (b.outageUntil !== undefined)
     return `Läuft nach dem Brand von selbst wieder; eine ${nk('firestation')} in der Nähe schützt`;
+  if (b.paused === true) return null;
   if (!b.connected) return `Baue einen Weg (${hotkeyLabel({ kind: 'road' })}) von hier zum Kontor`;
   const def = BUILDING_DEFS[b.defId];
   if (b.state === 'noService' && def.requiresService) {
@@ -227,10 +228,11 @@ export function remedyText(w: World, b: Building): string | null {
     const g = def.produces;
     const sell = `Verkaufe ${GOODS[g].name} am Kontor`;
     const c = consumerOf(g);
-    if (c && buildLock(w, c) === null) return `${sell} oder baue ${nk(c)}`; // gesperrter Abnehmer: kein Zusatz (S11)
+    const still = ' oder lege den Betrieb still';
+    if (c && buildLock(w, c) === null) return `${sell} oder baue ${nk(c)}${still}`; // gesperrter Abnehmer: kein Zusatz (S11)
     if (Object.values(TIERS).some((t) => g in t.needs))
-      return `${sell} oder baue weitere Wohnhäuser`;
-    return sell;
+      return `${sell} oder baue weitere Wohnhäuser${still}`;
+    return `${sell}${still}`;
   }
   return null;
 }

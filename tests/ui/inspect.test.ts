@@ -9,6 +9,7 @@ import {
   refundText,
   restView,
   upgradeOkText,
+  upkeepText,
   upgradeReasonTexts,
   levelText,
   refundLine,
@@ -20,6 +21,7 @@ import {
 } from '../../src/ui/inspect';
 import { upgradeView } from '../../src/ui/panelView';
 import { setEdict } from '../../src/sim/edicts';
+import { setPaused } from '../../src/sim/pause';
 import { upgradeBuilding } from '../../src/sim/upgrade';
 import { serialize } from '../../src/sim/save';
 import type { BuildingDefId, World } from '../../src/sim/types';
@@ -469,5 +471,25 @@ describe('TASTEN-KOMFORT Panel-Knöpfe (AK-TK-28, 30)', () => {
       'Diesen Gebäudetyp als Bauwerkzeug wählen (Strg/Cmd+Klick auf ein Gebäude)',
     );
     expect(UPGRADE_TITLE).toBe('Ausbauen (Umschalt+U)');
+  });
+});
+
+describe('M13-E1 upkeepText stillgelegt (AK-M13STL-09)', () => {
+  it('AK-M13STL-09 Glashütte läuft 150 / min, still 78 / min', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const g: Building = {
+      id: w.nextBuildingId++,
+      defId: 'glassworks',
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+      island: 0,
+    };
+    w.buildings[g.id] = g;
+    expect(upkeepText(g)).toBe('Unterhalt 150 / min');
+    expect(setPaused(w, g.id, true).ok).toBe(true);
+    expect(upkeepText(g)).toBe('Unterhalt 78 / min');
   });
 });
