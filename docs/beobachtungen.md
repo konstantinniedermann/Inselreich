@@ -332,4 +332,4 @@ Raster) ist bereits benannt (R327).
 
 ### 2026-10-10 · TOOL-BUENDEL-2: Metrikdatei bei rotem T03-Lauf im Hauptrepo statt im Worktree
 
-- **Fundort:** `tools/studio/metrics.py` / `paths.py`: bei einem roten Lauf von T03 wurde eine Metrikdatei im Hauptrepo (`docs/studio/metriken/`) statt im Worktree geschrieben. Ursprung: TOOL-BUENDEL-2 (T03). Einschätzung: niedrig; Zielpfad nach `aebfc1ee` (`worktree_docs_dir`) prüfen, Datei im Hauptrepo nicht committen.
+- **Fundort:** `tools/studio/metrics.py` / `paths.py`: bei einem roten Lauf von T03 wurde eine Metrikdatei im Hauptrepo (`docs/studio/metriken/`) statt im Worktree geschrieben. Ursprung: TOOL-BUENDEL-2 (T03). Einschätzung: niedrig; Zielpfad nach `aebfc1ee` (`worktree_docs_dir`) prüfen, Datei im Hauptrepo nicht committen. Final-Review T07: Ursache ist der Test (`tests/studio/test_metrics.py:183` entfernt `STUDIO_DOCS`, ohne `paths.repo_root` abzuschotten), nicht der Code; Vorschlag: `paths.repo_root` im Test auf ein Temp-Verzeichnis zeigen lassen. Im Hauptrepo liegt heute keine Restdatei.
