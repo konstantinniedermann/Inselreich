@@ -67,6 +67,7 @@ export function recomputeConnectivity(world: World): void {
     b.connected = isBuildingConnected(world, b, roads[b.island]!);
     if (!needsConnection(b.defId)) continue;
     if (b.outageUntil !== undefined) b.state = 'burning';
+    else if (b.paused === true) b.state = 'paused';
     else if (!b.connected) b.state = 'notConnected';
     else if (b.state === 'notConnected') b.state = 'ok';
   }
