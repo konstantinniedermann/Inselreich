@@ -4,28 +4,28 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-10 (Studio-Session 2cfa57e0, R444–R458; Ende: REL-15 live; REL-16, REL-17, HOTFIX-CI-01, TOOL-BUENDEL-3 lokal auf main @ `f9ac34e4`, Push offen; CI auf main rot bis zum Push)
+Stand: 2026-10-10 (Studio-Session 5a00a316, R460–R470; Ende: REL-16, REL-17 live; M13-E1, UI-GUT-CHIP (I-043), TOOL-BUENDEL-4 lokal auf main @ `f22317df`, Push offen; CI auf main grün)
 
 ## Release-Notizen
 
-**REL-17 „Probleme finden, Wege abziehen“ (lokal auf main @ `f9ac34e4`, Gate Merge Release OK R458, Push offen)** — Save
-unverändert (v10), Balancing-Test unverändert. Ideen I-041/I-042 vom Studio vorgeschlagen (IDEEN-05).
+**Release-Kandidat (lokal auf main, Push offen, nächste Session):** M13-E1 (R467), UI-GUT-CHIP (R470), TOOL-BUENDEL-4
+(R469). Save **v11** (Migration v10→v11), Balancing-Baseline unverändert (nur `balance-upgrade.test.ts`, eine Zeile
+`buyPrice`, R456). Opus-Reviews je Strang erfolgt (T15 M13-E1, T09 UI-GUT-CHIP, Final-Review TOOL-BUENDEL-4).
 
-- **Neu:** `.` und `,` springen zum nächsten bzw. vorigen Problem (nicht angebunden, Betrieb steht, Haus ohne Dienst,
-  fehlende Ware), auch auf anderen Inseln, öffnen das Info-Panel und melden «Problem 2 von 5: …»; ohne Problem «Alles
-  versorgt, kein Problem offen». Das Abriss-Werkzeug reisst beim Ziehen mehrere Wege auf einmal ab (Gebäude bleiben
-  stehen); trennt ein Abriss Gebäude vom Kontor, warnt das Spiel.
-- **Bitte testen:** (1) `.` mehrmals drücken: Kamera und Panel wechseln, Werkzeug bleibt, Meldung ersetzt die vorige?
-  (2) Mit dem Abriss-Werkzeug über einen Weg nahe Häusern ziehen: nur Wege verschwinden? (3) Den einzigen Weg zu einem
-  Betrieb abreissen: Warnung «Abriss trennt 1 Gebäude vom Kontor»?
+- **Neu M13-E1 „Edikte der Amtsstube, Betrieb stilllegen“:** Nach dem Bürger-Ziel erlässt der Spieler in der Amtsstube ein
+  Edikt (Sparen, Handel, Wohlfahrt; 600 Geld, danach 5 min nicht änderbar). Jeder Betrieb lässt sich stilllegen: halber
+  Unterhalt (je Betrieb auf der 100-Tick-Basis aufgerundet), keine Erzeugung, zählt nicht als Problem.
+- **Neu I-043 „Gut-Chip zeigt Erzeuger und Verbraucher“:** Klick auf einen Lager-Chip springt zum ersten Erzeuger, hebt
+  Erzeuger und Verbraucher hervor; `.`/`,` gehen sie durch; zweiter Klick, `Esc` oder Inselwechsel beendet den Fokus.
+- **Bitte testen (nach dem Push):** (1) Amtsstube nach dem Bürger-Ziel: Edikt Sparen erlassen, Kopfzeile Unterhalt sinkt,
+  Handel ist 5 min gesperrt (Sperrzeile, Tooltip). (2) Fischerhütte stilllegen: Zustand «Stillgelegt — halber Unterhalt»,
+  sie verschwindet aus der Problemliste (`.`). (3) Holz-Chip klicken, `.` mehrmals: Kamera springt zu Holzfällern und
+  Verbrauchern, `Esc` beendet. (4) Alter Spielstand (v10) lädt.
 
-**REL-16 „Ruhiges Bauschild, sauberer Neustart“ (lokal auf main @ `915d87c5`, Gate Merge Release OK R454, Push offen)** —
-Save unverändert (v10), Balancing-Test unverändert.
+**REL-17 „Probleme finden, Wege abziehen“ (live, R463)** — Push `c282def0..a9f5336e`, CI 38055866019 grün, Pages 38056273377. Bitte testen: `.`/`,` springen zu Problemen; Abriss-Zug entfernt nur Wege, Warnung bei abgetrenntem Betrieb.
 
-- **Neu:** Das Bauschild nennt den Grund genau: «Kein Bauland: Wasser» / «Kein Bauland: Gebirge», «Platz belegt: Wohnhaus»
-  / «Platz belegt: Weg»; dieselbe Meldung beim Klick. «Neue Insel» und Laden räumen das Inselmenü des alten Spiels ab.
-- **Bitte testen:** Wohnhaus- und Weg-Werkzeug am Bergfuss, an der Küste und über bestehenden Häusern und Wegen — passt
-  das Schild zur Kachel unter dem Zeiger? Nach «Neue Insel» das Inselmenü öffnen und mit Esc schliessen.
+**REL-16 „Ruhiges Bauschild, sauberer Neustart“ (live, R463)** — Bitte testen: Bauschild «Kein Bauland: Gebirge» /
+«Platz belegt: Weg»; «Neue Insel» räumt das Inselmenü ab.
 
 **REL-15 „Klare Abhilfe, ruhiges Schild, saubere Seekarte“ (live, R446)** — Push `9eb99e77..c282def0`, CI 38038270428
 **rot** (Sekunden-Flake im Studio-Test, Fix HOTFIX-CI-01 lokal), Pages 38038481954 grün. Bitte testen: «Mangel: Kapelle
@@ -68,31 +68,29 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 ## Fortsetzung beim nächsten Start
 
 Keine Nutzer-Aufträge offen. Dauerauftrag R445: bei freier Kapazität eine breite Ideen-Runde (höchstens eine je Session).
-**Neues Claude-Gespräch empfohlen** (R438 V4 b; L0-Kontext dieser Session bis 774k).
+**Neues Claude-Gespräch empfohlen** (R438 V4 b).
 
-0. **Push** main (HOTFIX-CI-01 `e158a3a1`, REL-16 `915d87c5`, TOOL-BUENDEL-3 `f0b0a701`, REL-17 `f9ac34e4`, Doku) nach
-   **Handbuch 1.42**: `tsc`, `lint`, `zeittests`, `conflicts`, Load ≤ 4 abwarten, `make check`, `make zeitreserve-push`,
-   `make check-ci-perf` (im Integrator-Briefing ausdrücklich nennen); `git push origin <geprüfter Hash>:main`; CI (muss
-   wieder grün sein), `gh workflow run Pages --ref main` (REL-16 + REL-17 sind Releases), `ci.py`. Danach
-   Prozess-Aussensicht REL-16/REL-17 (`studio-process-coach`, ein Start für beide).
-1. **Gate Plan M13-E1** (`docs/superpowers/plans/2026-10-10-m13-e1/`, `0b40d7f1`; Entscheide E1–E9, Budgetantrag 37
-   Starts, Parallelität 2): `lead-qa` + `lead-production` (neue Branch-/Merge-Struktur, vier Controller-Instanzen), dann
-   Umsetzung (≈ 860 Tools, ≈ 95 min Wandzeit). Sim-Strang zuerst, UI-Strang nach Sim-T03. Handoff
-   `.studio/handoffs/2026-10-10-lead-tech-M13-E1.md`.
-2. **Nach REL-17:** I-043 „Gut-Chip zeigt Erzeuger und Verbraucher“ (R448 (3), nutzt `src/ui/problems.ts`) als nächstes
-   S-Bedien-Häppchen; Kurzdesign `lead-design`. Parallel möglich: Denkmal-Sprite für M13-E2 (lead-art, R452 O2).
-3. **Werkzeug-Kandidaten** in `docs/beobachtungen.md` (Abschnitte REL-16 R454, TOOL-BUENDEL-3 R457, REL-17 R458) für das
-   nächste Bündel sammeln; Auswertung, wenn > 30 Einträge.
-4. **Experimente (R459):** E-050 behalten, **E-054 (Pläne auf sonnet) startet** mit dem nächsten Plan; E-038 „angepasst“
-   (Coach passt an); V2/E-058 Integrator-Briefing mit `make check-ci-perf` als Vorlagenzeile (studio-coach); E-056, E-057
-   eingereiht; Messaufträge M1 (Frist 2026-10-23), M2 (Frist 2026-11-19), L0-Kontext Start ≤ 65k / Max ≤ 350k.
+0. **Push** main (M13-E1, UI-GUT-CHIP, TOOL-BUENDEL-4, Doku; 72+ Commits) nach **Handbuch 1.44**: **keine Umsetzer starten,
+   bis `make zeitreserve-push` Exit 0** (R464 V1); `tsc`, `lint`, `zeittests`, `conflicts`, Load ≤ 4, `make check` (zeigt
+   `loadStart`), `make zeitreserve-push`, `make check-ci-perf`; `git push origin <geprüfter Hash>:main`; CI, `gh workflow run
+Pages --ref main` (Release: Paket-ID **REL-18** vergeben, Release-Notizen oben), `ci.py`. Danach Prozess-Aussensicht
+   REL-18 (`studio-process-coach`).
+1. **M13-E2** (I-039 „Denkmal als Wahlziel“, R452): Brainstorming/Spec mit `lead-design` (opus); dabei die Seed-Randlage
+   Sparen/Handel „arm“ = K′ − 600 (R466 (2)) und den AK-36-Wortlaut (R466 (1)) aufnehmen. Parallel möglich: Denkmal-Sprite
+   (`lead-art`, R452 O2) — erst nach dem Push.
+2. **Werkzeug-Kandidaten** in `docs/beobachtungen.md` (u. a. `model.py` schneller / Events kürzen — Dashboard bis 80 s alt,
+   R469; `testrun` Ctrl-C; `start.sh` fremder Server; Fokus-Regel doppelt `focusList`/`drawFocusMarks`). Auswertung, wenn
+   > 30 Einträge (Beobachtungs-Auswertung steht ohnehin an: Einträge seit 2026-10-10 zählen).
+3. **Experimente:** E-054 hat 2 von 3 Datenpunkten (Retro 5a00a316); nächster Plan auf sonnet schliesst ab. Messaufträge M1
+   (Frist 2026-10-23), M2 (Frist 2026-11-19).
+4. **Aufräumen** (eigenes Ruling): gemergte Worktrees `.worktrees/b4`, `m13-e1-sim`, `m13-e1-ui`, `ui-gut-chip` erst nach dem
+   Push entfernen (`git worktree remove`, Branches bleiben).
 5. **Warteschlange N-99** (Kenntnis R434) offen; ohne Antwort gilt R434.
 
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich**. **M12 abgeschlossen** (R352). Live: REL-01…REL-15, M1–M8, M10, M11, M9-Häppchen, M12; REL-16, REL-17,
-  HOTFIX-CI-01 und TOOL-BUENDEL-3 lokal auf main, Push offen. **M13 „Spätspiel mit Richtung“** in Planung (Spec E1
-  `3acc7e2f`, Plan `0b40d7f1`, Gate Plan offen). Verfassung **1.2**, Handbuch **1.42**.
+- Projekt: **Inselreich**. **M12 abgeschlossen** (R352). Live: REL-01…REL-17, M1–M8, M10, M11, M9-Häppchen, M12. **M13 „Spätspiel mit Richtung“**: E1 (Edikte, Stilllegen)
+  lokal auf main (R467), E2 (Denkmal) offen. Verfassung **1.2**, Handbuch **1.44**.
 - Dauerregeln: Desktop-first (R78); kein Rebase; eine aktive L0-Session je Repo (R129, R324); studioweit **≤ 8 Agenten,
   davon ≤ 2 Browser-Läufe** (R424, ersetzt R241); vor Paketstart `git worktree list`, `git status`, fremde Heartbeats
   prüfen (R329); Messungen nur bei 1-min-Load ≤ 4 (R329).
@@ -112,29 +110,32 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Parallele Sessions
 
-Keine aktive L0-Session ausser dieser. Prozess „anno-clone #3“ lief beim Start dieser Session nicht mehr.
+Keine aktive L0-Session ausser dieser.
 
 ## Seit letzter Session erledigt
 
-- REL-15 + Werkzeug-Bündel 2 live (R446); CI rot durch Sekunden-Flake → HOTFIX-CI-01 lokal (R447); Prozess-Retro REL-15
-  (R450) → Handbuch 1.42, V1–V3 in TOOL-BUENDEL-3.
-- BEOB-AUSW-04 (R444); breite Ideen-Runde IDEEN-05 nach Nutzerauftrag (R445, Handbuch 1.41), 15 Ideen priorisiert (R448).
-- REL-16 (R451, R454) und REL-17 (R449, R453, R458) umgesetzt, abgenommen, lokal gemergt; TOOL-BUENDEL-3 (R451, R457)
-  lokal gemergt (`test_failed`-Erfassung, gemeinsame Uhr, Budget-Warnung).
-- M13: Brainstorming Ansatz A (R452), Spec E1 mit Nacharbeit (R455, R456), Plan fertig.
-- Kurz-Retro 2026-10-10 (2cfa57e0).
+- REL-16, REL-17, HOTFIX-CI-01, TOOL-BUENDEL-3 live (R463), CI wieder grün; Prozess-Aussensicht REL-16/17 (R464) →
+  Handbuch 1.43 (kein Umsetzerstart während eines anstehenden Pushes).
+- M13-E1: Gate Plan (R460), Umsetzung Sim T01–T08 und UI T09–T14 mit vier Controllern, Final-Review opus (R466, R467), lokal
+  gemergt `b811aca2`.
+- I-043 UI-GUT-CHIP: Kurzdesign (R461), Plan auf sonnet (E-054), Gate (R462), Umsetzung T01–T09, Merge `84196941` (R470).
+- TOOL-BUENDEL-4: Plan auf sonnet, Gate (R465), Umsetzung, Merge `f8939b29` (R469); Dashboard-Server 100 % → 0 % CPU;
+  Handbuch 1.44.
+- Kurz-Retro 2026-10-10 (5a00a316).
 
 ## Pausierte Pakete
 
-- Keine. Worktrees: Hauptcheckout, `.worktrees/integrate` (detached @ `f9ac34e4`). M13-E1 wartet auf Gate Plan (kein Worktree).
+- Keine. Worktrees: Hauptcheckout, `.worktrees/integrate` (detached @ `84196941`), gemergt und aufräumbar nach dem Push:
+  `.worktrees/b4` (`tool/b4`), `.worktrees/m13-e1-sim`, `.worktrees/m13-e1-ui`, `.worktrees/ui-gut-chip` (Symlink
+  `node_modules`).
 - Branch `int/rel-07`, Alt-Branches (u. a. `fix/rel07-a-wood`, `feat/m7-fx`, gemergte `fix/…`, `feat/…`, `tool/…`),
   Remote `wip/r118a-render-aufraeumen` und `stash@{0}` bleiben bis Ruling.
 
 ## Budget
 
-Offen: keine Freigaben (Restbudgets REL-16/REL-17/TOOL-BUENDEL-3 verfallen mit Session-Ende). M13-E1 braucht die Freigabe im Gate Plan (Antrag 37 Starts).
+Offen: keine Freigaben (Restbudgets M13-E1 ≈ 5, UI-GUT-CHIP 4, TOOL-BUENDEL-4 1 verfallen mit Session-Ende).
 
 ## Offene Entscheide
 
 - Nutzer: N-99 (Kenntnis R434), ohne Antwort gilt R434.
-- L0: Gate Plan M13-E1 (E1–E9).
+- L0: Release-Paket-ID und Umfang des Pushes (Vorschlag REL-18 = M13-E1 + I-043 + TOOL-BUENDEL-4).
