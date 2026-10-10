@@ -4442,3 +4442,15 @@ Regelbezug: STUDIO.md Merge/Push („CI rot → Behebung hat Vorrang, Ad-hoc-Ret
 auf main bis zum nächsten Push rot; Fehlalarm in `ci.py`.
 
 Entscheider: L0 · Anlass: Bericht production-integrator PUSH-REL-15 · ADR: —
+
+## R447 · 2026-10-10 · Gate Merge HOTFIX-CI-01: OK
+
+Ruling: **OK** für `fix/ci-metrics-flake` @ `47978b81` (nur `tools/studio/tests/test_metrics.py`, +23/−4): Test patcht
+`metrics.datetime` mit einer Uhr, die je Lauf eine Sekunde weiterspringt, und filtert beide Zeitstempel-Zeilen
+(`erzeugt`, `"created"`); Probe vorher rot/nachher grün belegt; `make studio-test`, `make studio-lint` Exit 0;
+Task-Review `qa-code-reviewer` OK; Konfliktprobe sauber; L0-Diffprüfung ohne Befund. Merge lokal durch
+`production-integrator` (`--no-ff`, `make check`), Worktree danach entfernen; Push mit der nächsten Studio-Session (R446).
+
+Regelbezug: gates.md Gate Merge; R446 · Kosten bei Irrtum: Revert-Merge vor dem Push.
+
+Entscheider: L0 · Anlass: Bericht lead-tech HOTFIX-CI-01 · ADR: —
