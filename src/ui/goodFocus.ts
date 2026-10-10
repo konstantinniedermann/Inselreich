@@ -5,7 +5,7 @@ import { missingInputs } from '../sim/queries';
 import type { Building, GoodId, World } from '../sim/types';
 import { buildLock } from '../sim/unlocks';
 import { jumpTarget } from './islandJump';
-import { compareSort, spot, type ProblemSort } from './problems';
+import { compareSort, spot, stepList, type ProblemCursor, type ProblemSort } from './problems';
 import { stateInfo } from './texts';
 
 export type FocusRole = 'producer' | 'consumer';
@@ -74,3 +74,99 @@ export function noProducerMessage(world: World, good: GoodId): string {
 /** M3: der Fokus hat nichts mehr zu markieren. */
 export const emptyFocusMessage = (good: GoodId): string =>
   `${GOODS[good].name}: nichts mehr markiert`;
+
+export type FocusState = { good: GoodId; island: number } | null;
+export type FocusEvent =
+  | { kind: 'toggle'; good: GoodId; island: number } // Chip-Klick
+  | { kind: 'clear' }; // Esc, Inselwechsel, Neue Insel, Laden, M3
+
+export function focusReduce(state: FocusState, e: FocusEvent): FocusState {
+  if (e.kind === 'clear') return null;
+  if (state !== null && state.good === e.good && state.island === e.island) return null;
+  return { good: e.good, island: e.island };
+}
+
+/** `true`, wenn nach dem Toggle gesprungen werden soll (Fokus an: neu oder anderes Gut/Insel). */
+export function toggleStartsJump(before: FocusState, e: FocusEvent): boolean {
+  return focusReduce(before, e) !== null;
+}
+
+export interface FocusDeps {
+  world: World;
+  activeIsland(): number;
+  getFocus(): FocusState;
+  setFocus(f: FocusState): void;
+  getCursor(): ProblemCursor | null; // Fokus-Cursor, getrennt vom Problem-Cursor
+  setCursor(c: ProblemCursor | null): void;
+  cancelPointerAction(): void;
+  centerOn(x: number, y: number): void;
+  openPanel(id: number): void;
+  refresh(): void;
+  message(text: string): void;
+}
+
+/** Routing von `.`/`,`: Gut-Liste bei aktivem Fokus, sonst Problemliste (AK-GC-08). */
+export function stepKeyTarget(focus: FocusState): 'focus' | 'problem' {
+  return focus === null ? 'problem' : 'focus';
+}
+
+/** `true`, wenn der Fokus nach einem Inselwechsel zu löschen ist (AK-GC-07). */
+export function shouldClearFocus(focus: FocusState, activeIsland: number): boolean {
+  return focus !== null && focus.island !== activeIsland;
+}
+
+function land(deps: FocusDeps, good: GoodId, list: readonly FocusEntry[], dir: 1 | -1): void {
+  const step = stepList(() => list, deps.getCursor(), deps.activeIsland(), dir);
+  if (step === null) return;
+  const { item } = step;
+  deps.centerOn(item.at.x, item.at.y);
+  deps.openPanel(item.id);
+  deps.refresh();
+  deps.setCursor({ ...step.cursor, landed: deps.activeIsland() });
+  deps.message(focusMessage(deps.world, good, step.index, step.count, item));
+}
+
+export function runFocusToggle(deps: FocusDeps, good: GoodId): void {
+  deps.cancelPointerAction();
+  const island = deps.activeIsland();
+  const next = focusReduce(deps.getFocus(), { kind: 'toggle', good, island });
+  if (next === null) {
+    deps.setFocus(null);
+    deps.setCursor(null);
+    deps.refresh();
+    return;
+  }
+  const list = focusList(deps.world, island, good);
+  if (list.length === 0) {
+    deps.message(noProducerMessage(deps.world, good));
+    deps.setFocus(null);
+    deps.setCursor(null);
+    deps.refresh();
+    return;
+  }
+  if (!list.some((e) => e.role === 'producer')) {
+    deps.message(noProducerMessage(deps.world, good));
+    deps.setFocus(next);
+    deps.setCursor(null);
+    deps.refresh();
+    return;
+  }
+  deps.setFocus(next);
+  deps.setCursor(null);
+  land(deps, good, list, 1);
+}
+
+export function runFocusStep(deps: FocusDeps, dir: 1 | -1): void {
+  const focus = deps.getFocus();
+  if (focus === null) return;
+  deps.cancelPointerAction();
+  const list = focusList(deps.world, focus.island, focus.good);
+  if (list.length === 0) {
+    deps.message(emptyFocusMessage(focus.good));
+    deps.setFocus(null);
+    deps.setCursor(null);
+    deps.refresh();
+    return;
+  }
+  land(deps, focus.good, list, dir);
+}
