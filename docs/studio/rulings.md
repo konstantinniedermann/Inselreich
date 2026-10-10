@@ -4507,3 +4507,21 @@ Regelbezug: STUDIO.md Verbesserungsschleife (R316), §10.2 Verfassung, R429 · K
 mehr im Bündel; Handbuch-Minor zurücknehmen.
 
 Entscheider: L0 · Anlass: Bericht studio-process-coach RETRO-REL-15 · ADR: —
+
+## R451 · 2026-10-10 · Gate Plan REL-16 / TOOL-BUENDEL-3: BEDENKEN → Nacharbeit, Umsetzung frei
+
+Ruling: Plan `docs/superpowers/plans/2026-10-10-rel-16/` (`f4b021e5`, T01–T12) frei. Urteil `lead-qa` BEDENKEN B1–B3,
+nichts blockierend; Nacharbeit ohne Zweitprüfung: **B1** das T12-Briefing nennt T10 namentlich (Merge, voller
+`make check` als Prüfgegenstand); **B2** Task-Review zu T02 verlangt eine Mutationsprobe (Aufruf in `dispose` entfernen →
+Test rot), Browser-Probe `--leck` in T04 bleibt Zweitbeleg; **B3** T08 prüft `load`/`diff` nur auf Typ/Format, Grenze
+des `git diff HEAD`-Hashes (ungetrackte Dateien) im Testkommentar. **Entscheide E1–E7** wie empfohlen (E1 Wortlaut
+„Kein Bauland: Gebirge/Wasser“, „Platz belegt: Wohnhaus/Weg“; E2 ein Browser-Lauf am Kandidaten im lead-qa-Release-Start,
+T04 vollständig als Prüfpunkt im Gate Merge Release; E3 Budget-Warnung in `modelguard.py`, nie `deny`; E4 arc42 je Strang;
+E5 Ampel Flake-Verdacht gelb ab 1, rot ab 3; E6 Uhr-Umstellung nur ohne Testumbau; E7 Namensschema im render-qa-README).
+**Budget:** UI-REL16 6 Starts, Parallelität 1; TOOL-BUENDEL-3 17 Starts, Parallelität 2 (Stränge py und qa unter einem
+Controller). Je Strang ein Controller `lead-tech` (sonnet). Studio-Deckel ≤ 8 Agenten (R424); Last vor jedem vollen
+`make check` ≤ 4 (Handbuch 1.42).
+
+Regelbezug: gates.md Gate Plan; R424, R450 · Kosten bei Irrtum: Nacharbeit im Strang vor dem Kandidaten.
+
+Entscheider: L0 · Anlass: Urteil lead-qa GATE-PLAN-REL16-TB3 · ADR: —
