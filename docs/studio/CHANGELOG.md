@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-10 · Handbuch 1.40
+
+- Anlass: Auftrag L0 nach TOOL-BUENDEL-2 (`zeitreserve-push` bewertet nur `loadStart`)
+- Datenbasis: Auftrag RETRO-SESSION-2026-10-10, `tools/studio/` (Merge R442)
+- Ruling: R442 (E6)
+- Änderungen: Push-Ablauf: Schritt „warten, bis die Last ≤ 4 ist“ nach `make check` gestrichen; Hinweis, dass `zeitreserve-push` nur `loadStart` bewertet
+
 ## 2026-10-10 · Handbuch 1.39
 
 - Anlass: Release-Retro REL-14
