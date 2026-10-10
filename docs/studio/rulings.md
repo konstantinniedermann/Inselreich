@@ -4958,3 +4958,17 @@ Regelbezug: STUDIO.md Ablauf Stufe leicht Schritt 2–4, Verbesserungsschleife (
 ein Bedienort oder eine Gutsliste nachziehen; ein echter Hänger bleibt bis zum Bericht unentdeckt.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-i049-reserve; Hook-Hinweis Ad-hoc-Retro · ADR: —
+
+## R478 · 2026-10-10 · Gate Plan TOOL-BUENDEL-5: BEDENKEN → Nacharbeit im Controller, Umsetzung frei
+
+Ruling: Plan `docs/superpowers/plans/2026-10-10-tool-buendel-5.md` (`9cc61a48`, T01–T06) mit Nacharbeit frei (Urteil
+`.studio/handoffs/2026-10-10-lead-qa-GATE-PLAN-TOOL-BUENDEL-5.md`, B1–B10). Die Nacharbeit übernimmt der Controller
+(`lead-tech`, sonnet) als ersten Schritt in den Task-Dateien, ohne Zweitprüfung. Zu **B6**: Die 30-fache Drosselung
+(R468) bleibt; T04 senkt sie nur mit CPU-Messwert ≤ 10 % im Leerlauf, sonst bleibt sie und T04 liefert nur `/api/ping`
+und die Fremdserver-Erkennung. Zu **B9**: seriell, Parallelität 1. Zu **B4**: Stopp an L0 bei > 10 abweichenden Leads.
+Ownership und Budget geprüft (R233 V2): disjunkt, **7 Starts** freigegeben (Phase `tool-buendel-5`). Push REL-18 ist
+erfolgt (`bfb6af44`), R464 hindert den Start nicht mehr.
+
+Regelbezug: gates.md Gate Plan, R233 V2, R464, R465, R468 · Kosten bei Irrtum: eine Fix-Runde im Werkzeug-Strang.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-tool-buendel-5 · ADR: —
