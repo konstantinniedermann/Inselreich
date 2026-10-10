@@ -4987,3 +4987,16 @@ Ownership/Budget: ein Baum `.worktrees/ui-tasten`, Branch `feat/ui-tasten`, kein
 Regelbezug: gates.md Kombiniertes Gate (Stufe leicht), R476 · Kosten bei Irrtum: eine Fix-Runde im UI-Strang.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-ui-tasten · ADR: —
+
+## R480 · 2026-10-10 · REL-18 „Edikte, Stilllegen, Gut-Chip“ live; Messauftrag M3 verfehlt
+
+Ruling: Push `a9f5336e..bfb6af44` (geprüfter Hash nach drei `make check`, `zeitreserve-push` Exit 0 bei loadStart 2,5),
+CI 38063457678 grün, Pages 38063909955 grün. REL-18 ist live. **M3** (R471): Push-Dauer 11,9 min > 8 min, Ursache Lastwarten
+und zwei `make check`-Wiederholungen (Exit 2 bei loadMax 8,7 bzw. 17,7) — Hinweis: Während des Pushs liefen bis zu 8
+Agenten (testfreie Vorarbeit, R475), die die Last mittrugen. Zwischen Gate und `zeitreserve-push` Exit 0 startete L0 keinen
+Umsetzer (M3 Teil 1 erfüllt). Bewertung und Hebel durch die Prozess-Aussensicht REL-18 (`studio-process-coach`), zusammen
+mit Actions-Minuten rot (R473) und Inaktiv-Fehlalarm beim CI-Warten (R477).
+
+Regelbezug: STUDIO.md Merges/Push, R335, R471 M3 · Kosten bei Irrtum: —.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-18 · ADR: —
