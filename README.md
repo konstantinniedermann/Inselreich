@@ -95,10 +95,10 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   Zeiger liegt über der Mitte der Grundfläche; ein halbtransparenter Geist zeigt das Gebäude. Die
   Grundfläche ist grün, wenn der Standort passt, sonst rot; der Grund erscheint als Meldung. Nicht
   bezahlbare Gebäude sind gedämpft mit gestrichelter Kante dargestellt, ein Klick nennt den Grund.
-- **Abriss:** Werkzeug wählen, dann auf einen Gebäudekörper oder einen Weg klicken — oder im Info-Panel
-  «Abreissen».
+- **Abriss:** Werkzeug wählen, dann auf einen Gebäudekörper klicken (reisst dieses Gebäude ab) oder über Wege
+  ziehen (reisst nur Wege ab, Gebäude bleiben stehen) — oder im Info-Panel «Abreissen».
 - **Wann eine Aktion wirkt:** Mit der Maus wirken Bauen, Weg und Abriss sofort beim Drücken, auf dem Ziel
-  unter dem Zeiger; die **Auswahl** erst beim Loslassen und nur, wenn der Zeiger nie weiter als 4 Pixel vom
+  unter dem Zeiger (der Abriss-Zug über Wege wirkt wie der Weg-Zug sofort je Kachel); die **Auswahl** erst beim Loslassen und nur, wenn der Zeiger nie weiter als 4 Pixel vom
   Druckpunkt wegwanderte (sonst war es ein Schwenken). Auf Touch beim Loslassen, aber auf der Kachel, auf die der Finger zuerst getippt hat — und nur, wenn
   kein zweiter Finger dazukam und nicht verschoben wurde.
 - **Tooltips:** Ein Eintrag der Bauleiste zeigt beim Überfahren, bei Tastaturfokus oder bei langem
@@ -123,33 +123,36 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 
 ### Tastatur und Maus
 
-| Eingabe                | Wirkung                                                                   |
-| ---------------------- | ------------------------------------------------------------------------- |
-| WASD / Pfeiltasten     | Karte verschieben                                                         |
-| Leertaste antippen     | Pause an/aus (wie `P`)                                                    |
-| Leertaste halten       | Mit gedrückter linker Maustaste die Karte verschieben                     |
-| `Esc` oder Rechtsklick | Zurück zum Werkzeug «Auswahl», Panel zu (`Esc` auch bei Knopffokus)       |
-| Mausrad                | Zoomen                                                                    |
-| `P`                    | Pause an/aus (setzt danach das letzte Tempo fort)                         |
-| `Umschalt` + `U`       | Markiertes Gebäude ausbauen (wie «Ausbauen», erst nach der Freischaltung) |
-| `Cmd`/`Strg` + Klick   | Gebäudetyp unter dem Zeiger als Bauwerkzeug wählen (Pipette)              |
-| `1` / `2` / `3`        | Tempo 1× / 2× / 4× (hebt die Pause auf)                                   |
-| `R` / `X`              | Weg / Abriss                                                              |
-| `H` / `M` / `K` / `U`  | Wohnhaus / Marktplatz / Kapelle / Schule                                  |
-| `F` / `L` / `B` / `G`  | Fischerhütte / Holzfäller / Steinbruch / Schäferei                        |
-| `V` / `Z` / `N` / `T`  | Weberei / Zuckerrohrplantage / Brennerei / Werkzeugmacher                 |
-| `E`                    | Feuerwache                                                                |
-| `I`                    | Amtsstube (erst ab U3, höchstens eine)                                    |
-| `C` / `Q`              | Roden / Aufforsten (erst ab U2)                                           |
-| `Y`                    | Jagdhütte (erst ab U2); die Rinderfarm hat keine Taste                    |
-| `?`                    | Hilfe (Karte mit Legende und Freischaltungen)                             |
-| `J` / `O`              | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                          |
-| `0` / `9`              | Kamera zur Heimat / zur nächsten Insel (erst mit der Seefahrt)            |
+| Eingabe                | Wirkung                                                                          |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| WASD / Pfeiltasten     | Karte verschieben                                                                |
+| Leertaste antippen     | Pause an/aus (wie `P`)                                                           |
+| Leertaste halten       | Mit gedrückter linker Maustaste die Karte verschieben                            |
+| `Esc` oder Rechtsklick | Zurück zum Werkzeug «Auswahl», Panel zu (`Esc` auch bei Knopffokus)              |
+| Mausrad                | Zoomen                                                                           |
+| `P`                    | Pause an/aus (setzt danach das letzte Tempo fort)                                |
+| `Umschalt` + `U`       | Markiertes Gebäude ausbauen (wie «Ausbauen», erst nach der Freischaltung)        |
+| `Cmd`/`Strg` + Klick   | Gebäudetyp unter dem Zeiger als Bauwerkzeug wählen (Pipette)                     |
+| `1` / `2` / `3`        | Tempo 1× / 2× / 4× (hebt die Pause auf)                                          |
+| `R` / `X`              | Weg / Abriss                                                                     |
+| `H` / `M` / `K` / `U`  | Wohnhaus / Marktplatz / Kapelle / Schule                                         |
+| `F` / `L` / `B` / `G`  | Fischerhütte / Holzfäller / Steinbruch / Schäferei                               |
+| `V` / `Z` / `N` / `T`  | Weberei / Zuckerrohrplantage / Brennerei / Werkzeugmacher                        |
+| `E`                    | Feuerwache                                                                       |
+| `I`                    | Amtsstube (erst ab U3, höchstens eine)                                           |
+| `C` / `Q`              | Roden / Aufforsten (erst ab U2)                                                  |
+| `Y`                    | Jagdhütte (erst ab U2); die Rinderfarm hat keine Taste                           |
+| `?`                    | Hilfe (Karte mit Legende und Freischaltungen)                                    |
+| `.` / `,`              | Zum nächsten / vorigen Problem springen (öffnet das Info-Panel, Werkzeug bleibt) |
+| `J` / `O`              | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                                 |
+| `0` / `9`              | Kamera zur Heimat / zur nächsten Insel (erst mit der Seefahrt)                   |
 
 Die Werkzeugtasten wirken nur ohne Strg, Cmd oder Alt; Gross- und Kleinschreibung ist egal. Ausnahmen sind `Umschalt` + `U` (Ausbau; `U` allein bleibt die Schule) und `Cmd`/`Strg` + Linksklick auf ein Gebäude (Pipette; auf dem Mac ist `Cmd` + Klick der Hauptweg, `Strg` + Klick geht auch). Die Pipette wirkt in jedem Werkzeug, beim Kontor meldet sie, dass es sich nicht nachbauen lässt. Leertaste halten und Ziehen hat Vorrang vor der Pipette. Dieselbe
 Werkzeugtaste bei schon aktivem Werkzeug schaltet zurück zur Auswahl. Der Tooltip in der Bauleiste
 nennt die Taste; alle Kürzel stehen auch im Menü unter «Tastenkürzel». Bei offener Karte (Start, Menü,
 Einstellungen) sind alle Kürzel stumm. Auf einem fokussierten Knopf aktiviert die Leertaste den Knopf.
+
+Probleme sind, nach Dringlichkeit: nicht angebundene Gebäude und Häuser ausserhalb der Versorgung, stehende Betriebe (wartet auf Ware, kein Wald, kein Dienst), Häuser ohne Dienst, fehlende Waren (ein Eintrag je Gut und Insel). Innerhalb einer Klasse kommt zuerst die Insel, auf der du gerade bist, dann die übrigen Inseln, dann der nähere Eintrag. Die Meldung zählt mit («Problem 2 von 5: …»); ohne Problem: «Alles versorgt, kein Problem offen». «Lager voll» und Brände zählen nicht.
 
 ### Geschwindigkeit
 
@@ -394,7 +397,7 @@ Einwohner und 10 s); es wächst nur auf Gewürzinseln und lässt sich am Kontor 
 
 Die Hälfte der Baukosten (abgerundet) wird zurückerstattet; Waren nur, soweit im Lager Platz ist. Der
 Button «Abreissen» zeigt den tatsächlichen Betrag und was am Lagerlimit verfällt (z. B. «Holz 1
-(4 verfallen – Lager voll)»). Das Kontor kann nicht abgerissen werden.
+(4 verfallen – Lager voll)»). Das Kontor kann nicht abgerissen werden. Ein Weg erstattet wie jeder Abriss die Hälfte (2 Geld). Trennt ein Abriss Gebäude vom Kontor, meldet das Spiel am Ende des Zugs «Abriss trennt n Gebäude vom Kontor»; `.` springt zu ihnen.
 
 ## Bevölkerung
 
