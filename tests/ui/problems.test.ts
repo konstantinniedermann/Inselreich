@@ -23,6 +23,7 @@ import {
   type ProblemCursor,
   type ProblemJumpDeps,
 } from '../../src/ui/problems';
+import { setPaused } from '../../src/sim/pause';
 import { forceGrass } from '../sim/helpers';
 
 function newWorld(): World {
@@ -447,5 +448,32 @@ describe('REL-17 newlyCut (AK-R17-15)', () => {
     const hall = raw(w, 'townhall', k.x + 6, k.y + 4);
     hall.connected = false;
     expect(newlyCut(before, w)).toBe(1);
+  });
+});
+
+describe('AK-M13STL-11 Stilllegen in Problemliste und Trenn-Warnung', () => {
+  const has = (w: World, id: number): boolean => problemList(w, 0).some((p) => p.id === id);
+  it('AK-M13STL-11 stillgelegter Betrieb fehlt, nach Anfahren ohne Anbindung erscheint er', () => {
+    const w = newWorld();
+    const k = w.buildings[home(w).kontorId]!;
+    const f = raw(w, 'fisher', k.x + 4, k.y - 6, 'waitingInput');
+    expect(has(w, f.id)).toBe(true);
+    expect(setPaused(w, f.id, true).ok).toBe(true);
+    expect(has(w, f.id)).toBe(false);
+    f.connected = false;
+    expect(has(w, f.id)).toBe(false);
+    expect(setPaused(w, f.id, false).ok).toBe(true);
+    expect(problemList(w, 0).find((p) => p.id === f.id)?.text).toBe(
+      'Fischerhütte nicht angebunden',
+    );
+  });
+  it('E4 stillgelegter Betrieb löst keine Trenn-Warnung aus', () => {
+    const w = newWorld();
+    const k = w.buildings[home(w).kontorId]!;
+    const f = raw(w, 'fisher', k.x + 4, k.y - 6);
+    expect(setPaused(w, f.id, true).ok).toBe(true);
+    const before = cutOffIds(w);
+    f.connected = false;
+    expect(newlyCut(before, w)).toBe(0);
   });
 });

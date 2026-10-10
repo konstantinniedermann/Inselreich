@@ -224,7 +224,7 @@ export function tickCrises(world: World): void {
   for (const b of Object.values(world.buildings)) {
     if (b.outageUntil !== undefined && b.outageUntil <= t) {
       delete b.outageUntil;
-      b.state = b.connected ? 'ok' : 'notConnected';
+      b.state = b.paused ? 'paused' : b.connected ? 'ok' : 'notConnected';
     }
   }
   if (world.crisis !== null && t >= world.crisis.until) world.crisis = null;

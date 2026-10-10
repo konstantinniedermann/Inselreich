@@ -31,7 +31,8 @@ import type {
 import { deriveUnlocks } from '../../src/sim/unlocks';
 import { createWorld, idx, home } from '../../src/sim/world';
 import { prepareLayout, runColony, startColony, type Layout } from './controller';
-import { forceGrass, forceRect, setAllTax } from './helpers';
+import { forceGrass, forceRect, placeTownhall, setAllTax } from './helpers';
+import { newMerchantTrajectory, runMerchants } from './merchantsController';
 import { verdeckung } from './scenarios-iso';
 
 const SEED = 3;
@@ -768,6 +769,37 @@ function galerieProbes(w: World): Probes {
   return out;
 }
 
+/** M13-E1: Amtsstube der Szenarien ab Ziel 1, Versatz (dx, dy) vom Kontor; `placeTownhall` (Weg bei (0, 2), Haus ab (0, 3)). */
+export const M13_TOWNHALL_AT: readonly [number, number] = [0, 3];
+
+/** M13-E1: Bürger-Controller bis `stop`, danach Amtsstube auf dem festen Platz und 3000 Geld. */
+function m13Base(stop: (w: World) => boolean): World {
+  const w = createWorld(SEED);
+  const { layout } = startColony(w);
+  const t = newMerchantTrajectory();
+  runMerchants(w, layout, t, stop);
+  const hall = placeTownhall(w);
+  const k = w.buildings[home(w).kontorId]!;
+  if (hall.x !== k.x + M13_TOWNHALL_AT[0] || hall.y !== k.y + M13_TOWNHALL_AT[1])
+    throw new Error('Amtsstube nicht auf M13_TOWNHALL_AT');
+  w.money = 3000;
+  return w;
+}
+
+/** M13-E1: Ziel 1 erreicht (Sieg), Amtsstube steht, 3000 Geld. */
+function m13Ziel1(): World {
+  const w = m13Base((x) => x.won);
+  if (!w.won) throw new Error('m13-ziel1: kein Sieg');
+  return w;
+}
+
+/** M13-E1: Tick 6000, kurz vor dem Sieg (6750), Amtsstube steht, 3000 Geld. */
+function m13VorZiel(): World {
+  const w = m13Base((x) => x.tick >= 6000);
+  if (w.won) throw new Error('m13-vor-ziel: schon gewonnen');
+  return w;
+}
+
 const RAW_SCENARIOS: Record<string, () => World> = {
   'bilanz-nahrung': bilanzNahrung,
   verdeckung,
@@ -808,6 +840,8 @@ const RAW_SCENARIOS: Record<string, () => World> = {
   'm11-ausbau': m11Ausbau,
   'm11-defizit': m11Defizit,
   'm11-stein': m11Stein,
+  'm13-ziel1': m13Ziel1,
+  'm13-vor-ziel': m13VorZiel,
 };
 
 /**

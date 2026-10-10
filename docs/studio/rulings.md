@@ -4765,3 +4765,40 @@ nur, solange kein Push ansteht (Handbuch 1.43, R464 V1).
 Regelbezug: gates.md Gate Plan; R380, R433, R438 V3, R464 · Kosten bei Irrtum: Nacharbeit im Strang.
 
 Entscheider: L0 · Anlass: Urteil lead-qa GATE-PLAN-TOOL-BUENDEL-4 · ADR: —
+
+## R466 · 2026-10-10 · M13-E1 bereit fürs Final-Review; Auslegung AK-M13E1-36, Seed-Randlage
+
+Ruling: UI-Strang `feat/m13-e1-ui` @ `bd26742b` (enthält Sim `2665350e`, `make check` Exit 0 bei Load 3,5; Playtest T14
+BEDENKEN ohne Blocker) geht ins Final-Review T15. **(1) AK-M13E1-36:** Der Spec-Text (U-4, `edictCardState` mit
+`disabled` und `reason`) geht dem AK-Wortlaut „Klick auf Handel → Meldung“ vor: gesperrte Karte, Sperrzeile mit Restzeit und
+Tooltip erfüllen den Zweck (der Spieler sieht, wann das Edikt wieder änderbar ist); AK gilt als erfüllt, der Wortlaut wird in
+der M13-E2-Spec berichtigt (Beobachtung). **(2) Seed-Randlage** Sparen/Handel „arm“ 11 200 = K′ − 600 (inklusive Grenze,
+Reserve 0): regelkonform, kein Pflicht-Stopp; `lead-design` nimmt die Randlage beim Balancing von M13-E2 auf. **(3)
+Unterhalt stillgelegt 30 → 18** im Playtest widerspricht `PAUSED_UPKEEP_PCT = 50` (⌈30 × 50 / 100⌉ = 15): T15 klärt mit
+Test, ob der Ausgangswert ein anderer war oder eine Wechselwirkung (Sparen, Stufe) falsch rechnet. **(4)** T15 macht eine
+Mutationsprobe für PLAN-M13-04 (Endfassung ohne eigenen Rot-Beleg) und reviewt die T13-Doku-Fixes `e6cb1ec4` mit.
+
+Regelbezug: gates.md Gate Merge; Verfassung §5 (Auslegung durch L0), R460 · Kosten bei Irrtum: (1) Spieler klickt auf
+gesperrte Karte ohne Meldung — gering, Tooltip vorhanden; (3) bei Rechenfehler Fix-Runde vor dem Merge.
+
+Entscheider: L0 · Anlass: Übergabe Controller D M13-E1 · ADR: —
+
+## R467 · 2026-10-10 · Gate Merge M13-E1: BEDENKEN → Trivial-Fix, dann lokaler Merge
+
+Ruling: Final-Review T15 (`.studio/handoffs/2026-10-10-lead-qa-M13-E1-final.md`, opus, `bd26742b`) BEDENKEN, alle Befunde
+niedrig, kein Blocker; Mutationsprobe PLAN-M13-04 rot (EXIT=1), Baseline, Bitgleichheit, Save v11, Module, Vorrang und
+Doku ohne weiteren Befund. **Befund 1** (`docs/arc42.md:413` „stats bleiben Nominalwerte“ falsch; Faktor Sparen fehlt):
+Trivial-Fix im UI-Strang. **Befund 2** (R460 A1 wörtlich verfehlt, 12 statt 3 Zeilen in `tests/sim/save.test.ts`):
+**angenommen** — nur Versionsvergleiche 10→11 und Index-Slice, `CHAIN_HASHES`/`V6_FORMS` unberührt; der Zweck von A1 ist
+erfüllt (L0-Entscheid aus dem Briefing Controller B hiermit festgehalten). **Befund 4** (30 → 18/min ist kein Fehler:
+Aufrunden auf der 100-Tick-Basis nach Spec S4, Basis 5 → 3, effektiv 60 %): Regel bleibt; README präzisiert „halber
+Unterhalt, je Betrieb aufgerundet“; der Panel-Text «Stillgelegt — halber Unterhalt» bleibt (Spec U-12, AK-M13STL-09).
+**Befund 3** (Playtest-Report nur in Übergabe D, nicht unter `.studio/qa/m13-e1/`): Controller legt den Report als Datei
+ab. Danach `make docs-check`; `make check` nur, wenn mehr als Doku geändert wurde. Merge **lokal** durch
+`production-integrator` (`feat/m13-e1-ui` mit `--no-ff` nach main, Sim-Strang ist enthalten); kein Push in dieser
+Studio-Session (R335, Push R463 bereits erfolgt). M13-E1 ist release-reif als Teil von M13; Release mit M13-E2 oder als
+eigenes REL nach Entscheid in der nächsten Session.
+
+Regelbezug: gates.md Gate Merge; R335, R460, R466 · Kosten bei Irrtum: Doku-Nacharbeit nach dem Merge.
+
+Entscheider: L0 · Anlass: Urteil lead-qa M13-E1 final · ADR: —

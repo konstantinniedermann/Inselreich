@@ -55,3 +55,5 @@ export const FEAST_RUM = 10;
 export const FEAST_DURATION = 600;
 /** Abklingzeit je Kapelle ab Festbeginn (3 min bei 1×); länger als die Wirkdauer. */
 export const FEAST_COOLDOWN = 1800;
+/** Sperre nach Erlass, Wechsel oder Aufheben eines Edikts (5 min bei 1×). */
+export const EDICT_LOCK = 3000;

@@ -94,6 +94,10 @@ import { bindInput, hintKey, strokeEndNotice, type InputAction, type InputBindin
 import { clearForest, plantForest } from '../sim/forest';
 import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../sim/tax';
 import { lockedTierFor } from './taxView';
+import { setEdict } from '../sim/edicts';
+import { setPaused } from '../sim/pause';
+import { EDICT_COST } from '../sim/defs/edicts';
+import { edictSuccessText } from './edictView';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
 import { deliveredMessage, orderMessageFor, orderVisible } from './order';
 import {
@@ -651,6 +655,24 @@ function launch(
           connectPreview = tiles;
         },
         ships: shipActions,
+        setPaused: (id, paused) => {
+          const r = setPaused(world, id, paused);
+          if (!r.ok) showError(friendlyReason(world, r.reason));
+          refresh();
+        },
+        setEdict: (id) => {
+          const r = setEdict(world, id);
+          if (r.ok) {
+            showMessage(edictSuccessText(world, id));
+            sound.play('build');
+          } else
+            showError(
+              friendlyReason(world, r.reason, {
+                cost: { money: EDICT_COST, wood: 0, tools: 0, stone: 0 },
+              }),
+            );
+          refresh();
+        },
         setUpgradeStop: (tier, stopped) => {
           const r = setUpgradeStop(world, tier, stopped);
           if (!r.ok) showError(friendlyReason(world, r.reason));
@@ -837,7 +859,7 @@ function launch(
   };
   const tradeCtx = (op: 'buy' | 'sell', good: GoodId, n: number, island: number): ReasonCtx =>
     op === 'buy'
-      ? { cost: { money: buyPrice(good, n), wood: 0, tools: 0, stone: 0 }, good, island }
+      ? { cost: { money: buyPrice(world, good, n), wood: 0, tools: 0, stone: 0 }, good, island }
       : { good, amount: n, island };
 
   const onAction = (a: InputAction): void => {

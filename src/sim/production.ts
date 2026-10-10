@@ -30,6 +30,10 @@ function advance(world: World, b: Building): boolean {
     b.state = 'burning'; // Ausfall hat Vorrang (Spec 10.1)
     return false;
   }
+  if (b.paused === true) {
+    b.state = 'paused'; // bewusst still: kein Fortschritt, keine Entnahme (Spec S3)
+    return false;
+  }
   if (!b.connected) {
     b.state = 'notConnected';
     return false;

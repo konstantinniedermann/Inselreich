@@ -54,6 +54,7 @@ export function stateInfo(
 ): { text: string; ok: boolean } {
   const def = BUILDING_DEFS[b.defId];
   if (b.outageUntil !== undefined) return { text: burningText(b, tick), ok: false };
+  if (b.paused === true) return { text: 'Stillgelegt — halber Unterhalt', ok: false };
   // Anbindung zuerst: `state` wird erst im nächsten Tick nachgeführt (z. B. bei Pause)
   if (!b.connected) return { text: 'Nicht an Kontor angebunden', ok: false };
   if (!def.produces) return { text: 'Angebunden', ok: true };
@@ -67,6 +68,8 @@ export function stateInfo(
     }
     case 'storageFull':
       return { text: 'Lager voll', ok: false };
+    case 'paused':
+      return { text: 'Stillgelegt — halber Unterhalt', ok: false };
     case 'burning':
       return { text: burningText(b, tick), ok: false };
     case 'noForest':

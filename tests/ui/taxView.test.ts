@@ -17,6 +17,7 @@ import {
   tierTaxPerMinute,
   tierTaxTooltip,
 } from '../../src/ui/taxView';
+import { setEdict } from '../../src/sim/edicts';
 import { placeTownhall } from '../sim/helpers';
 
 type Levels = Record<Tier, TaxLevel>;
@@ -192,5 +193,30 @@ describe('Statuszeile und Knopf-Tooltip (U-4, U-7)', () => {
     const w = createWorld(3);
     w.taxLevels = lv('low', 'high', 'normal', 'normal');
     expect(taxStatusLine(w)).toBe(taxEffect('normal'));
+  });
+});
+
+describe('M13-E1 Steueranzeige mit Edikt (AK-M13E1-32)', () => {
+  const edictHall = (id?: 'saving' | 'trade' | 'welfare'): World => {
+    const w = hallWorld();
+    w.won = true;
+    w.money = 1000;
+    for (let i = 0; i < 4; i++) addHouse(w, 4, 20, true);
+    if (id) expect(setEdict(w, id).ok).toBe(true);
+    return w;
+  };
+  it('AK-M13E1-32 taxButtonTitle mit Zusatz nur bei wirkendem Edikt', () => {
+    const w = edictHall();
+    expect(taxButtonTitle(w)).toBe(taxEffect('normal'));
+    expect(taxButtonTitle(edictHall('saving'))).toBe(`${taxEffect('normal')} · Edikt: Sparen`);
+  });
+  it('AK-M13E1-32 tierTaxPerMinute mit Sparen 9820, ohne 10560', () => {
+    expect(tierTaxPerMinute(edictHall(), 4)).toBe(10560);
+    expect(tierTaxPerMinute(edictHall('saving'), 4)).toBe(9820);
+  });
+  it('AK-M13E1-32 taxStatusLine mit Punkten', () => {
+    expect(taxStatusLine(edictHall('saving'))).toBe(`${taxEffect('normal')} · Edikt −7 Punkte`);
+    expect(taxStatusLine(edictHall('welfare'))).toBe(`${taxEffect('normal')} · Edikt −5 Punkte`);
+    expect(taxStatusLine(edictHall('trade'))).toBe(taxEffect('normal'));
   });
 });

@@ -1,6 +1,6 @@
 # T07 · Betrieb stilllegen (Sim) und Browser-Szenarien (TDD)
 
-Strang sim · Worktree `.worktrees/m13-e1-sim` · Umsetzer `tech-sim-engineer` (sonnet, Fortsetzung) · AK-M13STL-01…08, PLAN-M13-02/03 · Spec §8.1 (S1–S6), Anhang 01 B · blocked-by T06 · Grösse M (≈ 35 Tools)
+Strang sim · Worktree `.worktrees/m13-e1-sim` · Umsetzer `tech-sim-engineer` (sonnet, Fortsetzung) · AK-M13STL-01…08, PLAN-M13-02/03/04 · Spec §8.1 (S1–S6), Anhang 01 B · blocked-by T06 · Grösse M (≈ 35 Tools)
 
 **Files:**
 
@@ -28,6 +28,8 @@ export const buildingUpkeep = (b: Building): number =>
 
 - [ ] **Schritt 1: Tests zuerst (rot).** `tests/sim/pause.test.ts`, `describe('M13-E1 Betrieb stilllegen (AK-M13STL-01…08)')`, Welt `createWorld(3, { unlockAll: true })`, Gebäude roh eingesetzt und angebunden (`putBuilding` bzw. `placeBuilding` + Weg). Je AK ein `it` mit genau den Werten aus Spec §8.3:
   1. `STL-01` Ablauf; 2. `STL-02` Gründe und Unversehrtheit (inkl. Matrix `id` × `paused`, `serialize` unverändert bei `ok: false`; **PLAN-M13-03** Quelltextprobe `pause.ts` ohne `'./rng'`, ohne `Math.random`); 3. `STL-03` Produktion ruht (Fischer, Weberei), Anfahren produziert ab dem nächsten Schritt; 4. `STL-04` Unterhalt 55 → 43 → 34 (Sparen, wirkende Amtsstube), 100 × `tickEconomy` −34, `buildingUpkeep` 5 → 3, 25 → 13, 33 → 17, 43 → 22; 5. `STL-05` Bilanz und Kette; 6. `STL-06` Brand über `beginCrisis` (Muster `fire.test.ts`), Ende des Ausfalls → `'paused'`; `fireTarget` gleich mit und ohne Flag; 7. `STL-07` Ausbau und Abriss; 8. `STL-08` Anbindung.
+
+  2. **`PLAN-M13-04` Determinismus (R460 A2):** gleicher Seed, gleiche `setPaused`-Folge (an/aus, Brand während Stilllegung, Abriss während Stilllegung) über mehrere tausend Ticks, zweimal → gleiches `serialize`; einmal `deserialize(serialize(w))` mitten im Lauf nach einem `setPaused` → gleiches Endergebnis wie ohne Laden.
 
 ```bash
 npx vitest run tests/sim/pause.test.ts; echo EXIT=$?   # rot: Modul pause.ts fehlt
