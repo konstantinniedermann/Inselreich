@@ -4231,3 +4231,19 @@ Cache-Write (2026-11-19) übernommen.
 Regelbezug: STUDIO.md Verbesserungsschleife (R316), R428/R431 · Kosten bei Irrtum: ein Handbuch-Minor zurück.
 
 Entscheider: L0 · Anlass: Kurz-Retro Session c64c0775 · ADR: —
+
+## R434 · 2026-10-10 · Neue Studio-Session nach abgeschlossener Ende-Routine; Push REL-14
+
+Ruling: Die Session c64c0775 wurde am 2026-10-09 mit der vollständigen Ende-Routine abgeschlossen (Metriken, Kurz-Retro
+R433, `state.md` `ddc4743`, Schlussbericht). Der Nutzer setzt am 2026-10-10 mit „mach weiter“ im selben Claude-Gespräch fort.
+Auslegung: Eine **Studio-Session** reicht von der Start- bis zur Ende-Routine; nach einer abgeschlossenen Ende-Routine
+beginnt eine neue Studio-Session, auch wenn die Claude-Session-ID gleich bleibt. Damit steht dieser Studio-Session der eine
+Push nach R335 zu: **Push REL-14 + Werkzeug-Bündel** (main @ `aktueller HEAD nach Push-Gate`, mindestens `4ee91a7` plus
+Doku) nach Handbuch 1.37 durch `lead-production`/`production-integrator`, Pages-Deploy (Release). Weil die Auslegung den
+Begriff „Session“ im Handbuch präzisiert, folgt im selben Zug ein Handbuch-Minor (1.38, R429 V1). Metriken der Studio-Session
+werden am Ende ab dem Zeitpunkt dieses Rulings gezählt (Hinweis an studio-coach).
+
+Regelbezug: STUDIO.md Push (R335), Session-Start und -Ende; R429 V1 · Kosten bei Irrtum: ein Push mehr in 24 h (CI-Minuten
+≈ 5, Pages ≈ 1); Rücknahme durch einen Handbuch-Minor.
+
+Entscheider: L0 · Anlass: Nutzer „mach weiter“ nach Session-Ende · ADR: —
