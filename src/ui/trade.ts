@@ -3,6 +3,7 @@ import { islandName } from '../sim/islands';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { BOOM_PCT } from '../sim/defs/crises';
 import { buy, buyPrice, sell, sellPrice } from '../sim/trade';
+import { activeEdictDef } from '../sim/edicts';
 import { goodUnlocked } from '../sim/unlocks';
 import type { GoodId, Result, World } from '../sim/types';
 import { setField } from './dom';
@@ -25,6 +26,21 @@ function sellTexts(
     price: `${price} Geld`,
     title: `${n} ${GOODS[good].name} verkaufen für ${price} Geld`,
   };
+}
+
+/** Stückpreis am Kontor mit wirkendem Edikt (Spec U-7). */
+export function buyUnitText(w: World, good: GoodId): string {
+  return `${buyPrice(w, good, 1)} Geld`;
+}
+
+export function buyTitle(w: World, good: GoodId, n: number): string {
+  return `${n} ${GOODS[good].name} kaufen für ${buyPrice(w, good, n)} Geld`;
+}
+
+/** Hinweis im Spaltenkopf «Kaufen», nur bei wirkendem Handel-Edikt. */
+export function buyHeadNote(w: World): string {
+  const d = activeEdictDef(w);
+  return d !== null && d.buyPct < 100 ? `Edikt ${d.name}: −${100 - d.buyPct} %` : '';
 }
 
 /** Wahr, solange `good` das Boom-Gut der laufenden Krise ist. */
@@ -83,7 +99,11 @@ export function renderTrade(
   head.append(title, back);
 
   const table = cell(panel, 'trade-table');
-  cell(table, 'trade-head', 'Kaufen');
+  const buyHead = cell(table, 'trade-head', 'Kaufen');
+  const note = document.createElement('small');
+  note.dataset.field = 'buy-note';
+  note.hidden = true;
+  buyHead.append(note);
   cell(table, 'trade-head', 'Verkaufen');
 
   const addTradeButton = (
@@ -100,9 +120,7 @@ export function renderTrade(
     btn.dataset.good = good;
     btn.dataset.op = op;
     btn.dataset.n = String(n);
-    btn.title = sellT
-      ? sellT.title
-      : `${n} ${GOODS[good].name} kaufen für ${buyPrice(world, good, n)} Geld`;
+    btn.title = sellT ? sellT.title : buyTitle(world, good, n);
     btn.addEventListener('click', () => {
       btn.blur();
       const r = op === 'buy' ? buy(world, good, n, island) : sell(world, good, n, island);
@@ -128,7 +146,7 @@ export function renderTrade(
 
     const buyCell = cell(table, 'trade-cell');
     if (canBuy) {
-      cell(buyCell, 'trade-price', `${GOODS[good].buy} Geld`);
+      cell(buyCell, 'trade-price', buyUnitText(world, good)).dataset.field = `buy-price-${good}`;
       for (const n of AMOUNTS) addTradeButton(buyCell, good, 'buy', n);
     } else {
       cell(buyCell, 'trade-price', 'noch nicht freigeschaltet');
@@ -150,6 +168,13 @@ export function updateTrade(panel: HTMLElement, world: World, island: number = H
     const boom = setField(panel, `boom-${good}`, `Boom +${BOOM_PCT - 100} %`);
     if (boom) boom.hidden = !boomGood(world, good);
   }
+  for (const good of GOOD_IDS) setField(panel, `buy-price-${good}`, buyUnitText(world, good));
+  const noteText = buyHeadNote(world);
+  const note = setField(panel, 'buy-note', noteText);
+  if (note) {
+    if (note.hidden !== (noteText === '')) note.hidden = noteText === '';
+    if (note.title !== noteText) note.title = noteText;
+  }
   for (const btn of panel.querySelectorAll<HTMLButtonElement>('button[data-op]')) {
     const good = btn.dataset.good as GoodId;
     const n = Number(btn.dataset.n);
@@ -158,6 +183,10 @@ export function updateTrade(panel: HTMLElement, world: World, island: number = H
         ? buyPrice(world, good, n) > world.money || stock[good] + n > STORAGE_CAP
         : stock[good] < n;
     btn.classList.toggle('unaffordable', unaffordable);
+    if (btn.dataset.op === 'buy') {
+      const title = buyTitle(world, good, n);
+      if (btn.title !== title) btn.title = title;
+    }
     if (btn.dataset.op === 'sell') {
       const t = sellTexts(world, good, n);
       const price = btn.querySelector('small');

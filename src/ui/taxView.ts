@@ -2,7 +2,9 @@
 import { TAX_LEVELS, TIERS, TIER_IDS } from '../sim/defs/tiers';
 import { tierCap, taxBaseByTier } from '../sim/population';
 import { canRiseTier, noRiseReason, taxChangeSet, taxLocked, taxTarget } from '../sim/tax';
-import { effectiveTaxLevel, taxPct, townhallActive } from '../sim/townhall';
+import { EDICTS } from '../sim/defs/edicts';
+import { activeEdict, edictTaxPoints, effectiveTaxPct } from '../sim/edicts';
+import { taxPct, townhallActive } from '../sim/townhall';
 import type { TaxLevel, Tier, World } from '../sim/types';
 import { taxEffect } from './guide';
 import { formatGameTime } from './time';
@@ -37,7 +39,7 @@ export function tierTaxTooltip(tier: Tier, level: TaxLevel): string {
 /** Steuer der Gruppe je Minute (600 Ticks), abgerundet; ohne wirksame Amtsstube mit «normal». */
 export function tierTaxPerMinute(w: World, tier: Tier): number {
   const s = taxBaseByTier(w)[tier];
-  return Math.floor((s * taxPct(effectiveTaxLevel(w, tier), tier) * 3) / 100);
+  return Math.floor((s * effectiveTaxPct(w, tier) * 3) / 100);
 }
 
 export function taxLockText(w: World, tier: Tier): string {
@@ -49,12 +51,16 @@ export function taxLockText(w: World, tier: Tier): string {
 export function taxStatusLine(w: World): string {
   if (!townhallActive(w)) return taxEffect('normal');
   const s = taxSummary(w);
-  return s === 'mixed' ? `Steuer gemischt: ${taxMixList(w)}` : taxEffect(s);
+  const base = s === 'mixed' ? `Steuer gemischt: ${taxMixList(w)}` : taxEffect(s);
+  const pts = edictTaxPoints(w);
+  return pts > 0 ? `${base} · Edikt −${pts} Punkte` : base;
 }
 
 export function taxButtonTitle(w: World): string {
   const s = taxSummary(w);
-  return s === 'mixed' ? taxMixList(w) : taxEffect(s);
+  const base = s === 'mixed' ? taxMixList(w) : taxEffect(s);
+  const e = activeEdict(w);
+  return e === null ? base : `${base} · Edikt: ${EDICTS[e].name}`;
 }
 
 /** Kleinste gesperrte Stufe in der Änderungsmenge von «alle Stufen». */

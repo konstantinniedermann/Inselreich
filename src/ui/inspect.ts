@@ -3,7 +3,6 @@ import { phaseAt, type Phase } from '../render/daynight';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, TIER_IDS } from '../sim/defs/tiers';
-import { GROWTH_INTERVAL } from '../sim/defs/timing';
 import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, upgradeStatus } from '../sim/population';
@@ -11,6 +10,7 @@ import { LEVELS } from '../sim/defs/levels';
 import { upkeepOf, utilization } from '../sim/levels';
 import { paidCost } from '../sim/upgrade';
 import { effectiveRefund, goalView, houseDiagnosis } from '../sim/queries';
+import { growthInterval } from '../sim/edicts';
 import { townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { upgradeDeficit } from '../sim/flow';
@@ -167,8 +167,8 @@ export function refundLine(world: World, b: Building): string {
 }
 
 /** Aufstiegszeile bei erfüllten Bedingungen (Spec L8: Zeit statt „Tick"). */
-export function upgradeOkText(): string {
-  return `✓ Bedingungen erfüllt — Aufstieg in höchstens ${formatGameTime(GROWTH_INTERVAL)}`;
+export function upgradeOkText(w: World): string {
+  return `✓ Bedingungen erfüllt — Aufstieg in höchstens ${formatGameTime(growthInterval(w))}`;
 }
 
 /** Gründe, warum das Haus nicht aufsteigt, als Klartext mit Aufstiegskosten. */
@@ -539,7 +539,7 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
     panel,
     'upgrade-reasons',
     status.ok
-      ? [{ text: upgradeOkText(), ok: true }]
+      ? [{ text: upgradeOkText(world), ok: true }]
       : upgradeReasonTexts(world, b).map((text) => ({ text, ok: false })),
   );
   setOptionalLine(panel, 'deficit', deficitLine(world, b));

@@ -19,6 +19,7 @@ import {
   UPGRADE_TITLE,
 } from '../../src/ui/inspect';
 import { upgradeView } from '../../src/ui/panelView';
+import { setEdict } from '../../src/sim/edicts';
 import { upgradeBuilding } from '../../src/sim/upgrade';
 import { serialize } from '../../src/sim/save';
 import type { BuildingDefId, World } from '../../src/sim/types';
@@ -181,9 +182,19 @@ describe('Anzeige bei Brandausfall (QA-M6U1)', () => {
 
 describe('Inselchronik und Aufstiegszeilen (M7-UX Task 8)', () => {
   it('Aufstiegszeile ohne „Tick" (Spec L8)', () => {
-    expect(upgradeOkText()).toBe(
+    const { w } = uxWorld();
+    expect(upgradeOkText(w)).toBe(
       `✓ Bedingungen erfüllt — Aufstieg in höchstens ${formatGameTime(GROWTH_INTERVAL)}`,
     );
+  });
+  it('AK-M13E1-33 Aufstiegszeile ohne Edikt 5 s, mit Wohlfahrt 4 s', () => {
+    const w = createWorld(3, { unlockAll: true });
+    expect(upgradeOkText(w)).toBe('✓ Bedingungen erfüllt — Aufstieg in höchstens 5 s');
+    w.won = true;
+    placeTownhall(w);
+    w.money = 1000;
+    expect(setEdict(w, 'welfare').ok).toBe(true);
+    expect(upgradeOkText(w)).toBe('✓ Bedingungen erfüllt — Aufstieg in höchstens 4 s');
   });
   it('Aufstiegsgründe über friendlyReason mit Aufstiegskosten (Spec L3 Aufrufer)', () => {
     const { w, house } = uxWorld();
