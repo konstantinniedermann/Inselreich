@@ -3,7 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { demolish, removeRoad } from '../../src/sim/build';
 import { refundCost } from '../../src/sim/economy';
 import { activeEdict, activeEdictDef, edictReason, setEdict } from '../../src/sim/edicts';
+import { GOODS, GOOD_IDS } from '../../src/sim/defs/goods';
+import { orderUnitReward } from '../../src/sim/orders';
 import { deserialize, serialize } from '../../src/sim/save';
+import { buy, buyPrice, sellPrice } from '../../src/sim/trade';
 import { recomputeConnectivity } from '../../src/sim/roads';
 import { paidCost } from '../../src/sim/upgrade';
 import type { Building, World } from '../../src/sim/types';
@@ -148,5 +151,71 @@ describe('M13-E1 Edikte: Aktion', () => {
     expect(hall.connected).toBe(false);
     expect(activeEdict(w)).toBeNull();
     expect(w.edict).toBe('saving');
+  });
+});
+
+describe('M13-E1 Kaufpreis Handel', () => {
+  const tradeWorld = (): World => {
+    const w = edictWorld();
+    setEdict(w, 'trade');
+    return w;
+  };
+
+  it('AK-M13E1-09 Handel senkt den Kaufpreis, aufgerundet über die Gesamtmenge', () => {
+    const w = tradeWorld();
+    expect(buyPrice(w, 'food', 1)).toBe(7);
+    expect(buyPrice(w, 'food', 10)).toBe(64);
+    expect(buyPrice(w, 'glass', 10)).toBe(400);
+    expect(buyPrice(w, 'spice', 1)).toBe(32);
+    const before = w.money;
+    expect(buy(w, 'food', 10).ok).toBe(true);
+    expect(w.money).toBe(before - 64);
+  });
+
+  it('AK-M13E1-09 ohne wirkendes Edikt gilt n × buy (auch AK-M13E1-13)', () => {
+    const plain = edictWorld();
+    expect(buyPrice(plain, 'food', 10)).toBe(80);
+    const w = tradeWorld();
+    w.edict = null;
+    expect(buyPrice(w, 'food', 10)).toBe(80);
+    const out = tradeWorld();
+    townhallOf(out).outageUntil = out.tick + 100;
+    expect(buyPrice(out, 'food', 10)).toBe(80);
+    const loose = tradeWorld();
+    const k = loose.buildings[loose.islands[0]!.kontorId!]!;
+    removeRoad(loose, k.x, k.y + 2);
+    recomputeConnectivity(loose);
+    expect(buyPrice(loose, 'food', 10)).toBe(80);
+  });
+
+  it('AK-M13E1-10 Arbitrage: Kaufpreis n = 1 laut Tabelle', () => {
+    const w = tradeWorld();
+    const expected = {
+      wood: 8,
+      tools: 32,
+      stone: 12,
+      food: 7,
+      wool: 10,
+      cloth: 24,
+      cane: 10,
+      rum: 32,
+      glass: 40,
+      spice: 32,
+    };
+    for (const g of GOOD_IDS) expect(buyPrice(w, g, 1)).toBe(expected[g as keyof typeof expected]);
+  });
+
+  it('AK-M13E1-10 Arbitrage: Kauf teurer als Prämie und Boom-Verkauf', () => {
+    const w = tradeWorld();
+    for (const g of GOOD_IDS) {
+      const boom = tradeWorld();
+      boom.crisis = { period: 1, kind: 'boom', from: 0, until: 9999, good: g };
+      boom.sellPct[g] = 100;
+      for (const n of [1, 10, 100]) {
+        if (GOODS[g].order !== undefined)
+          expect(buyPrice(w, g, n)).toBeGreaterThan(n * orderUnitReward(g));
+        expect(buyPrice(w, g, n)).toBeGreaterThan(sellPrice(boom, g, n));
+      }
+    }
   });
 });

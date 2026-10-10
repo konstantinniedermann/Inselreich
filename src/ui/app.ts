@@ -837,7 +837,7 @@ function launch(
   };
   const tradeCtx = (op: 'buy' | 'sell', good: GoodId, n: number, island: number): ReasonCtx =>
     op === 'buy'
-      ? { cost: { money: buyPrice(good, n), wood: 0, tools: 0, stone: 0 }, good, island }
+      ? { cost: { money: buyPrice(world, good, n), wood: 0, tools: 0, stone: 0 }, good, island }
       : { good, amount: n, island };
 
   const onAction = (a: InputAction): void => {

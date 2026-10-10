@@ -85,7 +85,7 @@ describe('sell', () => {
 
 describe('prices', () => {
   it('computes totals from the goods table', () => {
-    expect(buyPrice('tools', 10)).toBe(400);
+    expect(buyPrice(w, 'tools', 10)).toBe(400);
     expect(sellPrice(w, 'rum', 3)).toBe(53);
   });
 });

@@ -178,19 +178,19 @@ function buyMissing(w: World, cost: Cost, keep = RESERVE): boolean {
   const missing = goods.map(
     (g) => [g, Math.max(0, cost[g] + reserve[g] - home(w).stock[g])] as const,
   );
-  const price = missing.reduce((sum, [g, n]) => sum + buyPrice(g, n), 0);
+  const price = missing.reduce((sum, [g, n]) => sum + buyPrice(w, g, n), 0);
   if (w.money - price - cost.money - reserve.money < keep) return false;
   for (const [g, n] of missing) if (n > 0) expect(buy(w, g, n).ok).toBe(true);
   return true;
 }
 
 /** Preis einschliesslich aller Waren zum Kaufpreis (Lagerbestand unberücksichtigt). */
-function fullPrice(cost: Cost): number {
+function fullPrice(w: World, cost: Cost): number {
   return (
     cost.money +
-    buyPrice('wood', cost.wood) +
-    buyPrice('tools', cost.tools) +
-    buyPrice('stone', cost.stone)
+    buyPrice(w, 'wood', cost.wood) +
+    buyPrice(w, 'tools', cost.tools) +
+    buyPrice(w, 'stone', cost.stone)
   );
 }
 
@@ -249,7 +249,7 @@ export function control(w: World, layout: Layout, opts: ColonyOptions): void {
   // 5. Bürger: Schule erst, wenn auch das erste Rum-Paar bezahlbar ist (sonst Unterhalt ohne Nutzen)
   if (anyPlan(3) && count(w, 'school') === 0) {
     const start: BuildingDefId[] = ['school', 'canefarm', 'distillery'];
-    const budget = start.reduce((sum, id) => sum + fullPrice(BUILDING_DEFS[id].cost), 0);
+    const budget = start.reduce((sum, id) => sum + fullPrice(w, BUILDING_DEFS[id].cost), 0);
     if (w.money < budget + RESERVE) return;
     if (!build(w, 'school', [layout.school])) return;
   }
