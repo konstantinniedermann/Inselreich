@@ -90,6 +90,20 @@ BUDGET_NONE = re.compile(
 )
 
 
+EXEMPT_PHASES = ("plan-", "design-", "gate-")
+
+
+def _exempt_reason(item: dict) -> str | None:
+    """Grund, warum eine Lead-Instanz aus dem Steuerungsanteil fällt (E-049)."""
+    if role_class(item["role"]) != "Leads":
+        return None
+    phase = (item.get("phase") or "").lower()
+    for prefix in EXEMPT_PHASES:
+        if phase.startswith(prefix):
+            return prefix.rstrip("-")
+    return "budget_keins" if item["budget_none"] else None
+
+
 def _budget_none(prompt: str | None) -> bool:
     head = "\n".join((prompt or "").splitlines()[:BUDGET_LINES])
     return bool(BUDGET_NONE.search(head))
@@ -349,6 +363,7 @@ def _instance(
     general_persona: bool,
     pkg: str | None = None,
     budget_none: bool = False,
+    phase: str | None = None,
 ) -> dict | None:
     calls = raw["calls"]
     if not calls:
@@ -375,6 +390,7 @@ def _instance(
         "rewrite_events": _rewrite_events(calls, package_family(pkg)),
         "package": pkg,
         "budget_none": budget_none,
+        "phase": phase,
         "turns": len(calls),
         "status_turns": sum(
             1
@@ -409,19 +425,24 @@ def _ratio(part: float, total: float) -> float:
 
 
 def compute(
-    mains: list[Path], persona_models: dict[str, str] | None = None
+    mains: list[Path],
+    persona_models: dict[str, str] | None = None,
+    phases: dict[str, str] | None = None,
 ) -> dict | None:
     """Kennzahlen über Haupttranskripte samt Subagenten; None = nicht gemessen.
 
     persona_models: Persona -> Modell aus der Frontmatter; ohne Eintrag oder bei
-    «inherit» gilt ein Persona-Start nie als abweichend."""
+    «inherit» gilt ein Persona-Start nie als abweichend.
+    phases: Knotenschlüssel «<session>:<agent>» -> Phase der Freigabe (E-049)."""
     try:
-        return _compute(mains, persona_models or {})
+        return _compute(mains, persona_models or {}, phases or {})
     except Exception:  # noqa: BLE001 - Messung darf nie abstürzen
         return None
 
 
-def _compute(mains: list[Path], persona_models: dict[str, str]) -> dict | None:
+def _compute(
+    mains: list[Path], persona_models: dict[str, str], phases: dict[str, str]
+) -> dict | None:
     instances: list[dict] = []
     reads: list[dict] = []
     sessions = 0
@@ -446,6 +467,7 @@ def _compute(mains: list[Path], persona_models: dict[str, str]) -> dict | None:
                 persona is not None,
                 _package(raw["prompt"]),
                 _budget_none(raw["prompt"]),
+                phases.get(f"{main.stem}:{path.stem.removeprefix('agent-')}"),
             )
             reads += raw["reads"]
             if built:
@@ -471,10 +493,14 @@ def _summary(
         if "opus" in (item["model"] or ""):
             opus += item["cost"]
     share = {k: _ratio(v, total) for k, v in by_class.items()}
-    removed = [
-        i for i in instances if role_class(i["role"]) == "Leads" and i["budget_none"]
-    ]
-    heraus = _ratio(sum(i["cost"] for i in removed), total)
+    grund = dict.fromkeys(("plan", "design", "gate", "budget_keins"), 0.0)
+    removed = 0
+    for item in instances:
+        reason = _exempt_reason(item)
+        if reason:
+            removed += 1
+            grund[reason] += _ratio(item["cost"], total)
+    heraus = sum(grund.values())
     split = _persona_split(instances, persona_models)
     leads = [
         _mean(i["contexts"]) for i in instances if role_class(i["role"]) == "Leads"
@@ -499,7 +525,8 @@ def _summary(
         "steuerung": share["L0"] + share["Leads"],
         "steuerung_bereinigt": share["L0"] + share["Leads"] - heraus,
         "steuerung_heraus": heraus,
-        "steuerung_heraus_n": len(removed),
+        "steuerung_heraus_n": removed,
+        "steuerung_heraus_grund": grund,
         "umsetzer": share["Umsetzer"],
         "lead_ctx_median": _med(leads) if leads else None,
         "l0_ctx_max": l0_max,
@@ -584,6 +611,7 @@ def _lead_stats(instances: list[dict]) -> dict:
             "role": i["role"],
             "package": i["package"],
             "budget_none": i["budget_none"],
+            "phase": i["phase"],
             "turns": i["turns"],
             "status_turns": i["status_turns"],
             "weight": i["cost"],
@@ -746,11 +774,16 @@ def _split_lines(split: dict | None) -> list[str]:
 
 def _adjusted_line(data: dict) -> str:
     value = data["steuerung_bereinigt"]
+    g = data["steuerung_heraus_grund"]
     return (
         f"- Steuerungsanteil bereinigt (E-049, ohne {data['steuerung_heraus_n']} "
-        f"Lead-Instanzen mit „Budget: keins“): {_pct(value)}, Bewertung "
+        "Lead-Instanzen mit Freigabephase plan-/design-/gate- oder "
+        f"„Budget: keins“): {_pct(value)}, Bewertung "
         f"{ampel('steuerung', value)} (Schwellen wie die Rohzeile; herausgerechnet "
-        f"{_pct(data['steuerung_heraus'])}; roh = bereinigt + herausgerechnet)"
+        f"{_pct(data['steuerung_heraus'])}: Plan {_pct(g['plan'])}, "
+        f"Design {_pct(g['design'])}, Gate {_pct(g['gate'])}, "
+        f"nur Budget keins {_pct(g['budget_keins'])}; "
+        "roh = bereinigt + herausgerechnet)"
     )
 
 
@@ -823,6 +856,7 @@ def _lead_lines(stats: dict | None) -> list[str]:
         [
             r["role"],
             str(r["package"] or "–"),
+            str(r["phase"] or ""),
             str(r["turns"]),
             str(r["status_turns"]),
             _k(r["weight"]),
@@ -832,7 +866,9 @@ def _lead_lines(stats: dict | None) -> list[str]:
     return [
         "### Lead-Instanzen",
         "",
-        *_table(["Rolle", "Paket", "Turns", "Status-Turns", "Kostengewicht"], rows),
+        *_table(
+            ["Rolle", "Paket", "Phase", "Turns", "Status-Turns", "Kostengewicht"], rows
+        ),
         "",
         (
             f"- Gesamt: {stats['instances']} Lead-Instanzen, {stats['turns']} Turns, "

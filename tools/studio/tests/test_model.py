@@ -2384,5 +2384,37 @@ class ManualSessionTest(unittest.TestCase):
         self.assertNotIn(model.MANUAL_SESSION, [s["id"] for s in state["sessions"]])
 
 
+class LeadPhasesTest(unittest.TestCase):
+    def grant(self, t, phase, lead="lead-tech"):
+        return ev(
+            "budget",
+            t,
+            agent_id="",
+            role=lead,
+            source="log",
+            budget={"granted": 10, "parallel": 1, "phase": phase},
+        )
+
+    def test_lead_phases_from_claims(self):
+        events = [self.grant(1, "plan-P"), start(2, "a1", "lead-tech")]
+        self.assertEqual(build(events)["lead_phases"], {"s1:a1": "plan-P"})
+
+    def test_parallel_leads_get_own_phase(self):
+        events = [
+            self.grant(1, "plan-P"),
+            start(2, "a1", "lead-tech"),
+            self.grant(3, "impl-Q"),
+            start(4, "a2", "lead-tech"),
+        ]
+        self.assertEqual(
+            build(events)["lead_phases"],
+            {"s1:a1": "plan-P", "s1:a2": "impl-Q"},
+        )
+
+    def test_lead_without_grant_has_no_phase(self):
+        events = [start(2, "a1", "lead-tech")]
+        self.assertNotIn("s1:a1", build(events)["lead_phases"])
+
+
 if __name__ == "__main__":
     unittest.main()

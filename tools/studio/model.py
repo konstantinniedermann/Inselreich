@@ -796,6 +796,10 @@ class _Builder:
         best = max(free or candidates, key=lambda g: g["since"])
         return (best["lead"], best["phase"], best["session_id"])
 
+    def lead_phases(self) -> dict[str, str]:
+        """Knotenschluessel des Leads -> Phase seiner Freigabe (Umkehrung von claims)."""
+        return {lead_key: key[1] for key, lead_key in self.claims.items()}
+
     def claim_budgets(self) -> None:
         """Jede Freigabe gehoert dem ersten danach gestarteten, noch freien Lead."""
         self.claims = {}
@@ -1057,6 +1061,7 @@ class _Builder:
                 :CHRONICLE_SIZE
             ],
             "budgets": self.budget_view(),
+            "lead_phases": self.lead_phases(),
             "board": self.board_view(),
             "decisions": sorted(
                 (

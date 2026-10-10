@@ -13,7 +13,8 @@ from unittest import mock
 import metrics
 import studio_docs
 
-from tests.test_effort import scenario
+import tests.test_efficiency as eff
+from tests.test_effort import ev, scenario
 
 REPO = Path(__file__).resolve().parents[3]
 PRETTIER = REPO / "node_modules" / ".bin" / "prettier"
@@ -208,6 +209,75 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(path.parent.name, "projects")
         with mock_env(STUDIO_TRANSCRIPTS="/x"):
             self.assertEqual(metrics.transcript_dir(Path("/a")), Path("/x"))
+
+
+class PhasesTest(unittest.TestCase):
+    """Phase der Freigabe kommt aus den ungefilterten Events (R441 B1)."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        base = Path(tmp.name)
+        self.out = base / "out"
+        self.transcripts = base / "transcripts"
+        events = [
+            ev("session_start", 0, agent_id="main", status="idle"),
+            ev(
+                "budget",
+                10,
+                agent_id="",
+                source="log",
+                role="lead-tech",
+                budget={"granted": 4, "parallel": 1, "phase": "plan-REL-15"},
+            ),
+            ev("agent_start", 100, agent_id="a9", role="lead-tech", status="active"),
+            ev("agent_stop", 200, agent_id="a9", role="lead-tech", status="done"),
+        ]
+        write_events(base / "home", events)
+        self.write_transcripts()
+        patch = mock_env(
+            STUDIO_HOME=str(base / "home"),
+            STUDIO_DOCS=str(base / "docs"),
+            STUDIO_TRANSCRIPTS=str(self.transcripts),
+        )
+        patch.__enter__()
+        self.addCleanup(patch.__exit__, None, None, None)
+
+    def write_transcripts(self):
+        main = self.transcripts / "s1.jsonl"
+        eff.write(main, [eff.assistant("m1", "claude-opus-4", out=100)])
+        eff.agent(
+            self.transcripts,
+            "s1",
+            "a9",
+            {"agentType": "lead-tech"},
+            [
+                eff.prompt("Persona: lead-tech\nPaket: REL-15\nBudget: 4 Starts"),
+                eff.assistant("x", "claude-opus-4", out=200),
+            ],
+        )
+
+    def args(self, **kw):
+        return argparse.Namespace(session="s1", milestone=None, out=None, **kw)
+
+    def test_phases_from_unfiltered_events_with_since(self):
+        # Freigabe (t=10) liegt vor dem Lead-Start (t=100); kein früherer Kostenstand
+        result = metrics.build(self.args())
+        grund = result[1]["efficiency"]["steuerung_heraus_grund"]
+        self.assertGreater(grund["plan"], 0)
+
+    def test_session_file_uses_lead_phases(self):
+        buffer = io.StringIO()
+        with (
+            contextlib.redirect_stdout(buffer),
+            mock.patch.object(metrics, "format_markdown", lambda path: None),
+        ):
+            code = metrics.main(["--session", "s1", "--out", str(self.out)])
+        self.assertEqual(code, 0)
+        text = next(self.out.glob("S-*.md")).read_text(encoding="utf-8")
+        line = next(x for x in text.splitlines() if "Steuerungsanteil bereinigt" in x)
+        self.assertIn("Plan ", line)
+        self.assertNotIn("Plan 0.0 %", line)
 
 
 def metrics_args(session=None, milestone=None):

@@ -574,5 +574,104 @@ class AdjustedControlTest(unittest.TestCase):
         )  # Zeile ändert die Rot-Menge nie
 
 
+class PhaseAdjustTest(unittest.TestCase):
+    PROMPT = "Persona: lead-tech\nPaket: P\nBudget: 4 Starts"
+
+    def build(self, leads, phases=None):
+        """leads: Liste (name, prompt-Text); phases: Dict oder None."""
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        write(root / "s1.jsonl", [assistant("m1", "claude-opus-4", out=100)])
+        for name, text in leads:
+            agent(
+                root,
+                "s1",
+                name,
+                {"agentType": "lead-tech"},
+                [prompt(text), assistant(f"x{name}", "claude-opus-4", out=200)],
+            )
+        agent(
+            root,
+            "s1",
+            "w1",
+            {"agentType": "tech-sim-engineer"},
+            [
+                prompt("Persona: tech-sim-engineer\nPaket: P"),
+                assistant("w", "claude-sonnet-5", out=500),
+            ],
+        )
+        return efficiency.compute([root / "s1.jsonl"], {}, phases=phases)
+
+    def test_plan_phase_lead_is_removed(self):
+        data = self.build([("l1", self.PROMPT)], {"s1:l1": "plan-REL-15"})
+        self.assertEqual(data["steuerung_heraus_n"], 1)
+        self.assertGreater(data["steuerung_heraus_grund"]["plan"], 0)
+        self.assertAlmostEqual(
+            data["steuerung"],
+            data["steuerung_bereinigt"] + data["steuerung_heraus"],
+            places=9,
+        )
+
+    def test_impl_phase_and_no_phase_count_as_control(self):
+        data = self.build(
+            [("l1", self.PROMPT), ("l2", self.PROMPT)], {"s1:l1": "impl-REL-15"}
+        )
+        self.assertEqual(data["steuerung_heraus_n"], 0)
+        self.assertEqual(data["steuerung_bereinigt"], data["steuerung"])
+
+    def test_phase_prefix_case_insensitive(self):
+        data = self.build([("l1", self.PROMPT)], {"s1:l1": "Gate-plan-TOOL"})
+        self.assertGreater(data["steuerung_heraus_grund"]["gate"], 0)
+        self.assertEqual(data["steuerung_heraus_grund"]["plan"], 0)
+
+    def test_design_phase(self):
+        data = self.build([("l1", self.PROMPT)], {"s1:l1": "design-X"})
+        self.assertGreater(data["steuerung_heraus_grund"]["design"], 0)
+
+    def test_phase_and_budget_none_counted_once(self):
+        text = "Persona: lead-tech\nBudget: keins, keine Agenten starten"
+        data = self.build([("l1", text)], {"s1:l1": "plan-X"})
+        self.assertEqual(data["steuerung_heraus_n"], 1)
+        self.assertGreater(data["steuerung_heraus_grund"]["plan"], 0)
+        self.assertEqual(data["steuerung_heraus_grund"]["budget_keins"], 0)
+
+    def test_budget_none_without_phase_reason(self):
+        text = "Persona: lead-tech\nBudget: keins"
+        data = self.build([("l1", text)], None)
+        self.assertGreater(data["steuerung_heraus_grund"]["budget_keins"], 0)
+        self.assertAlmostEqual(
+            sum(data["steuerung_heraus_grund"].values()),
+            data["steuerung_heraus"],
+            places=9,
+        )
+
+    def test_without_phases_unchanged(self):
+        text = "Persona: lead-tech\nBudget: keins"
+        data = self.build([("l1", text), ("l2", self.PROMPT)], None)
+        self.assertEqual(data["steuerung_heraus_n"], 1)
+
+    def test_raw_and_classes_unchanged(self):
+        leads = [("l1", self.PROMPT)]
+        plain = self.build(leads, None)
+        phased = self.build(leads, {"s1:l1": "plan-X"})
+        self.assertEqual(plain["class_share"], phased["class_share"])
+        self.assertEqual(plain["steuerung"], phased["steuerung"])
+
+    def test_render_adjusted_line_reasons(self):
+        data = self.build([("l1", self.PROMPT)], {"s1:l1": "plan-X"})
+        lines = efficiency.render_section(data).splitlines()
+        line = next(x for x in lines if "bereinigt" in x and "E-049" in x)
+        self.assertIn("Plan ", line)
+        self.assertIn("%", line.split("Plan ", 1)[1])
+        for prefix in ("- ROT:", "- GELB:", "- GRÜN:"):
+            self.assertFalse(line.startswith(prefix))
+
+    def test_lead_rows_have_phase(self):
+        data = self.build([("l1", self.PROMPT)], {"s1:l1": "plan-X"})
+        self.assertEqual(data["lead_stats"]["rows"][0]["phase"], "plan-X")
+        self.assertIn("plan-X", efficiency.render_rewrites(data))
+
+
 if __name__ == "__main__":
     unittest.main()

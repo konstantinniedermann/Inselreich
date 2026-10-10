@@ -363,7 +363,9 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
         state = _milestone_state(state, events, args.milestone)
         sids = sorted({r["session_id"] for r in state["records"]})
         data = efficiency.compute(
-            _session_files(paths.repo_root(), sids), _persona_models()
+            _session_files(paths.repo_root(), sids),
+            _persona_models(),
+            state["lead_phases"],
         )
         raw = summarize(
             state, "milestone", args.milestone, handbook, None, created, data
@@ -378,7 +380,9 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
     kennung = f"S-{day}-{sid[:8]}"
     cost = _session_cost(state, sid, paths.repo_root())
     data = efficiency.compute(
-        _session_files(paths.repo_root(), [sid]), _persona_models()
+        _session_files(paths.repo_root(), [sid]),
+        _persona_models(),
+        state["lead_phases"],
     )
     return kennung, summarize(state, "session", kennung, handbook, cost, created, data)
 
@@ -405,10 +409,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.efficiency:
         files = latest_transcripts(paths.repo_root(), args.sessions)
-        data = efficiency.compute(files, _persona_models())
+        events = load_events(paths.studio_home())
+        state = model.build_state(
+            events, datetime.now(UTC).timestamp(), _persona_models(), "all"
+        )
+        data = efficiency.compute(files, _persona_models(), state["lead_phases"])
         print(efficiency.render_section(data))
         print(efficiency.render_rewrites(data))
-        events = load_events(paths.studio_home())
         gaps = efficiency.idle_gaps(events, args.idle_prefix)
         print(efficiency.render_idle(gaps))
         print(actions.render(since=_session_start(events)))
