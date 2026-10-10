@@ -4661,3 +4661,27 @@ Regelbezug: STUDIO.md Verbesserungsschleife (R316), §10.2 Verfassung · Kosten 
 belegt; Ad-hoc-Retro nachholen.
 
 Entscheider: L0 · Anlass: Kurz-Retro Session 2cfa57e0, Ampel-Hinweis · ADR: —
+
+## R460 · 2026-10-10 · Gate Plan M13-E1: OK mit Auflagen, Umsetzung frei
+
+Ruling: Plan `docs/superpowers/plans/2026-10-10-m13-e1/` (`0b40d7f1`, T01–T15) frei. Urteile `lead-qa` und
+`lead-production` je **OK mit Auflagen** (`.studio/handoffs/2026-10-10-lead-qa-GATE-PLAN-M13-E1.md`,
+`…-lead-production-GATE-PLAN-M13-E1.md`). **Entscheide E1–E9** wie im Plan empfohlen; **E4** ja (stillgelegt auch nicht
+in `cutOffIds`, ein gemeinsames Prädikat in `problems.ts`); **E6** ja: ein Browser-Lauf T14 statt je UI-Task, Abweichung
+von gates.md Plan-Frage 2 hiermit festgehalten (QA A4) — T14 lädt das Szenario je Schrittblock neu, Blocker schliesst eine
+Teil-Wiederholung vor T15. **Auflagen, Nacharbeit ohne Zweitprüfung** (Controller A als erster Commit im Sim-Strang):
+QA **A1** T02 und T15 prüfen, dass in `tests/sim/save.test.ts` nur die drei Version/Index-Zeilen geändert sind
+(`CHAIN_HASHES`, `V6_FORMS` unberührt); **A2** Determinismus-Lauf Stilllegen (`setPaused`-Folge, Brand und Abriss
+während Stilllegung, Speichern/Laden mitten im Lauf) als neuer Plan-AK PLAN-M13-04 in T07; **A3** T15 prüft AK-13
+dreiteilig (T04, T05, T06); **A5** REL-17-Stand und Zeilenangaben (`app.ts` ≈ Z. 838–840) in Index und Übergabe.
+Production **1/2** Index: Starts 28 + 4 Controller = 32 von 37, Wandzeit nach richtwerte.md (Tools ÷ 4, ≈ 110–130 min),
+UI-Startbedingung erfüllt, Abzweig beider Stränge von `a9f5336e`; **3** Sim-Merges in den UI-Strang nur auf vom Reviewer
+abgenommene Commits; **4** Sim-Befunde über den Ledger an T13; **5** Gate Merge erst, wenn main gepusht ist (Push läuft);
+**6** Board-Pakete T01–T14 vor Start Controller A (L0). **Budget:** `lead-tech` 36, `lead-qa` 1, Parallelität 2, Phase
+M13-E1. Controller A (`lead-tech`, sonnet) übernimmt T01–T04 im Sim-Strang; UI-Strang startet nach T03 mit eigener
+Controller-Instanz. Kein `make check` zweier Stränge gleichzeitig (Testlock); Last ≤ 4 vor jedem vollen `make check`.
+
+Regelbezug: gates.md Gate Plan; STUDIO.md Umsetzung (≤ 4 Tasks je Controller-Instanz), R424, R433 · Kosten bei Irrtum:
+Nacharbeit im Strang vor dem Final-Review; ein Browser-Lauf statt vier kann einen UI-Fehler spät finden (Teil-Wiederholung).
+
+Entscheider: L0 · Anlass: Urteile lead-qa und lead-production GATE-PLAN-M13-E1 · ADR: —
