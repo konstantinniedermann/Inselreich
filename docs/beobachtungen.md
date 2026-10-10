@@ -215,3 +215,7 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
   bringt rund 240 Geld/min nahe am Vollpreis gegen 30 Unterhalt je Holzfäller — mögliche Geldquelle ohne Wahl. Ursprung:
   Scout-Befund IDEEN-06 (lead-design). Einschätzung: mittel; mit I-048 „Zukauf-Aufschlag“ durch `design-economy-designer`
   nachrechnen, kein eigenes Paket vorher.
+
+### 2026-10-10 · Weitere Beschleunigung von build_state als Werkzeug-Kandidat
+
+- **Fundort:** `tools/studio/model.py` (`_Builder.apply`, `result`: `_collapse_feed`, `layouts`, `budget_view`, `effort.incidents`). Beobachtung: Nach T01 braucht `build_state` bei 69k Events rund 1,3 s (vorher 3,6 s); `apply` etwa 0,8 s, `result` etwa 0,65 s, beide ohne einzelne Spitze. Ursprung: TOOL-BUENDEL-5 T01 (R482: 1,3 s akzeptiert). Einschätzung: niedrig; Kandidaten wären inkrementelles Fortschreiben des Stands statt Neuaufbau je Abruf und weniger `dict.get` in `touch`/`add_feed`; erst bei spürbarem Verzug im Dashboard angehen.
