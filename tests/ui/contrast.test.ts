@@ -56,6 +56,10 @@ describe('UI-Kontrast (AK-U2-02)', () => {
     expect(contrast(vars['--warn-amber']!, vars['--warn-parchment']!)).toBeGreaterThanOrEqual(3);
   });
 
+  it('Grafik-Kontrast ≥ 3 : 1: Chip-Rahmen (Gut-Fokus) auf der Leiste', () => {
+    expect(contrast('#00c8ff', vars['--wood']!)).toBeGreaterThanOrEqual(3);
+  });
+
   it('Boom-Marke bleibt mit hidden verborgen', () => {
     expect(css).toMatch(/\.badge--boom\[hidden\]\s*\{[^}]*display:\s*none/);
   });

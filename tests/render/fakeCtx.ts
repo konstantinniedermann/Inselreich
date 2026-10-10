@@ -32,6 +32,8 @@ export interface Ev {
   lineWidth: number;
   /** `lineJoin` zum Zeitpunkt des Aufrufs; nur gesetzt, wenn nicht der Standard `miter` (H-R8, R195). */
   lineJoin?: string;
+  /** `setLineDash` zum Zeitpunkt des Aufrufs; nur gesetzt, wenn nicht leer (Gut-Fokus). */
+  dash?: number[];
   points: P[];
   /** Zum Zeitpunkt des Aufrufs aktive Clips (ältester zuerst); `restore` nimmt sie zurück. */
   clips: readonly ClipRec[];
@@ -56,6 +58,7 @@ export class FakeCtx {
   lineWidth = 1;
   lineCap = 'butt';
   lineJoin = 'miter';
+  dash: number[] = [];
   /** Jede Zuweisung an `globalAlpha`. */
   alphaSet: number[] = [];
   private stack: { m: Mat; f: string; s: string; c: string; a: number; k: readonly ClipRec[] }[] =
@@ -115,6 +118,7 @@ export class FakeCtx {
       alpha: this._alpha,
       lineWidth: this.lineWidth,
       ...(this.lineJoin !== 'miter' ? { lineJoin: this.lineJoin } : {}),
+      ...(this.dash.length > 0 ? { dash: [...this.dash] } : {}),
       points,
       clips: this.clips,
     });
@@ -236,7 +240,12 @@ export class FakeCtx {
       d ? [this.apply(d[0]!, d[1]!), this.apply(d[0]! + d[2]!, d[1]! + d[3]!)] : [],
     );
   }
-  setLineDash(): void {}
+  setLineDash(d: number[] = []): void {
+    this.dash = [...d];
+  }
+  getLineDash(): number[] {
+    return [...this.dash];
+  }
   /** Verlauf als Objekt, dessen Textform die Farbstopps nennt (`gradient(a|b)`), damit Tests Füllungen erkennen. */
   createLinearGradient(): FakeGradient {
     return new FakeGradient();
