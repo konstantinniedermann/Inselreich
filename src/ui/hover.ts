@@ -15,7 +15,8 @@ import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
 import { taxSummaryText } from './taxView';
 import { buildingShown, functionLock } from '../sim/unlocks';
 import { HOME, home, adjacentOf, center, inBounds, isKontor } from '../sim/world';
-import type { Building, BuildingDefId, Terrain, Tier, World } from '../sim/types';
+import type { Building, BuildingDefId, Terrain, World } from '../sim/types';
+import { HOUSE_TITLES } from './texts';
 import { costLine } from './dom';
 import { friendlyReason } from './hints';
 import { islandCard } from './islandCard';
@@ -74,12 +75,6 @@ export function hoverPosition(
   };
 }
 
-export const HOUSE_TITLES: Record<Tier, string> = {
-  1: 'Pionierhaus',
-  2: 'Siedlerhaus',
-  3: 'Bürgerhaus',
-  4: 'Kaufmannshaus',
-};
 const TERRAIN_TITLES: Record<Terrain, string> = {
   forest: 'Wald',
   grass: 'Weide',
