@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.44 · Stand: 2026-10-10 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.45 · Stand: 2026-10-10 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -185,6 +185,11 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
   Freigabe; sonst zählt das Dashboard den Start auf die jüngste Freigabe (E-013, R166). Phasenlabels
   sind je Session eindeutig: ein Paket, das in einer späteren Session weiterläuft, bekommt ein Suffix
   (z. B. Datum), weil `effort.py` je `lead:phase` über alle Sessions zählt (R233 (6)).
+- **Phasenpräfix für Plan, Design und Gate (R471, E-049):** Freigaben für Plan-, Kurzdesign- und
+  Gate-Instanzen tragen die Phase mit Präfix `plan-<paket>`, `design-<paket>` bzw. `gate-<paket>`
+  (z. B. `--phase plan-M13-E1`); die Kopfzeile `Paket:` dieser Lead-Instanz nennt dieselbe ID. Nur
+  so rechnet die Zeile „Steuerungsanteil bereinigt“ diese Instanzen heraus. Gate-Instanzen ohne
+  eigene Arbeiter schreiben zusätzlich „Budget: keins“ ins Briefing.
 - **Formel Umsetzung:** `Pakete × 2 + QA-Checks + 1 Final-Review`, darauf 30 % Puffer, aufgerundet.
   Beispiel: 4 Pakete, 2 UI-Checks → 8 + 2 + 1 = 11 → × 1,3 → **15**. Fix-Runden per `SendMessage`
   zählen nicht als Start. L0 teilt auf (Stufe voll: Final-Review an `lead-qa`, Rest an `lead-tech`;
@@ -234,7 +239,11 @@ Urteile: **OK / BEDENKEN [Liste] / ZURÜCK [Grund]**. L0 entscheidet und dokumen
 - **ADR** unter `docs/adr/`, wo es ein „Warum" mit Bestand gibt (Architektur, Formate,
   Abhängigkeiten, Organisation).
 - Der superpowers-Ledger unter `.superpowers/sdd/` bleibt Arbeitsdatei (gitignored, wird gelöscht).
-  Rulings daraus überträgt der Tech-Lead beim Abschluss nach `rulings.md`.
+  Entscheidungen daraus meldet der Tech-Lead beim Abschluss als Entwurf an L0; L0 trägt sie in
+  `rulings.md` ein.
+- **Rulings schreibt nur L0 (R471):** Leads, Umsetzer und Integrator ändern `rulings.md` nie, auch
+  nicht im Strang-Branch; Entscheidungsbedarf geht als Entwurf in den Bericht. Ein Plan-Task dafür
+  heisst „Entwurf an L0“, nie „Rulings nachführen“.
 
 ## Prozessstufen
 

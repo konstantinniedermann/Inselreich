@@ -5,7 +5,7 @@ Regeln: [STUDIO.md](../STUDIO.md), „Budget".
 
 ```text
 Lead: <lead-…>
-Phase: <name, z. B. M5-umsetzung>
+Phase: <name, z. B. M5-umsetzung; Plan, Kurzdesign, Gate mit Präfix plan-<paket>, design-<paket>, gate-<paket> (R471)>
 Pakete:
 - <id> <titel> (<UI ja/nein>)
 - <id> <titel> (<UI ja/nein>)

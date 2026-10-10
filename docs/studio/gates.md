@@ -259,6 +259,9 @@ Ruling „verwerfen“. Eingeplante Ideen durchlaufen den normalen Zyklus; keine
   Test-first-Schritte, Umsetzungsschritte, Prüfbefehle, Commit-Nachricht); grössere Tasks werden
   geteilt. Gate Plan prüft Index und Grössen; Arbeiter und Task-Reviewer lesen nur ihre Task-Datei
   und die genannten AK-IDs.
+- **Rulings im Plan (R471):** Kein Task ändert `docs/studio/rulings.md`. Braucht ein Task eine
+  Entscheidung oder deren Nachweis, heisst er „Entwurf an L0“ und liefert den Wortlaut im Bericht;
+  L0 schreibt das Ruling. Gate Plan meldet einen Task „Rulings nachführen“ als Befund.
 - **Doku im Plan (E-017):** README, arc42, ADR und Spec-Verweise sind ein eigener Task mit
   Eigentümer; das Umsetzer-Briefing erlaubt die D1-Dateien ausdrücklich. Das Final-Review meldet
   keine fehlende Doku.

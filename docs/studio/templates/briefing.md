@@ -13,7 +13,7 @@ Paket: <id>
 Meilenstein: <id> (oder „ohne")
 Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <Starts>)   (ganzer Auftrag inkl. aller Unteraufträge; Tools aus docs/studio/metriken/richtwerte.md, Leads schätzen in Tools, Minuten = Tools ÷ 6, nicht Menschenzeit)
 Modell: <alias> (<Einsatz>)   (Pflicht bei stärkerem Modell als die Persona, dann auch im Agent-Aufruf; Einsatz aus der Modelltabelle, STUDIO.md „Modellwahl“, z. B. `opus (Tech-Lead beim Plan)`, `opus (Final-Review)`, `sonnet (Controller in der Umsetzung)`, `sonnet (lead-qa-Gate-Urteile)`, `sonnet (Kurz-Retro)`)
-Budget: <n Starts / Parallelität k> (nur für Leads; Arbeiter: „keins, keine Agenten starten")
+Budget: <n Starts / Parallelität k> (nur für Leads; Arbeiter: „keins, keine Agenten starten"; Plan-, Kurzdesign- und Gate-Leads: `Paket:` gleich der Freigabephase `plan-<paket>`, `design-<paket>`, `gate-<paket>`, R471)
 Prozessstufe: <leicht|voll>
 
 1. Persona und Expertise: <wer du bist, welche Erfahrung zählt hier>
@@ -21,7 +21,9 @@ Prozessstufe: <leicht|voll>
 3. Kontext (nur diese Dateien lesen): <pfad>, <pfad>
 4. Deliverable: <was> unter <ablageort>   (Final-Review und Playtests: kein Report-Dateipfad, der Schlussbericht ist der Report)
 5. Definition of Done: <prüfbare Punkte, z. B. Test grün, make check grün>
-   Pflichtzeilen je Paketart (R375): jedes Paket mit Budget „Mehrbedarf vor dem Überschreiten melden (templates/budgetantrag.md), nie nachträglich“;
+   Pflichtzeilen je Paketart (R375): jedes Paket „Rulings schreibt nur L0: `docs/studio/rulings.md` nicht ändern, Entscheidungsbedarf als Entwurf an L0 im Bericht (R471)“;
+   jedes Paket mit Kontextdatei > 30 KB (README, `docs/ideen.md`, Specs, Plan-Index) „nur den genannten Abschnitt bzw. Zeilenbereich lesen (`offset`/`limit` oder `grep`), nie die ganze Datei (E-057)“ — die Kontextzeile nennt dafür Abschnitt oder Zeilen;
+   jedes Paket mit Budget „Mehrbedarf vor dem Überschreiten melden (templates/budgetantrag.md), nie nachträglich“;
    Werkzeug-Paket „make studio-test grün; Echtlauf gegen jede externe API (gh, CI, Pages), Ausgabe im Bericht“;
    Änderung an Experimenten, Handbuch oder Personas „make studio-test grün (u. a. höchstens 3 Experimente laufend)“;
    Paket mit `src/`-Änderung (R392, E-052) „vor Task 1 die Zeiten der berührten bestehenden Tests auf main messen (`npx vitest related --run <geplante src-Dateien>`), Tests > 200 ms mit Zeit in den Plan; Abnahme: dieselben Dateien auf main und Branch unmittelbar nacheinander, kein bestehender Test > 500 ms oder > +50 %, Zeiten vorher/nachher im Bericht“;

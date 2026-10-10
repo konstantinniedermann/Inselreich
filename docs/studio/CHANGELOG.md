@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-10 · Handbuch 1.45
+
+- Anlass: Kurz-Retro Studio-Session 5a00a316, V1–V3 angenommen
+- Datenbasis: `docs/studio/retros/2026-10-10-session-5a00a316-ende.md` (B2, B3, B4), `docs/studio/metriken/S-2026-10-10-5a00a316.md`
+- Ruling: R471
+- Änderungen: Budget: Phasenpräfix `plan-`/`design-`/`gate-<paket>` für Plan-, Kurzdesign- und Gate-Freigaben, `Paket:` gleich Phase (V1, E-049); Gates und Dokumentation: Rulings schreibt nur L0, superpowers-Ledger als Entwurf an L0 statt Übertrag durch den Tech-Lead (V2); `gates.md` Plan-Format: Task „Entwurf an L0“ statt „Rulings nachführen“ (V2); Vorlagen `briefing.md` (Pflichtzeilen Rulings und E-057 Teillesen, Budgetzeile Phase) und `budgetantrag.md` (Phase); E-038 behalten und abgeschlossen, E-057 laufend (V3)
+
 ## 2026-10-10 · Handbuch 1.44
 
 - Anlass: TOOL-BUENDEL-4 T03 entfernt `$(TESTLOCK)` von `make zeitreserve-push`; Handbuch an Ist-Stand angeglichen (AK-TB4-16)

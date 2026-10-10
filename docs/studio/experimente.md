@@ -15,8 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Reihenfolge der Wartenden auf einen freien Platz (R375): E-038 (frühestens 2026-10-22), E-048,
-E-049, E-044; E-054 läuft seit R459; E-055 (Budget-Warnung, Retro c64c0775-b V1) danach; E-056 und E-057 (Retro 2cfa57e0 V1, V3) zuletzt; E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R471): E-049, E-054, E-057. Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056; E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 ---
 
@@ -336,7 +335,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Messauftrag (R438 V1, Frist 2026-10-24, durch L0 oder Lead-Start, nicht durch den Coach): Probe, ob ein Vordergrundstart (`run_in_background: false`, Boolean) aus einem Lead greift; Messgrösse: Arbeiter läuft im Vordergrund und der Lead erhält den Rückgabewert ohne Polling (ja/nein). Greift er nicht, passt ein Handbuch-Minor die Vordergrund-Regel (ADR-007) an; Rückfall: Regel unverändert.
 - Bewertung (R420): **angepasst**. Die Regel „lange Bash-Läufe im Hintergrund“ bleibt als Hygiene, ist aber kein Cache-Write-Hebel mehr; der Platz geht an E-050.
 
-## E-038 · laufend (angepasst R420) · Lead-Schicht bei Ein-Umsetzer-Paketen schlank (Hebel 5)
+## E-038 · behalten (R471) · Lead-Schicht bei Ein-Umsetzer-Paketen schlank (Hebel 5)
 
 - Hypothese: Wenn Leads bei Ein-Umsetzer-Paketen auf sonnet laufen oder die Lead-Schicht entfällt, sinken opus- und Steuerungsanteil ohne mehr Nacharbeit (Retro [proc-aufwandsverteilung](retros/2026-10-08-proc-aufwandsverteilung.md); R314). Hebel 2–4 erst nach Messung von E-037.
 - Messgrösse (R420): Starts über der Modelltabelle (STUDIO.md, Abschnitt Modelle) ≤ 1 je Session (Ausgang 10 von 13 in fb37ceac) und opus-Anteil (Ausgang 74,1 %) ≤ 60 % über 3 Sessions; Steuerungsanteil (Ausgang 49,8 % Historie) ≤ 40 % weiter beobachtet; Gegenprobe: Review-Runden im Mittel ≤ 2 und Erstabnahme-Quote nicht schlechter.
@@ -350,6 +349,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Datenpunkt 1 von 3, S-2026-10-09-c64c0775 (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md) B3): 0 von 40 Starts über der Tabelle (Ausgang 10 von 13); opus-Anteil 68,4 % (Schwelle ≤ 60 % verfehlt); Gegenprobe Review-Runden 1,00, Erstabnahme 100 % erfüllt. `modelguard` ab Merge im Modus `warn`, die Wirkung kommt bisher von der Kopfzeile. Weiter beobachten.
 - Datenpunkt 3 von 3, S-2026-10-10-2cfa57e0 (Retro [session-2cfa57e0-ende](retros/2026-10-10-session-2cfa57e0-ende.md) B3): 0 Starts über der Tabelle, opus 74,4 % (Schwelle ≤ 60 % zum zweiten Mal verfehlt), Steuerung bereinigt 25,2 %, Review-Runden 1,00. Urteil **angepasst** (R459): die opus-Schwelle wird nicht mehr hier, sondern in E-054 (Pläne auf sonnet) verfolgt, weil die opus-Starts aus Plan-, Spec- und Review-Starts laut Tabelle stammen; Messgrössen Starts über der Tabelle ≤ 1 je Session und Steuerung ≤ 40 % bleiben hier. Rückfall unverändert.
 - Datenpunkt 2 von 3, S-2026-10-10-c64c0775 (Retro [session-c64c0775-b-ende](retros/2026-10-10-session-c64c0775-b-ende.md) B5): 0 von 39 Starts über der Tabelle (erfüllt); opus-Anteil 66,5 % (verfehlt); Steuerung bereinigt 37,6 % (≤ 40 % erfüllt), roh 68,7 %; Review-Runden 1,00, Erstabnahme 100 % erfüllt. `modelguard` `deny` seit 1.38: 0 Blockaden, 0 Fehlalarme. Weiter beobachten.
+- Bewertung (R471, Retro [session-5a00a316-ende](retros/2026-10-10-session-5a00a316-ende.md) V3): **behalten**, abgeschlossen. Starts über der Tabelle 0 in drei Sessions (Schwelle ≤ 1), Review-Runden 1,00–1,50 (Gegenprobe ≤ 2); die opus-Schwelle verfolgt E-054, die Steuerungsschwelle E-049. Platz an E-057.
 
 ## E-039 · übernommen (R315) · Vergleichsart im Perf-Artefakt
 
@@ -540,15 +540,16 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/lead-tech.md` (nur nach Ruling)
 - Ruling: –
 
-## E-057 · vorgeschlagen (wartet auf Platz) · Grosse Dateien gezielt lesen
+## E-057 · laufend (R471) · Grosse Dateien gezielt lesen
 
 - Hypothese: Wenn Briefings für Dateien über 30 KB (README, `docs/ideen.md`, Specs, Pläne) den benötigten Abschnitt oder Zeilenbereich nennen und Teillesen (`offset`/`limit`) vorschreiben, sinken die Lese-Ergebnisse über 30 KB und mit ihnen der Cache-Write-Anteil (Retro [session-2cfa57e0-ende](retros/2026-10-10-session-2cfa57e0-ende.md) Ampel; Pflichthebel R316).
-- Messgrösse: Lese-Ergebnisse > 30 KB je Session ≤ 2 (Ausgang 4) und Cache-Write-5-min-Anteil der Session ≤ 18 % (Ausgang 20,2 %) über 3 Sessions; Gegenprobe: Review-Runden im Mittel ≤ 1,5, Erstabnahme ≥ 90 %.
+- Messgrösse: Lese-Ergebnisse > 30 KB je Session ≤ 2 (Ausgang 4) und Cache-Write-5-min-Anteil der Session ≤ 18 % (Ausgang als Spanne 20,2–27,2 %, Sessions 2cfa57e0 und 5a00a316) über 3 Sessions; Gegenprobe: Review-Runden im Mittel ≤ 1,5, Erstabnahme ≥ 90 % (bei ≥ 10 geprüften Ergebnissen).
 - Messbarkeit: Liste „Grösste Lese-Ergebnisse“ und Kostenart der Metrik-Datei bleiben unverändert.
 - Zeitraum: 3 Sessions, höchstens bis 2026-11-19.
 - Rückfall: Pflichtzeile und Persona-Satz streichen.
 - Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/lead-*.md` (nur nach Ruling)
-- Ruling: –
+- Ruling: R471 (V3)
+- Start: 2026-10-10 (Handbuch 1.45): Pflichtzeile in `templates/briefing.md`. Der Persona-Satz in `.claude/agents/lead-*.md` ist nicht gesetzt (Umsetzungsauftrag nur `docs/studio/`); er folgt nur, wenn die Briefing-Zeile die Schwelle nach 2 Sessions verfehlt. Erster Datenpunkt: nächste Studio-Session.
 
 ## E-058 · umgesetzt (Vorlagenzeile, kein Platz; R459, R464) · Integrator-Briefing nennt beide Prüfbefehle
 
