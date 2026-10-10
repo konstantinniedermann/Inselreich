@@ -5059,3 +5059,16 @@ leicht; die Retro-Ampel vergleicht ab jetzt mit der neuen Zuordnung.
 Regelbezug: R478 B4, R471 V1 · Kosten bei Irrtum: einzelne Lead-Phasen in alten Sessions falsch zugeordnet (nur Metrik).
 
 Entscheider: L0 · Anlass: Stopp-Meldung Controller TOOL-BUENDEL-5 · ADR: —
+
+## R485 · 2026-10-10 · Gate AUFRAEUM-01: BEDENKEN → frei, Merge vor M13-E2-SIM
+
+Ruling: Plan `docs/superpowers/plans/2026-10-10-aufraeum-01.md` (`d42c1c23`) frei (Urteil
+`.studio/handoffs/2026-10-10-lead-qa-GATE-AUFRAEUM-01.md`, B1–B3 niedrig). **B1** L0 entscheidet: `goodRole` kommt nach
+`src/sim/queries.ts` (etablierter Ort für Lese-Prädikate), keine neue Datei. **B2** Briefings benennen „Verhalten
+unverändert“ als Beleg, Task-Reviews zitieren Vorher/Nachher-Lauf der betroffenen Testdateien. **B3** seriell, ein Baum
+(TOOL-TESTLOCK). T04 (Doku) mit dem T03-Review zusammengelegt. **12 Starts** (Phase `aufraeum-01`). Merge-Reihenfolge:
+AUFRAEUM-01 vor M13-E2-SIM (beide berühren evtl. `src/sim/edicts.ts`). Start, sobald ein Platz frei ist (R424).
+
+Regelbezug: gates.md Kombiniertes Gate (Stufe leicht), R475 · Kosten bei Irrtum: eine Fix-Runde.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-aufraeum-01 · ADR: —
