@@ -1,7 +1,7 @@
 # M13 Etappe E2 «Denkmal als Wahlziel» (I-039) — Design-Spec
 
-Datum: 2026-10-10 · Paket design-m13-e2 · Meilenstein M13 «Spätspiel mit Richtung» · Status: **Entwurf, Gate Spec
-(lead-tech, lead-qa), danach Plan (lead-tech)** · Prozessstufe voll
+Datum: 2026-10-10 · Paket design-m13-e2 · Meilenstein M13 «Spätspiel mit Richtung» · Status: **Gate Spec BEDENKEN (R489), Nachtrag
+eingearbeitet (Anhang 08); das Gate Plan prüft den Nachtrag mit** · Prozessstufe voll
 
 Grundlage: [Designvorschlag](2026-10-10-spaetspiel-vorschlag.md) §4.2 (D1–D6), §5–§10 (verbindlich für Regeln und
 Zahlen), [Rechnung](2026-10-10-spaetspiel-vorschlag/anhang-01-rechnung.md) C, D.2, D.3, «Empfohlene Werte»; Rulings
@@ -16,7 +16,8 @@ Anhänge: [01 Rechenbeispiele](2026-10-10-m13-e2-denkmal-design/anhang-01-rechen
 [04 Zuordnung R452/R466](2026-10-10-m13-e2-denkmal-design/anhang-04-zuordnung-r452-r466.md) ·
 [05 Doku-Folgen](2026-10-10-m13-e2-denkmal-design/anhang-05-doku-folgen.md) ·
 [06 Asset-Anforderung](2026-10-10-m13-e2-denkmal-design/anhang-06-asset-anforderung.md) ·
-[07 UI-Helfer und Texte](2026-10-10-m13-e2-denkmal-design/anhang-07-ui-texte.md).
+[07 UI-Helfer und Texte](2026-10-10-m13-e2-denkmal-design/anhang-07-ui-texte.md) ·
+[08 Nachtrag Gate Spec](2026-10-10-m13-e2-denkmal-design/anhang-08-nachtrag-gate.md).
 
 Kennzeichnung: **Setzung Spec** (hier ergänzt oder vom Lead gesetzt), **[Tech]** (Umsetzungsdetail; lead-tech
 entscheidet im Plan, die Spec legt nur das prüfbare Verhalten fest).
@@ -101,11 +102,12 @@ Neues Modul `src/sim/monument.ts`. Alle Aktionen werfen nie, ziehen keinen Zufal
 
 ### R5 Zug (D3, S4)
 
-- **R5.1** `tickMonument(w)` läuft in `step` nach `tickPopulation` und `tickEconomy`, vor `tickUnlocks` [Tech: Platz].
+- **R5.1** `tickMonument(w)` läuft in `step` direkt nach `tickEconomy` (damit nach `tickPopulation`) und vor `checkWin`
+  (**Setzung Nachtrag**, R489, tech B3); die letzten zwei Aufrufe bleiben `checkWin`, `tickUnlocks` (AK-S1-05 (c)).
   Gezogen wird bei `w.tick % MONUMENT_PULL_TICKS === 0` (Phase des Ticks, Muster `growthInterval`).
 - **R5.2** Je Gut in `MONUMENT_GOODS`-Reihenfolge mit Rest > 0, höchstens ein Stück je Gut und Zug: (1) `stock[g] >
-reserve(w, g)` → `stock[g] −= 1`, `delivered[g] += 1`; (2) sonst bei `buy[g]`, Zukauf möglich (R7) und `money ≥
-buyPrice(w, g, 1)` → `money −= buyPrice(w, g, 1)`, `delivered[g] += 1`; (3) sonst nichts.
+reserve(w, g)` → `stock[g] −= 1`, `delivered[g] += 1`; (2) sonst bei `buy[g]` ein Zukauf über die Funktion aus R7.3;
+  liefert sie 1 Stück, `delivered[g] += 1`; (3) sonst nichts.
 - **R5.3** Kein Zug bei `monument === null`, `!running`, `paused` oder nicht angebunden.
 - **R5.4** Reserve einmal je Zug vor dem ersten Gut; Ergebnis nur aus dem Weltzustand, kein RNG.
 
@@ -113,20 +115,29 @@ buyPrice(w, g, 1)` → `money −= buyPrice(w, g, 1)`, `delivered[g] += 1`; (3) 
 
 - **R6.1** `reserve(w, g) = max(MONUMENT_RESERVE_MIN, ⌈MONUMENT_RESERVE_TICKS × U_g / 100⌉, lock_g)`. `U_g` =
   Hausverbrauch der Heimat je 100 Ticks = Σ `inhabitants × TIERS[tier].needs[g]` über versorgte Häuser (Häuser-Teil von
-  `goodsBalance(w, HOME)`, Betriebe zählen nicht) [Tech: Abfrage]. `lock_g` = Sperrbestand des Guts auf der Heimat aus
-  I-049 (`home(w).reserve[g]`, nur Stein), solange I-049 nicht gemergt ist 0 (**Setzung Spec**, R477).
-- **R6.2** Exakt ohne Gleitkomma-Fehler: 80 Kaufleute → 64, 60 → 48, 61 → 49 [Tech: Zehntel oder Rundung vor dem
-  Aufrunden, Muster `DEFICIT_EPSILON`]. Stein, Werkzeug ohne I-049 immer 20. Tabelle: Anhang 01 A.
+  `goodsBalance(w, HOME)`, Betriebe zählen nicht) [Tech: Abfrage]. `lock_g` liefert eine eigene Funktion in `monument.ts` [Tech: Name,
+  z. B. `monumentLock(w, g)`], in E2 immer 0, weil `Island.reserve` (I-049) erst nach E2 gemergt wird (R477, R489).
+  I-049 ersetzt nur deren Rumpf durch den Sperrbestand `home(w).reserve[g]` (nur Stein) und bringt den Kopplungsfall
+  K1 als eigenes AK mit (Anhang 08 A).
+- **R6.2** Exakt ohne Gleitkomma-Fehler: 80 Kaufleute → 64, 60 → 48, 61 → 49 **Setzung Nachtrag** (tech A3): ganzzahlig, Σ `inhabitants × round(needs × 1000)`, dann
+  Aufrundungs-Division; kein Gleitkomma, kein `DEFICIT_EPSILON`.. Stein, Werkzeug ohne I-049 immer 20. Tabelle: Anhang 01 A.
 - **R6.3** Der Zug senkt den Bestand nie unter die Reserve; Häuser und Betriebe verbrauchen weiter darunter.
 
 ### R7 Zukauf (D4, S4)
 
 - **R7.1 Zukauf möglich** = `noKontorTrade(w, HOME) === null` und `goodLock(w, g) === null`. Preis je Stück **immer**
   `buyPrice(w, g, 1)`: ohne Edikt `GOODS[g].buy` (15, 40, 50, 40), mit wirkendem Handel aufgerundet 80 % (12, 32, 40,
-  32). Ein späterer Aufschlag aus I-048 wirkt damit von selbst (**Setzung Spec**, R477); die Festwerte 64 200 / 54 960
-  gelten ohne I-048 bzw. mit neutralem Aufschlag, der Plan stimmt das ab.
+  32). **Setzung R489:** Der Zukauf **zahlt** den jeweils gültigen Kaufaufschlag aus I-048 (Kaufanteil `buyPct[g]`),
+  **hebt ihn aber nicht**: kein Anstieg, keine Rückkopplung auf normale Käufe; Denkmal-Ware ist nicht verkäuflich, also
+  kein Ausnutzen. Die Festwerte 64 200 / 54 960 gelten bei Kaufanteil 100; I-048 übernimmt die Setzung in Z3 und pinnt
+  in seinem Plan nach.
 - **R7.2** Das Stück geht direkt ins Denkmal: kein Lager, keine Lagergrenze, `sellPct` unverändert. Vollzukauf dauert
   2000 Ticks je Abschnitt (Anhang 01 C). Liegt Ware über der Reserve, wird nie gekauft.
+- **R7.3 Eine Zukauf-Funktion** (**Setzung R489**, tech B1 (a)): Der Denkmal-Zukauf läuft nur über eine Funktion in
+  `src/sim/trade.ts` [Tech: Name, z. B. `buyMonumentUnit(w, g)`]. Sie prüft «Zukauf möglich» (R7.1), rechnet
+  `buyPrice(w, g, 1)`, liefert bei `money < Preis` 0 und ändert nichts, sonst `money −= Preis` und liefert 1. Lager,
+  `sellPct` und Kaufanteil bleiben unverändert; `buy()` bleibt, wie es ist. I-048 hängt seine Preisregel nur dort ein,
+  ohne `monument.ts` zu berühren.
 
 ### R8 Abschnitt fertig und Wahlziel (D5, S6)
 
@@ -141,7 +152,7 @@ false`, `stage += 1`, `delivered` alle 0; auch bei `paused` und ohne Anbindung.
   jedem Gebäude (`refundCost(paidCost(b))` = 250 Geld, 5 Holz, 5 Stein); Abschnitts-Geld und Waren **nicht**.
   **Setzung Spec:** «keine Erstattung» (D6) meint Abschnitts-Geld und Waren; 250 < 500 ist kein Geldtrick.
 - **R9.2** Ein Neubau beginnt bei `stage 0`; ein Abriss nach `monumentDone` lässt das Wahlziel erreicht.
-- **R9.3** Bestätigung ab begonnenem Abschnitt 1: offener Punkt P-1 (§7.5, §13).
+- **R9.3** Bestätigung ab begonnenem Abschnitt 1 (P-1, entschieden R483): §7.5.
 
 ## 4. Datenmodell und Def-Einträge
 
@@ -273,32 +284,32 @@ ein Denkmal'`, `'Kein Denkmal'`, `'Abschnitt läuft'`, `'Denkmal fertig'`, `'Ung
   ändert das Bild. Die Bildstufe steht in `spriteKey` (fehlt = 0); der Schlüsselaudit in `spriteCache.ts` wird
   nachgeführt. Details: Anhang 06.
 
-### 7.5 Abriss-Bestätigung (S7, R476, P-1)
+### 7.5 Abriss-Bestätigung (S7, R476, P-1 nach R483)
 
-R476 (3) sagt «keine Bestätigung beim Abriss per Taste». **Vorbehalt P-1 (Entscheid L0):** Ausnahme nur für das
-Denkmal ab begonnenem Abschnitt 1, für Knopf **und** Taste gleich. Gilt P-1:
+R476 (3) sagt «keine Bestätigung beim Abriss per Taste». **R483 (P-1):** Ausnahme nur für das Denkmal ab begonnenem
+Abschnitt 1, für Knopf **und** Taste gleich; für alle übrigen Gebäude bleibt der Abriss per Taste ohne Bestätigung.
 
 - **U-14** `monumentNeedsConfirm(w, id)` = Denkmal und (`running` oder `stage ≥ 1`). Erster Klick auf «Abreissen» oder
   erster Druck auf `Entf`/`Backspace` setzt den Knopftext «Wirklich abreissen? Fortschritt geht verloren»; erst der
   zweite reisst ab. Auswahlwechsel, `Esc`, Panel-Schliessen setzen zurück (Muster «Wirklich laden?», `src/ui/dom.ts`).
+  Der Zwei-Klick-Zustand ist ein reiner, DOM-freier Helfer in `src/ui/` [Tech: Name, Ort]; Fälle Anhang 08 C.
 - **U-15** Abriss-Werkzeug und Abriss-Zug auf der Karte überspringen ein solches Denkmal mit Meldung «Denkmal nur im
   Panel abreissen». Ohne Fortschritt gilt der normale Abriss.
-
-Lehnt L0 P-1 ab, entfallen U-14, U-15, AK-M13E2-34 (Teil `monumentNeedsConfirm`) und AK-M13E2-45; der Abriss folgt R476.
 
 ## 8. Grafik (Paket M13-E2-ART)
 
 Prozedural in `src/render/sprites.ts` (ADR-006, ADR-012, ART-STIL-01), Motiv und Bauphasen nach
 [Art-Vorschlag](2026-10-10-denkmal-art-vorschlag.md) §2, §4: fünf Bildstufen 0 Baugrund, 1 Sockel, 2 Terrassen, 3
-Schaft, 4 Fertig; Höhe Stufe 4 ≈ 2,9 · `ISO_H` (≤ `H_TOWER`), klar über der Amtsstube (2,0). Render liest nur die
+Schaft, 4 Fertig; Höhe Stufe 4 ≈ 2,9 · `ISO_H` (≤ `H_TOWER`), höher als die Amtsstube (2,0; AK-M13E2-36). Render liest nur die
 Bildstufe (U-13) und das Gebäude, schreibt nie in die Welt. Anforderung: Anhang 06.
 
 ## 9. Save v12
 
 - **R9.1** `SAVE_VERSION = 12`; Weltschlüssel `monument`, `monumentDone` am Ende nach `edictLockedUntil`; Gebäude-Typ
-  `monument` bekannt. Diese Spec legt **nur ihre eigenen** Schlüssel fest (R477). Merge-Reihenfolge: M13-E2-SIM vor
-  I-049-Sim; I-049 (`Island.reserve`, Plan `docs/superpowers/plans/2026-10-10-i049-sperrbestand.md`) setzt auf v12 auf
-  und erweitert nur Migration und Ladeprüfung; I-048 stimmt sein Plan mit `main` ab.
+  `monument` bekannt. Diese Spec legt **nur ihre eigenen** Schlüssel fest (R477). Merge-Reihenfolge (R489): AUFRAEUM-01 →
+  M13-E2-SIM → I-049-Sim / I-048-SIM. I-049 (`Island.reserve`, Plan `docs/superpowers/plans/2026-10-10-i049-sperrbestand.md`)
+  und I-048 (`World.buyPct`) setzen auf v12 auf, erweitern Migration und Ladeprüfung und verschärfen die Rückfaltung
+  für ihren Schlüssel (R9.5).
 - **R9.2** `migrateV11ToV12`: fehlt `monument` → `null`, fehlt `monumentDone` → `false`, `version 12`; Kette v1 …
   v12 ladbar.
 - **R9.3** Ladeprüfung V1–V9 (Anhang 02 C): u. a. Mengen 0 … Soll, `stage` 0 … 3, `buildingId` ist `monument` auf der
@@ -306,8 +317,9 @@ Bildstufe (U-13) und das Gebäude, schreibt nie in die Welt. Anforderung: Anhang
 - **R9.4** Inkompatible Stände **mit Hinweis abweisen, nie ein Absturz**: `version` > 12 → `'Unbekannte Version'`, kein
   JSON → `'Ungültiges Format'`; Spiel bleibt unverändert, UI zeigt den Grund (Verfassung §3; AK-M13E2-26, -47).
 - **R9.5** Hash-Pins über `foldBackToV11` [Tech: Name] vor `foldBackToV10` (Anhang 02 D): entfernt `monument`,
-  `monumentDone` und verwirft je Insel alle Schlüssel ausserhalb der v11-Positivliste (z. B. `reserve` aus I-049);
-  Fixtures Anhang 02 E.
+  `monumentDone` und alle Welt- und Inselschlüssel ausserhalb der v11-Positivlisten, **ohne die Reihenfolge der übrigen
+  zu ändern** (**Setzung Nachtrag**, tech B4). Wer einen Schlüssel einführt (I-049 `reserve`, I-048 `buyPct`, qa B9b),
+  verschärft für ihn auf «nur Neutralwert, sonst Fehler» (Muster I-049 `dropZeroReserve`). Fixtures Anhang 02 E.
 
 ## 10. Abnahmekriterien
 
@@ -338,14 +350,19 @@ false` `serialize(w)` und RNG-Zustand unverändert.
   3; 1040 nichts; dazwischen keine Änderung; Start 1005 → erster Zug 1010; Reihenfolge Stein vor Glas bei Geld für ein
   Stück.
 - **AK-M13E2-09** Reserve: jede Zeile Anhang 01 A exakt; unversorgte Häuser und Fremdinsel-Häuser zählen nicht; eine
-  Glashütte ändert die Stein-Reserve nicht; mit I-049 (falls gemergt) Stein-Sperrbestand 40 → Reserve 40.
-- **AK-M13E2-10** Reserve hält: 80 versorgte Kaufleute, Glas 70, Gewürz 64; 200 Schritte → nach jedem Zug Glas ≥ 64,
-  Gewürz ≥ 64; Gewürz geliefert 0.
+  Glashütte ändert die Stein-Reserve nicht; die Sperrbestand-Funktion (R6.1) liefert für alle vier Güter 0. Die
+  Kopplung «Sperrbestand 40 → Reserve 40» ist kein E2-AK, sondern Fall K1 mit Eigentümer I-049 (Anhang 08 A).
+- **AK-M13E2-10** Reserve hält (Aufbau Anhang 08 B.1: 80 versorgte Kaufleute, vor jedem Schritt gehalten; Glas 80,
+  Gewürz 64): vor dem ersten Schritt Reserve Glas = Gewürz = 64; 200 Schritte; in jedem Schritt, in dem `delivered[g]`
+  gestiegen ist, gilt danach `stock[g] ≥ monumentReserve(w, g)` (Muster AK-20; Hausverbrauch darf den Bestand zwischen
+  den Zügen darunter senken, R6.3); Glas geliefert 1 … 16, Gewürz geliefert 0.
 - **AK-M13E2-11** Zukauf: Lager auf Reserve, `buy.stone` → je Zug Geld −15, geliefert +1; mit Handel −12; `money 14`
   → kein Kauf; `buy` aus → nichts; Lager 25 → erst fünf Stück aus dem Lager ohne Geld; `kontorId = null`
-  (synthetisch) → kein Kauf. Zukauf ruft genau `buyPrice(w, g, 1)` (Spy oder Vergleich).
+  (synthetisch) → kein Kauf. Der gezahlte Betrag je Stück ist `buyPrice(w, g, 1)` vor dem Zug (Vergleich, kein Spy, tech A5).
+  Zukauf-Funktion R7.3 direkt: `money` = Preis → liefert 1, Geld 0; `money` = Preis − 1 → liefert 0, `serialize`
+  unverändert; Lager und `sellPct` je unverändert.
 - **AK-M13E2-12** Vollzukauf exakt (Lauf A, `balance-monument.test.ts`, Anhang 03 B): fertig bei 3000, 5000, 7000;
-  Geld gegenüber Zwilling −64 200, mit Handel −54 960 (ohne I-048).
+  Geld gegenüber Zwilling −64 200, mit Handel −54 960 (Kaufanteil 100, R489; Krisen aus).
 - **AK-M13E2-13** Abschluss: letzter Rest → im selben Tick `running false`, `stage +1`, `delivered` 0; nach Abschnitt 3
   `monumentDone true`, `won`/`wonMerchants`/`wonSpice` unverändert; alle Reste 0 und `paused` → Abschluss im nächsten
   Tick.
@@ -353,16 +370,20 @@ false` `serialize(w)` und RNG-Zustand unverändert.
   Unterhalt), `delivered`; Fortsetzen bzw. Weg → Zug ab dem nächsten Zug-Tick.
 - **AK-M13E2-15** Abriss im laufenden Abschnitt 2 → `monument null`, Geld +250, Holz +5, Stein +5, sonst nichts;
   `monumentDone` bleibt (`true` und `false`); Neubau `stage 0`.
-- **AK-M13E2-16** Zufall und Krise: `fireTarget` wählt nie das Denkmal; zwei Kopien über 1000 Schritte → `serialize`
-  gleich; `tickMonument` ändert den RNG-Zustand nie.
+- **AK-M13E2-16** Zufall und Krise: `fireTarget` wählt nie das Denkmal; zwei Kopien mit laufendem Abschnitt 1 (Stein aus dem Lager,
+  übrige Güter per Zukauf, Aufbau Anhang 08 B.2) über 1000 Schritte → `serialize` gleich; `tickMonument` ändert den RNG-Zustand nie.
 - **AK-M13E2-17** v11-Stand mit `wonMerchants true` (Anhang 02 E) lädt, `canPlace` sofort ok.
+- **AK-M13E2-49** Speichern/Laden mitten im Abschnitt (qa B1, Anhang 08 B.2): Speichern bei Tick 1007, 1010, 1013 und
+  pausiert bei 1025, Laden, weiter bis Tick 1500 → `serialize` gleich dem ununterbrochenen Zwilling; jeder Fall enthält
+  Lieferungen aus dem Lager und per Zukauf.
 
 ### 10.2 Vitest Seed-Läufe, Baseline, Save
 
 AK-M13E2-18 bis -20: Anhang 03 A (Festwerte vor dem Merge, Timeouts, Zeitreserve-Regel, Phasen einmal je Datei).
 
 - **AK-M13E2-18** Lauf B (Anhang 03 C): ab K′-arm-Stand T0 = 11 800, 6000 Ticks → geliefert je Gut, Endbestand,
-  Kaufleute als Festwerte; Hochrechnung nach Anhang 03 C; README-Satz folgt dem Messwert.
+  Kaufleute als Festwerte; Hochrechnung nach Anhang 03 C; README-Satz folgt dem Messwert. Ab T0 kein Controller (Anhang 03 C); erst
+  messen, dann pinnen, Grenzverletzung = Ruling-Stopp (Anhang 03 A).
 - **AK-M13E2-19** Lauf C (Anhang 03 D): Abschnitt 1 fertig bei t₁ mit 4704 ≤ t₁ − t_s ≤ 8736 (11,2 min ± 30 %,
   O11); Festwert t₁; Verfehlen = Pflicht-Rulingpunkt.
 - **AK-M13E2-20** Reserve im Referenzstand (Anhang 03 C, K′-Stand mit Glas und Gewürz auf Reserve + 10): nach jedem
@@ -371,8 +392,9 @@ AK-M13E2-18 bis -20: Anhang 03 A (Festwerte vor dem Merge, Timeouts, Zeitreserve
 - **AK-M13E2-21** Baseline: drei Balancing-Tests grün; `git diff main -- 'tests/sim/balance*.test.ts'
 tests/sim/e0Pins.ts tests/sim/e1Pins.ts tests/sim/seePins.ts` ohne Änderung (neue Datei ausgenommen).
 - **AK-M13E2-22** Hash-Pins grün ohne Pin-Änderung; `foldBackToV11` (`tests/sim/helpers.ts`): v12 ohne Denkmal →
-  v11-Form ohne `monument`, `monumentDone`, `JSON.stringify` gleich einem v11-Stand; Inseln nur mit den Schlüsseln der
-  v11-Positivliste (eine Insel mit Zusatzschlüssel `reserve` ergibt dieselbe Form); mit `monument`, `monumentDone
+  v11-Form ohne `monument`, `monumentDone`, `JSON.stringify` gleich einem v11-Stand; Zusatzschlüssel mit Neutralwert werden entfernt, die
+  Reihenfolge der übrigen bleibt: Insel mit `reserve: { wood: 0, stone: 0 }` und Welt mit `buyPct` (alle 100) am Ende
+  ergeben dieselbe Form; eine Insel mit abweichender Schlüsselfolge behält ihre Folge; mit `monument`, `monumentDone
 true` oder Gebäude `monument` → wirft.
 - **AK-M13E2-23** Rundlauf v12 (Anhang 02 F) ok, tief gleich.
 - **AK-M13E2-24** Migration v11 → v12 und Kette v1 … v11 → `version 12`, `monument null`, `monumentDone false`.
@@ -394,25 +416,28 @@ Geld'`; `running`/`stage 3` → unsichtbar; Stufe 2 → «Abschnitt 3 beginnen (
 - **AK-M13E2-33** `monumentEvents`: 0 → 1 ein Eintrag «Denkmal: Abschnitt 1 fertig» (`info`); 2 → 3 mit
   `monumentDone` → zwei Einträge in dieser Reihenfolge; gleicher Stand und Abriss → leer. `diffSoundEvents` liefert das
   Glocken-Ereignis genau beim Übergang `monumentDone` false → true, nicht nach dem Laden.
-- **AK-M13E2-34** `monumentNeedsConfirm` (P-1): Stufe 0 ohne Lauf `false`, laufend `true`, `stage 1` `true`, anderes
-  Gebäude `false`; `friendlyReason` aller Gründe U-7 wörtlich, Geldgrund «Zu wenig Geld: 4000 nötig, 100 vorhanden».
+- **AK-M13E2-34** `monumentNeedsConfirm` und Zwei-Klick-Zustand (R483): Stufe 0 ohne Lauf `false`, laufend `true`,
+  `stage 1` laufend und nicht `true`, anderes Gebäude `false`; Zustandsfälle C1–C7 aus Anhang 08 C (Klick, `Entf`,
+  `Backspace`, Rücksetzen, anderes Gebäude per Taste sofort, Abriss-Werkzeug überspringt); `friendlyReason` aller Gründe U-7 wörtlich, Geldgrund «Zu wenig Geld: 4000 nötig, 100 vorhanden».
 - **AK-M13E2-35** Bauleiste (`tests/ui/buildMenu.test.ts`): `tierPreviewLine('monument') === null`; Tooltip-Zeile
   U-6; `lockedToolText` vor Ziel 2 → «Denkmal: Erst nach dem Kaufleute-Ziel».
-- **AK-M13E2-36** Bildstufe und Sprite (`tests/render/`, `fakeCtx.ts`): `monumentImageStage` für alle sechs Fälle
-  U-13; fünf Stufen ergeben fünf verschiedene Aufzeichnungen; Höhe streng steigend, Stufe 4 in [2,8; 3,0] · `ISO_H`;
-  seitlich in der 3×3-Rautenbreite; `drawGhost` zeichnet Stufe 4.
+- **AK-M13E2-36** Bildstufe und Sprite (`tests/render/`, `fakeCtx.ts`): `monumentImageStage` für alle sieben
+  erreichbaren Paare (`stage`, `running`) aus Anhang 06 A; fünf Stufen ergeben fünf verschiedene Aufzeichnungen;
+  Höhenmass H(s) nach Anhang 06 C: streng steigend, H(4) in [2,8; 3,0], jede Stufe in ihrer Hülle; Stufe 4 höher als
+  die Amtsstube (H und `bodyHeight`); seitlich in der 3×3-Rautenbreite; `drawGhost` zeichnet Stufe 4.
 - **AK-M13E2-37** Picking (`picking.test.ts`): jede der neun Kacheln und die Spitze der Stufe 4 liefern die Id, neben
   der Hülle nicht; die Hülle wächst mit der Bildstufe.
 - **AK-M13E2-38** Tiefensortierung (`iso.test.ts`): Haus davor (grössere `x + y`) und Baum dahinter → Denkmal
   dazwischen; Nachbar an der unteren Ecke.
 - **AK-M13E2-39** Cache und Grenzen: `spriteKey` ändert sich mit der Bildstufe, fehlende Stufe = 0, Audit-Kommentar
   nennt sie; Eintrag bei Zoom 2, DPR 2 ≤ `SPRITE_MAX_BYTES`; Effekt U-12 hält `CAPS`, endet nach ≤ 3 s, entfällt bei
-  reduzierter Bewegung; Render-Durchlauf lässt `serialize` gleich.
+  reduzierter Bewegung; Render-Durchlauf lässt `serialize` gleich. Alle übrigen Gebäude: `bodyHeight`, `bodyHull`,
+  `spriteKey` ohne Bildstufe gleich wie mit Bildstufe 0; bestehende Render-Tests ohne Änderung grün (qa B7d).
 
 ### 10.4 Browser (qa-playtester, Headless-Chrome)
 
-Screenshots `.studio/qa/m13-e2/<ak>-<breite>x<höhe>.png`, 1280×720 und 1920×1080. Testwelt: Stand mit Ziel 2 (für
--43/-44 Ziel 3), Geld ≥ 30 000.
+Screenshots `.studio/qa/m13-e2/<ak>-<breite>x<höhe>.png`, 1280×720 und 1920×1080. Ausgangsstände: benannte Szenario-Stände je AK
+aus Anhang 08 D (Seed 3, erzeugt in `tests/sim/scenarios.ts`, geladen wie die übrigen Browser-Szenarien).
 
 - **AK-M13E2-40** Vor Ziel 2 «Öffentlich» ohne Denkmal; mit Ziel 2 Denkmal mit Tooltip U-6; Vorschau 3×3 mit Bild
   Stufe 4 (grün frei, rot auf Fremdinsel mit Grund); Bau → Bauplatz, Geld −500.
@@ -422,11 +447,12 @@ Screenshots `.studio/qa/m13-e2/<ak>-<breite>x<höhe>.png`, 1280×720 und 1920×1
 - **AK-M13E2-42** Zukauf Stein bei Lager auf Reserve → Geld −15 je Sekunde, Balken steigt; ohne Weg «Nicht angebunden».
 - **AK-M13E2-43** Abschnitt fertig (Zeitraffer, Vollzukauf): Meldung «Denkmal: Abschnitt 1 fertig», Bild Terrassen,
   Chip «Denkmal 1/3», Chronik-Zeile.
-- **AK-M13E2-44** Wahlziel (Stand `stage 2`, Abschnitt 3 bis auf 1 Stück je Gut): Banner «Wahlziel erreicht: Das
+- **AK-M13E2-44** Wahlziel (Stand `m13e2-abschnitt3-rest` nach Laden: `stage 2`, Abschnitt 3 bis auf 1 Stück je Gut): Banner «Wahlziel erreicht: Das
   Denkmal steht!», Aufflammen und Glocke einmal, Bild Stufe 4, Chip «Wahlziel erreicht»; nach Laden kein Banner, kein
   Effekt.
-- **AK-M13E2-45** (P-1) Laufender Abschnitt: erster Klick bzw. `Entf` zeigt «Wirklich abreissen? Fortschritt geht
-  verloren», `Esc` setzt zurück, zweiter reisst ab; Abriss-Werkzeug meldet «Denkmal nur im Panel abreissen».
+- **AK-M13E2-45** (R483) Stand `m13e2-abschnitt1`: erster Klick, `Entf` bzw. `Backspace` zeigt «Wirklich abreissen?
+  Fortschritt geht verloren», `Esc` setzt zurück, zweiter reisst ab; Abriss-Werkzeug meldet «Denkmal nur im Panel
+  abreissen»; ein Haus per `Entf` ist sofort weg, ohne Bestätigung. Stand `m13e2-bauplatz`: Denkmal per `Entf` sofort weg.
 - **AK-M13E2-46** Bild je Stufe 0–4 bei Standard-Zoom, Tag, Nacht, Regen (`46-s<n>-<licht>-<b>x<h>.png`); Stufe 4 aus
   Standard-Zoom als höchstes Bauwerk der Heimat erkennbar, nachts Leuchtfeuer.
 - **AK-M13E2-47** Slot mit `version 13`: Hinweis «Unbekannte Version», Spiel läuft, keine Konsolenfehler.
@@ -434,16 +460,8 @@ Screenshots `.studio/qa/m13-e2/<ak>-<breite>x<höhe>.png`, 1280×720 und 1920×1
 
 ## 11. Berichtigungen der E1-Spec (R466 (1), Beobachtung M13-E1)
 
-- **AK-M13E1-36 neu:** «Klick «Erlassen (600)» bei Sparen: Geld −600, die Karte Sparen ist hervorgehoben (Klasse
-  `active`) mit Knopf «Aufheben»; die Zeile «wieder änderbar in 5:00» zählt herunter; die Karten Handel und Wohlfahrt
-  sind gesperrt (Knopf `disabled`), ihr Tooltip lautet «Edikt erst in {m:ss} wieder änderbar»; ein Klick auf eine
-  gesperrte Karte löst nichts aus, keine Meldung; der Unterhalt der Kopfzeile sinkt.» Grund: U-4 und `edictCardState`
-  (`disabled`, `reason`) gehen dem alten Wortlaut «Klick auf Handel → Meldung» vor (R466 (1)). Texte aus
-  `src/ui/edictView.ts` (`edictLockText`) und `src/ui/hints.ts` zum Grund `'Edikt-Sperrzeit'` (`src/sim/edicts.ts`).
-- **AK-M13E1-14 ergänzt:** «… bei 4000 mit `money ≥ 600` (der Test setzt `money = 600`) → ok.» Grund: Beobachtung
-  M13-E1 Punkt 3 (nach dem Erlass bleiben 400).
-- **Mechanisch** (Spec-Text unverändert): AK-M13E1-01 prüft die Folge vor den Denkmal-Schlüsseln; AK-M13E1-26 und -41
-  nutzen `SAVE_VERSION + 1` statt 12 (§6).
+Neufassung AK-M13E1-36, Ergänzung AK-M13E1-14 und die mechanischen Anpassungen (AK-M13E1-01, -26, -41) stehen
+unverändert in [Anhang 08 F](2026-10-10-m13-e2-denkmal-design/anhang-08-nachtrag-gate.md) (Platz, R167).
 
 ## 12. Doku-Folgen
 
@@ -452,12 +470,8 @@ Persistenz v12): [Anhang 05](2026-10-10-m13-e2-denkmal-design/anhang-05-doku-fol
 
 ## 13. Offene Punkte (mit Empfehlung)
 
-- **P-1 Abriss-Bestätigung** (S7 gegen R476 (3), Entscheid L0): Empfehlung **ja**, Ausnahme nur fürs Denkmal ab
-  begonnenem Abschnitt 1, für Knopf und Taste gleich (Verlust bis 18 000 Geld plus Ware).
-- **P-2 Bauplatz-Erstattung** (R9.1): so lassen (einheitlich, kein Geldtrick).
-- **P-3 Lauf C synthetisch** (Anhang 03 D): Im K′-Stand kauft der Controller Stein für drei Glashütten und Gewürz für
-  die Häuser; ein R-Ausbau misst dort nicht, was die Rechnung annimmt. Empfehlung: R in der synthetischen R-Welt
-  messen, die Konkurrenz zu den Häusern über AK-M13E2-20 belegen.
+- **P-1 bis P-3:** entschieden in R483 nach Empfehlung (Bestätigung ab Abschnitt 1; Bauplatz-Erstattung wie üblich;
+  Lauf C in der synthetischen R-Welt). Zukauf und I-048: R489 (R7.1, R7.3).
 - **P-4 Gerüst-Animation:** nach Playtest (S-Paket Grafik).
 - **P-5 Feinwerte E3:** Mengen ±30 % nur über `MONUMENT_STAGES` (O11), mit Ruling und grünem Lauf C.
 
@@ -471,7 +485,7 @@ O2, O6, O7, O8, O11, B3, R466 (1), (2), R476, R477: [Anhang 04](2026-10-10-m13-e
 ## 15. Grössenschätzung
 
 **M** (Vorschlag §9 ≈ 200): M13-E2-SIM ≈ 100 Tools (3×3-Gebäude, Zustand, Zug, Save v12, Seed-Läufe), M13-E2-ART ≈ 55
-Tools (Sprite fünf Bildstufen, Bildstufen-Funktion, Cache-Schlüssel, Picking, Sortierung, Effekt; parallel ab Gate
-Spec, R67), M13-E2-UI ≈ 70 Tools (Panel, Chip, Chronik, Log, Glocke, Bestätigung, README, arc42); ≈ 225. Risiko mittel:
+Tools (Sprite fünf Bildstufen, Bildstufen-Funktion, Cache-Schlüssel, Picking, Sortierung, Effekt; Maler ab Gate Spec,
+Einhängen nach dem Def-Kern, R489/tech B2), M13-E2-UI ≈ 70 Tools (Panel, Chip, Chronik, Log, Glocke, Bestätigung, README, arc42); ≈ 225. Risiko mittel:
 erstes 3×3-Gebäude, Save-Reihenfolge (M13-E2-SIM vor I-049-Sim, I-049 erweitert v12 nur um Migration und
 Ladeprüfung; I-048 nach Plan), Lauf C an der Spanne.

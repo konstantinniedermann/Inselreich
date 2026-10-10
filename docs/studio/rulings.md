@@ -5171,3 +5171,42 @@ erfüllt.
 Regelbezug: gates.md Gate Merge Release (Stufe leicht), R485 · Kosten bei Irrtum: ein Revert-Commit.
 
 Entscheider: L0 · Anlass: Bericht Controller AUFRAEUM-01 · ADR: —
+
+## R492 · 2026-10-10 · Spec-Nachtrag I-048 abgenommen; Plan in der nächsten Session
+
+Ruling: Nachtrag `12c98fd3` (Spec 38,8 KB, AK-ZK-29…33, `buyQuote` als reine Kernfunktion, Klassen N/R in §6) und
+`1d724c5e` (Ideen-Status) abgenommen. Umbenennung `EdictDef.buyPct` → `buyFactorPct` bleibt im Umfang (eindeutige Namen,
+≈ 5 Tools). Spec I-048 ist damit gegatet (R487, R490). Plan durch `lead-tech` wegen Limit-Ampel gelb (R488) erst in der
+nächsten Session; Plan-Punkte stehen im Handoff `.studio/handoffs/2026-10-10-lead-design-design-i048-nachtrag.md`.
+
+Regelbezug: gates.md Gate Spec, R488 · Kosten bei Irrtum: eine Umbenennung zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-i048-nachtrag · ADR: —
+
+## R493 · 2026-10-10 · Spec-Nachtrag M13-E2 abgenommen; Plan in der nächsten Session
+
+Ruling: Nachtrag `a39a1ccb` (Spec 39,2 KB, Anhang 08 neu, AK-49 neu, Zwei-Klick-Helfer C1–C7, Rückfaltung mit
+Reihenfolgeerhalt) abgenommen; Spec M13-E2 ist gegatet (R483, R489). Entscheid zu Anhang 08 D: Die Ausgangsstände zu
+AK-43/-44 tragen `wonSpice = true` (Ziel-Chip zeigt das Denkmal erst nach Ziel 3) — so lassen, lead-qa bestätigt im Gate
+Plan. Plan durch `lead-tech` (opus, Tech-Lead beim Plan) wegen Limit-Ampel gelb (R488) in der nächsten Session als erstes;
+Plan-Punkte in Anhang 08 E und im Handoff `.studio/handoffs/2026-10-10-lead-design-design-m13-e2-nachtrag.md`,
+einschliesslich Nachtrag Plan I-049 (Fall K1, `dropZeroReserve`).
+
+Regelbezug: gates.md Gate Spec, R488 · Kosten bei Irrtum: ein Ausgangsstand im Browser-Check falsch gewählt.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-m13-e2-nachtrag · ADR: —
+
+## R494 · 2026-10-10 · Gate Merge TOOL-BUENDEL-5: OK, lokaler Merge nach AUFRAEUM-01
+
+Ruling: `tool/b5` @ `ff59778f` abgenommen (T01–T06, Batch-Reviews OK bzw. BEDENKEN→behoben, Final-Review opus OK;
+`studio-lint`, `studio-test` 661, `docs-check` Exit 0; 5 von 7 Starts). Messwerte: `build_state` 3,62 → 1,3 s (R482);
+CPU Leerlauf 1,5 % bei 30-facher Drosselung, die bleibt (R478). Ermessensentscheide des Controllers (Prozessgruppe
+verbindlich, SIGTERM/SIGHUP wie Ctrl-C, `--retitle` nur mit `--title`, Diff-Hash mit ungetrackten Dateien) bestätigt.
+Sonderfall `ac8af81e` (`Paket: M13-E1-T01` bindet Phase M13-E1 nicht): Regel bleibt — die Phase bindet nur bei exakter
+`Paket:`-ID oder Präfix `plan-`/`design-`/`gate-` (Handbuch 1.45); Task-IDs als `Paket:` sind künftig zu vermeiden
+(Briefing nennt das Paket, nicht den Task). Merge lokal durch `production-integrator` **nach** AUFRAEUM-01, seriell,
+kein Push.
+
+Regelbezug: gates.md Gate Merge Release, R478, R482, R484 · Kosten bei Irrtum: ein Revert im Werkzeug-Strang.
+
+Entscheider: L0 · Anlass: Bericht Controller TOOL-BUENDEL-5 · ADR: —

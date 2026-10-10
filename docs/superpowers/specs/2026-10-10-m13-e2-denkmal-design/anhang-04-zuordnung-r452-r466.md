@@ -16,6 +16,6 @@ betrifft, mit dem Ort in Spec und Anhängen. O1, O3–O5, O9, O10, B1, B2 betref
 | R466 (1) Wortlaut AK-M13E1-36                          | §11; Verweis in der E1-Spec                                       |
 | R466 (2) Randlage Sparen/Handel «arm»                  | §6.1, AK-M13E2-21, Anhang 03 A                                    |
 | Beobachtung M13-E1 Punkt 3 (AK-M13E1-14)               | §11; Verweis in der E1-Spec                                       |
-| R476 (3) keine Bestätigung beim Abriss per Taste       | §7.5, §13 P-1 (Ausnahme zur Entscheidung L0), AK-M13E2-34, -45    |
+| R476 (3) keine Bestätigung beim Abriss per Taste       | §7.5, §13 P-1 (Ausnahme, entschieden R483), AK-M13E2-34, -45      |
 | R476 belegte Tasten                                    | §2 (keine neue Taste)                                             |
 | R477 Save-Reihenfolge v12, I-049/I-048                 | §9 R9.1, R9.5, R6.1 (`lock_g`), R7.1 (I-048), Anhang 02 D, §15    |

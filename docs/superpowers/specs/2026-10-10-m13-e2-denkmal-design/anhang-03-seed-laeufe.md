@@ -12,14 +12,16 @@ Controller baut ein Denkmal). Muster: [Anhang 03 der Spec M13-E1](../2026-10-10-
   Controller bis zum nächsten Vielfachen von 200. Erwartet: `wonMerchantsTick` = `K_ARM` = 11 800 und **T0 = 11 800**
   (Festwerte aus `balance-edicts.test.ts`). Weicht einer ab, stoppt der Umsetzer: Die E1-Festwerte gehen vor, ein
   Abweichen ist ein Baseline-Bruch (AK-M13E2-21). Begründung, warum nur dieser Stand: Spec §6.1 (b), R466 (2).
-- **Synthetische Welten (Läufe A, C):** `createWorld(3, { unlockAll: true })`, `wonMerchants = true`, keine Häuser
-  (Reserve 20), Krisen wie Standard der Testwelt; Plätze als Konstanten im Test [Tech: einmal bestimmen].
+- **Synthetische Welten (Läufe A, C):** `createWorld(3, { unlockAll: true, crisisLevel: 'off' })`,
+  `wonMerchants = true`, keine Häuser (Reserve 20), **Krisen aus** (**Setzung R489**, tech A4: Ausfälle an Steinbrüchen
+  oder Glashütte würden t₁ und die Summen beliebig verschieben, die Pins würden spröde); Plätze als Konstanten im Test [Tech: einmal bestimmen].
 - **Denkmal roh einsetzen:** `placeBuilding(w, 'monument', …)` auf einem festen, über einen Weg angebundenen Platz
   [Tech: Konstante `MONUMENT_AT`, Weg mit `placeRoad`]; Bauplatz- und Wegkosten werden vorher gutgeschrieben; 4000
   Geld werden vor `startMonumentStage` gutgeschrieben (Kosten neutralisiert). Erwartung je `ok: true`.
 - **Festwerte (R455 T-B2):** Vor dem Merge stehen die Messwerte als `const` im Test und werden mit `toBe` geprüft,
   zusätzlich zu den Grenzen. Verfehlt ein Wert eine Grenze, ist das ein **Pflicht-Rulingpunkt**: Umsetzer stoppt,
-  meldet an `lead-design`; Grenzen und Festwerte ändert nur ein Ruling L0.
+  meldet an `lead-design`; Grenzen und Festwerte ändert nur ein Ruling L0. Reihenfolge im Plan (qa B3): erst messen, dann
+  als `const` pinnen; liegt ein Messwert ausserhalb einer Grenze, wird nicht gepinnt, sondern gestoppt.
 - **Laufzeit (R455 T-B3):** Phase 1 und 2 laufen **einmal je Datei** in `beforeAll` (Timeout 15 000 ms); jeder Lauf
   startet aus einer Kopie `deserialize(serialize(stand))`. Timeouts: Lauf A 10 000 ms, Lauf B 10 000 ms, Lauf C
   10 000 ms. Zeitreserve-Regel: lokal unter `CI=true` (`make test`, `.studio/zeitreserve.json`) braucht jeder Test und
@@ -44,20 +46,22 @@ Zwilling: dieselbe Welt ohne `startMonumentStage` und ohne `buy` (gleicher Unter
 | Lager der vier Güter am Ende               | 20 (nie angetastet)     |
 
 Variante Handel: `won = true`, Amtsstube angebunden, `setEdict(w, 'trade')` vor Tick 1000 in Lauf und Zwilling. Die
-Festwerte gelten ohne I-048 bzw. mit neutralem Aufschlag (Spec R7.1).
+Festwerte gelten bei Kaufanteil 100 (R489, Spec R7.1); I-048 pinnt seine Fassung in seinem Plan nach.
 
 ## C. Lauf B · Referenz ohne Zusatzausbau (AK-M13E2-18, -20)
 
-K′-arm-Stand bei T0, Denkmal roh eingesetzt, Abschnitt 1 gestartet, **kein** Zukauf, kein Controller, `feed` alle 10
-Ticks, Laufzeit 6000 Ticks (10 min).
+K′-arm-Stand bei T0, Denkmal roh eingesetzt, Abschnitt 1 gestartet, **kein** Zukauf. **Ab T0 kein Controller**
+(**Setzung Nachtrag**, qa B3): `runMerchants` wird nach T0 nicht mehr aufgerufen, je Tick nur `feed` (alle 10 Ticks)
+und `step`; Krisenstufe unverändert aus dem K′-Stand; Laufzeit 6000 Ticks (10 min).
 
 Messgrössen (Festwerte): `delivered[g]` je Gut bei T0 + 6000, Endbestand der vier Güter, Kaufleute bei T0 und am Ende.
 
 Hochrechnung (im Test berechnet und geloggt, nicht gepinnt): Rate `r_g = delivered[g] / 6000` je Tick; Dauer
 Abschnitt 1 ≈ `max_g (Soll_g / r_g)`; ist ein `r_g = 0` bei offenem Soll, gilt «ohne zusätzliche Betriebe nicht fertig».
 
-Erwartung (gerechnet, kein Pin): Der Referenz-Controller baut weder Steinbruch noch Werkzeugmacher noch Plantage; er
-kauft Stein für drei Glashütten und Gewürz für die Häuser. Ohne ihn liefert das Lager Stein und Werkzeug nur, soweit
+Erwartung (gerechnet, kein Pin): Der Stand bei T0 ist das Werk des Referenz-Controllers **bis** T0: Er hat weder
+Steinbruch noch Werkzeugmacher noch Plantage gebaut und Stein für drei Glashütten sowie Gewürz für die Häuser
+gekauft. Ab T0 kauft niemand mehr; also liefert das Lager Stein und Werkzeug nur, soweit
 der Bestand bei T0 über 20 liegt, Gewürz nur über 48; die Glashütten stehen nach dem Stein im Lager still. Also wird
 Abschnitt 1 voraussichtlich **nicht** fertig. README-Satz (Anhang 05) nach dem Messwert, Vorlage: «Ohne zusätzliche
 Betriebe (Steinbruch, Werkzeugmacher, Glashütte, Plantage) wird schon der erste Abschnitt nicht fertig; plane Ausbau
@@ -66,8 +70,9 @@ oder Zukauf ein.» Liefert die Messung für alle Güter > 0, nennt der Satz die 
 **Reserve-Prüfung (AK-M13E2-20), eigene Kopie des K′-Stands:** wie Lauf B, aber bei T0 Glas und Gewürz im
 Heimatlager auf `monumentReserve(w, g) + 10` gesetzt (damit der Zug sicher aus dem Lager liefert), Laufzeit 1000
 Ticks. Vor jedem Schritt `before = delivered`; stieg nach dem Schritt `delivered[g]` für Glas oder Gewürz (alle `buy`
-aus, also aus dem Lager), gilt `stock[g] ≥ monumentReserve(w, g)`. Die Zahl der geprüften Fälle ist > 0 (erwartet
-≥ 10 je Gut) und steht als Festwert im Test.
+aus, also aus dem Lager), gilt `stock[g] ≥ monumentReserve(w, g)`. Die Zahl der geprüften Fälle ist > 0 je Gut und steht nach der Messung
+als Festwert im Test; keine feste Untergrenze vorab, weil die Häuser Glas und Gewürz verbrauchen und `feed` sie nicht
+nachfüllt (qa B9c).
 
 ## D. Lauf C · R-Ausbau (AK-M13E2-19)
 
