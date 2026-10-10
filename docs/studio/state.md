@@ -81,11 +81,13 @@ Pages --ref main` (Release: Paket-ID **REL-18** vergeben, Release-Notizen oben),
 2. **Werkzeug-Kandidaten** in `docs/beobachtungen.md` (u. a. `model.py` schneller / Events kürzen — Dashboard bis 80 s alt,
    R469; `testrun` Ctrl-C; `start.sh` fremder Server; Fokus-Regel doppelt `focusList`/`drawFocusMarks`). Auswertung, wenn
    > 30 Einträge (Beobachtungs-Auswertung steht ohnehin an: Einträge seit 2026-10-10 zählen).
-3. **Experimente:** E-054 hat 2 von 3 Datenpunkten (Retro 5a00a316); nächster Plan auf sonnet schliesst ab. Messaufträge M1
+3. **Retro R471:** `studio-coach` setzt V1 (Phasenpräfix `plan-`/`design-`/`gate-` in Budgetzeilen) und V2 („Rulings
+   schreibt nur L0“ in Plan-Vorlage und Briefing) um; E-057 startet; Messauftrag M3 beim Push.
+4. **Experimente:** E-054 hat 2 von 3 Datenpunkten (Retro 5a00a316); nächster Plan auf sonnet schliesst ab. Messaufträge M1
    (Frist 2026-10-23), M2 (Frist 2026-11-19).
-4. **Aufräumen** (eigenes Ruling): gemergte Worktrees `.worktrees/b4`, `m13-e1-sim`, `m13-e1-ui`, `ui-gut-chip` erst nach dem
+5. **Aufräumen** (eigenes Ruling): gemergte Worktrees `.worktrees/b4`, `m13-e1-sim`, `m13-e1-ui`, `ui-gut-chip` erst nach dem
    Push entfernen (`git worktree remove`, Branches bleiben).
-5. **Warteschlange N-99** (Kenntnis R434) offen; ohne Antwort gilt R434.
+6. **Warteschlange N-99** (Kenntnis R434) offen; ohne Antwort gilt R434.
 
 ## Aktuelles Projekt und Phase
 

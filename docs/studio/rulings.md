@@ -4849,3 +4849,19 @@ Regelbezug: gates.md Gate Merge Release; STUDIO.md Ablauf Stufe leicht Schritt 6
 Merge.
 
 Entscheider: L0 · Anlass: Übergabe lead-tech UI-GUT-CHIP Controller B · ADR: —
+
+## R471 · 2026-10-10 · Kurz-Retro 5a00a316 angenommen; Vorlagenzeilen Phase und Rulings, E-038 → E-057
+
+Ruling: Retro `docs/studio/retros/2026-10-10-session-5a00a316-ende.md` (`1f98c884`) angenommen. **V1** Budgetzeilen für
+Plan, Design und Gate tragen die Phase mit Präfix (`plan-<paket>`, `design-<paket>`, `gate-<paket>`), damit E-049 den
+Steuerungsanteil bereinigen kann (bisher 0,0 % herausgerechnet, Messfehler) — Vorlagenzeile ohne Experiment-Platz.
+**V2** Plan-Vorlage und Briefing-Pflichtzeile „Rulings schreibt nur L0“; ein Plan-Task heisst „Entwurf an L0“; Messgrösse:
+Diff von `rulings.md` in Strang-Branches bleibt in 3 Paketen leer, sonst Persona-Grenze. **V3** E-038 **behalten**,
+abgeschlossen; frei werdender Platz an **E-057** (grosse Dateien gezielt lesen) als Hebel für den roten Cache-Write (R316).
+**M3** Messauftrag: nächster Push ohne Umsetzer-/Controller-Start zwischen Gate-Beginn und `zeitreserve-push` Exit 0,
+Push-Dauer ≤ 8 min. Umsetzung V1/V2 durch `studio-coach` zu Beginn der nächsten Studio-Session; bis dahin setzt L0 beides
+im Briefing. E-054 läuft (2 von 3 Datenpunkten).
+
+Regelbezug: STUDIO.md Verbesserungsschleife, R316 · Kosten bei Irrtum: ein Experiment-Platz falsch belegt.
+
+Entscheider: L0 · Anlass: Kurz-Retro Session 5a00a316 · ADR: —
