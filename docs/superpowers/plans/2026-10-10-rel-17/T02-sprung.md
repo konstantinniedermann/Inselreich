@@ -66,7 +66,7 @@ const jumpToProblem = (dir: 1 | -1): void => {
 
 `onHotkey`: zwei Zweige `problemNext` → `jumpToProblem(1)`, `problemPrev` → `jumpToProblem(-1)` **vor** dem bisherigen `else`; das `else` (Pause) wird zu `else if (h.kind === 'pause')`, damit eine neue Aktion nie still als Pause endet. Das abschliessende `refresh()` in `onHotkey` bleibt (doppeltes `refresh` ist harmlos, ≈ 1 Aufruf je Tastendruck).
 
-Kein Vitest für die Verdrahtung (DOM, Kamera): Beleg T05 Schritte 1–5, Review prüft die Reihenfolge `cancelPointerAction` → `centerOn` → `setPanel` → `refresh` → Cursor → Meldung.
+**Quelltext-Test (rot vorher)**, Präzedenz AK-R16-06 (REL-16, `readFileSync` auf `app.ts`, typisiert in `tests/ui/node-shim.d.ts`): Ergänzung in `tests/ui/hotkeys.test.ts`, `it('AK-R17-10 jumpToProblem: Reihenfolge und kein Werkzeugwechsel (Quelltext)')` — Block ab `const jumpToProblem` bis zum ersten `\n  };` herausschneiden; erwartet `indexOf('cancelPointerAction') < indexOf('centerOn') < indexOf('setPanel') < indexOf('refresh()') < indexOf('landed: state.activeIsland')`, `replaceMessage` zweimal, kein `selectTool(`. Testkommentar: `app.ts` braucht DOM und ist in Vitest nicht startbar. Wirkung im Spiel belegt T05 Schritte 1–5.
 
 ## Prüfbefehle
 

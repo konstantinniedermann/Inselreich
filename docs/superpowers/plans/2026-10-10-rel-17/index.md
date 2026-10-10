@@ -41,7 +41,7 @@ Dateien (alle exklusiv beim einen Umsetzer):
 - T04: `README.md`, `docs/arc42.md`, `docs/beobachtungen.md`
 - T05, T06: keine (Browser-Lauf mit Ablage `.studio/qa/REL-17/`, Review)
 
-T02 und T03 teilen `src/ui/app.ts` und laufen deshalb nacheinander im selben Baum mit demselben Umsetzer (SendMessage). **Berührungspunkte mit REL-16 in `app.ts`:** REL-16 ändert `dispose` (heute Z. 1294 ff., `islandMenuAbort`) und `hints.ts`/`hud.ts`/`placement.ts`. REL-17 ändert in `app.ts` nur Importe, `jumpToIsland`-Umfeld (Z. 420–426, neuer `jumpToProblem`), `onHotkey` (Z. 771–791), die Zug-Flags (Z. 749–762) und `onAction` (Z. 836–884); `dispose` bleibt unberührt (der Cursor braucht kein Aufräumen). Keine Hunk-Überschneidung erwartet; trotzdem blocked-by, weil die Dateimatrix bei gleicher Datei Stapeln verlangt.
+T02 und T03 teilen `src/ui/app.ts` und laufen deshalb nacheinander im selben Baum mit demselben Umsetzer (SendMessage). **Berührungspunkte mit REL-16** (Plan `docs/superpowers/plans/2026-10-10-rel-16/`, T01/T02): REL-16 ändert in `app.ts` `showRoadFailure` (Z. ~754, neuer optionaler Parameter `at`), den Bau-Fehler (Z. ~853), den Aufruf nach `placeRoad` (Z. ~861) und `dispose` (Z. ~1294–1318); dazu `hints.ts` (`ReasonCtx.at`) und `hud.ts`. REL-17 ändert in `app.ts` Importe, das Umfeld von `jumpToIsland` (Z. 420–426, neuer `jumpToProblem`), die Zug-Flags (Z. 749–752, **neben** `showRoadFailure`), `onHotkey` (Z. 771–791), den `dragEnd`-Zweig (Z. 836) und den Abriss-Zweig (Z. 877–884, **drei Zeilen unter** dem `placeRoad`-Aufruf); `dispose`, `hints.ts`, `hud.ts` bleiben unberührt. Nebeneinanderliegende Hunks → Stapeln nötig, deshalb blocked-by; der Abriss-Pfad nutzt `showRoadFailure` ohne `at`, verträglich mit der neuen Signatur.
 
 ## Tasks
 

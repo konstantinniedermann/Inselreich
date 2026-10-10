@@ -60,7 +60,9 @@ Abriss-Zweig in `onAction` (heute Z. 877–884) — vor dem bisherigen Gebäude-
 - `!a.dragging` (Druck auf eine Gebäudehülle, AK-R17-14): bisheriger Code unverändert (`demolishBuilding`, Meldung `demolishText`).
 - `dragEnd`-Zweig (Z. 836): zusätzlich, wenn `stroke !== null`: `const n = strokeEndNotice(newlyCut(stroke.before, world), stroke.removed, stroke.tiles)`; `warn` → `showMessage(n.text, 'warn')`; `error` → `showRoadFailure(n.reason, false, stroke.island)`; danach `stroke = null`.
 
-Erstattung und Konnektivität bleiben in `removeRoad` (Sim, unverändert). `refresh()` läuft je Kachel wie beim Weg-Zug (Z. 885).
+Erstattung und Konnektivität bleiben in `removeRoad` (Sim, unverändert). `refresh()` läuft je Kachel wie beim Weg-Zug (Z. 885). Nach REL-16 hat `showRoadFailure` einen optionalen vierten Parameter `at`; der Abriss-Pfad übergibt ihn nicht (wie REL-16 beim `removeRoad`-Aufruf).
+
+**Quelltext-Test (rot vorher)** wie AK-R16-06 in `tests/ui/input.test.ts`: `it('AK-R17-13/15 Abriss-Zug in app.ts (Quelltext)')` — `app.ts` enthält `strokeEndNotice(newlyCut(stroke.before, world)` im `dragEnd`-Zweig und `stroke = null` danach; im Zweig `tool.kind === 'demolish' && a.dragging` steht `removeRoad` und kein `demolishBuilding`. Testkommentar wie dort.
 
 ## Prüfbefehle
 

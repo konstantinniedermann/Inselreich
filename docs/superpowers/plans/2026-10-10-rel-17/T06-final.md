@@ -6,7 +6,7 @@ Rolle `qa-code-reviewer` · Modell **opus** (Briefing-Kopfzeile `Modell: opus (F
 
 ## Prüfpunkte
 
-1. **AK-Abdeckung:** je AK-R17-01…20 den belegenden Test bzw. den T05-Schritt aus dem Ledger `.superpowers/sdd/rel-17/ledger.md` und dem Playtest-Report nennen; fehlt ein Beleg → BEDENKEN. Ausnahmen mit Begründung: AK-R17-10, 11 nur Browser (kein DOM in `tests/ui/`).
+1. **AK-Abdeckung:** je AK-R17-01…20 den belegenden Test bzw. den T05-Schritt aus dem Ledger `.superpowers/sdd/rel-17/ledger.md` und dem Playtest-Report nennen; fehlt ein Beleg → BEDENKEN. Ausnahmen mit Begründung: AK-R17-10 nur Quelltext-Test plus Browser, AK-R17-11 nur Browser (kein DOM in `tests/ui/`).
 2. **Sperrdateien:** `git diff main...HEAD -- src/sim src/render src/audio tests/sim src/ui/hints.ts src/ui/hud.ts docs/studio docs/ideen.md` ist leer (AK-R17-19); `SAVE_VERSION` unverändert.
 3. **Reinheit `problems.ts`:** kein DOM, kein Kamera-Parameter, kein Import aus `./app` oder `./hints`; ein Prädikat für Klasse 1 und `cutOffIds`; Brand vor Anbindung; Sortierschlüssel vollständig (keine Gleichstände ohne ID).
 4. **Umlauf (Review Focus 1):** `problemStep` mit `landed`/`anchor` kann bei zwei Inseln nicht pendeln; Test simuliert die gefolgte Kamera; verschwundener Schlüssel → Nachfolger nach `sort`.
