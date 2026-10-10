@@ -4357,3 +4357,17 @@ Parallelität 2, Controller `sonnet`.
 Regelbezug: gates.md Gate Plan (Folgeplan R233 V2); Verfassung §7.2; R394 · Kosten bei Irrtum: Revert-Merge vor dem Push.
 
 Entscheider: L0 · Anlass: Gate Plan TOOL-BUENDEL-2 · ADR: —
+
+## R442 · 2026-10-10 · Gate Merge TOOL-BUENDEL-2: OK
+
+Ruling: **OK** für `tool/b2-py` @ `7a10b831` (T01–T06, Merge `tool/b2-ts` `0cc1e304`): Final-Review opus OK ohne BEDENKEN,
+AK-TB2-01…13, R441 B1–B4 erfüllt; `make check`, `make studio-test` (546), `make studio-lint`, `tsc`, `docs-check` Exit 0;
+Konfliktprobe gegen main sauber. Merge lokal durch `production-integrator` (`--no-ff`), danach `make check` und
+`make studio-test` auf main; Worktrees `b2-py`/`b2-ts` entfernen; kein Push (nächste Studio-Session, zusammen mit REL-15).
+Direkt danach streicht der studio-coach die STUDIO.md-Zeile „warten, bis die Last ≤ 4“ im Push-Ablauf (E6) als Handbuch
+1.40. Für die Kurz-Retro: Reviewer hat den Worktree `b2-py` kurz auf `main` umgeschaltet (zurückgestellt, sauber);
+versehentlich committete `*-E`-Sicherungsdateien (entfernt, Historie bleibt).
+
+Regelbezug: gates.md Gate Merge; R335/R434 · Kosten bei Irrtum: Revert-Merge vor dem Push.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-2 · ADR: —
