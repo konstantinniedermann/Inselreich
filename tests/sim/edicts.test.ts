@@ -1,17 +1,27 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { demolish, removeRoad } from '../../src/sim/build';
-import { refundCost } from '../../src/sim/economy';
-import { activeEdict, activeEdictDef, edictReason, setEdict } from '../../src/sim/edicts';
+import { refundCost, tickEconomy, totalUpkeep } from '../../src/sim/economy';
+import {
+  activeEdict,
+  activeEdictDef,
+  edictReason,
+  edictTaxPoints,
+  effectiveTaxPct,
+  setEdict,
+} from '../../src/sim/edicts';
+import { taxUnits, tickTaxes } from '../../src/sim/population';
+import { TIERS } from '../../src/sim/defs/tiers';
 import { GOODS, GOOD_IDS } from '../../src/sim/defs/goods';
 import { orderUnitReward } from '../../src/sim/orders';
 import { deserialize, serialize } from '../../src/sim/save';
 import { buy, buyPrice, sellPrice } from '../../src/sim/trade';
 import { recomputeConnectivity } from '../../src/sim/roads';
 import { paidCost } from '../../src/sim/upgrade';
-import type { Building, World } from '../../src/sim/types';
+import type { Building, EdictId, GoodId, Tier, World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
-import { foldBackToV10, placeTownhall } from './helpers';
+import { foldBackToV10, placeTownhall, putBuilding, setHouse } from './helpers';
+import { shipLiteral } from './seaHelpers';
 
 /** Testwelt (Spec §10): freigeschaltet, gewonnen, Amtsstube, 1000 Geld, Tick 1000. */
 export function edictWorld(): World {
@@ -217,5 +227,154 @@ describe('M13-E1 Kaufpreis Handel', () => {
         expect(buyPrice(w, g, n)).toBeGreaterThan(sellPrice(boom, g, n));
       }
     }
+  });
+});
+
+describe('M13-E1 Steuer und Unterhalt', () => {
+  const SPOT = { x: 20, y: 20 };
+  let spotN = 0;
+  const spot = (w: World): { x: number; y: number } => {
+    const isl = w.islands[0]!;
+    const per = Math.floor((isl.width - SPOT.x) / 2);
+    const n = spotN++;
+    return { x: SPOT.x + (n % per) * 2, y: SPOT.y + Math.floor(n / per) * 2 };
+  };
+  const put = (w: World, defId: Parameters<typeof putBuilding>[2]): Building => {
+    const p = spot(w);
+    return putBuilding(w, 0, defId, p.x, p.y);
+  };
+  const house = (w: World, tier: Tier, n: number, met: boolean): void => {
+    const b = put(w, 'house');
+    const h = b.house!;
+    const def = TIERS[tier];
+    setHouse(b, tier, n);
+    for (const g of Object.keys(def.needs) as GoodId[]) h.satisfied[g] = met;
+    for (const s of def.services) h.services[s] = met;
+    h.supplied = met;
+  };
+  /** Welt A.1 (Anhang 01 A): fünf Häuser, gemischte Steuerstufen. */
+  const worldA1 = (): World => {
+    spotN = 0;
+    const w = edictWorld();
+    w.taxLevels = { 1: 'low', 2: 'normal', 3: 'high', 4: 'high' };
+    house(w, 1, 4, true);
+    house(w, 2, 8, true);
+    house(w, 2, 8, false);
+    house(w, 3, 11, true);
+    house(w, 4, 15, true);
+    w.taxCarry = 0;
+    w.money = 0;
+    return w;
+  };
+  /** Welt A.2: vier Kaufleute-Häuser à 20, erfüllt, «normal». */
+  const worldA2 = (): World => {
+    spotN = 0;
+    const w = edictWorld();
+    for (let i = 0; i < 4; i++) house(w, 4, 20, true);
+    w.taxCarry = 0;
+    w.money = 0;
+    return w;
+  };
+  /** Welt B Zeile 1: Kontor, Amtsstube, 2 Fischer, Glashütte. */
+  const worldB = (): World => {
+    spotN = 0;
+    const w = edictWorld();
+    put(w, 'fisher');
+    put(w, 'fisher');
+    put(w, 'glassworks');
+    w.money = 0;
+    return w;
+  };
+  const withEdict = (w: World, id: EdictId | null): World => {
+    w.edict = id;
+    return w;
+  };
+  const runTaxes = (w: World): [number, number] => {
+    for (let i = 0; i < 100; i++) tickTaxes(w);
+    return [w.money, w.taxCarry];
+  };
+
+  it('AK-M13E1-06 taxUnits und wirksamer Satz je Edikt', () => {
+    const expected: [EdictId | null, number][] = [
+      [null, 133_860],
+      ['saving', 125_796],
+      ['welfare', 128_100],
+      ['trade', 133_860],
+    ];
+    for (const [id, units] of expected) expect(taxUnits(withEdict(worldA1(), id))).toBe(units);
+    expect(effectiveTaxPct(withEdict(worldA1(), 'saving'), 4)).toBe(108);
+    expect(edictTaxPoints(withEdict(worldA1(), 'welfare'))).toBe(5);
+    expect(edictTaxPoints(worldA1())).toBe(0);
+  });
+
+  it('AK-M13E1-07 100 Ticks Steuern: Geld und Übertrag je Edikt', () => {
+    expect(runTaxes(worldA1())).toEqual([669, 6000]);
+    expect(runTaxes(withEdict(worldA1(), 'saving'))).toEqual([628, 19_600]);
+    expect(runTaxes(withEdict(worldA1(), 'welfare'))).toEqual([640, 10_000]);
+    expect(runTaxes(worldA2())).toEqual([1760, 0]);
+    expect(runTaxes(withEdict(worldA2(), 'saving'))[0]).toBe(1636);
+    expect(runTaxes(withEdict(worldA2(), 'saving'))[1]).toBe(16_000);
+    expect(runTaxes(withEdict(worldA2(), 'welfare'))).toEqual([1672, 0]);
+  });
+
+  it('AK-M13E1-08 Unterhalt mit Edikt, Schiff und gebuchter Wert', () => {
+    expect(totalUpkeep(worldB())).toBe(55);
+    expect(totalUpkeep(withEdict(worldB(), 'saving'))).toBe(44);
+    expect(totalUpkeep(withEdict(worldB(), 'trade'))).toBe(55);
+    expect(totalUpkeep(withEdict(worldB(), 'welfare'))).toBe(55);
+    const ship = worldB();
+    shipLiteral(ship);
+    expect(totalUpkeep(ship)).toBe(70);
+    expect(totalUpkeep(withEdict(ship, 'saving'))).toBe(56);
+    const w = withEdict(worldB(), 'saving');
+    w.upkeepCarry = 0;
+    for (let i = 0; i < 100; i++) tickEconomy(w);
+    expect(w.money).toBe(-44);
+    expect(w.stats.upkeep).toBe(44);
+  });
+
+  it('AK-M13E1-13 Ausfall oder Trennung der Amtsstube: Werte wie ohne Edikt', () => {
+    const w = withEdict(worldA1(), 'saving');
+    const hall = townhallOf(w);
+    hall.outageUntil = w.tick + 100;
+    const noEdict = withEdict(worldA1(), null);
+    townhallOf(noEdict).outageUntil = noEdict.tick + 100;
+    expect(taxUnits(w)).toBe(taxUnits(noEdict));
+    expect(totalUpkeep(w)).toBe(totalUpkeep(withEdict(worldA1(), null)));
+    expect([w.edict, w.edictLockedUntil]).toEqual(['saving', 0]);
+    delete hall.outageUntil;
+    expect(taxUnits(w)).toBe(125_796);
+    expect(totalUpkeep(w)).toBeLessThan(totalUpkeep(withEdict(worldA1(), null)));
+
+    const loose = withEdict(worldB(), 'saving');
+    townhallOf(loose).connected = false;
+    expect(totalUpkeep(loose)).toBe(55);
+    townhallOf(loose).connected = true;
+    expect(totalUpkeep(loose)).toBe(44);
+  });
+
+  it('AK-M13E1-20 Edikt im Endzustand wirkt bewusst klein', () => {
+    const balance = (id: EdictId | null): number => {
+      spotN = 0;
+      const w = withEdict(worldA2(), id);
+      for (let i = 0; i < 32; i++) put(w, 'school');
+      expect(totalUpkeep(withEdict(w, null))).toBe(820);
+      w.edict = id;
+      w.taxCarry = 0;
+      w.upkeepCarry = 0;
+      w.money = 0;
+      for (let i = 0; i < 600; i++) {
+        tickTaxes(w);
+        tickEconomy(w);
+      }
+      return w.money;
+    };
+    expect(balance(null)).toBe(5640);
+    expect(balance('saving')).toBe(5884);
+    expect(balance('welfare')).toBe(5112);
+    expect(balance('trade')).toBe(5640);
+    const trade = withEdict(edictWorld(), 'trade');
+    expect(buyPrice(trade, 'stone', 48)).toBe(576);
+    expect(buyPrice(edictWorld(), 'stone', 48)).toBe(720);
   });
 });

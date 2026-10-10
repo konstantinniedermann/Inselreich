@@ -18,6 +18,7 @@ import type {
 import { budgetFrom, dampsOn, deficitGood, goodsBalance, upgradeDelta, type Budget } from './flow';
 import { buildCoverage, distance, serviceBuildings, type Coverage } from './coverage';
 import { inSupplyRange } from './supply';
+import { effectiveTaxPct } from './edicts';
 import { effectiveTaxLevel, goodLockActive, taxPct, upgradeStopActive } from './townhall';
 import { center, islandOf } from './world';
 
@@ -250,7 +251,7 @@ export function taxBaseByTier(world: World): Record<Tier, number> {
 export function taxUnits(world: World): number {
   const base = taxBaseByTier(world);
   let units = 0;
-  for (const t of TIER_IDS) units += base[t] * taxPct(effectiveTaxLevel(world, t), t);
+  for (const t of TIER_IDS) units += base[t] * effectiveTaxPct(world, t);
   return units;
 }
 

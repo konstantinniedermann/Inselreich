@@ -1,6 +1,7 @@
 import { SHIP } from './defs/sea';
 import { STORAGE_CAP } from './defs/goods';
 import { UPKEEP_INTERVAL } from './defs/timing';
+import { activeEdictDef } from './edicts';
 import { upkeepOf } from './levels';
 import type { Cost, GoodId, Island, Result, World } from './types';
 import { fail, ok } from './types';
@@ -57,14 +58,16 @@ export function grantRefund(world: World, isl: Island, cost: Cost): void {
   addStock(isl, 'stone', cost.stone);
 }
 
-/** Unterhalt als Nominalwert je 100 Ticks. */
+/** Unterhalt je 100 Ticks, wirksam: Summe S (Gebäude + Schiffe), mit Edikt upkeepPct < 100 → ⌊S × pct / 100⌋. */
 export function totalUpkeep(world: World): number {
   let sum = 0;
   for (const b of Object.values(world.buildings)) sum += upkeepOf(b);
-  return sum + world.ships.length * SHIP.upkeep;
+  sum += world.ships.length * SHIP.upkeep;
+  const pct = activeEdictDef(world)?.upkeepPct ?? 100;
+  return pct < 100 ? Math.floor((sum * pct) / 100) : sum;
 }
 
-/** Bucht den Unterhalt je Schritt mit ganzzahligem Übertrag; `stats.upkeep` bleibt der Nominalwert. */
+/** Bucht den Unterhalt je Schritt mit ganzzahligem Übertrag; `stats.upkeep` ist der wirksame Wert (Edikt Sparen, Spec R3.2). */
 export function tickEconomy(world: World): void {
   world.stats.upkeep = totalUpkeep(world);
   world.upkeepCarry += world.stats.upkeep;
