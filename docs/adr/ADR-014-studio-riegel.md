@@ -54,3 +54,13 @@ geschützt; Arbeiter können die Datei nicht ändern, und die Modellregel ist Ha
 - Im Modus `warn` hat der Guard keine Wirkung auf den Start; erst `deny` (TOOL-AKTIVIERUNG) lehnt ab. Abgelehnte
   Starts erschienen dann als `spawn`-Ereignis ohne Kind, wie bisher bei Ablehnungen durch `guard.py`.
 - Der Hook `pre-commit` ersetzt nicht die CI-Prüfung und nicht die Pflichtzeile `make docs-check` im Briefing.
+
+## Nachtrag 2026-10-10 (TOOL-BUENDEL-3)
+
+- **Entscheidung:** Die Budget-Warnung (E-055, R443) läuft im Modell-Guard-Prozess (`budgetwarn.py`, aufgerufen
+  aus `modelguard.py`), nicht in `hook.py`. Grund: Der Guard läuft nur bei `Agent|Task`, es braucht keine neue
+  Hook-Zeile, und `hook.py` läuft bei jedem Werkzeugaufruf.
+- **Modus:** Warnung statt Ablehnung (Ereignis `budget_warn`, Kontext und Systemmeldung). Fehlwarnungen sollen
+  gemessen werden, bevor daraus ein Riegel wird (E-055, Gegenprobe).
+- **Rückfall:** `git revert` des Zweigs.
+- **Verweise:** R443, `docs/superpowers/plans/2026-10-10-rel-16/index.md` E3.
