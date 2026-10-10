@@ -4474,3 +4474,19 @@ Regelbezug: gates.md Gate Ideen-Runde (breite Runde, R445) · Kosten bei Irrtum:
 umstellen; kein Code betroffen.
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-05 · ADR: —
+
+## R449 · 2026-10-10 · Kurzdesign REL-17 UI-PROBLEM-SPRUNG angenommen
+
+Ruling: Kurzdesign `lead-design` (Selbstprüfung OK, Handoff `.studio/handoffs/2026-10-10-lead-design-UI-PROBLEM-SPRUNG.md`)
+angenommen. Entscheide wie empfohlen: **(1)** Waren-Mangel als ein Eintrag je Gut und Insel (mit Hauszahl); **(2)** «Lager
+voll» nicht als Problem bis I-035; **(3)** kein Zähler-Knopf in REL-17 (mit I-043 bündeln); **(4)** Trenn-Warnung „Abriss
+trennt n Gebäude vom Kontor“ für Zug- und Einzelabriss eines Wegs. Tasten `.`/`,` über `hotkeyAction`; Reihenfolge nach
+Schwere, aktive Insel, Abstand, ID (kameraunabhängig); Abriss-Zug nur Wege, Gebäude übersprungen, Erstattung wie
+Einzelabriss. `src/sim/` nur lesend, kein Save, keine Baseline. Plan `lead-tech` (opus) jetzt; die Umsetzung startet
+nach dem Merge von REL-16, weil beide `src/ui/app.ts` berühren (Dateimatrix, E-019); `src/ui/problems.ts` ist der
+Baustein für I-043.
+
+Regelbezug: gates.md Gate Brainstorming / Kombiniertes Gate (Stufe leicht); R448 · Kosten bei Irrtum: Plan-Nacharbeit,
+kein Code betroffen.
+
+Entscheider: L0 · Anlass: Bericht lead-design UI-PROBLEM-SPRUNG · ADR: —
