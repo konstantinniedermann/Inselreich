@@ -4422,3 +4422,23 @@ Regelbezug: Nutzerauftrag; STUDIO.md Discovery-Strang (E-027, R208); gates.md Ga
 eine zu breite Runde (≈ 160 Tools), Pool wieder eindampfen.
 
 Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-10 · ADR: —
+
+## R446 · 2026-10-10 · REL-15 live; CI rot durch Sekunden-Flake im Metrik-Test; Hotfix ohne zweiten Push
+
+Ruling: (1) **REL-15 + Werkzeug-Bündel 2 live:** Push `9eb99e77..c282def0` (Push-Gate grün: `make check` 2875 Tests,
+`loadStart` 3,64, `zeitreserve-push` und `check-ci-perf` Exit 0), Pages 38038481954 grün. (2) **CI 38038270428 rot**,
+einziger Fehler `tests.test_metrics.MetricsTest.test_second_run_overwrites`. Beleg: Die Listen unterscheiden sich nur
+in einer Zeile mit Zeitstempel `…:36:16+00:00` gegen `…:36:17+00:00`; der Test filtert nur Zeilen mit „erzeugt“, der
+JSON-Block trägt den Zeitstempel `created` (`tools/studio/metrics.py:409`) aber zusätzlich. Das Spiel ist nicht
+betroffen (alle Vitest-Läufe grün, Pages baut selbst). Dass der Integrator Pages trotz roter CI auslöste, ist
+gedeckt: Gate R440 erteilt, alle Prüfungen lokal grün, Fehler nur im Studio-Werkzeug. (3) **HOTFIX-CI-01**
+(lead-tech, Controller sonnet): Test zeitfest machen (feste Uhr oder Filter auf `created`), Branch im Worktree,
+Task-Review, Gate Merge durch L0, Merge lokal. **Kein zweiter Push** in dieser Studio-Session (R335): Live-Spiel
+unberührt, CI auf main bleibt bis zum nächsten Push rot; der Hotfix geht als erstes mit dem nächsten Push raus. (4)
+Ad-hoc-Retro „CI rot“ (Hook) wird mit der fälligen Prozess-Aussensicht REL-15 in **einem** `studio-process-coach`-Start
+gebündelt. UI-REL16 und TOOL-BUENDEL-3 starten, sobald die Ideen-Runde IDEEN-05 Plätze freigibt (≤ 8 Agenten, R424).
+
+Regelbezug: STUDIO.md Merge/Push („CI rot → Behebung hat Vorrang, Ad-hoc-Retro“), R335, R424 · Kosten bei Irrtum: CI
+auf main bis zum nächsten Push rot; Fehlalarm in `ci.py`.
+
+Entscheider: L0 · Anlass: Bericht production-integrator PUSH-REL-15 · ADR: —
