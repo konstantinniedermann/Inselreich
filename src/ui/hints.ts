@@ -88,6 +88,18 @@ const costOf = (c: ReasonCtx): Cost | null =>
   c.cost ?? (c.defId ? BUILDING_DEFS[c.defId].cost : null);
 
 export const REASON_TABLE: readonly ReasonRow[] = [
+  {
+    source: 'edicts',
+    pattern: /^Edikt-Sperrzeit$/,
+    show: (_m, w) =>
+      w.tick < w.edictLockedUntil
+        ? `Edikt erst in ${formatGameTime(w.edictLockedUntil - w.tick)} wieder änderbar`
+        : null,
+  },
+  { source: 'edicts', pattern: /^Erst nach dem Bürger-Ziel$/, show: same },
+  { source: 'edicts', pattern: /^Edikt bereits aktiv$/, show: same },
+  { source: 'edicts', pattern: /^Kein Edikt aktiv$/, show: same },
+  { source: 'edicts', pattern: /^Ungültiges Edikt$/, show: same },
   { source: 'upgrade', pattern: /^Kann nicht ausgebaut werden$/, show: same },
   { source: 'upgrade', pattern: /^Gebäude brennt$/, show: same },
   {

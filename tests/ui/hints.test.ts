@@ -48,6 +48,19 @@ import { perfBudget } from '../helpers/perfBudget';
 declare const process: { env: Record<string, string | undefined> };
 
 describe('friendlyReason (AK-UX-03)', () => {
+  it('AK-M13E1-29 Edikt-Gründe (U-6) und AK-M13E1-26 Ladegründe', () => {
+    const { w } = uxWorld();
+    w.tick = 1000;
+    w.edictLockedUntil = 1450;
+    expect(friendlyReason(w, 'Edikt-Sperrzeit')).toBe('Edikt erst in 45 s wieder änderbar');
+    w.edictLockedUntil = 1000;
+    expect(friendlyReason(w, 'Edikt-Sperrzeit')).toBe('Edikt-Sperrzeit');
+    for (const r of ['Erst nach dem Bürger-Ziel', 'Edikt bereits aktiv', 'Kein Edikt aktiv'])
+      expect(friendlyReason(w, r)).toBe(r);
+    expect(friendlyReason(w, 'Unbekannte Version')).not.toBe('');
+    expect(friendlyReason(w, 'Ungültiges Format')).not.toBe('');
+  });
+
   it('AK-UX-03 Pflichtfälle aus der Spec', () => {
     const { w } = uxWorld();
     home(w).stock.wood = 1;
