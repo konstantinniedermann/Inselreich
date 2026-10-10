@@ -4580,3 +4580,23 @@ und Wegen; Inselmenü nach „Neue Insel“).
 Regelbezug: gates.md Gate Merge Release (Ein-Paket-Release, R429); R451 · Kosten bei Irrtum: Revert-Merge vor dem Push.
 
 Entscheider: L0 · Anlass: Urteil lead-qa REL-16 · ADR: —
+
+## R455 · 2026-10-10 · Gate Spec M13-E1: BEDENKEN → Nacharbeit ohne Zweitprüfung; AK-Nummern
+
+Ruling: Spec `docs/superpowers/specs/2026-10-10-m13-e1-edikte-design.md` (`c7608c22`) angenommen unter Nacharbeit. Urteile
+`lead-tech` BEDENKEN T-B1–T-B3 und `lead-qa` BEDENKEN Q-B1–Q-B4, nichts blockierend. **AK-Nummern (R417, Q-B1):**
+`AK-E1-nn` → **`AK-M13E1-nn`**, `AK-STL-nn` → **`AK-M13STL-nn`** (beide per grep kollisionsfrei), durchgängig in Spec und
+Anhängen. Nacharbeit durch `design-spec-author` (Fortsetzung): **T-B1** §2/AK-M13E1-21 „Strategie der Controller
+unverändert, nur Aufrufe mechanisch an `buyPrice(world, good, n)` angepasst“; **T-B2/Q-B4c** gemessene Seed-Werte stehen
+vor dem Merge als Festwerte in der Testdatei, Verfehlen der Grenzen relativ zu K′ ist Pflicht-Rulingpunkt; **T-B3/Q-B2**
+je Seed-AK Timeout und Zeitreserve-Regel (lokal unter `CI=true` ≤ 50 % des Timeouts), Phase 1/2 einmal je Datei rechnen
+und per `serialize` kopieren; **Q-B3** entschieden: ein **stillgelegter Betrieb erscheint nicht in der Problemliste**
+(I-042), auch nicht als „nicht angebunden“ — bewusster Zustand, kein Lärm; Satz in S6 plus ein AK-M13STL; **Q-B4a**
+AK-M13E1-09 Erwartungswert lesbar; **Q-B4b** Anhang 03 E: Diff in `balance*.test.ts` und Pins muss leer sein. Spec
+bleibt ≤ 40 KB (Nacharbeit in Anhänge auslagern, wenn nötig). Danach **Plan M13-E1** durch `lead-tech` (opus) mit
+Strängen sim (6–7 Tasks) und ui (5–6 Tasks, blocked-by Sim-Task 1–2), Merge-Reihenfolge nach REL-17 (Problemliste,
+`hints.ts`).
+
+Regelbezug: gates.md Gate Spec; R136, R417, R452 · Kosten bei Irrtum: Spec-Nacharbeit vor dem Plan.
+
+Entscheider: L0 · Anlass: Urteile lead-tech, lead-qa GATE-SPEC-M13-E1 · ADR: —
