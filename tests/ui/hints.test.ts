@@ -57,8 +57,14 @@ describe('friendlyReason (AK-UX-03)', () => {
     expect(friendlyReason(w, 'Edikt-Sperrzeit')).toBe('Edikt-Sperrzeit');
     for (const r of ['Erst nach dem Bürger-Ziel', 'Edikt bereits aktiv', 'Kein Edikt aktiv'])
       expect(friendlyReason(w, r)).toBe(r);
-    expect(friendlyReason(w, 'Unbekannte Version')).not.toBe('');
-    expect(friendlyReason(w, 'Ungültiges Format')).not.toBe('');
+    expect(friendlyReason(w, 'Unbekannte Version')).toBe('Unbekannte Version');
+    expect(friendlyReason(w, 'Ungültiges Format')).toBe('Ungültiges Format');
+  });
+
+  it('Ungültiges Edikt (U-6): eigene Tabellenzeile, Text unverändert', () => {
+    const { w } = uxWorld();
+    expect(REASON_TABLE.some((row) => row.pattern.test('Ungültiges Edikt'))).toBe(true);
+    expect(friendlyReason(w, 'Ungültiges Edikt')).toBe('Ungültiges Edikt');
   });
 
   it('AK-UX-03 Pflichtfälle aus der Spec', () => {

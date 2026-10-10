@@ -10,6 +10,7 @@ import {
   edictEffectText,
   edictLockText,
   edictStatusLine,
+  edictSuccessText,
   edictWhenText,
 } from '../../src/ui/edictView';
 import { friendlyReason, REASON_TABLE } from '../../src/ui/hints';
@@ -127,6 +128,15 @@ describe('M13-E1 edictView (AK-M13E1-27…30)', () => {
     const { w } = edictWorld();
     w.edictLockedUntil = w.tick + 450;
     expect(friendlyReason(w, 'Edikt-Sperrzeit')).toBe('Edikt erst in 45 s wieder änderbar');
+  });
+
+  it('edictSuccessText: erlassen und aufgehoben (U-3)', () => {
+    const { w } = edictWorld();
+    expect(setEdict(w, 'saving').ok).toBe(true);
+    expect(edictSuccessText(w, 'saving')).toBe('Edikt ‹Sparen› erlassen — wieder änderbar in 5:00');
+    w.tick += EDICT_LOCK;
+    expect(setEdict(w, null).ok).toBe(true);
+    expect(edictSuccessText(w, null)).toBe('Edikt aufgehoben — wieder änderbar in 5:00');
   });
 
   it('Reinheit: Helfer ändern die Welt nicht, kein DOM', () => {

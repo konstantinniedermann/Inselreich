@@ -14,9 +14,10 @@ import { effectiveRefund, goalView, houseDiagnosis } from '../sim/queries';
 import { townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { upgradeDeficit } from '../sim/flow';
+import { buildEdictSection, updateEdictSection } from './edictSection';
 import { feastView, houseFeastLine } from './feast';
 import { glassStoneHint } from './hints';
-import type { Building, BuildingDefId, GoodId, TaxLevel, Tier, World } from '../sim/types';
+import type { Building, BuildingDefId, EdictId, GoodId, TaxLevel, Tier, World } from '../sim/types';
 import { costLine, setField } from './dom';
 import { deficitText, diagnosisText, refundText } from './texts';
 import { mapSigns, nextStep, remedyText, taxEffect } from './guide';
@@ -91,6 +92,8 @@ export interface InspectActions {
   setTierTax(tier: Tier, level: TaxLevel): void;
   setGoodLock(tier: Tier, good: GoodId, locked: boolean): void;
   setUpgradeStop(tier: Tier, stopped: boolean): void;
+  /** Amtsstube: Edikt erlassen, wechseln oder (null) aufheben; die Rückmeldung zeigt der Aufrufer. */
+  setEdict(id: EdictId | null): void;
   /** Betrieb mit dem Kontor verbinden; die Ablehnung zeigt der Aufrufer. */
   connect(id: number): void;
   /** Kapelle: Fest feiern; die Ablehnung zeigt der Aufrufer. */
@@ -621,6 +624,7 @@ function renderTownhall(panel: HTMLElement, actions: InspectActions): void {
   }
   panel.append(grid);
   addLine(panel, '', 'tax-effect');
+  panel.append(buildEdictSection((id) => actions.setEdict(id)));
   const matrix = document.createElement('div');
   matrix.dataset.field = 'lock-matrix';
   panel.append(matrix);
@@ -667,6 +671,8 @@ function updateTownhall(panel: HTMLElement, world: World): void {
     setField(panel, `tax-lock-${t}`, text);
   }
   setField(panel, 'tax-effect', taxStatusLine(world));
+  const edictEl = panel.querySelector<HTMLElement>('[data-field="edict"]');
+  if (edictEl) updateEdictSection(edictEl, world);
 
   const matrixEl = panel.querySelector<HTMLElement>('[data-field="lock-matrix"]');
   const rows = lockMatrix(world);

@@ -94,6 +94,9 @@ import { bindInput, hintKey, strokeEndNotice, type InputAction, type InputBindin
 import { clearForest, plantForest } from '../sim/forest';
 import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../sim/tax';
 import { lockedTierFor } from './taxView';
+import { setEdict } from '../sim/edicts';
+import { EDICT_COST } from '../sim/defs/edicts';
+import { edictSuccessText } from './edictView';
 import { renderInspect, renderRest, updateInspect, updateRest } from './inspect';
 import { deliveredMessage, orderMessageFor, orderVisible } from './order';
 import {
@@ -651,6 +654,19 @@ function launch(
           connectPreview = tiles;
         },
         ships: shipActions,
+        setEdict: (id) => {
+          const r = setEdict(world, id);
+          if (r.ok) {
+            showMessage(edictSuccessText(world, id));
+            sound.play('build');
+          } else
+            showError(
+              friendlyReason(world, r.reason, {
+                cost: { money: EDICT_COST, wood: 0, tools: 0, stone: 0 },
+              }),
+            );
+          refresh();
+        },
         setUpgradeStop: (tier, stopped) => {
           const r = setUpgradeStop(world, tier, stopped);
           if (!r.ok) showError(friendlyReason(world, r.reason));

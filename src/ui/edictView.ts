@@ -59,3 +59,10 @@ export function edictStatusLine(w: World): string {
   const name = EDICTS[w.edict].name;
   return activeEdict(w) !== null ? `Edikt: ${name}` : `Edikt ${name} ruht: Amtsstube wirkt nicht`;
 }
+
+/** Erfolgsmeldung nach setEdict (U-3): erlassen oder aufgehoben, mit Restzeit der neuen Sperre. */
+export function edictSuccessText(w: World, id: EdictId | null): string {
+  const lock = edictLockText(w);
+  const head = id === null ? 'Edikt aufgehoben' : `Edikt ‹${EDICTS[id].name}› erlassen`;
+  return lock === '' ? head : `${head} — ${lock}`;
+}
