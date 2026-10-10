@@ -242,6 +242,15 @@ Im Menü «Neue Insel» schaltet **Alles frei** alle Schritte von Anfang an frei
 - **Amtsstube** (Taste `I`, 200 Geld · 15 Holz · 2 Werkzeug · 5 Stein, Unterhalt 120 / min, höchstens eine): In
   ihrem Panel stellst du die Steuer je Bevölkerungsstufe und die Ausgabesperre ein. Beides wirkt nur mit **angebundener**
   Amtsstube; ohne sie gilt die Steuerstufe «normal». Die Kopfzeile zeigt den Steuerknopf erst, wenn die Amtsstube wirkt.
+- **Werkzeugmacher** arbeitet nur mit einer **Schule** in Reichweite.
+- **Roden** (`C`, 10 Geld, kein Holz) macht aus Wald Weide, **Aufforsten** (`Q`, 20 Geld) aus Weide wieder
+  Wald. Schäferei und Zuckerrohrplantage brauchen Weide im Umkreis. Beides lässt sich ziehen (mehrere
+  Kacheln in einem Zug).
+- **Hilfe** (`?` oder Knopf «Hilfe»): Legende der Kartenzeichen, Bedeutung der Symbole und die nächsten Freischaltungen.
+- **Mouse-over:** Mit dem Auswahl-Werkzeug zeigt eine kleine Karte nach 400 ms Ruhe, was unter dem Zeiger liegt
+  (Gebäude mit Zustand und Versorgung, Gelände, Schiff, Tiere).
+- **Symbole:** Kopfzeile, Bauleiste, Haus-Panel und Meldungen tragen kleine Symbole auf dunklen Chips; der
+  bisherige Text bleibt als `aria-label` erhalten.
 
 #### Edikte
 
@@ -258,17 +267,8 @@ Im Panel der Amtsstube erlässt du **ein** Edikt zur Zeit. Es wirkt nur, solange
 - **Aufheben** kostet nichts, sperrt aber ebenfalls.
 - **Ruhen:** Ohne wirkende Amtsstube (Brand, kein Weg zur Amtsstube) ruht das Edikt; es bleibt gewählt und wirkt wieder, sobald die Amtsstube wirkt.
 - **Abriss:** Wer die Amtsstube abreisst, beendet das Edikt ohne Erstattung der 600 Geld; die Sperre bleibt.
-- **Stapelregel:** Fest, niedrige Steuer und Wohlfahrt verkürzen die Aufstiegs-Wartezeit nicht unter 15 s; sie addieren sich nicht.
+- **Stapelregel:** Fest, niedrige Steuer und Wohlfahrt verkürzen die Aufstiegs-Wartezeit nicht unter die der niedrigen Steuer (15 s); sie addieren sich nicht. Bei Mangel an einem Gut verdoppelt sich die Wartezeit weiter.
 - Im späten Spiel sind Edikte eine Feinsteuerung von wenigen Prozent; spürbar werden sie beim Zukauf und bei vielen neuen Häusern.
-- **Werkzeugmacher** arbeitet nur mit einer **Schule** in Reichweite.
-- **Roden** (`C`, 10 Geld, kein Holz) macht aus Wald Weide, **Aufforsten** (`Q`, 20 Geld) aus Weide wieder
-  Wald. Schäferei und Zuckerrohrplantage brauchen Weide im Umkreis. Beides lässt sich ziehen (mehrere
-  Kacheln in einem Zug).
-- **Hilfe** (`?` oder Knopf «Hilfe»): Legende der Kartenzeichen, Bedeutung der Symbole und die nächsten Freischaltungen.
-- **Mouse-over:** Mit dem Auswahl-Werkzeug zeigt eine kleine Karte nach 400 ms Ruhe, was unter dem Zeiger liegt
-  (Gebäude mit Zustand und Versorgung, Gelände, Schiff, Tiere).
-- **Symbole:** Kopfzeile, Bauleiste, Haus-Panel und Meldungen tragen kleine Symbole auf dunklen Chips; der
-  bisherige Text bleibt als `aria-label` erhalten.
 
 ## Wirtschaft
 
