@@ -266,3 +266,7 @@ Raster) ist bereits benannt (R327).
 ### 2026-10-09 · Retro c64c0775: Ampelzeile «Persona-Starts» zählt nur `general-purpose`
 
 - **Fundort:** `tools/studio/efficiency.py` (Ampelzeile Persona-Starts auf opus): typisierte Persona-Starts fehlen in der Zählung. Ursprung: Kurz-Retro Session c64c0775 (ausserhalb Scope). Einschätzung: niedrig; mit der Ampelzeile E-038 in TOOL-AKTIVIERUNG oder TOOL-E049-PHASE mitnehmen.
+
+### 2026-10-10 · TOOL-AKTIVIERUNG: haiku-Zeile der Modelltabelle per Kopfzeile nicht erfüllbar
+
+- **Fundort:** `tools/studio/modelguard.py` (Regex `\(([^)]*)\)`): die Einsatz-Bezeichnung der haiku-Zeile in `STUDIO.md` enthält selbst Klammern; der Parser schneidet an der ersten schliessenden Klammer ab. Ursprung: TOOL-AKTIVIERUNG (studio-coach). Einschätzung: niedrig; wirkt nicht, weil für `haiku` nie eine Kopfzeile erzwungen wird. Tabellenzeile ohne Klammern formulieren oder Parser anpassen.
