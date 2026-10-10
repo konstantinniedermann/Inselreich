@@ -59,7 +59,7 @@ schneller. Mengen pro Zeit stehen «pro Minute» (`/ min`).
 - **Cursor-Hinweis:** Beim Bauen, Wegbauen, Abreissen und Auswählen hängt ein kleines Schild am Zeiger. Es
   sagt, ob der Standort passt («Baubar · wird an den Kontor angebunden», «Baubar · danach mit Weg (R) zum
   Kontor verbinden») oder warum nicht, was ein Abriss zurückgibt und — bei der Auswahl — den Zustand des
-  Gebäudes unter dem Zeiger. Über leerem Boden und bei offener Karte erscheint kein Schild.
+  Gebäudes unter dem Zeiger. Bei der Auswahl ersetzt die Mouse-over-Karte das Schild, sobald sie erscheint; ein Kachelwechsel, Ziehen oder ein anderes Werkzeug bringen das Schild sofort zurück. Über leerem Boden und bei offener Karte erscheint kein Schild.
 - **Esc-Reihenfolge:** Eine offene Karte schliesst zuerst (bei gestapelten Karten die oberste). Sonst
   legt `Esc` das Werkzeug ab, schliesst die Einträge-Leiste der Bauleiste und das Panel und führt zurück zur
   Auswahl. `Esc` wirkt auch, wenn gerade ein Knopf den Fokus hat.
@@ -358,7 +358,7 @@ Einwohner und 10 s); es wächst nur auf Gewürzinseln und lässt sich am Kontor 
 
 - **Inseln wechseln:** Taste `0` springt zur Heimat, Taste `9` zur nächsten Insel; der Knopf «Inseln» in der Kopfzeile
   öffnet ein Fenster mit einer kleinen **Seekarte** über der Liste: Silhouetten aller Inseln, die Fahrlinien der Routen und
-  je ein Punkt für jedes Schiff mit Route (ein Schiff ohne Route fehlt; im Hafen liegt der Punkt am Anker der Insel).
+  je ein Punkt für jedes Schiff mit Route (ein Schiff ohne Route fehlt; im Hafen liegt der Punkt am Anker der Insel; Inseln mit Kontor tragen eine helle Marke knapp über dem Anker).
   Ein Klick auf das Land einer Insel springt dorthin wie die Tasten `0`/`9` und schliesst das Fenster; ein Klick ins
   Wasser tut nichts, `Esc` oder ein Klick daneben schliesst. Die Liste darunter bleibt als Tastaturweg. Die Kamera zeigt die Insel, die in der Bildmitte liegt; die Lagerleiste in der Kopfzeile zeigt das
   Lager **dieser** Insel, mit dem Inselnamen davor. Jede Insel hat ihr eigenes Lager.
