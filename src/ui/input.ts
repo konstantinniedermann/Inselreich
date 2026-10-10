@@ -100,9 +100,36 @@ export function hintKey(h: { island?: number; x: number; y: number; tool: Tool |
   return `${h.island ?? HOME}:${h.x},${h.y},${t ? `${t.kind}:${t.kind === 'build' ? t.defId : ''}` : 'none'}`;
 }
 
-/** Werkzeuge, die beim Ziehen über mehrere Kacheln je Kachel einmal wirken: Weg, Roden, Aufforsten (Spec K5). */
+/** Werkzeuge, die beim Ziehen je Kachel einmal wirken: Weg, Roden, Aufforsten (Spec K5), Abriss (nur Wege, I-041). */
 export function isDragPaintTool(tool: Tool): boolean {
-  return tool.kind === 'road' || tool.kind === 'clearForest' || tool.kind === 'plantForest';
+  return (
+    tool.kind === 'road' ||
+    tool.kind === 'clearForest' ||
+    tool.kind === 'plantForest' ||
+    tool.kind === 'demolish'
+  );
+}
+
+/** Abriss beginnt einen Zug, ausser der Druck trifft eine Gebäudehülle (dann Einzelabriss wie bisher). */
+export function demolishStroke(world: World, down: IslandTile | null): boolean {
+  if (down === null) return true;
+  return tileAt(world.islands[down.island]!, down.x, down.y)?.buildingId == null;
+}
+
+/** Pick-Werkzeug im Zug: Abriss läuft über die Bodenkachel wie der Weg, nicht über die Hülle. */
+export function strokePickTool(tool: Tool): Tool {
+  return tool.kind === 'demolish' ? { kind: 'road' } : tool;
+}
+
+/** Meldung am Zugende: Trenn-Warnung, sonst „Kein Weg“ beim reinen Klick auf leeren Boden (E5). */
+export function strokeEndNotice(
+  cut: number,
+  removed: number,
+  tiles: number,
+): { kind: 'warn'; text: string } | { kind: 'error'; reason: 'Kein Weg' } | null {
+  if (cut > 0) return { kind: 'warn', text: `Abriss trennt ${cut} Gebäude vom Kontor` };
+  if (removed === 0 && tiles === 1) return { kind: 'error', reason: 'Kein Weg' };
+  return null;
 }
 
 /** Weltpixel, um die die Kamera bei gedrückter Pan-Taste in `dtMs` wandert (unabhängig von der Framerate). */
@@ -163,6 +190,8 @@ export function bindInput(
     lastTile: string | null;
     /** Werkzeug war beim Drücken Weg, Roden oder Aufforsten, also ein Zieh-Werkzeug (unabhängig von späteren Werkzeugwechseln). */
     road: boolean;
+    /** Der Zug ist ein Abriss-Zug: jede Kachel meldet `dragging: true`, Pick über die Bodenkachel. */
+    demolish: boolean;
     pointerId: number;
     /** Touch: Aktion erst beim Loslassen, und zwar auf der Drück-Kachel. */
     touch: boolean;
@@ -209,13 +238,26 @@ export function bindInput(
       return;
     }
     const tool = state.tool;
-    const t = pickTarget(state.world, state.cam, tool, pointer.sx, pointer.sy);
+    const stroking = drag !== null && drag.demolish && drag.road && !drag.panning;
+    const t = pickTarget(
+      state.world,
+      state.cam,
+      stroking ? strokePickTool(tool) : tool,
+      pointer.sx,
+      pointer.sy,
+    );
     if (!t) {
       state.hover = null;
       return;
     }
     const w = state.world;
     let ok = true;
+    if (stroking) {
+      // Abriss-Zug: grün nur auf einer Wegkachel, kein Hüllen-Rot über Gebäuden (AK-R17-16)
+      ok = tileAt(w.islands[t.island]!, t.x, t.y)?.road === true;
+      state.hover = { island: t.island, x: t.x, y: t.y, tool, ok };
+      return;
+    }
     if (tool.kind === 'build') ok = canPlace(w, tool.defId, t.x, t.y, t.island).ok;
     else if (tool.kind === 'road') ok = canPlaceRoad(w, t.x, t.y, t.island).ok;
     else if (tool.kind === 'demolish') ok = canDemolishTile(w, t.x, t.y, t.island);
@@ -225,10 +267,30 @@ export function bindInput(
   };
 
   const tileAction = (sx: number, sy: number, dragging: boolean): void => {
-    const t = pickTarget(state.world, state.cam, state.tool, sx, sy);
+    const t = pickTarget(
+      state.world,
+      state.cam,
+      drag?.demolish ? strokePickTool(state.tool) : state.tool,
+      sx,
+      sy,
+    );
     if (!t) return;
-    onAction({ type: 'tile', island: t.island, x: t.x, y: t.y, dragging });
+    onAction({
+      type: 'tile',
+      island: t.island,
+      x: t.x,
+      y: t.y,
+      dragging: (drag?.demolish ?? false) || dragging,
+    });
   };
+  /** Kachelaktion eines laufenden Zugs; im Abriss-Zug meldet jede Kachel `dragging: true`. */
+  const strokeTile = (
+    island: number,
+    x: number,
+    y: number,
+    dragging: boolean,
+    demolish: boolean,
+  ): void => onAction({ type: 'tile', island, x, y, dragging: demolish || dragging });
 
   /** Bricht Ein-Zeiger-Aktion ab; eine Weg-Zug-Serie wird mit `dragEnd` sauber beendet. */
   const cancelPointerAction = (): void => {
@@ -286,6 +348,9 @@ export function bindInput(
       return;
     }
     canvas.setPointerCapture(e.pointerId);
+    const hullTile = pickTarget(state.world, state.cam, state.tool, p.sx, p.sy);
+    const stroke =
+      !wantsPan && state.tool.kind === 'demolish' && demolishStroke(state.world, hullTile);
     drag = {
       button: e.button,
       startX: p.sx,
@@ -294,10 +359,13 @@ export function bindInput(
       lastY: p.sy,
       panning: wantsPan,
       lastTile: null,
-      road: !wantsPan && isDragPaintTool(state.tool),
+      road: !wantsPan && isDragPaintTool(state.tool) && (state.tool.kind !== 'demolish' || stroke),
+      demolish: stroke,
       pointerId: e.pointerId,
       touch: isTouch,
-      downTile: pickTarget(state.world, state.cam, state.tool, p.sx, p.sy),
+      downTile: stroke
+        ? pickTarget(state.world, state.cam, strokePickTool(state.tool), p.sx, p.sy)
+        : hullTile,
       select: !wantsPan && !isTouch && state.tool.kind === 'select',
     };
     if (wantsPan) return;
@@ -365,12 +433,11 @@ export function bindInput(
           tileAction(drag.startX, drag.startY, false);
         }
         // Weg-Zug immer über die Bodenkachel; ausserhalb der Karte (Meer) ignorieren
-        const t = pickTarget(state.world, state.cam, state.tool, p.sx, p.sy);
+        const t = pickTarget(state.world, state.cam, strokePickTool(state.tool), p.sx, p.sy);
         const key = t ? tileKey(t) : null;
         if (t && key !== drag.lastTile) {
           // Start ausserhalb der Karte: erste Kachel im Feld selbst setzen
-          if (drag.lastTile === null)
-            onAction({ type: 'tile', island: t.island, x: t.x, y: t.y, dragging: true });
+          if (drag.lastTile === null) strokeTile(t.island, t.x, t.y, true, drag.demolish);
           const from =
             drag.lastTile !== null && drag.lastTile.startsWith(`${t.island}:`)
               ? drag.lastTile
@@ -384,10 +451,10 @@ export function bindInput(
           while (cx !== t.x || cy !== t.y) {
             if (Math.abs(t.x - cx) >= Math.abs(t.y - cy)) cx += Math.sign(t.x - cx);
             else cy += Math.sign(t.y - cy);
-            onAction({ type: 'tile', island: t.island, x: cx, y: cy, dragging: true });
+            strokeTile(t.island, cx, cy, true, drag.demolish);
           }
           if (drag.lastTile !== null && !drag.lastTile.startsWith(`${t.island}:`))
-            onAction({ type: 'tile', island: t.island, x: t.x, y: t.y, dragging: true });
+            strokeTile(t.island, t.x, t.y, true, drag.demolish);
           drag.lastTile = key;
         }
       }
@@ -426,13 +493,7 @@ export function bindInput(
     } else if (d.road) {
       // Touch-Tippen ohne Ziehen: einzelne Weg-Kachel auf der Drück-Kachel
       if (d.touch && d.lastTile === null && d.downTile) {
-        onAction({
-          type: 'tile',
-          island: d.downTile.island,
-          x: d.downTile.x,
-          y: d.downTile.y,
-          dragging: false,
-        });
+        strokeTile(d.downTile.island, d.downTile.x, d.downTile.y, false, d.demolish);
       }
       onAction({ type: 'dragEnd' });
     } else if (d.touch && d.downTile) {
@@ -556,6 +617,8 @@ export function bindInput(
     keys.clear();
     spaceDown = false;
     spaceTap.blur();
+    // Ein laufender Zug endet mit `dragEnd`, sonst bliebe der Abriss-Zug in app.ts offen (REL-17)
+    if (drag !== null) cancelPointerAction();
   };
 
   canvas.addEventListener('contextmenu', onContextMenu);
