@@ -5000,3 +5000,22 @@ mit Actions-Minuten rot (R473) und Inaktiv-Fehlalarm beim CI-Warten (R477).
 Regelbezug: STUDIO.md Merges/Push, R335, R471 M3 · Kosten bei Irrtum: —.
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-18 · ADR: —
+
+## R481 · 2026-10-10 · Kombiniertes Gate I-049 Sperrbestand: BEDENKEN → frei, Start nach M13-E2-SIM
+
+Ruling: Plan `docs/superpowers/plans/2026-10-10-i049-sperrbestand.md` (`435db423`) mit Nacharbeit B1–B9 frei (Urteil
+`.studio/handoffs/2026-10-10-lead-qa-GATE-I049.md`). **B1** Die Umsetzung startet **als Ganzes erst nach dem Merge von
+M13-E2-SIM** auf main (Board: `blocked-by M13-E2-SIM`), nicht schon T01/T02 — `types.ts`, `world.ts` und `save.ts` sind
+Hot Spots beider Stränge, ein Vorlauf erzeugt nur Merge-Arbeit. Frist: keine; der Leerlauf wird nach R475 mit anderer
+Vorarbeit gefüllt. B2–B5 und B7–B9 arbeitet der Controller vor T01 ein (Save-Fall A als Normalfall; `dropZeroReserve`
+am äussersten Einstieg der Rückfalt-Ketten; T04 als Selbstvergleich gestrichen, Bitgleichheit über unveränderte
+`balance*`-, Baseline- und `seaGolden`-Hashes; Determinismus-Test mit Reserve > 0 inkl. Speichern/Laden; T08 mit
+Fixture-Save und Messwert bei 1280 px, zweite Zeile Pflicht). **B6** entscheidet L0 (Auslegung, R449-Linie): (a) Abriss
+eines Betriebs in `waitingReserve` wie jeder Abriss, ein Test; (b) ohne Kontor auf der Insel wirkt die Reserve nicht
+(nicht bedienbar → nicht wirksam, kein Festsitzen), Wert bleibt gespeichert; (c) Reserve-Stufen müssen unter der
+Lagerobergrenze liegen — prüft der Controller in T01, liegt eine Stufe ≥ Obergrenze, Stufe streichen und melden.
+Budget **21 Starts** (Phase `i049-reserve`) gilt ab Start.
+
+Regelbezug: gates.md Kombiniertes Gate (Stufe leicht), R475, R477 · Kosten bei Irrtum: I-049 rutscht ein Release später.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-i049-reserve · ADR: —
