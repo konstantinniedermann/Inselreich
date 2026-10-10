@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-10 · Handbuch 1.43
+
+- Anlass: Prozess-Aussensicht REL-16/REL-17, V1; Vorlagenzeile E-058 (R459 V2)
+- Datenbasis: `docs/studio/retros/2026-10-10-release-rel16-17-prozess.md`, `docs/studio/rulings.md` R464, R459
+- Ruling: R464 (V1, V4), R459
+- Änderungen: Push-Ablauf: keine Umsetzer und Controller, solange `make zeitreserve-push` nicht Exit 0 meldet (Gates, Kurzdesigns, Pläne ohne Testläufe dürfen parallel laufen); Briefing-Vorlage: Pflichtzeile Integrator (`make check` und `make check-ci-perf` mit Exit-Code); `lernen.md` eine Zeile (lange Läufe mit `run_in_background`); E-038 und E-058 nachgeführt
+
+## 2026-10-10 · Persona production-integrator 1.9
+
+- Anlass: Kurz-Retro 2cfa57e0 B4 (Perf-Lauf in 3 von 3 Merges ausgelassen)
+- Datenbasis: `docs/studio/retros/2026-10-10-session-2cfa57e0-ende.md`
+- Ruling: R459 (V2), R464
+- Änderungen: Ablauf Schritt 3: beide Prüfbefehle gelten auch bei schweigendem Briefing
+
 ## 2026-10-10 · Handbuch 1.42
 
 - Anlass: Retro REL-15 (mit Ad-hoc CI rot), Vorschlag V4

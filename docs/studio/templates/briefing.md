@@ -30,6 +30,7 @@ Prozessstufe: <leicht|voll>
    „Entfällt eine Vorbedingung, nennt die Abnahme die Fehlerrichtung und belegt, dass das abhängige Gate erfüllbar bleibt (R395)“;
    Plan-Paket „Format nach E-010: Index plus Task-Dateien ≤ 10 KB (R417)“;
    jedes Paket mit Doku-Commit „`make docs-check` Exit 0 vor dem Commit (Übergang bis TOOL-PRETTIER-HOOK, R417)“;
+   Integrator-Briefing „`make check` und `make check-ci-perf` je mit Exit-Code im Bericht (R459, E-058)“;
    jedes Paket mit Plan „Prüfschritte des Plans (z. B. Task-Reviews) nicht zur Budgetersparnis streichen — Mehrbedarf melden“
 6. Grenzen und Datei-Ownership: darfst ändern <pfade>; nicht ändern <pfade>; Worktree <pfad>; Umsetzer: Doku-Dateien (D1: README, arc42, ADR, Spec-Verweise) des Plan-Tasks sind ausdrücklich erlaubt (E-017)
 7. Schnittstellen: <von wem kommt Input, wer nutzt das Ergebnis, Übergabe unter .studio/handoffs/…>

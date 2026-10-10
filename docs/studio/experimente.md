@@ -348,6 +348,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Anpassung vorgeschlagen (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md) V1): Die Modelltabelle sieht sonnet für Controller, lead-qa-Gate-Urteile, lead-production und Kurz-Retro schon vor; in fb37ceac liefen 10 von 13 Lead-/Coach-Starts trotzdem auf opus. Mechanik neu: (a) `metriken/richtwerte.md` Spalte „Modell“ → „gemessen auf“; (b) Werkzeug TOOL-MODELL-GUARD prüft typisierte Persona-Starts gegen das Frontmatter (opus nur mit Tabellen-Ausnahme in der Kopfzeile `Modell:`), Ampelzeile zählt sie mit. Messgrösse zusätzlich: Starts über der Tabelle ≤ 1 je Session (Ausgang 10). Der Stichtag 2026-10-22 entfällt (E-027 abgeschlossen, R350). Status bis zum Ruling unverändert.
 - Start: 2026-10-09 (R420, Handbuch 1.36); der Stichtag 2026-10-22 entfällt. Werkzeug-Paket TOOL-MODELL-GUARD folgt; bis dahin zählt die Messung die Starts per Hand aus den Spawn-Events. Das Einsatzmodell bestimmt die Modelltabelle in STUDIO.md, nicht die Spalte in `richtwerte.md`.
 - Datenpunkt 1 von 3, S-2026-10-09-c64c0775 (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md) B3): 0 von 40 Starts über der Tabelle (Ausgang 10 von 13); opus-Anteil 68,4 % (Schwelle ≤ 60 % verfehlt); Gegenprobe Review-Runden 1,00, Erstabnahme 100 % erfüllt. `modelguard` ab Merge im Modus `warn`, die Wirkung kommt bisher von der Kopfzeile. Weiter beobachten.
+- Datenpunkt 3 von 3, S-2026-10-10-2cfa57e0 (Retro [session-2cfa57e0-ende](retros/2026-10-10-session-2cfa57e0-ende.md) B3): 0 Starts über der Tabelle, opus 74,4 % (Schwelle ≤ 60 % zum zweiten Mal verfehlt), Steuerung bereinigt 25,2 %, Review-Runden 1,00. Urteil **angepasst** (R459): die opus-Schwelle wird nicht mehr hier, sondern in E-054 (Pläne auf sonnet) verfolgt, weil die opus-Starts aus Plan-, Spec- und Review-Starts laut Tabelle stammen; Messgrössen Starts über der Tabelle ≤ 1 je Session und Steuerung ≤ 40 % bleiben hier. Rückfall unverändert.
 - Datenpunkt 2 von 3, S-2026-10-10-c64c0775 (Retro [session-c64c0775-b-ende](retros/2026-10-10-session-c64c0775-b-ende.md) B5): 0 von 39 Starts über der Tabelle (erfüllt); opus-Anteil 66,5 % (verfehlt); Steuerung bereinigt 37,6 % (≤ 40 % erfüllt), roh 68,7 %; Review-Runden 1,00, Erstabnahme 100 % erfüllt. `modelguard` `deny` seit 1.38: 0 Blockaden, 0 Fehlalarme. Weiter beobachten.
 
 ## E-039 · übernommen (R315) · Vergleichsart im Perf-Artefakt
@@ -547,7 +548,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/lead-*.md` (nur nach Ruling)
 - Ruling: –
 
-## E-058 · vorgeschlagen (Vorlagenzeile, kein Platz) · Integrator-Briefing nennt beide Prüfbefehle
+## E-058 · umgesetzt (Vorlagenzeile, kein Platz; R459, R464) · Integrator-Briefing nennt beide Prüfbefehle
 
 - Hypothese: Wenn die Pflichtzeile „Integrator“ `make check` und `make check-ci-perf` mit Exit-Code im Bericht nennt und die Persona klarstellt, dass sie auch bei schweigendem Briefing gilt, läuft der Perf-Lauf in jedem Merge (Retro [session-2cfa57e0-ende](retros/2026-10-10-session-2cfa57e0-ende.md) B4).
 - Messgrösse: 3 von 3 Integrator-Merge-Berichten nennen `make check-ci-perf` mit Exit-Code (Ausgang 0 von 3); Gegenprobe: Merge-Dauer des Integrators ≤ 8 min.
@@ -555,4 +556,4 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Merges, höchstens bis 2026-11-19.
 - Rückfall: Zeile und Persona-Satz streichen.
 - Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/production-integrator.md` (nur nach Ruling)
-- Ruling: –
+- Ruling: R459, R464 (Umsetzung mit Handbuch 1.43 und Persona production-integrator 1.9; Beobachtung läuft über die nächsten 3 Merges)
