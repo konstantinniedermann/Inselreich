@@ -130,13 +130,6 @@ export function migrateV1ToV2(raw: Record<string, unknown>): void {
  * sie ab. Nicht idempotent: ein zweiter Aufruf findet kein `taxLevel` mehr, läuft aber über das schon
  * verteilte `taxLockedUntil` erneut und macht daraus Objekte in Objekten; er gehört nur zur Kette v9 → v10.
  */
-/** v10 → v11 (M13-E1): Edikt-Felder ergänzen; vorhandene Werte bleiben und gehen in die Prüfung. */
-export function migrateV10ToV11(raw: Record<string, unknown>): void {
-  if (!('edict' in raw)) raw.edict = null;
-  if (!('edictLockedUntil' in raw)) raw.edictLockedUntil = 0;
-  raw.version = 11;
-}
-
 export function migrateV9ToV10(raw: Record<string, unknown>): void {
   if ('taxLevel' in raw) {
     raw.taxLevels = Object.fromEntries(
@@ -149,6 +142,13 @@ export function migrateV9ToV10(raw: Record<string, unknown>): void {
     raw.taxLockedUntil = Object.fromEntries(TIER_IDS.map((t) => [t, old]));
   }
   raw.version = 10;
+}
+
+/** v10 → v11 (M13-E1): Edikt-Felder ergänzen; vorhandene Werte bleiben und gehen in die Prüfung. */
+export function migrateV10ToV11(raw: Record<string, unknown>): void {
+  if (!('edict' in raw)) raw.edict = null;
+  if (!('edictLockedUntil' in raw)) raw.edictLockedUntil = 0;
+  raw.version = 11;
 }
 
 const CRISIS_KINDS: readonly string[] = ['fire', 'storm', 'boom'];
