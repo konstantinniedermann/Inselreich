@@ -2,6 +2,7 @@ import contextlib
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -124,11 +125,53 @@ class MainTest(unittest.TestCase):
         self.assertIn("git", stderr.getvalue())
         self.assertIn("kaputt", stderr.getvalue())
 
+    def test_record_without_session_uses_manual_session(self):
+        precommit.record(["a.ts"], Path("/wt"), {})
+        self.assertEqual(self.events()[0]["session_id"], model.MANUAL_SESSION)
+
+    def test_old_python_allows_silently(self):
+        run = FakeRunner("a.ts\0", prettier_code=1, prettier_out="a.ts\n")
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            code = precommit.main(run, {}, version=(3, 10))
+        self.assertEqual(code, 0)
+        self.assertEqual(run.calls, [])
+        self.assertIn("3.11", stderr.getvalue())
+
     def test_event_does_not_break_dashboard_model(self):
         run = FakeRunner("a.ts\0", prettier_code=1, prettier_out="a.ts\n")
         precommit.main(run, {"CLAUDE_CODE_SESSION_ID": "s1"})
         state = model.build_state(self.events(), time.time(), {})
         self.assertIn("tree", state)
+
+
+HOOK = Path(__file__).resolve().parents[2] / "githooks" / "pre-commit"
+
+
+class HookShellTest(unittest.TestCase):
+    def test_hook_is_executable(self):
+        self.assertTrue(os.access(HOOK, os.X_OK))
+
+    def test_hook_without_python3_allows(self):
+        if not os.path.exists("/bin/sh"):
+            self.skipTest("/bin/sh fehlt")
+        git = shutil.which("git")
+        if git is None:
+            self.skipTest("git fehlt")
+        with tempfile.TemporaryDirectory() as tmp:
+            bin_dir = Path(tmp, "bin")
+            bin_dir.mkdir()
+            Path(bin_dir, "git").symlink_to(git)
+            done = subprocess.run(
+                ["/bin/sh", str(HOOK)],
+                cwd=HOOK.parent,
+                env={"PATH": str(bin_dir), "HOME": tmp},
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertIn("python3 fehlt", done.stderr)
 
 
 @unittest.skipUnless(PRETTIER.is_file(), "node_modules fehlt")

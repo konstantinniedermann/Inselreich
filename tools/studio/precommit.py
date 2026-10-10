@@ -15,6 +15,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 FILES_MAX = 20
+PYTHON_MIN = (3, 11)
 Runner = Callable[[Sequence[str]], subprocess.CompletedProcess]
 
 
@@ -85,7 +86,18 @@ def record(files: list[str], top: Path, env: Mapping[str, str]) -> None:
         print(f"pre-commit: Ereignis nicht geloggt ({exc}).", file=sys.stderr)
 
 
-def main(runner: Runner = run, env: Mapping[str, str] = os.environ) -> int:
+def main(
+    runner: Runner = run,
+    env: Mapping[str, str] = os.environ,
+    version: tuple[int, ...] = tuple(sys.version_info[:2]),
+) -> int:
+    if version < PYTHON_MIN:
+        needed = ".".join(map(str, PYTHON_MIN))
+        print(
+            f"pre-commit: Python {needed} nötig, Check übersprungen (CI prüft mit make lint).",
+            file=sys.stderr,
+        )
+        return 0
     try:
         from paths import repo_root
 

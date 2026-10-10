@@ -4,4 +4,6 @@
 # `git commit --no-verify` umgeht den Hook (Briefing-Regel, nicht technisch); CI prüft mit `make lint`.
 root=$(git rev-parse --show-toplevel) || exit 0
 [ -f "$root/tools/studio/precommit.py" ] || exit 0
+command -v python3 >/dev/null 2>&1 || { echo "pre-commit: python3 fehlt, Prettier-Check übersprungen (CI prüft mit make lint)." >&2; exit 0; }
+python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))' || { echo "pre-commit: Python 3.11 nötig, Prettier-Check übersprungen (CI prüft mit make lint)." >&2; exit 0; }
 exec python3 "$root/tools/studio/precommit.py"
