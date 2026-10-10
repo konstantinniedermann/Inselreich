@@ -215,3 +215,16 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
   bringt rund 240 Geld/min nahe am Vollpreis gegen 30 Unterhalt je Holzfäller — mögliche Geldquelle ohne Wahl. Ursprung:
   Scout-Befund IDEEN-06 (lead-design). Einschätzung: mittel; mit I-048 „Zukauf-Aufschlag“ durch `design-economy-designer`
   nachrechnen, kein eigenes Paket vorher.
+
+### 2026-10-10 · Playtest REL-18 (live): niedrige Befunde und Ärgernisse
+
+- **Fundort:** `.studio/qa/rel-18/report.md` (Screenshots 00–26). Beobachtung: (1) Kein v10-Fixture unter
+  `tests/sim/fixtures` (nur v1–v9, v11 neu) — Migration v10→v11 nur synthetisch geprüft. (2) Nach `Esc` (Gut-Fokus) und
+  `.` beginnt die Problemliste bei «Problem 2 von 7» statt 1. (3) Stillgelegter Betrieb zeigt weiter Ausstoss 15/min;
+  Unterhalt sinkt 30 → 18/min (60 %, Folge der Aufrundung je Betrieb auf der 100-Tick-Basis, R467 — konform, aber für
+  Spieler „halber Unterhalt“ missverständlich). (4) Unterhalt nur im Kopfzeilen-Tooltip; «lohnt, wenn…»-Zeilen und
+  gesperrte Edikt-Knöpfe sehr blass. (5) Krisen bei 4× in Sekunden vorbei, Meldung oben rechts nur kurz. (6) «Neu: …»-Karte
+  steht > 25 s und verdeckt oben links. (7) «Nächster Schritt» nennt Weberei/Schäferei, obwohl Nahrung auf 0 fällt
+  (Saldo −42/min) — Hinweis übersieht akuten Mangel. (8) Taste `4` ohne Wirkung/Hinweis (Tempo nur `1`–`3`). Ursprung:
+  qa-playtester playtest-rel-18. Einschätzung: (7) mittel (Frühspiel-Führung), Rest niedrig; I-058 bleibt geparkt bis
+  Brandfall bei 4× belegt, I-059 geparkt (nicht vermisst).
