@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   closeAllModals,
   isModalOpen,
   modalStackAfterEscape,
   nextFocusIndex,
+  openModal,
   pickOpener,
   shouldCloseOnClick,
 } from '../../src/ui/modal';
@@ -49,5 +50,57 @@ describe('Modal-Stapel (Spec L2)', () => {
   it('RF-2 closeAllModals ohne offene Karte ist folgenlos, danach ist keine Karte offen (Browserteil QA-UX2)', () => {
     closeAllModals();
     expect(isModalOpen()).toBe(false);
+  });
+});
+
+describe('Strg/Cmd+S bei offenem Modal (AK-UT-10)', () => {
+  type Handler = (e: unknown) => void;
+  const handlers: Handler[] = [];
+  const el = (): Record<string, unknown> => ({
+    className: '',
+    setAttribute() {},
+    appendChild() {},
+    addEventListener() {},
+    remove() {},
+  });
+
+  afterEach(() => {
+    closeAllModals();
+    handlers.length = 0;
+    vi.unstubAllGlobals();
+  });
+
+  function key(init: Record<string, unknown>): { defaultPrevented: boolean } {
+    vi.stubGlobal('document', { createElement: el, activeElement: null });
+    vi.stubGlobal('window', {
+      addEventListener: (_t: string, h: Handler) => handlers.push(h),
+      removeEventListener: () => {},
+    });
+    openModal({ host: el() as unknown as HTMLElement, className: 'x', label: 'x' });
+    const e = {
+      key: 's',
+      ctrlKey: false,
+      metaKey: false,
+      altKey: false,
+      shiftKey: false,
+      defaultPrevented: false,
+      stopImmediatePropagation() {},
+      preventDefault() {
+        this.defaultPrevented = true;
+      },
+      ...init,
+    };
+    for (const h of handlers) h(e);
+    return e;
+  }
+
+  it('Strg+S und Cmd+S: defaultPrevented', () => {
+    expect(key({ ctrlKey: true }).defaultPrevented).toBe(true);
+    expect(key({ metaKey: true, key: 'S' }).defaultPrevented).toBe(true);
+  });
+  it('Umschalt+Strg+S, Alt+Strg+S und blosses s: nicht unterdrückt', () => {
+    expect(key({ ctrlKey: true, shiftKey: true }).defaultPrevented).toBe(false);
+    expect(key({ ctrlKey: true, altKey: true }).defaultPrevented).toBe(false);
+    expect(key({}).defaultPrevented).toBe(false);
   });
 });
