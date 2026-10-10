@@ -4600,3 +4600,15 @@ Strängen sim (6–7 Tasks) und ui (5–6 Tasks, blocked-by Sim-Task 1–2), Mer
 Regelbezug: gates.md Gate Spec; R136, R417, R452 · Kosten bei Irrtum: Spec-Nacharbeit vor dem Plan.
 
 Entscheider: L0 · Anlass: Urteile lead-tech, lead-qa GATE-SPEC-M13-E1 · ADR: —
+
+## R456 · 2026-10-10 · Spec M13-E1 Nacharbeit abgenommen; Ausnahme `balance-upgrade.test.ts`; Plan frei
+
+Ruling: Nacharbeit `3acc7e2f` erfüllt R455 (AK-Kollisions-grep leer, Spec 39 633 Byte, neues AK-M13STL-11 zur
+Problemliste). **Bestätigt:** `tests/sim/balance-upgrade.test.ts` ist die einzige Ausnahme vom leeren Diff in
+`balance*.test.ts` — nur der Aufruf `buyPrice('tools', n)` wird mechanisch auf die neue Signatur umgestellt, kein
+Erwartungswert ändert sich (Regressionsschutz bleibt). Plan **M13-E1** durch `lead-tech` (opus) jetzt.
+
+Regelbezug: R455; Verfassung §3 (Balancing-Test bleibt Regressionsschutz) · Kosten bei Irrtum: eine Testdatei mehr im
+Review.
+
+Entscheider: L0 · Anlass: Bericht design-spec-author Nacharbeit R455 · ADR: —
