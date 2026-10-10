@@ -4612,3 +4612,18 @@ Regelbezug: R455; Verfassung §3 (Balancing-Test bleibt Regressionsschutz) · Ko
 Review.
 
 Entscheider: L0 · Anlass: Bericht design-spec-author Nacharbeit R455 · ADR: —
+
+## R457 · 2026-10-10 · Gate Merge TOOL-BUENDEL-3: OK
+
+Ruling: **OK** für `tool/b3-py` @ `95cb4dbe` (T05–T11, `tool/b3-qa` eingemergt): Final-Review opus OK (T05–T11 je OK, T10
+ausdrücklich geprüft, R451 B1), Task-Reviews OK bzw. BEDENKEN niedrig (T09 `clock.py` 63 statt 50 Zeilen — akzeptiert,
+Grenze widersprach der Spec); `make check` (Load 4,00), `studio-test` (593), `studio-lint`, `lint`, `docs-check`,
+`zeittests` Exit 0; Konfliktprobe sauber; Uhr-Warnungen 12 → 0; R451 B3 im Testkommentar. Restpunkte als Beobachtung.
+Merge lokal durch `production-integrator` (`--no-ff`, `make check`), Worktrees `b3-py`/`b3-qa` entfernen; Push mit der
+nächsten Studio-Session (R335). Für die Kurz-Retro: Controller 1 beendete seinen Zug wartend, der Bericht von Controller 2
+kam bei L0 an (ADR-007-Muster, kein Schaden); Controller 2 mergte `tool/b3-qa` selbst, weil der Umsetzer das per
+Persona ablehnte.
+
+Regelbezug: gates.md Gate Merge; R335, R451 · Kosten bei Irrtum: Revert-Merge vor dem Push.
+
+Entscheider: L0 · Anlass: Bericht Controller 2 TOOL-BUENDEL-3 · ADR: —
