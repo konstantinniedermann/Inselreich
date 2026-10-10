@@ -5103,3 +5103,21 @@ Regelbezug: gates.md Gate Spec, Balancing-Regel (CLAUDE.md Test-Strategie), R474
 Baseline-Neumessung mehr.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-i048-zukauf · ADR: —
+
+## R488 · 2026-10-10 · Prozess-Aussensicht REL-18 angenommen (V1–V4); Ampel gelb: keine neue Welle
+
+Ruling: Retro `docs/studio/retros/2026-10-10-rel-18-prozess.md` (`39e7e6c0`) angenommen. R480 wird korrigiert: Die zwei
+zusätzlichen `make check` kamen von knapper Zeitreserve in `tests/ui/time.test.ts` (Lauf 1) und gleicher Schwelle Warten/Gate
+(Lauf 2), nicht von 8 parallelen Agenten (während des Pushs liefen 2–5). **V1** Werkzeug-Paket **TOOL-PUSH-CHECK**
+(`make push-check`: wartet auf Load ≤ 3, wiederholt bei Exit 2 nur markierte Tests, Reserve `time.test.ts` anheben);
+Messgrösse ersetzt M3: 1 voller `make check` je Push in 3 Pushes, Dauer ≤ 8 min bei ≥ 4 Agenten. **V2** Ampel-Prognose
+Actions-Konto zum Monatsende (gelb > 1600, rot > 1900; bei Rot höchstens ein Push je Tag) ins nächste Werkzeug-Bündel.
+**V3** Integrator wartet mit `timeout 240 gh run watch` in Schleife, keine Heartbeat-Ausnahme — Persona-Zeile durch
+`studio-coach`. **V4** Ampelzeile Produktivanteil (Umsetzer + Design/Spec/Plan, gelb < 25 %) ins nächste Werkzeug-Bündel.
+R475 bleibt. Wegen **Limit-Ampel gelb** (5h 60 %) startet L0 keine neue Welle: Plan TOOL-PUSH-CHECK und die
+V3-Umsetzung beginnen in der nächsten Session; laufende Pakete und Gates werden abgeschlossen.
+
+Regelbezug: STUDIO.md Verbesserungsschleife, Limits und Sessiongrösse, R316, R471 M3 · Kosten bei Irrtum: ein Werkzeug-Paket
+zu viel.
+
+Entscheider: L0 · Anlass: Bericht studio-process-coach retro-rel-18; Limit-Ampel gelb · ADR: —

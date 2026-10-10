@@ -228,3 +228,10 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
   (Saldo −42/min) — Hinweis übersieht akuten Mangel. (8) Taste `4` ohne Wirkung/Hinweis (Tempo nur `1`–`3`). Ursprung:
   qa-playtester playtest-rel-18. Einschätzung: (7) mittel (Frühspiel-Führung), Rest niedrig; I-058 bleibt geparkt bis
   Brandfall bei 4× belegt, I-059 geparkt (nicht vermisst).
+
+### 2026-10-10 · CI-Lauf dauert 7 statt 4 min
+
+- **Fundort:** GitHub Actions CI, Läufe `38038270428` (≈ 4 min) gegen `38055866019`/`38063457678` (6–7 min). Beobachtung:
+  Die CI-Dauer hat sich innerhalb eines Tages fast verdoppelt; Ursache nicht geprüft (mehr Tests M13-E1/I-043? Runner?).
+  Ursprung: Prozess-Aussensicht REL-18. Einschätzung: niedrig bis mittel (Actions-Konto-Prognose ≈ 1990/2000 min, R488 V2);
+  mit TOOL-PUSH-CHECK oder der V2-Prognose prüfen.
