@@ -4941,3 +4941,20 @@ Wirkung nur bei offenem Panel, ein Gebäude). Weiter mit Plan durch `lead-tech` 
 Regelbezug: STUDIO.md Ablauf Stufe leicht Schritt 2–4, R474 · Kosten bei Irrtum: eine Tastenzuordnung zurücknehmen.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-ui-tasten · ADR: —
+
+## R477 · 2026-10-10 · Kurzdesign I-049 Sperrbestand angenommen; Vorfall „Integrator inaktiv“ quittiert
+
+Ruling: (1) Kurzdesign `docs/superpowers/specs/2026-10-10-i049-sperrbestand-design.md` (`7e6b2844`, AK-SB-01…17)
+angenommen, Entscheide nach Empfehlung: **E1** Reserve je Insel; **E2** nur Holz und Stein, Stufen 0/20/40/60; **E3**
+Schiffsladung nicht einbezogen (Routen-Reserve bleibt eigen); **E4** kein Eintrag in der Problemliste (wie Stilllegen).
+Save-Reihenfolge der drei Vorarbeiten: M13-E2 nimmt die nächste Version (v12); I-049 und I-048 fahren, wenn sie im
+selben Release landen, auf dieser Erhöhung mit, sonst je nächste freie — der jeweilige Plan stimmt das mit main ab.
+Weiter mit Plan `lead-tech` (Stufe leicht). (2) Vorfall `inaktiv:…:afbfd3a3ba9e6a50c` (production-integrator) ist kein
+Fehler: Der Push REL-18 ist erfolgt (origin/main `bfb6af44`), der Agent wartet auf den CI-Lauf 38063457678 (`gh run
+watch`, lange Werkzeugdauer ohne Heartbeat). Quittiert ohne Retro; wiederholt sich das Muster, prüft die
+Prozess-Aussensicht REL-18 eine Heartbeat-Ausnahme für CI-Warten.
+
+Regelbezug: STUDIO.md Ablauf Stufe leicht Schritt 2–4, Verbesserungsschleife (Ad-hoc-Retro), R475 · Kosten bei Irrtum:
+ein Bedienort oder eine Gutsliste nachziehen; ein echter Hänger bleibt bis zum Bericht unentdeckt.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-i049-reserve; Hook-Hinweis Ad-hoc-Retro · ADR: —
