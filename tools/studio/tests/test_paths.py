@@ -46,5 +46,33 @@ class RepoRootTest(unittest.TestCase):
         self.assertRegex(paths.now_iso(), r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$")
 
 
+class WorktreeDocsTest(unittest.TestCase):
+    def make_worktree(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        wt = Path(tmp.name).resolve() / "wt"
+        (wt / "a" / "b").mkdir(parents=True)
+        (wt / ".git").write_text("gitdir: /irgendwo/.git/worktrees/wt\n", "utf-8")
+        return wt
+
+    def test_worktree_root_with_git_file(self):
+        wt = self.make_worktree()
+        self.assertEqual(paths.worktree_root(wt / "a" / "b"), wt)
+
+    def test_worktree_root_none_without_git(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertIsNone(paths.worktree_root(Path(tmp).resolve()))
+
+    def test_worktree_docs_dir_override_and_fallback(self):
+        wt = self.make_worktree()
+        with mock.patch.dict(os.environ, {"STUDIO_DOCS": "/x/docs"}):
+            self.assertEqual(paths.worktree_docs_dir(), Path("/x/docs"))
+        env = {k: v for k, v in os.environ.items() if k != "STUDIO_DOCS"}
+        with mock.patch.dict(os.environ, env, clear=True):
+            self.assertEqual(paths.worktree_docs_dir(wt / "a"), wt / "docs" / "studio")
+            with mock.patch.object(paths, "worktree_root", return_value=None):
+                self.assertEqual(paths.worktree_docs_dir(), paths.docs_dir())
+
+
 if __name__ == "__main__":
     unittest.main()

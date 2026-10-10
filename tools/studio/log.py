@@ -10,7 +10,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import studio_docs
 from paths import (
@@ -241,7 +241,7 @@ def archive() -> int:
         return 0
     target_dir = archive_dir() / "events"
     target_dir.mkdir(parents=True, exist_ok=True)
-    stamp = f"{datetime.now(timezone.utc):%Y%m%d-%H%M%S}"
+    stamp = f"{datetime.now(UTC):%Y%m%d-%H%M%S}"
     target = target_dir / f"events-{stamp}.jsonl"
     counter = 0
     while target.exists():

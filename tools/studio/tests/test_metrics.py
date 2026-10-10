@@ -7,13 +7,15 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest import mock
 
 import metrics
 import studio_docs
 
-from tests.test_effort import scenario
+import tests.test_efficiency as eff
+from tests.test_effort import ev, scenario
 
 REPO = Path(__file__).resolve().parents[3]
 PRETTIER = REPO / "node_modules" / ".bin" / "prettier"
@@ -95,6 +97,95 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(raw["agents"], 4)
         self.assertEqual(raw["quality"]["first_pass_rate"], 1.0)
         self.assertIsNone(raw["quality"]["ci_runs"])
+
+    SINCE = "2026-09-30T12:00:30Z"  # Events des scenario liegen vor und nach t=30 s
+
+    def since_day(self):
+        since = datetime.fromisoformat(self.SINCE)
+        return since.astimezone().strftime("%Y-%m-%d")
+
+    def test_since_filters_events_and_names_file(self):
+        code, _ = self.run_cli("--session", "s1", "--since", self.SINCE)
+        self.assertEqual(code, 0)
+        path = self.out / f"S-{self.since_day()}-s1.md"
+        text = path.read_text(encoding="utf-8")
+        self.assertIn("- Ab: 2026-09-30T12:00:30+00:00 (Studio-Session, R434)", text)
+        self.run_cli("--session", "s1")
+        plain = (self.out / "S-2026-09-30-s1.md").read_text(encoding="utf-8")
+        self.assertNotIn("- Ab:", plain)
+        self.assertIn("Agenten: 2,", text)  # a1 und a2 liegen vor t=30 s
+
+    def test_since_cost_is_delta(self):
+        extra = [
+            ev(
+                "usage",
+                20,
+                session_cost={"total_usd": 1.0, "models": {"m": {"usd": 1}}},
+            ),
+            ev(
+                "usage",
+                40,
+                session_cost={"total_usd": 3.5, "models": {"m": {"usd": 3}}},
+            ),
+        ]
+        write_events(self.home, scenario() + extra)
+        result = metrics.build(
+            metrics_args("s1", since=datetime.fromisoformat(self.SINCE))
+        )
+        cost = result[1]["session_cost"]
+        self.assertEqual(cost["total_usd"], 2.5)
+        self.assertEqual(cost["models"]["m"]["usd"], 2)
+
+    def test_cost_delta_rules(self):
+        self.assertEqual(
+            metrics._cost_delta({"a": 5, "b": None}, {"a": 2}), {"a": 3, "b": None}
+        )
+        self.assertEqual(metrics._cost_delta({"a": 5}, None), {"a": 5})
+        self.assertIsNone(metrics._cost_delta(None, {"a": 1}))
+
+    def test_since_invalid_exit_2(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as cm:
+            metrics.main(["--session", "latest", "--since", "gestern"])
+        self.assertEqual(cm.exception.code, 2)
+        self.assertIn("ungültiger Zeitpunkt", err.getvalue())
+
+    def test_since_with_milestone_rejected(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err), self.assertRaises(SystemExit) as cm:
+            metrics.main(["--milestone", "M9", "--since", self.SINCE])
+        self.assertEqual(cm.exception.code, 2)
+        self.assertIn("nur mit --session oder --efficiency", err.getvalue())
+
+    def test_parse_since_variants(self):
+        self.assertEqual(
+            metrics._parse_since("2026-10-10T06:30:00Z").isoformat(),
+            "2026-10-10T06:30:00+00:00",
+        )
+        naive = metrics._parse_since("2026-10-10T06:30:00")
+        self.assertEqual(
+            naive, datetime.fromisoformat("2026-10-10T06:30:00").astimezone()
+        )
+
+    def test_default_out_is_worktree(self):
+        wt = Path(self.tmp.name).resolve() / "wt"
+        wt.mkdir()
+        (wt / ".git").write_text("gitdir: /irgendwo/.git/worktrees/wt\n", "utf-8")
+        old = Path.cwd()
+        os.chdir(wt)
+        self.addCleanup(os.chdir, old)
+        buffer = io.StringIO()
+        with (
+            mock.patch.dict(os.environ),
+            contextlib.redirect_stdout(buffer),
+            mock.patch.object(metrics, "format_markdown", lambda path: None),
+        ):
+            os.environ.pop("STUDIO_DOCS")
+            code = metrics.main(["--session", "s1"])
+        self.assertEqual(code, 0)
+        self.assertTrue(
+            (wt / "docs" / "studio" / "metriken" / "S-2026-09-30-s1.md").exists()
+        )
 
     def test_missing_transcript_is_not_measured(self):
         self.run_cli("--session", "s1")
@@ -210,8 +301,88 @@ class MetricsTest(unittest.TestCase):
             self.assertEqual(metrics.transcript_dir(Path("/a")), Path("/x"))
 
 
-def metrics_args(session=None, milestone=None):
-    return argparse.Namespace(session=session, milestone=milestone, out=None)
+class PhasesTest(unittest.TestCase):
+    """Phase der Freigabe kommt aus den ungefilterten Events (R441 B1)."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        base = Path(tmp.name)
+        self.out = base / "out"
+        self.transcripts = base / "transcripts"
+        events = [
+            ev("session_start", 0, agent_id="main", status="idle"),
+            ev(
+                "budget",
+                10,
+                agent_id="",
+                source="log",
+                role="lead-tech",
+                budget={"granted": 4, "parallel": 1, "phase": "plan-REL-15"},
+            ),
+            ev("agent_start", 100, agent_id="a9", role="lead-tech", status="active"),
+            ev("agent_stop", 200, agent_id="a9", role="lead-tech", status="done"),
+        ]
+        write_events(base / "home", events)
+        self.write_transcripts()
+        patch = mock_env(
+            STUDIO_HOME=str(base / "home"),
+            STUDIO_DOCS=str(base / "docs"),
+            STUDIO_TRANSCRIPTS=str(self.transcripts),
+        )
+        patch.__enter__()
+        self.addCleanup(patch.__exit__, None, None, None)
+
+    def write_transcripts(self):
+        main = self.transcripts / "s1.jsonl"
+        eff.write(main, [eff.assistant("m1", "claude-opus-4", out=100)])
+        eff.agent(
+            self.transcripts,
+            "s1",
+            "a9",
+            {"agentType": "lead-tech"},
+            [
+                eff.prompt("Persona: lead-tech\nPaket: REL-15\nBudget: 4 Starts"),
+                eff.assistant("x", "claude-opus-4", out=200),
+            ],
+        )
+
+    def args(self, **kw):
+        return argparse.Namespace(
+            session="s1", milestone=None, out=None, **{"since": None, **kw}
+        )
+
+    def test_phases_without_since(self):
+        result = metrics.build(self.args())
+        grund = result[1]["efficiency"]["steuerung_heraus_grund"]
+        self.assertGreater(grund["plan"], 0)
+
+    def test_phases_from_unfiltered_events_with_since(self):
+        # Freigabe (t=10) vor since (t=50), Lead-Start (t=100) danach,
+        # kein früherer session_cost-Stand
+        since = datetime(2026, 9, 30, 12, 0, 50, tzinfo=UTC)
+        result = metrics.build(self.args(since=since))
+        grund = result[1]["efficiency"]["steuerung_heraus_grund"]
+        self.assertGreater(grund["plan"], 0)
+
+    def test_session_file_uses_lead_phases(self):
+        buffer = io.StringIO()
+        with (
+            contextlib.redirect_stdout(buffer),
+            mock.patch.object(metrics, "format_markdown", lambda path: None),
+        ):
+            code = metrics.main(["--session", "s1", "--out", str(self.out)])
+        self.assertEqual(code, 0)
+        text = next(self.out.glob("S-*.md")).read_text(encoding="utf-8")
+        line = next(x for x in text.splitlines() if "Steuerungsanteil bereinigt" in x)
+        self.assertIn("Plan ", line)
+        self.assertNotIn("Plan 0.0 %", line)
+
+
+def metrics_args(session=None, milestone=None, since=None):
+    return argparse.Namespace(
+        session=session, milestone=milestone, out=None, since=since
+    )
 
 
 @contextlib.contextmanager

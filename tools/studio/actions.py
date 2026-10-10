@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import math
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 NOT_RECORDED = "nicht erfasst"
 # (gelb über, rot über)
@@ -38,7 +38,7 @@ def _light(value: float, limits: tuple[int, int]) -> str:
 def usage(now: datetime | None = None, runner=None) -> tuple[float, float] | None:
     """(Repo-Minuten, Konto-Minuten) im laufenden Monat oder None, wenn nicht erfassbar."""
     run = runner or run_gh
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
     try:
         login = run(["api", "user", "--jq", ".login"]).strip()
         name = run(["repo", "view", "--json", "name", "-q", ".name"]).strip()
@@ -68,7 +68,7 @@ def usage(now: datetime | None = None, runner=None) -> tuple[float, float] | Non
 
 
 def _ts(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return datetime.fromisoformat(value)
 
 
 def session_minutes(since: datetime, runner=None) -> int | None:

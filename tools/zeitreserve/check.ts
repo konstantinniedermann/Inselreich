@@ -1,6 +1,7 @@
 // tools/zeitreserve/check.ts — CLI: node tools/zeitreserve/check.ts [report.json]  (E-032, R270)
-// Mit --push (make zeitreserve-push, Pflicht vor dem Session-End-Push, R338): bei Last > 4 oder einer Messung
-// mit anderem Commit als HEAD / Last > 4 während des Laufs / altem Format kein Ergebnis (Exit 2, R353).
+// Mit --push (make zeitreserve-push, Pflicht vor dem Push, R338): kein Ergebnis (Exit 2), wenn die Messung einen
+// anderen Commit als HEAD hat, die Last vor dem Lauf (loadStart) > 4 war oder das alte Format hat (R353, R394);
+// die aktuelle Last zählt nicht (R438 V3).
 // Liest den Bericht des Reporters (nach `npm test`) und schlägt bei fehlender CI-Reserve fehl.
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -26,7 +27,7 @@ const ON_CI = process.env.GITHUB_ACTIONS === 'true';
 const FAKE_LOAD = process.env.ZEITRESERVE_FAKE_LOAD; // nur für Tests
 const LOAD = FAKE_LOAD !== undefined ? Number(FAKE_LOAD) : (loadavg()[0] ?? 0);
 const PUSH = process.argv.includes('--push');
-const VERDICT = loadVerdict(LOAD, ON_CI);
+const VERDICT = PUSH ? 'strict' : loadVerdict(LOAD, ON_CI);
 
 /** Verstoss ausgeben: bei ruhiger Last (oder auf Actions) als Fehler, sonst als Warnung. */
 function report(line: string): void {
@@ -51,12 +52,6 @@ const BASELINE_PATH = new URL('./baseline.json', import.meta.url);
 
 function main(): number {
   const path = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '.studio/zeitreserve.json';
-  if (PUSH && VERDICT === 'unreliable') {
-    console.error(
-      `zeitreserve-push: nicht belastbar, Last ${LOAD.toFixed(1)} > ${LOAD_MAX}, warten und erneut starten (kein Ergebnis).`,
-    );
-    return 2;
-  }
   if (!existsSync(path)) {
     console.error(`zeitreserve: ${path} fehlt; zuerst die Tests laufen lassen (make test).`);
     return 1;
@@ -79,7 +74,9 @@ function main(): number {
   for (const k of baseline)
     if (!known.has(k))
       console.warn(`zeitreserve: Altlast ohne Test, aus baseline.json streichen: ${k}`);
-  console.log(`zeitreserve: Last (1 min): ${LOAD.toFixed(1)}`);
+  if (PUSH)
+    console.log(`zeitreserve: Last vor dem Lauf (Messung): ${measurement.loadStart?.toFixed(1)}`);
+  else console.log(`zeitreserve: Last (1 min): ${LOAD.toFixed(1)}`);
   const factor = process.env.GITHUB_ACTIONS === 'true' ? CI_FACTOR_ON_CI : CI_FACTOR;
   const bad = findViolations(timings, baseline, factor);
   console.log(

@@ -1,11 +1,11 @@
 import json
 import subprocess
 import unittest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import actions
 
-NOW = datetime(2026, 10, 8, tzinfo=timezone.utc)
+NOW = datetime(2026, 10, 8, tzinfo=UTC)
 
 
 def fake(items, login="koschi", name="anno-clone"):
@@ -81,7 +81,7 @@ class ActionsTest(unittest.TestCase):
 
 
 class SessionMinutesTest(unittest.TestCase):
-    SINCE = datetime(2026, 10, 8, 10, tzinfo=timezone.utc)
+    SINCE = datetime(2026, 10, 8, 10, tzinfo=UTC)
 
     @staticmethod
     def runner(runs, jobs):

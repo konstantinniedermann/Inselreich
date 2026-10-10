@@ -71,6 +71,26 @@ class ReasonTest(unittest.TestCase):
         self.assertIsNotNone(call("lead-qa", "Modell: sonnet (Final-Review)", "opus"))
         self.assertIsNotNone(call("lead-qa", "Modell: opus", "opus"))
 
+    def test_use_with_parentheses_in_header(self):
+        table = [
+            ("opus", ["Final-Review (über die Branch)"]),
+            ("sonnet", ["Standard"]),
+        ]
+        personas = {"lead-x": {"model": "sonnet"}}
+        data = {"subagent_type": "lead-x", "model": "opus"}
+        prompt = "Persona: lead-x\nModell: opus (Final-Review (über die Branch))"
+        self.assertIsNone(modelguard.reason(data | {"prompt": prompt}, personas, table))
+        wrong = "Persona: lead-x\nModell: opus (Spiel) (Final-Review (über die Branch))"
+        self.assertIsNotNone(
+            modelguard.reason(data | {"prompt": wrong}, personas, table)
+        )
+
+    def test_real_table_haiku_use_parses(self):
+        uses = dict(TABLE)["haiku"]
+        self.assertEqual(len(uses), 1)
+        self.assertTrue(uses[0].startswith("mechanische Prüfungen ("))
+        self.assertTrue(uses[0].endswith(")"))
+
     def test_unknown_alias_is_allowed_with_note(self):
         self.assertIsNone(call("lead-design", "", "fable"))
         data = {"subagent_type": "lead-design", "model": "fable"}

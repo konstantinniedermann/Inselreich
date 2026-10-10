@@ -8,7 +8,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import actions
@@ -83,6 +83,7 @@ def summarize(
     cost: dict | None,
     created: str,
     efficiency_data: dict | None = None,
+    since: datetime | None = None,
 ) -> dict:
     """Rohwerte einer Verdichtung; fehlende Messungen bleiben ``None``."""
     aggregate = state["effort"]
@@ -102,6 +103,7 @@ def summarize(
         "incidents_open": len(state["incidents"]),
         "session_cost": cost,
         "efficiency": efficiency_data,
+        "since": since.isoformat() if since else None,
     }
 
 
@@ -182,6 +184,7 @@ def render(raw: dict) -> str:
         f"- erzeugt: {raw['created']}",
         f"- Art: {art}",
         f"- Handbuch: {_text(raw['handbook_version'])}",
+        *([f"- Ab: {raw['since']} (Studio-Session, R434)"] if raw.get("since") else []),
         "",
         "## Aufwand",
         "",
@@ -352,18 +355,67 @@ def latest_transcripts(root: Path, count: int | None) -> list[Path]:
     return found if count is None else found[-count:] if count > 0 else []
 
 
+def _parse_since(text: str) -> datetime:
+    """ISO 8601 mit Offset oder ``Z``; ohne Offset gilt die Ortszeit. Ergebnis in UTC."""
+    try:
+        when = datetime.fromisoformat(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"ungültiger Zeitpunkt: {text!r}") from None
+    return when.astimezone(UTC)
+
+
+def _cost_delta(after: object, before: object) -> object:
+    """Kostenstand ``after`` minus ``before``; ``None`` bleibt ``None``."""
+    if after is None:
+        return None
+    if before is None:
+        return after
+    if isinstance(after, dict):
+        prior = before if isinstance(before, dict) else {}
+        return {k: _cost_delta(v, prior.get(k)) for k, v in after.items()}
+    if isinstance(after, (int, float)) and isinstance(before, (int, float)):
+        return after - before
+    return after
+
+
+def _event_cost(events: list[dict], sid: str, until: float | None = None):
+    """Letzter ``session_cost``-Stand der Session (optional nur Events vor ``until``)."""
+    last = None
+    for event in events:
+        if event.get("session_id") != sid or event.get("session_cost") is None:
+            continue
+        if until is None or model.parse_ts(event.get("ts")) < until:
+            last = event["session_cost"]
+    return last
+
+
+def _since_cost(events: list[dict], sid: str, since: datetime):
+    after = _event_cost(events, sid)
+    return _cost_delta(after, _event_cost(events, sid, since.timestamp()))
+
+
+def _from_since(events: list[dict], since: datetime | None) -> list[dict]:
+    if since is None:
+        return events
+    return [e for e in events if model.parse_ts(e.get("ts")) >= since.timestamp()]
+
+
 def build(args: argparse.Namespace) -> tuple[str, dict] | None:
-    events = load_events(paths.studio_home())
+    all_events = load_events(paths.studio_home())
+    since = getattr(args, "since", None)
+    events = _from_since(all_events, since)
     models = model.read_agent_models(paths.agents_dir())
     handbook = studio_docs.read_version(paths.docs_dir() / "STUDIO.md")
     created = datetime.now().astimezone().isoformat(timespec="seconds")
-    now = datetime.now(timezone.utc).timestamp()
+    now = datetime.now(UTC).timestamp()
     if args.milestone:
         state = model.build_state(events, now, models, "all")
         state = _milestone_state(state, events, args.milestone)
         sids = sorted({r["session_id"] for r in state["records"]})
         data = efficiency.compute(
-            _session_files(paths.repo_root(), sids), _persona_models()
+            _session_files(paths.repo_root(), sids),
+            _persona_models(),
+            state["lead_phases"],
         )
         raw = summarize(
             state, "milestone", args.milestone, handbook, None, created, data
@@ -374,13 +426,20 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
     found = next((s for s in state["sessions"] if s["id"] == sid), None)
     if not sid or sid == "all" or found is None:
         return None
-    day = datetime.fromtimestamp(found["started"]).astimezone().strftime("%Y-%m-%d")
+    # R441 B1: Freigaben liegen oft vor ``since`` - Phasen aus ungefilterten Events
+    phases = model.build_state(all_events, now, models, "all")["lead_phases"]
+    started = since.timestamp() if since else found["started"]
+    day = datetime.fromtimestamp(started).astimezone().strftime("%Y-%m-%d")
     kennung = f"S-{day}-{sid[:8]}"
-    cost = _session_cost(state, sid, paths.repo_root())
+    if since:
+        cost = _since_cost(all_events, sid, since)
+    else:
+        cost = _session_cost(state, sid, paths.repo_root())
     data = efficiency.compute(
-        _session_files(paths.repo_root(), [sid]), _persona_models()
+        _session_files(paths.repo_root(), [sid]), _persona_models(), phases, since
     )
-    return kennung, summarize(state, "session", kennung, handbook, cost, created, data)
+    raw = summarize(state, "session", kennung, handbook, cost, created, data, since)
+    return kennung, raw
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -402,16 +461,30 @@ def main(argv: list[str] | None = None) -> int:
         default="",
         help="mit --efficiency: Leerlauf nur für Pakete mit dieser ID-Vorsilbe (z. B. H-)",
     )
+    parser.add_argument(
+        "--since",
+        type=_parse_since,
+        default=None,
+        help="mit --session/--efficiency: erst ab diesem Zeitpunkt messen (ISO 8601)",
+    )
     args = parser.parse_args(argv)
+    if args.since and args.milestone:
+        parser.error("--since gilt nur mit --session oder --efficiency")
     if args.efficiency:
         files = latest_transcripts(paths.repo_root(), args.sessions)
-        data = efficiency.compute(files, _persona_models())
+        all_events = load_events(paths.studio_home())
+        events = _from_since(all_events, args.since)
+        state = model.build_state(
+            all_events, datetime.now(UTC).timestamp(), _persona_models(), "all"
+        )
+        data = efficiency.compute(
+            files, _persona_models(), state["lead_phases"], args.since
+        )
         print(efficiency.render_section(data))
         print(efficiency.render_rewrites(data))
-        events = load_events(paths.studio_home())
         gaps = efficiency.idle_gaps(events, args.idle_prefix)
         print(efficiency.render_idle(gaps))
-        print(actions.render(since=_session_start(events)))
+        print(actions.render(since=args.since or _session_start(events)))
         return 0
     result = build(args)
     if result is None:
@@ -420,7 +493,7 @@ def main(argv: list[str] | None = None) -> int:
     kennung, raw = result
     if args.milestone and raw["agents"] == 0:
         print(f"studio-metrics: keine Datensätze für {kennung}", file=sys.stderr)
-    folder = args.out or paths.docs_dir() / "metriken"
+    folder = args.out or paths.worktree_docs_dir() / "metriken"
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{kennung}.md"
     path.write_text(render(raw), encoding="utf-8")
@@ -440,7 +513,7 @@ def _session_start(events: list[dict]):
         return None
     sid = max(stamped, key=lambda e: model.parse_ts(e["ts"]))["session_id"]
     first = min(model.parse_ts(e["ts"]) for e in stamped if e["session_id"] == sid)
-    return datetime.fromtimestamp(first, timezone.utc)
+    return datetime.fromtimestamp(first, UTC)
 
 
 def format_markdown(path: Path) -> None:

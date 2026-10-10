@@ -2,7 +2,7 @@ import io
 import tempfile
 import unittest
 from contextlib import redirect_stdout
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest import mock
 
@@ -11,7 +11,7 @@ import metrics
 
 from tests.test_efficiency import agent, assistant, prompt, write
 
-T0 = datetime(2026, 10, 8, 10, 0, tzinfo=timezone.utc)
+T0 = datetime(2026, 10, 8, 10, 0, tzinfo=UTC)
 BASH = ("b1", "Bash", {"command": "make check"})
 OPUS = "claude-opus-4"
 

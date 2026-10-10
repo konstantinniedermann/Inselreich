@@ -2,7 +2,7 @@ import json
 import os
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import limits
@@ -163,7 +163,7 @@ class FileTest(unittest.TestCase):
 
 
 def hhmm(epoch):
-    return datetime.fromtimestamp(epoch, tz=timezone.utc).astimezone().strftime("%H:%M")
+    return datetime.fromtimestamp(epoch, tz=UTC).astimezone().strftime("%H:%M")
 
 
 class SummaryTest(unittest.TestCase):

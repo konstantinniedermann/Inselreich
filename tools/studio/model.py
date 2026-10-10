@@ -10,7 +10,7 @@ import contextlib
 import json
 import threading
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import effort
@@ -35,6 +35,7 @@ FINAL = frozenset({"done", "failed", "ended"})
 DEPARTMENTS = ("production", "design", "tech", "art", "qa")
 DIRECTOR = "studio-director"
 CI_SESSION = "ci"  # Pseudo-Session der CI-Events (ci.py)
+MANUAL_SESSION = "manual"  # Events ohne Claude-Session (Commit von Hand, precommit.py)
 AGENT_MESSAGE_TASK = "Meldung eines Agenten"  # gleicher Text wie in hook.py
 PUBLIC = (
     "key",
@@ -63,7 +64,7 @@ PUBLIC = (
 
 def parse_ts(value: object) -> float:
     try:
-        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+        return datetime.fromisoformat(str(value)).timestamp()
     except ValueError:
         return 0.0
 
@@ -340,7 +341,7 @@ class _Builder:
         node["_chron"] = True
         self.chronicle.append(
             {
-                "ts": datetime.fromtimestamp(ts, timezone.utc)
+                "ts": datetime.fromtimestamp(ts, UTC)
                 .astimezone()
                 .isoformat(timespec="seconds"),
                 "t": ts,
@@ -455,7 +456,7 @@ class _Builder:
         ts = parse_ts(event.get("ts"))
         sid = str(event.get("session_id") or "unbekannt")
         # CI-Läufe gehören zu den Sessions, in deren Zeitraum sie fallen (result)
-        if event.get("kind") != "ci" and sid != CI_SESSION:
+        if event.get("kind") != "ci" and sid not in (CI_SESSION, MANUAL_SESSION):
             session = self.sessions.setdefault(
                 sid, {"id": sid, "started": ts, "last": ts, "ended": None}
             )
@@ -795,6 +796,10 @@ class _Builder:
         best = max(free or candidates, key=lambda g: g["since"])
         return (best["lead"], best["phase"], best["session_id"])
 
+    def lead_phases(self) -> dict[str, str]:
+        """Knotenschluessel des Leads -> Phase seiner Freigabe (Umkehrung von claims)."""
+        return {lead_key: key[1] for key, lead_key in self.claims.items()}
+
     def claim_budgets(self) -> None:
         """Jede Freigabe gehoert dem ersten danach gestarteten, noch freien Lead."""
         self.claims = {}
@@ -1056,6 +1061,7 @@ class _Builder:
                 :CHRONICLE_SIZE
             ],
             "budgets": self.budget_view(),
+            "lead_phases": self.lead_phases(),
             "board": self.board_view(),
             "decisions": sorted(
                 (
@@ -1268,7 +1274,7 @@ class _Builder:
                 buckets[minute][entry["department"]] += 1
         return [
             {
-                "minute": datetime.fromtimestamp(m * 60, timezone.utc)
+                "minute": datetime.fromtimestamp(m * 60, UTC)
                 .astimezone()
                 .strftime("%H:%M"),
                 "total": sum(c.values()),

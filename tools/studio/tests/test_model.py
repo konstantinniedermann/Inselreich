@@ -5,7 +5,7 @@ import os
 import tempfile
 import unittest
 import unittest.mock
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import graph
@@ -13,7 +13,7 @@ import model
 
 from tests.fixtures import make_demo
 
-T0 = datetime(2026, 9, 30, 12, 0, tzinfo=timezone.utc).timestamp()
+T0 = datetime(2026, 9, 30, 12, 0, tzinfo=UTC).timestamp()
 MODELS = {
     "lead-qa": "opus",
     "qa-code-reviewer": "sonnet",
@@ -24,9 +24,7 @@ MODELS = {
 
 
 def ts(offset):
-    stamp = datetime.fromtimestamp(T0 + offset, timezone.utc).isoformat(
-        timespec="milliseconds"
-    )
+    stamp = datetime.fromtimestamp(T0 + offset, UTC).isoformat(timespec="milliseconds")
     return stamp.replace("+00:00", "Z")
 
 
@@ -2319,10 +2317,7 @@ class GraphFixtureTest(unittest.TestCase):
             ],
         )
         self.assertEqual([r["kind"] for r in rows[:3]].count("pause"), 0)
-        stamps = [
-            datetime.fromisoformat(e["ts"].replace("Z", "+00:00")).timestamp()
-            for e in events
-        ]
+        stamps = [datetime.fromisoformat(e["ts"]).timestamp() for e in events]
         latest = max(
             stamp
             for stamp, e in zip(stamps[:-2], events[:-2])
@@ -2376,6 +2371,49 @@ class GateSpecFixesTest(unittest.TestCase):
         texts = [c["text"] for c in build([helper, real])["chronicle"]]
         self.assertEqual(texts, ["Gefunden"])
         self.assertNotIn("_key", build([real])["chronicle"][0])
+
+
+class ManualSessionTest(unittest.TestCase):
+    def test_manual_commit_event_creates_no_session(self):
+        events = [
+            ev("agent_start", 0, session="s1", status="active"),
+            ev("commit_rejected", 50, session=model.MANUAL_SESSION, source="log"),
+        ]
+        state = model.build_state(events, T0 + 60, MODELS, "latest")
+        self.assertEqual(state["session"], "s1")
+        self.assertNotIn(model.MANUAL_SESSION, [s["id"] for s in state["sessions"]])
+
+
+class LeadPhasesTest(unittest.TestCase):
+    def grant(self, t, phase, lead="lead-tech"):
+        return ev(
+            "budget",
+            t,
+            agent_id="",
+            role=lead,
+            source="log",
+            budget={"granted": 10, "parallel": 1, "phase": phase},
+        )
+
+    def test_lead_phases_from_claims(self):
+        events = [self.grant(1, "plan-P"), start(2, "a1", "lead-tech")]
+        self.assertEqual(build(events)["lead_phases"], {"s1:a1": "plan-P"})
+
+    def test_parallel_leads_get_own_phase(self):
+        events = [
+            self.grant(1, "plan-P"),
+            start(2, "a1", "lead-tech"),
+            self.grant(3, "impl-Q"),
+            start(4, "a2", "lead-tech"),
+        ]
+        self.assertEqual(
+            build(events)["lead_phases"],
+            {"s1:a1": "plan-P", "s1:a2": "impl-Q"},
+        )
+
+    def test_lead_without_grant_has_no_phase(self):
+        events = [start(2, "a1", "lead-tech")]
+        self.assertNotIn("s1:a1", build(events)["lead_phases"])
 
 
 if __name__ == "__main__":

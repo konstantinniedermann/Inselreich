@@ -28,7 +28,7 @@ test: ## Tests ausführen (Vitest; schreibt .studio/zeitreserve.json); studiowei
 zeitreserve: ## CI-Reserve prüfen (lokal × 4, R270; und geschätzte Runner-Zeit lokal × 3, E-043); nach make test
 	node tools/zeitreserve/check.ts
 
-zeitreserve-push: ## Streng vor dem Session-End-Push (R338): Last > 4 = Exit 2 "nicht belastbar", sonst harte Prüfung; nach make test; mit Testsperre
+zeitreserve-push: ## Streng vor dem Push (R338): Messung mit Commit = HEAD und Last vor dem Lauf <= 4 (R394), sonst Exit 2 "nicht belastbar"; aktuelle Last zählt nicht (R438 V3); nach make test; mit Testsperre
 	@node $(TESTLOCK) node tools/zeitreserve/check.ts --push
 
 check-ci-perf: ## Nur die Perf-Budget-Tests mit CI=true (ersetzt den zweiten vollen Lauf CI=true make check, R353); schreibt kein zeitreserve.json
@@ -49,8 +49,10 @@ build: ## Typprüfung + Produktions-Build
 studio-test: ## Tests der Studio-Werkzeuge (Python unittest)
 	python3 -m unittest discover -s tools/studio/tests -t tools/studio
 
-studio-lint: ## Ruff über tools/studio (via uvx; vor Commits an tools/studio, nicht Teil von check)
-	uvx ruff check tools/studio && uvx ruff format --check tools/studio
+RUFF = uvx ruff@0.17.0
+
+studio-lint: ## Ruff über tools/studio (gepinnt, via uvx; vor Commits an tools/studio, nicht Teil von check)
+	$(RUFF) check tools/studio && $(RUFF) format --check tools/studio
 
 studio: ## Studio-Dashboard starten (gibt die URL aus)
 	@bash tools/studio/start.sh

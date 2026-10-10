@@ -15,6 +15,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 FILES_MAX = 20
+PYTHON_MIN = (3, 11)
 Runner = Callable[[Sequence[str]], subprocess.CompletedProcess]
 
 
@@ -66,25 +67,37 @@ def message(files: list[str], detail: str) -> str:
 
 
 def record(files: list[str], top: Path, env: Mapping[str, str]) -> None:
-    from paths import append_event, now_iso
-
-    event = {
-        "ts": now_iso(),
-        "session_id": env.get("CLAUDE_CODE_SESSION_ID", "manual"),
-        "agent_id": "",
-        "source": "log",
-        "kind": "commit_rejected",
-        "summary": f"Prettier: {len(files)} Datei(en) nicht formatiert",
-        "files": files[:FILES_MAX],
-        "worktree": str(top),
-    }
     try:
+        from model import MANUAL_SESSION
+        from paths import append_event, now_iso
+
+        event = {
+            "ts": now_iso(),
+            "session_id": env.get("CLAUDE_CODE_SESSION_ID", MANUAL_SESSION),
+            "agent_id": "",
+            "source": "log",
+            "kind": "commit_rejected",
+            "summary": f"Prettier: {len(files)} Datei(en) nicht formatiert",
+            "files": files[:FILES_MAX],
+            "worktree": str(top),
+        }
         append_event(event)
     except Exception as exc:  # noqa: BLE001 - Ablehnung gilt auch ohne Log
         print(f"pre-commit: Ereignis nicht geloggt ({exc}).", file=sys.stderr)
 
 
-def main(runner: Runner = run, env: Mapping[str, str] = os.environ) -> int:
+def main(
+    runner: Runner = run,
+    env: Mapping[str, str] = os.environ,
+    version: tuple[int, ...] = tuple(sys.version_info[:2]),
+) -> int:
+    if version < PYTHON_MIN:
+        needed = ".".join(map(str, PYTHON_MIN))
+        print(
+            f"pre-commit: Python {needed} nötig, Check übersprungen (CI prüft mit make lint).",
+            file=sys.stderr,
+        )
+        return 0
     try:
         from paths import repo_root
 

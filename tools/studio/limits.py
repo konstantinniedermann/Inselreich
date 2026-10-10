@@ -11,7 +11,7 @@ import math
 import os
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Richtwerte (R68/R69), nur hier definiert; Hinweise empfehlen nie ein Modell.
@@ -147,11 +147,7 @@ def reset_time(epoch: float | None) -> str:
     if epoch is None:
         return ""
     try:
-        return (
-            datetime.fromtimestamp(epoch, tz=timezone.utc)
-            .astimezone()
-            .strftime("%H:%M")
-        )
+        return datetime.fromtimestamp(epoch, tz=UTC).astimezone().strftime("%H:%M")
     except (OverflowError, OSError, ValueError):
         return ""
 

@@ -1,14 +1,14 @@
 import tempfile
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import efficiency
 
 from tests.test_efficiency import agent, assistant, prompt, write
 
-BEFORE = datetime(2026, 10, 3, 12, 0, tzinfo=timezone.utc)
-AFTER = datetime(2026, 10, 5, 12, 0, tzinfo=timezone.utc)
+BEFORE = datetime(2026, 10, 3, 12, 0, tzinfo=UTC)
+AFTER = datetime(2026, 10, 5, 12, 0, tzinfo=UTC)
 OPUS, SONNET = "claude-opus-4", "claude-sonnet-5"
 FRONTMATTER = {"tech-sim-engineer": "sonnet", "studio-coach": "opus", "x": "inherit"}
 

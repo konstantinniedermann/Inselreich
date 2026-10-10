@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 NOW = time.time()
@@ -21,7 +21,7 @@ XSS = "<img src=x onerror=alert(1)>"
 
 
 def ts(minutes_ago: float) -> str:
-    stamp = datetime.fromtimestamp(NOW - minutes_ago * 60, timezone.utc)
+    stamp = datetime.fromtimestamp(NOW - minutes_ago * 60, UTC)
     return stamp.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
@@ -451,7 +451,7 @@ LANG = (
 
 
 def stamp_at(t: float) -> str:
-    stamp = datetime.fromtimestamp(t, timezone.utc)
+    stamp = datetime.fromtimestamp(t, UTC)
     return stamp.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
@@ -709,7 +709,7 @@ def append_g9(path: Path) -> list[dict]:
     """Zwei Nachrichten nach dem jüngsten Event der Session G (G-S9, zeitunabhängig)."""
     events = [json.loads(line) for line in path.read_text("utf-8").splitlines() if line]
     latest = max(
-        datetime.fromisoformat(e["ts"].replace("Z", "+00:00")).timestamp()
+        datetime.fromisoformat(e["ts"]).timestamp()
         for e in events
         if e.get("session_id") == GRAPH
     )

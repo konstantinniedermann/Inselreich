@@ -585,7 +585,14 @@ flowchart LR
   Starts über der Modelltabelle als Ereignis `model_guard` (Startzustand nur Warnung). Die Testsperre weist auf
   verwaiste Vitest-Prozesse hin (PPID 1, ab 30 min) und beendet nichts. Im Dashboard melden Knoten ohne
   `agent_start` und ohne `spawned` keinen Inaktiv-Vorfall und werden nach 600 s ausgeblendet. Die Metriken
-  (`make studio-metrics`) führen zusätzlich die Zeile «Steuerungsanteil bereinigt» (E-049).
+  (`make studio-metrics`) führen zusätzlich die Zeile «Steuerungsanteil bereinigt» (E-049): Sie rechnet
+  Lead-Instanzen mit Freigabephase `plan-`/`design-`/`gate-` (Zuordnung wie im Dashboard) oder „Budget: keins“
+  heraus und nennt den Anteil je Grund. `metrics.py --since <ISO>` verdichtet eine Studio-Session innerhalb
+  eines Claude-Gesprächs (R434); ohne `--out` schreibt es in den Worktree, aus dem es läuft.
+  `make zeitreserve-push` bewertet nur die Messung (Commit = HEAD, Last vor dem Lauf ≤ 4), nicht die aktuelle
+  Last. `make studio-lint` nutzt eine gepinnte Ruff-Version (Makefile-Variable `RUFF`). Die Studio-Werkzeuge
+  verlangen Python ≥ 3.11 (`datetime.UTC`, `fromisoformat("…Z")`); `precommit.py` und der Git-Hook lassen bei
+  älterem Python still zu (R441 B2).
 - **CI:** `.github/workflows/ci.yml` führt `make check` bei Push auf `main` und bei Pull Requests aus.
 - **Deploy:** `.github/workflows/pages.yml` baut bei Push auf `main` (oder manuell) und veröffentlicht
   `dist/` auf GitHub Pages. Er greift erst, wenn Pages im Repo aktiviert ist (Quelle: GitHub Actions);

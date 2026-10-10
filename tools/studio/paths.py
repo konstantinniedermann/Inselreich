@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -32,7 +32,17 @@ def repo_root(start: Path | None = None) -> Path:
     return here.parent
 
 
+def worktree_root(start: Path | None = None) -> Path | None:
+    """Nächster Ordner ab ``start`` (Standard: cwd) aufwärts mit ``.git`` (Datei oder Ordner)."""
+    here = (start or Path.cwd()).resolve()
+    for folder in [here, *here.parents]:
+        if (folder / ".git").exists():
+            return folder
+    return None
+
+
 def studio_home() -> Path:
+    # nur für Tests (R378)
     override = os.environ.get("STUDIO_HOME")
     return Path(override) if override else repo_root() / ".studio"
 
@@ -42,8 +52,19 @@ def events_file() -> Path:
 
 
 def docs_dir() -> Path:
+    # nur für Tests (R378)
     override = os.environ.get("STUDIO_DOCS")
     return Path(override) if override else repo_root() / "docs" / "studio"
+
+
+def worktree_docs_dir(start: Path | None = None) -> Path:
+    """Studio-Doku des aufrufenden Worktrees (Schreibziel); sonst wie ``docs_dir``."""
+    # STUDIO_DOCS: nur für Tests (R378)
+    override = os.environ.get("STUDIO_DOCS")
+    if override:
+        return Path(override)
+    root = worktree_root(start)
+    return root / "docs" / "studio" if root else docs_dir()
 
 
 def archive_dir() -> Path:
@@ -55,7 +76,7 @@ def agents_dir() -> Path:
 
 
 def now_iso() -> str:
-    stamp = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
+    stamp = datetime.now(UTC).isoformat(timespec="milliseconds")
     return stamp.replace("+00:00", "Z")
 
 

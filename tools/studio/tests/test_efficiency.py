@@ -3,6 +3,7 @@ import json
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest import mock
 
@@ -12,12 +13,12 @@ import effort
 import metrics
 
 
-def assistant(mid, model, inp=0, cc5=0, cc1=0, cr=0, out=0, tools=()):
+def assistant(mid, model, inp=0, cc5=0, cc1=0, cr=0, out=0, tools=(), ts=None):
     content = [
         {"type": "tool_use", "id": tid, "name": name, "input": data}
         for tid, name, data in tools
     ]
-    return {
+    entry = {
         "type": "assistant",
         "message": {
             "id": mid,
@@ -35,6 +36,9 @@ def assistant(mid, model, inp=0, cc5=0, cc1=0, cr=0, out=0, tools=()):
             },
         },
     }
+    if ts:
+        entry["timestamp"] = ts
+    return entry
 
 
 def result(tid, content):
@@ -572,6 +576,174 @@ class AdjustedControlTest(unittest.TestCase):
         self.assertEqual(
             with_line["red"], without["red"]
         )  # Zeile ändert die Rot-Menge nie
+
+
+class PhaseAdjustTest(unittest.TestCase):
+    PROMPT = "Persona: lead-tech\nPaket: P\nBudget: 4 Starts"
+
+    def build(self, leads, phases=None):
+        """leads: Liste (name, prompt-Text); phases: Dict oder None."""
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        write(root / "s1.jsonl", [assistant("m1", "claude-opus-4", out=100)])
+        for name, text in leads:
+            agent(
+                root,
+                "s1",
+                name,
+                {"agentType": "lead-tech"},
+                [prompt(text), assistant(f"x{name}", "claude-opus-4", out=200)],
+            )
+        agent(
+            root,
+            "s1",
+            "w1",
+            {"agentType": "tech-sim-engineer"},
+            [
+                prompt("Persona: tech-sim-engineer\nPaket: P"),
+                assistant("w", "claude-sonnet-5", out=500),
+            ],
+        )
+        return efficiency.compute([root / "s1.jsonl"], {}, phases=phases)
+
+    def test_plan_phase_lead_is_removed(self):
+        data = self.build([("l1", self.PROMPT)], {"s1:l1": "plan-REL-15"})
+        self.assertEqual(data["steuerung_heraus_n"], 1)
+        self.assertGreater(data["steuerung_heraus_grund"]["plan"], 0)
+        self.assertAlmostEqual(
+            data["steuerung"],
+            data["steuerung_bereinigt"] + data["steuerung_heraus"],
+            places=9,
+        )
+
+    def test_impl_phase_and_no_phase_count_as_control(self):
+        data = self.build(
+            [("l1", self.PROMPT), ("l2", self.PROMPT)], {"s1:l1": "impl-REL-15"}
+        )
+        self.assertEqual(data["steuerung_heraus_n"], 0)
+        self.assertEqual(data["steuerung_bereinigt"], data["steuerung"])
+
+    def test_phase_prefix_case_insensitive(self):
+        data = self.build([("l1", self.PROMPT)], {"s1:l1": "Gate-plan-TOOL"})
+        self.assertGreater(data["steuerung_heraus_grund"]["gate"], 0)
+        self.assertEqual(data["steuerung_heraus_grund"]["plan"], 0)
+
+    def test_design_phase(self):
+        data = self.build([("l1", self.PROMPT)], {"s1:l1": "design-X"})
+        self.assertGreater(data["steuerung_heraus_grund"]["design"], 0)
+
+    def test_phase_and_budget_none_counted_once(self):
+        text = "Persona: lead-tech\nBudget: keins, keine Agenten starten"
+        data = self.build([("l1", text)], {"s1:l1": "plan-X"})
+        self.assertEqual(data["steuerung_heraus_n"], 1)
+        self.assertGreater(data["steuerung_heraus_grund"]["plan"], 0)
+        self.assertEqual(data["steuerung_heraus_grund"]["budget_keins"], 0)
+
+    def test_budget_none_without_phase_reason(self):
+        text = "Persona: lead-tech\nBudget: keins"
+        data = self.build([("l1", text)], None)
+        self.assertGreater(data["steuerung_heraus_grund"]["budget_keins"], 0)
+        self.assertAlmostEqual(
+            sum(data["steuerung_heraus_grund"].values()),
+            data["steuerung_heraus"],
+            places=9,
+        )
+
+    def test_without_phases_unchanged(self):
+        text = "Persona: lead-tech\nBudget: keins"
+        data = self.build([("l1", text), ("l2", self.PROMPT)], None)
+        self.assertEqual(data["steuerung_heraus_n"], 1)
+
+    def test_raw_and_classes_unchanged(self):
+        leads = [("l1", self.PROMPT)]
+        plain = self.build(leads, None)
+        phased = self.build(leads, {"s1:l1": "plan-X"})
+        self.assertEqual(plain["class_share"], phased["class_share"])
+        self.assertEqual(plain["steuerung"], phased["steuerung"])
+
+    def test_render_adjusted_line_reasons(self):
+        data = self.build([("l1", self.PROMPT)], {"s1:l1": "plan-X"})
+        lines = efficiency.render_section(data).splitlines()
+        line = next(x for x in lines if "bereinigt" in x and "E-049" in x)
+        self.assertIn("Plan ", line)
+        self.assertIn("%", line.split("Plan ", 1)[1])
+        for prefix in ("- ROT:", "- GELB:", "- GRÜN:"):
+            self.assertFalse(line.startswith(prefix))
+
+    def test_lead_rows_have_phase(self):
+        data = self.build([("l1", self.PROMPT)], {"s1:l1": "plan-X"})
+        self.assertEqual(data["lead_stats"]["rows"][0]["phase"], "plan-X")
+        self.assertIn("plan-X", efficiency.render_rewrites(data))
+
+
+class SinceTest(unittest.TestCase):
+    EARLY = "2026-10-10T06:00:00Z"
+    LATE = "2026-10-10T07:00:00Z"
+    SINCE = datetime(2026, 10, 10, 6, 30, tzinfo=UTC)
+
+    def transcript(self, lead_prompt=None, times=(EARLY, LATE)):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        lines = [prompt(lead_prompt)] if lead_prompt else []
+        for index, when in enumerate(times):
+            lines.append(assistant(f"m{index}", "claude-opus-4", out=10, ts=when))
+        write(root / "s1.jsonl", lines)
+        return root / "s1.jsonl"
+
+    def test_only_calls_since_count(self):
+        main = self.transcript()
+        self.assertEqual(efficiency.compute([main])["calls"], 2)
+        self.assertEqual(efficiency.compute([main], since=self.SINCE)["calls"], 1)
+
+    def test_since_boundary_inclusive(self):
+        main = self.transcript(times=("2026-10-10T06:30:00Z",))
+        self.assertEqual(efficiency.compute([main], since=self.SINCE)["calls"], 1)
+
+    def test_reads_before_since_are_skipped(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        main = Path(tmp.name) / "s1.jsonl"
+        read = ("t1", "Read", {"file_path": "/r/docs/big.md"})
+        early = result("t1", "x" * 100)
+        early["timestamp"] = self.EARLY
+        write(
+            main,
+            [
+                assistant("m0", "claude-opus-4", out=1, tools=[read], ts=self.EARLY),
+                early,
+                assistant("m1", "claude-opus-4", out=1, ts=self.LATE),
+            ],
+        )
+        self.assertEqual(len(efficiency.compute([main])["top_reads"]), 1)
+        self.assertEqual(efficiency.compute([main], since=self.SINCE)["top_reads"], [])
+
+    def test_prompt_before_since_keeps_role(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        write(
+            root / "s1.jsonl", [assistant("m0", "claude-opus-4", out=1, ts=self.LATE)]
+        )
+        agent(
+            root,
+            "s1",
+            "w1",
+            {"agentType": "general-purpose"},
+            [
+                prompt("Persona: lead-tech\nPaket: P"),
+                assistant("w0", "claude-opus-4", out=1, ts=self.EARLY),
+                assistant("w1", "claude-opus-4", out=1, ts=self.LATE),
+            ],
+        )
+        data = efficiency.compute([root / "s1.jsonl"], since=self.SINCE)
+        self.assertEqual(data["lead_stats"]["rows"][0]["role"], "lead-tech")
+        self.assertEqual(data["lead_stats"]["rows"][0]["turns"], 1)
+
+    def test_instance_without_calls_since_drops_out(self):
+        main = self.transcript(times=(self.EARLY,))
+        self.assertIsNone(efficiency.compute([main], since=self.SINCE))
 
 
 if __name__ == "__main__":

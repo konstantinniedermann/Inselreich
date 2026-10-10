@@ -202,4 +202,12 @@ describe('verwaiste Vitest-Prozesse (TOOL-STUDIO-HYGIENE)', () => {
     writeFileSync(ps, '  1 0 10-00:00:00 /sbin/launchd');
     expect(run({ TESTLOCK_PS_FIXTURE: ps }, 'node', '-e', '0').stderr).not.toContain('verwaist');
   });
+  it('ps-Fehler (Fixture fehlt): Befehl läuft, Exit unverändert, kein Hinweis', () => {
+    const { run } = setup();
+    const fehlt = join(mkdtempSync(join(tmpdir(), 'ps-')), 'fehlt.txt');
+    const p = run({ TESTLOCK_PS_FIXTURE: fehlt }, 'node', '-e', 'process.exit(4)');
+    expect(p.status).toBe(4);
+    expect(p.stderr).not.toContain('verwaist');
+    expect(p.stderr).not.toContain('Error');
+  });
 });
