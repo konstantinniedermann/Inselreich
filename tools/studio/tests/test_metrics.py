@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from unittest import mock
 
+import clock
 import metrics
 import paths
 import studio_docs
@@ -274,15 +275,10 @@ class MetricsTest(unittest.TestCase):
 
     def test_second_run_overwrites(self):
         # Uhr springt zwischen den Läufen eine Sekunde weiter (Sekundengrenze in CI)
-        class TickingClock(datetime):
-            ticks = 0
+        ticks = iter(range(1, 1000))
 
-            @classmethod
-            def now(cls, tz=None):
-                if tz is not None:
-                    return datetime.now(tz)
-                cls.ticks += 1
-                return datetime(2026, 9, 30, 12, 0, cls.ticks).astimezone()
+        def ticking():
+            return datetime(2026, 9, 30, 12, 0, next(ticks), tzinfo=UTC)
 
         self.run_cli("--session", "s1")
         path = self.out / "S-2026-09-30-s1.md"
@@ -295,7 +291,7 @@ class MetricsTest(unittest.TestCase):
                 if "erzeugt" not in line and '"created"' not in line
             ]
 
-        with mock.patch.object(metrics, "datetime", TickingClock):
+        with clock.frozen(ticking):
             self.run_cli("--session", "s1")
             first = path.read_text(encoding="utf-8")
             self.run_cli("--session", "s1")

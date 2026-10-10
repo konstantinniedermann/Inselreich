@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import actions
+import clock
 import efficiency
 import effort
 import model
@@ -415,8 +416,8 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
     events = _from_since(all_events, since)
     models = model.read_agent_models(paths.agents_dir())
     handbook = studio_docs.read_version(paths.docs_dir() / "STUDIO.md")
-    created = datetime.now().astimezone().isoformat(timespec="seconds")
-    now = datetime.now(UTC).timestamp()
+    created = clock.now().astimezone().isoformat(timespec="seconds")
+    now = clock.timestamp()
     if args.milestone:
         state = model.build_state(events, now, models, "all")
         state = _milestone_state(state, events, args.milestone)
@@ -487,7 +488,7 @@ def main(argv: list[str] | None = None) -> int:
         all_events = load_events(paths.studio_home())
         events = _from_since(all_events, args.since)
         state = model.build_state(
-            all_events, datetime.now(UTC).timestamp(), _persona_models(), "all"
+            all_events, clock.timestamp(), _persona_models(), "all"
         )
         data = _with_flakes(
             efficiency.compute(
