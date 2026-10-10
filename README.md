@@ -415,7 +415,7 @@ Einwohner und 10 s); es wächst nur auf Gewürzinseln und lässt sich am Kontor 
 
 Im Betriebs-Panel legt der Knopf «Stilllegen» einen Betrieb still, der etwas erzeugt (Farmen, Werkstätten und so weiter; Wohnhäuser und Dienste nicht).
 
-- Ein stillgelegter Betrieb zahlt den **halben Unterhalt** (aufgerundet), erzeugt nichts und verbraucht nichts. Die Kette dahinter läuft leer.
+- Ein stillgelegter Betrieb zahlt den **halben Unterhalt** (je Betrieb aufgerundet), erzeugt nichts und verbraucht nichts. Die Kette dahinter läuft leer.
 - «Wieder anfahren» (derselbe Knopf) startet ihn mit einem Klick, ohne Kosten.
 - Stillgelegte Betriebe stehen nicht in der Problemliste: Die Pause ist gewollt.
 
