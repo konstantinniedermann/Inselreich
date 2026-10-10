@@ -85,6 +85,7 @@ import {
   sameTool,
   withSpeed,
   type HotkeyAction,
+  demolishTarget,
   upgradeTarget,
 } from './hotkeys';
 import { buildingDefAt, pipetteResult } from './pipette';
@@ -404,12 +405,15 @@ function launch(
     if (notice !== null) showMessage(notice, 'info', true, true);
   };
 
+  /** Manuelles Speichern: Menü-Knopf und Strg/Cmd+S gehen hier durch (kein Ton, Zustand bleibt). */
+  const saveManual = (): void => {
+    const r = saveToStorage(world);
+    if (r.ok) showMessage('Gespeichert');
+    else showMessage(r.reason, 'error');
+  };
+
   const menuActions: MenuActions = {
-    save: () => {
-      const r = saveToStorage(world);
-      if (r.ok) showMessage('Gespeichert');
-      else showMessage(r.reason, 'error');
-    },
+    save: () => saveManual(),
     listSaves,
     storageNote: () => STORAGE_NOTES[currentStorageProblem()],
     hasProgress: () => world.tick > 0,
@@ -633,14 +637,7 @@ function launch(
     if (panel.kind === 'inspect') {
       state.selectedId = panel.id;
       renderInspect(panelEl, world, panel.id, {
-        demolish: (id) => {
-          const r = demolishBuilding(id);
-          if (r.ok) {
-            sound.play('demolish');
-            setPanel({ kind: 'none' });
-          }
-          refresh();
-        },
+        demolish: (id) => demolishFromPanel(id),
         openTrade: () => {
           const b = world.buildings[panel.id];
           if (b) setPanel({ kind: 'trade', island: b.island });
@@ -877,6 +874,12 @@ function launch(
     } else if (h.kind === 'problemPrev') {
       if (stepKeyTarget(goodFocus) === 'focus') runFocusStep(focusDeps, -1);
       else jumpToProblem(-1);
+    } else if (h.kind === 'demolishSelected') {
+      const t = demolishTarget(state.panel, world);
+      if (t.ok) demolishFromPanel(t.id);
+      else showError(t.reason);
+    } else if (h.kind === 'save') {
+      saveManual();
     } else if (h.kind === 'pause') {
       setSpeed(afterPause(state.speed, lastSpeed).speed);
     }
@@ -894,6 +897,15 @@ function launch(
     if (r.ok) showMessage(text);
     else showError(friendlyReason(world, r.reason));
     return r;
+  };
+  /** Abriss aus dem Info-Panel: Knopf «Abreissen» und Taste Entf gehen hier durch. */
+  const demolishFromPanel = (id: number): void => {
+    const r = demolishBuilding(id);
+    if (r.ok) {
+      sound.play('demolish');
+      setPanel({ kind: 'none' });
+    }
+    refresh();
   };
   const tradeCtx = (op: 'buy' | 'sell', good: GoodId, n: number, island: number): ReasonCtx =>
     op === 'buy'
