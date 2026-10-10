@@ -196,3 +196,7 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
 ### 2026-10-10 · I-043 (UI-GUT-CHIP): Befunde des Browser-Laufs T08
 
 - **Fundort:** `.studio/qa/ui-gut-chip/report.md`. Beobachtung: (1) Tab-Reihenfolge: die Lager-Chips kommen vor den oberen HUD-Knöpfen (Inseln, Tempo, Menü); vorbestehend, nicht von I-043. (2) `0` auf der Heimatinsel löscht den Fokus nicht (kein Inselwechsel, konsistent mit AK-GC-07). (3) Nicht im Browser prüfbar: Problem-Sprung auf eine andere Insel bei aktivem Fokus (`.` geht dann auf die Gut-Liste; Logik per `shouldClearFocus` im Vitest), Meldung «Erzeuger noch nicht frei» (Glas und Seefahrt hängen an U6), Obergrenze 40 nur im Vitest (AK-GC-11). Ursprung: Playtest T08. Einschätzung: alle niedrig.
+
+### 2026-10-10 · I-043 (UI-GUT-CHIP): Befunde des Branch-Reviews (opus)
+
+- **Fundort:** `src/ui/goodFocus.ts:90`, `tests/ui/goodFocus.test.ts` (AK-GC-08), `src/ui/goodFocus.ts` `focusList` und `src/render/focusMarks.ts`. Beobachtung: (1) `toggleStartsJump` wird nur im Test benutzt (toter Export). (2) Der Test «Problem-Cursor unberührt» legt den Problem-Cursor je Aufruf neu an und belegt die Trennung in `app.ts` nur durch den Aufbau. (3) Die Regel, welche Gebäude zum Fokus gehören (Erzeuger/Verbraucher), steht zweimal: in `focusList` und in `drawFocusMarks` (Modulgrenze render ↛ ui); ein gemeinsamer Helfer in `src/render/` oder `src/sim/queries` wäre denkbar. (README-Beispiel «Häuser verbrauchen Holz» → «Nahrung» wurde als Trivial-Fix korrigiert.) Ursprung: Branch-Review T09. Einschätzung: alle niedrig.

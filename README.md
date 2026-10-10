@@ -285,7 +285,7 @@ Im Panel der Amtsstube erlässt du **ein** Edikt zur Zeit. Es wirkt nur, solange
   ersten Erzeuger, das Info-Panel ist offen, und die Meldung nennt ihn, z. B. «Holz 1 von 4: Holzfäller (Erzeuger) · …».
   Solange die Markierung aktiv ist, gehen `.` / `,` die Gebäude des Guts durch (sonst die Problemliste). Ein zweiter
   Klick auf denselben Chip, `Esc`, Rechtsklick oder ein Wechsel der aktiven Insel löscht die Markierung. Häuser werden
-  nicht markiert; der Tooltip des Chips nennt ihre Zahl («… Häuser verbrauchen Holz»). Gibt es noch keinen Erzeuger, sagt
+  nicht markiert; der Tooltip des Chips nennt ihre Zahl («… Häuser verbrauchen Nahrung»). Gibt es noch keinen Erzeuger, sagt
   die Meldung es und nennt die baubaren Typen («Noch kein Erzeuger für Holz — Bauen: …»). Die Markierung ist reiner
   Anzeigezustand und steht nicht im Spielstand.
 - **Baukosten:** Geld und teils Holz, Werkzeug oder Stein; sie stehen in der Bauleiste.
