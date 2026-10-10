@@ -215,3 +215,7 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
   bringt rund 240 Geld/min nahe am Vollpreis gegen 30 Unterhalt je Holzfäller — mögliche Geldquelle ohne Wahl. Ursprung:
   Scout-Befund IDEEN-06 (lead-design). Einschätzung: mittel; mit I-048 „Zukauf-Aufschlag“ durch `design-economy-designer`
   nachrechnen, kein eigenes Paket vorher.
+
+### 2026-10-10 · UI-TASTEN: Laden-Liste im offenen Menü aktualisiert sich nach «Speichern» nicht
+
+- **Fundort:** Menü «Laden»-Liste (`src/ui/menu.ts`), Playtest T05 (`.studio/qa/ui-tasten/17-menue-nach-speichern-liste-nicht-aktualisiert`). Beobachtung: Nach «Speichern» bei offenem Menü zeigt die Liste weiter den Stand vom Öffnen; vermutlich schon vor UI-TASTEN so. Ursprung: Playtest UI-TASTEN. Einschätzung: niedrig, rein kosmetisch.
