@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  COLORS,
+  DOT_R,
+  MARK,
   createSilhouetteCache,
   drawSeaMap,
   mapDots,
@@ -18,7 +21,7 @@ function draw(w: ReturnType<typeof seaWorld>, hover: number | null = null) {
   const l = mapLayout(w, 360, 240, 12);
   const { ctx, log } = fakeCtx();
   const cache = createSilhouetteCache(factory);
-  drawSeaMap(ctx, w, l, cache, { hover });
+  drawSeaMap(ctx, w, l, cache, { hover, dpr: 1 });
   return { l, log, cache };
 }
 
@@ -44,7 +47,7 @@ describe('drawSeaMap Reihenfolge (AK-S7)', () => {
     const { l, cache } = draw(w);
     const n = cache.rasterCount;
     const { ctx } = fakeCtx();
-    drawSeaMap(ctx, w, l, cache, { hover: null });
+    drawSeaMap(ctx, w, l, cache, { hover: null, dpr: 1 });
     expect(cache.rasterCount).toBe(n);
   });
 });
@@ -109,4 +112,45 @@ describe('drawSeaMap Punkte und Marken (AK-S9)', () => {
     draw(w, 1);
     expect(w).toEqual(copy);
   });
+});
+
+describe('drawSeaMap Kontor-Marke und dpr (REL-15, UI-SEEKARTE-NACHZUG)', () => {
+  type Box = { x0: number; y0: number; x1: number; y1: number };
+  const box = (pts: readonly { x: number; y: number }[]): Box => ({
+    x0: Math.min(...pts.map((p) => p.x)),
+    y0: Math.min(...pts.map((p) => p.y)),
+    x1: Math.max(...pts.map((p) => p.x)),
+    y1: Math.max(...pts.map((p) => p.y)),
+  });
+  const disjoint = (a: Box, b: Box): boolean =>
+    a.x1 <= b.x0 || b.x1 <= a.x0 || a.y1 <= b.y0 || b.y1 <= a.y0;
+  for (const dpr of [1, 2])
+    it(`dpr ${dpr}: Marke über dem Hafenpunkt, Grössen und Striche × dpr`, () => {
+      const w = seaWorld();
+      shipLiteral(w, { route, port: 0, to: null }); // Hafenschiff am Anker der Heimat
+      const l = mapLayout(w, 360 * dpr, 240 * dpr, 12 * dpr);
+      const { ctx, log } = fakeCtx();
+      drawSeaMap(ctx, w, l, createSilhouetteCache(factory), { hover: 1, dpr });
+      const h = w.islands[0]!;
+      const a = tileToMap(l, h.ox + h.anchor.x + 0.5, h.oy + h.anchor.y + 0.5);
+      const ev = (op: string, style: string) =>
+        log.events.filter((e) => e.op === op && e.style === style);
+      const dist = (b: Box) => Math.hypot((b.x0 + b.x1) / 2 - a.x, (b.y0 + b.y1) / 2 - a.y);
+      const mark = ev('fillRect', COLORS.kontor)
+        .map((e) => box(e.points))
+        .sort((p, q) => dist(p) - dist(q))[0]!;
+      const dots = ev('fill', COLORS.dot);
+      expect(dots).toHaveLength(1);
+      const dot = box(dots[0]!.points);
+      expect(mark.x1 - mark.x0).toBeCloseTo(MARK * dpr, 6);
+      expect(mark.y1 - mark.y0).toBeCloseTo(MARK * dpr, 6);
+      expect(dot.x1 - dot.x0).toBeCloseTo(2 * DOT_R * dpr, 6);
+      expect(disjoint(mark, dot), 'Marke vom Hafenpunkt verdeckt').toBe(true);
+      expect(mark.y1, 'Marke über dem Anker').toBeLessThan(a.y);
+      expect(ev('stroke', COLORS.dotEdge)[0]!.lineWidth).toBe(dpr);
+      expect(ev('stroke', COLORS.hover)[0]!.lineWidth).toBe(2 * dpr);
+      const lanes = ev('stroke', COLORS.lane);
+      expect(lanes.length).toBeGreaterThan(0);
+      for (const e of lanes) expect(e.lineWidth).toBe(dpr);
+    });
 });
