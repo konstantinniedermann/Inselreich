@@ -453,6 +453,8 @@ function launch(
 
   const actions: HudActions = {
     jumpToIsland,
+    toggleGoodFocus: () => {}, // Platzhalter, T06 ersetzt
+    focusedGood: () => null,
     setSpeed: (speed) => setSpeed(speed),
     settings: () => settings,
     setMuted: (muted) => {
