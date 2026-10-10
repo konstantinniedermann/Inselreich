@@ -4490,3 +4490,20 @@ Regelbezug: gates.md Gate Brainstorming / Kombiniertes Gate (Stufe leicht); R448
 kein Code betroffen.
 
 Entscheider: L0 · Anlass: Bericht lead-design UI-PROBLEM-SPRUNG · ADR: —
+
+## R450 · 2026-10-10 · Retro REL-15 (mit Ad-hoc CI rot) angenommen
+
+Ruling: Retro `docs/studio/retros/2026-10-10-release-rel15-prozess.md` (`33c8453a`) angenommen, V1–V4 wie empfohlen.
+**V1** rote Testläufe automatisch mit Testnamen als `test_failed`-Event plus Ampelzeile, **V2** gemeinsame Uhr für die
+Studio-Werkzeuge mit `studio-lint`-Warnung bei direktem `datetime.now`/`time.time` (zunächst nur Warnung), **V3**
+Werkzeug-Tasks prüfen schmal (`studio-test`, `studio-lint`, `tsc`, `lint`, `vitest tests/tools`), voller `make check`
+erst am Strang-Ende, beim Merge und im Push-Gate (Verfassung §7 unverändert) — V1 und V2 als Tasks, V3 als Prüfregel in
+den Plan **TOOL-BUENDEL-3** (lead-tech per Nachricht). **V4** Handbuch-Minor 1.42 durch den studio-coach: im Push-Ablauf
+„Load ≤ 4 vor `make check` abwarten (R394)“ und „Pages bei roter CI nur, wenn ausschliesslich Studio-Werkzeuge rot sind“.
+Hinweis an die nächste Kurz-Retro: Last bis 13 (1-min) während der Parallelphase dieser Session; Merge HOTFIX-CI-01 lief
+`make check` bei Load 7,9.
+
+Regelbezug: STUDIO.md Verbesserungsschleife (R316), §10.2 Verfassung, R429 · Kosten bei Irrtum: zwei Werkzeug-Tasks
+mehr im Bündel; Handbuch-Minor zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht studio-process-coach RETRO-REL-15 · ADR: —
