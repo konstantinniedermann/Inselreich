@@ -1,6 +1,6 @@
 # T01 · Reiner Helfer `src/ui/problems.ts` (TDD)
 
-Strang UI · Worktree `.worktrees/rel-17` · Branch `feat/rel-17-problem-sprung` · Umsetzer `tech-ui-engineer` (sonnet) · AK-R17-01…07 und der Helfer-Teil von AK-R17-15 (`ak.md`) · blocked-by REL-16-Merge · Grösse M (≈ 25 Tools)
+Strang UI · Worktree `.worktrees/rel-17` · Branch `feat/rel-17` · Umsetzer `tech-ui-engineer` (sonnet) · AK-R17-01…07, 10 und der Helfer-Teil von AK-R17-15 (`ak.md`) · blocked-by: REL-16-Merge erledigt (`915d87c5`) · Grösse M (≈ 25 Tools)
 
 **Files:**
 
@@ -41,7 +41,24 @@ export function problemStep(
 export function problemMessage(index: number, count: number, p: Problem): string; // „Problem 2 von 5: …“
 export function cutOffIds(world: World): Set<number>; // needsConnection && !connected, ohne Brand
 export function newlyCut(before: Set<number>, world: World): number;
+
+/** Abhängigkeiten des Sprungs (B1, R453): `app.ts` verdrahtet sie, Tests übergeben protokollierende Fakes. */
+export interface ProblemJumpDeps {
+  world: World;
+  activeIsland(): number; // liest den Stand zum Zeitpunkt des Aufrufs (nach refresh = gefolgte Kamera)
+  getCursor(): ProblemCursor | null;
+  setCursor(c: ProblemCursor | null): void;
+  cancelPointerAction(): void;
+  centerOn(x: number, y: number): void; // Archipel-Kacheln, Zoom bleibt
+  openPanel(id: number): void; // setPanel inspect, KEIN Werkzeugwechsel
+  refresh(): void;
+  message(text: string): void; // app.ts: replaceMessage('problem', text)
+}
+/** Reiner Ablauf des Problem-Sprungs (AK-R17-10, E1, E3, E6). */
+export function runProblemJump(deps: ProblemJumpDeps, dir: 1 | -1): void;
 ```
+
+`runProblemJump`: (1) `cancelPointerAction()`; (2) `problemStep(world, getCursor(), activeIsland(), dir)`; `null` → `setCursor(null)`, `message(NO_PROBLEM_TEXT)`, Ende (kein `centerOn`/`openPanel`/`refresh`); (3) sonst in genau dieser Reihenfolge `centerOn(at.x, at.y)` → `openPanel(id)` → `refresh()` → `setCursor({ ...step.cursor, landed: activeIsland() })` (nach `refresh` gelesen, nicht `problem.island`) → `message(problemMessage(...))`. Es gibt bewusst keinen Hook für ein Werkzeug: ein Werkzeugwechsel ist damit nicht ausdrückbar (E1).
 
 `index` ist 1-basiert. `landed` setzt `app.ts` nach dem Sprung (T02); `problemStep` liest es nur.
 
@@ -66,13 +83,14 @@ export function newlyCut(before: Set<number>, world: World): number;
   5. `AK-R17-05 Texte`: `problemMessage(2, 5, p)` = „Problem 2 von 5: Weberei wartet auf Wolle“; `NO_PROBLEM_TEXT`; Fremdinsel-Suffix ` (<islandName>)`; „Stoff fehlt in 1 Haus“; zwei fehlende Dienste „Kapelle und Schule fehlen am Bürgerhaus“.
   6. `AK-R17-06 Sprungpunkt`: Weberei 2 × 2 an `(x, y)` auf Insel 2 → `at` = `{ x: ox + c.cx, y: oy + c.cy }` mit `center(BUILDING_DEFS.weaver, x, y)`.
   7. `AK-R17-07 rein`: `JSON.stringify(world)` vor und nach `problemList` + `problemStep` gleich; `readFileSync('src/ui/problems.ts')` enthält weder `document` noch `window`.
-  8. `AK-R17-15 newlyCut`: `before = cutOffIds(w)` bei angebundener Weberei; Weberei `connected = false` → `newlyCut(before, w) === 1`; schon vorher getrennt → 0; Amtsstube getrennt → 0.
+  8. `AK-R17-10 runProblemJump` (B1, ersetzt den Quelltext-Test): Fakes protokollieren in ein Array `log`; `deps` hat **kein** Werkzeug-Feld, `refresh` ändert die vom Fake `activeIsland()` gelieferte Insel auf `problem.island`. Prüfen: Reihenfolge `['cancel','center','panel','refresh','message']`; `centerOn` mit `at`; `openPanel` mit `id`; gespeicherter Cursor hat `landed` = Insel **nach** `refresh` (Fake-Kamera klemmt: `refresh` liefert eine andere Insel als `problem.island` → `landed` folgt `activeIsland()`); Meldung = `problemMessage(…)`; 0 Probleme → `log` = `['cancel','message']`, Cursor `null`, Text `NO_PROBLEM_TEXT`; zwei Aufrufe nacheinander mit gefolgter Kamera besuchen bei zwei Inseln alle Einträge je einmal (wie Test 4, aber über `runProblemJump`).
+  9. `AK-R17-15 newlyCut`: `before = cutOffIds(w)` bei angebundener Weberei; Weberei `connected = false` → `newlyCut(before, w) === 1`; schon vorher getrennt → 0; Amtsstube getrennt → 0.
 
 ```bash
 npx vitest run tests/ui/problems.test.ts; echo EXIT=$?   # rot: Modul fehlt
 ```
 
-- [ ] **Schritt 2: Umsetzen.** `src/ui/problems.ts` mit Kopfkommentar wie `islandJump.ts` („rein: …, nicht im Spielstand; I-042, REL-17“). Texte aus den genannten Quellen zusammensetzen, keine neuen Begriffe; `HOUSE_TITLES` aus `hover.ts` importieren (dafür nur das `export`). Kein Import aus `./hints` oder `./app`.
+- [ ] **Schritt 2: Umsetzen.** `src/ui/problems.ts` (inkl. `runProblemJump`, nur Funktionsaufrufe über `deps`, kein DOM) mit Kopfkommentar wie `islandJump.ts` („rein: …, nicht im Spielstand; I-042, REL-17“). Texte aus den genannten Quellen zusammensetzen, keine neuen Begriffe; `HOUSE_TITLES` aus `hover.ts` importieren (dafür nur das `export`). Kein Import aus `./hints` oder `./app`.
 
 ```bash
 npx vitest run tests/ui/problems.test.ts tests/ui/imports.test.ts tests/ui/hover.test.ts; echo EXIT=$?
