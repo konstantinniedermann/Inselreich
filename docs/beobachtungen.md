@@ -224,3 +224,7 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
   (Saldo −42/min) — Hinweis übersieht akuten Mangel. (8) Taste `4` ohne Wirkung/Hinweis (Tempo nur `1`–`3`). Ursprung:
   qa-playtester playtest-rel-18. Einschätzung: (7) mittel (Frühspiel-Führung), Rest niedrig; I-058 bleibt geparkt bis
   Brandfall bei 4× belegt, I-059 geparkt (nicht vermisst).
+
+### 2026-10-10 · AK-GC-08 Verdrahtung in app.ts ungetestet (AUFRAEUM-01 Final-Review)
+
+Der gestärkte Test `tests/ui/goodFocus.test.ts` (AK-GC-08) belegt die Trennung von Fokus- und Problem-Cursor nur gegen die Fake-Abhängigkeiten; die echte Verdrahtung in `src/ui/app.ts` bleibt ohne Test. Erste Einschätzung: niedrig, beim nächsten Eingriff in `app.ts` (z. B. UI-TASTEN-Folge) prüfen; Ursprung: Final-Review AUFRAEUM-01.
