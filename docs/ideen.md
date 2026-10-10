@@ -57,27 +57,25 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 | Aufwand (`richtwerte.md`) | S: ≤ 1 Häppchen                                                            | M: 2–4 Pakete                | L: Meilenstein                                                             |
 | Risiko                    | berührt weder Save, Baseline, Perf noch Lizenz                             | berührt eines davon          | berührt mehrere                                                            |
 
-## Rangliste IDEEN-05 (Vorschlag lead-design, Ruling L0 offen)
+## Rangliste IDEEN-06 (Vorschlag lead-design, Ruling L0 offen)
 
-Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Keine Idee ändert Kernsäule, Genre oder Titel.
+IDEEN-05 ist mit R448 entschieden. Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Keine Idee ändert
+Kernsäule, Genre oder Titel (§5.3). Gestrichen (Bestätigung im Runden-Ruling): I-046, I-053, I-060 neu; I-037, I-040 alt.
+Zusammengefasst: I-054 → I-014, I-024 → I-059. Offene Ideen danach: 37 von 40.
 
-| Rang | ID    | Name                                | Grösse | Summe | Nutzen/Aufwand                                              |
-| ---- | ----- | ----------------------------------- | ------ | ----- | ----------------------------------------------------------- |
-| 1    | I-042 | Nächstes Problem anspringen         | S      | 13    | spart Suchen ab Stunde 1, risikofrei, ≈ 70 Tools            |
-| 2    | I-031 | Edikte der Amtsstube                | M      | 13    | stärkste neue Wahl (eins von drei), ≈ 2 Pakete mit Rechnung |
-| 3    | I-041 | Wege abreissen durch Ziehen         | S      | 13    | Umbau schneller, risikofrei, mit I-042 bündelbar            |
-| 4    | I-035 | Betrieb stilllegen                  | S      | 12    | Unterhalt gegen Bereitschaft, Save v11, ≈ 1 Häppchen        |
-| 5    | I-039 | Denkmal als Wahlziel (mit I-030)    | M      | 11    | Warensenke und Ziel nach Stunde 2, ≈ 2 Pakete plus Sprite   |
-| 6    | I-043 | Gut-Chip zeigt Erzeuger/Verbraucher | S–M    | 11    | Ketten lesbar, teilt Sprung-Logik mit I-042                 |
-| 7    | I-032 | Dienstkapazität                     | M      | 10    | Dichteplanung, aber Pflichtbau-Gefahr und Neumessung        |
-| 8    | I-045 | Versorgungsebene                    | M      | 10    | Kern beim Platzieren schon da, nach I-042 prüfen            |
-| 9    | I-033 | Ersatzware Wolle statt Stoff        | M      | 10    | Notbehelf, nur als Schalter eine Wahl                       |
-| 10   | I-038 | Erkundungsfahrt                     | L      | 9     | grösster Inhalts-Hebel, aber Meilenstein (M-Teil: 10)       |
-| 11   | I-036 | Wrackbergung                        | M      | 9     | Beute heute bedeutungslos, mit I-038 denken                 |
-| 12   | I-034 | Seuche und Badehaus                 | M      | 9     | Strafe ohne Vorbau-Wahl, Krisen-Pins ändern sich            |
-| 13   | I-037 | Leuchtturm gegen Sturm              | S      | 9     | tote Option (≈ 6 % Sturmverlust), nur Kulisse               |
-| 14   | I-044 | Kamera-Lesezeichen                  | S      | 9     | Seekarte und 9/0 decken das meiste                          |
-| 15   | I-040 | Inseln taufen                       | S      | 9     | reine Bindung, nur als Lückenfüller                         |
+| Rang | ID    | Name                              | Grösse | Summe | Save / Baseline           | Nutzen/Aufwand                                       | Empfehlung                       |
+| ---- | ----- | --------------------------------- | ------ | ----- | ------------------------- | ---------------------------------------------------- | -------------------------------- |
+| 1    | I-056 | Entf-Taste reisst Markiertes ab   | S      | 13    | nein / nein               | jeder Umbau kürzer, risikofrei, ≈ 70 Tools mit I-057 | einplanen nächstes Release       |
+| 2    | I-048 | Zukauf-Aufschlag (Kaufsättigung)  | S–M    | 12    | ja / ja (Neumessung)      | Bauen statt Kaufen wird Wahl, ≈ 1–2 Pakete           | einplanen Wirtschafts-Baustein   |
+| 3    | I-057 | Schnellspeichern `Strg`/`Cmd`+`S` | S      | 12    | nein / nein               | Genre-Standard, im Häppchen mit I-056                | einplanen mit I-056              |
+| 4    | I-049 | Sperrbestand (Reserve je Gut)     | S      | 12    | ja / nein (Standard 0)    | Holz bleibt zum Bauen, ≈ 90 Tools                    | mit nächster Save-Änderung (v12) |
+| 5    | I-050 | Arbeitskräfte                     | L      | 12    | ja / ja                   | tiefste Wahl, aber Meilenstein                       | parken (Brainstorming nach M13)  |
+| 6    | I-047 | Stammkunde (Liefervertrag)        | M      | 11    | ja / nein                 | Planbarkeit für Fortgeschrittene, ≈ 2 Pakete         | parken (Handels-Brainstorming)   |
+| 7    | I-059 | Sammelausbau gleicher Betriebe    | S–M    | 11    | nein / nein               | Mittelspiel weniger Klicks, ≈ 90 Tools               | parken (Playtest-Anlass)         |
+| 8    | I-058 | Pause bei Krise                   | S–M    | 11    | nein / nein               | Entlastung bei 4×, ≈ 80 Tools                        | parken (Playtest-Anlass)         |
+| 9    | I-055 | Fischreiche Insel                 | S–M    | 10    | ja / ja (Weltgenerierung) | Grund für zweite Kolonie, trägt erst mit mehr Inseln | parken (Archipel)                |
+| 10   | I-051 | Park als Wohnwert                 | M      | 10    | evtl. / nein              | läuft in die Stapelregel, heute wirkungslos          | parken (Stadtplanung)            |
+| 11   | I-052 | Einwandererschiff                 | M      | 9     | ja / ja (eigener Strom)   | Atmosphäre ohne Wahl                                 | parken (Krisen-Überarbeitung)    |
 
 ## Ideen
 
@@ -179,6 +177,7 @@ Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Keine Idee �
   («bei Sturm anlegen / weiterfahren»). Bei 2 von 10 Gewürz (≈ 80 Geld) gegen 30 s ist die Wahl im späten Spiel
   belanglos; trägt erst mit grösseren Ladungen. Baustein nach E4, nicht gepitcht.
 - Entscheid: R238 → geparkt bis nach dem v9-Merge (E4 Schiffe und Routen); Fassung als Daueranweisung je Route prüfen
+- Zusammengefasst (IDEEN-06): I-054 «Piraten bedrohen Routen» (Scout B) — Überfall statt Sturm als Routenverlust mit Gegenmittel (Route umlegen, Ladung klein halten, Begleitschiff); gleiche Stelle im Code und gleiche Abwägung, darum hier. Ohne Kampf; ein Seekampf wäre eine eigene Frage an L0 (M12 §10 schliesst Piraten und Kampf aus).
 
 ### I-015 · neu · Seefahrt-Leitsätze
 
@@ -247,16 +246,7 @@ Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Keine Idee �
 
 ### I-023 · live · Pipette für Gebäude — R323 → TASTEN-KOMFORT, live mit REL-08 (R339, R346)
 
-### I-024 · bewertet · Direkt als Stufe 2 bauen
-
-- Bereich: Inhalt/Bedienung · Säule: Produktionsketten · Quelle: Nutzer 2026-10-08 (R323, wörtlich: Gebäude bereits in der höheren Stufe bauen)
-- Ist-Stand: Gebäude entstehen immer auf Stufe 1; Ausbau einzeln per Knopf „Ausbauen“ (`src/sim/upgrade.ts` `upgradeBuilding`: Stufe 1 → 2 → 3, Kosten und Gebühr aus `src/sim/defs/levels.ts`, gesperrt bis U3 (Stufe 2) bzw. U5 (Stufe 3), nicht bei Brand; Abriss erstattet die Hälfte).
-- Spielerwirkung: „Der Spieler wählt beim Platzieren «Stufe 2» und zahlt Bau und Ausbau in einem Zug, statt nach dem Bau zurückzukehren und einzeln aufzurüsten.“
-- Grösse: M · Risiko: **berührt Sim-Regeln (nicht entschieden):** Kosten und Gebühr bei Bau (Summe oder Rabatt?), Sperren U3/U5, `build.ts`-Ergebnisse und Controller-Verhalten; Save nur, wenn ein neues Feld nötig ist; Baseline, falls der Controller es nutzt; Balancing-Test; Platzier-Vorschau und Tooltips müssten Kosten beider Stufen zeigen; Alternative ohne Sim-Änderung: UI-Knopf „Bauen und gleich ausbauen“ als zwei Sim-Aktionen
-- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9
-- Verwandt: I-025
-- Bewertung IDEEN-03: Rabatt oder Summe der Kosten ist eine Wirtschaftsentscheidung (Dominanz: Stufe 2 direkt lässt Stufe 1 überflüssig, Sperre U3 und Gebühr müssten neu begründet werden). Mit Pipette und Umschalt+U sind es nur zwei Tastendrücke mehr; Nutzen klein.
-- Entscheid: Empfehlung parken bis Pipette und Ausbau-Taste live sind und Playtest zeigt, dass Nachrüsten nervt (dann nur UI-Variante «Bauen und gleich ausbauen» als zwei Sim-Aktionen, ohne Sim-Änderung)
+### I-024 · zusammengefasst · Direkt als Stufe 2 bauen — IDEEN-06 in I-059 (Sammelausbau) aufgegangen; die UI-Variante «Bauen und gleich ausbauen» ist dort ein Unterfall
 
 ### I-025 · live · Ausbau-Taste (`Umschalt+U`) — R323 → TASTEN-KOMFORT, live mit REL-08 (R339, R346)
 
@@ -290,7 +280,7 @@ Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Keine Idee �
 - Doppelung: keine; I-028 (live) teilt die Steuer je Stufe, I-007 (live) beschleunigt lokal mit Ware. Edikte sind ein globaler Modus mit Ausschluss.
 - Bewertung lead-design: Risiko 1 → 2 (nur Save, Baseline bleibt bitgleich). Stärkste neue Entscheidung der Runde, weil sie ausschliesst (eins von drei) und mit der Spielphase kippt. **Bedenken:** Wohlfahrt ist der dritte Aufstiegs-Beschleuniger neben Steuer «niedrig» und Fest; die drei dürfen sich nicht stapeln (nur der stärkste wirkt, Untergrenze 15 s). Handel ist schwach (Sättigung trifft nur Dauer-Verkäufer); `design-economy-designer` muss alle drei gegen die Bilanz je Einwohner rechnen, sonst gibt es ein Pflicht-Edikt. Einfachere Variante: zwei Edikte statt drei.
 - Nutzen/Aufwand: hoher Nutzen (Richtung fürs Geld ab Stunde 1, echte Ausschluss-Wahl) · M · ≈ 2 Pakete (Wirtschafts-Kurzdesign mit Rechnung ≈ 40 Tools, Umsetzung Sim+Panel ≈ 150 Tools)
-- Entscheid: R448 → eingeplant M13 «Spätspiel mit Richtung» (Baustein mit I-039; Brainstorming mit Rechnung, noch keine Spec)
+- Entscheid: R448 → eingeplant M13 «Spätspiel mit Richtung» (Baustein mit I-039); umgesetzt in M13-E1 (R467), live mit REL-18 (R472, Push läuft)
 
 ### I-032 · geparkt · Dienstkapazität
 
@@ -329,7 +319,7 @@ Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Keine Idee �
 - Nutzen/Aufwand: kleiner Nutzen, Krisen-Pins ändern sich · M · ≈ 2 Pakete (≈ 150 Tools)
 - Entscheid: R448 → geparkt bis Anlass: Überarbeitung der Krisen (braucht eine Vorbau-Entscheidung statt Strafe)
 
-### I-035 · geparkt · Betrieb stilllegen
+### I-035 · eingeplant · Betrieb stilllegen
 
 - Bereich: Inhalt/Bedienung · Säule: Produktionsketten · Quelle: Genre-Mechanik (Betrieb pausieren); IDEEN-05 Scout A; Pfade `README.md` Z. 255 („Lager voll", neue Ware verfällt) und Z. 166 (volle Betriebe stehen still, Unterhalt läuft weiter)
 - Spielerwirkung: „Der Spieler legt bei vollem Lager einen Betrieb im Panel still, zahlt dann nur halben Unterhalt und stellt ihn mit einem Klick wieder an, wenn die Ware gebraucht wird."
@@ -340,7 +330,7 @@ Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Keine Idee �
 - Doppelung: keine; I-013 (verworfen) war eine Senke, dies ist eine Option. Abgrenzung zu Abriss: Abriss erstattet die Hälfte und kostet Neubau.
 - Bewertung lead-design: bestätigt (12). Erste Wirtschafts-Entscheidung, die ein S-Häppchen bleibt: Unterhalt sparen gegen Bereitschaft der Kette. Einfachere Variante geprüft: automatisch halber Unterhalt bei «Lager voll» — nimmt die Wahl weg, verworfen. Save-Version steigt (v11); mit anderen Save-Änderungen bündeln.
 - Nutzen/Aufwand: mittlerer Nutzen (sichtbare Kontrolle über Unterhalt, hilft Anfängern bei negativer Bilanz) · S · ≈ 1 Häppchen (≈ 80–100 Tools)
-- Entscheid: R448 → geparkt bis zur nächsten Save-Änderung (v11), dann mitnehmen
+- Entscheid: R448 → geparkt bis zur nächsten Save-Änderung (v11); R452 → eingeplant M13-E1 (Save v11), umgesetzt (R467), live mit REL-18 (R472, Push läuft)
 
 ### I-036 · geparkt · Wrackbergung
 
@@ -355,17 +345,7 @@ Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Keine Idee �
 - Nutzen/Aufwand: kleiner Nutzen in dieser Fassung · M · ≈ 2 Pakete (≈ 150 Tools)
 - Entscheid: R448 → geparkt bis Archipel-Brainstorming (mit I-038, I-016; Beute als knappes Gut fassen)
 
-### I-037 · geparkt · Leuchtturm gegen Sturm
-
-- Bereich: Inhalt · Säule: Produktionsketten (Schutzgebäude nach Muster der Feuerwache) · Quelle: Genre-Mechanik (Schutzbau gegen Wetter); IDEEN-05 Scout B; Pfade `README.md` Z. 509 ff. (Sturm: 30 s halbe Leistung für Fischerhütte, Holzfäller, Schäferei, Zuckerrohr), `src/sim/defs/crises.ts`
-- Spielerwirkung: „Der Spieler baut an der Küste einen Leuchtturm, der im Sturm die Betriebe im Radius 10 mit weniger Einbusse weiterarbeiten lässt, und sieht ihn nachts leuchten."
-- Grösse: S · Risiko: Baseline nur über neue Gebäude-Defs (Controller baut ihn nicht); kein Save-Feld, Schutz aus dem Bestand abgeleitet
-- Raster: Spass 1 · Passung 2 · Aufwand 3 · Risiko 2 = 9
-- Randfälle: nur Küste; mehrere Türme zählen einmal; Schutz nur halb (sonst Pflicht); Panel «Schützt n sturmanfällige Betriebe».
-- Doppelung: keine; I-014 (Sturm auf See) betrifft Routen.
-- Bewertung lead-design: Spass 2 → 1, Passung 3 → 2. Rechnung: Bei Krisen «normal» kommt im Mittel alle 4 min ein Sturm (1/min × 25 %), der 30 s lang vier Betriebsarten halbiert ≈ 6 % ihres Ausstosses; ein Leuchtturm mit Unterhalt lohnt damit fast nie — eine tote Option. Trägt nur, wenn er auch Seewege schützt (I-014) oder Atmosphäre ist (Licht in der Nacht, lead-art). Kein Pitch.
-- Nutzen/Aufwand: kleiner Nutzen (tote Option, schöne Kulisse) · S · ≈ 1 Häppchen (≈ 80 Tools)
-- Entscheid: R448 → geparkt bis Anlass: Seewege-Schutz (I-014) oder Atmosphäre-Paket lead-art
+### I-037 · verworfen · Leuchtturm gegen Sturm — IDEEN-06 Streichung lead-design (Bestätigung im Runden-Ruling): tote Option (≈ 6 % Sturmverlust), nur Kulisse; Pool-Obergrenze 40 (R445)
 
 ### I-038 · geparkt · Erkundungsfahrt
 
@@ -393,42 +373,11 @@ Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Keine Idee �
 - Nutzen/Aufwand: mittlerer Nutzen (Ziel nach Stunde 2, Senke) · M · ≈ 2 Pakete inkl. Sprite (≈ 150 Tools plus lead-art)
 - Entscheid: R448 → eingeplant M13 «Spätspiel mit Richtung» (Baustein mit I-031; Mengen mit design-economy-designer)
 
-### I-040 · geparkt · Inseln taufen
+### I-040 · verworfen · Inseln taufen — IDEEN-06 Streichung lead-design (Bestätigung im Runden-Ruling): reine Bindung ohne Wahl, nur Lückenfüller mit Save-Änderung; Pool-Obergrenze 40 (R445)
 
-- Bereich: Inhalt/Bedienung · Säule: Insel besiedeln (Persönlichkeit) · Quelle: Genre-Mechanik (eigene Benennung); IDEEN-05 Scout B; Pfad `README.md` Z. 364 (Lagerleiste zeigt den Inselnamen)
-- Spielerwirkung: „Der Spieler gibt im Kontor-Panel jeder Insel einen eigenen Namen (höchstens 20 Zeichen) und liest ihn in Lagerleiste, Seekarte und Meldungen."
-- Grösse: S · Risiko: Save (Namensfeld je Insel, Migration Standardname); Nutzertext nur als Text ausgeben, nie als HTML (OWASP)
-- Raster: Spass 1 · Passung 2 · Aufwand 3 · Risiko 2 = 9
-- Randfälle: leerer Name → Standardname; Länge und Zeichen begrenzt; Tastenkürzel während der Eingabe stumm.
-- Doppelung: keine; I-018 (Story) gibt Namen vor, hier benennt der Spieler.
-- Bewertung lead-design: bestätigt (9), reine Kulisse ohne Wahl. Nur als Lückenfüller, wenn ohnehin eine Save-Änderung ansteht.
-- Nutzen/Aufwand: kleiner Nutzen (Bindung) · S · ≈ 1 kleines Häppchen (≈ 60 Tools)
-- Entscheid: R448 → geparkt bis Anlass: nächste Save-Änderung als Lückenfüller
+### I-041 · live · Wege abreissen durch Ziehen — R448 → UI-PROBLEM-SPRUNG, live mit REL-17 (R463)
 
-### I-041 · eingeplant · Wege abreissen durch Ziehen
-
-- Bereich: Bedienung · Säule: Bedienung · Quelle: Genre-Mechanik (Streifen räumen); IDEEN-05 Scout C; Ist-Stand: Ziehen wirkt nur bei Weg, Roden, Aufforsten (`src/ui/input.ts` `isDragPaintTool`), Abriss nur per Einzelklick (`README.md` Z. 98)
-- Spielerwirkung: „Der Spieler zieht mit dem Abriss-Werkzeug über einen Weg und räumt ihn in einem Zug, statt jede Kachel einzeln anzuklicken."
-- Grösse: S · Risiko: keins bei Save, Baseline, Perf (viele Einzelaktionen mit `{ ok, reason }`, keine neue Sim-Regel); Fehlabriss: Ziehen trifft nur Wegkacheln, Gebäude bleiben Einzelklick
-- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13
-- Randfälle: eine Sammelmeldung für die Erstattung statt n Meldungen; Leertaste-Halten (Verschieben) hat Vorrang; Ziehen beginnt auf einem Gebäude → nur dieses, kein Streifen; abgeschnittene Betriebe melden «nicht angebunden» wie bisher.
-- Doppelung: keine.
-- Bewertung lead-design: bestätigt (13). Kleiner, aber häufiger Reibungspunkt beim Umbau der Stadt; risikofrei. Mit I-042 als ein Bedien-Häppchen bündelbar (beide `src/ui/input.ts`), sonst Merge-Konflikt.
-- Nutzen/Aufwand: mittlerer Nutzen (Umbau spürbar schneller) · S · ≈ 1 Häppchen (≈ 60 Tools)
-- Entscheid: R448 → eingeplant REL-17, Paket UI-PROBLEM-SPRUNG (mit I-042)
-
-### I-042 · eingeplant · Nächstes Problem anspringen
-
-- Bereich: Bedienung · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: Genre-Mechanik (Sprung zum nächsten Mangel); IDEEN-05 Scout C; Ausbau von I-002 (Meldung führt zum Ort, live: dort nur flüchtige Meldungen)
-- Ist-Stand: Mängel zeigen sich über dem Haus erst ab Zoom 0.75 oder in einer Meldung, die verschwindet; eine dauerhafte Sprungfunktion fehlt.
-- Spielerwirkung: „Der Spieler drückt `.` und die Kamera springt zum nächsten Haus mit Mangel oder zum nächsten stehenden Betrieb («2 von 5»), mit `,` zurück, statt die Insel nach Symbolen abzusuchen."
-- Grösse: S · Risiko: keins (reine UI mit Lesezugriff; Reihenfolge deterministisch nach Abstand zur Bildmitte, dann Kachelindex)
-- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13
-- Randfälle: nichts offen → «Alles versorgt»; Ziel auf einer anderen Insel → Inselwechsel wie `9`/`0`; bei offenem Menü stumm; `,`/`.` laut Scout unbelegt (grep in `hotkeys.ts`, `input.ts`), im Plan per `event.key` prüfen (deutsche und englische Belegung).
-- Doppelung: keine; I-002 hängt an Meldungen, I-026 ist das Panel.
-- Bewertung lead-design: bestätigt (13). Bester Nutzen je Aufwand der Runde: Im wachsenden Spiel ist „wo hakt es?" die häufigste Frage, und die Antwort (REL-15: Abhilfe im Haus-Panel) ist dann einen Tastendruck entfernt. Reihenfolge Haus-Mängel vor stehenden Betrieben, Stillgelegte (I-035) nicht mitzählen.
-- Nutzen/Aufwand: hoher Nutzen (spart Suchen ab Stunde 1) · S · ≈ 1 Häppchen (≈ 70 Tools)
-- Entscheid: R448 → eingeplant REL-17, Paket UI-PROBLEM-SPRUNG (mit I-041)
+### I-042 · live · Nächstes Problem anspringen — R448 → UI-PROBLEM-SPRUNG, live mit REL-17 (R463)
 
 ### I-043 · eingeplant · Gut-Chip zeigt Erzeuger und Verbraucher
 
@@ -440,7 +389,7 @@ Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Keine Idee �
 - Doppelung: Nähe zu I-042 (Sprung); hier nach Gut, dort nach Problem — gemeinsam denken, ein Sprung-Mechanismus.
 - Bewertung lead-design: Aufwand bleibt 2 (Render-Hervorhebung plus Chip-Umbau, zwei Stränge). Gute Antwort auf „warum fehlt Holz?", aber nach I-042; teilt dessen Sprung-Logik.
 - Nutzen/Aufwand: mittlerer Nutzen (Ketten lesbar) · S–M · ≈ 1–2 Pakete (≈ 100 Tools)
-- Entscheid: R448 → eingeplant nach REL-17 (teilt die Sprung-Logik von UI-PROBLEM-SPRUNG)
+- Entscheid: R448 → eingeplant nach REL-17; umgesetzt UI-GUT-CHIP (R470), live mit REL-18 (R472, Push läuft)
 
 ### I-044 · geparkt · Kamera-Lesezeichen
 
@@ -464,4 +413,147 @@ Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Keine Idee �
 - Doppelung: teilweise vorhanden (Radius beim Platzieren); I-042 springt zum unversorgten Haus.
 - Bewertung lead-design: Passung 3 → 2, weil der Kern (abgedeckte Fläche) beim Platzieren schon da ist; der Rest überschneidet sich mit I-042. Nach I-042 neu prüfen.
 - Nutzen/Aufwand: kleiner bis mittlerer Nutzen · M · ≈ 2 Pakete (≈ 120 Tools)
-- Entscheid: R448 → geparkt bis Anlass: nach I-042 live neu prüfen
+- Entscheid: R448 → geparkt bis Anlass: nach I-042 live neu prüfen. IDEEN-06 geprüft: `.`/`,` führt im Alltag zum unversorgten Haus; bleibt geparkt bis Stadtplanungs-Brainstorming (mit I-032, I-051)
+
+### I-046 · verworfen · Überlauf-Ausfuhr — IDEEN-06 Scout A; Streichung lead-design (Bestätigung im Runden-Ruling): Ware, die bei vollem Lager verfiele, ginge automatisch zum halben Preis ans Kontor. Entartet zur passiven Einnahme (Holzfäller ≈ 40 Geld/min Überlauf gegen 30 Unterhalt) und nimmt dem Zustand «Lager voll» die Entscheidung; die Antwort auf Überschuss ist Stilllegen (I-035) oder Verkauf von Hand.
+
+### I-047 · bewertet · Stammkunde (Liefervertrag)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik (Dauerabnahme gegen Festpreis, nur Mechanik, ADR-006); IDEEN-06 Scout A; Pfade `src/sim/orders.ts` (Aufträge einmalig), `src/sim/defs/goods.ts` (`ORDER_PREMIUM`, Sättigung)
+- Spielerwirkung: „Der Spieler nimmt nach einem erfüllten Auftrag das Angebot «Stammkunde: 12 Rum alle 3 min zu 130 %» an und wägt feste Abnahme gegen Verkauf am freien Markt ab."
+- Grösse: M · Risiko: Save (Vertragszustand im Weltzustand, Migration „keiner"); Baseline bitgleich, solange der Controller keinen Vertrag annimmt
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Randfälle: höchstens ein Vertrag; nur für Güter mit Erzeuger; verpasste Lieferung beendet ihn mit 100 Geld Strafe, Kündigen kostenlos; Preis bleibt unter `buy` (Rum 23,4 < 40, kein Kauf-und-Verkauf-Gewinn); Menge < 40 % der gemessenen Erzeugung, damit kein Pflichtbau entsteht.
+- Doppelung: keine im Mechanismus; I-029 (Spotnachfrage) und I-006 (Kaufseite) teilen dieselbe Stelle (Handel am Kontor).
+- Bewertung lead-design (IDEEN-06): Spass 3 → 2: Die Bindung trägt erst für Fortgeschrittene, die Rum im Überschuss haben; im ersten Spiel bleibt sie unsichtbar. Mit I-006 und I-029 als ein Handels-Baustein denken, nicht einzeln einplanen.
+- Nutzen/Aufwand: mittlerer Nutzen (Planbarkeit im Mittelspiel) · M · ≈ 2 Pakete (Rechnung `design-economy-designer` ≈ 40 Tools, Sim+Panel ≈ 150 Tools)
+- Entscheid: Empfehlung parken bis Handels-Brainstorming (mit I-006, I-029); Ruling IDEEN-06 offen
+
+### I-048 · bewertet · Zukauf-Aufschlag (Kaufsättigung)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Beobachtung (Kaufpreise fest, `src/sim/defs/goods.ts` `buy`; jeder Mangel lässt sich mit Geld beheben, README „Handel"); Genre-Mechanik Nachfragepreis; IDEEN-06 Scout A
+- Spielerwirkung: „Der Spieler merkt, dass Dauer-Zukauf teurer wird («Preis 140 %»), und baut die Kette selbst aus, statt jeden Engpass mit Geld zu beheben."
+- Grösse: S–M · Risiko: Save (Aufschlag je Gut im Weltzustand, Spiegel der Verkaufssättigung) und Baseline (der Controller kauft Werkzeug → Neumessung per Ruling); Balancing-Test
+- Raster: Spass 3 · Passung 3 · Aufwand 2 · Risiko 1 = 12
+- Startwerte (Scout, mit `design-economy-designer` nachrechnen): +2 Punkte je gekaufte Einheit, Deckel +60 %, Erholung 1 Punkt/s wie beim Verkauf; bis ≈ 30 Einheiten/min praktisch ohne Aufschlag, 100 Stück am Stück im Mittel ≈ 151 %.
+- Randfälle: Handelsdialog zeigt «Preis … %» und den Preis je Knopf; gilt nur für den Kauf am Kontor, nicht für Bau- und Ausbaukosten; Edikt Handel (Kaufpreise −20 %) wirkt multiplikativ auf den Aufschlag.
+- Entartung: zu hart → Zukauf nutzlos, Frühspiel mit Werkzeugmangel wird zäh; zu weich → alles bleibt wie heute. Kein Pflichtbau, weil Kaufen weiter geht, nur teurer.
+- Doppelung: I-006 (Sonderangebot, Preis runter) ist der Gegenpol; nicht gleichzeitig einplanen.
+- Bewertung lead-design (IDEEN-06): bestätigt (12). Stärkster Wirtschaftsbeitrag der Runde: schliesst die Lücke „Geld löst jeden Mangel" (Befund Scout A) und gibt dem Edikt Handel Gewicht, das laut README im späten Spiel nur Feinsteuerung ist. Gehört in die Richtung von M13 „Spätspiel mit Richtung". Risiko: die Baseline-Neumessung braucht ein eigenes Ruling.
+- Nutzen/Aufwand: hoher Nutzen (Bauen statt Kaufen wird eine Entscheidung) · S–M · ≈ 1–2 Pakete (Rechnung ≈ 40 Tools, Sim+Handelsdialog ≈ 120 Tools)
+- Entscheid: Empfehlung einplanen als Wirtschafts-Baustein (M13-Rest oder nächstes Meilenstein-Brainstorming); Ruling IDEEN-06 offen
+
+### I-049 · bewertet · Sperrbestand (Reserve je Gut)
+
+- Bereich: Inhalt · Säule: Produktionsketten · Quelle: Beobachtung (Werkzeugmacher und Glashütte ziehen Holz und Stein, die zum Bauen fehlen); Genre-Mechanik Lager-Priorität; IDEEN-06 Scout A
+- Spielerwirkung: „Der Spieler legt für Holz «Reserve 20» fest, und Betriebe ziehen Holz nur, wenn mehr als 20 im Lager liegen; so bleibt Holz zum Bauen übrig."
+- Grösse: S · Risiko: Save (Reserve je Gut, Migration 0); Baseline bitgleich bei Reserve 0
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12
+- Randfälle: Haushaltsbedarf (Nahrung, Stoff, Rum) kennt keine Reserve, Häuser hungern nie wegen des Schalters; Betrieb zeigt «Wartet auf Holz (Reserve)»; Stufen 0/20/40/60; die Problemliste (`.`) zählt «Reserve» nicht als Problem oder nennt den Grund.
+- Entartung: Reserve 60 legt die Kette lahm; dominiert nicht, weil sie nur in Mangelphasen wirkt.
+- Doppelung: keine; I-035 legt ganze Betriebe still, I-043 zeigt Verbraucher. **Bedienort:** Der Gut-Chip ist seit I-043 mit dem Fokus-Klick belegt; die Einstellung gehört ins Handels- oder Kontor-Panel.
+- Bewertung lead-design (IDEEN-06): bestätigt (12). Echte kleine Wahl (Bauen gegen Produzieren) mit sauberem Standard. Nur Save-Risiko; wie I-035 am besten mit der nächsten Save-Änderung mitnehmen.
+- Nutzen/Aufwand: mittlerer Nutzen (Frühspiel-Engpass Holz lösbar ohne Abriss) · S · ≈ 1 Häppchen (≈ 90 Tools, Sim + Panel)
+- Entscheid: Empfehlung einplanen mit der nächsten Save-Änderung (v12); Ruling IDEEN-06 offen
+
+### I-050 · bewertet · Arbeitskräfte
+
+- Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: Genre-Mechanik (Wohnraum liefert Arbeit, nur Mechanik); IDEEN-06 Scout A; Beobachtung: Betriebe laufen unabhängig von der Bevölkerung, die Stufen haben ausser Steuer keine Rolle
+- Spielerwirkung: „Der Spieler plant Wohn- und Gewerbeviertel gegeneinander: Jeder Betrieb braucht Arbeiter aus Häusern in Reichweite, und ein aufgestiegenes Haus liefert weniger Arbeiter als ein Pionierhaus."
+- Grösse: L · Risiko: Save, Baseline, Perf und alle Balancing-Werte
+- Raster: Spass 3 · Passung 3 · Aufwand 1 · Risiko 1 = 12
+- Randfälle: Henne-Ei am Spielstart (erster Betrieb ohne Haus), Zuordnung deterministisch nach Abstand, dann ID; Busywork-Gefahr („Haus für 4 Arbeiter" als Pflichtbau).
+- Doppelung: I-032 (Dienstkapazität) teilt die Zuordnung Haus → Gebäude; beide im selben Brainstorming denken.
+- Bewertung lead-design (IDEEN-06): **kein Säulenwechsel** (vertieft die Säule Bevölkerung, ändert weder Genre noch Titel), aber ein Umbau der Kernschleife im Umfang eines Meilensteins. Trägt nur, wenn Aufstieg und Arbeit echt konkurrieren; sonst reine Mehrarbeit.
+- Nutzen/Aufwand: hoher Nutzen, sehr hoher Aufwand · L · Meilenstein (≥ 5 Pakete, Baseline-Neumessung)
+- Entscheid: Empfehlung parken bis Meilenstein-Brainstorming nach M13 (mit I-032); Ruling IDEEN-06 offen
+
+### I-051 · bewertet · Park als Wohnwert
+
+- Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: Genre-Mechanik (Dekor mit Wirkung); IDEEN-06 Scout B; Lücke in `src/sim/defs/buildings.ts` (kein Wohnumfeld-Gebäude)
+- Spielerwirkung: „Der Spieler setzt einen Park zwischen Wohnhäuser und sieht sie schneller aufsteigen, also plant er Viertel statt Reihen."
+- Grösse: M · Risiko: Balancing-Test, neues Sprite (lead-art, ADR-011); Save nur, falls der Gebäudetyp ein Feld braucht; Baseline bitgleich, solange der Controller ihn nicht baut
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 2 = 10
+- Randfälle: braucht Unterhalt und Wegeanbindung; Wirkkreis wie Kapelle.
+- Doppelung: I-008 (Standortgüte für Betriebe), I-011 (Hauswunsch) grenzen daran.
+- Bewertung lead-design (IDEEN-06): Aufwand 3 → 2 (Sprite plus Sim plus Balancing). **Bedenken:** Als vierter Aufstiegs-Beschleuniger neben Fest, Steuer «niedrig» und Edikt Wohlfahrt läuft er in die Stapelregel (nie unter 15 s) und ist dann wirkungslos. Trägt nur mit eigener Wirkung (z. B. Bedingung für Kaufleute oder Steuer-Plus im Kreis).
+- Nutzen/Aufwand: kleiner Nutzen in heutiger Form · M · ≈ 2 Pakete plus Sprite
+- Entscheid: Empfehlung parken bis Stadtplanungs-Brainstorming (mit I-011, I-032); Ruling IDEEN-06 offen
+
+### I-052 · bewertet · Einwandererschiff
+
+- Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: Genre-Mechanik (Zuzug als Ereignis); IDEEN-06 Scout B; positives Gegenstück zu den Krisen in `src/sim/crises.ts`
+- Spielerwirkung: „Der Spieler sieht ab und zu ein Schiff mit Siedlern anlegen und erlebt Wachstum als Belohnung für freie, versorgte Wohnhäuser."
+- Grösse: M · Risiko: Save (Ereigniszustand), Baseline (eigener seeded Strom nach ADR-010 nötig), Schiffsfigur im Render-Strang
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9
+- Randfälle: ohne freien Wohnraum «Siedler warten»; Obergrenze je Ereignis, nur in versorgte Häuser; darf Ziele nicht kurzschliessen.
+- Doppelung: keine im Pool; Wachstum aus freiem Wohnraum läuft heute schon stetig.
+- Bewertung lead-design (IDEEN-06): Spass 3 → 2: Das Ereignis belohnt, was der Spieler ohnehin tut, und verlangt keine Entscheidung; es ist Atmosphäre. Erst mit einer Wahl (Aufnehmen gegen Versorgungsdruck) ein Kandidat.
+- Nutzen/Aufwand: kleiner Nutzen · M · ≈ 2 Pakete
+- Entscheid: Empfehlung parken bis Überarbeitung der Krisen (mit I-034); Ruling IDEEN-06 offen
+
+### I-053 · verworfen · Taverne als Rum-Verbraucher — IDEEN-06 Scout B; Streichung lead-design (Bestätigung im Runden-Ruling): Annahme falsch, Rum ist schon Bedarf von Bürgern und Kaufleuten (README Z. 445–446), die Brennerei hat Abnehmer.
+
+### I-054 · zusammengefasst · Piraten bedrohen Routen — IDEEN-06 Scout B, in I-014 (Sturm auf See) aufgegangen (gleiche Stelle: Verlust auf der Route mit Gegenmittel; ohne Kampf)
+
+### I-055 · bewertet · Fischreiche Insel
+
+- Bereich: Inhalt · Säule: Insel besiedeln · Quelle: Genre-Mechanik (Inselcharakter); IDEEN-06 Scout B; Lücke in `src/sim/defs/sea.ts` (`IslandTrait` kennt nur `spice` und `mountain`)
+- Spielerwirkung: „Der Spieler sieht auf der Seekarte, dass eine Insel fischreich ist, und gründet dort ein Kontor, um Nahrung für die Heimat zu holen."
+- Grösse: S–M · Risiko: Save (Trait im Weltzustand) und Baseline (Inselgenerierung ändert die Zufallsfolge)
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 1 = 10
+- Randfälle: Gewürzinsel nicht zugleich fischreich; Wirkung nur auf der Fremdinsel; Nahrung muss per Route heim, sonst kein Grund für die Kolonie.
+- Doppelung: I-012 (Endliche Vorkommen) betrifft die Menge; Archipel-Bausteine I-038, I-036, I-016.
+- Bewertung lead-design (IDEEN-06): Passung 2 → 3 (Säule Insel besiedeln direkt), Aufwand 3 → 2 (Weltgenerierung plus Baseline-Neumessung). Trägt erst mit mehr Inseln, sonst eine Variante der Gewürzinsel.
+- Nutzen/Aufwand: mittlerer Nutzen (Grund für eine zweite Kolonie) · S–M · ≈ 1–2 Pakete
+- Entscheid: Empfehlung parken bis Archipel-Brainstorming (mit I-038, I-036, I-016); Ruling IDEEN-06 offen
+
+### I-056 · bewertet · Entf-Taste reisst Markiertes ab
+
+- Bereich: Bedienung · Säule: Bedienung · Quelle: Code (`src/ui/hotkeys.ts`, `src/ui/input.ts`: keine Entf-/Backspace-Belegung; Abriss nur über Werkzeug und Klick); Genre-Mechanik; IDEEN-06 Scout C
+- Spielerwirkung: „Der Spieler markiert ein Gebäude und reisst es mit `Entf` ab, statt Werkzeug zu wechseln, zu klicken und zur Auswahl zurückzukehren."
+- Grösse: S · Risiko: keins bei Save, Baseline, Perf (bestehende Abriss-Aktion mit `{ ok, reason }`); Fehlbedienung → Warnung «Abriss trennt N Gebäude» wie beim Abriss-Zug
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13
+- Randfälle: stumm bei offener Karte und in Eingabefeldern; ohne Markierung nichts; Heimatkontor meldet seinen Grund; Mac: `Backspace` als Alternative; Erstattung wie beim Abriss-Werkzeug.
+- Doppelung: keine; I-041 räumt nur Wege.
+- Bewertung lead-design (IDEEN-06): bestätigt (13). Bester Nutzen je Aufwand der Runde, risikofrei, mit I-057 als ein Tasten-Häppchen bündelbar (gleiche Dateien).
+- Nutzen/Aufwand: mittlerer Nutzen (jeder Umbau einen Werkzeugwechsel kürzer) · S · ≈ 1 Häppchen mit I-057 (≈ 70 Tools zusammen)
+- Entscheid: Empfehlung einplanen nächstes Release (Studio-Platz, mit I-057); Ruling IDEEN-06 offen
+
+### I-057 · bewertet · Schnellspeichern mit `Strg`/`Cmd` + `S`
+
+- Bereich: Bedienung · Säule: Bedienung · Quelle: Code (`src/ui/input.ts:571` verwirft alle Strg/Cmd-Tasten; Speichern nur über das Menü, Autosave alle 2 min, README Z. 575); IDEEN-06 Scout C
+- Spielerwirkung: „Der Spieler sichert vor einem riskanten Umbau oder einer Seefahrt mit einem Tastendruck und liest «Gespeichert»."
+- Grösse: S · Risiko: Browser-Konflikt (Seite speichern; `preventDefault` nötig); sonst keins, der Speicherweg (`src/ui/storage.ts`) existiert
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Randfälle: Speicher voll oder gesperrt → vorhandener Fehlertext; stumm bei offener Karte und in Eingabefeldern; während Brand erlaubt.
+- Doppelung: keine; Menü-Speichern und Autosave sind live, die Taste fehlt.
+- Bewertung lead-design (IDEEN-06): bestätigt (12). Klein, erwartbar (Genre-Standard), mit I-056 bündeln.
+- Nutzen/Aufwand: kleiner bis mittlerer Nutzen (Sicherheit vor Experimenten) · S · im Häppchen mit I-056
+- Entscheid: Empfehlung einplanen nächstes Release (mit I-056); Ruling IDEEN-06 offen
+
+### I-058 · bewertet · Pause bei Krise
+
+- Bereich: Bedienung · Säule: Bedienung · Quelle: Code (`src/ui/settings.ts`, `src/ui/crisis.ts`: keine Pause-Option; Brand und Sturm laufen bei 2× und 4× weiter); Genre-Mechanik; IDEEN-06 Scout C
+- Spielerwirkung: „Der Spieler schaltet «Bei Krise pausieren» ein und bekommt bei Brand oder Sturm ein stehendes Bild mit Meldung, statt bei 4× zu spät zu reagieren."
+- Grösse: S–M · Risiko: keins beim Save (Einstellung im Browser-Speicher); Zusammenspiel mit Tempo-Gedächtnis (`P`) und Leertaste-Pause
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 3 = 11
+- Randfälle: Krisenstufe «aus» löst nichts aus; mehrere Ereignisse kurz hintereinander pausieren einmal; Fortsetzen nimmt das letzte Tempo; Standard aus.
+- Doppelung: keine; I-014 ist Inhalt.
+- Bewertung lead-design (IDEEN-06): bestätigt (11). Nützlich ab Tempo 4×, aber nur für einen Teil der Spieler; nach dem Tasten-Häppchen.
+- Nutzen/Aufwand: kleiner bis mittlerer Nutzen · S–M · ≈ 1 Häppchen (≈ 80 Tools)
+- Entscheid: Empfehlung parken bis ein Playtest verpasste Krisen bei hohem Tempo meldet, sonst Lückenfüller; Ruling IDEEN-06 offen
+
+### I-059 · bewertet · Sammelausbau gleicher Betriebe (mit I-024)
+
+- Bereich: Bedienung · Säule: Produktionsketten · Quelle: Genre-Mechanik (Massenaufwertung); Ausbau heute einzeln über «Ausbauen» oder `Umschalt+U` (README Z. 298); IDEEN-06 Scout C; nimmt I-024 (Direkt als Stufe 2 bauen) auf
+- Spielerwirkung: „Der Spieler sieht im Panel «Alle 6 Holzfäller ausbauen» mit Gesamtkosten und Gebühr und rüstet eine Kette mit einer Entscheidung auf."
+- Grösse: S–M · Risiko: keins bei Save und Baseline, wenn die UI die bestehende Aktion `upgradeBuilding` je Betrieb aufruft (keine neue Sim-Regel, Kosten unverändert); Regel bei zu wenig Geld nötig
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 3 = 11
+- Randfälle: so viele wie bezahlbar, Reihenfolge nach Abstand zum Kontor, dann ID; Brand, gesperrte Stufe, nicht angebunden → übersprungen und genannt; eine Sammelmeldung.
+- Doppelung: I-024 (Stufe 2 beim Bauen) zielt auf dasselbe Ärgernis „Nachrüsten nervt"; hier zusammengefasst, die I-024-Variante «Bauen und gleich ausbauen» als zwei Sim-Aktionen ist ein Unterfall.
+- Bewertung lead-design (IDEEN-06): Risiko 2 → 3, weil die Sim unberührt bleibt (n Einzelaktionen wie I-041); Passung 3 → 2 (Bedienung, Kette nur indirekt). Spürbar erst ab dem Mittelspiel.
+- Nutzen/Aufwand: mittlerer Nutzen (Mittelspiel weniger Klicks) · S–M · ≈ 1 Häppchen (≈ 90 Tools)
+- Entscheid: Empfehlung parken bis Playtest „Nachrüsten nervt" (Anlass aus I-024); Ruling IDEEN-06 offen
+
+### I-060 · verworfen · Gleichartige Betriebe durchblättern — IDEEN-06 Scout C; Streichung lead-design (Bestätigung im Runden-Ruling): durch I-043 gedeckt (Gut-Chip plus `.`/`,` geht die Erzeuger eines Guts durch, je Gut fast immer genau ein Gebäudetyp); eine zweite Sprung-Taste kostet Tastenplatz ohne neuen Nutzen.
