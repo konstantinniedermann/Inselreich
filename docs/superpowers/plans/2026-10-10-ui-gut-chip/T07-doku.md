@@ -2,7 +2,7 @@
 
 Strang ui · Umsetzer `tech-ui-engineer` (E-017: darf ausdrücklich `README.md`, `docs/arc42.md`, `docs/beobachtungen.md` ändern, sonst nichts) · AK-GC-16 · blocked-by T06 · Grösse S (≈ 15 Tools)
 
-**Review dieser Task:** `qa-code-reviewer` mit `model: opus` über die **ganze Branch** (`git diff main...HEAD`); er gilt als Final-Review (Stufe leicht). Prüfpunkte: Review Focus 1–6 im Index, Doku-Konsistenz (README, arc42), keine Secrets, Commit-Konvention.
+**Review dieser Task:** `qa-code-reviewer` (sonnet) über den Diff der Task. Das opus-Review über die ganze Branch ist T09 und läuft erst nach T08 (R462 B1).
 
 ## Schritt 0: Zeilenstände nach M13-E1-Merge prüfen (Pflicht)
 

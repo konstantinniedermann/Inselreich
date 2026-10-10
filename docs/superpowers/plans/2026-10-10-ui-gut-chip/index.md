@@ -23,7 +23,7 @@
 4. **T04 HUD:** Lager-Chips `<button type="button">` in `hud.ts`, `aria-pressed`, `:focus-visible`, Klick → `HudActions.toggleGoodFocus(good)`; `stockTooltip` bekommt die zweite Zeile (Zahlen aus `focusList`/`populationByTier`).
 5. **T05 Render:** `src/render/focusMarks.ts` (neu) `drawFocusMarks(ctx, frame…)`; `RenderFx.focus?`; Aufruf in `render()` vor der Auswahl-Kontur; Farbe `signalFocus` in `palette.ts`.
 6. **T06 Verdrahtung `app.ts`:** Zustand `focus`/`focusCursor` in der Closure; `.`/`,` und `Esc`; Löschen bei Inselwechsel (`refresh`), Neue Insel, Laden; `fx.focus`; Chip-`blur()` nach Mausklick; Meldung `replaceMessage('gut', …)`.
-7. **T07 Doku, T08 Browser-Lauf.** Final-Review = Review von T07 auf opus über die ganze Branch.
+7. **T07 Doku, T08 Browser-Lauf, T09 Branch-Review (opus)** als letzter Schritt nach allen Browser-Fixes (R462 B1).
 
 ## Worktree und Datei-Ownership
 
@@ -38,26 +38,28 @@ Ein Strang, ein Worktree `.worktrees/ui-gut-chip`, Branch `feat/ui-gut-chip`, Ab
 | T05  | `src/render/focusMarks.ts` (neu), `src/render/palette.ts`, `src/render/renderer.ts`, `tests/render/focusMarks.test.ts` (neu)                                                          | — (Render-Dateien nicht im M13-E1-UI-Strang)                                                                 |
 | T06  | `src/ui/app.ts`                                                                                                                                                                       | `app.ts` (T10 `setEdict`, T12 `setPaused`; `tradeCtx`)                                                       |
 | T07  | `README.md`, `docs/arc42.md`, `docs/beobachtungen.md`                                                                                                                                 | `README.md`, `docs/arc42.md` (M13-E1 T13)                                                                    |
-| T08  | keine (Ablage `.studio/qa/ui-gut-chip/`)                                                                                                                                              | —                                                                                                            |
+| T08  | keine (Ablage `.studio/qa/ui-gut-chip/`; Fixes im Umsetzer-Baum)                                                                                                                      | —                                                                                                            |
+| T09  | keine (Review `git diff main...HEAD`)                                                                                                                                                 | —                                                                                                            |
 
 `tests/ui/imports.test.ts` prüft Importgrenzen: nach T02 laufen lassen (neue Datei `goodFocus.ts` darf `sim` lesen, kein DOM).
 
 ## Tasks
 
-| ID  | Titel                                  | Datei                                      | AK ([ak.md](ak.md))       | blocked-by      | Modell | Grösse |
-| --- | -------------------------------------- | ------------------------------------------ | ------------------------- | --------------- | ------ | ------ |
-| T01 | Umlauf-Helfer, `HOUSE_TITLES` umziehen | [T01-umlauf.md](T01-umlauf.md)             | GC-04, 16 (Import)        | M13-E1-UI-Merge | sonnet | S ≈ 20 |
-| T02 | `focusList`, Meldungen M1/M2/M3        | [T02-focuslist.md](T02-focuslist.md)       | GC-01, 02, 03, 05 (Text)  | T01             | sonnet | M ≈ 25 |
-| T03 | Fokus-Zustand und Sprungablauf         | [T03-ablauf.md](T03-ablauf.md)             | GC-05, 06, 07, 08, 09, 12 | T02             | sonnet | M ≈ 25 |
-| T04 | Chip als Knopf, Tooltip-Zeile          | [T04-chip-tooltip.md](T04-chip-tooltip.md) | GC-10, (14)               | T03             | sonnet | M ≈ 25 |
-| T05 | Render: Konturen                       | [T05-render.md](T05-render.md)             | GC-11, (13)               | T03             | sonnet | M ≈ 25 |
-| T06 | Verdrahtung in `app.ts`                | [T06-verdrahtung.md](T06-verdrahtung.md)   | GC-07, (13–15)            | T04, T05        | sonnet | M ≈ 35 |
-| T07 | Doku README, arc42, Beobachtungen      | [T07-doku.md](T07-doku.md)                 | GC-16                     | T06             | sonnet | S ≈ 15 |
-| T08 | Browser-Lauf am Kandidaten             | [T08-browser.md](T08-browser.md)           | GC-13, 14, 15             | T07             | sonnet | 1 Lauf |
+| ID  | Titel                                  | Datei                                        | AK ([ak.md](ak.md))       | blocked-by       | Modell | Grösse   |
+| --- | -------------------------------------- | -------------------------------------------- | ------------------------- | ---------------- | ------ | -------- |
+| T01 | Umlauf-Helfer, `HOUSE_TITLES` umziehen | [T01-umlauf.md](T01-umlauf.md)               | GC-04, 16 (Import)        | M13-E1-UI-Merge  | sonnet | S ≈ 20   |
+| T02 | `focusList`, Meldungen M1/M2/M3        | [T02-focuslist.md](T02-focuslist.md)         | GC-01, 02, 03, 05 (Text)  | T01              | sonnet | M ≈ 25   |
+| T03 | Fokus-Zustand und Sprungablauf         | [T03-ablauf.md](T03-ablauf.md)               | GC-05, 06, 07, 08, 09, 12 | T02              | sonnet | M ≈ 25   |
+| T04 | Chip als Knopf, Tooltip-Zeile          | [T04-chip-tooltip.md](T04-chip-tooltip.md)   | GC-10, (14)               | T03              | sonnet | M ≈ 25   |
+| T05 | Render: Konturen                       | [T05-render.md](T05-render.md)               | GC-11, (13)               | T03              | sonnet | M ≈ 25   |
+| T06 | Verdrahtung in `app.ts`                | [T06-verdrahtung.md](T06-verdrahtung.md)     | GC-07, (13–15)            | T04, T05         | sonnet | M ≈ 35   |
+| T07 | Doku README, arc42, Beobachtungen      | [T07-doku.md](T07-doku.md)                   | GC-16                     | T06              | sonnet | S ≈ 15   |
+| T08 | Browser-Lauf am Kandidaten             | [T08-browser.md](T08-browser.md)             | GC-13, 14, 15             | T07              | sonnet | 1 Lauf   |
+| T09 | Branch-Review opus (Final-Review)      | [T09-branch-review.md](T09-branch-review.md) | alle, GC-16               | T08 (alle Fixes) | opus   | 1 Review |
 
-Je Task: Umsetzer `tech-ui-engineer` (T05 darf `art-rendering-engineer` sein, Empfehlung: `tech-ui-engineer`, da `src/render/` laut Persona mitgemeint) → `qa-code-reviewer` (sonnet, Urteil OK/BEDENKEN/ZURÜCK) → Fix-Runde per SendMessage bis OK. **Der Review von T07 läuft auf `model: opus` über die ganze Branch und gilt als Final-Review** (Stufe leicht). T08 `qa-playtester` am Kandidaten nach OK von T07 (nicht vorher: ein Lauf statt je Task). Fixes aus T08 im selben Baum, Teil-Wiederholung.
+Je Task: Umsetzer `tech-ui-engineer` (T05 darf `art-rendering-engineer` sein, Empfehlung: `tech-ui-engineer`, da `src/render/` laut Persona mitgemeint) → `qa-code-reviewer` (sonnet, Urteil OK/BEDENKEN/ZURÜCK) → Fix-Runde per SendMessage bis OK. **Reihenfolge (R462 B1):** T01–T07 je mit sonnet-Review. Danach T08 (`qa-playtester`, ein Lauf). Fixes aus T08 im selben Baum (Umsetzer + sonnet-Review des Fix-Diffs, Teil-Wiederholung des Browser-Laufs). **Erst danach** T09: `qa-code-reviewer` mit `model: opus` über die ganze Branch (`git diff main...HEAD`); er gilt als Final-Review (Stufe leicht) und sieht alle Fix-Commits. Kein Fix nach T09 ohne neuen Delta-Review.
 
-**Controller (R167, R190):** `lead-tech` auf sonnet, ≤ 4 Tasks je Instanz: **A** T01–T04, **B** T05–T08 samt Abschluss (Rulings, Handoff, `make check`, „bereit zum Merge-Gate“). Übergabe per Ledger `.superpowers/sdd/ui-gut-chip/ledger.md` und einem Satz Status.
+**Controller (R167, R190):** `lead-tech` auf sonnet, ≤ 4 Tasks je Instanz: **A** T01–T04, **B** T05–T09 samt Abschluss (Rulings, Handoff, `make check`, „bereit zum Merge-Gate“). Übergabe per Ledger `.superpowers/sdd/ui-gut-chip/ledger.md` und einem Satz Status.
 
 ## Review Focus
 
@@ -66,7 +68,9 @@ Je Task: Umsetzer `tech-ui-engineer` (T05 darf `art-rendering-engineer` sein, Em
 3. Fokus ist reiner UI-Zustand: `JSON.stringify(world)` vor/nach gleich, kein Feld in `serialize` (AK-GC-12).
 4. Problem-Cursor bleibt beim Fokus unberührt; `.`/`,` ohne Fokus verhalten sich wie REL-17 (AK-GC-08).
 5. Renderer prüft nur sichtbare Gebäude des Fokus-Frames, ≤ `MAX_FOCUS_MARKS`, Form (durchgezogen/gestrichelt) statt nur Farbe, `focus: null` zeichnet nichts (AK-GC-11).
-6. Chip-Knopf: `aria-pressed`, kein Tastaturfokus nach Mausklick (Leertaste-Schwenken), verborgene Chips nicht klickbar (AK-GC-14).
+6. Chip-Knopf: `aria-pressed`, kein Tastaturfokus nach Mausklick (Leertaste-Schwenken), Leertaste/`.`/`,`/`Esc` bei Tastaturfokus auf dem Chip, verborgene Chips nicht klickbar (AK-GC-14).
+7. Sim unberührt (R462 B6): `git diff --stat main...HEAD -- src/sim tests/sim src/ui/storage.ts` leer; `make check` grün (Controller, mit `balance.test.ts`).
+8. Palette (R462 B3): `signalFocus` in `SIGNAL_NAMES` oder eigener ΔE-Test; CSS-Wert = Palette-Wert getestet.
 
 ## Budgetantrag
 
@@ -81,14 +85,14 @@ Pakete:
 - T05 Render-Konturen (ja)
 - T06 Verdrahtung app.ts (ja)
 - T07 Doku (nein)
-Formel: 7 × 2 + 1 (QA-Check: ein Browser-Lauf T08) + 1 Final-Review (Review T07 auf opus) = 16 → × 1,3 = 20,8 → aufgerundet 21
+Formel: 7 × 2 + 1 (QA-Check: ein Browser-Lauf T08) + 1 Final-Review (T09, opus, nach T08) = 16 → × 1,3 = 20,8 → aufgerundet 21
 Parallelität: 1 (ein Strang, ein Worktree, seriell)
 Bisher frei/verbraucht: —
 Begründung Mehrbedarf: —
-Beantragt: 21 Starts, Parallelität 1 (Final-Review ist Teil davon, Stufe leicht: Budget ganz bei lead-tech)
+Beantragt: 21 Starts, Parallelität 1 (Budget bleibt 21, R462 B8; Stufe leicht: ganz bei lead-tech)
 ```
 
-Geplant sind **16 Arbeiter-Starts** (7 Umsetzer, 7 Reviewer, davon T07 auf opus, 1 Playtester, +1 Reserve für Fix-Teilwiederholung) und 2 Controller-Instanzen (zählen nach R433 zum Paket) = 18–19 von 21.
+Geplant sind **16 Arbeiter-Starts** (7 Umsetzer, 7 sonnet-Reviewer, 1 Playtester, 1 opus-Branch-Review T09 = 16, dazu 1 Reserve) und 2 Controller-Instanzen (zählen nach R433 zum Paket) = 18–19 von 21.
 
 **Schätzung** (Richtwerte `docs/studio/metriken/richtwerte.md`, Tools ÷ 4 für Minuten): Umsetzer 165 Tools (T01 20, T02 25, T03 25, T04 25, T05 25, T06 35, T07 10), Reviewer 7 × 8 + 25 Aufschlag opus = ≈ 80, Fix-Runden ≈ 30, Playtester ≈ 30, Controller 2 × 35 = 70 → **≈ 375 Tools, ≈ 95 min Summe**; seriell ≈ **Wandzeit 90–100 min**. Das Kurzdesign schätzte 80–100 Tools für den Umsetzer-Teil; hier stehen Tools aller Beteiligten.
 
