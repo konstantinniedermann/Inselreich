@@ -1,20 +1,25 @@
 import http.client
 import json
 import os
+import socket
+import struct
 import tempfile
 import threading
 import time
 import unittest
+from datetime import UTC, datetime, timedelta
+from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest import mock
 
+import clock
 import server
 
 
 class ServerTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        events = Path(self.tmp.name) / "events.jsonl"
+        events = self.events = Path(self.tmp.name) / "events.jsonl"
         events.write_text(
             '{"kind":"agent_start","ts":"2026-09-30T12:00:00.000Z","session_id":"s1",'
             '"agent_id":"a1","role":"lead-qa","source":"hook"}\n',
@@ -183,6 +188,73 @@ class ServerTest(unittest.TestCase):
         with mock.patch.object(server, "build_state", side_effect=RuntimeError("x")):
             self.assertEqual(self.get("/api/state")[0], 500)
         self.assertEqual(self.get("/api/state")[0], 200)
+
+    def test_client_abort_keeps_server_responsive(self):
+        with mock.patch.object(ThreadingHTTPServer, "handle_error") as handled:
+            sock = socket.create_connection(("127.0.0.1", self.port), timeout=5)
+            sock.sendall(
+                f"GET /api/state HTTP/1.1\r\nHost: 127.0.0.1:{self.port}\r\n\r\n".encode()
+            )
+            linger = struct.pack("ii", 1, 0)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, linger)
+            sock.close()
+            time.sleep(0.3)
+            self.assertEqual(self.get("/api/state")[0], 200)
+            time.sleep(0.3)
+        self.assertEqual(handled.call_count, 0)
+
+    def append_event(self):
+        with open(self.events, "a", encoding="utf-8") as handle:
+            handle.write(
+                '{"kind":"agent_start","ts":"2026-09-30T12:01:00.000Z",'
+                '"session_id":"s1","agent_id":"a2","role":"lead-tech",'
+                '"source":"hook"}\n'
+            )
+
+    def test_state_cached_within_two_seconds(self):
+        with (
+            clock.frozen(datetime(2026, 10, 10, 12, 0, tzinfo=UTC)),
+            mock.patch.object(server, "build_state", wraps=server.build_state) as built,
+        ):
+            self.get("/api/state")
+            self.get("/api/state")
+            self.assertEqual(built.call_count, 1)
+            self.append_event()
+            self.get("/api/state")
+            self.assertEqual(built.call_count, 2)
+
+    def test_state_cache_expires_after_two_seconds(self):
+        start = datetime(2026, 10, 10, 12, 0, tzinfo=UTC)
+        with mock.patch.object(
+            server, "build_state", wraps=server.build_state
+        ) as built:
+            with clock.frozen(start):
+                self.get("/api/state")
+            with clock.frozen(start + timedelta(seconds=3)):
+                self.get("/api/state")
+            self.assertEqual(built.call_count, 2)
+
+    def test_expensive_build_is_throttled(self):
+        ticks = iter(range(0, 1000, 5))  # jeder Uhrablesung +5 s: Aufbau "teuer"
+        start = datetime(2026, 10, 10, 12, 0, tzinfo=UTC)
+        slow = lambda: start + timedelta(seconds=next(ticks))
+        with (
+            clock.frozen(slow),
+            mock.patch.object(server, "build_state", wraps=server.build_state) as built,
+        ):
+            self.get("/api/state")
+            self.append_event()
+            self.get("/api/state")
+            self.assertEqual(built.call_count, 1)
+
+    def test_cache_key_includes_session(self):
+        with mock.patch.object(
+            server, "build_state", wraps=server.build_state
+        ) as built:
+            self.get("/api/state?session=all")
+            self.get("/api/state?session=s1")
+            self.get("/api/state?session=s1&heartbeats=0")
+            self.assertEqual(built.call_count, 3)
 
 
 if __name__ == "__main__":
