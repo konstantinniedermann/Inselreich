@@ -1,6 +1,6 @@
-# REL-15 — AK-Entwürfe (Arbeitskennungen A/B/C/D; Nummern AK-R15-nn vergibt L0)
+# REL-15 — AK-Entwürfe (Arbeitskennungen A/B/C/D; Nummern AK-R15-nn vergeben in R437)
 
-Vorschlag Zuordnung: A1–A4 = AK-R15-01…04, B1–B6 = AK-R15-05…10, C1–C7 = AK-R15-11…17, D1–D4 = AK-R15-18…21. Quelle: AK-Vorschläge des Kurzdesigns (R435), ergänzt um UI-SEEKARTE-NACHZUG, die Trivial-Fixes aus R435 und die Gate-Entscheide E1–E6 im Index.
+Zuordnung (R437): A1–A4 = AK-R15-01…04, B1–B6 = AK-R15-05…10, C1–C7 = AK-R15-11…17, D1–D4 = AK-R15-18…21. Quelle: AK-Vorschläge des Kurzdesigns (R435), ergänzt um UI-SEEKARTE-NACHZUG, die Trivial-Fixes aus R435 und die Gate-Entscheide E1–E6 im Index.
 
 ## A · UI-INSPEKTOR-ABHILFE
 

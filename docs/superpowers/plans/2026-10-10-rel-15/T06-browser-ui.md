@@ -12,7 +12,7 @@ DOM-Sonden: Schild `document.querySelector('.cursor-hint')` (`hidden`, `textCont
 
 - [ ] **Schritt 1: Haus-Panel Dienst-Mangel (A4), nur 1280 × 720.** Siedlerhaus im Versorgungsradius, Nahrung und Stoff erfüllt, keine Kapelle (z. B. Wohnhaus nahe dem Kontor setzen und per `prep` auf Stufe 2 mit erfüllten Gütern bringen, wie `setHouse` in `tests/ui/worlds.ts`), Haus anklicken. Erwartet: Panel-Text enthält „Mangel: Kapelle fehlt“ **genau einmal** (Anzahl der Vorkommen im `textContent` zählen und berichten), die Abhilfe-Zeile `[data-field="remedy"]` lautet „Baue Kapelle (K) in Reichweite“, nirgends „fehlt:“. Screenshot `a4-dienst.png`. Wenn ohne Aufwand erreichbar: Nahrung fehlt → Abhilfe „Baue mehr Fischerhütte oder kaufe Nahrung am Kontor“, Screenshot `a4b-nahrung.png`.
 
-- [ ] **Schritt 2: Schild → Karte → Schild (B5), je Grösse.** Auswahl-Werkzeug (Esc), Zeiger per `mouseMoved` auf die Mitte eines Wohnhauses.
+- [ ] **Schritt 2: Schild → Karte → Schild (B5 = AK-R15-09), je Grösse.** Ausdrücklich zu bestätigen (R437 B5): beim Kachelwechsel ist das Schild im selben Frame wieder da (Karte `hidden` und Schild sichtbar im ersten Frame nach dem Wechsel, per `requestAnimationFrame`-Probe oder ≤ 1 Frame Wartezeit). Auswahl-Werkzeug (Esc), Zeiger per `mouseMoved` auf die Mitte eines Wohnhauses.
   - nach ≈ 100 ms: Schild sichtbar (`hidden === false`, Text mit Hausname), Karte `hidden === true` → `b5-<grösse>-1-schild.png`
   - nach weiteren ≥ 500 ms ohne Bewegung: Karte sichtbar, Schild `hidden === true` → `b5-<grösse>-2-karte.png`
   - kleine Bewegung um 2 px innerhalb derselben Kachel: Karte bleibt, Schild bleibt aus (Review Focus 2)
