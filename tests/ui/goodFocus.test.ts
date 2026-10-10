@@ -270,30 +270,33 @@ describe('UI-GUT-CHIP Ablauf (AK-GC-05…09, 12)', () => {
   it('AK-GC-08 Umlauf vor und zurück, Problem-Cursor unberührt', () => {
     const { w } = woodWorld();
     const f = fake(w);
-    const pf = fake(w);
-    pf.focus = null;
-    const problemTrail = (): string[] => {
+    // Problem-Schritte mit gemeinsamem Cursor; `trail` sammelt die geöffneten Panels.
+    const problemRun = (cur: { pc: ProblemCursor | null }, steps: number): string[] => {
       const c: string[] = [];
-      let pc: ProblemCursor | null = null;
-      runProblemJump(
-        {
-          world: w,
-          activeIsland: () => 0,
-          getCursor: () => pc,
-          setCursor: (x) => (pc = x),
-          cancelPointerAction: () => {},
-          centerOn: () => {},
-          openPanel: (id) => c.push(`p${id}`),
-          refresh: () => {},
-          message: () => {},
-        },
-        1,
-      );
+      for (let i = 0; i < steps; i++) {
+        runProblemJump(
+          {
+            world: w,
+            activeIsland: () => 0,
+            getCursor: () => cur.pc,
+            setCursor: (x) => (cur.pc = x),
+            cancelPointerAction: () => {},
+            centerOn: () => {},
+            openPanel: (id) => c.push(`p${id}`),
+            refresh: () => {},
+            message: () => {},
+          },
+          1,
+        );
+      }
       return c;
     };
-    const before = problemTrail();
+    const ref = { pc: null as ProblemCursor | null };
+    const expected = problemRun(ref, 2);
+    const cur = { pc: null as ProblemCursor | null };
+    const trail = problemRun(cur, 1);
+    const pcBefore = structuredClone(cur.pc);
     runFocusToggle(f.deps, 'wood');
-    f.focus = { good: 'wood', island: 0 };
     const keys = [f.cursor!.key];
     for (let i = 0; i < 4; i++) {
       runFocusStep(f.deps, 1);
@@ -302,8 +305,9 @@ describe('UI-GUT-CHIP Ablauf (AK-GC-05…09, 12)', () => {
     expect(keys).toEqual(['b:1001', 'b:1002', 'b:1004', 'b:1003', 'b:1001']);
     runFocusStep(f.deps, -1);
     expect(f.cursor!.key).toBe('b:1003');
-    f.focus = null;
-    expect(problemTrail()).toEqual(before);
+    expect(cur.pc).toEqual(pcBefore);
+    trail.push(...problemRun(cur, 1));
+    expect(trail).toEqual(expected);
   });
 
   it('AK-GC-04 Rückfall bei Abriss', () => {
