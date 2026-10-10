@@ -10,7 +10,9 @@ import type { Building, BuildingDefId, BuildingState, Order, World } from '../..
 import { friendlyReason } from '../../src/ui/hints';
 import { deriveUnlocks } from '../../src/sim/unlocks';
 import {
+  cursorHintVisible,
   foreignHoverTitle,
+  HOVER_DELAY_MS,
   hoverInfo,
   hoverPosition,
   hoverVisible,
@@ -364,5 +366,44 @@ describe('M12 E2 UI Inseln: Fremdinsel vor seafaring', () => {
     w.won = true;
     w.unlocked = deriveUnlocks(w);
     expect(foreignHoverTitle(w, 'Möweninsel · 24 × 24')).toBe('Möweninsel · 24 × 24');
+  });
+});
+
+describe('UI-HOVER-SCHILD: Schild weicht der Karte (R435)', () => {
+  const base: HoverState = {
+    restMs: 0,
+    sameTile: true,
+    dragging: false,
+    modalOpen: false,
+    tool: { kind: 'select' },
+  };
+  const card = (s: Partial<HoverState>): boolean => hoverVisible({ ...base, ...s });
+  it('B1 sichtbar genau dann, wenn ein Hinweis da ist und keine Karte offen ist', () => {
+    expect(cursorHintVisible(true, false)).toBe(true);
+    expect(cursorHintVisible(true, true)).toBe(false);
+    expect(cursorHintVisible(false, false)).toBe(false);
+    expect(cursorHintVisible(false, true)).toBe(false);
+  });
+  it('B2 Ablauf über einem Wohnhaus: Schild, nach 400 ms nur Karte, Wechsel bringt das Schild', () => {
+    expect(cursorHintVisible(true, card({ restMs: 0 }))).toBe(true);
+    expect(cursorHintVisible(true, card({ restMs: HOVER_DELAY_MS - 1 }))).toBe(true);
+    expect(cursorHintVisible(true, card({ restMs: HOVER_DELAY_MS }))).toBe(false);
+    const rest = { restMs: HOVER_DELAY_MS };
+    expect(cursorHintVisible(true, card({ ...rest, sameTile: false }))).toBe(true); // Kachelwechsel
+    expect(cursorHintVisible(true, card({ ...rest, dragging: true }))).toBe(true); // Ziehen
+    expect(cursorHintVisible(true, card({ ...rest, tool: { kind: 'road' } }))).toBe(true); // Werkzeug
+  });
+  it('B3 beim Bauen nie eine Karte, das Schild bleibt', () => {
+    const tools: Tool[] = [
+      { kind: 'build', defId: 'house' },
+      { kind: 'road' },
+      { kind: 'demolish' },
+      { kind: 'clearForest' },
+      { kind: 'plantForest' },
+    ];
+    for (const tool of tools) {
+      expect(card({ restMs: 10_000, tool }), tool.kind).toBe(false);
+      expect(cursorHintVisible(true, card({ restMs: 10_000, tool })), tool.kind).toBe(true);
+    }
   });
 });
