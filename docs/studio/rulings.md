@@ -4730,3 +4730,21 @@ Push zählt für Session 5a00a316). Prozess-Aussensicht REL-16/REL-17 folgt (ein
 Regelbezug: STUDIO.md Push-Gate (R429, Handbuch 1.42), R335 · Kosten bei Irrtum: keine (Stand grün geprüft).
 
 Entscheider: L0 · Anlass: Bericht production-integrator PUSH-2026-10-10b · ADR: —
+
+## R464 · 2026-10-10 · Prozess-Aussensicht REL-16/REL-17 angenommen; Handbuch 1.43; TOOL-BUENDEL-4
+
+Ruling: Retro `docs/studio/retros/2026-10-10-release-rel16-17-prozess.md` (`056cde16`, B1–B6, V1–V4) angenommen.
+**V1** (Handbuch-Minor 1.43): Steht ein Push an, startet L0 keine Umsetzer und Controller, bis `make zeitreserve-push`
+Exit 0 meldet; Gates, Kurzdesigns und Pläne ohne Testläufe dürfen parallel laufen (Anlass: L0 startete M13-E1 mitten im
+Push-Gate, Push 29 statt ≈ 5 min). **V4** Zeile in `lernen.md` (Subagent ohne `Monitor`, macOS ohne `timeout`, Bash-Abbruch
+nach 600 s → `run_in_background`). Umsetzung V1/V4 und die offene Vorlagenzeile E-058 (R459: Integrator-Briefing nennt
+`make check` und `make check-ci-perf` mit Exit-Code) durch `studio-coach`. **V2** (`zeitreserve-push` ohne Testsperre,
+`make check` gibt `loadStart` aus) und **V3** (Dashboard-Server 100 % CPU, `make studio` Fehlstart-Meldung) bilden mit der
+Beobachtung Budget-Zuordnung (Paket-Kopfzeile mit Zusatz) und den Restpunkten R457 das Paket **TOOL-BUENDEL-4**; Plan
+jetzt durch `lead-tech` auf sonnet (E-054, zweiter Fall), Umsetzung nach dem M13-E1-Merge oder parallel, sobald kein Push
+ansteht. Budget Plan: `lead-tech` 1, Phase TOOL-BUENDEL-4; Coach: `studio-coach` 1, Phase HB-1.43.
+
+Regelbezug: STUDIO.md Verbesserungsschleife, R316, R429 (Abweichung → Handbuch-Minor) · Kosten bei Irrtum: erster
+Controller startet nach einem Push 5–8 min später.
+
+Entscheider: L0 · Anlass: Prozess-Aussensicht REL-16/REL-17 · ADR: —
