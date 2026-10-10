@@ -265,6 +265,27 @@ const V9_WORLD_KEYS = [
   ...V9_ADDED_WORLD_KEYS,
 ] as const;
 
+const V10_WORLD_KEYS = V9_WORLD_KEYS.map((k) => (k === 'taxLevel' ? 'taxLevels' : k)) as string[];
+
+/**
+ * Formt ein v11-JSON-Objekt in die v10-Form zurück (M13-E1): ohne `edict`, `edictLockedUntil`; `version 10`.
+ * Edikt, Sperre oder stillgelegte Gebäude sind nicht rückfaltbar → Fehler im Test.
+ */
+export function foldBackToV10(v11: Record<string, unknown>): Record<string, unknown> {
+  const allowed = [...V10_WORLD_KEYS, 'edict', 'edictLockedUntil'];
+  for (const k of Object.keys(v11))
+    if (!allowed.includes(k)) throw new Error(`foldBackToV10: unbekannter Schlüssel ${k}`);
+  if (v11.edict !== null || v11.edictLockedUntil !== 0)
+    throw new Error('foldBackToV10: Edikt nicht rückfaltbar');
+  const buildings = Object.values(v11.buildings as Record<string, Record<string, unknown>>);
+  if (buildings.some((b) => 'paused' in b || b.state === 'paused'))
+    throw new Error('foldBackToV10: Stilllegung nicht rückfaltbar');
+  const out: Record<string, unknown> = {};
+  for (const k of V10_WORLD_KEYS) if (k in v11) out[k] = v11[k];
+  out.version = 10;
+  return out;
+}
+
 /** Setzt alle vier Steuerregler auf dieselbe Stufe (T1b: über `taxTarget`). */
 export function setAllTax(world: World, level: TaxLevel): void {
   for (const t of TIER_IDS) world.taxLevels[t] = taxTarget(level, t);
@@ -275,7 +296,8 @@ export function setAllTax(world: World, level: TaxLevel): void {
  * Schlüsselfolge `V9_WORLD_KEYS`, `version 9`. Unbekannter Schlüssel (auch `taxLevel`) oder nicht zusammenfassbare
  * Regler (Stufen 1 bis 3 ungleich, oder Stufe 4 weder gleich noch `normal` bei `low`) → Fehler im Test.
  */
-export function foldBackToV9(v10: Record<string, unknown>): Record<string, unknown> {
+export function foldBackToV9(x: Record<string, unknown>): Record<string, unknown> {
+  const v10 = x.version === 11 ? foldBackToV10(x) : x;
   const allowed = V9_WORLD_KEYS.map((k) => (k === 'taxLevel' ? 'taxLevels' : k)) as string[];
   for (const k of Object.keys(v10))
     if (!allowed.includes(k)) throw new Error(`foldBackToV9: unbekannter Schlüssel ${k}`);

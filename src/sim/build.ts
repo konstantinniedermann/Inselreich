@@ -84,6 +84,7 @@ export function demolish(world: World, id: number): Result {
     if (tile) tile.buildingId = null;
   }
   delete world.buildings[id];
+  if (b.defId === 'townhall') world.edict = null;
   if (isFar) {
     const isl = world.islands[b.island]!;
     if (isl.kontorId === b.id) isl.kontorId = null;

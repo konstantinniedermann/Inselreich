@@ -11,7 +11,16 @@ import {
   WIN_SPICE_HOLD,
   WIN_SPICE_MERCHANTS,
 } from '../../src/sim/defs/tiers';
-import { EFF_MAX, EFF_WINDOW, UPGRADE_DEFICIT_WAIT_FACTOR } from '../../src/sim/defs/timing';
+import {
+  EDICT_LOCK,
+  EFF_MAX,
+  EFF_WINDOW,
+  GROWTH_INTERVAL,
+  UPGRADE_DEFICIT_WAIT_FACTOR,
+} from '../../src/sim/defs/timing';
+import { EDICTS, EDICT_COST, EDICT_IDS, EDICT_UNLOCK } from '../../src/sim/defs/edicts';
+import { PAUSED_UPKEEP_PCT } from '../../src/sim/defs/buildings';
+import { TAX_LEVELS } from '../../src/sim/defs/tiers';
 import { LEVELS } from '../../src/sim/defs/levels';
 import { SERVICE_BUILDING, SERVICE_IDS } from '../../src/sim/population';
 import { sellPrice } from '../../src/sim/trade';
@@ -337,5 +346,76 @@ describe('M12 Seefahrt Werte (T02)', () => {
       if (!/wonSpice|WIN_SPICE/.test(text)) continue;
       expect(/\b(80|600)\b/.test(text), f).toBe(false);
     }
+  });
+});
+
+describe('M13-E1 Edikte (AK-M13E1-02)', () => {
+  it('Kosten, Sperre und Freischaltflagge', () => {
+    expect(EDICT_COST).toBe(600);
+    expect(EDICT_LOCK).toBe(3000);
+    expect(EDICT_UNLOCK).toBe('won');
+  });
+  it('Tabelle Spec §4 exakt', () => {
+    expect(EDICTS).toEqual({
+      saving: {
+        id: 'saving',
+        name: 'Sparen',
+        upkeepPct: 80,
+        taxPoints: 7,
+        buyPct: 100,
+        growthInterval: null,
+        upgradeWait: null,
+      },
+      trade: {
+        id: 'trade',
+        name: 'Handel',
+        upkeepPct: 100,
+        taxPoints: 0,
+        buyPct: 80,
+        growthInterval: null,
+        upgradeWait: null,
+      },
+      welfare: {
+        id: 'welfare',
+        name: 'Wohlfahrt',
+        upkeepPct: 100,
+        taxPoints: 5,
+        buyPct: 100,
+        growthInterval: 40,
+        upgradeWait: 200,
+      },
+    });
+  });
+  it('EDICT_IDS in Kartenfolge', () => {
+    expect([...EDICT_IDS]).toEqual(['saving', 'trade', 'welfare']);
+    expect([...EDICT_IDS]).toEqual(Object.keys(EDICTS));
+  });
+  it('Wertebereiche je Edikt', () => {
+    const minTax = Math.min(
+      ...Object.values(TAX_LEVELS).flatMap((l) => [l.pct, ...Object.values(l.pctByTier ?? {})]),
+    );
+    for (const id of EDICT_IDS) {
+      const e = EDICTS[id];
+      expect(Number.isInteger(e.upkeepPct) && e.upkeepPct >= 1 && e.upkeepPct <= 100, id).toBe(
+        true,
+      );
+      expect(Number.isInteger(e.buyPct) && e.buyPct >= 1 && e.buyPct <= 100, id).toBe(true);
+      expect(Number.isInteger(e.taxPoints) && e.taxPoints >= 0 && e.taxPoints < minTax, id).toBe(
+        true,
+      );
+      if (e.growthInterval !== null) {
+        expect(Number.isInteger(e.growthInterval), id).toBe(true);
+        expect(e.growthInterval).toBeGreaterThan(0);
+        expect(e.growthInterval).toBeLessThan(GROWTH_INTERVAL);
+      }
+      if (e.upgradeWait !== null) {
+        expect(e.upgradeWait).toBeGreaterThanOrEqual(TAX_LEVELS.low.upgradeWait as number);
+      }
+    }
+  });
+  it('PAUSED_UPKEEP_PCT ganzzahlig in 1..99', () => {
+    expect(Number.isInteger(PAUSED_UPKEEP_PCT)).toBe(true);
+    expect(PAUSED_UPKEEP_PCT).toBeGreaterThanOrEqual(1);
+    expect(PAUSED_UPKEEP_PCT).toBeLessThanOrEqual(99);
   });
 });

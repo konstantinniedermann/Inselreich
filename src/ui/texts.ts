@@ -67,6 +67,8 @@ export function stateInfo(
     }
     case 'storageFull':
       return { text: 'Lager voll', ok: false };
+    case 'paused':
+      return { text: 'Stillgelegt — halber Unterhalt', ok: false };
     case 'burning':
       return { text: burningText(b, tick), ok: false };
     case 'noForest':

@@ -73,6 +73,7 @@ export function stateTone(b: Building): Tone {
       return 'ok';
     case 'waitingInput':
     case 'storageFull':
+    case 'paused':
       return 'warn';
     case 'burning':
     case 'noForest':
