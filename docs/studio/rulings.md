@@ -5210,3 +5210,18 @@ kein Push.
 Regelbezug: gates.md Gate Merge Release, R478, R482, R484 · Kosten bei Irrtum: ein Revert im Werkzeug-Strang.
 
 Entscheider: L0 · Anlass: Bericht Controller TOOL-BUENDEL-5 · ADR: —
+
+## R495 · 2026-10-10 · Spec M14-E1 „Inselcharakter“ eingereicht; E-1…E-5 entschieden
+
+Ruling: Spec `docs/superpowers/specs/2026-10-10-m14-e1-inselcharakter-design.md` (`ff2c2fd8`, AK-M14E1-01…41, 3 Anhänge)
+und Ideen-Pflege (`43bf5c99`) entgegengenommen; Scratch-Test gelöscht, nie committet. Entscheide nach Empfehlung: **E-1**
+O6 wird so ausgelegt: Weidenau ist wie die anderen Inseln von Start an sichtbar, nutzbar ab der Seefahrt. **E-2**
+Gebirge+ wirkt auf Steinbruch und Glashütte (×2), weil jede Heimat Gebirge hat (300/300 Seeds). **E-3** Weidenau im Band
+30–35 mit Gewürz. **E-4** Bestehende Pins bleiben über die Rückfaltung gleich, neue Weidenau-Strecken als zusätzliche Pins.
+**E-5** Die Weidenau-Erzeugung wirft nie (Ersatzregel; Seed 963 scheitert heute) — Auflage an den Plan. Werft wird
+eigenes Epic M14-E2 (mit I-015, I-019), Routenrisiko M14-E3. Gate Spec (lead-tech, lead-qa) in der nächsten Session nach
+den Plänen M13-E2 und I-048; Umsetzung erst nach Abschluss M13 (R486).
+
+Regelbezug: gates.md Gate Spec, R486 · Kosten bei Irrtum: eine Inselzuordnung nachjustieren.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-m14-e1 · ADR: —
