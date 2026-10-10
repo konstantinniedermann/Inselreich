@@ -192,3 +192,7 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
 ### 2026-10-10 · I-043 (UI-GUT-CHIP): Rechtsklick löscht den Gut-Fokus
 
 - **Fundort:** `src/ui/app.ts` (`cancel`-Zweig ruft `clearGoodFocus`). Beobachtung: Reviewer-Hinweis: Rechtsklick löscht den Fokus wie `Esc`, das steht nicht in den Akzeptanzkriterien der Spec (README-Tastentabelle nennt es jetzt). Ursprung: Review T06/T07 I-043. Einschätzung: niedrig; bei Gelegenheit in die Spec nachziehen.
+
+### 2026-10-10 · I-043 (UI-GUT-CHIP): Befunde des Browser-Laufs T08
+
+- **Fundort:** `.studio/qa/ui-gut-chip/report.md`. Beobachtung: (1) Tab-Reihenfolge: die Lager-Chips kommen vor den oberen HUD-Knöpfen (Inseln, Tempo, Menü); vorbestehend, nicht von I-043. (2) `0` auf der Heimatinsel löscht den Fokus nicht (kein Inselwechsel, konsistent mit AK-GC-07). (3) Nicht im Browser prüfbar: Problem-Sprung auf eine andere Insel bei aktivem Fokus (`.` geht dann auf die Gut-Liste; Logik per `shouldClearFocus` im Vitest), Meldung «Erzeuger noch nicht frei» (Glas und Seefahrt hängen an U6), Obergrenze 40 nur im Vitest (AK-GC-11). Ursprung: Playtest T08. Einschätzung: alle niedrig.
