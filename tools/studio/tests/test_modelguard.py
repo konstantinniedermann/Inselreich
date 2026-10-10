@@ -249,6 +249,18 @@ class HookTest(unittest.TestCase):
         _, out, _ = self.run_budget_hook("deny", [grant], **self.LEAD)
         self.assertEqual(out, "")
 
+    def test_budget_warning_also_with_alias_note_or_warn_mode(self):
+        alias = {"subagent_type": "lead-qa", "model": "fable"}
+        alias["prompt"] = self.LEAD["prompt"]
+        _, out, events = self.run_budget_hook("deny", [], **alias)
+        self.assertIn("Budget-Warnung", json.loads(out)["systemMessage"])
+        self.assertEqual(out.count("\n"), 1)
+        self.assertEqual([e["kind"] for e in events], ["model_guard", "budget_warn"])
+        over = {"subagent_type": "lead-qa", "model": "opus"}
+        over["prompt"] = self.LEAD["prompt"]
+        _, out, _ = self.run_budget_hook("warn", [], **over)
+        self.assertIn("Budget-Warnung", json.loads(out)["systemMessage"])
+
     def test_broken_input_never_fails(self):
         done = subprocess.run(
             [sys.executable, str(Path(modelguard.__file__))],

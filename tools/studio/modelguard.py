@@ -176,6 +176,8 @@ def main() -> int:
                 "permissionDecisionReason": found,
             }
             print(json.dumps({"hookSpecificOutput": out}, ensure_ascii=False))
+            return 0
+        return _budget_warn(payload, data)
     except Exception:  # noqa: BLE001 - Hooks werfen nie
         return 0
     return 0
