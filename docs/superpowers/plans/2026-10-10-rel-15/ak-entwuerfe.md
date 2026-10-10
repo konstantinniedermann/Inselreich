@@ -26,7 +26,7 @@ Zuordnung (R437): A1–A4 = AK-R15-01…04, B1–B6 = AK-R15-05…10, C1–C7 = 
 - **C4** `tests/render/seaMap.test.ts` enthält kein `performance.now`; der Ersatztest prüft `rasterCount === Inselzahl` und genau ein `fillRect` je Landstreifen (Zähler statt Uhr).
 - **C5** `node tools/render-qa/seekarte.mjs --help` Exit 0; ohne `--help` baut das Skript die Szene (Kontor auf Insel 1, zwei Schiffe, Route 0↔1, ein Schiff im Hafen), öffnet die Seekarte je `--size` und `--dpr`, legt Screenshots unter `--out` ab und meldet mit `--leck` die Listener-Zahl vor und nach zwei Neustarts; Exit 0 bestanden, 1 Prüfung fehlgeschlagen, 2 Aufruffehler. Zeile in `tools/render-qa/README.md`.
 - **C6** Browser-Check: Seekarte offen bei 1280 × 720 und 1920 × 1080, dpr 1 und 2: Kontor-Marken auf Heimat und Insel 1 sichtbar, nicht vom Hafenpunkt verdeckt, Punktgrösse bei dpr 2 optisch gleich wie bei dpr 1.
-- **C7** Browser-Check: nach zweimal „Neue Insel“ genau ein Inselmenü-`pointerdown`-Listener am `document` (vorher 3 auf `main`-Stand als Gegenprobe); Konsole ohne Fehler.
+- **C7** Browser-Check: nach zweimal „Neue Insel“ genau ein Inselmenü-`pointerdown`-Listener am `document` (Gegenprobe in T04: auf `main`-Stand ohne T03 sind es 3, Ports 5491/5591); Konsole ohne Fehler.
 
 ## D · Trivial-Fixes und Doku
 
