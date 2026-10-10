@@ -184,6 +184,71 @@ class HookTest(unittest.TestCase):
         }
         self.assertEqual(self.run_hook(bash, "deny")[1:], ("", []))
 
+    def run_budget_hook(self, mode, events_lines, **tool_input):
+        with (
+            tempfile.TemporaryDirectory() as home,
+            tempfile.TemporaryDirectory() as docs,
+        ):
+            shutil.copy(STUDIO, Path(docs) / "STUDIO.md")
+            path = Path(home) / "events.jsonl"
+            if events_lines is not None:
+                path.write_text("".join(x + "\n" for x in events_lines), "utf-8")
+            env = {"STUDIO_HOME": home, "STUDIO_DOCS": docs}
+            out = io.StringIO()
+            with (
+                mock.patch.dict(os.environ, env),
+                mock.patch.object(modelguard, "MODE", mode),
+                mock.patch.object(
+                    sys, "stdin", io.StringIO(json.dumps(self.payload(**tool_input)))
+                ),
+                mock.patch.object(sys, "stdout", out),
+            ):
+                code = modelguard.main()
+            lines = path.read_text("utf-8").splitlines() if path.exists() else []
+            return code, out.getvalue(), [json.loads(x) for x in lines]
+
+    LEAD = MappingProxyType(
+        {"subagent_type": "lead-qa", "prompt": "Persona: lead-qa\nPaket: P\nBudget: 3"}
+    )
+
+    def test_budget_warning_output_and_event(self):
+        code, out, events = self.run_budget_hook("deny", [], **self.LEAD)
+        self.assertEqual(code, 0)
+        data = json.loads(out)
+        self.assertNotIn("permissionDecision", data["hookSpecificOutput"])
+        text = data["hookSpecificOutput"]["additionalContext"]
+        self.assertEqual(text, data["systemMessage"])
+        self.assertIn("Budget-Warnung (E-055)", text)
+        self.assertEqual(events[-1]["kind"], "budget_warn")
+        self.assertEqual(events[-1]["persona"], "lead-qa")
+        self.assertEqual(events[-1]["package"], "P")
+
+    def test_deny_wins_over_budget_warning(self):
+        data = {"subagent_type": "lead-qa", "model": "opus"}
+        data["prompt"] = "Persona: lead-qa\nPaket: P\nBudget: 3"
+        _, out, events = self.run_budget_hook("deny", [], **data)
+        self.assertEqual(out.count("\n"), 1)
+        self.assertIn("deny", out)
+        self.assertNotIn("systemMessage", out)
+        self.assertEqual([e["kind"] for e in events], ["model_guard"])
+
+    def test_missing_events_file_is_silent(self):
+        code, out, events = self.run_budget_hook("deny", None, **self.LEAD)
+        self.assertEqual((code, out), (0, ""))
+        self.assertEqual(events, [])
+
+    def test_matching_grant_is_silent(self):
+        grant = json.dumps(
+            {
+                "kind": "budget",
+                "session_id": "s1",
+                "role": "lead-qa",
+                "budget": {"granted": 3, "phase": "P"},
+            }
+        )
+        _, out, _ = self.run_budget_hook("deny", [grant], **self.LEAD)
+        self.assertEqual(out, "")
+
     def test_broken_input_never_fails(self):
         done = subprocess.run(
             [sys.executable, str(Path(modelguard.__file__))],
