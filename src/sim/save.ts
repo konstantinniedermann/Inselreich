@@ -14,6 +14,7 @@ import {
 } from './defs/timing';
 import { LEVELS } from './defs/levels';
 import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
+import { EDICTS } from './defs/edicts';
 import { UNLOCK_IDS } from './defs/unlocks';
 import { ISLANDS, ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
 import { generateForeignIslands, homeAnchor, laneTicks, type LaneIsland } from './islands';
@@ -34,7 +35,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 export type { LoadResult };
 
@@ -129,6 +130,13 @@ export function migrateV1ToV2(raw: Record<string, unknown>): void {
  * sie ab. Nicht idempotent: ein zweiter Aufruf findet kein `taxLevel` mehr, läuft aber über das schon
  * verteilte `taxLockedUntil` erneut und macht daraus Objekte in Objekten; er gehört nur zur Kette v9 → v10.
  */
+/** v10 → v11 (M13-E1): Edikt-Felder ergänzen; vorhandene Werte bleiben und gehen in die Prüfung. */
+export function migrateV10ToV11(raw: Record<string, unknown>): void {
+  if (!('edict' in raw)) raw.edict = null;
+  if (!('edictLockedUntil' in raw)) raw.edictLockedUntil = 0;
+  raw.version = 11;
+}
+
 export function migrateV9ToV10(raw: Record<string, unknown>): void {
   if ('taxLevel' in raw) {
     raw.taxLevels = Object.fromEntries(
@@ -449,6 +457,7 @@ const BUILDING_STATES: readonly BuildingState[] = [
   'burning',
   'noService',
   'noForest',
+  'paused',
 ];
 
 const isIntBetween = (v: unknown, min: number, max: number): boolean =>
@@ -621,6 +630,27 @@ function isValidV9Fields(raw: Record<string, unknown>): boolean {
   return ids.every((id) => nextShipId > (id as number));
 }
 
+/** C5 bis C7: `paused` nur als `true`, nur an Betrieben; `state 'paused'` verlangt `paused`. */
+function isValidPaused(b: unknown): boolean {
+  if (!isObject(b)) return false;
+  if (b.paused === undefined) return b.state !== 'paused';
+  const def = BUILDING_DEFS[b.defId as keyof typeof BUILDING_DEFS];
+  return b.paused === true && def !== undefined && def.produces !== undefined;
+}
+
+/** Felder von Save v11 (M13-E1): Edikt und Stilllegung (C1 bis C7). */
+function isValidV11Fields(raw: Record<string, unknown>): boolean {
+  const { edict, edictLockedUntil } = raw;
+  const buildings = Object.values(raw.buildings as Record<string, unknown>);
+  if (edict !== null && !(typeof edict === 'string' && Object.hasOwn(EDICTS, edict))) return false;
+  if (!isInt(edictLockedUntil) || edictLockedUntil < 0) return false;
+  if (edict !== null) {
+    if (raw.won !== true) return false;
+    if (!buildings.some((b) => isObject(b) && b.defId === 'townhall')) return false;
+  }
+  return buildings.every(isValidPaused);
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { stats } = raw;
@@ -632,6 +662,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidV5Fields(raw)) return false;
   if (!isValidV6Fields(raw)) return false;
   if (!isValidV9Fields(raw)) return false;
+  if (!isValidV11Fields(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -669,6 +700,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 7) migrateV7ToV8(raw);
   const grace = raw.version === 8 ? migrateV8ToV9(raw) : 0;
   if (raw.version === 9) migrateV9ToV10(raw);
+  if (raw.version === 10) migrateV10ToV11(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

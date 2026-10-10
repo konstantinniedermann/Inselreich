@@ -95,7 +95,14 @@ export interface TierDef {
   unlockCitizens?: number | null;
 }
 export type BuildingState =
-  'ok' | 'waitingInput' | 'storageFull' | 'notConnected' | 'burning' | 'noService' | 'noForest';
+  | 'ok'
+  | 'waitingInput'
+  | 'storageFull'
+  | 'notConnected'
+  | 'burning'
+  | 'noService'
+  | 'noForest'
+  | 'paused';
 export interface HouseState {
   tier: Tier;
   inhabitants: number;
@@ -117,6 +124,8 @@ export interface Building {
   island: number;
   /** Letzter Ausfall-Tick; nur bei state 'burning'. */
   outageUntil?: number;
+  /** Betrieb stillgelegt (M13-E1); fehlt = läuft. Nur an Betrieben mit `produces`. */
+  paused?: true;
   /** Auslastung in Promille × `EFF_WINDOW` (0 … 256 000); fehlt = 256 000 (volle Auslastung). */
   eff?: number;
   /** Ausbaustufe; fehlt = Stufe 1. */
@@ -223,7 +232,7 @@ export interface Ship {
   homing: boolean;
 }
 export interface World {
-  version: 10;
+  version: 11;
   seed: number;
   islands: Island[];
   tick: number;
@@ -257,6 +266,10 @@ export interface World {
   nextShipId: number;
   /** Drittes Ziel „Gewürzstadt“ erreicht; nur mit `wonMerchants`, nie zurückgesetzt. */
   wonSpice: boolean;
+  /** Gewähltes Edikt (M13-E1); nur nach dem Bürger-Ziel und mit Amtsstube. */
+  edict: EdictId | null;
+  /** Bis zu diesem Tick ist die Edikt-Wahl gesperrt. */
+  edictLockedUntil: number;
 }
 
 /** Eine Insel: Raster, Kontor, Lager und Lage im Archipel (M12 E0, E1). */
