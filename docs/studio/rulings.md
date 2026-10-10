@@ -4748,3 +4748,20 @@ Regelbezug: STUDIO.md Verbesserungsschleife, R316, R429 (Abweichung → Handbuch
 Controller startet nach einem Push 5–8 min später.
 
 Entscheider: L0 · Anlass: Prozess-Aussensicht REL-16/REL-17 · ADR: —
+
+## R465 · 2026-10-10 · Gate Plan TOOL-BUENDEL-4: BEDENKEN → Nacharbeit ohne Zweitprüfung, Umsetzung frei
+
+Ruling: Plan `docs/superpowers/plans/2026-10-10-tool-buendel-4.md` (`3f78d374`, T01–T07) mit Nacharbeit frei (Urteil
+`.studio/handoffs/2026-10-10-lead-qa-GATE-PLAN-TOOL-BUENDEL-4.md`). **B1** Global Constraints erlauben gezielte
+Einzeldatei-Läufe `npx vitest run <Dateien>` (wie M13-E1, R380); `make test`/`make check` nur der Controller. **B2** neuer
+Task T08 `studio-coach`: STUDIO.md-Zeilen zu `zeitreserve-push` („mit Sperre“) nach T03 nachführen; T03 ergänzt einen Test:
+halb geschriebene oder fehlende Messdatei → Exit ≠ 0, nie OK. **B3** T01: Messzahlen ins Ledger; dritte Ursache → Stopp und
+Meldung an L0; Cache-Test bleibt als Rückfallschutz, sobald ein Abruf > 0,15 s dauert. **B4** T04 misst an der
+Zählerausgabe („2 von 36“) und hat Gegenproben fremde Phase, Kopfzeile ohne Zusatz, `since` nach dem Start. **B5** Ctrl-C-Test
+in T05 ohne feste Schlafzeit (Bereitschaftssignal). **B6** angenommen. Seriell in einem Worktree (Plan-Entscheid 4: seriell).
+**Budget:** `lead-tech` 8 Starts (7 + T08-Coach), Parallelität 1, Phase TOOL-BUENDEL-4; Controller `lead-tech` sonnet. Start
+nur, solange kein Push ansteht (Handbuch 1.43, R464 V1).
+
+Regelbezug: gates.md Gate Plan; R380, R433, R438 V3, R464 · Kosten bei Irrtum: Nacharbeit im Strang.
+
+Entscheider: L0 · Anlass: Urteil lead-qa GATE-PLAN-TOOL-BUENDEL-4 · ADR: —
