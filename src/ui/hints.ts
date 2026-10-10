@@ -10,7 +10,16 @@ import { canPlace, canPlaceRoad } from '../sim/placement';
 import { effectiveRefund, houseDiagnosis } from '../sim/queries';
 import { reachableRoads } from '../sim/roads';
 import { paidCost } from '../sim/upgrade';
-import type { Building, BuildingDefId, Cost, GoodId, Tier, World } from '../sim/types';
+import type {
+  Building,
+  BuildingDefId,
+  Cost,
+  GoodId,
+  Terrain,
+  Tier,
+  Tile,
+  World,
+} from '../sim/types';
 import { HOME, home, adjacentOf, idx, isKontor, tileAt } from '../sim/world';
 import { toolAfford } from './islandTools';
 import { costLine } from './dom';
@@ -27,6 +36,39 @@ export interface ReasonCtx {
   island?: number;
   /** Bevölkerungsstufe, auf die sich ein Steuergrund bezieht (P-2). */
   tier?: Tier;
+  /** Grundriss der Aktion (Ursprung, Breite, Höhe) auf `island`; nennt Gelände bzw. Belegung (REL-16). */
+  at?: { x: number; y: number; w: number; h: number };
+}
+
+const GROUND_NAMES: Partial<Record<Terrain, string>> = { water: 'Wasser', mountain: 'Gebirge' };
+
+/** Kacheln des Grundrisses (Zeilen aussen, Spalten innen); nur lesen. */
+function footprint(world: World, c: ReasonCtx): Tile[] {
+  const at = c.at;
+  const isl = world.islands[c.island ?? HOME];
+  if (!at || !isl) return [];
+  const out: Tile[] = [];
+  for (let dy = 0; dy < at.h; dy++)
+    for (let dx = 0; dx < at.w; dx++) {
+      const t = tileAt(isl, at.x + dx, at.y + dy);
+      if (t) out.push(t);
+    }
+  return out;
+}
+
+function groundText(world: World, c: ReasonCtx): string | null {
+  const found = new Set(footprint(world, c).map((t) => t.terrain));
+  const names = (['water', 'mountain'] as const)
+    .filter((t) => found.has(t))
+    .map((t) => GROUND_NAMES[t]!);
+  return names.length ? `Kein Bauland: ${names.join(' und ')}` : null;
+}
+
+function occupantText(world: World, c: ReasonCtx): string | null {
+  const tiles = footprint(world, c);
+  const b = tiles.find((t) => t.buildingId !== null);
+  if (b) return `Platz belegt: ${BUILDING_DEFS[world.buildings[b.buildingId!]!.defId].name}`;
+  return tiles.some((t) => t.road) ? 'Platz belegt: Weg' : null;
 }
 
 /** `show` liefert den Anzeigetext; `null` = Grund unverändert anzeigen. */
@@ -56,12 +98,12 @@ export const REASON_TABLE: readonly ReasonRow[] = [
   {
     source: 'placement',
     pattern: /^Kein Bauland$/,
-    show: () => 'Kein Bauland — nur auf Land bauen',
+    show: (_m, w, c) => groundText(w, c) ?? 'Kein Bauland — nur auf Land bauen',
   },
   {
     source: 'placement',
     pattern: /^Bereits bebaut$/,
-    show: () => 'Hier steht schon ein Gebäude oder Weg',
+    show: (_m, w, c) => occupantText(w, c) ?? 'Hier steht schon ein Gebäude oder Weg',
   },
   {
     source: 'placement',
@@ -237,7 +279,13 @@ export function placementHint(
     const def = BUILDING_DEFS[tool.defId];
     const r = canPlace(world, tool.defId, x, y, island);
     const a = r.ok ? toolAfford(world, tool, island) : r;
-    if (!a.ok) return { tone: 'bad', text: friendlyReason(world, a.reason, { defId: tool.defId }) };
+    if (!a.ok) {
+      const at = { x, y, w: def.w, h: def.h };
+      return {
+        tone: 'bad',
+        text: friendlyReason(world, a.reason, { defId: tool.defId, island, at }),
+      };
+    }
     if (tool.defId === 'house') return { tone: 'ok', text: 'Baubar · im Versorgungsgebiet' };
     if (tool.defId === 'kontor2') return { tone: 'ok', text: 'Baubar · Kosten aus der Heimat' };
     return touchesReachable(world, x, y, def.w, def.h, reachableRoads(world, island), island)
@@ -247,8 +295,13 @@ export function placementHint(
   if (tool.kind === 'road') {
     const r = canPlaceRoad(world, x, y, island);
     const a = r.ok ? toolAfford(world, tool, island) : r;
-    if (!a.ok)
-      return { tone: 'bad', text: friendlyReason(world, a.reason, { cost: ROAD_COST_OBJ }) };
+    if (!a.ok) {
+      const at = { x, y, w: 1, h: 1 };
+      return {
+        tone: 'bad',
+        text: friendlyReason(world, a.reason, { cost: ROAD_COST_OBJ, island, at }),
+      };
+    }
     const roads = reachableRoads(world, island);
     const linked = adjacentOf(isl, x, y, 1, 1).some(
       (p) => roads.has(idx(isl, p.x, p.y)) || tileAt(isl, p.x, p.y)?.buildingId === isl.kontorId,
