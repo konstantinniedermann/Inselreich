@@ -112,8 +112,10 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend (Session 2cfa57e0)
 
-- REL-18 Push (R472) durch `production-integrator`; parallel `studio-coach` (R471 V1/V2, fällige Retros) und `lead-design`
-  (M13-E2 Spec). Keine Umsetzer bis `zeitreserve-push` Exit 0.
+- REL-18 Push (R472) durch `production-integrator`; keine Umsetzer bis `zeitreserve-push` Exit 0.
+- Vorarbeit (R475, Deckel voll): M13-E2 Spec (`lead-design`), UI-TASTEN Kurzdesign (I-056/I-057, R474), I-048 Spec
+  Zukauf-Aufschlag, I-049 Kurzdesign Sperrbestand, TOOL-BUENDEL-5 Plan (`lead-tech`), Denkmal-Art-Vorschlag (`lead-art`),
+  M14-Brainstorming. Erledigt: Handbuch 1.45 (R473), IDEEN-06 (R474).
 
 ## Parallele Sessions
 
