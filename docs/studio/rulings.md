@@ -4525,3 +4525,24 @@ Controller). Je Strang ein Controller `lead-tech` (sonnet). Studio-Deckel ≤ 8 
 Regelbezug: gates.md Gate Plan; R424, R450 · Kosten bei Irrtum: Nacharbeit im Strang vor dem Kandidaten.
 
 Entscheider: L0 · Anlass: Urteil lead-qa GATE-PLAN-REL16-TB3 · ADR: —
+
+## R452 · 2026-10-10 · Gate Brainstorming M13 „Spätspiel mit Richtung“: Ansatz A angenommen
+
+Ruling: Designvorschlag `docs/superpowers/specs/2026-10-10-spaetspiel-vorschlag.md` mit Rechnung (`153a1d9d`) angenommen,
+Selbstprüfung OK mit B1–B3. L0-Prüfung nach Gate Brainstorming: stärkt die Säulen Wirtschaft und Ausbau, Zweck („Geld
+und Ware bekommen nach Ziel 1 eine Richtung“) in einem Satz sagbar; Baseline und Balancing-Test unverändert (Lauf ohne
+Edikt 6750/11 500 Ticks); kein Richtungswechsel (§5.3). **Entscheide O1–O11 wie empfohlen:** O1 Ansatz A (Edikte ab Ziel 1,
+Denkmal ab Ziel 2, getrennte Systeme); O2 Etappe E1 Edikte zuerst (Save v11), E2 Denkmal danach, Denkmal-Sprite parallel
+zu E1 (lead-art); O3 Wohlfahrt über den Wachstumstakt (40 statt 50 Ticks, Wartezeit 200, Steuer −5 Punkte; Rückfall: nur
+zwei Edikte); O4 Sparen −7 Steuerpunkte; O5 Handel Kaufpreise −20 % aufgerundet; O6 Freischaltung wie O1; O7 Zukauf-Schalter
+je Gut; O8 automatische Lieferung über der Reserve mit «Bau pausieren»; O9 Edikt-Preis 600 Geld, 5 min Sperre; O10 I-035
+„Betrieb stilllegen“ in Save v11 mit eigenem S-Kurzdesign; O11 Denkmal-Mengen nach Playtest ±30 %. **Auflagen an die
+Spec:** B1 Wohlfahrts-Vorteil per Simulation belegen (AK mit Seed-Lauf), B2 Edikt-Wirkung im Endzustand als bewusst
+klein dokumentieren, B3 Denkmal-Dauer gegen Referenzlauf ohne Zusatzausbau prüfen; Playtest ab Spielstand mit Ziel 1;
+Rückfaltung `foldBackToV10` für Hash-Pins. Nächster Schritt: Spec M13-E1 durch `design-spec-author` (opus), sobald im
+Studio-Deckel Platz ist (REL-16/TOOL-BUENDEL-3 laufen). Befunde ausserhalb Scope (I-031/I-039-Zahlen im Pool, Referenz-
+Controller erreicht Ziel 3 nicht) trägt `lead-design` beim nächsten Start nach.
+
+Regelbezug: gates.md Gate Brainstorming; R448; Verfassung §5.3 · Kosten bei Irrtum: Spec-Nacharbeit; kein Code betroffen.
+
+Entscheider: L0 · Anlass: Bericht lead-design M13-BRAINSTORM · ADR: —
