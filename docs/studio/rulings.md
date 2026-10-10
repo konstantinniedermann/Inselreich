@@ -4399,3 +4399,26 @@ keine weiteren Spielerthemen liefert, folgt nach REL-16 eine Ideen-Runde (Discov
 Regelbezug: STUDIO.md Auswahl/Discovery-Strang; R335, R443 · Kosten bei Irrtum: zwei S-Pakete umplanen, kein Code betroffen.
 
 Entscheider: L0 · Anlass: Bericht lead-production BEOB-AUSW-04 · ADR: —
+
+## R445 · 2026-10-10 · Nutzerauftrag: Ideen-Runden bei freier Kapazität; IDEEN-05 breit
+
+Ruling: Auslegung von „wenn du in einer Session Kapazitäten hast …, lass den Brainstorming-Agenten neue Ideen entwickeln
+(neue Funktionen, Spieltiefe, QoL; nur Idee, nicht Umsetzung) → die Ideen kommen zu dir, du priorisierst nach Nutzen und
+Aufwand“ als **Dauerauftrag**: (1) Ist im Studio-Deckel (≤ 8 Agenten) und im Nutzungslimit Platz, startet L0 eine
+Ideen-Runde, zusätzlich zum bisherigen Takt (nach Release, spätestens jede zweite Session); weiterhin höchstens eine
+Runde je Session. (2) Eine solche Runde ist breiter: `lead-design` setzt bis zu **3** `design-idea-scout` parallel mit je
+einem Schwerpunkt ein (Spieltiefe und Wirtschaft · neue Funktionen und Inhalte · Komfort und Bedienung), je höchstens 5
+Ideen, zusammen ≤ 160 Tools. (3) `lead-design` bewertet **alle** Ideen nach dem Raster, ergänzt je Idee Nutzen und
+Aufwand in einer Zeile und liefert L0 eine vollständige Rangliste statt höchstens 2 Pitches; **L0 priorisiert** im
+Runden-Ruling nach Nutzen/Aufwand. (4) Obergrenze offener Ideen im Pool 40 statt rund 30; Doppelte fasst `lead-design`
+zusammen. (5) Nur Ideen, keine Specs oder Pläne; Säulenwechsel bleibt Warteschlange (§5.3). Erste Runde: **IDEEN-05**
+jetzt, parallel zum Push (reine Doku). Handbuch-Minor (STUDIO.md Discovery-Strang, gates.md Gate Ideen-Runde) setzt der
+studio-coach im selben Zug um (R429).
+
+Zweck der Anweisung: mehr und bessere Spielideen ohne Leerlauf, Auswahl beim Projektleiter; Auslegung widerspricht ihm
+nicht, weil sie freie Kapazität nutzt, nur Ideen erzeugt und die Priorisierung bei L0 lässt.
+
+Regelbezug: Nutzerauftrag; STUDIO.md Discovery-Strang (E-027, R208); gates.md Gate Ideen-Runde; R429 · Kosten bei Irrtum:
+eine zu breite Runde (≈ 160 Tools), Pool wieder eindampfen.
+
+Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-10 · ADR: —
