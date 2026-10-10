@@ -332,21 +332,28 @@ function closeIslandMenu(box: HTMLElement): void {
 /** Zeichnet die offene Seekarte neu, aber nur bei geändertem Anzeige-Schlüssel (je Box registriert). */
 const seaMapRedraw = new WeakMap<HTMLElement, () => void>();
 
+/** Abmeldung der Dokument-Listener des Inselmenüs je Kopfzeile: ein Neustart bindet neu, der alte Satz fällt weg. */
+const islandMenuAbort = new WeakMap<HTMLElement, AbortController>();
+
 /**
  * Knopf „Inseln": Klick 1 öffnet das Popover (Seekarte über der Liste, beides beim Öffnen aufgebaut, nicht je Tick),
  * Klick auf Land der Karte oder auf einen Listeneintrag springt und schliesst. Wasser tut nichts; ein Klick daneben
  * oder Esc schliesst. Die Karte hält keinen Sim-Zustand (nur offen/zu und Hover).
  */
-function bindIslandMenu(header: HTMLElement, state: GameState, actions: HudActions): void {
+export function bindIslandMenu(header: HTMLElement, state: GameState, actions: HudActions): void {
   const box = header.querySelector<HTMLElement>('.hud-islands');
   const btn = box?.querySelector<HTMLButtonElement>('[data-field="islands"]');
   const pop = box?.querySelector<HTMLElement>('.island-pop');
   const list = box?.querySelector<HTMLElement>('.island-list');
   const canvas = box?.querySelector<HTMLCanvasElement>('canvas.sea-map');
   if (!box || !btn || !pop || !list || !canvas) return;
+  islandMenuAbort.get(header)?.abort();
+  const menuAbort = new AbortController();
+  islandMenuAbort.set(header, menuAbort);
   const close = (): void => closeIslandMenu(box);
   const cache = createSilhouetteCache();
   let layout: MapLayout | null = null;
+  let mapDpr = 1;
   let shownKey = '';
   let hover: number | null = null;
   const dpr = (): number => Math.max(1, window.devicePixelRatio || 1);
@@ -357,7 +364,7 @@ function bindIslandMenu(header: HTMLElement, state: GameState, actions: HudActio
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     shownKey = key;
-    drawSeaMap(ctx, state.world, layout, cache, { hover });
+    drawSeaMap(ctx, state.world, layout, cache, { hover, dpr: mapDpr });
   };
   seaMapRedraw.set(box, () => redraw(false));
   const point = (ev: MouseEvent): { x: number; y: number } => {
@@ -416,6 +423,7 @@ function bindIslandMenu(header: HTMLElement, state: GameState, actions: HudActio
     canvas.hidden = off;
     if (!off) {
       const d = dpr();
+      mapDpr = d;
       canvas.width = Math.round(SEA_MAP_W * d);
       canvas.height = Math.round(SEA_MAP_H * d);
       layout = mapLayout(state.world, canvas.width, canvas.height, SEA_MAP_PAD * d);
@@ -425,12 +433,20 @@ function bindIslandMenu(header: HTMLElement, state: GameState, actions: HudActio
     btn.setAttribute('aria-expanded', 'true');
     if (!off) redraw(true);
   });
-  document.addEventListener('pointerdown', (ev) => {
-    if (!pop.hidden && ev.target instanceof Node && !box.contains(ev.target)) close();
-  });
-  document.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape' && !pop.hidden) close();
-  });
+  document.addEventListener(
+    'pointerdown',
+    (ev) => {
+      if (!pop.hidden && ev.target instanceof Node && !box.contains(ev.target)) close();
+    },
+    { signal: menuAbort.signal },
+  );
+  document.addEventListener(
+    'keydown',
+    (ev) => {
+      if (ev.key === 'Escape' && !pop.hidden) close();
+    },
+    { signal: menuAbort.signal },
+  );
 }
 
 /** Legt den Meldungsstapel oben rechts in `#game` an: Auftrag und Krisenkarte (Spec L2). */

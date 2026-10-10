@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { deriveUnlocks } from '../../src/sim/unlocks';
 import { STORAGE_CAP } from '../../src/sim/defs/goods';
 import { goodsBalance } from '../../src/sim/queries';
@@ -8,6 +8,7 @@ import {
   balanceDue,
   balanceText,
   balanceView,
+  bindIslandMenu,
   chipRole,
   chipView,
   moneyView,
@@ -241,5 +242,38 @@ describe('M12 E2 UI Inseln: Lagerleiste je Insel', () => {
     expect(stockChipHidden(w, 'spice', 2)).toBe(false);
     const s = seaWorld();
     expect(stockChipHidden(s, 'spice')).toBe(false);
+  });
+});
+
+describe('Inselmenü: Dokument-Listener (REL-15, R437 B1)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  type Reg = { type: string; opts?: { signal?: AbortSignal } };
+  it('ein erneutes Binden derselben Kopfzeile meldet den alten Satz ab', () => {
+    const regs: Reg[] = [];
+    vi.stubGlobal('document', {
+      addEventListener: (type: string, _fn: unknown, opts?: { signal?: AbortSignal }) =>
+        regs.push({ type, opts }),
+      removeEventListener: () => {},
+    });
+    const el = () => ({ addEventListener: () => {}, contains: () => false, hidden: true });
+    const box = { ...el(), querySelector: () => el() };
+    const header = {
+      querySelector: (sel: string) => (sel === '.hud-islands' ? box : null),
+    } as unknown as HTMLElement;
+    const state = { world: createWorld(3) } as never;
+    const actions = {} as never;
+    bindIslandMenu(header, state, actions);
+    const first = regs.slice();
+    bindIslandMenu(header, state, actions);
+    expect(regs.map((r) => r.type).sort()).toEqual([
+      'keydown',
+      'keydown',
+      'pointerdown',
+      'pointerdown',
+    ]);
+    const active = regs.filter((r) => r.opts?.signal !== undefined && !r.opts.signal.aborted);
+    const permanent = regs.filter((r) => r.opts?.signal === undefined);
+    expect(active.length + permanent.length).toBe(2);
+    for (const r of first) expect(r.opts?.signal?.aborted).toBe(true);
   });
 });
