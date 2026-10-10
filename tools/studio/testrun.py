@@ -145,17 +145,42 @@ def _signal_group(pgid: int, sig: signal.Signals) -> None:
 
 
 def _stop_group(proc: subprocess.Popen) -> None:
-    """SIGTERM an die Gruppe, nach GRACE SIGKILL; Kind und Enkel sind danach tot."""
+    """SIGTERM an die Gruppe, nach GRACE SIGKILL; Kind und Enkel sind danach tot.
+
+    Unterbrechungsfest: weitere Interrupts während der Eskalation werden ignoriert,
+    und das SIGKILL läuft in jedem Fall.
+    """
     pgid = proc.pid  # start_new_session=True: Gruppen-ID = PID des Kindes
-    _signal_group(pgid, signal.SIGTERM)
-    deadline = time.monotonic() + GRACE
-    while time.monotonic() < deadline:
-        proc.poll()  # reapt das Kind, sonst bleibt die Gruppe als Zombie sichtbar
-        if not _group_alive(pgid):
+    previous = _ignore_interrupts()
+    try:
+        _signal_group(pgid, signal.SIGTERM)
+        deadline = time.monotonic() + GRACE
+        while time.monotonic() < deadline:
+            proc.poll()  # reapt das Kind, sonst bleibt die Gruppe als Zombie sichtbar
+            if not _group_alive(pgid):
+                break
+            time.sleep(POLL)
+    finally:
+        _signal_group(pgid, signal.SIGKILL)  # nach Frist; sonst wirkungslos
+        try:
+            proc.wait()
+        finally:
+            _restore_handlers(previous)
+
+
+def _ignore_interrupts() -> dict:
+    previous = {}
+    for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+        try:
+            previous[sig] = signal.signal(sig, signal.SIG_IGN)
+        except ValueError:  # nicht im Hauptthread
             break
-        time.sleep(POLL)
-    _signal_group(pgid, signal.SIGKILL)  # nach Frist; sonst wirkungslos
-    proc.wait()
+    return previous
+
+
+def _restore_handlers(previous: dict) -> None:
+    for sig, handler in previous.items():
+        signal.signal(sig, handler)
 
 
 def _run(command: list[str]) -> tuple[int, list[str]]:
@@ -220,8 +245,7 @@ def main(argv: list[str] | None = None) -> int:
         print("testrun: abgebrochen", file=sys.stderr)
         return INTERRUPTED
     finally:
-        for sig, handler in previous.items():
-            signal.signal(sig, handler)
+        _restore_handlers(previous)
     _record(args.suite, code, lines, args.skip_exit)
     return code
 

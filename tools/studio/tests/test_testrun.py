@@ -1,4 +1,5 @@
 import contextlib
+import hashlib
 import io
 import json
 import os
@@ -260,6 +261,27 @@ class RunTest(unittest.TestCase):
         self.assert_dead([int(x) for x in ready.read_text().split()])
         self.assertEqual([e["kind"] for e in self.events()], ["test_aborted"])
 
+    def test_second_interrupt_during_grace_still_kills_family(self):
+        ready, child = self.spawn_stubborn_family()
+        self.interrupt_when_ready(ready)
+        real = testrun._group_alive
+        fired = []
+
+        def alive_then_interrupt(pgid):
+            if not fired:  # zweiter Ctrl-C mitten in der Schonfrist
+                fired.append(True)
+                os.kill(os.getpid(), signal.SIGINT)
+            return real(pgid)
+
+        with (
+            mock.patch.object(testrun, "GRACE", 0.5),
+            mock.patch.object(testrun, "_group_alive", alive_then_interrupt),
+        ):
+            code, _, _ = self.run_main(["--suite", "studio"], child)
+        self.assertEqual(code, 130)
+        self.assertTrue(fired)
+        self.assert_dead([int(x) for x in ready.read_text().split()])
+
     def test_child_gets_own_process_group(self):
         code, out, _ = self.run_main(
             ["--suite", "studio"], py("import os; print(os.getpgrp() == os.getpid())")
@@ -439,10 +461,16 @@ class DiffHashTest(unittest.TestCase):
         (self.repo / "x.log").write_text("laut", "utf-8")
         self.assertEqual(testrun._diff_hash(), before)
 
-    def test_tracked_diff_hash_format_unchanged(self):
+    def test_tracked_diff_hash_is_bit_identical_to_old_algorithm(self):
         (self.repo / "t.txt").write_text("a", "utf-8")
         self.git("add", "t.txt")
-        self.assertRegex(testrun._diff_hash(), r"^[0-9a-f]{12}$")
+        diff = subprocess.run(
+            ["git", "diff", "HEAD", "--binary"],
+            cwd=self.repo,
+            check=True,
+            capture_output=True,
+        ).stdout
+        self.assertEqual(testrun._diff_hash(), hashlib.sha1(diff).hexdigest()[:12])
 
 
 if __name__ == "__main__":

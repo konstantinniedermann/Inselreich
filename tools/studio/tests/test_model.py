@@ -2780,5 +2780,33 @@ class ClaimByPackageNameTest(unittest.TestCase):
         self.assertEqual(phases.get(f"{SA}:LB"), "plan-B")
 
 
+class PackageTitleKeptTest(unittest.TestCase):
+    def test_package_event_without_title_keeps_existing_title(self):
+        events = [
+            ev(
+                "package",
+                1,
+                agent_id="",
+                source="log",
+                package_id="P1",
+                title="Alt",
+                owner="o",
+                status="open",
+            ),
+            ev(
+                "package",
+                2,
+                agent_id="",
+                source="log",
+                package_id="P1",
+                owner="o",
+                status="active",
+            ),
+        ]
+        (item,) = build(events)["board"]
+        self.assertEqual(item["title"], "Alt")
+        self.assertEqual(item["status"], "active")
+
+
 if __name__ == "__main__":
     unittest.main()
