@@ -6,6 +6,7 @@ Aufrufe stehen in docs/studio/STUDIO.md (Abschnitt Logging-Pflicht).
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import subprocess
@@ -92,7 +93,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     package = sub.add_parser("package", help="Paket auf dem Meilenstein-Board")
     package.add_argument("--id", required=True)
-    package.add_argument("--title", required=True)
+    package.add_argument("--title", default="")
+    package.add_argument(
+        "--retitle",
+        action="store_true",
+        help="Titel auch bei bestehendem Paket überschreiben",
+    )
     package.add_argument("--owner", required=True)
     package.add_argument("--status", required=True, choices=PACKAGE_STATUSES)
     package.add_argument("--blocked-by", default="")
@@ -211,9 +217,10 @@ def make_event(args: argparse.Namespace) -> dict:
         )
     elif args.kind == "package":
         blocked = _split(args.blocked_by)
+        if args.title and (args.retitle or not args.package_known):
+            event["title"] = args.title
         event.update(
             package_id=args.id,
-            title=args.title,
             owner=args.owner,
             status=args.status,
             blocked_by=blocked,
@@ -232,6 +239,42 @@ def make_event(args: argparse.Namespace) -> dict:
                 }
             )
     return event
+
+
+def _package_exists(package_id: str) -> bool:
+    """Steht die Paket-ID schon im Ereignislager? Fehler gelten als «neu»."""
+    needle = f'"{package_id}"'
+    try:
+        with open(events_file(), encoding="utf-8") as handle:
+            for line in handle:
+                if needle in line and _is_package_line(line, package_id):
+                    return True
+    except (OSError, ValueError):
+        return False
+    return False
+
+
+def _is_package_line(line: str, package_id: str) -> bool:
+    try:
+        event = json.loads(line)
+    except ValueError:
+        return False
+    return (
+        isinstance(event, dict)
+        and event.get("kind") == "package"
+        and package_id in (event.get("package_id"), event.get("package"))
+    )
+
+
+def _check_package_title(parser: argparse.ArgumentParser, args) -> None:
+    """Setzt args.package_known; Titelpflicht nur für neue Pakete."""
+    args.package_known = _package_exists(args.id)
+    if args.retitle and not args.title:
+        parser.error("--retitle braucht --title")
+    if not args.package_known and not args.title:
+        parser.error("the following arguments are required: --title")
+    if args.package_known and args.title and not args.retitle:
+        print("studio-log: Titel unverändert (--retitle zum Ändern)", file=sys.stderr)
 
 
 def archive() -> int:
@@ -267,6 +310,8 @@ def main(argv: list[str] | None = None) -> int:
         args.resolution or (args.target and args.question)
     ):
         parser.error("decision braucht --for und --question oder --resolution")
+    if args.kind == "package":
+        _check_package_title(parser, args)
     if args.kind == "queue" and not QUEUE_ID.fullmatch(args.id):
         parser.exit(2, f"studio-log: --id {args.id!r} ist keine N-<Nummer>\n")
     if (

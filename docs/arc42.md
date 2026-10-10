@@ -604,8 +604,14 @@ flowchart LR
   eines Claude-Gesprächs (R434); ohne `--out` schreibt es in den Worktree, aus dem es läuft.
   `make zeitreserve-push` bewertet nur die Messung (Commit = HEAD, Last vor dem Lauf ≤ 4), nicht die aktuelle
   Last. `make test` und `make studio-test` laufen über `tools/studio/testrun.py`: rote Läufe schreiben das Ereignis
-  `test_failed` mit Testnamen, grüne `test_passed` (je mit Commit und Diff-Prüfsumme); in CI (`CI` gesetzt) und
-  bei Testsperre-Abbruch (`--skip-exit 3`) entsteht kein Ereignis. `make studio-metrics` und
+  `test_failed` mit Testnamen, grüne `test_passed` (je mit Commit und Diff-Prüfsumme, die ungetrackte, nicht
+  ignorierte Dateien nach Name, Grösse und `mtime_ns` einschliesst); in CI (`CI` gesetzt) und
+  bei Testsperre-Abbruch (`--skip-exit 3`) entsteht kein Ereignis. Das Kommando läuft in einer eigenen
+  Prozessgruppe; Ctrl-C, SIGTERM und SIGHUP beenden die ganze Gruppe (SIGTERM, nach 5 s SIGKILL), schreiben das
+  Ereignis `test_aborted` (zählt weder für Flake-Verdacht noch Metriken) und geben Exit 130 zurück, damit die
+  Testsperre frei wird. `log.py package` setzt den Titel nur bei neuem Paket oder mit `--retitle`. Das Dashboard
+  beantwortet `/api/ping` mit `{"studio": true}`; `start.sh` erkennt damit ein laufendes Studio-Dashboard und
+  meldet einen fremden Server am Port als belegt. `make studio-metrics` und
   `metrics.py --efficiency` zeigen daraus die Ampelzeile „Flake-Verdacht“ (R450 V1). `tools/studio/clock.py` ist
   die gemeinsame Uhr der Studio-Werkzeuge (`frozen()` nur für Tests); `make studio-lint` nutzt eine gepinnte
   Ruff-Version (Makefile-Variable `RUFF`) und warnt zusätzlich bei direktem `datetime.now(`/`time.time(`

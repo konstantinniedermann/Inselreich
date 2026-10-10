@@ -31,7 +31,10 @@ ARCHIVE_SUFFIXES = {".md", ".jsonl", ".txt"}
 STATE_LIMITS_MAX_AGE = 3600
 STATE_CACHE_MAX_AGE = 2.0
 STATE_CACHE_KEYS = 8
-STATE_BUILD_DUTY = 30  # Aufbau höchstens alle 30 × Aufbaudauer (~3 % CPU)
+# Aufbau höchstens alle 30 × Aufbaudauer. Messung T04 (R478, 2026-10-10, 69k Events,
+# Aufbau 1,3 s, Dashboard-Poll alle 2 s, 70 s): 30-fach 1,5 % CPU, 4-fach (Verzug
+# <= 5 s) 14,4 % CPU. Über 10 % -> der Wert bleibt (R468/R478).
+STATE_BUILD_DUTY = 30
 STATE_THROTTLE_MAX = 90.0
 
 
@@ -69,6 +72,9 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_error(403)
                 return
             url = urlparse(self.path)
+            if url.path == "/api/ping":
+                self.send_ping()
+                return
             if url.path == "/api/state":
                 query = parse_qs(url.query)
                 session = query.get("session", ["latest"])[0]
@@ -173,6 +179,17 @@ class Handler(SimpleHTTPRequestHandler):
         state["docs"] = bundle(self.docs, self.agents)
         state["limits"] = limits_state(clock.timestamp())
         return json.dumps(state, ensure_ascii=False).encode("utf-8")
+
+    def send_ping(self) -> None:
+        """Kennung des Studio-Servers; baut keinen Zustand (start.sh erkennt Fremdserver)."""
+        body = b'{"studio": true}'
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def send_state(self, session: str, heartbeats: bool = True) -> None:
         body = self.state_body(session, heartbeats)

@@ -125,6 +125,68 @@ class LogTest(LogBase):
         self.assertEqual(ev["blocked_by"], ["M5-T1", "M5-T0"])
         self.assertEqual(ev["status"], "blocked")
 
+    def package(self, pid, *extra, title="T"):
+        argv = ["package", "--id", pid, "--owner", "o", "--status", "active"]
+        if title is not None:
+            argv += ["--title", title]
+        return self.run_log(*argv, *extra)
+
+    def test_existing_package_keeps_title(self):
+        self.package("P1", title="Alt")
+        code, _, err = self.package("P1", title="Neu")
+        self.assertEqual(code, 0)
+        self.assertNotIn("title", self.events()[1])
+        self.assertEqual(self.events()[1]["status"], "active")
+        self.assertIn("Titel unverändert (--retitle zum Ändern)", err)
+
+    def test_retitle_overrides(self):
+        self.package("P1", title="Alt")
+        code, _, err = self.package("P1", "--retitle", title="Neu")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.events()[1]["title"], "Neu")
+        self.assertNotIn("Titel unverändert", err)
+
+    def test_new_package_requires_title(self):
+        code, _, err = self.package("P1", title=None)
+        self.assertEqual(code, 2)
+        self.assertIn("--title", err)
+        self.assertEqual(self.events(), [])
+
+    def test_existing_package_without_title_ok(self):
+        self.package("P1", title="Alt")
+        code, _, err = self.package("P1", title=None)
+        self.assertEqual(code, 0)
+        self.assertNotIn("title", self.events()[1])
+        self.assertNotIn("Titel unverändert", err)
+
+    def test_id_only_in_blocked_by_counts_as_new(self):
+        self.package("P2", "--blocked-by", "P1", title="Zwei")
+        code, _, _ = self.package("P1", title=None)
+        self.assertEqual(code, 2)
+
+    def test_prefix_id_is_not_existing(self):
+        self.package("T10", title="Zehn")
+        code, _, err = self.package("T1", title="Eins")
+        self.assertEqual(code, 0)
+        self.assertEqual(self.events()[1]["title"], "Eins")
+        self.assertNotIn("Titel unverändert", err)
+
+    def test_new_package_with_title_gives_no_hint(self):
+        _, _, err = self.package("P1", title="Neu")
+        self.assertNotIn("Titel unverändert", err)
+
+    def test_legacy_package_field_counts_as_existing(self):
+        path = Path(self.tmp.name) / "events.jsonl"
+        path.write_text('{"kind":"package","package":"P1","title":"A"}\n', "utf-8")
+        code, _, _ = self.package("P1", title=None)
+        self.assertEqual(code, 0)
+
+    def test_unreadable_events_count_as_new(self):
+        path = Path(self.tmp.name) / "events.jsonl"
+        path.write_bytes(b'"P1" kaputt\n\xff\xfe "P1"\n')
+        code, _, _ = self.package("P1", title=None)
+        self.assertEqual(code, 2)
+
     def test_package_rejects_unknown_status(self):
         code, _, _ = self.run_log(
             "package", "--id", "A", "--title", "t", "--owner", "o", "--status", "x"

@@ -3,9 +3,12 @@ import signal
 import socket
 import subprocess
 import tempfile
+import textwrap
+import threading
 import time
 import unittest
 import urllib.request
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 START = Path(__file__).resolve().parent.parent / "start.sh"
@@ -15,6 +18,18 @@ def free_port() -> int:
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         return sock.getsockname()[1]
+
+
+class ForeignHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        body = b"fremd"
+        self.send_response(200)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format, *args):
+        return
 
 
 class StartScriptTest(unittest.TestCase):
@@ -85,6 +100,43 @@ class StartScriptTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("startet nicht", result.stderr)
         self.assertLess(elapsed, 20)
+
+    def test_start_foreign_server_reports_port_busy(self):
+        with HTTPServer(("127.0.0.1", self.port), ForeignHandler) as foreign:
+            threading.Thread(target=foreign.serve_forever, daemon=True).start()
+            result = self.run_script()
+            foreign.shutdown()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(f"Port {self.port} belegt (kein Studio-Dashboard)", result.stderr)
+        self.assertNotIn("läuft bereits", result.stdout)
+        self.assertFalse((Path(self.tmp.name) / "server.pid").exists())
+
+    def test_old_studio_without_ping_is_found_by_pid(self):
+        fake_dir = Path(self.tmp.name) / "studio"
+        fake_dir.mkdir()
+        fake = fake_dir / "server.py"
+        fake.write_text(
+            textwrap.dedent(
+                f"""
+                from http.server import BaseHTTPRequestHandler, HTTPServer
+
+                class H(BaseHTTPRequestHandler):
+                    def do_GET(self):
+                        self.send_error(404)
+
+                HTTPServer(("127.0.0.1", {self.port}), H).serve_forever()
+                """
+            ),
+            "utf-8",
+        )
+        proc = subprocess.Popen(["python3", str(fake)])
+        self.addCleanup(proc.wait)
+        self.addCleanup(proc.terminate)
+        (Path(self.tmp.name) / "server.pid").write_text(str(proc.pid), "utf-8")
+        time.sleep(0.5)
+        result = self.run_script()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("läuft bereits", result.stdout)
 
 
 if __name__ == "__main__":

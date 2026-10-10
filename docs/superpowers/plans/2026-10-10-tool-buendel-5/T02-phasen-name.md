@@ -15,3 +15,12 @@
 - [ ] **Prüfen:** gezielte Tests, `make studio-lint`, Exit-Codes nennen.
 
 **Commit:** `fix: lead_phases ordnet Freigaben zuerst über die Kopfzeile Paket zu`
+
+## Nacharbeit Gate Plan (R478, B4)
+
+Der Test `test_claim_prefers_name_over_time` lautet neu: Freigaben `plan-A` (t1) und `plan-B` (t2); Lead A (`Paket: plan-A`) startet nach t2, Lead B (`Paket: plan-B`) startet nach t2 und vor Lead A. Zeitregel allein gäbe Lead B die Freigabe `plan-A` (rot); erwartet: `lead_phases[B] == "plan-B"`, `lead_phases[A] == "plan-A"`.
+
+- [ ] **Weitere Tests:** zwei Leads mit gleichem `Paket:` (der zuerst startende bindet, der zweite fällt auf Durchgang 2 zurück); Namenstreffer mit falscher `session_id` bzw. `started < since` bindet nicht (bleibt in Durchgang 2).
+- [ ] **Wirkungstest auf Fixture:** Test, der Wirkung auf Metriken/Effizienz (`lead_phases`-abhängige Ausgabe) auf einer Fixture mit Präfix-Kopfzeile zeigt (alt: Zeitzuordnung falsch, neu: richtig).
+- [ ] **Echtdaten-Differenz als Liste** `(Lead, alt, neu)` im Bericht (Kopie im Scratchpad, `build_state` alt/neu).
+- [ ] **Stopp-Kriterium:** weicht ein Lead **ohne** Präfix-Kopfzeile ab, oder sind es **> 10** Einträge: **Stopp, Meldung an Controller -> L0** (R478), kein Weiterbau.

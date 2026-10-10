@@ -25,7 +25,8 @@ Prozessstufe voll (Format) · Paket TOOL-BUENDEL-5 · Meilenstein TOOL · Planba
 
 - Keine neue Abhängigkeit (ADR-001, `dep-guard` nie umgehen); nur Python-Standardbibliothek und Bash.
 - `tools/studio/guard.py`, `docs/studio/VERFASSUNG.md`, `STUDIO.md`, `docs/studio/templates/`, `.claude/`, `src/` bleiben **unverändert**; Messwerkzeuge werfen nie, Hooks lassen im Zweifel zu.
-- Jeder Task: Test zuerst rot (pytest/unittest unter `tools/studio/tests`), dann grün; `make studio-lint` Exit 0 (ganzer Ordner) vor jedem Commit, danach `make studio-test`.
+- Jeder Task: Test zuerst rot (`tools/studio/tests`), dann grün. Umsetzer fahren nur gezielte Dateien (`python3 -m unittest tools.studio.tests.<modul>`); `make studio-lint` und `make studio-test` fährt **nur der Controller** über die Testsperre (R380; bei belegter Sperre nicht warten, später wiederholen) (R478 B8).
+- Nacharbeit Gate Plan R478 (B1–B10) steht am Ende jeder Task-Datei und gilt vor deren Schritten; bei Widerspruch gilt die Nacharbeit.
 - `model.py` (≈ 54 KB) und `test_model.py` (≈ 2400 Z.) nur abschnittsweise lesen.
 - **Steht ein Push an (R464 V1), startet kein Testlauf.** Gesamtläufe (`make test`, `make check`) nur der Controller über die Testsperre; Umsetzer fahren nur gezielte Dateien. Exit-Codes `…; echo EXIT=$?`, nie in eine Pipe.
 - Kein Task ändert `docs/studio/rulings.md` (R471); T06 liefert den Wortlaut als «Entwurf an L0».
@@ -44,7 +45,7 @@ Prozessstufe voll (Format) · Paket TOOL-BUENDEL-5 · Meilenstein TOOL · Planba
 - **T01:** `claim_budgets` sortiert Knoten einmal vorab (nach Rolle gruppiert) statt je Freigabe; `budget_view` und `lead_phases` teilen ein Ergebnis je `_Builder` (Cache, ungültig sobald ein Start-/Budget-Ereignis kommt, oder einmal in `result()`). `build_state` sortiert die Events nur, wenn sie nicht schon aufsteigend sind (Lager ist append-only). Erst messen (cProfile-Lauf auf 67k-Events-Kopie, im Task-Bericht), dann ändern.
 - **T02:** `claim_budgets` in zwei Durchgängen: (1) Freigabe, deren `phase` ∈ {Paket der Lead-Instanz, `_package_token(Paket)`} → diesem Lead (dieselbe Namensmenge wie `budget_key`, als gemeinsamer Helfer `_grant_names`); (2) der Rest wie heute nach Zeit. Keine Änderung der Kopfzeilenregeln.
 - **T03:** `log.py package`: bei bestehender `package_id` im Ereignislager (zeilenweise, Vorfilter auf die ID, kein Voll-Parse) wird `title` nicht ins Ereignis geschrieben (Hinweis auf stderr), ausser `--retitle`. `model.on_package` setzt Titel nur bei vorhandenem Feld — bleibt unverändert.
-- **T04:** `server.py` Route `/api/ping` → `{"studio": true}` (billig, Host-Prüfung bleibt); `start.sh`: `answers()` prüft `/api/ping`-Inhalt. Fremder Server → Meldung, kein Start. Drosselung (30-Fache, max. 90 s) auf Messwert aus T01 absenken (Ziel ≤ 5 s Verzug), Konstante mit Kommentar.
+- **T04:** `server.py` Route `/api/ping` → `{"studio": true}` (billig, Host-Prüfung bleibt); `start.sh`: `answers()` prüft `/api/ping`-Inhalt. Fremder Server → Meldung, kein Start. Drosselung (30-Fache) bleibt, ausser CPU-Leerlauf-Messwert ≤ 10 % nach dem Absenken (R478 B6).
 - **T05:** `testrun._run`: Eskalation `terminate()` → `wait(timeout=5)` → `kill()`; `KeyboardInterrupt` schreibt vor dem Weiterwerfen ein `test_aborted`-Ereignis (nicht `test_failed`, damit `flake_suspects` es ignoriert; Konsumenten von `kind` prüfen). `_diff_hash` bezieht ungetrackte Dateien ein: `git ls-files -o --exclude-standard -z`, Hash über Name + Grösse + `mtime_ns` (kein Inhalt lesen, billig).
 
 ## Datei-Ownership (ein Worktree `.worktrees/b5`, Branch `tool/b5`)
@@ -59,7 +60,7 @@ Zwei Umsetzer **nacheinander** (nie zwei gleichzeitig im Baum), beide `tech-sim-
 | B        | T05      | `tools/studio/testrun.py`, `tests/test_testrun.py`                                                                                                                                                           |
 | B        | T06      | `docs/beobachtungen.md` (erledigte Abschnitte entfernen, Rest mit Begründung), `docs/arc42.md` nur falls ein Satz zu `start.sh`/Dashboard-Drosselung dort steht; Wortlaut-Entwurf im Bericht                 |
 
-**Wahlweise parallel** (nur wenn kein Push läuft): A in `.worktrees/b5`, B in `.worktrees/b5b` (Branch `tool/b5b`); Dateien sind disjunkt (A: model/server/start, B: log/testrun/Doku). Vor dem Merge `b5b` in `tool/b5` einlesen (`git merge`, kein Rebase). Empfehlung: seriell, spart ≈ 8 min nicht den Merge-Aufwand wert, ausser Leerlauf-Deckel (R475) verlangt es.
+**Seriell, Parallelität 1** (R478 B9; die Option «wahlweise parallel» ist gestrichen).
 
 Berührung mit anderen Strängen: keine `src/`-, `tests/`-(TS)-Dateien; Konfliktgefahr nur `docs/beobachtungen.md` (T06 zuletzt, `main` vorher einlesen).
 
@@ -72,7 +73,7 @@ Pakete:
 - TOOL-BUENDEL-5-A model/server/start: T01, T02, T04 (nein)
 - TOOL-BUENDEL-5-B log/testrun/Doku: T03, T05, T06 (nein)
 Formel: 2 × 2 + 0 QA-Checks + 1 Final-Review = 5 → × 1,3 = 6,5 → aufgerundet 7
-Parallelität: 1 (wahlweise 2, siehe Ownership)
+Parallelität: 1
 Beantragt: 7 Starts, Parallelität 1
 ```
 
@@ -87,7 +88,7 @@ Beantragt: 7 Starts, Parallelität 1
 
 **Controller:** ein `lead-tech` (sonnet), höchstens 4 Tasks je Instanz (R167): Instanz 1 steuert A (T01, T02, T04), Instanz 2 steuert B (T03, T05, T06); Übergabe per Ledger `.superpowers/sdd/tool-buendel-5/ledger.md`. Kein UI → kein `qa-playtester`, kein Coach-Start (keine Handbuchzeile betroffen).
 
-**Schätzung:** Arbeiter ≈ 181 Tools + 2 Controller ≈ 50 Tools = **≈ 230 Tools**; ÷ 4 ≈ **58 min** seriell (A 18 → Review 4 → B 13 → Review 3 → Final 9 + Übergaben); parallel ≈ 45 min.
+**Schätzung:** Arbeiter ≈ 181 Tools + 2 Controller ≈ 50 Tools = **≈ 230 Tools**; ÷ 4 ≈ **58 min** seriell (A 18 → Review 4 → B 13 → Review 3 → Final 9 + Übergaben);
 
 ## Task-Tabelle
 

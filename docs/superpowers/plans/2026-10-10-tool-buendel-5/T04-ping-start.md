@@ -12,3 +12,10 @@
 - [ ] **Prüfen:** gezielte Tests, `make studio-lint`; kein echter Server im Hauptrepo (`STUDIO_HOME=<tmp>`).
 
 **Commit:** `fix: start.sh prüft /api/ping statt jede HTTP-Antwort; Drosselung nach Messung abgesenkt`
+
+## Nacharbeit Gate Plan (R478, B6; ersetzt AK-TB5-08 und den Schritt «Drosselkonstanten senken»)
+
+R468/R469 bestätigten die 30-fache Drosselung (4,7 % CPU). **Sie bleibt**, ausser ein CPU-Messwert im Leerlauf nach dem Absenken ist <= 10 %.
+
+- [ ] **AK-TB5-08 neu:** Mit T01-Aufbaudauer die Drosselung testweise absenken (Ziel Verzug <= 5 s), CPU im Leerlauf messen (z. B. `ps -o %cpu` über >= 60 s, Methode im Bericht). Messwert <= 10 %: absenken, Konstanten benannt, Kommentar mit Messwert und R468/R478. Messwert > 10 %: **alter Wert bleibt**, T04 liefert nur `/api/ping` und Fremdserver-Erkennung; Messwert im Bericht (Entwurf an L0 zur Änderung von R468 nur, wenn abgesenkt wurde).
+- [ ] **Gegenproben (R465 B4):** Studio-Server ohne `/api/ping` (404, alter Stand) wird über PID als «läuft» erkannt, nicht als fremd; `/api/ping` mit falschem Host wird abgelehnt; Fremdserver-Test auf freiem ephemerem Port (Port 0 bzw. frei gewählt), kein fester Port.
