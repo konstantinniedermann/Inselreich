@@ -15,6 +15,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 _overrides: list[Callable[[], datetime]] = []
+# time.monotonic ist zulässig (Dauern, keine Uhrzeit) und wird von --check nicht gemeldet.
 DIRECT_CALL = re.compile(r"datetime\.now\(|time\.time\(")
 
 

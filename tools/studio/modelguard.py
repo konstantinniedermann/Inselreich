@@ -45,7 +45,7 @@ def model_table(text: str) -> list[tuple[str, list[str]]]:
     return rows
 
 
-def _header(prompt: str, key: str) -> str:
+def header(prompt: str, key: str) -> str:
     """Wert der Kopfzeile `key` in den ersten Zeilen (wie hook.header_text, ohne Import)."""
     for raw in prompt.splitlines()[:HEADER_LINES]:
         line = raw.strip().lstrip("-*#> ").replace("**", "").strip()
@@ -55,11 +55,11 @@ def _header(prompt: str, key: str) -> str:
     return ""
 
 
-def _persona(tool_input: Mapping) -> str:
+def persona(tool_input: Mapping) -> str:
     kind = str(tool_input.get("subagent_type") or "general-purpose")
     if kind == "general-purpose":
         prompt = str(tool_input.get("prompt") or "")
-        return (_header(prompt, "Persona").split() or [""])[0]
+        return (header(prompt, "Persona").split() or [""])[0]
     return kind
 
 
@@ -68,11 +68,11 @@ def reason(tool_input: Mapping, personas: Mapping[str, Mapping], table) -> str |
     prompt = str(tool_input.get("prompt") or "")
     if kind in SKIP_TYPES or not table:
         return None
-    persona = _persona(tool_input)
-    if persona not in personas:
+    persona_name = persona(tool_input)
+    if persona_name not in personas:
         return None
     ranks = {alias: index for index, (alias, _) in enumerate(table)}
-    base = str(personas[persona].get("model") or "inherit")
+    base = str(personas[persona_name].get("model") or "inherit")
     wanted = str(tool_input.get("model") or base)
     if base not in ranks:
         return None
@@ -81,14 +81,14 @@ def reason(tool_input: Mapping, personas: Mapping[str, Mapping], table) -> str |
     if ranks[wanted] >= ranks[base]:
         return None
     uses = dict(table)[wanted]
-    line = _header(prompt, "Modell")
+    line = header(prompt, "Modell")
     paren = PAREN.search(line)
     if _norm(line).split()[:1] == [wanted] and paren:
         given = _norm(paren.group(1))
         if any(given.startswith(_norm(use)) for use in uses):
             return None
     return (
-        f"Start über der Modelltabelle: {persona} hat `{base}`, der Aufruf will `{wanted}`. "
+        f"Start über der Modelltabelle: {persona_name} hat `{base}`, der Aufruf will `{wanted}`. "
         f"Nur mit Kopfzeile `Modell: {wanted} (<Einsatz>)`, Einsatz aus: {', '.join(uses)}; "
         "sonst `model` weglassen" + SUFFIX
     )
@@ -122,8 +122,8 @@ def _budget_warn(payload: Mapping, data: Mapping) -> int:
                 "agent_id": str(payload.get("agent_id") or "main"),
                 "source": "hook",
                 "kind": "budget_warn",
-                "persona": _persona(data),
-                "package": _header(str(data.get("prompt") or ""), "Paket"),
+                "persona": persona(data),
+                "package": header(str(data.get("prompt") or ""), "Paket"),
                 "summary": found[:160],
             }
         )
@@ -164,7 +164,7 @@ def main() -> int:
                     "source": "hook",
                     "kind": "model_guard",
                     "mode": MODE,
-                    "persona": _persona(data),
+                    "persona": persona(data),
                     "model": str(data.get("model") or ""),
                     "summary": (found or note or "")[:160],
                 }

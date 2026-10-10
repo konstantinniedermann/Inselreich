@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import os
 import re
+import signal
 import subprocess
 import sys
 
@@ -58,6 +59,9 @@ def _git(*args: str) -> bytes:
     return subprocess.run(["git", *args], check=True, capture_output=True).stdout
 
 
+INTERRUPTED = 128 + int(signal.SIGINT)
+
+
 def _diff_hash() -> str:
     # erfasst ungetrackte Dateien nicht (git diff HEAD kennt nur Getracktes)
     diff = _git("diff", "HEAD", "--binary")
@@ -101,11 +105,20 @@ def _run(command: list[str]) -> tuple[int, list[str]]:
         errors="replace",
     ) as proc:
         assert proc.stdout is not None
-        for line in proc.stdout:
-            sys.stdout.write(line)
-            sys.stdout.flush()
-            lines.append(line)
-    return proc.returncode, lines
+        try:
+            for line in proc.stdout:
+                sys.stdout.write(line)
+                sys.stdout.flush()
+                lines.append(line)
+        except KeyboardInterrupt:
+            proc.terminate()  # Kind nicht verwaist zurücklassen
+            raise
+    return _shell_exit(proc.returncode), lines
+
+
+def _shell_exit(returncode: int) -> int:
+    """Wie die Shell: Tod durch Signal N ergibt 128+N (statt negativem Code)."""
+    return 128 - returncode if returncode < 0 else returncode
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -122,6 +135,11 @@ def main(argv: list[str] | None = None) -> int:
     except OSError as error:
         print(f"testrun: Befehl nicht startbar ({error})", file=sys.stderr)
         return 127
+    except (
+        KeyboardInterrupt
+    ):  # Ctrl-C: Kind wurde vom with-Block beendet, kein Ergebnis
+        print("testrun: abgebrochen", file=sys.stderr)
+        return INTERRUPTED
     _record(args.suite, code, lines, args.skip_exit)
     return code
 

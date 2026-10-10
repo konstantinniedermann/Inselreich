@@ -54,9 +54,19 @@ function main(): number {
   const path = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? '.studio/zeitreserve.json';
   if (!existsSync(path)) {
     console.error(`zeitreserve: ${path} fehlt; zuerst die Tests laufen lassen (make test).`);
-    return 1;
+    return PUSH ? 2 : 1;
   }
-  const measurement = parseMeasurement(JSON.parse(readFileSync(path, 'utf8')));
+  let raw: unknown;
+  try {
+    raw = JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    // Leer oder halb geschrieben (laufendes make check, keine Sperre mehr): nie Exit 0.
+    console.error(
+      `zeitreserve: ${path} nicht lesbar (leer oder halb geschrieben); make check abwarten.`,
+    );
+    return PUSH ? 2 : 1;
+  }
+  const measurement = parseMeasurement(raw);
   const timings = measurement.timings;
   const problem = measurementProblem(measurement, currentHead());
   if (PUSH && problem !== null) {
@@ -74,9 +84,13 @@ function main(): number {
   for (const k of baseline)
     if (!known.has(k))
       console.warn(`zeitreserve: Altlast ohne Test, aus baseline.json streichen: ${k}`);
-  if (PUSH)
-    console.log(`zeitreserve: Last vor dem Lauf (Messung): ${measurement.loadStart?.toFixed(1)}`);
-  else console.log(`zeitreserve: Last (1 min): ${LOAD.toFixed(1)}`);
+  const ls = measurement.loadStart;
+  console.log(
+    ls === undefined
+      ? 'zeitreserve: loadStart unbekannt'
+      : `zeitreserve: loadStart ${ls.toFixed(1)}${ls > 4 ? ' — für Push nicht belastbar, make check ruhig wiederholen' : ''}`,
+  );
+  if (!PUSH) console.log(`zeitreserve: Last (1 min): ${LOAD.toFixed(1)}`);
   const factor = process.env.GITHUB_ACTIONS === 'true' ? CI_FACTOR_ON_CI : CI_FACTOR;
   const bad = findViolations(timings, baseline, factor);
   console.log(

@@ -2416,5 +2416,98 @@ class LeadPhasesTest(unittest.TestCase):
         self.assertNotIn("s1:a1", build(events)["lead_phases"])
 
 
+class BudgetKeyHeaderTest(unittest.TestCase):
+    """Paket-Kopfzeile mit Zusatz trifft die Phase (T04, R433)."""
+
+    HEADER = "M13-E1 \u2014 UI-Strang, Tasks T09\u2013T12"
+
+    def used(self, events):
+        state = build(events, now=2000, session="all")
+        return {b["phase"]: b for b in state["budgets"]}
+
+    def one_worker(self, package, extra_grants=(), lead_package=None):
+        return [
+            grant(0, SA, "M13-E1", 36, 2),
+            *extra_grants,
+            *lead_node(10, SA, "LA", package=lead_package or package),
+            *worker(20, SA, "LA", "W1", stop_at=25, package=package),
+        ]
+
+    def test_header_with_suffix_hits_phase(self):
+        events = self.one_worker(
+            self.HEADER, extra_grants=[grant(5, SA, "UI-GUT-CHIP", 1, 1)]
+        )
+        rows = self.used(events)
+        self.assertEqual(rows["M13-E1"]["used"], 1)
+        self.assertEqual(rows["UI-GUT-CHIP"]["used"], 0)
+
+    def test_header_delimiters(self):
+        for header in (
+            "M13-E1: Text",
+            "M13-E1 (UI)",
+            "M13-E1 \u2013 Text",
+            "M13-E1",
+        ):
+            with self.subTest(header=header):
+                events = self.one_worker(
+                    header, extra_grants=[grant(5, SA, "UI-GUT-CHIP", 1, 1)]
+                )
+                rows = self.used(events)
+                self.assertEqual(rows["M13-E1"]["used"], 1)
+                self.assertEqual(rows["UI-GUT-CHIP"]["used"], 0)
+
+    def test_header_prefix_needs_delimiter(self):
+        events = self.one_worker(
+            "M13-E1-b \u2014 x",
+            extra_grants=[grant(5, SA, "M13-E1-b", 4, 1)],
+        )
+        rows = self.used(events)
+        self.assertEqual(rows["M13-E1-b"]["used"], 1)
+        self.assertEqual(rows["M13-E1"]["used"], 0)
+
+    def test_parallel_controllers_share_grant(self):
+        events = [
+            grant(0, SA, "M13-E1", 36, 2),
+            grant(5, SA, "UI-GUT-CHIP", 1, 1),
+            *lead_node(10, SA, "LA", package=self.HEADER),
+            *lead_node(11, SA, "LB", package=self.HEADER),
+            *worker(20, SA, "LA", "W1", stop_at=25, package=self.HEADER),
+            *worker(30, SA, "LB", "W2", stop_at=35, package=self.HEADER),
+        ]
+        state = build(events, now=2000, session="all")
+        rows = {b["phase"]: b for b in state["budgets"]}
+        self.assertEqual((rows["M13-E1"]["used"], rows["M13-E1"]["granted"]), (2, 36))
+        self.assertEqual(rows["UI-GUT-CHIP"]["used"], 0)
+        self.assertFalse(rows["M13-E1"]["overrun"])
+        self.assertFalse(rows["UI-GUT-CHIP"]["overrun"])
+        self.assertEqual([i for i in state["incidents"] if i["kind"] == "budget"], [])
+
+    def test_foreign_phase_falls_back(self):
+        events = [
+            grant(0, SA, "M13-E1", 36, 2),
+            grant(5, SA, "UI-GUT-CHIP", 1, 1),
+            *lead_node(10, SA, "LA"),
+            *worker(20, SA, "LA", "W1", stop_at=25, package="UI-GUT-X \u2014 y"),
+        ]
+        rows = self.used(events)
+        self.assertEqual(rows["UI-GUT-CHIP"]["used"], 1)
+        self.assertEqual(rows["M13-E1"]["used"], 0)
+
+    def test_header_without_suffix_still_equal(self):
+        rows = self.used(
+            self.one_worker("M13-E1", extra_grants=[grant(5, SA, "UI-GUT-CHIP", 1, 1)])
+        )
+        self.assertEqual(rows["M13-E1"]["used"], 1)
+
+    def test_grant_since_after_start_not_counted(self):
+        events = [
+            *lead_node(1, SA, "LA"),
+            *worker(20, SA, "LA", "W1", stop_at=25, package=self.HEADER),
+            grant(100, SA, "M13-E1", 36, 2),
+        ]
+        rows = self.used(events)
+        self.assertEqual(rows["M13-E1"]["used"], 0)
+
+
 if __name__ == "__main__":
     unittest.main()

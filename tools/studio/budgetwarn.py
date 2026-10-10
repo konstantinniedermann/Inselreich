@@ -9,14 +9,14 @@ import json
 import re
 from collections.abc import Iterable, Mapping
 
-from modelguard import SKIP_TYPES, _header, _persona
+from modelguard import SKIP_TYPES, header, persona
 
 NUMBER = re.compile(r"\d+")
 
 
 def budget_count(prompt: str) -> int | None:
     """Erste ganze Zahl der Kopfzeile `Budget:`; None bei «keins» oder 0."""
-    found = NUMBER.search(_header(prompt, "Budget"))
+    found = NUMBER.search(header(prompt, "Budget"))
     return int(found.group()) or None if found else None
 
 
@@ -45,7 +45,7 @@ def _phase(event: Mapping) -> str:
 
 
 def warning(tool_input: Mapping, given: Iterable[Mapping]) -> str | None:
-    role = _persona(tool_input)
+    role = persona(tool_input)
     if str(tool_input.get("subagent_type")) in SKIP_TYPES or not role.startswith(
         "lead-"
     ):
@@ -62,7 +62,7 @@ def warning(tool_input: Mapping, given: Iterable[Mapping]) -> str | None:
             f"keine Freigabe. Vor dem Start: python3 tools/studio/log.py budget "
             f"--lead {role} --grant {count} --phase <Paket> …"
         )
-    package = _header(prompt, "Paket")
+    package = header(prompt, "Paket")
     phases = [_phase(g) for g in own]
     if not package or package.casefold() in {p.casefold() for p in phases}:
         return None

@@ -2,8 +2,11 @@ import contextlib
 import io
 import json
 import os
+import signal
 import sys
 import tempfile
+import threading
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -148,6 +151,43 @@ class RunTest(unittest.TestCase):
             )
         self.assertEqual(code, 2)
         self.assertIn("testrun: Event nicht geschrieben (", err)
+
+    def test_signal_exit_is_128_plus_n(self):
+        code, _, _ = self.run_main(
+            ["--suite", "studio"],
+            py(
+                "import os, signal; signal.signal(signal.SIGINT, signal.SIG_DFL); "
+                "os.kill(os.getpid(), signal.SIGINT)"
+            ),
+        )
+        self.assertEqual(code, 130)
+
+    def test_ctrl_c_in_runner_exits_quietly(self):
+        with mock.patch.object(testrun, "_run", side_effect=KeyboardInterrupt):
+            code, _, err = self.run_main(["--suite", "studio"], py("pass"))
+        self.assertEqual(code, 130)
+        self.assertNotIn("Traceback", err)
+        self.assertEqual(self.events(), [])
+
+    def test_ctrl_c_stops_child(self):
+        ready = self.home.parent / "ready"
+        child = py(
+            f"import time, pathlib; pathlib.Path({str(ready)!r}).write_text('x'); "
+            "time.sleep(20)"
+        )
+
+        def interrupt_when_ready():
+            while not ready.exists():
+                time.sleep(0.01)
+            os.kill(os.getpid(), signal.SIGINT)
+
+        self.home.parent.mkdir(parents=True, exist_ok=True)
+        threading.Thread(target=interrupt_when_ready, daemon=True).start()
+        began = time.monotonic()
+        code, _, err = self.run_main(["--suite", "studio"], child)
+        self.assertEqual(code, 130)
+        self.assertNotIn("Traceback", err)
+        self.assertLess(time.monotonic() - began, 10)
 
     def test_missing_command_does_not_raise(self):
         code, _, err = self.run_main(["--suite", "studio"], ["/nicht/vorhanden"])

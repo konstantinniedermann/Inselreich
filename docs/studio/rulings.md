@@ -4802,3 +4802,34 @@ eigenes REL nach Entscheid in der nächsten Session.
 Regelbezug: gates.md Gate Merge; R335, R460, R466 · Kosten bei Irrtum: Doku-Nacharbeit nach dem Merge.
 
 Entscheider: L0 · Anlass: Urteil lead-qa M13-E1 final · ADR: —
+
+## R468 · 2026-10-10 · TOOL-BUENDEL-4: Übernahme der Entwurfsentscheide aus dem Ledger
+
+Ruling: Die Entscheide aus `.superpowers/sdd/tool-buendel-4/ledger.md` gelten. **T01** Dashboard-Server: Der Wiederaufbau von
+`build_state` wird auf das 30-Fache der Aufbaudauer gedrosselt (max. 90 s); gemessen 4,7 % CPU statt ≈ 100 % (Faktor 10 bzw. 25 mit
+Cap 60 s reichten nicht: 9,9 % bzw. 5,9 %). Abweichung vom Plan (reiner 2-s-Cache, bei 2,7 s Aufbau wirkungslos); Folge: Dashboard
+bis ≈ 80 s veraltet, Abhilfe in `model.py` als Beobachtung. Uhr: `clock.timestamp()` (`clock.monotonic` existiert nicht). **T02**
+`start.sh` Echtlauf mit `STUDIO_HOME=<tmp>`, zweiter Aufruf meldet «läuft bereits». **T03** `zeitreserve-push` läuft ohne Testsperre
+(R438 V3: aktuelle Last zählt nicht); fehlende, leere oder halb geschriebene Messung gibt Exit 2; `make check` zeigt `loadStart`
+(bei > 4 mit Zusatz «für Push nicht belastbar»). **T06** `render-qa` filtert nur die Warnung «AudioContext was not allowed to start»
+(Fehler nie) und wartet auf ruhige Kamera (`warteBisRuhig`) statt fest zu schlafen.
+
+Regelbezug: R438 V3, R465 · Kosten bei Irrtum: Werkzeug-Nacharbeit.
+
+Entscheider: L0 (Übernahme durch Umsetzer B, Review durch `lead-tech`) · Anlass: Plan TOOL-BUENDEL-4 T07 · ADR: ADR-014 (Nachführung)
+
+## R469 · 2026-10-10 · Gate Merge TOOL-BUENDEL-4: OK unter BEDENKEN; R468 bestätigt
+
+Ruling: `tool/b4` @ `4df52db3` (T01–T08, Handbuch 1.44 aus T08) lokal nach main gemergt (`f8939b29`; `make check` Exit 0,
+`studio-test` Exit 0, `check-ci-perf` Exit 0; `loadStart` 6,6 → für einen Push nicht belastbar, vor dem nächsten Push ruhig
+wiederholen). Final-Review opus BEDENKEN, nichts blockierend. **R468** (vom Umsetzer mit „Entscheider: L0“ eingetragen)
+wird inhaltlich **bestätigt**: Drosselung des Zustandsaufbaus auf das 30-Fache der Aufbaudauer (höchstens 90 s), gemessen
+4,7 % CPU statt ≈ 100 %, nach Neustart 0,0 %; das Dashboard darf als Übergang bis ≈ 80 s veralten. Folgearbeit
+(Beobachtungen): `model.py` beschleunigen bzw. Events kürzen (67 105 Events, 19,7 MB), `testrun` bei Ctrl-C, `start.sh`
+erkennt fremde HTTP-Server am Port, `smoke.mjs` Audio-Filter. **Ablauffehler:** Rulings schreibt nur L0; ein Plan-Task
+„Rulings nachführen“ heisst künftig „Entwurf an L0“ (Anlass für die Session-Retro). M13-E1 (R467) und TOOL-BUENDEL-4 gehen
+mit dem nächsten Push raus.
+
+Regelbezug: gates.md Gate Merge; R335, R465 · Kosten bei Irrtum: Dashboard zeigt bis 80 s alten Stand.
+
+Entscheider: L0 · Anlass: Übergabe lead-tech TOOL-BUENDEL-4, Bericht production-integrator · ADR: ADR-014 (Nachführung)

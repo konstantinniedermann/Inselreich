@@ -5,9 +5,11 @@ import sys
 import tempfile
 import time
 import unittest
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest import mock
 
+import clock
 import hook
 import limits
 
@@ -192,6 +194,12 @@ class MessageEventTest(unittest.TestCase):
         for tool in ("Read", "Grep", "WebFetch", "ListAgents"):
             event = hook.to_event(payload("PreToolUse", tool_name=tool, tool_input={}))
             self.assertEqual((event["kind"], event["tool"]), ("heartbeat", tool))
+
+
+class StampTest(unittest.TestCase):
+    def test_stamp_uses_shared_clock(self):
+        with clock.frozen(datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC)):
+            self.assertEqual(hook.stamp(), "20260102-030405")
 
 
 class HeaderTest(unittest.TestCase):
