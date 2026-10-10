@@ -228,14 +228,33 @@ class MetricsTest(unittest.TestCase):
         self.assertIn("≥", text)
 
     def test_second_run_overwrites(self):
+        # Uhr springt zwischen den Läufen eine Sekunde weiter (Sekundengrenze in CI)
+        class TickingClock(datetime):
+            ticks = 0
+
+            @classmethod
+            def now(cls, tz=None):
+                if tz is not None:
+                    return datetime.now(tz)
+                cls.ticks += 1
+                return datetime(2026, 9, 30, 12, 0, cls.ticks).astimezone()
+
         self.run_cli("--session", "s1")
         path = self.out / "S-2026-09-30-s1.md"
 
         def body(text):
-            return [line for line in text.splitlines() if "erzeugt" not in line]
+            # Zeitstempel steht als "erzeugt" im Text und als "created" im JSON-Block
+            return [
+                line
+                for line in text.splitlines()
+                if "erzeugt" not in line and '"created"' not in line
+            ]
 
-        first = path.read_text(encoding="utf-8")
-        self.run_cli("--session", "s1")
+        with mock.patch.object(metrics, "datetime", TickingClock):
+            self.run_cli("--session", "s1")
+            first = path.read_text(encoding="utf-8")
+            self.run_cli("--session", "s1")
+        self.assertNotEqual(first, path.read_text(encoding="utf-8"))
         self.assertEqual(body(first), body(path.read_text(encoding="utf-8")))
 
     def test_load_events_reads_archives(self):
