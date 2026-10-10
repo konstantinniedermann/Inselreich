@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R471): E-049, E-054, E-057. Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056; E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R471): E-049, E-054, E-057. Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 (Ersatz durch E-059 vorgeschlagen); E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 ---
 
@@ -457,6 +457,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Datenpunkt 1 von 3, S-2026-10-09-c64c0775 (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md) B2): roh 71,7 %, bereinigt 69,6 %, herausgerechnet 2,0 Punkte (2 von 14 Lead-Instanzen); Gegenprobe roh = bereinigt + herausgerechnet erfüllt. Der Filter trifft die Plan-Instanzen (35,4 %) nicht. Anpassung vorgeschlagen (Retro V2): Klassen und Bereinigung nach Freigabephase `plan-*`, `design-*`, `gate-*` plus „Budget: keins“; Ausgang bereinigt ≈ 30 %. Status bis zum Ruling unverändert.
 - Anpassung umgesetzt (R433 V2, TOOL-BUENDEL-2, 319fa8bc): herausgerechnet werden Lead-Instanzen mit Freigabephase `plan-*`/`design-*`/`gate-*` (Zuordnung `claim_budgets`) oder „Budget: keins“; die Zeile nennt den Anteil je Grund. Rohzeile und Klassen unverändert (Entscheid E1 im Plan); Messgrösse ‚Klasse Design/Spec/Plan > 0‘ gelesen als ‚herausgerechnet Plan > 0 bei Plan-Instanzen‘. Zählung der Datenpunkte beginnt mit der ersten Session nach dem Merge neu; Frist 2026-11-19 unverändert.
 - Datenpunkt 1 von 3 nach der Anpassung, S-2026-10-10-c64c0775 (Retro [session-c64c0775-b-ende](retros/2026-10-10-session-c64c0775-b-ende.md) B2): roh 68,7 %, bereinigt 37,6 %, herausgerechnet 31,1 Punkte (Plan 16,2, Design 1,7, Gate 0,0, nur Budget keins 13,2; 5 von 11 Lead-Instanzen); Gegenprobe erfüllt. Weiter beobachten.
+- Datenpunkt 2 von 3, S-2026-10-10-f52039fc (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md) B5): roh 58,3 %, bereinigt 23,4 %, herausgerechnet 34,9 Punkte (21 von 25 Lead-Instanzen; Plan 2,8, Design 22,7, Gate 9,5); Gegenprobe erfüllt. Lücke: `design-m14-e1` (1,36 M, ≈ 6,5 Punkte) hat in `lead_phases` keine Phase, weil die Freigabe 3 s nach dem Start kam; bereinigt wären ≈ 16,9 %. Weiter beobachten; Lücke adressiert E-060.
 
 ## E-050 · behalten (R459) · Fortsetzung nach Pause als frische Instanz (Umsetzer)
 
@@ -517,6 +518,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Modellwahl), `.claude/agents/lead-tech.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
 - Ruling: R459 (Start 2026-10-10, erster Fall UI-GUT-CHIP R461, zweiter TOOL-BUENDEL-4 R464)
 - Datenpunkt 1 und 2 von 3, S-2026-10-10-5a00a316 (Retro [session-5a00a316-ende](retros/2026-10-10-session-5a00a316-ende.md) B1): Plan-Instanz `UI-GUT-CHIP` Gewicht 0,46 M in 25 Turns (≈ 33 % des Ausgangs REL-14-PLAN 1,38 M), `TOOL-BUENDEL-4` 0,23 M in 15 Turns (≈ 11 % von 2,01 M); Tools Plan + Nacharbeit 15 + 8 bzw. 11 + 4. Gate-Plan-Befunde 9 (UI-GUT-CHIP) und 6 (Bündel), je 0 blockierend, Nacharbeit ohne Zweitprüfung (R462, R465). Kostenschwelle ≤ 60 % je Plan erfüllt; die Befundzahl 9 liegt über dem Ausgang REL-14 (5), unter dem des Bündels (12) — Vergleichsbasis uneinheitlich, bei n = 2 kein Urteil. Vorbehalt Umfang: UI-GUT-CHIP Plan T01–T08, Bündel T01–T07 + T08; Umfang des Ausgangs nicht gegengeprüft. Messlücke: Steuerung bereinigt (E-049) war in dieser Session nicht auswertbar (Retro B2); opus-Anteil Session 37,0 % (Historie 71,1 %), durch den Modellwechsel allein nicht erklärbar (Session ohne Spec-Autor). Weiter beobachten, Datenpunkt 3 beim nächsten Plan.
+- Datenpunkt 3 von 3, S-2026-10-10-f52039fc (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md), Bewertung): Plan-Instanzen auf sonnet `plan-tool-buendel-5` 0,15 M (≈ 8 % von 2,01 M), `plan-ui-tasten` 0,12 M (≈ 9 % von 1,38 M), `plan-aufraeum-01` 0,14 M, `plan-i049-reserve` 0,16 M; Gate-Plan-Befunde 10 / 5 / 3 / 9, je 0 blockierend (R478, R479, R485, R481); Steuerung bereinigt 23,4 %, Review-Runden 1,6. Gegenprobe Erstabnahme 40 % verfehlt (5 geprüfte Ergebnisse, Ursache in der Umsetzung UI-TASTEN, nicht im Plan). Bewertungsvorschlag: **behalten**; Status bis zum Ruling unverändert.
 
 ## E-055 · übernommen als Werkzeug (R443, TOOL-BUENDEL-3) · Warnung bei Lead-Start mit Budgetzeile ohne Freigabe
 
@@ -539,6 +541,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Pflichtzeile streichen; Eigentümer löst Konflikte wie bisher (R303, E-031).
 - Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/lead-tech.md` (nur nach Ruling)
 - Ruling: –
+- Ersetzungsvorschlag (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md) B3): In f52039fc konfliktierten alle 3 Merges (`ae050073`, `adb7e28e`, `4b3a3aac`), obwohl die Stränge nacheinander gemergt wurden; die Reihenfolge der Commits im Strang ändert daran nichts. Vorschlag: abgelehnt, ersetzt durch E-059.
 
 ## E-057 · laufend (R471) · Grosse Dateien gezielt lesen
 
@@ -550,6 +553,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/lead-*.md` (nur nach Ruling)
 - Ruling: R471 (V3)
 - Start: 2026-10-10 (Handbuch 1.45): Pflichtzeile in `templates/briefing.md`. Der Persona-Satz in `.claude/agents/lead-*.md` ist nicht gesetzt (Umsetzungsauftrag nur `docs/studio/`); er folgt nur, wenn die Briefing-Zeile die Schwelle nach 2 Sessions verfehlt. Erster Datenpunkt: nächste Studio-Session.
+- Datenpunkt 1 von 3, S-2026-10-10-f52039fc (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md)): Lese-Ergebnisse > 30 KB = 2 (37,0 KB Spec M13-E2, 35,1 KB Tool-Ergebnis), Schwelle ≤ 2 erfüllt; Cache-Write 5 min 26,8 %, Schwelle ≤ 18 % verfehlt (Neuschreibungen > 20k vor allem `lead-design`, 8). Weiter beobachten.
 
 ## E-058 · umgesetzt (Vorlagenzeile, kein Platz; R459, R464) · Integrator-Briefing nennt beide Prüfbefehle
 
@@ -560,3 +564,39 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Zeile und Persona-Satz streichen.
 - Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/production-integrator.md` (nur nach Ruling)
 - Ruling: R459, R464 (Umsetzung mit Handbuch 1.43 und Persona production-integrator 1.9; Beobachtung läuft über die nächsten 3 Merges)
+
+## E-059 · vorgeschlagen · Merge-Treiber für reines Anhängen in `docs/beobachtungen.md`
+
+- Hypothese: Wenn `docs/beobachtungen.md` einen eigenen Merge-Treiber bekommt, der Konflikte nur dann selbst löst, wenn beide Seiten im Konflikt-Abschnitt ausschliesslich Zeilen anhängen (Basis-Teil leer: erst „ours“, dann „theirs“), und sonst mit Konfliktmarken stehen bleibt, entfallen die manuellen Auflösungen am Dateiende, ohne dass gestrichene Zeilen zurückkehren wie unter `merge=union` (E-031) (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md) B3; 3 von 3 Merges der Session, vorher ≥ 3 Fälle bis R458).
+- Messgrösse: 0 manuelle Konfliktauflösungen in `docs/beobachtungen.md` in den nächsten 3 Merges, die die Datei auf beiden Seiten berühren (Ausgang 3 von 3); Gegenprobe: 0 zurückgekehrte gestrichene Zeilen und 0 verlorene Einträge (Überschriften nach dem Merge = Basis + Zugänge beider Seiten − Löschungen, per `git diff <merge-base>`), Konflikte mit Löschungen bleiben manuell.
+- Messbarkeit: `git merge-tree` gegen die Eltern zeigt den Konflikt weiter (ohne Treiber), der Merge-Commit zeigt die Auflösung; beides bleibt lesbar.
+- Zeitraum: 3 Merges, höchstens bis 2026-11-19.
+- Rückfall: Zeile in `.gitattributes` entfernen; Integrator löst wie bisher (R303).
+- Dateien: `.gitattributes`, `tools/studio/merge_append.py` (neu, mit Tests unter `tools/studio/tests/`), `Makefile` (Ziel zum Setzen von `merge.beob-append.driver` in `.git/config`, gilt für alle Worktrees), `.claude/agents/production-integrator.md`, `docs/studio/STUDIO.md` (Merges), `docs/studio/CHANGELOG.md` (nur nach Ruling; Umsetzung als Werkzeug-Paket)
+- Ruling: –
+- Start: –
+- Bewertung: –
+
+## E-060 · vorgeschlagen · Budget-Hook blockt statt zu warnen (Anpassung E-055)
+
+- Hypothese: Wenn der Spawn-Hook einen Lead-Start mit „Budget: n“ (n > 0) ohne vorherige `log.py budget`-Zeile derselben Rolle und Phase blockt (wie der Modell-Guard, R167) statt nur zu warnen, bindet jede Freigabe ihre Lead-Instanz und E-049 rechnet alle Freigabephasen heraus (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md) B5: Warnung 0,9 s nach dem Start, Freigabe 3 s später, Instanz ohne Phase; vorher REL-15, R440).
+- Messgrösse: 0 Lead-Instanzen mit „Budget: n > 0“ und Phase `None` in `lead_stats.rows` über 3 Sessions (Ausgang 1 in f52039fc); Gegenprobe: 0 Fehlblocks bei „Budget: keins“ und bei Folge-Controllern eines freigegebenen Pakets (R433 V3 b), höchstens 1 zusätzlicher Agent-Aufruf je Block.
+- Messbarkeit: Das Ereignis `budget_warn` bleibt (als Block-Ereignis mit gleichem Namen oder Feld `blocked: true`); Budgetansicht und `lead_stats.rows` unverändert.
+- Zeitraum: 3 Sessions nach dem Merge, höchstens bis 2026-11-19.
+- Rückfall: Hook-Zweig auf Warnen zurückstellen (`git revert`).
+- Dateien: `tools/studio/budgetwarn.py`, `tools/studio/modelguard.py`, `tools/studio/tests/` (nur nach Ruling; Werkzeug-Paket)
+- Ruling: –
+- Start: –
+- Bewertung: –
+
+## E-061 · vorgeschlagen · Spec-Nachtrag und Kurzdesign Stufe leicht auf sonnet
+
+- Hypothese: Wenn `lead-design` Spec-Nachträge (Einarbeitung von Gate-Befunden ohne neue Spielwerte) und Kurzdesigns der Stufe leicht (kein Save, kein neuer Spielwert) auf sonnet statt opus schreibt, sinkt das Kostengewicht dieser Instanzen um den Modellfaktor, ohne dass die Befunde im folgenden Gate zunehmen — analog E-054 (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md), Ampel opus-Anteil gelb 76,7 %; Nachträge M13-E2 0,71 M und I-048 0,70 M, Kurzdesign UI-TASTEN 0,16 M, alle opus).
+- Messgrösse: Kostengewicht je Nachtrag-Instanz ≤ 60 % des Ausgangs (0,70 M) und je Kurzdesign ≤ 60 % von 0,16 M über 3 Instanzen; opus-Anteil der Session ≤ 70 % in einer Session mit ≥ 2 Spec-Arbeiten. Gegenprobe: Befunde im folgenden Gate (Plan bzw. Kombi) zu Spec-Inhalten nicht über Ausgang (R492/R493: Gate Plan folgt), 0 ZURÜCK, kein zweiter Nachtrag zum selben Gate.
+- Messbarkeit: `lead_stats.rows` (Gewicht je Instanz) und die Gate-Rulings bleiben unverändert lesbar; Specs (opus) bleiben getrennt erkennbar am Paketnamen `design-…-nachtrag`.
+- Zeitraum: 3 Instanzen, höchstens bis 2026-11-19; Start erst bei freiem Platz (nach Bewertung E-054).
+- Rückfall: Zeile in der Modelltabelle (`STUDIO.md`) und Satz in `lead-design.md` auf die Fassung davor.
+- Dateien: `docs/studio/STUDIO.md` (Modelltabelle), `.claude/agents/lead-design.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
+- Ruling: –
+- Start: –
+- Bewertung: –
