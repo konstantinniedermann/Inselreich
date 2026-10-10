@@ -4264,3 +4264,16 @@ kombiniertes Gate.
 Regelbezug: STUDIO.md Ablauf Stufe leicht; R78 Desktop-first · Kosten bei Irrtum: ein Häppchen zurück vor dem Push.
 
 Entscheider: L0 · Anlass: Kurzdesign lead-design · ADR: —
+
+## R436 · 2026-10-10 · REL-14 live; Rest-Worktree see-f3 aufräumen
+
+Ruling: (1) **REL-14 + Werkzeug-Bündel live:** Push `46153c6..9eb99e7`, CI 38031718801 grün, Pages 38031921572 grün; danach
+Prozess-Aussensicht REL-14 (`studio-process-coach`, R127/R316). (2) **see-f3:** Der Ordner `.vitest/` im Worktree
+`.worktrees/see-f3-schiffskontrast` ist reiner Vitest-Cache (wird bei jedem Lauf neu erzeugt, nicht versioniert, Branch-Kopf
+`a0278db` ist Vorfahre von main); `production-integrator` löscht ihn mit `rm -r` und entfernt danach den Worktree mit
+`git worktree remove` ohne `--force`. Sperrt der Guard das Löschen, bleibt der Worktree und der Punkt geht an die nächste
+Retro (kein Umgehen).
+
+Regelbezug: STUDIO.md Worktrees aufräumen (R329), Verfassung §6 · Kosten bei Irrtum: keine (Cache wird neu erzeugt).
+
+Entscheider: L0 · Anlass: Push-Bericht, R431 · ADR: —
