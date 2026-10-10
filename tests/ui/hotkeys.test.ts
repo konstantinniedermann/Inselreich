@@ -532,10 +532,10 @@ describe('UI-TASTEN T01 (AK-UT-01, 02, 07, 11, 12)', () => {
     expect(keyDownVerdict(save, false, true, true)).toEqual({ act: false, preventDefault: true });
     expect(keyDownVerdict(null, false, false, true)).toEqual({ act: false, preventDefault: true });
     const pause = { kind: 'pause' } as const;
-    expect(keyDownVerdict(pause, true, false, false)).toEqual({ act: true, preventDefault: false });
-    expect(keyDownVerdict(pause, false, true, false)).toEqual({
-      act: false,
-      preventDefault: false,
-    });
+    expect(keyDownVerdict(pause, true, false, false)).toEqual({ act: true, preventDefault: true });
+    expect(keyDownVerdict(pause, false, true, false)).toEqual({ act: false, preventDefault: true });
+    const tool = { kind: 'tool', tool: { kind: 'road' } } as const;
+    expect(keyDownVerdict(tool, false, true, false)).toEqual({ act: false, preventDefault: true });
+    expect(keyDownVerdict(tool, false, false, false)).toEqual({ act: true, preventDefault: true });
   });
 });

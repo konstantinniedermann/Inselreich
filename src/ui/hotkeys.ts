@@ -65,7 +65,7 @@ export function isSaveChord(key: string, mods: Mods): boolean {
 
 /**
  * Entscheidung für einen keydown: `act` = Aktion ausführen, `preventDefault` = Browser-Standard
- * unterdrücken. Entf und Strg/Cmd+S sind bei laufendem Zug bzw. Wiederholung stumm, aber abgefangen.
+ * unterdrücken (bei belegter Taste immer). Wiederholung und Entf im laufenden Zug sind stumm.
  */
 export function keyDownVerdict(
   hot: HotkeyAction | null,
@@ -74,10 +74,8 @@ export function keyDownVerdict(
   saveChord: boolean,
 ): { act: boolean; preventDefault: boolean } {
   if (hot === null) return { act: false, preventDefault: saveChord };
-  const intercepted = hot.kind === 'demolishSelected' || hot.kind === 'save' || saveChord;
-  if (repeat) return { act: false, preventDefault: intercepted };
-  if (hot.kind === 'demolishSelected' && dragActive) return { act: false, preventDefault: true };
-  return { act: true, preventDefault: intercepted };
+  // Wie bisher in input.ts: jede belegte Taste unterdrückt den Browser-Standard.
+  return { act: !repeat && !(hot.kind === 'demolishSelected' && dragActive), preventDefault: true };
 }
 
 /**
