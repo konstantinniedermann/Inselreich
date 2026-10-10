@@ -625,7 +625,34 @@ describe('Schild nennt Gelände und Belegung (REL-16)', () => {
     });
   });
 
-  it('AK-R16-03 ohne Grundriss bleiben die alten Texte', () => {
+  it('AK-R16-02 gemischt: Weg und Gebäude im Grundriss zeigt das Gebäude (R454)', () => {
+    const { w, fisher } = uxWorld();
+    const x = fisher.x - 1;
+    const y = fisher.y;
+    expect(placeRoad(w, x, y).ok).toBe(true);
+    expect(friendlyReason(w, 'Bereits bebaut', { island: HOME, at: { x, y, w: 2, h: 1 } })).toBe(
+      'Platz belegt: Fischerhütte',
+    );
+  });
+
+  it('AK-R16-02 buildingId ohne Gebäude: neutraler Text statt Wurf', () => {
+    const { w, kx, ky } = uxWorld();
+    home(w).tiles[idx(home(w), kx + 12, ky + 6)]!.buildingId = 999999;
+    expect(
+      friendlyReason(w, 'Bereits bebaut', {
+        island: HOME,
+        at: { x: kx + 12, y: ky + 6, w: 1, h: 1 },
+      }),
+    ).toBe('Platz belegt');
+  });
+
+  it('AK-R16-03 mit Grundriss nennt der Grund den Ort', () => {
+    const { w, kx, ky } = uxWorld();
+    const at = { x: kx + 7, y: ky, w: 1, h: 1 };
+    expect(friendlyReason(w, 'Kein Bauland', { island: HOME, at })).toBe('Kein Bauland: Wasser');
+  });
+
+  it('AK-R16-04 ohne Grundriss bleiben die alten Texte', () => {
     const { w } = uxWorld();
     expect(friendlyReason(w, 'Kein Bauland')).toBe('Kein Bauland — nur auf Land bauen');
     expect(friendlyReason(w, 'Bereits bebaut')).toBe('Hier steht schon ein Gebäude oder Weg');
