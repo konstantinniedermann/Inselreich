@@ -404,7 +404,7 @@ false` ist `serialize(w)` unverändert; RNG-Zustand in allen Fällen gleich.
   Sparen-Werte. Gleiches bei nicht angebundener Amtsstube.
 - **AK-M13E1-14** Abriss: Sparen erlassen bei Tick 1000 (Sperre 4000), `demolish` der Amtsstube bei 2000 → `edict
 null`, Sperre 4000, Geld = vorher + Gebäude-Erstattung (keine 600). Neue Amtsstube bei 2500, `setEdict(w,
-'trade')` → `'Edikt-Sperrzeit'`; bei 4000 → ok.
+'trade')` → `'Edikt-Sperrzeit'`; bei 4000 → ok. (Berichtigt in Spec M13-E2 §11: Vorbedingung `money ≥ 600`.)
 - **AK-M13E1-15** Freischaltung: `won = false` → abgelehnt; nach `won = true` ok. Ein v10-Stand mit `won true` (Anhang
   02 E) lädt und erlaubt `setEdict` sofort.
 - **AK-M13E1-16** Pfadzeiten (B1 analytisch, Anhang 01 E): ein Haus ab t0 = 2000 unter den Bedingungen dort; Tick, an
@@ -465,7 +465,7 @@ Spielstand mit Ziel 1 erreicht, aktive Amtsstube, Geld ≥ 2000 (Playtest-Stand 
 - **AK-M13E1-35** Stand vor Ziel 1: Karten blass, Zeile «Erst nach dem Bürger-Ziel», Klick ohne Wirkung.
 - **AK-M13E1-36** Klick «Erlassen (600)» bei Sparen: Geld −600, Karte hervorgehoben mit «Aufheben», Zeile «wieder
   änderbar in 5:00» zählt herunter, Klick auf Handel → Meldung «Edikt erst in … wieder änderbar»; Unterhalt der
-  Kopfzeile sinkt.
+  Kopfzeile sinkt. (Berichtigt in Spec M13-E2 §11, R466 (1): gesperrte Karten statt Meldung.)
 - **AK-M13E1-37** Nach Ablauf (Zeitraffer) «Aufheben»: Meldung «Edikt aufgehoben — wieder änderbar in 5:00», Status «Kein
   Edikt», Geld unverändert.
 - **AK-M13E1-38** Handel erlassen: Kontor-Panel zeigt Stückpreise −20 % (Nahrung 7, Glas 40), Kauf von 10 Nahrung kostet 64.
