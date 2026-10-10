@@ -66,19 +66,20 @@ def message(files: list[str], detail: str) -> str:
 
 
 def record(files: list[str], top: Path, env: Mapping[str, str]) -> None:
-    from paths import append_event, now_iso
-
-    event = {
-        "ts": now_iso(),
-        "session_id": env.get("CLAUDE_CODE_SESSION_ID", "manual"),
-        "agent_id": "",
-        "source": "log",
-        "kind": "commit_rejected",
-        "summary": f"Prettier: {len(files)} Datei(en) nicht formatiert",
-        "files": files[:FILES_MAX],
-        "worktree": str(top),
-    }
     try:
+        from model import MANUAL_SESSION
+        from paths import append_event, now_iso
+
+        event = {
+            "ts": now_iso(),
+            "session_id": env.get("CLAUDE_CODE_SESSION_ID", MANUAL_SESSION),
+            "agent_id": "",
+            "source": "log",
+            "kind": "commit_rejected",
+            "summary": f"Prettier: {len(files)} Datei(en) nicht formatiert",
+            "files": files[:FILES_MAX],
+            "worktree": str(top),
+        }
         append_event(event)
     except Exception as exc:  # noqa: BLE001 - Ablehnung gilt auch ohne Log
         print(f"pre-commit: Ereignis nicht geloggt ({exc}).", file=sys.stderr)

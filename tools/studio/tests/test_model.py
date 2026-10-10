@@ -2373,5 +2373,16 @@ class GateSpecFixesTest(unittest.TestCase):
         self.assertNotIn("_key", build([real])["chronicle"][0])
 
 
+class ManualSessionTest(unittest.TestCase):
+    def test_manual_commit_event_creates_no_session(self):
+        events = [
+            ev("agent_start", 0, session="s1", status="active"),
+            ev("commit_rejected", 50, session=model.MANUAL_SESSION, source="log"),
+        ]
+        state = model.build_state(events, T0 + 60, MODELS, "latest")
+        self.assertEqual(state["session"], "s1")
+        self.assertNotIn(model.MANUAL_SESSION, [s["id"] for s in state["sessions"]])
+
+
 if __name__ == "__main__":
     unittest.main()

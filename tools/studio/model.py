@@ -35,6 +35,7 @@ FINAL = frozenset({"done", "failed", "ended"})
 DEPARTMENTS = ("production", "design", "tech", "art", "qa")
 DIRECTOR = "studio-director"
 CI_SESSION = "ci"  # Pseudo-Session der CI-Events (ci.py)
+MANUAL_SESSION = "manual"  # Events ohne Claude-Session (Commit von Hand, precommit.py)
 AGENT_MESSAGE_TASK = "Meldung eines Agenten"  # gleicher Text wie in hook.py
 PUBLIC = (
     "key",
@@ -455,7 +456,7 @@ class _Builder:
         ts = parse_ts(event.get("ts"))
         sid = str(event.get("session_id") or "unbekannt")
         # CI-Läufe gehören zu den Sessions, in deren Zeitraum sie fallen (result)
-        if event.get("kind") != "ci" and sid != CI_SESSION:
+        if event.get("kind") != "ci" and sid not in (CI_SESSION, MANUAL_SESSION):
             session = self.sessions.setdefault(
                 sid, {"id": sid, "started": ts, "last": ts, "ended": None}
             )
