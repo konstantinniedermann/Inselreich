@@ -27,7 +27,7 @@ Den Absatz zu den Studio-Werkzeugen (`grep -n "Steuerungsanteil bereinigt" docs/
 
 - Metriken: Die Zeile «Steuerungsanteil bereinigt» rechnet Lead-Instanzen mit Freigabephase `plan-`/`design-`/`gate-` (Zuordnung wie im Dashboard) oder „Budget: keins“ heraus und nennt den Anteil je Grund (E-049). `metrics.py --since <ISO>` verdichtet eine Studio-Session innerhalb eines Claude-Gesprächs (R434); ohne `--out` schreibt es in den Worktree, aus dem es läuft.
 - `make zeitreserve-push` bewertet nur die Messung (Commit = HEAD, Last vor dem Lauf ≤ 4), nicht die aktuelle Last.
-- `make studio-lint` nutzt eine gepinnte Ruff-Version (Makefile-Variable `RUFF`).
+- `make studio-lint` nutzt eine gepinnte Ruff-Version (Makefile-Variable `RUFF`). **R441 B2:** Die Studio-Werkzeuge verlangen Python ≥ 3.11 (`datetime.UTC`, `fromisoformat("…Z")`); `precommit.py` und der Git-Hook lassen bei älterem Python still zu.
 
 ## Schritt 4 · experimente.md, E-049
 

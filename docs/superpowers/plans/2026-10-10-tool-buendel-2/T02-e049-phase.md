@@ -17,7 +17,7 @@ Lesen nur abschnittsweise: `efficiency.py` Z. 85–100 (`BUDGET_*`), 346–520 (
 3. **Herausgerechnet** wird eine Instanz der Klasse `Leads`, wenn ihre Phase mit `plan-`, `design-` oder `gate-` beginnt (Gross/klein egal; Konstante `EXEMPT_PHASES = ("plan-", "design-", "gate-")`) **oder** sie `budget_none` hat (bestehende Regel). Grund je Instanz genau einer, in dieser Reihenfolge: `plan`, `design`, `gate`, sonst `budget_keins`.
 4. **Ergebnis-Schlüssel** in `compute`: bestehend `steuerung_bereinigt`, `steuerung_heraus`, `steuerung_heraus_n` (jetzt über beide Kriterien) plus neu `steuerung_heraus_grund: {"plan": float, "design": float, "gate": float, "budget_keins": float}` (Kostenanteile, Summe = `steuerung_heraus`). Je Instanz Feld `phase: str | None`; `lead_stats.rows[*]["phase"]`.
 5. **Signatur:** `compute(mains, persona_models=None, phases=None)`; ohne `phases` verhält sich alles wie heute (nur `Budget: keins`). `compute` wirft weiter nie.
-6. **metrics.py:** `build` reicht `state["lead_phases"]` an beide `efficiency.compute`-Aufrufe (Session und Meilenstein). Der Zweig `--efficiency` baut dafür `model.build_state(events, now, models, "all")` (Events werden dort ohnehin geladen; vor den Aufruf von `compute` ziehen).
+6. **metrics.py:** `build` reicht `state["lead_phases"]` an beide `efficiency.compute`-Aufrufe (Session und Meilenstein). Der Zweig `--efficiency` baut dafür `model.build_state(events, now, models, "all")` (Events werden dort ohnehin geladen; vor den Aufruf von `compute` ziehen). **R441 B1:** `lead_phases` wird aus den **ungefilterten** Events gebaut, auch wenn T03 später mit `--since` filtert (Freigabe vor `since`, Lead nach `since` behält seine Phase).
 
 ## Ausgabe
 
@@ -47,6 +47,8 @@ Lead-Tabelle (`_lead_lines`): eine Spalte `Phase` nach `Paket` (leer, wenn `None
 - `test_lead_phases_from_claims`: Events `budget` (lead-tech, `plan-P`, ts 1) → `agent_start` lead-tech `a1` (ts 2) → `lead_phases == {"s1:a1": "plan-P"}`.
 - `test_parallel_leads_get_own_phase`: zwei Freigaben (`plan-P` ts 1, `impl-Q` ts 3), zwei Lead-Starts (ts 2, ts 4) → je ihre Phase.
 - `test_lead_without_grant_has_no_phase`: Start ohne Freigabe → Schlüssel fehlt.
+
+`test_metrics.py` (R441 B1): `test_phases_from_unfiltered_events_with_since` — `budget`-Event `plan-…` vor `since`, Lead-Start nach `since`, kein früherer Kostenstand (`session_cost`) → Phase wird trotzdem zugeordnet (wird nach T03 grün, wenn `--since` existiert; im T02-Stand als Test auf `build` ohne `since` anlegen und in T03 um `since` erweitern).
 
 `test_metrics.py`: `test_session_file_uses_lead_phases` — Fixture mit `budget`-Event `plan-…` und passendem Lead-Transkript; die geschriebene Datei enthält „Plan “ in der bereinigten Zeile.
 

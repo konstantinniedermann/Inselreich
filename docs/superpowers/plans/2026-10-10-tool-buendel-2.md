@@ -44,6 +44,8 @@ Prozessstufe voll (Format) · Paket TOOL-BUENDEL-2 · Meilenstein TOOL · Planba
 | `py`   | `tool/b2-py`, `.worktrees/b2-py` | T01+T04, T02+T03, T06 (seriell) | `tech-sim-engineer` | T01: `Makefile` (nur Ziel `studio-lint`), die 16 von Ruff gemeldeten Dateien unter `tools/studio/`. T04: `tools/studio/model.py`, `tools/studio/precommit.py`, `tools/githooks/pre-commit`, `tools/studio/modelguard.py`, Tests `test_model.py`, `test_precommit.py`, `test_modelguard.py`. T02/T03: `tools/studio/efficiency.py`, `metrics.py`, `model.py`, `paths.py`, Tests `test_efficiency.py`, `test_metrics.py`, `test_paths.py`. T06: siehe T06 |
 | `ts`   | `tool/b2-ts`, `.worktrees/b2-ts` | T05                             | `tech-ui-engineer`  | `tools/zeitreserve/check.ts`, `tests/tools/zeitreserve.test.ts`, `tests/tools/testlock.test.ts`                                                                                                                                                                                                                                                                                                                                                         |
 
+**Vermerk R441 B3:** T06 hat abweichend von der Regel «je Task ein Review» kein eigenes Task-Review; das Final-Review T07 deckt T06 ausdrücklich ab. **Nacharbeit R441:** B1 (T02/T03), B2 (T04/T06), B4 (T04) in den Task-Dateien eingearbeitet; E7 abgelehnt, Start sofort.
+
 **Parallelität:** `py` und `ts` teilen keine Datei → Welle 1: T01+T04 ‖ T05. Welle 2: T02+T03 (nach Review OK T01+T04, gleicher Baum). Welle 3: T06 (nach T02+T03 und T05 Review OK; holt `tool/b2-ts` per `git merge --no-ff` in `tool/b2-py`, damit der Integrator eine Branch merged). Höchstens **2 Arbeiter zugleich**. `Makefile` ändern nacheinander T01 (`studio-lint`) und T06 (Hilfetext `zeitreserve-push`), nie gleichzeitig.
 
 ## Budgetantrag (Formel Handbuch 1.39)
@@ -64,16 +66,16 @@ Pakete (Umsetzer-Starts) = 4 (T01+T04, T05, T02+T03, T06) → 4 × 2 + 0 QA-Chec
 
 ## Task-Tabelle
 
-| ID  | Titel                                             | Datei                                                                  | AK-IDs        | Strang | blocked-by                            | Modell |
-| --- | ------------------------------------------------- | ---------------------------------------------------------------------- | ------------- | ------ | ------------------------------------- | ------ |
-| T00 | Worktrees anlegen (Controller)                    | dieser Index                                                           | –             | alle   | Gate Plan, Push-Gate REL-15 grün (E7) | sonnet |
-| T01 | studio-lint grün, Ruff gepinnt                    | [T01-studio-lint.md](2026-10-10-tool-buendel-2/T01-studio-lint.md)     | AK-TB2-01     | py     | T00                                   | sonnet |
-| T02 | E-049 nach Freigabephase                          | [T02-e049-phase.md](2026-10-10-tool-buendel-2/T02-e049-phase.md)       | AK-TB2-02…04  | py     | T01+T04 (Review OK)                   | sonnet |
-| T03 | `metrics.py --since`, Ausgabe in den Worktree     | [T03-metrics-since.md](2026-10-10-tool-buendel-2/T03-metrics-since.md) | AK-TB2-05…07  | py     | mit T02 gebündelt (nach T02)          | sonnet |
-| T04 | Hook-Kleinkram: manual, python3, Klammern         | [T04-hook-fixes.md](2026-10-10-tool-buendel-2/T04-hook-fixes.md)       | AK-TB2-08…10  | py     | mit T01 gebündelt (nach T01)          | sonnet |
-| T05 | zeitreserve nur `loadStart`, testlock `ps`-Fehler | [T05-ts.md](2026-10-10-tool-buendel-2/T05-ts.md)                       | AK-TB2-11, 12 | ts     | T00                                   | sonnet |
-| T06 | Doku, Beobachtungen, Zusammenführung              | [T06-doku.md](2026-10-10-tool-buendel-2/T06-doku.md)                   | AK-TB2-13     | py     | T02+T03, T05 (Review OK)              | sonnet |
-| T07 | Final-Review über das Bündel                      | [T07-final.md](2026-10-10-tool-buendel-2/T07-final.md)                 | alle          | –      | T06                                   | opus   |
+| ID  | Titel                                             | Datei                                                                  | AK-IDs        | Strang | blocked-by                     | Modell |
+| --- | ------------------------------------------------- | ---------------------------------------------------------------------- | ------------- | ------ | ------------------------------ | ------ |
+| T00 | Worktrees anlegen (Controller)                    | dieser Index                                                           | –             | alle   | Gate Plan (E7 abgelehnt, R441) | sonnet |
+| T01 | studio-lint grün, Ruff gepinnt                    | [T01-studio-lint.md](2026-10-10-tool-buendel-2/T01-studio-lint.md)     | AK-TB2-01     | py     | T00                            | sonnet |
+| T02 | E-049 nach Freigabephase                          | [T02-e049-phase.md](2026-10-10-tool-buendel-2/T02-e049-phase.md)       | AK-TB2-02…04  | py     | T01+T04 (Review OK)            | sonnet |
+| T03 | `metrics.py --since`, Ausgabe in den Worktree     | [T03-metrics-since.md](2026-10-10-tool-buendel-2/T03-metrics-since.md) | AK-TB2-05…07  | py     | mit T02 gebündelt (nach T02)   | sonnet |
+| T04 | Hook-Kleinkram: manual, python3, Klammern         | [T04-hook-fixes.md](2026-10-10-tool-buendel-2/T04-hook-fixes.md)       | AK-TB2-08…10  | py     | mit T01 gebündelt (nach T01)   | sonnet |
+| T05 | zeitreserve nur `loadStart`, testlock `ps`-Fehler | [T05-ts.md](2026-10-10-tool-buendel-2/T05-ts.md)                       | AK-TB2-11, 12 | ts     | T00                            | sonnet |
+| T06 | Doku, Beobachtungen, Zusammenführung              | [T06-doku.md](2026-10-10-tool-buendel-2/T06-doku.md)                   | AK-TB2-13     | py     | T02+T03, T05 (Review OK)       | sonnet |
+| T07 | Final-Review über das Bündel                      | [T07-final.md](2026-10-10-tool-buendel-2/T07-final.md)                 | alle          | –      | T06                            | opus   |
 
 **T00 (Controller):** `git worktree list`, `git status` (R329), dann `git worktree add .worktrees/b2-py -b tool/b2-py main` und `git worktree add .worktrees/b2-ts -b tool/b2-ts main`. Kein `src/` → keine R392-Basismessung.
 
@@ -119,4 +121,4 @@ Pakete (Umsetzer-Starts) = 4 (T01+T04, T05, T02+T03, T06) → 4 × 2 + 0 QA-Chec
 - **E4 Ruff `0.17.0` pinnen und die 28 Befunde beheben** (22 automatisch, 6 FURB162 von Hand) statt einer älteren Version ohne diese Regeln. Voraussetzung Python ≥ 3.11 (`datetime.UTC`, `fromisoformat("…Z")`); CI ubuntu-24.04 hat 3.12, lokal 3.14. Aufwand ≈ 15 Tools Umsetzer. Empfehlung: annehmen.
 - **E5 Bleibt Beobachtung:** (a) Ampelzeile „bereinigt“ im Dashboard erst nach Bewertung E-049 (sonst Vorfälle aus einer unbewerteten Messgrösse, `effort.py`); (b) Persona-Starts typisiert: Definition steht in `verbesserung.md` (studio-coach, Ruling), und typisierte Starts über der Frontmatter sind mit Kopfzeile erlaubt — Vorschlag an den Coach: Ampel aus `model_guard`-Events zählen; (c) Probe-Event: append-only-Log, erledigt beim nächsten `make studio-archive`. Empfehlung: annehmen.
 - **E6 Handbuch:** STUDIO.md Z. 367 „warten, bis die Last ≤ 4“ und das Integrator-Briefing streicht der studio-coach nach dem Merge (STUDIO.md hier gesperrt). Empfehlung: Auftrag an studio-coach mit dem Merge.
-- **E7 Start nach Push-Gate REL-15:** `make check` je Strang lastet die Maschine aus (R421 analog). Empfehlung: annehmen.
+- **E7 gestrichen (R441):** abgelehnt, Umsetzung startet sofort.

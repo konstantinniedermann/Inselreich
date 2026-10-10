@@ -12,7 +12,7 @@ Strang `py` · Worktree `.worktrees/b2-py` · Branch `tool/b2-py` · Umsetzer `t
 
 Ursache: `precommit.record` setzt ohne `CLAUDE_CODE_SESSION_ID` die session_id `"manual"`; `model._Builder.apply` legt für jede session_id ausser `CI_SESSION` eine Session an.
 
-**Regel:** Neue Konstante `MANUAL_SESSION = "manual"  # Events ohne Claude-Session (Commit von Hand, precommit.py)` neben `CI_SESSION` in `model.py`. `apply` legt für `MANUAL_SESSION` keine Session an (wie `CI_SESSION`); das Event bleibt im Feed/Zähler. `precommit.record` importiert die Konstante **lazy** (`from model import MANUAL_SESSION` in `record`, wie schon `paths`) statt des String-Literals.
+**Regel:** Neue Konstante `MANUAL_SESSION = "manual"  # Events ohne Claude-Session (Commit von Hand, precommit.py)` neben `CI_SESSION` in `model.py`. `apply` legt für `MANUAL_SESSION` keine Session an (wie `CI_SESSION`); das Event bleibt im Feed/Zähler. `precommit.record` importiert die Konstante **lazy** (`from model import MANUAL_SESSION` in `record`, wie schon `paths`) statt des String-Literals. **R441 B4:** dieser Import steht **innerhalb des `try`** von `record` (ein Importfehler darf den Commit nie blockieren, Messwerkzeuge werfen nie).
 
 Tests zuerst (rot):
 
@@ -22,6 +22,8 @@ Tests zuerst (rot):
 ## Teil B · Hook ohne `python3` (AK-TB2-09)
 
 Ursache: `exec python3 …` endet ohne `python3` mit Exit 127 und blockiert den Commit, obwohl alle anderen Werkzeugfehler zulassen.
+
+**R441 B2:** `precommit.py` und Hook lassen bei Python < 3.11 still zu (Exit 0, Hinweis auf stderr; z. B. Versionsprüfung `sys.version_info < (3, 11)` am Anfang von `main` bzw. im Hook `python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))' || { echo … >&2; exit 0; }`), Test dazu (Version per Parameter/Patch simulieren). Mindest-Python ≥ 3.11 steht in arc42 (T06).
 
 Neue Zeile vor dem `exec` in `tools/githooks/pre-commit`:
 
