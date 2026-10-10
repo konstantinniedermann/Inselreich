@@ -148,3 +148,7 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
 ---
 
 ## Offen (neue Einträge unten anhängen)
+
+### 2026-10-10 · Plan REL-16: Gebirgskachel am Bergfuss wirkt wie Wiese; Playtest misst nach Schwenk mit alten Pixeln
+
+- **Fundort:** `.studio/qa/REL-15/ui/b6-bauen.png` (Seed 7, Kachel (38, 35) = `mountain`, Probe beim Planen), Skript `.studio/qa/REL-15/ui/t06.mjs` Schritt 2.4 (Ziehen um +40/+20 px, danach weiter mit `p0`). Beobachtung: Der Geisterbau stand auf einer Gebirgskachel, die im Bild grün wie Wiese aussieht; das Schild „Kein Bauland“ war richtig, wirkte aber falsch. Zweitens zielte der Playtest nach dem Schwenk nicht mehr auf das Haus. Ursprung: Planung REL-16 (lead-tech). Einschätzung: niedrig; Darstellung des Bergfusses an `lead-art` (Sichtprüfung, ob Gebirgskacheln am Rand als Gebirge lesbar sind); REL-16 nennt das Gelände im Schild, der Release-Check T04 misst Pixel nach jeder Kamerabewegung neu.
