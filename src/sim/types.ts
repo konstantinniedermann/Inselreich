@@ -281,3 +281,19 @@ export type LoadResult =
 export type Result = { readonly ok: true } | { readonly ok: false; readonly reason: string };
 export const ok: Result = Object.freeze({ ok: true as const });
 export const fail = (reason: string): Result => ({ ok: false, reason });
+
+export type EdictId = 'saving' | 'trade' | 'welfare';
+export interface EdictDef {
+  id: EdictId;
+  name: string;
+  /** 100 = keine Wirkung. */
+  upkeepPct: number;
+  /** Prozentpunkte Abzug auf den Steuersatz, 0 = keine Wirkung. */
+  taxPoints: number;
+  /** 100 = keine Wirkung. */
+  buyPct: number;
+  /** null = GROWTH_INTERVAL. */
+  growthInterval: number | null;
+  /** null = keine Wirkung. */
+  upgradeWait: number | null;
+}
