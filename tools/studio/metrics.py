@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import actions
+import clock
 import efficiency
 import effort
 import model
@@ -400,14 +401,23 @@ def _from_since(events: list[dict], since: datetime | None) -> list[dict]:
     return [e for e in events if model.parse_ts(e.get("ts")) >= since.timestamp()]
 
 
+def _with_flakes(data: dict | None, events: list[dict]) -> dict | None:
+    """Ampelwert Flake-Verdacht; ``None`` ohne Test-Events im Zeitraum (nicht gemessen)."""
+    if data is None:
+        return None
+    has_tests = any(e.get("kind") in ("test_failed", "test_passed") for e in events)
+    data["flakes"] = efficiency.flake_suspects(events) if has_tests else None
+    return data
+
+
 def build(args: argparse.Namespace) -> tuple[str, dict] | None:
     all_events = load_events(paths.studio_home())
     since = getattr(args, "since", None)
     events = _from_since(all_events, since)
     models = model.read_agent_models(paths.agents_dir())
     handbook = studio_docs.read_version(paths.docs_dir() / "STUDIO.md")
-    created = datetime.now().astimezone().isoformat(timespec="seconds")
-    now = datetime.now(UTC).timestamp()
+    created = clock.now().astimezone().isoformat(timespec="seconds")
+    now = clock.timestamp()
     if args.milestone:
         state = model.build_state(events, now, models, "all")
         state = _milestone_state(state, events, args.milestone)
@@ -435,8 +445,11 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
         cost = _since_cost(all_events, sid, since)
     else:
         cost = _session_cost(state, sid, paths.repo_root())
-    data = efficiency.compute(
-        _session_files(paths.repo_root(), [sid]), _persona_models(), phases, since
+    data = _with_flakes(
+        efficiency.compute(
+            _session_files(paths.repo_root(), [sid]), _persona_models(), phases, since
+        ),
+        events,
     )
     raw = summarize(state, "session", kennung, handbook, cost, created, data, since)
     return kennung, raw
@@ -475,10 +488,13 @@ def main(argv: list[str] | None = None) -> int:
         all_events = load_events(paths.studio_home())
         events = _from_since(all_events, args.since)
         state = model.build_state(
-            all_events, datetime.now(UTC).timestamp(), _persona_models(), "all"
+            all_events, clock.timestamp(), _persona_models(), "all"
         )
-        data = efficiency.compute(
-            files, _persona_models(), state["lead_phases"], args.since
+        data = _with_flakes(
+            efficiency.compute(
+                files, _persona_models(), state["lead_phases"], args.since
+            ),
+            events,
         )
         print(efficiency.render_section(data))
         print(efficiency.render_rewrites(data))

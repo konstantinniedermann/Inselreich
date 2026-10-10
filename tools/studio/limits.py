@@ -10,9 +10,10 @@ import json
 import math
 import os
 import tempfile
-import time
 from datetime import UTC, datetime
 from pathlib import Path
+
+import clock
 
 # Richtwerte (R68/R69), nur hier definiert; Hinweise empfehlen nie ein Modell.
 YELLOW_FROM = 60
@@ -61,7 +62,7 @@ def parse(payload: object, now: float | None = None) -> dict:
     context = _section(root, "context_window")
     session = root.get("session_id")
     return {
-        "ts": time.time() if now is None else now,
+        "ts": clock.timestamp() if now is None else now,
         "session_id": session if isinstance(session, str) else "",
         "five_hour_pct": _percent(five.get("used_percentage")),
         "five_hour_resets_at": _reset(five.get("resets_at")),

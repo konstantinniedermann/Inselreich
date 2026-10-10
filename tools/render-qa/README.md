@@ -42,5 +42,6 @@ Meldung ab. `--help` läuft ohne Prüfung. Zum Belegen der Abbruchlogik: `LASTGA
 - Wurzeln per `--root` (Einzelstand) bzw. `--a`/`--b` (Verzeichnisse); Standard ist der Repo-Stamm (`git rev-parse --show-toplevel`).
 - Ausgabe in `--out` (Standard `<Wurzel>/.studio/qa/<skript>`).
 - Dateiname: `aa-<Stand>-<name>` (gleicher Stand gegen sich, auch Einzelstand-Läufe) oder `ab-<A>-vs-<B>-<name>`.
+- Playtest- und Release-Screenshots: `<fall>-<B>x<H>[-dpr<d>].png` (z. B. `belegt-haus-1280x720.png`), nie ohne Grösse, damit Läufe je Fenstergrösse sich nicht überschreiben; Ablage `.studio/qa/<paket>/`.
 - Erste Zeile jeder Textausgabe: `Vergleich: A/A|A/B | A=<Stand>@<Hash> | B=<Stand>@<Hash>` mit beiden Commit-Hashes.
 - Tests: `tests/tools/renderqa.test.ts` (Lastabbruch, Vergleich; ohne Browser).

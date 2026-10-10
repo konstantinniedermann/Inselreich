@@ -45,6 +45,7 @@ THRESHOLDS = {
     "opus": {"gelb": 0.60, "rot": 0.80, "op": ">"},
     "persona_opus": {"gelb": 1, "rot": 5, "op": ">="},
     "largest_read": {"gelb": 40, "rot": 100, "op": ">"},  # KB (1 KB = 1024 Zeichen)
+    "flake": {"gelb": 1, "rot": 3, "op": ">="},  # Testnamen mit Flake-Verdacht
 }
 
 # Anzeigename je Ampelzeile: einzige Quelle für `_lights` und die Vorfall-Zuordnung
@@ -57,7 +58,9 @@ LIGHT_LABELS = {
     "opus": "opus-Anteil",
     "persona_opus": "Persona-Starts als general-purpose auf opus (Instanzen)",
     "largest_read": "Grösste gelesene Datei",
+    "flake": "Tests rot, beim gleichen Stand später grün (Flake-Verdacht)",
 }
+MAX_FLAKE_NAMES = 10
 LABEL_KEYS = {label: key for key, label in LIGHT_LABELS.items()}
 
 CLASSES = (
@@ -194,7 +197,8 @@ def scan(path: Path, since: datetime | None = None) -> dict | None:
     """Ein Transkript: Aufrufe (je Message-ID einmal), erster Prompt, Lese-Ergebnisse.
 
     since: Einträge davor liefern weder Aufrufe noch Lese-Ergebnisse (der erste
-    Prompt wird immer gelesen)."""
+    Prompt wird immer gelesen). Ein Lesevorgang zählt, wenn sein Ergebnis ab
+    ``since`` eintrifft."""
     calls: dict[str, dict] = {}
     pending: dict[str, str] = {}
     reads: list[dict] = []
@@ -215,10 +219,11 @@ def scan(path: Path, since: datetime | None = None) -> dict | None:
         fresh = not (isinstance(content, list) and _only_results(content))
         if entry.get("type") == "user" and prompt is None and fresh:
             prompt = _first_prompt(entry)
-        if _before(entry, since):
-            continue
+        before = _before(entry, since)
         if isinstance(content, list):
-            _collect_tools(content, pending, reads)
+            _collect_tools(content, pending, None if before else reads)
+        if before:
+            continue
         usage = message.get("usage")
         if isinstance(usage, dict):
             _add_call(calls, message, entry, usage)
@@ -229,7 +234,8 @@ def _only_results(content: list) -> bool:
     return all(isinstance(b, dict) and b.get("type") == "tool_result" for b in content)
 
 
-def _collect_tools(content: list, pending: dict, reads: list) -> None:
+def _collect_tools(content: list, pending: dict, reads: list | None) -> None:
+    """Merkt Lese-Ziele; Ergebnisse zählen nur, wenn ``reads`` übergeben ist."""
     for block in content:
         if not isinstance(block, dict):
             continue
@@ -237,7 +243,7 @@ def _collect_tools(content: list, pending: dict, reads: list) -> None:
             target = _read_target(block.get("name"), block.get("input"))
             if target and isinstance(block.get("id"), str):
                 pending[block["id"]] = target
-        elif block.get("type") == "tool_result":
+        elif block.get("type") == "tool_result" and reads is not None:
             ident = block.get("tool_use_id")
             target = pending.get(ident) if isinstance(ident, str) else None
             if target:
@@ -674,6 +680,33 @@ def _roles(instances: list[dict]) -> list[dict]:
     return sorted(rows, key=lambda r: -r["cost"])
 
 
+def _event_time(event: dict) -> float:
+    try:
+        return datetime.fromisoformat(str(event.get("ts"))).timestamp()
+    except ValueError:
+        return 0.0
+
+
+def _test_state(event: dict) -> tuple:
+    return (event.get("suite"), event.get("commit"), event.get("diff"))
+
+
+def flake_suspects(events: list[dict]) -> list[str]:
+    """Testnamen, die rot waren und beim gleichen Stand (Suite, Commit, Diff) später grün."""
+    ordered = sorted(
+        (e for e in events if e.get("kind") in ("test_failed", "test_passed")),
+        key=_event_time,
+    )
+    red: dict[tuple, set[str]] = {}
+    suspects: set[str] = set()
+    for event in ordered:
+        if event["kind"] == "test_failed":
+            red.setdefault(_test_state(event), set()).update(event.get("names") or [])
+        else:
+            suspects |= red.pop(_test_state(event), set())
+    return sorted(suspects)
+
+
 def ampel(key: str, value: float | None) -> str:
     if value is None:
         return NOT_MEASURED
@@ -708,6 +741,7 @@ def _table(head: list[str], rows: list[list[str]]) -> list[str]:
 
 def _lights(data: dict) -> list[str]:
     top = data["top_reads"][0]["chars"] / KB if data["top_reads"] else None
+    flakes = data.get("flakes")
     t = THRESHOLDS
     entries = [
         (
@@ -758,12 +792,20 @@ def _lights(data: dict) -> list[str]:
             NOT_MEASURED if top is None else f"{top:.1f} KB",
             f"gelb > {t['largest_read']['gelb']} KB, rot > {t['largest_read']['rot']} KB",
         ),
+        (
+            LIGHT_LABELS["flake"],
+            "flake",
+            NOT_MEASURED if flakes is None else str(len(flakes)),
+            f"gelb ≥ {t['flake']['gelb']}, rot ≥ {t['flake']['rot']}",
+        ),
     ]
-    values = {"largest_read": top}
+    values = {"largest_read": top, "flake": None if flakes is None else len(flakes)}
     out = []
     for label, key, shown, rule in entries:
         value = values[key] if key in values else _raw_value(data, key)
         out.append(f"- {ampel(key, value).upper()}: {label}: {shown} ({rule})")
+        if key == "flake" and flakes:
+            out.append(f"  - Flake-Verdacht: {', '.join(flakes[:MAX_FLAKE_NAMES])}")
     return out
 
 

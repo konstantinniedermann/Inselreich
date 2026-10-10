@@ -17,6 +17,7 @@ import time
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
+import clock
 import context
 import limits
 import studio_docs
@@ -310,7 +311,7 @@ def enrich(event: dict, payload: dict) -> list[dict]:
 def open_incidents() -> list[dict]:
     return pending_incidents(
         EventStore(events_file()).events(),
-        time.time(),
+        clock.timestamp(),
         ampel_sessions=load_ampel_sessions(docs_dir() / "metriken"),
     )
 
@@ -353,7 +354,7 @@ def limits_notice(payload: dict, now: float | None = None) -> str:
     """Limit-Zeile für L0 (Hauptsession); ohne frische Werte „nicht gemessen“."""
     if payload.get("agent_id"):
         return ""
-    now = time.time() if now is None else now
+    now = clock.timestamp() if now is None else now
     data = limits.read_fresh(studio_home() / "limits.json", now, limits.HOOK_MAX_AGE)
     return (limits.summary(data) if data else "") or limits.NOT_MEASURED_LINE
 

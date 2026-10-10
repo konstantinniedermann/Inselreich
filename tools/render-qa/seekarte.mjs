@@ -133,11 +133,19 @@ const markPixel = (a, i, dpr) =>
     const w = window.__inselDev.world();
     const cv = document.querySelector('canvas.sea-map');
     const d = ${dpr};
-    const l = sm.mapLayout(w, cv.width, cv.height, 12 * d);
+    const vm = await import('/src/ui/seaMapView.ts');
+    const pad = (vm.SEA_MAP_PAD ?? 12) * d; // Rand aus der Quelle; ältere Stände ohne die Konstante
+    const l = sm.mapLayout(w, cv.width, cv.height, pad);
     const isl = w.islands[${i}];
     const m = sm.tileToMap(l, isl.ox + isl.anchor.x + 0.5, isl.oy + isl.anchor.y + 0.5);
     const x = Math.round(m.x), y = Math.round(m.y - ((sm.DOT_R ?? 3) + 1) * d - (sm.MARK ?? 4) * d / 2); // ältere Stände ohne die Konstanten
-    const p = cv.getContext('2d').getImageData(x, y, 1, 1).data;
+    // Kopie mit willReadFrequently: der App-Kontext bleibt GPU-fähig, die Probe löst keine Chrome-Warnung aus.
+    const k = document.createElement('canvas');
+    k.width = cv.width;
+    k.height = cv.height;
+    const g = k.getContext('2d', { willReadFrequently: true });
+    g.drawImage(cv, 0, 0);
+    const p = g.getImageData(x, y, 1, 1).data;
     return JSON.stringify({ x, y, rgb: [p[0], p[1], p[2]], kontor: isl.kontorId !== null });
   })()`);
 

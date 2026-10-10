@@ -4612,3 +4612,35 @@ Regelbezug: R455; Verfassung §3 (Balancing-Test bleibt Regressionsschutz) · Ko
 Review.
 
 Entscheider: L0 · Anlass: Bericht design-spec-author Nacharbeit R455 · ADR: —
+
+## R457 · 2026-10-10 · Gate Merge TOOL-BUENDEL-3: OK
+
+Ruling: **OK** für `tool/b3-py` @ `95cb4dbe` (T05–T11, `tool/b3-qa` eingemergt): Final-Review opus OK (T05–T11 je OK, T10
+ausdrücklich geprüft, R451 B1), Task-Reviews OK bzw. BEDENKEN niedrig (T09 `clock.py` 63 statt 50 Zeilen — akzeptiert,
+Grenze widersprach der Spec); `make check` (Load 4,00), `studio-test` (593), `studio-lint`, `lint`, `docs-check`,
+`zeittests` Exit 0; Konfliktprobe sauber; Uhr-Warnungen 12 → 0; R451 B3 im Testkommentar. Restpunkte als Beobachtung.
+Merge lokal durch `production-integrator` (`--no-ff`, `make check`), Worktrees `b3-py`/`b3-qa` entfernen; Push mit der
+nächsten Studio-Session (R335). Für die Kurz-Retro: Controller 1 beendete seinen Zug wartend, der Bericht von Controller 2
+kam bei L0 an (ADR-007-Muster, kein Schaden); Controller 2 mergte `tool/b3-qa` selbst, weil der Umsetzer das per
+Persona ablehnte.
+
+Regelbezug: gates.md Gate Merge; R335, R451 · Kosten bei Irrtum: Revert-Merge vor dem Push.
+
+Entscheider: L0 · Anlass: Bericht Controller 2 TOOL-BUENDEL-3 · ADR: —
+
+## R458 · 2026-10-10 · Gate Merge Release REL-17: OK unter Auflage (Doku-Konflikt lösen)
+
+Ruling: **OK** für `feat/rel-17` (T01–T04) unter Auflage. Final-Review opus und Browser-Lauf T05 vollständig (1280×720,
+1920×1080; Schritt 8 „Weg-Zug + `.`“ und „Abriss-Zug + `.`“ einzeln bestanden; `pointercancel`/`blur` ohne hängenden Zug;
+Fremdinsel-Sprung öffnet das Panel; Konsole sauber); AK-R17-01…19 belegt, Sim/Render/Audio-Diff leer. **Auflage (B1):**
+`git merge-tree` gegen main meldet Konflikt in `docs/beobachtungen.md` (beide Seiten am Dateiende angehängt). Der
+Eigentümer (Controller REL-17, Fortsetzung) mergt main per `git merge` in `feat/rel-17` (kein Rebase), behält beide
+Abschnitte, trägt die niedrigen Befunde (Reviewer B2–B4, Playtest 1–2, vier Befunde ausserhalb Scope) als
+Beobachtung ein und darf den Trivial-Fix B3 (Kommentar „Q/E“ → `.`/`,` in `src/ui/problems.ts:1`) mitnehmen; danach
+`make check` und `merge-tree` sauber (AK-R17-20). Delta-Review durch L0 (Diff seit `6b62640c`). Danach Merge lokal durch
+`production-integrator`; Push nächste Studio-Session (R335). Release-Notiz nach dem lead-qa-Vorschlag.
+
+Regelbezug: gates.md Gate Merge Release (Konflikte: Eigentümer holt main per Merge, Delta-Review); R453 · Kosten bei
+Irrtum: Revert-Merge vor dem Push.
+
+Entscheider: L0 · Anlass: Urteil lead-qa REL-17 · ADR: —

@@ -3,7 +3,7 @@
 Basis ist das Persona-Frontmatter; Ausnahmen stehen nur in der Tabelle «Modellwahl» in
 docs/studio/STUDIO.md. Ein stärkeres Modell braucht die Kopfzeile `Modell: <alias> (<Einsatz>)`.
 Eigenes Modul statt guard.py: guard.py ist verfassungsgeschützt (§1.3), diese Regel ist Handbuch.
-Fehler lassen zu.
+Fehler lassen zu. Danach prüft budgetwarn.py Lead-Starts mit `Budget:` auf eine Freigabe (E-055).
 """
 
 from __future__ import annotations
@@ -101,6 +101,41 @@ def unknown_alias(tool_input: Mapping, table) -> str | None:
     return None
 
 
+def _budget_warn(payload: Mapping, data: Mapping) -> int:
+    """Budget-Warnung (E-055) als Hinweis, nie als Entscheidung; Fehler lassen zu."""
+    from budgetwarn import grants, warning
+    from paths import append_event, events_file, now_iso
+
+    session = str(payload.get("session_id") or "")
+    try:
+        text = events_file().read_text("utf-8", errors="replace")
+    except OSError:
+        return 0
+    found = warning(data, grants(text, session))
+    if not found:
+        return 0
+    with contextlib.suppress(Exception):
+        append_event(
+            {
+                "ts": now_iso(),
+                "session_id": session,
+                "agent_id": str(payload.get("agent_id") or "main"),
+                "source": "hook",
+                "kind": "budget_warn",
+                "persona": _persona(data),
+                "package": _header(str(data.get("prompt") or ""), "Paket"),
+                "summary": found[:160],
+            }
+        )
+    out = {"hookEventName": "PreToolUse", "additionalContext": found}
+    print(
+        json.dumps(
+            {"hookSpecificOutput": out, "systemMessage": found}, ensure_ascii=False
+        )
+    )
+    return 0
+
+
 def main() -> int:
     try:
         from paths import agents_dir, append_event, docs_dir, now_iso
@@ -119,7 +154,7 @@ def main() -> int:
         found = reason(data, persona_meta(agents_dir()), table)
         note = unknown_alias(data, table)  # unbekannter Alias: nur Event, nie deny
         if not found and not note:
-            return 0
+            return _budget_warn(payload, data)
         with contextlib.suppress(Exception):
             append_event(
                 {
@@ -141,6 +176,8 @@ def main() -> int:
                 "permissionDecisionReason": found,
             }
             print(json.dumps({"hookSpecificOutput": out}, ensure_ascii=False))
+            return 0
+        return _budget_warn(payload, data)
     except Exception:  # noqa: BLE001 - Hooks werfen nie
         return 0
     return 0
