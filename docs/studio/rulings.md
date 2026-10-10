@@ -4277,3 +4277,19 @@ Retro (kein Umgehen).
 Regelbezug: STUDIO.md Worktrees aufräumen (R329), Verfassung §6 · Kosten bei Irrtum: keine (Cache wird neu erzeugt).
 
 Entscheider: L0 · Anlass: Push-Bericht, R431 · ADR: —
+
+## R437 · 2026-10-10 · Kombiniertes Gate REL-15: BEDENKEN → Nacharbeit, Umsetzung frei
+
+Ruling: Urteil `lead-qa` BEDENKEN B1–B5, nichts blockierend; Plan `7ec80cc`. Nacharbeit durch die Controller vor dem
+jeweiligen Task, ohne Zweitprüfung: **B1** Vitest für das Listener-Leck in `tests/ui/hud.test.ts` (Anmeldungen/Abmeldungen
+per `signal` zählen, rot vor dem Fix), Browser-Probe bleibt Zweitbeleg; **B2** T04 mit festen Ports 5491/5591; **B3** AK C7
+nennt „Gegenprobe in T04“; **B4** Eintrag in `docs/beobachtungen.md` (`seaMap.test.ts` in `ZEITTESTS` ohne Uhr); **B5** T06
+bestätigt ausdrücklich das Schild im selben Frame beim Kachelwechsel. **Entscheide E1–E6** wie empfohlen (E1 zwei
+Controller `sonnet`, je Strang einer; E2 Leck statt Layout-Befund; E3 Szenen-Helfer versionieren; E4 Kontor-Marke 4 × 4
+CSS-px ohne lead-art; E5 Dialog; E6 dpr-Wechsel nur Beobachtung). **AK-Nummern:** A1–A4 → AK-R15-01…04, B1–B6 →
+AK-R15-05…10, C1–C7 → AK-R15-11…17, D1–D4 → AK-R15-18…21. **Budget:** 16 Arbeiter-Starts für das Paket (eine Zeile, R433
+V3 b), höchstens 6 zugleich, davon 2 Browser-Läufe; opus-Review über den Kandidaten separat.
+
+Regelbezug: gates.md Kombiniertes Gate; R424; R433 V3 · Kosten bei Irrtum: Nacharbeit im Strang vor dem Kandidaten.
+
+Entscheider: L0 · Anlass: Kombiniertes Gate REL-15 · ADR: —
