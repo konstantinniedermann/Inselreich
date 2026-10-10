@@ -4293,3 +4293,20 @@ V3 b), höchstens 6 zugleich, davon 2 Browser-Läufe; opus-Review über den Kand
 Regelbezug: gates.md Kombiniertes Gate; R424; R433 V3 · Kosten bei Irrtum: Nacharbeit im Strang vor dem Kandidaten.
 
 Entscheider: L0 · Anlass: Kombiniertes Gate REL-15 · ADR: —
+
+## R438 · 2026-10-10 · Release-Retro REL-14: V1–V4 angenommen
+
+Ruling: Retro `docs/studio/retros/2026-10-10-release-rel14-prozess.md` (`54279f3`) angenommen. **V1** Arbeiter nur per
+Benachrichtigung abwarten, kein Polling auf `tasks/*.output`; `run_in_background` als Boolean; eine Probe klärt, ob ein
+Vordergrundstart aus einem Lead greift, sonst wird die Vordergrund-Regel (ADR-007) per Handbuch-Minor angepasst — den
+laufenden REL-15-Controllern sofort mitgeteilt. **V2** Ein Controller mit Blocker meldet `waiting` und wird per
+`SendMessage` fortgesetzt statt ersetzt. **V3** `zeitreserve-push` bewertet nur `loadStart` (R394), das Lastwarten nach
+`make check` entfällt; Kopfkommentar `tools/zeitreserve/check.ts` mitkorrigieren. **V4** (a) `metrics.py --since`; (b) die
+Ende-Routine empfiehlt dem Nutzer für die nächste Studio-Session ein neues Claude-Gespräch; (c) Kenntnis-Eintrag R434 in
+der Warteschlange (N-99). V1, V2, V4 b als Handbuch 1.39 durch den studio-coach (sonnet) jetzt; V3 und V4 a mit
+TOOL-E049-PHASE und den Werkzeug-Befunden als **TOOL-BUENDEL-2** nach REL-15.
+
+Regelbezug: STUDIO.md Z. 46/67 (Arbeiter, Controller-Übergabe), ADR-007, R394, R434 · Kosten bei Irrtum: ein Handbuch-Minor
+zurück.
+
+Entscheider: L0 · Anlass: Release-Retro REL-14 · ADR: —
