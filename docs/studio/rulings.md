@@ -4894,3 +4894,19 @@ E-057 in `.claude/agents/lead-*.md` folgt nur, wenn die Briefing-Zeile die Schwe
 Regelbezug: STUDIO.md Verbesserungsschleife, R316, R471 · Kosten bei Irrtum: eine Vorlagenzeile zurücknehmen.
 
 Entscheider: L0 · Anlass: Bericht studio-coach retro-r471-umsetzung · ADR: —
+
+## R474 · 2026-10-10 · Ideen-Runde IDEEN-06 entschieden
+
+Ruling: Runde `08db740c` angenommen (15 Ideen I-046…I-060, 3 Starts, ≈ 52 Tools; Pool 37 von 40). Priorisierung nach
+Nutzen je Aufwand (R445): **(1) einplanen** Häppchen **UI-TASTEN** = I-056 „Entf-Taste reisst Markiertes ab“ + I-057
+„Schnellspeichern mit Strg/Cmd+S“ (Stufe leicht, kein Save, keine Baseline; Kurzdesign und Plan dürfen während des
+REL-18-Pushes laufen, Umsetzung erst nach `zeitreserve-push` Exit 0, R464). **(2) als Nächstes nach M13-E2:** I-048
+„Zukauf-Aufschlag“ als Wirtschafts-Baustein mit Rechnung durch `design-economy-designer`, zusammen mit dem Befund
+Verkaufssättigung (`docs/beobachtungen.md`); Baseline-Neumessung braucht dann ein eigenes Ruling. **(3)** I-049
+„Sperrbestand je Gut“ fährt beim nächsten Save-Wechsel (v12) mit, falls M13-E2 ihn auslöst. Übrige geparkt laut Rangliste;
+Streichungen (I-046, I-053, I-060, I-037, I-040) und Zusammenfassungen (I-054 → I-014, I-024 → I-059) bestätigt. Kein
+Säulenwechsel.
+
+Regelbezug: R445, gates.md Gate Ideen-Runde · Kosten bei Irrtum: ein kleines Bedien-Häppchen umsonst geplant.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-ideen-06 · ADR: —

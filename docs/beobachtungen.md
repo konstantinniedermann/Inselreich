@@ -208,3 +208,10 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
 ### 2026-10-10 · Board-Titel durch `log.py package` überschrieben
 
 - **Fundort:** Retro Studio-Session 5a00a316 B3 (d). Beobachtung: `log.py package` mit Platzhalter-Titel überschrieb den Titel eines bestehenden Pakets auf dem Board; L0 korrigierte sofort. Ursprung: Studio-Session 5a00a316. Einschätzung: Einzelfall; Werkzeugkandidat «Titel nur setzen, wenn das Paket neu ist oder `--title` explizit steht», Paket erst bei zweitem Fall.
+
+### 2026-10-10 · Verkaufssättigung erholt sich schnell: Dauerverkauf Holz fast zum Vollpreis
+
+- **Fundort:** `src/sim/defs/` (Sättigung, Erholung 60 Punkte/min), Ideen-Runde IDEEN-06. Beobachtung: Dauerverkauf von Holz
+  bringt rund 240 Geld/min nahe am Vollpreis gegen 30 Unterhalt je Holzfäller — mögliche Geldquelle ohne Wahl. Ursprung:
+  Scout-Befund IDEEN-06 (lead-design). Einschätzung: mittel; mit I-048 „Zukauf-Aufschlag“ durch `design-economy-designer`
+  nachrechnen, kein eigenes Paket vorher.
