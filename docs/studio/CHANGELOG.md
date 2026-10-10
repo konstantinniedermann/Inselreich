@@ -22,6 +22,48 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-10 · Handbuch 1.39
+
+- Anlass: Release-Retro REL-14
+- Datenbasis: `docs/studio/retros/2026-10-10-release-rel14-prozess.md`
+- Ruling: R438
+- Änderungen: V1 Arbeiter nur per Benachrichtigung abwarten, kein Polling auf `tasks/*.output`, `run_in_background` als Boolean, Vordergrund-Regel (ADR-007) unter Vorbehalt der Probe (Messauftrag bei E-037); V2 Controller mit Blocker meldet `waiting` und wird per SendMessage fortgesetzt; V4 b Ende-Routine empfiehlt neues Claude-Gespräch (R434 Ausnahmefall)
+
+## 2026-10-10 · Persona lead-design 1.10
+
+- Anlass: Release-Retro REL-14
+- Datenbasis: `docs/studio/retros/2026-10-10-release-rel14-prozess.md`
+- Ruling: R438
+- Änderungen: Arbeiter nur per Benachrichtigung abwarten, kein Polling auf `tasks/*.output`, `run_in_background` als Boolean, Vordergrund-Regel unter Vorbehalt der Probe R438 V1
+
+## 2026-10-10 · Persona lead-art 1.8
+
+- Anlass: Release-Retro REL-14
+- Datenbasis: `docs/studio/retros/2026-10-10-release-rel14-prozess.md`
+- Ruling: R438
+- Änderungen: Arbeiter nur per Benachrichtigung abwarten, kein Polling auf `tasks/*.output`, `run_in_background` als Boolean, Vordergrund-Regel unter Vorbehalt der Probe R438 V1
+
+## 2026-10-10 · Persona lead-qa 1.10
+
+- Anlass: Release-Retro REL-14
+- Datenbasis: `docs/studio/retros/2026-10-10-release-rel14-prozess.md`
+- Ruling: R438
+- Änderungen: Arbeiter nur per Benachrichtigung abwarten, kein Polling auf `tasks/*.output`, `run_in_background` als Boolean, Vordergrund-Regel unter Vorbehalt der Probe R438 V1
+
+## 2026-10-10 · Persona lead-tech 1.12
+
+- Anlass: Release-Retro REL-14
+- Datenbasis: `docs/studio/retros/2026-10-10-release-rel14-prozess.md`
+- Ruling: R438
+- Änderungen: Arbeiter nur per Benachrichtigung abwarten, kein Polling auf `tasks/*.output`, `run_in_background` als Boolean, Vordergrund-Regel unter Vorbehalt der Probe R438 V1; Controller mit Blocker meldet `waiting` und wird per SendMessage fortgesetzt (V2)
+
+## 2026-10-10 · Persona lead-production 1.10
+
+- Anlass: Release-Retro REL-14
+- Datenbasis: `docs/studio/retros/2026-10-10-release-rel14-prozess.md`
+- Ruling: R438
+- Änderungen: Arbeiter nur per Benachrichtigung abwarten, kein Polling auf `tasks/*.output`, `run_in_background` als Boolean, Vordergrund-Regel unter Vorbehalt der Probe R438 V1
+
 ## 2026-10-10 · Persona lead-art 1.7
 
 - Anlass: Aktivierung Werkzeug-Bündel (ADR-014)

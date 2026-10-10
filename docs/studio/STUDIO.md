@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.38 · Stand: 2026-10-10 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.39 · Stand: 2026-10-10 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -45,7 +45,10 @@ Ebene höher — mit Empfehlung. L0 fragt den Nutzer nicht zurück (Abschnitt [A
   Nur L0 spricht mit dem Nutzer (Verfassung §2).
 - **Vordergrund-Regel:** Leads starten Arbeiter immer mit `run_in_background: false` (parallel =
   mehrere Agent-Aufrufe in einer Nachricht); Arbeiter starten keine Agenten; L0 darf Leads im
-  Hintergrund starten (ADR-007).
+  Hintergrund starten (ADR-007). Dieser Satz gilt vorbehaltlich der Probe R438 V1 (Messauftrag bei E-037 in
+  [experimente.md](experimente.md)). Leads warten auf Arbeiter nur per Benachrichtigung bzw. Rückgabewert, nie
+  per Polling auf `tasks/*.output` (`stat`, `sleep`-Schleifen); `run_in_background` ist ein Boolean
+  (`false`), kein String (R438 V1).
 - **Lange Bash-Läufe (E-037):** Leads und Umsetzer starten Bash-Läufe, die voraussichtlich > 4 min dauern
   (Tests, Browser, Perf-Messung), mit `run_in_background: true` und fragen sie spätestens alle 4 min ab
   (Cache-Frist 5 min). Das betrifft nur das Bash-Werkzeug. Arbeiter-Starts über das Agent-Werkzeug bleiben
@@ -279,7 +282,9 @@ Ablauf eines Meilensteins (Stufe voll):
    grossem Kontext auf Arbeiter; Doku-Pakete delegiert er. Je Task liest der Controller nur die
    Task-Datei. **Warten (R233 V1):** Unabhängige kleine Tasks desselben Pakets bündelt der Lead in
    einen Implementierer-Start, statt Turn für Turn zu warten; jedes Warten loggt er als
-   `status --status waiting`.
+   `status --status waiting`. **Blocker (R438 V2):** Ein Controller mit Blocker meldet `waiting` und wird
+   per `SendMessage` fortgesetzt, nicht durch eine neue Instanz ersetzt (Ausnahme: die Ablösung nach
+   Abschlussbericht oder bei 200k Kontext, E-042, R319).
 5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
 6. **Gate Merge** (L0, eines je Meilenstein) → Production-Lead lässt `production-integrator` die
    Stränge seriell mergen, CI und Pages prüfen.
@@ -502,6 +507,9 @@ Abnahme pushen (R107).
    Schritte, Stand-Datum) und `lernen.md` nachführen; Rulings in `rulings.md`, Befunde in
    `docs/beobachtungen.md` sind eingetragen. Committen (`docs: …`).
 5. Kurzbericht an den Nutzer: erledigt · Aufwand · Handbuch-Änderungen · offene Nutzerentscheide.
+   Der Schlussbericht empfiehlt dem Nutzer, die nächste Studio-Session in einem neuen Claude-Gespräch
+   zu starten (frischer Kontext); R434 (Studio-Session bei gleicher Claude-Session-ID) bleibt Ausnahmefall
+   (R438 V4 b).
    Danach `python3 tools/studio/log.py status --role studio-director --status done --summary "<Kurzbericht>"`.
 
 Gebündelter Push (höchstens einer je Session, nach Abschluss des zu pushenden Stands, immer `git push origin <geprüfter Hash>:main`): `production-integrator` pusht auf L0-Auftrag, prüft CI (läuft nur, wenn Code dabei ist) und löst bei einem Release Pages mit `gh workflow run Pages --ref main` aus und prüft den Deploy.

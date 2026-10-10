@@ -333,6 +333,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Endstand S-2026-10-08-29c3791b (Retro [session-29c3791b-ende](retros/2026-10-08-session-29c3791b-ende.md) Nachtrag Teil 2): 24,3 %; 35 Neuschreibungen > 20k, 90 % des Gewichts nach Turn-Ende, davon eine L0-Neuschreibung nach 620 min Pause mit 25 % des Gewichts.
 - Datenpunkt 2 von 3, S-2026-10-09-e90e097e (Retro [session-e90e097e-ende](retros/2026-10-09-session-e90e097e-ende.md)): 24,1 % (Schwelle ≤ 20 % nicht erreicht).
 - Datenpunkt 3 von 3, S-2026-10-09-fb37ceac (Retro [session-fb37ceac-ende](retros/2026-10-09-session-fb37ceac-ende.md)): 31,7 %; Mittel 26,7 % (Schwelle ≤ 20 % verfehlt); Neuschreibungen nach Bash 31 % des Gewichts, davon der Grossteil unter Fremdlast (verwaister Vitest-Worker). Empfehlung Coach: **angepasst** (Regel bleibt als Hygiene, kein Cache-Write-Hebel; Platz an E-050); Urteil per Ruling offen.
+- Messauftrag (R438 V1, Frist 2026-10-24, durch L0 oder Lead-Start, nicht durch den Coach): Probe, ob ein Vordergrundstart (`run_in_background: false`, Boolean) aus einem Lead greift; Messgrösse: Arbeiter läuft im Vordergrund und der Lead erhält den Rückgabewert ohne Polling (ja/nein). Greift er nicht, passt ein Handbuch-Minor die Vordergrund-Regel (ADR-007) an; Rückfall: Regel unverändert.
 - Bewertung (R420): **angepasst**. Die Regel „lange Bash-Läufe im Hintergrund“ bleibt als Hygiene, ist aber kein Cache-Write-Hebel mehr; der Platz geht an E-050.
 
 ## E-038 · laufend (angepasst R420) · Lead-Schicht bei Ein-Umsetzer-Paketen schlank (Hebel 5)
