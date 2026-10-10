@@ -5239,3 +5239,19 @@ Screenshots unter `.worktrees/ui-tasten/.studio/qa/ui-tasten/` vor dem Wegräume
 Regelbezug: gates.md Gate Merge Release, R335, R476, R479, R488 · Kosten bei Irrtum: ein Revert.
 
 Entscheider: L0 · Anlass: Bericht Controller UI-TASTEN · ADR: —
+
+## R497 · 2026-10-10 · Kurz-Retro f52039fc angenommen; E-059, E-060, E-061
+
+Ruling: Retro `docs/studio/retros/2026-10-10-session-f52039fc-ende.md` (`4994d0e3`) angenommen. **E-054 behalten**
+(abgeschlossen). **E-056 abgelehnt**, ersetzt durch **E-059**: Merge-Treiber für `docs/beobachtungen.md`, der nur reine
+Anhänge beider Seiten selbst auflöst (Messgrösse 0 manuelle Auflösungen in 3 Merges, 0 verlorene Einträge). **E-060**:
+Budget-Hook blockt Lead-Starts ohne vorherige Freigabe (statt Warnung). E-059 und E-060 als Werkzeug-Paket ins nächste
+Bündel (zusammen mit TOOL-PUSH-CHECK und R488 V2/V4). **E-061** startet auf dem Platz von E-054: Spec-Nachträge und
+Kurzdesigns der Stufe leicht durch `lead-design` auf sonnet; Umsetzung (Modelltabelle, `lead-design.md`, Handbuch-Minor)
+durch `studio-coach` in der nächsten Session. Briefings nennen die Minuten als Tools ÷ 6. Ampel **Cache-Write** zwei
+Sessions rot: Hebel ist E-057 (läuft, erster Datenpunkt), Bewertung in der nächsten Retro; ohne Besserung dann neuer
+Hebel Pflicht (R316). **L0-Kontext** gelb (272k): Messauftrag an die nächste Session-Retro.
+
+Regelbezug: STUDIO.md Verbesserungsschleife, R316, R475 · Kosten bei Irrtum: ein Experiment-Platz falsch belegt.
+
+Entscheider: L0 · Anlass: Kurz-Retro Session f52039fc · ADR: —

@@ -89,8 +89,9 @@ Keine Nutzer-Aufträge offen. Daueraufträge: R445 (Ideen-Runde bei freier Kapaz
 2. **Plan I-048** (`lead-tech`) aus Spec `12c98fd3` (gegatet R487/R490/R492), Merge erst nach M13-E2-SIM.
 3. **I-049** Plan gegatet (R481), Start nach Merge M13-E2-SIM.
 4. **Gate Spec M14-E1** (`ff2c2fd8`, R495; lead-tech + lead-qa); Umsetzung erst nach Abschluss M13 (R486).
-5. **Werkzeug:** Plan TOOL-PUSH-CHECK (R488 V1), V2-Ampel Actions-Konto-Prognose + V4 Produktivanteil (nächstes
-   Werkzeug-Bündel), V3-Persona-Zeile Integrator (`studio-coach`).
+5. **Werkzeug-Bündel 6:** TOOL-PUSH-CHECK (R488 V1), Ampel Actions-Konto-Prognose (V2) und Produktivanteil (V4),
+   Merge-Treiber `beobachtungen.md` (E-059), Budget-Hook blockt Start ohne Freigabe (E-060) (R497). `studio-coach`:
+   V3-Persona-Zeile Integrator (R488), E-061 lead-design-Nachträge auf sonnet (R497).
 6. **Kurzdesign-Kandidat** aus Playtest REL-18: «Nächster Schritt» übersieht akuten Nahrungsmangel (docs/beobachtungen.md).
 7. **Aufräumen** (eigenes Ruling): Worktrees `.worktrees/b4`, `m13-e1-sim`, `m13-e1-ui`, `ui-gut-chip`, `b5`,
    `aufraeum-01`, `ui-tasten` sind gemergt — nach dem Push REL-19 entfernen (`git worktree remove`, Branches bleiben;
