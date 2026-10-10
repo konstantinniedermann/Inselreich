@@ -155,3 +155,13 @@ describe('M13-E1 edictView (AK-M13E1-27…30)', () => {
     expect(src).not.toMatch(/\bdocument\b|\bwindow\b/);
   });
 });
+
+describe('edictCardState.unlocked', () => {
+  it('folgt der Freischaltung, nicht dem Reason-Text', () => {
+    const { w } = edictWorld();
+    w.won = false;
+    expect(edictCardState(w, 'saving').unlocked).toBe(false);
+    w.won = true;
+    expect(edictCardState(w, 'saving').unlocked).toBe(true);
+  });
+});
