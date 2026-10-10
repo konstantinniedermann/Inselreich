@@ -53,6 +53,7 @@ import { render, wildlifeEnvOf, type Hover, type RenderFx, type Tool } from '../
 import { cameraBounds, islandView } from '../render/archipel';
 import { activeIsland, islandRects } from './activeIsland';
 import { jumpTarget, nextIsland } from './islandJump';
+import { runProblemJump, type ProblemCursor } from './problems';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
 import { createIslandLayers, idleSchedule } from './islandLayers';
@@ -109,7 +110,7 @@ import { renderEventLog, updateEventLog } from './eventLogView';
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
 import { crisisLogEntries, crisisLogVisible, pushLog, type LogEntry } from './crisisLog';
-import { bindMessages, closeClosableToast, showMessage } from './messages';
+import { bindMessages, closeClosableToast, replaceMessage, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
 import { parseDevParams } from './devParams';
@@ -425,6 +426,26 @@ function launch(
     centerOn(state.cam, t.x, t.y, clampView(), bounds);
     refresh();
   };
+
+  /** Problem-Sprung (I-042): Cursor nur in der Closure, nie im Spielstand. */
+  let problemCursor: ProblemCursor | null = null;
+  const jumpToProblem = (dir: 1 | -1): void =>
+    runProblemJump(
+      {
+        world,
+        activeIsland: () => state.activeIsland,
+        getCursor: () => problemCursor,
+        setCursor: (c) => {
+          problemCursor = c;
+        },
+        cancelPointerAction: () => input?.cancelPointerAction(),
+        centerOn: (x, y) => centerOn(state.cam, x, y, clampView(), bounds),
+        openPanel: (id) => setPanel({ kind: 'inspect', id }), // E1: kein selectTool
+        refresh,
+        message: (t) => replaceMessage('problem', t),
+      },
+      dir,
+    );
 
   const actions: HudActions = {
     jumpToIsland,
@@ -790,7 +811,11 @@ function launch(
       jumpToIsland(HOME);
     } else if (h.kind === 'islandCycle') {
       jumpToIsland(nextIsland(state.activeIsland, world.islands.length));
-    } else {
+    } else if (h.kind === 'problemNext') {
+      jumpToProblem(1);
+    } else if (h.kind === 'problemPrev') {
+      jumpToProblem(-1);
+    } else if (h.kind === 'pause') {
       setSpeed(afterPause(state.speed, lastSpeed).speed);
     }
     refresh();
