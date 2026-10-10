@@ -4,20 +4,23 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-09 (Session c64c0775, Ende: REL-13 live; REL-14 und Werkzeug-Bündel lokal auf main @ `4ee91a7`, Push offen)
+Stand: 2026-10-10 (Studio-Session ab R434, Ende: REL-14 live; REL-15 und Werkzeug-Bündel 2 lokal auf main, Push offen)
 
 ## Release-Notizen
 
-**REL-14 „Klarer Inspektor, Fest je Insel“ (lokal auf main @ `ed547b0`, Gate Merge Release OK R430, Push offen)** —
-Haus-Inspektor in der Wortfamilie „Versorgung“; Fest wirkt nur auf Häuser der Kapellen-Insel. Save unverändert (v10),
-Balancing-Test unverändert.
+**REL-15 „Klare Abhilfe, ruhiges Schild, saubere Seekarte“ (lokal auf main @ `0cb9bc2`, Gate Merge Release OK R440, Push
+offen)** — Save unverändert (v10), Balancing-Test unverändert.
 
-- **Neu:** Chip «Im Versorgungsradius» / «Ausserhalb der Versorgung»; Mangel nur «Mangel: … fehlt», Zeile «Fehlt:» entfällt;
-  Hover und Cursor-Hinweis sagen dasselbe («Kapelle fehlt», «zufrieden»); Fest einer Kapelle wirkt nicht mehr auf Häuser
-  einer Fremdinsel mit gleichen Koordinaten.
-- **Bitte testen:** (1) Haus ausserhalb des Markt-/Kontorradius anklicken: Chip rot «Ausserhalb der Versorgung», kein
-  «Versorgt»? (2) Haus im Radius ohne Nahrung: Chip grün «Im Versorgungsradius» und «Mangel: Nahrung fehlt», ohne
-  Widerspruch? (3) Mit einer Kolonie: Fest daheim lässt Kolonie-Häuser unbeeinflusst?
+- **Neu:** Haus-Panel nennt einen Mangel nur einmal, darunter direkt die Abhilfe («Baue Kapelle (K) in Reichweite»);
+  Cursor-Schild weicht der Mouse-over-Karte und kommt beim Kachelwechsel sofort zurück; Kontor-Marke auf der Seekarte über
+  dem Hafenpunkt und an die Pixeldichte gebunden; Speicherleck beim Neustart (Listener) behoben.
+- **Bitte testen:** (1) Haus mit fehlender Kapelle: «Mangel: Kapelle fehlt» genau einmal, darunter «Baue Kapelle (K) in
+  Reichweite»? (2) Mit dem Auswahlwerkzeug über ein Haus fahren: erst Schild, nach kurzer Zeit nur die Karte, beim Weiterfahren
+  wieder das Schild? (3) Seekarte öffnen: Kontor-Marke sichtbar über dem Hafen?
+
+**REL-14 „Klarer Inspektor, Fest je Insel“ (live, R436)** — Push `46153c6..9eb99e7`, CI 38031718801, Pages 38031921572.
+Bitte testen: Chip «Ausserhalb der Versorgung» / «Im Versorgungsradius» ohne Widerspruch; Fest daheim lässt Kolonie-Häuser
+unbeeinflusst.
 
 **REL-13 „Steuer je Stufe“ (live, R425)** — Steuer in der Amtsstube je Stufe, Save v10. Push `3417346..46153c6`, CI
 37984641871, Pages 37985195805. Bitte testen: Pioniere «niedrig» / Kaufleute «hoch», Kopfzeile «gemischt», alter
@@ -51,27 +54,23 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen.
+Keine Nutzer-Aufträge offen. **Neues Claude-Gespräch empfohlen** (R438 V4 b; Messauftrag L0-Start-Kontext ≤ 60k, R443).
 
-0. **Push** main @ `4ee91a7` + Doku-Commits (REL-14, Werkzeug-Bündel) nach **Handbuch 1.37**: `tsc`, `lint`, `zeittests`,
-   `conflicts`, `make check` (Load ≤ 4 beim Start, sonst später neu), warten bis Last ≤ 4, `make zeitreserve-push`,
-   `make check-ci-perf`; Push per `git push origin <geprüfter Hash>:main`; CI, `gh workflow run Pages --ref main`
-   (REL-14 ist ein Release), `ci.py`. Danach Prozess-Aussensicht REL-14 (`studio-process-coach`, R127/R316).
-1. **TOOL-AKTIVIERUNG** (studio-coach, R428/R432): Kopfzeilen-Syntax `Modell: <alias> (<Einsatz>)` in
-   `templates/briefing.md` und `STUDIO.md`, `make hooks` im Hauptcheckout (Prettier-Hook), Modell-Guard
-   `tools/studio/modelguard.py` von `warn` auf `deny` (Rückweg ADR-014); Ampelzeile E-038 im Dashboard.
-2. **Handbuch 1.38** (R433 V3, studio-coach, mit TOOL-AKTIVIERUNG): Schätzung in Tools, keine Budget-Zeile für weitere
-   Controller-Instanzen, Handoff-Name mit Paket-ID. Werkzeug-Paket **TOOL-E049-PHASE** (R433 V2, lead-tech, ≈ 25 Tools).
-3. **Beobachtungen:** neue Einträge im Abschnitt „Offen“ (u. a. studio-lint 28 Ruff-Altfehler, Dienst-Mangel-Wortlaut in
-   der Aufstiegsliste, Hover verdeckt Cursor-Hinweis, Hook-Wrapper ohne `python3`); bei Bedarf Auswertung BEOB-AUSW-04.
-   REL-15-Kandidat: UI-SEEKARTE-NACHZUG (R422).
-4. **Worktree `see-f3-schiffskontrast`:** Ruling, ob der Testcache `.vitest/` per `rm -r` gelöscht und der Worktree dann
-   ohne `--force` entfernt wird (R431).
+0. **Push** main (REL-15 `0cb9bc2`, Werkzeug-Bündel 2 `9ea9c9e`, Doku) nach **Handbuch 1.40**: `tsc`, `lint`, `zeittests`,
+   `conflicts`, `make check` (Load ≤ 4 beim Start), `make zeitreserve-push` (bewertet nur `loadStart`), `make check-ci-perf`;
+   `git push origin <geprüfter Hash>:main`; CI, `gh workflow run Pages --ref main` (REL-15 ist ein Release), `ci.py`. Danach
+   Prozess-Aussensicht REL-15 (`studio-process-coach`).
+1. **TOOL-BUDGET-WARN** (R443 V1/E-055, lead-tech ≈ 20 Tools): Spawn-Hook warnt bei „Budget: n“ ohne `budget`-Zeile.
+2. **Beobachtungen auswerten** (BEOB-AUSW-04): seit 2026-10-09 viele neue Einträge (REL-14, REL-15, Werkzeug-Bündel 1/2);
+   daraus REL-16-Kandidaten.
+3. **Experimente:** E-054 (Pläne auf sonnet) als erster Kandidat für den nächsten freien Platz; laufend E-038, E-049 (nach
+   Freigabephase), E-050; E-055 als Werkzeug.
+4. **Warteschlange N-99** (Kenntnis R434) offen; ohne Antwort gilt R434.
 
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich**. **M12 abgeschlossen** (R352). Live: REL-01…REL-13, M1–M8, M10, M11, M9-Häppchen, M12; REL-14
-  und Werkzeug-Bündel (ADR-014) lokal auf main, Push offen. Verfassung **1.2**, Handbuch **1.37**.
+- Projekt: **Inselreich**. **M12 abgeschlossen** (R352). Live: REL-01…REL-14, M1–M8, M10, M11, M9-Häppchen, M12; REL-15 und
+  Werkzeug-Bündel 2 lokal auf main, Push offen. Verfassung **1.2**, Handbuch **1.40**.
 - Dauerregeln: Desktop-first (R78); kein Rebase; eine aktive L0-Session je Repo (R129, R324); studioweit **≤ 8 Agenten,
   davon ≤ 2 Browser-Läufe** (R424, ersetzt R241); vor Paketstart `git worktree list`, `git status`, fremde Heartbeats
   prüfen (R329); Messungen nur bei 1-min-Load ≤ 4 (R329).
@@ -81,11 +80,13 @@ Keine Nutzer-Aufträge offen.
 - **GitHub Actions mit Sparregeln (R334):** `CI` ignoriert Doku-Pushes, `Pages` nur per `gh workflow run Pages --ref
 main` beim Release, `CI` mit `cancel-in-progress`.
 - **Höchstens ein Push pro Session (R335)**, nach Abschluss des zu pushenden Stands, immer per geprüftem Hash (Handbuch
-  1.37, R429). Push-Gate ohne separates `make test` (Messdatei aus `make check`). Merges nach Gate bleiben lokal.
+  1.37, R429). Push-Gate ohne separates `make test` und ohne Lastwarten nach `make check` (Handbuch 1.40). Merges nach Gate bleiben lokal.
 - **Rulings** mit Pflichtfeldern „Regelbezug“ und „Kosten bei Irrtum“; Abweichung vom Handbuch → Handbuch-Minor im selben
   Zug (R429). Ein-Paket-Release: Gate Merge und Release-Check in einem `lead-qa`-Start.
-- **Modell-Guard** (`modelguard.py`, Modus `warn`) prüft Agent-Starts gegen die Modelltabelle in STUDIO.md; Modell nur
-  nach dieser Tabelle (R420). `make docs-check` Exit 0 vor Doku-Commits, bis `make hooks` aktiv ist.
+- **Modell-Guard** (`modelguard.py`, Modus `deny`, Handbuch 1.38) prüft Agent-Starts gegen die Modelltabelle in STUDIO.md; Modell nur
+  nach dieser Tabelle (R420). Kopfzeile `Modell: <alias> (<Einsatz>)` bei stärkerem Modell als die Persona. Prettier-Pre-Commit-Hook aktiv (`make hooks`).
+- **Arbeiter** nur per Benachrichtigung abwarten, kein Polling; `run_in_background: false` als Boolean; Controller mit Blocker
+  `waiting` und Fortsetzung per `SendMessage` (Handbuch 1.39).
 
 ## Parallele Sessions
 
@@ -93,25 +94,24 @@ Keine aktive L0-Session ausser dieser. Prozess „anno-clone #3“ lief beim Sta
 
 ## Seit letzter Session erledigt
 
-- REL-13 live (R421, R425): Push `3417346..46153c6`, CI und Pages grün.
-- REL-14 komplett (R422–R424, R427, R430, R431): Kurzdesign, Urteil lead-art (Meeresfels bleibt, R423), Plan, Umsetzung in
-  zwei Strängen, Playtest, Kandidat, Final-Review opus, Merge lokal `ed547b0`.
-- Werkzeug-Bündel komplett (R428, R432): Prettier-Pre-Commit-Hook, Modell-Guard (warn), Phantom-Vorfälle ausgeblendet,
-  Testsperre meldet Waisen, Smoke-Etikett aus der Quelle, E-049-Zeile; ADR-014; Merge lokal `4ee91a7`.
-- Release-Retro REL-13 (R429) → Handbuch 1.37. CLEANUP-WT-2: 7 von 8 Alt-Worktrees entfernt (R425, R426, R431).
+- REL-14 + Werkzeug-Bündel live (R434, R436); Prozess-Retro REL-14 (R438) → Handbuch 1.39.
+- REL-15 komplett (R435, R437, R440): Kurzdesign, Plan, zwei Stränge, Kandidat, Final-Review opus, Merge lokal `0cb9bc2`.
+- Werkzeug-Bündel 2 komplett (R439, R441, R442): Ruff gepinnt und studio-lint grün, E-049 nach Freigabephase,
+  `metrics.py --since`, `zeitreserve-push` nur `loadStart`, Hook-Fixes; Merge lokal `9ea9c9e`.
+- TOOL-AKTIVIERUNG: Modell-Guard `deny`, `make hooks`, Handbuch 1.38; Handbuch 1.40 (R442 E6). Alle Alt-Worktrees entfernt.
+- Kurz-Retro 2026-10-10 (R443).
 
 ## Pausierte Pakete
 
-- Keine. Worktrees: Hauptcheckout, `.worktrees/integrate` (detached @ `4ee91a7`), `see-f3-schiffskontrast` (nur
-  `?? .vitest/`, Fortsetzung 4).
-- Branch `int/rel-07`, Alt-Branches (u. a. `fix/rel07-a-wood`, `feat/m7-fx`, gemergte `fix/…`, `feat/…`, `tool/buendel-*`),
+- Keine. Worktrees: Hauptcheckout, `.worktrees/integrate` (detached @ `9ea9c9e`).
+- Branch `int/rel-07`, Alt-Branches (u. a. `fix/rel07-a-wood`, `feat/m7-fx`, gemergte `fix/…`, `feat/…`, `tool/…`),
   Remote `wip/r118a-render-aufraeumen` und `stash@{0}` bleiben bis Ruling.
 
 ## Budget
 
-Offen: lead-tech TOOL-BUENDEL 4 Puffer-Starts (verfallen mit Session-Ende). Neue Pakete brauchen eigene Freigabe.
+Offen: lead-tech REL-15 und TOOL-BUENDEL-2 Restpuffer (verfallen mit Session-Ende). Neue Pakete brauchen eigene Freigabe.
 
 ## Offene Entscheide
 
-- Nutzer: keine; Warteschlange leer.
-- L0: Ruling zu Fortsetzung 4 (see-f3); E-054 wartet auf einen Experiment-Platz (R433).
+- Nutzer: N-99 (Kenntnis R434), ohne Antwort gilt R434.
+- L0: Auswahl REL-16 nach BEOB-AUSW-04; Experiment-Platz für E-054.
