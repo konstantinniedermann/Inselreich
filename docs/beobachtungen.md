@@ -211,3 +211,7 @@ nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py
 ### 2026-10-10 · TOOL-BUENDEL-5 (Review): `lead_phases`/`budget_key` verlassen sich auf die Reihenfolge in `result`
 
 - **Fundort:** `tools/studio/model.py` (`lead_phases()`, `budget_key`). Beobachtung: Beide lesen `self.claims` und setzen voraus, dass `budget_view` in `result` zuerst läuft. Ein Aufruf von `claim_budgets()` am Anfang von `lead_phases()` wäre eine billige Absicherung. Ursprung: TOOL-BUENDEL-5, Review T01/T02. Einschätzung: niedrig; heute kein Fehler.
+
+### 2026-10-10 · TOOL-BUENDEL-5 (Final-Review): `testrun` Restfenster beim zweiten Ctrl-C und Testlücke
+
+- **Fundort:** `tools/studio/testrun.py` (`_run`, `except KeyboardInterrupt` vor `_ignore_interrupts()`), `tools/studio/tests/test_testrun.py`, `tools/studio/log.py` (`_package_exists`). Beobachtung: (1) Ein zweites Ctrl-C in den Mikrosekunden zwischen Eintritt in den `except`-Zweig und `_ignore_interrupts()` überspringt `_stop_group`; die Gruppe läuft dann verwaist (Abhilfe: `signal.pthread_sigmask`). (2) Kein Test prüft, dass der SIGINT-Handler nach dem Doppel-Interrupt wiederhergestellt ist (`signal.getsignal` vorher/nachher). (3) Der Vorfilter in `_package_exists` sucht die ID als JSON-Rohtext; eine nicht-ASCII-ID würde escaped geschrieben und gälte als neu. Ursprung: TOOL-BUENDEL-5, Final-Review. Einschätzung: niedrig (Fenster Mikrosekunden, IDs heute ASCII); Sammelkandidat für das nächste Werkzeug-Bündel.
