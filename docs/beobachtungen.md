@@ -200,3 +200,11 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - **Fundort:** `src/ui/texts.ts:107` (`stateText`), nur noch Re-Export in `src/ui/inspect.ts:82`. Beobachtung: seit der
   Umstellung des Maus-Hinweises auf `stateInfo` mit `missingInputs`/`reservedInputs` ruft niemand `stateText` auf. Ursprung:
   I049-UI Final-Review. Einschätzung: gering; beim nächsten Aufräum-Häppchen samt Re-Export streichen.
+
+### 2026-10-11 · Budget-Zuordnung: Namenstreffer schlägt ausdrückliche Lead-Freigabe
+
+- **Fundort:** `tools/studio/model.py` (`budget_key`, `_named_grant`). Beobachtung: Im Echtlog verliert
+  `controller-TOOL-BUENDEL-3` drei Starts an `impl-TOOL-BUENDEL` (8 → 11); bei `plan-ui-tasten`/`ui-tasten` gewinnt die exakte
+  Rohphase vor der eigenen Freigabe des Leads, der Plan-Arbeiter zählt auf `ui-tasten` (auf main schon so). Ursprung:
+  TOOL-E060-FIX. Einschätzung: gering (nur Altdaten mit Präfix-Phasen; seit R543 vergibt L0 reine Paket-IDs); im zweiten
+  E-060-Echtlauf beobachten.

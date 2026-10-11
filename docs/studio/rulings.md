@@ -5934,3 +5934,16 @@ bei Last 4,5 nicht belastbar → I048-B wiederholt ihn. Integrator mergt; danach
 Regelbezug: gates.md Gate Merge, R505, R535, R537, R544 · Kosten bei Irrtum: ein Rückmerge im UI-Strang.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I048-UI · ADR: —
+
+## R546 · 2026-10-11 · Gate Merge TOOL-E060-FIX: OK; zweiter Echtlauf E-060
+
+Ruling: `tool/e060-fix` @ `a7aacc13` (Task-Review OK, Final-Review opus nach zwei ZURÜCK-Runden OK, Rot-Belege je
+Fix-Runde, `make studio-test` und `make lint` Exit 0) → **Gate Merge OK** (Stufe leicht). Angenommen: eine gemeinsame
+Funktion `phase_matches` für Hook und Metrik, Rohphase bleibt gespeichert (`gate-`-Einordnung unverändert, R532 B4).
+Entscheidungsbedarf „Namenstreffer schlägt ausdrückliche Lead-Freigabe“: so lassen, als Beobachtung im zweiten Echtlauf
+prüfen (betrifft nur Altdaten mit Präfix-Phasen). Integrator mergt lokal; danach wiederholt der Coach den Echtlauf
+(R543) und stellt bei 0 Fehlblocks `BUDGET_MODE` auf `deny`.
+
+Regelbezug: R532, R542, R543 · Kosten bei Irrtum: ein Werkzeug-Revert.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-E060-FIX · ADR: —
