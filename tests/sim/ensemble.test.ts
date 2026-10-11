@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { serialize } from '../../src/sim/save';
 import { createWorld } from '../../src/sim/world';
-import { formatTable, judge, runEnsemble, summarize } from './ensemble';
-import { buySurcharge, buyVolume, runColony, startColony, type ColonyOptions } from './controller';
+import { formatTable, judge, PHASES, runEnsemble, summarize, type Row } from './ensemble';
+import {
+  buySurcharge,
+  buyVolume,
+  CONTROL_INTERVAL,
+  MAX_TICKS,
+  runColony,
+  startColony,
+  WIN_TICK_LIMIT,
+  type ColonyOptions,
+} from './controller';
 
 function stateAt1500(opts: ColonyOptions): string {
   const w = createWorld(3);
@@ -87,5 +96,80 @@ describe('Ensemble-Statistik (Gate-Ensemble)', () => {
     });
     expect(calls).toEqual([0, 20, 40, 60, 80]);
     expect(out).toEqual([0, 40, 80, 120, 160]);
+  });
+});
+
+describe('Ensemble-Wächter (Gate-Ensemble)', () => {
+  it('GE-6: fünf paarweise verschiedene Phasen unterhalb des Kontrollintervalls', () => {
+    expect(PHASES.length).toBe(5);
+    expect(new Set(PHASES).size).toBe(PHASES.length);
+    for (const p of PHASES) expect(p).toBeLessThan(CONTROL_INTERVAL);
+  });
+});
+
+// Quelle der Grenzen: balance*.test.ts (balance.test.ts: Sieg-Tick <= WIN_TICK_LIMIT und Geld > 0;
+// balance-upgrade.test.ts: minMoney >= 0). Für Siedler, Bürger und Zukauf-Mehrkosten gibt es dort
+// keine Grenze; sie werden ohne Grenze mitgemessen.
+const LIMIT_WIN_TICK = { name: 'Sieg-Tick', hi: WIN_TICK_LIMIT };
+const LIMIT_MIN_MONEY = { name: 'minMoney', lo: 0 };
+const LIMIT_END_MONEY = { name: 'endMoney', lo: 1 };
+
+interface Measurement {
+  winTick: number;
+  firstSettler: number;
+  firstCitizen: number;
+  minMoney: number;
+  endMoney: number;
+  surchargePct: number;
+}
+
+function measurePhase(phase: number): Measurement {
+  const w = createWorld(3);
+  const { layout, t } = startColony(w);
+  runColony(w, layout, t, { phase });
+  const volume = buyVolume(w);
+  return {
+    winTick: t.winTick ?? MAX_TICKS + 1,
+    firstSettler: t.firstSettler ?? MAX_TICKS + 1,
+    firstCitizen: t.firstCitizen ?? MAX_TICKS + 1,
+    minMoney: t.minMoney,
+    endMoney: t.endMoney,
+    surchargePct: volume === 0 ? 0 : (100 * buySurcharge(w)) / volume,
+  };
+}
+
+// Messlauf: nur mit VITE_ENSEMBLE=1 (make gate-ensemble); das Werkzeug misst, die Gates urteilen.
+describe.runIf(Boolean(import.meta.env.VITE_ENSEMBLE))('Ensemble-Messlauf (Gate-Ensemble)', () => {
+  it('GE-7: misst alle Phasen und gibt die Tabelle aus', () => {
+    const ms = runEnsemble(measurePhase);
+    const col = (pick: (m: Measurement) => number): number[] => ms.map(pick);
+    const rows: Row[] = [
+      judge(
+        LIMIT_WIN_TICK,
+        col((m) => m.winTick),
+      ),
+      judge(
+        { name: 'erster Siedler' },
+        col((m) => m.firstSettler),
+      ),
+      judge(
+        { name: 'erster Bürger' },
+        col((m) => m.firstCitizen),
+      ),
+      judge(
+        LIMIT_MIN_MONEY,
+        col((m) => m.minMoney),
+      ),
+      judge(
+        LIMIT_END_MONEY,
+        col((m) => m.endMoney),
+      ),
+      judge(
+        { name: 'Zukauf-Mehrkosten %' },
+        col((m) => m.surchargePct),
+      ),
+    ];
+    console.log(`\n${formatTable(rows)}`);
+    expect(rows.length).toBeGreaterThan(0);
   });
 });
