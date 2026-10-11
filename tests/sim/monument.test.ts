@@ -866,3 +866,55 @@ describe('AK-M13E2-49 Speichern und Laden mitten im Abschnitt', () => {
     expect(pulls).toBeGreaterThanOrEqual(40);
   });
 });
+
+describe('AK-SB-K1 Sperrbestand → Denkmal-Reserve', () => {
+  const k1World = (stone: 0 | 20 | 40 | 60, wood: 0 | 20 | 40 | 60 = 0): World => {
+    const { w } = village(0, { unlockAll: true });
+    w.wonMerchants = true;
+    home(w).reserve = { wood, stone };
+    return w;
+  };
+
+  it.each([
+    [0, 20],
+    [20, 20],
+    [40, 40],
+    [60, 60],
+  ] as const)('Heimat reserve.stone %i: Reserve Stein %i', (stone, expected) => {
+    expect(monumentReserve(k1World(stone), 'stone')).toBe(expected);
+  });
+
+  it('Grenzfall 10 (keine Stufe, direkt gesetzt): Reserve Stein 20', () => {
+    const w = k1World(0);
+    (home(w).reserve as { stone: number }).stone = 10;
+    expect(monumentReserve(w, 'stone')).toBe(20);
+  });
+
+  it('Holz 60 ändert die Reserven von Stein, Werkzeug, Glas, Gewürz nicht', () => {
+    const a = k1World(0, 60);
+    const b = k1World(0, 0);
+    for (const g of MONUMENT_GOODS) expect(monumentReserve(a, g)).toBe(monumentReserve(b, g));
+  });
+
+  it('monumentLock für tools, glass, spice bleibt 0 (Stein 60)', () => {
+    const w = k1World(60);
+    for (const g of ['tools', 'glass', 'spice'] as const) expect(monumentLock(w, g)).toBe(0);
+    expect(monumentLock(w, 'stone')).toBe(60);
+  });
+
+  it('ohne Kontor auf der Heimat (kontorId null): Reserve Stein 20', () => {
+    const w = k1World(60);
+    home(w).kontorId = null as unknown as number;
+    expect(monumentReserve(w, 'stone')).toBe(20);
+  });
+
+  it('Fremdinsel mit und ohne Kontor, Stein 60, Heimat 0: Reserve Stein 20', () => {
+    const w = k1World(0);
+    const foreign = w.islands[1]!;
+    foreign.reserve = { wood: 0, stone: 60 };
+    foreign.kontorId = 1;
+    expect(monumentReserve(w, 'stone')).toBe(20);
+    foreign.kontorId = null;
+    expect(monumentReserve(w, 'stone')).toBe(20);
+  });
+});

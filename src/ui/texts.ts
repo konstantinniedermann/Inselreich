@@ -73,6 +73,8 @@ export function stateInfo(
       const goods = missing && missing.length > 0 ? missing : (def.consumes ?? []);
       return { text: `Wartet auf ${goods.length > 0 ? goodList(goods) : 'Rohstoff'}`, ok: false };
     }
+    case 'waitingReserve': // Minimum für I-049 T02; T06 verfeinert (Hover, Hinweis)
+      return { text: `Wartet auf ${goodList(def.consumes ?? [])} (Reserve)`, ok: false };
     case 'storageFull':
       return { text: 'Lager voll', ok: false };
     case 'paused':

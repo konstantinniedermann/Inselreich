@@ -19,6 +19,7 @@ import type {
   Terrain,
   World,
 } from './types';
+import { reserveOf } from './reserve';
 import { center, HOME, home, idx, islandOf, tilesInRadius, type Pos } from './world';
 
 /** Reine Abfragen für UI und Renderer: lesen die Welt, verändern sie nie. */
@@ -73,6 +74,27 @@ export { goodsBalance } from './flow';
 /** Güter aus `consumes` mit Bestand < 1, Reihenfolge wie `consumes`; leer ohne `consumes` (M8 12). */
 export function missingInputs(world: World, b: Building): GoodId[] {
   return (BUILDING_DEFS[b.defId].consumes ?? []).filter((g) => islandOf(world, b).stock[g] < 1);
+}
+
+/** Güter aus `consumes`, deren Lagerbestand die Reserve der Insel nur gerade erreicht (1 ≤ Bestand ≤ Reserve), Reihenfolge wie `consumes`. */
+export function reservedInputs(world: World, b: Building): GoodId[] {
+  const isl = islandOf(world, b);
+  return (BUILDING_DEFS[b.defId].consumes ?? []).filter(
+    (g) => isl.stock[g] >= 1 && isl.stock[g] <= reserveOf(isl, g),
+  );
+}
+
+/** Anzahl Betriebe der Insel, die wegen der Reserve auf `good` warten (`waitingReserve`, Bestand ≤ Reserve). */
+export function reserveHolds(world: World, island: number, good: GoodId): number {
+  const isl = world.islands[island];
+  if (isl === undefined) return 0;
+  return Object.values(world.buildings).filter(
+    (b) =>
+      b.island === island &&
+      b.state === 'waitingReserve' &&
+      (BUILDING_DEFS[b.defId].consumes ?? []).includes(good) &&
+      isl.stock[good] <= reserveOf(isl, good),
+  ).length;
 }
 
 export function goalView(world: World): GoalView {

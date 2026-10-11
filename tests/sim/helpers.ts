@@ -449,6 +449,7 @@ export function twoIslandWorld(): World {
       ox: h.ox,
       oy: h.oy,
       anchor: h.anchor,
+      reserve: { wood: 0, stone: 0 },
     },
   ];
   w.buildings[id] = {
