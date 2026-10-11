@@ -43,7 +43,7 @@ describe('defs', () => {
     expect(GOOD_IDS).toHaveLength(10);
     for (const id of GOOD_IDS) expect(GOODS[id].buy).toBeGreaterThan(GOODS[id].sell);
   });
-  it('has 21 building defs whose goods exist (M11 S2)', () => {
+  it('has 22 building defs whose goods exist (M11 S2)', () => {
     expect(BUILDING_IDS).toHaveLength(22); // bewusst, M12 T02: kontor2, spicefarm; M13-E2 T01: monument
     for (const id of BUILDING_IDS) {
       const d = BUILDING_DEFS[id];
