@@ -987,6 +987,8 @@ function launch(
     if (a.type === 'cancel') {
       clearGoodFocus();
       demolishConfirm = confirmStep(world, demolishConfirm, { kind: 'reset' }).state; // auch wenn nur ein Toast schliesst
+      const demolishBtn = panelEl.querySelector<HTMLElement>('[data-field="demolish"]');
+      if (demolishBtn) demolishBtn.textContent = 'Abreissen'; // Knopf zurück, falls das Panel offen bleibt
       if (closeClosableToast()) return;
       setPanel({ kind: 'none' });
       selectTool({ kind: 'select' });
