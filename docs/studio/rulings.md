@@ -5344,3 +5344,14 @@ Freigaben im Phasenformat haben (Prod-B4). Umsetzung erst nach Push REL-19 (R464
 Regelbezug: gates.md Gate Plan, R488, R464, E-059, E-060 · Kosten bei Irrtum: ein Werkzeug-Paket nachbessern.
 
 Entscheider: L0 · Anlass: Gate-Berichte lead-qa und lead-production · ADR: —
+
+## R504 · 2026-10-11 · Plan-Nachtrag TOOL-BUENDEL-6 abgenommen; Umsetzung frei nach Push REL-19
+
+Ruling: Nachtrag `cdbe4630` deckt R503 (QA-B1/B2/B3/B5/B9, Hinweise B4/B6–B8; neues Ziel `make check-push` = `check`
+ohne lockeres `zeitreserve`, `make check` unverändert). Gate Plan TOOL-BUENDEL-6 damit **OK**. Umsetzung in zwei
+Strängen (A `tool/b6a` T01–T03, B `tool/b6b` T04–T07), je ein Controller `lead-tech` sonnet, Budget 8 Starts gesamt,
+Merge A vor B, T07 nach Prod-B4. Start, sobald `make zeitreserve-push` Exit 0 (R464).
+
+Regelbezug: gates.md Gate Plan, R503, R464 · Kosten bei Irrtum: ein Werkzeug-Paket nachbessern.
+
+Entscheider: L0 · Anlass: Nachtrag-Bericht lead-tech · ADR: —
