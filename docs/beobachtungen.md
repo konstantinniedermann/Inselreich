@@ -218,3 +218,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - **Nachtrag 2026-10-11 (D-I048-B-WERTE):** 27 Messungen (Scratchpad lead-design): Antwort auch ohne Zukauf-Aufschlag nicht
   monoton (`SELL_RECOVERY_INTERVAL` 15 → Sieg 6750, 16 → 7350, 18 → Krisen normal ohne Sieg). Schmalste Ränder: Edikt reich
   «Wohlfahrt echt früher» 60 Ticks, Krisen normal 150 Ticks. Einschätzung: hoch, Einzellauf-Gates blockieren jede Wirtschaftsänderung.
+
+### 2026-10-11 · Balancing-Controller: Seed wirkt nicht auf die Heimkolonie
+
+- **Fundort:** `tests/sim/controller.ts` / `createWorld`-Seed in den Balancing-Tests. Beobachtung: Läufe für Seeds 3, 5, 7, 11
+  bitgleich; der Seed ändert nur Fremdinseln. Damit gibt es keine Robustheitsachse für Gates (jede Grenze ist ein Einzellauf,
+  vgl. „Sieg-Tick sprunghaft“). Ursprung: Probe I048-TOTZONE (R551). Einschätzung: hoch für künftige Balancing-Arbeit;
+  Kandidat für ein Werkzeug-/Test-Häppchen (Startvarianten oder Controller-Phasen, Median).

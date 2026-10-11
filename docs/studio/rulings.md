@@ -6010,3 +6010,19 @@ kein neuer Start); Spec-Zeile 32/48 berichtigt der Controller im Branch als `doc
 Regelbezug: R530, R534 · Kosten bei Irrtum: ein Tooltip-Wortlaut.
 
 Entscheider: L0 · Anlass: Bericht lead-tech UI-TEXTE-1 (Testnachzug `tooltip.test.ts`) · ADR: —
+
+## R551 · 2026-10-11 · Probe Totzone: keine tragfähige Preisformel; I-048 Schritt B zurück ins Design
+
+Ruling: Probe `lead-tech` (Raster `BUY_RISE` {1, 2} × `BUY_FREE` {10, 20, 30}, Intervall 10, `BUY_CAP` 180) angenommen: Nur 1/30
+hält alle Grenzen und wirkt praktisch nicht (0,04 % Mehrkosten, 30er-Holz +0 %); 1/20 reisst Edikte arm (Abstand 700 > 600);
+`BUY_RISE` 2 reisst die Krisen-Grenze bei jedem `BUY_FREE`. Zusätzlich: Die Controller-Läufe sind für Seeds 3/5/7/11 bitgleich
+(der Seed ändert nur Fremdinseln) — Seeds taugen nicht als Robustheitsachse. Entscheid: **Keine Werte setzen.** I-048 Schritt B
+geht als Designfrage ins nächste Brainstorming nach M13 (lead-design, zusammen mit M14-Vorlauf): Mengenstaffel o. ä. statt
+Preisformel, oder Verzicht auf Schritt B (Mechanik bleibt inaktiv). Voraussetzung jeder Neumessung: robustere Gate-Messung
+(Controller-Phasen oder Startvarianten der Heimkolonie, Median) — als Ideen-/Werkzeug-Eintrag für `lead-qa`/`lead-tech`.
+Kein Spec-Nachtrag Totzone. Messdaten bleiben im Scratchpad (nicht versioniert); die Tabellen stehen im Handoff
+`.studio/handoffs/2026-10-11-lead-design-D-I048-B-WERTE.md` bzw. im Bericht dieser Probe.
+
+Regelbezug: R547, R549, Spec I-048 P-5 · Kosten bei Irrtum: I-048 Schritt B verzögert sich weiter; kein Schaden auf `main`.
+
+Entscheider: L0 · Anlass: Bericht lead-tech probe-I048-TOTZONE · ADR: —
