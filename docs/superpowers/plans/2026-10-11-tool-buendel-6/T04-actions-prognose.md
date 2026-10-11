@@ -39,3 +39,4 @@
 
 - Die Regel „bei Rot höchstens ein Push je Tag“ erzwingt das Werkzeug **nicht** (kein Netzaufruf in `push-check`); sie steht im Handbuch (studio-coach) und in der Zeile. Entscheid D3 im Controller-Bericht.
 - Keine Beträge oder Kontodaten in Doku oder Commits; im Bericht nur Minuten.
+- **B8 (R503):** Heute steckt teilweise in `a` und zählt zusätzlich voll in `t` (bewusste Doppelzählung, vorsichtige Prognose); dazu ein Kommentar an `forecast`. Rate bei 0 vollen Tagen = „nicht erfasst“, nie 0 (Test 3).

@@ -6,7 +6,7 @@
 
 **Spec:** keine (Werkzeug-Paket). Grundlage: R488 V1/V2/V4 (Retro `docs/studio/retros/2026-10-10-rel-18-prozess.md`), R497 (E-059, E-060 in `experimente.md`), STUDIO.md „Merges“ (R429).
 
-Prozessstufe leicht (Format E-010: dieser Index plus je Task eine Datei ≤ 10 KB in [`2026-10-11-tool-buendel-6/`](2026-10-11-tool-buendel-6/)) · Paket TOOL-BUENDEL-6 · Meilenstein ohne · Planbasis `main` @ `eef88dc1` · Worktree `.worktrees/b6`, Branch `tool/b6` · Plan: `lead-tech`, opus. **Umsetzung erst nach dem Push REL-19** (R464).
+Prozessstufe leicht (Format E-010: dieser Index plus je Task eine Datei ≤ 10 KB in [`2026-10-11-tool-buendel-6/`](2026-10-11-tool-buendel-6/)) · Paket TOOL-BUENDEL-6 · Meilenstein ohne · Planbasis `main` @ `eef88dc1` · Plan: `lead-tech`, opus · **Nachtrag R503** (QA-B1–B9, D1–D4 entschieden, Parallelität 2) in T02, T03, T04, T05, T07. **Umsetzung erst nach Push REL-19 (R464) und Abnahme des Nachtrags.**
 
 ## Global Constraints
 
@@ -22,47 +22,45 @@ Prozessstufe leicht (Format E-010: dieser Index plus je Task eine Datei ≤ 10 K
 ## Architektur (≤ 15 Zeilen)
 
 - **T01:** `tests/ui/time.test.ts` AK-UX-13 je Szenario aufteilen (`it.each`), Prüfinhalt gleich, eigenes Timeout nach Messung (R392).
-- **T02:** `tools/zeitreserve/`: Reporter schreibt bei `ZEITRESERVE_OUT` in eine andere Datei; `check.ts --push --marked <f>` schreibt die Dateien mit Verstoss oder Warnung (beide Regeln) **auch bei Exit 2**; `--retry <f>` ersetzt deren Zeiten durch eine Nachmessung (Commit = HEAD, `loadStart` ≤ 4). Annahme: höhere Last macht Tests nur langsamer (Monotonie).
-- **T03:** `tools/studio/pushcheck.py` + `make push-check`: schnelle Vorprüfungen → Load ≤ 3 abwarten (≤ 10 min) → genau ein `make check` → `zeitreserve-push --marked` → bei Exit 2 (oder Exit 1 mit `loadStart` > 3) einmal nur markierte Dateien nachmessen → `check-ci-perf` → Schlusszeile (Hash, Exit, Dauer), Ereignis `push_check` (M3, R488).
+- **T02:** `tools/zeitreserve/`: Reporter schreibt bei `ZEITRESERVE_OUT` in eine andere Datei; `check.ts --push --marked <f>` schreibt die Dateien mit Verstoss oder Warnung (beide Regeln) **auch bei Exit 2**; `--retry <f>` berechnet die Liste rein neu (B2) und ersetzt deren Zeiten durch die Nachmessung (Commit = HEAD, `loadStart` ≤ 4). Annahme Monotonie.
+- **T03:** `tools/studio/pushcheck.py` + `make push-check`: schnelle Vorprüfungen → Load ≤ 3 abwarten (≤ 10 min) → genau ein `make check-push` (= `check` ohne lockeres `zeitreserve`, B3) → `check.ts --push --marked` → bei Exit 2 (oder Exit 1 mit `loadStart` > 3) einmal nur markierte Dateien nachmessen → `check-ci-perf` → Arbeitsbaum unverändert (B5) → Schlusszeile, Ereignis `push_check` (M3).
 - **T04:** `actions.py`: Prognosezeile Konto zum Monatsende = verbraucht + Tagesrate (letzte 3 volle Tage) × Resttage, gelb > 1600, rot > 1900; Repo-Zeile Info ohne Farbe.
 - **T05:** `efficiency.py`: Zeile Produktivanteil = Klassenanteil Umsetzer + Design/Spec/Plan, gelb < 25 %, rot < 15 %; Umsetzeranteil erzeugt nur Befund/Vorfall, wenn Produktivanteil gelb/rot.
 - **T06:** `tools/studio/merge_append.py` als Git-Merge-Treiber (`git merge-file --diff3 -p`), löst nur Konfliktblöcke mit leerer Basis (erst ours, dann theirs); `.gitattributes`, `make merge-driver`.
 - **T07:** `modelguard._budget_warn` gibt bei fehlender Freigabe `permissionDecision: deny` aus (Schalter `BUDGET_MODE`); Abgleich Paket ↔ Phase wie `model._grant_names`.
 
-## Datei-Ownership (ein Worktree `.worktrees/b6`, Branch `tool/b6`, seriell)
+## Datei-Ownership (R503: Parallelität 2)
+
+Strang **A** (T01–T03): `.worktrees/b6a`, Branch `tool/b6a`. Strang **B** (T04–T07): `.worktrees/b6b`, Branch `tool/b6b`.
 
 - **A · T01:** `tests/ui/time.test.ts`
-- **A · T02:** `tools/zeitreserve/check.ts`, `reporter.ts`, `rule.ts` (nur neue Exporte), `README.md`; `tests/tools/zeitreserve.test.ts`, neue Fixtures unter `tests/tools/`
-- **A · T03:** neu `tools/studio/pushcheck.py`, `tools/studio/tests/test_pushcheck.py`; `Makefile` (Ziel `push-check`); `docs/arc42.md` (Absatz Push-Gate ≈ Z. 605); `tools/zeitreserve/README.md` (Absatz Push-Gate)
-- **B · T04:** `tools/studio/actions.py`, `tools/studio/tests/test_actions.py`
-- **B · T05:** `tools/studio/efficiency.py`, `tools/studio/effort.py` (nur `ampel_incidents`), `tests/test_efficiency.py`, `tests/test_effort.py`
-- **B · T06:** neu `tools/studio/merge_append.py`, `tools/studio/tests/test_merge_append.py`, neu `.gitattributes`, `Makefile` (Ziel `merge-driver`)
-- **B · T07:** `tools/studio/modelguard.py`, `tools/studio/budgetwarn.py`, `tests/test_modelguard.py`, `tests/test_budgetwarn.py`; `docs/arc42.md` (Absatz Hook ≈ Z. 596)
+- **A · T02:** `tools/zeitreserve/check.ts`, `reporter.ts`, `rule.ts` (nur neue Exporte), `README.md`; `tests/tools/zeitreserve.test.ts`, Fixtures `tests/tools/`
+- **A · T03:** neu `tools/studio/pushcheck.py`, `tests/test_pushcheck.py`; `Makefile` (Absatz `check`/`check-run`/`check-push`/`push-check`); `docs/arc42.md` (Push-Gate ≈ Z. 605)
+- **B · T04:** `tools/studio/actions.py`, `tests/test_actions.py`
+- **B · T05:** `tools/studio/efficiency.py`, `effort.py` (nur `ampel_incidents`), `tests/test_efficiency.py`, `tests/test_effort.py`
+- **B · T06:** neu `tools/studio/merge_append.py`, `tests/test_merge_append.py`, neu `.gitattributes`, `Makefile` (eigener Absatz `merge-driver` am Dateiende)
+- **B · T07:** `modelguard.py`, `budgetwarn.py`, `tests/test_modelguard.py`, `tests/test_budgetwarn.py`, `tests/fixtures/budget_pairs.json`; `docs/arc42.md` (Hook ≈ Z. 596)
 
-D1-Doku (`docs/arc42.md`, `tools/zeitreserve/README.md`) im Umsetzer-Briefing ausdrücklich erlauben (E-017). **Seriell, Parallelität 1:** ein Baum laut Briefing, `Makefile` und `docs/arc42.md` werden von A und B berührt. Vor dem Merge `git merge-tree --write-tree main tool/b6` (Berührung: `Makefile`, `tests/ui/time.test.ts`).
+D1-Doku im Umsetzer-Briefing ausdrücklich erlauben (E-017). Gemeinsam berührt nur `Makefile` und `docs/arc42.md`, in getrennten Absätzen. Merge seriell A vor B, je Branch vorher `git merge-tree --write-tree main <branch>`. **T07 (Strang B) wird erst gemergt, wenn alle laufenden Stränge Freigaben im Phasenformat haben** (R503, Prod-B4; Prüfung T07 Hinweise).
 
-## Budgetantrag (Formel Handbuch 1.39)
+## Budgetantrag (R503)
 
 ```text
 Lead: lead-tech
 Phase: TOOL-BUENDEL-6-umsetzung
-Pakete:
-- TOOL-BUENDEL-6-A Push-Gate: T01, T02, T03 (nein)
-- TOOL-BUENDEL-6-B Ampel/Merge/Hook: T04, T05, T06, T07 (nein)
-Formel: 2 × 2 + 0 QA-Checks + 1 Final-Review = 5 → × 1,3 = 6,5 → aufgerundet 7
-Parallelität: 1
-Beantragt: 7 Starts, Parallelität 1
+Pakete: A Push-Gate T01–T03 · B Ampel/Merge/Hook T04–T07
+Formel: 2 × 2 + 0 QA-Checks + 1 Final-Review = 5 → × 1,3 → 7; R503: 8
+Beantragt: 8 Starts, Parallelität 2
 ```
 
-- Start 1: `tech-sim-engineer` (sonnet): T01, T02, T03 (TS + Python); je Task ein Commit — ≈ 85 Tools
-- Start 2: `qa-code-reviewer` (sonnet): Review T01–T03 — ≈ 15 Tools
-- Start 3: `tech-sim-engineer` (sonnet): T04–T07 — ≈ 95 Tools
-- Start 4: `qa-code-reviewer` (opus): Review T04–T07 **und** Final-Review über `tool/b6` (Stufe leicht) — ≈ 40 Tools
-- Start 5–7 (Puffer): Fix-Runden per SendMessage (zählen nicht); Starts nur nach Meldung an L0
+- Starts 1–2 parallel: `tech-sim-engineer` (sonnet) A (≈ 85 Tools) und B (≈ 95 Tools)
+- Starts 3–4: `qa-code-reviewer` (sonnet) Review A (≈ 15) bzw. B (≈ 20), je nach Fertigstellung
+- Start 5: `qa-code-reviewer` (opus) Final-Review über `tool/b6a` und `tool/b6b` (≈ 40)
+- Starts 6–8: Puffer; Fix-Runden per SendMessage (zählen nicht)
 
-**Controller:** `lead-tech` auf sonnet, höchstens 4 Tasks je Instanz (R167): Instanz 1 steuert A (T01–T03), Instanz 2 steuert B (T04–T07) und fährt am Ende `make studio-lint`, `make studio-test`, `make lint` und **einmal `make push-check`** (ersetzt `make check`, gilt als Echtlauf von T03; Bash im Hintergrund, E-037). Ledger `.superpowers/sdd/tool-buendel-6/ledger.md`. Kein UI → kein `qa-playtester`.
+**Controller:** je Strang ein `lead-tech` (sonnet, ≤ 4 Tasks, R167), Ledger `.superpowers/sdd/tool-buendel-6/ledger-<a|b>.md`. Gesamtläufe nur über die Testsperre (seriell). Controller A fährt am Ende **einmal `make push-check`** (Echtlauf T03, im Hintergrund, E-037), Controller B `make studio-lint`, `make studio-test`. Kein UI → kein `qa-playtester`.
 
-**Schätzung:** Arbeiter ≈ 235 Tools + 2 Controller ≈ 50 Tools = **≈ 285 Tools**, ÷ 6 ≈ **48 min** seriell (A 14 → Review 3 → B 16 → Review/Final 7 → Controller-Läufe inkl. `push-check` ≈ 8).
+**Schätzung:** Arbeiter ≈ 235 Tools + 2 Controller ≈ 50 Tools = **≈ 285 Tools**, ÷ 6 ≈ **48 min** Summe, parallel ≈ 30 min Wanduhr (B 16 + Review 3 + Final 7 + Läufe ≈ 4).
 
 ## Task-Tabelle
 
@@ -78,7 +76,7 @@ Beantragt: 7 Starts, Parallelität 1
 
 ## Review Focus
 
-1. **Gate nicht aufgeweicht (T02/T03):** Kein Pfad meldet Exit 0, ohne dass jeder Test entweder in einer Messung mit `loadStart` ≤ 4 oder als unmarkiert unter höherer Last bestanden hat; Commit überall = HEAD; höchstens ein voller `make check` und eine Nachmessung je Aufruf.
+1. **Gate nicht aufgeweicht (T02/T03):** Kein Pfad meldet Exit 0, ohne dass jeder Test entweder in einer Messung mit `loadStart` ≤ 4 oder als unmarkiert unter höherer Last bestanden hat; Commit = HEAD; ein `check-push`, höchstens eine Nachmessung; D1 nur mit existierender, gültiger, leerer Liste (B1).
 2. **Kein verlorener Eintrag (T06):** Konfliktblöcke mit Basisinhalt bleiben mit Marken stehen, Exit ≠ 0; Zeilenbilanz im Test.
 3. **Keine Selbstaussperrung (T07):** „Budget: keins“, Nicht-Leads, Folge-Controller mit gleicher `Paket:`-Zeile und jeder Hook-Fehler lassen zu.
 

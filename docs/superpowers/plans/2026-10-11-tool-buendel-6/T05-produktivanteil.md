@@ -14,6 +14,7 @@
   2. Grenzen 25 % und 15 % (`<`): 25,0 % grün, 24,9 % gelb, 14,9 % rot.
   3. Zeile erscheint unter „Umsetzeranteil“ mit Label und Schwellentext.
   4. Umsetzer 5,7 % (rot) bei `produktiv` 33,7 % → Zusatz „kein Befund“, kein Vorfall in `ampel_incidents` (`test_effort.py`); bei `produktiv` 20 % → Vorfall wie heute.
+     4a. (B7, R503) Die Zusammenfassung der Ampel in `efficiency.py` (Zählung gelb/rot, `for color, name in …` ≈ Z. 714 bzw. deren Aufrufer) zählt die unterdrückte Umsetzer-Zeile nicht mit.
   5. Neuer Schlüssel bricht keine bestehenden Konsumenten von `LIGHT_LABELS` (`effort.py` Z. 410–444): bestehende Tests unverändert grün.
 - [ ] **Rot-Beleg (R395):** `python3 -m unittest tools.studio.tests.test_efficiency tools.studio.tests.test_effort; echo EXIT=$?` → `EXIT=1`, im Bericht.
 - [ ] **Umsetzung:** Kennzahl im Ergebnis-Dict (`"produktiv"`), Schwelle, Label, Zeile; Zusatz für die Umsetzer-Zeile; falls `ampel_incidents` die Farbe aus dem Zeilentext liest, die Unterdrückung dort über den Zusatz erkennen (eine Stelle, mit Test).
