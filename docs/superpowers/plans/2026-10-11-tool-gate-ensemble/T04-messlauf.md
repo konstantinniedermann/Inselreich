@@ -1,0 +1,10 @@
+# T04 — Messlauf und Make-Ziel (GE-6, GE-7)
+
+**Dateien:** `tests/sim/ensemble.test.ts`, `Makefile` (ein Ziel, `.PHONY` ergänzen, `help`-Kommentar).
+
+- [ ] **Schritt 1: Test zuerst** (kleiner Wächter, läuft im Standardlauf): `describe.runIf(Boolean(import.meta.env.VITE_ENSEMBLE))` umschliesst den Messlauf; ein immer laufender Fall prüft, dass `PHASES.length === 5` und die Phasen paarweise verschieden und `< CONTROL_INTERVAL` sind.
+- [ ] **Schritt 2: Rot-Beleg.** Wächter-Fall gegen eine absichtlich falsche Erwartung (`PHASES.length === 6`) → `EXIT=1`, danach korrigieren. Für den Messlauf: einmal mit `VITE_ENSEMBLE=1` starten und bestätigen, dass ohne Umsetzung des Laufs `EXIT=1` (Fall „Tabelle leer“) steht.
+- [ ] **Schritt 3: Messlauf.** Je Phase `startColony(createWorld(3))` + `runColony(w, layout, t, { phase })`; Werte sammeln: Sieg-Tick (`t.winTick`, `null` → `MAX_TICKS + 1`), `t.firstSettler`, `t.firstCitizen`, `t.minMoney`, `t.endMoney`, Zukauf-Mehrkosten in % `100 * buySurcharge / buyVolume` (0 bei Volumen 0). Grenzen als benannte Konstanten oben in der Datei mit Kommentar „Quelle: balance*.test.ts“ (Werte aus den bestehenden Klasse-N-Tests übernehmen, nicht erfinden: `grep -n "toBeLessThan\|toBeGreaterThan" tests/sim/balance*.test.ts`). Ausgabe `console.log(formatTable(rows))`; **kein `expect` auf Grenzen** (das Werkzeug misst, die Gates urteilen), nur `expect(rows.length).toBeGreaterThan(0)`.
+- [ ] **Schritt 4: Make-Ziel** `gate-ensemble: ## Gate-Messung: 5 Controller-Phasen, Median/Min/Max (nicht Teil von check)` mit `VITE_ENSEMBLE=1 npx vitest run tests/sim/ensemble.test.ts --silent=false`. `check` und `CHECK_PUSH_STEPS` bleiben unverändert (Schritt 5 belegt es).
+- [ ] **Schritt 5: Messung (Controller, Load ≤ 4, Testsperre):** `time make gate-ensemble; echo EXIT=$?` → 0 und ≤ 90 s; Standardlauf `npx vitest related --run tests/sim/ensemble.ts tests/sim/controller.ts; echo EXIT=$?` zeigt den Messlauf als übersprungen. Zeitabnahme nach Index (R392). Tabelle im Bericht festhalten (Phase 0 Sieg-Tick muss dem heutigen Einzellauf entsprechen).
+- [ ] **Schritt 6: Commit** `feat: make gate-ensemble (TOOL-GATE-ENSEMBLE T04)`.
