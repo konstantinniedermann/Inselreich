@@ -610,7 +610,9 @@ merge-driver` setzt die Treiberkonfiguration einmal je Klon in `.git/config`; oh
   Starts über der Modelltabelle als Ereignis `model_guard` und lehnt sie ab (`MODE = "deny"`, TOOL-AKTIVIERUNG, R428).
   Im selben Hook-Prozess prüft `budgetwarn.py` einen Lead-Start mit „Budget: n“ gegen die Freigaben der
   Session (Rolle und Phase = `Paket:`, dessen Phasenname oder ein Präfix davon bis zu einem `-`, längster Treffer zuerst,
-  `model.package_names`, R528 (3)). Standard `BUDGET_MODE = "warn"` in `modelguard.py`:
+  `model.package_names`, R528 (3)); die Freigabe-Phase verliert dabei ein Rollen-Präfix (`model.ROLE_PREFIXES`:
+  `impl-`, `plan-`, `design-`, `gate-`, `release-check-`; `phase_matches`, Rohphase bleibt gespeichert, R543). Eine
+  Kopfzeile „Budget: n verbleibende …“ gilt als Folge-Controller und löst weder Block noch Warnung aus. Standard `BUDGET_MODE = "warn"` in `modelguard.py`:
   Kontext und Systemmeldung, Ereignis `budget_warn` mit `blocked: false` (E-055). Mit `"deny"` (L0 schaltet per
   Ruling ein) lehnt der Hook mit `permissionDecision: "deny"` samt fertigem `log.py budget`-Befehl ab,
   `blocked: true` (E-060). Ein Modell-Guard-Deny
