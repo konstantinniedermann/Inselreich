@@ -5469,3 +5469,15 @@ setzt danach mit T02/T03 fort.
 Regelbezug: gates.md Gate Merge, R508, R510 · Kosten bei Irrtum: ein Revert eines Test-Umbaus.
 
 Entscheider: L0 · Anlass: Zwischenbericht Controller Strang A · ADR: —
+
+## R513 · 2026-10-11 · REL-19 gepusht; Umsetzungsstart M13-E2 SIM/ART und UI-NAECHSTER-SCHRITT
+
+Ruling: Push `801bee89` (Merge T01) erfolgt, CI/Pages laufen beim Integrator; R464 aufgehoben. Start nach R509-Staffelung:
+**M13-E2-SIM** Controller A (`lead-tech` sonnet, T00–T04, 9 Starts) und **M13-E2-ART** Controller C (`lead-art` sonnet,
+T00, T08, T19, T09, 7 Starts) — zusammen 16 der 42. **UI-NAECHSTER-SCHRITT** briefet L0 direkt (R502, E-037):
+`tech-ui-engineer` T1–T3, dann `qa-code-reviewer` opus (Final), `qa-playtester`. TOOL-BUENDEL-6 Strang B startet, sobald
+ein Platz frei ist (Deckel 8, R424).
+
+Regelbezug: R424, R464, R502, R509 · Kosten bei Irrtum: Wartezeit an der Testsperre.
+
+Entscheider: L0 · Anlass: Push REL-19 · ADR: —
