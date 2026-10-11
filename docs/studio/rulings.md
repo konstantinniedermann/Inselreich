@@ -5560,3 +5560,19 @@ den Worktree unberührt.
 Regelbezug: R129, R324, R329, R424 · Kosten bei Irrtum: Konflikt in einer Doku-Datei beim späteren Merge.
 
 Entscheider: L0 · Anlass: unbekannter Worktree beim Aufräumen, Events der Session c6709a04 · ADR: —
+
+## R520 · 2026-10-11 · Gate Merge TOOL-BUENDEL-6 Strang B: OK, Budget-Hook vorerst `warn`; Handbuch 1.48 abgenommen
+
+Ruling: `tool/b6b` @ `dbe48e75` (T04 Actions-Prognose, T05 Produktivanteil, T06 E-059 Merge-Treiber, T07 E-060
+Budget-Hook, R514 V2 `load` je Stufe; Fixes `f7d8a3a5`, `3bf85886`, `dbe48e75`) abgenommen: Reviews OK/BEDENKEN niedrig,
+Final-Review opus ohne Blocker, `make studio-lint`/`studio-test` Exit 0 (726), Echtläufe belegt. **`BUDGET_MODE` Standard
+`warn`**, weil die parallele Nutzer-Session (R519) keine Freigaben loggt; `deny` (Start E-060) per eigenem Ruling, wenn
+nur eine Session läuft — dann vorher `design-m14-e1` im Phasenformat nachtragen und `KNOWN_MISMATCH` entfernen.
+E-059 startet mit dem Merge (`make merge-driver` im Hauptcheckout und in `.worktrees/integrate`). **Actions-Prognose
+ROT (1991 von 2000 min):** höchstens ein Push je Tag (R488 V2); wegen der M13-Release-Sperre (R505) ohnehin kein
+Spiel-Push geplant. Handbuch **1.48** (`05cd1141`, push-check) abgenommen. `studio-coach` ergänzt danach: Integrator-
+Hinweis `git checkout --merge docs/beobachtungen.md` bei Treiberfehler, E-059 „läuft“ in `experimente.md`.
+
+Regelbezug: gates.md Gate Merge, R488, R503, R504, R514, R519 · Kosten bei Irrtum: ein Werkzeug-Revert.
+
+Entscheider: L0 · Anlass: Schlussbericht Controller Strang B · ADR: —
