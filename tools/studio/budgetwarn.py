@@ -46,6 +46,13 @@ def _phase(event: Mapping) -> str:
     return str(budget.get("phase") or "").strip() if isinstance(budget, dict) else ""
 
 
+def _matches(package: str, phases: Iterable[str]) -> bool:
+    """Passt eine Freigabe-Phase zu den Namen der Kopfzeile `Paket:` (inkl. Praefix-Regel)?"""
+    return bool(
+        {p.casefold() for p in phases} & {n.casefold() for n in package_names(package)}
+    )
+
+
 def _lead_start(tool_input: Mapping) -> tuple[str, int, str] | None:
     """(Rolle, Budget, Prompt) eines Lead-Starts mit `Budget: n`; sonst None."""
     role = persona(tool_input)
@@ -68,11 +75,7 @@ def check(tool_input: Mapping, given: Iterable[Mapping]) -> str | None:
     package = header(prompt, "Paket")
     phases = [_phase(g) for g in own]
     token = _package_token(package) or "<Paket>"
-    if own and (
-        not package
-        or {p.casefold() for p in phases}
-        & {n.casefold() for n in package_names(package)}
-    ):
+    if own and (not package or _matches(package, phases)):
         return None
     command = f"python3 tools/studio/log.py budget --lead {role} --grant {count} --phase {token} …"
     prefix = "Budget-Block (E-060): "
@@ -103,7 +106,7 @@ def warning(tool_input: Mapping, given: Iterable[Mapping]) -> str | None:
         )
     package = header(prompt, "Paket")
     phases = [_phase(g) for g in own]
-    if not package or package.casefold() in {p.casefold() for p in phases}:
+    if not package or _matches(package, phases):
         return None
     return (
         f"{prefix}Freigabe für Phase {package} fehlt (vorhanden: {', '.join(phases)}); "

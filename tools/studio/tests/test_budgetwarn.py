@@ -164,6 +164,14 @@ class PrefixRuleTest(unittest.TestCase):
         self.assertIsNone(self.check("X-T01", "X"))
         self.assertIsNotNone(self.check("XY-T01", "X"))
 
+    def test_warning_follows_prefix_rule(self):
+        def warn(package):
+            prompt = f"Persona: lead-tech\nBudget: 4\nPaket: {package}"
+            return budgetwarn.warning(start(prompt), [json.loads(grant(phase="X"))])
+
+        self.assertIsNone(warn("X-T01"))
+        self.assertIsNotNone(warn("XY-T01"))
+
     def test_exact_grant_is_named_before_prefix(self):
         names = budgetwarn.package_names("X-T01")
         self.assertLess(names.index("X-T01"), names.index("X"))
