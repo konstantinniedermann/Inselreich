@@ -9,7 +9,14 @@ import { MAP_SIGNS, nextStep, producerOf, remedyText, taxEffect } from '../../sr
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { home, createWorld, idx } from '../../src/sim/world';
 import { setPaused } from '../../src/sim/pause';
-import { houseFar, placeTownhall, setAllTax, village } from '../sim/helpers';
+import {
+  houseFar,
+  placeTownhall,
+  putBuilding,
+  setAllTax,
+  twoIslandWorld,
+  village,
+} from '../sim/helpers';
 import { build, connectAll, setHouse, uxWorld } from './worlds';
 
 type Extra = 'chapel' | 'weaver' | 'sheepfarm';
@@ -69,10 +76,9 @@ describe('nextStep (AK-UX-08)', () => {
     expectStep(world(2, 4, ['chapel', 'weaver']), 'Weberei braucht Wolle: baue Schäferei (G)');
   });
   it('AK-UX-08 R3c Erzeuger und Vorstufe stehen → Regel 3 schaltet weiter bis Regel 7', () => {
-    expectStep(
-      world(2, 4, ['chapel', 'weaver', 'sheepfarm']),
-      'Baue weitere Wohnhäuser und versorge sie',
-    );
+    const w = world(2, 4, ['chapel', 'weaver', 'sheepfarm']);
+    home(w).stock.cloth = 5; // R502: Regel 3 schaltet erst ab Lager ≥ 1 weiter
+    expectStep(w, 'Baue weitere Wohnhäuser und versorge sie');
   });
   it('AK-UX-08 R4 volles Pionierhaus, Stoffkette steht, keine Kapelle', () => {
     expectStep(
@@ -150,7 +156,7 @@ describe('taxEffect und remedyText (AK-UX-10)', () => {
     lj.state = 'ok';
     expect(remedyText(w, lj)).toBeNull();
     setHouse(house, 1, 2, []);
-    expect(remedyText(w, house)).toBe('Baue mehr Fischerhütte oder kaufe Nahrung am Kontor');
+    expect(remedyText(w, house)).toBe('Baue mehr Fischerhütte (F) oder kaufe Nahrung am Kontor');
   });
 });
 
@@ -504,7 +510,7 @@ describe('REL-15 Abhilfe eines Wohnhauses ohne Vorspann (R435)', () => {
     expect(texts).toEqual([
       'Baue einen Marktplatz (M) in der Nähe',
       'Baue Kapelle (K) in Reichweite',
-      'Baue mehr Fischerhütte oder kaufe Nahrung am Kontor',
+      'Baue mehr Fischerhütte (F) oder kaufe Nahrung am Kontor',
       'Baue Fischerhütte (F)',
       'Kaufe Gewürz am Kontor oder gründe ein Kontor auf einer Gewürzinsel',
     ]);
@@ -533,5 +539,93 @@ describe('M13-E1 Leitfaden und Stilllegen (AK-M13STL-09)', () => {
     expect(remedyText(w, fisher)).toBeNull();
     fisher.connected = true;
     expect(remedyText(w, fisher)).toBeNull();
+  });
+});
+
+const MANGEL_FOOD =
+  'Nahrung ist aufgebraucht: baue mehr Fischerhütte (F) oder kaufe Nahrung am Kontor';
+
+describe('UI-NAECHSTER-SCHRITT akuter Warenmangel (R499)', () => {
+  /** Stufe-1-Haus, Nahrung unerfüllt, Fischerhütte steht, Lager `food` wie gegeben. */
+  function hunger(food: number): World {
+    const w = world(1, 2, []);
+    const h = Object.values(w.buildings).find((b) => b.house)!;
+    setHouse(h, 1, 2, []);
+    home(w).stock.food = food;
+    return w;
+  }
+  it('AK-NS-01 Erzeuger steht, Lager leer → Mangel-Satz statt Weberei', () => {
+    const s = nextStep(hunger(0));
+    expect(s).toBe(MANGEL_FOOD);
+    expect(s).not.toContain('Weberei');
+    expect(s).not.toContain('Schäferei');
+  });
+  it('AK-NS-02 Lager gefüllt → bisheriger Pfad', () => {
+    expect(nextStep(hunger(5))).not.toContain('aufgebraucht');
+  });
+  it('AK-NS-03 volles Haus will Gut der nächsten Stufe, Mangel bei stehendem Erzeuger gewinnt', () => {
+    const w = world(1, TIERS[1].maxInhabitants, []);
+    const h = Object.values(w.buildings).find((b) => b.house)!;
+    setHouse(h, 1, TIERS[1].maxInhabitants, []);
+    home(w).stock.food = 0;
+    expect(nextStep(w)).toBe(MANGEL_FOOD);
+  });
+  it('AK-NS-04 Erzeuger fehlt → Satz «Deine … brauchen …» bleibt', () => {
+    const { w, house, fisher } = uxWorld();
+    delete w.buildings[fisher.id];
+    connectAll(w);
+    setHouse(house, 1, 2, []);
+    home(w).stock.food = 0;
+    w.money = 1000;
+    w.stats = { taxes: 10, upkeep: 5 };
+    expect(nextStep(w)).toBe('Deine Pioniere brauchen Nahrung: baue Fischerhütte (F)');
+  });
+  it('AK-NS-06 tieferes Tier gewinnt vor GOOD_IDS-Reihenfolge', () => {
+    const w = world(2, 4, ['chapel', 'weaver', 'sheepfarm']);
+    const k = w.buildings[home(w).kontorId]!;
+    const h2 = Object.values(w.buildings).find((b) => b.house)!;
+    setHouse(h2, 2, 4, ['food']); // Stoff fehlt
+    const h3 = build(w, 'house', k.x + 4, k.y - 2);
+    connectAll(w);
+    setHouse(h3, 3, 4, ['cloth', 'rum']); // Nahrung fehlt
+    home(w).stock.food = 0;
+    home(w).stock.cloth = 0;
+    expect(nextStep(w)).toBe(
+      'Stoff ist aufgebraucht: baue mehr Weberei (V) oder kaufe Stoff am Kontor',
+    );
+  });
+  it('AK-NS-06 Gleichstand im Tier: das frühere Gut in GOOD_IDS (Nahrung vor Stoff)', () => {
+    const w = world(2, 4, ['chapel', 'weaver', 'sheepfarm']);
+    const h = Object.values(w.buildings).find((b) => b.house)!;
+    setHouse(h, 2, 4, []);
+    home(w).stock.food = 0;
+    home(w).stock.cloth = 0;
+    expect(nextStep(w)).toBe(MANGEL_FOOD);
+  });
+  it('AK-NS-07 Gewürz ohne Bestand → Fremdgut-Hinweis, kein «baue mehr»', () => {
+    const w = citizenWorld();
+    w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    for (const id of ['glassworks', 'quarry', 'lumberjack'] as const) addDirect(w, id);
+    const h = Object.values(w.buildings).find((b) => b.house)!;
+    setHouse(h, 4, 20, ['food', 'cloth', 'rum', 'glass']);
+    home(w).stock.spice = 0;
+    const s = nextStep(w);
+    expect(s).toContain('kaufe es am Kontor oder gründe ein Kontor auf einer Gewürzinsel');
+    expect(s).not.toContain('baue mehr');
+  });
+  it('Kolonie: Mangel zählt am Bestand der Insel des Hauses, nicht der Heimat', () => {
+    const w = twoIslandWorld();
+    const k = w.buildings[home(w).kontorId]!;
+    putBuilding(w, 0, 'fisher', k.x + 4, k.y);
+    const h = putBuilding(w, 1, 'house', k.x + 2, k.y);
+    setHouse(h, 1, 2, []);
+    w.money = 1000;
+    w.islands[0]!.stock.food = 50;
+    w.islands[1]!.stock.food = 0;
+    expect(nextStep(w)).toBe(MANGEL_FOOD);
+    w.islands[0]!.stock.food = 0;
+    w.islands[1]!.stock.food = 50;
+    expect(nextStep(w)).not.toContain('aufgebraucht');
   });
 });
