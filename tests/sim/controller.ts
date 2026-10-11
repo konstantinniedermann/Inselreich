@@ -259,6 +259,8 @@ export function control(w: World, layout: Layout, opts: ColonyOptions): void {
 export interface ColonyOptions {
   /** Krisen-Lauf normal: eine Feuerwache, sobald die Kapelle steht, auf layout.fireStation (Spec 15). */
   fireStation?: boolean;
+  /** Versatz der Entscheidungs-Ticks im Intervall, Robustheitsachse des Gate-Ensembles. */
+  phase?: number;
 }
 
 export interface Trajectory {
@@ -303,8 +305,9 @@ export function runColony(
   opts: ColonyOptions = {},
   stop?: (w: World) => boolean,
 ): boolean {
+  const phase = opts.phase ?? 0;
   while (w.tick < MAX_TICKS && citizens(w) < WIN_CITIZENS) {
-    if (w.tick % CONTROL_INTERVAL === 0) control(w, layout, opts);
+    if (w.tick % CONTROL_INTERVAL === phase) control(w, layout, opts);
     step(w);
     const pop = populationByTier(w);
     if (t.firstSettler === null && pop[2] > 0) t.firstSettler = w.tick;
