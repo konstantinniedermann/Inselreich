@@ -62,6 +62,9 @@ function flagValue(flag: string): string | undefined {
 const VALUE_FLAGS = ['--marked', '--retry'];
 const MARKED = flagValue('--marked');
 const RETRY = flagValue('--retry');
+const BAD_FLAG = VALUE_FLAGS.find(
+  (f) => process.argv.includes(f) && (flagValue(f) ?? '--').startsWith('--'),
+);
 
 function readMeasurement(path: string): Measurement | null {
   try {
@@ -92,6 +95,10 @@ function main(): number {
       .find((a, i, all) => !a.startsWith('--') && !VALUE_FLAGS.includes(all[i - 1] ?? '')) ??
     '.studio/zeitreserve.json';
   const baseline = new Set(JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) as string[]);
+  if (BAD_FLAG !== undefined) {
+    console.error(`zeitreserve: ${BAD_FLAG} braucht einen Dateipfad als Wert.`);
+    return 2;
+  }
   if (RETRY !== undefined && !PUSH) {
     console.error('zeitreserve: --retry nur zusammen mit --push.');
     return 2;

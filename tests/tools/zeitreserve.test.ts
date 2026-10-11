@@ -487,7 +487,13 @@ describe('zeitreserve markierte Dateien und Nachmessung (R488 V1, AK-TB6-02..04)
   });
 
   it('--retry: Datei weiter ohne Reserve: Exit 1, Meldung nennt den Test', () => {
-    const m = write('r-main-bad.json', meas(mainTimings, 6));
+    const m = write(
+      'r-main-bad.json',
+      meas(
+        [f('tests/a.test.ts', 2500, 'lahm'), ...mainTimings.slice(0, 1), ...mainTimings.slice(2)],
+        6,
+      ),
+    );
     const r = write('r-bad.json', meas([f('tests/a.test.ts', 2500, 'lahm'), retryTimings[1]!], 2));
     const p = run(['--push', m, '--retry', r]);
     expect(p.status).toBe(1);
@@ -519,6 +525,26 @@ describe('zeitreserve markierte Dateien und Nachmessung (R488 V1, AK-TB6-02..04)
       ]);
       expect(r.measurement.loadStart).toBe(2);
     }
+  });
+
+  it('--retry: fehlt ein Test einer markierten Datei in der Nachmessung, Exit 2', () => {
+    const main2 = [...mainTimings, f('tests/a.test.ts', 100, 'zweiter')];
+    const m = write('r-main-test.json', meas(main2, 6));
+    const p = run(['--push', m, '--retry', write('r-test.json', meas(retryTimings, 2))]);
+    expect(p.status).toBe(2);
+    expect(p.stderr).toContain('zweiter');
+  });
+
+  it('mergeRetry rein: fehlender Test einer markierten Datei ist ein problem', () => {
+    const main2 = [...mainTimings, f('tests/a.test.ts', 100, 'zweiter')];
+    const r = mergeRetry(meas(main2, 6), meas(retryTimings, 2), new Set(), RUNNER_FACTOR, 'abc');
+    expect('problem' in r && r.problem).toContain('zweiter');
+  });
+
+  it('Flag-Wert, der mit -- beginnt oder fehlt: Exit 2', () => {
+    const m = write('fl.json', meas(mainTimings, 1));
+    expect(run(['--push', m, '--retry', '--push']).status).toBe(2);
+    expect(run(['--push', m, '--marked']).status).toBe(2);
   });
 
   it('Reporter: ZEITRESERVE_OUT bestimmt den Pfad, sonst REPORT_PATH', () => {

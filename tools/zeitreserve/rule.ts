@@ -196,6 +196,13 @@ export function mergeRetry(
   );
   if (missing.length > 0)
     return { problem: `Nachmessung ohne markierte Dateien: ${missing.join(', ')}` };
+  const marked = new Set(markedFiles(main.timings, baseline, scale, factor));
+  const have = new Set(retry.timings.map(testKey));
+  const lost = main.timings.filter((t) => marked.has(t.file) && !have.has(testKey(t)));
+  if (lost.length > 0)
+    return {
+      problem: `Nachmessung ohne Tests markierter Dateien: ${lost.map(testKey).join(', ')}`,
+    };
   return {
     measurement: {
       ...retry,
