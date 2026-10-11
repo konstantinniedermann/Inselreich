@@ -185,7 +185,7 @@ describe('M10 Forst-Werkzeuge, Tooltips, Gründe (Spec 11.9)', () => {
       'Steuer und Ausgabesperre einstellen',
       'Brennbar',
       'Standort: frei',
-      'Höchstens eine Amtsstube',
+      'Nur ein Amtsstube je Insel',
     ]);
     expect(tooltipLines({ kind: 'clearForest' })).toEqual([
       'Roden (C)',
