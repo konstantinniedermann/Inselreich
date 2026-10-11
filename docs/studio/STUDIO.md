@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.50 · Stand: 2026-10-11 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.51 · Stand: 2026-10-11 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -362,6 +362,8 @@ Regeln dazu:
   `.studio/qa/<id>/stand.md` mindestens alle 30 min, nicht erst nach einem Teil.
   **Fix-Runde nach ZURÜCK (R330 (4)):** Eine Fix-Runde nach Gate ZURÜCK startet in derselben Session, sofern
   Budget und Wanduhr-Limit es erlauben; sonst Eintrag in `state.md` und Start in der nächsten Session.
+  **Final-Review ZURÜCK (R553):** Nach ZURÜCK und Fix-Runde ist ein Delta-Review desselben `opus`-Reviewers
+  (`SendMessage`-Fortsetzung, kein neuer Start; `git diff <final-review-commit>..HEAD`) Pflicht, bevor der Bericht an L0 geht.
   **Release mit einem Häppchen (R249 (1)):** Hat das Häppchen ein `opus`-Final-Review und einen
   Browser-Check auf demselben Stand, prüft das Release-Review nur das Delta seit dem Final-Review
   (`git diff <final-review-commit> <kandidat> -- src/ tests/`, `make check`, `make check-ci-perf`;

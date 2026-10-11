@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-11 · Persona lead-tech 1.14
+
+- Anlass: Kurz-Retro f2a404fd, V2 (Delta-Review nach Final-Review ZURÜCK)
+- Datenbasis: `docs/studio/retros/2026-10-11-session-f2a404fd-ende.md` B2
+- Ruling: R553
+- Änderungen: Abschluss: Delta-Review desselben opus-Reviewers nach ZURÜCK, im Budget
+
+## 2026-10-11 · Handbuch 1.51
+
+- Anlass: Kurz-Retro f2a404fd, V1 (Wertgrenzen-Prüffrage) und V2 (Delta-Review nach ZURÜCK)
+- Datenbasis: `docs/studio/retros/2026-10-11-session-f2a404fd-ende.md` B1, B2
+- Ruling: R553
+- Änderungen: gates.md Gate Spec Frage 5 und Gate Plan Frage 4 (Wertgrenzen auf mehr als einem Lauf, sonst Risiko mit Rückfall); STUDIO.md Umsetzungsablauf: Delta-Review nach Final-Review ZURÜCK; Persona siehe eigener Eintrag
+
 ## 2026-10-11 · Persona lead-tech 1.13
 
 - Anlass: Kurz-Retro dc50be15, V1 (E-054 übernehmen)

@@ -84,6 +84,8 @@ Prüfen: `lead-tech` (`opus`, Machbarkeit, Save-Format) · `lead-qa` (`opus`, Te
    `s=<spec>; for k in $(grep -o 'AK-[A-Z0-9-]*[0-9]' "$s" | sort -u); do n=$(grep -lw -- "$k" docs/superpowers/specs/*.md | wc -l); [ "$n" -gt 1 ] && echo "$k $n"; done`.
    Jeder Verweis auf ein altes AK trägt den Meilenstein (`M7:AK-U2-02`); alte Specs werden nicht
    umnummeriert. Widerspricht ein AK-Wortlaut der Prosa derselben Spec?
+5. Beruht jede Wertgrenze (Balancing, Sieg-Tick, Mehrkosten) auf mehr als einem unabhängigen Lauf (Start- oder
+   Controller-Variante)? Wenn nein: als Risiko mit Rückfall benannt (R553)?
 
 Neue AK-Nummern vergibt L0 im Gate-Spec-Ruling (R417), nicht der Design-Lead.
 
@@ -110,6 +112,8 @@ Branch- oder Merge-Struktur dazu.
    eingeplant? Ist das Final-Review auf `opus` vorgesehen?
 3. Deckt der Plan Determinismus (gleicher Seed → gleicher Zustand) und Save-Kompatibilität ab,
    wo die Spec sie berührt?
+4. Beruht jede Wertgrenze (Balancing, Sieg-Tick, Mehrkosten) auf mehr als einem unabhängigen Lauf (Start- oder
+   Controller-Variante)? Wenn nein: als Risiko mit Rückfall benannt (R553)?
 
 **Prüffragen `lead-production`:**
 
