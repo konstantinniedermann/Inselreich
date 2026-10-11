@@ -22,6 +22,7 @@
   --parchment: #efe3c4;
   --parchment-edge: #d9c79c;
   --parchment-muted: #c0b090;
+  --ink-muted: #5a4a30;
   --ink: #2e2418;
   --signal-red: #ff3b5c;
   --signal-warn: #ff6726;
@@ -1168,7 +1169,7 @@ button.chip {
   flex: 1;
 }
 .ship-reserve {
-  color: var(--parchment-muted);
+  color: var(--ink-muted);
 }
 .ship-adders {
   display: flex;
@@ -1217,11 +1218,11 @@ button.chip {
   box-shadow: 0 0 0 2px var(--gold);
 }
 .edict-card.locked {
-  color: var(--parchment-muted);
+  color: var(--ink-muted);
   border-style: dashed;
 }
 .edict-when {
-  color: var(--parchment-muted);
+  color: var(--ink-muted);
 }
 
 /* Denkmal-Panel, Abschnitt «Bau» (M13-E2 T12) */
@@ -1251,7 +1252,7 @@ button.chip {
   background: var(--gold);
 }
 .monument-reserve {
-  color: var(--parchment-muted);
+  color: var(--ink-muted);
 }
 .monument-buy {
   display: flex;

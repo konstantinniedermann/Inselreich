@@ -42,6 +42,8 @@ const PAIRS: Array<[string, string]> = [
   ['--negative', '--wood'], // .negative in der Leiste
   ['--parchment-muted', '--wood-light'], // .btn.unaffordable (R132)
   ['--parchment-muted', '--wood'], // .btn.unaffordable auf Hover
+  ['--ink-muted', '--parchment'], // blasse Texte auf Pergament (AK-UT-12)
+  ['--ink-muted', '--parchment-edge'],
 ];
 
 describe('UI-Kontrast (AK-U2-02)', () => {
@@ -51,6 +53,29 @@ describe('UI-Kontrast (AK-U2-02)', () => {
       expect(vars[bg], bg).toBeDefined();
       expect(contrast(vars[fg]!, vars[bg]!), `${fg}/${bg}`).toBeGreaterThanOrEqual(4.5);
     }
+  });
+
+  it('AK-UT-12 --parchment-muted taugt nicht auf Pergament (Grund für --ink-muted)', () => {
+    expect(contrast(vars['--parchment-muted']!, vars['--parchment']!)).toBeLessThan(4.5);
+  });
+
+  it('AK-UT-11/13 blasse Pergament-Texte nutzen --ink-muted, --parchment-muted nur auf Holz', () => {
+    const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+      sel: m[1]!.replace(/\/\*[\s\S]*?\*\//g, '').trim(),
+      body: m[2]!,
+    }));
+    for (const r of rules)
+      if (/color:\s*var\(--parchment-muted\)/.test(r.body))
+        expect(r.sel, 'Pergament-Regel mit --parchment-muted').toMatch(/^\.btn/);
+    // `.edict-when` ist die «lohnt, wenn …»-Zeile (edictView.ts, WHEN)
+    for (const sel of ['.edict-card.locked', '.edict-when', '.monument-reserve', '.ship-reserve']) {
+      const r = rules.find((x) => x.sel === sel);
+      expect(r, sel).toBeDefined();
+      expect(r!.body, sel).toMatch(/color:\s*var\(--ink-muted\)/);
+    }
+    expect(rules.find((x) => x.sel === '.edict-card.locked')!.body).toMatch(
+      /border-style:\s*dashed/,
+    );
   });
 
   it('Grafik-Kontrast ≥ 3 : 1: Warnkante auf Warn-Pergament', () => {
