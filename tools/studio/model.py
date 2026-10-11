@@ -869,7 +869,7 @@ class _Builder:
             hits = [g for g in candidates if phase_matches(g["phase"], name)]
             if not hits:
                 continue
-            pool = [g for g in hits if g["phase"].strip().casefold() == name.casefold()]
+            pool = [g for g in hits if str(g["phase"]).strip().casefold() == name.casefold()]
             pool = pool or hits
             claimed = [
                 g
@@ -932,7 +932,34 @@ class _Builder:
             for exact in (True, False) if by_name else (False,):  # roh vor normalisiert
                 self._claim_round(grants, by_role, names, taken, rank, by_name, exact)
 
+    def _claim_normalized(self, grants, by_role, names, taken, rank):
+        """Normalisierter Rang (R543): je Lead die juengste passende Freigabe vor seinem Start."""
+        leads = sorted(
+            (lead for group in by_role.values() for lead in group),
+            key=lambda n: n["started"],
+        )
+        for lead in leads:
+            if lead["key"] in taken:
+                continue
+            hits = [
+                (key, grant)
+                for key, grant in grants
+                if grant["lead"] == lead["role"]
+                and lead["started"] >= grant["since"]
+                and grant["session_id"] in ("", lead["session_id"])
+                and self._name_hit(grant, names[lead["key"]][rank : rank + 1], False)
+            ]
+            if hits:
+                key = max(hits, key=lambda kv: kv[1]["since"])[0]
+                if key in self.claims:
+                    continue  # juengste Freigabe vergeben: aelteren Plan nicht nehmen
+                self.claims[key] = lead["key"]
+                taken.add(lead["key"])
+
     def _claim_round(self, grants, by_role, names, taken, rank, by_name, exact):
+        if by_name and not exact:
+            self._claim_normalized(grants, by_role, names, taken, rank)
+            return
         for key, grant in grants:
             if key in self.claims:
                 continue
@@ -953,7 +980,7 @@ class _Builder:
     @staticmethod
     def _name_hit(grant: dict, names: list[str], exact: bool) -> bool:
         if exact:
-            return any(grant["phase"].strip().casefold() == n.casefold() for n in names)
+            return any(str(grant["phase"]).strip().casefold() == n.casefold() for n in names)
         return any(phase_matches(grant["phase"], n) for n in names)
 
     def on_package(self, event, ts, sid):

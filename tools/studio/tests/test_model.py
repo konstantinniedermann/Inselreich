@@ -2773,6 +2773,21 @@ class PlanAndImplGrantTest(unittest.TestCase):
         self.assertEqual(used, {"plan-REL-14": 0, "impl-REL-14": 1})
         self.assertEqual(state["lead_phases"][f"{SA}:LF"], "impl-REL-14")
 
+    def test_older_plan_grant_does_not_steal_later_impl_lead(self):
+        events = [
+            grant(1, SA, "plan-REL-14", 1, 0),
+            *lead_with_package(5, SA, "LP", package=""),
+            grant(50, SA, "impl-REL-14", 10, 3),
+            *lead_with_package(60, SA, "LI", package="REL-14"),
+            *worker(70, SA, "LI", "WI1", stop_at=75, package="REL-14-T01"),
+            *worker(80, SA, "LI", "WI2", stop_at=85, package="REL-14-T02"),
+        ]
+        state = build(events, now=2000, session="all")
+        used = {b["phase"]: b["used"] for b in state["budgets"]}
+        self.assertEqual(used, {"plan-REL-14": 0, "impl-REL-14": 2})
+        self.assertEqual(state["lead_phases"][f"{SA}:LI"], "impl-REL-14")
+        self.assertEqual(state["lead_phases"][f"{SA}:LP"], "plan-REL-14")
+
     def test_exact_raw_phase_beats_normalized(self):
         events = [
             grant(1, SA, "impl-REL-14", 4, 1),
