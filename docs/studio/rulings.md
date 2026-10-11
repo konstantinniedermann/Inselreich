@@ -6190,3 +6190,15 @@ Regelbezug: gates.md Kombiniertes Gate, R553 V1, R558, R560 · Kosten bei Irrtum
 im Gate Merge per Ruling bestätigt wird.
 
 Entscheider: L0 · Anlass: Berichte lead-tech plan-TOOL-CONTROLLER-HAERTUNG, lead-qa gate-TOOL-CONTROLLER-HAERTUNG · ADR: —
+
+## R562 · 2026-10-11 · Merge-Commit TOOL-GATE-ENSEMBLE bleibt; Vorfall an die Retro
+
+Ruling: Der Merge `a8d9dcac` → `main` liegt als `6ffa7f81` mit der Nachricht von R560 vor, weil der L0-Commit den offenen
+`--no-commit`-Merge des Integrators einfing (Ursache bei L0). Inhalt geprüft (`make check`, `make check-ci-perf` Exit 0). Kein
+Umschreiben der Historie (Verfassung §6). Bis zur Retro: L0 committet auf `main` nur, wenn kein Integrator läuft und kein
+`.git/MERGE_HEAD` besteht. Befund in `docs/beobachtungen.md`, Abhilfe (Merge im Worktree `integrate` oder Guard) entscheidet die
+Session-Ende-Retro.
+
+Regelbezug: Verfassung §6, R224, STUDIO.md Integrator · Kosten bei Irrtum: eine irreführende Commit-Nachricht in der Historie.
+
+Entscheider: L0 · Anlass: Bericht production-integrator MERGE-TOOL-GATE-ENSEMBLE · ADR: —
