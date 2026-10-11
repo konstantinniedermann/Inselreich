@@ -67,7 +67,7 @@ Sonst Datei teilen (z. B. `balance-monument-c.test.ts` für Lauf C), **nie** das
 
 ```bash
 npx vitest run tests/sim/balance.test.ts tests/sim/balance-merchants.test.ts tests/sim/balance-edicts.test.ts; echo EXIT=$?
-git diff --stat main -- 'tests/sim/balance*.test.ts' tests/sim/e0Pins.ts tests/sim/e1Pins.ts tests/sim/seePins.ts; echo EXIT=$?
+git diff --stat main...HEAD -- 'tests/sim/balance*.test.ts' tests/sim/e0Pins.ts tests/sim/e1Pins.ts tests/sim/seePins.ts; echo EXIT=$?
 ```
 
 Erwartung: Tests grün; der Diff nennt **nur** `tests/sim/balance-monument.test.ts` (bzw. die geteilten neuen Dateien).

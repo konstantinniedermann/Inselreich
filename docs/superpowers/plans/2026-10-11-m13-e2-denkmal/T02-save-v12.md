@@ -62,6 +62,8 @@ Rundlauf und Hash-Pins zwischen zwei Commits rot (Muster M13-E1 T02).
   - **AK-25a–k:** je Zeile der Tabelle F ein `it.each`-Fall, genau das genannte Ergebnis; 25k: `running`, alle Reste 0
     → ok, nach einem `step` … erst mit T05 erfüllbar: hier nur «lädt ok» prüfen, der `step`-Teil steht als
     `it.todo('AK-25k step → T05')` und wird in T05 eingelöst (Ledger).
+  - **AK-25 A6 (eigenes `it`):** `stage 3` mit `running true` → `'Beschädigter Spielstand'`, kein Wurf (kein Zugriff
+    auf `MONUMENT_STAGES[3]`); `stage 3`, `running false`, `monumentDone true`, `delivered` alle 0 → ok.
   - **AK-26:** `version: 13` → `'Unbekannte Version'`, Text `{"version": 12` → `'Ungültiges Format'`, kein Wurf;
     `friendlyReason` beider Gründe nicht leer.
 

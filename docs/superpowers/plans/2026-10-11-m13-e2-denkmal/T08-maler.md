@@ -19,7 +19,8 @@ je Bildstufe in einer **neuen Datei**, damit sie nicht mit den Platzhaltern aus 
 ## Schnittstelle
 
 ```ts
-// src/render/monumentSprite.ts — nur `import type { IsoPainter } from './sprites'` (kein Laufzeit-Kreis)
+// src/render/monumentSprite.ts — Laufzeit-Importe nur aus './isoBase' (ISO_H, project), './palette', './limits';
+// `import type { IsoPainter } from './sprites'`; NIE aus './iso' oder './sprites' zur Laufzeit (iso.ts importiert diese Datei in T09)
 export type MonumentImageStage = 0 | 1 | 2 | 3 | 4;
 /** Höhe des Körpers in ISO_H-Einheiten je Bildstufe; streng steigend; [4] in [2,8; 3,0], [0] ≤ 0,3. */
 export const MONUMENT_HEIGHTS: readonly [number, number, number, number, number];
@@ -83,4 +84,4 @@ make lint; echo EXIT=$?
 ## Bericht
 
 Testnamen, Rot-Zeile, Exit-Codes, Messwerte H(0…4), Zahl der Zeichenbefehle je Stufe; ob ein Laufzeit-Import auf
-`sprites.ts` besteht (muss «nein» sein).
+`sprites.ts` oder `iso.ts` besteht (muss «nein» sein).

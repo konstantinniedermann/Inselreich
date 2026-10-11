@@ -109,5 +109,5 @@ make lint; echo EXIT=$?
 ## Bericht
 
 Testnamen je Prüfpunkt, eine Zeile Rot-Ausgabe, Exit-Codes, `git diff --stat main...HEAD`, Liste der Platzhalter
-(Datei, Grund, welcher Test). Bestätigen: `git diff main -- 'tests/sim/balance*' tests/sim/e0Pins.ts
+(Datei, Grund, welcher Test). Bestätigen: `git diff main...HEAD -- 'tests/sim/balance*' tests/sim/e0Pins.ts
 tests/sim/e1Pins.ts tests/sim/seePins.ts` leer. Der Controller notiert den abgenommenen Commit-Hash im Ledger.

@@ -47,8 +47,13 @@ Denkmal-Güter je 20, Holz 100.
 - Zustände nur über Sim-Aktionen und erlaubte Testsetzungen (`delivered`, `stage`, `monumentDone` von Hand ist
   zulässig, solange V1–V9 gelten; `stage 3` heisst `monumentDone true`). `m13e2-bild-4`: `stage 3`, `monumentDone
 true`.
-- `m13e2-v13`: eigene Ausgabe in `writeScenarios` (eine Zusatzdatei `m13e2-v13.json` in `SCENARIO_OUT`), keine
-  Aufnahme in `SCENARIOS`; ein Test prüft, dass `deserialize` sie mit `'Unbekannte Version'` abweist.
+- `m13e2-v13`: Zusatzdatei `m13e2-v13.json` über `writeExtraSaves` (nicht `writeScenarios`), keine Aufnahme in
+  `SCENARIOS`; ein Test prüft, dass `deserialize` sie mit `'Unbekannte Version'` abweist.
+- **Erlaubte Anpassungen bestehender Tests in `scenario-saves.test.ts` (je Ledger-Vermerk, Plan-Review B1):** die
+  exakte Namensliste um die zwölf `m13e2-*`-Namen ergänzen; `WON_AFTER_FIRST_TICK` um alle `m13e2-*` mit `won = true`
+  ergänzen (Muster `m13-ziel1`); der Zählvergleich zu `writeScenarios` bleibt unverändert, weil `m13e2-v13.json`
+  **nicht** über `writeScenarios` entsteht, sondern über eine eigene Funktion `writeExtraSaves(out)` in `scenarios.ts`
+  (gleicher Befehl/Ordner, eigener Aufruf). Jede weitere Änderung an bestehenden Tests ist Stopp und Meldung.
 - `scenario-saves.test.ts`: jeder neue Stand lädt über `deserialize` (ok) und prüft die Felder der Tabelle
   (`wonMerchants`, `monument`-Zustand, Reste, `buy`, `wonSpice`, `monumentDone`).
 
@@ -63,8 +68,11 @@ true`.
 npx vitest run tests/sim/monument.test.ts tests/sim/scenario-saves.test.ts; echo EXIT=$?   # rot
 ```
 
-- [ ] **Schritt 2: Umsetzen** (Helfer, Szenarien). AK-16/49 dürfen ohne Codeänderung in `src/` grün werden; zeigt
-      einer einen Unterschied, ist das ein Befund in `monument.ts` (Ursache im Bericht, Fix in dieser Task).
+- [ ] **Schritt 2: Umsetzen** (Helfer, Szenarien). AK-16/49 sind **Charakterisierungstests**: sie dürfen ohne
+      Codeänderung in `src/` grün werden; zeigt einer einen Unterschied, ist das ein Befund in `monument.ts` (Ursache im
+      Bericht, Fix in dieser Task). **Mutationsnachweis** statt Rot-vor-Umsetzung: lokal `paused` in `migrateV11ToV12`
+      bzw. beim Laden testweise auf `false` zwingen → AK-49 (Fall 1025) muss rot werden; Ausgabe-Zeile in den Bericht,
+      Mutation zurücknehmen, nicht committen.
 
 ```bash
 npx vitest run tests/sim/monument.test.ts tests/sim/scenario-saves.test.ts tests/sim/save-v12.test.ts; echo EXIT=$?

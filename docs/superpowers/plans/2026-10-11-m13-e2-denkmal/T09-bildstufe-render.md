@@ -24,7 +24,7 @@ export function imageStageOf(world: World, b: Building): MonumentImageStage;
 
 // iso.ts / sprites.ts / spriteCache.ts: jeweils letzter, optionaler Parameter `stage = 0`
 bodyHeight(def, b, stage = 0); bodyHull(def, b, stage = 0); spriteBounds(def, b, stage = 0);
-spriteKey(…, stage = 0); drawBody(…, stage = 0); type SilhouetteFn = (p, b, stage?) => void;
+spriteKey(…, stage = 0); drawBody(…, stage = 0); drawBodyCached(…, stage = 0); type SilhouetteFn = (p, b, stage?) => void;
 ```
 
 - `monumentImageStage`: (0, nein) → 0; (0, ja) → 1; (1, ·) → 2; (2, ·) → 3; (3, nein) → 4. Keine Anteils-Schwellen.
@@ -70,7 +70,11 @@ npx vitest run tests/render/monumentSprite.test.ts tests/render/picking.test.ts 
       ändert sich.
 
 ```bash
-npx vitest run tests/render; echo EXIT=$?
+npx vitest run tests/render/monumentSprite.test.ts tests/render/picking.test.ts tests/render/iso.test.ts \
+  tests/render/spriteCache.test.ts tests/render/sprites.test.ts tests/render/sprites-referenz.test.ts \
+  tests/render/variants.test.ts tests/render/sprites-kanten.test.ts tests/render/sprites-licht.test.ts \
+  tests/render/sprites-signale.test.ts tests/render/statusMarks.test.ts tests/render/overlays.test.ts; echo EXIT=$?
+npx vitest run tests/render/renderer.test.ts; echo EXIT=$?   # Zeittest (ZEITTESTS): nur bei freier Testsperre, R380
 npx tsc --noEmit; echo EXIT=$?
 make lint; echo EXIT=$?
 ```

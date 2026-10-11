@@ -46,7 +46,9 @@ monumentReserve(w, g)`; Ende: Glas geliefert in 1 … 16, Gewürz 0.
     Zukauf-Funktion direkt (Wiederholung der T04-Hilfstests als AK-Zeilen): `money = Preis` → 1, Geld 0; `money =
 Preis − 1` → 0, `serialize` gleich; Lager und `sellPct` unverändert. **qa B8:** Lager unter Reserve (Stein 12) und
     `buy` an → nur Kauf, Lager bleibt 12; Handel wird mitten im Abschnitt aufgehoben bzw. die Amtsstube abgerissen →
-    Preis ab dem nächsten Zug 15; Häuser wachsen von 60 auf 80 Kaufleute → Glas-Reserve 48 → 64 ab dem nächsten Zug.
+    Preis ab dem nächsten Zug 15; Häuser wachsen von 60 auf 80 Kaufleute → Glas-Reserve 48 → 64 ab dem nächsten Zug; Häuser schrumpfen von 80 auf
+    60 → Reserve 64 → 48, Glas 60 liefert ab dem nächsten Zug wieder aus dem Lager; leeres Lager (`stock = 0`) mit `buy`
+    an → Kauf, Lager bleibt 0; mit `buy` aus → nichts, kein Wurf.
   - **AK-13 Abschluss:** letzter Rest im Zug-Tick → im selben Tick `running false`, `stage +1`, `delivered` 0; nach
     Abschnitt 3 `monumentDone true`, `won`/`wonMerchants`/`wonSpice` unverändert; alle Reste 0 gesetzt und `paused` →
     Abschluss im nächsten Tick (auch ohne Zug-Tick).

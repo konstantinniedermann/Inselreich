@@ -50,7 +50,8 @@ export function mapDemolishAllowed(w: World, id: number): boolean;
 - Verdrahtung: Knopf und Taste rufen denselben `confirmStep` (ein Zustand im App-Zustand); `demolish true` → bestehende
   Abriss-Aktion **genau einmal**. Kachel-Abriss und Abriss-Zug fragen `mapDemolishAllowed`; bei `false` bleibt das
   Denkmal stehen, Meldung `MAP_SKIP_TEXT` (einmal je Zug), Häuser im selben Zug werden abgerissen.
-- `REASON_TABLE`: Zeilen für `'Erst nach dem Kaufleute-Ziel'`, `'Nur auf der Heimatinsel'`, `'Es gibt schon ein
+- `REASON_TABLE` (Pflichtfeld `source`: `'placement'` für die drei Bauplatz-Gründe, neuer Wert `'monument'` im Quell-Typ
+  für die fünf Aktionsgründe): Zeilen für `'Erst nach dem Kaufleute-Ziel'`, `'Nur auf der Heimatinsel'`, `'Es gibt schon ein
 Denkmal'`, `'Kein Denkmal'`, `'Abschnitt läuft'`, `'Denkmal fertig'`, `'Ungültiges Gut'`, `'Ungültiger Wert'`, je
   Text unverändert (Muster «Ungültiges Edikt»). Geldgrund über die bestehende Zeile `^Zu wenig Geld$` mit
   `ctx.cost = { money: MONUMENT_STAGES[stage].money, wood: 0, tools: 0, stone: 0 }`.
@@ -64,7 +65,8 @@ src/ui/input.ts src/ui/inspect.ts | head -40`.
     nicht laufend `true`, anderes Gebäude `false`.
   - `tests/ui/demolishConfirm.test.ts`, Fälle **C1–C7** aus Anhang 08 C wörtlich als `it` (C2 mit allen drei
     Eingabefolgen; C6 Haus und Amtsstube; C7 über `mapDemolishAllowed` und den reinen Teil des Abriss-Zugs, falls
-    `demolishStroke` dafür einen Helfer braucht: neuer reiner Helfer `strokeTargets`, sonst nur `mapDemolishAllowed`).
+    `demolishStroke` dafür einen Helfer braucht: neuer reiner Helfer `strokeTargets` in `src/ui/demolishConfirm.ts`, Test in `tests/ui/demolishConfirm.test.ts`; sonst
+    nur `mapDemolishAllowed`).
   - `tests/ui/hints.test.ts`: alle acht Gründe U-7 wörtlich; «Zu wenig Geld: 4000 nötig, 100 vorhanden» mit
     `ctx.cost` des Abschnitts.
 

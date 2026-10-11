@@ -72,7 +72,7 @@ npx vitest run tests/ui/goal.test.ts tests/ui/monumentView.test.ts tests/ui/soun
 
 ```bash
 npx vitest run tests/ui/goal.test.ts tests/ui/monumentView.test.ts tests/ui/soundEvents.test.ts tests/ui/inspect.test.ts \
-  tests/ui/crisisLog.test.ts tests/audio tests/assets; echo EXIT=$?
+  tests/ui/crisisLog.test.ts tests/audio/sound.test.ts tests/audio/buildSounds.test.ts tests/assets/assets.test.ts; echo EXIT=$?
 npx tsc --noEmit; echo EXIT=$?
 make lint; echo EXIT=$?
 ```

@@ -41,9 +41,12 @@ Anhang 07 A, C) · blocked-by T11 und ART-Hash T09 (Schritt 0) · Grösse M (≈
   - **AK-35** `tests/ui/buildMenu.test.ts` (neu): `tierPreviewLine('monument') === null`; Tooltip-Text des Eintrags
     enthält die Zeile U-6 wörtlich; `lockedToolText(w, { kind: 'build', defId: 'monument' })` vor Ziel 2 → «Denkmal:
     Erst nach dem Kaufleute-Ziel»; nach Ziel 2 `null`; kein Hotkey für `monument` in der Tastenliste.
-  - Hilfstest (kein eigenes AK, Browser-Abnahme AK-41 in T15): reiner Teil von `monumentSection.ts`, falls ausgelagert
-    (z. B. `monumentSectionModel(w)` = Zeilen + Knöpfe), in `tests/ui/monumentView.test.ts`; Meldungstext «Abschnitt 1
-    begonnen: Sockel».
+  - **Pflicht-Hilfstest** (kein eigenes AK, Browser-Abnahme AK-41 in T15): reines Modell `monumentSectionModel(w)` in
+    `monumentView.ts` (Zeilen, Grund-/ETA-Zeile, Knöpfe mit Text, `hidden`, `disabled`, Klasse); rot zuerst in
+    `tests/ui/monumentView.test.ts`: über 50 Ticks eines laufenden Abschnitts bleibt die **Menge** der Modell-Einträge
+    (Schlüssel, Reihenfolge) gleich, nur Werte ändern sich (U-5); Pause-Knopf-Text «Bau pausieren»/«Bau fortsetzen»;
+    Start-Knopf `unaffordable` bei `'Zu wenig Geld'`; Meldungstext «Abschnitt 1 begonnen: Sockel». `monumentSection.ts`
+    rendert nur dieses Modell.
 
 ```bash
 npx vitest run tests/ui/buildMenu.test.ts tests/ui/monumentView.test.ts; echo EXIT=$?   # rot
