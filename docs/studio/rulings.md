@@ -5507,3 +5507,56 @@ ohne Verhaltensänderung, daher ohne erneutes Review; Playtest OK in allen 4 Pun
 Regelbezug: gates.md Gate Merge, R502, R505 · Kosten bei Irrtum: ein Revert eines kleinen UI-Pakets.
 
 Entscheider: L0 · Anlass: Berichte Final-Review, Umsetzer, Playtester · ADR: —
+
+## R516 · 2026-10-11 · M13-E2-SIM T01: Sprite-Matrix-Schranke 1,30 → 1,40 (Denkmal 3×3)
+
+Ruling: `tests/render/variants.test.ts` AK7 (Zoom 2 / DPR 2) wird mit `monument` (3×3) in `BUILDING_DEFS` rot: Matrix
+91,1 MB gegen 87,24 MB (Faktor 1,357 statt ≤ 1,30 zu `SPRITE_CACHE_MAX_BYTES` 67,1 MB); unabhängig vom Platzhalter-Sprite.
+Der Cache bleibt per LRU gedeckelt; das Denkmal existiert höchstens einmal je Spiel. Schranke wird **1,40** (Kommentar
+mit Verweis R516), als Einzeiler in T01 durch den SIM-Umsetzer, damit SIM, ART und UI von grünem Hash abzweigen.
+Leistung bei Zoom 2 prüft der Browser-Lauf T15/T16 (Bildrate mit Denkmal im Bild, keine sichtbaren Ruckler).
+
+Regelbezug: ISO §10/Obergrenzen (render), R509 · Kosten bei Irrtum: mehr Cache-Wechsel bei Zoom 2, messbar im Browser-Lauf.
+
+Entscheider: L0 · Anlass: Entscheidungsbedarf Controller A M13-E2-SIM · ADR: —
+
+## R517 · 2026-10-11 · Gate Merge TOOL-BUENDEL-6 Strang A: OK, lokaler Merge
+
+Ruling: `tool/b6a` (T02 `17805835`/`ac372cb8`, T03 `526662ec`/`8f69f494`, Final-Fix `63806621`; T01 schon auf main)
+abgenommen: Reviews OK, Final-Review opus BEDENKEN (niedrig) → Fix ohne erneutes Review hingenommen; `make studio-test`
+Exit 0, Echtlauf `make push-check` Exit 0 (4:50 min, D1-Pfad unter Load 69). Merge lokal durch `production-integrator`
+nach UI-NAECHSTER-SCHRITT. Ab dem Merge ist **`make push-check`** der Push-Weg (Handbuch-Folge durch `studio-coach`).
+Die zwei Restrisiken (Lastwarten greift nicht bis Vitest-Start → D1 wird unter Parallelität Regelfall; `check-ci-perf`
+ohne Lastwarten → falsches Rot möglich) gehen nach `docs/beobachtungen.md`; Bewertung mit den Daten aus R514 V2.
+
+Regelbezug: gates.md Gate Merge, R503, R504, R514 · Kosten bei Irrtum: ein Werkzeug-Revert.
+
+Entscheider: L0 · Anlass: Schlussbericht Controller Strang A · ADR: —
+
+## R518 · 2026-10-11 · Merges UI-NAECHSTER-SCHRITT und Strang A erfolgt; Worktrees aufräumen; Handbuch-Folge push-check
+
+Ruling: Lokal gemergt `1a44799a` (UI-NAECHSTER-SCHRITT) und `1d6b0560` (TOOL-BUENDEL-6 Strang A), je `make check` und
+`make check-ci-perf` Exit 0; main `b5879e09`. Handbuch **1.47** (`4dfd2b87`, R514 V1/V3) abgenommen. **Aufräumen**
+(`lead-production`): Worktrees `b4`, `m13-e1-sim`, `m13-e1-ui`, `ui-gut-chip`, `b5`, `aufraeum-01`, `ui-tasten`,
+`ui-naechster-schritt`, `b6a` — alle Branches in main enthalten, getrackt sauber — per `git worktree remove` entfernen;
+vorher ungetrackte Ergebnisse (`.studio/qa/…`, Ledger `.superpowers/sdd/…`) nach `.studio/archiv/worktrees/<name>/`
+im Hauptcheckout sichern. Branches bleiben. **Handbuch-Folge** (`studio-coach`): Push-Ablauf und Integrator-Persona
+auf `make push-check` umstellen (ersetzt die Einzelkette; R503 D1–D4 nennen).
+
+Regelbezug: state.md „Fortsetzung“ Punkt 7, R496, R504, R517 · Kosten bei Irrtum: ein Worktree wird per `git worktree add` neu angelegt.
+
+Entscheider: L0 · Anlass: Berichte production-integrator · ADR: —
+
+## R519 · 2026-10-11 · Parallele Nutzer-Session c6709a04 (Design „Erweiterung“) geduldet; Deckel geteilt
+
+Ruling: Seit ≈ 08:30Z läuft eine zweite, vom Nutzer gestartete Session `c6709a04` (Brainstorming/Konzept „Erweiterung“ mit
+`lead-design`, Worktree `.worktrees/erweiterung-1`, Branch `design/erweiterung-1`). Abweichung von R129/R324 (eine aktive
+L0-Session je Repo) wird geduldet, weil sie nur Design-Doku in eigenem Worktree schreibt und der Nutzer sie selbst
+gestartet hat. Folgen für diese Session: Studio-Deckel ≤ 8 Agenten gilt **gemeinsam** — diese Session hält ≤ 6 eigene
+Agenten, solange die andere aktiv ist; keine Änderungen an `.worktrees/erweiterung-1`, `design/erweiterung-1` oder an
+Dateien, die sie für das Konzept braucht; Doku-Commits auf main nur mit eigenen Pfaden. Das Aufräumen (R518) liess
+den Worktree unberührt.
+
+Regelbezug: R129, R324, R329, R424 · Kosten bei Irrtum: Konflikt in einer Doku-Datei beim späteren Merge.
+
+Entscheider: L0 · Anlass: unbekannter Worktree beim Aufräumen, Events der Session c6709a04 · ADR: —
