@@ -16,6 +16,7 @@ import type { GoalView } from '../sim/queries';
 import type { BuildingDefId, UnlockDef, UnlockId, World } from '../sim/types';
 import { friendlyReason } from './hints';
 import { ISLAND_CYCLE_KEY, hotkeyLabel, toolName } from './hotkeys';
+import type { MonumentChip } from './monumentView';
 
 /** Name des zweiten Ziels (Setzung Spec M8 7). */
 export const SECOND_GOAL_NAME = 'Handelsstadt';
@@ -40,8 +41,11 @@ export interface GoalTexts {
 
 const pct = (current: number, target: number): number => Math.min(100, (current / target) * 100);
 
-/** Texte der Zielanzeige je Phase (Tabelle Spec M8 14.1). */
-export function goalTexts(view: GoalView): GoalTexts {
+/**
+ * Texte der Zielanzeige je Phase (Tabelle Spec M8 14.1). `chip` (Wahlziel Denkmal, M13-E2 U-8) wirkt nur in
+ * Phase 'done'; ohne `chip` bleiben alle Texte wie vor M13-E2.
+ */
+export function goalTexts(view: GoalView, chip?: MonumentChip | null): GoalTexts {
   const citizen = TIERS[3];
   const merchant = TIERS[4];
   switch (view.phase) {
@@ -77,11 +81,11 @@ export function goalTexts(view: GoalView): GoalTexts {
       };
     case 'done':
       return {
-        chip: `${THIRD_GOAL_NAME} · ${view.current} ${merchant.name}`,
-        title: 'Alle drei Ziele erreicht — freies Spiel',
+        chip: chip ? chip.chip : `${THIRD_GOAL_NAME} · ${view.current} ${merchant.name}`,
+        title: chip ? chip.title : 'Alle drei Ziele erreicht — freies Spiel',
         rest: `${THIRD_GOAL_NAME} erreicht · ${view.current} ${merchant.name}`,
         next: null,
-        fillPct: 100,
+        fillPct: chip ? chip.fillPct : 100,
       };
   }
 }

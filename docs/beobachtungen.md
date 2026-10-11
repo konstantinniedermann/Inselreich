@@ -290,3 +290,24 @@ Der gestärkte Test `tests/ui/goodFocus.test.ts` (AK-GC-08) belegt die Trennung 
   in einem Frame um mehr als einen Abschnitt, entsteht nur ein Chronik-Eintrag; (5) kein DOM-Test für die Zeile
   `rest-monument`. Ursprung: Controller D M13-E2-UI. Einschätzung: niedrig bis mittel (1–3 sind Kopplung über Anzeigetexte,
   bricht bei Textänderung still); Kandidat für Final-Review T18 oder ein Aufräum-Häppchen nach M13.
+
+### 2026-10-11 · M13-E2 Browser-Lauf 1: Layout unter 900 px, Texte, Test-Konstante
+
+- **Fundort:** `feat/m13-e2-ui` @ `e2660aa9`, Playtest T15 (`.studio/qa/m13-e2/48-*.png`) und T14-Review. Beobachtung:
+  (1) Bei 800×600 überlappen `#panel` und `#game` um 161 px (Panel `max-height: 38vh`, Karte `min-height: 300px`); dieselbe
+  Überlappung zeigen Inselchronik und Wohnhaus-Panel, der HUD ist 931 px breit und rechts abgeschnitten
+  (`overflow: hidden`). AK-M13E2-48 («keine Überlappung») ist damit nicht erfüllbar, ohne vorbestehendes Layout zu ändern.
+  (2) Im Bauplatz-Stand (Abschnitt nicht gestartet) steht schon der Knopf «Bau pausieren». (3) `buildMenu.ts:152`
+  erzeugt «Höchstens eine Denkmal» (Genus; Text generisch für alle `maxCount`-Gebäude). (4) «Denkmal: Abschnitt n fertig»
+  steht im Ereignis-Log, das bei «Krisen: aus» ausgeblendet ist; es bleibt der Toast (spec-konform, U-11). (5)
+  `tests/sim/balance-monument.test.ts:48` `RESERVE_TICKS = 1000` neben der Sim-Konstante 800 (nur Beobachtungszeitraum von
+  AK-20, unklar benannt). Ursprung: qa-playtester T15, qa-code-reviewer T14. Einschätzung: (1) mittel, Entscheid
+  `lead-design` (Desktop-first: schmale Fenster nur «stürzt nicht ab»); (2)–(5) niedrig.
+
+### 2026-10-11 · M13-E2 Final-Review: docs-check, Nächster-Schritt-Text
+
+- **Fundort:** Fix-Runde-Review (`docs/arc42.md:256`) und Final-Review T18 (`src/ui/guide.ts:130`). Beobachtung:
+  (1) `make docs-check` (Prettier) erkennt zerrissene Markdown-Tabellen nicht: ein unmaskiertes `|` im Code-Span einer
+  Tabellenzelle trennt die Zelle trotzdem. (2) `guide.ts:130`: Nach dem dritten Ziel sagt «Nächster Schritt» «Handelsstadt
+  erreicht — spiel frei weiter», ohne Hinweis auf das Denkmal (Playtest-Frage aus Spec §13). (3) Das Literal «Abreissen»
+  steht fünfmal im UI-Code (`inspect.ts` viermal, `app.ts` Esc-Zweig). Ursprung: qa-code-reviewer. Einschätzung: niedrig.

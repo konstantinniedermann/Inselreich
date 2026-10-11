@@ -5,6 +5,7 @@ import { UNLOCKS } from '../sim/defs/unlocks';
 import { buildingShown, entryOfBuilding, functionLock } from '../sim/unlocks';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import { GOODS } from '../sim/defs/goods';
+import { MONUMENT_GOODS } from '../sim/defs/monument';
 import { LEVELS } from '../sim/defs/levels';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/defs/timing';
@@ -94,6 +95,11 @@ export function crisisTooltipLines(defId: BuildingDefId): string[] {
   return lines;
 }
 
+/** U-6: Tooltip-Zeile des Denkmals; Gutnamen aus den Defs. */
+function monumentToolLine(): string {
+  return `Wahlziel in drei Abschnitten: ${MONUMENT_GOODS.map((g) => GOODS[g].name).join(', ')}`;
+}
+
 /** Tooltip-Zeilen ohne Sperrgrund (der kommt live dazu); alle Zahlen aus `src/sim/defs/`. */
 export function tooltipLines(tool: Tool): string[] {
   const key = hotkeyLabel(tool);
@@ -144,6 +150,7 @@ export function tooltipLines(tool: Tool): string[] {
   lines.push(...crisisTooltipLines(def.id));
   lines.push(`Standort: ${def.site.length ? def.site.map(siteText).join(', ') : 'frei'}`);
   if (def.maxCount?.n === 1) lines.push(`Höchstens eine ${def.name}`);
+  if (def.id === 'monument') lines.push(monumentToolLine());
   const preview = tierPreviewLine(def.id);
   if (preview) lines.push(preview);
   return lines;

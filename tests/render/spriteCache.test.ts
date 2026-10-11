@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import type { Building, BuildingDefId, Tier } from '../../src/sim/types';
-import { spriteBounds } from '../../src/render/iso';
+import { bodyHeight, bodyHull, spriteBounds } from '../../src/render/iso';
+import { readFileSync } from 'node:fs';
 import { SPRITE_CACHE_MAX_BYTES, SPRITE_MAX_BYTES } from '../../src/render/limits';
 import { drawBody } from '../../src/render/sprites';
 import { createSpriteCache, spriteKey, type SpriteSurface } from '../../src/render/spriteCache';
@@ -313,5 +314,51 @@ describe('H-R6 AK6 Zähler', () => {
     expect(s.entries).toBe(1);
     expect(s.bytes).toBe(f.made[0]!.width * f.made[0]!.height * 4);
     expect(f.made.length).toBe(1);
+  });
+});
+
+describe('M13-E2 T09 Bildstufe im Cache', () => {
+  const mono = mk('monument', 12, 7);
+  it('AK-M13E2-39 spriteKey ändert sich mit der Bildstufe, fehlende Stufe = 0', () => {
+    const d = BUILDING_DEFS.monument;
+    const k = (s?: number) =>
+      s === undefined ? spriteKey(d, mono, {}, 1, 1, 0) : spriteKey(d, mono, {}, 1, 1, 0, s);
+    expect(new Set([0, 1, 2, 3, 4].map((s) => k(s))).size).toBe(5);
+    expect(k()).toBe(k(0));
+  });
+  it('AK-M13E2-39 Schlüssel aller übrigen Gebäude unverändert; Höhe und Hülle gleich mit Bildstufe 0', () => {
+    for (const d of Object.values(BUILDING_DEFS)) {
+      if (d.id === 'monument') continue;
+      const b = mk(d.id, 12, 7, d.id === 'house' ? 2 : undefined);
+      expect(spriteKey(d, b, {}, 1.5, 2, 1, 0)).toBe(spriteKey(d, b, {}, 1.5, 2, 1));
+      expect(spriteKey(d, b, {}, 1.5, 2, 1, 3)).toBe(spriteKey(d, b, {}, 1.5, 2, 1)); // andere Gebäude kennen keine Stufe
+      expect(bodyHeight(d, b, 0)).toBe(bodyHeight(d, b));
+      expect(bodyHeight(d, b, 3)).toBe(bodyHeight(d, b));
+      expect(bodyHull(d, b, 0)).toEqual(bodyHull(d, b));
+      expect(spriteBounds(d, b, 0)).toEqual(spriteBounds(d, b));
+    }
+    expect(spriteKey(BUILDING_DEFS.market, mk('market'), {}, 1, 1, 0)).toBe(
+      'market|0|1|0|0|1000|1000',
+    );
+  });
+  it('AK-M13E2-39 Schlüsselaudit im Kopf nennt die Bildstufe', () => {
+    const src = readFileSync('src/render/spriteCache.ts', 'utf8');
+    const head = src.slice(0, src.indexOf('const UNCACHED'));
+    expect(head).toMatch(/Bildstufe/);
+  });
+  it('AK-M13E2-39 Eintrag Stufe 4 bei Zoom 2, DPR 2 bleibt unter SPRITE_MAX_BYTES und wird gecacht', () => {
+    const f = factory();
+    const c = createSpriteCache({ factory: f.make });
+    c.beginFrame(2, 2);
+    c.beginFrame(2, 2);
+    const t = target();
+    expect(c.draw(t.ctx, cam(0, 0, 2), BUILDING_DEFS.monument, mono, undefined, 0, 4)).toBe(true);
+    const st = c.stats();
+    expect(st.bytes).toBeGreaterThan(0);
+    expect(st.bytes).toBeLessThanOrEqual(SPRITE_MAX_BYTES);
+    expect(st.bypassed).toBe(0);
+    // Stufe 3 ist ein eigener Eintrag
+    expect(c.draw(t.ctx, cam(0, 0, 2), BUILDING_DEFS.monument, mono, undefined, 0, 3)).toBe(true);
+    expect(c.stats().entries).toBe(2);
   });
 });

@@ -5,6 +5,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import type { Building, World } from '../sim/types';
 import { worldToScreen, type Camera, type TileRange } from './camera';
 import { spriteBounds } from './iso';
+import { imageStageOf } from './monumentStage';
 import { PALETTE } from './palette';
 
 // --- Darstellungswerte (keine Spielwerte) ---
@@ -82,7 +83,7 @@ export function drawStatusMarks(
       continue;
     const mark = statusMarkOf(b.state);
     if (!mark) continue;
-    const box = spriteBounds(BUILDING_DEFS[b.defId], b);
+    const box = spriteBounds(BUILDING_DEFS[b.defId], b, imageStageOf(world, b));
     const top = worldToScreen(cam, { x: box.x + box.w / 2, y: box.y });
     const cx = top.x;
     const by = top.y - GAP_PX - PULSE_PX + bob; // Unterkante der Marke

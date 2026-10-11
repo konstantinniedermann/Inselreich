@@ -630,12 +630,12 @@
     "marks": 0
   },
   "monument|waitingInput|z1": {
-    "hash": 1008496861,
+    "hash": 3266430096,
     "length": 623,
     "marks": 1
   },
   "monument|storageFull|z1": {
-    "hash": 454053204,
+    "hash": 2842720839,
     "length": 901,
     "marks": 1
   },
@@ -645,8 +645,8 @@
     "marks": 0
   },
   "monument|noForest|z1": {
-    "hash": 4085337315,
-    "length": 1228,
+    "hash": 858364247,
+    "length": 1306,
     "marks": 1
   },
   "monument|burning|z1": {
@@ -1290,12 +1290,12 @@
     "marks": 0
   },
   "monument|waitingInput|z2": {
-    "hash": 680663353,
+    "hash": 3366453662,
     "length": 623,
     "marks": 1
   },
   "monument|storageFull|z2": {
-    "hash": 773974493,
+    "hash": 1197876558,
     "length": 901,
     "marks": 1
   },
@@ -1305,8 +1305,8 @@
     "marks": 0
   },
   "monument|noForest|z2": {
-    "hash": 2144540500,
-    "length": 1183,
+    "hash": 3636429377,
+    "length": 1354,
     "marks": 1
   },
   "monument|burning|z2": {

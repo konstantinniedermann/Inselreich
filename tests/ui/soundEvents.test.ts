@@ -167,3 +167,35 @@ describe('M10 Ton unlock', () => {
     expect(diffSoundEvents(soundSnapshot(b), soundSnapshot(b))).toEqual([]);
   });
 });
+
+describe('M13-E2 Ton monumentDone (AK-M13E2-33, U-12)', () => {
+  it('genau beim Übergang false → true', () => {
+    const w = createWorld(1);
+    const before = soundSnapshot(w);
+    w.monumentDone = true;
+    expect(diffSoundEvents(before, soundSnapshot(w))).toEqual(['monumentDone']);
+  });
+
+  it('geladener Stand mit monumentDone true: nichts', () => {
+    const w = createWorld(1);
+    w.monumentDone = true;
+    expect(diffSoundEvents(soundSnapshot(w), soundSnapshot(w))).toEqual([]);
+  });
+
+  it('QA-B1 Einmal-Beweis: false,false,true,true,true → genau einmal; nach Laden keines', () => {
+    const w = createWorld(1);
+    const seq: boolean[] = [false, false, true, true, true];
+    let prev = soundSnapshot(w);
+    const heard: string[] = [];
+    for (const done of seq) {
+      w.monumentDone = done;
+      const cur = soundSnapshot(w);
+      heard.push(...diffSoundEvents(prev, cur));
+      prev = cur;
+    }
+    expect(heard.filter((e) => e === 'monumentDone')).toHaveLength(1);
+    // «Laden»: neue Basis mit true, danach gleicher Stand
+    const loaded = soundSnapshot(w);
+    expect(diffSoundEvents(loaded, soundSnapshot(w))).toEqual([]);
+  });
+});

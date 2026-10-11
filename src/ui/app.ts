@@ -99,11 +99,21 @@ import {
 } from './hover';
 import { highlightShip, homeKontorPanel, lossMessages, shipHover, type ShipActions } from './ships';
 import { targetTile } from './target';
+import {
+  CONFIRM_TEXT,
+  MAP_SKIP_TEXT,
+  confirmStep,
+  mapDemolishAllowed,
+  type ConfirmState,
+} from './demolishConfirm';
 import { bindInput, hintKey, strokeEndNotice, type InputAction, type InputBinding } from './input';
 import { clearForest, plantForest } from '../sim/forest';
 import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../sim/tax';
 import { lockedTierFor } from './taxView';
 import { setEdict } from '../sim/edicts';
+import { setMonumentBuy, setMonumentPaused, startMonumentStage } from '../sim/monument';
+import { MONUMENT_STAGES } from '../sim/defs/monument';
+import { monumentStartedText } from './monumentView';
 import { setPaused } from '../sim/pause';
 import { EDICT_COST } from '../sim/defs/edicts';
 import { edictSuccessText } from './edictView';
@@ -122,6 +132,7 @@ import { resolveLogClick } from './logTarget';
 import { renderEventLog, updateEventLog } from './eventLogView';
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
+import { MONUMENT_DONE_TEXT, monumentEvents, monumentSnapshot } from './monumentView';
 import { crisisLogEntries, crisisLogVisible, pushLog, type LogEntry } from './crisisLog';
 import { bindMessages, closeClosableToast, replaceMessage, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
@@ -632,6 +643,7 @@ function launch(
   /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   const setPanel = (panel: PanelState): void => {
     state.panel = panel;
+    demolishConfirm = confirmStep(world, demolishConfirm, { kind: 'reset' }).state;
     connectPreview = null;
     panelEl.classList.toggle('card--rest', panel.kind === 'none');
     if (panel.kind === 'inspect') {
@@ -703,6 +715,35 @@ function launch(
                 cost: { money: EDICT_COST, wood: 0, tools: 0, stone: 0 },
               }),
             );
+          refresh();
+        },
+        startMonumentStage: () => {
+          const stage = world.monument?.stage ?? 0;
+          const r = startMonumentStage(world);
+          if (r.ok) {
+            showMessage(monumentStartedText(stage));
+            sound.play('build');
+          } else
+            showError(
+              friendlyReason(world, r.reason, {
+                cost: {
+                  money: MONUMENT_STAGES[stage]?.money ?? 0,
+                  wood: 0,
+                  tools: 0,
+                  stone: 0,
+                },
+              }),
+            );
+          refresh();
+        },
+        setMonumentPaused: (paused) => {
+          const r = setMonumentPaused(world, paused);
+          if (!r.ok) showError(friendlyReason(world, r.reason));
+          refresh();
+        },
+        setMonumentBuy: (good, on) => {
+          const r = setMonumentBuy(world, good, on);
+          if (!r.ok) showError(friendlyReason(world, r.reason));
           refresh();
         },
         setUpgradeStop: (tier, stopped) => {
@@ -826,6 +867,8 @@ function launch(
   // Geld-Fehler beim Strassen-Ziehen nur einmal pro Zug melden; jede Aktion ausserhalb eines Zugs setzt zurück
   let dragMoneyToastShown = false;
   let dragForestFailureShown = false;
+  let dragMapSkipShown = false; // Meldung «Denkmal nur im Panel abreissen» einmal je Zug (U-15)
+  let demolishConfirm: ConfirmState = { armedId: null }; // Zwei-Klick-Abriss des Denkmals (U-14)
   /** Abriss-Zug (I-041): Anbindung vor dem Zug, besuchte und entfernte Wegkacheln. */
   let stroke: { before: Set<number>; tiles: number; removed: number; island: number } | null = null;
   const forestCost = (tool: { kind: 'clearForest' | 'plantForest' }): Cost =>
@@ -900,6 +943,15 @@ function launch(
   };
   /** Abriss aus dem Info-Panel: Knopf «Abreissen» und Taste Entf gehen hier durch. */
   const demolishFromPanel = (id: number): void => {
+    const step = confirmStep(world, demolishConfirm, { kind: 'press', id });
+    demolishConfirm = step.state;
+    if (!step.demolish) {
+      // Denkmal mit Fortschritt: erster Druck macht scharf (Knopf und Taste gleich)
+      const btn = panelEl.querySelector<HTMLElement>('[data-field="demolish"]');
+      if (btn) btn.textContent = step.buttonText ?? CONFIRM_TEXT;
+      refresh();
+      return;
+    }
     const r = demolishBuilding(id);
     if (r.ok) {
       sound.play('demolish');
@@ -934,6 +986,9 @@ function launch(
     }
     if (a.type === 'cancel') {
       clearGoodFocus();
+      demolishConfirm = confirmStep(world, demolishConfirm, { kind: 'reset' }).state; // auch wenn nur ein Toast schliesst
+      const demolishBtn = panelEl.querySelector<HTMLElement>('[data-field="demolish"]');
+      if (demolishBtn) demolishBtn.textContent = 'Abreissen'; // Knopf zurück, falls das Panel offen bleibt
       if (closeClosableToast()) return;
       setPanel({ kind: 'none' });
       selectTool({ kind: 'select' });
@@ -942,6 +997,7 @@ function launch(
     if (a.type === 'dragEnd') {
       dragMoneyToastShown = false;
       dragForestFailureShown = false;
+      dragMapSkipShown = false;
       if (stroke !== null) {
         const n = strokeEndNotice(newlyCut(stroke.before, world), stroke.removed, stroke.tiles);
         if (n?.kind === 'warn') showMessage(n.text, 'warn');
@@ -953,6 +1009,7 @@ function launch(
     if (!a.dragging) {
       dragMoneyToastShown = false;
       dragForestFailureShown = false;
+      dragMapSkipShown = false;
     }
     const tool = state.tool;
     const tile = tileAt(world.islands[a.island]!, a.x, a.y);
@@ -1006,10 +1063,15 @@ function launch(
           stroke.removed++;
           sound.play('demolish');
         }
+      } else if (tile?.buildingId != null && !mapDemolishAllowed(world, tile.buildingId)) {
+        if (!dragMapSkipShown) showMessage(MAP_SKIP_TEXT, 'warn');
+        dragMapSkipShown = true;
       }
     } else if (tile?.buildingId != null) {
-      const r = demolishBuilding(tile.buildingId);
-      if (r.ok) sound.play('demolish');
+      if (!mapDemolishAllowed(world, tile.buildingId)) {
+        if (!dragMapSkipShown) showMessage(MAP_SKIP_TEXT, 'warn');
+        dragMapSkipShown = true; // Zug, der auf dem Denkmal beginnt: Meldung nur einmal
+      } else if (demolishBuilding(tile.buildingId).ok) sound.play('demolish');
     } else {
       const r = removeRoad(world, a.x, a.y, a.island);
       if (!r.ok) showRoadFailure(r.reason, a.dragging, a.island);
@@ -1265,6 +1327,9 @@ function launch(
   let prevOrderVisible = orderVisible(world);
   // Nach dem Laden ist der geladene Stand die Vergleichsbasis: eine laufende Krise erzeugt keinen Eintrag
   let prevCrisis = crisisView(world);
+  let prevMonument = monumentSnapshot(world);
+  /** Start des Aufflammens (U-12): nur beim Übergang monumentDone false → true, nie nach dem Laden. */
+  let monumentFlareStart: number | undefined;
   let last = performance.now();
   let lastAmbienceMs = -Infinity;
   let fireMemo: FireMemo = null;
@@ -1358,6 +1423,18 @@ function launch(
         state.eventLog = pushLog(state.eventLog, logged);
         for (const e of logged) if (e.toast !== null) showMessage(e.text, e.toast);
       }
+      const curMonument = monumentSnapshot(world);
+      const monumentLogged = monumentEvents(prevMonument, curMonument, world.tick);
+      if (!prevMonument.monumentDone && curMonument.monumentDone)
+        monumentFlareStart = performance.now();
+      prevMonument = curMonument;
+      if (monumentLogged.length > 0) {
+        state.eventLog = pushLog(state.eventLog, monumentLogged);
+        for (const e of monumentLogged) {
+          if (e.text === MONUMENT_DONE_TEXT) showMessage(e.text, 'info', true, true);
+          else if (e.toast !== null) showMessage(e.text, e.toast);
+        }
+      }
       const msg = orderMessageFor(prevOrder, prevOrderVisible, world);
       if (msg) showMessage(msg);
       prevOrderVisible = orderVisible(world);
@@ -1403,6 +1480,7 @@ function launch(
         boom: preview.boom ?? inputs.render.boom,
         raster: preview.raster === true,
         focus: goodFocus,
+        ...(monumentFlareStart === undefined ? {} : { monumentFlareStart }),
       };
       render(ctx, world, state.cam, layers, state.hover, state.selectedId, view, fx);
       if (connectPreview) drawPathPreview(ctx, state.cam, connectPreview);

@@ -6,6 +6,7 @@ import { cycleOf } from '../sim/levels';
 import type { Building, World } from '../sim/types';
 import { worldToScreen, type Camera, type TileRange } from './camera';
 import { spriteBounds } from './iso';
+import { imageStageOf } from './monumentStage';
 import { PALETTE } from './palette';
 import { MARK_MIN_PX } from './statusMarks';
 
@@ -48,7 +49,7 @@ export function drawProgressRings(
     if (b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1) continue;
     const view = ringView(b, frac);
     if (!view) continue;
-    const box = spriteBounds(BUILDING_DEFS[b.defId], b);
+    const box = spriteBounds(BUILDING_DEFS[b.defId], b, imageStageOf(world, b));
     const top = worldToScreen(cam, { x: box.x + box.w / 2, y: box.y });
     const cx = top.x + s;
     const cy = top.y - GAP_PX - s / 2;

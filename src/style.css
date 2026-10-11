@@ -1208,3 +1208,49 @@ button.chip {
 .edict-when {
   color: var(--parchment-muted);
 }
+
+/* Denkmal-Panel, Abschnitt «Bau» (M13-E2 T12) */
+.monument-section {
+  margin-top: 8px;
+}
+.monument-rows {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.monument-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.monument-bar {
+  height: 8px;
+  background: var(--parchment-edge);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.monument-fill {
+  height: 100%;
+  background: var(--gold);
+}
+.monument-reserve {
+  color: var(--parchment-muted);
+}
+.monument-buy {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.monument-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+.monument-pause[hidden],
+.monument-start[hidden],
+.monument-row[hidden] {
+  display: none;
+}

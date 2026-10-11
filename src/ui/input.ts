@@ -10,6 +10,7 @@ import { shipAt } from '../render/shipLane';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
 import { hotkeyAction, isSaveChord, keyDownVerdict, type HotkeyAction } from './hotkeys';
+import { mapDemolishAllowed } from './demolishConfirm';
 import { isModalOpen } from './modal';
 import { pickTarget, type IslandTile } from './islandTools';
 import { createSpaceTap } from './spaceTap';
@@ -90,7 +91,7 @@ export function canDemolishTile(
   if (!tile || !isl) return false;
   // Das Kontor der Heimat bleibt stehen; das zweite Kontor meldet seinen Grund beim Abriss (Sim)
   if (tile.buildingId !== null && (island !== HOME || tile.buildingId !== isl.kontorId))
-    return true;
+    return mapDemolishAllowed(world, tile.buildingId); // Denkmal mit Fortschritt: nur im Panel (U-15)
   return tile.road;
 }
 

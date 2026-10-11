@@ -448,7 +448,9 @@ describe('Schatten und Bauvorschau', () => {
       expect(log.saves).toBe(log.restores);
       const b = mk(def.id, 12, 9);
       expect(log.events.filter((e) => e.op === 'fill').every((e) => e.alpha === 0.5)).toBe(true);
-      for (const p of log.allPoints) expect(inHull(bodyHull(def, b), p.x, p.y, 0.5)).toBe(true);
+      // Das Denkmal zeigt als Vorschau sein Ziel, die Bildstufe 4 (M13-E2 T09)
+      const hull = bodyHull(def, b, def.id === 'monument' ? 4 : 0);
+      for (const p of log.allPoints) expect(inHull(hull, p.x, p.y, 0.5)).toBe(true);
     }
   });
 });
@@ -598,7 +600,7 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
       school: 2,
       firestation: 2,
       townhall: 2, // Rückfall public (M10-S2, T-12)
-      monument: 2, // Platzhalter Rückfall public (M13-E2 T01, ersetzt in T09)
+      monument: 0, // M13-E2 T09: echter Maler, keine Wandfenster (Stufe 0)
       'fallback public 1': 2,
       'fallback public 2': 2,
     };
@@ -680,7 +682,9 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
     for (const d of DEFS)
       if (d.id !== 'kontor' && d.id !== 'kontor2' && d.id !== 'market')
         expect(always(d.id), d.id).toHaveLength(0);
-    for (const d of DEFS) expect(lightAnchors(d, mk(d.id)).length, d.id).toBeGreaterThan(0);
+    // Das Denkmal hat keine Wandfenster (M13-E2 T09); sein Leuchtfeuer ist keine Fensterleuchte
+    for (const d of DEFS.filter((x) => x.id !== 'monument'))
+      expect(lightAnchors(d, mk(d.id)).length, d.id).toBeGreaterThan(0);
   });
 
   it('RF-6c drawAir nur AIR_COLORS, drawBody ohne AIR_COLORS und SHADOW (alle Typen, Fallback)', () => {

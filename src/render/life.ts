@@ -12,6 +12,7 @@ import type { Phase } from './daynight';
 import { ISO_H, ISO_W, project, type Pt } from './iso';
 import { cap } from './limits';
 import { LIGHT } from './light';
+import { imageStageOf } from './monumentStage';
 import { PALETTE, mixHex, rgbOfCss, rgbaOf, toInk } from './palette';
 import { bodyPolygons, lightAnchors, type LightAnchor } from './sprites';
 import { coastField, fieldWorld, type Field } from './terrainField';
@@ -396,11 +397,12 @@ export function coastFor(world: World): Field {
  * Haustufe ab, nicht von der Lage; der Cache hat damit höchstens (Typen × 3) Einträge.
  */
 const anchorCache = new Map<string, readonly LightAnchor[]>();
-export function anchorsFor(def: BuildingDef, b: Building): readonly LightAnchor[] {
-  const key = def.id === 'house' ? `house:${b.house?.tier ?? 1}` : def.id;
+export function anchorsFor(def: BuildingDef, b: Building, stage = 0): readonly LightAnchor[] {
+  const key =
+    def.id === 'house' ? `house:${b.house?.tier ?? 1}` : stage > 0 ? `${def.id}:s${stage}` : def.id;
   let a = anchorCache.get(key);
   if (!a) {
-    a = lightAnchors(def, b);
+    a = lightAnchors(def, b, stage);
     anchorCache.set(key, a);
   }
   return a;
@@ -592,11 +594,15 @@ export const polyCacheStats = (world: World): { size: number; hits: number } => 
 export function buildingClips(cam: Camera, world: World, b: Building): Poly[][] {
   let c = polyCache.get(world);
   if (!c || c.size >= POLY_CACHE_MAX) polyCache.set(world, (c = new Map()));
-  const key = `${b.defId}|${b.x}|${b.y}|${b.connected}|${b.house?.tier ?? 0}|${b.state}`;
+  const stage = imageStageOf(world, b);
+  const key = `${b.defId}|${b.x}|${b.y}|${b.connected}|${b.house?.tier ?? 0}|${b.state}|${stage}`;
   let e = c.get(b.id);
   if (e?.key === key) polyCacheHits++;
   else {
-    e = { key, groups: groupDisjoint(pruneContained(bodyPolygons(BUILDING_DEFS[b.defId], b))) };
+    e = {
+      key,
+      groups: groupDisjoint(pruneContained(bodyPolygons(BUILDING_DEFS[b.defId], b, 0, stage))),
+    };
     c.set(b.id, e);
   }
   return e.groups.map((g) => g.map((p) => p.map((q) => worldToScreen(cam, q))));

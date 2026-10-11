@@ -18,6 +18,9 @@ import {
   drawBoomCoin,
   drawFire,
   drawFireGlow,
+  drawMonumentBeacon,
+  drawMonumentFlare,
+  flareStrength,
   drawRain,
   drawStormEdge,
   drawWarnRing,
@@ -67,6 +70,8 @@ import {
   type Pt,
   type SortedItem,
 } from './iso';
+import { monumentNightLight } from './monumentSprite';
+import { imageStageOf, monumentBowlPoint } from './monumentStage';
 import {
   SYMBOL_MIN_ZOOM,
   drawNeedSymbols,
@@ -171,6 +176,11 @@ export interface RenderFx {
   /** Brennende Betriebe (R3). */
   fire?: { id: number; flames: number; smoke: number }[];
   reduceMotion?: boolean;
+  /**
+   * Start des Aufflammens der Feuerschale (ms, Zeitbasis wie `timeMs`); gesetzt von der UI beim Abschluss des
+   * Denkmals. Gezeichnet wird ≤ 3 s lang, nur bei sichtbarem Denkmal, nicht bei `reduceMotion`.
+   */
+  monumentFlareStart?: number;
   mood?: boolean;
   boom?: boolean;
   /** Tag-Nacht-Tönung; nur bei explizit `true` (Standard: aus). */
@@ -286,8 +296,10 @@ function footprintPath(
 }
 
 /** Körperumriss als Teilpfad. */
-function hullPath(ctx: CanvasRenderingContext2D, cam: Camera, b: Building): void {
-  const hull = bodyHull(BUILDING_DEFS[b.defId], b).map((p) => worldToScreen(cam, p));
+function hullPath(ctx: CanvasRenderingContext2D, world: World, cam: Camera, b: Building): void {
+  const hull = bodyHull(BUILDING_DEFS[b.defId], b, imageStageOf(world, b)).map((p) =>
+    worldToScreen(cam, p),
+  );
   hull.forEach((p, i) => (i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
   ctx.closePath();
 }
@@ -298,8 +310,8 @@ const buildingAt = (world: World, x: number, y: number): Building | undefined =>
 };
 
 /** Bildbox eines Gebäudes in CSS-Pixeln (aus `spriteBounds`); nur für Effekte, nie fürs Picking. */
-function screenRect(cam: Camera, b: Building): Rect {
-  const box = spriteBounds(BUILDING_DEFS[b.defId], b);
+function screenRect(world: World, cam: Camera, b: Building): Rect {
+  const box = spriteBounds(BUILDING_DEFS[b.defId], b, imageStageOf(world, b));
   const a = worldToScreen(cam, { x: box.x, y: box.y }),
     z = worldToScreen(cam, { x: box.x + box.w, y: box.y + box.h });
   return { x: a.x, y: a.y, w: z.x - a.x, h: z.y - a.y };
@@ -340,7 +352,7 @@ function drawHover(ctx: CanvasRenderingContext2D, world: World, cam: Camera, hov
     footprintPath(ctx, cam, hover.x, hover.y, 1, 1);
     if (b && def) {
       footprintPath(ctx, cam, b.x, b.y, def.w, def.h);
-      hullPath(ctx, cam, b);
+      hullPath(ctx, world, cam, b);
     }
     ctx.strokeStyle = HOVER_LINE;
     ctx.lineWidth = 1;
@@ -381,7 +393,7 @@ function polyPath(ctx: CanvasRenderingContext2D, poly: readonly Pt[]): void {
 function collectBadges(world: World, cam: Camera, range: TileRange): void {
   for (const b of homeBuildings(world)) {
     if (b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1) continue;
-    const box = spriteBounds(BUILDING_DEFS[b.defId], b);
+    const box = spriteBounds(BUILDING_DEFS[b.defId], b, imageStageOf(world, b));
     const a = worldToScreen(cam, { x: box.x + box.w / 2, y: box.y });
     if (cam.zoom >= SYMBOL_MIN_ZOOM && b.house && houseDiagnosis(world, b).length > 0)
       renderStats.badges.push({ id: b.id, x: b.x, y: b.y, kind: 'need', sx: a.x, sy: a.y });
@@ -408,6 +420,7 @@ interface WindowLights {
  * unabhängig von `isLit` (R114). `occ` und `rank` (Gebäude-Id → Rang im sortierten Durchgang) liefern die Verdecker.
  */
 function collectWindowLights(
+  world: World,
   cam: Camera,
   buildings: readonly Building[],
   windows: number,
@@ -419,9 +432,10 @@ function collectWindowLights(
   for (const b of buildings) {
     const def = BUILDING_DEFS[b.defId];
     const lit = isLit(def, b);
-    const anchors = anchorsFor(def, b);
+    const stage = imageStageOf(world, b);
+    const anchors = anchorsFor(def, b, stage);
     if (!lit && !anchors.some((a) => a.always)) continue;
-    const box = spriteBounds(def, b);
+    const box = spriteBounds(def, b, stage);
     const g: LightGroup = { windows: [], lanterns: [], clip: [] };
     anchorRects(cam, box, anchors).forEach((r, i) => {
       if (anchors[i]!.always) g.lanterns.push(r);
@@ -458,7 +472,7 @@ function occludersOf(
       if (!b || shadowOnly.has(b.id)) return null;
       const def = BUILDING_DEFS[b.defId];
       return {
-        box: toScreen(spriteBounds(def, b)),
+        box: toScreen(spriteBounds(def, b, imageStageOf(world, b))),
         clips: once(() => buildingClips(cam, world, b)),
       };
     }
@@ -498,6 +512,10 @@ interface IslandFrame {
   lit: { f: { id: number; flames: number; smoke: number }; rect: Rect }[];
   fireClips: Poly[][][];
   windowLights: WindowLights;
+  /** Bildpunkte der Feuerschalen sichtbarer Denkmäler, solange das Aufflammen läuft (Schritt 10). */
+  flares: Pt[];
+  /** Bildpunkte der Feuerschalen sichtbarer, fertiger Denkmäler für das nächtliche Leuchtfeuer (Schritt 10). */
+  beacons: Pt[];
   /** Glühwürmchen dieser Insel für den einen additiven Durchgang (Schritt 10). */
   fireflies: FaunaHit[];
 }
@@ -523,6 +541,8 @@ function drawIsland(
   let windowLights: WindowLights = { groups: [], k: 0 };
   let fireClips: Poly[][][] = []; // je Eintrag von `lit`: Flächen, die sein Feuer verdecken
   let fireflies: FaunaHit[] = [];
+  const beacons: Pt[] = [];
+  const flares: Pt[] = []; // Feuerschalen sichtbarer Denkmäler, solange das Aufflammen läuft
 
   const range = visibleTileRange(cam, view, { w: home(world).width, h: home(world).height });
   const empty = range.x1 < range.x0 || range.y1 < range.y0;
@@ -531,7 +551,7 @@ function drawIsland(
   const lit: { f: { id: number; flames: number; smoke: number }; rect: Rect }[] = [];
   if (!empty)
     for (const f of fires.values()) {
-      const rect = screenRect(cam, world.buildings[f.id]!);
+      const rect = screenRect(world, cam, world.buildings[f.id]!);
       if (rect.x > view.w || rect.x + rect.w < 0 || rect.y > view.h || rect.y + rect.h < 0)
         continue;
       lit.push({ f, rect });
@@ -647,7 +667,7 @@ function drawIsland(
       if (it.kind === 'building') {
         const b = world.buildings[it.id];
         if (!b) continue;
-        const box = spriteBounds(BUILDING_DEFS[b.defId], b);
+        const box = spriteBounds(BUILDING_DEFS[b.defId], b, imageStageOf(world, b));
         const m = SHADOW_MARGIN;
         if (
           box.x > right + m ||
@@ -695,6 +715,15 @@ function drawIsland(
       return occludersAfter(occ, at, boxAround([rect], rect.w * FIRE_GLOW_REACH));
     });
 
+    const flareAge = fx.monumentFlareStart === undefined ? -1 : fx.timeMs - fx.monumentFlareStart;
+    if (flareStrength(flareAge, reduce) > 0)
+      for (const b of buildings)
+        if (b.defId === 'monument') flares.push(worldToScreen(cam, monumentBowlPoint(b)));
+
+    for (const b of buildings)
+      if (b.defId === 'monument' && monumentNightLight(imageStageOf(world, b)))
+        beacons.push(worldToScreen(cam, monumentBowlPoint(b)));
+
     // 5 Schatten: alle Polygone in einem Pfad, eine Füllung (überlappende Schatten dunkeln nicht doppelt)
     if (visible.length > 0 || gulls.length > 0) {
       withGround(ctx, cam, () => {
@@ -702,7 +731,7 @@ function drawIsland(
         for (const it of visible) {
           if (it.kind === 'building') {
             const b = world.buildings[it.id]!;
-            polyPath(ctx, buildingShadow(BUILDING_DEFS[b.defId], b));
+            polyPath(ctx, buildingShadow(BUILDING_DEFS[b.defId], b, imageStageOf(world, b)));
           } else if (it.kind === 'tree') polyPath(ctx, treeShadow(it as TreeItem));
           else if (it.kind === 'decor') {
             const sh = decorShadow(it as DecorItem);
@@ -738,13 +767,14 @@ function drawIsland(
           fx.timeMs,
           def.id === 'kontor' || def.id === 'kontor2' ? waterSides(world, b) : undefined,
           variantOf(world.seed, b.x, b.y),
+          imageStageOf(world, b),
         );
         // Abdunklung direkt nach dem Körper, damit sie kein Gebäude davor abdunkelt (Plan R3)
         if ((fires.get(b.id)?.flames ?? 0) > 0) {
           ctx.save();
           ctx.globalCompositeOperation = 'multiply';
           ctx.beginPath();
-          hullPath(ctx, cam, b);
+          hullPath(ctx, world, cam, b);
           ctx.fillStyle = DIM_FIRE;
           ctx.fill();
           ctx.restore();
@@ -791,6 +821,7 @@ function drawIsland(
       const n = Math.min(operatingPuffs(def, b), budget);
       budget -= n;
       renderStats.smokeDrawn += n;
+      // Luft kennt keine Welt und nur Betriebe (Rauch) und das Kontor (Flagge): das Denkmal hat keine Luft, Stufe 0 bleibt
       drawAir(ctx, cam, def, b, fx.timeMs, n);
     }
     for (const b of lod ? [] : buildings) {
@@ -827,6 +858,7 @@ function drawIsland(
       if (clip.length > 0) ctx.restore();
     });
     windowLights = collectWindowLights(
+      world,
       cam,
       buildings,
       fx.dayNight === true ? light.windows : 0,
@@ -834,7 +866,19 @@ function drawIsland(
       rank,
     );
   }
-  return { island: -1, v, ci, range, empty, lit, fireClips, windowLights, fireflies };
+  return {
+    island: -1,
+    v,
+    ci,
+    range,
+    empty,
+    lit,
+    fireClips,
+    windowLights,
+    flares,
+    beacons,
+    fireflies,
+  };
 }
 
 /**
@@ -941,6 +985,8 @@ export function render(
     lit: [],
     fireClips: [],
     windowLights: { groups: [], k: 0 },
+    flares: [],
+    beacons: [],
     fireflies: [],
   };
   const { range, empty } = act;
@@ -966,7 +1012,9 @@ export function render(
   }
 
   // 10 Additiver Durchgang (höchstens einer): Fensterlicht, Laternen, Feuerglühen
-  const glowing = lit.some(({ f }) => f.flames > 0);
+  const flares = frames.flatMap((f) => f.flares);
+  const beacons = windowLights.k > 0 ? frames.flatMap((f) => f.beacons) : [];
+  const glowing = lit.some(({ f }) => f.flames > 0) || flares.length > 0 || beacons.length > 0;
   const lights = windowLights.groups;
   const glowFlies = frames.some((f) => f.fireflies.length > 0);
   if (glowing || lights.length > 0 || glowFlies) {
@@ -1003,6 +1051,8 @@ export function render(
       drawFireGlow(ctx, rect, fx.timeMs, f.flames);
       if (clip.length > 0) ctx.restore();
     });
+    for (const pt of beacons) drawMonumentBeacon(ctx, pt, windowLights.k, fx.timeMs, reduce);
+    for (const pt of flares) drawMonumentFlare(ctx, pt, fx.timeMs - fx.monumentFlareStart!, reduce);
     for (const f of frames) drawFireflies(ctx, f.ci, f.fireflies);
     ctx.restore();
   }
@@ -1026,7 +1076,8 @@ export function render(
 
   for (const { f, rect } of lit) if (f.flames > 0) drawWarnRing(ctx, rect, fx.timeMs);
   const kontor = av.buildings[home(av).kontorId];
-  if (fx.boom === true && kontor && !empty) drawBoomCoin(ctx, screenRect(acam, kontor), fx.timeMs);
+  if (fx.boom === true && kontor && !empty)
+    drawBoomCoin(ctx, screenRect(av, acam, kontor), fx.timeMs);
   drawNeedSymbols(ctx, av, acam, range);
   drawUnconnected(ctx, av, acam, range);
   drawStatusMarks(ctx, av, acam, range, fx.timeMs, reduce);
@@ -1035,7 +1086,11 @@ export function render(
 
   // Gut-Fokus: Konturen auf der Fokus-Insel, unter der Auswahl-Kontur
   const ff = fx.focus ? frames.find((f) => f.island === fx.focus!.island) : undefined;
-  if (ff) drawFocusMarks(ctx, ff, fx.focus ?? null, { footprint: footprintPath, hull: hullPath });
+  if (ff)
+    drawFocusMarks(ctx, ff, fx.focus ?? null, {
+      footprint: footprintPath,
+      hull: (c, k, b) => hullPath(c, ff.v, k, b),
+    });
 
   // Auswahl: das Gebäude hebt sich in der Ansicht seiner Insel ab (Id in der Kopie gleich)
   const selB = selectedId === null ? undefined : world.buildings[selectedId];
@@ -1046,7 +1101,7 @@ export function render(
     ctx.save();
     ctx.beginPath();
     footprintPath(ctx, sf.ci, sel.x, sel.y, def.w, def.h);
-    hullPath(ctx, sf.ci, sel);
+    hullPath(ctx, sf.v, sf.ci, sel);
     ctx.strokeStyle = PALETTE.signalYellow;
     ctx.lineWidth = 2;
     ctx.stroke();

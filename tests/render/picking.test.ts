@@ -1,8 +1,17 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { bodyHull, buildingHulls, pickBuilding, type Hull } from '../../src/render/iso';
+import { bodyHull, buildingHulls, pickBuilding, project, type Hull } from '../../src/render/iso';
+import { placeBuilding } from '../../src/sim/build';
+import { MONUMENT_AT, monumentWorld } from '../sim/monumentHelpers';
 import { SILHOUETTES, bodyPolygons } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import type { BuildingDef, BuildingDefId, Building, Tier, World } from '../../src/sim/types';
+import type {
+  BuildingDef,
+  BuildingDefId,
+  Building,
+  Monument,
+  Tier,
+  World,
+} from '../../src/sim/types';
 import { home, tileAt } from '../../src/sim/world';
 import { VERDECKUNG, verdeckung } from '../sim/scenarios-iso';
 import { inHull, type P } from './fakeCtx';
@@ -139,4 +148,53 @@ describe('bodyPolygons für alle Typen (R113)', () => {
         const def = { ...BUILDING_DEFS.fisher, id: 'unbekannt' as BuildingDefId, category, w, h };
         nonEmpty(def, mk('fisher'));
       });
+});
+
+describe('M13-E2 T09 Picking des Denkmals folgt der Bildstufe', () => {
+  const DEF = BUILDING_DEFS.monument;
+  function setup(stage: number, running: boolean) {
+    const w = monumentWorld();
+    const r = placeBuilding(w, 'monument', MONUMENT_AT.x, MONUMENT_AT.y);
+    if (!r.ok) throw new Error('Denkmal nicht platzierbar');
+    const b = w.buildings[r.id!]!;
+    w.monument = { buildingId: b.id, stage, running } as Monument;
+    return { w, b, hulls: buildingHulls(w).filter((h) => h.id === b.id) };
+  }
+  // Stufe 4: Spitze der gezeichneten Polygone (nur Test, Welt wird nicht gelesen)
+  const apex = (b: Building) => {
+    const pts = bodyPolygons(DEF, b, 0, 4).flat();
+    return pts.reduce((a, q) => (q.y < a.y ? q : a));
+  };
+
+  it('AK-M13E2-37 jede der neun Kacheln und die Spitze der Stufe 4 liefern die Id', () => {
+    const { b, hulls } = setup(3, false);
+    for (let i = 0; i < 3; i++)
+      for (let j = 0; j < 3; j++) {
+        const c = project(b.x + i + 0.5, b.y + j + 0.5);
+        expect(pickBuilding(hulls, c.x, c.y)).toBe(b.id);
+      }
+    const a = apex(b);
+    expect(pickBuilding(hulls, a.x, a.y + 2)).toBe(b.id);
+  });
+
+  it('AK-M13E2-37 ein Punkt knapp neben der Hülle trifft nicht', () => {
+    const { b, hulls } = setup(3, false);
+    const hull = hulls[0]!.hull;
+    const left = hull.reduce((m, q) => (q.x < m.x ? q : m));
+    const right = hull.reduce((m, q) => (q.x > m.x ? q : m));
+    expect(pickBuilding(hulls, left.x - 3, left.y)).toBeNull();
+    expect(pickBuilding(hulls, right.x + 3, right.y)).toBeNull();
+    const top = Math.min(...hull.map((q) => q.y));
+    expect(pickBuilding(hulls, project(b.x, b.y).x, top - 3)).toBeNull();
+  });
+
+  it('AK-M13E2-37 die Hülle wächst mit der Bildstufe: Stufe 1 trifft die Höhe der Stufe 4 nicht', () => {
+    const low = setup(0, true); // Bildstufe 1
+    const hi = setup(3, false); // Bildstufe 4
+    const a = apex(hi.b);
+    expect(pickBuilding(hi.hulls, a.x, a.y + 2)).toBe(hi.b.id);
+    expect(pickBuilding(low.hulls, a.x, a.y + 2)).toBeNull();
+    const top = (h: Hull[]) => Math.min(...h[0]!.hull.map((q) => q.y));
+    expect(top(hi.hulls)).toBeLessThan(top(low.hulls));
+  });
 });

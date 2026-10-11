@@ -107,6 +107,7 @@ function tipLines(world: World): string[] {
 
 /** Abschnitte der Hilfe-Karte in der Reihenfolge der Spec 12.1; rein, ohne DOM. */
 export function helpSections(world: World): HelpSection[] {
+  // Bewusst ohne `chip` (QA-B3): die Startkarte zeigt kein Wahlziel Denkmal.
   const goal = goalTexts(goalView(world));
   const sections: HelpSection[] = [
     { field: 'help-now', title: 'Jetzt tun', lines: [nextStep(world)] },
