@@ -5404,3 +5404,18 @@ gleicht der zuletzt mergende Strang ab (Prod-B4); Browser-Läufe nie mit I-048-T
 Regelbezug: gates.md Gate Plan, R424, R481, R505, roster.md · Kosten bei Irrtum: ein Plan-Nachtrag.
 
 Entscheider: L0 · Anlass: Gate-Berichte lead-qa und lead-production · ADR: —
+
+## R508 · 2026-10-11 · Push REL-19: zweiter Versuch im Ruhefenster, sonst TOOL-BUENDEL-6 Strang A zuerst
+
+Ruling: Integrator-Bericht: `make check` Exit 0 (zweimal), `make check-ci-perf` Exit 0, `make zeitreserve-push` erst
+Exit 2 (loadStart 4,4), dann **Exit 1** (9 Tests ohne Reserve, Load stieg im Lauf auf 7; parallele Studio-Agenten).
+Kein Push trotz Exit 1. **Zweiter Versuch** im Ruhefenster: L0 startet bis zum Ergebnis keine neuen Agenten (laufend
+nur der Plan-Nachtrag M13-E2, ohne Tests); Integrator startet `make check` erst bei 1-min-Load ≤ 3 und 5-min-Load ≤ 4,
+dann `make zeitreserve-push`, `make check-ci-perf`; bei Exit 0 Push nach Briefing. **Scheitert er erneut (Exit 1):**
+kein Push in dieser Phase; Ausnahme von R464 für **TOOL-BUENDEL-6 Strang A** (T01 Reserve `time.test.ts`, T02, T03
+`make push-check`) — dieser Strang ist die Abhilfe genau dieses Fehlers; Push REL-19 danach mit `make push-check`.
+
+Regelbezug: STUDIO.md Push-Ablauf (R394, R464), R488 V1, R503 · Kosten bei Irrtum: REL-19 verschiebt sich um einige
+Stunden.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-19 · ADR: —
