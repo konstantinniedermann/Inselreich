@@ -170,7 +170,7 @@ describe('AK-M13E2-30 monumentStallReason', () => {
   }
 
   it('1 Bau pausiert hat Vorrang', () => {
-    expect(monumentStallReason(worst())).toBe('Bau pausiert');
+    expect(monumentStallReason(worst())).toBe('Bau angehalten');
   });
 
   it('2 Nicht angebunden', () => {
@@ -330,7 +330,7 @@ describe('AK-M13E2-35 monumentSectionModel (U-1 bis U-5)', () => {
       if (e.kind !== 'pause') throw new Error('Typ');
       return e;
     };
-    expect(pause()).toMatchObject({ text: 'Bau pausieren', hidden: false });
+    expect(pause()).toMatchObject({ text: 'Bau anhalten', hidden: false });
     expect(setMonumentPaused(w, true).ok).toBe(true);
     expect(pause().text).toBe('Bau fortsetzen');
     w.monument!.stage = 3;

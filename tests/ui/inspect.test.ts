@@ -547,12 +547,12 @@ describe('UI-TASTEN Tooltip «Entf» am Abreissen-Knopf (AK-UT-12)', () => {
     renderInspect(panel as unknown as HTMLElement, w, id, noActions);
     return allButtons(panel).find((b) => b.dataset.field === 'demolish')?.title;
   };
-  it('Wohnhaus, Betrieb und Fern-Kontor tragen title «Entf»', () => {
+  it('Wohnhaus, Betrieb und Fern-Kontor tragen title «Entf / ⌫»', () => {
     const { w, house, fisher } = uxWorld();
-    expect(demolishTitle(w, house.id)).toBe('Entf');
-    expect(demolishTitle(w, fisher.id)).toBe('Entf');
+    expect(demolishTitle(w, house.id)).toBe('Entf / ⌫');
+    expect(demolishTitle(w, fisher.id)).toBe('Entf / ⌫');
     const far = { ...w.buildings[home(w).kontorId]!, id: 9999, defId: 'kontor2' as const };
     w.buildings[far.id] = far;
-    expect(demolishTitle(w, far.id)).toBe('Entf');
+    expect(demolishTitle(w, far.id)).toBe('Entf / ⌫');
   });
 });

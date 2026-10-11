@@ -55,7 +55,10 @@ describe('nextStep (AK-UX-08)', () => {
     w.won = true;
     w.wonMerchants = true;
     w.wonSpice = true;
-    expectStep(w, 'Handelsstadt erreicht — spiel frei weiter');
+    expectStep(
+      w,
+      'Handelsstadt erreicht — spiel frei weiter. Das Denkmal bleibt als eigenes Ziel offen.',
+    );
   });
   it('AK-UX-08 R1 nur Kontor', () => {
     const { w, house, fisher } = uxWorld();
@@ -321,7 +324,24 @@ describe('M8 nextStep nach dem Sieg (AK-U2-08)', () => {
     w.won = true;
     w.wonMerchants = true;
     w.wonSpice = true;
-    expectStep(w, 'Handelsstadt erreicht — spiel frei weiter');
+    expectStep(
+      w,
+      'Handelsstadt erreicht — spiel frei weiter. Das Denkmal bleibt als eigenes Ziel offen.',
+    );
+  });
+  it('AK-UT-06 Denkmal im Bau: derselbe Text wie offen; fertig: nur Satz 1', () => {
+    const w = citizenWorld();
+    w.won = true;
+    w.wonMerchants = true;
+    w.wonSpice = true;
+    w.monumentDone = false;
+    w.monument = { running: true } as unknown as typeof w.monument;
+    expectStep(
+      w,
+      'Handelsstadt erreicht — spiel frei weiter. Das Denkmal bleibt als eigenes Ziel offen.',
+    );
+    w.monumentDone = true;
+    expectStep(w, 'Handelsstadt erreicht — spiel frei weiter.');
   });
   it('wonMerchants ohne wonSpice → Satz zum dritten Ziel, nicht „spiel frei weiter“', () => {
     const w = citizenWorld();

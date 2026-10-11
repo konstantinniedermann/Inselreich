@@ -86,7 +86,7 @@ export function monumentEtaText(w: World): string {
 export function monumentStallReason(w: World): string | null {
   const m = w.monument;
   if (m === null || !m.running) return null;
-  if (m.paused) return 'Bau pausiert';
+  if (m.paused) return 'Bau angehalten';
   if (!w.buildings[m.buildingId]?.connected) return 'Nicht angebunden';
   const stock = home(w).stock;
   const open = openGoods(m).map((e) => e.good);
@@ -219,7 +219,7 @@ export function monumentSectionModel(w: World): MonumentSectionModel {
   entries.push({
     key: 'pause',
     kind: 'pause',
-    text: m?.paused === true ? 'Bau fortsetzen' : 'Bau pausieren',
+    text: m?.paused === true ? 'Bau fortsetzen' : 'Bau anhalten',
     hidden: m === null || m.stage >= STAGE_COUNT,
   });
   const st = monumentStartState(w);
