@@ -5444,3 +5444,17 @@ Blocker). T02/T03 laufen danach weiter. Weitere Umsetzer bleiben bis zum Push ge
 Regelbezug: R464, R508, R503/R504 · Kosten bei Irrtum: ein Zwischen-Merge mehr.
 
 Entscheider: L0 · Anlass: Bericht production-integrator, zweiter Versuch · ADR: —
+
+## R511 · 2026-10-11 · Review Nachtrag I-049: BEDENKEN → Wortlaut-Korrektur; Sperrbestand ohne Kontor wirkt nicht auf Denkmal
+
+Ruling: lead-qa BEDENKEN (B1–B5). **Auslegung B1:** Ein Sperrbestand ohne Kontor auf der Heimatinsel wirkt auch nicht
+auf die Denkmal-Reserve (Linie R481 B6(b)); `monumentLock` nutzt das Prädikat aus I-049 T02 (`reserveOf`), neuer K1-Fall
+„kein Kontor ⇒ Reserve 20“. B2 (E2-Test `monument.test.ts` bleibt unverändert, K1 als neuer `describe`-Block), B3
+(Vergleichswelt, Welt mit Stein-Hausverbrauch < 20 festlegen, Grenzfälle 0/20/60, Fremdinsel 60), B4 (v11-Fixtures ohne
+`reserve`, nur v12-Rundlauf-Fixtures mit; README-Satz „nur Betriebe“ anpassen; Global Constraints verweist auf N3),
+B5 durch den Planverfasser M13-E2 in `nachtrag-i049.md` und — nur für B4/B5 — im I-049-Plan. Danach gilt der Nachtrag
+ohne erneutes Review als abgenommen (L0 prüft Stichprobe).
+
+Regelbezug: R481, R507 E8, R509 · Kosten bei Irrtum: ein Test im I-049-Strang nachbessern.
+
+Entscheider: L0 · Anlass: Review-Bericht lead-qa · ADR: —
