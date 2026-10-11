@@ -154,3 +154,16 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
   bringt rund 240 Geld/min nahe am Vollpreis gegen 30 Unterhalt je Holzfäller — mögliche Geldquelle ohne Wahl. Ursprung:
   Scout-Befund IDEEN-06 (lead-design). Einschätzung: mittel; mit I-048 „Zukauf-Aufschlag“ durch `design-economy-designer`
   nachrechnen, kein eigenes Paket vorher.
+
+### 2026-10-11 · Zahlen im Ideen-Eintrag I-031 weichen vom README ab
+
+- **Fundort:** `docs/ideen.md` I-031 (Edikte der Amtsstube) gegen `README.md` Abschnitt «Edikte». Beobachtung: I-031 nennt noch
+  Steuer −5 %, Verkaufssättigung und −10 %; das README nennt Sparen mit Unterhalt −20 % und Steuer −7 Punkte, Handel mit
+  Kaufpreise −20 %, Wohlfahrt mit Steuer −5 Punkte. Ursprung: Scout A IDEEN-07 (lead-design). Einschätzung: gering; Eintrag
+  ist Historie, bei Gelegenheit nachführen.
+
+### 2026-10-11 · Formatvorlage in `docs/ideen.md` zählt beim grep als offene Idee
+
+- **Fundort:** `docs/ideen.md` Zeile `### I-001 · neu · <Kurzname>` im Formatblock. Beobachtung: `grep '^### I-'` zählt die Vorlage
+  mit, die Zählung der Obergrenze 40 liegt um 1 zu hoch. Ursprung: Scouts B und C IDEEN-07 (lead-design). Einschätzung: gering;
+  Zählung mit `grep -v '<Kurz'` oder die Vorlage im Codeblock ohne `###` führen.
