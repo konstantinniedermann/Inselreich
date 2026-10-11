@@ -99,6 +99,13 @@ import {
 } from './hover';
 import { highlightShip, homeKontorPanel, lossMessages, shipHover, type ShipActions } from './ships';
 import { targetTile } from './target';
+import {
+  CONFIRM_TEXT,
+  MAP_SKIP_TEXT,
+  confirmStep,
+  mapDemolishAllowed,
+  type ConfirmState,
+} from './demolishConfirm';
 import { bindInput, hintKey, strokeEndNotice, type InputAction, type InputBinding } from './input';
 import { clearForest, plantForest } from '../sim/forest';
 import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../sim/tax';
@@ -632,6 +639,7 @@ function launch(
   /** Wechselt den Panel-Inhalt; Auswahl-Hervorhebung folgt dem Panel. DOM wird neu gebaut. */
   const setPanel = (panel: PanelState): void => {
     state.panel = panel;
+    demolishConfirm = confirmStep(world, demolishConfirm, { kind: 'reset' }).state;
     connectPreview = null;
     panelEl.classList.toggle('card--rest', panel.kind === 'none');
     if (panel.kind === 'inspect') {
@@ -826,6 +834,8 @@ function launch(
   // Geld-Fehler beim Strassen-Ziehen nur einmal pro Zug melden; jede Aktion ausserhalb eines Zugs setzt zurück
   let dragMoneyToastShown = false;
   let dragForestFailureShown = false;
+  let dragMapSkipShown = false; // Meldung «Denkmal nur im Panel abreissen» einmal je Zug (U-15)
+  let demolishConfirm: ConfirmState = { armedId: null }; // Zwei-Klick-Abriss des Denkmals (U-14)
   /** Abriss-Zug (I-041): Anbindung vor dem Zug, besuchte und entfernte Wegkacheln. */
   let stroke: { before: Set<number>; tiles: number; removed: number; island: number } | null = null;
   const forestCost = (tool: { kind: 'clearForest' | 'plantForest' }): Cost =>
@@ -900,6 +910,15 @@ function launch(
   };
   /** Abriss aus dem Info-Panel: Knopf «Abreissen» und Taste Entf gehen hier durch. */
   const demolishFromPanel = (id: number): void => {
+    const step = confirmStep(world, demolishConfirm, { kind: 'press', id });
+    demolishConfirm = step.state;
+    if (!step.demolish) {
+      // Denkmal mit Fortschritt: erster Druck macht scharf (Knopf und Taste gleich)
+      const btn = panelEl.querySelector<HTMLElement>('[data-field="demolish"]');
+      if (btn) btn.textContent = step.buttonText ?? CONFIRM_TEXT;
+      refresh();
+      return;
+    }
     const r = demolishBuilding(id);
     if (r.ok) {
       sound.play('demolish');
@@ -942,6 +961,7 @@ function launch(
     if (a.type === 'dragEnd') {
       dragMoneyToastShown = false;
       dragForestFailureShown = false;
+      dragMapSkipShown = false;
       if (stroke !== null) {
         const n = strokeEndNotice(newlyCut(stroke.before, world), stroke.removed, stroke.tiles);
         if (n?.kind === 'warn') showMessage(n.text, 'warn');
@@ -953,6 +973,7 @@ function launch(
     if (!a.dragging) {
       dragMoneyToastShown = false;
       dragForestFailureShown = false;
+      dragMapSkipShown = false;
     }
     const tool = state.tool;
     const tile = tileAt(world.islands[a.island]!, a.x, a.y);
@@ -1006,10 +1027,13 @@ function launch(
           stroke.removed++;
           sound.play('demolish');
         }
+      } else if (tile?.buildingId != null && !mapDemolishAllowed(world, tile.buildingId)) {
+        if (!dragMapSkipShown) showMessage(MAP_SKIP_TEXT, 'warn');
+        dragMapSkipShown = true;
       }
     } else if (tile?.buildingId != null) {
-      const r = demolishBuilding(tile.buildingId);
-      if (r.ok) sound.play('demolish');
+      if (!mapDemolishAllowed(world, tile.buildingId)) showMessage(MAP_SKIP_TEXT, 'warn');
+      else if (demolishBuilding(tile.buildingId).ok) sound.play('demolish');
     } else {
       const r = removeRoad(world, a.x, a.y, a.island);
       if (!r.ok) showRoadFailure(r.reason, a.dragging, a.island);

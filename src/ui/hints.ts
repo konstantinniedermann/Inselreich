@@ -109,6 +109,13 @@ export const REASON_TABLE: readonly ReasonRow[] = [
   { source: 'pause', pattern: /^Nur Betriebe lassen sich stilllegen$/, show: same },
   { source: 'pause', pattern: /^Schon stillgelegt$/, show: same },
   { source: 'pause', pattern: /^Läuft bereits$/, show: same },
+  { source: 'placement', pattern: /^Erst nach dem Kaufleute-Ziel$/, show: same },
+  { source: 'placement', pattern: /^Nur auf der Heimatinsel$/, show: same },
+  { source: 'placement', pattern: /^Es gibt schon ein Denkmal$/, show: same },
+  { source: 'monument', pattern: /^Kein Denkmal$/, show: same },
+  { source: 'monument', pattern: /^Abschnitt läuft$/, show: same },
+  { source: 'monument', pattern: /^Denkmal fertig$/, show: same },
+  { source: 'monument', pattern: /^Ungültiges Gut$/, show: same },
   { source: 'upgrade', pattern: /^Kann nicht ausgebaut werden$/, show: same },
   { source: 'upgrade', pattern: /^Gebäude brennt$/, show: same },
   {

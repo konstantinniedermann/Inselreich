@@ -33,6 +33,7 @@ import {
   type ReasonCtx,
 } from '../../src/ui/hints';
 import { formatGameTime } from '../../src/ui/time';
+import { MONUMENT_STAGES } from '../../src/sim/defs/monument';
 import { SCENARIOS } from '../sim/scenarios';
 import { tooltipLines } from '../../src/ui/buildMenu';
 import { build, setHouse, uxWorld } from './worlds';
@@ -686,6 +687,37 @@ describe('M13-E1 Stilllegen-Gründe (AK-M13STL-09, AK-UX-03)', () => {
     }
     expect(friendlyReason(w, 'Nur Betriebe lassen sich stilllegen')).toBe(
       'Nur Betriebe lassen sich stilllegen',
+    );
+  });
+});
+
+describe('M13-E2 Gründe U-7 (AK-M13E2-34)', () => {
+  it('alle acht Gründe wörtlich und in der Tabelle', () => {
+    const w = createWorld(3);
+    for (const r of [
+      'Erst nach dem Kaufleute-Ziel',
+      'Nur auf der Heimatinsel',
+      'Es gibt schon ein Denkmal',
+      'Kein Denkmal',
+      'Abschnitt läuft',
+      'Denkmal fertig',
+      'Ungültiges Gut',
+      'Ungültiger Wert',
+    ]) {
+      expect(
+        REASON_TABLE.some((row) => row.pattern.test(r)),
+        r,
+      ).toBe(true);
+      expect(friendlyReason(w, r), r).toBe(r);
+    }
+  });
+
+  it('Geldgrund mit Kosten des Abschnitts: «Zu wenig Geld: 4000 nötig, 100 vorhanden»', () => {
+    const w = createWorld(3);
+    w.money = 100;
+    const cost = { money: MONUMENT_STAGES[0]!.money, wood: 0, tools: 0, stone: 0 };
+    expect(friendlyReason(w, 'Zu wenig Geld', { cost })).toBe(
+      'Zu wenig Geld: 4000 nötig, 100 vorhanden',
     );
   });
 });

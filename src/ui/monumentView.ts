@@ -157,3 +157,9 @@ export function monumentChip(w: World): MonumentChip | null {
     fillPct: Math.floor((100 * m.stage) / STAGE_COUNT),
   };
 }
+
+/** U-14: Das Denkmal mit Fortschritt (läuft oder Abschnitt ≥ 1) verlangt beim Abriss einen zweiten Klick. */
+export function monumentNeedsConfirm(w: World, id: number): boolean {
+  const m = w.monument;
+  return m !== null && id === m.buildingId && (m.running || m.stage >= 1);
+}

@@ -6,6 +6,7 @@ import type { World } from '../../src/sim/types';
 import { home } from '../../src/sim/world';
 import {
   monumentChip,
+  monumentNeedsConfirm,
   monumentChronicleLine,
   monumentEtaText,
   monumentRows,
@@ -276,5 +277,21 @@ describe('monumentChip (Hilfstests U-8)', () => {
       title: 'Wahlziel Denkmal erreicht — freies Spiel',
       fillPct: 100,
     });
+  });
+});
+
+describe('AK-M13E2-34 monumentNeedsConfirm (U-14)', () => {
+  it('Stufe 0 ohne Lauf false, laufend true, Stufe 1 nicht laufend true, anderes Gebäude false', () => {
+    const w = monumentWorld();
+    const id = placeMonument(w);
+    expect(monumentNeedsConfirm(w, id)).toBe(false);
+    expect(startMonumentStage(w).ok).toBe(true);
+    expect(monumentNeedsConfirm(w, id)).toBe(true);
+    w.monument!.running = false;
+    w.monument!.stage = 1;
+    expect(monumentNeedsConfirm(w, id)).toBe(true);
+    expect(monumentNeedsConfirm(w, id + 999)).toBe(false);
+    w.monument = null;
+    expect(monumentNeedsConfirm(w, id)).toBe(false);
   });
 });
