@@ -5750,3 +5750,16 @@ Worktree `.worktrees/tool-b7` durch einen Controller `lead-tech` sonnet, spielfr
 Regelbezug: gates.md Gate Plan, R392, R471, R523 V3, R528 · Kosten bei Irrtum: ein Werkzeug-Nachtrag.
 
 Entscheider: L0 · Anlass: Urteil lead-qa gate-TOOL-BUENDEL-7 · ADR: —
+
+## R533 · 2026-10-11 · UI-TEXTE-1: Stilllegen-Wortlaut aus der Def (50 %, aufgerundet); R530 berichtigt
+
+Ruling: Der Plan (`b5bc0168`) belegt `PAUSED_UPKEEP_PCT = 50` (`src/sim/defs/buildings.ts:303`, Aufrundung je Betrieb in
+`levels.ts:18`); die 60 % aus R467 Befund 4 sind nur der Fall Basis 5 → 3. Der in R530 angenommene Wortlaut «Unterhalt auf
+60 %» ist damit falsch und wird ersetzt: **Option A** — Text aus der Def, «Stillgelegt — Unterhalt auf 50 % (aufgerundet)»
+über `${PAUSED_UPKEEP_PCT}`, README „50 % des Unterhalts, je Betrieb aufgerundet“; kein Spielwert ändert sich. Der
+Spec-Autor berichtigt AK-UT-02/-04 entsprechend; `style.css:212` (Holz, `.btn.unaffordable`) bleibt unverändert.
+Gate Plan durch `lead-qa`; Umsetzung erst nach den Merges von I-049-UI und I-048-UI (Budget 6 bei Start).
+
+Regelbezug: R467, R530 · Kosten bei Irrtum: ein Wortlaut.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-UI-TEXTE-1 · ADR: —
