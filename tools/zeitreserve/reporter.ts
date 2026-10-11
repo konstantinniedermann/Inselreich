@@ -3,10 +3,11 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { loadavg } from 'node:os';
-import { relative } from 'node:path';
+import { dirname, relative } from 'node:path';
+import { DEFAULT_REPORT_PATH, reportPath } from './rule.ts';
 import type { Measurement, TestTiming } from './rule.ts';
 
-export const REPORT_PATH = '.studio/zeitreserve.json';
+export const REPORT_PATH = DEFAULT_REPORT_PATH;
 
 interface ReportedTest {
   fullName: string;
@@ -45,7 +46,8 @@ export default class ZeitreserveReporter {
         });
       }
     }
-    mkdirSync('.studio', { recursive: true });
+    const path = reportPath(process.env);
+    mkdirSync(dirname(path), { recursive: true });
     const loadEnd = loadavg()[0] ?? 0;
     const report: Measurement = {
       commit: headCommit(),
@@ -54,6 +56,6 @@ export default class ZeitreserveReporter {
       loadMax: Math.max(this.loadStart, loadEnd),
       timings,
     };
-    writeFileSync(REPORT_PATH, JSON.stringify(report));
+    writeFileSync(path, JSON.stringify(report));
   }
 }

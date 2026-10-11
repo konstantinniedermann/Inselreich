@@ -5481,3 +5481,113 @@ ein Platz frei ist (Deckel 8, R424).
 Regelbezug: R424, R464, R502, R509 · Kosten bei Irrtum: Wartezeit an der Testsperre.
 
 Entscheider: L0 · Anlass: Push REL-19 · ADR: —
+
+## R514 · 2026-10-11 · Prozess-Aussensicht REL-19 angenommen: V1–V3, V4 zurückgestellt
+
+Ruling: Retro `docs/studio/retros/2026-10-11-rel-19-prozess.md` (`e21e1a9e`) angenommen. Push-Weg 60,6 min statt ≈ 15 min;
+Hauptursache: der Fix des benannten Blockers war durch R464 selbst gesperrt. **V1** Handbuch: Ausnahme von R464 für
+Fixes eines benannten Push-Blockers (Ruling nennt Test und Paket; nur gezielte Läufe der berührten Dateien). **V2**
+`make push-check` loggt 1-min-Load je Stufe im Ereignis `push_check` — als kleiner Zusatz in TOOL-BUENDEL-6 Strang B (T05
+oder eigener Mini-Task). **V3** Ende-Routine: `make zeitreserve-push` einmal im Ruhefenster vor Session-Ende, wenn seit
+dem letzten Push Code gemergt wurde (ab TOOL-BUENDEL-6: `make push-check` ohne Push). **V4** (Integrator-Wartegrenze 15 min)
+zurückgestellt bis V2 Daten liefert. V1 und V3 setzt `studio-coach` als Handbuch-Minor um.
+
+Regelbezug: STUDIO.md Verbesserungsschleife, R464, R488 · Kosten bei Irrtum: eine zu weite Ausnahme von R464.
+
+Entscheider: L0 · Anlass: Bericht studio-process-coach retro-rel-19 · ADR: —
+
+## R515 · 2026-10-11 · Gate Merge UI-NAECHSTER-SCHRITT: OK, lokaler Merge; Release mit M13
+
+Ruling: `feat/ui-naechster-schritt` @ `da78589a` abgenommen: T1–T3 (AK-NS-01…08 + Kolonie), Final-Review opus BEDENKEN
+(3× niedrig) → Fix-Runde `1d55a512`/`da78589a` (m7-Spec-Regelliste, AK-NS-02 exakt, AK-NS-07 trennscharf mit Rot-Beleg)
+ohne Verhaltensänderung, daher ohne erneutes Review; Playtest OK in allen 4 Punkten bei 1280 und 1920. Merge lokal durch
+`production-integrator`. **Kein Release vor M13-Ende** (R505); das Paket fährt im M13-Release mit. Playtest-Hinweis
+(Inspektor-Abhilfe bei gefülltem Lager, solange das Haus noch unversorgt ist) → `docs/beobachtungen.md`.
+
+Regelbezug: gates.md Gate Merge, R502, R505 · Kosten bei Irrtum: ein Revert eines kleinen UI-Pakets.
+
+Entscheider: L0 · Anlass: Berichte Final-Review, Umsetzer, Playtester · ADR: —
+
+## R516 · 2026-10-11 · M13-E2-SIM T01: Sprite-Matrix-Schranke 1,30 → 1,40 (Denkmal 3×3)
+
+Ruling: `tests/render/variants.test.ts` AK7 (Zoom 2 / DPR 2) wird mit `monument` (3×3) in `BUILDING_DEFS` rot: Matrix
+91,1 MB gegen 87,24 MB (Faktor 1,357 statt ≤ 1,30 zu `SPRITE_CACHE_MAX_BYTES` 67,1 MB); unabhängig vom Platzhalter-Sprite.
+Der Cache bleibt per LRU gedeckelt; das Denkmal existiert höchstens einmal je Spiel. Schranke wird **1,40** (Kommentar
+mit Verweis R516), als Einzeiler in T01 durch den SIM-Umsetzer, damit SIM, ART und UI von grünem Hash abzweigen.
+Leistung bei Zoom 2 prüft der Browser-Lauf T15/T16 (Bildrate mit Denkmal im Bild, keine sichtbaren Ruckler).
+
+Regelbezug: ISO §10/Obergrenzen (render), R509 · Kosten bei Irrtum: mehr Cache-Wechsel bei Zoom 2, messbar im Browser-Lauf.
+
+Entscheider: L0 · Anlass: Entscheidungsbedarf Controller A M13-E2-SIM · ADR: —
+
+## R517 · 2026-10-11 · Gate Merge TOOL-BUENDEL-6 Strang A: OK, lokaler Merge
+
+Ruling: `tool/b6a` (T02 `17805835`/`ac372cb8`, T03 `526662ec`/`8f69f494`, Final-Fix `63806621`; T01 schon auf main)
+abgenommen: Reviews OK, Final-Review opus BEDENKEN (niedrig) → Fix ohne erneutes Review hingenommen; `make studio-test`
+Exit 0, Echtlauf `make push-check` Exit 0 (4:50 min, D1-Pfad unter Load 69). Merge lokal durch `production-integrator`
+nach UI-NAECHSTER-SCHRITT. Ab dem Merge ist **`make push-check`** der Push-Weg (Handbuch-Folge durch `studio-coach`).
+Die zwei Restrisiken (Lastwarten greift nicht bis Vitest-Start → D1 wird unter Parallelität Regelfall; `check-ci-perf`
+ohne Lastwarten → falsches Rot möglich) gehen nach `docs/beobachtungen.md`; Bewertung mit den Daten aus R514 V2.
+
+Regelbezug: gates.md Gate Merge, R503, R504, R514 · Kosten bei Irrtum: ein Werkzeug-Revert.
+
+Entscheider: L0 · Anlass: Schlussbericht Controller Strang A · ADR: —
+
+## R518 · 2026-10-11 · Merges UI-NAECHSTER-SCHRITT und Strang A erfolgt; Worktrees aufräumen; Handbuch-Folge push-check
+
+Ruling: Lokal gemergt `1a44799a` (UI-NAECHSTER-SCHRITT) und `1d6b0560` (TOOL-BUENDEL-6 Strang A), je `make check` und
+`make check-ci-perf` Exit 0; main `b5879e09`. Handbuch **1.47** (`4dfd2b87`, R514 V1/V3) abgenommen. **Aufräumen**
+(`lead-production`): Worktrees `b4`, `m13-e1-sim`, `m13-e1-ui`, `ui-gut-chip`, `b5`, `aufraeum-01`, `ui-tasten`,
+`ui-naechster-schritt`, `b6a` — alle Branches in main enthalten, getrackt sauber — per `git worktree remove` entfernen;
+vorher ungetrackte Ergebnisse (`.studio/qa/…`, Ledger `.superpowers/sdd/…`) nach `.studio/archiv/worktrees/<name>/`
+im Hauptcheckout sichern. Branches bleiben. **Handbuch-Folge** (`studio-coach`): Push-Ablauf und Integrator-Persona
+auf `make push-check` umstellen (ersetzt die Einzelkette; R503 D1–D4 nennen).
+
+Regelbezug: state.md „Fortsetzung“ Punkt 7, R496, R504, R517 · Kosten bei Irrtum: ein Worktree wird per `git worktree add` neu angelegt.
+
+Entscheider: L0 · Anlass: Berichte production-integrator · ADR: —
+
+## R519 · 2026-10-11 · Parallele Nutzer-Session c6709a04 (Design „Erweiterung“) geduldet; Deckel geteilt
+
+Ruling: Seit ≈ 08:30Z läuft eine zweite, vom Nutzer gestartete Session `c6709a04` (Brainstorming/Konzept „Erweiterung“ mit
+`lead-design`, Worktree `.worktrees/erweiterung-1`, Branch `design/erweiterung-1`). Abweichung von R129/R324 (eine aktive
+L0-Session je Repo) wird geduldet, weil sie nur Design-Doku in eigenem Worktree schreibt und der Nutzer sie selbst
+gestartet hat. Folgen für diese Session: Studio-Deckel ≤ 8 Agenten gilt **gemeinsam** — diese Session hält ≤ 6 eigene
+Agenten, solange die andere aktiv ist; keine Änderungen an `.worktrees/erweiterung-1`, `design/erweiterung-1` oder an
+Dateien, die sie für das Konzept braucht; Doku-Commits auf main nur mit eigenen Pfaden. Das Aufräumen (R518) liess
+den Worktree unberührt.
+
+Regelbezug: R129, R324, R329, R424 · Kosten bei Irrtum: Konflikt in einer Doku-Datei beim späteren Merge.
+
+Entscheider: L0 · Anlass: unbekannter Worktree beim Aufräumen, Events der Session c6709a04 · ADR: —
+
+## R520 · 2026-10-11 · Gate Merge TOOL-BUENDEL-6 Strang B: OK, Budget-Hook vorerst `warn`; Handbuch 1.48 abgenommen
+
+Ruling: `tool/b6b` @ `dbe48e75` (T04 Actions-Prognose, T05 Produktivanteil, T06 E-059 Merge-Treiber, T07 E-060
+Budget-Hook, R514 V2 `load` je Stufe; Fixes `f7d8a3a5`, `3bf85886`, `dbe48e75`) abgenommen: Reviews OK/BEDENKEN niedrig,
+Final-Review opus ohne Blocker, `make studio-lint`/`studio-test` Exit 0 (726), Echtläufe belegt. **`BUDGET_MODE` Standard
+`warn`**, weil die parallele Nutzer-Session (R519) keine Freigaben loggt; `deny` (Start E-060) per eigenem Ruling, wenn
+nur eine Session läuft — dann vorher `design-m14-e1` im Phasenformat nachtragen und `KNOWN_MISMATCH` entfernen.
+E-059 startet mit dem Merge (`make merge-driver` im Hauptcheckout und in `.worktrees/integrate`). **Actions-Prognose
+ROT (1991 von 2000 min):** höchstens ein Push je Tag (R488 V2); wegen der M13-Release-Sperre (R505) ohnehin kein
+Spiel-Push geplant. Handbuch **1.48** (`05cd1141`, push-check) abgenommen. `studio-coach` ergänzt danach: Integrator-
+Hinweis `git checkout --merge docs/beobachtungen.md` bei Treiberfehler, E-059 „läuft“ in `experimente.md`.
+
+Regelbezug: gates.md Gate Merge, R488, R503, R504, R514, R519 · Kosten bei Irrtum: ein Werkzeug-Revert.
+
+Entscheider: L0 · Anlass: Schlussbericht Controller Strang B · ADR: —
+
+## R521 · 2026-10-11 · M13-E2-ART abgenommen (`4626645a`); Ownership-Abweichungen bestätigt
+
+Ruling: ART-Strang (T08 `f0ef73d5`, T19 `004f7971` Glocke `monumentDone`, T09 `4d39a866` + Fix `4626645a`, Merge Sim
+`051efcc8`) abgenommen; Reviews OK; Klangfigur durch `lead-art` abgenommen (Hörprobe in T16/AK-44). Nachträglich
+bestätigt: `tests/render/weather.test.ts` (CAPS `flareSparks`), `sprites-kanten.test.ts`/`sprites.test.ts`
+(Stufe 0 und Denkmal aus Silhouetten-Prüfungen, eigener Lichtkanten-Test), Referenz-Hash `monument` `a64989a4` →
+`8a28960e`. Merge nach main erst laut Reihenfolge R505/R507 (nach M13-E2-SIM und I-049-Sim), Gate Merge gemeinsam mit
+dem UI-Strang nach T18. T09-Mehrbedarf (≈ 100 statt 45 Tools) wurde nicht vorab gemeldet — Punkt für die Session-Retro.
+`monumentNightLight` (nicht eingehängt) und schwankende Frame-Ereigniszahl in `renderer.test.ts` → `docs/beobachtungen.md`;
+Controller E prüft in T15, ob die Spec ein Nachtlicht verlangt.
+
+Regelbezug: R505, R507, R509, R516 · Kosten bei Irrtum: ein Test-Nachtrag im ART-Strang.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-art M13-E2-ART · ADR: —
