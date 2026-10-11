@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { demolish } from '../../src/sim/build';
 import {
   isMonumentGood,
+  monumentLock,
+  monumentProgress,
+  monumentReserve,
   monumentStartReason,
   newMonument,
   setMonumentBuy,
@@ -14,9 +17,9 @@ import { serialize } from '../../src/sim/save';
 import type { World } from '../../src/sim/types';
 import { buildEntries } from '../../src/ui/buildMenu';
 import { HOME, home, tileAt } from '../../src/sim/world';
-import { MONUMENT_STAGES } from '../../src/sim/defs/monument';
+import { MONUMENT_GOODS, MONUMENT_STAGES } from '../../src/sim/defs/monument';
 import { placeBuilding } from '../../src/sim/build';
-import { forceRect, twoIslandWorld } from './helpers';
+import { forceRect, houseFar, putBuilding, setHouse, twoIslandWorld, village } from './helpers';
 import { MONUMENT_AT, monumentWorld, placeMonument } from './monumentHelpers';
 
 describe('AK-M13E2-03 Freischaltung', () => {
@@ -305,5 +308,92 @@ describe('AK-M13E2-15 Abriss', () => {
       expect(w.monument!.stage).toBe(0);
       expect(w.monument!.running).toBe(false);
     }
+  });
+});
+
+describe('AK-M13E2-09 Reserve', () => {
+  const TABLE: [number, number][] = [
+    [0, 20],
+    [20, 20],
+    [25, 20],
+    [26, 21],
+    [40, 32],
+    [60, 48],
+    [61, 49],
+    [80, 64],
+    [81, 65],
+  ];
+
+  it.each(TABLE)('%i Kaufleute in einem Haus: Glas und Gewürz %i', (n, expected) => {
+    const { w, houses } = village(1);
+    if (n > 0) setHouse(houses[0]!, 4, n);
+    expect(monumentReserve(w, 'glass')).toBe(expected);
+    expect(monumentReserve(w, 'spice')).toBe(expected);
+    expect(monumentReserve(w, 'stone')).toBe(20);
+    expect(monumentReserve(w, 'tools')).toBe(20);
+  });
+
+  it.each(TABLE)('%i Kaufleute auf Häuser verteilt: Reserve %i', (n, expected) => {
+    const { w, houses } = village(9);
+    houses.forEach((h, i) => setHouse(h, 4, Math.floor(n / 9) + (i < n % 9 ? 1 : 0)));
+    expect(houses.reduce((s, h) => s + h.house!.inhabitants, 0)).toBe(n);
+    expect(monumentReserve(w, 'glass')).toBe(expected);
+  });
+
+  it('80 Kaufleute auf viele Häuser (Summenfolge) ergeben 64, nicht 65', () => {
+    const { w, houses } = village(16);
+    const parts = [1, 9, 3, 7, 2, 8, 6, 4, 5, 5, 7, 3, 9, 1, 4, 6];
+    parts.forEach((p, i) => setHouse(houses[i]!, 4, p));
+    expect(parts.reduce((a, b) => a + b, 0)).toBe(80);
+    expect(monumentReserve(w, 'glass')).toBe(64);
+    expect(monumentReserve(w, 'spice')).toBe(64);
+  });
+
+  it('zählt unversorgte Häuser nicht', () => {
+    const { w, houses } = village(1);
+    setHouse(houses[0]!, 4, 40);
+    const far = houseFar(w);
+    setHouse(far, 4, 200);
+    expect(monumentReserve(w, 'glass')).toBe(32);
+  });
+
+  it('zählt Häuser auf einer Fremdinsel nicht', () => {
+    const w = twoIslandWorld();
+    const k = w.buildings[home(w).kontorId]!;
+    setHouse(putBuilding(w, 1, 'house', k.x + 3, k.y), 4, 200);
+    setHouse(putBuilding(w, HOME, 'house', k.x + 3, k.y), 4, 40);
+    expect(monumentReserve(w, 'glass')).toBe(32);
+  });
+
+  it('lässt die Stein-Reserve von einer Glashütte unberührt', () => {
+    const { w, houses } = village(1);
+    setHouse(houses[0]!, 4, 100);
+    const k = w.buildings[home(w).kontorId]!;
+    putBuilding(w, HOME, 'glassworks', k.x + 2, k.y + 4);
+    expect(monumentReserve(w, 'stone')).toBe(20);
+    expect(monumentReserve(w, 'tools')).toBe(20);
+  });
+
+  it('monumentLock liefert für alle vier Güter 0', () => {
+    const w = monumentWorld();
+    for (const g of MONUMENT_GOODS) expect(monumentLock(w, g)).toBe(0);
+  });
+});
+
+describe('monumentProgress', () => {
+  it('ist 0 ohne laufenden Abschnitt', () => {
+    const w = monumentWorld();
+    placeMonument(w);
+    expect(monumentProgress(w)).toBe(0);
+  });
+
+  it('rundet Σ geliefert / Σ Soll ab: 414 von 520 sind 79 Prozent', () => {
+    const w = monumentWorld();
+    placeMonument(w);
+    const m = w.monument!;
+    m.stage = 1; // Soll 200 + 80 + 140 + 100 = 520
+    m.running = true;
+    m.delivered = { stone: 200, tools: 80, glass: 100, spice: 34 };
+    expect(monumentProgress(w)).toBe(79);
   });
 });

@@ -4,7 +4,7 @@ import { SELL_RECOVERY_INTERVAL } from './defs/timing';
 import { addStock, takeStock } from './economy';
 import { activeEdictDef } from './edicts';
 import { goodLock } from './unlocks';
-import type { GoodId, Result, World } from './types';
+import type { GoodId, MonumentGood, Result, World } from './types';
 import { fail, ok } from './types';
 import { islandName } from './islands';
 import { islandAt } from './placement';
@@ -100,4 +100,21 @@ export function sell(world: World, good: GoodId, n: number, island: number = HOM
 export function tickMarket(world: World): void {
   if (world.tick === 0 || world.tick % SELL_RECOVERY_INTERVAL !== 0) return;
   for (const g of GOOD_IDS) world.sellPct[g] = Math.min(100, world.sellPct[g] + 1);
+}
+
+/** R7.1: `null` = Zukauf für das Denkmal möglich; sonst der Grund (Kontor der Heimat, Gut freigeschaltet). */
+export function monumentBuyBlock(world: World, good: MonumentGood): string | null {
+  return noKontorTrade(world, HOME) ?? goodLock(world, good);
+}
+
+/**
+ * R7.3: einziger Zukaufweg des Denkmals. Zahlt `buyPrice(w, g, 1)` und liefert 1; sonst 0 ohne Änderung.
+ * Kein Lagerzugang, `sellPct` unberührt. Einhängepunkt I-048 (Kaufanteil zahlen, nicht heben, R489).
+ */
+export function buyMonumentUnit(world: World, good: MonumentGood): 0 | 1 {
+  if (monumentBuyBlock(world, good) !== null) return 0;
+  const price = buyPrice(world, good, 1);
+  if (world.money < price) return 0;
+  world.money -= price;
+  return 1;
 }

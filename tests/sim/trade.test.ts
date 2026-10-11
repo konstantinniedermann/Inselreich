@@ -6,9 +6,19 @@ import { deliverOrder } from '../../src/sim/orders';
 import { createWorld, home } from '../../src/sim/world';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
-import { buy, buyPrice, sell, sellPrice, tickMarket } from '../../src/sim/trade';
+import {
+  buy,
+  buyMonumentUnit,
+  buyPrice,
+  monumentBuyBlock,
+  sell,
+  sellPrice,
+  tickMarket,
+} from '../../src/sim/trade';
 import type { GoodId, World } from '../../src/sim/types';
 import { foundKontor2Literal, seaWorld } from './seaHelpers';
+import { placeTownhall } from './helpers';
+import { monumentWorld } from './monumentHelpers';
 
 let w: World;
 
@@ -266,5 +276,68 @@ describe('M12 E2 Handel je Insel (AK-E2-04)', () => {
     expect(buy(s, 'wood', 1, 1)).toEqual({ ok: false, reason: 'Kein Kontor auf Möweninsel' });
     expect(sell(s, 'wood', 1, 1)).toEqual({ ok: false, reason: 'Kein Kontor auf Möweninsel' });
     expect(serialize(s)).toBe(before);
+  });
+});
+
+describe('buyMonumentUnit (R7.3)', () => {
+  const GOODS4 = ['stone', 'tools', 'glass', 'spice'] as const;
+
+  it('kostet ohne Edikt 15/40/50/40', () => {
+    const m = monumentWorld();
+    const paid = GOODS4.map((g) => {
+      const before = m.money;
+      expect(buyMonumentUnit(m, g)).toBe(1);
+      return before - m.money;
+    });
+    expect(paid).toEqual([15, 40, 50, 40]);
+  });
+
+  it('kostet mit wirkendem Handel 12/32/40/32', () => {
+    const m = monumentWorld();
+    placeTownhall(m);
+    m.edict = 'trade';
+    const paid = GOODS4.map((g) => {
+      const before = m.money;
+      expect(buyMonumentUnit(m, g)).toBe(1);
+      return before - m.money;
+    });
+    expect(paid).toEqual([12, 32, 40, 32]);
+  });
+
+  it('kauft bei Geld = Preis und lässt Geld 0', () => {
+    const m = monumentWorld();
+    m.money = 50;
+    expect(buyMonumentUnit(m, 'glass')).toBe(1);
+    expect(m.money).toBe(0);
+  });
+
+  it('ändert bei Geld = Preis - 1 nichts', () => {
+    const m = monumentWorld();
+    m.money = 49;
+    const before = serialize(m);
+    expect(buyMonumentUnit(m, 'glass')).toBe(0);
+    expect(serialize(m)).toBe(before);
+  });
+
+  it('lässt Lager und sellPct unverändert', () => {
+    const m = monumentWorld();
+    const stock = { ...home(m).stock };
+    const sellPct = { ...m.sellPct };
+    buyMonumentUnit(m, 'spice');
+    expect(home(m).stock).toEqual(stock);
+    expect(m.sellPct).toEqual(sellPct);
+  });
+
+  it('kauft ohne Kontor nichts und nennt den Grund', () => {
+    const m = monumentWorld();
+    m.islands[0]!.kontorId = null;
+    expect(monumentBuyBlock(m, 'stone')).not.toBeNull();
+    const before = m.money;
+    expect(buyMonumentUnit(m, 'stone')).toBe(0);
+    expect(m.money).toBe(before);
+  });
+
+  it('erlaubt den Zukauf mit Kontor (Block null)', () => {
+    expect(monumentBuyBlock(monumentWorld(), 'stone')).toBeNull();
   });
 });
