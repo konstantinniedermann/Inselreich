@@ -278,3 +278,29 @@ export function drawMonumentFlare(
   ctx.fill();
   ctx.restore();
 }
+
+const BEACON_R = 46;
+/**
+ * Leuchtfeuer der fertigen Feuerschale bei Nacht (Spec Anhang 06 A, AK-M13E2-46): ruhiger Schein bei `top`
+ * (Schalenmitte), Stärke `k` 0…1 aus dem Nachtlicht; flackert leicht, bei `reduce` nicht. Der Aufrufer setzt
+ * im additiven Durchgang `'lighter'`; keine Partikel, keine Compositing-Änderung hier.
+ */
+export function drawMonumentBeacon(
+  ctx: CanvasRenderingContext2D,
+  top: Pt,
+  k: number,
+  timeMs: number,
+  reduce: boolean,
+): void {
+  const s = clamp01(k);
+  if (s <= 0) return;
+  const flick = reduce ? 1 : 0.9 + 0.1 * Math.sin(timeMs / 210);
+  ctx.save();
+  const g = ctx.createRadialGradient(top.x, top.y, 0, top.x, top.y, BEACON_R);
+  g.addColorStop(0, rgbaOf(PALETTE.window, Number((0.7 * s * flick).toFixed(3))));
+  g.addColorStop(0.45, rgbaOf(PALETTE.lightEvening, Number((0.3 * s * flick).toFixed(3))));
+  g.addColorStop(1, rgbaOf(PALETTE.lightEvening, 0));
+  ctx.fillStyle = g;
+  ctx.fillRect(top.x - BEACON_R, top.y - BEACON_R, 2 * BEACON_R, 2 * BEACON_R);
+  ctx.restore();
+}

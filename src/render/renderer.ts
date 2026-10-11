@@ -18,6 +18,7 @@ import {
   drawBoomCoin,
   drawFire,
   drawFireGlow,
+  drawMonumentBeacon,
   drawMonumentFlare,
   flareStrength,
   drawRain,
@@ -69,6 +70,7 @@ import {
   type Pt,
   type SortedItem,
 } from './iso';
+import { monumentNightLight } from './monumentSprite';
 import { imageStageOf, monumentBowlPoint } from './monumentStage';
 import {
   SYMBOL_MIN_ZOOM,
@@ -512,6 +514,8 @@ interface IslandFrame {
   windowLights: WindowLights;
   /** Bildpunkte der Feuerschalen sichtbarer Denkmäler, solange das Aufflammen läuft (Schritt 10). */
   flares: Pt[];
+  /** Bildpunkte der Feuerschalen sichtbarer, fertiger Denkmäler für das nächtliche Leuchtfeuer (Schritt 10). */
+  beacons: Pt[];
   /** Glühwürmchen dieser Insel für den einen additiven Durchgang (Schritt 10). */
   fireflies: FaunaHit[];
 }
@@ -537,6 +541,7 @@ function drawIsland(
   let windowLights: WindowLights = { groups: [], k: 0 };
   let fireClips: Poly[][][] = []; // je Eintrag von `lit`: Flächen, die sein Feuer verdecken
   let fireflies: FaunaHit[] = [];
+  const beacons: Pt[] = [];
   const flares: Pt[] = []; // Feuerschalen sichtbarer Denkmäler, solange das Aufflammen läuft
 
   const range = visibleTileRange(cam, view, { w: home(world).width, h: home(world).height });
@@ -715,6 +720,10 @@ function drawIsland(
       for (const b of buildings)
         if (b.defId === 'monument') flares.push(worldToScreen(cam, monumentBowlPoint(b)));
 
+    for (const b of buildings)
+      if (b.defId === 'monument' && monumentNightLight(imageStageOf(world, b)))
+        beacons.push(worldToScreen(cam, monumentBowlPoint(b)));
+
     // 5 Schatten: alle Polygone in einem Pfad, eine Füllung (überlappende Schatten dunkeln nicht doppelt)
     if (visible.length > 0 || gulls.length > 0) {
       withGround(ctx, cam, () => {
@@ -857,7 +866,19 @@ function drawIsland(
       rank,
     );
   }
-  return { island: -1, v, ci, range, empty, lit, fireClips, windowLights, flares, fireflies };
+  return {
+    island: -1,
+    v,
+    ci,
+    range,
+    empty,
+    lit,
+    fireClips,
+    windowLights,
+    flares,
+    beacons,
+    fireflies,
+  };
 }
 
 /**
@@ -965,6 +986,7 @@ export function render(
     fireClips: [],
     windowLights: { groups: [], k: 0 },
     flares: [],
+    beacons: [],
     fireflies: [],
   };
   const { range, empty } = act;
@@ -991,7 +1013,8 @@ export function render(
 
   // 10 Additiver Durchgang (höchstens einer): Fensterlicht, Laternen, Feuerglühen
   const flares = frames.flatMap((f) => f.flares);
-  const glowing = lit.some(({ f }) => f.flames > 0) || flares.length > 0;
+  const beacons = windowLights.k > 0 ? frames.flatMap((f) => f.beacons) : [];
+  const glowing = lit.some(({ f }) => f.flames > 0) || flares.length > 0 || beacons.length > 0;
   const lights = windowLights.groups;
   const glowFlies = frames.some((f) => f.fireflies.length > 0);
   if (glowing || lights.length > 0 || glowFlies) {
@@ -1028,6 +1051,7 @@ export function render(
       drawFireGlow(ctx, rect, fx.timeMs, f.flames);
       if (clip.length > 0) ctx.restore();
     });
+    for (const pt of beacons) drawMonumentBeacon(ctx, pt, windowLights.k, fx.timeMs, reduce);
     for (const pt of flares) drawMonumentFlare(ctx, pt, fx.timeMs - fx.monumentFlareStart!, reduce);
     for (const f of frames) drawFireflies(ctx, f.ci, f.fireflies);
     ctx.restore();

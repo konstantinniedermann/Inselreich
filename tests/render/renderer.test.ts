@@ -50,7 +50,9 @@ import { readFileSync } from 'node:fs';
 import { deserialize, serialize } from '../../src/sim/save';
 import { MONUMENT_AT, monumentWorld } from '../sim/monumentHelpers';
 import { cap } from '../../src/render/limits';
-import type { Monument } from '../../src/sim/types';
+import { monumentBowlPoint } from '../../src/render/monumentStage';
+import { worldToScreen } from '../../src/render/camera';
+import type { Building, Monument } from '../../src/sim/types';
 import { fnv1a32, forceRect } from '../sim/helpers';
 import { fakeCtx, type Ev, type Mat } from './fakeCtx';
 
@@ -1776,5 +1778,52 @@ describe('M13-E2 T09 Denkmal im Renderer', () => {
     const { w: w0, b: b0 } = mono(0, false);
     draw(w0, cam);
     expect(h.calls.some((c) => c.kind === 'body' && c.id === b0.id)).toBe(false);
+  });
+
+  // Leuchtfeuer: additive fillRect, die die Feuerschale umschliesst
+  const beacon = (
+    w: World,
+    b: Building,
+    cam: ReturnType<typeof camAtMono>,
+    fx: Partial<RenderFx>,
+  ) => {
+    const pt = worldToScreen(cam, monumentBowlPoint(b));
+    return lighter(draw(w, cam, { dayNight: true, ...fx })).filter(
+      (e) =>
+        e.op === 'fillRect' &&
+        Math.min(...e.points.map((q) => q.x)) < pt.x &&
+        Math.max(...e.points.map((q) => q.x)) > pt.x &&
+        Math.min(...e.points.map((q) => q.y)) < pt.y &&
+        Math.max(...e.points.map((q) => q.y)) > pt.y,
+    );
+  };
+  it('AK-M13E2-46 Leuchtfeuer: Stufe 4 nachts zeichnet es, Stufe 4 am Tag und Stufe 3 nachts nicht', () => {
+    const night = (stage: number) => {
+      const { w, b } = mono(stage, false);
+      w.tick = 3000;
+      return { w, b, cam: camAtMono(w) };
+    };
+    const s4 = night(3);
+    const before = serialize(s4.w);
+    expect(beacon(s4.w, s4.b, s4.cam, {}).length).toBeGreaterThan(0);
+    expect(serialize(s4.w)).toBe(before);
+    const s3 = night(2);
+    expect(beacon(s3.w, s3.b, s3.cam, {})).toHaveLength(0);
+    const day = mono(3, false);
+    day.w.tick = 1000;
+    expect(beacon(day.w, day.b, camAtMono(day.w), {})).toHaveLength(0);
+  });
+
+  it('AK-M13E2-46 Leuchtfeuer: ohne dayNight aus, bei reduceMotion ruhig (ohne Flackern) und innerhalb des Rahmens', () => {
+    const { w, b } = mono(3, false);
+    w.tick = 3000;
+    const cam = camAtMono(w);
+    expect(beacon(w, b, cam, { dayNight: false })).toHaveLength(0);
+    const calm = (t: number) =>
+      JSON.stringify(beacon(w, b, cam, { reduceMotion: true, timeMs: t }).map((e) => e.style));
+    expect(calm(10000)).toBe(calm(10555));
+    expect(beacon(w, b, cam, { reduceMotion: true }).length).toBeGreaterThan(0);
+    const log = draw(w, cam, { dayNight: true });
+    expect(log.saves).toBe(log.restores);
   });
 });
