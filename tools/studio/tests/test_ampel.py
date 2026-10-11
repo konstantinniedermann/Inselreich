@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import efficiency
 import effort
 import hook
 import model
@@ -125,6 +126,75 @@ class AmpelParserTest(unittest.TestCase):
         self.assertEqual(
             len(set(efficiency.LIGHT_LABELS.values())), len(efficiency.LIGHT_LABELS)
         )
+
+
+METRIKEN = Path(__file__).resolve().parents[3] / "docs" / "studio" / "metriken"
+RAW_RED = "- ROT: Steuerungsanteil (L0 + Leads): 66.2 % (gelb > 40 %, rot > 50 %)\n"
+
+
+def steuerung_text(adjusted=None, extra=""):
+    head = (
+        "- erzeugt: 2026-10-11T09:00:00+02:00\n"
+        "- Datenbasis: 1 Session(s), 20 Agenten, 100 Aufrufe.\n"
+    )
+    line = ""
+    if adjusted is not None:
+        line = (
+            "- Steuerungsanteil bereinigt (E-049, ohne 2 Lead-Instanzen): "
+            f"30.1 %, Bewertung {adjusted} (Schwellen wie die Rohzeile)\n"
+        )
+    return head + RAW_RED + extra + line
+
+
+def parse_red(text):
+    return effort.parse_ampel_session("S-a", text)["red"]
+
+
+class AmpelAdjustedSteuerungTest(unittest.TestCase):
+    def test_adjusted_green_clears_steuerung(self):
+        self.assertNotIn("steuerung", parse_red(steuerung_text("grün")))
+
+    def test_adjusted_yellow_clears_steuerung(self):
+        self.assertNotIn("steuerung", parse_red(steuerung_text("gelb")))
+
+    def test_adjusted_red_keeps_steuerung(self):
+        self.assertIn("steuerung", parse_red(steuerung_text("rot")))
+
+    def test_without_adjusted_line_raw_counts(self):
+        self.assertIn("steuerung", parse_red(steuerung_text(None)))
+
+    def test_not_measured_adjusted_falls_back_to_raw(self):
+        text = steuerung_text(None) + (
+            "- Steuerungsanteil bereinigt (E-049, ohne 0 Lead-Instanzen): "
+            f"{efficiency.NOT_MEASURED}\n"
+        )
+        self.assertIn("steuerung", parse_red(text))
+
+    def test_other_red_lights_stay(self):
+        other = "- ROT: Cache-Write 5 min: 90 % (x)\n"
+        for rating in ("grün", "gelb"):
+            red = parse_red(steuerung_text(rating, extra=other))
+            self.assertEqual(red, {"cache_write_5m"})
+
+    def test_incidents_ignore_cleared_pair_but_fire_on_red_pair(self):
+        def pair(rating):
+            a = effort.parse_ampel_session("S-1", steuerung_text(rating))
+            b = effort.parse_ampel_session("S-2", steuerung_text(rating))
+            return [a, {**b, "t": a["t"] + 1}]
+
+        cleared = effort.ampel_incidents(pair("grün"), set())
+        self.assertNotIn("ampel:steuerung:S-2", ids(cleared))
+        fired = effort.ampel_incidents(pair("rot"), set())
+        self.assertIn("ampel:steuerung:S-2", ids(fired))
+
+    def test_real_files(self):
+        def real(name):
+            text = (METRIKEN / f"{name}.md").read_text("utf-8")
+            return effort.parse_ampel_session(name, text)["red"]
+
+        self.assertNotIn("steuerung", real("S-2026-10-11-dc50be15"))
+        self.assertNotIn("steuerung", real("S-2026-10-10-f52039fc"))
+        self.assertIn("steuerung", real("S-2026-10-09-c64c0775"))
 
 
 class AmpelWiringTest(unittest.TestCase):

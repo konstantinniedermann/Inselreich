@@ -75,6 +75,80 @@ class ParserTest(unittest.TestCase):
         self.assertTrue(all(len(n) <= 200 for n in names))
 
 
+class MessagesTest(unittest.TestCase):
+    NAME = "tests/render/terrain.test.ts > R170 > Kachelraster"
+
+    def vitest(self, *body):
+        return [f" FAIL  {self.NAME}", *body, " FAIL  tests/b.test.ts > Anderer"]
+
+    def test_timeout_message(self):
+        lines = self.vitest("Error: Test timed out in 5000ms.", " \u276f x.ts:1")
+        found = testrun.parse_messages(lines, "vitest")
+        self.assertEqual(found[self.NAME], "Error: Test timed out in 5000ms.")
+
+    def test_assertion_message_first_line(self):
+        lines = self.vitest(
+            " \u276f tests/x.ts:9",
+            "AssertionError: expected 2.4 to be less than or equal to 2.3",
+            "Error: spaeter",
+        )
+        found = testrun.parse_messages(lines, "vitest")
+        self.assertEqual(
+            found[self.NAME],
+            "AssertionError: expected 2.4 to be less than or equal to 2.3",
+        )
+
+    def test_long_message_is_cut(self):
+        found = testrun.parse_messages(self.vitest("Error: " + "x" * 500), "vitest")
+        self.assertEqual(len(found[self.NAME]), 200)
+
+    def test_message_belongs_to_its_own_name_only(self):
+        lines = self.vitest()
+        lines.append("Error: gehoert zu b")
+        found = testrun.parse_messages(lines, "vitest")
+        self.assertNotIn(self.NAME, found)
+        self.assertEqual(found["tests/b.test.ts > Anderer"], "Error: gehoert zu b")
+
+    def test_unittest_message(self):
+        lines = [
+            "FAIL: test_x (test_mod.Klasse.test_x)",
+            "-" * 20,
+            "Traceback (most recent call last):",
+            '  File "x.py", line 3, in test_x',
+            "AssertionError: 1 != 2",
+            "=" * 20,
+            "ERROR: test_y (test_mod.Andere.test_y)",
+        ]
+        found = testrun.parse_messages(lines, "studio")
+        self.assertEqual(found, {"Klasse.test_x": "AssertionError: 1 != 2"})
+
+    def test_no_message_gives_empty(self):
+        self.assertEqual(
+            testrun.parse_messages(self.vitest(" \u276f x.ts:1"), "vitest"), {}
+        )
+
+    def test_red_event_carries_messages_and_names(self):
+        lines = self.vitest("Error: Test timed out in 5000ms.")
+        event = testrun.build_event("vitest", 1, lines)
+        self.assertEqual(event["names"], [self.NAME, "tests/b.test.ts > Anderer"])
+        self.assertEqual(
+            event["messages"], {self.NAME: "Error: Test timed out in 5000ms."}
+        )
+
+    def test_red_event_without_message_has_no_messages_key(self):
+        event = testrun.build_event("vitest", 1, self.vitest())
+        self.assertIn("names", event)
+        self.assertNotIn("messages", event)
+
+    def test_green_event_has_neither(self):
+        event = testrun.build_event("vitest", 0, self.vitest("Error: x"))
+        self.assertNotIn("names", event)
+        self.assertNotIn("messages", event)
+
+    def test_unparsable_input_never_raises(self):
+        self.assertEqual(testrun.parse_messages([None, 3], "vitest"), {})
+
+
 class RunTest(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()

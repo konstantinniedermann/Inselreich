@@ -25,6 +25,12 @@ _AGENTS = re.compile(r"^- Sessions:\s*\d+,\s*Agenten:\s*(\d+)", re.MULTILINE)
 _MEASURED = re.compile(r"^- Datenbasis: \d+ Session\(s\), (\d+) Agenten", re.MULTILINE)
 # Zeilen mit dem Zusatz „— kein Befund“ (efficiency.NO_FINDING) zählen nicht als rot
 _RED = re.compile(r"^- ROT: (?![^\n]*— kein Befund)(.+?): ", re.MULTILINE)
+# Bereinigte Steuerungszeile (E-049): ohne Plan-/Design-/Gate-Leads. Fehlt sie oder
+# ist sie „nicht gemessen“, gilt die Rohzeile (R538 V1).
+_ADJUSTED = re.compile(
+    r"^- Steuerungsanteil bereinigt \(E-049[^\n]*?Bewertung (rot|gelb|grün)",
+    re.MULTILINE,
+)
 
 
 def _lead(node: dict, nodes: dict[str, dict]) -> str:
@@ -412,6 +418,9 @@ def parse_ampel_session(ident: str, text: str) -> dict | None:
         for name in _RED.findall(text)
         if name in efficiency.LABEL_KEYS
     }
+    adjusted = _ADJUSTED.search(text)
+    if adjusted and adjusted.group(1) != "rot":
+        red.discard("steuerung")  # R538 V1: nur bereinigt rot löst den Vorfall aus
     return {"id": ident, "t": stamp, "agents": int(agents.group(1)), "red": red}
 
 

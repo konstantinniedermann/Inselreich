@@ -5862,3 +5862,45 @@ Dashboard escaped werden, Testzeile ohne `_adjusted_line`) gehen ins nächste We
 Regelbezug: gates.md Gate Merge (Stufe leicht), R538, R539 · Kosten bei Irrtum: ein Werkzeug-Revert.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-8 · ADR: —
+
+## R541 · 2026-10-11 · Merge TOOL-BUENDEL-8 angenommen; E-060 wartet auf Platz
+
+Ruling: Integrator-Merge `ecf9972b` (keine Konflikte, `make check`, `make studio-test`, `make check-ci-perf` Exit 0)
+angenommen. **E-060 (`deny`)** startet noch nicht: Die drei Experiment-Plätze sind belegt (E-057, E-059, E-061;
+experimente.md Obergrenze 3). Der Schalter bleibt `warn`; Start per Ruling, sobald ein Platz frei ist und nur eine Session
+läuft (R520), mit Echtlauf gegen Lagerdaten (R539). `studio-coach` prüft jetzt, ob E-059 (3 Merges) und E-061
+(3 Instanzen) bewertbar sind; Reihenfolge freier Plätze: E-060 vor E-062.
+
+Regelbezug: R520, R539, R540, experimente.md · Kosten bei Irrtum: E-060 startet eine Session später.
+
+Entscheider: L0 · Anlass: Bericht Integrator MERGE-TOOL-BUENDEL-8 · ADR: —
+
+## R542 · 2026-10-11 · E-059 läuft passiv ohne Platz; E-060 startet mit `deny`
+
+Ruling: E-059 (Merge-Treiber) braucht keine Verhaltensänderung, misst nur, und hat in 7 Merges nie gegriffen (0 von 3,
+Bericht EXP-BEWERTUNG-1011). Es läuft **passiv ohne Platz** weiter (Muster E-058), Bewertung bei 3 beidseitigen Merges
+oder spätestens 2026-11-19. E-061 bleibt laufend (verlängern, Bewertung beim dritten sauber getrennten Datenpunkt).
+Der freie Platz geht an **E-060**: `studio-coach` macht zuerst den Echtlauf (R539) — Hook-Entscheid gegen alle
+Lead-Starts mit Budgetzeile in `.studio/events.jsonl` seit 2026-10-10 — und stellt `BUDGET_MODE` nur dann auf `deny`,
+wenn kein Fehlblock bei „Budget: keins“ und bei Folge-Controllern auftritt; sonst Bericht ohne Umstellung. Bedingung
+„nur eine Session läuft“ (R520) ist erfüllt (eine aktive L0-Session). Rückfall: `git revert`.
+
+Regelbezug: R520, R539, R541, experimente.md Obergrenze 3 · Kosten bei Irrtum: ein blockierter Lead-Start (ein Aufruf mehr).
+
+Entscheider: L0 · Anlass: Bericht studio-coach EXP-BEWERTUNG-1011 · ADR: —
+
+## R543 · 2026-10-11 · E-060: Echtlauf 5 Fehlblocks → Abgleich-Fix TOOL-E060-FIX, dann zweiter Echtlauf
+
+Ruling: Der Echtlauf (113 Lead-Starts seit 2026-10-10) ergab 3 berechtigte und 5 Fehlblocks; `BUDGET_MODE` bleibt `warn`
+(R542-Bedingung). Ursache: Freigabe-Phasen mit Rollen-Präfix (`impl-`, `plan-`, `design-`, `gate-`,
+`release-check-`) treffen `package_names()` nie; ein Folge-Controller trug „Budget: n verbleibende“ im Kopf.
+Entscheid: **beides** — (a) Werkzeug: Die gemeinsame Namensfunktion entfernt beim Abgleich bekannte Rollen-Präfixe von
+der Freigabe-Phase (für Hook **und** `model.py`, eine Quelle, R532 B2); „Budget: n verbleibende …“ gilt als Folge-Controller
+(kein Block, R433 V3 b). (b) Konvention: L0 vergibt die Freigabe-Phase künftig als reine Paket-ID (wie seit R537).
+Paket **TOOL-E060-FIX** (spielfremd, Stufe leicht): Controller `lead-tech` sonnet, Budget **4** (Umsetzer, Task-Review,
+Final-Review opus, Puffer), Worktree `.worktrees/tool-e060`. Danach wiederholt der Coach den Echtlauf; bei 0 Fehlblocks
+`deny`. E-060 belegt den Platz bis dahin (Zeitraum zählt erst ab Umstellung).
+
+Regelbezug: R433, R520, R532, R542 · Kosten bei Irrtum: ein Werkzeug-Revert, `deny` eine Session später.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Echtlauf E-060 · ADR: —
