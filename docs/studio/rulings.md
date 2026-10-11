@@ -5704,3 +5704,18 @@ beim grep mit) trägt lead-design in docs/beobachtungen.md ein.
 Regelbezug: R445, R475, R505, docs/ideen.md Obergrenze · Kosten bei Irrtum: eine Idee zu früh verworfen (wieder aufnehmbar).
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-07 · ADR: —
+
+## R530 · 2026-10-11 · Gate Spec UI-TEXTE-1: BEDENKEN → Spec-Nachtrag
+
+Ruling: lead-qa BEDENKEN (1–9), kein Blocker. Der Spec-Autor führt alle neun Punkte nach (Fortsetzung): AK-UT-06 mit
+`monumentDone` als einzigem Schalter; AK-UT-08 fest «Entf / ⌫» (Rücktaste seit REL-19 belegt); **AK-UT-10 Variante A**
+mit wörtlicher Überschrift «Speichern» über dem Knopf und zusätzlichem Vitest der Menü-Reihenfolge; neue **AK-UT-14**
+(Raten-Anzeige stillgelegter Betriebe ohne Produktionszahl bzw. «Stillgelegt»); AK-UT-12 erweitert den bestehenden
+`tests/ui/contrast.test.ts`; AK-UT-02 Wert per Import aus der Def; AK-UT-05 Test über alle Defs mit `maxCount.n === 1`;
+AK-UT-13 gegen `--parchment`/`--parchment-edge`; AK-UT-01 ohne `tests/` und README. Wortlaut «Stillgelegt — Unterhalt auf
+60 %» angenommen (R467 Befund 4, kein Spielwert). Nach dem Nachtrag gilt die Spec ohne erneutes Review als abgenommen
+(L0 prüft Stichprobe); Plan durch `lead-tech` sonnet (E-054), Umsetzung nach I-049-UI.
+
+Regelbezug: gates.md Gate Spec, R467, R528 · Kosten bei Irrtum: ein Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Urteil lead-qa gate-UI-TEXTE-1 · ADR: —
