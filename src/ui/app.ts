@@ -1,7 +1,6 @@
 import { BUILDING_DEFS, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
 import { crisisView } from '../sim/queries';
-import { buyPrice } from '../sim/trade';
 import { setReserve } from '../sim/reserve';
 import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
@@ -166,7 +165,7 @@ import {
   type Slot,
 } from './storage';
 import { openStartCard, startChoices, STORAGE_NOTES } from './startCard';
-import { renderTrade, updateTrade } from './trade';
+import { renderTrade, tradeReasonCtx, updateTrade } from './trade';
 
 export type PanelState =
   { kind: 'none' } | { kind: 'inspect'; id: number } | { kind: 'trade'; island: number };
@@ -966,9 +965,7 @@ function launch(
     refresh();
   };
   const tradeCtx = (op: 'buy' | 'sell', good: GoodId, n: number, island: number): ReasonCtx =>
-    op === 'buy'
-      ? { cost: { money: buyPrice(world, good, n), wood: 0, tools: 0, stone: 0 }, good, island }
-      : { good, amount: n, island };
+    tradeReasonCtx(world, op, good, n, island);
 
   const onAction = (a: InputAction): void => {
     if (a.type === 'ship') {

@@ -2,13 +2,14 @@ import { HOME } from '../sim/world';
 import { islandName } from '../sim/islands';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { BOOM_PCT } from '../sim/defs/crises';
-import { buy, buyPrice, sell, sellPrice } from '../sim/trade';
+import { buy, buyPrice, buyQuoteFor, sell, sellPrice } from '../sim/trade';
 import { RESERVE_GOODS, RESERVE_STEPS } from '../sim/defs/reserve';
 import { reserveHolds } from '../sim/queries';
 import { reserveOf } from '../sim/reserve';
 import { activeEdictDef } from '../sim/edicts';
 import { goodUnlocked } from '../sim/unlocks';
 import type { GoodId, Result, World } from '../sim/types';
+import type { ReasonCtx } from './hints';
 import { setField } from './dom';
 
 export interface TradeActions {
@@ -58,8 +59,41 @@ export function buyUnitText(w: World, good: GoodId): string {
   return `${buyPrice(w, good, 1)} Geld`;
 }
 
+/** Kaufanteil des Guts, z. B. «Kauf 109 %» (I-048). */
+export function buyPctText(w: World, good: GoodId): string {
+  return `Kauf ${w.buyPct[good]} %`;
+}
+
+/** Verkaufsanteil des Guts, z. B. «Verkauf 80 %». */
+export function sellPctText(w: World, good: GoodId): string {
+  return `Verkauf ${w.sellPct[good]} %`;
+}
+
+/** Knopftitel Kaufen; ab einem Mittel über 100 % mit Zusatz. */
+export function buyTitleText(
+  name: string,
+  n: number,
+  quote: { price: number; meanPct: number },
+): string {
+  const base = `${n} ${name} kaufen für ${quote.price} Geld`;
+  return quote.meanPct > 100 ? `${base} · im Mittel ${quote.meanPct} %` : base;
+}
+
 export function buyTitle(w: World, good: GoodId, n: number): string {
-  return `${n} ${GOODS[good].name} kaufen für ${buyPrice(w, good, n)} Geld`;
+  return buyTitleText(GOODS[good].name, n, buyQuoteFor(w, good, n));
+}
+
+/** Kontext für die Fehlermeldung einer Handelsaktion. */
+export function tradeReasonCtx(
+  world: World,
+  op: 'buy' | 'sell',
+  good: GoodId,
+  n: number,
+  island: number,
+): ReasonCtx {
+  return op === 'buy'
+    ? { cost: { money: buyPrice(world, good, n), wood: 0, tools: 0, stone: 0 }, good, island }
+    : { good, amount: n, island };
 }
 
 /** Hinweis im Spaltenkopf «Kaufen», nur bei wirkendem Handel-Edikt. */
@@ -165,6 +199,9 @@ export function renderTrade(
     const stock = document.createElement('small');
     stock.dataset.field = `stock-${good}`;
     name.appendChild(stock);
+    const buyPct = document.createElement('small');
+    buyPct.dataset.field = `buy-pct-${good}`;
+    name.appendChild(buyPct);
     const pct = document.createElement('small');
     pct.dataset.field = `price-${good}`;
     name.appendChild(pct);
@@ -212,7 +249,8 @@ export function updateTrade(panel: HTMLElement, world: World, island: number = H
   const stock = world.islands[island]!.stock;
   for (const good of GOOD_IDS) {
     setField(panel, `stock-${good}`, `Lager ${stock[good]}`);
-    setField(panel, `price-${good}`, `Preis ${world.sellPct[good]} %`);
+    setField(panel, `buy-pct-${good}`, buyPctText(world, good));
+    setField(panel, `price-${good}`, sellPctText(world, good));
     const boom = setField(panel, `boom-${good}`, `Boom +${BOOM_PCT - 100} %`);
     if (boom) boom.hidden = !boomGood(world, good);
   }
