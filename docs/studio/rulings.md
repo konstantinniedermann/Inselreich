@@ -5660,3 +5660,17 @@ in die Release-Notiz M13.
 Regelbezug: R505 Schritt 3, R521, CLAUDE.md UI-Regel, gates.md Gate Merge · Kosten bei Irrtum: ein Layout-Nachtrag für kleine Fenster.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M13-E2-CTRL-E-1011 · ADR: —
+
+## R527 · 2026-10-11 · Merge M13-E2 ART/UI angenommen; Welle: I-049-Sim, I-048-Sim, Beobachtungen, Ideen
+
+Ruling: Integrator-Merge `102468b2` (kein Konflikt, `make check` und `make check-ci-perf` Exit 0) angenommen; Merge im
+Worktree `integrate` plus `--ff-only` auf main ist zulässig (Persona vor Briefing). Ampel grün: Start **I-049-Sim**
+(Budget I049-SIM 10, Parallelität 1, Zeile aus R524 reaktiviert) und parallel **I-048-Sim** T01–T03 (+T05 laut Plan;
+Budget I048-SIM 8), I-048-Sim mergt **nach** I-049-Sim (R505/R506). **lead-production**: Beobachtungs-Auswertung (≈ 30
+Einträge seit 2026-10-10) und Entfernen der Worktrees `m13-e2-sim`, `b6b`, `m13-e2-art`, `m13-e2-ui` (Branches in
+`git branch --merged main`, Status sauber; Branches bleiben). **Ideen-Runde** IDEEN durch `lead-design` (R445/R475,
+freie Plätze; M14-E1-Plan bleibt bis M13-Ende gesperrt, R486).
+
+Regelbezug: R445, R475, R486, R505, R506, R518 · Kosten bei Irrtum: ein Merge-Konflikt zwischen den Sim-Strängen.
+
+Entscheider: L0 · Anlass: Merge-Bericht, Ampel grün · ADR: —
