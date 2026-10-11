@@ -5375,3 +5375,13 @@ Prod-B4–B6 (Zählweise Starts inkl. Controller, Merge-Weg über Gate Merge), A
 Regelbezug: gates.md Gate Plan, R481, R487, R490, R492 · Kosten bei Irrtum: Releases verzögern sich bis M13-Ende.
 
 Entscheider: L0 · Anlass: Gate-Berichte lead-qa und lead-production · ADR: —
+
+## R506 · 2026-10-11 · Plan-Nachtrag I-048 abgenommen; Gate Plan I-048 OK
+
+Ruling: Nachtrag `d6c8873b` setzt R505 um (Save v12 geteilt, Stränge I048-SIM nach M13-E2-SIM, I048-UI nach I-049-UI,
+I048-B zuletzt; QA-B2–B7, Prod-B4–B6). Gate Plan I-048 **OK**. Budget **19 Starts** (inkl. 3 Controller, Parallelität 1
+je Strang), freigegeben je Strang beim Start. Start I048-SIM erst nach Merge M13-E2-SIM.
+
+Regelbezug: gates.md Gate Plan, R505 · Kosten bei Irrtum: ein Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Nachtrag-Bericht lead-tech · ADR: —
