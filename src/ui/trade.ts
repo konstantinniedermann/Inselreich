@@ -65,7 +65,7 @@ export function buyTitle(w: World, good: GoodId, n: number): string {
 /** Hinweis im Spaltenkopf «Kaufen», nur bei wirkendem Handel-Edikt. */
 export function buyHeadNote(w: World): string {
   const d = activeEdictDef(w);
-  return d !== null && d.buyPct < 100 ? `Edikt ${d.name}: −${100 - d.buyPct} %` : '';
+  return d !== null && d.buyFactorPct < 100 ? `Edikt ${d.name}: −${100 - d.buyFactorPct} %` : '';
 }
 
 /** Wahr, solange `good` das Boom-Gut der laufenden Krise ist. */

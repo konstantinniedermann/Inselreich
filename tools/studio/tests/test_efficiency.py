@@ -745,6 +745,70 @@ class PhaseAdjustTest(unittest.TestCase):
         self.assertIn("plan-X", efficiency.render_rewrites(data))
 
 
+class PhaseProduktivTest(unittest.TestCase):
+    """AK-TB7-07: Plan-/Design-Leads zaehlen zu produktiv, Gate-Leads nicht."""
+
+    LEAD = "Persona: lead-tech\nPaket: P\nBudget: 4 Starts"
+
+    def build(self, leads, phases):
+        """leads: Liste (name, prompt, out); alles auf demselben Modell."""
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        write(root / "s1.jsonl", [assistant("m1", "claude-opus-4", out=100)])
+        for name, text, out in leads:
+            agent(
+                root,
+                "s1",
+                name,
+                {"agentType": "lead-tech"},
+                [prompt(text), assistant(f"x{name}", "claude-opus-4", out=out)],
+            )
+        agent(
+            root,
+            "s1",
+            "w1",
+            {"agentType": "tech-sim-engineer"},
+            [
+                prompt("Persona: tech-sim-engineer\nPaket: P"),
+                assistant("w", "claude-opus-4", out=300),
+            ],
+        )
+        return efficiency.compute([root / "s1.jsonl"], {}, phases=phases)
+
+    def three_leads(self):
+        leads = [(n, self.LEAD, 100) for n in ("lp", "ld", "lg")]
+        phases = {"s1:lp": "plan-X", "s1:ld": "design-Y", "s1:lg": "gate-Z"}
+        return self.build(leads, phases)
+
+    def test_plan_and_design_leads_count_gate_does_not(self):
+        data = self.three_leads()
+        self.assertAlmostEqual(data["produktiv"], (300 + 100 + 100) / 700)
+        self.assertAlmostEqual(data["produktiv_plan"], 100 / 700)
+        self.assertAlmostEqual(data["produktiv_design"], 100 / 700)
+
+    def test_lead_without_phase_does_not_count_even_with_budget_keins(self):
+        leads = [
+            ("l1", self.LEAD, 100),
+            ("l2", "Persona: lead-tech\nPaket: P\nBudget: keins", 100),
+        ]
+        data = self.build(leads, {})
+        self.assertAlmostEqual(data["produktiv"], 300 / 600)
+        self.assertEqual(data["produktiv_plan"], 0)
+
+    def test_produktiv_at_most_one_and_steuerung_unchanged(self):
+        data = self.three_leads()
+        self.assertLessEqual(data["produktiv"], 1)
+        self.assertAlmostEqual(data["steuerung"], 400 / 700)
+        self.assertAlmostEqual(data["steuerung_bereinigt"], 100 / 700)
+
+    def test_ampel_line_shows_plan_and_design_detail(self):
+        data = self.three_leads()
+        lines = efficiency.render_section(data).splitlines()
+        line = next(x for x in lines if "Produktivanteil (Umsetzer" in x)
+        self.assertIn("davon Plan 14.3 % · Design 14.3 %", line)
+
+
 class SinceTest(unittest.TestCase):
     EARLY = "2026-10-10T06:00:00Z"
     LATE = "2026-10-10T07:00:00Z"

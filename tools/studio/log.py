@@ -243,11 +243,13 @@ def make_event(args: argparse.Namespace) -> dict:
 
 def _package_exists(package_id: str) -> bool:
     """Steht die Paket-ID schon im Ereignislager? Fehler gelten als «neu»."""
-    needle = f'"{package_id}"'
+    needles = (f'"{package_id}"', json.dumps(package_id))  # roh und ensure_ascii
     try:
         with open(events_file(), encoding="utf-8") as handle:
             for line in handle:
-                if needle in line and _is_package_line(line, package_id):
+                if any(n in line for n in needles) and _is_package_line(
+                    line, package_id
+                ):
                     return True
     except (OSError, ValueError):
         return False

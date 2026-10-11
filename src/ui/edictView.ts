@@ -10,7 +10,7 @@ export function edictEffectText(id: EdictId): string {
   const d = EDICTS[id];
   const parts: string[] = [];
   if (d.upkeepPct < 100) parts.push(`Unterhalt −${100 - d.upkeepPct} %`);
-  if (d.buyPct < 100) parts.push(`Kaufpreise am Kontor −${100 - d.buyPct} %`);
+  if (d.buyFactorPct < 100) parts.push(`Kaufpreise am Kontor −${100 - d.buyFactorPct} %`);
   if (d.growthInterval !== null)
     parts.push(
       `Wachstum alle ${formatGameTime(d.growthInterval)} statt ${formatGameTime(GROWTH_INTERVAL)}`,

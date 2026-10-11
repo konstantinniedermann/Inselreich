@@ -155,6 +155,31 @@ class NameRuleTest(unittest.TestCase):
             self.assertEqual(ours, theirs, package)
 
 
+class PrefixRuleTest(unittest.TestCase):
+    def check(self, package, phase):
+        prompt = f"Persona: lead-tech\nBudget: 4\nPaket: {package}"
+        return budgetwarn.check(start(prompt), [json.loads(grant(phase=phase))])
+
+    def test_grant_x_binds_x_suffix_but_not_xy(self):
+        self.assertIsNone(self.check("X-T01", "X"))
+        self.assertIsNotNone(self.check("XY-T01", "X"))
+
+    def test_warning_follows_prefix_rule(self):
+        def warn(package):
+            prompt = f"Persona: lead-tech\nBudget: 4\nPaket: {package}"
+            return budgetwarn.warning(start(prompt), [json.loads(grant(phase="X"))])
+
+        self.assertIsNone(warn("X-T01"))
+        self.assertIsNotNone(warn("XY-T01"))
+
+    def test_exact_grant_is_named_before_prefix(self):
+        names = budgetwarn.package_names("X-T01")
+        self.assertLess(names.index("X-T01"), names.index("X"))
+
+    def test_uses_the_same_function_as_model(self):
+        self.assertIs(budgetwarn.package_names, model.package_names)
+
+
 FIXTURE = Path(__file__).parent / "fixtures" / "budget_pairs.json"
 RULE_FROM = "2026-10-10T15:16:00Z"  # Handbuch 1.45 (Commit e5563696, 17:16 MESZ): `Paket:` gleich Phase
 # Echte Abweichung nach 1.45 (Paket `design-m14-e1`, Freigabe `design-m14-richtung`):

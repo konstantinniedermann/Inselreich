@@ -16,6 +16,8 @@ export const EFF_WINDOW = 256;
 export const EFF_MAX = 1000;
 /** Alle 10 Ticks erholt sich der Verkaufsanteil jedes Guts um einen Prozentpunkt. */
 export const SELL_RECOVERY_INTERVAL = 10;
+/** Alle 10 Ticks erholt sich der Kaufanteil jedes Guts um einen Prozentpunkt (I-048). */
+export const BUY_RECOVERY_INTERVAL = 10;
 /*
  * Achtung: ORDER_FIRST_TICK, ORDER_PERIOD und ORDER_DURATION liest die Save-Prüfung (`isValidOrder`).
  * Eine Änderung lässt Stände mit laufendem Auftrag bei der Prüfung scheitern und braucht eine

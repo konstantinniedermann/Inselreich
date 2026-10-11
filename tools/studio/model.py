@@ -12,6 +12,7 @@ import re
 import threading
 from bisect import bisect_right
 from collections import Counter
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from itertools import pairwise
 from pathlib import Path
@@ -178,11 +179,35 @@ def _package_token(text: str) -> str:
     return re.split(r"[\s\u2014\u2013:(]", text.strip(), maxsplit=1)[0]
 
 
-def _grant_names(lead_node: dict, child: dict | None = None) -> set[str]:
-    """Namen, unter denen eine Freigabe zu Lead (und Kind) passt: Kopfzeile und ihr Phasenname."""
-    packages = {lead_node["package"]} | ({child["package"]} if child else set())
-    packages -= {""}
-    return packages | {_package_token(p) for p in packages}
+def _unique(names: Iterable[str]) -> list[str]:
+    return list(dict.fromkeys(n for n in names if n))
+
+
+def _exact_names(package: str) -> list[str]:
+    return _unique([package, _package_token(package)])
+
+
+def _prefix_names(package: str) -> list[str]:
+    """Praefixe des Phasennamens bis zu jedem ``-``, laengster zuerst (R528)."""
+    token = _package_token(package)
+    cuts = [i for i, char in enumerate(token) if char == "-" and i > 0]
+    return [token[:i] for i in reversed(cuts)]
+
+
+def package_names(package: str) -> list[str]:
+    """Namen, unter denen eine Freigabe zu einer Paket-Kopfzeile passt, nach Rang:
+    Kopfzeile, Phasenname, dann Praefixe (laengster zuerst). Einzige Quelle fuer
+    Modell und Budget-Hook."""
+    return _unique(_exact_names(package) + _prefix_names(package))
+
+
+def _grant_names(lead_node: dict, child: dict | None = None) -> list[str]:
+    """Namen einer Freigabe fuer Lead (und Kind) nach Rang: erst alle exakten, dann Praefixe."""
+    packages = [lead_node["package"]] + ([child["package"]] if child else [])
+    exact = [n for p in packages for n in _exact_names(p)]
+    prefixes = [n for p in packages for n in _prefix_names(p)]
+    prefixes.sort(key=len, reverse=True)  # stabil: laengster Treffer gewinnt
+    return _unique(exact + prefixes)
 
 
 def _estimate(value: object) -> dict | None:
@@ -785,6 +810,7 @@ class _Builder:
 
     def budget_key(self, lead_node: dict, child: dict) -> tuple | None:
         """Schlüssel der Freigabe, der ein Start zählt; None = keine passt."""
+        self.claim_budgets()
         candidates = [
             g
             for g in self.budgets.values()
@@ -795,9 +821,9 @@ class _Builder:
         if not candidates:
             return None
         names = _grant_names(lead_node, child)
-        for grant in candidates:
-            if grant["phase"] in names:
-                return (grant["lead"], grant["phase"], grant["session_id"])
+        named = self._named_grant(candidates, names)
+        if named is not None:
+            return named
         # Ohne Namenstreffer: Freigaben, die ein anderer Lead derselben Rolle
         # beansprucht (parallele Controller), scheiden aus; von den uebrigen zaehlt
         # die juengste. Ein einzelner Lead mit mehreren Phasen bleibt zeitlich
@@ -813,9 +839,39 @@ class _Builder:
         best = max(free or candidates, key=lambda g: g["since"])
         return (best["lead"], best["phase"], best["session_id"])
 
+    @staticmethod
+    def _named_grant(candidates: list[dict], names: list[str]) -> tuple | None:
+        """Freigabe nach Namensrang: exakt vor Praefix, laengster Praefix zuerst."""
+        for name in names:
+            for grant in candidates:
+                if grant["phase"] == name:
+                    return (grant["lead"], grant["phase"], grant["session_id"])
+        return None
+
+    def _named_phase(self, lead_node: dict) -> str | None:
+        """Phase, die der Name der Paket-Kopfzeile trifft (wie budget_key, ohne Zeitregel)."""
+        candidates = [
+            g
+            for g in self.budgets.values()
+            if g["lead"] == lead_node["role"]
+            and g["session_id"] in ("", lead_node["session_id"])
+            and g["since"] <= lead_node["started"]
+        ]
+        named = self._named_grant(candidates, _grant_names(lead_node))
+        return None if named is None else named[1]
+
     def lead_phases(self) -> dict[str, str]:
         """Knotenschluessel des Leads -> Phase seiner Freigabe (Umkehrung von claims)."""
-        return {lead_key: key[1] for key, lead_key in self.claims.items()}
+        self.claim_budgets()
+        phases = {lead_key: key[1] for key, lead_key in self.claims.items()}
+        granted_roles = {g["lead"] for g in self.budgets.values()}
+        for node in self.nodes.values():  # nicht geclaimte Leads: nur Namenstreffer
+            if node["key"] in phases or node["role"] not in granted_roles:
+                continue
+            phase = self._named_phase(node)
+            if phase is not None:
+                phases[node["key"]] = phase
+        return phases
 
     def claim_budgets(self) -> None:
         """Jede Freigabe gehoert dem ersten danach gestarteten, noch freien Lead.
@@ -834,7 +890,10 @@ class _Builder:
         for lead in sorted(self.nodes.values(), key=lambda n: n["started"]):
             by_role.setdefault(lead["role"], []).append(lead)
         grants = sorted(self.budgets.items(), key=lambda kv: kv[1]["since"])
-        for by_name in (True, False):  # erst Kopfzeile Paket:, dann Zeitregel
+        names = {lead["key"]: _grant_names(lead) for lead in self.nodes.values()}
+        ranks = max((len(n) for n in names.values()), default=0)
+        for rank in range(ranks + 1):  # Namensrang 0..n, zuletzt die Zeitregel
+            by_name = rank < ranks
             for key, grant in grants:
                 if key in self.claims:
                     continue
@@ -843,7 +902,10 @@ class _Builder:
                         lead["key"] not in taken
                         and lead["started"] >= grant["since"]
                         and grant["session_id"] in ("", lead["session_id"])
-                        and (not by_name or grant["phase"] in _grant_names(lead))
+                        and (
+                            not by_name
+                            or grant["phase"] in names[lead["key"]][rank : rank + 1]
+                        )
                     ):
                         self.claims[key] = lead["key"]
                         taken.add(lead["key"])

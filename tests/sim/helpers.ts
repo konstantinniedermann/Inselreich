@@ -278,6 +278,8 @@ export const V11_ISLAND_KEYS = V8_ISLAND_KEYS;
  */
 export function foldBackToV11(v12: Record<string, unknown>): Record<string, unknown> {
   if (v12.monument !== null || v12.monumentDone !== false) throw new Error(MONUMENT_FOLD_ERROR);
+  const shares = Object.values((v12.buyPct ?? {}) as Record<string, number>);
+  if (shares.some((p) => p !== 100)) throw new Error('foldBackToV11: Kaufanteil nicht rückfaltbar');
   const buildings = Object.values(v12.buildings as Record<string, Record<string, unknown>>);
   if (buildings.some((b) => b.defId === 'monument')) throw new Error(MONUMENT_FOLD_ERROR);
   dropZeroReserve(v12);

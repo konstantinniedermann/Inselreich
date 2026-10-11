@@ -171,6 +171,32 @@ class LogTest(LogBase):
         self.assertEqual(self.events()[1]["title"], "Eins")
         self.assertNotIn("Titel unverändert", err)
 
+    def write_package_line(self, package_id, ensure_ascii):
+        line = json.dumps(
+            {"kind": "package", "package_id": package_id, "title": "A"},
+            ensure_ascii=ensure_ascii,
+        )
+        path = Path(self.tmp.name) / "events.jsonl"
+        path.write_text(line + "\n", "utf-8")
+
+    def test_non_ascii_id_is_found_in_both_encodings(self):
+        for ensure_ascii in (True, False):
+            with self.subTest(ensure_ascii=ensure_ascii):
+                self.write_package_line("Köder-1", ensure_ascii)
+                self.assertTrue(log._package_exists("Köder-1"))
+
+    def test_non_ascii_id_needs_exact_match(self):
+        for ensure_ascii in (True, False):
+            with self.subTest(ensure_ascii=ensure_ascii):
+                self.write_package_line("Köder-1", ensure_ascii)
+                self.assertFalse(log._package_exists("Köder-10"))
+                self.assertFalse(log._package_exists("Köder"))
+
+    def test_ascii_id_needs_exact_match(self):
+        self.write_package_line("T1", True)
+        self.assertTrue(log._package_exists("T1"))
+        self.assertFalse(log._package_exists("T10"))
+
     def test_new_package_with_title_gives_no_hint(self):
         _, _, err = self.package("P1", title="Neu")
         self.assertNotIn("Titel unverändert", err)

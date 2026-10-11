@@ -556,7 +556,13 @@ def _summary(
         "steuerung_heraus_n": removed,
         "steuerung_heraus_grund": grund,
         "umsetzer": share["Umsetzer"],
-        "produktiv": share["Umsetzer"] + share["Design/Spec/Plan"],
+        # Plan-/Design-Leads zaehlen doppelt: in steuerung (roh) und hier (R523 V3)
+        "produktiv": share["Umsetzer"]
+        + share["Design/Spec/Plan"]
+        + grund["plan"]
+        + grund["design"],
+        "produktiv_plan": grund["plan"],
+        "produktiv_design": grund["design"],
         "lead_ctx_median": _med(leads) if leads else None,
         "l0_ctx_max": l0_max,
         "persona_opus": split["ab_guard"][
@@ -744,6 +750,15 @@ def _table(head: list[str], rows: list[list[str]]) -> list[str]:
     return [line(head), line(["-" * w for w in widths]), *(line(r) for r in rows)]
 
 
+def _produktiv_shown(data: dict) -> str:
+    """Produktivanteil; mit Detail, wenn Plan-/Design-Leads dazugehoeren."""
+    shown = _pct(data["produktiv"])
+    plan, design = data.get("produktiv_plan"), data.get("produktiv_design")
+    if plan or design:
+        shown += f" (davon Plan {_pct(plan or 0)} · Design {_pct(design or 0)})"
+    return shown
+
+
 def _lights(data: dict) -> list[str]:
     top = data["top_reads"][0]["chars"] / KB if data["top_reads"] else None
     flakes = data.get("flakes")
@@ -764,7 +779,7 @@ def _lights(data: dict) -> list[str]:
         (
             LIGHT_LABELS["produktiv"],
             "produktiv",
-            _pct(data["produktiv"]),
+            _produktiv_shown(data),
             f"gelb < {t['produktiv']['gelb'] * 100:.0f} %, rot < {t['produktiv']['rot'] * 100:.0f} %",
         ),
         (
