@@ -347,3 +347,20 @@ describe('UI-GUT-CHIP Ablauf (AK-GC-05…09, 12)', () => {
     expect(JSON.stringify(w)).toBe(json);
   });
 });
+
+describe('I-049 T06 Gut-Fokus waitingReserve (AK-SB-15)', () => {
+  it('Verbraucher in waitingReserve steht in focusList, Text endet mit «(Reserve)»', () => {
+    const w = newWorld();
+    home(w).reserve = { wood: 20, stone: 0 };
+    home(w).stock.wood = 20;
+    const k = kontorOf(w);
+    synth(w, 1001, 'lumberjack', k.x + 4, k.y, 'ok');
+    synth(w, 1003, 'toolmaker', k.x + 20, k.y, 'waitingReserve');
+    const list = focusList(w, 0, 'wood');
+    const e = list.find((x) => x.id === 1003)!;
+    expect(e.role).toBe('consumer');
+    expect(focusMessage(w, 'wood', 2, list.length, e).endsWith('Wartet auf Holz (Reserve)')).toBe(
+      true,
+    );
+  });
+});

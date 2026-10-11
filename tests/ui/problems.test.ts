@@ -477,3 +477,13 @@ describe('AK-M13STL-11 Stilllegen in Problemliste und Trenn-Warnung', () => {
     expect(newlyCut(before, w)).toBe(0);
   });
 });
+
+describe('I-049 T06 waitingReserve in der Problemliste (AK-SB-14)', () => {
+  it('kein Eintrag; einziger stehender Betrieb -> NO_PROBLEM_TEXT', () => {
+    const w = newWorld();
+    const k = kontorOf(w);
+    raw(w, 'toolmaker', k.x + 6, k.y - 6, 'waitingReserve');
+    expect(problemList(w, 0)).toEqual([]);
+    expect(problemStep(w, null, 0, 1)).toBeNull();
+  });
+});

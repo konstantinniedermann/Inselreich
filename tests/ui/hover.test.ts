@@ -433,3 +433,36 @@ describe('M13-E1 Mouse-over stillgelegter Betrieb (AK-M13STL-09)', () => {
     expect(hoverInfo(w, f, 0, none)!.lines[0]).toBe('brennt');
   });
 });
+
+describe('I-049 T06 Hover waitingReserve (AK-SB-13)', () => {
+  it('«wartet auf Holz (Reserve)»; Glashütte mit beiden Gütern «Stein, Holz»', () => {
+    const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
+    home(w).reserve = { wood: 20, stone: 20 };
+    home(w).stock.wood = 20;
+    home(w).stock.stone = 20;
+    const k = w.buildings[home(w).kontorId]!;
+    const none = { ship: false, animal: null };
+    const mk = (defId: BuildingDefId, x: number, y: number): { x: number; y: number } => {
+      const id = w.nextBuildingId++;
+      w.buildings[id] = {
+        id,
+        defId,
+        x,
+        y,
+        connected: true,
+        progress: 0,
+        state: 'waitingReserve',
+        island: 0,
+      };
+      forceGrass(w, x, y);
+      home(w).tiles[idx(home(w), x, y)]!.buildingId = id;
+      return { x, y };
+    };
+    expect(hoverInfo(w, mk('toolmaker', k.x + 6, k.y - 6), 0, none)!.lines[0]).toBe(
+      'wartet auf Holz (Reserve)',
+    );
+    expect(hoverInfo(w, mk('glassworks', k.x + 10, k.y - 6), 0, none)!.lines[0]).toBe(
+      'wartet auf Stein, Holz (Reserve)',
+    );
+  });
+});

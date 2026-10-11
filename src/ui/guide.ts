@@ -9,7 +9,7 @@ import { SERVICE_BUILDING, tierLock } from '../sim/population';
 import { buildLock } from '../sim/placement';
 import { effectiveTaxLevel, taxPct, townhallActive } from '../sim/townhall';
 import { entryOfBuilding, isUnlocked, unlockText } from '../sim/unlocks';
-import { houseDiagnosis, missingInputs } from '../sim/queries';
+import { houseDiagnosis, missingInputs, reservedInputs } from '../sim/queries';
 import type {
   Building,
   BuildingDefId,
@@ -250,6 +250,10 @@ export function remedyText(w: World, b: Building): string | null {
   if (b.state === 'waitingInput' && def.consumes) {
     const g = missingInputs(w, b)[0] ?? def.consumes[0]!;
     return `Baue ${nk(producerOf(g)!)} oder kaufe ${GOODS[g].name} am Kontor`;
+  }
+  if (b.state === 'waitingReserve' && def.consumes) {
+    const g = reservedInputs(w, b)[0] ?? def.consumes[0]!;
+    return `Senke die Reserve für ${GOODS[g].name} im Handel am Kontor oder baue ${nk(producerOf(g)!)}`;
   }
   if (b.state === 'storageFull' && def.produces) {
     const g = def.produces;

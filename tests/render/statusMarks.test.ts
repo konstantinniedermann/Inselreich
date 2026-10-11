@@ -223,3 +223,9 @@ describe('M13-E1 Zustand paused', () => {
     expect(statusMarkOf('paused')).toBeNull();
   });
 });
+
+describe('I-049 Zustand waitingReserve', () => {
+  it('AK-SB-17 statusMarkOf(waitingReserve) = null', () => {
+    expect(statusMarkOf('waitingReserve')).toBeNull();
+  });
+});

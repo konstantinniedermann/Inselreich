@@ -8,7 +8,7 @@ import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import { GOODS } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import { SERVICE_BUILDING, upgradeStatus } from '../sim/population';
-import { houseDiagnosis, missingInputs, type Diagnosis } from '../sim/queries';
+import { houseDiagnosis, missingInputs, reservedInputs, type Diagnosis } from '../sim/queries';
 import { cycleOf } from '../sim/levels';
 import { inSupplyRange } from '../sim/supply';
 import { effectiveTaxLevel, townhallActive } from '../sim/townhall';
@@ -21,7 +21,7 @@ import { costLine } from './dom';
 import { friendlyReason } from './hints';
 import { islandCard } from './islandCard';
 import { levelText, protectedCount, utilizationText } from './inspect';
-import { diagnosisText, goodList, stateInfo } from './texts';
+import { diagnosisText, goodList, reserveGoods, stateInfo } from './texts';
 import { formatGameTime, perMinute } from './time';
 
 /** Inhalt der Mouse-over-Karte (Spec M10 13): Titel und höchstens drei Zeilen. */
@@ -124,6 +124,8 @@ function workshopInfo(world: World, b: Building): HoverInfo {
   else if (b.state === 'waitingInput') {
     const missing = missingInputs(world, b);
     lines.push(`wartet auf ${goodList(missing.length > 0 ? missing : (def.consumes ?? []))}`);
+  } else if (b.state === 'waitingReserve') {
+    lines.push(`wartet auf ${reserveGoods(def.consumes, reservedInputs(world, b))} (Reserve)`);
   } else if (b.state === 'storageFull') lines.push('Lager voll');
   else if (b.state === 'noService')
     lines.push(

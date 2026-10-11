@@ -1,7 +1,7 @@
 // goodFocus.ts — rein: Erzeuger und Verbraucher eines Guts auf einer Insel und die Meldungen M1–M3 (I-043); nicht im Spielstand.
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS } from '../sim/defs/goods';
-import { goodRole, missingInputs } from '../sim/queries';
+import { goodRole, missingInputs, reservedInputs } from '../sim/queries';
 import type { Building, GoodId, World } from '../sim/types';
 import { buildLock } from '../sim/unlocks';
 import { jumpTarget } from './islandJump';
@@ -52,7 +52,12 @@ export function focusMessage(
 ): string {
   const def = BUILDING_DEFS[e.building.defId];
   const role = e.role === 'producer' ? 'Erzeuger' : 'Verbraucher';
-  const state = stateInfo(e.building, world.tick, missingInputs(world, e.building)).text;
+  const state = stateInfo(
+    e.building,
+    world.tick,
+    missingInputs(world, e.building),
+    reservedInputs(world, e.building),
+  ).text;
   return `${GOODS[good].name} ${index} von ${count}: ${def.name} (${role}) · ${state}`;
 }
 
