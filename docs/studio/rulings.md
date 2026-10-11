@@ -5282,3 +5282,21 @@ Erzeuger und volles Lager ohne Hinweis bleiben ausserhalb (Beobachtung). Kein Sa
 Regelbezug: STUDIO.md Ablauf Stufe leicht, R475, R464 · Kosten bei Irrtum: ein kleines UI-Paket nachbessern.
 
 Entscheider: L0 · Anlass: Kurzdesign-Bericht lead-design · ADR: —
+
+## R500 · 2026-10-11 · Gate Spec M14-E1: BEDENKEN → Spec-Nachtrag, Auflagen an den Plan
+
+Ruling: lead-qa BEDENKEN (B1–B11), lead-tech BEDENKEN (B1–B13), kein ZURÜCK. **Spec-Nachtrag** durch `lead-design`
+(E-061, sonnet): QA-B4 (Zählsignal Ersatzregel als [Tech]-Testhook, Stufen 1–3 benannt, Schwelle ≤ 3 für Stufe 3),
+QA-B5 (Seed 963 ist Messseed, kein Bestands-Pin; Abgleich mit Anhang 01 A3), QA-B6 (AK-11 mit Zahlen oder tickgenauem
+Vergleich), QA-B7 (AK-09 Funktion und Einheit), QA-B8 (neues AK: Schiff unterwegs, Position/Ankunft nach Migration
+unverändert), QA-B9 (`AK-M14E1-12` voll ausschreiben), QA-B1 (AK-31 als „Bestandstext unverändert + angehängter Satz“).
+**Auflagen an den Plan** (Pflicht): QA-B2 (B3-Messung nach I-048 und M13-E2 neu, Rangfolge P1 > P2 > P3 bleibt
+Playtest-Kriterium, Kippen → Ruling), QA-B3 (Vergleichsbasis = main-Commit zum Plan-Start, Test „Controller Seed 3
+gründet nie auf B oder C“), QA-B10/B11 (Abriss-/Neubau-Tests, Fixture-Slot Pflicht), Tech-B1 (`cycleOf(world, b)`,
+SIM ändert Aufrufer in ui/render mechanisch mit, UI blocked-by SIM), Tech-B2 (Migration mit eingefrorenem Literal, nie
+`createWorld`), Tech-B3 (A/B-Bitgleichheit über 1…1000 Seeds plus Lagevergleich in der Migration), Tech-B4 (Ersatzregel
+konstruktiv), Tech-B5/B6/B8, Nachtrag zu ADR-010 beim Plan. Plan erst nach Abschluss M13 (R486).
+
+Regelbezug: gates.md Gate Spec, R486, R495, E-061 · Kosten bei Irrtum: ein weiterer Nachtrag.
+
+Entscheider: L0 · Anlass: Gate-Berichte lead-qa und lead-tech · ADR: —
