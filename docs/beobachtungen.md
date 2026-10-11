@@ -268,3 +268,10 @@ Der gestärkte Test `tests/ui/goodFocus.test.ts` (AK-GC-08) belegt die Trennung 
   — unter paralleler Last wird das der Normalfall, das Gate trägt dann allein die Monotonie-Annahme. (2) Vor
   `check-ci-perf` wartet `push-check` nicht auf ruhige Last → falsches Rot möglich, kein falsches Grün. Ursprung:
   Controller Strang A, Final-Review opus. Einschätzung: niedrig bis mittel; mit den Load-Daten aus R514 V2 bewerten.
+
+### 2026-10-11 · M13-E2-ART: Nachtlicht des Denkmals nicht eingehängt; Frame-Ereigniszahl schwankt
+
+- **Fundort:** `feat/m13-e2-art` @ `4626645a`; Handoff `.studio/handoffs/2026-10-11-lead-art-m13-e2-art.md`. Beobachtung:
+  (1) `monumentNightLight` (Leuchtfeuer bei Nacht) ist definiert, aber nirgends eingehängt. (2) In `tests/render/renderer.test.ts`
+  schwankt die Zahl der Frame-Ereignisse zwischen Läufen. Ursprung: lead-art M13-E2-ART. Einschätzung: (1) mittel, falls die
+  Spec ein Nachtlicht verlangt (Controller E prüft in T15), sonst niedrig; (2) niedrig, Flake-Kandidat.

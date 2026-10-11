@@ -5576,3 +5576,18 @@ Hinweis `git checkout --merge docs/beobachtungen.md` bei Treiberfehler, E-059 �
 Regelbezug: gates.md Gate Merge, R488, R503, R504, R514, R519 · Kosten bei Irrtum: ein Werkzeug-Revert.
 
 Entscheider: L0 · Anlass: Schlussbericht Controller Strang B · ADR: —
+
+## R521 · 2026-10-11 · M13-E2-ART abgenommen (`4626645a`); Ownership-Abweichungen bestätigt
+
+Ruling: ART-Strang (T08 `f0ef73d5`, T19 `004f7971` Glocke `monumentDone`, T09 `4d39a866` + Fix `4626645a`, Merge Sim
+`051efcc8`) abgenommen; Reviews OK; Klangfigur durch `lead-art` abgenommen (Hörprobe in T16/AK-44). Nachträglich
+bestätigt: `tests/render/weather.test.ts` (CAPS `flareSparks`), `sprites-kanten.test.ts`/`sprites.test.ts`
+(Stufe 0 und Denkmal aus Silhouetten-Prüfungen, eigener Lichtkanten-Test), Referenz-Hash `monument` `a64989a4` →
+`8a28960e`. Merge nach main erst laut Reihenfolge R505/R507 (nach M13-E2-SIM und I-049-Sim), Gate Merge gemeinsam mit
+dem UI-Strang nach T18. T09-Mehrbedarf (≈ 100 statt 45 Tools) wurde nicht vorab gemeldet — Punkt für die Session-Retro.
+`monumentNightLight` (nicht eingehängt) und schwankende Frame-Ereigniszahl in `renderer.test.ts` → `docs/beobachtungen.md`;
+Controller E prüft in T15, ob die Spec ein Nachtlicht verlangt.
+
+Regelbezug: R505, R507, R509, R516 · Kosten bei Irrtum: ein Test-Nachtrag im ART-Strang.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-art M13-E2-ART · ADR: —
