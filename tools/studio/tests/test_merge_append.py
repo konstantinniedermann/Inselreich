@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -125,6 +126,11 @@ class GitIntegrationTest(unittest.TestCase):
             "docs/beobachtungen.md merge=beob-append\n"
         )
         (self.repo / "docs").mkdir()
+        script = self.repo / "tools" / "studio"
+        script.mkdir(parents=True)
+        shutil.copy(
+            MODULE, script / "merge_append.py"
+        )  # Treiberpfad relativ zur Wurzel
         self.file = self.repo / "docs" / "beobachtungen.md"
         self.file.write_text(HEAD)
         git(self.repo, "add", "-A")
@@ -141,7 +147,7 @@ class GitIntegrationTest(unittest.TestCase):
             self.repo,
             "config",
             "merge.beob-append.driver",
-            f"python3 {MODULE} %O %A %B %L %P",
+            "python3 tools/studio/merge_append.py %O %A %B %L %P",
         )
 
     def test_merge_without_conflict(self):
