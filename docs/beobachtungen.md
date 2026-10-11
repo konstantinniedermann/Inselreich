@@ -251,3 +251,12 @@ Der gestärkte Test `tests/ui/goodFocus.test.ts` (AK-GC-08) belegt die Trennung 
 ### 2026-10-10 · UI-TASTEN: Final-Review-Hinweise (niedrig)
 
 - **Fundort:** `src/ui/modal.ts` (importiert `hotkeys.ts` für `isSaveChord`, zieht `sim/defs` mit), Tooltip «Entf» am Abreissen-Knopf (Mac ohne Entf-Taste), `keyDownVerdict` (sperrt nur den Abriss-Zug). Beobachtung: `isSaveChord` könnte in ein kleines reines Modul; Tooltip könnte «Entf / Rücktaste» nennen. Ursprung: Final-Review UI-TASTEN. Einschätzung: alle niedrig.
+
+### 2026-10-11 · Inspektor-Abhilfe «baue mehr» bei gefülltem Lager
+
+- **Fundort:** `src/ui/guide.ts` `remedyText` (Wohnhaus), Playtest UI-NAECHSTER-SCHRITT
+  (`.worktrees/ui-naechster-schritt/.studio/qa/ui-naechster-schritt/food-1920x1080-3-inspektor.png`). Beobachtung: Das
+  Wohnhaus-Feld `remedy` nennt «Baue mehr Fischerhütte (F) oder kaufe Nahrung am Kontor» auch bei Nahrung 50 im Lager,
+  solange das Haus Nahrung als unerfüllt führt (im Test pausiert, kein Tick); «Nächster Schritt» zeigt dann den
+  bisherigen Pfad. Ursprung: qa-playtester ui-naechster-schritt. Einschätzung: niedrig, vermutlich nur bis zum nächsten
+  Versorgungs-Tick sichtbar; prüfen, ob es im laufenden Spiel auftritt.

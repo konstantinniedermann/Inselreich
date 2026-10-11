@@ -5495,3 +5495,15 @@ zurückgestellt bis V2 Daten liefert. V1 und V3 setzt `studio-coach` als Handbuc
 Regelbezug: STUDIO.md Verbesserungsschleife, R464, R488 · Kosten bei Irrtum: eine zu weite Ausnahme von R464.
 
 Entscheider: L0 · Anlass: Bericht studio-process-coach retro-rel-19 · ADR: —
+
+## R515 · 2026-10-11 · Gate Merge UI-NAECHSTER-SCHRITT: OK, lokaler Merge; Release mit M13
+
+Ruling: `feat/ui-naechster-schritt` @ `da78589a` abgenommen: T1–T3 (AK-NS-01…08 + Kolonie), Final-Review opus BEDENKEN
+(3× niedrig) → Fix-Runde `1d55a512`/`da78589a` (m7-Spec-Regelliste, AK-NS-02 exakt, AK-NS-07 trennscharf mit Rot-Beleg)
+ohne Verhaltensänderung, daher ohne erneutes Review; Playtest OK in allen 4 Punkten bei 1280 und 1920. Merge lokal durch
+`production-integrator`. **Kein Release vor M13-Ende** (R505); das Paket fährt im M13-Release mit. Playtest-Hinweis
+(Inspektor-Abhilfe bei gefülltem Lager, solange das Haus noch unversorgt ist) → `docs/beobachtungen.md`.
+
+Regelbezug: gates.md Gate Merge, R502, R505 · Kosten bei Irrtum: ein Revert eines kleinen UI-Pakets.
+
+Entscheider: L0 · Anlass: Berichte Final-Review, Umsetzer, Playtester · ADR: —
