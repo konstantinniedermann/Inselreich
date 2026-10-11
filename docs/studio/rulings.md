@@ -5803,3 +5803,18 @@ Release M13). **I048-SIM** führt jetzt `git merge main` aus, löst die Konflikt
 Regelbezug: R505, R532, R535 · Kosten bei Irrtum: ein Werkzeug-Rückbau.
 
 Entscheider: L0 · Anlass: Berichte Integrator MERGE-I049-SIM, lead-tech TOOL-BUENDEL-7 · ADR: —
+
+## R537 · 2026-10-11 · Gate Merge I048-SIM: OK; I-049-UI startet
+
+Ruling: Sim-Strang I-048 (`feat/i048-sim` @ `dcae12eb`, gemergt mit `b569a8f2`; Task-Reviews und Delta-Review OK,
+Final-Review opus OK ohne hohen Befund, `make check` Exit 0 auf `dcae12eb` nach einem Last-Ausreisser
+`terrain.test.ts` bei Load 8,5) → **Gate Merge OK** (Muster R535: Sim-Merge vor dem UI-Strang; Final-Review über beide
+Stränge nach dem UI-Strang). Konfliktlösung `save.ts` (`ef0b214a`) und Rückfaltung `reserve`/Denkmal/`buyPct`
+(`dcae12eb`, Prod-B4) angenommen. Der laufende Integrator mergt `feat/i048-sim` **nach** `tool/b7`, seriell.
+**I-049-UI** (T05–T09) startet jetzt: Controller `lead-tech` sonnet, Worktree `.worktrees/i049-ui` von `main`
+(I-049-Sim enthalten), Budget **11** (Rest aus 21: T05–T09 8 Starts + Puffer 3), Parallelität 1. Vor T07 und T09
+`git merge main` (dann mit I048-SIM). Wochenfenster hoch: höchstens 2 Umsetzungsstränge (R535).
+
+Regelbezug: R505, R506, R535, R536 · Kosten bei Irrtum: ein Rückmerge im Sim-Strang.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I048-SIM · ADR: —
