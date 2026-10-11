@@ -247,21 +247,54 @@ describe('AK-ZK-31 kein Kauf-Verkauf-Gewinn', () => {
 });
 
 describe('AK-ZK-33 Rueckfaltung', () => {
-  it('alle 100: buyPct entfaellt, Rest in gleicher Folge', () => {
-    const v12 = JSON.parse(serialize(createWorld(3))) as Record<string, unknown>;
-    const out = foldBackToV11(v12);
-    expect('buyPct' in out).toBe(false);
+  const v12Of = (x: World): Record<string, unknown> =>
+    JSON.parse(serialize(x)) as Record<string, unknown>;
+
+  /** Stand der Vorversion von Hand: ohne monument, monumentDone, buyPct und islands[*].reserve. */
+  const v11ByHand = (v12: Record<string, unknown>): Record<string, unknown> => {
     const hand: Record<string, unknown> = {};
     for (const k of Object.keys(v12))
       if (!['monument', 'monumentDone', 'buyPct'].includes(k)) hand[k] = v12[k];
+    hand.islands = (v12.islands as Record<string, unknown>[]).map((isl) => {
+      const kept: Record<string, unknown> = {};
+      for (const k of Object.keys(isl)) if (k !== 'reserve') kept[k] = isl[k];
+      return kept;
+    });
     hand.version = 11;
-    expect(JSON.stringify(out)).toBe(JSON.stringify(hand));
+    return hand;
+  };
+
+  it('alle 100: buyPct entfaellt, Rest in gleicher Folge', () => {
+    const v12 = v12Of(createWorld(3));
+    const out = foldBackToV11(v12);
+    expect('buyPct' in out).toBe(false);
+    expect(JSON.stringify(out)).toBe(JSON.stringify(v11ByHand(v12)));
   });
 
   it('Anteil 101 wirft', () => {
     const x = createWorld(3);
     x.buyPct.tools = 101;
-    const v12 = JSON.parse(serialize(x)) as Record<string, unknown>;
-    expect(() => foldBackToV11(v12)).toThrow(/Kaufanteil nicht rückfaltbar/);
+    expect(() => foldBackToV11(v12Of(x))).toThrow(/Kaufanteil nicht rückfaltbar/);
+  });
+
+  it('Prod-B4: reserve ungleich 0 wirft', () => {
+    const v12 = v12Of(createWorld(3));
+    (v12.islands as { reserve: Record<string, number> }[])[0]!.reserve.wood = 1;
+    expect(() => foldBackToV11(v12)).toThrow(/Sperrbestand nicht rückfaltbar/);
+  });
+
+  it('Prod-B4: Denkmal gesetzt wirft', () => {
+    const v12 = v12Of(createWorld(3));
+    v12.monument = {};
+    expect(() => foldBackToV11(v12)).toThrow(/Denkmal nicht rückfaltbar/);
+    const { w: m } = runningMonument();
+    expect(() => foldBackToV11(v12Of(m))).toThrow(/Denkmal nicht rückfaltbar/);
+  });
+
+  it('Prod-B4: alles neutral (buyPct, reserve, Denkmal) ergibt die v11-Form', () => {
+    const x = createWorld(3);
+    for (const isl of x.islands) expect(isl.reserve).toEqual({ wood: 0, stone: 0 });
+    const v12 = v12Of(x);
+    expect(JSON.stringify(foldBackToV11(v12))).toBe(JSON.stringify(v11ByHand(v12)));
   });
 });

@@ -73,10 +73,19 @@ function tally(run: Run): void {
   }
 }
 
-/** Serialisierter Zustand ohne das neue Feld `islands[*].reserve`. */
+/**
+ * Serialisierter Zustand ohne die neuen Felder `islands[*].reserve` (I-049) und `buyPct` (I-048). Das Golden stammt
+ * aus main vor beiden Paketen; `buyPct` wird vor dem Hash entfernt, nur wenn alle Anteile 100 sind (sonst Fehler).
+ */
 function withoutReserve(world: World): string {
-  const raw = JSON.parse(serialize(world)) as { islands: Record<string, unknown>[] };
+  const raw = JSON.parse(serialize(world)) as {
+    islands: Record<string, unknown>[];
+    buyPct?: Record<string, number>;
+  };
   for (const isl of raw.islands) delete isl.reserve;
+  if (Object.values(raw.buyPct ?? {}).some((p) => p !== 100))
+    throw new Error('withoutReserve: Kaufanteil nicht rückfaltbar');
+  delete raw.buyPct;
   return JSON.stringify(raw);
 }
 
