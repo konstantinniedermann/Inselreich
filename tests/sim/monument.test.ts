@@ -1,5 +1,12 @@
-import { describe, expect, it } from 'vitest';
-import { demolish } from '../../src/sim/build';
+import { readFileSync } from 'node:fs';
+import { describe, expect, it, vi } from 'vitest';
+import { demolish, placeRoad, removeRoad } from '../../src/sim/build';
+import { step } from '../../src/sim/tick';
+import { fireTarget } from '../../src/sim/crises';
+import { createRng } from '../../src/sim/rng';
+import { deserialize } from '../../src/sim/save';
+import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { buyMonumentUnit, buyPrice } from '../../src/sim/trade';
 import {
   isMonumentGood,
   monumentLock,
@@ -8,6 +15,7 @@ import {
   monumentStartReason,
   newMonument,
   setMonumentBuy,
+  tickMonument,
   setMonumentPaused,
   startMonumentStage,
 } from '../../src/sim/monument';
@@ -19,8 +27,28 @@ import { buildEntries } from '../../src/ui/buildMenu';
 import { HOME, home, tileAt } from '../../src/sim/world';
 import { MONUMENT_GOODS, MONUMENT_STAGES } from '../../src/sim/defs/monument';
 import { placeBuilding } from '../../src/sim/build';
-import { forceRect, houseFar, putBuilding, setHouse, twoIslandWorld, village } from './helpers';
-import { MONUMENT_AT, monumentWorld, placeMonument } from './monumentHelpers';
+import {
+  forceRect,
+  houseFar,
+  placeTownhall,
+  putBuilding,
+  setHouse,
+  twoIslandWorld,
+  village,
+} from './helpers';
+import {
+  MONUMENT_AT,
+  monumentWorld,
+  placeMonument,
+  monumentRunWorld,
+  runningMonument,
+  villageMonument,
+} from './monumentHelpers';
+
+vi.mock('../../src/sim/rng', async (orig) => {
+  const m = await orig<typeof import('../../src/sim/rng')>();
+  return { ...m, createRng: vi.fn(m.createRng) };
+});
 
 describe('AK-M13E2-03 Freischaltung', () => {
   const LOCK = 'Erst nach dem Kaufleute-Ziel';
@@ -395,5 +423,446 @@ describe('monumentProgress', () => {
     m.running = true;
     m.delivered = { stone: 200, tools: 80, glass: 100, spice: 34 };
     expect(monumentProgress(w)).toBe(79);
+  });
+});
+
+const GOOD4 = MONUMENT_GOODS;
+const stepTo = (w: World, tick: number): void => {
+  while (w.tick < tick) step(w);
+};
+/** Zukaufpreis im Zug-Tick `tick`: Geld-Unterschied zum Zwilling ohne Zukauf-Schalter, nur dieser Tick. */
+const paidAt = (w: World, twin: World, tick: number): number => {
+  stepTo(w, tick - 1);
+  stepTo(twin, tick - 1);
+  const before = twin.money - w.money;
+  step(w);
+  step(twin);
+  return twin.money - w.money - before;
+};
+const buyTwin = (prep: (w: World) => void): [World, World] => {
+  const w = runningMonument().w;
+  const twin = runningMonument().w;
+  for (const x of [w, twin]) prep(x);
+  w.monument!.buy.stone = true;
+  return [w, twin];
+};
+const stock = (w: World) => home(w).stock;
+const goal = (stage: number) => MONUMENT_STAGES[stage]!.goods;
+
+describe('AK-M13E2-08 Zug aus dem Lager', () => {
+  it('zieht alle 10 Ticks ein Stück Stein über der Reserve', () => {
+    const { w } = runningMonument();
+    stock(w).stone = 23;
+    const seen: [number, number, number][] = [];
+    for (let t = 1001; t <= 1040; t++) {
+      step(w);
+      seen.push([t, stock(w).stone, w.monument!.delivered.stone]);
+    }
+    const at = (t: number) => seen.find((r) => r[0] === t)!;
+    expect(at(1009)).toEqual([1009, 23, 0]);
+    expect(at(1010)).toEqual([1010, 22, 1]);
+    expect(at(1019)).toEqual([1019, 22, 1]);
+    expect(at(1020)).toEqual([1020, 21, 2]);
+    expect(at(1030)).toEqual([1030, 20, 3]);
+    expect(at(1040)).toEqual([1040, 20, 3]);
+  });
+
+  it('Start bei Tick 1005: erster Zug bei 1010', () => {
+    const w = runningMonument().w;
+    w.monument!.running = false;
+    w.tick = 1005;
+    w.monument!.running = true;
+    stock(w).stone = 23;
+    stepTo(w, 1009);
+    expect(w.monument!.delivered.stone).toBe(0);
+    step(w);
+    expect(w.monument!.delivered.stone).toBe(1);
+  });
+
+  it('Geld für genau ein Stück: Stein wird gekauft, Glas nicht', () => {
+    const { w } = runningMonument();
+    w.monument!.buy.stone = true;
+    w.monument!.buy.glass = true;
+    w.money = 15;
+    stepTo(w, 1010);
+    expect(w.monument!.delivered).toEqual({ stone: 1, tools: 0, glass: 0, spice: 0 });
+    expect(w.money).toBe(0);
+  });
+});
+
+describe('AK-M13E2-10 Reserve hält', () => {
+  it('Lager fällt durch Zug nie unter die Reserve; Glas wird geliefert, Gewürz nicht', () => {
+    const { w, houses } = villageMonument();
+    Object.assign(stock(w), { stone: 20, tools: 20, glass: 80, spice: 64 });
+    const keep = (): void => houses.forEach((h) => setHouse(h, 4, 20));
+    keep();
+    expect(monumentReserve(w, 'glass')).toBe(64);
+    expect(monumentReserve(w, 'spice')).toBe(64);
+    for (let i = 0; i < 200; i++) {
+      keep();
+      const before = { ...w.monument!.delivered };
+      step(w);
+      for (const g of GOOD4) {
+        if (w.monument!.delivered[g] > before[g]) {
+          expect(stock(w)[g]).toBeGreaterThanOrEqual(monumentReserve(w, g));
+        }
+      }
+    }
+    const d = w.monument!.delivered;
+    expect(d.glass).toBeGreaterThanOrEqual(1);
+    expect(d.glass).toBeLessThanOrEqual(16);
+    expect(d.spice).toBe(0);
+  });
+});
+
+describe('AK-M13E2-11 Zukauf im Zug', () => {
+  it('kauft je Zug ein Stück zum Preis vor dem Zug (15)', () => {
+    const { w } = runningMonument();
+    w.monument!.buy.stone = true;
+    for (const t of [1010, 1020, 1030]) {
+      stepTo(w, t - 1);
+      const money = w.money;
+      const price = buyPrice(w, 'stone', 1);
+      step(w);
+      expect(money - w.money).toBe(price);
+      expect(price).toBe(15);
+    }
+    expect(w.monument!.delivered.stone).toBe(3);
+  });
+
+  it('zahlt mit wirkendem Handel 12', () => {
+    const [w, twin] = buyTwin((x) => {
+      placeTownhall(x);
+      x.edict = 'trade';
+    });
+    expect(paidAt(w, twin, 1010)).toBe(12);
+  });
+
+  it('kauft mit 14 Geld nicht, ohne Schalter nicht', () => {
+    const { w } = runningMonument();
+    w.monument!.buy.stone = true;
+    w.money = 14;
+    stepTo(w, 1010);
+    expect(w.monument!.delivered.stone).toBe(0);
+    expect(w.money).toBe(14);
+    const v = runningMonument().w;
+    stepTo(v, 1010);
+    expect(v.monument!.delivered.stone).toBe(0);
+  });
+
+  it('Stein 25: fünf Züge aus dem Lager ohne Geld, dann Kauf', () => {
+    const { w } = runningMonument();
+    stock(w).stone = 25;
+    w.monument!.buy.stone = true;
+    const money = w.money;
+    stepTo(w, 1050);
+    expect(w.monument!.delivered.stone).toBe(5);
+    expect(w.money).toBe(money);
+    stepTo(w, 1060);
+    expect(w.monument!.delivered.stone).toBe(6);
+    expect(w.money).toBe(money - 15);
+  });
+
+  it('ohne Kontor kein Kauf', () => {
+    const { w } = runningMonument();
+    w.monument!.buy.stone = true;
+    w.islands[0]!.kontorId = null;
+    const money = w.money;
+    stepTo(w, 1010);
+    expect(w.monument!.delivered.stone).toBe(0);
+    expect(w.money).toBe(money);
+  });
+
+  it('Zukauf-Funktion: Geld = Preis → 1, Preis − 1 → 0 und unverändert', () => {
+    const { w } = runningMonument();
+    w.money = 15;
+    expect(buyMonumentUnit(w, 'stone')).toBe(1);
+    expect(w.money).toBe(0);
+    w.money = 14;
+    const before = serialize(w);
+    expect(buyMonumentUnit(w, 'stone')).toBe(0);
+    expect(serialize(w)).toBe(before);
+  });
+
+  it('qa B8 Lager unter Reserve (Stein 12), Schalter an: nur Kauf, Lager bleibt 12', () => {
+    const { w } = runningMonument();
+    stock(w).stone = 12;
+    w.monument!.buy.stone = true;
+    stepTo(w, 1010);
+    expect(stock(w).stone).toBe(12);
+    expect(w.monument!.delivered.stone).toBe(1);
+  });
+
+  it('qa B8 Handel aufgehoben bzw. Amtsstube abgerissen: Preis ab nächstem Zug 15', () => {
+    for (const how of ['edict', 'demolish'] as const) {
+      const [w, twin] = buyTwin((x) => {
+        placeTownhall(x);
+        x.edict = 'trade';
+      });
+      expect(paidAt(w, twin, 1010)).toBe(12);
+      for (const x of [w, twin]) {
+        if (how === 'edict') x.edict = null;
+        else demolish(x, Object.values(x.buildings).find((b) => b.defId === 'townhall')!.id);
+      }
+      expect(paidAt(w, twin, 1020)).toBe(15);
+    }
+  });
+
+  it('qa B8 Häuser wachsen von 60 auf 80 Kaufleute: Glas-Reserve 48 → 64 ab nächstem Zug', () => {
+    const { w, houses } = villageMonument();
+    stock(w).glass = 60;
+    houses.forEach((h) => setHouse(h, 4, 15));
+    expect(monumentReserve(w, 'glass')).toBe(48);
+    stepTo(w, 1010);
+    expect(w.monument!.delivered.glass).toBeGreaterThanOrEqual(1);
+    houses.forEach((h) => setHouse(h, 4, 20));
+    expect(monumentReserve(w, 'glass')).toBe(64);
+    const d = w.monument!.delivered.glass;
+    stock(w).glass = 60;
+    stepTo(w, 1020);
+    expect(w.monument!.delivered.glass).toBe(d);
+  });
+
+  it('qa B8 Häuser schrumpfen von 80 auf 60: Reserve 64 → 48, Glas 60 liefert wieder', () => {
+    const { w, houses } = villageMonument();
+    houses.forEach((h) => setHouse(h, 4, 20));
+    stock(w).glass = 60;
+    stepTo(w, 1010);
+    expect(w.monument!.delivered.glass).toBe(0);
+    houses.forEach((h) => setHouse(h, 4, 15));
+    expect(monumentReserve(w, 'glass')).toBe(48);
+    stepTo(w, 1020);
+    expect(w.monument!.delivered.glass).toBeGreaterThanOrEqual(1);
+  });
+
+  it('qa B8 leeres Lager: mit Schalter Kauf, Lager bleibt 0; ohne Schalter nichts, kein Wurf', () => {
+    const { w } = runningMonument();
+    for (const g of GOOD4) stock(w)[g] = 0;
+    w.monument!.buy.stone = true;
+    stepTo(w, 1010);
+    expect(w.monument!.delivered.stone).toBe(1);
+    expect(stock(w).stone).toBe(0);
+    w.monument!.buy.stone = false;
+    expect(() => stepTo(w, 1030)).not.toThrow();
+    expect(w.monument!.delivered.stone).toBe(1);
+    expect(GOOD4.every((g) => stock(w)[g] === 0)).toBe(true);
+  });
+});
+
+describe('AK-M13E2-13 Abschluss', () => {
+  const nearlyDone = (stage: number): World => {
+    const { w } = runningMonument();
+    const m = w.monument!;
+    m.stage = stage;
+    m.delivered = { ...goal(stage), stone: goal(stage).stone - 1 };
+    stock(w).stone = 25;
+    return w;
+  };
+
+  it('letzter Rest im Zug-Tick: im selben Tick Abschnitt zu', () => {
+    const w = nearlyDone(0);
+    stepTo(w, 1009);
+    expect(w.monument!.running).toBe(true);
+    step(w);
+    expect(w.monument).toMatchObject({
+      running: false,
+      stage: 1,
+      delivered: { stone: 0, tools: 0, glass: 0, spice: 0 },
+    });
+  });
+
+  it('nach Abschnitt 3 ist monumentDone wahr, Sieg-Flags unverändert', () => {
+    const w = nearlyDone(2);
+    const flags = [w.won, w.wonMerchants, w.wonSpice];
+    expect(w.monumentDone).toBe(false);
+    stepTo(w, 1010);
+    expect(w.monument!.stage).toBe(3);
+    expect(w.monumentDone).toBe(true);
+    expect([w.won, w.wonMerchants, w.wonSpice]).toEqual(flags);
+  });
+
+  it('alle Reste 0 und pausiert: Abschluss im nächsten Tick ohne Zug-Tick', () => {
+    const { w } = runningMonument();
+    w.monument!.delivered = { ...goal(0) };
+    w.monument!.paused = true;
+    step(w);
+    expect(w.tick % 10).not.toBe(0);
+    expect(w.monument).toMatchObject({ running: false, stage: 1 });
+  });
+});
+
+describe('AK-M13E2-14 Kein Zug', () => {
+  const snapshot = (w: World) => ({
+    goods: GOOD4.map((g) => stock(w)[g]),
+    delivered: { ...w.monument!.delivered },
+  });
+
+  it('pausiert, ohne Weg oder ohne laufenden Abschnitt: 100 Schritte ohne Änderung', () => {
+    const cases: [string, (w: World) => void][] = [
+      ['paused', (w) => (w.monument!.paused = true)],
+      ['ohne Weg', (w) => removeRoad(w, MONUMENT_AT.x - 1, MONUMENT_AT.y - 1)],
+      ['!running', (w) => (w.monument!.running = false)],
+    ];
+    for (const [name, prep] of cases) {
+      const { w } = runningMonument();
+      const twin = runningMonument().w;
+      twin.monument!.running = false;
+      for (const x of [w, twin]) {
+        stock(x).stone = 40;
+        stock(x).glass = 40;
+      }
+      prep(w);
+      prep(twin);
+      if (name === 'ohne Weg')
+        expect(Object.values(w.buildings).find((b) => b.defId === 'monument')!.connected).toBe(
+          false,
+        );
+      const before = snapshot(w);
+      for (let i = 0; i < 100; i++) {
+        step(w);
+        step(twin);
+      }
+      expect(snapshot(w), name).toEqual(before);
+      expect(w.money, name).toBe(twin.money);
+    }
+  });
+
+  it('Fortsetzen bzw. Weg neu: Zug ab dem nächsten Zug-Tick', () => {
+    const { w } = runningMonument();
+    stock(w).stone = 40;
+    w.monument!.paused = true;
+    stepTo(w, 1015);
+    w.monument!.paused = false;
+    stepTo(w, 1019);
+    expect(w.monument!.delivered.stone).toBe(0);
+    step(w);
+    expect(w.monument!.delivered.stone).toBe(1);
+    removeRoad(w, MONUMENT_AT.x - 1, MONUMENT_AT.y - 1);
+    stepTo(w, 1030);
+    expect(w.monument!.delivered.stone).toBe(1);
+    placeRoad(w, MONUMENT_AT.x - 1, MONUMENT_AT.y - 1);
+    stepTo(w, 1039);
+    expect(w.monument!.delivered.stone).toBe(1);
+    step(w);
+    expect(w.monument!.delivered.stone).toBe(2);
+  });
+
+  it('qa B8 Weg-Abriss zwischen 1009 und 1010: kein Zug bei 1010', () => {
+    const { w } = runningMonument();
+    stock(w).stone = 40;
+    stepTo(w, 1009);
+    removeRoad(w, MONUMENT_AT.x - 1, MONUMENT_AT.y - 1);
+    step(w);
+    expect(w.monument!.delivered.stone).toBe(0);
+  });
+
+  it('qa B8 Abriss bei pausiert: monument null, nächster step wirft nicht', () => {
+    const { w, id } = runningMonument();
+    w.monument!.paused = true;
+    expect(demolish(w, id)).toEqual({ ok: true });
+    expect(w.monument).toBeNull();
+    expect(() => step(w)).not.toThrow();
+  });
+});
+
+describe('Tick-Platz (R5.1)', () => {
+  it('tickMonument steht in step direkt nach tickEconomy', () => {
+    const src = readFileSync('src/sim/tick.ts', 'utf8');
+    const body = src.slice(src.indexOf('export function step'));
+    const calls = [...body.slice(0, body.indexOf('\n}')).matchAll(/^\s+(\w+)\(world\);/gm)].map(
+      (m) => m[1],
+    );
+    expect(calls[calls.indexOf('tickEconomy') + 1]).toBe('tickMonument');
+    expect(calls.slice(-2)).toEqual(['checkWin', 'tickUnlocks']);
+  });
+});
+
+describe('AK-M13E2-16 Determinismus', () => {
+  it('(a) fireTarget wählt nie das Denkmal, auch nicht neben brennbaren Nachbarn', () => {
+    const { w, id } = runningMonument();
+    const { x, y } = MONUMENT_AT;
+    const hut = putBuilding(w, HOME, 'lumberjack', x + 3, y);
+    let hits = 0;
+    for (let tx = x - 3; tx <= x + 7; tx++) {
+      for (let ty = y - 3; ty <= y + 6; ty++) {
+        const t = fireTarget(w, { x: tx, y: ty });
+        if (t !== null) hits++;
+        expect(t?.id).not.toBe(id);
+      }
+    }
+    expect(hits).toBeGreaterThan(0);
+    expect(fireTarget(w, { x: x + 1, y: y + 1 })?.id).toBe(hut.id);
+    expect(BUILDING_DEFS.monument.flammable).not.toBe(true);
+  });
+
+  it('(b) zwei Kopien aus Speichern/Laden bleiben über 1000 Schritte gleich', () => {
+    const a = monumentRunWorld();
+    const r = deserialize(serialize(a));
+    if (!r.ok) throw new Error('laden');
+    const b = r.world;
+    for (let i = 0; i < 1000; i++) {
+      step(a);
+      step(b);
+    }
+    expect(serialize(b)).toBe(serialize(a));
+  });
+
+  it('(c) tickMonument ruft an einem Zug-Tick keinen Zufall auf', () => {
+    const w = monumentRunWorld();
+    stepTo(w, 1009);
+    w.tick = 1010;
+    vi.mocked(createRng).mockClear();
+    const random = vi.spyOn(Math, 'random');
+    tickMonument(w);
+    expect(w.monument!.delivered.stone).toBe(1);
+    expect(createRng).not.toHaveBeenCalled();
+    expect(random).not.toHaveBeenCalled();
+    random.mockRestore();
+  });
+});
+
+describe('AK-M13E2-49 Speichern und Laden mitten im Abschnitt', () => {
+  const END = 1500;
+  const withPause = (w: World, paused: boolean): void => {
+    // Pause zwischen den Schritten: bei Tick 1015 an, bei 1035 aus. Der Tick-Vergleich greift nur, weil `run`
+    // Tick für Tick läuft (jeder Tick wird vor dem Schritt gesehen).
+    if (!paused) return;
+    if (w.tick === 1015) setMonumentPaused(w, true);
+    if (w.tick === 1035) setMonumentPaused(w, false);
+  };
+  const sum = (w: World): number =>
+    MONUMENT_GOODS.reduce((n, g) => n + w.monument!.delivered[g], 0);
+  /** Läuft bis `to` und liefert die Zahl der Schritte, in denen das Denkmal ein Stück bekam (= tatsächliche Züge). */
+  const run = (w: World, to: number, paused: boolean): number => {
+    let pulls = 0;
+    while (w.tick < to) {
+      withPause(w, paused);
+      const before = sum(w);
+      step(w);
+      if (sum(w) > before) pulls++;
+    }
+    return pulls;
+  };
+
+  it.each([
+    [1007, false],
+    [1010, false],
+    [1013, false],
+    [1025, true],
+  ] as const)('Speicher-Tick %i (pausiert: %s): K′ gleich Zwilling Z', (s, paused) => {
+    const z = monumentRunWorld();
+    run(z, END, paused);
+    const k = monumentRunWorld();
+    run(k, s, paused);
+    const r = deserialize(serialize(k));
+    if (!r.ok) throw new Error('laden');
+    const k2 = r.world;
+    const pulls = run(k2, END, paused);
+    expect(serialize(k2)).toBe(serialize(z));
+    expect(k2.monument!.running).toBe(true);
+    expect(k2.monument!.delivered.stone).toBeGreaterThanOrEqual(1);
+    expect(k2.monument!.delivered.glass).toBeGreaterThanOrEqual(1);
+    // Nach s: 1007 → 50 Züge (1010 … 1500), 1010 → 49, 1013 → 49; bei 1025 pausiert fallen 1030 aus → 47.
+    expect(pulls).toBeGreaterThanOrEqual(40);
   });
 });

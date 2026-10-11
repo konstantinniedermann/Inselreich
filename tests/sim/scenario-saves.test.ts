@@ -23,7 +23,16 @@ import { step } from '../../src/sim/tick';
 import type { Building, World } from '../../src/sim/types';
 import { deriveUnlocks } from '../../src/sim/unlocks';
 import { buildingsOfType, center, idx, inBounds, tilesInRadius, home } from '../../src/sim/world';
-import { PROBES, SCENARIOS, tickBeforeFirst, writeProbes, writeScenarios } from './scenarios';
+import {
+  PROBES,
+  SCENARIOS,
+  tickBeforeFirst,
+  writeExtraSaves,
+  writeProbes,
+  writeScenarios,
+} from './scenarios';
+import { MONUMENT_AT } from './monumentHelpers';
+import { MONUMENT_STAGES } from '../../src/sim/defs/monument';
 
 /** Lädt ein Szenario so, wie der Browser es lädt: über Serialisierung und `deserialize`. */
 function load(name: string): World {
@@ -31,6 +40,20 @@ function load(name: string): World {
   if (!r.ok) throw new Error(`${name}: ${r.reason}`);
   return r.world;
 }
+
+const M13E2 = [
+  'm13e2-vor-ziel2',
+  'm13e2-ziel2',
+  'm13e2-bauplatz',
+  'm13e2-abschnitt1',
+  'm13e2-abschnitt1-rest',
+  'm13e2-abschnitt3-rest',
+  'm13e2-bild-0',
+  'm13e2-bild-1',
+  'm13e2-bild-2',
+  'm13e2-bild-3',
+  'm13e2-bild-4',
+] as const;
 
 const houses = (w: World): Building[] => buildingsOfType(w, 'house');
 
@@ -43,6 +66,7 @@ const WON_AFTER_FIRST_TICK = new Set([
   'm8-kaufleute-ohne-glas',
   'm11-stein', // M11 B1: won true (Freischaltung U6)
   'm13-ziel1', // M13-E1: Stand nach Ziel 1
+  ...M13E2, // M13-E2: Basis mit won = true
 ]);
 
 describe('Szenario-Saves', () => {
@@ -107,6 +131,7 @@ describe('Szenario-Saves', () => {
         ...M11, // M11 B1
         'm13-ziel1',
         'm13-vor-ziel',
+        ...M13E2,
       ].sort(),
     );
   });
@@ -690,10 +715,107 @@ describe('M11 Szenarien (Anhang 02 F)', () => {
   });
 });
 
+describe('M13-E2 Szenario-Stände (Anhang 08 D)', () => {
+  const goals = (stage: number) => MONUMENT_STAGES[stage]!.goods;
+  const mon = (w: World): NonNullable<World['monument']> => w.monument!;
+  const GOOD4 = ['stone', 'tools', 'glass', 'spice'] as const;
+
+  it('alle laden und teilen die Basis: Amtsstube, vier Kaufleute-Häuser, Lager 20, Holz 100', () => {
+    for (const name of M13E2) {
+      const w = load(name);
+      expect(w.won, name).toBe(true);
+      expect(buildingsOfType(w, 'townhall'), name).toHaveLength(1);
+      const hs = houses(w);
+      expect(hs, name).toHaveLength(4);
+      expect(
+        hs.every((h) => h.house!.tier === 4),
+        name,
+      ).toBe(true);
+      expect(home(w).stock.wood, name).toBeGreaterThanOrEqual(100);
+    }
+  });
+
+  it('vor-ziel2 und ziel2: ohne Denkmal, wonMerchants false bzw. true', () => {
+    const a = load('m13e2-vor-ziel2');
+    const b = load('m13e2-ziel2');
+    expect([a.wonMerchants, a.monument, a.monumentDone]).toEqual([false, null, false]);
+    expect([b.wonMerchants, b.monument, b.monumentDone]).toEqual([true, null, false]);
+    expect(b.money).toBe(30_000);
+    for (const g of GOOD4) expect(home(b).stock[g]).toBe(20);
+    expect(canPlace(b, 'monument', MONUMENT_AT.x, MONUMENT_AT.y).ok).toBe(true);
+  });
+
+  it('bauplatz: Denkmal gebaut, Stufe 0, nicht laufend, angebunden, Stein 20', () => {
+    const w = load('m13e2-bauplatz');
+    expect(w.wonMerchants).toBe(true);
+    expect(mon(w)).toMatchObject({ stage: 0, running: false, paused: false });
+    expect(w.buildings[mon(w).buildingId]).toMatchObject({ x: MONUMENT_AT.x, connected: true });
+    expect(home(w).stock.stone).toBe(20);
+  });
+
+  it('abschnitt1: läuft, je Gut ein Viertel des Solls', () => {
+    const w = load('m13e2-abschnitt1');
+    expect(mon(w)).toMatchObject({ stage: 0, running: true });
+    for (const g of GOOD4) expect(mon(w).delivered[g], g).toBe(Math.floor(goals(0)[g] / 4));
+    expect(w.buildings[mon(w).buildingId]!.connected).toBe(true);
+  });
+
+  it('abschnitt1-rest: Rest 5 je Gut, alle buy an, wonSpice', () => {
+    const w = load('m13e2-abschnitt1-rest');
+    expect(mon(w)).toMatchObject({ stage: 0, running: true });
+    for (const g of GOOD4) {
+      expect(goals(0)[g] - mon(w).delivered[g], g).toBe(5);
+      expect(mon(w).buy[g], g).toBe(true);
+    }
+    expect(w.wonSpice).toBe(true);
+  });
+
+  it('abschnitt3-rest: Stufe 2 läuft, Rest 1 je Gut, buy an, wonSpice, nicht fertig', () => {
+    const w = load('m13e2-abschnitt3-rest');
+    expect(mon(w)).toMatchObject({ stage: 2, running: true });
+    for (const g of GOOD4) {
+      expect(goals(2)[g] - mon(w).delivered[g], g).toBe(1);
+      expect(mon(w).buy[g], g).toBe(true);
+    }
+    expect([w.wonSpice, w.monumentDone]).toEqual([true, false]);
+  });
+
+  it('bild-0 bis bild-4: Zustandspaare der Bildstufen', () => {
+    const want: [number, boolean][] = [
+      [0, false],
+      [0, true],
+      [1, false],
+      [2, false],
+      [3, false],
+    ];
+    want.forEach(([stage, running], i) => {
+      const w = load(`m13e2-bild-${i}`);
+      expect([mon(w).stage, mon(w).running], `bild-${i}`).toEqual([stage, running]);
+      expect(w.monumentDone, `bild-${i}`).toBe(stage === 3);
+    });
+  });
+
+  it('v13 (QA-B5): nicht in SCENARIOS, eigene Datei, wird als unbekannte Version abgewiesen', () => {
+    expect(Object.keys(SCENARIOS)).not.toContain('m13e2-v13');
+    const written: [string, string][] = [];
+    expect(writeExtraSaves(undefined, (p, d) => void written.push([p, d]))).toBe(0);
+    expect(writeExtraSaves('out', (p, d) => void written.push([p, d]))).toBe(1);
+    expect(written.map(([p]) => p)).toEqual(['out/m13e2-v13.json']);
+    const raw = JSON.parse(written[0]![1]) as { version: number };
+    expect(raw.version).toBe(SAVE_VERSION + 1);
+    expect(deserialize(written[0]![1])).toEqual({ ok: false, reason: 'Unbekannte Version' });
+  });
+});
+
 // Echter Schreibpfad für die Browser-Checks (übersprungen ohne SCENARIO_OUT).
 const out = import.meta.env.SCENARIO_OUT as string | undefined;
 it.runIf(out)('schreibt die Szenario-Saves nach SCENARIO_OUT', () => {
   mkdirSync(out!, { recursive: true });
   writeScenarios(out, writeFileSync);
   writeProbes(out, writeFileSync);
+});
+
+it.runIf(out)('schreibt die Zusatz-Stände (m13e2-v13) nach SCENARIO_OUT', () => {
+  mkdirSync(out!, { recursive: true });
+  writeExtraSaves(out, writeFileSync);
 });

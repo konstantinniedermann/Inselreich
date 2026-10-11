@@ -4,6 +4,7 @@ import { tickOrders } from './orders';
 import { citizens, merchants, tickPopulation, tickTaxes } from './population';
 import { tickProduction } from './production';
 import { tickShips, type ShipLoss } from './ships';
+import { tickMonument } from './monument';
 import { tickMarket } from './trade';
 import { tickUnlocks } from './unlocks';
 import { WIN_CITIZENS, WIN_MERCHANTS, WIN_SPICE_MERCHANTS } from './defs/tiers';
@@ -38,6 +39,7 @@ export function step(world: World): StepReport {
   tickPopulation(world);
   tickTaxes(world);
   tickEconomy(world);
+  tickMonument(world);
   tickMarket(world);
   tickOrders(world);
   tickCrises(world);
