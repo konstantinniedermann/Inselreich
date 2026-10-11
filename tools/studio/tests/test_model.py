@@ -2735,6 +2735,24 @@ class ClaimPrefixRuleTest(unittest.TestCase):
         self.assertEqual(rows["X"]["used"], 2)
         self.assertEqual(rows["other"]["used"], 0)
 
+    def test_unclaimed_lead_gets_shared_prefix_phase(self):
+        events = [
+            grant(1, SA, "X", 4, 1),
+            *lead_with_package(10, SA, "L1", package="X-T01"),
+            *lead_with_package(11, SA, "L2", package="X-T02"),
+        ]
+        phases = build(events, now=2000, session="all")["lead_phases"]
+        self.assertEqual(phases, {f"{SA}:L1": "X", f"{SA}:L2": "X"})
+
+    def test_unclaimed_lead_without_name_match_gets_no_phase(self):
+        events = [
+            grant(1, SA, "X", 4, 1),
+            *lead_with_package(10, SA, "L1", package="X-T01"),
+            *lead_with_package(11, SA, "L2", package="Y-T02"),
+        ]
+        phases = build(events, now=2000, session="all")["lead_phases"]
+        self.assertEqual(phases, {f"{SA}:L1": "X"})
+
     def test_budget_key_counts_start_on_prefix_grant(self):
         events = [
             grant(0, SA, "other", 4, 1),

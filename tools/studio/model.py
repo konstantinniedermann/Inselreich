@@ -821,10 +821,9 @@ class _Builder:
         if not candidates:
             return None
         names = _grant_names(lead_node, child)
-        for name in names:  # Rang: exakt vor Praefix, laengster Praefix zuerst
-            for grant in candidates:
-                if grant["phase"] == name:
-                    return (grant["lead"], grant["phase"], grant["session_id"])
+        named = self._named_grant(candidates, names)
+        if named is not None:
+            return named
         # Ohne Namenstreffer: Freigaben, die ein anderer Lead derselben Rolle
         # beansprucht (parallele Controller), scheiden aus; von den uebrigen zaehlt
         # die juengste. Ein einzelner Lead mit mehreren Phasen bleibt zeitlich
@@ -840,10 +839,39 @@ class _Builder:
         best = max(free or candidates, key=lambda g: g["since"])
         return (best["lead"], best["phase"], best["session_id"])
 
+    @staticmethod
+    def _named_grant(candidates: list[dict], names: list[str]) -> tuple | None:
+        """Freigabe nach Namensrang: exakt vor Praefix, laengster Praefix zuerst."""
+        for name in names:
+            for grant in candidates:
+                if grant["phase"] == name:
+                    return (grant["lead"], grant["phase"], grant["session_id"])
+        return None
+
+    def _named_phase(self, lead_node: dict) -> str | None:
+        """Phase, die der Name der Paket-Kopfzeile trifft (wie budget_key, ohne Zeitregel)."""
+        candidates = [
+            g
+            for g in self.budgets.values()
+            if g["lead"] == lead_node["role"]
+            and g["session_id"] in ("", lead_node["session_id"])
+            and g["since"] <= lead_node["started"]
+        ]
+        named = self._named_grant(candidates, _grant_names(lead_node))
+        return None if named is None else named[1]
+
     def lead_phases(self) -> dict[str, str]:
         """Knotenschluessel des Leads -> Phase seiner Freigabe (Umkehrung von claims)."""
         self.claim_budgets()
-        return {lead_key: key[1] for key, lead_key in self.claims.items()}
+        phases = {lead_key: key[1] for key, lead_key in self.claims.items()}
+        granted_roles = {g["lead"] for g in self.budgets.values()}
+        for node in self.nodes.values():  # nicht geclaimte Leads: nur Namenstreffer
+            if node["key"] in phases or node["role"] not in granted_roles:
+                continue
+            phase = self._named_phase(node)
+            if phase is not None:
+                phases[node["key"]] = phase
+        return phases
 
     def claim_budgets(self) -> None:
         """Jede Freigabe gehoert dem ersten danach gestarteten, noch freien Lead.
