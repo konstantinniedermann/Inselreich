@@ -1,11 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { GOOD_IDS } from '../../src/sim/defs/goods';
+import { readFileSync } from 'node:fs';
+import { BUY_CAP, GOODS, GOOD_IDS } from '../../src/sim/defs/goods';
+import { buyPrice, buyQuote } from '../../src/sim/trade';
+import { HOME } from '../../src/sim/world';
 import { home, createWorld } from '../../src/sim/world';
 import { setEdict } from '../../src/sim/edicts';
 import {
   boomGood,
   buyHeadNote,
+  buyPctText,
   buyTitle,
+  buyTitleText,
+  sellPctText,
+  tradeReasonCtx,
   buyUnitText,
   renderTrade,
   reserveTitle,
@@ -198,5 +205,57 @@ describe('I-049 T05 Reserve-Zeile im Handelsdialog (AK-SB-16)', () => {
     w.buildings[102]!.state = 'ok';
     updateTrade(panel as unknown as HTMLElement, w);
     expect(field(panel, 'reserve-hold-wood')!.hidden).toBe(true);
+  });
+});
+
+describe('I-048 Kaufanteil', () => {
+  it('AK-ZK-19 buyPctText zeigt den Kaufanteil', () => {
+    const w = createWorld(3);
+    w.buyPct.tools = 109;
+    expect(buyPctText(w, 'tools')).toBe('Kauf 109 %');
+    w.buyPct.tools = 100;
+    expect(buyPctText(w, 'tools')).toBe('Kauf 100 %');
+  });
+
+  it('AK-ZK-32 sellPctText statt «Preis … %»', () => {
+    const w = createWorld(3);
+    w.sellPct.wood = 80;
+    expect(sellPctText(w, 'wood')).toBe('Verkauf 80 %');
+    w.sellPct.wood = 100;
+    expect(sellPctText(w, 'wood')).toBe('Verkauf 100 %');
+    expect(readFileSync('src/ui/trade.ts', 'utf8')).not.toContain('`Preis ${');
+  });
+
+  it('AK-ZK-21 Titel wortgleich bei rise 0, ohne Mittel-Zusatz', () => {
+    for (const g of GOOD_IDS)
+      for (const n of [1, 10])
+        for (const edictPct of [100, 80]) {
+          const buy = GOODS[g].buy;
+          const p = edictPct === 100 ? n * buy : Math.floor((n * buy * 80 + 99) / 100);
+          const name = GOODS[g].name;
+          expect(buyTitleText(name, n, buyQuote(buy, 100, n, 0, BUY_CAP, edictPct))).toBe(
+            `${n} ${name} kaufen für ${p} Geld`,
+          );
+        }
+  });
+
+  it('buyTitleText: Mittel-Zusatz nur über 100 %', () => {
+    expect(buyTitleText('Werkzeug', 10, { price: 436, meanPct: 109 })).toBe(
+      '10 Werkzeug kaufen für 436 Geld · im Mittel 109 %',
+    );
+    expect(buyTitleText('Werkzeug', 10, { price: 400, meanPct: 100 })).toBe(
+      '10 Werkzeug kaufen für 400 Geld',
+    );
+  });
+
+  it('tradeReasonCtx: Kauf mit buyPrice bei Anteil 120, Verkauf mit Menge', () => {
+    const w = createWorld(3);
+    w.buyPct.tools = 120;
+    expect(tradeReasonCtx(w, 'buy', 'tools', 10, HOME).cost?.money).toBe(buyPrice(w, 'tools', 10));
+    expect(tradeReasonCtx(w, 'sell', 'wood', 5, HOME)).toEqual({
+      good: 'wood',
+      amount: 5,
+      island: HOME,
+    });
   });
 });
