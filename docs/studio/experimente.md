@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R523): E-057, E-059, E-061. Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R542): E-057, E-060, E-061; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 ---
 
@@ -567,7 +567,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/production-integrator.md` (nur nach Ruling)
 - Ruling: R459, R464 (Umsetzung mit Handbuch 1.43 und Persona production-integrator 1.9; Beobachtung läuft über die nächsten 3 Merges)
 
-## E-059 · laufend · Merge-Treiber für reines Anhängen in `docs/beobachtungen.md`
+## E-059 · umgesetzt (laufend passiv, ohne Platz, R542) · Merge-Treiber für reines Anhängen in `docs/beobachtungen.md`
 
 - Hypothese: Wenn `docs/beobachtungen.md` einen eigenen Merge-Treiber bekommt, der Konflikte nur dann selbst löst, wenn beide Seiten im Konflikt-Abschnitt ausschliesslich Zeilen anhängen (Basis-Teil leer: erst „ours“, dann „theirs“), und sonst mit Konfliktmarken stehen bleibt, entfallen die manuellen Auflösungen am Dateiende, ohne dass gestrichene Zeilen zurückkehren wie unter `merge=union` (E-031) (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md) B3; 3 von 3 Merges der Session, vorher ≥ 3 Fälle bis R458).
 - Messgrösse: 0 manuelle Konfliktauflösungen in `docs/beobachtungen.md` in den nächsten 3 Merges, die die Datei auf beiden Seiten berühren (Ausgang 3 von 3); Gegenprobe: 0 zurückgekehrte gestrichene Zeilen und 0 verlorene Einträge (Überschriften nach dem Merge = Basis + Zugänge beider Seiten − Löschungen, per `git diff <merge-base>`), Konflikte mit Löschungen bleiben manuell.
@@ -577,9 +577,9 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `.gitattributes`, `tools/studio/merge_append.py` (neu, mit Tests unter `tools/studio/tests/`), `Makefile` (Ziel zum Setzen von `merge.beob-append.driver` in `.git/config`, gilt für alle Worktrees), `.claude/agents/production-integrator.md`, `docs/studio/STUDIO.md` (Merges), `docs/studio/CHANGELOG.md` (nur nach Ruling; Umsetzung als Werkzeug-Paket)
 - Ruling: R520 (Werkzeug gemergt, Merge-Treiber `beob-append`); Start 2026-10-11 auf dem Platz von E-049 (R523 V4)
 - Start: 2026-10-11
-- Bewertung: Entwurf 2026-10-11 (Studio-Coach, EXP-BEWERTUNG-1011): noch nicht bewertbar, 0 von 3 Merges mit beidseitiger Änderung von `docs/beobachtungen.md` seit Treiber (`712e63f2`, 10:37). Geprüft per `git diff <merge-base>` je Elternteil: `cda5fdb7` und `e8b462de` nur ours, `ecf9972b`, `1cbbdf89`, `9be27dab` nur theirs, `0a8ee0c2` und `612856dc` keine Änderung; der Treiber lief also nie. Fehlender Datenpunkt: 3 Merges mit Änderung auf beiden Seiten.
+- Bewertung: läuft passiv ohne Platz (R542), Bewertung bei 3 beidseitigen Merges oder spätestens 2026-11-19. Entwurf 2026-10-11 (Studio-Coach, EXP-BEWERTUNG-1011): noch nicht bewertbar, 0 von 3 Merges mit beidseitiger Änderung von `docs/beobachtungen.md` seit Treiber (`712e63f2`, 10:37). Geprüft per `git diff <merge-base>` je Elternteil: `cda5fdb7` und `e8b462de` nur ours, `ecf9972b`, `1cbbdf89`, `9be27dab` nur theirs, `0a8ee0c2` und `612856dc` keine Änderung; der Treiber lief also nie. Fehlender Datenpunkt: 3 Merges mit Änderung auf beiden Seiten.
 
-## E-060 · vorgeschlagen · Budget-Hook blockt statt zu warnen (Anpassung E-055)
+## E-060 · laufend (R542) · Budget-Hook blockt statt zu warnen (Anpassung E-055)
 
 - Hypothese: Wenn der Spawn-Hook einen Lead-Start mit „Budget: n“ (n > 0) ohne vorherige `log.py budget`-Zeile derselben Rolle und Phase blockt (wie der Modell-Guard, R167) statt nur zu warnen, bindet jede Freigabe ihre Lead-Instanz und E-049 rechnet alle Freigabephasen heraus (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md) B5: Warnung 0,9 s nach dem Start, Freigabe 3 s später, Instanz ohne Phase; vorher REL-15, R440).
 - Messgrösse: 0 Lead-Instanzen mit „Budget: n > 0“ und Phase `None` in `lead_stats.rows` über 3 Sessions (Ausgang 1 in f52039fc); Gegenprobe: 0 Fehlblocks bei „Budget: keins“ und bei Folge-Controllern eines freigegebenen Pakets (R433 V3 b), höchstens 1 zusätzlicher Agent-Aufruf je Block.
@@ -587,10 +587,11 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Sessions nach dem Merge, höchstens bis 2026-11-19.
 - Rückfall: Hook-Zweig auf Warnen zurückstellen (`git revert`).
 - Dateien: `tools/studio/budgetwarn.py`, `tools/studio/modelguard.py`, `tools/studio/tests/` (nur nach Ruling; Werkzeug-Paket)
-- Ruling: –
-- Start: –
+- Ruling: R542
+- Start: 2026-10-11
 - Bewertung: –
 - Notiz (R520): Werkzeug gemergt, Start mit `deny` per Ruling, wenn nur eine Session läuft (R520); Standard bis dahin `warn`.
+- Echtlauf (R542, EXP-BEWERTUNG-1011): 113 Lead-Starts seit 2026-10-10, 8 mögliche Blocks, davon 3 berechtigt (keine Freigabe vor dem Start) und 5 Fehlblocks (Freigabe vorhanden, aber unter Phasenname `impl-…` bzw. `design-M13`, den `package_names` nicht trifft; zwei davon Folge-Controller bzw. Mehrfach-Controller). `BUDGET_MODE` bleibt `warn`, der Schalter ist nicht umgestellt; Messung startet erst nach Korrektur des Abgleichs (Ruling nötig).
 
 ## E-061 · laufend (R497) · Spec-Nachtrag und Kurzdesign Stufe leicht auf sonnet
 
@@ -603,7 +604,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R497
 - Start: 2026-10-11 (erster Fall: Spec-Nachtrag M14-E1)
 - Datenpunkt 1 von 3, S-2026-10-11-dc50be15 (Retro [session-dc50be15-ende](retros/2026-10-11-session-dc50be15-ende.md) B4): `design-m14-e1-nachtrag` (sonnet) 0,078 M gegen Ausgang 0,70 M (≈ 11 %, Schwelle ≤ 60 % erfüllt); Gate danach ohne weitere Befunde, 0 ZURÜCK (R501); Kurzdesign `design-ui-naechster-schritt` (sonnet) 0,056 M gegen 0,16 M (≈ 35 %); opus-Anteil 55,6 % (≤ 70 % erfüllt). Weiter beobachten.
-- Bewertung: Entwurf 2026-10-11 (Studio-Coach, EXP-BEWERTUNG-1011): noch nicht bewertbar. Datenpunkt 2, S-2026-10-11-d665682d (`lead_stats.rows`): `design-UI-TEXTE-1` (sonnet, eine Instanz, 18 Turns) 0,129 M für Kurzdesign samt Spec-Nachtrag (R530) und Berichtigung (R533), gegen 0,16 M Ausgang Kurzdesign = ≈ 81 % (Schwelle ≤ 60 % verfehlt, aber Nachtrag-Anteil nicht trennbar, weil dieselbe Instanz); opus-Anteil der Session 38,2 % (≤ 70 % erfüllt); Gate Spec BEDENKEN (R530, 9 Punkte, kein Blocker). Tendenz: Nachtrag klar unter Schwelle (11 %, Datenpunkt 1), Kurzdesign mit Spec nahe 80 %. Fehlend: ein dritter, sauber getrennter Datenpunkt und der Ausgangswert der Gate-Befunde (Gegenprobe); Empfehlung: Schwelle für Kurzdesign inklusive Spec und Nachtrag in einer Instanz neu fassen oder weiter beobachten (verlängern).
+- Bewertung: verlängert (R542). Entwurf 2026-10-11 (Studio-Coach, EXP-BEWERTUNG-1011): noch nicht bewertbar. Datenpunkt 2, S-2026-10-11-d665682d (`lead_stats.rows`): `design-UI-TEXTE-1` (sonnet, eine Instanz, 18 Turns) 0,129 M für Kurzdesign samt Spec-Nachtrag (R530) und Berichtigung (R533), gegen 0,16 M Ausgang Kurzdesign = ≈ 81 % (Schwelle ≤ 60 % verfehlt, aber Nachtrag-Anteil nicht trennbar, weil dieselbe Instanz); opus-Anteil der Session 38,2 % (≤ 70 % erfüllt); Gate Spec BEDENKEN (R530, 9 Punkte, kein Blocker). Tendenz: Nachtrag klar unter Schwelle (11 %, Datenpunkt 1), Kurzdesign mit Spec nahe 80 %. Fehlend: ein dritter, sauber getrennter Datenpunkt und der Ausgangswert der Gate-Befunde (Gegenprobe); Empfehlung: Schwelle für Kurzdesign inklusive Spec und Nachtrag in einer Instanz neu fassen oder weiter beobachten (verlängern).
 
 ## E-062 · vorgeschlagen (wartet auf Platz) · Turnkappe 60 Turns für Plan-Instanzen
 
