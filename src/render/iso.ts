@@ -13,6 +13,8 @@ import {
   type WoodLayout,
 } from './forest';
 import type { Crown } from './crown';
+import { MONUMENT_HEIGHTS, type MonumentImageStage } from './monumentSprite';
+import { imageStageOf } from './monumentStage';
 import { kontorPos, seaContext, stampPlacements, type StampKind } from './decor';
 
 // iso.ts — Kern (Setzung Spec D-01 bis D-05, D-13, D-16)
@@ -59,47 +61,50 @@ const CATEGORY_HEIGHT: Record<Category, number> = {
   infrastructure: 1.4 * ISO_H,
 };
 /** R1b, R2 und R2-FW tragen hier die Höhen der Silhouetten ein; die Signaturen bleiben. */
-export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number>> = {
-  // Hütte, Fachwerk, Bürgerhaus mit Gaube, Kaufmannshaus mit Treppengiebel (M8-R1, Spitze 2,08 · ISO_H < H_TOWER)
-  house: (b) => [0.8, 1.2, 1.6, 2.0][Math.min(b.house?.tier ?? 1, 4) - 1]! * ISO_H,
-  kontor: () => 1.4 * ISO_H, // Lagerhaus
-  kontor2: () => 1.4 * ISO_H, // M12: Aussenkontor, Form des Lagerhauses
-  lumberjack: () => 1.2 * ISO_H, // Hütte mit Stapel
-  // R2: übrige Typen (Richthöhen ISO 7.1; Betriebe 2 × 2 zwischen 1,2 und 1,6, Turm bis H_TOWER)
-  market: () => 0.8 * ISO_H, // Stände mit Sonnendächern
-  fisher: () => 1.0 * ISO_H,
-  hunter: () => 1.0 * ISO_H, // M11-R2: Blockhütte mit Fellgestell und Holzstapel
-  cattlefarm: () => 1.1 * ISO_H, // M11-R2: Stall mit Weide, Gatter und Heuballen
-  quarry: () => 1.1 * ISO_H,
-  sheepfarm: () => 1.2 * ISO_H,
-  weaver: () => 1.3 * ISO_H,
-  canefarm: () => 0.6 * ISO_H, // Halme; die Hütte steht vorn
-  spicefarm: () => 0.6 * ISO_H, // M12: Zuckerrohr-Form mit eigenem Ton (D-144)
-  distillery: () => 1.4 * ISO_H,
-  toolmaker: () => 1.3 * ISO_H,
-  chapel: () => 2.2 * ISO_H, // Glockenturm: Spitze bis 2,2 + 0,35 = 2,55 · ISO_H, unter H_TOWER
-  school: () => 1.5 * ISO_H,
-  bathhouse: () => 1.4 * ISO_H, // M8-R1: Kubus mit flacher Kuppel, Portikus, Becken; Kuppelscheitel unter H_TOWER
-  glassworks: () => 1.6 * ISO_H, // M8-R1: Werkhalle, Glasofenkegel bis 1,97 · ISO_H, unter H_TOWER
-  townhall: () => 2.0 * ISO_H, // M10-R1: Halle mit Uhrturm, Spitze genau auf der Hüllenkante, Höhe = H_MAX
-  monument: () => 0.6 * ISO_H, // Platzhalter M13-E2 T01, ersetzt in T09
-  firestation: () => 1.7 * ISO_H, // Wachhaus mit Glockenstuhl: Spitze bis 1,7 + 0,5 = 2,2 · ISO_H, unter H_TOWER
-};
-export const bodyHeight = (def: BuildingDef, b: Building): number =>
-  BODY_HEIGHTS[def.id]?.(b) ?? CATEGORY_HEIGHT[def.category];
+export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building, stage: number) => number>> =
+  {
+    // Hütte, Fachwerk, Bürgerhaus mit Gaube, Kaufmannshaus mit Treppengiebel (M8-R1, Spitze 2,08 · ISO_H < H_TOWER)
+    house: (b) => [0.8, 1.2, 1.6, 2.0][Math.min(b.house?.tier ?? 1, 4) - 1]! * ISO_H,
+    kontor: () => 1.4 * ISO_H, // Lagerhaus
+    kontor2: () => 1.4 * ISO_H, // M12: Aussenkontor, Form des Lagerhauses
+    lumberjack: () => 1.2 * ISO_H, // Hütte mit Stapel
+    // R2: übrige Typen (Richthöhen ISO 7.1; Betriebe 2 × 2 zwischen 1,2 und 1,6, Turm bis H_TOWER)
+    market: () => 0.8 * ISO_H, // Stände mit Sonnendächern
+    fisher: () => 1.0 * ISO_H,
+    hunter: () => 1.0 * ISO_H, // M11-R2: Blockhütte mit Fellgestell und Holzstapel
+    cattlefarm: () => 1.1 * ISO_H, // M11-R2: Stall mit Weide, Gatter und Heuballen
+    quarry: () => 1.1 * ISO_H,
+    sheepfarm: () => 1.2 * ISO_H,
+    weaver: () => 1.3 * ISO_H,
+    canefarm: () => 0.6 * ISO_H, // Halme; die Hütte steht vorn
+    spicefarm: () => 0.6 * ISO_H, // M12: Zuckerrohr-Form mit eigenem Ton (D-144)
+    distillery: () => 1.4 * ISO_H,
+    toolmaker: () => 1.3 * ISO_H,
+    chapel: () => 2.2 * ISO_H, // Glockenturm: Spitze bis 2,2 + 0,35 = 2,55 · ISO_H, unter H_TOWER
+    school: () => 1.5 * ISO_H,
+    bathhouse: () => 1.4 * ISO_H, // M8-R1: Kubus mit flacher Kuppel, Portikus, Becken; Kuppelscheitel unter H_TOWER
+    glassworks: () => 1.6 * ISO_H, // M8-R1: Werkhalle, Glasofenkegel bis 1,97 · ISO_H, unter H_TOWER
+    townhall: () => 2.0 * ISO_H, // M10-R1: Halle mit Uhrturm, Spitze genau auf der Hüllenkante, Höhe = H_MAX
+    monument: (_b, stage) =>
+      MONUMENT_HEIGHTS[Math.min(4, Math.max(0, Math.trunc(stage))) as MonumentImageStage]! * ISO_H, // M13-E2 T09: je Bildstufe 0…4
+    firestation: () => 1.7 * ISO_H, // Wachhaus mit Glockenstuhl: Spitze bis 1,7 + 0,5 = 2,2 · ISO_H, unter H_TOWER
+  };
+/** Höhe des Körpers; `stage` ist die Bildstufe (nur das Denkmal liest sie, alle anderen Ids ignorieren sie). */
+export const bodyHeight = (def: BuildingDef, b: Building, stage = 0): number =>
+  BODY_HEIGHTS[def.id]?.(b, stage) ?? CATEGORY_HEIGHT[def.category];
 
 /** Bildbox in Weltpixeln: Rautenbreite des Footprints, von (obere Ecke − Höhe) bis untere Ecke. Nie fürs Picking. */
-export function spriteBounds(def: BuildingDef, b: Building): Box {
+export function spriteBounds(def: BuildingDef, b: Building, stage = 0): Box {
   const top = project(b.x, b.y),
     left = project(b.x, b.y + def.h),
     right = project(b.x + def.w, b.y),
     bottom = project(b.x + def.w, b.y + def.h);
-  const h = bodyHeight(def, b);
+  const h = bodyHeight(def, b, stage);
   return { x: left.x, y: top.y - h, w: right.x - left.x, h: bottom.y - top.y + h };
 }
 /** Körperhülle: Footprint-Raute ∪ dieselbe Raute um die Höhe nach oben; konvexes Sechseck im Uhrzeigersinn. */
-export function bodyHull(def: BuildingDef, b: Building): Pt[] {
-  const h = bodyHeight(def, b);
+export function bodyHull(def: BuildingDef, b: Building, stage = 0): Pt[] {
+  const h = bodyHeight(def, b, stage);
   const top = project(b.x, b.y),
     right = project(b.x + def.w, b.y),
     bottom = project(b.x + def.w, b.y + def.h),
@@ -511,7 +516,7 @@ export interface Hull {
   /** Gezeichnete Körperpolygone (Weltpixel), lazy: nur für Treffer des Hüllen-Vorfilters (R113). */
   shape?: () => readonly (readonly Pt[])[];
 }
-type ShapeFn = (def: BuildingDef, b: Building) => readonly (readonly Pt[])[];
+type ShapeFn = (def: BuildingDef, b: Building, stage?: number) => readonly (readonly Pt[])[];
 let shapeProvider: ShapeFn | null = null;
 /** Meldet die Quelle der gezeichneten Körperpolygone an (`sprites.ts` beim Laden; iso.ts importiert sprites nicht, ISO §4). */
 export const setBodyShapes = (fn: ShapeFn): void => {
@@ -524,10 +529,11 @@ export function buildingHulls(world: World): Hull[] {
     if (it.kind === 'building') {
       const b = world.buildings[it.id]!;
       const def = BUILDING_DEFS[b.defId];
+      const stage = imageStageOf(world, b); // Hülle und Polygone folgen der aktuellen Bildstufe
       out.push({
         id: b.id,
-        hull: bodyHull(def, b),
-        ...(shapeProvider ? { shape: () => shapeProvider!(def, b) } : {}),
+        hull: bodyHull(def, b, stage),
+        ...(shapeProvider ? { shape: () => shapeProvider!(def, b, stage) } : {}),
       });
     }
   return out;

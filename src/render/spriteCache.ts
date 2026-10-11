@@ -12,6 +12,7 @@ import { bodyFaces, drawBody, type BodyEnv } from './sprites';
 //   - `b.house.tier` (Wohnhaus-Stufe, Höhe/Dach)    → Schlüssel: Stufe (für Nicht-Häuser 0)
 //   - `b.x`, `b.y` nur als Ursprung der Projektion  → reine Verschiebung, nicht im Schlüssel
 //   - `b.level` (Ausbaustufe, M11 `drawLevelTopper`) → Schlüssel: Stufe, fehlend = 1
+//   - Bildstufe 0…4 (nur das Denkmal, `imageStageOf`)  → Schlüssel: Bildstufe, fehlend = 0; andere Ids immer 0
 //   - `env` (Wasserseiten des Kontors)              → Schlüssel: 4 Bits
 //   - Zoom und DPR (Kameraabbildung, Pixelraster)   → Schlüssel
 //   - Variante (H-R7, `variantOf(seed, x, y)`)      → Schlüssel; Töne und Zubehör, nie der Umriss
@@ -58,6 +59,7 @@ export function spriteKey(
   zoom: number,
   dpr: number,
   variant: number,
+  stage = 0,
 ): string {
   const tier = def.id === 'house' ? (b.house?.tier ?? 1) : 0;
   const e = env
@@ -67,7 +69,9 @@ export function spriteKey(
       (env.waterV0 ? 8 : 0)
     : 0;
   const level = b.level ?? 1;
-  return `${def.id}|${tier}|${level}|${e}|${variant}|${Math.round(zoom * 1000)}|${Math.round(dpr * 1000)}`;
+  // Bildstufe nur für das Denkmal als Feld; alle übrigen Schlüssel bleiben unverändert
+  const st = def.id === 'monument' ? `|s${stage}` : '';
+  return `${def.id}|${tier}|${level}|${e}|${variant}|${Math.round(zoom * 1000)}|${Math.round(dpr * 1000)}${st}`;
 }
 
 interface Entry {
@@ -140,13 +144,14 @@ export function createSpriteCache(opts: SpriteCacheOptions = {}) {
       b: Building,
       env?: BodyEnv,
       variant = 0,
+      stage = 0,
     ): boolean {
       if (!factory || !warm || UNCACHED.has(def.id) || cam.zoom !== zoom) {
         st.bypassed++;
         return false;
       }
-      const key = spriteKey(def, b, env, zoom, dpr, variant);
-      const bounds = spriteBounds(def, b);
+      const key = spriteKey(def, b, env, zoom, dpr, variant, stage);
+      const bounds = spriteBounds(def, b, stage);
       const ox = bounds.x - MARGIN,
         oy = bounds.y - MARGIN;
       let e = map.get(key);
@@ -172,10 +177,10 @@ export function createSpriteCache(opts: SpriteCacheOptions = {}) {
         }
         sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         // Gleiche Befehle wie ungecacht; nur die Kamera ist um den Ursprung der Fläche verschoben.
-        drawBody(sctx, { x: ox, y: oy, zoom }, def, b, 0, env, variant);
+        drawBody(sctx, { x: ox, y: oy, zoom }, def, b, 0, env, variant, stage);
         if (material) {
           const sc = { x: ox, y: oy, zoom };
-          drawMaterial(sctx, bodyFaces(def, b, variant, sc), def, b, variant, zoom);
+          drawMaterial(sctx, bodyFaces(def, b, variant, sc, stage), def, b, variant, zoom);
         }
         evict(size);
         e = { surface, bytes: size, w: pw / dpr, h: ph / dpr, ox, oy };
@@ -213,7 +218,8 @@ export function drawBodyCached(
   timeMs: number,
   env?: BodyEnv,
   variant = 0,
+  stage = 0,
 ): void {
-  if (!spriteCache.draw(ctx, cam, def, b, env, variant))
-    drawBody(ctx, cam, def, b, timeMs, env, variant);
+  if (!spriteCache.draw(ctx, cam, def, b, env, variant, stage))
+    drawBody(ctx, cam, def, b, timeMs, env, variant, stage);
 }

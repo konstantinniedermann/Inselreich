@@ -1,4 +1,5 @@
-import { fireTongues } from './limits';
+import type { Pt } from './isoBase';
+import { cap, fireTongues } from './limits';
 import { INK_TONE, LIGHT_TONE, PALETTE, rgbOfCss, rgbaOf, rgbaOfCss, toInk } from './palette';
 
 // fx.ts — Krisen-Effekte (Spec 6.5): Feuer mit Rauch, Glühen, Warnring, Boom-Münze. Bildraum, `rect` ist die
@@ -226,5 +227,80 @@ export function drawStormEdge(
   ctx.save();
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, view.w, view.h);
+  ctx.restore();
+}
+
+// --- M13-E2 T08: Aufflammen der Feuerschale des Denkmals (Abschluss-Moment, Spec U-12) ---
+/** Dauer des Aufflammens in ms (Darstellungswert). */
+const FLARE_MS = 3000;
+const FLARE_RISE_MS = 300;
+/** Stärke 0…1 des Aufflammens über die Zeit seit Start: schneller Anstieg, sanftes Abklingen; 0 ab 3000 ms und bei `reduce`. */
+export function flareStrength(elapsedMs: number, reduce: boolean): number {
+  if (reduce || !Number.isFinite(elapsedMs) || elapsedMs < 0 || elapsedMs >= FLARE_MS) return 0;
+  const k =
+    elapsedMs < FLARE_RISE_MS
+      ? elapsedMs / FLARE_RISE_MS
+      : 1 - (elapsedMs - FLARE_RISE_MS) / (FLARE_MS - FLARE_RISE_MS);
+  return Math.max(0.01, k * k * (3 - 2 * k));
+}
+
+/**
+ * Aufflammen über der Feuerschale bei `top` (Bildpunkt der Schalenmitte): Schein und aufsteigende Funken in
+ * `lightEvening`/`window`. Der Aufrufer setzt im additiven Durchgang `'lighter'`; hier keine Compositing-Änderung.
+ * Höchstens `cap('flareSparks')` Funken; bei `reduce` oder nach 3 s wird nichts gezeichnet.
+ */
+export function drawMonumentFlare(
+  ctx: CanvasRenderingContext2D,
+  top: Pt,
+  elapsedMs: number,
+  reduce: boolean,
+): void {
+  const k = flareStrength(elapsedMs, reduce);
+  if (k <= 0) return;
+  const r = 34 + 30 * k;
+  ctx.save();
+  const g = ctx.createRadialGradient(top.x, top.y, 0, top.x, top.y, r);
+  g.addColorStop(0, rgbaOf(PALETTE.window, Number((0.8 * k).toFixed(3))));
+  g.addColorStop(0.5, rgbaOf(PALETTE.lightEvening, Number((0.35 * k).toFixed(3))));
+  g.addColorStop(1, rgbaOf(PALETTE.lightEvening, 0));
+  ctx.fillStyle = g;
+  ctx.fillRect(top.x - r, top.y - r, 2 * r, 2 * r);
+  const n = Math.min(cap('flareSparks', reduce), Math.ceil(k * cap('flareSparks', reduce)));
+  const t = elapsedMs / FLARE_MS;
+  ctx.fillStyle = PALETTE.window;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const a = (t * 1.6 + spread(i, 5)) % 1; // Alter 0…1
+    const x = top.x + (spread(i, 6) - 0.5) * 26 + Math.sin(a * 6 + i) * 4;
+    const y = top.y - a * (30 + 40 * spread(i, 7));
+    ctx.arc(x, y, 1.6 * (1 - a * 0.6), 0, Math.PI * 2);
+  }
+  ctx.fill();
+  ctx.restore();
+}
+
+const BEACON_R = 46;
+/**
+ * Leuchtfeuer der fertigen Feuerschale bei Nacht (Spec Anhang 06 A, AK-M13E2-46): ruhiger Schein bei `top`
+ * (Schalenmitte), Stärke `k` 0…1 aus dem Nachtlicht; flackert leicht, bei `reduce` nicht. Der Aufrufer setzt
+ * im additiven Durchgang `'lighter'`; keine Partikel, keine Compositing-Änderung hier.
+ */
+export function drawMonumentBeacon(
+  ctx: CanvasRenderingContext2D,
+  top: Pt,
+  k: number,
+  timeMs: number,
+  reduce: boolean,
+): void {
+  const s = clamp01(k);
+  if (s <= 0) return;
+  const flick = reduce ? 1 : 0.9 + 0.1 * Math.sin(timeMs / 210);
+  ctx.save();
+  const g = ctx.createRadialGradient(top.x, top.y, 0, top.x, top.y, BEACON_R);
+  g.addColorStop(0, rgbaOf(PALETTE.window, Number((0.7 * s * flick).toFixed(3))));
+  g.addColorStop(0.45, rgbaOf(PALETTE.lightEvening, Number((0.3 * s * flick).toFixed(3))));
+  g.addColorStop(1, rgbaOf(PALETTE.lightEvening, 0));
+  ctx.fillStyle = g;
+  ctx.fillRect(top.x - BEACON_R, top.y - BEACON_R, 2 * BEACON_R, 2 * BEACON_R);
   ctx.restore();
 }

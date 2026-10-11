@@ -32,6 +32,8 @@ interface Case {
   def: BuildingDef;
   b: Building;
   variant: number;
+  /** Bildstufe (nur Denkmal; sonst 0). */
+  stage: number;
 }
 /** Jeder Typ × Wohnhaus-Stufen 1–4 × Ausbaustufen (falls LEVELS) × alle Varianten. */
 function cases(): Case[] {
@@ -39,32 +41,38 @@ function cases(): Case[] {
   for (const def of Object.values(BUILDING_DEFS)) {
     const tiers: (Tier | undefined)[] = def.id === 'house' ? [1, 2, 3, 4] : [undefined];
     const levels: (2 | 3 | undefined)[] = LEVELS[def.id] ? [undefined, 2, 3] : [undefined];
-    for (const tier of tiers)
-      for (const level of levels)
-        for (let variant = 0; variant < VARIANT_COUNT; variant++) {
-          const b: Building = {
-            id: 3,
-            defId: def.id,
-            x: 10,
-            y: 10,
-            connected: true,
-            progress: 0,
-            state: 'ok',
-            island: 0,
-          };
-          if (tier) b.house = { tier } as unknown as Building['house'];
-          if (level) b.level = level;
-          out.push({
-            name: `${def.id}${tier ?? ''}${level ? 'L' + level : ''}v${variant}`,
-            def,
-            b,
-            variant,
-          });
-        }
+    // Denkmal: Bildstufen 0–4 (M13-E2 T09)
+    const stages = def.id === 'monument' ? [0, 1, 2, 3, 4] : [0];
+    for (const stage of stages)
+      for (const tier of tiers)
+        for (const level of levels)
+          for (let variant = 0; variant < VARIANT_COUNT; variant++) {
+            const b: Building = {
+              id: 3,
+              defId: def.id,
+              x: 10,
+              y: 10,
+              connected: true,
+              progress: 0,
+              state: 'ok',
+              island: 0,
+            };
+            if (tier) b.house = { tier } as unknown as Building['house'];
+            if (level) b.level = level;
+            out.push({
+              name: `${def.id}${stage ? 'S' + stage : ''}${tier ?? ''}${level ? 'L' + level : ''}v${variant}`,
+              def,
+              b,
+              variant,
+              stage,
+            });
+          }
   }
   return out;
 }
 const CASES = cases();
+/** Fälle mit Silhouette: Denkmal Stufe 0 (Baugrund) ist eine flache Erdfläche mit Pflöcken ohne Körper und hat keine. */
+const SIL = CASES.filter((c) => !(c.def.id === 'monument' && c.stage === 0));
 const house = (tier: Tier, variant = 0): Case =>
   CASES.find((c) => c.name === `house${tier}v${variant}`)!;
 
@@ -90,7 +98,16 @@ function paint(c: Case, zoom = 1, plain = false) {
       return Reflect.get(t, k, t) as unknown;
     },
   });
-  (plain ? drawBodyPlain : drawBody)(spy, sceneCam(zoom), c.def, c.b, 0, undefined, c.variant);
+  (plain ? drawBodyPlain : drawBody)(
+    spy,
+    sceneCam(zoom),
+    c.def,
+    c.b,
+    0,
+    undefined,
+    c.variant,
+    c.stage,
+  );
   return { log, curves };
 }
 const strokes = (events: Ev[]) => events.filter((e) => e.op === 'stroke');
@@ -108,7 +125,7 @@ describe('L3 Kanten: Silhouette statt Strich je Fläche', () => {
     expect(strokes(log.events).filter((e) => e.lineWidth >= 1).length).toBeLessThanOrEqual(1);
   });
   it('AK-L3-a alle Typen, Stufen, Varianten: höchstens ein Kontur-Strich, Innenkanten ohne Strich', () => {
-    for (const c of CASES) {
+    for (const c of SIL) {
       const { log } = paint(c);
       const kont = contours(log.events);
       expect(kont.length, c.name).toBe(1);
@@ -119,7 +136,7 @@ describe('L3 Kanten: Silhouette statt Strich je Fläche', () => {
   });
   it('AK-L3-a alle Typen, Stufen, Varianten bei Zoom 0,75: genau ein Kontur-Strich (SIL_MIN_BOX nimmt keiner kleinen Hütte die Kontur)', () => {
     const zoom = 0.75;
-    for (const c of CASES) {
+    for (const c of SIL) {
       const { log } = paint(c, zoom);
       // Kontur: Strich mit lineWidth = 2 · Konturbreite des Zooms und Deckkraft CONTOUR_ALPHA
       const kont = strokes(log.events).filter(
@@ -132,7 +149,7 @@ describe('L3 Kanten: Silhouette statt Strich je Fläche', () => {
     expect(CONTOUR_WIDTH).toBeLessThanOrEqual(0.75);
     expect(CONTOUR_ALPHA).toBeLessThanOrEqual(0.7);
     for (const zoom of [1, 1.5, 2])
-      for (const c of CASES.filter((x) => x.variant === 0)) {
+      for (const c of SIL.filter((x) => x.variant === 0)) {
         const k = contours(paint(c, zoom).log.events)[0]!;
         expect(k.lineWidth / 2, c.name).toBeLessThanOrEqual(0.75 + 1e-9);
         expect(k.alpha, c.name).toBeLessThanOrEqual(0.7);
@@ -152,7 +169,7 @@ describe('L3 Kanten: Silhouette statt Strich je Fläche', () => {
   });
   it('AK-L3-a bei Zoom ≤ 0,5 kein Konturstrich und keine Lichtkante', () => {
     for (const zoom of [0.5, 0.35, 0.25])
-      for (const c of CASES.filter((x) => x.variant === 0)) {
+      for (const c of SIL.filter((x) => x.variant === 0)) {
         const { log } = paint(c, zoom);
         expect(contours(log.events).length, `${c.name}@${zoom}`).toBe(0);
         expect(lightEdges(log.events).length, `${c.name}@${zoom}`).toBe(0);
@@ -172,7 +189,9 @@ describe('L3 Kanten: Silhouette statt Strich je Fläche', () => {
 describe('L3 Kanten: Lichtkante', () => {
   it('AK-L3-b Lichtkante je Körper mit Dach oder Quader: 0,5–1 px, wärmer als die angrenzende Fläche', () => {
     let withEdge = 0;
-    for (const c of CASES.filter((x) => x.variant === 0)) {
+    // Denkmal hier ausgenommen: Sein Schaft ist verjüngt, die Lichtkante läuft über die Wandkante hinaus und wird von
+    // keiner einzelnen Fläche umschlossen; es hat die eigene Mindestprüfung unten (M13-E2 T09)
+    for (const c of CASES.filter((x) => x.variant === 0 && x.def.id !== 'monument')) {
       const { log } = paint(c);
       const light = lightEdges(log.events);
       if (light.length > 0) withEdge++;
@@ -303,13 +322,30 @@ describe('L3 Kanten: Signalabstand und Zusatzfarben', () => {
   });
 });
 
+describe('L3 Kanten: Lichtkante des Denkmals', () => {
+  it('AK-L3-b Denkmal Stufen 1–4: mindestens eine Lichtkante, 0,5–1 px, Deckkraft < 1, wärmer als der Stein', () => {
+    for (const c of CASES.filter(
+      (x) => x.def.id === 'monument' && x.stage > 0 && x.variant === 0,
+    )) {
+      const light = lightEdges(paint(c).log.events);
+      expect(light.length, c.name).toBeGreaterThan(0);
+      for (const e of light) {
+        expect(e.lineWidth, c.name).toBeGreaterThanOrEqual(0.5);
+        expect(e.lineWidth, c.name).toBeLessThanOrEqual(1);
+        expect(e.alpha, c.name).toBeLessThan(1);
+        expect(share(e.style), c.name).toBeLessThan(share(PALETTE.wallStone));
+      }
+    }
+  });
+});
+
 describe('L3 Kanten: Bodenkontakt und Sprite-Fläche', () => {
   // Timeout: lokal ≤ 2,0 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('AK-L3-e alle Pfadpunkte des Körpers liegen in spriteBounds + MARGIN (alle Zooms)', () => {
     for (const zoom of [1, 2])
       for (const c of CASES) {
         const { log } = paint(c, zoom);
-        const bb = spriteBounds(c.def, c.b);
+        const bb = spriteBounds(c.def, c.b, c.stage);
         const [x0, y0, x1, y1] = [
           (bb.x - MARGIN) * zoom,
           (bb.y - MARGIN) * zoom,

@@ -24,6 +24,7 @@ import { demolish, placeBuilding } from '../../src/sim/build';
 import { home, createWorld, tilesInRadius } from '../../src/sim/world';
 import type { Building, World } from '../../src/sim/types';
 import { forceRect } from '../sim/helpers';
+import { MONUMENT_AT, monumentWorld } from '../sim/monumentHelpers';
 import { VORWALD_MAX } from '../../src/render/forest';
 import { clearForest, plantForest } from '../../src/sim/forest';
 
@@ -354,4 +355,36 @@ it('AK-R1-02 sortedObjects: nach clearForest kein Waldbaum auf (x, y), höchsten
   expect(onCrowns().every((c) => c.young || c.bush)).toBe(true);
   expect(plantForest(w, x, y).ok).toBe(true);
   expect(on().length).toBeGreaterThanOrEqual(2);
+});
+
+describe('M13-E2 T09 Sortierung mit dem Denkmal', () => {
+  it('AK-M13E2-38 Haus davor und Baum dahinter: das Denkmal liegt dazwischen, Nachbar an der unteren Ecke richtig', () => {
+    const w = monumentWorld();
+    const { x, y } = MONUMENT_AT;
+    const m = placeBuilding(w, 'monument', x, y);
+    expect(m.ok).toBe(true);
+    forceRect(w, x - 2, y - 2, 6, 7, 'grass');
+    const behind = placeBuilding(w, 'house', x - 1, y - 1); // kleinere x + y: hinten
+    const corner = placeBuilding(w, 'house', x, y + 3); // Nachbar an der unteren Ecke (Kontor-Radius endet bei x + 2)
+    const front = placeBuilding(w, 'house', x + 1, y + 3); // grössere x + y: vorn
+    for (const r of [behind, corner, front]) expect(r.ok).toBe(true);
+    // Figur hinten (vor dem Denkmal zu zeichnen) und Figur vorn (danach)
+    const items = sortedObjects(w, [
+      { kind: 'walker', id: 901, cx: x - 1, cy: y - 1 },
+      { kind: 'walker', id: 902, cx: x + 5, cy: y + 5 },
+    ]);
+    const at = (kind: string, id: number) =>
+      items.findIndex((t) => t.kind === kind && (t as { id: number }).id === id);
+    const iM = at('building', m.id!),
+      iB = at('building', behind.id!),
+      iF = at('building', front.id!),
+      iC = at('building', corner.id!);
+    expect(iM).toBeGreaterThanOrEqual(0);
+    expect(iB).toBeLessThan(iM);
+    expect(at('walker', 901)).toBeLessThan(iM);
+    expect(iM).toBeLessThan(at('walker', 902));
+    expect(iM).toBeLessThan(iC); // beide Nachbarn vorn liegen nach dem Denkmal
+    expect(iM).toBeLessThan(iF);
+    expect(iC).toBeLessThan(iF);
+  });
 });
