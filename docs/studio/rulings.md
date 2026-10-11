@@ -6105,3 +6105,24 @@ Regelbezug: gates.md Kombiniertes Gate, R551, R553 V1, Budget-Formel · Kosten b
 misst; Rückfall in (c).
 
 Entscheider: L0 · Anlass: Berichte lead-tech plan-TOOL-GATE-ENSEMBLE, lead-qa gate-TOOL-GATE-ENSEMBLE · ADR: —
+
+## R557 · 2026-10-11 · Gate Plan M14-E1: OK mit Auflagen; R-c2 mit Auflage angenommen
+
+Ruling: Plan `44510be4` (lead-tech opus). lead-production OK mit Hinweisen, lead-qa BEDENKEN (kein ZURÜCK). Entscheid: **OK**,
+Budget 21 Starts / Parallelität 2 (Formel 7 × 2 + 1 + 1 = 16 × 1,3) wird beim Start nach Release M13 geloggt (Phasen
+`M14-E1-SIM`, `M14-E1-UI`, Pakete per `log.py package`), zwei Controller durch L0. Auflagen, durch die Controller in T00/T03/T05/T08
+umzusetzen (kein Plan-Nachtrag): (1) **R-c2 angenommen mit Auflage:** vor dem Neupinnen belegt T03 im Bericht für AK-E1-10, dass
+sich die Heimat-Aufrufliste nur in Meer-Zeichenaufrufen ändert (Land, Gebäude, Tiere identisch), und für AK-K1b/K2 einen Teilhash
+der Flächen um Heimat, A und B bitgleich zu `9113e574`; neu gepinnt wird nur der Gesamt-Hash, Kommentar `bewusst neu gepinnt
+(R557)`. Archipel-Speicher ≈ 56,8 MB (AK-E1-21) angenommen; `lead-art` erhält die Kenntnis im nächsten Start. (2) Der
+Controller-Lauf Seed 963 (QA-B3) wird nie gestrichen; reicht die Testzeit nicht, wandert er in einen eigenen Messlauf ausserhalb
+`make check`, nicht ins Nichts. (3) Die B3-Rangfolge P1 > P2 > P3 (QA-B2) wird **vor T08** mit TOOL-GATE-ENSEMBLE nachgemessen,
+sobald es gemergt ist (Verdikte nach R556); kippt sie → Entwurf an L0. (4) Merge-Reihenfolge: TOOL-GATE-ENSEMBLE vor dem Start
+von M14-E1; T00 zieht die Basis nach und nennt `tests/sim/controller.ts` ausdrücklich; T07 startet von `main` nach diesem Merge.
+(5) Ein Integrator-Merge `feat/m14-e1` nach `main` (UI per Controller-Merge), ein Merge-Gate. AK-11 nach Zyklus-Skalierung (E6)
+zur Kenntnis.
+
+Regelbezug: gates.md Gate Plan, R500, R501, R553 V1, R554, R556 · Kosten bei Irrtum: T03 braucht eine zweite Fix-Runde für die
+Teilhash-Belege; Regressionsschutz der Pins bleibt erhalten.
+
+Entscheider: L0 · Anlass: Berichte lead-qa gate-plan-M14-E1, lead-production gate-plan-M14-E1-prod · ADR: —
