@@ -5888,3 +5888,19 @@ wenn kein Fehlblock bei „Budget: keins“ und bei Folge-Controllern auftritt; 
 Regelbezug: R520, R539, R541, experimente.md Obergrenze 3 · Kosten bei Irrtum: ein blockierter Lead-Start (ein Aufruf mehr).
 
 Entscheider: L0 · Anlass: Bericht studio-coach EXP-BEWERTUNG-1011 · ADR: —
+
+## R543 · 2026-10-11 · E-060: Echtlauf 5 Fehlblocks → Abgleich-Fix TOOL-E060-FIX, dann zweiter Echtlauf
+
+Ruling: Der Echtlauf (113 Lead-Starts seit 2026-10-10) ergab 3 berechtigte und 5 Fehlblocks; `BUDGET_MODE` bleibt `warn`
+(R542-Bedingung). Ursache: Freigabe-Phasen mit Rollen-Präfix (`impl-`, `plan-`, `design-`, `gate-`,
+`release-check-`) treffen `package_names()` nie; ein Folge-Controller trug „Budget: n verbleibende“ im Kopf.
+Entscheid: **beides** — (a) Werkzeug: Die gemeinsame Namensfunktion entfernt beim Abgleich bekannte Rollen-Präfixe von
+der Freigabe-Phase (für Hook **und** `model.py`, eine Quelle, R532 B2); „Budget: n verbleibende …“ gilt als Folge-Controller
+(kein Block, R433 V3 b). (b) Konvention: L0 vergibt die Freigabe-Phase künftig als reine Paket-ID (wie seit R537).
+Paket **TOOL-E060-FIX** (spielfremd, Stufe leicht): Controller `lead-tech` sonnet, Budget **4** (Umsetzer, Task-Review,
+Final-Review opus, Puffer), Worktree `.worktrees/tool-e060`. Danach wiederholt der Coach den Echtlauf; bei 0 Fehlblocks
+`deny`. E-060 belegt den Platz bis dahin (Zeitraum zählt erst ab Umstellung).
+
+Regelbezug: R433, R520, R532, R542 · Kosten bei Irrtum: ein Werkzeug-Revert, `deny` eine Session später.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Echtlauf E-060 · ADR: —
