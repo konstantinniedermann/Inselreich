@@ -35,8 +35,8 @@ zeitreserve-push: ## Streng vor dem Push (R338): Messung mit Commit = HEAD und L
 check-ci-perf: ## Nur die Perf-Budget-Tests mit CI=true (ersetzt den zweiten vollen Lauf CI=true make check, R353); schreibt kein zeitreserve.json
 	CI=true npx vitest run $$(grep -rl perfBudget tests --include='*.test.ts')
 
-docs-check: ## Prettier-Check über alles inkl. docs/ (schnell, vor Doku-Commits; Teil von lint)
-	npx prettier --check .
+docs-check: ## Prettier-Check über alles inkl. docs/ plus zerrissene Tabellen (schnell, vor Doku-Commits; Teil von lint)
+	npx prettier --check . ; a=$$?; python3 tools/studio/tablecheck.py ; b=$$?; exit $$((a>b?a:b))
 
 lint: ## ESLint + Prettier-Check
 	npm run lint
