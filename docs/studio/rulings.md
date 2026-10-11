@@ -6202,3 +6202,21 @@ Session-Ende-Retro.
 Regelbezug: Verfassung §6, R224, STUDIO.md Integrator · Kosten bei Irrtum: eine irreführende Commit-Nachricht in der Historie.
 
 Entscheider: L0 · Anlass: Bericht production-integrator MERGE-TOOL-GATE-ENSEMBLE · ADR: —
+
+## R563 · 2026-10-11 · Kombiniertes Gate UI-AUFRAEUM-2: OK mit Auflagen, gebündelt auf 13 Starts
+
+Ruling: Plan `fe8dd8b3` (lead-tech), Urteil lead-qa BEDENKEN (nicht blockierend). L0-Prüffragen: ein Umsetzer-Strang, ein Worktree;
+Überschneidung nur `src/ui/inspect.ts` mit M14-E1 → **Umsetzung erst nach dem M14-E1-Merge**; bleibt leicht. Entscheide:
+(1) **Bündeln** T03+T04+T05 zu einem Task „Konstanten und Importe“ (`inspect.ts` zuletzt) → 4 Tasks × 2 + 1 Playtester + 1
+Final-Review = 10 × 1,3 → **13 Starts**. (2) **DOM-Testweg ohne neue Abhängigkeit** (ADR-001): T00 baut Fake-Elemente nach dem
+Muster `tests/render/fakeCtx.ts`; kein jsdom/happy-dom. T00 belegt Pause an/aus (`dataset.paused`), Abschlusszeile, `setText`/
+`setHidden`; Mutationsbeleg mutiert auch die `paused`-Quelle. (3) **Stage-Sprung > 1:** ein Chronik-Eintrag je Abschnitt, aber
+**nur der letzte mit Toast**; Pins: Sprung = 1 genau ein Eintrag (unverändert), `prev.stage = -1` kein Eintrag. (4) T05:
+`RESERVE_TICKS` nur kommentieren; Angleichen nur per eigenem Ruling. (5) Statt Quelltext-Zählung „Abreissen“: Test auf
+`DEMOLISH_VERB` plus Textvergleichs-Pin je Fundort (Liste nach Neuzählung); `isSaveChord` per Verhaltenstest (Import ohne
+`hotkeys`). (6) Test Fehlerpfad `startMonumentStage` bei zu wenig Geld: Meldung unverändert. Nacharbeit (1)–(6) im Plan durch die
+Plan-Instanz jetzt, ohne Zweitprüfung. Budget wird beim Start geloggt.
+
+Regelbezug: gates.md Kombiniertes Gate, ADR-001, Verfassung §3, R557 · Kosten bei Irrtum: ein Toast-Verhalten im seltenen Ladefall.
+
+Entscheider: L0 · Anlass: Berichte lead-tech plan-UI-AUFRAEUM-2, lead-qa gate-UI-AUFRAEUM-2 · ADR: —
