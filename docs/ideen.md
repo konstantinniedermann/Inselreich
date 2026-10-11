@@ -446,9 +446,9 @@ Entschieden mit R529. Scouts A, B, C je ≤ 5 Ideen (14 gesamt); keine ändert K
 - Bewertung lead-design (IDEEN-06): Spass 3 → 2: Die Bindung trägt erst für Fortgeschrittene, die Rum im Überschuss haben; im ersten Spiel bleibt sie unsichtbar. Mit I-006 und I-029 als ein Handels-Baustein denken, nicht einzeln einplanen.
 - Nutzen/Aufwand: mittlerer Nutzen (Planbarkeit im Mittelspiel) · M · ≈ 2 Pakete (Rechnung `design-economy-designer` ≈ 40 Tools, Sim+Panel ≈ 150 Tools)
 - Entscheid: Empfehlung parken bis Handels-Brainstorming (mit I-006, I-029); Ruling IDEEN-06 offen
-- Entscheid: R486 (O3) → eingeplant als Paket nach I-048, nur in der Fassung mit Gewicht (≈ 25 % der Erzeugung zu 120 %, M14-Anhang 01 C.1); I-029 und I-006 bleiben geparkt
+- Entscheid: R486 (O3) → eingeplant als Paket nach I-048, nur in der Fassung mit Gewicht (≈ 25 % der Erzeugung zu 120 %, M14-Anhang 01 C.1); I-029 und I-006 bleiben geparkt; Stand: wartet auf den Entscheid I-048 Schritt B (bei Verzicht sofort frei)
 
-### I-048 · eingeplant (Spec gegatet, R490) · Zukauf-Aufschlag (Kaufsättigung)
+### I-048 · eingeplant (Schritt A auf main inaktiv, Schritt B im Design, R551) · Zukauf-Aufschlag (Kaufsättigung)
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Beobachtung (Kaufpreise fest, `src/sim/defs/goods.ts` `buy`; jeder Mangel lässt sich mit Geld beheben, README „Handel"); Genre-Mechanik Nachfragepreis; IDEEN-06 Scout A
 - Spielerwirkung: „Der Spieler merkt, dass Dauer-Zukauf teurer wird («Preis 140 %»), und baut die Kette selbst aus, statt jeden Engpass mit Geld zu beheben."
@@ -461,7 +461,7 @@ Entschieden mit R529. Scouts A, B, C je ≤ 5 Ideen (14 gesamt); keine ändert K
 - Bewertung lead-design (IDEEN-06): bestätigt (12). Stärkster Wirtschaftsbeitrag der Runde: schliesst die Lücke „Geld löst jeden Mangel" (Befund Scout A) und gibt dem Edikt Handel Gewicht, das laut README im späten Spiel nur Feinsteuerung ist. Gehört in die Richtung von M13 „Spätspiel mit Richtung". Risiko: die Baseline-Neumessung braucht ein eigenes Ruling.
 - Nutzen/Aufwand: hoher Nutzen (Bauen statt Kaufen wird eine Entscheidung) · S–M · ≈ 1–2 Pakete (Rechnung ≈ 40 Tools, Sim+Handelsdialog ≈ 120 Tools)
 - Entscheid: Empfehlung einplanen als Wirtschafts-Baustein (M13-Rest oder nächstes Meilenstein-Brainstorming); Ruling IDEEN-06 offen
-- Stand: eingeplant (Spec gegatet, R490): Spec `docs/superpowers/specs/2026-10-10-i048-zukauf-aufschlag-design.md` mit Nachtrag R490 (R487, R489); nächster Schritt Plan lead-tech, nach M13-E2-SIM
+- Stand: Schritt A (Mechanik, `BUY_RISE` 0) auf main, inaktiv (R549); Schritt B ohne Werte zurück ins Design (R551). Designfrage `docs/superpowers/specs/2026-10-11-i048-b-designfrage.md`: Empfehlung Kontingent-Staffel (Controller bitgleich, Biss per Szenario-Test), sonst Verzicht; wartet auf Design-Gate L0 und Ensemble-Messung (plan-TOOL-GATE-ENSEMBLE)
 
 ### I-049 · bewertet · Sperrbestand (Reserve je Gut)
 
