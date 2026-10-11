@@ -1,4 +1,5 @@
 import { home, isKontor } from '../sim/world';
+import { monumentChronicleLine } from './monumentView';
 import { phaseAt, type Phase } from '../render/daynight';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
@@ -1117,6 +1118,7 @@ export function renderRest(panel: HTMLElement, world: World): void {
   bar.appendChild(label);
   panel.appendChild(bar);
   addLine(panel, '', 'goal-next');
+  addLine(panel, '', 'rest-monument');
   addLine(panel, tierPath());
 
   addHeading(panel, 'Nächster Schritt');
@@ -1163,6 +1165,7 @@ export function updateRest(panel: HTMLElement, world: World): void {
   const v = restView(world);
   setField(panel, 'rest-phase', `${v.symbol} ${v.label}`);
   setField(panel, 'rest-inhabitants', `Einwohner ${v.inhabitants}`);
+  // Bewusst ohne `chip` (QA-B3): das Wahlziel Denkmal führt die Ruhe-Ansicht in der eigenen Zeile `rest-monument`.
   const goal = goalTexts(goalView(world));
   setField(panel, 'goal-text', goal.rest);
   const fill = panel.querySelector<HTMLElement>('[data-field="goal-fill"]');
@@ -1170,6 +1173,9 @@ export function updateRest(panel: HTMLElement, world: World): void {
   if (fill && fill.style.width !== width) fill.style.width = width;
   const next = setField(panel, 'goal-next', goal.next ?? '');
   if (next && next.hidden !== (goal.next === null)) next.hidden = goal.next === null;
+  const monoText = monumentChronicleLine(world);
+  const mono = setField(panel, 'rest-monument', monoText ?? '');
+  if (mono && mono.hidden !== (monoText === null)) mono.hidden = monoText === null;
   setField(panel, 'next-step', nextStep(world));
   setField(panel, 'rest-tax', v.tax);
   fillMapSigns(panel, world);

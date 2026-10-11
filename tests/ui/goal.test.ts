@@ -19,6 +19,8 @@ import {
   unlockNoticeText,
 } from '../../src/ui/goal';
 import { diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
+import { monumentChip } from '../../src/ui/monumentView';
+import { monumentWorld, placeMonument } from '../sim/monumentHelpers';
 
 const citizensView = (current: number, unlockCitizens: number | null): GoalView => ({
   phase: 'citizens',
@@ -323,5 +325,69 @@ describe('M12 Z3 Merkfeld drittes Banner (R258, C3-3)', () => {
     applyGoalShown(state, first.shown);
     expect(state).toEqual({ wonShown: true, wonMerchantsShown: true, wonSpiceShown: true });
     expect(goalBanners(state, w).texts).toEqual([]);
+  });
+});
+
+describe('M13-E2 Ziel-Chip mit Denkmal (AK-M13E2-31, U-8)', () => {
+  const doneWorld = () => {
+    const w = monumentWorld();
+    w.wonSpice = true;
+    return w;
+  };
+
+  it('AK-M13E2-31 vor wonSpice: gleich wie heute, ohne und mit chip null', () => {
+    const w = monumentWorld();
+    expect(monumentChip(w)).toBeNull();
+    expect(goalTexts(merchantsView, monumentChip(w))).toEqual(goalTexts(merchantsView));
+    expect(goalTexts(spiceView(true), null)).toEqual(goalTexts(spiceView(true)));
+  });
+
+  it('AK-M13E2-31 done ohne Denkmal: «Wahlziel: Denkmal bauen», Balken 0', () => {
+    const w = doneWorld();
+    const t = goalTexts(doneView, monumentChip(w));
+    expect(t.chip).toBe('Wahlziel: Denkmal bauen');
+    expect(t.fillPct).toBe(0);
+    expect(t.rest).toBe(goalTexts(doneView).rest);
+    expect(t.next).toBeNull();
+  });
+
+  it('AK-M13E2-31 done mit Σ 414 / 520: «Denkmal 2/3 · 79 %»', () => {
+    const w = doneWorld();
+    placeMonument(w);
+    w.monument!.stage = 1;
+    w.monument!.running = true;
+    w.monument!.delivered = { stone: 200, tools: 80, glass: 84, spice: 50 };
+    const t = goalTexts(doneView, monumentChip(w));
+    expect(t.chip).toBe('Denkmal 2/3 · 79 %');
+    expect(t.fillPct).toBe(79);
+    expect(t.title).toBe(monumentChip(w)!.title);
+  });
+
+  it('AK-M13E2-31 zwischen Abschnitten «Denkmal 1/3» (33)', () => {
+    const w = doneWorld();
+    placeMonument(w);
+    w.monument!.stage = 1;
+    const t = goalTexts(doneView, monumentChip(w));
+    expect(t.chip).toBe('Denkmal 1/3');
+    expect(t.fillPct).toBe(33);
+  });
+
+  it('AK-M13E2-31 erreicht: «Wahlziel erreicht», 100', () => {
+    const w = doneWorld();
+    w.monumentDone = true;
+    const t = goalTexts(doneView, monumentChip(w));
+    expect(t.chip).toBe('Wahlziel erreicht');
+    expect(t.fillPct).toBe(100);
+  });
+
+  it('QA-B3 ohne chip (renderRest, startCard): done-Texte wie heute', () => {
+    expect(goalTexts(doneView)).toEqual({
+      chip: 'Gewürzstadt · 80 Kaufleute',
+      title: 'Alle drei Ziele erreicht — freies Spiel',
+      rest: 'Gewürzstadt erreicht · 80 Kaufleute',
+      next: null,
+      fillPct: 100,
+    });
+    expect(goalTexts(doneView, null)).toEqual(goalTexts(doneView));
   });
 });

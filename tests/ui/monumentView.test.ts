@@ -7,6 +7,8 @@ import type { World } from '../../src/sim/types';
 import { home } from '../../src/sim/world';
 import {
   monumentChip,
+  monumentEvents,
+  monumentSnapshot,
   monumentNeedsConfirm,
   monumentChronicleLine,
   monumentEtaText,
@@ -17,6 +19,7 @@ import {
   monumentStallReason,
   monumentStartState,
 } from '../../src/ui/monumentView';
+import { nameSegments } from '../../src/ui/messages';
 import { placeTownhall, setHouse, village } from '../sim/helpers';
 import { monumentWorld, placeMonument } from '../sim/monumentHelpers';
 
@@ -362,5 +365,44 @@ describe('AK-M13E2-35 monumentSectionModel (U-1 bis U-5)', () => {
 
   it('Meldungstext nach Start', () => {
     expect(monumentStartedText(0)).toBe('Abschnitt 1 begonnen: Sockel');
+  });
+});
+
+describe('AK-M13E2-33 monumentEvents (U-10, U-11)', () => {
+  const snap = (stage: number, monumentDone = false) => ({ stage, monumentDone });
+
+  it('0 → 1: ein Eintrag «Denkmal: Abschnitt 1 fertig» (info)', () => {
+    expect(monumentEvents(snap(0), snap(1), 77)).toEqual([
+      { text: 'Denkmal: Abschnitt 1 fertig', toast: 'info', tick: 77 },
+    ]);
+  });
+
+  it('2 → 3 mit monumentDone: zwei Einträge in dieser Reihenfolge', () => {
+    expect(monumentEvents(snap(2), snap(3, true), 5)).toEqual([
+      { text: 'Denkmal: Abschnitt 3 fertig', toast: 'info', tick: 5 },
+      { text: 'Wahlziel erreicht: Das Denkmal steht!', toast: null, tick: 5 },
+    ]);
+  });
+
+  it('gleicher Stand, Abriss (→ −1) und Neubau (−1 → 0): []', () => {
+    expect(monumentEvents(snap(1), snap(1), 1)).toEqual([]);
+    expect(monumentEvents(snap(1), snap(-1), 1)).toEqual([]);
+    expect(monumentEvents(snap(-1), snap(0), 1)).toEqual([]);
+    expect(monumentEvents(snap(3, true), snap(3, true), 1)).toEqual([]);
+  });
+
+  it('monumentSnapshot: −1 ohne Denkmal, sonst Abschnitt und Done', () => {
+    const w = monumentWorld();
+    expect(monumentSnapshot(w)).toEqual({ stage: -1, monumentDone: false });
+    placeMonument(w);
+    w.monument!.stage = 2;
+    w.monumentDone = true;
+    expect(monumentSnapshot(w)).toEqual({ stage: 2, monumentDone: true });
+  });
+
+  it('Meldungstext trägt das Denkmal-Symbol (Namensmuster, kein eigener Typ nötig)', () => {
+    const segs = nameSegments('Denkmal: Abschnitt 1 fertig');
+    expect(segs[0]).toMatchObject({ text: 'Denkmal' });
+    expect(segs[0]!.icon).toBeDefined();
   });
 });

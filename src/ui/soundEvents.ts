@@ -19,6 +19,8 @@ export interface SoundSnapshot {
   won: boolean;
   /** Zweites Ziel (Spec M8 14.1): derselbe Ton `win`, höchstens einer je Frame. */
   wonMerchants: boolean;
+  /** Wahlziel Denkmal (M13-E2): Glocke `monumentDone` beim Übergang false → true. */
+  monumentDone: boolean;
   /** Laufende Krise (M6 13.5); `burning` nur bei einem Brand mit Ausfall. */
   crisis: { period: number; kind: CrisisKind; burning: boolean } | null;
 }
@@ -36,6 +38,7 @@ export function soundSnapshot(world: World): SoundSnapshot {
     upgrades,
     won: world.won,
     wonMerchants: world.wonMerchants,
+    monumentDone: world.monumentDone,
     crisis: world.crisis
       ? {
           period: world.crisis.period,
@@ -74,6 +77,7 @@ export function diffSoundEvents(prev: SoundSnapshot, cur: SoundSnapshot): SoundE
   const won = (cur.won && !prev.won) || (cur.wonMerchants && !prev.wonMerchants);
   if (won) out.push('win');
   else if (cur.unlocked > prev.unlocked) out.push('unlock');
+  if (cur.monumentDone && !prev.monumentDone) out.push('monumentDone');
   out.push(...crisisSignals(prev.crisis, cur.crisis));
   return out;
 }

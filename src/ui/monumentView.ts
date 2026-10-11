@@ -5,6 +5,7 @@ import { buyPrice, monumentBuyBlock } from '../sim/trade';
 import type { Monument, MonumentGood, World } from '../sim/types';
 import { home } from '../sim/world';
 import { friendlyReason } from './hints';
+import type { LogEntry } from './crisisLog';
 import { formatGameTime } from './time';
 
 // Reine, DOM-freie Helfer für Denkmal-Panel, Inselchronik und Ziel-Chip (M13-E2, Spec §7, Anhang 07).
@@ -236,4 +237,32 @@ export function monumentSectionModel(w: World): MonumentSectionModel {
         : '',
   });
   return { entries };
+}
+
+/** Schnappschuss je Frame für `monumentEvents` und den Glockenton; `stage` −1 ohne Denkmal. */
+export interface MonumentSnapshot {
+  stage: number;
+  monumentDone: boolean;
+}
+
+export function monumentSnapshot(w: World): MonumentSnapshot {
+  return { stage: w.monument === null ? -1 : w.monument.stage, monumentDone: w.monumentDone };
+}
+
+export const MONUMENT_DONE_TEXT = 'Wahlziel erreicht: Das Denkmal steht!';
+
+/** U-10: Chronik-Einträge für den Übergang `prev` → `cur`; Abriss, Neubau und gleicher Stand ergeben []. */
+export function monumentEvents(
+  prev: MonumentSnapshot,
+  cur: MonumentSnapshot,
+  tick: number,
+): LogEntry[] {
+  const out: LogEntry[] = [];
+  if (prev.stage >= 0 && cur.stage > prev.stage) {
+    out.push({ text: `Denkmal: Abschnitt ${cur.stage} fertig`, toast: 'info', tick });
+  }
+  if (!prev.monumentDone && cur.monumentDone) {
+    out.push({ text: MONUMENT_DONE_TEXT, toast: null, tick });
+  }
+  return out;
 }

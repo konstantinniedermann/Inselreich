@@ -132,6 +132,7 @@ import { resolveLogClick } from './logTarget';
 import { renderEventLog, updateEventLog } from './eventLogView';
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
+import { MONUMENT_DONE_TEXT, monumentEvents, monumentSnapshot } from './monumentView';
 import { crisisLogEntries, crisisLogVisible, pushLog, type LogEntry } from './crisisLog';
 import { bindMessages, closeClosableToast, replaceMessage, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
@@ -1324,6 +1325,9 @@ function launch(
   let prevOrderVisible = orderVisible(world);
   // Nach dem Laden ist der geladene Stand die Vergleichsbasis: eine laufende Krise erzeugt keinen Eintrag
   let prevCrisis = crisisView(world);
+  let prevMonument = monumentSnapshot(world);
+  /** Start des Aufflammens (U-12): nur beim Übergang monumentDone false → true, nie nach dem Laden. */
+  let monumentFlareStart: number | undefined;
   let last = performance.now();
   let lastAmbienceMs = -Infinity;
   let fireMemo: FireMemo = null;
@@ -1417,6 +1421,18 @@ function launch(
         state.eventLog = pushLog(state.eventLog, logged);
         for (const e of logged) if (e.toast !== null) showMessage(e.text, e.toast);
       }
+      const curMonument = monumentSnapshot(world);
+      const monumentLogged = monumentEvents(prevMonument, curMonument, world.tick);
+      if (!prevMonument.monumentDone && curMonument.monumentDone)
+        monumentFlareStart = performance.now();
+      prevMonument = curMonument;
+      if (monumentLogged.length > 0) {
+        state.eventLog = pushLog(state.eventLog, monumentLogged);
+        for (const e of monumentLogged) {
+          if (e.text === MONUMENT_DONE_TEXT) showMessage(e.text, 'info', true, true);
+          else if (e.toast !== null) showMessage(e.text, e.toast);
+        }
+      }
       const msg = orderMessageFor(prevOrder, prevOrderVisible, world);
       if (msg) showMessage(msg);
       prevOrderVisible = orderVisible(world);
@@ -1462,6 +1478,7 @@ function launch(
         boom: preview.boom ?? inputs.render.boom,
         raster: preview.raster === true,
         focus: goodFocus,
+        ...(monumentFlareStart === undefined ? {} : { monumentFlareStart }),
       };
       render(ctx, world, state.cam, layers, state.hover, state.selectedId, view, fx);
       if (connectPreview) drawPathPreview(ctx, state.cam, connectPreview);

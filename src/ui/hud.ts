@@ -1,4 +1,5 @@
 import { HOME } from '../sim/world';
+import { monumentChip } from './monumentView';
 import { islandName } from '../sim/islands';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
@@ -285,7 +286,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     const hide = popChipHidden(world, tier);
     if (chip && chip.hidden !== hide) chip.hidden = hide;
   }
-  const goal = goalTexts(goalView(world));
+  const goal = goalTexts(goalView(world), monumentChip(world));
   const goalEl = setField(header, 'goal', goal.chip);
   if (goalEl && goalEl.title !== goal.title) goalEl.title = goal.title;
   updateMoney(header, world);
