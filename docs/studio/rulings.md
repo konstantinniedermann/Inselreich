@@ -5268,3 +5268,17 @@ erst nach `make zeitreserve-push` Exit 0.
 Regelbezug: state.md „Fortsetzung“, R464, R475, R488, R496 · Kosten bei Irrtum: ein verschobener Push.
 
 Entscheider: L0 · Anlass: Session-Start · ADR: —
+
+## R499 · 2026-10-11 · Kurzdesign UI-NAECHSTER-SCHRITT angenommen (Stufe leicht)
+
+Ruling: Kurzdesign `lead-design` (Bericht, AK-NS-01…08) angenommen; Paket **UI-NAECHSTER-SCHRITT**. «Nächster Schritt»
+(`src/ui/guide.ts`, `nextStep`) nennt **akuten Warenmangel** (Haus unversorgt bei Gut g, Erzeuger steht, Lager der
+Insel des Hauses < 1) vor den Gütern der nächsten Stufe; Text aus dem gemeinsamen Baustein mit `remedyText`. **Akuter
+Kassenmangel nur bei `money < 0`** (Fallback-Variante, keine neue Konstante `ACUTE_CASH_MINUTES`, YAGNI), direkt nach dem
+Warenmangel; AK-NS-05 entsprechend ohne Saldo-Fall. Kolonie: Bestand der Insel des Hauses. Stillgelegter/ausgefallener
+Erzeuger und volles Lager ohne Hinweis bleiben ausserhalb (Beobachtung). Kein Save-, kein Balancing-Bezug. Plan durch
+`lead-tech` im Bericht, dann kombiniertes Gate durch L0; Umsetzung erst nach Push REL-19 (R464).
+
+Regelbezug: STUDIO.md Ablauf Stufe leicht, R475, R464 · Kosten bei Irrtum: ein kleines UI-Paket nachbessern.
+
+Entscheider: L0 · Anlass: Kurzdesign-Bericht lead-design · ADR: —
