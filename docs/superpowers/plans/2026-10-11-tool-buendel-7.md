@@ -22,9 +22,9 @@ Prozessstufe leicht (Format E-010: dieser Index plus je Task eine Datei ≤ 10 K
 
 - **T01:** `testrun.parse_names` liefert bei Sammelfehlern (vitest «FAIL file» ohne `>`-Teil, unittest `ImportError`-Blöcke) den Dateinamen statt einer leeren Liste; `_stop_group` blockt SIGINT/SIGTERM/SIGHUP ab dem ersten Moment mit `signal.pthread_sigmask` (Fallback `_ignore_interrupts`), schliesst das Fenster vor `_ignore_interrupts()`.
 - **T02:** `log._package_exists` vergleicht die geparste ID statt Rohtext `"id"` (JSON-Escape `\uXXXX` bei nicht-ASCII).
-- **T03:** `model.py`: `lead_phases` und `budget_key` rufen immer zuerst `claim_budgets()` (kein Zustand nur im `result`-Pfad, Z. 1214). Präfix-Regel: ohne exakte Freigabe bindet für Lead-Paket `X-<Suffix>` die Freigabe `X` (längster Präfix bis `-`; exakt geht vor), in `_grant_names`/`compute_claims`/`budget_key`.
-- **T04:** neu `tools/studio/tablecheck.py` (Zeilen mit Tabellenzellen: unmaskiertes `|` in Code-Span, abweichende Spaltenzahl innerhalb einer Tabelle) + `make docs-check` ruft es nach Prettier.
-- **T05:** `efficiency.py`: Lead-Instanzen mit Phase `plan-`/`design-`/`gate-` zählen zur Klasse «Design/Spec/Plan» in `produktiv`; Ampelzeile zeigt den Anteil nach Phase (Plan · Design · Gate). Die Rohzeile `steuerung` bleibt unverändert.
+- **T03:** `model.py`: `lead_phases` und `budget_key` rufen immer zuerst `claim_budgets()` (kein Zustand nur im `result`-Pfad, Z. 1214). Präfix-Regel (B2, R532): **eine** gemeinsame Funktion für die Freigabe-Namen (Paket-ID → Namen inkl. Präfixe bis `-`, exakt vor Präfix, längster zuerst) in `model.py`; `budgetwarn.package_names` (heute Kopie) und `model._grant_names` nutzen sie beide. `modelguard.py` ruft `budgetwarn.check` und bleibt unverändert.
+- **T04:** neu `tools/studio/tablecheck.py` (unmaskiertes `|` in Code-Span, abweichende Spaltenzahl; auch eingerückte und zitierte `>`-Tabellen) + `make docs-check` ruft es nach Prettier, Exit = Maximum beider. Bestands-Treffer behebt T04 als eigener `docs:`-Commit (B3, R532).
+- **T05:** `efficiency.py`: Lead-Instanzen mit Phase `plan-`/`design-` zählen in `produktiv` zur Klasse «Design/Spec/Plan»; `gate-` **nicht** (Gates sind Steuerung, B4). Mehrfachzählung gewollt: ein Plan-/Design-Lead steht in `steuerung` (Roh) und in `produktiv`; `produktiv` ≤ 1 bleibt Invariante (Test). Ampelzeile zeigt «davon Plan x % · Design y %». `steuerung`/`steuerung_bereinigt` unverändert.
 
 ## Datei-Ownership (ein Worktree, Parallelität 1 → Strang seriell)
 
@@ -40,22 +40,23 @@ Worktree `.worktrees/tool-b7`, Branch `tool/b7`. Berührt `src/` und `tests/` (T
 
 Doku: `docs/arc42.md` (Abschnitt Werkzeuge/Budget-Hook, nur bei Änderung der Beschreibung) und `docs/studio/` bleiben unberührt (Handbuch-Folgen: `studio-coach` nach dem Merge). D1-Doku im Umsetzer-Briefing ausdrücklich erlauben (E-017): nur `docs/arc42.md`.
 
-## Budgetantrag
+## Budgetantrag (Nachtrag R532)
 
 ```text
 Lead: lead-tech
 Phase: TOOL-BUENDEL-7-umsetzung
 Pakete: 1 Strang T01–T05 (ein Umsetzer, seriell)
-Formel: 1 × 2 + 0 QA-Checks + 1 Final-Review = 3 → × 1,3 → 4
-Beantragt: 4 Starts, Parallelität 1
+Formel: 1 × 2 + 3 Task-Reviews + 1 Final-Review = 6 → × 1,3 → 8
+Beantragt: 8 Starts, Parallelität 1 (R532 B1)
 ```
 
-- Start 1: `tech-sim-engineer` (sonnet) T01–T05 (≈ 110 Tools; Briefing: Persona-Hinweis «Werkzeug-Paket, `tools/studio/`, kein `src/`»)
-- Start 2: `qa-code-reviewer` (opus) Final-Review über `tool/b7` (≈ 35, zählt als Task-Review)
-- Starts 3–4: Puffer; Fix-Runden per SendMessage (zählen nicht)
+- Start 1: `tech-sim-engineer` (sonnet) T01–T05 (≈ 110 Tools; Briefing: «Werkzeug-Paket, `tools/studio/`, kein `src/`»)
+- Starts 2–4: `qa-code-reviewer` (sonnet) Task-Reviews nach T01/T02, nach T03, nach T04/T05
+- Start 5: `qa-code-reviewer` (opus) Final-Review über `tool/b7` (≈ 35)
+- Starts 6–8: Puffer; Fix-Runden per SendMessage (zählen nicht)
 
 Controller-Ein-Umsetzer-Regel (E-037): L0 briefet den Umsetzer direkt oder der Lead läuft auf sonnet.
 
-## Entwurf an L0 (Ruling, R471)
+## Entscheide (R532)
 
-Keine neuen Entscheide nötig; zu bestätigen: (a) Präfix-Regel wie R528 (3) (längster Treffer bis `-`, exakt vor Präfix); (b) T04 als eigenes Skript statt Prettier-Plugin (Prettier fängt den Fehler nicht, Plugin = Abhängigkeit, ADR-001).
+Präfix-Regel wie R528 (3) und T04 als Stdlib-Skript bestätigt; B1–B6 eingearbeitet (Index, T01–T05). Abgenommen ohne erneutes Review (Stichprobe L0).
