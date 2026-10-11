@@ -2697,6 +2697,117 @@ def lead_with_package(t, session, aid, package=""):
     ]
 
 
+class ClaimRolePrefixTest(unittest.TestCase):
+    """R543: Rollen-Praefix der Phase wird beim Abgleich ignoriert, die Rohphase bleibt."""
+
+    def phases(self, phase, package):
+        events = [
+            grant(1, SA, "other", 4, 1),
+            grant(2, SA, phase, 4, 1),
+            *lead_with_package(10, SA, "L1", package=package),
+        ]
+        return build(events, now=2000, session="all")["lead_phases"]
+
+    def test_prefixed_phase_is_assigned_and_stays_raw(self):
+        self.assertEqual(self.phases("impl-REL-15", "REL-15"), {f"{SA}:L1": "impl-REL-15"})
+
+    def test_prefix_of_package_name_matches(self):
+        self.assertEqual(self.phases("design-M13", "M13-BRAINSTORM"), {f"{SA}:L1": "design-M13"})
+
+    def test_x_does_not_bind_xy(self):
+        events = [
+            grant(1, SA, "impl-X", 4, 1),
+            grant(2, SA, "other", 4, 1),
+            *lead_node(10, SA, "LA", package="XY-T01"),
+            *worker(20, SA, "LA", "W1", stop_at=25, package="XY-T01"),
+        ]
+        state = build(events, now=2000, session="all")
+        rows = {b["phase"]: b for b in state["budgets"]}
+        self.assertEqual(rows["impl-X"]["used"], 0)
+        self.assertEqual(rows["other"]["used"], 1)
+
+    def test_claim_counts_start_on_prefixed_grant(self):
+        events = [
+            grant(0, SA, "other", 4, 1),
+            grant(1, SA, "impl-REL-15", 4, 1),
+            *lead_node(10, SA, "LA", package="REL-15"),
+            *worker(20, SA, "LA", "W1", stop_at=25, package="REL-15"),
+        ]
+        rows = {b["phase"]: b for b in build(events, now=2000, session="all")["budgets"]}
+        self.assertEqual(rows["impl-REL-15"]["used"], 1)
+        self.assertEqual(rows["other"]["used"], 0)
+
+
+class PlanAndImplGrantTest(unittest.TestCase):
+    """Plan- und Umsetzungs-Freigabe desselben Pakets bleiben getrennt (Review R543)."""
+
+    PAIRS = (("plan-REL-14", "impl-REL-14", "REL-14"), ("plan-ui-tasten", "ui-tasten", "ui-tasten"))
+
+    def test_counts_and_phases_per_grant(self):
+        for plan, impl, pkg in self.PAIRS:
+            events = [
+                grant(1, SA, plan, 4, 1),
+                *lead_with_package(10, SA, "LP", package=pkg),
+                *worker(20, SA, "LP", "WP", stop_at=25, package=pkg),
+                grant(50, SA, impl, 4, 1),
+                *lead_with_package(60, SA, "LI", package=pkg),
+                *worker(70, SA, "LI", "WI1", stop_at=75, package=pkg),
+                *worker(80, SA, "LI", "WI2", stop_at=85, package=pkg),
+            ]
+            state = build(events, now=2000, session="all")
+            used = {b["phase"]: b["used"] for b in state["budgets"]}
+            self.assertEqual(used, {plan: 1, impl: 2}, plan)
+            self.assertEqual(state["lead_phases"], {f"{SA}:LP": plan, f"{SA}:LI": impl})
+
+    def test_follow_up_controller_gets_youngest_grant(self):
+        events = [
+            grant(1, SA, "plan-REL-14", 4, 1),
+            *lead_with_package(10, SA, "LP", package="REL-14"),
+            grant(50, SA, "impl-REL-14", 4, 1),
+            *lead_with_package(60, SA, "LI", package="REL-14"),
+            *lead_with_package(90, SA, "LF", package="REL-14"),
+            *worker(95, SA, "LF", "WF", stop_at=99, package="REL-14"),
+        ]
+        state = build(events, now=2000, session="all")
+        used = {b["phase"]: b["used"] for b in state["budgets"]}
+        self.assertEqual(used, {"plan-REL-14": 0, "impl-REL-14": 1})
+        self.assertEqual(state["lead_phases"][f"{SA}:LF"], "impl-REL-14")
+
+    def test_older_plan_grant_does_not_steal_later_impl_lead(self):
+        events = [
+            grant(1, SA, "plan-REL-14", 1, 0),
+            *lead_with_package(5, SA, "LP", package=""),
+            grant(50, SA, "impl-REL-14", 10, 3),
+            *lead_with_package(60, SA, "LI", package="REL-14"),
+            *worker(70, SA, "LI", "WI1", stop_at=75, package="REL-14-T01"),
+            *worker(80, SA, "LI", "WI2", stop_at=85, package="REL-14-T02"),
+        ]
+        state = build(events, now=2000, session="all")
+        used = {b["phase"]: b["used"] for b in state["budgets"]}
+        self.assertEqual(used, {"plan-REL-14": 0, "impl-REL-14": 2})
+        self.assertEqual(state["lead_phases"][f"{SA}:LI"], "impl-REL-14")
+        self.assertEqual(state["lead_phases"][f"{SA}:LP"], "plan-REL-14")
+
+    def test_exact_raw_phase_beats_normalized(self):
+        events = [
+            grant(1, SA, "impl-REL-14", 4, 1),
+            grant(2, SA, "REL-14", 4, 1),
+            *lead_with_package(10, SA, "L1", package="REL-14"),
+        ]
+        phases = build(events, now=2000, session="all")["lead_phases"]
+        self.assertEqual(phases, {f"{SA}:L1": "REL-14"})
+
+    def test_gate_and_release_check_prefix_pair(self):
+        for phase in ("gate-X", "release-check-X"):
+            events = [
+                grant(1, SA, "other", 4, 1),
+                grant(2, SA, phase, 4, 1),
+                *lead_with_package(10, SA, "L1", package="X"),
+            ]
+            phases = build(events, now=2000, session="all")["lead_phases"]
+            self.assertEqual(phases, {f"{SA}:L1": phase})
+
+
 class ClaimPrefixRuleTest(unittest.TestCase):
     """Freigabe X bindet X-<Suffix> (R528 (3)); exakt vor Praefix, laengster vor kuerzerem."""
 

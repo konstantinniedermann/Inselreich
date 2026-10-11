@@ -180,6 +180,55 @@ class PrefixRuleTest(unittest.TestCase):
         self.assertIs(budgetwarn.package_names, model.package_names)
 
 
+class RolePrefixTest(unittest.TestCase):
+    """R543: Freigabe-Phasen mit Rollen-Praefix treffen den Paketnamen."""
+
+    def check(self, package, phase, budget="4"):
+        prompt = f"Persona: lead-tech\nBudget: {budget}\nPaket: {package}"
+        given = [json.loads(grant(phase=phase))]
+        return budgetwarn.check(start(prompt), given), budgetwarn.warning(
+            start(prompt), given
+        )
+
+    def test_phase_key(self):
+        self.assertEqual(model.phase_key("impl-REL-15"), "REL-15")
+        self.assertEqual(model.phase_key("Release-Check-X"), "X")
+        self.assertEqual(model.phase_key("impl-plan-X"), "plan-X")
+        self.assertEqual(model.phase_key("impl-"), "impl-")
+        self.assertEqual(model.phase_key(None), "None")
+        self.assertEqual(model.phase_key("REL-15"), "REL-15")
+
+    def test_pairs_match(self):
+        for phase, package in (
+            ("impl-REL-15", "REL-15"),
+            ("impl-TOOL-BUENDEL-2", "TOOL-BUENDEL-2"),
+            ("design-M13", "M13-BRAINSTORM"),
+            ("gate-X", "X"),
+            ("release-check-X", "X"),
+        ):
+            self.assertEqual(self.check(package, phase), (None, None), phase)
+
+    def test_other_package_still_blocks(self):
+        block, warn = self.check("REL-15", "impl-OTHER-1")
+        self.assertIsNotNone(block)
+        self.assertIsNotNone(warn)
+
+    def test_x_does_not_bind_xy_even_with_prefix(self):
+        self.assertIsNotNone(self.check("XY-T01", "impl-X")[0])
+        self.assertIsNone(self.check("X-T01", "impl-X")[0])
+
+    def test_follow_up_controller_is_exempt(self):
+        for budget in ("6 verbleibende", "6 Verbleibende Starts", "2 verbleibend"):
+            prompt = f"Persona: lead-tech\nPaket: REL-15\nBudget: {budget}"
+            for given in ([], [json.loads(grant(phase="impl-OTHER-1"))]):
+                self.assertIsNone(budgetwarn.check(start(prompt), given), budget)
+                self.assertIsNone(budgetwarn.warning(start(prompt), given), budget)
+
+    def test_normal_budget_unchanged(self):
+        self.assertEqual(budgetwarn.budget_count("Budget: 12 Starts"), 12)
+        self.assertIsNotNone(budgetwarn.check(start(PROMPT), []))
+
+
 FIXTURE = Path(__file__).parent / "fixtures" / "budget_pairs.json"
 RULE_FROM = "2026-10-10T15:16:00Z"  # Handbuch 1.45 (Commit e5563696, 17:16 MESZ): `Paket:` gleich Phase
 

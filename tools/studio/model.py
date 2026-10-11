@@ -179,6 +179,25 @@ def _package_token(text: str) -> str:
     return re.split(r"[\s\u2014\u2013:(]", text.strip(), maxsplit=1)[0]
 
 
+ROLE_PREFIXES = ("impl-", "plan-", "design-", "gate-", "release-check-")
+
+
+def phase_key(phase: str) -> str:
+    """Phase ohne hoechstens ein fuehrendes Rollen-Praefix (R543); nur wenn danach etwas bleibt."""
+    text = str(phase).strip()
+    lower = text.casefold()
+    for prefix in ROLE_PREFIXES:
+        if lower.startswith(prefix) and len(text) > len(prefix):
+            return text[len(prefix) :]
+    return text
+
+
+def phase_matches(phase: str, name: str) -> bool:
+    """Passt die Freigabe-Phase (roh oder ohne Rollen-Praefix) zum Paketnamen? Casefold."""
+    wanted = name.casefold()
+    return wanted in (str(phase).strip().casefold(), phase_key(phase).casefold())
+
+
 def _unique(names: Iterable[str]) -> list[str]:
     return list(dict.fromkeys(n for n in names if n))
 
@@ -821,7 +840,7 @@ class _Builder:
         if not candidates:
             return None
         names = _grant_names(lead_node, child)
-        named = self._named_grant(candidates, names)
+        named = self._named_grant(candidates, names, lead_node["key"])
         if named is not None:
             return named
         # Ohne Namenstreffer: Freigaben, die ein anderer Lead derselben Rolle
@@ -839,13 +858,27 @@ class _Builder:
         best = max(free or candidates, key=lambda g: g["since"])
         return (best["lead"], best["phase"], best["session_id"])
 
-    @staticmethod
-    def _named_grant(candidates: list[dict], names: list[str]) -> tuple | None:
-        """Freigabe nach Namensrang: exakt vor Praefix, laengster Praefix zuerst."""
+    def _named_grant(
+        self, candidates: list[dict], names: list[str], lead_key: str | None = None
+    ) -> tuple | None:
+        """Freigabe nach Namensrang: exakt vor Praefix, laengster Praefix zuerst.
+
+        Passen mehrere Freigaben, gewinnt die exakte Rohphase, dann die vom Lead
+        beanspruchte, sonst die juengste (R543)."""
         for name in names:
-            for grant in candidates:
-                if grant["phase"] == name:
-                    return (grant["lead"], grant["phase"], grant["session_id"])
+            hits = [g for g in candidates if phase_matches(g["phase"], name)]
+            if not hits:
+                continue
+            pool = [g for g in hits if str(g["phase"]).strip().casefold() == name.casefold()]
+            pool = pool or hits
+            claimed = [
+                g
+                for g in pool
+                if lead_key is not None
+                and self.claims.get((g["lead"], g["phase"], g["session_id"])) == lead_key
+            ]
+            grant = max(claimed or pool, key=lambda g: g["since"])
+            return (grant["lead"], grant["phase"], grant["session_id"])
         return None
 
     def _named_phase(self, lead_node: dict) -> str | None:
@@ -857,7 +890,9 @@ class _Builder:
             and g["session_id"] in ("", lead_node["session_id"])
             and g["since"] <= lead_node["started"]
         ]
-        named = self._named_grant(candidates, _grant_names(lead_node))
+        named = self._named_grant(
+            candidates, _grant_names(lead_node), lead_node["key"]
+        )
         return None if named is None else named[1]
 
     def lead_phases(self) -> dict[str, str]:
@@ -894,22 +929,59 @@ class _Builder:
         ranks = max((len(n) for n in names.values()), default=0)
         for rank in range(ranks + 1):  # Namensrang 0..n, zuletzt die Zeitregel
             by_name = rank < ranks
-            for key, grant in grants:
+            for exact in (True, False) if by_name else (False,):  # roh vor normalisiert
+                self._claim_round(grants, by_role, names, taken, rank, by_name, exact)
+
+    def _claim_normalized(self, grants, by_role, names, taken, rank):
+        """Normalisierter Rang (R543): je Lead die juengste passende Freigabe vor seinem Start."""
+        leads = sorted(
+            (lead for group in by_role.values() for lead in group),
+            key=lambda n: n["started"],
+        )
+        for lead in leads:
+            if lead["key"] in taken:
+                continue
+            hits = [
+                (key, grant)
+                for key, grant in grants
+                if grant["lead"] == lead["role"]
+                and lead["started"] >= grant["since"]
+                and grant["session_id"] in ("", lead["session_id"])
+                and self._name_hit(grant, names[lead["key"]][rank : rank + 1], False)
+            ]
+            if hits:
+                key = max(hits, key=lambda kv: kv[1]["since"])[0]
                 if key in self.claims:
-                    continue
-                for lead in by_role.get(grant["lead"], ()):
-                    if (
-                        lead["key"] not in taken
-                        and lead["started"] >= grant["since"]
-                        and grant["session_id"] in ("", lead["session_id"])
-                        and (
-                            not by_name
-                            or grant["phase"] in names[lead["key"]][rank : rank + 1]
-                        )
-                    ):
-                        self.claims[key] = lead["key"]
-                        taken.add(lead["key"])
-                        break
+                    continue  # juengste Freigabe vergeben: aelteren Plan nicht nehmen
+                self.claims[key] = lead["key"]
+                taken.add(lead["key"])
+
+    def _claim_round(self, grants, by_role, names, taken, rank, by_name, exact):
+        if by_name and not exact:
+            self._claim_normalized(grants, by_role, names, taken, rank)
+            return
+        for key, grant in grants:
+            if key in self.claims:
+                continue
+            for lead in by_role.get(grant["lead"], ()):
+                if (
+                    lead["key"] not in taken
+                    and lead["started"] >= grant["since"]
+                    and grant["session_id"] in ("", lead["session_id"])
+                    and (
+                        not by_name
+                        or self._name_hit(grant, names[lead["key"]][rank : rank + 1], exact)
+                    )
+                ):
+                    self.claims[key] = lead["key"]
+                    taken.add(lead["key"])
+                    break
+
+    @staticmethod
+    def _name_hit(grant: dict, names: list[str], exact: bool) -> bool:
+        if exact:
+            return any(str(grant["phase"]).strip().casefold() == n.casefold() for n in names)
+        return any(phase_matches(grant["phase"], n) for n in names)
 
     def on_package(self, event, ts, sid):
         key = _package(event)
