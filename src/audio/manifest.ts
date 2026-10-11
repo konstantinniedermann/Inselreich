@@ -169,6 +169,7 @@ export const LAYER_FILES: Partial<Record<Layer, string>> = {
 /** Samples der Signaltöne; ohne Datei oder bei Fehler spielt der synthetische Rückfall. */
 export const SFX_FILES: Partial<Record<SoundEvent, string>> = {
   alarm: 'audio/sfx/bell.mp3',
+  monumentDone: 'audio/sfx/bell.mp3',
   stormWarning: 'audio/sfx/foghorn.mp3',
   boom: 'audio/sfx/coins.mp3',
 };

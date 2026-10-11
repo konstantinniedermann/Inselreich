@@ -49,7 +49,8 @@ export type SoundEvent =
   | 'alarm'
   | 'stormWarning'
   | 'boom'
-  | 'unlock';
+  | 'unlock'
+  | 'monumentDone';
 
 export interface SoundOptions {
   muted: boolean;
@@ -86,6 +87,8 @@ export interface AudioDebugState {
   layers: Partial<Record<Layer, number>>;
   duck: number;
   music: { state: 'idle' | 'pause' | 'playing'; id: string | null };
+  /** Zahl der gespielten Ereignisse je Art seit Start (Dev-Zähler, QA-B1); nur gezählt, nie zurückgesetzt. */
+  events: Partial<Record<SoundEvent, number>>;
 }
 
 export interface Sound {
@@ -118,6 +121,8 @@ export const THROTTLE_MS: Partial<Record<SoundEvent, number>> = {
   alarm: 2000,
   stormWarning: 5000,
   boom: 2000,
+  // Länger als die Figur (FIGURE_S), damit ein zweites Ereignis die Schläge nicht doppelt spielt.
+  monumentDone: 3000,
 };
 
 /**
@@ -131,6 +136,7 @@ const FIGURE_S: Partial<Record<SoundEvent, number>> = {
   win: 1.14,
   alarm: 2.0,
   stormWarning: 2.0,
+  monumentDone: 2.8,
 };
 
 /** Pegel von `unlock` gegenüber `win` (Setzung U1, ohne Vorgabe von lead-art). */
@@ -138,6 +144,12 @@ const UNLOCK_LEVEL = 0.5;
 const FX = 0.5; // Effekte liegen 6 dB unter den Signalen (Spec 7.1)
 const SAMPLE_GAIN = 0.8; // Pegel der Signal-Samples (Alarm, Sturmwarnung) auf dem Effekte-Bus
 const EPS = 1e-9;
+// Glocke «Denkmal fertig» (feierlich, nicht Alarm): zwei Schläge, tiefer (Rate), weit auseinander, langer Ausklang.
+const MONUMENT_RATE = 0.75;
+const MONUMENT_STRIKES_AT = [0, 1.1]; // Abstand 1,1 s (alarm: Rückfall 3 x 0,45 s, Sample 1 x)
+const MONUMENT_STRIKE_GAIN = [SAMPLE_GAIN, SAMPLE_GAIN * 0.75]; // Signal-Pegel wie alarm, zweiter Schlag leiser
+const MONUMENT_RING_S = 1.8; // Ausklang des Rückfalls (alarm: 0,8 s)
+const MONUMENT_BASE_HZ = 293.66; // D4, eine Oktave unter dem Alarm-Rückfall (D5)
 
 const defaultIo = (): SoundIo => ({
   fetchBuffer: (u) =>
@@ -200,6 +212,7 @@ export function createSound(
   let crisis = false;
   let music: MusicPlayer | null = null;
   const lastPlayed = new Map<SoundEvent, number>();
+  const events: Partial<Record<SoundEvent, number>> = {};
   const lastBuild = new Map<string, number>();
   const lastShortage = new Map<string, number>();
   let lastShortageAny: number | null = null;
@@ -306,12 +319,13 @@ export function createSound(
     if (!b) loader.request(file);
     return b;
   };
-  const playSample = (b: AudioBuffer, peak: number) => {
+  const playSample = (b: AudioBuffer, peak: number, at = 0, rate = 1) => {
     const dest = bus.effects;
     if (!ctx || !dest) return;
     const src = ctx.createBufferSource();
     const g = ctx.createGain();
     src.buffer = b;
+    if (rate !== 1 && src.playbackRate) src.playbackRate.value = rate;
     g.gain.value = peak;
     src.connect(g);
     g.connect(dest);
@@ -319,7 +333,7 @@ export function createSound(
       src.disconnect();
       g.disconnect();
     };
-    src.start();
+    src.start(ctx.currentTime + at);
   };
   const winFigure = (level: number) => {
     knock(0, 0.3 * level);
@@ -360,6 +374,17 @@ export function createSound(
       for (let k = 0; k < 3; k++) {
         [1, 2.76, 5.4].forEach((m, j) => tone(D5 * m, k * 0.45, 0.8, 0.4 / (j + 1)));
       }
+    },
+    // Denkmal fertig: dieselbe Glocke, aber zwei tiefere, weit gesetzte Schläge mit langem Ausklang.
+    // Rückfall: Partialtöne 1 : 2,76 : 5,4 auf D4, zwei Schläge, 1,8 s.
+    monumentDone: () => {
+      const b = sample('monumentDone');
+      MONUMENT_STRIKES_AT.forEach((at, k) => {
+        if (b) return playSample(b, MONUMENT_STRIKE_GAIN[k]!, at, MONUMENT_RATE);
+        [1, 2.76, 5.4].forEach((m, j) =>
+          tone(MONUMENT_BASE_HZ * m, at, MONUMENT_RING_S, 0.4 / (j + 1)),
+        );
+      });
     },
     // Rückfall Sturmwarnung: tiefer Sägezahn-Akkord (D2, A2) durch Tiefpass 400 Hz, 2 s.
     stormWarning: () => {
@@ -489,6 +514,7 @@ export function createSound(
       const last = lastPlayed.get(e);
       if (gap !== undefined && last !== undefined && now - last + EPS < gap / 1000) return;
       lastPlayed.set(e, now);
+      events[e] = (events[e] ?? 0) + 1;
       safe(figures[e]);
       const figS = FIGURE_S[e];
       if ((e === 'alarm' || e === 'stormWarning') && figS !== undefined)
@@ -595,6 +621,7 @@ export function createSound(
         layers: engine && !disposed ? engine.levels() : {},
         duck,
         music: m,
+        events: { ...events },
       };
     },
     dispose() {

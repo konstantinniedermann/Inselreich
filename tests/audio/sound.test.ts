@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createSound, THROTTLE_MS, type SoundEvent } from '../../src/audio/sound';
+import { SFX_FILES } from '../../src/audio/manifest';
 
 // Der Fake bildet nur die Knoten-API nach, die sound.ts nutzt.
 interface FakeNode {
@@ -17,6 +18,8 @@ function fakeCtx() {
     bufferStarts: 0,
     gains: [] as FakeNode[],
     sets: [] as Array<{ gain: unknown; kind: string; v: number; t: number }>,
+    osc: [] as Array<{ freq: number; start: number; stop: number }>,
+    samples: [] as Array<{ start: number; rate: number; gain: number }>,
   };
   const param = () => {
     const p = {
@@ -63,14 +66,35 @@ function fakeCtx() {
       log.gains.push(g);
       return g;
     },
-    createOscillator: node,
+    createOscillator: () => {
+      const n = node();
+      const rec = { freq: 0, start: 0, stop: 0 };
+      (n.frequency as { setValueAtTime: (v: number, t: number) => void }).setValueAtTime = (v) => {
+        rec.freq = v;
+      };
+      n.start = (t: unknown) => {
+        rec.start = Number(t);
+      };
+      n.stop = (t: unknown) => {
+        rec.stop = Number(t);
+      };
+      log.osc.push(rec);
+      return n;
+    },
     createBufferSource: () => {
       const n = node();
-      n.start = () => {
+      n.playbackRate = param();
+      n.start = (t: unknown) => {
         log.bufferStarts += 1;
+        log.samples.push({
+          start: typeof t === 'number' ? t : 0,
+          rate: (n.playbackRate as { value: number }).value,
+          gain: (n.target as FakeNode | undefined)?.gain.value ?? 0,
+        });
       };
       return n;
     },
+    decodeAudioData: (ab: ArrayBuffer) => Promise.resolve({ duration: 3, tag: ab.byteLength }),
     createBiquadFilter: node,
     createBuffer: (_c: number, len: number) => ({ getChannelData: () => new Float32Array(len) }),
     resume() {
@@ -116,6 +140,7 @@ const ALL: SoundEvent[] = [
   'alarm',
   'stormWarning',
   'boom',
+  'monumentDone',
 ];
 
 describe('sound', () => {
@@ -254,6 +279,7 @@ describe('sound', () => {
       alarm: 2000,
       stormWarning: 5000,
       boom: 2000,
+      monumentDone: 3000,
     });
   });
 
@@ -545,6 +571,140 @@ describe('sound', () => {
         music: { state: 'idle', id: null },
       });
     });
+  });
+});
+
+describe('M13-E2 T19 monumentDone (Glocke)', () => {
+  const sampleIo = () => ({
+    baseUrl: '/',
+    fetchBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+    mediaFactory: (): never => {
+      throw new Error('kein Media-Element im Test');
+    },
+  });
+  const mk = (withSample: boolean) => {
+    const f = fakeCtx();
+    const s = createSound(
+      { muted: false, volume: 0.4 },
+      () => f.ctx,
+      withSample ? sampleIo() : fakeIo(),
+    );
+    s.unlock();
+    return { ...f, s };
+  };
+  // Sample laden: erster Aufruf stösst den Abruf an (Rückfall spielt), danach liegt der Puffer vor.
+  const warm = async (s: ReturnType<typeof mk>['s'], ctx: AudioContext) => {
+    s.play('monumentDone');
+    s.play('alarm');
+    await new Promise((r) => setTimeout(r, 0));
+    setTime(ctx, 100);
+  };
+  const recipe = (log: ReturnType<typeof fakeCtx>['log'], fromOsc: number, fromSmp: number) => {
+    const smp = log.samples.slice(fromSmp);
+    const osc = log.osc.slice(fromOsc);
+    const starts = (
+      smp.length ? smp.map((x) => x.start) : [...new Set(osc.map((o) => o.start))]
+    ).sort((a, b) => a - b);
+    return {
+      rate: smp[0]?.rate,
+      strikes: starts.length,
+      gap: starts.length > 1 ? starts[1]! - starts[0]! : 0,
+      ring: osc.length ? Math.max(...osc.map((o) => o.stop - o.start)) : 0,
+      peak: smp.length ? Math.max(...smp.map((x) => x.gain)) : 0,
+      baseHz: osc.length ? Math.min(...osc.map((o) => o.freq)) : 0,
+    };
+  };
+  const differing = (a: object, b: object) =>
+    (Object.keys(a) as Array<keyof typeof a>).filter(
+      (k) => JSON.stringify(a[k]) !== JSON.stringify(b[k]),
+    );
+
+  it('SFX_FILES.monumentDone zeigt auf die vorhandene Glocke', () => {
+    expect(SFX_FILES.monumentDone).toBe('audio/sfx/bell.mp3');
+  });
+
+  it('Rückfall ohne Sample: spielt, anders als alarm in mindestens zwei Grössen', () => {
+    const { s, ctx, log } = mk(false);
+    const base = log.osc.length; // Oszillatoren aus unlock() (Umgebung) zählen nicht
+    s.play('alarm');
+    const alarmOsc = log.osc.length;
+    expect(alarmOsc).toBeGreaterThan(0);
+    setTime(ctx, 50);
+    s.play('monumentDone');
+    expect(log.osc.length).toBeGreaterThan(alarmOsc);
+    const a = recipe(
+      { ...log, osc: log.osc.slice(base, alarmOsc) } as typeof log,
+      0,
+      log.samples.length,
+    );
+    const m = recipe({ ...log, osc: log.osc.slice(alarmOsc) } as typeof log, 0, log.samples.length);
+    expect(differing(a, m).length).toBeGreaterThanOrEqual(2);
+    expect(m.strikes).toBeLessThan(a.strikes);
+    expect(m.ring).toBeGreaterThan(a.ring);
+  });
+
+  it('mit Sample: tiefere Rate, anderer Abstand und Schlagzahl als alarm, Pegel hörbar', async () => {
+    const { s, ctx, log } = mk(true);
+    await warm(s, ctx);
+    const n0 = log.samples.length;
+    s.play('alarm');
+    const n1 = log.samples.length;
+    expect(n1).toBeGreaterThan(n0);
+    setTime(ctx, 200);
+    s.play('monumentDone');
+    expect(log.samples.length).toBeGreaterThan(n1);
+    const a = recipe(log, log.osc.length, n0);
+    const alarmSmp = log.samples.slice(n0, n1);
+    const mSmp = log.samples.slice(n1);
+    const A = { rate: alarmSmp[0]!.rate, strikes: alarmSmp.length };
+    const M = { rate: mSmp[0]!.rate, strikes: mSmp.length };
+    expect(M.rate).toBeLessThan(A.rate);
+    expect(M.strikes).toBeGreaterThanOrEqual(2);
+    expect(M.strikes).not.toBe(A.strikes);
+    expect(a).toBeDefined();
+    // Spielrelevantes Signal bleibt hörbar: Pegel wie die übrigen Signal-Samples
+    expect(Math.max(...mSmp.map((x) => x.gain))).toBeGreaterThanOrEqual(0.5);
+    // Schläge zeitlich gestaffelt, nicht gleichzeitig
+    expect(mSmp[1]!.start).toBeGreaterThan(mSmp[0]!.start + 0.5);
+  });
+
+  it('Dev-Zähler: je gespieltes Ereignis +1, gedrosselter Aufruf zählt nicht, alarm getrennt', () => {
+    const { s, ctx } = mk(false);
+    expect(s.debugState().events).toEqual({});
+    s.play('monumentDone');
+    expect(s.debugState().events.monumentDone).toBe(1);
+    setTime(ctx, 0.5);
+    s.play('monumentDone');
+    expect(s.debugState().events.monumentDone).toBe(1);
+    s.play('alarm');
+    expect(s.debugState().events.alarm).toBe(1);
+    expect(s.debugState().events.monumentDone).toBe(1);
+    setTime(ctx, 60);
+    s.play('monumentDone');
+    expect(s.debugState().events.monumentDone).toBe(2);
+    // Kopie: Änderung von aussen wirkt nicht zurück
+    s.debugState().events.monumentDone = 99;
+    expect(s.debugState().events.monumentDone).toBe(2);
+  });
+
+  it('Drossel deckt die Figur ab, Bus Signale: ducken wie win', () => {
+    expect(THROTTLE_MS.monumentDone).toBeGreaterThanOrEqual(2500);
+    const { s, ctx } = mk(false);
+    s.play('monumentDone');
+    setTime(ctx, 0.5);
+    expect(s.debugState().duck).toBeLessThan(1);
+  });
+
+  it('stumm, vor unlock und nach dispose: kein Ereignis, kein Wurf', () => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: false }, () => ctx, fakeIo());
+    expect(() => s.play('monumentDone')).not.toThrow();
+    expect(log.nodes).toBe(0);
+    expect(s.debugState().events).toEqual({});
+    s.unlock();
+    s.dispose();
+    expect(() => s.play('monumentDone')).not.toThrow();
+    expect(() => s.debugState()).not.toThrow();
   });
 });
 
