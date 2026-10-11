@@ -5920,3 +5920,17 @@ Gut», «Ungültiger Wert») statt Spec R4 angenommen, da für Spieler unsichtba
 Regelbezug: gates.md Gate Merge, R505, R535, R537 · Kosten bei Irrtum: ein Rückmerge im UI-Strang.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I049-UI · ADR: —
+
+## R545 · 2026-10-11 · Gate Merge I048-UI: OK (Strang-Merge vor Schritt B)
+
+Ruling: `feat/i048-ui` @ `d0629d4c` (T04, Rot-Commit `e69e7d11`, Review OK; `make check`, `tsc`, `make lint` Exit 0) →
+**Gate Merge OK** nach Muster R535/R537: Strang-Merge vor dem Abschlussstrang; das Final-Review opus über ganz I-048 läuft
+laut Plan am Ende von I048-B (nach T08). Abweichungen angenommen: `ReasonCtx` aus `./hints`, `style.css` unverändert
+(Umbruch per `flex-wrap`). **Auflagen für I048-B:** T07 prüft «Kauf … %»/«Verkauf … %» neben der Reserve-Zeile bei
+1280 px ohne Umbruch; T08 führt `README.md:387` und `docs/arc42.md:301` (inkl. `tradeReasonCtx`) nach. `make zeittests`
+bei Last 4,5 nicht belastbar → I048-B wiederholt ihn. Integrator mergt; danach startet I048-B (T06–T08), Budget 6
+(Controller, Umsetzer T06+T08, Review T06, Playtester T07, Final-Review opus, Puffer), Parallelität 1.
+
+Regelbezug: gates.md Gate Merge, R505, R535, R537, R544 · Kosten bei Irrtum: ein Rückmerge im UI-Strang.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I048-UI · ADR: —
