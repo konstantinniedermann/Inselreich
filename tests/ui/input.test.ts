@@ -380,6 +380,11 @@ describe('UI-TASTEN app.ts Verdrahtung (Quelltext, B5)', () => {
     return src.slice(a, src.indexOf(end, a));
   };
 
+  it('AK-UT-08 Knopf nach Esc trägt wieder DEMOLISH_LABEL, kein Literal', () => {
+    expect(src).toContain('demolishBtn.textContent = DEMOLISH_LABEL');
+    expect(src).not.toContain("textContent = 'Abreissen'");
+  });
+
   it('Abreissen-Knopf und Entf teilen demolishFromPanel(id)', () => {
     expect(src).toContain('demolish: (id) => demolishFromPanel(id),');
     const fn = block('const demolishFromPanel = ', '\n  };');

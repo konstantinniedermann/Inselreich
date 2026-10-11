@@ -149,7 +149,7 @@ export function tooltipLines(tool: Tool): string[] {
   if (radius !== undefined) lines.push(`Radius: ${radius}`);
   lines.push(...crisisTooltipLines(def.id));
   lines.push(`Standort: ${def.site.length ? def.site.map(siteText).join(', ') : 'frei'}`);
-  if (def.maxCount?.n === 1) lines.push(`Höchstens eine ${def.name}`);
+  if (def.maxCount?.n === 1) lines.push('Nur einmal je Insel');
   if (def.id === 'monument') lines.push(monumentToolLine());
   const preview = tierPreviewLine(def.id);
   if (preview) lines.push(preview);

@@ -24,7 +24,7 @@ import { isSupplied } from '../../src/sim/population';
 import { functionLock } from '../../src/sim/unlocks';
 import { serialize } from '../../src/sim/save';
 import { createWorld, home } from '../../src/sim/world';
-import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { BUILDING_DEFS, PAUSED_UPKEEP_PCT } from '../../src/sim/defs/buildings';
 import { LEVELS } from '../../src/sim/defs/levels';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { stateInfo } from '../../src/ui/texts';
@@ -394,22 +394,43 @@ describe('REL-14 Quelltext: alte Begriffe und Fehlt-Zeile entfernt', () => {
   });
 });
 
+const PAUSED_TEXT = `Stillgelegt — Unterhalt auf ${PAUSED_UPKEEP_PCT} % (aufgerundet)`;
+
+describe('AK-UT-14 Kacheln stillgelegt', () => {
+  const w = createWorld(3, { unlockAll: true });
+  it('Ausstoss und Verbrauch ohne Rate, Unterhalt aufgerundet', () => {
+    const wv = put(w, 'weaver');
+    const normal = statTiles(wv);
+    expect(normal.find((t) => t.key === 'output')!.value).toMatch(/ \/ min$/);
+    wv.paused = true;
+    const t = statTiles(wv);
+    for (const key of ['output', 'input'] as const) {
+      const tile = t.find((x) => x.key === key)!;
+      expect(tile.value).toBe('Stillgelegt');
+      expect(tile.sub).toBeNull();
+    }
+    expect(t.find((x) => x.key === 'upkeep')!.value).toBe(
+      `${perMinute(buildingUpkeep(wv), UPKEEP_INTERVAL)} / min`,
+    );
+  });
+});
+
 describe('M13-E1 Stilllegen im Panel (AK-M13STL-09)', () => {
   const w = createWorld(3, { unlockAll: true });
   it('AK-M13STL-09 stateInfo und stateTone: stillgelegt mit Vorrang vor Anbindung, nach Ausfall', () => {
     const f = put(w, 'fisher', { connected: false });
     expect(setPaused(w, f.id, true).ok).toBe(true);
-    expect(stateInfo(f, w.tick)).toEqual({ text: 'Stillgelegt — halber Unterhalt', ok: false });
+    expect(stateInfo(f, w.tick)).toEqual({ text: PAUSED_TEXT, ok: false });
     expect(stateTone(f)).toBe('warn');
     f.outageUntil = w.tick + 100;
-    expect(stateInfo(f, w.tick).text).not.toBe('Stillgelegt — halber Unterhalt');
+    expect(stateInfo(f, w.tick).text).not.toBe(PAUSED_TEXT);
     expect(stateTone(f)).toBe('bad');
   });
   it('AK-M13STL-09 pauseButton: Betrieb ja, Wohnhaus und Kapelle nein', () => {
     const f = put(w, 'fisher');
     expect(pauseButton(f)).toEqual({
       text: 'Stilllegen',
-      title: 'Halber Unterhalt, keine Erzeugung',
+      title: `Unterhalt auf ${PAUSED_UPKEEP_PCT} % (aufgerundet), keine Erzeugung`,
     });
     expect(setPaused(w, f.id, true).ok).toBe(true);
     expect(pauseButton(f)!.text).toBe('Wieder anfahren');

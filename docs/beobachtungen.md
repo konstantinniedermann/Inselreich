@@ -225,3 +225,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
   bitgleich; der Seed ändert nur Fremdinseln. Damit gibt es keine Robustheitsachse für Gates (jede Grenze ist ein Einzellauf,
   vgl. „Sieg-Tick sprunghaft“). Ursprung: Probe I048-TOTZONE (R551). Einschätzung: hoch für künftige Balancing-Arbeit;
   Kandidat für ein Werkzeug-/Test-Häppchen (Startvarianten oder Controller-Phasen, Median).
+
+### 2026-10-11 · Gesperrte Edikt-Knöpfe: heller Text auf graubeigem Grund
+
+- **Fundort:** Edikt-Karten, Knöpfe «Erlassen (600)» und «Aufheben» im gesperrten Zustand (Screenshot `.studio/qa/ui-texte-1/edikt-unten-1280x800.png`). Beobachtung: Der Kontrast wirkt gering, wurde nicht gemessen und gehört nicht zu AK-UT-11..13 (nur Pergament-Texte). Ursprung: Playtest UI-TEXTE-1 (T06). Einschätzung: gering; bei der nächsten Kontrast-Runde in `tests/ui/contrast.test.ts` das Paar messen.

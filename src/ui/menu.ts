@@ -122,6 +122,7 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
   const close = btn('Schliessen', () => m.close());
   m.card.append(
     title,
+    h('Speichern'),
     save,
     h('Laden'),
     loadBox,

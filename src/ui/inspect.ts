@@ -110,7 +110,7 @@ export interface InspectActions {
   setEdict(id: EdictId | null): void;
   /** Denkmal: Abschnitt beginnen; die Meldung bzw. Ablehnung zeigt der Aufrufer. */
   startMonumentStage(): void;
-  /** Denkmal: Bau pausieren oder fortsetzen. */
+  /** Denkmal: Bau anhalten oder fortsetzen. */
   setMonumentPaused(paused: boolean): void;
   /** Denkmal: Zukauf eines Guts ein- oder ausschalten. */
   setMonumentBuy(good: MonumentGood, on: boolean): void;
@@ -198,6 +198,10 @@ export function upgradeReasonTexts(world: World, b: Building): string[] {
     (r) => `✗ ${friendlyReason(world, r, { cost, island: b.island, tier: b.house!.tier })}`,
   );
 }
+
+/** Hinweis am Abriss-Knopf: Entf und Rücktaste lösen den Abriss aus (U+232B). */
+const DEMOLISH_HINT = 'Entf / ⌫';
+export const DEMOLISH_LABEL = `Abreissen (${DEMOLISH_HINT})`;
 
 function addButton(
   parent: HTMLElement,
@@ -819,14 +823,14 @@ export function renderInspect(
     addLine(panel, `Lagerkapazität ${STORAGE_CAP} je Gut`);
     addButton(buttons, 'Handeln', () => actions.openTrade());
     if (kontor.demolish)
-      addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', 'Entf');
+      addButton(buttons, DEMOLISH_LABEL, () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
   } else if (b.defId === 'townhall') {
     renderTownhall(panel, actions);
     addRemedy(panel);
     addLine(panel, '', 'upkeep');
     addLine(panel, '', 'fire-protection');
     if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
-    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', 'Entf');
+    addButton(buttons, DEMOLISH_LABEL, () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
   } else if (b.defId === 'monument') {
     addHead(panel, b, def.name);
     panel.append(
@@ -836,7 +840,7 @@ export function renderInspect(
         setBuy: (good, on) => actions.setMonumentBuy(good, on),
       }),
     );
-    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', 'Entf');
+    addButton(buttons, DEMOLISH_LABEL, () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
   } else {
     if (b.house) {
       renderHouse(panel, b);
@@ -850,7 +854,7 @@ export function renderInspect(
     if (def.service === 'faith') addButton(buttons, '', () => actions.holdFeast(id), 'feast');
     if (needsConnection(b.defId)) addConnectButton(buttons, id, actions);
     if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
-    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', 'Entf');
+    addButton(buttons, DEMOLISH_LABEL, () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
   }
   panel.appendChild(buttons);
   if (kontor !== null) renderShipSection(panel, world, b.island, actions.ships);

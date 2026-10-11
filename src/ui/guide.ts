@@ -127,7 +127,10 @@ function cashSentence(w: World): string {
 }
 
 export function nextStep(w: World): string {
-  if (w.wonMerchants && w.wonSpice) return 'Handelsstadt erreicht — spiel frei weiter';
+  if (w.wonMerchants && w.wonSpice)
+    return w.monumentDone
+      ? 'Handelsstadt erreicht — spiel frei weiter.'
+      : 'Handelsstadt erreicht — spiel frei weiter. Das Denkmal bleibt als eigenes Ziel offen.';
   if (w.wonMerchants)
     return `Drittes Ziel: ${THIRD_GOAL_NAME} — ${WIN_SPICE_MERCHANTS} ${TIERS[4].name} mit ${GOODS.spice.name} von einer fernen Insel`;
   const houses = Object.values(w.buildings)
