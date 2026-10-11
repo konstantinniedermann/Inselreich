@@ -54,7 +54,7 @@ schneller. Mengen pro Zeit stehen «pro Minute» (`/ min`).
   Klick daneben schliesst; der Fokus geht zurück an «Menü». Bei offener Karte ruhen Hotkeys, Tempo-Tasten und
   Kartenschwenken; mit `Tab` springt der Fokus nur zwischen den Elementen der Karte.
 - **Inselchronik:** Ist nichts ausgewählt, zeigt das Panel rechts die Chronik: Ziel mit Fortschritt und
-  Stufenpfad, den **nächsten Schritt** («Baue ein Wohnhaus (H) nahe dem Kontor», «Verbinde … per Weg …»),
+  Stufenpfad, den **nächsten Schritt** («Baue ein Wohnhaus (H) nahe dem Kontor», «Verbinde … per Weg …»; bei leerem Lager vor neuen Gütern «Nahrung ist aufgebraucht: baue mehr Fischerhütte (F) oder kaufe Nahrung am Kontor», bei Kasse im Minus «Deine Kasse schrumpft: …»),
   die Wirkung der Steuerstufe (bei unterschiedlichen Reglern «Steuer gemischt: P niedrig · S normal · …») und aufklappbar die **Kartenzeichen** (Bedeutung der Symbole auf der Karte).
 - **Cursor-Hinweis:** Beim Bauen, Wegbauen, Abreissen und Auswählen hängt ein kleines Schild am Zeiger. Es
   sagt, ob der Standort passt («Baubar · wird an den Kontor angebunden», «Baubar · danach mit Weg (R) zum

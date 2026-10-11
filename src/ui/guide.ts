@@ -1,4 +1,4 @@
-import { home } from '../sim/world';
+import { home, islandOf } from '../sim/world';
 // guide.ts — rein: nächster Schritt, Steuerwirkung, Abhilfe und Kartenzeichen als Klartext (Spec L5–L7).
 import { PALETTE } from '../render/palette';
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
@@ -28,6 +28,7 @@ import { formatGameTime } from './time';
 const key = (id: BuildingDefId): string => hotkeyLabel({ kind: 'build', defId: id }) ?? '';
 const nm = (id: BuildingDefId): string => BUILDING_DEFS[id].name;
 const nk = (id: BuildingDefId): string => `${nm(id)} (${key(id)})`;
+const cap = (t: string): string => t.charAt(0).toUpperCase() + t.slice(1);
 const has = (w: World, id: BuildingDefId): boolean =>
   Object.values(w.buildings).some((b) => b.defId === id);
 
@@ -93,6 +94,29 @@ function goodSentence(w: World, tierName: string, g: GoodId): string | null {
   return null;
 }
 
+/** Gemeinsamer Baustein für Warenmangel bei stehendem Erzeuger (Nächster Schritt und Abhilfe). */
+function moreOrBuy(g: GoodId): string {
+  return `baue mehr ${nk(producerOf(g)!)} oder kaufe ${GOODS[g].name} am Kontor`;
+}
+
+/**
+ * Akuter Warenmangel (R499): ein Haus ist bei Gut g unversorgt, der Erzeuger steht und das Lager der Insel des Hauses
+ * ist leer. Gewählt wird das kleinste Tier, dann der frühere Index in `GOOD_IDS`.
+ */
+function shortageSentence(w: World, houses: readonly Building[]): string | null {
+  let best: { tier: number; idx: number; g: GoodId } | null = null;
+  for (const h of houses)
+    for (const d of houseDiagnosis(w, h)) {
+      if (d.kind !== 'good' || needsForeignIsland(d.good)) continue;
+      const p = producerOf(d.good);
+      if (p === undefined || !has(w, p) || islandOf(w, h).stock[d.good] >= 1) continue;
+      const c = { tier: h.house!.tier, idx: GOOD_IDS.indexOf(d.good), g: d.good };
+      if (best === null || c.tier < best.tier || (c.tier === best.tier && c.idx < best.idx))
+        best = c;
+    }
+  return best === null ? null : `${GOODS[best.g].name} ist aufgebraucht: ${moreOrBuy(best.g)}`;
+}
+
 /** Kassen-Satz in drei Fassungen (Spec 12.3): vor U3, ab U3 ohne aktive Amtsstube, mit aktiver Amtsstube. */
 function cashSentence(w: World): string {
   const base = 'Deine Kasse schrumpft: versorge mehr Wohnhäuser';
@@ -132,6 +156,9 @@ export function nextStep(w: World): string {
         if (s) return s;
       }
     }
+  const shortage = shortageSentence(w, houses);
+  if (shortage) return shortage;
+  if (w.money < 0) return cashSentence(w); // akuter Kassenmangel (R499), vor den Gütern der nächsten Stufe
   for (const h of full) {
     const next = (h.house!.tier + 1) as Tier;
     for (const g of GOOD_IDS) {
@@ -166,7 +193,7 @@ export function nextStep(w: World): string {
   // C.11: ab U6 bis zum ersten Kontor auf einer Fremdinsel
   if (isUnlocked(w, 'U6') && !has(w, 'kontor2'))
     return 'Gründe ein Kontor auf einer Insel mit Gewürz';
-  if (w.money < 0 || w.stats.taxes - w.stats.upkeep < 0) return cashSentence(w);
+  if (w.stats.taxes - w.stats.upkeep < 0) return cashSentence(w);
   const blocked = TIER_IDS.find(
     (t) =>
       TAX_LEVELS[effectiveTaxLevel(w, t)].upgradeWait === null &&
@@ -209,7 +236,7 @@ export function remedyText(w: World, b: Building): string | null {
     const g = GOODS[d.good].name;
     if (needsForeignIsland(d.good)) return `Kaufe ${g} am Kontor oder ${foundKontorHint(d.good)}`;
     const p = producerOf(d.good)!;
-    return has(w, p) ? `Baue mehr ${nm(p)} oder kaufe ${g} am Kontor` : `Baue ${nk(p)}`;
+    return has(w, p) ? cap(moreOrBuy(d.good)) : `Baue ${nk(p)}`;
   }
   if (b.outageUntil !== undefined)
     return `Läuft nach dem Brand von selbst wieder; eine ${nk('firestation')} in der Nähe schützt`;
