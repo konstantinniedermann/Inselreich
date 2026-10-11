@@ -96,7 +96,7 @@ Push-Weg ist `make push-check` (Handbuch 1.48/1.49); Probelauf auf `73837fd2` Ex
    nachtragen und `KNOWN_MISMATCH` entfernen (R520). E-059 startet, sobald ein Experiment-Platz frei ist.
 5. Plan **M14-E1** erst nach M13 (R486, Auflagen R500/R501).
 6. Beobachtungs-Auswertung, sobald > 30 Einträge seit 2026-10-10 (jetzt ≈ 28).
-7. Retro-Vorschläge dieser Session laut Ende-Ruling.
+7. Zuerst: `studio-coach` setzt R523 V1 um (E-054 in Modelltabelle/`lead-tech.md`) und startet E-059 (R523 V4). V3 ins nächste Werkzeug-Bündel; V2 Messauftrag L0-Kontext.
 
 ## Aktuelles Projekt und Phase
 
