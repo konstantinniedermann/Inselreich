@@ -248,7 +248,7 @@ export interface Ship {
   homing: boolean;
 }
 export interface World {
-  version: 11;
+  version: 12;
   seed: number;
   islands: Island[];
   tick: number;
@@ -286,6 +286,10 @@ export interface World {
   edict: EdictId | null;
   /** Bis zu diesem Tick ist die Edikt-Wahl gesperrt. */
   edictLockedUntil: number;
+  /** Denkmal (M13-E2); `null` = nicht gebaut. */
+  monument: Monument | null;
+  /** Denkmal vollendet (Abschnitt 3 fertig); wird nie zurückgesetzt. */
+  monumentDone: boolean;
 }
 
 /** Eine Insel: Raster, Kontor, Lager und Lage im Archipel (M12 E0, E1). */

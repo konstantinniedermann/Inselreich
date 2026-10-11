@@ -199,7 +199,10 @@ describe('Szenario-Saves', () => {
   it('galerie: jeder Gebäudetyp, Häuser in drei Stufen, Sonderfälle, gerader Weg ab 10 Kacheln', () => {
     const w = load('galerie');
     // M12 T02: kontor2 und spicefarm stehen nur auf fernen Inseln, nicht in der Heimat-Galerie
-    for (const id of BUILDING_IDS.filter((b) => b !== 'kontor2' && b !== 'spicefarm')) {
+    // Denkmal nur per T06-Szenario (M13-E2)
+    for (const id of BUILDING_IDS.filter(
+      (b) => b !== 'kontor2' && b !== 'spicefarm' && b !== 'monument',
+    )) {
       expect(buildingsOfType(w, id).length, id).toBeGreaterThanOrEqual(1);
     }
     expect(new Set(houses(w).map((h) => h.house!.tier))).toEqual(new Set([1, 2, 3]));
@@ -521,7 +524,10 @@ describe('M10 Szenarien (Spec 18.1)', () => {
       expect(JSON.stringify(PROBES[name]!(r.world))).not.toMatch(/Tick/);
     }
     const g = SCENARIOS.galerie!();
-    for (const id of BUILDING_IDS.filter((b) => b !== 'kontor2' && b !== 'spicefarm'))
+    // Denkmal nur per T06-Szenario (M13-E2)
+    for (const id of BUILDING_IDS.filter(
+      (b) => b !== 'kontor2' && b !== 'spicefarm' && b !== 'monument',
+    ))
       expect(
         Object.values(g.buildings).some((b) => b.defId === id),
         id,

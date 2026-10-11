@@ -267,11 +267,39 @@ const V9_WORLD_KEYS = [
 
 const V10_WORLD_KEYS = V9_WORLD_KEYS.map((k) => (k === 'taxLevel' ? 'taxLevels' : k)) as string[];
 
+/** Stand v11, nicht erweitern: Weltschlüssel in `createWorld`-Reihenfolge vor M13-E2. */
+export const V11_WORLD_KEYS = [...V10_WORLD_KEYS, 'edict', 'edictLockedUntil'] as const;
+/** Stand v11, nicht erweitern: Inselschlüssel in Erzeugungsreihenfolge. */
+export const V11_ISLAND_KEYS = V8_ISLAND_KEYS;
+
+/**
+ * Formt ein v12-JSON-Objekt in die v11-Form zurück (M13-E2): Schlüssel ausserhalb der v11-Listen entfallen ohne
+ * Umordnen, `monument`/`monumentDone` müssen neutral sein; `version 11`. Denkmal → Fehler im Test.
+ */
+export function foldBackToV11(v12: Record<string, unknown>): Record<string, unknown> {
+  if (v12.monument !== null || v12.monumentDone !== false) throw new Error(MONUMENT_FOLD_ERROR);
+  const buildings = Object.values(v12.buildings as Record<string, Record<string, unknown>>);
+  if (buildings.some((b) => b.defId === 'monument')) throw new Error(MONUMENT_FOLD_ERROR);
+  const worldKeys: readonly string[] = V11_WORLD_KEYS;
+  const islandKeys: readonly string[] = V11_ISLAND_KEYS;
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(v12)) if (worldKeys.includes(k)) out[k] = v12[k];
+  out.islands = (v12.islands as Record<string, unknown>[]).map((isl) => {
+    const kept: Record<string, unknown> = {};
+    for (const k of Object.keys(isl)) if (islandKeys.includes(k)) kept[k] = isl[k];
+    return kept;
+  });
+  out.version = 11;
+  return out;
+}
+const MONUMENT_FOLD_ERROR = 'foldBackToV11: Denkmal nicht rückfaltbar';
+
 /**
  * Formt ein v11-JSON-Objekt in die v10-Form zurück (M13-E1): ohne `edict`, `edictLockedUntil`; `version 10`.
  * Edikt, Sperre oder stillgelegte Gebäude sind nicht rückfaltbar → Fehler im Test.
  */
-export function foldBackToV10(v11: Record<string, unknown>): Record<string, unknown> {
+export function foldBackToV10(x: Record<string, unknown>): Record<string, unknown> {
+  const v11 = x.version === 12 ? foldBackToV11(x) : x;
   const allowed = [...V10_WORLD_KEYS, 'edict', 'edictLockedUntil'];
   for (const k of Object.keys(v11))
     if (!allowed.includes(k)) throw new Error(`foldBackToV10: unbekannter Schlüssel ${k}`);
@@ -297,7 +325,7 @@ export function setAllTax(world: World, level: TaxLevel): void {
  * Regler (Stufen 1 bis 3 ungleich, oder Stufe 4 weder gleich noch `normal` bei `low`) → Fehler im Test.
  */
 export function foldBackToV9(x: Record<string, unknown>): Record<string, unknown> {
-  const v10 = x.version === 11 ? foldBackToV10(x) : x;
+  const v10 = (x.version as number) >= 11 ? foldBackToV10(x) : x;
   const allowed = V9_WORLD_KEYS.map((k) => (k === 'taxLevel' ? 'taxLevels' : k)) as string[];
   for (const k of Object.keys(v10))
     if (!allowed.includes(k)) throw new Error(`foldBackToV9: unbekannter Schlüssel ${k}`);

@@ -13,6 +13,7 @@ import {
   UPKEEP_INTERVAL,
 } from './defs/timing';
 import { LEVELS } from './defs/levels';
+import { MONUMENT_GOODS, MONUMENT_STAGES } from './defs/monument';
 import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
 import { EDICTS } from './defs/edicts';
 import { UNLOCK_IDS } from './defs/unlocks';
@@ -35,7 +36,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 export type { LoadResult };
 
@@ -149,6 +150,13 @@ export function migrateV10ToV11(raw: Record<string, unknown>): void {
   if (!('edict' in raw)) raw.edict = null;
   if (!('edictLockedUntil' in raw)) raw.edictLockedUntil = 0;
   raw.version = 11;
+}
+
+/** v11 → v12 (M13-E2): Denkmal-Felder ergänzen; vorhandene Werte bleiben und gehen in die Prüfung. */
+export function migrateV11ToV12(raw: Record<string, unknown>): void {
+  if (!('monument' in raw)) raw.monument = null;
+  if (!('monumentDone' in raw)) raw.monumentDone = false;
+  raw.version = 12;
 }
 
 const CRISIS_KINDS: readonly string[] = ['fire', 'storm', 'boom'];
@@ -651,6 +659,64 @@ function isValidV11Fields(raw: Record<string, unknown>): boolean {
   return buildings.every(isValidPaused);
 }
 
+const hasExactKeys = (o: Record<string, unknown>, keys: readonly string[]): boolean => {
+  const own = Object.keys(o);
+  return own.length === keys.length && keys.every((k) => Object.hasOwn(o, k));
+};
+
+/** V4/V5: genau die vier Gut-Schlüssel, Werte nach `valid`. */
+const isGoodMap = (v: unknown, valid: (x: unknown) => boolean): v is Record<string, unknown> =>
+  isObject(v) && hasExactKeys(v, MONUMENT_GOODS) && MONUMENT_GOODS.every((g) => valid(v[g]));
+
+/** V4: Lieferstand passt zu `running` und zum Soll des Abschnitts (nur bei `running && stage < 3`). */
+function isValidDelivered(m: Record<string, unknown>): boolean {
+  const { delivered, running, stage } = m;
+  if (!isGoodMap(delivered, (x) => isInt(x) && x >= 0)) return false;
+  if (running !== true) return MONUMENT_GOODS.every((g) => delivered[g] === 0);
+  if ((stage as number) >= MONUMENT_STAGES.length) return true;
+  const goal = MONUMENT_STAGES[stage as number]!.goods;
+  return MONUMENT_GOODS.every((g) => (delivered[g] as number) <= goal[g]);
+}
+
+/** V2, V3, V4, V5, V6: Form und Wertebereich des Denkmal-Objekts. */
+function isValidMonumentShape(m: Record<string, unknown>, monumentDone: boolean): boolean {
+  if (!hasExactKeys(m, ['buildingId', 'stage', 'running', 'delivered', 'paused', 'buy']))
+    return false;
+  if (!isIntBetween(m.stage, 0, MONUMENT_STAGES.length)) return false;
+  if (typeof m.running !== 'boolean' || typeof m.paused !== 'boolean') return false;
+  if (!isValidDelivered(m)) return false;
+  if (!isGoodMap(m.buy, (x) => typeof x === 'boolean')) return false;
+  return m.stage !== MONUMENT_STAGES.length || (m.running === false && monumentDone);
+}
+
+/** V8: `buildingId` zeigt auf das Denkmal-Gebäude der Heimatinsel. */
+function isValidMonumentBuilding(
+  m: Record<string, unknown>,
+  raw: Record<string, unknown>,
+): boolean {
+  if (!isInt(m.buildingId)) return false;
+  const b = (raw.buildings as Record<string, unknown>)[String(m.buildingId)];
+  return isObject(b) && b.defId === 'monument' && b.island === 0;
+}
+
+/** V1 bis V9 (M13-E2): Denkmal und Fertig-Merker. */
+function isValidMonumentFields(raw: Record<string, unknown>): boolean {
+  const { monument, monumentDone } = raw;
+  if (typeof monumentDone !== 'boolean') return false;
+  const count = Object.values(raw.buildings as Record<string, unknown>).filter(
+    (b) => isObject(b) && b.defId === 'monument',
+  ).length;
+  if (monument === null) return count === 0;
+  if (!isObject(monument) || count !== 1) return false;
+  if (!isValidMonumentShape(monument, monumentDone)) return false;
+  return raw.wonMerchants === true && isValidMonumentBuilding(monument, raw);
+}
+
+/** Felder von Save v12 (M13-E2): Denkmal. Weitere Pakete hängen hier eigene Teilprüfungen an. */
+function isValidV12Fields(raw: Record<string, unknown>): boolean {
+  return isValidMonumentFields(raw);
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { stats } = raw;
@@ -663,6 +729,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidV6Fields(raw)) return false;
   if (!isValidV9Fields(raw)) return false;
   if (!isValidV11Fields(raw)) return false;
+  if (!isValidV12Fields(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -701,6 +768,7 @@ export function deserialize(json: string): LoadResult {
   const grace = raw.version === 8 ? migrateV8ToV9(raw) : 0;
   if (raw.version === 9) migrateV9ToV10(raw);
   if (raw.version === 10) migrateV10ToV11(raw);
+  if (raw.version === 11) migrateV11ToV12(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;
