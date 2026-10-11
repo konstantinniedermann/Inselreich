@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.48 · Stand: 2026-10-11 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.49 · Stand: 2026-10-11 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -198,6 +198,7 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
   `log.py budget --lead lead-tech --grant 14 --parallel 2 --phase M5-UMSETZUNG`.
 
 - **Weitere Controller-Instanzen (R433):** Die Übergabe an eine weitere Controller-Instanz desselben Pakets bekommt keine eigene `log.py budget`-Zeile; sie zählt zum Budget des Pakets.
+- **Budget-Hook (E-060):** Standard `warn`; `deny` nur per Ruling (R520).
 - **Studio-Coach:** Der Coach bekommt je Retro 1 Start (Stabsstelle, ohne Arbeiter).
 - **Mehrbedarf:** vor dem Überschreiten per [templates/budgetantrag.md](templates/budgetantrag.md)
   an L0. Ohne Freigabe kein weiterer Start.

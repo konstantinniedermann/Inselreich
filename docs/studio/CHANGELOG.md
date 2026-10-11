@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-11 · Handbuch 1.49
+
+- Anlass: Nacharbeit R520 (Gate Merge TOOL-BUENDEL-6 Strang B)
+- Datenbasis: Auftrag coach-r520, Ruling R520
+- Ruling: R520
+- Änderungen: Abschnitt Budget: Satz zum Budget-Hook (E-060), Standard `warn`, `deny` per Ruling
+
+## 2026-10-11 · Persona production-integrator 1.12
+
+- Anlass: Nacharbeit R520 (Merge-Treiber E-059)
+- Datenbasis: Auftrag coach-r520, Ruling R520
+- Ruling: R520
+- Änderungen: Satz zum Merge-Treiber `beob-append` (`make merge-driver`); bei Treiberfehler `git checkout --merge docs/beobachtungen.md`, nie blind `git add`
+
 ## 2026-10-11 · Persona production-integrator 1.11
 
 - Anlass: Handbuch-Folge TOOL-BUENDEL-6 Strang A (`make push-check`)
