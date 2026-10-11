@@ -589,6 +589,12 @@ flowchart LR
   fehlt oder nicht lädt.
 - **Entwicklung:** `make dev` startet den Vite-Dev-Server; `make check` entspricht der CI; lokal greift zusätzlich die Testsperre (Abbruch mit `testlock: ABBRUCH`, Exit 3, bei belegter Sperre oder Load > 8; auf CI aus). Dev-Vorschau und
   Sonden (`?wetter=`, `?perf=1`, `window.__inselAudio`, `window.__inselPerf`) gibt es nur im Dev-Build.
+- **Merge-Treiber für Beobachtungen** (E-059): `.gitattributes` weist `docs/beobachtungen.md` dem Treiber `beob-append`
+  zu (`tools/studio/merge_append.py`). Er löst Konfliktblöcke mit leerer Basis (beide Seiten haben nur angehängt) zu
+  ours + theirs auf; Blöcke mit Basis-Inhalt bleiben als Konflikt stehen, nichts Gestrichenes kehrt zurück. `make
+merge-driver` setzt die Treiberkonfiguration einmal je Klon in `.git/config`; ohne sie gilt der normale Text-Merge.
+  Bleibt nach einem Fehler des Treibers nur die eigene Seite, stellt `git checkout --merge docs/beobachtungen.md`
+  die Konfliktmarken wieder her.
 - **Studio-Werkzeuge** (ADR-014): `make hooks` aktiviert den Git-Hook `pre-commit` (`tools/githooks/`,
   `tools/studio/precommit.py`): Prettier-Check der gestagten Dateien, Ablehnung als Ereignis `commit_rejected`.
   Der Modell-Guard `tools/studio/modelguard.py` ist ein zusätzlicher PreToolUse-Hook neben `guard.py` und meldet
@@ -611,7 +617,7 @@ flowchart LR
   `make check-push` (= `make check` ohne das lockere `zeitreserve`, unter der Testsperre), danach die strenge
   Zeitreserve (`check.ts --push`), bei Exit 2 oder Exit 1 mit `loadStart` > 3 höchstens eine Nachmessung der markierten
   Dateien, zuletzt `make check-ci-perf`. Exit 0 grün, 1 rot oder Arbeitsbaum verändert, 2 nicht belastbar, 3 Testsperre
-  belegt; Ereignis `push_check` (HEAD, Exit, `full_checks`, `retry_files`, Schritte mit Dauer und 1-min-Load zu Stufenbeginn, R514 V2). `make test` und `make studio-test` laufen über `tools/studio/testrun.py`: rote Läufe schreiben das Ereignis
+  belegt; Ereignis `push_check` (HEAD, Exit, `full_checks`, `retry_files`, Schritte mit Dauer und 1-min-Load zu Stufenbeginn, R514 V2, `load_errors`). `make test` und `make studio-test` laufen über `tools/studio/testrun.py`: rote Läufe schreiben das Ereignis
   `test_failed` mit Testnamen, grüne `test_passed` (je mit Commit und Diff-Prüfsumme, die ungetrackte, nicht
   ignorierte Dateien nach Name, Grösse und `mtime_ns` einschliesst); in CI (`CI` gesetzt) und
   bei Testsperre-Abbruch (`--skip-exit 3`) entsteht kein Ereignis. Das Kommando läuft in einer eigenen
