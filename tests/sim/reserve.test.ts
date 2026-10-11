@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { placeBuilding } from '../../src/sim/build';
+import { demolish, placeBuilding, placeRoad } from '../../src/sim/build';
 import { RESERVE_STEPS } from '../../src/sim/defs/reserve';
 import { deliverOrder } from '../../src/sim/orders';
 import { upgradeStatus } from '../../src/sim/population';
 import { reservedInputs, reserveHolds } from '../../src/sim/queries';
 import { reserveOf, setReserve } from '../../src/sim/reserve';
-import { serialize } from '../../src/sim/save';
+import { deserialize, serialize } from '../../src/sim/save';
+import { recomputeConnectivity } from '../../src/sim/roads';
+import { step } from '../../src/sim/tick';
 import { setRoute } from '../../src/sim/ships';
 import { tickShips } from '../../src/sim/ships';
 import { tickProduction } from '../../src/sim/production';
@@ -268,5 +270,62 @@ describe('AK-SB-10 Reserve je Insel; reserveHolds', () => {
     expect(reserveHolds(w, 0, 'wood')).toBe(2);
     expect(reserveHolds(w, 0, 'stone')).toBe(0);
     expect(reserveHolds(w, 1, 'wood')).toBe(0);
+  });
+});
+
+describe('R481 Charakterisierungstests (Nachtrag, Verhalten schon vorhanden)', () => {
+  /** Werkzeugmacher über echte Wege am Kontor angebunden (überlebt Laden und Neuberechnung). */
+  const reserved = (): World => {
+    const w = base();
+    reserveSet(w, 20);
+    stockOf(w).wood = 20;
+    const k = w.buildings[home(w).kontorId]!;
+    for (let i = 0; i < 6; i++) forceGrass(w, k.x + 2 + i, k.y);
+    for (let i = 0; i < 3; i++) placeRoad(w, k.x + 2 + i, k.y);
+    toolmaker(w, { x: k.x + 5, y: k.y });
+    recomputeConnectivity(w);
+    return w;
+  };
+
+  it('Determinismus: gleicher Seed, und Speichern/Laden mittendrin ändert nichts', () => {
+    const plain = reserved();
+    for (let i = 0; i < 300; i++) step(plain);
+    const again = reserved();
+    for (let i = 0; i < 300; i++) step(again);
+    expect(serialize(again)).toBe(serialize(plain));
+
+    let w = reserved();
+    for (let i = 0; i < 150; i++) step(w);
+    const loaded = deserialize(serialize(w));
+    expect(loaded.ok).toBe(true);
+    if (!loaded.ok) return;
+    w = loaded.world;
+    for (let i = 0; i < 150; i++) step(w);
+    expect(serialize(w)).toBe(serialize(plain));
+    expect(Object.values(plain.buildings).some((b) => b.state === 'waitingReserve')).toBe(true);
+  });
+
+  it('R481 B6a: Abriss in waitingReserve gelingt wie jeder Abriss', () => {
+    const gone = (state: 'waitingReserve' | 'ok'): unknown => {
+      const w = base();
+      reserveSet(w, state === 'waitingReserve' ? 20 : 0);
+      stockOf(w).wood = state === 'waitingReserve' ? 20 : 0;
+      const tm = toolmaker(w, { state: 'ok' });
+      const money = w.money;
+      const stock = { ...stockOf(w) };
+      tickProduction(w);
+      if (state === 'waitingReserve') expect(tm.state).toBe('waitingReserve');
+      else tm.state = 'ok';
+      expect(demolish(w, tm.id)).toEqual({ ok: true });
+      expect(w.buildings[tm.id]).toBeUndefined();
+      expect(reserveHolds(w, 0, 'wood')).toBe(0);
+      expect(deserialize(serialize(w)).ok).toBe(true);
+      for (let i = 0; i < 50; i++) step(w);
+      return [
+        w.money - money,
+        Object.keys(stock).map((g) => stockOf(w)[g as 'wood'] - stock[g as 'wood']),
+      ];
+    };
+    expect(gone('waitingReserve')).toEqual(gone('ok'));
   });
 });

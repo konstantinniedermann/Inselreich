@@ -3,6 +3,9 @@ import { islandName } from '../sim/islands';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { BOOM_PCT } from '../sim/defs/crises';
 import { buy, buyPrice, sell, sellPrice } from '../sim/trade';
+import { RESERVE_GOODS, RESERVE_STEPS } from '../sim/defs/reserve';
+import { reserveHolds } from '../sim/queries';
+import { reserveOf } from '../sim/reserve';
 import { activeEdictDef } from '../sim/edicts';
 import { goodUnlocked } from '../sim/unlocks';
 import type { GoodId, Result, World } from '../sim/types';
@@ -12,6 +15,28 @@ export interface TradeActions {
   back(): void;
   /** Nach jedem Kauf/Verkauf, mit dem Ergebnis der Sim-Aktion (Meldung und Ton macht der Aufrufer). */
   changed(op: 'buy' | 'sell', result: Result, good: GoodId, n: number): void;
+  /** Reserve-Wunsch (Sperrbestand, I-049); der Aufrufer ruft `setReserve` und meldet eine Absage. */
+  reserve(good: GoodId, value: number): void;
+}
+
+const isReserveGood = (g: GoodId): boolean => (RESERVE_GOODS as readonly string[]).includes(g);
+
+/** Tooltip der Reserve-Zeile (Spec R5). */
+export function reserveTitle(good: GoodId, value: number): string {
+  return `Betriebe nehmen ${GOODS[good].name} nur, solange mehr als ${value} im Lager liegen. Bauen, Handel und Schiffe sind frei.`;
+}
+
+/** Zusatz «hält n Betrieb(e) an»; leer, wenn keine Reserve oder kein Betrieb wartet. */
+export function reserveHoldText(world: World, island: number, good: GoodId): string {
+  const n = reserveOf(world.islands[island]!, good) > 0 ? reserveHolds(world, island, good) : 0;
+  return n === 0 ? '' : n === 1 ? 'hält 1 Betrieb an' : `hält ${n} Betriebe an`;
+}
+
+/** Nächste Stufe in Richtung `dir`, an den Rändern unverändert. */
+function stepFrom(value: number, dir: -1 | 1): number {
+  const i = RESERVE_STEPS.findIndex((s) => s === value);
+  const j = Math.min(RESERVE_STEPS.length - 1, Math.max(0, (i < 0 ? 0 : i) + dir));
+  return RESERVE_STEPS[j]!;
 }
 
 /** Beschriftung und Tooltip eines Verkaufsbuttons: genauer Erlös aus `sellPrice`, nie ein Stückpreis. */
@@ -143,6 +168,29 @@ export function renderTrade(
     const pct = document.createElement('small');
     pct.dataset.field = `price-${good}`;
     name.appendChild(pct);
+    if (isReserveGood(good)) {
+      const box = document.createElement('span');
+      box.className = 'trade-reserve';
+      box.dataset.field = `reserve-box-${good}`;
+      const mk = (label: string, dir: -1 | 1): HTMLButtonElement => {
+        const b = document.createElement('button');
+        b.className = 'btn btn-small';
+        b.textContent = label;
+        b.dataset.reserve = `${good}-${dir < 0 ? 'minus' : 'plus'}`;
+        b.addEventListener('click', () => {
+          b.blur();
+          actions.reserve(good, stepFrom(reserveOf(world.islands[island]!, good), dir));
+        });
+        return b;
+      };
+      const val = document.createElement('small');
+      val.dataset.field = `reserve-${good}`;
+      const hold = document.createElement('small');
+      hold.dataset.field = `reserve-hold-${good}`;
+      hold.hidden = true;
+      box.append(mk('−', -1), val, mk('+', 1), hold);
+      name.appendChild(box);
+    }
 
     const buyCell = cell(table, 'trade-cell');
     if (canBuy) {
@@ -167,6 +215,16 @@ export function updateTrade(panel: HTMLElement, world: World, island: number = H
     setField(panel, `price-${good}`, `Preis ${world.sellPct[good]} %`);
     const boom = setField(panel, `boom-${good}`, `Boom +${BOOM_PCT - 100} %`);
     if (boom) boom.hidden = !boomGood(world, good);
+  }
+  for (const good of RESERVE_GOODS) {
+    const value = reserveOf(world.islands[island]!, good);
+    setField(panel, `reserve-${good}`, `Reserve ${value}`);
+    const box = panel.querySelector<HTMLElement>(`[data-field="reserve-box-${good}"]`);
+    const title = reserveTitle(good, value);
+    if (box && box.title !== title) box.title = title;
+    const text = reserveHoldText(world, island, good);
+    const hold = setField(panel, `reserve-hold-${good}`, text);
+    if (hold && hold.hidden !== (text === '')) hold.hidden = text === '';
   }
   for (const good of GOOD_IDS) setField(panel, `buy-price-${good}`, buyUnitText(world, good));
   const noteText = buyHeadNote(world);

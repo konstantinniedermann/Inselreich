@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
 import { home, createWorld } from '../../src/sim/world';
 import { setEdict } from '../../src/sim/edicts';
@@ -7,9 +7,15 @@ import {
   buyHeadNote,
   buyTitle,
   buyUnitText,
+  renderTrade,
+  reserveTitle,
   tradeRows,
   tradeTitle,
+  updateTrade,
+  type TradeActions,
 } from '../../src/ui/trade';
+import { reserveHolds } from '../../src/sim/queries';
+import type { Building, GoodId, World } from '../../src/sim/types';
 import { placeTownhall } from '../sim/helpers';
 
 describe('boomGood (Marke nur am Boom-Gut)', () => {
@@ -64,5 +70,133 @@ describe('M13-E1 Kontor-Preise mit Edikt (AK-M13E1-31)', () => {
     expect(buyUnitText(w, 'food')).toBe('8 Geld');
     expect(buyTitle(w, 'food', 10)).toBe('10 Nahrung kaufen für 80 Geld');
     expect(buyHeadNote(w)).toBe('');
+  });
+});
+
+interface Fake {
+  tag: string;
+  className: string;
+  textContent: string;
+  title: string;
+  hidden: boolean;
+  dataset: Record<string, string>;
+  children: Fake[];
+  handlers: (() => void)[];
+  [k: string]: unknown;
+}
+/** Minimaler DOM-Ersatz mit Kindern, data-Attributen und Klick-Handlern. */
+function fakeEl(tag: string): Fake {
+  const el: Fake = {
+    tag,
+    className: '',
+    textContent: '',
+    title: '',
+    hidden: false,
+    dataset: {},
+    children: [],
+    handlers: [],
+    classList: { toggle: () => {} },
+    appendChild: (c: Fake) => void el.children.push(c),
+    append: (...c: Fake[]) => void el.children.push(...c),
+    replaceChildren: () => void (el.children = []),
+    addEventListener: (_t: string, h: () => void) => void el.handlers.push(h),
+    blur: () => {},
+    querySelector: (sel: string) => {
+      const m = /^\[data-field="(.+)"\]$/.exec(sel);
+      return m ? (flat(el).find((e) => e.dataset.field === m[1]) ?? null) : null;
+    },
+    querySelectorAll: (sel: string) =>
+      sel === 'button[data-op]'
+        ? flat(el).filter((e) => e.tag === 'button' && 'op' in e.dataset)
+        : [],
+  };
+  return el;
+}
+const flat = (e: Fake): Fake[] => [e, ...e.children.flatMap(flat)];
+const field = (root: Fake, name: string): Fake | undefined =>
+  flat(root).find((e) => e.dataset.field === name);
+const rbtn = (root: Fake, good: string, dir: 'minus' | 'plus'): Fake =>
+  flat(root).find((e) => e.dataset.reserve === `${good}-${dir}`)!;
+
+describe('I-049 T05 Reserve-Zeile im Handelsdialog (AK-SB-16)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const setup = (): { w: World; panel: Fake; calls: [GoodId, number][] } => {
+    vi.stubGlobal('document', { createElement: fakeEl });
+    const w = createWorld(3, { unlockAll: true });
+    const panel = fakeEl('div');
+    const calls: [GoodId, number][] = [];
+    const actions: TradeActions = {
+      back: () => {},
+      changed: () => {},
+      reserve: (g, v) => {
+        calls.push([g, v]);
+        w.islands[0]!.reserve[g as 'wood' | 'stone'] = v as 0;
+      },
+    };
+    renderTrade(panel as unknown as HTMLElement, w, actions);
+    return { w, panel, calls };
+  };
+  const click = (b: Fake): void => b.handlers.forEach((h) => h());
+
+  it('nur Holz und Stein haben Reserve, Start «Reserve 0»', () => {
+    const { panel } = setup();
+    expect(field(panel, 'reserve-wood')!.textContent).toBe('Reserve 0');
+    expect(field(panel, 'reserve-stone')!.textContent).toBe('Reserve 0');
+    expect(field(panel, 'reserve-tools')).toBeUndefined();
+    expect(field(panel, 'reserve-food')).toBeUndefined();
+    expect(rbtn(panel, 'tools', 'plus')).toBeUndefined();
+  });
+
+  it('+ dreimal 0 -> 20 -> 40 -> 60, weiteres + bleibt 60; - bei 0 bleibt 0', () => {
+    const { w, panel, calls } = setup();
+    for (let i = 0; i < 4; i++) {
+      click(rbtn(panel, 'wood', 'plus'));
+      updateTrade(panel as unknown as HTMLElement, w);
+    }
+    expect(calls.map((c) => c[1])).toEqual([20, 40, 60, 60]);
+    expect(field(panel, 'reserve-wood')!.textContent).toBe('Reserve 60');
+    const c2 = setup();
+    click(rbtn(c2.panel, 'stone', 'minus'));
+    expect(c2.calls).toEqual([['stone', 0]]);
+    expect(field(c2.panel, 'reserve-stone')!.textContent).toBe('Reserve 0');
+  });
+
+  it('Tooltip wörtlich laut Spec R5', () => {
+    expect(reserveTitle('wood', 20)).toBe(
+      'Betriebe nehmen Holz nur, solange mehr als 20 im Lager liegen. Bauen, Handel und Schiffe sind frei.',
+    );
+    const { panel } = setup();
+    expect(field(panel, 'reserve-box-stone')!.title).toBe(reserveTitle('stone', 0));
+  });
+
+  it('Zusatz «hält n Betrieb(e) an» nur bei Reserve > 0 und reserveHolds > 0, je Tick aktualisiert', () => {
+    const { w, panel } = setup();
+    const mk = (id: number): Building => ({
+      id,
+      defId: 'toolmaker',
+      x: 0,
+      y: 5,
+      connected: true,
+      progress: 0,
+      state: 'waitingReserve',
+      island: 0,
+    });
+    w.buildings[101] = mk(101);
+    w.islands[0]!.stock.wood = 10;
+    // Reserve 0: kein Zusatz, auch wenn Zustand gesetzt ist
+    updateTrade(panel as unknown as HTMLElement, w);
+    expect(field(panel, 'reserve-hold-wood')!.hidden).toBe(true);
+    w.islands[0]!.reserve.wood = 20;
+    expect(reserveHolds(w, 0, 'wood')).toBe(1);
+    updateTrade(panel as unknown as HTMLElement, w);
+    expect(field(panel, 'reserve-hold-wood')!.hidden).toBe(false);
+    expect(field(panel, 'reserve-hold-wood')!.textContent).toBe('hält 1 Betrieb an');
+    w.buildings[102] = mk(102);
+    updateTrade(panel as unknown as HTMLElement, w);
+    expect(field(panel, 'reserve-hold-wood')!.textContent).toBe('hält 2 Betriebe an');
+    w.buildings[101]!.state = 'ok';
+    w.buildings[102]!.state = 'ok';
+    updateTrade(panel as unknown as HTMLElement, w);
+    expect(field(panel, 'reserve-hold-wood')!.hidden).toBe(true);
   });
 });

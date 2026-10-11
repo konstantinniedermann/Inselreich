@@ -5,7 +5,7 @@ import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
 import { buildingUpkeep, cycleOf, upkeepOf, utilization } from '../sim/levels';
 import { isSupplied } from '../sim/population';
-import { missingInputs } from '../sim/queries';
+import { missingInputs, reservedInputs } from '../sim/queries';
 import { upgradeBuilding } from '../sim/upgrade';
 import { functionLock } from '../sim/unlocks';
 import type { Building, BuildingDefId, Tier, World } from '../sim/types';
@@ -89,7 +89,7 @@ export function stateTone(b: Building): Tone {
 }
 
 export function stateChip(world: World, b: Building): Chip {
-  const text = stateInfo(b, world.tick, missingInputs(world, b)).text;
+  const text = stateInfo(b, world.tick, missingInputs(world, b), reservedInputs(world, b)).text;
   return { text, tone: stateTone(b), label: `Zustand: ${text}` };
 }
 

@@ -19,7 +19,7 @@ import {
   type StatKey,
 } from '../../src/ui/panelView';
 import { upgradeView, progressPct } from '../../src/ui/panelView';
-import { missingInputs } from '../../src/sim/queries';
+import { missingInputs, reservedInputs } from '../../src/sim/queries';
 import { isSupplied } from '../../src/sim/population';
 import { functionLock } from '../../src/sim/unlocks';
 import { serialize } from '../../src/sim/save';
@@ -424,5 +424,34 @@ describe('M13-E1 Stilllegen im Panel (AK-M13STL-09)', () => {
     expect(setPaused(w, g.id, true).ok).toBe(true);
     expect(tile()).not.toBe(run);
     expect(tile()).toBe(`${perMinute(buildingUpkeep(g), UPKEEP_INTERVAL)} / min`);
+  });
+});
+
+describe('I-049 T06 waitingReserve im Panel (AK-SB-13)', () => {
+  const reserved = (wood: number, stone: number) => {
+    const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
+    home(w).reserve = { wood: wood as 0 | 20, stone: stone as 0 | 20 };
+    home(w).stock.wood = wood;
+    home(w).stock.stone = stone;
+    return w;
+  };
+  it('Werkzeugmacher: «Wartet auf Holz (Reserve)», ok false, Ton warn', () => {
+    const w = reserved(20, 0);
+    const tm = put(w, 'toolmaker', { state: 'waitingReserve' });
+    const info = stateInfo(tm, w.tick, missingInputs(w, tm), reservedInputs(w, tm));
+    expect(info).toEqual({ text: 'Wartet auf Holz (Reserve)', ok: false });
+    expect(stateTone(tm)).toBe('warn');
+    expect(stateChip(w, tm).text).toBe('Wartet auf Holz (Reserve)');
+  });
+  it('Glashütte mit beiden Gütern gesperrt: «Wartet auf Stein, Holz (Reserve)»', () => {
+    const w = reserved(20, 20);
+    const gw = put(w, 'glassworks', { state: 'waitingReserve' });
+    expect(stateChip(w, gw).text).toBe('Wartet auf Stein, Holz (Reserve)');
+  });
+  it('Glashütte nur Holz gesperrt: nennt nur Holz', () => {
+    const w = reserved(20, 0);
+    home(w).stock.stone = 15;
+    const gw = put(w, 'glassworks', { state: 'waitingReserve' });
+    expect(stateChip(w, gw).text).toBe('Wartet auf Holz (Reserve)');
   });
 });

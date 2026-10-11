@@ -46,7 +46,7 @@ jeden startest du im Panel des Denkmals selbst, dabei zahlst du das Geld des Abs
 | 3         | Schaft und Feuerschale | 8000 |   200 |       80 |  160 |    100 |
 
 - **Lieferung:** Das Denkmal holt sich **1 Stück je Gut und Sekunde** aus dem Lager der Heimat, aber nur, was **über der
-  Reserve** liegt. Die Reserve ist je Gut «mindestens 20, sonst 8 × Hausverbrauch je 100 Ticks», damit der Bau deine
+  Reserve** liegt. Die Reserve ist je Gut «mindestens 20, sonst 8 × Hausverbrauch je 100 Ticks, beim Stein mindestens der Sperrbestand der Heimat (nur mit Kontor)», damit der Bau deine
   Häuser nicht leerzieht. Der Bau braucht eine Anbindung ans Kontor.
 - **Zukaufen:** Der Schalter «zukaufen» je Gut kauft fehlende Stücke zum Kontorpreis (mit Edikt Handel 20 % günstiger),
   sobald das Lager nichts über der Reserve hergibt. Das gekaufte Stück geht direkt ins Denkmal.
@@ -386,6 +386,11 @@ Schiffsabschnitt («Handeln» bleibt dort ein Knopf); sonst öffnet er direkt de
   ganze Lager auf einmal verkauft, drückt den Preis stark (100 Holz bringen 219 statt 400). Der
   Handelsdialog zeigt je Gut «Preis … %», und jeder Verkaufsbutton nennt den genauen Erlös für seine
   Menge.
+- **Reserve (Sperrbestand):** Im Handel stellst du je Insel für **Holz und Stein** eine Reserve von 0, 20, 40 oder 60
+  ein (nur mit Kontor auf der Insel). Betriebe, die das Gut verbrauchen, nehmen nichts mehr aus dem Lager, solange der
+  Bestand die Reserve nicht übersteigt; sie zeigen «Wartet auf Holz (Reserve)». Beim Stein gilt die Reserve der Heimat
+  auch für das Denkmal (nur mit Kontor). Bauen, Ausbau, Aufstieg, Handel, Fest und Schiffsladung bleiben frei; die
+  Schiffsladung hat ihre eigene Routenreserve.
 - Buttons, die sicher scheitern, sind blass, bleiben aber klickbar; ein Klick nennt den Grund («Kein
   Geld», «Zu wenig Geld», «Lager voll», «Nicht genug Ware»).
 

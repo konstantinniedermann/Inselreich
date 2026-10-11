@@ -194,3 +194,9 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - **Diagnose (TOOL-BUENDEL-8 T03, nur Quellcode gelesen, nichts gemessen):** Die Rechnungen sind deterministisch (feste Seeds 3, 5, 12588; in beiden Dateien kein `Math.random`/`Date.now`; `performance.now` nur in den Zeittests mit Budget, `terrain.test.ts` Z. 313 und 1113, `save.test.ts` Z. 1404). Die wechselnden Testnamen bei Wiederholung grün sprechen für eine Zeitüberschreitung unter Fremdlast (Hypothese H1, unbelegt) statt für einen Wertfehler.
 - **Timeouts je Test:** R170-Block (Z. 672–686) 60 s, patchGrid AK-R1-01 (Z. 746) 30 s (nicht ohne Timeout, wie die Planannahme war), AK-E1-11/Dünen-Tests 15–60 s; `save.test.ts` AK-S1-14 (Z. 624, 730) ohne eigenes Timeout, also Vitest-Standard 5 s. Der `save`-Fall hat damit den knappsten Spielraum (Setup-Kosten nicht gemessen).
 - **Empfehlung:** Kein Fix auf Verdacht. Seit TOOL-BUENDEL-8 T05 trägt `test_failed` die Fehlermeldung (`messages`). Beim nächsten roten Lauf entscheidet sie: «Test timed out» heisst Timeout je Test anheben (eigenes Häppchen, dann ist `tests/` bzw. `vite.config.ts` zulässig), Zahlenabweichung heisst Ursache im Code suchen. Schwellen bleiben unverändert.
+
+### 2026-10-11 · `stateText` ohne Aufrufer (nach Hinweis-Umstellung I-049)
+
+- **Fundort:** `src/ui/texts.ts:107` (`stateText`), nur noch Re-Export in `src/ui/inspect.ts:82`. Beobachtung: seit der
+  Umstellung des Maus-Hinweises auf `stateInfo` mit `missingInputs`/`reservedInputs` ruft niemand `stateText` auf. Ursprung:
+  I049-UI Final-Review. Einschätzung: gering; beim nächsten Aufräum-Häppchen samt Re-Export streichen.

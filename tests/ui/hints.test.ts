@@ -330,6 +330,39 @@ describe('placementHint (AK-UX-04)', () => {
   });
 });
 
+describe('I-049 Maus-Hinweis mit Zustandstext (Charakterisierung)', () => {
+  const glassAt = (wood: number, stone: number, state: Building['state']) => {
+    const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
+    home(w).reserve = { wood: wood as 0 | 20, stone: stone as 0 | 20 };
+    home(w).stock.wood = wood;
+    home(w).stock.stone = stone;
+    if (wood === 20 && stone === 40) home(w).stock.stone = 60; // Stein über der Reserve
+    const b: Building = {
+      id: w.nextBuildingId++,
+      defId: 'glassworks',
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state,
+      island: 0,
+    };
+    w.buildings[b.id] = b;
+    tileAt(home(w), 0, 0)!.buildingId = b.id;
+    return w;
+  };
+  it('Glashütte nur mit Holz gesperrt: «Wartet auf Holz (Reserve)»', () => {
+    const w = glassAt(20, 40, 'waitingReserve');
+    expect(placementHint(w, { kind: 'select' }, 0, 0)?.text).toBe(
+      'Glashütte · Wartet auf Holz (Reserve)',
+    );
+  });
+  it('waitingInput nennt nur die fehlenden Güter', () => {
+    const w = glassAt(5, 0, 'waitingInput');
+    expect(placementHint(w, { kind: 'select' }, 0, 0)?.text).toBe('Glashütte · Wartet auf Stein');
+  });
+});
+
 describe('Anbindung (AK-UX-05, RF-5)', () => {
   it('AK-UX-05 Weg in die Lücke bindet die Fischerhütte an; Weg ohne Wirkung → []', () => {
     const { w, kx, ky } = uxWorld();

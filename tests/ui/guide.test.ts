@@ -681,3 +681,17 @@ describe('UI-NAECHSTER-SCHRITT Zustandsfreiheit (AK-NS-08)', () => {
     expect(w).toEqual(before);
   });
 });
+
+describe('I-049 T06 remedyText waitingReserve', () => {
+  it('Senke die Reserve für Holz im Handel am Kontor oder baue Holzfäller', () => {
+    const { w, kx, ky } = uxWorld();
+    home(w).reserve = { wood: 20, stone: 0 };
+    home(w).stock.wood = 20;
+    const tm = build(w, 'toolmaker', kx + 8, ky + 2);
+    tm.connected = true;
+    tm.state = 'waitingReserve';
+    expect(remedyText(w, tm)).toBe(
+      'Senke die Reserve für Holz im Handel am Kontor oder baue Holzfäller (L)',
+    );
+  });
+});

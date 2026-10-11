@@ -51,6 +51,18 @@ export function goodList(goods: readonly GoodId[]): string {
 }
 
 /**
+ * Güternamen des Reserve-Stillstands, mit Komma verbunden („Stein, Holz“); `reserved` = `reservedInputs`,
+ * leer oder fehlend → alle Inputs aus `consumes`.
+ */
+export function reserveGoods(
+  consumes: readonly GoodId[] | undefined,
+  reserved?: readonly GoodId[],
+): string {
+  const goods = reserved && reserved.length > 0 ? reserved : (consumes ?? []);
+  return goods.length > 0 ? goods.map((g) => GOODS[g].name).join(', ') : 'Rohstoff';
+}
+
+/**
  * Zustandstext des Info-Panels. `missing` = fehlende Inputs (`missingInputs`); leer oder fehlend → alle Inputs
  * aus `consumes` (M8 14.4, Input seit dem letzten Schritt eingetroffen).
  */
@@ -58,6 +70,7 @@ export function stateInfo(
   b: Building,
   tick: number,
   missing?: readonly GoodId[],
+  reserved?: readonly GoodId[],
 ): { text: string; ok: boolean } {
   const def = BUILDING_DEFS[b.defId];
   if (b.outageUntil !== undefined) return { text: burningText(b, tick), ok: false };
@@ -73,8 +86,8 @@ export function stateInfo(
       const goods = missing && missing.length > 0 ? missing : (def.consumes ?? []);
       return { text: `Wartet auf ${goods.length > 0 ? goodList(goods) : 'Rohstoff'}`, ok: false };
     }
-    case 'waitingReserve': // Minimum für I-049 T02; T06 verfeinert (Hover, Hinweis)
-      return { text: `Wartet auf ${goodList(def.consumes ?? [])} (Reserve)`, ok: false };
+    case 'waitingReserve':
+      return { text: `Wartet auf ${reserveGoods(def.consumes, reserved)} (Reserve)`, ok: false };
     case 'storageFull':
       return { text: 'Lager voll', ok: false };
     case 'paused':
