@@ -1,4 +1,5 @@
 import { BUILDING_DEFS, BUILDING_IDS } from './defs/buildings';
+import { MONUMENT_UNLOCK } from './defs/monument';
 import { TIERS, WIN_CITIZENS } from './defs/tiers';
 import {
   FUNCTION_ENTRY,
@@ -78,6 +79,8 @@ export function lockReason(w: World, def: UnlockDef): string {
 }
 
 export function buildLock(w: World, defId: BuildingDefId): string | null {
+  if (defId === 'monument')
+    return w[MONUMENT_UNLOCK] === true ? null : 'Erst nach dem Kaufleute-Ziel';
   const e = entryOfBuilding(defId);
   return e === null || isUnlocked(w, e.id) ? null : lockReason(w, e);
 }

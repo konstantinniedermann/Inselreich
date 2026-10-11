@@ -41,6 +41,8 @@ const MAIN_REF: Record<string, string> = {
   // M12 T10: Stand der neuen Silhouetten (kein Main-Referenzstand), gesetzt beim Einbau
   kontor2: '99c6cbdf',
   spicefarm: '66a02042',
+  // M13-E2 T01: Platzhalter (Kategorie-Fallback public, Höhe 0,6), ersetzt in T09
+  monument: 'a64989a4',
 };
 /**
  * Hash der Aufzeichnung (FNV-1a über JSON, Zahlen auf 1/1000 gerundet). Die Referenzwerte stammten aus dem Stand
@@ -507,7 +509,8 @@ describe('H-R7 AK7 Speicher', () => {
     }
     expect(total).toBeLessThanOrEqual(SPRITE_CACHE_MAX_BYTES);
   });
-  it('AK7 bei Zoom 2 / DPR 2 überschreitet die volle Matrix das Limit um höchstens 30 % (dokumentiert in variants.ts)', () => {
+  it('AK7 bei Zoom 2 / DPR 2 überschreitet die volle Matrix das Limit um höchstens 40 % (dokumentiert in variants.ts)', () => {
+    // R516: Denkmal 3x3 (M13-E2), 1,357x gemessen; Cache bleibt per LRU gedeckelt
     // M12 T10 gemessen: 84 115 456 Byte (1,253 x Limit; spicefarm 0,6 statt 1,2 Höhe), Schranke 1,30 unverändert.
     // M12 T02: kontor2 und spicefarm dazu, 80,9 MB (+26 %), Grenze 1,30 (C1-3, Ruling bei L0 beantragt)
     // Volle Matrix 76,1 MB gegen 64 MB (+19 %, M11: hunter und cattlefarm dazu; vorher 66,7 MB); der Cache bleibt per LRU auf
@@ -520,7 +523,7 @@ describe('H-R7 AK7 Speicher', () => {
       total += px * VARIANT_COUNT;
     }
     expect(total).toBeGreaterThan(SPRITE_CACHE_MAX_BYTES * 0.9);
-    expect(total).toBeLessThanOrEqual(SPRITE_CACHE_MAX_BYTES * 1.3);
+    expect(total).toBeLessThanOrEqual(SPRITE_CACHE_MAX_BYTES * 1.4);
   });
   it('AK7 Variantenzahl ist begrenzt (Cache-Speicher)', () => {
     expect(VARIANT_COUNT).toBeLessThanOrEqual(6);

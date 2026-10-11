@@ -82,6 +82,7 @@ export const BODY_HEIGHTS: Partial<Record<BuildingDefId, (b: Building) => number
   bathhouse: () => 1.4 * ISO_H, // M8-R1: Kubus mit flacher Kuppel, Portikus, Becken; Kuppelscheitel unter H_TOWER
   glassworks: () => 1.6 * ISO_H, // M8-R1: Werkhalle, Glasofenkegel bis 1,97 · ISO_H, unter H_TOWER
   townhall: () => 2.0 * ISO_H, // M10-R1: Halle mit Uhrturm, Spitze genau auf der Hüllenkante, Höhe = H_MAX
+  monument: () => 0.6 * ISO_H, // Platzhalter M13-E2 T01, ersetzt in T09
   firestation: () => 1.7 * ISO_H, // Wachhaus mit Glockenstuhl: Spitze bis 1,7 + 0,5 = 2,2 · ISO_H, unter H_TOWER
 };
 export const bodyHeight = (def: BuildingDef, b: Building): number =>

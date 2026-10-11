@@ -284,6 +284,17 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
     maxCount: { n: 1, reason: 'Es gibt schon eine Amtsstube' },
     site: [],
   },
+  monument: {
+    id: 'monument',
+    name: 'Denkmal',
+    w: 3,
+    h: 3,
+    cost: cost(500, 10, 0, 10),
+    upkeep: 0,
+    category: 'public',
+    maxCount: { n: 1, reason: 'Es gibt schon ein Denkmal' },
+    site: [{ kind: 'home' }, { kind: 'supply' }],
+  },
 };
 export const BUILDING_IDS = Object.keys(BUILDING_DEFS) as BuildingDefId[];
 export const ROAD_COST = 5;

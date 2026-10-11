@@ -629,6 +629,36 @@
     "length": 2,
     "marks": 0
   },
+  "monument|waitingInput|z1": {
+    "hash": 1008496861,
+    "length": 623,
+    "marks": 1
+  },
+  "monument|storageFull|z1": {
+    "hash": 454053204,
+    "length": 901,
+    "marks": 1
+  },
+  "monument|noService|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "monument|noForest|z1": {
+    "hash": 4085337315,
+    "length": 1228,
+    "marks": 1
+  },
+  "monument|burning|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "monument|ok|z1": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
   "kontor|waitingInput|z2": {
     "hash": 1947613349,
     "length": 2,
@@ -1255,6 +1285,36 @@
     "marks": 0
   },
   "townhall|ok|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "monument|waitingInput|z2": {
+    "hash": 680663353,
+    "length": 623,
+    "marks": 1
+  },
+  "monument|storageFull|z2": {
+    "hash": 773974493,
+    "length": 901,
+    "marks": 1
+  },
+  "monument|noService|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "monument|noForest|z2": {
+    "hash": 2144540500,
+    "length": 1183,
+    "marks": 1
+  },
+  "monument|burning|z2": {
+    "hash": 1947613349,
+    "length": 2,
+    "marks": 0
+  },
+  "monument|ok|z2": {
     "hash": 1947613349,
     "length": 2,
     "marks": 0
