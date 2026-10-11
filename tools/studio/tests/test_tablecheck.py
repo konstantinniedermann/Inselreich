@@ -54,6 +54,26 @@ class TableCheckTest(unittest.TestCase):
     def test_even_backticks_in_cell_quiet(self):
         self.assertEqual(problems(HEAD + "| `a` | `b` |\n"), [])
 
+    def test_tilde_fence_with_inner_backtick_fence_stays_open(self):
+        bad = HEAD + "| a | `x|y` |\n"
+        text = "~~~\n```\n" + bad + "```\n~~~\n"
+        self.assertEqual(problems(text), [])
+
+    def test_long_fence_ignores_shorter_inner_fence(self):
+        bad = HEAD + "| a | `x|y` |\n"
+        text = "````\n```\n" + bad + "```\n````\n"
+        self.assertEqual(problems(text), [])
+
+    def test_table_after_fence_is_checked_again(self):
+        text = "````\n```\n````\n" + HEAD + "| a | `x|y` |\n"
+        self.assertEqual(len(problems(text)), 1)
+
+    def test_double_backtick_span_with_single_backtick_is_quiet(self):
+        self.assertEqual(problems(HEAD + "| ``a`b`` | `c` |\n"), [])
+
+    def test_unmatched_run_length_is_reported(self):
+        self.assertEqual(len(problems(HEAD + "| ``a` | b |\n")), 1)
+
     def test_table_ends_at_blank_line(self):
         self.assertEqual(problems(HEAD + "| 1 | 2 |\n\n| x | y | z |\n"), [])
 

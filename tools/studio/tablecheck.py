@@ -15,7 +15,8 @@ from pathlib import Path
 
 DEFAULT_ROOTS = ("docs", ".claude")
 DEFAULT_FILES = ("README.md",)
-FENCE = re.compile(r"^\s*(```|~~~)")
+FENCE = re.compile(r"^\s*(`{3,}|~{3,})(.*)$")
+BACKTICKS = re.compile(r"(?<!\\)`+")
 QUOTE = re.compile(r"^(\s*>)+")
 DELIMITER_CELL = re.compile(r"^\s*:?-+:?\s*$")
 
@@ -45,7 +46,16 @@ def _is_delimiter(line: str, columns: int) -> bool:
 
 
 def _open_backtick(cell: str) -> bool:
-    return len(re.findall(r"(?<!\\)`", cell)) % 2 == 1
+    """Backtick-Folge ohne gleich lange Schlussfolge (CommonMark-Code-Span)."""
+    lengths = [len(m.group()) for m in BACKTICKS.finditer(cell)]
+    index = 0
+    while index < len(lengths):
+        try:
+            partner = lengths.index(lengths[index], index + 1)
+        except ValueError:
+            return True
+        index = partner + 1
+    return False
 
 
 def _row_problem(cells: list[str], columns: int | None) -> str | None:
@@ -56,6 +66,18 @@ def _row_problem(cells: list[str], columns: int | None) -> str | None:
     return None
 
 
+def _fence_marker(line: str, open_fence: str) -> str | None:
+    """Zaun-Zeile: oeffnend (Marker) oder schliessend (gleiches Zeichen, mind. gleiche Laenge)."""
+    match = FENCE.match(line)
+    if not match:
+        return None
+    run, rest = match.groups()
+    if open_fence:
+        closes = run[0] == open_fence[0] and len(run) >= len(open_fence)
+        return run if closes and not rest.strip() else None
+    return None if run[0] == "`" and "`" in rest else run
+
+
 def _content(raw: str) -> str:
     return QUOTE.sub("", raw).strip()
 
@@ -64,12 +86,14 @@ def check_text(name: str, text: str) -> list[str]:
     """Verstösse eines Markdown-Textes als ``Datei:Zeile: Grund``."""
     found: list[str] = []
     lines = text.splitlines()
-    in_fence = False
+    fence = ""  # offener Zaun: Zeichen mal Laenge, sonst leer
     columns: int | None = None
     for number, raw in enumerate(lines, start=1):
-        if FENCE.match(QUOTE.sub("", raw)):
-            in_fence, columns = not in_fence, None
+        marker = _fence_marker(QUOTE.sub("", raw), fence)
+        if marker is not None:
+            fence, columns = ("" if fence else marker), None
             continue
+        in_fence = bool(fence)
         line = _content(raw)
         if in_fence or "|" not in line:
             columns = None
