@@ -5790,3 +5790,16 @@ Wochenfenster hoch: Parallelität halbiert (höchstens 2 Umsetzungsstränge).
 Regelbezug: R505, R506, R511, R531 · Kosten bei Irrtum: ein Rückmerge im Sim-Strang.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I049-SIM · ADR: —
+
+## R536 · 2026-10-11 · Merge I049-SIM angenommen; Gate Merge TOOL-BUENDEL-7: OK; I048-SIM holt main
+
+Ruling: Integrator-Merge `cda5fdb7`/`1cbbdf89` (keine Konflikte, `make check` und `check-ci-perf` Exit 0; Zwischen-Merge nur
+wegen eines Doku-Commits, keine Neuprüfung nötig) angenommen. **TOOL-BUENDEL-7** (`tool/b7`, T01–T05, Final-Review opus
+BEDENKEN → Fixes, Delta-Review OK, `make studio-test` Exit 0): **Gate Merge OK**; Abweichungen (Retro-Commit `42c89283`
+Zellenkorrektur, `lead_phases` 1:1) angenommen. Integrator mergt `tool/b7` lokal (spielfremd, kein Push nötig vor
+Release M13). **I048-SIM** führt jetzt `git merge main` aus, löst die Konflikte in eigener Ownership, ergänzt die
+`reserve`-Rückfaltung (Prod-B4), `make check`; danach Gate Merge I048-SIM.
+
+Regelbezug: R505, R532, R535 · Kosten bei Irrtum: ein Werkzeug-Rückbau.
+
+Entscheider: L0 · Anlass: Berichte Integrator MERGE-I049-SIM, lead-tech TOOL-BUENDEL-7 · ADR: —
