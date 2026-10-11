@@ -23,7 +23,7 @@ Ledger-Vermerk.
    Anhang 07; Knoten des Panels stabil (U-5); Zwei-Klick nur für das Denkmal mit Fortschritt, UI-TASTEN-Tests
    unverändert grün (R483); Abriss-Werkzeug überspringt mit Meldung.
 4. **Ziel-Chip und Ereignisse:** vor `wonSpice` unverändert; `monumentEvents` und Glocke nicht nach dem Laden;
-   `src/audio/` importiert nichts aus `src/sim/`/`src/ui/`; kein neues Asset (`tests/assets` unverändert).
+   `src/audio/` importiert nichts aus `src/sim/`/`src/ui/`; kein neues Asset (`tests/assets` unverändert). T19: Klangfigur `monumentDone` von `lead-art` abgenommen (ART-Ledger), Rezept unterscheidet sich vom `alarm`; Dev-Zähler `events` in `debugState`.
 5. **Desktop-first:** T15-Messwert kein waagrechtes Scrollen ab 1280 px; 800×600 ohne Überlappung.
 6. **Doku:** README-Abschnitt, Tabelle und Lauf-B-Satz stimmen mit `MONUMENT_STAGES` und dem T07-Messwert; arc42
    (Bausteine, Tick, Persistenz v12, Obergrenzen); E1-Spec nur zwei Verweiszeilen; Beobachtungen nur angehängt.

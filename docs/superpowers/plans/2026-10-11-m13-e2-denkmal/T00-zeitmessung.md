@@ -28,7 +28,7 @@ npx vitest related --run --reporter=json --outputFile=.studio/qa/m13-e2/zeit/mai
 ```bash
 npx vitest related --run --reporter=json --outputFile=.studio/qa/m13-e2/zeit/main-art.json \
   src/render/iso.ts src/render/sprites.ts src/render/spriteCache.ts src/render/renderer.ts src/render/fx.ts \
-  src/render/limits.ts; echo EXIT=$?
+  src/render/limits.ts src/audio/sound.ts src/audio/manifest.ts; echo EXIT=$?
 ```
 
 - [ ] **Schritt 3: UI-Strang (Controller D).**
@@ -36,14 +36,17 @@ npx vitest related --run --reporter=json --outputFile=.studio/qa/m13-e2/zeit/mai
 ```bash
 npx vitest related --run --reporter=json --outputFile=.studio/qa/m13-e2/zeit/main-ui.json \
   src/ui/hints.ts src/ui/inspect.ts src/ui/hotkeys.ts src/ui/input.ts src/ui/goal.ts src/ui/hud.ts \
-  src/ui/soundEvents.ts src/audio/sound.ts src/audio/manifest.ts; echo EXIT=$?
+  src/ui/soundEvents.ts; echo EXIT=$?
 ```
 
 - [ ] **Schritt 4: Auswerten.** Je Lauf Gesamtdauer und die fünf langsamsten Dateien (aus `testResults[*]`,
       `endTime − startTime`) in den Ledger. Exit ≠ 0 auf `main` ist ein Befund vor jeder Änderung: an L0 melden, nicht
       beginnen.
 
-## Abnahme (in T17/T18)
+## Abnahme (vor T17/T18, Aufgabe der Controller B und E, QA-B9)
+
+Controller **B** (Sim) misst vor «bereit fürs Final-Review SIM», Controller **E** (UI, zugleich für ART) vor «bereit
+fürs Final-Review»; Ergebnis im Ledger und im Bericht an L0, der Final-Reviewer prüft nur das Vorliegen.
 
 Derselbe Befehl je Strang zuerst im Hauptcheckout (`main`), direkt danach im Worktree; Ausgabe nach
 `branch-<strang>.json`. Eine bestehende Datei, die auf der Branch > 25 % und > 2 s langsamer ist, ist ein Befund im

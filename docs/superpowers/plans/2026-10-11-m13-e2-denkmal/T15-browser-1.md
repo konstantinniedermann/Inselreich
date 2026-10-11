@@ -7,6 +7,13 @@ Rolle `qa-playtester` (sonnet) · gestartet vom UI-Controller (D) · AK-M13E2-40
 Screenshots `.studio/qa/m13-e2/<ak>-<breite>x<höhe>.png`, AK-46: `46-s<n>-<licht>-<b>x<h>.png`. Ausgangsstände aus
 Anhang 08 D (Seed 3, erzeugt in T06, geladen wie die übrigen Browser-Szenarien).
 
+## Schritt 0 (QA-B2, vom Controller D vor dem Start)
+
+Im UI-Baum `git merge main` (bringt I-049-Sim, falls schon gemergt), dann die Szenarien neu schreiben
+(`writeScenarios` und `writeExtraSaves`, Befehl aus dem Kopf von `tests/sim/scenarios.ts`), Commit-Hash und Dateiliste
+im Ledger notieren; der Playtester prüft genau diesen Stand. **Nie gleichzeitig mit dem Browser-Lauf I-048-T04**
+(Prod-B7). Dieselbe Regel gilt für die Browser-Läufe der Folgestränge (I-049-UI, I-048-UI).
+
 ## Prüfschritte
 
 | AK  | Stand                                | Schritte und Erwartung                                                                                                                                                                                                                                                                   |

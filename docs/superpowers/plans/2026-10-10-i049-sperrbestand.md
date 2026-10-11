@@ -6,6 +6,8 @@
 
 **Grundlage:** Kurzdesign `docs/superpowers/specs/2026-10-10-i049-sperrbestand-design.md` (`7e6b2844`, AK-SB-01…17, Wortlaut dort), Ruling **R477** (E1 je Insel, E2 nur Holz/Stein, E3 Schiffsladung nicht, E4 keine Problemliste; Save-Reihenfolge M13-E2 = v12). Stufe **leicht** (Plan im kombinierten Gate), Planbasis `main` @ `753c0067`, `SAVE_VERSION` 11. Arbeiter lesen nur ihre Task und die genannten AK im Kurzdesign.
 
+**Nachtrag M13-E2 (R489 tech B5, R507 E8):** vor T01 einarbeiten — [nachtrag-i049.md](2026-10-11-m13-e2-denkmal/nachtrag-i049.md) (Fall K1, `dropZeroReserve`, Save v12 Fall A).
+
 ## Global Constraints
 
 - `src/sim/` DOM-frei, kein Zufall, `setReserve` wirft nie (`{ ok, reason }`), Spielwerte nur in `src/sim/defs/reserve.ts`. Keine Laufzeit-Abhängigkeit, kein ADR (ein Mechanismus, kein Bestand; Save-Entscheid steht hier und in R477).

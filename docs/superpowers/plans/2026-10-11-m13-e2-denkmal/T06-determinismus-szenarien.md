@@ -42,7 +42,7 @@ Denkmal-Güter je 20, Holz 100.
 | `m13e2-abschnitt1-rest` | Abschnitt 1 läuft, Rest 5 je Gut, alle `buy` an, `wonSpice = true`                                  |
 | `m13e2-abschnitt3-rest` | `stage 2`, Abschnitt 3 läuft, Rest 1 je Gut, alle `buy` an, `wonSpice = true`, `monumentDone false` |
 | `m13e2-bild-0` … `-4`   | Bildstufe 0 … 4 (Bild 1: Abschnitt 1 läuft; sonst nicht laufend), Amtsstube daneben                 |
-| `m13e2-v13`             | `serialize(m13e2-ziel2)` mit `version: 13`; **nicht** in `RAW_SCENARIOS`                            |
+| `m13e2-v13`             | `serialize(m13e2-ziel2)` mit `version: SAVE_VERSION + 1` (QA-B5); **nicht** in `RAW_SCENARIOS`      |
 
 - Zustände nur über Sim-Aktionen und erlaubte Testsetzungen (`delivered`, `stage`, `monumentDone` von Hand ist
   zulässig, solange V1–V9 gelten; `stage 3` heisst `monumentDone true`). `m13e2-bild-4`: `stage 3`, `monumentDone
@@ -72,7 +72,9 @@ npx vitest run tests/sim/monument.test.ts tests/sim/scenario-saves.test.ts; echo
       Codeänderung in `src/` grün werden; zeigt einer einen Unterschied, ist das ein Befund in `monument.ts` (Ursache im
       Bericht, Fix in dieser Task). **Mutationsnachweis** statt Rot-vor-Umsetzung: lokal `paused` in `migrateV11ToV12`
       bzw. beim Laden testweise auf `false` zwingen → AK-49 (Fall 1025) muss rot werden; Ausgabe-Zeile in den Bericht,
-      Mutation zurücknehmen, nicht committen.
+      Mutation zurücknehmen, nicht committen. **QA-B7, AK-16:** (a) `BUILDING_DEFS.monument` lokal `flammable: true` →
+      AK-16 (a) muss rot werden; (c) in `tickMonument` lokal einen Aufruf des RNG einfügen → AK-16 (c) muss rot
+      werden. Je eine Ausgabe-Zeile in den Bericht, Mutationen zurücknehmen, nicht committen.
 
 ```bash
 npx vitest run tests/sim/monument.test.ts tests/sim/scenario-saves.test.ts tests/sim/save-v12.test.ts; echo EXIT=$?

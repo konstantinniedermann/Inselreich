@@ -58,18 +58,21 @@ für einen Teil, die Abnahme des AK liegt bei der genannten Task.
 
 ## Plan-Punkte aus Anhang 08 E und dem Gate-Handoff lead-tech
 
-| Punkt                                                    | Erledigt in                                    |
-| -------------------------------------------------------- | ---------------------------------------------- |
-| qa B5 Szenario-Stände `m13e2-*`                          | T06                                            |
-| qa B8 Randfälle in AK-11/-14                             | T05                                            |
-| qa B9a AK-21 wörtlich; Ledger mechanische Anpassungen    | T17 Punkt 2; T02 Schritt 5                     |
-| tech B2 Def-Kern zuerst, Platzhalter                     | T01                                            |
-| tech B5 Nachtrag Plan I-049 (Fall K1, `dropZeroReserve`) | [nachtrag-i049.md](nachtrag-i049.md), Index E8 |
-| A1 Strang-Schnitt                                        | Index, Stränge und Merge-Reihenfolge           |
-| A2 Bildstufe in die Render-Geometrie, Bildrand-Test      | T09                                            |
-| A3 Reserve ganzzahlig                                    | T04                                            |
-| A4 Läufe A und C Krisen aus                              | T07                                            |
-| A5 Vergleich statt Spy                                   | T05                                            |
-| A6 V4 nur bei `stage < 3`                                | T02                                            |
-| E1-Berichtigungen (Spec §11, Anhang 08 F)                | T02 (mechanisch), T14 (Verweise), Index E6     |
-| R392/E-052 Zeitmessung Ausgang                           | T00                                            |
+| Punkt                                                    | Erledigt in                                     |
+| -------------------------------------------------------- | ----------------------------------------------- |
+| qa B5 Szenario-Stände `m13e2-*`                          | T06                                             |
+| qa B8 Randfälle in AK-11/-14                             | T05                                             |
+| qa B9a AK-21 wörtlich; Ledger mechanische Anpassungen    | T17 Punkt 2; T02 Schritt 5                      |
+| tech B2 Def-Kern zuerst, Platzhalter                     | T01                                             |
+| tech B5 Nachtrag Plan I-049 (Fall K1, `dropZeroReserve`) | [nachtrag-i049.md](nachtrag-i049.md), Index E8  |
+| A1 Strang-Schnitt                                        | Index, Stränge und Merge-Reihenfolge            |
+| A2 Bildstufe in die Render-Geometrie, Bildrand-Test      | T09                                             |
+| A3 Reserve ganzzahlig                                    | T04                                             |
+| A4 Läufe A und C Krisen aus                              | T07                                             |
+| A5 Vergleich statt Spy                                   | T05                                             |
+| A6 V4 nur bei `stage < 3`                                | T02                                             |
+| E1-Berichtigungen (Spec §11, Anhang 08 F)                | T02 (mechanisch), T14 (Verweise), Index E6      |
+| R392/E-052 Zeitmessung Ausgang                           | T00                                             |
+| R507 QA-B1/B4 Glocke, Dev-Zähler                         | T19 (ART), Auslöser T13, Browser T16            |
+| R507 QA-B2/B5–B9                                         | T15/T16 Schritt 0; T02, T06; T17; T06; T16; T00 |
+| R507 QA-B3                                               | T13                                             |

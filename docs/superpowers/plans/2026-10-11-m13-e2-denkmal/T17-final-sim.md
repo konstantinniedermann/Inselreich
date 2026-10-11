@@ -38,7 +38,7 @@ tests/sim/save-v11.test.ts` zeigt nur die im Ledger gelisteten mechanischen Zeil
 # B1
 git diff --stat main...feat/m13-e2-sim -- 'tests/sim/balance*.test.ts' tests/sim/e0Pins.ts tests/sim/e1Pins.ts tests/sim/seePins.ts; echo EXIT=$?
 # B2
-git diff --diff-filter=M --stat main...feat/m13-e2-sim -- 'tests/sim/balance*.test.ts' tests/sim/e0Pins.ts tests/sim/e1Pins.ts tests/sim/seePins.ts tests/sim/controller.ts tests/sim/merchantsController.ts; echo EXIT=$?
+git diff --diff-filter=MDR --stat main...feat/m13-e2-sim -- 'tests/sim/balance*.test.ts' tests/sim/e0Pins.ts tests/sim/e1Pins.ts tests/sim/seePins.ts tests/sim/controller.ts tests/sim/merchantsController.ts; echo EXIT=$?
 # B3
 npx vitest run tests/sim/monument.test.ts tests/sim/save-v12.test.ts tests/sim/defs.test.ts tests/sim/balance.test.ts; echo EXIT=$?
 npx tsc --noEmit; echo EXIT=$?

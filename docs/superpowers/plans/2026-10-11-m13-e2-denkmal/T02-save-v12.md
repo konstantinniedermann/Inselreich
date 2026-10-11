@@ -64,7 +64,8 @@ Rundlauf und Hash-Pins zwischen zwei Commits rot (Muster M13-E1 T02).
     `it.todo('AK-25k step → T05')` und wird in T05 eingelöst (Ledger).
   - **AK-25 A6 (eigenes `it`):** `stage 3` mit `running true` → `'Beschädigter Spielstand'`, kein Wurf (kein Zugriff
     auf `MONUMENT_STAGES[3]`); `stage 3`, `running false`, `monumentDone true`, `delivered` alle 0 → ok.
-  - **AK-26:** `version: 13` → `'Unbekannte Version'`, Text `{"version": 12` → `'Ungültiges Format'`, kein Wurf;
+  - **AK-26:** `version: SAVE_VERSION + 1` (nie die feste Zahl 13, QA-B5; bleibt mit I-049/I-048 auf v12 richtig) →
+    `'Unbekannte Version'`, Text `{"version": 12` → `'Ungültiges Format'`, kein Wurf;
     `friendlyReason` beider Gründe nicht leer.
 
 ```bash
