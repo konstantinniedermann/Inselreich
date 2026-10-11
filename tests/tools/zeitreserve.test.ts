@@ -414,6 +414,13 @@ describe('zeitreserve markierte Dateien und Nachmessung (R488 V1, AK-TB6-02..04)
     expect(JSON.parse(readFileSync(out, 'utf8'))).toEqual(['tests/a.test.ts', 'tests/b.test.ts']);
   });
 
+  it('--marked bei loadStart 6 und nur Tests mit Reserve: Exit 2, leere Liste (D1)', () => {
+    const m = write('m6-leer.json', meas([f('tests/c.test.ts', 100)], 6));
+    const out = join(dir, 'marked6-leer.json');
+    expect(run(['--push', m, '--marked', out]).status).toBe(2);
+    expect(JSON.parse(readFileSync(out, 'utf8'))).toEqual([]);
+  });
+
   it('--marked bei Exit 1 (ruhige Last, Verstoss) schreibt die Liste', () => {
     const m = write('m1.json', meas(mainTimings, 1));
     const out = join(dir, 'marked1.json');

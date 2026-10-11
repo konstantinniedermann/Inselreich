@@ -235,6 +235,37 @@ class PushCheckTest(unittest.TestCase):
                 self.assertEqual(h.count(VITEST), 0)
                 self.assertEqual(h.count(PERF), 0)
 
+    def test_nachmessung_wartet_zu_lange_auf_ruhe(self):
+        h = Harness(self, loads=(1.0, 5.0))
+        h.check_ts(2, marked='["tests/a.test.ts"]')
+        self.assertEqual(h.go(), 2)
+        self.assertEqual(h.count(VITEST), 0)
+        self.assertEqual(sum("--retry" in k for k in h.names()), 0)
+        self.assertEqual(h.count(PERF), 0)
+
+    def test_vitest_der_nachmessung_rot_ohne_abbruch_gibt_exit_1(self):
+        h = Harness(self)
+        h.check_ts(2, marked='["tests/a.test.ts"]')
+        h.handlers[VITEST] = (1, "FAIL tests/a.test.ts")
+        self.assertEqual(h.go(), 1)
+        self.assertEqual(sum("--retry" in k for k in h.names()), 0)
+
+    def test_d1_ist_im_ereignis_und_in_der_schlusszeile_sichtbar(self):
+        h = Harness(self)
+        h.check_ts(2, marked="[]", load_start=6.2)
+        self.assertEqual(h.go(), 0)
+        (event,) = h.events()
+        self.assertIs(event["d1"], True)
+        self.assertEqual(event["main_load_start"], 6.2)
+        last = h.output.getvalue().strip().splitlines()[-1]
+        self.assertIn(" · D1 (Last 6.2, leere Liste)", last)
+        h = Harness(self)
+        h.check_ts(0, marked="[]", load_start=1.5)
+        self.assertEqual(h.go(), 0)
+        (event,) = h.events()
+        self.assertIs(event["d1"], False)
+        self.assertNotIn("D1", h.output.getvalue())
+
     def test_ereignis_schlusszeile_und_schreibfehler(self):
         h = Harness(self)
         h.check_ts(0, marked="[]")

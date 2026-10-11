@@ -113,6 +113,8 @@ class Gate:
         self.full_checks = 0
         self.retry_files = 0
         self.retried = False
+        self.d1 = False
+        self.main_load_start: float | None = None
         self.started = time.monotonic()
 
     def step(
@@ -168,6 +170,7 @@ class Gate:
         if code == 0:
             return 0
         start = _load_start(self.measurement)
+        self.main_load_start = start
         if code == 2 or (code == 1 and start is not None and start > RETRY_LOAD):
             files = _read_list(self.marked)
             if files is None:
@@ -176,7 +179,8 @@ class Gate:
                 )
                 return 2
             if not files:
-                return 0 if code == 2 else 1  # D1: nichts nachzumessen
+                self.d1 = code == 2  # D1: nichts nachzumessen
+                return 0 if code == 2 else 1
             return self.retry(files)
         return 1
 
@@ -196,6 +200,15 @@ class Gate:
         if code != 0:
             return code
         return 0 if self.step("check-ci-perf", ["make", "check-ci-perf"])[0] == 0 else 1
+
+
+def _d1_note(gate: Gate) -> str:
+    if not gate.d1:
+        return ""
+    last = (
+        "unbekannt" if gate.main_load_start is None else f"{gate.main_load_start:.1f}"
+    )
+    return f" · D1 (Last {last}, leere Liste)"
 
 
 def main(
@@ -218,6 +231,7 @@ def main(
     _say(
         f"push-check: EXIT={code} · geprüfter Hash {head0} · check-push {gate.full_checks}× · "
         f"Nachmessung {int(gate.retried)} ({gate.retry_files} Dateien) · {_mmss(duration)}"
+        + _d1_note(gate)
     )
     try:
         paths.append_event(
@@ -229,6 +243,8 @@ def main(
                 "exit": code,
                 "full_checks": gate.full_checks,
                 "retry_files": gate.retry_files,
+                "d1": gate.d1,
+                "main_load_start": gate.main_load_start,
                 "duration_s": round(duration, 1),
                 "steps": gate.steps,
             }
