@@ -1,6 +1,7 @@
-"""Budget-Warnung beim Lead-Start (E-055, R443): Start mit `Budget: <n>` ohne passende Freigabe.
+"""Budget-Prüfung beim Lead-Start (E-055, R443; Block E-060): Start mit `Budget: <n>` ohne passende Freigabe.
 
-Rein bis auf das Lesen der Event-Datei; warnt nur, blockiert nie. Fehler lassen zu.
+Rein bis auf das Lesen der Event-Datei. `check` liefert den Blocktext (E-060),
+`warning` den Hinweis des Rückfallmodus (E-055). Fehler lassen zu.
 """
 
 from __future__ import annotations
@@ -9,6 +10,7 @@ import json
 import re
 from collections.abc import Iterable, Mapping
 
+from model import _package_token
 from modelguard import SKIP_TYPES, header, persona
 
 NUMBER = re.compile(r"\d+")
@@ -44,7 +46,13 @@ def _phase(event: Mapping) -> str:
     return str(budget.get("phase") or "").strip() if isinstance(budget, dict) else ""
 
 
-def warning(tool_input: Mapping, given: Iterable[Mapping]) -> str | None:
+def package_names(package: str) -> set[str]:
+    """Namen, unter denen eine Freigabe zur Kopfzeile `Paket:` passt (wie model._grant_names)."""
+    return {package, _package_token(package)} - {""}
+
+
+def _lead_start(tool_input: Mapping) -> tuple[str, int, str] | None:
+    """(Rolle, Budget, Prompt) eines Lead-Starts mit `Budget: n`; sonst None."""
     role = persona(tool_input)
     if str(tool_input.get("subagent_type")) in SKIP_TYPES or not role.startswith(
         "lead-"
@@ -52,8 +60,44 @@ def warning(tool_input: Mapping, given: Iterable[Mapping]) -> str | None:
         return None
     prompt = str(tool_input.get("prompt") or "")
     count = budget_count(prompt)
-    if count is None:
+    return None if count is None else (role, count, prompt)
+
+
+def check(tool_input: Mapping, given: Iterable[Mapping]) -> str | None:
+    """Blocktext (E-060) bei Lead-Start ohne passende Freigabe der Rolle, sonst None."""
+    start = _lead_start(tool_input)
+    if start is None:
         return None
+    role, count, prompt = start
+    own = [g for g in given if g.get("role") == role]
+    package = header(prompt, "Paket")
+    phases = [_phase(g) for g in own]
+    token = _package_token(package) or "<Paket>"
+    if own and (
+        not package
+        or {p.casefold() for p in phases}
+        & {n.casefold() for n in package_names(package)}
+    ):
+        return None
+    command = f"python3 tools/studio/log.py budget --lead {role} --grant {count} --phase {token} …"
+    prefix = "Budget-Block (E-060): "
+    if not own:
+        return (
+            f"{prefix}{role} startet mit „Budget: {count}“, in dieser Session gibt es "
+            f"keine Freigabe. Vor dem Start: {command}"
+        )
+    return (
+        f"{prefix}Freigabe für Phase {package} fehlt (vorhanden: {', '.join(phases)}). "
+        f"Vor dem Start: {command}"
+    )
+
+
+def warning(tool_input: Mapping, given: Iterable[Mapping]) -> str | None:
+    """Hinweistext des Rückfallmodus (BUDGET_MODE = "warn", E-055)."""
+    start = _lead_start(tool_input)
+    if start is None:
+        return None
+    role, count, prompt = start
     own = [g for g in given if g.get("role") == role]
     prefix = "Budget-Warnung (E-055): "
     if not own:

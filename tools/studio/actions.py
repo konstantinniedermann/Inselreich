@@ -7,6 +7,7 @@ Fehlt `gh`, das Token oder schlägt der Aufruf fehl, steht „nicht erfasst“ �
 
 from __future__ import annotations
 
+import calendar
 import json
 import math
 import subprocess
@@ -16,8 +17,9 @@ import clock
 
 NOT_RECORDED = "nicht erfasst"
 # (gelb über, rot über)
-REPO_LIMITS = (150, 400)
 ACCOUNT_LIMITS = (1000, 1600)
+PROGNOSIS_LIMITS = (1600, 1900)
+RATE_DAYS = 3
 ACCOUNT_QUOTA = 2000
 # Session-Minuten (gelb über, rot über)
 SESSION_LIMITS = (8, 15)
@@ -37,10 +39,43 @@ def _light(value: float, limits: tuple[int, int]) -> str:
     return "GELB" if value > limits[0] else "GRÜN"
 
 
-def usage(now: datetime | None = None, runner=None) -> tuple[float, float] | None:
-    """(Repo-Minuten, Konto-Minuten) im laufenden Monat oder None, wenn nicht erfassbar."""
+def _daily(items: list[dict], now: datetime) -> dict[int, float] | None:
+    """Konto-Minuten je Tag des laufenden Monats; None, wenn ein Eintrag kein `date` trägt.
+
+    Variante „mit date“ (Echtlauf T04): die Monatsantwort trägt je Eintrag ein
+    `date`; Tagesdaten kommen aus derselben Antwort, kein zusätzlicher gh-Aufruf.
+    """
+    days: dict[int, float] = {}
+    for item in items:
+        if item.get("product") != "actions" or item.get("unitType") != "Minutes":
+            continue
+        try:
+            day = _ts(str(item["date"]).replace("Z", "+00:00")).day
+        except (KeyError, ValueError):
+            return None
+        days[day] = days.get(day, 0.0) + float(item.get("quantity", 0))
+    return days
+
+
+def forecast(spent: float, daily: dict[int, float] | None, now: datetime) -> int | None:
+    """Prognose Monatsende: verbraucht + Rate × Resttage, ganze Minuten.
+
+    Rate = Konto-Minuten der letzten bis zu 3 vollen Tage vor heute ÷ Anzahl dieser
+    Tage; am 1. des Monats oder ohne Tagesdaten None (nie 0). Heute steckt
+    teilweise schon in `spent` und zählt zusätzlich voll in den Resttagen
+    (bewusste Doppelzählung, vorsichtige Prognose, R503 B8).
+    """
+    if daily is None or now.day <= 1:
+        return None
+    days = range(max(1, now.day - RATE_DAYS), now.day)
+    rate = sum(daily.get(d, 0.0) for d in days) / len(days)
+    rest = calendar.monthrange(now.year, now.month)[1] - now.day + 1
+    return round(spent + rate * rest)
+
+
+def _load(now: datetime, runner=None):
+    """(Repo, Konto, Tagesdaten oder None) im laufenden Monat; None, wenn nicht erfassbar."""
     run = runner or run_gh
-    now = now or clock.now()
     try:
         login = run(["api", "user", "--jq", ".login"]).strip()
         name = run(["repo", "view", "--json", "name", "-q", ".name"]).strip()
@@ -64,9 +99,15 @@ def usage(now: datetime | None = None, runner=None) -> tuple[float, float] | Non
             account += minutes
             if item.get("repositoryName") == name:
                 repo += minutes
-        return repo, account
+        return repo, account, _daily(items, now)
     except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError):
         return None
+
+
+def usage(now: datetime | None = None, runner=None) -> tuple[float, float] | None:
+    """(Repo-Minuten, Konto-Minuten) im laufenden Monat oder None, wenn nicht erfassbar."""
+    data = _load(now or clock.now(), runner)
+    return None if data is None else data[:2]
 
 
 def _ts(value: str) -> datetime:
@@ -115,8 +156,9 @@ def render_session(since: datetime | None, runner=None) -> str:
 def render(
     now: datetime | None = None, runner=None, since: datetime | None = None
 ) -> str:
+    now = now or clock.now()
     session = render_session(since, runner)
-    data = usage(now, runner)
+    data = _load(now, runner)
     head = ["## Actions-Minuten (Monat)", ""]
     if data is None:
         return "\n".join(
@@ -124,18 +166,28 @@ def render(
                 *head,
                 f"- {NOT_RECORDED}: Inselreich-Minuten",
                 f"- {NOT_RECORDED}: Konto-Minuten",
+                f"- {NOT_RECORDED}: Konto-Prognose Monatsende",
                 session,
                 "",
             ]
         )
-    repo, account = data
-    repo_rule = f"(gelb > {REPO_LIMITS[0]}, rot > {REPO_LIMITS[1]})"
+    repo, account, daily = data
     account_rule = f"(gelb > {ACCOUNT_LIMITS[0]}, rot > {ACCOUNT_LIMITS[1]})"
-    repo_line = (
-        f"- {_light(repo, REPO_LIMITS)}: Inselreich-Minuten: {repo:.0f} {repo_rule}"
-    )
+    repo_line = f"- Info: Inselreich-Minuten: {repo:.0f}"
     account_line = (
         f"- {_light(account, ACCOUNT_LIMITS)}: Konto-Minuten: "
         f"{account:.0f} von {ACCOUNT_QUOTA} {account_rule}"
     )
-    return "\n".join([*head, repo_line, account_line, session, ""])
+    predicted = forecast(account, daily, now)
+    if predicted is None:
+        forecast_line = f"- {NOT_RECORDED}: Konto-Prognose Monatsende"
+    else:
+        rest = calendar.monthrange(now.year, now.month)[1] - now.day + 1
+        rate = (predicted - account) / rest
+        forecast_line = (
+            f"- {_light(predicted, PROGNOSIS_LIMITS)}: Konto-Prognose Monatsende: "
+            f"{predicted} von {ACCOUNT_QUOTA} (verbraucht {account:.0f} + "
+            f"{rate:.0f}/Tag × {rest} Resttage; gelb > {PROGNOSIS_LIMITS[0]}, "
+            f"rot > {PROGNOSIS_LIMITS[1]}; bei Rot höchstens ein Push je Tag, R488 V2)"
+        )
+    return "\n".join([*head, repo_line, account_line, forecast_line, session, ""])

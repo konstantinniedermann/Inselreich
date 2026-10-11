@@ -110,6 +110,7 @@ class Gate:
         self.run, self.load, self.sleep, self.git = run, load, sleep, git
         self.marked, self.retry_out, self.measurement = marked, retry_out, measurement
         self.steps: list[dict] = []
+        self.load_errors = 0
         self.full_checks = 0
         self.retry_files = 0
         self.retried = False
@@ -120,27 +121,43 @@ class Gate:
     def step(
         self, name: str, cmd: list[str], env: dict | None = None
     ) -> tuple[int, str]:
+        load = self._load_now()
         began = time.monotonic()
         code, output = self.run(cmd, env)
         self.steps.append(
-            {"name": name, "exit": code, "s": round(time.monotonic() - began, 1)}
+            {
+                "name": name,
+                "exit": code,
+                "s": round(time.monotonic() - began, 1),
+                "load": load,  # 1-min-Load zu Beginn der Stufe (R514 V2)
+            }
         )
         return code, output
+
+    def _load_now(self) -> float | None:
+        try:
+            return round(self.load(), 1)
+        except (OSError, ValueError, TypeError):
+            self.load_errors += 1
+            return None
 
     def wait_quiet(self) -> bool:
         waited = 0
         while True:
-            current = self.load()
-            if current <= LOAD_WAIT:
+            try:
+                current: float | None = self.load()
+            except (OSError, ValueError, TypeError):
+                self.load_errors += 1  # Fehler = nicht ruhig, bis die Frist abläuft
+                current = None
+            shown = "unbekannt" if current is None else f"{current:.1f}"
+            if current is not None and current <= LOAD_WAIT:
                 return True
             if waited >= WAIT_MAX_S:
-                _say(
-                    f"push-check: kein ruhiges Fenster nach {waited} s (Load {current:.1f})"
-                )
+                _say(f"push-check: kein ruhiges Fenster nach {waited} s (Load {shown})")
                 return False
             if waited % 60 == 0:
                 _say(
-                    f"push-check: warte auf Load <= {LOAD_WAIT} (jetzt {current:.1f}, {waited} s)"
+                    f"push-check: warte auf Load <= {LOAD_WAIT} (jetzt {shown}, {waited} s)"
                 )
             self.sleep(POLL_S)
             waited += POLL_S
@@ -245,6 +262,7 @@ def main(
                 "retry_files": gate.retry_files,
                 "d1": gate.d1,
                 "main_load_start": gate.main_load_start,
+                "load_errors": gate.load_errors,
                 "duration_s": round(duration, 1),
                 "steps": gate.steps,
             }
