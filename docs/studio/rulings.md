@@ -5385,3 +5385,22 @@ je Strang), freigegeben je Strang beim Start. Start I048-SIM erst nach Merge M13
 Regelbezug: gates.md Gate Plan, R505 · Kosten bei Irrtum: ein Plan-Nachtrag.
 
 Entscheider: L0 · Anlass: Nachtrag-Bericht lead-tech · ADR: —
+
+## R507 · 2026-10-11 · Gate Plan M13-E2: BEDENKEN → Plan-Nachtrag; Glocke unter lead-art
+
+Ruling: lead-qa BEDENKEN (B1–B10), lead-production BEDENKEN (B1–B8), kein ZURÜCK. **Plan-Nachtrag** durch den
+Planverfasser vor Start T01: QA-B1 (Dev-Zähler der Klangereignisse in `devProbes`/`debugState` für AK-44, Einmal-Beweis in
+`soundEvents.test.ts`), QA-B2 (T15/T16 Schritt 0: Szenarien im UI-Baum nach `git merge main` neu schreiben, Hash
+notieren; Regel an Folgestränge), QA-B3, B5 (`SAVE_VERSION + 1`), B6 (`--diff-filter=MDR`), B7, B8, B9. **E3/QA-B4:**
+Das Klangereignis „Glocke“ wird **Teil-Task im ART-Strang** (`lead-art`, `art-audio-engineer`, Roster-Ownership
+`src/audio/`); `lead-art` nimmt eine Klangfigur ab, die sich hörbar vom Krisenalarm (`bell.mp3`/`alarm`) unterscheidet;
+T13 liefert nur den UI-Auslöser. **E1, E2, E4, E5, E6** angenommen; **E8** angenommen mit kurzem `lead-qa`-Review des
+Nachtrag-Wortlauts vor I-049-Start und Verweiszeile im I-049-Plan (QA-B10, Prod-B6). **Prod-Auflagen:** Plätze nach B1
+staffeln (Start SIM + ART, UI nach T04); I-048-Sim mergt **nach** I-049-Sim und holt vorher `main` per Merge (Prod-B2);
+Abhängigkeit T18 ← I-049-Sim im Index, I-049-Sim startet sofort nach Merge E2-SIM (Prod-B3); arc42-`save.ts`-Zeile
+gleicht der zuletzt mergende Strang ab (Prod-B4); Browser-Läufe nie mit I-048-T04 gleichzeitig (Prod-B7). Budget 42 Starts
+(Parallelität 3, gestaffelt), freigegeben je Strang beim Start.
+
+Regelbezug: gates.md Gate Plan, R424, R481, R505, roster.md · Kosten bei Irrtum: ein Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Gate-Berichte lead-qa und lead-production · ADR: —
