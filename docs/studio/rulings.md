@@ -6026,3 +6026,17 @@ Kein Spec-Nachtrag Totzone. Messdaten bleiben im Scratchpad (nicht versioniert);
 Regelbezug: R547, R549, Spec I-048 P-5 · Kosten bei Irrtum: I-048 Schritt B verzögert sich weiter; kein Schaden auf `main`.
 
 Entscheider: L0 · Anlass: Bericht lead-tech probe-I048-TOTZONE · ADR: —
+
+## R552 · 2026-10-11 · Gate Merge UI-TEXTE-1: OK; M13-Inhalt vollständig
+
+Ruling: `feat/ui-texte-1` @ `fbbfd6e4` (Zwischen-Reviews BEDENKEN→behoben / OK, Browser-Check AK-UT-04/-09/-10/-13 OK,
+Final-Review opus ZURÜCK → Fixes → **Delta-Review opus OK**, Texte auf Grammatik/Genus geprüft; `make check` 3529 Tests,
+`tsc`, `make lint`, `make zeittests`, `make conflicts`, `make docs-check` Exit 0; kein Test > 500 ms) → **Gate Merge OK**.
+Abweichungen angenommen: Wortlaut R550, Testnachzug `tooltip.test.ts`, Zeitvergleich vom Stand `fa4bb075` (Fix danach nur
+Texte/Tests). Integrator mergt lokal. Damit ist der Inhalt von **Release M13** vollständig (R549). Push frühestens am
+2026-10-12 (REL-19 am 2026-10-11 gepusht; Actions-Prognose rot, ein Push je Tag, R488 V2) über `make push-check`; bis dahin
+Sicherung nach `origin/backup/main-lokal` (R524, kein CI).
+
+Regelbezug: gates.md Gate Merge, Verfassung §9, R505, R549, R550 · Kosten bei Irrtum: ein Rückmerge im UI-Strang.
+
+Entscheider: L0 · Anlass: Bericht lead-tech UI-TEXTE-1 · ADR: —
