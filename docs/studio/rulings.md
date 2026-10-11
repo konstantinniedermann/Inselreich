@@ -6144,3 +6144,14 @@ Regelbezug: gates.md Gate Merge (Stufe leicht), R553 V1, R556, R557 · Kosten be
 Gates bis zur Diagnose relativ statt absolut lesen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GATE-ENSEMBLE · ADR: —
+
+## R559 · 2026-10-11 · Beobachtungs-Auswertung BEOB-2026-10-11b angenommen; UI-AUFRAEUM-2 ergänzt
+
+Ruling: Auswertung `94500464` (lead-production, 12 Einträge: 4 offen mit Paket-Zuordnung, 1 erledigt, 1 eingeplant, 6 abgehakt
+mit Trigger) angenommen. Board-Paket **UI-AUFRAEUM-2** um „`stateText` samt Re-Export in `src/ui/inspect.ts` streichen“ ergänzt
+(Owner `lead-tech`, Grösse S–M, nach Release M13). Der Eintrag „Seed wirkt nicht“ wird mit dem Merge TOOL-GATE-ENSEMBLE (R558)
+geschlossen; ein Merge-Konflikt in `docs/beobachtungen.md` löst nicht der Integrator, sondern L0 per Fortsetzung des Leads.
+
+Regelbezug: STUDIO.md Session-Start Punkt 6, R287, R288, R471 · Kosten bei Irrtum: ein abgehakter Befund taucht erneut auf.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-2026-10-11b · ADR: —
