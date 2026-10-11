@@ -7,7 +7,7 @@ import { refundCost } from '../sim/economy';
 import { canClearForest, canPlantForest } from '../sim/forest';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import { canPlace, canPlaceRoad } from '../sim/placement';
-import { effectiveRefund, houseDiagnosis } from '../sim/queries';
+import { effectiveRefund, houseDiagnosis, missingInputs, reservedInputs } from '../sim/queries';
 import { reachableRoads } from '../sim/roads';
 import { paidCost } from '../sim/upgrade';
 import type {
@@ -24,7 +24,7 @@ import { HOME, home, adjacentOf, idx, isKontor, tileAt } from '../sim/world';
 import { toolAfford } from './islandTools';
 import { costLine } from './dom';
 import { hotkeyLabel } from './hotkeys';
-import { diagnosisText, refundText, stateText } from './texts';
+import { diagnosisText, refundText, stateInfo } from './texts';
 import { formatGameTime } from './time';
 
 export interface ReasonCtx {
@@ -375,7 +375,10 @@ export function placementHint(
       text: `${name} — ${TIERS[b.house.tier].name} · ${d ? diagnosisText(d) : 'zufrieden'}`,
     };
   }
-  return { tone: 'info', text: `${name} · ${stateText(b, world.tick)}` };
+  return {
+    tone: 'info',
+    text: `${name} · ${stateInfo(b, world.tick, missingInputs(world, b), reservedInputs(world, b)).text}`,
+  };
 }
 
 export function hintPosition(
