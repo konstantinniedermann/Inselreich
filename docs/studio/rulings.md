@@ -5546,3 +5546,17 @@ auf `make push-check` umstellen (ersetzt die Einzelkette; R503 D1–D4 nennen).
 Regelbezug: state.md „Fortsetzung“ Punkt 7, R496, R504, R517 · Kosten bei Irrtum: ein Worktree wird per `git worktree add` neu angelegt.
 
 Entscheider: L0 · Anlass: Berichte production-integrator · ADR: —
+
+## R519 · 2026-10-11 · Parallele Nutzer-Session c6709a04 (Design „Erweiterung“) geduldet; Deckel geteilt
+
+Ruling: Seit ≈ 08:30Z läuft eine zweite, vom Nutzer gestartete Session `c6709a04` (Brainstorming/Konzept „Erweiterung“ mit
+`lead-design`, Worktree `.worktrees/erweiterung-1`, Branch `design/erweiterung-1`). Abweichung von R129/R324 (eine aktive
+L0-Session je Repo) wird geduldet, weil sie nur Design-Doku in eigenem Worktree schreibt und der Nutzer sie selbst
+gestartet hat. Folgen für diese Session: Studio-Deckel ≤ 8 Agenten gilt **gemeinsam** — diese Session hält ≤ 6 eigene
+Agenten, solange die andere aktiv ist; keine Änderungen an `.worktrees/erweiterung-1`, `design/erweiterung-1` oder an
+Dateien, die sie für das Konzept braucht; Doku-Commits auf main nur mit eigenen Pfaden. Das Aufräumen (R518) liess
+den Worktree unberührt.
+
+Regelbezug: R129, R324, R329, R424 · Kosten bei Irrtum: Konflikt in einer Doku-Datei beim späteren Merge.
+
+Entscheider: L0 · Anlass: unbekannter Worktree beim Aufräumen, Events der Session c6709a04 · ADR: —

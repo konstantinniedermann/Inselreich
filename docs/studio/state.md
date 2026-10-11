@@ -131,7 +131,8 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Parallele Sessions
 
-Keine aktive L0-Session ausser dieser.
+- Nutzer-Session `c6709a04` (seit 2026-10-11 ≈ 08:30Z): Konzept „Erweiterung“ (`lead-design`), Worktree
+  `.worktrees/erweiterung-1`, Branch `design/erweiterung-1` — geduldet, Deckel geteilt (R519). Nicht anfassen.
 
 ## Seit letzter Session erledigt
 
