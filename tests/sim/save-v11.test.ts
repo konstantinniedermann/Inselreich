@@ -5,7 +5,14 @@ import { FIRE_OUTAGE } from '../../src/sim/defs/timing';
 import { SAVE_VERSION, deserialize, migrateV10ToV11, serialize } from '../../src/sim/save';
 import type { Building, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
-import { foldBackToV10, foldBackToV9, placeTownhall, prepareEast, putBuilding } from './helpers';
+import {
+  foldBackToV10,
+  foldBackToV11,
+  foldBackToV9,
+  placeTownhall,
+  prepareEast,
+  putBuilding,
+} from './helpers';
 
 const BAD = { ok: false, reason: 'Beschädigter Spielstand' };
 
@@ -32,6 +39,10 @@ const onBuilding =
   (r: Record<string, unknown>): void => {
     (r.buildings as Record<string, Record<string, unknown>>)[String(id)]![k] = val;
   };
+
+function v11Of(w: World): Record<string, unknown> {
+  return foldBackToV11(JSON.parse(serialize(w)) as Record<string, unknown>);
+}
 
 function v10Of(w: World): Record<string, unknown> {
   return foldBackToV10(JSON.parse(serialize(w)) as Record<string, unknown>);
@@ -80,6 +91,11 @@ describe('M13-E1 Save v11', () => {
       const v11 = { ...JSON.parse(serialize(createWorld(3))), foo: 1 };
       // Anhang 02 D1: foldBackToV11 entfernt Fremdschlüssel (M13-E2 T02)
       expect(Object.keys(foldBackToV10(v11))).not.toContain('foo');
+    });
+    it('echter v11-Stand mit unbekanntem Schlüssel wirft', () => {
+      const v11: Record<string, unknown> = { ...v11Of(createWorld(3)), foo: 1 };
+      expect(v11.version).toBe(11);
+      expect(() => foldBackToV10(v11)).toThrow('foldBackToV10: unbekannter Schlüssel foo');
     });
     it('foldBackToV9 auf v11 = foldBackToV9(foldBackToV10(x))', () => {
       const v11 = JSON.parse(serialize(createWorld(3))) as Record<string, unknown>;

@@ -159,6 +159,19 @@ describe('M13-E2 Save v12', () => {
       ['25a monumentDone fehlt (v12)', (r) => delete r.monumentDone],
       ['25b Zusatzschlüssel', (r) => (mon(r).x = 1)],
       ['25b ohne buy', (r) => delete mon(r).buy],
+      [
+        '25c running kein Boolean',
+        (r) => {
+          mon(r).running = 'ja';
+          mon(r).delivered = { stone: 0, tools: 0, glass: 0, spice: 0 };
+        },
+      ],
+      ['25c paused kein Boolean', (r) => (mon(r).paused = 1)],
+      ['25d delivered negativ', (r) => ((mon(r).delivered as Record<string, number>).tools = -1)],
+      [
+        '25d delivered nicht ganzzahlig',
+        (r) => ((mon(r).delivered as Record<string, number>).tools = 0.5),
+      ],
       ['25c stage -1', (r) => (mon(r).stage = -1)],
       ['25c stage 4', (r) => (mon(r).stage = 4)],
       ['25c stage 1,5', (r) => (mon(r).stage = 1.5)],
