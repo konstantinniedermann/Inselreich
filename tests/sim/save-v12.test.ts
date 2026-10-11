@@ -4,6 +4,8 @@ import { placeBuilding } from '../../src/sim/build';
 import { canPlace } from '../../src/sim/placement';
 import { SAVE_VERSION, deserialize, migrateV11ToV12, serialize } from '../../src/sim/save';
 import type { Monument, World } from '../../src/sim/types';
+import { MONUMENT_STAGES } from '../../src/sim/defs/monument';
+import { step } from '../../src/sim/tick';
 import { createWorld } from '../../src/sim/world';
 import { friendlyReason } from '../../src/ui/hints';
 import { V11_WORLD_KEYS, foldBackToV10, foldBackToV11, foldBackToV9 } from './helpers';
@@ -240,7 +242,15 @@ describe('M13-E2 Save v12', () => {
       });
       expect(deserialize(serialize(w)).ok).toBe(true);
     });
-    it.todo('AK-M13E2-25k step → T05');
+    it('AK-M13E2-25k geladener Stand laufend, alle Reste 0: nach einem step stage +1, running false', () => {
+      const w = withMonument((m) => {
+        m.delivered = { ...MONUMENT_STAGES[1]!.goods };
+      });
+      const r = deserialize(serialize(w));
+      if (!r.ok) throw new Error('laden');
+      step(r.world);
+      expect(r.world.monument).toMatchObject({ stage: 2, running: false });
+    });
 
     it('AK-M13E2-25 A6 stage 3 laufend → beschädigt ohne Wurf, fertig ruhend → ok', () => {
       const w = withMonument((m) => {

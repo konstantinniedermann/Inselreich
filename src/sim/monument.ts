@@ -1,11 +1,13 @@
 import {
   MONUMENT_GOODS,
+  MONUMENT_PULL_TICKS,
   MONUMENT_RESERVE_MIN,
   MONUMENT_RESERVE_TICKS,
   MONUMENT_STAGES,
 } from './defs/monument';
 import { TIERS } from './defs/tiers';
 import { isSupplied } from './population';
+import { buyMonumentUnit } from './trade';
 import type { Monument, MonumentGood, Result, World } from './types';
 import { fail, ok } from './types';
 import { HOME } from './world';
@@ -97,4 +99,41 @@ export function monumentProgress(w: World): number {
     total += goal[g];
   }
   return total === 0 ? 0 : Math.floor((100 * got) / total);
+}
+
+function pullDue(w: World, m: Monument): boolean {
+  return w.tick % MONUMENT_PULL_TICKS === 0 && !m.paused && w.buildings[m.buildingId]!.connected;
+}
+
+/** R5.2: je Gut höchstens ein Stück, zuerst aus dem Lager über der Reserve, sonst per Zukauf. */
+function pullOnce(w: World, m: Monument): void {
+  const reserve = {} as Record<MonumentGood, number>;
+  for (const g of MONUMENT_GOODS) reserve[g] = monumentReserve(w, g);
+  const goal = MONUMENT_STAGES[m.stage]!.goods;
+  const stock = w.islands[HOME]!.stock;
+  for (const g of MONUMENT_GOODS) {
+    if (m.delivered[g] >= goal[g]) continue;
+    if (stock[g] > reserve[g]) {
+      stock[g] -= 1;
+      m.delivered[g] += 1;
+    } else if (m.buy[g] && buyMonumentUnit(w, g) === 1) m.delivered[g] += 1;
+  }
+}
+
+/** R8.1: alle Reste 0 → Abschnitt fertig; nach dem letzten Abschnitt `monumentDone` (R8.2). */
+function finishStageIfDone(w: World, m: Monument): void {
+  const goal = MONUMENT_STAGES[m.stage]!.goods;
+  if (MONUMENT_GOODS.some((g) => m.delivered[g] < goal[g])) return;
+  m.running = false;
+  m.stage += 1;
+  m.delivered = NO_GOODS();
+  if (m.stage >= MONUMENT_STAGES.length) w.monumentDone = true;
+}
+
+/** Tick-Schritt des Denkmals (Spec R5, R8): Zug alle MONUMENT_PULL_TICKS Ticks, Abschluss in jedem Tick. Kein RNG. */
+export function tickMonument(w: World): void {
+  const m = w.monument;
+  if (m === null || !m.running) return;
+  if (pullDue(w, m)) pullOnce(w, m);
+  finishStageIfDone(w, m);
 }
