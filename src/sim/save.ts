@@ -20,6 +20,7 @@ import {
   UPKEEP_INTERVAL,
 } from './defs/timing';
 import { LEVELS } from './defs/levels';
+import { RESERVE_GOODS, RESERVE_STEPS } from './defs/reserve';
 import { MONUMENT_GOODS, MONUMENT_STAGES } from './defs/monument';
 import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
 import { EDICTS } from './defs/edicts';
@@ -163,6 +164,12 @@ export function migrateV10ToV11(raw: Record<string, unknown>): void {
 export function migrateV11ToV12(raw: Record<string, unknown>): void {
   if (!('monument' in raw)) raw.monument = null;
   if (!('monumentDone' in raw)) raw.monumentDone = false;
+  // I-049 (Fall A: Mitfahrt auf v12): Sperrbestand je Insel, auch auf der Heimatinsel
+  if (Array.isArray(raw.islands)) {
+    for (const isl of raw.islands) {
+      if (isObject(isl)) isl.reserve ??= { wood: 0, stone: 0 };
+    }
+  }
   if (!('buyPct' in raw)) raw.buyPct = Object.fromEntries(GOOD_IDS.map((g) => [g, 100]));
   raw.version = 12;
 }
@@ -369,6 +376,7 @@ function addForeignIslands(raw: Record<string, unknown>, isl: Record<string, unk
     ox: p.ox,
     oy: p.oy,
     anchor: p.anchor,
+    reserve: { wood: 0, stone: 0 },
   }));
   raw.islands = [homeIsland, ...foreign];
 }
@@ -474,6 +482,7 @@ const BUILDING_STATES: readonly BuildingState[] = [
   'noService',
   'noForest',
   'paused',
+  'waitingReserve',
 ];
 
 const isIntBetween = (v: unknown, min: number, max: number): boolean =>
@@ -728,7 +737,22 @@ function isValidBuyPct(raw: Record<string, unknown>): boolean {
 
 /** Felder von Save v12 (M13-E2): Denkmal; I-048: Kaufanteil. Weitere Pakete hängen hier eigene Teilprüfungen an. */
 function isValidV12Fields(raw: Record<string, unknown>): boolean {
-  return isValidMonumentFields(raw) && isValidBuyPct(raw);
+  return isValidMonumentFields(raw) && isValidReserves(raw) && isValidBuyPct(raw);
+}
+
+/** Sperrbestand (I-049): je Insel genau `wood` und `stone`, Werte aus den Stufen. */
+function isValidReserves(raw: Record<string, unknown>): boolean {
+  return (raw.islands as unknown[]).every((isl) =>
+    isValidReserve((isl as Record<string, unknown>).reserve),
+  );
+}
+
+function isValidReserve(r: unknown): boolean {
+  if (!isObject(r)) return false;
+  const keys = Object.keys(r);
+  if (keys.length !== RESERVE_GOODS.length || !RESERVE_GOODS.every((g) => keys.includes(g)))
+    return false;
+  return RESERVE_GOODS.every((g) => (RESERVE_STEPS as readonly unknown[]).includes(r[g]));
 }
 
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */

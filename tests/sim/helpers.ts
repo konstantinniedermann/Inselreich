@@ -282,6 +282,7 @@ export function foldBackToV11(v12: Record<string, unknown>): Record<string, unkn
   if (shares.some((p) => p !== 100)) throw new Error('foldBackToV11: Kaufanteil nicht rückfaltbar');
   const buildings = Object.values(v12.buildings as Record<string, Record<string, unknown>>);
   if (buildings.some((b) => b.defId === 'monument')) throw new Error(MONUMENT_FOLD_ERROR);
+  dropZeroReserve(v12);
   const worldKeys: readonly string[] = V11_WORLD_KEYS;
   const islandKeys: readonly string[] = V11_ISLAND_KEYS;
   const out: Record<string, unknown> = {};
@@ -293,6 +294,15 @@ export function foldBackToV11(v12: Record<string, unknown>): Record<string, unkn
   });
   out.version = 11;
   return out;
+}
+
+/** I-049: `reserve` fällt nur weg, wenn überall alle Werte 0 sind (sonst ginge Spielzustand verloren). */
+function dropZeroReserve(v12: Record<string, unknown>): void {
+  for (const isl of v12.islands as Record<string, unknown>[]) {
+    const r = isl.reserve as Record<string, number> | undefined;
+    if (r !== undefined && Object.values(r).some((v) => v !== 0))
+      throw new Error('foldBackToV11: Sperrbestand nicht rückfaltbar');
+  }
 }
 const MONUMENT_FOLD_ERROR = 'foldBackToV11: Denkmal nicht rückfaltbar';
 
@@ -451,6 +461,7 @@ export function twoIslandWorld(): World {
       ox: h.ox,
       oy: h.oy,
       anchor: h.anchor,
+      reserve: { wood: 0, stone: 0 },
     },
   ];
   w.buildings[id] = {

@@ -71,6 +71,11 @@ describe('M13-E1 Save v11', () => {
         if (!['edict', 'edictLockedUntil', 'monument', 'monumentDone', 'buyPct'].includes(k))
           hand[k] = v11[k];
       hand.version = 10;
+      hand.islands = (hand.islands as Record<string, unknown>[]).map((isl) => {
+        const rest = { ...isl };
+        delete rest.reserve;
+        return rest;
+      });
       expect(JSON.stringify(out)).toBe(JSON.stringify(hand));
     });
     it('Edikt gesetzt wirft', () => {

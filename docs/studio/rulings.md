@@ -5674,3 +5674,132 @@ freie Plätze; M14-E1-Plan bleibt bis M13-Ende gesperrt, R486).
 Regelbezug: R445, R475, R486, R505, R506, R518 · Kosten bei Irrtum: ein Merge-Konflikt zwischen den Sim-Strängen.
 
 Entscheider: L0 · Anlass: Merge-Bericht, Ampel grün · ADR: —
+
+## R528 · 2026-10-11 · Beobachtungs-Auswertung 2026-10-11 angenommen; Präfix-Regel; TOOL-BUENDEL-7 und UI-TEXTE-1 vorbereiten
+
+Ruling: Auswertung `e85f26aa` (29 Einträge, drei Bündel) und Entfernen der Worktrees `m13-e2-sim`, `b6b`, `m13-e2-art`,
+`m13-e2-ui` angenommen. Entwürfe: (1) AK-M13E2-48 ist durch R526 entschieden. (2) `push-check` D1/Lastwarten: zurückgestellt
+bis zu den Load-Daten (R514 V2). (3) **Präfix-Regel:** Hat ein Lead die Paket-ID `X-<Suffix>` und gibt es keine Freigabe
+genau dieser Phase, bindet die Freigabe `X` (Präfix bis zum Bindestrich, längster Treffer gewinnt); exakte Freigabe geht
+vor. Umsetzung in TOOL-BUENDEL-7. **TOOL-BUENDEL-7** (Restpunkte testrun/log/model, Präfix-Regel, `docs-check` gegen
+zerrissene Tabellen, dazu R523 V3 Ampelzeile „Produktivanteil nach Phase“): Plan durch `lead-tech` auf sonnet (E-054,
+Werkzeug-Paket, Stufe leicht); Umsetzung darf vor M13-Ende laufen (spielfremd, R505). **UI-TEXTE-1**: Kurzdesign der
+Wortlaute durch `lead-design` (sonnet, Stufe leicht, E-061); Umsetzung erst nach I-049-UI wegen `texts.ts`.
+UI-AUFRAEUM-2 nach M13.
+
+Regelbezug: R505, R514, R523 V3, E-054, E-061 · Kosten bei Irrtum: ein Werkzeug-Plan zu viel.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-AUSW-1011 · ADR: —
+
+## R529 · 2026-10-11 · Runden-Ruling IDEEN-07
+
+Ruling: Sieben neue Ideen I-061–I-067 angenommen, Streichungen I-069–I-072, I-074 und Zusammenfassungen I-068 → I-049,
+I-073 → I-047 bestätigt. **I-062 + I-063** (Betriebsrangliste nach Unterhalt, Weg mit Winkel) als ein UI-Häppchen nach M13.
+**I-064** (Edikt «Bauherr») **nicht** in I-049/v12 — der M13-Umfang bleibt fest (R505); geparkt bis zur ersten Save-Änderung
+nach M13. **I-061** Baustein fürs nächste Meilenstein-Brainstorming (Stadtplanung, mit I-045 und I-051). I-065, I-066,
+I-067 geparkt. Pool-Obergrenze: **I-056 und I-057** sind mit REL-19 live → Status „umgesetzt“; **I-052, I-055** verworfen;
+I-051 bleibt (Stadtplanung), I-034 bleibt geparkt. Pool damit 40. Die zwei Befunde (I-031-Zahlen, Formatvorlage zählt
+beim grep mit) trägt lead-design in docs/beobachtungen.md ein.
+
+Regelbezug: R445, R475, R505, docs/ideen.md Obergrenze · Kosten bei Irrtum: eine Idee zu früh verworfen (wieder aufnehmbar).
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-07 · ADR: —
+
+## R530 · 2026-10-11 · Gate Spec UI-TEXTE-1: BEDENKEN → Spec-Nachtrag
+
+Ruling: lead-qa BEDENKEN (1–9), kein Blocker. Der Spec-Autor führt alle neun Punkte nach (Fortsetzung): AK-UT-06 mit
+`monumentDone` als einzigem Schalter; AK-UT-08 fest «Entf / ⌫» (Rücktaste seit REL-19 belegt); **AK-UT-10 Variante A**
+mit wörtlicher Überschrift «Speichern» über dem Knopf und zusätzlichem Vitest der Menü-Reihenfolge; neue **AK-UT-14**
+(Raten-Anzeige stillgelegter Betriebe ohne Produktionszahl bzw. «Stillgelegt»); AK-UT-12 erweitert den bestehenden
+`tests/ui/contrast.test.ts`; AK-UT-02 Wert per Import aus der Def; AK-UT-05 Test über alle Defs mit `maxCount.n === 1`;
+AK-UT-13 gegen `--parchment`/`--parchment-edge`; AK-UT-01 ohne `tests/` und README. Wortlaut «Stillgelegt — Unterhalt auf
+60 %» angenommen (R467 Befund 4, kein Spielwert). Nach dem Nachtrag gilt die Spec ohne erneutes Review als abgenommen
+(L0 prüft Stichprobe); Plan durch `lead-tech` sonnet (E-054), Umsetzung nach I-049-UI.
+
+Regelbezug: gates.md Gate Spec, R467, R528 · Kosten bei Irrtum: ein Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Urteil lead-qa gate-UI-TEXTE-1 · ADR: —
+
+## R531 · 2026-10-11 · D-i048-01: Schlüsselfolge-Tests dürfen um `buyPct` nachgeführt werden
+
+Ruling: AK-ZK-01 (`buyPct` letzter Weltschlüssel) und AK-ZK-13 („`save*.test.ts` unverändert“) widersprechen sich in sechs
+Tests, die die Schlüsselfolge von hinten bzw. per Handvergleich prüfen (`save.test.ts` Z. 400/558, `save-v11.test.ts`
+ab Z. 56, `save-v12.test.ts` ab Z. 59). Auslegung: Nur diese Offsets und Handvergleiche werden um `buyPct` verschoben,
+keine Erwartung wird gelockert (Muster M13-E2). AK-ZK-13 gilt weiter für Fixtures, Pins und Balancing; der Diff-Beleg in
+T05 nennt genau diese Zeilen. Abweichungen aus T02 (Preistabelle 100/160 im Arbitrage-Test, `SELL_RECOVERY_INTERVAL` 10
+bis Schritt B, `reserve`-Rückfaltung erst nach `git merge main` mit I-049-Sim) angenommen.
+
+Regelbezug: R505, R506, M13-E2-Muster · Kosten bei Irrtum: sechs Testzeilen zurückzudrehen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I048-SIM · ADR: —
+
+## R532 · 2026-10-11 · Gate Plan TOOL-BUENDEL-7: BEDENKEN → Plan-Nachtrag; Budget 8
+
+Ruling: lead-qa BEDENKEN (B1–B6), kein ZURÜCK. Bestätigt: Präfix-Regel wie R528 (3); T04 als eigenes Stdlib-Skript statt
+Prettier-Plugin (ADR-001). Entscheide: **B1** drei Task-Reviews (`qa-code-reviewer` sonnet nach T01/T02, T03, T04/T05),
+Budget **8 Starts**, Parallelität 1. **B2** Hook und Metrik gemeinsam: eine gemeinsame Funktion für die Freigabe-Namen,
+die `model.py` und `budgetwarn.py` nutzen; `budgetwarn.py`/`test_budgetwarn.py` fest in T03 mit Rot-Test (`X` bindet
+`X-T01`, nicht `XY-T01`). **B3** Bestands-Treffer: T04 darf die Maskierung `\|` in den gefundenen Doku-Dateien (auch
+`docs/studio/retros/`, `docs/superpowers/plans/`) als eigenen `docs:`-Commit beheben — reine Formatierung, kein Inhalt;
+keine Ausnahmeliste. Makefile-Exit als Maximum laut Vorschlag; Tests für eingerückte/zitierte Tabellen und Backtick-Regel.
+**B4** `gate-` zählt **nicht** in `produktiv` (Gates sind Steuerung); Mehrfachzählung zwischen `steuerung` und `produktiv`
+ausdrücklich im Plan, Test „`produktiv` ≤ 1, `Budget: keins` ohne Phase zählt nicht“. **B5** Abhängigkeit T05 → T03 streichen.
+**B6** übernehmen. Nach dem Nachtrag gilt der Plan ohne erneutes Review als abgenommen (L0 prüft Stichprobe); Umsetzung im
+Worktree `.worktrees/tool-b7` durch einen Controller `lead-tech` sonnet, spielfremd, darf vor M13-Ende laufen (R505).
+
+Regelbezug: gates.md Gate Plan, R392, R471, R523 V3, R528 · Kosten bei Irrtum: ein Werkzeug-Nachtrag.
+
+Entscheider: L0 · Anlass: Urteil lead-qa gate-TOOL-BUENDEL-7 · ADR: —
+
+## R533 · 2026-10-11 · UI-TEXTE-1: Stilllegen-Wortlaut aus der Def (50 %, aufgerundet); R530 berichtigt
+
+Ruling: Der Plan (`b5bc0168`) belegt `PAUSED_UPKEEP_PCT = 50` (`src/sim/defs/buildings.ts:303`, Aufrundung je Betrieb in
+`levels.ts:18`); die 60 % aus R467 Befund 4 sind nur der Fall Basis 5 → 3. Der in R530 angenommene Wortlaut «Unterhalt auf
+60 %» ist damit falsch und wird ersetzt: **Option A** — Text aus der Def, «Stillgelegt — Unterhalt auf 50 % (aufgerundet)»
+über `${PAUSED_UPKEEP_PCT}`, README „50 % des Unterhalts, je Betrieb aufgerundet“; kein Spielwert ändert sich. Der
+Spec-Autor berichtigt AK-UT-02/-04 entsprechend; `style.css:212` (Holz, `.btn.unaffordable`) bleibt unverändert.
+Gate Plan durch `lead-qa`; Umsetzung erst nach den Merges von I-049-UI und I-048-UI (Budget 6 bei Start).
+
+Regelbezug: R467, R530 · Kosten bei Irrtum: ein Wortlaut.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-UI-TEXTE-1 · ADR: —
+
+## R534 · 2026-10-11 · Gate Plan UI-TEXTE-1: BEDENKEN → Nacharbeit ohne Zweitprüfung
+
+Ruling: lead-qa BEDENKEN (B1–B3), kein Blocker; Vorschlag übernommen. **B1** Plan nach R533 nachführen (Wortlaut
+«Stillgelegt — Unterhalt auf ${PAUSED_UPKEEP_PCT} % (aufgerundet)», Blocker-Abschnitt und Option B streichen). **B2**
+AK-UT-14-Test mit einem Betrieb mit `produces` und `consumes` (z. B. Weberei). **B3** Budget **6** mit zwei Zwischen-Reviews
+(nach T02 und nach T04) und Final-Review opus, ein Puffer. Nacharbeit durch den Planverfasser; danach gilt der Plan als
+abgenommen (L0 prüft Stichprobe). Start erst nach den Merges von I-049-UI und I-048-UI.
+
+Regelbezug: gates.md Gate Plan, R530, R533 · Kosten bei Irrtum: ein Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Urteil lead-qa gate-plan-UI-TEXTE-1 · ADR: —
+
+## R535 · 2026-10-11 · Gate Merge I049-SIM: OK; Mini-UI-Zweige zulässig
+
+Ruling: Sim-Strang T01–T04 (`feat/i049-sim` @ `ffccf116`, Reviews OK, `make check` Exit 0, Baseline unverändert, Zeiten ohne
+Ausreisser über 500 ms) → **Gate Merge OK** (Plan T04: Sim-Merge vor dem UI-Strang; Final-Review T09 über beide Branches
+nach dem UI-Strang). Save Fall A: v12 bleibt, `migrateV11ToV12` ergänzt `reserve`. Die Minimalzweige für `'waitingReserve'`
+in `src/ui/texts.ts`/`panelView.ts` (Ownership-Abweichung für `tsc` Exit 0) sind zulässig; I-049-UI T06 verfeinert sie.
+Golden-Hash in `reserve-bitgleich.test.ts`: I048-SIM erzeugt ihn nur neu, wenn sich die Sim bewusst ändert, mit Rezept im
+Dateikopf. Reihenfolge: Integrator mergt I049-SIM; danach führt I048-SIM `git merge main` aus (Konflikte in `save.ts`,
+`helpers.ts`, `types.ts`, `world.ts`), ergänzt die `reserve`-Rückfaltung, `make check`, dann Gate Merge I048-SIM; danach I-049-UI.
+Wochenfenster hoch: Parallelität halbiert (höchstens 2 Umsetzungsstränge).
+
+Regelbezug: R505, R506, R511, R531 · Kosten bei Irrtum: ein Rückmerge im Sim-Strang.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I049-SIM · ADR: —
+
+## R536 · 2026-10-11 · Merge I049-SIM angenommen; Gate Merge TOOL-BUENDEL-7: OK; I048-SIM holt main
+
+Ruling: Integrator-Merge `cda5fdb7`/`1cbbdf89` (keine Konflikte, `make check` und `check-ci-perf` Exit 0; Zwischen-Merge nur
+wegen eines Doku-Commits, keine Neuprüfung nötig) angenommen. **TOOL-BUENDEL-7** (`tool/b7`, T01–T05, Final-Review opus
+BEDENKEN → Fixes, Delta-Review OK, `make studio-test` Exit 0): **Gate Merge OK**; Abweichungen (Retro-Commit `42c89283`
+Zellenkorrektur, `lead_phases` 1:1) angenommen. Integrator mergt `tool/b7` lokal (spielfremd, kein Push nötig vor
+Release M13). **I048-SIM** führt jetzt `git merge main` aus, löst die Konflikte in eigener Ownership, ergänzt die
+`reserve`-Rückfaltung (Prod-B4), `make check`; danach Gate Merge I048-SIM.
+
+Regelbezug: R505, R532, R535 · Kosten bei Irrtum: ein Werkzeug-Rückbau.
+
+Entscheider: L0 · Anlass: Berichte Integrator MERGE-I049-SIM, lead-tech TOOL-BUENDEL-7 · ADR: —

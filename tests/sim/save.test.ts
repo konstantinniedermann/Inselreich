@@ -1090,7 +1090,9 @@ describe('M12 E0 Save v7', () => {
     migrateV8ToV9(migrated);
     const live = JSON.parse(serialize(fixtureV6Run().w)) as Raw;
     expect(Object.keys(migrated)).toEqual(Object.keys(foldBackToV9(live)));
-    expect(Object.keys(migrated.islands[0])).toEqual(Object.keys(live.islands[0]));
+    expect(Object.keys(migrated.islands[0])).toEqual(
+      Object.keys(live.islands[0]).filter((k) => k !== 'reserve'),
+    );
     expect(Object.keys(migrated.buildings)).toEqual(Object.keys(live.buildings));
     for (const id of Object.keys(live.buildings)) {
       expect(Object.keys(migrated.buildings[id])).toEqual(Object.keys(live.buildings[id]));
@@ -1275,6 +1277,7 @@ describe('M12 E1 Save v8', () => {
       'ox',
       'oy',
       'anchor',
+      'reserve',
     ]);
     for (const isl of fresh.islands.slice(1)) {
       expect(isl.kontorId).toBeNull();

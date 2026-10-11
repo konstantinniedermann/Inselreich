@@ -70,6 +70,11 @@ describe('M13-E2 Save v12', () => {
       for (const k of Object.keys(v12))
         if (k !== 'monument' && k !== 'monumentDone' && k !== 'buyPct') hand[k] = v12[k];
       hand.version = 11;
+      hand.islands = (hand.islands as Record<string, unknown>[]).map((isl) => {
+        const rest = { ...isl };
+        delete rest.reserve;
+        return rest;
+      });
       expect(JSON.stringify(out)).toBe(JSON.stringify(hand));
     });
     it('Insel-Zusatz reserve und Welt-Zusatz buyPct am Ende werden entfernt', () => {
@@ -87,7 +92,7 @@ describe('M13-E2 Save v12', () => {
       (v12.islands as unknown[])[0] = swapped;
       const out = foldBackToV11(v12);
       expect(Object.keys((out.islands as Record<string, unknown>[])[0]!)).toEqual(
-        Object.keys(swapped),
+        Object.keys(swapped).filter((k) => k !== 'reserve'),
       );
     });
     it('Denkmal gesetzt, Fertig-Merker oder Denkmal-Gebäude wirft', () => {

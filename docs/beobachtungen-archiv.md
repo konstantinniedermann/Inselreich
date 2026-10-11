@@ -1,8 +1,237 @@
 # Beobachtungen — Archiv
 
 Ausgewertete Abschnitte aus [beobachtungen.md](beobachtungen.md), unverändert verschoben (R417, Paket BEOB-AUSW-03,
-2026-10-09; BEOB-AUSW-04, 2026-10-10). Neueste oben. Diese Datei zählt der SessionStart-Hook nicht; neue Befunde gehören in
+2026-10-09; BEOB-AUSW-04, 2026-10-10; BEOB-AUSW-1011, 2026-10-11). Neueste oben. Diese Datei zählt der SessionStart-Hook nicht; neue Befunde gehören in
 `docs/beobachtungen.md`, Abschnitt „Offen“.
+
+---
+
+## Ausgewertet 2026-10-09 (2) (verschoben aus BEOB-AUSW-1011, 2026-10-11)
+
+**Bilanz** (11 Überschriften-Einträge mit 27 Teilbefunden, `lead-production`, Paket BEOB-AUSW-03, gegen `d7291aa`):
+5 erledigt/überholt, 8 abgehakt (mit Trigger), 3 Trivial-Fix-Kandidaten, 11 Teilbefunde in 6 Paket-Kandidaten,
+0 verworfen, 0 Ideen, 0 ungesichtet. Gezählt sind Teilbefunde. Verifiziert per grep und `git worktree list` am Code;
+Bildbefunde, Kontrastwerte und Testzeiten aus Agentenberichten sind nicht neu gemessen. Die Rohfassung der Einträge
+steht unverändert im [Archiv](beobachtungen-archiv.md).
+
+**Erledigt / überholt**
+
+| Eintrag                                                                         | Beleg                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SEE-F3: „10 px“ gelten für Wrack/Eiland, Schiff hat 16 px                       | im Eintrag selbst als erledigt vermerkt (Merge `fix/see-f3-schiffskontrast`, `cb760c0`)                                                                                                        |
+| Blindprobe ohne Schaumring/Wassertönung, Sichtprobe im echten Spiel fehlt       | `tools/render-qa/blindprobe.mjs` zeichnet nur Stempel auf Flächenwasser (belegt); Sichtprobe im Spiel danach im Release-Check REL-11 nachgeholt (`E-fels-z0.25.png`, „keine Boot-Lesart mehr“) |
+| README «hoch»: Kaufleute fehlen in der Belegung                                 | `README.md` Steuertabelle, Zeile «hoch»: „Pioniere 3, Siedler 6, Bürger 11, Kaufleute 15“ (I-028, `5174971`)                                                                                   |
+| README: Steuerregler «in der Kopfzeile»                                         | `README.md` „Steuern und Steuerregler“: „stehen im Panel der **Amtsstube**“ (I-028, `5174971`)                                                                                                 |
+| Doku-Commits ohne `make docs-check` (Push-Gate REL-11/12)                       | R417 V2: Werkzeug-Paket TOOL-PRETTIER-HOOK nächste Session, bis dahin Pflichtzeile `make docs-check` im Briefing                                                                               |
+| Smoke-Etikett „Save v9“ (`tools/render-qa/smoke.mjs:466`, Release-Check REL-13) | erledigt durch TOOL-BUENDEL: `tools/render-qa/saveVersion.mjs` liest die Version aus der Quelle (Commit `39239ba`, R419); der Eintrag in „Offen“ ist ausgetragen                               |
+
+**Trivial-Fix-Kandidaten (L0 entscheidet; nicht umgesetzt)**
+
+| Eintrag                                                  | Beleg (gegen `d7291aa`)                                                                                                   | Vorschlag                                                                |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `.vitest/` liegt untracked in Worktrees                  | `.gitignore` ohne `.vitest`; `git status` in `.worktrees/see-f3-schiffskontrast` zeigt `?? .vitest/`                      | Zeile `.vitest/` in `.gitignore`                                         |
+| arc42 nennt „Steuersperre in Spielzeit“ in der Kopfzeile | `docs/arc42.md`, Zeile `hud.ts`; die Sperre zeigt `src/ui/taxView.ts` („wieder änderbar in …“), `hud.ts` hat keine Sperre | Halbsatz in der `hud.ts`-Zeile streichen, Sperre bei `taxView.ts` nennen |
+| AK-Eindeutigkeits-Einzeiler erfasst `AK-T01` nicht       | `docs/studio/gates.md`, Gate Spec, lead-qa 4: Muster `AK-[A-Z0-9]*-[0-9]*` verlangt zwei Bindestriche                     | Muster `AK-[A-Z0-9-]*[0-9]` (studio-coach, nächster Handbuch-Minor)      |
+
+**Paket-Kandidaten (L0 entscheidet, Auswahl REL-14)**
+
+| Kandidat                                                                     | Grösse | Inhalt                                                                                                                                                                                                                      | Ursprung                                                | Beleg (gegen `d7291aa`)                                                                                                                                                                                                                   | Owner                                     |
+| ---------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| UI-INSPEKTOR-KLARTEXT                                                        | S      | Haus-Inspektor zeigt „Versorgt ✓“ (Radius) neben „Mangel: Nahrung fehlt“ (Gut) und „Fehlt: Nahrung“; Begriffe trennen (z. B. „Im Marktradius“), Doppelzeile zusammenlegen; `TIER_LIST` durch `TIER_IDS` ersetzen            | Release-Check REL-11, Playtest REL-11 UI (a), I-028 T4  | `src/ui/panelView.ts` `supplyChip`; `src/ui/inspect.ts` `setFirstMissing`, `houseDiagnosis`-Liste, `TIER_LIST`; `src/sim/defs/tiers.ts` `TIER_IDS`                                                                                        | lead-tech                                 |
+| SIM-FEST-INSEL                                                               | S      | `feastActive` prüft die Insel nicht: Hauskoordinaten sind inselbezogen, eine Kapelle wirkt auf Häuser einer Fremdinsel mit passenden Koordinaten; Test mit zwei Inseln, dann `b.island === house.island`                    | Plan I-028 (lead-tech)                                  | `src/sim/feast.ts` `feastActive`/`inChapelRadius` ohne Inselvergleich; `src/sim/types.ts` `Building.island`; `tileAt(islandOf(…), x, y)`                                                                                                  | lead-tech (bündelbar mit UI-INSELFILTER)  |
+| ART-FELS-FERNGROESSE                                                         | S      | Meeresfels bei Zoom 0,25 nur ≈ 5 px; Mindestgrösse wie Wrack/Eiland prüfen (Designurteil lead-art)                                                                                                                          | Release-Check REL-11                                    | `src/render/decorStamps.ts` `minStampScale` gilt nur für `wreck`/`islet`                                                                                                                                                                  | lead-art                                  |
+| UI-SEEKARTE-NACHZUG                                                          | S      | Layout und Silhouetten-Cache bleiben bei offenem Popover über einen Weltwechsel; Kontor-Marke unter dem Schiffspunkt und nicht an dpr gebunden; Zeittest `< 50 ms` auf Zähler; Szenen-Helfer Seekarte in `tools/render-qa/` | UI-SEEKARTE Reviews, Release-Check REL-12               | `src/ui/hud.ts` `layout` nur beim Öffnen gesetzt; `src/render/seaMap.ts` `fillRect(m.x - 2, …, 4, 4)`, `arc(…, 3, …)`; `tests/render/seaMap.test.ts` `performance.now`; kein Seekarten-Skript in `tools/render-qa/`                       | lead-tech (Helfer: lead-art)              |
+| TOOL-STUDIO-HYGIENE (Erweiterung) — erledigt durch TOOL-BUENDEL (2026-10-09) | S      | Spawn ohne `agent_start` meldet „Agent unbekannt ist inaktiv“ (Frist, dann ausblenden); Testsperre meldet verwaiste Vitest-Worker (PPID 1, älter als 30 min), nur melden                                                    | Release-Retro REL-12 (B-b), Session fb37ceac (L0)       | `tools/studio/effort.py` Vorfall `inaktiv` aus `inactive_keys`; `tools/testlock/testlock.ts`; Worker am 2026-10-09 beendet, jetzt keiner aktiv (`ps`)                                                                                     | lead-production (`production-studio-ops`) |
+| CLEANUP-WT-2                                                                 | S      | Scratch-Worktree unter dem Scratchpad (Session e90e097e), sieben gemergte Worktrees, Datei `.worktrees/check2.log`                                                                                                          | REL-11 Review (lead-art); Nebenbefund dieser Auswertung | `git worktree list`: `…/e90e097e-…/scratchpad/mainwt` (detached), `art-meeresfels`, `rel11-kamera`, `rel11-triv`, `render-seeplan-keepout`, `see-f3-schiffskontrast`, `steuer-je-stufe`, `ui-seekarte` alle in `git branch --merged main` | production-integrator (Ruling nötig, §6)  |
+
+Empfehlung für REL-14: UI-INSPEKTOR-KLARTEXT und SIM-FEST-INSEL (spielwirksam, mittel), dazu ART-FELS-FERNGROESSE als
+kleiner Render-Strang; die übrigen bei Gelegenheit. Dateien disjunkt: `src/ui/inspect.ts`/`panelView.ts`,
+`src/sim/feast.ts`, `src/render/decorStamps.ts`.
+
+**Abgehakt (bewusst nichts tun, mit Reevaluations-Trigger)**
+
+| Eintrag                                                           | Begründung / Beleg                                                                                      | Trigger zurück                                             |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Schiffsmast ohne Saum, kleinster Saumkontrast 2,21 knapp über 2,2 | `src/render/ship.ts` Mast nur `stroke()`, `strokeSaum` nur an Rumpf und Segel; Werte nicht neu gemessen | RENDER-LOOK-01 oder Playtest meldet unsichtbaren Mast      |
+| `seaPlanKeepOutIndex.test.ts` ≈ 2,3 s                             | neuer Test, nicht unter der 500-ms-Regel; Zeit nicht neu gemessen                                       | Suite-Laufzeitdruck oder Zeitreserve-Push ohne Reserve     |
+| Hüllenecken bei Zoom 1 zeigen nur Wasser                          | von R401 akzeptiert                                                                                     | Spielerbefund                                              |
+| Seekarten-Popover verdeckt Lager-Chips, Hover zeigt Iso-Rechteck  | gewollt (Eintrag selbst)                                                                                | Playtest-Verwirrung                                        |
+| Claude-Session „anno-clone #3“ lebt weiter                        | ungeklärt (R324), keine Wirkung im Repo festgestellt                                                    | Ereignisse dieser Session im Log oder Konflikt im Worktree |
+| Kopfzeile bei 800 × 600 teilweise abgeschnitten                   | Desktop-first ab 1280 px, nur „stürzt nicht ab“                                                         | Nutzer meldet schmale Fenster                              |
+| I-028 T1a: Rot-Belege teils nur formal                            | Prozess; Messgrösse R410 V2                                                                             | Session-Retro wertet R410 V2 aus                           |
+| AK-T17 prüft die Versorgung der vier Häuser nicht ausdrücklich    | `tests/sim/save.test.ts` AK-T17 (Rundreise, Weiterlauf); Testtiefe                                      | nächstes Sim-Paket an Steuern                              |
+
+**Falsche Prämissen:** Der Inaktiv-Vorfall entsteht nicht in `tools/studio/model.py` `pending_incidents`, sondern dort
+nur gesammelt; den Text „Agent … ist inaktiv“ baut `tools/studio/effort.py`.
+
+**Ideen:** keine.
+
+---
+
+## Rohfassung der Einträge zur Auswertung 2026-10-11
+
+### 2026-10-10 · Plan REL-16: Gebirgskachel am Bergfuss wirkt wie Wiese; Playtest misst nach Schwenk mit alten Pixeln
+
+- **Fundort:** `.studio/qa/REL-15/ui/b6-bauen.png` (Seed 7, Kachel (38, 35) = `mountain`, Probe beim Planen), Skript `.studio/qa/REL-15/ui/t06.mjs` Schritt 2.4 (Ziehen um +40/+20 px, danach weiter mit `p0`). Beobachtung: Der Geisterbau stand auf einer Gebirgskachel, die im Bild grün wie Wiese aussieht; das Schild „Kein Bauland“ war richtig, wirkte aber falsch. Zweitens zielte der Playtest nach dem Schwenk nicht mehr auf das Haus. Ursprung: Planung REL-16 (lead-tech). Einschätzung: niedrig; Darstellung des Bergfusses an `lead-art` (Sichtprüfung, ob Gebirgskacheln am Rand als Gebirge lesbar sind); REL-16 nennt das Gelände im Schild, der Release-Check T04 misst Pixel nach jeder Kamerabewegung neu.
+
+### 2026-10-10 · REL-16 (R454): Rest nach AUFRAEUM-01
+
+- **Fundort:** `src/ui/hints.ts:73`. Beobachtung: `b.buildingId!` ist noch eine Non-null-Assertion (sachlich sicher, nur Typ-Nit). Ursprung: Final-Review/Release-Check REL-16 (lead-qa), Rest aus AUFRAEUM-01. Einschätzung: niedrig, beim nächsten Eingriff in `hints.ts`.
+
+### 2026-10-10 · REL-17: Randfälle von Problem-Sprung und Abriss-Zug
+
+- **Fundort:** `src/ui/app.ts` (Log-Klick über `resolveLogClick`, `onAction`), `src/ui/problems.ts`, `src/ui/hints.ts`, `src/ui/input.ts`. Beobachtung: (a) Log-Klick auf Fremdinseln zentriert auf Inselkacheln ohne `ox`/`oy`, der Problem-Sprung rechnet mit Archipel-Kacheln; prüfen, ob Krisen auf Fremdinseln vorkommen. (b) `unconnectedIds` (`hints.ts`) zählt die Amtsstube mit, `cutOffIds` (`problems.ts`) nicht (`needsConnection`); I-043 hat `hints.ts` bewusst nicht berührt; bleibt offen. (c) Weg-Zug und Tasten `0`/`9`: ein Inselsprung mitten im Zug bricht den Zug nicht ab (nur `.`/`,` tun das); prüfen. (d) Touch-Schwelle ungeprüft: AK-R17-16 verlangt „Touch-Schwelle wie Weg“ für den Abriss-Zug; es gibt keinen Touch-Beleg (Desktop-first, kein Touch-Lauf in T05). (e) `Esc` und Rechtsklick beenden einen laufenden Weg- oder Abriss-Zug nicht, solange ein schliessbarer Toast offen ist (`closeClosableToast` → `return` in `app.ts`); seit dem Weg-Zug so, kein Regress. (f) `onBlur` beendet jetzt auch Weg-, Roden- und Aufforsten-Züge (Absicht, harmlos: setzt nur `dragMoneyToastShown` zurück). (g) Die Abriss-Zug-Vorschau (`updateHover`) hat keinen Vitest-Beleg, nur den Browser. Ursprung: Planung und Reviews REL-17. Einschätzung: niedrig; (a), (b) und (c) bei I-043 bzw. dem nächsten Eingriff prüfen.
+
+### 2026-10-10 · TOOL-BUENDEL-3 (R457): Restpunkt Flake-Matching
+
+- **Fundort:** Flake-Matching im Testlauf-Wrapper (`tools/studio/testrun.py`). Beobachtung: Bei Sammelfehlern (Import-/Ladefehler vor dem ersten Test) bleibt `names` leer. Ungetrackte Dateien fliessen seit TOOL-BUENDEL-5 in die Diff-Prüfsumme ein. Zurückgestellt, bewusst nicht Teil von TOOL-BUENDEL-5. Die übrigen Punkte (Uhr, `TickingClock`, Ctrl-C-Exit, private Helfer, ADR-014-Modus) sind in TOOL-BUENDEL-4 erledigt; die Plan-Grenze für `clock.py` war ein Planfehler (Grenze war Planfehler, geschlossen). Ursprung: Controller 2 / Final-Review TOOL-BUENDEL-3. Einschätzung: niedrig, Kandidat für ein späteres Werkzeug-Bündel.
+
+### 2026-10-10 · REL-17 (R458): niedrige Befunde aus Review und Playtest
+
+- **Fundort:** `src/ui/problems.ts`, `src/ui/hints.ts`, `src/ui/app.ts`, `src/ui/input.ts`, Playtest REL-17. Beobachtung: (1) Review B2: `problems.ts:85` Klasse 4 ohne eindeutigen Sortierschlüssel. (2) Review B4: drei Randfälle ohne Test. (3) Playtest 1: Das Schild im Abriss-Zug zeigt über Gebäuden rot „Abreissen: Weberei …“ (`hints.ts` 327–336). (4) Playtest 2: AK-R17-16 sagt „grün“, die Vorschau malt `HOVER_BAD`. (5) Ausserhalb Scope: Ein Weg direkt hinter einer Gebäudehülle lässt sich nicht als Zug-Start drücken. (6) Das Weberei-Panel läuft bei 1280×720 unten aus dem Bild. (7) Toter `else`-Zweig `removeRoad`/`showRoadFailure` im Abriss-Zweig von `app.ts`. (8) `HOUSE_TITLES` zieht `problems.ts` über `hover` in unnötige Abhängigkeiten (erledigt in I-043: liegt in `texts.ts`). Ursprung: REL-17. Erste Einschätzung: alle niedrig, nichts blockierend; (3)/(4) bei einer Nacharbeit der Abriss-Vorschau gemeinsam klären; (8) erledigt.
+
+### 2026-10-10 · M13-E1 (T13): Restpunkte aus Sim- und UI-Strang
+
+- **Fundort:** siehe je Punkt. Beobachtung: (2) `src/style.css` ca. Zeile 1191: ungeplantes `border-style: dashed` bei `.edict-card.locked`. (3) Spec AK-M13E1-14 nennt kein Geld ≥ 600 für den Wechsel bei Tick 4000 (der Test setzt `money = 600`); Spec ergänzen (an `lead-design`). (5) `timeout` fehlt im PATH (macOS); lange Läufe mit `run_in_background` starten. (6) Ausbau-Vorschau `panelView.ts:233`/`:319` ist bewusst nominal (`upkeepOf`, nicht `buildingUpkeep`); Befund H1 zu `inspect.ts` und `panelView.ts:183` ist behoben (beide zeigen `buildingUpkeep`). Statusmarke «stillgelegt» (P-4) bleibt offen. (7) STL-08-Test setzt den Betrieb roh ohne Anbindung statt den Weg zu entfernen (schwächer als der Wortlaut, Logik erreicht) und nutzt `placeTownhall` statt `M13_TOWNHALL_AT` (gleicher Platz). (8) AK-13-Trennungsvariante prüft nur `totalUpkeep`, nicht `taxUnits` (Nit). (9) Hinweis an `lead-design`: Seed-Lauf Sparen/Handel «arm» = 11 200 = K′ − 600 genau am inklusiven unteren Rand (Erwartung ≈ K′ − 300, Reserve 0; K′ = 11 800 arm; reich 7 700, W 7 640); Randlage, kein Fehler. (10) `WAVE_SLOTS` ist nicht gegen Dienstradien geprüft. (11) Hinweis T15: `save.test.ts` hat 12 reine Versionszeilen (10 → 11); der Baseline-Diff betrifft nur `balance-upgrade.test.ts` (1 Zeile). Ursprung: M13-E1 (Ledger Sim und UI, Übergabe Controller B). Einschätzung: alle niedrig; (2) beim nächsten Eingriff in den Edikt-Abschnitt, (3) und (9) an `lead-design`.
+
+### 2026-10-10 · M13-E1 (T14): Befunde des Browser-Laufs
+
+- **Fundort:** `.studio/qa/m13-e1/`, `src/ui/edictView.ts:51`, Kontor-Spaltenkopf «Kaufen», `--parchment-muted`, Seitenbreite bei 800 px. Beobachtung: (1) Spec-Widerspruch AK-M13E1-36 («Klick auf Handel → Meldung») gegen U-4/§Karten (`disabled` in der Sperre, Info nur als Sperrzeile und Tooltip); Umsetzung folgt dem Entwurf, an lead-design: AK-36 anpassen oder Meldung nachrüsten. (2) Kontor: «Kaufen» und «Edikt Handel: −20 %» im Spaltenkopf ohne Trenner (liest sich «KAUFENEDIKT»), niedrig. (3) «lohnt, wenn …» mit geringem Kontrast (`--parchment-muted`), niedrig. (4) Stillgelegter Betrieb zeigt weiter «Ausstoss 15 / min» (nominal), niedrig. (5) Unterhalt stillgelegt 30 → 18 pro Minute (60 %, Aufrunden nach Anhang 01), README sagt «halber Unterhalt»; Wortlaut prüfen. (6) Bei 800×600 scrollt die Seite waagrecht (Mindestbreite ≈ 880 px), nicht von M13-E1 verursacht. (7) `border-style: dashed` bei `.edict-card.locked` stört nicht, behalten. Ursprung: M13-E1 T14. Einschätzung: keine Blocker.
+
+### 2026-10-10 · TOOL-BUENDEL-4: Worktree-`start.sh` ohne `STUDIO_HOME` greift auf `.studio` des Hauptrepos zu
+
+- **Fundort:** `tools/studio/start.sh` im Worktree. Beobachtung: Ohne gesetztes `STUDIO_HOME` liest und schreibt ein im Worktree gestartetes Dashboard die `.studio`-Daten des Hauptrepos. Ursprung: TOOL-BUENDEL-4 (Umsetzer A, T02). Erste Einschätzung: niedrig; so gewollt für Echtdaten, aber bei Tests nur mit `STUDIO_HOME=<tmp>` starten.
+
+### 2026-10-10 · I-043 (UI-GUT-CHIP): Rechtsklick löscht den Gut-Fokus
+
+- **Fundort:** `src/ui/app.ts` (`cancel`-Zweig ruft `clearGoodFocus`). Beobachtung: Reviewer-Hinweis: Rechtsklick löscht den Fokus wie `Esc`, das steht nicht in den Akzeptanzkriterien der Spec (README-Tastentabelle nennt es jetzt). Ursprung: Review T06/T07 I-043. Einschätzung: niedrig; bei Gelegenheit in die Spec nachziehen.
+
+### 2026-10-10 · I-043 (UI-GUT-CHIP): Befunde des Browser-Laufs T08
+
+- **Fundort:** `.studio/qa/ui-gut-chip/report.md`. Beobachtung: (1) Tab-Reihenfolge: die Lager-Chips kommen vor den oberen HUD-Knöpfen (Inseln, Tempo, Menü); vorbestehend, nicht von I-043. (2) `0` auf der Heimatinsel löscht den Fokus nicht (kein Inselwechsel, konsistent mit AK-GC-07). (3) Nicht im Browser prüfbar: Problem-Sprung auf eine andere Insel bei aktivem Fokus (`.` geht dann auf die Gut-Liste; Logik per `shouldClearFocus` im Vitest), Meldung «Erzeuger noch nicht frei» (Glas und Seefahrt hängen an U6), Obergrenze 40 nur im Vitest (AK-GC-11). Ursprung: Playtest T08. Einschätzung: alle niedrig.
+
+### 2026-10-10 · Board-Titel durch `log.py package` überschrieben
+
+- **Fundort:** Retro Studio-Session 5a00a316 B3 (d). Beobachtung: `log.py package` mit Platzhalter-Titel überschrieb den Titel eines bestehenden Pakets auf dem Board; L0 korrigierte sofort. Ursprung: Studio-Session 5a00a316. Einschätzung: Einzelfall; Werkzeugkandidat «Titel nur setzen, wenn das Paket neu ist oder `--title` explizit steht», Paket erst bei zweitem Fall.
+
+### 2026-10-10 · I-043 (UI-GUT-CHIP): Befunde des Branch-Reviews (opus)
+
+- **Fundort:** `src/ui/goodFocus.ts:90`, `tests/ui/goodFocus.test.ts` (AK-GC-08), `src/ui/goodFocus.ts` `focusList` und `src/render/focusMarks.ts`. Beobachtung: (1) `toggleStartsJump` wird nur im Test benutzt (toter Export). (2) Der Test «Problem-Cursor unberührt» legt den Problem-Cursor je Aufruf neu an und belegt die Trennung in `app.ts` nur durch den Aufbau. (3) Die Regel, welche Gebäude zum Fokus gehören (Erzeuger/Verbraucher), steht zweimal: in `focusList` und in `drawFocusMarks` (Modulgrenze render ↛ ui); ein gemeinsamer Helfer in `src/render/` oder `src/sim/queries` wäre denkbar. (README-Beispiel «Häuser verbrauchen Holz» → «Nahrung» wurde als Trivial-Fix korrigiert.) Ursprung: Branch-Review T09. Einschätzung: alle niedrig.
+
+### 2026-10-10 · Verkaufssättigung erholt sich schnell: Dauerverkauf Holz fast zum Vollpreis
+
+- **Fundort:** `src/sim/defs/` (Sättigung, Erholung 60 Punkte/min), Ideen-Runde IDEEN-06. Beobachtung: Dauerverkauf von Holz
+  bringt rund 240 Geld/min nahe am Vollpreis gegen 30 Unterhalt je Holzfäller — mögliche Geldquelle ohne Wahl. Ursprung:
+  Scout-Befund IDEEN-06 (lead-design). Einschätzung: mittel; mit I-048 „Zukauf-Aufschlag“ durch `design-economy-designer`
+  nachrechnen, kein eigenes Paket vorher.
+
+### 2026-10-10 · Playtest REL-18 (live): niedrige Befunde und Ärgernisse
+
+- **Fundort:** `.studio/qa/rel-18/report.md` (Screenshots 00–26). Beobachtung: (1) Kein v10-Fixture unter
+  `tests/sim/fixtures` (nur v1–v9, v11 neu) — Migration v10→v11 nur synthetisch geprüft. (2) Nach `Esc` (Gut-Fokus) und
+  `.` beginnt die Problemliste bei «Problem 2 von 7» statt 1. (3) Stillgelegter Betrieb zeigt weiter Ausstoss 15/min;
+  Unterhalt sinkt 30 → 18/min (60 %, Folge der Aufrundung je Betrieb auf der 100-Tick-Basis, R467 — konform, aber für
+  Spieler „halber Unterhalt“ missverständlich). (4) Unterhalt nur im Kopfzeilen-Tooltip; «lohnt, wenn…»-Zeilen und
+  gesperrte Edikt-Knöpfe sehr blass. (5) Krisen bei 4× in Sekunden vorbei, Meldung oben rechts nur kurz. (6) «Neu: …»-Karte
+  steht > 25 s und verdeckt oben links. (7) «Nächster Schritt» nennt Weberei/Schäferei, obwohl Nahrung auf 0 fällt
+  (Saldo −42/min) — Hinweis übersieht akuten Mangel. (8) Taste `4` ohne Wirkung/Hinweis (Tempo nur `1`–`3`). Ursprung:
+  qa-playtester playtest-rel-18. Einschätzung: (7) mittel (Frühspiel-Führung), Rest niedrig; I-058 bleibt geparkt bis
+  Brandfall bei 4× belegt, I-059 geparkt (nicht vermisst).
+
+### 2026-10-10 · CI-Lauf dauert 7 statt 4 min
+
+- **Fundort:** GitHub Actions CI, Läufe `38038270428` (≈ 4 min) gegen `38055866019`/`38063457678` (6–7 min). Beobachtung:
+  Die CI-Dauer hat sich innerhalb eines Tages fast verdoppelt; Ursache nicht geprüft (mehr Tests M13-E1/I-043? Runner?).
+  Ursprung: Prozess-Aussensicht REL-18. Einschätzung: niedrig bis mittel (Actions-Konto-Prognose ≈ 1990/2000 min, R488 V2);
+  mit TOOL-PUSH-CHECK oder der V2-Prognose prüfen.
+
+### 2026-10-10 · AK-GC-08 Verdrahtung in app.ts ungetestet (AUFRAEUM-01 Final-Review)
+
+Der gestärkte Test `tests/ui/goodFocus.test.ts` (AK-GC-08) belegt die Trennung von Fokus- und Problem-Cursor nur gegen die Fake-Abhängigkeiten; die echte Verdrahtung in `src/ui/app.ts` bleibt ohne Test. Erste Einschätzung: niedrig, beim nächsten Eingriff in `app.ts` (z. B. UI-TASTEN-Folge) prüfen; Ursprung: Final-Review AUFRAEUM-01.
+
+### 2026-10-10 · Weitere Beschleunigung von build_state als Werkzeug-Kandidat
+
+- **Fundort:** `tools/studio/model.py` (`_Builder.apply`, `result`: `_collapse_feed`, `layouts`, `budget_view`, `effort.incidents`). Beobachtung: Nach T01 braucht `build_state` bei 69k Events rund 1,3 s (vorher 3,6 s); `apply` etwa 0,8 s, `result` etwa 0,65 s, beide ohne einzelne Spitze. Ursprung: TOOL-BUENDEL-5 T01 (R482: 1,3 s akzeptiert). Einschätzung: niedrig; Kandidaten wären inkrementelles Fortschreiben des Stands statt Neuaufbau je Abruf und weniger `dict.get` in `touch`/`add_feed`; erst bei spürbarem Verzug im Dashboard angehen.
+
+### 2026-10-10 · TOOL-BUENDEL-5 (Review): Lead mit Paket bindet Freigabe nicht nach Präfix
+
+- **Fundort:** `tools/studio/model.py` (`claim_budgets`, `_grant_names`). Beobachtung: Ein Lead mit Paket `X-T01` bindet die Freigabe der Phase `X` nicht (Beispiel ac8af81e gegen a0e93925: Kosten des Controllers fehlen in der Phase M13-E1 der Metriken). Eine Regel «Präfix mit Trennzeichen als Zweitrang» wäre neues Verhalten. Ursprung: TOOL-BUENDEL-5, Review T02. Einschätzung: niedrig; Kandidat für ein späteres Werkzeug-Bündel, vorher als Regel entscheiden (L0).
+
+### 2026-10-10 · TOOL-BUENDEL-5 (Review): `lead_phases`/`budget_key` verlassen sich auf die Reihenfolge in `result`
+
+- **Fundort:** `tools/studio/model.py` (`lead_phases()`, `budget_key`). Beobachtung: Beide lesen `self.claims` und setzen voraus, dass `budget_view` in `result` zuerst läuft. Ein Aufruf von `claim_budgets()` am Anfang von `lead_phases()` wäre eine billige Absicherung. Ursprung: TOOL-BUENDEL-5, Review T01/T02. Einschätzung: niedrig; heute kein Fehler.
+
+### 2026-10-10 · TOOL-BUENDEL-5 (Final-Review): `testrun` Restfenster beim zweiten Ctrl-C und Testlücke
+
+- **Fundort:** `tools/studio/testrun.py` (`_run`, `except KeyboardInterrupt` vor `_ignore_interrupts()`), `tools/studio/tests/test_testrun.py`, `tools/studio/log.py` (`_package_exists`). Beobachtung: (1) Ein zweites Ctrl-C in den Mikrosekunden zwischen Eintritt in den `except`-Zweig und `_ignore_interrupts()` überspringt `_stop_group`; die Gruppe läuft dann verwaist (Abhilfe: `signal.pthread_sigmask`). (2) Kein Test prüft, dass der SIGINT-Handler nach dem Doppel-Interrupt wiederhergestellt ist (`signal.getsignal` vorher/nachher). (3) Der Vorfilter in `_package_exists` sucht die ID als JSON-Rohtext; eine nicht-ASCII-ID würde escaped geschrieben und gälte als neu. Ursprung: TOOL-BUENDEL-5, Final-Review. Einschätzung: niedrig (Fenster Mikrosekunden, IDs heute ASCII); Sammelkandidat für das nächste Werkzeug-Bündel.
+
+### 2026-10-10 · UI-TASTEN: Laden-Liste im offenen Menü aktualisiert sich nach «Speichern» nicht
+
+- **Fundort:** Menü «Laden»-Liste (`src/ui/menu.ts`), Playtest T05 (`.studio/qa/ui-tasten/17-menue-nach-speichern-liste-nicht-aktualisiert`). Beobachtung: Nach «Speichern» bei offenem Menü zeigt die Liste weiter den Stand vom Öffnen; vermutlich schon vor UI-TASTEN so. Ursprung: Playtest UI-TASTEN. Einschätzung: niedrig, rein kosmetisch.
+
+### 2026-10-10 · UI-TASTEN: Final-Review-Hinweise (niedrig)
+
+- **Fundort:** `src/ui/modal.ts` (importiert `hotkeys.ts` für `isSaveChord`, zieht `sim/defs` mit), Tooltip «Entf» am Abreissen-Knopf (Mac ohne Entf-Taste), `keyDownVerdict` (sperrt nur den Abriss-Zug). Beobachtung: `isSaveChord` könnte in ein kleines reines Modul; Tooltip könnte «Entf / Rücktaste» nennen. Ursprung: Final-Review UI-TASTEN. Einschätzung: alle niedrig.
+
+### 2026-10-11 · Inspektor-Abhilfe «baue mehr» bei gefülltem Lager
+
+- **Fundort:** `src/ui/guide.ts` `remedyText` (Wohnhaus), Playtest UI-NAECHSTER-SCHRITT
+  (`.worktrees/ui-naechster-schritt/.studio/qa/ui-naechster-schritt/food-1920x1080-3-inspektor.png`). Beobachtung: Das
+  Wohnhaus-Feld `remedy` nennt «Baue mehr Fischerhütte (F) oder kaufe Nahrung am Kontor» auch bei Nahrung 50 im Lager,
+  solange das Haus Nahrung als unerfüllt führt (im Test pausiert, kein Tick); «Nächster Schritt» zeigt dann den
+  bisherigen Pfad. Ursprung: qa-playtester ui-naechster-schritt. Einschätzung: niedrig, vermutlich nur bis zum nächsten
+  Versorgungs-Tick sichtbar; prüfen, ob es im laufenden Spiel auftritt.
+
+### 2026-10-11 · `make push-check`: D1 unter Parallelität Regelfall, `check-ci-perf` ohne Lastwarten
+
+- **Fundort:** `tools/studio/pushcheck.py` (TOOL-BUENDEL-6 T03), Echtlauf bei Load 69,3. Beobachtung: (1) Das Warten auf
+  Load ≤ 3 endet nach der Frist, Vitest startet trotzdem; bei leerer Markierungsliste greift D1 (Exit 0 ohne Nachmessung)
+  — unter paralleler Last wird das der Normalfall, das Gate trägt dann allein die Monotonie-Annahme. (2) Vor
+  `check-ci-perf` wartet `push-check` nicht auf ruhige Last → falsches Rot möglich, kein falsches Grün. Ursprung:
+  Controller Strang A, Final-Review opus. Einschätzung: niedrig bis mittel; mit den Load-Daten aus R514 V2 bewerten.
+
+### 2026-10-11 · M13-E2-ART: Nachtlicht des Denkmals nicht eingehängt; Frame-Ereigniszahl schwankt
+
+- **Fundort:** `feat/m13-e2-art` @ `4626645a`; Handoff `.studio/handoffs/2026-10-11-lead-art-m13-e2-art.md`. Beobachtung:
+  (1) `monumentNightLight` (Leuchtfeuer bei Nacht) ist definiert, aber nirgends eingehängt. (2) In `tests/render/renderer.test.ts`
+  schwankt die Zahl der Frame-Ereignisse zwischen Läufen. Ursprung: lead-art M13-E2-ART. Einschätzung: (1) mittel, falls die
+  Spec ein Nachtlicht verlangt (Controller E prüft in T15), sonst niedrig; (2) niedrig, Flake-Kandidat.
+
+### 2026-10-11 · M13-E2-UI: «Kein Kontor» auch beim Gut-Sperr-Fall
+
+- **Fundort:** `feat/m13-e2-ui` T11 (`26d51c50`, Gründe/Abriss-Bestätigung). Beobachtung: Der Grund «Kein Kontor» erscheint
+  spec-konform auch dann, wenn eigentlich der Sperrbestand eines Guts (`goodLock`) den Zug verhindert — Text ungenau.
+  Ursprung: Controller D M13-E2-UI. Einschätzung: niedrig; mit I-049-UI (Sperrbestand-Anzeige) gemeinsam prüfen.
+
+### 2026-10-11 · M13-E2-UI: Kopplung über Texte, doppelte Kostenstruktur
+
+- **Fundort:** `feat/m13-e2-ui` @ `81c0b87b`; Handoff `.studio/handoffs/2026-10-11-lead-tech-m13-e2-ui.md`. Beobachtung:
+  (1) Abschluss-Banner wird in `src/ui/app.ts:~1431` am Text erkannt; (2) `src/ui/monumentSection.ts:~99` leitet den
+  Pausenzustand aus dem Knopftext ab; (3) Kostenstruktur doppelt (`monumentView.ts` und `app.ts:~727`); (4) springt `stage`
+  in einem Frame um mehr als einen Abschnitt, entsteht nur ein Chronik-Eintrag; (5) kein DOM-Test für die Zeile
+  `rest-monument`. Ursprung: Controller D M13-E2-UI. Einschätzung: niedrig bis mittel (1–3 sind Kopplung über Anzeigetexte,
+  bricht bei Textänderung still); Kandidat für Final-Review T18 oder ein Aufräum-Häppchen nach M13.
+
+### 2026-10-11 · M13-E2 Browser-Lauf 1: Layout unter 900 px, Texte, Test-Konstante
+
+- **Fundort:** `feat/m13-e2-ui` @ `e2660aa9`, Playtest T15 (`.studio/qa/m13-e2/48-*.png`) und T14-Review. Beobachtung:
+  (1) Bei 800×600 überlappen `#panel` und `#game` um 161 px (Panel `max-height: 38vh`, Karte `min-height: 300px`); dieselbe
+  Überlappung zeigen Inselchronik und Wohnhaus-Panel, der HUD ist 931 px breit und rechts abgeschnitten
+  (`overflow: hidden`). AK-M13E2-48 («keine Überlappung») ist damit nicht erfüllbar, ohne vorbestehendes Layout zu ändern.
+  (2) Im Bauplatz-Stand (Abschnitt nicht gestartet) steht schon der Knopf «Bau pausieren». (3) `buildMenu.ts:152`
+  erzeugt «Höchstens eine Denkmal» (Genus; Text generisch für alle `maxCount`-Gebäude). (4) «Denkmal: Abschnitt n fertig»
+  steht im Ereignis-Log, das bei «Krisen: aus» ausgeblendet ist; es bleibt der Toast (spec-konform, U-11). (5)
+  `tests/sim/balance-monument.test.ts:48` `RESERVE_TICKS = 1000` neben der Sim-Konstante 800 (nur Beobachtungszeitraum von
+  AK-20, unklar benannt). Ursprung: qa-playtester T15, qa-code-reviewer T14. Einschätzung: (1) mittel, Entscheid
+  `lead-design` (Desktop-first: schmale Fenster nur «stürzt nicht ab»); (2)–(5) niedrig.
+
+### 2026-10-11 · M13-E2 Final-Review: docs-check, Nächster-Schritt-Text
+
+- **Fundort:** Fix-Runde-Review (`docs/arc42.md:256`) und Final-Review T18 (`src/ui/guide.ts:130`). Beobachtung:
+  (1) `make docs-check` (Prettier) erkennt zerrissene Markdown-Tabellen nicht: ein unmaskiertes `|` im Code-Span einer
+  Tabellenzelle trennt die Zelle trotzdem. (2) `guide.ts:130`: Nach dem dritten Ziel sagt «Nächster Schritt» «Handelsstadt
+  erreicht — spiel frei weiter», ohne Hinweis auf das Denkmal (Playtest-Frage aus Spec §13). (3) Das Literal «Abreissen»
+  steht fünfmal im UI-Code (`inspect.ts` viermal, `app.ts` Esc-Zweig). Ursprung: qa-code-reviewer. Einschätzung: niedrig.
 
 ---
 
