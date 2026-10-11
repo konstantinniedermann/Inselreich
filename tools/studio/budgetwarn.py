@@ -10,7 +10,7 @@ import json
 import re
 from collections.abc import Iterable, Mapping
 
-from model import _package_token
+from model import _package_token, package_names
 from modelguard import SKIP_TYPES, header, persona
 
 NUMBER = re.compile(r"\d+")
@@ -44,11 +44,6 @@ def grants(text: str, session_id: str) -> list[dict]:
 def _phase(event: Mapping) -> str:
     budget = event.get("budget")
     return str(budget.get("phase") or "").strip() if isinstance(budget, dict) else ""
-
-
-def package_names(package: str) -> set[str]:
-    """Namen, unter denen eine Freigabe zur Kopfzeile `Paket:` passt (wie model._grant_names)."""
-    return {package, _package_token(package)} - {""}
 
 
 def _lead_start(tool_input: Mapping) -> tuple[str, int, str] | None:

@@ -2697,6 +2697,89 @@ def lead_with_package(t, session, aid, package=""):
     ]
 
 
+class ClaimPrefixRuleTest(unittest.TestCase):
+    """Freigabe X bindet X-<Suffix> (R528 (3)); exakt vor Praefix, laengster vor kuerzerem."""
+
+    def phases(self, grants, package):
+        events = [*grants, *lead_with_package(10, SA, "L1", package=package)]
+        return build(events, now=2000, session="all")["lead_phases"]
+
+    def test_prefix_grant_binds_suffix_package(self):
+        grants = [grant(1, SA, "other", 4, 1), grant(2, SA, "M13-E2", 4, 1)]
+        self.assertEqual(self.phases(grants, "M13-E2-T01"), {f"{SA}:L1": "M13-E2"})
+
+    def test_exact_grant_beats_prefix(self):
+        grants = [grant(1, SA, "M13-E2", 4, 1), grant(2, SA, "M13-E2-T01", 4, 1)]
+        self.assertEqual(self.phases(grants, "M13-E2-T01"), {f"{SA}:L1": "M13-E2-T01"})
+
+    def test_prefix_needs_delimiter(self):
+        grants = [grant(1, SA, "z", 4, 1), grant(2, SA, "M13-E2", 4, 1)]
+        self.assertEqual(self.phases(grants, "M13-E22-T01"), {f"{SA}:L1": "z"})
+
+    def test_longest_prefix_wins(self):
+        grants = [grant(1, SA, "A", 4, 1), grant(2, SA, "A-B", 4, 1)]
+        self.assertEqual(self.phases(grants, "A-B-C"), {f"{SA}:L1": "A-B"})
+
+    def test_two_packages_share_prefix_grant(self):
+        events = [
+            grant(0, SA, "other", 4, 1),
+            grant(1, SA, "X", 4, 1),
+            *lead_node(10, SA, "L1", package="X-T01"),
+            *worker(20, SA, "L1", "W1", stop_at=25, package="X-T01"),
+            *lead_node(30, SA, "L2", package="X-T02"),
+            *worker(40, SA, "L2", "W2", stop_at=45, package="X-T02"),
+        ]
+        rows = {
+            b["phase"]: b for b in build(events, now=2000, session="all")["budgets"]
+        }
+        self.assertEqual(rows["X"]["used"], 2)
+        self.assertEqual(rows["other"]["used"], 0)
+
+    def test_budget_key_counts_start_on_prefix_grant(self):
+        events = [
+            grant(0, SA, "other", 4, 1),
+            grant(1, SA, "M13-E2", 4, 1),
+            *lead_node(10, SA, "LA", package="M13-E2-T01"),
+            *worker(20, SA, "LA", "W1", stop_at=25, package="M13-E2-T01"),
+        ]
+        rows = {
+            b["phase"]: b for b in build(events, now=2000, session="all")["budgets"]
+        }
+        self.assertEqual(rows["M13-E2"]["used"], 1)
+        self.assertEqual(rows["other"]["used"], 0)
+
+
+class CallOrderTest(unittest.TestCase):
+    """lead_phases und budget_key haengen nicht davon ab, ob budget_view vorher lief."""
+
+    def builder(self):
+        events = [
+            grant(1, SA, "plan-A", 4, 1),
+            *lead_with_package(10, SA, "LA", package="plan-A"),
+        ]
+        builder = model._Builder(MODELS, T0 + 2000, None)
+        for e in sorted(events, key=lambda e: model.parse_ts(e["ts"])):
+            builder.apply(e)
+        return builder
+
+    def test_lead_phases_same_before_and_after_budget_view(self):
+        before = self.builder().lead_phases()
+        later = self.builder()
+        later.budget_view()
+        self.assertTrue(before)
+        self.assertEqual(before, later.lead_phases())
+
+    def test_budget_key_same_before_and_after_budget_view(self):
+        first, second = self.builder(), self.builder()
+        second.budget_view()
+        lead = first.nodes[f"{SA}:LA"]
+        child = {"package": "", "started": lead["started"] + 1}
+        self.assertEqual(
+            first.budget_key(lead, child),
+            second.budget_key(second.nodes[f"{SA}:LA"], child),
+        )
+
+
 class ClaimByPackageNameTest(unittest.TestCase):
     """Die Kopfzeile Paket: bindet die gleichnamige Freigabe vor der Zeitregel (T02)."""
 
