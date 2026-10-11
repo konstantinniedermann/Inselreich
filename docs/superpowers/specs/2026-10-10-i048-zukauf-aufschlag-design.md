@@ -40,7 +40,7 @@ sich der Verkaufsanteil nur noch um 1 Punkt je 2 Sekunden.
 
 **Im ersten 15-min-Spiel spürbar:** Werkzeug gibt es vor der Schule nur über den Kauf. 10 Werkzeug am Stück kosten
 436 statt 400 Geld (im Mittel 109 %), die Spalte zeigt danach «Kauf 120 %» und sinkt in 20 s zurück auf 100 %. Wer
-in Zehnerbrocken kauft, zahlt in 15 min ≈ 4 % des Startgelds drauf; wer 30 am Stück kauft, zahlt 29 % drauf
+in Zehnerbrocken kauft, zahlt im Frühspiel ≈ 11 % des Zukauf-Volumens drauf (Holz-Engpass 27 %); wer 30 am Stück kauft, zahlt 29 % drauf
 (Anhang b).
 
 ## 2. Umfang und ausdrücklich nicht
@@ -253,11 +253,13 @@ R490 B2) erlaubt die Neumessung in Schritt B.
 
 - `WIN_TICK_LIMIT` 7500, `MAX_TICKS` 9000, Geld > 0 in jedem Szenario;
 - **Frühspiel-Grenzwert:** Mehrkosten Zukauf im Baseline-Controller (`balance.test`, Seed 3) bis Lauf-Ende,
-  höchstens Tick 9000, **≤ 250 Geld** (5 % des Startgelds 5000); erwartet ≈ 4 % (Anhang b). Mehrkosten = Σ über alle
+  höchstens Tick 9000, **Festwert** (Toleranz 0; Messung
+  R547: 544 Geld) und **≤ 15 % des Zukauf-Volumens zum Listenpreis** (Messung 11,1 %; der Controller summiert das Volumen
+  mit, `trackedBuy`; Anhang b). Mehrkosten = Σ über alle
   erfolgreichen Käufe (bezahlter Preis − `buyQuote(…, startPct 100, …).price` desselben Kaufs). [Tech: Messweg im
   Plan, ohne Sim-Schalter.]
-- Reisst eine Grenze, wird zuerst `BUY_RISE` 2 → 1 gesenkt (10er-Brocken dann 104,5 %); reisst sie weiter, Stopp an
-  L0 (R487 P-1).
+- Reisst eine Grenze, Stopp an L0 (R487 P-1); die Regel «zuerst `BUY_RISE` 2 → 1» entfällt (R547: Biss halbiert,
+  Sieg-Tick 7550).
 
 **Klassenregel für rote Tests in Schritt B (R490 B2).** Jeder Test, der nach dem Setzen der Werte rot wird, gehört
 genau einer Klasse an; der Bericht des Umsetzungs-Pakets führt die Liste «Test → Klasse → vorher/nachher»:
@@ -403,7 +405,7 @@ tests/sim/save.test.ts tests/sim/fixtures/` leer. Beleg (Ausgabe `make check` un
   überschreitet `MAX_TICKS` 9000, Geld bleibt > 0. Klasse-R-Tests laufen in eigener Datei mit `vi.mock` der alten
   Werte grün, Fixture-Dateien unverändert. Tabelle «Test → Klasse → vorher/nachher» im Bericht.
 - **AK-ZK-15** Frühspiel-Grenzwert: Mehrkosten Zukauf im `balance.test`-Controller (Seed 3) bis Lauf-Ende, höchstens
-  Tick 9000 (Definition §6). Zwei getrennte Asserts: Messwert = Festwert (Toleranz 0) und Messwert ≤ 250 Geld.
+  Tick 9000 (Definition §6). Zwei getrennte Asserts: Messwert = Festwert (Toleranz 0) und Messwert ≤ 15 % des Zukauf-Volumens zum Listenpreis (R547).
 - **AK-ZK-16** Save-Rundlauf: Welt mit `buyPct` {tools 137, spice 160, sonst 100} → `deserialize(serialize(w))` ok
   und tief gleich.
 - **AK-ZK-17** Migration: ein v11-Stand (Fixture, im Task neu erzeugt; `tests/sim/fixtures/` endet heute bei v9) mit
@@ -474,8 +476,8 @@ neues Spiel (Startgeld 5000), Geschwindigkeit 1×.
 
 ## 11. Entschiedene Punkte
 
-- **P-1** Neumessung Schritt B erlaubt (R487), erweitert um Klasse R «alte Werte per `vi.mock`» (R490 B2); Rückfall
-  `BUY_RISE` 2 → 1, sonst Stopp an L0.
+- **P-1** Neumessung Schritt B erlaubt (R487), erweitert um Klasse R «alte Werte per `vi.mock`» (R490 B2); Bei
+  gerissener Grenze Stopp an L0 (Rückfall `BUY_RISE` 2 → 1 entfällt, R547).
 - **P-2** Verkaufserholung 10 → 20 mitnehmen (R487).
 - **P-3** Beschriftung «Preis» → «Verkauf» (R487); AK-ZK-32.
 - **P-4** Save-Weiche v12 geteilt / v13 (R487, präzisiert R490 B3); §8.

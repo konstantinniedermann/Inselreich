@@ -75,10 +75,14 @@ Mehrkosten für 60 Werkzeug, Brocken jeweils ≥ 20 s auseinander:
 | 60      | +1068 (145 %) | +1068  | 21,4 %        |
 
 25 Holz am Stück kosten +60 (124 %).
-▶ **Grenzwert:** Bei Brocken ≤ 10 bleiben die Mehrkosten in 15 min **≤ 5 % des Startgelds (250)**. Erwartet
-sind ≈ 4 %. Wer 30 und mehr am Stück kauft, zahlt spürbar drauf, und das ist gewollt. Die Schwelle von 30/min liegt
-weit über dem Werkzeugbedarf der Pioniere. Reisst die Neumessung den Grenzwert, ist der erste Hebel `BUY_RISE`
-2 → 1 (10er-Brocken dann 104,5 %).
+▶ **Grenzwert (R547):** Die Mehrkosten im Frühspiel bleiben **≤ 15 % des Zukauf-Volumens** zum Listenpreis
+(Festwert 544, Toleranz 0).[^r547] Wer 30 und mehr am Stück kauft, zahlt spürbar drauf, und das ist gewollt. Die Schwelle von 30/min liegt
+weit über dem Werkzeugbedarf der Pioniere. Der Hebel `BUY_RISE` 2 → 1 ist verworfen (R547).
+
+[^r547]:
+    Die frühere Schätzung (≈ 4 % des Startgelds) rechnete nur Werkzeug. Gemessen (R547, `balance.test`-Controller
+    Seed 3): Zukauf-Volumen 4910, Mehrkosten 544 (11,1 %): Werkzeug +251 (7,3 %), Holz +194 (27 %), Stein +99 (13 %);
+    Sieg Tick 7150.
 
 ## c) Dauer-Zukauf gegen Eigenbau (volle Auslastung)
 
