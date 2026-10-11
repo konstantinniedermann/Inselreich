@@ -636,7 +636,7 @@ Scouts A, B, C je ≤ 5 Ideen (14 gesamt). Keine Idee ändert Kernsäule, Genre 
 - Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12
 - Randfälle: nie Aufstiegsbedingung; Bonus unter dem Warenpreis; Rum ist schon Pflichtbedarf von Bürgern und Kaufleuten (README), daher braucht es eine andere Ware oder eine tiefere Stufe als Genuss.
 - Doppelung: I-011 (Hauswunsch, Einzelereignis), I-053 (verworfen, andere Annahme); I-028 (Steuer je Stufe, live) berührt dieselbe Stelle.
-- Bewertung lead-design (IDEEN-07): Risiko: Der Rum-Vorschlag ist wegen R-Annahme (I-053) falsch, Ware offen. Bleibt bewertet (12), Bedarf vor Einplanung ein Wirtschafts-Brainstorming.
+- Bewertung lead-design (IDEEN-07): Risiko: Der Rum-Vorschlag des Scouts scheitert an I-053 (Rum ist schon Pflichtbedarf), die Ware ist offen. Bleibt bewertet (12), Bedarf vor Einplanung ein Wirtschafts-Brainstorming.
 - Nutzen/Aufwand: mittlerer Nutzen · S · ≈ 1 Häppchen nach Warenwahl
 - Entscheid: Empfehlung parken bis Wirtschafts-Brainstorming; Ruling IDEEN-07 offen
 
