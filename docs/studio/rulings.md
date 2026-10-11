@@ -6172,3 +6172,21 @@ Regelbezug: R553 V1, R556, R557, R558; Verfassung §3 (Balancing-Test, bewusste 
 Baseline-Neumessung; die Härtung kann eine echte Spielhärte verdecken (Gegenmittel: Idee Armutsfalle).
 
 Entscheider: L0 · Anlass: Bericht lead-tech probe-CONTROLLER-PHASE · ADR: —
+
+## R561 · 2026-10-11 · Kombiniertes Gate TOOL-CONTROLLER-HAERTUNG: OK mit Auflagen
+
+Ruling: Plan `54c81a57` (lead-tech), Urteil lead-qa BEDENKEN (1 hoch, 2 mittel, 3 niedrig). L0-Prüffragen: ein Owner
+(`tests/sim/controller.ts`, `tests/sim/ensemble.test.ts`), ein Worktree `.worktrees/tool-controller-haertung` (von main **nach**
+MERGE-TOOL-GATE-ENSEMBLE); Budget nach Formel 1 × 2 + 1 = 3 × 1,3 → **4 Starts**, Parallelität 1; bleibt leicht. Auflagen, vom
+Controller vor T01 in den Plan: (1) **Erfüllbarkeit:** Weber-Bau (`buildChain('cloth')`/`producersNeeded`) und die Schul-Bedingung
+nutzen **dieselbe** Zielbedarf-Formel, damit die Schule nie dauerhaft wartet; neuer Test „Schule wird bis `MAX_TICKS` gebaut“ je
+Phase. Verschiebt das Phase 0, gilt der Rückfall des Plans; bleibt eine Verschiebung, ist sie als Tabelle alt→neu eine bewusste
+Pin-Änderung für das Gate Merge (Verfassung §3, R560 (1)). (2) Tick-Gleichheit Phase 0 vor/nach (Schul-Tick, Zustand nach N Ticks)
+im Bericht, nicht nur Pins. (3) Stillstand = kein Sieg bis `MAX_TICKS`; Gegenprüfung 10/30/50/70/90 als Tabelle im Bericht, Treffer
+→ `docs/beobachtungen.md`. (4) Zeitbudget AK-2: zeigt T00 > 500 ms je Test, liegen die Vollläufe von Anfang an hinter
+`VITE_ENSEMBLE`. Restrisiko benannt: nur Seed 3, Seed-Achse unbelegt (Beobachtung „Seed wirkt nicht“, R553 V1).
+
+Regelbezug: gates.md Kombiniertes Gate, R553 V1, R558, R560 · Kosten bei Irrtum: eine Baseline-Verschiebung im Balance-Test, die
+im Gate Merge per Ruling bestätigt wird.
+
+Entscheider: L0 · Anlass: Berichte lead-tech plan-TOOL-CONTROLLER-HAERTUNG, lead-qa gate-TOOL-CONTROLLER-HAERTUNG · ADR: —
