@@ -53,7 +53,7 @@ jeden startest du im Panel des Denkmals selbst, dabei zahlst du das Geld des Abs
 - **Bau pausieren:** hält die Lieferung an, ohne etwas zu verlieren.
 - **Abriss:** Wer das Denkmal abreisst, bekommt nur die Hälfte des Bauplatzes zurück, **nicht** das Geld des Abschnitts
   und nicht die gelieferte Ware. Ein Neubau beginnt wieder bei Abschnitt 1; ein bereits erreichtes Wahlziel bleibt erreicht.
-- **Anzeige:** Der Chip «Ziel» zeigt «Denkmal 1/3 · n %», am Ende «Wahlziel erreicht»; die Inselchronik führt dazu
+- **Anzeige:** Ab dem dritten Ziel (Gewürz) zeigt der Chip «Ziel» «Denkmal 1/3 · n %», am Ende «Wahlziel erreicht»; die Inselchronik führt dazu
   eine Zeile «Wahlziel». Jeder fertige Abschnitt steht im Ereignis-Log, der letzte lässt die Feuerschale aufflammen.
 
 Ohne zusätzliche Betriebe (Steinbruch, Werkzeugmacher, Glashütte, Plantage) wird schon der erste Abschnitt nicht fertig:
