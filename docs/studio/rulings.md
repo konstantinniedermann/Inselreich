@@ -5977,3 +5977,24 @@ Ownership. Danach Release M13 (R505).
 Regelbezug: R505, R533, R534, R535 (≤ 2 Umsetzungsstränge) · Kosten bei Irrtum: ein Merge-Konflikt in einer Testdatei.
 
 Entscheider: L0 · Anlass: Merges I-049-UI, I-048-UI · ADR: —
+
+## R549 · 2026-10-11 · I-048 Schritt B angehalten (D-150); Release M13 ohne aktiven Zukauf-Aufschlag
+
+Ruling: Designurteil D-150 (lead-design, 27 Konfigurationen Seed 3) angenommen: **kein Wertepaar** mit `BUY_RISE` ≥ 1 hält alle
+Grenzen; fast passende Paare (1/15, 2/20) wären Anpassung an den Bot, Controller-Kalibrierung ebenso. Ursache liegt in der
+Formel Z2 (Anteil steigt schon innerhalb eines Kaufs je Einheit; gebündelte kleine Käufe zahlen 5–11 %), nicht in den Werten.
+Entscheid: (1) **Schritt B angehalten**, P-2 (Verkaufserholung 20) zurückgenommen. `main` bleibt bei `BUY_RISE` 0 und
+`SELL_RECOVERY_INTERVAL` 10 — die Mechanik ist eingebaut, aber inaktiv; Save v12 enthält `buyPct` bereits, eine spätere
+Wertänderung braucht keine Save-Änderung. (2) **R505 angepasst:** Die Release-Sperre endet nach dem Merge von UI-TEXTE-1;
+Release M13 = E2 + I-049 + I-048 Schritt A (inaktiv) + UI-NAECHSTER-SCHRITT + TOOL-Bündel 6–8 + UI-TEXTE-1. Die Anzeige
+«Kauf 100 %» bleibt im Release (zeigt den künftigen Mechanismus, Release-Notiz nennt sie). (3) **I-048 Schritt B neu**
+nach M13: Spec-Nachtrag Totzone (`max(100, buyPct − BUY_FREE)`, Erstvorschlag `BUY_FREE` 20, `BUY_CAP` 180) durch
+`design-spec-author` opus nach Probe `lead-tech` (≈ 15 Tools); dazu prüfen `lead-qa`/`lead-tech` eine Ensemble-Messung
+(z. B. 5 feste Controller-Phasen, Median) für die Klasse-N-Tests. (4) `feat/i048-b` @ `bc57f8ba` bleibt geparkt (Messweg
+`trackedBuy`, Klasse-R-Umzug wiederverwendbar), kein Merge; Restbudget verfällt, neues Budget beim Neustart.
+Beobachtung Sieg-Tick-Sprunghaftigkeit auf „hoch“ angehoben.
+
+Regelbezug: R487 P-1/P-2, R505, R547, Spec I-048 §6/P-5 · Kosten bei Irrtum: I-048 kommt ein Release später; kein Schaden
+auf `main`.
+
+Entscheider: L0 · Anlass: D-150 lead-design (D-I048-B-WERTE), Stopp lead-tech I048-B · ADR: —
