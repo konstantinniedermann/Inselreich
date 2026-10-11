@@ -5831,3 +5831,19 @@ Plan-Instanzen“ trägt der Coach als E-062 „vorgeschlagen (wartet auf Platz)
 Regelbezug: R316, R523, E-049 · Kosten bei Irrtum: ein verdecktes Steuerungsproblem (Revert einer Funktion).
 
 Entscheider: L0 · Anlass: Bericht studio-coach adhoc-ampel-1011 · ADR: —
+
+## R539 · 2026-10-11 · Gate Plan TOOL-BUENDEL-8: BEDENKEN → Nachtrag; keine künstliche Last
+
+Ruling: lead-qa BEDENKEN (1–7), kein ZURÜCK. **B1/B2 anders gelöst als vorgeschlagen:** T03 erzeugt **keine künstliche
+Last** (kollidiert mit parallelen Strängen, R329, TOOL-TESTLOCK). Stattdessen neue **T05**: `testrun` schreibt beim
+roten Lauf die Fehlermeldung (gekürzt, je fehlgeschlagenem Test) ins `test_failed`-Ereignis, mit Rot-Test. T03 schrumpft
+auf Quellcode-Diagnose ohne Code-Fix; ein Fix (z. B. `testTimeout`) folgt erst, wenn ein aufgezeichnetes Ereignis die
+Ursache belegt (eigenes Häppchen, dann auch `vite.config.ts` zulässig). **B3** `save.test.ts` in die Diagnose aufnehmen.
+**B4** Testfall „nicht gemessen“ ergänzen. **B5–B7** übernommen; Grenzen wörtlich ins Umsetzer-Briefing. Offene Entscheide:
+(1) `deny` als eigenes Ruling nach T02 mit Echtlauf gegen Lagerdaten; (2) erledigt durch T05; (3) seriell. Budget **7**,
+Parallelität 1. Nach dem Nachtrag gilt der Plan ohne erneutes Review als abgenommen (L0 prüft Stichprobe); Umsetzung im
+Worktree `.worktrees/tool-b8` (Branch `tool/b8`), spielfremd, darf neben I-049-UI laufen (zweiter Strang, R535).
+
+Regelbezug: gates.md Gate Plan, R329, R380, R535, R538 · Kosten bei Irrtum: Flake-Ursache eine Runde später belegt.
+
+Entscheider: L0 · Anlass: Urteil lead-qa gate-plan-TOOL-BUENDEL-8 · ADR: —
