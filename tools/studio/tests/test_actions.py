@@ -25,13 +25,16 @@ def fake(items, login="koschi", name="anno-clone"):
     return run
 
 
-def item(qty, repo="anno-clone", product="actions", unit="Minutes"):
-    return {
+def item(qty, repo="anno-clone", product="actions", unit="Minutes", day=None):
+    entry = {
         "product": product,
         "unitType": unit,
         "quantity": qty,
         "repositoryName": repo,
     }
+    if day is not None:
+        entry["date"] = f"2026-10-{day:02d}T06:00:00Z"
+    return entry
 
 
 class ActionsTest(unittest.TestCase):
@@ -43,9 +46,13 @@ class ActionsTest(unittest.TestCase):
         )
 
     def test_lights_green_yellow_red(self):
-        self.assertIn("GRÜN: Inselreich", actions.render(NOW, fake([item(150)])))
-        self.assertIn("GELB: Inselreich", actions.render(NOW, fake([item(151)])))
-        self.assertIn("ROT: Inselreich", actions.render(NOW, fake([item(401)])))
+        self.assertIn(
+            "- Info: Inselreich-Minuten: 150", actions.render(NOW, fake([item(150)]))
+        )
+        for qty in (151, 401):
+            text = actions.render(NOW, fake([item(qty)]))
+            self.assertIn(f"- Info: Inselreich-Minuten: {qty}", text)
+            self.assertNotIn(f"Inselreich-Minuten: {qty} (", text)
         text = actions.render(NOW, fake([item(1001, repo="x")]))
         self.assertIn("GELB: Konto-Minuten: 1001", text)
         self.assertIn(
@@ -62,7 +69,7 @@ class ActionsTest(unittest.TestCase):
 
         for runner in (broken, failing, lambda a: "kein json"):
             text = actions.render(NOW, runner)
-            self.assertEqual(text.count("nicht erfasst"), 3)
+            self.assertEqual(text.count("nicht erfasst"), 4)
             self.assertNotIn("GRÜN", text)
 
     def test_empty_usage_is_zero_not_missing(self):
@@ -78,6 +85,68 @@ class ActionsTest(unittest.TestCase):
 
     def test_empty_login_is_not_recorded(self):
         self.assertIsNone(actions.usage(NOW, fake([], login="")))
+
+
+class ForecastTest(unittest.TestCase):
+    TEN = datetime(2026, 10, 10, 12, tzinfo=UTC)
+
+    def items(self, **extra):
+        base = [item(1101, day=1)] + [item(50, day=d) for d in (7, 8, 9)]
+        return base + extra.get("more", [])
+
+    def test_red_forecast_with_push_rule(self):
+        text = actions.render(self.TEN, fake(self.items()))
+        self.assertIn(
+            "- ROT: Konto-Prognose Monatsende: 2351 von 2000 "
+            "(verbraucht 1251 + 50/Tag × 22 Resttage;",
+            text,
+        )
+        self.assertIn("höchstens ein Push je Tag", text)
+        self.assertIn("gelb > 1600, rot > 1900", text)
+
+    def test_forecast_boundaries(self):
+        for spent, light in (
+            (1600, "GRÜN"),
+            (1601, "GELB"),
+            (1900, "GELB"),
+            (1901, "ROT"),
+        ):
+            line = actions.render(self.TEN, fake([item(spent, day=1)]))
+            self.assertIn(f"- {light}: Konto-Prognose Monatsende: {spent} ", line)
+
+    def test_first_of_month_is_not_recorded(self):
+        first = datetime(2026, 10, 1, 12, tzinfo=UTC)
+        text = actions.render(first, fake([item(40, day=1)]))
+        self.assertIn("- nicht erfasst: Konto-Prognose Monatsende", text)
+        self.assertIsNone(actions.forecast(40, {1: 40.0}, first))
+
+    def test_second_of_month_uses_exactly_one_day(self):
+        second = datetime(2026, 10, 2, 12, tzinfo=UTC)
+        self.assertEqual(
+            actions.forecast(100, {1: 60.0, 2: 99.0}, second), 100 + 60 * 30
+        )
+
+    def test_third_day_uses_two_days(self):
+        third = datetime(2026, 10, 3, 12, tzinfo=UTC)
+        self.assertEqual(actions.forecast(0, {1: 20.0, 2: 40.0}, third), 30 * 29)
+
+    def test_foreign_products_and_units_ignored(self):
+        more = [
+            item(500, product="copilot", day=8),
+            item(500, unit="GigabyteHours", day=9),
+        ]
+        text = actions.render(self.TEN, fake(self.items(more=more)))
+        self.assertIn("50/Tag × 22", text)
+
+    def test_missing_dates_only_forecast_not_recorded(self):
+        text = actions.render(self.TEN, fake([item(100)]))
+        self.assertIn("- nicht erfasst: Konto-Prognose Monatsende", text)
+        self.assertIn("Konto-Minuten: 100 von 2000", text)
+
+    def test_forecast_is_pure_and_rounded(self):
+        days = {7: 10.0, 8: 10.0, 9: 11.0}
+        self.assertEqual(actions.forecast(0, days, self.TEN), round(31 / 3 * 22))
+        self.assertIsNone(actions.forecast(5, None, self.TEN))
 
 
 class SessionMinutesTest(unittest.TestCase):
