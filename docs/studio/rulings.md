@@ -6040,3 +6040,17 @@ Sicherung nach `origin/backup/main-lokal` (R524, kein CI).
 Regelbezug: gates.md Gate Merge, Verfassung §9, R505, R549, R550 · Kosten bei Irrtum: ein Rückmerge im UI-Strang.
 
 Entscheider: L0 · Anlass: Bericht lead-tech UI-TEXTE-1 · ADR: —
+
+## R553 · 2026-10-11 · Retro session-f2a404fd: V1, V2 angenommen (Handbuch 1.51), V3 beobachten
+
+Ruling: **V1** angenommen: Gate Spec und Gate Plan erhalten die Prüffrage „Beruht jede Wertgrenze (Balancing, Sieg-Tick,
+Mehrkosten) auf mehr als einem unabhängigen Lauf? Wenn nein: als Risiko mit Rückfall benannt?“ (gates.md). Solange der
+Controller nur einen Lauf kennt (Beobachtung „Seed wirkt nicht“), genügt die Risiko-Benennung. **V2** angenommen: Nach einem
+Final-Review ZURÜCK ist ein Delta-Review desselben opus-Reviewers (Fortsetzung, kein Start) Pflicht vor dem Bericht an L0;
+STUDIO.md (Umsetzungsablauf) und `.claude/agents/lead-tech.md`. Umsetzung als Handbuch-Minor **1.51** durch `studio-coach`
+(CHANGELOG). **V3** nur beobachten. Ampel rot Steuerung bereinigt 50,3 %: erste bereinigte Rot-Session — Messauftrag an die
+nächste Session-Retro (Anteil L0-Gate-Rulings vs. Lead-Steuerung). Cache-Write: Hebel E-062 (wartet auf Platz).
+
+Regelbezug: R316, R538, R549–R552, Verfassung §9 · Kosten bei Irrtum: eine Prüffrage bzw. ein Delta-Review je ZURÜCK.
+
+Entscheider: L0 · Anlass: Retro session-f2a404fd-ende · ADR: —
