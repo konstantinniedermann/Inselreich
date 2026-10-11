@@ -1,0 +1,1128 @@
+[
+  {
+    "role": "lead-design",
+    "package": "G-spec",
+    "phases": ["graph-spec"],
+    "ts": "2026-09-30T10:00:48.441Z"
+  },
+  {
+    "role": "lead-production",
+    "package": "S16-01",
+    "phases": ["S16-wartung"],
+    "ts": "2026-09-30T13:19:52.251Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M5-01",
+    "phases": ["M5-01"],
+    "ts": "2026-09-30T13:28:27.097Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "M5-02",
+    "phases": ["M5-brainstorming"],
+    "ts": "2026-09-30T13:28:45.086Z"
+  },
+  {
+    "role": "lead-production",
+    "package": "G-merge",
+    "phases": ["graph-merge"],
+    "ts": "2026-09-30T14:00:28.905Z"
+  },
+  {
+    "role": "lead-production",
+    "package": "S17-01",
+    "phases": ["S16-wartung", "S16-wartung", "M5-01-merge", "S17-werkzeug"],
+    "ts": "2026-09-30T14:03:50.532Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M5-W1",
+    "phases": ["M5-01", "M5-plan", "M5-umsetzung"],
+    "ts": "2026-09-30T14:35:14.114Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "M5-W1-art",
+    "phases": ["M5-umsetzung"],
+    "ts": "2026-09-30T14:35:30.571Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "M7-SPEC",
+    "phases": ["M7-SPEC"],
+    "ts": "2026-09-30T18:56:02.177Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "M6-SPEC",
+    "phases": ["M6-SPEC"],
+    "ts": "2026-09-30T18:56:21.308Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "STUDIO-LIMIT",
+    "phases": ["STUDIO-LIMIT"],
+    "ts": "2026-09-30T18:56:34.622Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M5-NACHLESE",
+    "phases": ["M5-NACHLESE"],
+    "ts": "2026-09-30T18:56:49.463Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "STUDIO-LIMIT",
+    "phases": ["M5-NACHLESE", "STUDIO-LIMIT"],
+    "ts": "2026-09-30T19:01:19.879Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M6-SPEC",
+    "phases": ["M5-NACHLESE", "STUDIO-LIMIT", "M6-SPEC"],
+    "ts": "2026-09-30T19:17:39.187Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "M6-SPEC",
+    "phases": ["STUDIO-LIMIT", "STUDIO-LIMIT", "M6-SPEC"],
+    "ts": "2026-09-30T19:17:49.982Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M7-PLAN",
+    "phases": ["M5-NACHLESE", "STUDIO-LIMIT", "M6-SPEC", "M7-SPEC", "M6-PLAN", "M7-PLAN"],
+    "ts": "2026-09-30T19:30:03.667Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "FB-TRIAGE",
+    "phases": ["FB-triage"],
+    "ts": "2026-10-02T13:28:21.900Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "BUG-LICHT",
+    "phases": ["BUG-LICHT"],
+    "ts": "2026-10-02T13:28:42.867Z"
+  },
+  {
+    "role": "lead-production",
+    "package": "M8-DOCS-MERGE",
+    "phases": ["M8-docs-merge"],
+    "ts": "2026-10-02T13:38:45.139Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "H-R1",
+    "phases": ["BUG-LICHT", "M9-H-R1"],
+    "ts": "2026-10-02T13:53:00.847Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M8-S1",
+    "phases": ["M8-auflagen", "M8-umsetzung"],
+    "ts": "2026-10-02T14:29:23.326Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "H-D1",
+    "phases": ["FB-triage", "H-M8", "M10-design"],
+    "ts": "2026-10-02T14:30:00.623Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M8-SIM-MERGE",
+    "phases": ["M8-auflagen", "M8-umsetzung"],
+    "ts": "2026-10-02T14:50:35.033Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "H-R2",
+    "phases": ["BUG-LICHT", "M9-H-R1", "M8-umsetzung", "M9-H-R2"],
+    "ts": "2026-10-02T14:51:09.782Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "M8-SIM-FR",
+    "phases": ["H-M8-delta-gate", "M8-umsetzung"],
+    "ts": "2026-10-02T14:52:30.709Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "M8-R1",
+    "phases": ["BUG-LICHT", "M9-H-R1", "M8-umsetzung", "M9-H-R2"],
+    "ts": "2026-10-02T17:01:38.566Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M10-PLAN",
+    "phases": ["M8-auflagen", "M8-umsetzung", "M10-spec-gate", "M10-plan"],
+    "ts": "2026-10-02T17:33:18.545Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "M8-FR",
+    "phases": ["H-M8-delta-gate", "M8-umsetzung", "M10-spec-gate", "M10-plan-gate"],
+    "ts": "2026-10-02T19:53:56.637Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "H-S1",
+    "phases": ["H-S1"],
+    "ts": "2026-10-03T16:38:26.725Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "H-R9",
+    "phases": ["H-R9"],
+    "ts": "2026-10-03T16:38:50.981Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "IDEEN-01",
+    "phases": ["IDEEN-01"],
+    "ts": "2026-10-04T05:49:59.884Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "ART-STIL-01",
+    "phases": ["ART-STIL-01"],
+    "ts": "2026-10-04T05:52:48.136Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "H-U2",
+    "phases": ["H-U2"],
+    "ts": "2026-10-04T05:54:27.415Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "H-R10",
+    "phases": ["ART-STIL-01", "H-R10", "H-R11"],
+    "ts": "2026-10-04T06:04:50.874Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "H-R11",
+    "phases": ["ART-STIL-01", "H-R10", "H-R11"],
+    "ts": "2026-10-04T06:05:13.586Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "H-R12",
+    "phases": ["ART-STIL-01", "H-R10", "H-R11", "H-R12", "H-R14"],
+    "ts": "2026-10-04T11:54:49.543Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "H-R14",
+    "phases": ["ART-STIL-01", "H-R10", "H-R11", "H-R12", "H-R14"],
+    "ts": "2026-10-04T11:55:06.640Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "H-T1",
+    "phases": ["H-U2", "H-T1"],
+    "ts": "2026-10-04T11:55:21.510Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "IDEEN-02",
+    "phases": ["IDEEN-01", "IDEEN-02"],
+    "ts": "2026-10-04T11:55:37.226Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "H-A2",
+    "phases": ["ART-STIL-01", "H-R10", "H-R11", "H-R12", "H-R14", "H-A2"],
+    "ts": "2026-10-04T11:59:47.726Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "REL-03-ART",
+    "phases": [],
+    "ts": "2026-10-05T08:21:30.914Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "H-U1",
+    "phases": [],
+    "ts": "2026-10-05T08:21:48.242Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "M12-BRAIN",
+    "phases": [],
+    "ts": "2026-10-05T08:22:04.802Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-E0",
+    "phases": ["M12-E0"],
+    "ts": "2026-10-05T08:52:23.684Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-E0",
+    "phases": ["M12-E0", "M12-E0"],
+    "ts": "2026-10-05T09:15:05.420Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "REL-03",
+    "phases": ["M12-E0", "M12-E1"],
+    "ts": "2026-10-05T10:03:00.603Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "H-T3",
+    "phases": [],
+    "ts": "2026-10-05T10:21:52.114Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-E0-C2",
+    "phases": ["M12-E0-C2"],
+    "ts": "2026-10-05T16:04:40.070Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "IDEEN-03",
+    "phases": ["IDEEN-03"],
+    "ts": "2026-10-05T16:04:56.366Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "M12-I010",
+    "phases": ["IDEEN-03", "M12-I010"],
+    "ts": "2026-10-05T16:10:14.137Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-SEE-PLAN",
+    "phases": ["M12-E0-C2", "M12-SEE-PLAN"],
+    "ts": "2026-10-05T16:19:39.902Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "H-I007",
+    "phases": ["IDEEN-03", "M12-I010", "H-I007"],
+    "ts": "2026-10-05T16:20:20.337Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "H-I007",
+    "phases": ["M12-E0-C2", "M12-SEE-PLAN", "H-I007-PLAN", "H-I007"],
+    "ts": "2026-10-05T16:26:58.493Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-E1-C1",
+    "phases": [
+      "M12-E0-C2",
+      "M12-SEE-PLAN",
+      "H-I007-PLAN",
+      "H-I007",
+      "M12-SEE-PLAN",
+      "M12-E0-C3",
+      "M12-E1-C1"
+    ],
+    "ts": "2026-10-05T16:50:18.940Z"
+  },
+  {
+    "role": "lead-production",
+    "package": "REL-04",
+    "phases": ["M12-SEE-GATE", "REL-04"],
+    "ts": "2026-10-05T16:54:48.859Z"
+  },
+  {
+    "role": "lead-production",
+    "package": "M12-E0-MERGE",
+    "phases": ["M12-SEE-GATE", "REL-04", "REL-04-PUSH", "M12-E0-MERGE"],
+    "ts": "2026-10-05T17:31:06.511Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-E1-C2",
+    "phases": [
+      "M12-E0-C2",
+      "M12-SEE-PLAN",
+      "H-I007-PLAN",
+      "H-I007",
+      "M12-SEE-PLAN",
+      "M12-E0-C3",
+      "M12-E1-C1",
+      "M12-E1-C2"
+    ],
+    "ts": "2026-10-05T17:31:24.702Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-E1-C3",
+    "phases": ["M12-E1 C3", "M12-See C1 (aus R241)", "E-030 Werkzeug"],
+    "ts": "2026-10-05T18:26:40.744Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-SEE-C1",
+    "phases": ["M12-E1 C3", "M12-See C1 (aus R241)", "E-030 Werkzeug"],
+    "ts": "2026-10-05T18:27:01.403Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "TOOL-E030",
+    "phases": ["M12-E1 C3", "M12-See C1 (aus R241)", "E-030 Werkzeug"],
+    "ts": "2026-10-05T18:27:20.923Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-SEE-C2",
+    "phases": [
+      "M12-E1 C3",
+      "M12-See C1 (aus R241)",
+      "E-030 Werkzeug",
+      "M12-See C2 (e2+e4, aus R241)"
+    ],
+    "ts": "2026-10-05T19:25:49.528Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-SEE-C3",
+    "phases": [
+      "M12-E1 C3",
+      "M12-See C1 (aus R241)",
+      "E-030 Werkzeug",
+      "M12-See C2 (e2+e4, aus R241)",
+      "M12-See C3 (e3, aus R241)"
+    ],
+    "ts": "2026-10-05T19:56:57.806Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "M12-FP7",
+    "phases": ["M12 F-P7 Werte E6"],
+    "ts": "2026-10-05T20:47:33.585Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-E1-C3B",
+    "phases": [
+      "M12-E1 C3",
+      "M12-See C1 (aus R241)",
+      "E-030 Werkzeug",
+      "M12-See C2 (e2+e4, aus R241)",
+      "M12-See C3 (e3, aus R241)",
+      "M12-E1 C3b (Rest aus R250)"
+    ],
+    "ts": "2026-10-06T06:13:59.932Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-E1-C4",
+    "phases": [
+      "M12-E1 C3",
+      "M12-See C1 (aus R241)",
+      "E-030 Werkzeug",
+      "M12-See C2 (e2+e4, aus R241)",
+      "M12-See C3 (e3, aus R241)",
+      "M12-E1 C3b (Rest aus R250)",
+      "M12-E1 C4 T08"
+    ],
+    "ts": "2026-10-06T08:14:59.607Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "M12-E1-C4",
+    "phases": ["M12-E1 Final-Review"],
+    "ts": "2026-10-06T08:24:15.262Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "M12-E1-ART",
+    "phases": ["M12-E1 Urteil Flachwasser"],
+    "ts": "2026-10-06T08:24:28.293Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-E1-F1",
+    "phases": [
+      "M12-E1 C3",
+      "M12-See C1 (aus R241)",
+      "E-030 Werkzeug",
+      "M12-See C2 (e2+e4, aus R241)",
+      "M12-See C3 (e3, aus R241)",
+      "M12-E1 C3b (Rest aus R250)",
+      "M12-E1 C4 T08",
+      "M12-E1 F1"
+    ],
+    "ts": "2026-10-06T08:34:21.677Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "H-T4",
+    "phases": [
+      "M12-E1 C3",
+      "M12-See C1 (aus R241)",
+      "E-030 Werkzeug",
+      "M12-See C2 (e2+e4, aus R241)",
+      "M12-See C3 (e3, aus R241)",
+      "M12-E1 C3b (Rest aus R250)",
+      "M12-E1 C4 T08",
+      "M12-E1 F1",
+      "H-T4 Hotfix"
+    ],
+    "ts": "2026-10-06T08:57:33.358Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "TOOL-MESSWAECHTER",
+    "phases": [
+      "M12-E1 C3",
+      "M12-See C1 (aus R241)",
+      "E-030 Werkzeug",
+      "M12-See C2 (e2+e4, aus R241)",
+      "M12-See C3 (e3, aus R241)",
+      "M12-E1 C3b (Rest aus R250)",
+      "M12-E1 C4 T08",
+      "M12-E1 F1",
+      "H-T4 Hotfix",
+      "Mess-Wächter R264 V1"
+    ],
+    "ts": "2026-10-06T08:58:02.785Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-SEE-C4",
+    "phases": [
+      "M12-E1 C3",
+      "M12-See C1 (aus R241)",
+      "E-030 Werkzeug",
+      "M12-See C2 (e2+e4, aus R241)",
+      "M12-See C3 (e3, aus R241)",
+      "M12-E1 C3b (Rest aus R250)",
+      "M12-E1 C4 T08",
+      "M12-E1 F1",
+      "H-T4 Hotfix",
+      "Mess-Wächter R264 V1",
+      "M12-See C4 (aus R241)"
+    ],
+    "ts": "2026-10-06T09:11:44.468Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "H-R15",
+    "phases": ["M12-E1 Urteil Flachwasser", "H-R15"],
+    "ts": "2026-10-06T09:12:05.488Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "H-T5",
+    "phases": [
+      "M12-E1 C3",
+      "M12-See C1 (aus R241)",
+      "E-030 Werkzeug",
+      "M12-See C2 (e2+e4, aus R241)",
+      "M12-See C3 (e3, aus R241)",
+      "M12-E1 C3b (Rest aus R250)",
+      "M12-E1 C4 T08",
+      "M12-E1 F1",
+      "H-T4 Hotfix",
+      "Mess-Wächter R264 V1",
+      "M12-See C4 (aus R241)",
+      "H-T5 Hotfix"
+    ],
+    "ts": "2026-10-06T09:20:59.029Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-SEE-C5",
+    "phases": [
+      "M12-E1 C3",
+      "M12-See C1 (aus R241)",
+      "E-030 Werkzeug",
+      "M12-See C2 (e2+e4, aus R241)",
+      "M12-See C3 (e3, aus R241)",
+      "M12-E1 C3b (Rest aus R250)",
+      "M12-E1 C4 T08",
+      "M12-E1 F1",
+      "H-T4 Hotfix",
+      "Mess-Wächter R264 V1",
+      "M12-See C4 (aus R241)",
+      "H-T5 Hotfix",
+      "M12-See C5 (aus R241)"
+    ],
+    "ts": "2026-10-06T10:47:29.059Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "M12-SEE-C5",
+    "phases": ["M12-E1 Final-Review", "M12-See Final-Review"],
+    "ts": "2026-10-06T12:13:14.936Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "M12-SEE-ART",
+    "phases": ["M12-E1 Urteil Flachwasser", "H-R15", "M12-See Urteil T15 (D-144)"],
+    "ts": "2026-10-06T12:13:29.245Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "M12-SEE-F2",
+    "phases": [
+      "M12-E1 C3",
+      "M12-See C1 (aus R241)",
+      "E-030 Werkzeug",
+      "M12-See C2 (e2+e4, aus R241)",
+      "M12-See C3 (e3, aus R241)",
+      "M12-E1 C3b (Rest aus R250)",
+      "M12-E1 C4 T08",
+      "M12-E1 F1",
+      "H-T4 Hotfix",
+      "Mess-Wächter R264 V1",
+      "M12-See C4 (aus R241)",
+      "H-T5 Hotfix",
+      "M12-See C5 (aus R241)",
+      "M12-See F2 (aus R241)"
+    ],
+    "ts": "2026-10-06T12:21:58.090Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "REL-05",
+    "phases": ["M12-E1 Final-Review", "M12-See Final-Review", "REL-05 Delta-Review"],
+    "ts": "2026-10-06T12:42:41.829Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "ART-STIL-02",
+    "phases": ["ART-STIL-02"],
+    "ts": "2026-10-06T14:35:09.099Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "ART-STIL-02-umsetzung",
+    "phases": ["ART-STIL-02", "ART-STIL-02-umsetzung"],
+    "ts": "2026-10-06T14:57:05.355Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "ART-STIL-02-umsetzung",
+    "phases": ["ART-STIL-02", "ART-STIL-02-umsetzung"],
+    "ts": "2026-10-06T14:57:22.435Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "ART-STIL-02-umsetzung",
+    "phases": ["ART-STIL-02", "ART-STIL-02-umsetzung"],
+    "ts": "2026-10-06T14:57:38.434Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "H-F1",
+    "phases": ["ART-STIL-02-gate", "H-F1"],
+    "ts": "2026-10-06T15:33:46.023Z"
+  },
+  {
+    "role": "lead-production",
+    "package": "BEOB-AUSW-01",
+    "phases": ["BEOB-AUSW-01"],
+    "ts": "2026-10-06T15:34:03.715Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "REL-HF1",
+    "phases": ["ART-STIL-02-gate", "ART-STIL-02-umsetzung", "REL-HF1"],
+    "ts": "2026-10-06T15:57:19.653Z"
+  },
+  {
+    "role": "lead-production",
+    "package": "CI-ACTIONS-NODE",
+    "phases": ["BEOB-AUSW-01", "DOC-MERGE-01", "CI-ACTIONS-NODE"],
+    "ts": "2026-10-06T16:02:28.638Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "ART-STIL-02-umsetzung",
+    "phases": ["ART-STIL-02", "ART-STIL-02-umsetzung"],
+    "ts": "2026-10-06T17:24:21.077Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "ART-STIL-02-umsetzung",
+    "phases": ["ART-STIL-02", "ART-STIL-02-umsetzung"],
+    "ts": "2026-10-06T18:43:44.265Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "ART-STIL-02-umsetzung",
+    "phases": ["ART-STIL-02", "ART-STIL-02-umsetzung"],
+    "ts": "2026-10-06T20:14:30.797Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "REL-06",
+    "phases": ["ART-STIL-02-gate", "ART-STIL-02-umsetzung", "REL-HF1", "REL-06"],
+    "ts": "2026-10-06T20:25:48.624Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "ART-STIL-02-umsetzung",
+    "phases": ["ART-STIL-02", "ART-STIL-02-umsetzung"],
+    "ts": "2026-10-06T21:17:39.709Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "REL-06-nach",
+    "phases": ["ART-STIL-02-gate", "ART-STIL-02-umsetzung", "REL-HF1", "REL-06", "REL-06-nach"],
+    "ts": "2026-10-07T05:49:58.736Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "H-T6",
+    "phases": ["ART-STIL-02-gate", "H-F1", "H-T6"],
+    "ts": "2026-10-07T07:15:47.865Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "WALD-02",
+    "phases": ["ART-STIL-02", "ART-STIL-02-umsetzung", "WALD-02"],
+    "ts": "2026-10-07T07:16:41.831Z"
+  },
+  {
+    "role": "lead-production",
+    "package": "TOOL-2026-10-07",
+    "phases": ["BEOB-AUSW-01", "DOC-MERGE-01", "CI-ACTIONS-NODE", "REL-06", "TOOL-2026-10-07"],
+    "ts": "2026-10-07T07:38:44.957Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "ART-STIL-02-umsetzung",
+    "phases": ["ART-STIL-02", "ART-STIL-02-umsetzung", "WALD-02"],
+    "ts": "2026-10-07T07:41:06.475Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "TOOL-GATES-2",
+    "phases": [],
+    "ts": "2026-10-09T10:37:26.308Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "REL11-RENDER-PLAN",
+    "phases": ["plan"],
+    "ts": "2026-10-09T11:22:23.365Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "REL11-UI-PLAN",
+    "phases": ["plan"],
+    "ts": "2026-10-09T11:22:41.397Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "IDEEN-04",
+    "phases": ["ideen-04"],
+    "ts": "2026-10-09T12:11:49.180Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "UI-SEEKARTE-PLAN",
+    "phases": ["plan", "rel11-ui-umsetzung", "ui-seekarte-plan"],
+    "ts": "2026-10-09T12:15:21.865Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "REL-12",
+    "phases": ["REL-12 Release-Check"],
+    "ts": "2026-10-09T14:02:52.963Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "I-028",
+    "phases": ["I-028 Brainstorming"],
+    "ts": "2026-10-09T14:03:13.107Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "I-028",
+    "phases": ["I-028 Umsetzung"],
+    "ts": "2026-10-09T15:14:11.869Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "I-028",
+    "phases": ["I-028 Umsetzung"],
+    "ts": "2026-10-09T18:57:19.123Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "REL-13",
+    "phases": ["REL-12 Release-Check", "REL-13 Release-Check"],
+    "ts": "2026-10-09T19:31:03.187Z"
+  },
+  {
+    "role": "lead-production",
+    "package": "PUSH-REL-13",
+    "phases": [],
+    "ts": "2026-10-09T19:57:13.430Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "REL-14-DESIGN",
+    "phases": ["design-REL-14"],
+    "ts": "2026-10-09T19:58:15.892Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "ART-FELS-FERNGROESSE",
+    "phases": ["design-REL-14"],
+    "ts": "2026-10-09T19:58:22.963Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "TOOL-BUENDEL",
+    "phases": ["plan-TOOL-BUENDEL"],
+    "ts": "2026-10-09T19:58:37.349Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "REL-14-PLAN",
+    "phases": ["plan-TOOL-BUENDEL", "plan-REL-14"],
+    "ts": "2026-10-09T20:01:08.620Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "GATE-REL-14",
+    "phases": ["gate-REL-14"],
+    "ts": "2026-10-09T20:13:44.699Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "REL-14",
+    "phases": ["plan-TOOL-BUENDEL", "plan-REL-14", "impl-REL-14"],
+    "ts": "2026-10-09T20:14:59.085Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "TOOL-BUENDEL",
+    "phases": ["plan-TOOL-BUENDEL", "plan-REL-14", "impl-REL-14", "impl-TOOL-BUENDEL"],
+    "ts": "2026-10-09T20:20:48.762Z"
+  },
+  {
+    "role": "lead-production",
+    "package": "REL-14",
+    "phases": ["gate-plan-TOOL", "release-REL-14"],
+    "ts": "2026-10-09T20:29:28.587Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "TOOL-BUENDEL",
+    "phases": ["plan-TOOL-BUENDEL", "plan-REL-14", "impl-REL-14", "impl-TOOL-BUENDEL"],
+    "ts": "2026-10-09T20:31:31.827Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "REL-14",
+    "phases": ["gate-REL-14", "gate-plan-TOOL", "release-check-REL-14"],
+    "ts": "2026-10-09T20:33:30.361Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "TOOL-BUENDEL",
+    "phases": [
+      "plan-TOOL-BUENDEL",
+      "plan-REL-14",
+      "impl-REL-14",
+      "impl-TOOL-BUENDEL",
+      "controller-TOOL-BUENDEL-3"
+    ],
+    "ts": "2026-10-09T20:43:47.322Z"
+  },
+  {
+    "role": "lead-production",
+    "package": "PUSH-REL-14",
+    "phases": ["gate-plan-TOOL", "release-REL-14", "push-REL-14"],
+    "ts": "2026-10-10T06:31:07.210Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "REL-15",
+    "phases": ["gate-REL-14", "gate-plan-TOOL", "release-check-REL-14"],
+    "ts": "2026-10-10T07:09:57.121Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "TOOL-BUENDEL-2",
+    "phases": [
+      "plan-TOOL-BUENDEL",
+      "plan-REL-14",
+      "impl-REL-14",
+      "impl-TOOL-BUENDEL",
+      "controller-TOOL-BUENDEL-3",
+      "plan-REL-15",
+      "impl-REL-15",
+      "impl-TOOL-BUENDEL-2"
+    ],
+    "ts": "2026-10-10T07:19:27.996Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "TOOL-BUENDEL-2",
+    "phases": [
+      "plan-TOOL-BUENDEL",
+      "plan-REL-14",
+      "impl-REL-14",
+      "impl-TOOL-BUENDEL",
+      "controller-TOOL-BUENDEL-3",
+      "plan-REL-15",
+      "impl-REL-15",
+      "impl-TOOL-BUENDEL-2"
+    ],
+    "ts": "2026-10-10T07:49:03.979Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "IDEEN-05",
+    "phases": ["IDEEN-05"],
+    "ts": "2026-10-10T08:35:14.476Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "HOTFIX-CI-01",
+    "phases": ["HOTFIX-CI-01"],
+    "ts": "2026-10-10T08:39:11.558Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "M13-BRAINSTORM",
+    "phases": ["IDEEN-05", "design-REL17", "design-M13"],
+    "ts": "2026-10-10T08:44:24.809Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "UI-REL16",
+    "phases": ["HOTFIX-CI-01", "plan-REL16-TB3", "plan-REL17", "UI-REL16", "TOOL-BUENDEL-3"],
+    "ts": "2026-10-10T09:05:27.741Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "TOOL-BUENDEL-3",
+    "phases": ["HOTFIX-CI-01", "plan-REL16-TB3", "plan-REL17", "UI-REL16", "TOOL-BUENDEL-3"],
+    "ts": "2026-10-10T09:05:48.100Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "REL-16",
+    "phases": ["gate-REL16-TB3", "REL-16"],
+    "ts": "2026-10-10T09:14:51.320Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "UI-PROBLEM-SPRUNG",
+    "phases": [
+      "HOTFIX-CI-01",
+      "plan-REL16-TB3",
+      "plan-REL17",
+      "UI-REL16",
+      "TOOL-BUENDEL-3",
+      "UI-PROBLEM-SPRUNG"
+    ],
+    "ts": "2026-10-10T09:23:59.542Z"
+  },
+  {
+    "role": "lead-qa",
+    "package": "REL-17",
+    "phases": ["gate-REL16-TB3", "REL-16", "gate-M13-E1-SPEC", "REL-17"],
+    "ts": "2026-10-10T09:41:16.838Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "design-ideen-06",
+    "phases": ["design-m13-e2", "design-ideen-06"],
+    "ts": "2026-10-10T15:17:16.826Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "design-i048-zukauf",
+    "phases": [
+      "design-m13-e2",
+      "design-ideen-06",
+      "design-ui-tasten",
+      "design-i048-zukauf",
+      "design-i049-reserve",
+      "design-m14-richtung"
+    ],
+    "ts": "2026-10-10T15:26:25.593Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "design-i049-reserve",
+    "phases": [
+      "design-m13-e2",
+      "design-ideen-06",
+      "design-ui-tasten",
+      "design-i048-zukauf",
+      "design-i049-reserve",
+      "design-m14-richtung"
+    ],
+    "ts": "2026-10-10T15:26:32.926Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "design-denkmal-sprite",
+    "phases": ["design-denkmal-sprite"],
+    "ts": "2026-10-10T15:26:49.519Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "design-m14-richtung",
+    "phases": [
+      "design-m13-e2",
+      "design-ideen-06",
+      "design-ui-tasten",
+      "design-i048-zukauf",
+      "design-i049-reserve",
+      "design-m14-richtung"
+    ],
+    "ts": "2026-10-10T15:26:58.766Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "tool-buendel-5",
+    "phases": [
+      "plan-ui-tasten",
+      "plan-tool-buendel-5",
+      "plan-i049-reserve",
+      "tool-buendel-5",
+      "ui-tasten"
+    ],
+    "ts": "2026-10-10T15:31:55.597Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "ui-tasten",
+    "phases": [
+      "plan-ui-tasten",
+      "plan-tool-buendel-5",
+      "plan-i049-reserve",
+      "tool-buendel-5",
+      "ui-tasten"
+    ],
+    "ts": "2026-10-10T15:32:05.774Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "aufraeum-01",
+    "phases": [
+      "plan-ui-tasten",
+      "plan-tool-buendel-5",
+      "plan-i049-reserve",
+      "tool-buendel-5",
+      "ui-tasten",
+      "plan-aufraeum-01",
+      "gate-m13-e2-spec",
+      "aufraeum-01"
+    ],
+    "ts": "2026-10-10T15:41:36.464Z"
+  },
+  {
+    "role": "lead-design",
+    "package": "design-m14-e1",
+    "phases": [
+      "design-m13-e2",
+      "design-ideen-06",
+      "design-ui-tasten",
+      "design-i048-zukauf",
+      "design-i049-reserve",
+      "design-m14-richtung"
+    ],
+    "ts": "2026-10-10T15:42:39.821Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "plan-m13-e2",
+    "phases": ["plan-m13-e2", "plan-i048", "gate-m14-e1"],
+    "ts": "2026-10-11T07:19:51.302Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "plan-i048",
+    "phases": ["plan-m13-e2", "plan-i048", "gate-m14-e1"],
+    "ts": "2026-10-11T07:20:07.547Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "plan-tool-buendel-6",
+    "phases": [
+      "plan-m13-e2",
+      "plan-i048",
+      "gate-m14-e1",
+      "plan-ui-naechster-schritt",
+      "plan-tool-buendel-6"
+    ],
+    "ts": "2026-10-11T07:24:40.988Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "tool-buendel-6-a",
+    "phases": [
+      "plan-m13-e2",
+      "plan-i048",
+      "gate-m14-e1",
+      "plan-ui-naechster-schritt",
+      "plan-tool-buendel-6",
+      "plan-tool-buendel-6",
+      "plan-i048",
+      "plan-m13-e2",
+      "tool-buendel-6-a"
+    ],
+    "ts": "2026-10-11T08:02:49.286Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "m13-e2-sim",
+    "phases": [
+      "plan-m13-e2",
+      "plan-i048",
+      "gate-m14-e1",
+      "plan-ui-naechster-schritt",
+      "plan-tool-buendel-6",
+      "plan-tool-buendel-6",
+      "plan-i048",
+      "plan-m13-e2",
+      "tool-buendel-6-a",
+      "plan-m13-e2",
+      "tool-buendel-6-a",
+      "m13-e2-sim"
+    ],
+    "ts": "2026-10-11T08:15:20.147Z"
+  },
+  {
+    "role": "lead-art",
+    "package": "m13-e2-art",
+    "phases": ["m13-e2-art"],
+    "ts": "2026-10-11T08:15:39.911Z"
+  },
+  {
+    "role": "lead-tech",
+    "package": "tool-buendel-6-b",
+    "phases": [
+      "plan-m13-e2",
+      "plan-i048",
+      "gate-m14-e1",
+      "plan-ui-naechster-schritt",
+      "plan-tool-buendel-6",
+      "plan-tool-buendel-6",
+      "plan-i048",
+      "plan-m13-e2",
+      "tool-buendel-6-a",
+      "plan-m13-e2",
+      "tool-buendel-6-a",
+      "m13-e2-sim",
+      "tool-buendel-6-b"
+    ],
+    "ts": "2026-10-11T08:29:46.688Z"
+  }
+]
