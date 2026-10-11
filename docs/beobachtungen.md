@@ -185,3 +185,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
   prüfen), `tools/studio/tablecheck.py` (`_open_backtick`: meldet ersten Backtick-Lauf ohne Partner sofort, CommonMark scannt weiter),
   `tools/studio/testrun.py` (Ctrl-C-Fenster zwischen zwei Signalen nur per Mock belegt). Ursprung: Reviews TOOL-BUENDEL-7.
   Einschätzung: gering; im Repo ohne Treffer.
+
+### 2026-10-11 · Last-Flake `terrain.test.ts` (R170 Kantenenergie) unter Load > 8
+
+- **Fundort:** `tests/render/terrain.test.ts` (R170 Kachelraster, Kantenenergie ≤ 2,3-fach), dazu einmal `tests/sim/save.test.ts`.
+  Beobachtung: Flake-Ampel zeigt 5 rote Läufe, vier davon in `terrain.test.ts`; Beleg `make check` auf `dcae12eb` rot bei
+  Load 8,5, unmittelbare Wiederholung grün. Ursprung: Retro adhoc-ampel-1011. Einschätzung: mittel (kostet Wiederholungen
+  im Integrator); prüfen, ob der Test zeitabhängig ist oder Zufall ohne festen Seed nutzt.
