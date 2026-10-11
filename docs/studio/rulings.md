@@ -5674,3 +5674,19 @@ freie Plätze; M14-E1-Plan bleibt bis M13-Ende gesperrt, R486).
 Regelbezug: R445, R475, R486, R505, R506, R518 · Kosten bei Irrtum: ein Merge-Konflikt zwischen den Sim-Strängen.
 
 Entscheider: L0 · Anlass: Merge-Bericht, Ampel grün · ADR: —
+
+## R528 · 2026-10-11 · Beobachtungs-Auswertung 2026-10-11 angenommen; Präfix-Regel; TOOL-BUENDEL-7 und UI-TEXTE-1 vorbereiten
+
+Ruling: Auswertung `e85f26aa` (29 Einträge, drei Bündel) und Entfernen der Worktrees `m13-e2-sim`, `b6b`, `m13-e2-art`,
+`m13-e2-ui` angenommen. Entwürfe: (1) AK-M13E2-48 ist durch R526 entschieden. (2) `push-check` D1/Lastwarten: zurückgestellt
+bis zu den Load-Daten (R514 V2). (3) **Präfix-Regel:** Hat ein Lead die Paket-ID `X-<Suffix>` und gibt es keine Freigabe
+genau dieser Phase, bindet die Freigabe `X` (Präfix bis zum Bindestrich, längster Treffer gewinnt); exakte Freigabe geht
+vor. Umsetzung in TOOL-BUENDEL-7. **TOOL-BUENDEL-7** (Restpunkte testrun/log/model, Präfix-Regel, `docs-check` gegen
+zerrissene Tabellen, dazu R523 V3 Ampelzeile „Produktivanteil nach Phase“): Plan durch `lead-tech` auf sonnet (E-054,
+Werkzeug-Paket, Stufe leicht); Umsetzung darf vor M13-Ende laufen (spielfremd, R505). **UI-TEXTE-1**: Kurzdesign der
+Wortlaute durch `lead-design` (sonnet, Stufe leicht, E-061); Umsetzung erst nach I-049-UI wegen `texts.ts`.
+UI-AUFRAEUM-2 nach M13.
+
+Regelbezug: R505, R514, R523 V3, E-054, E-061 · Kosten bei Irrtum: ein Werkzeug-Plan zu viel.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-AUSW-1011 · ADR: —
