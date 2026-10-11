@@ -8,17 +8,17 @@ import { tierPreviewLine, tooltipLines } from '../../src/ui/buildMenu';
 const MONUMENT_TOOL = { kind: 'build', defId: 'monument' } as const;
 
 describe('AK-UT-05 Höchstzahl-Zeile', () => {
-  it('maxCount 1: «Nur ein <Name> je Insel», sonst keine «Nur ein»-Zeile, nie «Höchstens»', () => {
+  it('maxCount 1: «Nur einmal je Insel», sonst keine «Nur einmal»-Zeile, nie «Höchstens»', () => {
     for (const def of Object.values(BUILDING_DEFS)) {
       const lines = tooltipLines({ kind: 'build', defId: def.id });
       expect(
         lines.some((l) => l.includes('Höchstens')),
         def.id,
       ).toBe(false);
-      if (def.maxCount?.n === 1) expect(lines).toContain(`Nur ein ${def.name} je Insel`);
+      if (def.maxCount?.n === 1) expect(lines).toContain('Nur einmal je Insel');
       else
         expect(
-          lines.some((l) => l.startsWith('Nur ein')),
+          lines.some((l) => l.startsWith('Nur einmal')),
           def.id,
         ).toBe(false);
     }
