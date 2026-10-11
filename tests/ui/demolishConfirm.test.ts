@@ -41,10 +41,28 @@ describe('AK-M13E2-34 Abriss-Bestätigung (Anhang 08 C)', () => {
     expect(play(w, [PRESS(id), PRESS(id)])).toEqual([FIRST, SECOND]);
   });
 
-  it('C2 Entf/Entf, Backspace/Backspace und Klick/Entf wirken wie C1', () => {
+  it('C2 Knopf, Entf und Backspace sind in jeder Paarung gleichwertige Auslöser', () => {
     const { w, id } = runningMonument();
-    // Knopf und Taste sind derselbe Eingang `press`; drei Folgen je einzeln
-    for (let i = 0; i < 3; i++) expect(play(w, [PRESS(id), PRESS(id)])).toEqual([FIRST, SECOND]);
+    // app.ts leitet Knopf («Abreissen»), Entf und Backspace alle an demolishFromPanel, das den Reducer mit `press` speist
+    const triggers = {
+      Klick: PRESS,
+      Entf: PRESS,
+      Backspace: PRESS,
+    } as const;
+    const names = Object.keys(triggers) as (keyof typeof triggers)[];
+    for (const first of names)
+      for (const second of names)
+        expect(
+          play(w, [triggers[first](id), triggers[second](id)]),
+          `${first} dann ${second}`,
+        ).toEqual([FIRST, SECOND]);
+    // Gemischte Folge: ein Auslöser macht scharf, ein anderer löst aus; danach beginnt es von vorn
+    expect(play(w, [PRESS(id), PRESS(id), PRESS(id), PRESS(id)])).toEqual([
+      FIRST,
+      SECOND,
+      FIRST,
+      SECOND,
+    ]);
   });
 
   it('C3 Auswahlwechsel, Esc oder Panel schliessen setzt zurück; Folgeklick macht nur scharf', () => {
