@@ -5327,3 +5327,20 @@ anderer Insel bleibt wie heute. Start, sobald `make zeitreserve-push` Exit 0 (R4
 Regelbezug: STUDIO.md Stufe leicht, gates.md Kombiniertes Gate, R499, R464 · Kosten bei Irrtum: ein UI-Paket nachbessern.
 
 Entscheider: L0 · Anlass: Plan-Bericht lead-tech · ADR: —
+
+## R503 · 2026-10-11 · Gate Plan TOOL-BUENDEL-6: BEDENKEN → Plan-Nachtrag; D1–D4 entschieden
+
+Ruling: lead-qa BEDENKEN (B1–B9), lead-production OK mit Bedenken (B1–B5). **Plan-Nachtrag** durch den Planverfasser
+(Fortsetzung): QA-B1 (D1 nur bei existierender, gültiger, leerer Markierungsliste; Datei vor dem Lauf löschen; Tests
+„Datei fehlt → Exit 2“, „veraltet → vorab gelöscht“), QA-B2 (Markierungsliste aus der Hauptmessung neu berechnen,
+reine Funktion, kein Dateizustand), QA-B3 (nicht-strenges `zeitreserve` in `check-run` darf die Nachmessung nicht
+verbauen — vor Task prüfen, Tests 3/4 in T03), QA-B5 (`git status --porcelain` zu Beginn und Ende, Abweichung → Exit 1,
+Test), QA-B9 (Lead-`Paket:` = Freigabe-Phase; Test mit realen Paket/Phase-Paaren aus `events.jsonl`). QA-B4, B6–B8 als
+Hinweise in die Task-Dateien. **D1** angenommen unter Auflage QA-B1; **D2, D3** angenommen; **D4** angenommen mit QA-B9.
+**Parallelität 2** (Prod-B3): Strang A (T01–T03, `.worktrees/b6a`) und Strang B (T04–T07, `.worktrees/b6b`), Konflikte
+nur `Makefile`/`docs/arc42.md` (getrennte Absätze). Budget 8 Starts. Merge von T07 erst, wenn alle laufenden Stränge
+Freigaben im Phasenformat haben (Prod-B4). Umsetzung erst nach Push REL-19 (R464) und Abnahme des Nachtrags durch L0.
+
+Regelbezug: gates.md Gate Plan, R488, R464, E-059, E-060 · Kosten bei Irrtum: ein Werkzeug-Paket nachbessern.
+
+Entscheider: L0 · Anlass: Gate-Berichte lead-qa und lead-production · ADR: —
