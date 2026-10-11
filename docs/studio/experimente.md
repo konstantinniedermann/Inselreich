@@ -577,7 +577,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `.gitattributes`, `tools/studio/merge_append.py` (neu, mit Tests unter `tools/studio/tests/`), `Makefile` (Ziel zum Setzen von `merge.beob-append.driver` in `.git/config`, gilt für alle Worktrees), `.claude/agents/production-integrator.md`, `docs/studio/STUDIO.md` (Merges), `docs/studio/CHANGELOG.md` (nur nach Ruling; Umsetzung als Werkzeug-Paket)
 - Ruling: R520 (Werkzeug gemergt, Merge-Treiber `beob-append`); Start 2026-10-11 auf dem Platz von E-049 (R523 V4)
 - Start: 2026-10-11
-- Bewertung: –
+- Bewertung: Entwurf 2026-10-11 (Studio-Coach, EXP-BEWERTUNG-1011): noch nicht bewertbar, 0 von 3 Merges mit beidseitiger Änderung von `docs/beobachtungen.md` seit Treiber (`712e63f2`, 10:37). Geprüft per `git diff <merge-base>` je Elternteil: `cda5fdb7` und `e8b462de` nur ours, `ecf9972b`, `1cbbdf89`, `9be27dab` nur theirs, `0a8ee0c2` und `612856dc` keine Änderung; der Treiber lief also nie. Fehlender Datenpunkt: 3 Merges mit Änderung auf beiden Seiten.
 
 ## E-060 · vorgeschlagen · Budget-Hook blockt statt zu warnen (Anpassung E-055)
 
@@ -603,7 +603,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R497
 - Start: 2026-10-11 (erster Fall: Spec-Nachtrag M14-E1)
 - Datenpunkt 1 von 3, S-2026-10-11-dc50be15 (Retro [session-dc50be15-ende](retros/2026-10-11-session-dc50be15-ende.md) B4): `design-m14-e1-nachtrag` (sonnet) 0,078 M gegen Ausgang 0,70 M (≈ 11 %, Schwelle ≤ 60 % erfüllt); Gate danach ohne weitere Befunde, 0 ZURÜCK (R501); Kurzdesign `design-ui-naechster-schritt` (sonnet) 0,056 M gegen 0,16 M (≈ 35 %); opus-Anteil 55,6 % (≤ 70 % erfüllt). Weiter beobachten.
-- Bewertung: –
+- Bewertung: Entwurf 2026-10-11 (Studio-Coach, EXP-BEWERTUNG-1011): noch nicht bewertbar. Datenpunkt 2, S-2026-10-11-d665682d (`lead_stats.rows`): `design-UI-TEXTE-1` (sonnet, eine Instanz, 18 Turns) 0,129 M für Kurzdesign samt Spec-Nachtrag (R530) und Berichtigung (R533), gegen 0,16 M Ausgang Kurzdesign = ≈ 81 % (Schwelle ≤ 60 % verfehlt, aber Nachtrag-Anteil nicht trennbar, weil dieselbe Instanz); opus-Anteil der Session 38,2 % (≤ 70 % erfüllt); Gate Spec BEDENKEN (R530, 9 Punkte, kein Blocker). Tendenz: Nachtrag klar unter Schwelle (11 %, Datenpunkt 1), Kurzdesign mit Spec nahe 80 %. Fehlend: ein dritter, sauber getrennter Datenpunkt und der Ausgangswert der Gate-Befunde (Gegenprobe); Empfehlung: Schwelle für Kurzdesign inklusive Spec und Nachtrag in einer Instanz neu fassen oder weiter beobachten (verlängern).
 
 ## E-062 · vorgeschlagen (wartet auf Platz) · Turnkappe 60 Turns für Plan-Instanzen
 
