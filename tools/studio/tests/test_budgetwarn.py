@@ -1,7 +1,9 @@
 import json
 import unittest
+from pathlib import Path
 
 import budgetwarn
+import model
 
 
 def grant(role="lead-tech", phase="P1", sid="s1", kind="budget"):
@@ -90,6 +92,93 @@ class WarningTest(unittest.TestCase):
         gp = "Persona: lead-tech\nPaket: P1\nBudget: 4"
         self.assertIsNone(self.warn(gp, [grant()], kind="general-purpose"))
         self.assertIn("keine Freigabe", self.warn(gp, kind="general-purpose"))
+
+
+class CheckTest(unittest.TestCase):
+    """Blockmodus (E-060): Freigabe derselben Rolle, Phase passt zu `Paket:` oder Token."""
+
+    def check(self, prompt, grants=(), kind="lead-tech"):
+        return budgetwarn.check(start(prompt, kind), [json.loads(g) for g in grants])
+
+    def test_blocks_without_grant_with_ready_command(self):
+        text = self.check("Persona: lead-tech\nPaket: TB-6-umsetzung\nBudget: 7")
+        self.assertIn("Budget-Block (E-060)", text)
+        self.assertIn(
+            "python3 tools/studio/log.py budget --lead lead-tech --grant 7 "
+            "--phase TB-6-umsetzung",
+            text,
+        )
+
+    def test_matching_phase_and_token_allowed(self):
+        grants = [grant(phase="TOOL-BUENDEL-6-umsetzung")]
+        for package in (
+            "TOOL-BUENDEL-6-umsetzung",
+            "tool-buendel-6-umsetzung (Instanz 2)",
+            "TOOL-BUENDEL-6-umsetzung — Controller",
+        ):
+            prompt = f"Persona: lead-tech\nPaket: {package}\nBudget: 7"
+            self.assertIsNone(self.check(prompt, grants), package)
+
+    def test_other_package_blocks_with_phase_list(self):
+        prompt = "Persona: lead-tech\nPaket: TOOL-BUENDEL-7\nBudget: 7"
+        text = self.check(prompt, [grant(phase="TOOL-BUENDEL-6-umsetzung")])
+        self.assertIn("TOOL-BUENDEL-6-umsetzung", text)
+        self.assertIn("--phase TOOL-BUENDEL-7", text)
+
+    def test_grant_of_other_role_blocks(self):
+        prompt = "Persona: lead-tech\nPaket: P1\nBudget: 7"
+        self.assertIsNotNone(self.check(prompt, [grant(role="lead-qa")]))
+
+    def test_no_block_cases(self):
+        self.assertIsNone(self.check("Persona: lead-tech\nBudget: keins"))
+        self.assertIsNone(self.check("Persona: lead-tech\nBudget: 0"))
+        tech = "Persona: tech-sim-engineer\nBudget: 3"
+        self.assertIsNone(self.check(tech, kind="tech-sim-engineer"))
+        self.assertIsNone(self.check(PROMPT, kind="fork"))
+
+    def test_no_paket_header_with_role_grant_allowed(self):
+        prompt = "Persona: lead-tech\nBudget: 4"
+        self.assertIsNone(self.check(prompt, [grant(phase="P0")]))
+        self.assertIsNotNone(self.check(prompt))
+
+
+class NameRuleTest(unittest.TestCase):
+    def test_same_names_as_model_grant_names(self):
+        for package in (
+            "TOOL-BUENDEL-6-umsetzung",
+            "P1 (Instanz 2)",
+            "REL-19 \u2014 Release",
+            "plan-x: Entwurf",
+        ):
+            ours = {n.casefold() for n in budgetwarn.package_names(package)}
+            theirs = {n.casefold() for n in model._grant_names({"package": package})}
+            self.assertEqual(ours, theirs, package)
+
+
+FIXTURE = Path(__file__).parent / "fixtures" / "budget_pairs.json"
+RULE_FROM = "2026-10-10T15:16:00Z"  # Handbuch 1.45 (Commit e5563696, 17:16 MESZ): `Paket:` gleich Phase
+# Echte Abweichung nach 1.45 (Paket `design-m14-e1`, Freigabe `design-m14-richtung`):
+# blockt mit E-060. Merge-Voraussetzung R503 B4: laufende Stränge vorher angleichen.
+KNOWN_MISMATCH = {("lead-design", "design-m14-e1")}
+
+
+class RealPairsTest(unittest.TestCase):
+    def test_pairs_from_handbook_1_45_are_allowed(self):
+        pairs = json.loads(FIXTURE.read_text("utf-8"))
+        recent = [p for p in pairs if p["ts"] >= RULE_FROM]
+        self.assertTrue(recent)
+        for pair in recent:
+            prompt = f"Persona: {pair['role']}\nPaket: {pair['package']}\nBudget: 1"
+            given = [
+                {"role": pair["role"], "budget": {"phase": phase}}
+                for phase in pair["phases"]
+            ]
+            result = budgetwarn.check(start(prompt, pair["role"]), given)
+            if (pair["role"], pair["package"]) in KNOWN_MISMATCH:
+                # wird die Ausnahme angeglichen, hier rot: KNOWN_MISMATCH-Eintrag löschen
+                self.assertIsNotNone(result, pair)
+            else:
+                self.assertIsNone(result, pair)
 
 
 if __name__ == "__main__":

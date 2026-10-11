@@ -251,3 +251,33 @@ Der gestärkte Test `tests/ui/goodFocus.test.ts` (AK-GC-08) belegt die Trennung 
 ### 2026-10-10 · UI-TASTEN: Final-Review-Hinweise (niedrig)
 
 - **Fundort:** `src/ui/modal.ts` (importiert `hotkeys.ts` für `isSaveChord`, zieht `sim/defs` mit), Tooltip «Entf» am Abreissen-Knopf (Mac ohne Entf-Taste), `keyDownVerdict` (sperrt nur den Abriss-Zug). Beobachtung: `isSaveChord` könnte in ein kleines reines Modul; Tooltip könnte «Entf / Rücktaste» nennen. Ursprung: Final-Review UI-TASTEN. Einschätzung: alle niedrig.
+
+### 2026-10-11 · Inspektor-Abhilfe «baue mehr» bei gefülltem Lager
+
+- **Fundort:** `src/ui/guide.ts` `remedyText` (Wohnhaus), Playtest UI-NAECHSTER-SCHRITT
+  (`.worktrees/ui-naechster-schritt/.studio/qa/ui-naechster-schritt/food-1920x1080-3-inspektor.png`). Beobachtung: Das
+  Wohnhaus-Feld `remedy` nennt «Baue mehr Fischerhütte (F) oder kaufe Nahrung am Kontor» auch bei Nahrung 50 im Lager,
+  solange das Haus Nahrung als unerfüllt führt (im Test pausiert, kein Tick); «Nächster Schritt» zeigt dann den
+  bisherigen Pfad. Ursprung: qa-playtester ui-naechster-schritt. Einschätzung: niedrig, vermutlich nur bis zum nächsten
+  Versorgungs-Tick sichtbar; prüfen, ob es im laufenden Spiel auftritt.
+
+### 2026-10-11 · `make push-check`: D1 unter Parallelität Regelfall, `check-ci-perf` ohne Lastwarten
+
+- **Fundort:** `tools/studio/pushcheck.py` (TOOL-BUENDEL-6 T03), Echtlauf bei Load 69,3. Beobachtung: (1) Das Warten auf
+  Load ≤ 3 endet nach der Frist, Vitest startet trotzdem; bei leerer Markierungsliste greift D1 (Exit 0 ohne Nachmessung)
+  — unter paralleler Last wird das der Normalfall, das Gate trägt dann allein die Monotonie-Annahme. (2) Vor
+  `check-ci-perf` wartet `push-check` nicht auf ruhige Last → falsches Rot möglich, kein falsches Grün. Ursprung:
+  Controller Strang A, Final-Review opus. Einschätzung: niedrig bis mittel; mit den Load-Daten aus R514 V2 bewerten.
+
+### 2026-10-11 · M13-E2-ART: Nachtlicht des Denkmals nicht eingehängt; Frame-Ereigniszahl schwankt
+
+- **Fundort:** `feat/m13-e2-art` @ `4626645a`; Handoff `.studio/handoffs/2026-10-11-lead-art-m13-e2-art.md`. Beobachtung:
+  (1) `monumentNightLight` (Leuchtfeuer bei Nacht) ist definiert, aber nirgends eingehängt. (2) In `tests/render/renderer.test.ts`
+  schwankt die Zahl der Frame-Ereignisse zwischen Läufen. Ursprung: lead-art M13-E2-ART. Einschätzung: (1) mittel, falls die
+  Spec ein Nachtlicht verlangt (Controller E prüft in T15), sonst niedrig; (2) niedrig, Flake-Kandidat.
+
+### 2026-10-11 · M13-E2-UI: «Kein Kontor» auch beim Gut-Sperr-Fall
+
+- **Fundort:** `feat/m13-e2-ui` T11 (`26d51c50`, Gründe/Abriss-Bestätigung). Beobachtung: Der Grund «Kein Kontor» erscheint
+  spec-konform auch dann, wenn eigentlich der Sperrbestand eines Guts (`goodLock`) den Zug verhindert — Text ungenau.
+  Ursprung: Controller D M13-E2-UI. Einschätzung: niedrig; mit I-049-UI (Sperrbestand-Anzeige) gemeinsam prüfen.

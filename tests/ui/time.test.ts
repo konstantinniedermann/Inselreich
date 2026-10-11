@@ -44,13 +44,23 @@ describe('formatGameTime (AK-UX-02)', () => {
   });
 });
 
-it('AK-UX-13 kein Text enthält „Tick" (alle Szenarien, Tick +0 und +300)', () => {
+const noTick = (texts: string[]): void => {
+  for (const t of texts) expect(t, t).not.toMatch(/Tick/);
+};
+
+it('AK-UX-13 kein Text enthält „Tick" (Werkzeuge, Gebäude, Steuerstufen)', () => {
   const texts: string[] = [];
   for (const tool of [{ kind: 'select' }, { kind: 'road' }, { kind: 'demolish' }] as const)
     texts.push(...tooltipLines(tool));
   for (const id of BUILDING_IDS) texts.push(...tooltipLines({ kind: 'build', defId: id }));
   for (const lvl of Object.keys(TAX_LEVELS) as TaxLevel[]) texts.push(taxEffect(lvl));
-  for (const build of Object.values(SCENARIOS)) {
+  noTick(texts);
+});
+
+it.each(Object.entries(SCENARIOS))(
+  'AK-UX-13 kein Text enthält „Tick" (Szenario %s, Tick +0 und +300)',
+  (_name, build) => {
+    const texts: string[] = [];
     const w = build();
     for (let i = 0; i <= 300; i++) {
       if (i === 0 || i === 300) {
@@ -64,6 +74,6 @@ it('AK-UX-13 kein Text enthält „Tick" (alle Szenarien, Tick +0 und +300)', ()
       }
       step(w);
     }
-  }
-  for (const t of texts) expect(t, t).not.toMatch(/Tick/);
-});
+    noTick(texts);
+  },
+);

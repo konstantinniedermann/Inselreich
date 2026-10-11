@@ -3,7 +3,7 @@
 Basis ist das Persona-Frontmatter; Ausnahmen stehen nur in der Tabelle «Modellwahl» in
 docs/studio/STUDIO.md. Ein stärkeres Modell braucht die Kopfzeile `Modell: <alias> (<Einsatz>)`.
 Eigenes Modul statt guard.py: guard.py ist verfassungsgeschützt (§1.3), diese Regel ist Handbuch.
-Fehler lassen zu. Danach prüft budgetwarn.py Lead-Starts mit `Budget:` auf eine Freigabe (E-055).
+Fehler lassen zu. Danach prüft budgetwarn.py Lead-Starts mit `Budget:` auf eine Freigabe (E-055, Block E-060).
 """
 
 from __future__ import annotations
@@ -14,6 +14,8 @@ import re
 import sys
 from collections.abc import Mapping
 
+# Standard "warn": Hinweis (E-055). "deny" blockt Lead-Starts ohne Freigabe (E-060); L0 schaltet per Ruling ein.
+BUDGET_MODE = "warn"
 MODE = "deny"  # aktiv seit TOOL-AKTIVIERUNG (ADR-014, R428); Startzustand war "warn"
 AGENT_TOOLS = ("Agent", "Task")
 SKIP_TYPES = {"fork"}
@@ -102,8 +104,8 @@ def unknown_alias(tool_input: Mapping, table) -> str | None:
 
 
 def _budget_warn(payload: Mapping, data: Mapping) -> int:
-    """Budget-Warnung (E-055) als Hinweis, nie als Entscheidung; Fehler lassen zu."""
-    from budgetwarn import grants, warning
+    """Budget-Block (E-060) oder im Rückfall "warn" Hinweis (E-055); Fehler lassen zu."""
+    from budgetwarn import check, grants, warning
     from paths import append_event, events_file, now_iso
 
     session = str(payload.get("session_id") or "")
@@ -111,7 +113,8 @@ def _budget_warn(payload: Mapping, data: Mapping) -> int:
         text = events_file().read_text("utf-8", errors="replace")
     except OSError:
         return 0
-    found = warning(data, grants(text, session))
+    block = BUDGET_MODE == "deny"
+    found = (check if block else warning)(data, grants(text, session))
     if not found:
         return 0
     with contextlib.suppress(Exception):
@@ -125,8 +128,17 @@ def _budget_warn(payload: Mapping, data: Mapping) -> int:
                 "persona": persona(data),
                 "package": header(str(data.get("prompt") or ""), "Paket"),
                 "summary": found[:160],
+                "blocked": block,
             }
         )
+    if block:
+        out = {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "deny",
+            "permissionDecisionReason": found,
+        }
+        print(json.dumps({"hookSpecificOutput": out}, ensure_ascii=False))
+        return 0
     out = {"hookEventName": "PreToolUse", "additionalContext": found}
     print(
         json.dumps(

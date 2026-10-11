@@ -489,6 +489,74 @@ class IdleGapTest(unittest.TestCase):
         self.assertIn("nicht gemessen", efficiency.render_idle([]))
 
 
+class ProduktivTest(unittest.TestCase):
+    def build(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        write(root / "s1.jsonl", [assistant("m0", "claude-opus-4", out=100)])
+        roles = (
+            ("tech-sim-engineer", "Persona: tech-sim-engineer", 20),
+            ("design-spec-author", "Persona: design-spec-author", 40),
+            ("tech-plan-architect", "Persona: tech-plan-architect", 20),
+            ("lead-tech", "Persona: lead-tech\nPhase: plan-spec", 20),
+        )
+        for index, (typ, text, out) in enumerate(roles):
+            agent(
+                root,
+                "s1",
+                f"r{index}",
+                {"agentType": typ},
+                [prompt(text), assistant(f"x{index}", "claude-opus-4", out=out)],
+            )
+        return efficiency.compute([root / "s1.jsonl"], {})
+
+    def test_sum_of_two_classes_leads_excluded(self):
+        data = self.build()
+        shares = data["class_share"]
+        self.assertAlmostEqual(
+            data["produktiv"], shares["Umsetzer"] + shares["Design/Spec/Plan"]
+        )
+        self.assertAlmostEqual(data["produktiv"], 80 / 200)
+
+    def test_limits(self):
+        self.assertEqual(efficiency.ampel("produktiv", 0.25), "grün")
+        self.assertEqual(efficiency.ampel("produktiv", 0.249), "gelb")
+        self.assertEqual(efficiency.ampel("produktiv", 0.15), "gelb")
+        self.assertEqual(efficiency.ampel("produktiv", 0.149), "rot")
+        self.assertEqual(efficiency.ampel("produktiv", None), "nicht gemessen")
+
+    def lines(self, umsetzer, produktiv):
+        data = dict(self.build(), umsetzer=umsetzer, produktiv=produktiv)
+        return efficiency.render_section(data).splitlines()
+
+    def test_line_below_umsetzer_with_label_and_rule(self):
+        lines = self.lines(0.057, 0.337)
+        i = next(n for n, x in enumerate(lines) if "Umsetzeranteil:" in x)
+        self.assertEqual(
+            lines[i + 1],
+            "- GRÜN: Produktivanteil (Umsetzer + Design/Spec/Plan): 33.7 % "
+            "(gelb < 25 %, rot < 15 %)",
+        )
+
+    def test_umsetzer_raw_line_with_suffix_when_produktiv_green(self):
+        line = next(x for x in self.lines(0.057, 0.337) if "Umsetzeranteil:" in x)
+        self.assertTrue(line.startswith("- ROT: Umsetzeranteil: 5.7 % (gelb < 15 %"))
+        self.assertTrue(
+            line.endswith("— kein Befund: Produktivanteil grün (R488 V4)"), line
+        )
+
+    def test_umsetzer_line_unchanged_when_produktiv_not_green(self):
+        for produktiv in (0.20, 0.10, None):
+            line = next(
+                x for x in self.lines(0.057, produktiv) if "Umsetzeranteil:" in x
+            )
+            self.assertNotIn("kein Befund", line)
+
+    def test_produktiv_not_measured_without_instances(self):
+        self.assertIsNone(efficiency.compute([], {}))
+
+
 class AdjustedControlTest(unittest.TestCase):
     def build(self, lead_prompts):
         tmp = tempfile.TemporaryDirectory()

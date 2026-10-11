@@ -573,7 +573,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Merges, höchstens bis 2026-11-19.
 - Rückfall: Zeile in `.gitattributes` entfernen; Integrator löst wie bisher (R303).
 - Dateien: `.gitattributes`, `tools/studio/merge_append.py` (neu, mit Tests unter `tools/studio/tests/`), `Makefile` (Ziel zum Setzen von `merge.beob-append.driver` in `.git/config`, gilt für alle Worktrees), `.claude/agents/production-integrator.md`, `docs/studio/STUDIO.md` (Merges), `docs/studio/CHANGELOG.md` (nur nach Ruling; Umsetzung als Werkzeug-Paket)
-- Ruling: –
+- Ruling: R520 (Werkzeug gemergt, Merge-Treiber `beob-append`); Start wartet auf Platz, 3 Experimente laufen (E-049, E-057, E-061)
 - Start: –
 - Bewertung: –
 
@@ -588,6 +588,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: –
 - Start: –
 - Bewertung: –
+- Notiz (R520): Werkzeug gemergt, Start mit `deny` per Ruling, wenn nur eine Session läuft (R520); Standard bis dahin `warn`.
 
 ## E-061 · laufend (R497) · Spec-Nachtrag und Kurzdesign Stufe leicht auf sonnet
 

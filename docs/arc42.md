@@ -589,13 +589,22 @@ flowchart LR
   fehlt oder nicht lädt.
 - **Entwicklung:** `make dev` startet den Vite-Dev-Server; `make check` entspricht der CI; lokal greift zusätzlich die Testsperre (Abbruch mit `testlock: ABBRUCH`, Exit 3, bei belegter Sperre oder Load > 8; auf CI aus). Dev-Vorschau und
   Sonden (`?wetter=`, `?perf=1`, `window.__inselAudio`, `window.__inselPerf`) gibt es nur im Dev-Build.
+- **Merge-Treiber für Beobachtungen** (E-059): `.gitattributes` weist `docs/beobachtungen.md` dem Treiber `beob-append`
+  zu (`tools/studio/merge_append.py`). Er löst Konfliktblöcke mit leerer Basis (beide Seiten haben nur angehängt) zu
+  ours + theirs auf; Blöcke mit Basis-Inhalt bleiben als Konflikt stehen, nichts Gestrichenes kehrt zurück. `make
+merge-driver` setzt die Treiberkonfiguration einmal je Klon in `.git/config`; ohne sie gilt der normale Text-Merge.
+  Bleibt nach einem Fehler des Treibers nur die eigene Seite, stellt `git checkout --merge docs/beobachtungen.md`
+  die Konfliktmarken wieder her.
 - **Studio-Werkzeuge** (ADR-014): `make hooks` aktiviert den Git-Hook `pre-commit` (`tools/githooks/`,
   `tools/studio/precommit.py`): Prettier-Check der gestagten Dateien, Ablehnung als Ereignis `commit_rejected`.
   Der Modell-Guard `tools/studio/modelguard.py` ist ein zusätzlicher PreToolUse-Hook neben `guard.py` und meldet
   Starts über der Modelltabelle als Ereignis `model_guard` und lehnt sie ab (`MODE = "deny"`, TOOL-AKTIVIERUNG, R428).
-  Im selben Hook-Prozess warnt `budgetwarn.py` bei einem Lead-Start mit „Budget: n“ ohne passende Freigabe der
-  Session (Rolle und Phase = `Paket:`) als Kontext und Systemmeldung, Ereignis `budget_warn`, nie als Ablehnung
-  (E-055). Die Testsperre weist auf
+  Im selben Hook-Prozess prüft `budgetwarn.py` einen Lead-Start mit „Budget: n“ gegen die Freigaben der
+  Session (Rolle und Phase = `Paket:` oder dessen Phasenname). Standard `BUDGET_MODE = "warn"` in `modelguard.py`:
+  Kontext und Systemmeldung, Ereignis `budget_warn` mit `blocked: false` (E-055). Mit `"deny"` (L0 schaltet per
+  Ruling ein) lehnt der Hook mit `permissionDecision: "deny"` samt fertigem `log.py budget`-Befehl ab,
+  `blocked: true` (E-060). Ein Modell-Guard-Deny
+  hat Vorrang; eigene Fehler lassen zu. Die Testsperre weist auf
   verwaiste Vitest-Prozesse hin (PPID 1, ab 30 min) und beendet nichts. Im Dashboard melden Knoten ohne
   `agent_start` und ohne `spawned` keinen Inaktiv-Vorfall und werden nach 600 s ausgeblendet. Die Metriken
   (`make studio-metrics`) führen zusätzlich die Zeile «Steuerungsanteil bereinigt» (E-049): Sie rechnet
@@ -603,7 +612,12 @@ flowchart LR
   heraus und nennt den Anteil je Grund. `metrics.py --since <ISO>` verdichtet eine Studio-Session innerhalb
   eines Claude-Gesprächs (R434); ohne `--out` schreibt es in den Worktree, aus dem es läuft.
   `make zeitreserve-push` bewertet nur die Messung (Commit = HEAD, Last vor dem Lauf ≤ 4), nicht die aktuelle
-  Last. `make test` und `make studio-test` laufen über `tools/studio/testrun.py`: rote Läufe schreiben das Ereignis
+  Last. `make push-check` (`tools/studio/pushcheck.py`, R488 V1, R503) ist der Einstieg ins Push-Gate: Vorprüfungen
+  (`conflicts`, `tsc`, `lint`, `zeittests`), Warten auf 1-min-Load ≤ 3 (höchstens 600 s, sonst Exit 2), genau ein
+  `make check-push` (= `make check` ohne das lockere `zeitreserve`, unter der Testsperre), danach die strenge
+  Zeitreserve (`check.ts --push`), bei Exit 2 oder Exit 1 mit `loadStart` > 3 höchstens eine Nachmessung der markierten
+  Dateien, zuletzt `make check-ci-perf`. Exit 0 grün, 1 rot oder Arbeitsbaum verändert, 2 nicht belastbar, 3 Testsperre
+  belegt; Ereignis `push_check` (HEAD, Exit, `full_checks`, `retry_files`, Schritte mit Dauer und 1-min-Load zu Stufenbeginn, R514 V2, `load_errors`). `make test` und `make studio-test` laufen über `tools/studio/testrun.py`: rote Läufe schreiben das Ereignis
   `test_failed` mit Testnamen, grüne `test_passed` (je mit Commit und Diff-Prüfsumme, die ungetrackte, nicht
   ignorierte Dateien nach Name, Grösse und `mtime_ns` einschliesst); in CI (`CI` gesetzt) und
   bei Testsperre-Abbruch (`--skip-exit 3`) entsteht kein Ereignis. Das Kommando läuft in einer eigenen

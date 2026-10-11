@@ -8,14 +8,14 @@ Stand: 2026-10-10 (Studio-Session f52039fc, R472–R496; Ende: REL-18 live; UI-T
 
 ## Release-Notizen
 
-**Release-Kandidat REL-19 „Tasten, Aufräumen, Werkzeug“ (lokal auf main, Push offen, nächste Session, R496):** UI-TASTEN
+**REL-19 „Tasten, Aufräumen, Werkzeug“ (live, R512)** — Push `801bee89` (inkl. TOOL-BUENDEL-6 T01), CI 38123931614, Pages 38124390332 grün. UI-TASTEN
 (R476/R479/R496), AUFRAEUM-01 (R485/R491), TOOL-BUENDEL-5 (R478/R482/R484/R494). Kein Save-Wechsel (v11), Baseline
 unverändert. Opus-Final-Reviews je Strang erfolgt.
 
 - **Neu:** `Entf` oder `Rücktaste` reisst das Gebäude im offenen Info-Panel ab (wie «Abreissen»); `Strg`/`Cmd`+`S`
   speichert in den manuellen Platz und unterdrückt den Browser-Dialog. Beide im Menü «Tastenkürzel». (vom Studio
   vorgeschlagen, I-056/I-057)
-- **Bitte testen (nach dem Push):** (1) echtes `Cmd+S` auf macOS in Chrome und Safari; (2) `Entf` auf Kontor
+- **Bitte testen:** (1) echtes `Cmd+S` auf macOS in Chrome und Safari; (2) `Entf` auf Kontor
   (Heimatkontor bleibt, Fern-Kontor mit Route nennt den Grund); (3) gehaltene `Entf` reisst höchstens ein Gebäude ab;
   (4) `Strg+S` bei offener Startkarte/Menü schreibt nichts.
 
@@ -121,17 +121,19 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Session 2026-10-11 (R498–R509): Push REL-19 zweiter Versuch im Ruhefenster (R508; erster Versuch `zeitreserve-push`
-  Exit 1, 9 Tests ohne Reserve unter Last 7). Scheitert er: TOOL-BUENDEL-6 Strang A zuerst, dann Push mit `make push-check`.
-- Gegatet, bereit zur Umsetzung nach dem Push: UI-NAECHSTER-SCHRITT (R499/R502), TOOL-BUENDEL-6 (R503/R504, Stränge A/B),
-  M13-E2 (R507/R509, SIM + ART zuerst, Budget 42), I-048 (R505/R506, Sim erst nach Merge M13-E2-SIM, Budget 19).
-  **Release-Sperre** für Spiel-Releases bis M13-E2, I-049, I-048 gemergt sind, gemeinsames Save v12 (R505).
-- Spec M14-E1 gegatet mit Nachtrag (R500/R501); Plan erst nach M13. Handbuch 1.46 (E-061 läuft, R501).
-- Offen: `lead-qa`-Review `nachtrag-i049.md` vor I-049-Start (R509).
+- Session 2026-10-11 (R498–R521). **REL-19 live** (Push `801bee89`). Lokal auf main (nicht gepusht, Release-Sperre R505,
+  Actions-Prognose ROT 1991/2000 → höchstens ein Push je Tag): UI-NAECHSTER-SCHRITT (R515), TOOL-BUENDEL-6 A+B (R517,
+  R520; `make push-check` ist der Push-Weg, Handbuch 1.49, Budget-Hook `warn`).
+- **M13-E2:** SIM-Strang (Controller A) bei T03/T04 auf `feat/m13-e2-sim` (T01 `46d82e00`, T02 `051efcc8`);
+  ART-Strang fertig `feat/m13-e2-art` @ `5295021d` (R521, inkl. Leuchtfeuer AK-46). Nächste: Controller B (T05–T07),
+  UI-Strang Controller D nach T04 (ART-Hash vor T12; Hinweis: `src/ui/messages.ts` ohne Icon für `monument`), dann E.
+- Danach: Gate Merge E2-SIM → I-049-Sim (Nachtrag `nachtrag-i049.md`, R511) → I-048-Sim (R506) usw. nach R505/R507.
+- Spec M14-E1 gegatet (R501), Plan nach M13.
 
 ## Parallele Sessions
 
-Keine aktive L0-Session ausser dieser.
+- Nutzer-Session `c6709a04` (seit 2026-10-11 ≈ 08:30Z): Konzept „Erweiterung“ (`lead-design`), Worktree
+  `.worktrees/erweiterung-1`, Branch `design/erweiterung-1` — geduldet, Deckel geteilt (R519). Nicht anfassen.
 
 ## Seit letzter Session erledigt
 

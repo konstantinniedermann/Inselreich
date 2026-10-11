@@ -149,3 +149,73 @@ export function measurementProblem(m: Measurement, head: string): string | null 
     return `Last vor dem Lauf ${m.loadStart.toFixed(1)} > ${LOAD_MAX} (Ende ${m.loadEnd?.toFixed(1)}, Max ${m.loadMax?.toFixed(1)})`;
   return null;
 }
+
+/**
+ * Testdateien (sortiert, ohne Doppelte), in denen mindestens ein Test unter der lokalen Regel
+ * (`factor`) oder der Runner-Schätzung (`scale`) einen Verstoss oder eine Warnung hat; Altlasten
+ * ausgenommen (R488 V1). Höhere Last macht Tests nur langsamer: unmarkierte Dateien haben auch in Ruhe Reserve.
+ */
+export function markedFiles(
+  timings: readonly TestTiming[],
+  baseline: ReadonlySet<string>,
+  scale: number,
+  factor: number = CI_FACTOR,
+): string[] {
+  const estimated = scaleToRunner(timings, scale);
+  const hits = [
+    ...findViolations(timings, baseline, factor),
+    ...findWarnings(timings, baseline, factor),
+    ...findViolations(estimated, baseline, CI_FACTOR_ON_CI),
+    ...findWarnings(estimated, baseline, CI_FACTOR_ON_CI),
+  ];
+  return [...new Set(hits.map((t) => t.file))].sort();
+}
+
+/**
+ * Führt Haupt- und Nachmessung zusammen (R488 V1): Zeiten der nachgemessenen Dateien ersetzen die der
+ * Hauptmessung. Die Hauptmessung darf `loadStart` > `LOAD_MAX` haben, die Nachmessung nicht; beide brauchen
+ * den Commit `head`. Jede markierte Datei der Hauptmessung muss nachgemessen sein.
+ */
+export function mergeRetry(
+  main: Measurement,
+  retry: Measurement,
+  baseline: ReadonlySet<string>,
+  scale: number,
+  head: string,
+  factor: number = CI_FACTOR,
+): { measurement: Measurement } | { problem: string } {
+  if (main.commit === undefined || main.loadStart === undefined)
+    return { problem: 'Hauptmessung im alten Format (Array) ohne Commit und Last vor dem Lauf' };
+  if (main.commit !== head)
+    return { problem: `Hauptmessung stammt von Commit ${main.commit}, HEAD ist ${head}` };
+  const retryProblem = measurementProblem(retry, head);
+  if (retryProblem !== null) return { problem: `Nachmessung: ${retryProblem}` };
+  const measured = new Set(retry.timings.map((t) => t.file));
+  const missing = markedFiles(main.timings, baseline, scale, factor).filter(
+    (f) => !measured.has(f),
+  );
+  if (missing.length > 0)
+    return { problem: `Nachmessung ohne markierte Dateien: ${missing.join(', ')}` };
+  const marked = new Set(markedFiles(main.timings, baseline, scale, factor));
+  const have = new Set(retry.timings.map(testKey));
+  const lost = main.timings.filter((t) => marked.has(t.file) && !have.has(testKey(t)));
+  if (lost.length > 0)
+    return {
+      problem: `Nachmessung ohne Tests markierter Dateien: ${lost.map(testKey).join(', ')}`,
+    };
+  return {
+    measurement: {
+      ...retry,
+      timings: [...main.timings.filter((t) => !measured.has(t.file)), ...retry.timings],
+    },
+  };
+}
+
+/** Standardpfad der Messdatei. */
+export const DEFAULT_REPORT_PATH = '.studio/zeitreserve.json';
+
+/** Zielpfad der Messung: `ZEITRESERVE_OUT` (Nachmessung), sonst `DEFAULT_REPORT_PATH`. */
+export function reportPath(env: Record<string, string | undefined>): string {
+  const out = env.ZEITRESERVE_OUT;
+  return out !== undefined && out !== '' ? out : DEFAULT_REPORT_PATH;
+}

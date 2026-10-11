@@ -184,7 +184,7 @@ class HookTest(unittest.TestCase):
         }
         self.assertEqual(self.run_hook(bash, "deny")[1:], ("", []))
 
-    def run_budget_hook(self, mode, events_lines, **tool_input):
+    def run_budget_hook(self, mode, events_lines, budget_mode="deny", **tool_input):
         with (
             tempfile.TemporaryDirectory() as home,
             tempfile.TemporaryDirectory() as docs,
@@ -198,6 +198,7 @@ class HookTest(unittest.TestCase):
             with (
                 mock.patch.dict(os.environ, env),
                 mock.patch.object(modelguard, "MODE", mode),
+                mock.patch.object(modelguard, "BUDGET_MODE", budget_mode),
                 mock.patch.object(
                     sys, "stdin", io.StringIO(json.dumps(self.payload(**tool_input)))
                 ),
@@ -212,10 +213,11 @@ class HookTest(unittest.TestCase):
     )
 
     def test_budget_warning_output_and_event(self):
-        code, out, events = self.run_budget_hook("deny", [], **self.LEAD)
+        code, out, events = self.run_budget_hook("deny", [], "warn", **self.LEAD)
         self.assertEqual(code, 0)
         data = json.loads(out)
         self.assertNotIn("permissionDecision", data["hookSpecificOutput"])
+        self.assertIs(events[-1]["blocked"], False)
         text = data["hookSpecificOutput"]["additionalContext"]
         self.assertEqual(text, data["systemMessage"])
         self.assertIn("Budget-Warnung (E-055)", text)
@@ -252,14 +254,85 @@ class HookTest(unittest.TestCase):
     def test_budget_warning_also_with_alias_note_or_warn_mode(self):
         alias = {"subagent_type": "lead-qa", "model": "fable"}
         alias["prompt"] = self.LEAD["prompt"]
-        _, out, events = self.run_budget_hook("deny", [], **alias)
+        _, out, events = self.run_budget_hook("deny", [], "warn", **alias)
         self.assertIn("Budget-Warnung", json.loads(out)["systemMessage"])
         self.assertEqual(out.count("\n"), 1)
         self.assertEqual([e["kind"] for e in events], ["model_guard", "budget_warn"])
         over = {"subagent_type": "lead-qa", "model": "opus"}
         over["prompt"] = self.LEAD["prompt"]
-        _, out, _ = self.run_budget_hook("warn", [], **over)
+        _, out, _ = self.run_budget_hook("warn", [], "warn", **over)
         self.assertIn("Budget-Warnung", json.loads(out)["systemMessage"])
+
+    def test_budget_mode_default_is_warn(self):
+        self.assertEqual(modelguard.BUDGET_MODE, "warn")
+
+    def test_lead_without_grant_is_denied_and_logged(self):
+        data = {
+            "subagent_type": "lead-tech",
+            "prompt": "Persona: lead-tech\nPaket: P\nBudget: 7",
+        }
+        _, out, events = self.run_budget_hook("deny", [], **data)
+        hook = json.loads(out)["hookSpecificOutput"]
+        self.assertEqual(hook["permissionDecision"], "deny")
+        self.assertIn(
+            "log.py budget --lead lead-tech --grant 7", hook["permissionDecisionReason"]
+        )
+        self.assertEqual(out.count("\n"), 1)
+        self.assertEqual(
+            (events[-1]["kind"], events[-1]["blocked"]), ("budget_warn", True)
+        )
+
+    def test_token_and_second_instance_allowed(self):
+        grant = json.dumps(
+            {
+                "kind": "budget",
+                "session_id": "s1",
+                "role": "lead-tech",
+                "budget": {"granted": 3, "phase": "TB-6-umsetzung"},
+            }
+        )
+        prompt = "Persona: lead-tech\nPaket: TB-6-umsetzung (Instanz 2)\nBudget: 3"
+        data = {"subagent_type": "lead-tech", "prompt": prompt}
+        _, out, _ = self.run_budget_hook("deny", [grant], **data)
+        self.assertEqual(out, "")
+
+    def test_grant_in_other_session_denies(self):
+        grant = json.dumps(
+            {
+                "kind": "budget",
+                "session_id": "andere",
+                "role": "lead-qa",
+                "budget": {"granted": 3, "phase": "P"},
+            }
+        )
+        _, out, _ = self.run_budget_hook("deny", [grant], **self.LEAD)
+        self.assertIn("deny", out)
+
+    def test_skip_types_and_workers_silent(self):
+        worker = {
+            "subagent_type": "qa-code-reviewer",
+            "prompt": "Persona: qa-code-reviewer\nBudget: keins",
+        }
+        self.assertEqual(self.run_budget_hook("deny", [], **worker)[1], "")
+        fork = {"subagent_type": "fork", "prompt": self.LEAD["prompt"]}
+        self.assertEqual(self.run_budget_hook("deny", [], **fork)[1], "")
+
+    def test_model_deny_and_missing_grant_gives_one_deny(self):
+        data = {
+            "subagent_type": "lead-qa",
+            "model": "opus",
+            "prompt": self.LEAD["prompt"],
+        }
+        _, out, events = self.run_budget_hook("deny", [], **data)
+        self.assertEqual(out.count("\n"), 1)
+        self.assertIn(
+            "Modell", json.loads(out)["hookSpecificOutput"]["permissionDecisionReason"]
+        )
+        self.assertEqual([e["kind"] for e in events], ["model_guard"])
+
+    def test_unreadable_events_file_allows(self):
+        _, out, _ = self.run_budget_hook("deny", None, **self.LEAD)
+        self.assertEqual(out, "")
 
     def test_broken_input_never_fails(self):
         done = subprocess.run(
