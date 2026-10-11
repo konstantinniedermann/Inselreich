@@ -4,9 +4,18 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-11 (Studio-Session dc50be15, R498–R522; Ende: REL-19 live; lokal auf main @ `73837fd2` (nicht gepusht): UI-NAECHSTER-SCHRITT, TOOL-BUENDEL-6, M13-E2-SIM; Release-Sperre bis M13-Ende, R505)
+Stand: 2026-10-11 (Studio-Session f2a404fd, R537–R552; Ende: M13-Inhalt vollständig; lokal auf main @ `24ba6d03` (nicht gepusht; Sicherung `origin/backup/main-lokal` @ `24ba6d03`); Release M13 frühestens 2026-10-12)
 
 ## Release-Notizen
+
+**M13 „Spätspiel mit Richtung“ (bereit, nicht gepusht, R549/R552)** — Entwurf. Save v12. Inhalt: M13-E2 Denkmal, I-049
+Sperrbestand, I-048 Schritt A (Mechanik eingebaut, **inaktiv**: Anzeige «Kauf 100 %», kein Aufschlag), UI-TEXTE-1,
+UI-NAECHSTER-SCHRITT, TOOL-Bündel 6–8, E-060 (Budget-Hook `deny`). Actions-Prognose rot: ein Push je Tag.
+
+- **Neu:** Denkmal als Spätspiel-Ziel; Sperrbestand je Gut (I-049); Zukauf-Anzeige «Kauf 100 %» (noch ohne Preiswirkung);
+  einheitliche UI-Texte (u. a. «Nur einmal je Insel»); Hinweis zum nächsten Schritt.
+- **Bitte testen:** (1) Denkmal bauen und Sieg-/Ziel-Anzeige; (2) Sperrbestand setzen, Lager-Chip; (3) Handelsfenster
+  zeigt «Kauf 100 %»; (4) alter Spielstand (v11) lädt; (5) Tooltip Amtsstube: «Nur einmal je Insel».
 
 **REL-19 „Tasten, Aufräumen, Werkzeug“ (live, R512)** — Push `801bee89` (inkl. TOOL-BUENDEL-6 T01), CI 38123931614, Pages 38124390332 grün. UI-TASTEN
 (R476/R479/R496), AUFRAEUM-01 (R485/R491), TOOL-BUENDEL-5 (R478/R482/R484/R494). Kein Save-Wechsel (v11), Baseline
@@ -78,30 +87,26 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475. **Release-Sperre** für Spiel-Releases bis M13-E2, I-049 und
-I-048 gemergt sind (R505, gemeinsames Save v12). **Actions-Prognose ROT** (1991/2000 min): höchstens ein Push je Tag.
-Push-Weg ist `make push-check` (Handbuch 1.48/1.49); Probelauf auf `73837fd2` Exit 0.
+Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475. **Actions-Prognose ROT:** höchstens ein Push je Tag (REL-19 am
+2026-10-11). Release-Sperre endet mit UI-TEXTE-1 (R549/R552); M13-Inhalt ist vollständig.
 
-1. **M13-E2 Controller E** (`lead-tech` sonnet): T14 Doku (README inkl. Lauf-B-Ziffern, arc42), T15/T16 Browser-Läufe
-   (Schritt 0: Szenarien nach `git merge main` neu schreiben; nie gleichzeitig mit I-048-T04; T15 prüft Leuchtfeuer AK-46),
-   T18 Final-Review opus über ART + UI. Stand: `feat/m13-e2-art` @ `5295021d` (R521), `feat/m13-e2-ui` @ `81c0b87b`
-   (enthält ART und Sim T06; vorher `git merge main` für Sim T07 — SIM ist seit `73837fd2` auf main). Handoffs
-   `.studio/handoffs/2026-10-11-lead-tech-m13-e2-ui.md`, `…-lead-art-m13-e2-art.md`. Budget: Rest aus 42 (R509).
-   Dann Gate Merge ART → UI (R505-Reihenfolge Schritt 3).
-2. **I-049-Sim** (darf jetzt starten, R522): Plan `docs/superpowers/plans/2026-10-10-i049-sperrbestand.md` +
-   `docs/superpowers/plans/2026-10-11-m13-e2-denkmal/nachtrag-i049.md` (R511, Auslegung B1). Parallel **I-048-Sim**
-   T01–T03 (R506; mergt **nach** I-049-Sim, vorher `git merge main`). Danach I-049-UI → I-048-UI → I-048 Schritt B.
-3. Nach allen M13-Merges: **Release M13** (E2 + I-049 + I-048 + UI-NAECHSTER-SCHRITT + TOOL-BUENDEL-6) mit `make push-check`.
-4. **Budget-Hook `deny`** (E-060) per Ruling, sobald nur eine Session läuft; vorher `design-m14-e1` im Phasenformat
-   nachtragen und `KNOWN_MISMATCH` entfernen (R520). E-059 startet, sobald ein Experiment-Platz frei ist.
-5. Plan **M14-E1** erst nach M13 (R486, Auflagen R500/R501).
-6. Beobachtungs-Auswertung, sobald > 30 Einträge seit 2026-10-10 (jetzt ≈ 28).
-7. Zuerst: `studio-coach` setzt R523 V1 um (E-054 in Modelltabelle/`lead-tech.md`) und startet E-059 (R523 V4). V3 ins nächste Werkzeug-Bündel; V2 Messauftrag L0-Kontext.
+1. **Release M13** am 2026-10-12: `make push-check`, dann `git push origin <Hash>:main` (geprüfter Hash), Pages per
+   `gh workflow run Pages --ref main`; Release-Notiz aus dem Entwurf oben. Danach `origin/backup/main-lokal` nachführen
+   (Löschen remote ist Guard-verboten).
+2. Meilenstein-Retro M13 (`studio-coach` opus) und Prozess-Aussensicht nach dem Release (R127, R316).
+3. Ideen-Runde nach dem Release (R445, 3 Scouts).
+4. **I-048 Schritt B** als Designfrage (R551, `lead-design` mit M14-Vorlauf) und robustere Gate-Messung (Beobachtung
+   „Seed wirkt nicht“; Controller-Phasen oder Startvarianten, Median).
+5. Plan **M14-E1** nach M13 (R486, Auflagen R500/R501).
+6. Retro-Vorschläge f2a404fd: V1 Gate-Frage Robustheit, V2 Delta-Review nach Final-Review ZURÜCK (Handbuch-Minor),
+   V3 beobachten — L0-Ruling ausstehend ([Retro](retros/2026-10-11-session-f2a404fd-ende.md)).
+7. Experimente: E-057, E-060 (`deny`, Messung ab 2026-10-11), E-061 laufend; E-059 passiv; E-062 wartet auf Platz
+   (Messauftrag Plan-Instanzen > 60 Turns geht auf die nächste Plan-Session).
 
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich**. **M12 abgeschlossen** (R352). Live: REL-01…REL-17, M1–M8, M10, M11, M9-Häppchen, M12. **M13 „Spätspiel mit Richtung“**: E1 (Edikte, Stilllegen)
-  lokal auf main (R467), E2 (Denkmal) offen. Verfassung **1.2**, Handbuch **1.49**.
+- Projekt: **Inselreich**. **M12 abgeschlossen** (R352). Live: REL-01…REL-19, M1–M8, M10, M11, M9-Häppchen, M12. **M13 „Spätspiel mit Richtung“**: E1 (Edikte, Stilllegen)
+  lokal auf main (R467), E2 (Denkmal) lokal gemergt, Inhalt vollständig (R552). Verfassung **1.2**, Handbuch **1.50**.
 - Dauerregeln: Desktop-first (R78); kein Rebase; eine aktive L0-Session je Repo (R129, R324); studioweit **≤ 8 Agenten,
   davon ≤ 2 Browser-Läufe** (R424, ersetzt R241); vor Paketstart `git worktree list`, `git status`, fremde Heartbeats
   prüfen (R329); Messungen nur bei 1-min-Load ≤ 4 (R329).
@@ -121,7 +126,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts (Session-Ende dc50be15).
+- Nichts (Session-Ende f2a404fd).
 
 ## Parallele Sessions
 
@@ -130,18 +135,16 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Seit letzter Session erledigt
 
-- **REL-19 live** (R512): Push `801bee89`, CI 38123931614, Pages 38124390332; Push-Weg mit drei Anläufen, Abhilfe
-  TOOL-BUENDEL-6 T01 vorgezogen (R508–R512); Prozess-Aussensicht angenommen (R514).
-- Gegatet: Pläne M13-E2 (R507/R509), I-048 (R505/R506), TOOL-BUENDEL-6 (R503/R504), UI-NAECHSTER-SCHRITT (R499/R502);
-  Spec M14-E1 mit Nachtrag (R500/R501); Nachtrag I-049 (R511).
-- Lokal gemergt: UI-NAECHSTER-SCHRITT (R515), TOOL-BUENDEL-6 A/B (R517/R520), M13-E2-SIM (R522). M13-E2-ART fertig
-  (R521), UI bis T13 fertig.
-- Handbuch 1.46–1.49 (E-061, push-check, R514 V1/V3, Budget-Hook `warn`). Worktrees aufgeräumt (R518).
+- Lokal gemergt (Gate OK): M13-E2 (ART, UI, Denkmal), I-049 (Sim, UI R544), I-048 Sim/UI (R537, R545), TOOL-BUENDEL-7/8
+  (R540/R541), TOOL-E060-FIX (R546), UI-TEXTE-1 (R552). Budget-Hook `deny` (E-060, R546).
+- I-048 Schritt B angehalten (R549), Probe Totzone ohne Formel (R551); `feat/i048-b` geparkt.
+- Retro: [session-f2a404fd-ende](retros/2026-10-11-session-f2a404fd-ende.md) (V1–V3 offen).
 
 ## Pausierte Pakete
 
-- M13-E2-ART (`.worktrees/m13-e2-art`) und M13-E2-UI (`.worktrees/m13-e2-ui`) warten auf Controller E (Punkt 1).
-  `.worktrees/m13-e2-sim` und `.worktrees/b6b` sind gemergt und aufräumbar. `.worktrees/integrate` bleibt.
+- `.worktrees/i048-b` (`feat/i048-b` @ `bc57f8ba`): geparkt (R549), kein Merge; Messweg `trackedBuy` wiederverwendbar.
+- Gemergte, aufräumbare Worktrees (nur per Ruling, `git worktree remove` ohne `--force`): `i048-sim`, `i048-ui`, `i049-sim`,
+  `i049-ui`, `tool-b7`, `tool-b8`, `tool-e060`, `ui-texte-1`. `.worktrees/integrate` bleibt.
   `.worktrees/erweiterung-1` gehört der Nutzer-Session (R519) — nicht anfassen.
 - Branch `int/rel-07`, Alt-Branches, Remote `wip/r118a-render-aufraeumen` und `stash@{0}` bleiben bis Ruling.
 
@@ -152,4 +155,4 @@ Offen: keine Freigaben (Restbudgets verfallen mit Session-Ende).
 ## Offene Entscheide
 
 - Nutzer: N-99 (Kenntnis R434), ohne Antwort gilt R434.
-- L0: keine offen (REL-19-Umfang entschieden, R496).
+- L0: Retro-Vorschläge V1–V3 (siehe Fortsetzung Punkt 6).
