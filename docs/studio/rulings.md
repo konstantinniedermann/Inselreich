@@ -5519,3 +5519,16 @@ Leistung bei Zoom 2 prüft der Browser-Lauf T15/T16 (Bildrate mit Denkmal im Bil
 Regelbezug: ISO §10/Obergrenzen (render), R509 · Kosten bei Irrtum: mehr Cache-Wechsel bei Zoom 2, messbar im Browser-Lauf.
 
 Entscheider: L0 · Anlass: Entscheidungsbedarf Controller A M13-E2-SIM · ADR: —
+
+## R517 · 2026-10-11 · Gate Merge TOOL-BUENDEL-6 Strang A: OK, lokaler Merge
+
+Ruling: `tool/b6a` (T02 `17805835`/`ac372cb8`, T03 `526662ec`/`8f69f494`, Final-Fix `63806621`; T01 schon auf main)
+abgenommen: Reviews OK, Final-Review opus BEDENKEN (niedrig) → Fix ohne erneutes Review hingenommen; `make studio-test`
+Exit 0, Echtlauf `make push-check` Exit 0 (4:50 min, D1-Pfad unter Load 69). Merge lokal durch `production-integrator`
+nach UI-NAECHSTER-SCHRITT. Ab dem Merge ist **`make push-check`** der Push-Weg (Handbuch-Folge durch `studio-coach`).
+Die zwei Restrisiken (Lastwarten greift nicht bis Vitest-Start → D1 wird unter Parallelität Regelfall; `check-ci-perf`
+ohne Lastwarten → falsches Rot möglich) gehen nach `docs/beobachtungen.md`; Bewertung mit den Daten aus R514 V2.
+
+Regelbezug: gates.md Gate Merge, R503, R504, R514 · Kosten bei Irrtum: ein Werkzeug-Revert.
+
+Entscheider: L0 · Anlass: Schlussbericht Controller Strang A · ADR: —

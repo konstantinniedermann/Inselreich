@@ -260,3 +260,11 @@ Der gestärkte Test `tests/ui/goodFocus.test.ts` (AK-GC-08) belegt die Trennung 
   solange das Haus Nahrung als unerfüllt führt (im Test pausiert, kein Tick); «Nächster Schritt» zeigt dann den
   bisherigen Pfad. Ursprung: qa-playtester ui-naechster-schritt. Einschätzung: niedrig, vermutlich nur bis zum nächsten
   Versorgungs-Tick sichtbar; prüfen, ob es im laufenden Spiel auftritt.
+
+### 2026-10-11 · `make push-check`: D1 unter Parallelität Regelfall, `check-ci-perf` ohne Lastwarten
+
+- **Fundort:** `tools/studio/pushcheck.py` (TOOL-BUENDEL-6 T03), Echtlauf bei Load 69,3. Beobachtung: (1) Das Warten auf
+  Load ≤ 3 endet nach der Frist, Vitest startet trotzdem; bei leerer Markierungsliste greift D1 (Exit 0 ohne Nachmessung)
+  — unter paralleler Last wird das der Normalfall, das Gate trägt dann allein die Monotonie-Annahme. (2) Vor
+  `check-ci-perf` wartet `push-check` nicht auf ruhige Last → falsches Rot möglich, kein falsches Grün. Ursprung:
+  Controller Strang A, Final-Review opus. Einschätzung: niedrig bis mittel; mit den Load-Daten aus R514 V2 bewerten.
