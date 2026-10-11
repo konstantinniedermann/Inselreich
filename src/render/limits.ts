@@ -29,6 +29,8 @@ export const CAPS = {
   seals: [3, 1],
   cormorants: [3, 1],
   dolphins: [3, 0],
+  // M13-E2 T08: Funken des Aufflammens der Feuerschale (aus bei reduzierter Bewegung)
+  flareSparks: [14, 0],
 } as const;
 export type CapName = keyof typeof CAPS;
 export const cap = (name: CapName, reduce = false): number => CAPS[name][reduce ? 1 : 0];

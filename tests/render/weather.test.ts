@@ -79,6 +79,7 @@ describe('Obergrenzen (Spec 12.2)', () => {
       seals: [3, 1],
       cormorants: [3, 1],
       dolphins: [3, 0],
+      flareSparks: [14, 0],
     });
     expect(cap('walkers')).toBe(40);
     expect(cap('walkers', true)).toBe(12);
