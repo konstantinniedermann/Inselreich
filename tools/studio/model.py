@@ -179,6 +179,25 @@ def _package_token(text: str) -> str:
     return re.split(r"[\s\u2014\u2013:(]", text.strip(), maxsplit=1)[0]
 
 
+ROLE_PREFIXES = ("impl-", "plan-", "design-", "gate-", "release-check-")
+
+
+def phase_key(phase: str) -> str:
+    """Phase ohne hoechstens ein fuehrendes Rollen-Praefix (R543); nur wenn danach etwas bleibt."""
+    text = phase.strip()
+    lower = text.casefold()
+    for prefix in ROLE_PREFIXES:
+        if lower.startswith(prefix) and len(text) > len(prefix):
+            return text[len(prefix) :]
+    return text
+
+
+def phase_matches(phase: str, name: str) -> bool:
+    """Passt die Freigabe-Phase (roh oder ohne Rollen-Praefix) zum Paketnamen? Casefold."""
+    wanted = name.casefold()
+    return wanted in (phase.strip().casefold(), phase_key(phase).casefold())
+
+
 def _unique(names: Iterable[str]) -> list[str]:
     return list(dict.fromkeys(n for n in names if n))
 
@@ -844,7 +863,7 @@ class _Builder:
         """Freigabe nach Namensrang: exakt vor Praefix, laengster Praefix zuerst."""
         for name in names:
             for grant in candidates:
-                if grant["phase"] == name:
+                if phase_matches(grant["phase"], name):
                     return (grant["lead"], grant["phase"], grant["session_id"])
         return None
 
@@ -904,7 +923,10 @@ class _Builder:
                         and grant["session_id"] in ("", lead["session_id"])
                         and (
                             not by_name
-                            or grant["phase"] in names[lead["key"]][rank : rank + 1]
+                            or any(
+                                phase_matches(grant["phase"], n)
+                                for n in names[lead["key"]][rank : rank + 1]
+                            )
                         )
                     ):
                         self.claims[key] = lead["key"]

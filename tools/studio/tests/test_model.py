@@ -2697,6 +2697,40 @@ def lead_with_package(t, session, aid, package=""):
     ]
 
 
+class ClaimRolePrefixTest(unittest.TestCase):
+    """R543: Rollen-Praefix der Phase wird beim Abgleich ignoriert, die Rohphase bleibt."""
+
+    def phases(self, phase, package):
+        events = [
+            grant(1, SA, "other", 4, 1),
+            grant(2, SA, phase, 4, 1),
+            *lead_with_package(10, SA, "L1", package=package),
+        ]
+        return build(events, now=2000, session="all")["lead_phases"]
+
+    def test_prefixed_phase_is_assigned_and_stays_raw(self):
+        self.assertEqual(self.phases("impl-REL-15", "REL-15"), {f"{SA}:L1": "impl-REL-15"})
+
+    def test_prefix_of_package_name_matches(self):
+        self.assertEqual(self.phases("design-M13", "M13-BRAINSTORM"), {f"{SA}:L1": "design-M13"})
+
+    def test_x_does_not_bind_xy(self):
+        self.assertNotEqual(
+            self.phases("impl-X", "XY-T01").get(f"{SA}:L1"), "impl-X"
+        )
+
+    def test_claim_counts_start_on_prefixed_grant(self):
+        events = [
+            grant(0, SA, "other", 4, 1),
+            grant(1, SA, "impl-REL-15", 4, 1),
+            *lead_node(10, SA, "LA", package="REL-15"),
+            *worker(20, SA, "LA", "W1", stop_at=25, package="REL-15"),
+        ]
+        rows = {b["phase"]: b for b in build(events, now=2000, session="all")["budgets"]}
+        self.assertEqual(rows["impl-REL-15"]["used"], 1)
+        self.assertEqual(rows["other"]["used"], 0)
+
+
 class ClaimPrefixRuleTest(unittest.TestCase):
     """Freigabe X bindet X-<Suffix> (R528 (3)); exakt vor Praefix, laengster vor kuerzerem."""
 

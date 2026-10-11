@@ -10,16 +10,22 @@ import json
 import re
 from collections.abc import Iterable, Mapping
 
-from model import _package_token, package_names
+from model import _package_token, package_names, phase_matches
 from modelguard import SKIP_TYPES, header, persona
 
 NUMBER = re.compile(r"\d+")
+FOLLOW_UP = re.compile(r"\d+\s+verbleibend", re.IGNORECASE)
 
 
 def budget_count(prompt: str) -> int | None:
     """Erste ganze Zahl der Kopfzeile `Budget:`; None bei «keins» oder 0."""
     found = NUMBER.search(header(prompt, "Budget"))
     return int(found.group()) or None if found else None
+
+
+def follow_up(prompt: str) -> bool:
+    """Folge-Controller (R543): Kopfzeile `Budget: <n> verbleibende …` braucht keine Freigabe."""
+    return bool(FOLLOW_UP.match(header(prompt, "Budget")))
 
 
 def grants(text: str, session_id: str) -> list[dict]:
@@ -48,9 +54,8 @@ def _phase(event: Mapping) -> str:
 
 def _matches(package: str, phases: Iterable[str]) -> bool:
     """Passt eine Freigabe-Phase zu den Namen der Kopfzeile `Paket:` (inkl. Praefix-Regel)?"""
-    return bool(
-        {p.casefold() for p in phases} & {n.casefold() for n in package_names(package)}
-    )
+    names = package_names(package)
+    return any(phase_matches(p, n) for p in phases for n in names)
 
 
 def _lead_start(tool_input: Mapping) -> tuple[str, int, str] | None:
@@ -62,7 +67,9 @@ def _lead_start(tool_input: Mapping) -> tuple[str, int, str] | None:
         return None
     prompt = str(tool_input.get("prompt") or "")
     count = budget_count(prompt)
-    return None if count is None else (role, count, prompt)
+    if count is None or follow_up(prompt):
+        return None
+    return (role, count, prompt)
 
 
 def check(tool_input: Mapping, given: Iterable[Mapping]) -> str | None:
