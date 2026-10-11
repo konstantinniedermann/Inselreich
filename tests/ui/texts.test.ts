@@ -24,10 +24,10 @@ describe('AK-UT-01/02 Stilllegen-Text', () => {
     expect(stateInfo(fisher({ paused: true }), w.tick)).toEqual({ text: EXPECTED, ok: false });
     expect(stateInfo(fisher({ state: 'paused' }), w.tick)).toEqual({ text: EXPECTED, ok: false });
   });
-  it('kein «halber» im UI-Quelltext', () => {
+  it('kein «halber»/«Halber» im UI-Quelltext', () => {
     const dir = 'src/ui/';
     for (const f of readdirSync(dir).filter((n) => n.endsWith('.ts'))) {
-      expect(readFileSync(dir + f, 'utf8'), f).not.toContain('halber');
+      expect(readFileSync(dir + f, 'utf8'), f).not.toMatch(/halber/i);
     }
   });
 });

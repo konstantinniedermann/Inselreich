@@ -201,7 +201,7 @@ export function upgradeReasonTexts(world: World, b: Building): string[] {
 
 /** Hinweis am Abriss-Knopf: Entf und Rücktaste lösen den Abriss aus (U+232B). */
 const DEMOLISH_HINT = 'Entf / ⌫';
-const DEMOLISH_LABEL = `Abreissen (${DEMOLISH_HINT})`;
+export const DEMOLISH_LABEL = `Abreissen (${DEMOLISH_HINT})`;
 
 function addButton(
   parent: HTMLElement,

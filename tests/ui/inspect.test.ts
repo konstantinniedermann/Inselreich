@@ -538,7 +538,7 @@ function allButtons(e: FakeEl): FakeEl[] {
   ];
 }
 
-describe('UI-TASTEN Tooltip «Entf» am Abreissen-Knopf (AK-UT-12)', () => {
+describe('AK-UT-08 Abreissen-Knopf: Label und Tooltip «Entf / ⌫»', () => {
   afterEach(() => vi.unstubAllGlobals());
   const noActions = new Proxy({}, { get: () => () => {} }) as unknown as InspectActions;
   const demolishBtn = (w: World, id: number) => {

@@ -1,4 +1,4 @@
-import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { BUILDING_DEFS, PAUSED_UPKEEP_PCT } from '../sim/defs/buildings';
 import { GOODS } from '../sim/defs/goods';
 import { LEVELS } from '../sim/defs/levels';
 import { TIERS } from '../sim/defs/tiers';
@@ -342,6 +342,6 @@ export function pauseButton(b: Building): { text: string; title: string } | null
   if (BUILDING_DEFS[b.defId].produces === undefined) return null;
   return {
     text: b.paused === true ? 'Wieder anfahren' : 'Stilllegen',
-    title: 'Halber Unterhalt, keine Erzeugung',
+    title: `Unterhalt auf ${PAUSED_UPKEEP_PCT} % (aufgerundet), keine Erzeugung`,
   };
 }

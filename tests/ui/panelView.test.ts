@@ -430,7 +430,7 @@ describe('M13-E1 Stilllegen im Panel (AK-M13STL-09)', () => {
     const f = put(w, 'fisher');
     expect(pauseButton(f)).toEqual({
       text: 'Stilllegen',
-      title: 'Halber Unterhalt, keine Erzeugung',
+      title: `Unterhalt auf ${PAUSED_UPKEEP_PCT} % (aufgerundet), keine Erzeugung`,
     });
     expect(setPaused(w, f.id, true).ok).toBe(true);
     expect(pauseButton(f)!.text).toBe('Wieder anfahren');
