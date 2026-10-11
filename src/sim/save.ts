@@ -361,6 +361,7 @@ function addForeignIslands(raw: Record<string, unknown>, isl: Record<string, unk
     ox: p.ox,
     oy: p.oy,
     anchor: p.anchor,
+    reserve: { wood: 0, stone: 0 },
   }));
   raw.islands = [homeIsland, ...foreign];
 }
