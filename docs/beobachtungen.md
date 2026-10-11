@@ -229,3 +229,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 ### 2026-10-11 · Gesperrte Edikt-Knöpfe: heller Text auf graubeigem Grund
 
 - **Fundort:** Edikt-Karten, Knöpfe «Erlassen (600)» und «Aufheben» im gesperrten Zustand (Screenshot `.studio/qa/ui-texte-1/edikt-unten-1280x800.png`). Beobachtung: Der Kontrast wirkt gering, wurde nicht gemessen und gehört nicht zu AK-UT-11..13 (nur Pergament-Texte). Ursprung: Playtest UI-TEXTE-1 (T06). Einschätzung: gering; bei der nächsten Kontrast-Runde in `tests/ui/contrast.test.ts` das Paar messen.
+
+### 2026-10-11 · Balancing-Controller kippt bei verschobenen Entscheidungszeitpunkten
+
+Fundort: `make gate-ensemble` (TOOL-GATE-ENSEMBLE, `tests/sim/ensemble.test.ts`), Seed 3, Phasen 0/20/40/60/80. Beobachtung: Nur Phase 0, 20 und 40 gewinnen (Sieg-Tick 6750 / 7250 / 6650); Phase 60 und 80 erreichen bis Tick 9000 keinen Sieg und fallen im Geld ins Minus (minMoney -91 / -51). Die Referenz-Baseline (Sieg 6750, minMoney 117) hängt also am Entscheidungsraster `tick % 100 === 0`. Ursprung: TOOL-GATE-ENSEMBLE T01/T04. Einschätzung: kein Spielfehler (der Controller ist ein Test-Spieler), aber Gates mit Wertgrenzen auf Basis eines Einzellaufs sind weniger belastbar als gedacht; Verdikt AUSREISSER für Sieg-Tick und minMoney. Für M14-Werte: Grenzen mit Ensemble prüfen, und ob der Controller bei Reserve/Aufstiegsmoment robuster werden soll, ist ein Design-/Tech-Entscheid an L0.
