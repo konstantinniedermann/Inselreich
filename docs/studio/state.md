@@ -8,14 +8,14 @@ Stand: 2026-10-10 (Studio-Session f52039fc, R472–R496; Ende: REL-18 live; UI-T
 
 ## Release-Notizen
 
-**Release-Kandidat REL-19 „Tasten, Aufräumen, Werkzeug“ (lokal auf main, Push offen, nächste Session, R496):** UI-TASTEN
+**REL-19 „Tasten, Aufräumen, Werkzeug“ (live, R512)** — Push `801bee89` (inkl. TOOL-BUENDEL-6 T01), CI 38123931614, Pages 38124390332 grün. UI-TASTEN
 (R476/R479/R496), AUFRAEUM-01 (R485/R491), TOOL-BUENDEL-5 (R478/R482/R484/R494). Kein Save-Wechsel (v11), Baseline
 unverändert. Opus-Final-Reviews je Strang erfolgt.
 
 - **Neu:** `Entf` oder `Rücktaste` reisst das Gebäude im offenen Info-Panel ab (wie «Abreissen»); `Strg`/`Cmd`+`S`
   speichert in den manuellen Platz und unterdrückt den Browser-Dialog. Beide im Menü «Tastenkürzel». (vom Studio
   vorgeschlagen, I-056/I-057)
-- **Bitte testen (nach dem Push):** (1) echtes `Cmd+S` auf macOS in Chrome und Safari; (2) `Entf` auf Kontor
+- **Bitte testen:** (1) echtes `Cmd+S` auf macOS in Chrome und Safari; (2) `Entf` auf Kontor
   (Heimatkontor bleibt, Fern-Kontor mit Route nennt den Grund); (3) gehaltene `Entf` reisst höchstens ein Gebäude ab;
   (4) `Strg+S` bei offener Startkarte/Menü schreibt nichts.
 
