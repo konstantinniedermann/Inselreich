@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { serialize } from '../../src/sim/save';
-import { createWorld } from '../../src/sim/world';
+import { buildingsOfType, createWorld } from '../../src/sim/world';
 import { formatTable, judge, PHASES, runEnsemble, summarize, type Row } from './ensemble';
 import {
   buySurcharge,
@@ -105,6 +105,30 @@ describe('Ensemble-Statistik (Gate-Ensemble)', () => {
     });
     expect(calls).toEqual([0, 20, 40, 60, 80]);
     expect(out).toEqual([0, 40, 80, 120, 160]);
+  });
+});
+
+// Stillstand = kein Sieg bis MAX_TICKS. Bei Phase 60 und 80 baute der Controller die Schule, bevor die
+// Stoffkette den Bedarf der Zielstufe deckte; Stoff blieb auf 0 (Härtung, TOOL-CONTROLLER-HAERTUNG).
+describe('Controller-Härtung: kein Stillstand (Gate-Ensemble)', () => {
+  function runPhase(phase: number): { w: ReturnType<typeof createWorld>; winTick: number } {
+    const w = createWorld(3);
+    const { layout, t } = startColony(w);
+    runColony(w, layout, t, { phase });
+    return { w, winTick: t.winTick ?? MAX_TICKS + 1 };
+  }
+
+  it('GE-8: Phase 60 und 80 siegen vor MAX_TICKS', () => {
+    for (const phase of [60, 80]) {
+      const { w, winTick } = runPhase(phase);
+      expect(w.won, `Phase ${phase}: kein Sieg bis MAX_TICKS`).toBe(true);
+      expect(winTick, `Phase ${phase}`).toBeLessThanOrEqual(MAX_TICKS);
+    }
+  });
+
+  it.each(PHASES)('GE-9: Phase %i baut die Schule bis MAX_TICKS', (phase) => {
+    const { w } = runPhase(phase);
+    expect(buildingsOfType(w, 'school').length).toBeGreaterThan(0);
   });
 });
 
