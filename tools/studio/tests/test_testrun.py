@@ -54,6 +54,19 @@ class ParserTest(unittest.TestCase):
             names, ["tests/ui/a.test.ts > Block > Fall", "tests/sim/b.test.ts"]
         )
 
+    def test_vitest_collection_error_gives_file_name(self):
+        lines = ["FAIL  tests/ui/foo.test.ts [ tests/ui/foo.test.ts ]"]
+        self.assertEqual(testrun.parse_names(lines, "vitest"), ["tests/ui/foo.test.ts"])
+
+    def test_unittest_import_error_gives_module_name(self):
+        lines = ["ERROR: tests.test_x (unittest.loader._FailedTest.tests.test_x)"]
+        self.assertEqual(testrun.parse_names(lines, "studio"), ["tests.test_x"])
+
+    def test_success_lines_give_no_names(self):
+        lines = [" \u2713 tests/ui/foo.test.ts (3 tests)", "ok: tests.test_x"]
+        self.assertEqual(testrun.parse_names(lines, "vitest"), [])
+        self.assertEqual(testrun.parse_names(lines, "studio"), [])
+
     def test_names_capped(self):
         lines = [f"FAIL: test_{i} (m.K.test_{i})" for i in range(80)]
         lines.append("FAIL: test_long (m.K." + "x" * 300 + ")")
@@ -281,6 +294,37 @@ class RunTest(unittest.TestCase):
         self.assertEqual(code, 130)
         self.assertTrue(fired)
         self.assert_dead([int(x) for x in ready.read_text().split()])
+
+    def test_signals_blocked_before_ignore_and_mask_restored(self):
+        calls = []
+        old_mask = {signal.SIGUSR2}
+        interrupts = {signal.SIGINT, signal.SIGTERM, signal.SIGHUP}
+
+        def fake_mask(how, sigs):
+            calls.append(("mask", how, set(sigs)))
+            return old_mask
+
+        real_signal = signal.signal
+
+        def fake_signal(sig, handler):
+            if handler == signal.SIG_IGN:
+                calls.append(("ignore", sig))
+            return real_signal(sig, handler)
+
+        proc = subprocess.Popen(["sleep", "30"], start_new_session=True)
+        with (
+            mock.patch("signal.pthread_sigmask", fake_mask),
+            mock.patch("signal.signal", fake_signal),
+            mock.patch.object(testrun, "GRACE", 0.5),
+        ):
+            testrun._stop_group(proc)
+        self.assertEqual(calls[0], ("mask", signal.SIG_BLOCK, interrupts))
+        first_ignore = next(i for i, c in enumerate(calls) if c[0] == "ignore")
+        self.assertGreater(first_ignore, 0)
+        masks = [c for c in calls if c[0] == "mask"]
+        self.assertEqual(masks[-1], ("mask", signal.SIG_SETMASK, old_mask))
+        self.assertGreater(calls.index(masks[-1]), first_ignore)
+        self.assertIsNotNone(proc.poll())
 
     def test_child_gets_own_process_group(self):
         code, out, _ = self.run_main(

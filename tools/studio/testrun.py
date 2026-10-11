@@ -25,7 +25,7 @@ MAX_NAMES = 50
 MAX_NAME_LEN = 200
 UNITTEST_RE = re.compile(r"^(FAIL|ERROR): (\S+) \((.+)\)$")
 VITEST_RE = re.compile(
-    r"^\s*FAIL\s+(?:\|[^|]+\|\s+)?(tests/\S+\.test\.ts)(?:\s+>\s+(.+?))?\s*$"
+    r"^\s*FAIL\s+(?:\|[^|]+\|\s+)?(tests/\S+\.test\.ts)(?:\s+>\s+(.+?)|\s+\[.*\])?\s*$"
 )
 
 
@@ -151,6 +151,7 @@ def _stop_group(proc: subprocess.Popen) -> None:
     und das SIGKILL läuft in jedem Fall.
     """
     pgid = proc.pid  # start_new_session=True: Gruppen-ID = PID des Kindes
+    old_mask = _block_interrupts()  # Fenster bis SIG_IGN gesetzt ist schliessen
     previous = _ignore_interrupts()
     try:
         _signal_group(pgid, signal.SIGTERM)
@@ -165,12 +166,34 @@ def _stop_group(proc: subprocess.Popen) -> None:
         try:
             proc.wait()
         finally:
+            # Maske zuerst: wartende Signale treffen noch SIG_IGN und verfallen
+            _restore_mask(old_mask)
             _restore_handlers(previous)
+
+
+_INTERRUPTS = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
+
+
+def _block_interrupts() -> set | None:
+    """Blockiert die Interrupt-Signale; liefert die alte Maske (None: nicht möglich)."""
+    try:
+        return signal.pthread_sigmask(signal.SIG_BLOCK, _INTERRUPTS)
+    except (AttributeError, ValueError, OSError):  # Windows/kein Hauptthread: fail-open
+        return None
+
+
+def _restore_mask(old_mask: set | None) -> None:
+    if old_mask is None:
+        return
+    try:
+        signal.pthread_sigmask(signal.SIG_SETMASK, old_mask)
+    except (AttributeError, ValueError, OSError):
+        pass
 
 
 def _ignore_interrupts() -> dict:
     previous = {}
-    for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+    for sig in _INTERRUPTS:
         try:
             previous[sig] = signal.signal(sig, signal.SIG_IGN)
         except ValueError:  # nicht im Hauptthread
