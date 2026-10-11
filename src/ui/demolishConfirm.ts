@@ -31,17 +31,3 @@ export function confirmStep(
 export function mapDemolishAllowed(w: World, id: number): boolean {
   return !monumentNeedsConfirm(w, id);
 }
-
-/** Gebäude eines Zugs: abzureissende Ids (ohne Wiederholung) und ob ein Denkmal übersprungen wurde. */
-export function strokeTargets(
-  w: World,
-  ids: readonly number[],
-): { demolish: number[]; skipped: boolean } {
-  const demolish: number[] = [];
-  let skipped = false;
-  for (const id of ids) {
-    if (!mapDemolishAllowed(w, id)) skipped = true;
-    else if (!demolish.includes(id)) demolish.push(id);
-  }
-  return { demolish, skipped };
-}

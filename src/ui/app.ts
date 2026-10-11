@@ -953,6 +953,7 @@ function launch(
     }
     if (a.type === 'cancel') {
       clearGoodFocus();
+      demolishConfirm = confirmStep(world, demolishConfirm, { kind: 'reset' }).state; // auch wenn nur ein Toast schliesst
       if (closeClosableToast()) return;
       setPanel({ kind: 'none' });
       selectTool({ kind: 'select' });
@@ -1032,8 +1033,10 @@ function launch(
         dragMapSkipShown = true;
       }
     } else if (tile?.buildingId != null) {
-      if (!mapDemolishAllowed(world, tile.buildingId)) showMessage(MAP_SKIP_TEXT, 'warn');
-      else if (demolishBuilding(tile.buildingId).ok) sound.play('demolish');
+      if (!mapDemolishAllowed(world, tile.buildingId)) {
+        if (!dragMapSkipShown) showMessage(MAP_SKIP_TEXT, 'warn');
+        dragMapSkipShown = true; // Zug, der auf dem Denkmal beginnt: Meldung nur einmal
+      } else if (demolishBuilding(tile.buildingId).ok) sound.play('demolish');
     } else {
       const r = removeRoad(world, a.x, a.y, a.island);
       if (!r.ok) showRoadFailure(r.reason, a.dragging, a.island);

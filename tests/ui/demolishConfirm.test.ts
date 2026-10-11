@@ -6,7 +6,6 @@ import {
   MAP_SKIP_TEXT,
   confirmStep,
   mapDemolishAllowed,
-  strokeTargets,
   type ConfirmInput,
   type ConfirmState,
 } from '../../src/ui/demolishConfirm';
@@ -94,7 +93,7 @@ describe('AK-M13E2-34 Abriss-Bestätigung (Anhang 08 C)', () => {
     expect(mapDemolishAllowed(w, id)).toBe(false);
     expect(mapDemolishAllowed(w, house)).toBe(true);
     expect(MAP_SKIP_TEXT).toBe('Denkmal nur im Panel abreissen');
-    expect(strokeTargets(w, [id, house, id])).toEqual({ demolish: [house], skipped: true });
-    expect(strokeTargets(w, [house])).toEqual({ demolish: [house], skipped: false });
+    const fresh = monumentWorld();
+    expect(mapDemolishAllowed(fresh, placeMonument(fresh))).toBe(true); // Stufe 0 ohne Lauf
   });
 });
