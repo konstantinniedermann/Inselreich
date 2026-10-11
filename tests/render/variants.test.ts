@@ -41,6 +41,8 @@ const MAIN_REF: Record<string, string> = {
   // M12 T10: Stand der neuen Silhouetten (kein Main-Referenzstand), gesetzt beim Einbau
   kontor2: '99c6cbdf',
   spicefarm: '66a02042',
+  // M13-E2 T01: Platzhalter (Kategorie-Fallback public, Höhe 0,6), ersetzt in T09
+  monument: 'a64989a4',
 };
 /**
  * Hash der Aufzeichnung (FNV-1a über JSON, Zahlen auf 1/1000 gerundet). Die Referenzwerte stammten aus dem Stand

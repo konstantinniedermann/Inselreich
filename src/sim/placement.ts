@@ -98,6 +98,8 @@ export function siteRuleOk(
         ? ok
         : fail('Hier wächst kein Gewürz');
     }
+    case 'home':
+      return island === HOME ? ok : fail('Nur auf der Heimatinsel');
     case 'foreignNoKontor':
       if (island === HOME) return fail('Nur auf einer fernen Insel');
       return isl.kontorId === null ? ok : fail('Auf dieser Insel steht schon ein Kontor');

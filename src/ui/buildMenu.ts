@@ -70,6 +70,8 @@ export function siteText(rule: SiteRule): string {
       return 'Nur auf Inseln mit Gewürz';
     case 'foreignNoKontor':
       return 'Nur auf einer fernen Insel ohne Kontor';
+    case 'home':
+      return 'Nur auf der Heimatinsel';
   }
 }
 
@@ -273,6 +275,7 @@ export function buildEntries(
     (id) =>
       id !== 'kontor' &&
       !(id === 'kontor2' && island === HOME) && // das zweite Kontor gründet man nur auf einer Fremdinsel
+      !(id === 'monument' && island !== HOME) && // das Denkmal steht nur auf der Heimatinsel
       BUILDING_DEFS[id].category === category &&
       buildingShown(world, id),
   );

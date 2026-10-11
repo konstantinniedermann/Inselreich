@@ -85,7 +85,7 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
       / Kaufleute brauchen Gewürz von einer fernen Insel: gründe dort ein Kontor\.$/,
     );
     const all = UNLOCKS.flatMap((u) => u.buildings);
-    for (const id of BUILDING_IDS.filter((b) => b !== 'kontor'))
+    for (const id of BUILDING_IDS.filter((b) => b !== 'kontor' && b !== 'monument'))
       expect(all.filter((b) => b === id)).toHaveLength(1);
     expect(all).not.toContain('kontor');
     for (const g of GOOD_IDS)
@@ -377,7 +377,7 @@ describe('M11 Freischaltung Jagdhütte, Rinderfarm, Ausbau (Spec 4)', () => {
     expect(row('U3').functions).toContain('upgrade2');
     expect(row('U5').functions).toContain('upgrade3');
     const all = UNLOCKS.flatMap((u) => u.buildings);
-    for (const id of BUILDING_IDS.filter((b) => b !== 'kontor'))
+    for (const id of BUILDING_IDS.filter((b) => b !== 'kontor' && b !== 'monument'))
       expect(
         all.filter((b) => b === id),
         id,

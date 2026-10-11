@@ -24,7 +24,8 @@ export type BuildingDefId =
   | 'glassworks'
   | 'townhall'
   | 'hunter'
-  | 'cattlefarm';
+  | 'cattlefarm'
+  | 'monument';
 export type ServiceId = 'faith' | 'school' | 'bath';
 export type Category = 'infrastructure' | 'housing' | 'production' | 'public';
 export interface Cost {
@@ -39,7 +40,22 @@ export type SiteRule =
   | { kind: 'radius'; terrain: Terrain; radius: number; min: number; free?: true } // ≥min Kacheln im Radius; `free`: nur unbebaute Kacheln
   | { kind: 'supply' } // im Radius von Kontor oder Markt
   | { kind: 'islandTrait'; trait: IslandTrait } // Insel trägt das Merkmal (nur ferne Inseln)
-  | { kind: 'foreignNoKontor' }; // ferne Insel ohne Kontor
+  | { kind: 'foreignNoKontor' } // ferne Insel ohne Kontor
+  | { kind: 'home' }; // nur auf der Heimatinsel
+export type MonumentGood = 'stone' | 'tools' | 'glass' | 'spice';
+export interface MonumentStageDef {
+  name: string;
+  money: number;
+  goods: Readonly<Record<MonumentGood, number>>;
+}
+export interface Monument {
+  buildingId: number;
+  stage: number; // 0 … 3 = fertige Abschnitte
+  running: boolean;
+  delivered: Record<MonumentGood, number>;
+  paused: boolean;
+  buy: Record<MonumentGood, boolean>;
+}
 export interface BuildingDef {
   id: BuildingDefId;
   name: string;

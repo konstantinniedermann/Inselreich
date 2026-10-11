@@ -918,5 +918,25 @@
     "polygons": "47c72007a369f52db8c8eff4cf81791aaa1a599b5390e602288bc6d0b5fda606",
     "hull": "3a0a7ad7b11c60e516b1dff4573fdaf0822a4bce69102b53e4de7f6193acc966",
     "count": 24
+  },
+  "monument|t-|l-|v0": {
+    "polygons": "c4ff070e030ed735c3a78cc44af64bf56a66455a204ab462a39795558b0229a5",
+    "hull": "46d36e70a6a562a629638b28e751334204ba22726bb7784d3c3036fd3b31726f",
+    "count": 16
+  },
+  "monument|t-|l-|v1": {
+    "polygons": "c4ff070e030ed735c3a78cc44af64bf56a66455a204ab462a39795558b0229a5",
+    "hull": "46d36e70a6a562a629638b28e751334204ba22726bb7784d3c3036fd3b31726f",
+    "count": 16
+  },
+  "monument|t-|l-|v2": {
+    "polygons": "c4ff070e030ed735c3a78cc44af64bf56a66455a204ab462a39795558b0229a5",
+    "hull": "46d36e70a6a562a629638b28e751334204ba22726bb7784d3c3036fd3b31726f",
+    "count": 16
+  },
+  "monument|t-|l-|v3": {
+    "polygons": "c4ff070e030ed735c3a78cc44af64bf56a66455a204ab462a39795558b0229a5",
+    "hull": "46d36e70a6a562a629638b28e751334204ba22726bb7784d3c3036fd3b31726f",
+    "count": 16
   }
 }
