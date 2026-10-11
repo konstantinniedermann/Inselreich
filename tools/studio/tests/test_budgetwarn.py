@@ -195,6 +195,7 @@ class RolePrefixTest(unittest.TestCase):
         self.assertEqual(model.phase_key("Release-Check-X"), "X")
         self.assertEqual(model.phase_key("impl-plan-X"), "plan-X")
         self.assertEqual(model.phase_key("impl-"), "impl-")
+        self.assertEqual(model.phase_key(None), "None")
         self.assertEqual(model.phase_key("REL-15"), "REL-15")
 
     def test_pairs_match(self):
@@ -202,6 +203,8 @@ class RolePrefixTest(unittest.TestCase):
             ("impl-REL-15", "REL-15"),
             ("impl-TOOL-BUENDEL-2", "TOOL-BUENDEL-2"),
             ("design-M13", "M13-BRAINSTORM"),
+            ("gate-X", "X"),
+            ("release-check-X", "X"),
         ):
             self.assertEqual(self.check(package, phase), (None, None), phase)
 
