@@ -5419,3 +5419,14 @@ Regelbezug: STUDIO.md Push-Ablauf (R394, R464), R488 V1, R503 · Kosten bei Irrt
 Stunden.
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-19 · ADR: —
+
+## R509 · 2026-10-11 · Plan-Nachtrag M13-E2 abgenommen; Gate Plan M13-E2 OK
+
+Ruling: Nachtrag `e37f775f` setzt R507 um (T19 Glocke im ART-Strang unter `lead-art`, Ablauf T08 → T19 → T09; QA-B1–B3,
+B5–B9; Index mit Staffelung, Merge-Reihenfolge, Save-Regel; Rahmen/Ownership/Entscheidungen ausgelagert; Verweiszeile im
+I-049-Plan). Gate Plan M13-E2 **OK**. Budget 42 Starts (39 geplant), Parallelität 3 gestaffelt. Start SIM + ART nach Push
+REL-19 bzw. nach dem Ergebnis von R508. Offen: `lead-qa`-Review des Wortlauts `nachtrag-i049.md` vor I-049-Start.
+
+Regelbezug: gates.md Gate Plan, R507 · Kosten bei Irrtum: ein Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Nachtrag-Bericht lead-tech · ADR: —
