@@ -651,3 +651,17 @@ describe('UI-NAECHSTER-SCHRITT akuter Kassenmangel (R499, AK-NS-05)', () => {
     expect(nextStep(w)).toBe(MANGEL_FOOD);
   });
 });
+
+describe('UI-NAECHSTER-SCHRITT Zustandsfreiheit (AK-NS-08)', () => {
+  it('AK-NS-08 nextStep ist rein: zweimal gleicher Text, Welt unverändert', () => {
+    const w = world(1, 2, []);
+    const h = Object.values(w.buildings).find((b) => b.house)!;
+    setHouse(h, 1, 2, []);
+    home(w).stock.food = 0;
+    const before = structuredClone(w);
+    const a = nextStep(w);
+    const b = nextStep(w);
+    expect(a).toBe(b);
+    expect(w).toEqual(before);
+  });
+});
