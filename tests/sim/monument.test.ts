@@ -824,16 +824,24 @@ describe('AK-M13E2-16 Determinismus', () => {
 describe('AK-M13E2-49 Speichern und Laden mitten im Abschnitt', () => {
   const END = 1500;
   const withPause = (w: World, paused: boolean): void => {
-    // Pause zwischen den Schritten: bei Tick 1015 an, bei 1035 aus.
+    // Pause zwischen den Schritten: bei Tick 1015 an, bei 1035 aus. Der Tick-Vergleich greift nur, weil `run`
+    // Tick für Tick läuft (jeder Tick wird vor dem Schritt gesehen).
     if (!paused) return;
     if (w.tick === 1015) setMonumentPaused(w, true);
     if (w.tick === 1035) setMonumentPaused(w, false);
   };
-  const run = (w: World, to: number, paused: boolean): void => {
+  const sum = (w: World): number =>
+    MONUMENT_GOODS.reduce((n, g) => n + w.monument!.delivered[g], 0);
+  /** Läuft bis `to` und liefert die Zahl der Schritte, in denen das Denkmal ein Stück bekam (= tatsächliche Züge). */
+  const run = (w: World, to: number, paused: boolean): number => {
+    let pulls = 0;
     while (w.tick < to) {
       withPause(w, paused);
+      const before = sum(w);
       step(w);
+      if (sum(w) > before) pulls++;
     }
+    return pulls;
   };
 
   it.each([
@@ -849,11 +857,12 @@ describe('AK-M13E2-49 Speichern und Laden mitten im Abschnitt', () => {
     const r = deserialize(serialize(k));
     if (!r.ok) throw new Error('laden');
     const k2 = r.world;
-    run(k2, END, paused);
+    const pulls = run(k2, END, paused);
     expect(serialize(k2)).toBe(serialize(z));
     expect(k2.monument!.running).toBe(true);
     expect(k2.monument!.delivered.stone).toBeGreaterThanOrEqual(1);
     expect(k2.monument!.delivered.glass).toBeGreaterThanOrEqual(1);
-    expect(Math.floor((END - s) / 10) - (paused ? 2 : 0)).toBeGreaterThanOrEqual(40);
+    // Nach s: 1007 → 50 Züge (1010 … 1500), 1010 → 49, 1013 → 49; bei 1025 pausiert fallen 1030 aus → 47.
+    expect(pulls).toBeGreaterThanOrEqual(40);
   });
 });
