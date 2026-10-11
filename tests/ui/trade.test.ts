@@ -125,6 +125,38 @@ const field = (root: Fake, name: string): Fake | undefined =>
 const rbtn = (root: Fake, good: string, dir: 'minus' | 'plus'): Fake =>
   flat(root).find((e) => e.dataset.reserve === `${good}-${dir}`)!;
 
+describe('AK-UT-09 Kopfzelle «Kaufen»', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const noop: TradeActions = { back: () => {}, changed: () => {}, reserve: () => {} };
+  it('Titel im eigenen span, small danach; Notiz nur mit Edikt sichtbar', () => {
+    vi.stubGlobal('document', { createElement: fakeEl });
+    const w = createWorld(3, { unlockAll: true });
+    w.won = true;
+    placeTownhall(w);
+    w.money = 1000;
+    const panel = fakeEl('div');
+    renderTrade(panel as unknown as HTMLElement, w, noop);
+    const head = flat(panel).find(
+      (e) => e.className === 'trade-head' && e.children.some((c) => c.tag === 'small'),
+    )!;
+    expect(head.textContent).toBe('');
+    expect(head.children.map((c) => c.tag)).toEqual(['span', 'small']);
+    expect(head.children[0]!.textContent).toBe('Kaufen');
+    const note = field(panel, 'buy-note')!;
+    expect(note).toBe(head.children[1]);
+    updateTrade(panel as unknown as HTMLElement, w);
+    expect(note.hidden).toBe(true);
+    expect(setEdict(w, 'trade').ok).toBe(true);
+    updateTrade(panel as unknown as HTMLElement, w);
+    expect(note.hidden).toBe(false);
+    expect(note.textContent).toBe('Edikt Handel: −20 %');
+  });
+  it('CSS: .trade-head small ist ein Block', () => {
+    const css = readFileSync('src/style.css', 'utf8');
+    expect(css).toMatch(/\.trade-head small\s*\{[^}]*display:\s*block/);
+  });
+});
+
 describe('I-049 T05 Reserve-Zeile im Handelsdialog (AK-SB-16)', () => {
   afterEach(() => vi.unstubAllGlobals());
   const setup = (): { w: World; panel: Fake; calls: [GoodId, number][] } => {

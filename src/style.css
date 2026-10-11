@@ -364,6 +364,11 @@ button.chip {
   text-transform: uppercase;
   font-weight: 700;
 }
+.trade-head small {
+  display: block;
+  text-transform: none;
+  font-weight: 400;
+}
 .trade-good {
   grid-column: 1 / -1;
   display: flex;

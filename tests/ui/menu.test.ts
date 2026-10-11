@@ -66,6 +66,40 @@ describe('UI-TASTEN Tooltip am Menü-Knopf «Speichern» (AK-UT-12)', () => {
   });
 });
 
+describe('AK-UT-10 Menü: Überschrift «Speichern»', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  it('Reihenfolge: Titel, Speichern-Überschrift, Knopf, Laden-Überschrift, Liste', () => {
+    vi.stubGlobal('document', { createElement: fakeEl });
+    vi.stubGlobal('Option', function Option() {});
+    const a = {
+      save: () => {},
+      listSaves: () => [],
+      storageNote: () => null,
+      hasProgress: () => false,
+      load: () => {},
+      crisisLevel: () => 'normal',
+      unlockMode: () => 'stepwise',
+      newIsland: () => {},
+      hotkeys: () => [],
+      seed: () => 1,
+      openGuide: () => {},
+    } as unknown as MenuActions;
+    openMenu(
+      fakeEl('div') as unknown as HTMLElement,
+      a,
+      fakeEl('button') as unknown as HTMLElement,
+    );
+    const kids = lastCard.card!.children;
+    expect(kids.slice(0, 5).map((k) => [k.tag, k.textContent])).toEqual([
+      ['h2', 'Menü'],
+      ['h3', 'Speichern'],
+      ['button', 'Speichern'],
+      ['h3', 'Laden'],
+      ['div', undefined],
+    ]);
+  });
+});
+
 describe('Menü-Texte (Spec L2, P-3)', () => {
   it('slotLabel: Spielzeit als Uhr', () => {
     expect(slotLabel({ slot: 'auto', tick: (300 * 1000) / TICK_MS })).toBe(

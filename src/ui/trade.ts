@@ -158,7 +158,10 @@ export function renderTrade(
   head.append(title, back);
 
   const table = cell(panel, 'trade-table');
-  const buyHead = cell(table, 'trade-head', 'Kaufen');
+  const buyHead = cell(table, 'trade-head');
+  const buyTitleEl = document.createElement('span');
+  buyTitleEl.textContent = 'Kaufen';
+  buyHead.append(buyTitleEl);
   const note = document.createElement('small');
   note.dataset.field = 'buy-note';
   note.hidden = true;
