@@ -598,6 +598,7 @@ describe('R2: Silhouetten-Tabelle, Kategorie-Fallback, Fensteranker, Erdwege', (
       school: 2,
       firestation: 2,
       townhall: 2, // Rückfall public (M10-S2, T-12)
+      monument: 2, // Platzhalter Rückfall public (M13-E2 T01, ersetzt in T09)
       'fallback public 1': 2,
       'fallback public 2': 2,
     };

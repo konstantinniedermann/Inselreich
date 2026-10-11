@@ -1,5 +1,6 @@
 import { BUILDING_DEFS, ROAD_COST_OBJ } from './defs/buildings';
 import { grantRefund, pay, refundCost } from './economy';
+import { newMonument } from './monument';
 import { newHouseState } from './population';
 import { affordBuild, canPlace, canPlaceRoad, islandAt } from './placement';
 import { effectiveRefund } from './queries';
@@ -64,6 +65,7 @@ export function placeBuilding(
   world.buildings[id] = building;
   for (const p of footprint(BUILDING_DEFS[defId], x, y)) tileAt(isl, p.x, p.y)!.buildingId = id;
   if (fromHome) isl.kontorId = id;
+  if (defId === 'monument') world.monument = newMonument(id);
   recomputeConnectivity(world);
   return { ok: true, id };
 }
@@ -85,6 +87,7 @@ export function demolish(world: World, id: number): Result {
   }
   delete world.buildings[id];
   if (b.defId === 'townhall') world.edict = null;
+  if (b.defId === 'monument') world.monument = null;
   if (isFar) {
     const isl = world.islands[b.island]!;
     if (isl.kontorId === b.id) isl.kontorId = null;

@@ -24,7 +24,8 @@ export type BuildingDefId =
   | 'glassworks'
   | 'townhall'
   | 'hunter'
-  | 'cattlefarm';
+  | 'cattlefarm'
+  | 'monument';
 export type ServiceId = 'faith' | 'school' | 'bath';
 export type Category = 'infrastructure' | 'housing' | 'production' | 'public';
 export interface Cost {
@@ -39,7 +40,22 @@ export type SiteRule =
   | { kind: 'radius'; terrain: Terrain; radius: number; min: number; free?: true } // ≥min Kacheln im Radius; `free`: nur unbebaute Kacheln
   | { kind: 'supply' } // im Radius von Kontor oder Markt
   | { kind: 'islandTrait'; trait: IslandTrait } // Insel trägt das Merkmal (nur ferne Inseln)
-  | { kind: 'foreignNoKontor' }; // ferne Insel ohne Kontor
+  | { kind: 'foreignNoKontor' } // ferne Insel ohne Kontor
+  | { kind: 'home' }; // nur auf der Heimatinsel
+export type MonumentGood = 'stone' | 'tools' | 'glass' | 'spice';
+export interface MonumentStageDef {
+  name: string;
+  money: number;
+  goods: Readonly<Record<MonumentGood, number>>;
+}
+export interface Monument {
+  buildingId: number;
+  stage: number; // 0 … 3 = fertige Abschnitte
+  running: boolean;
+  delivered: Record<MonumentGood, number>;
+  paused: boolean;
+  buy: Record<MonumentGood, boolean>;
+}
 export interface BuildingDef {
   id: BuildingDefId;
   name: string;
@@ -232,7 +248,7 @@ export interface Ship {
   homing: boolean;
 }
 export interface World {
-  version: 11;
+  version: 12;
   seed: number;
   islands: Island[];
   tick: number;
@@ -270,6 +286,10 @@ export interface World {
   edict: EdictId | null;
   /** Bis zu diesem Tick ist die Edikt-Wahl gesperrt. */
   edictLockedUntil: number;
+  /** Denkmal (M13-E2); `null` = nicht gebaut. */
+  monument: Monument | null;
+  /** Denkmal vollendet (Abschnitt 3 fertig); wird nie zurückgesetzt. */
+  monumentDone: boolean;
 }
 
 /** Eine Insel: Raster, Kontor, Lager und Lage im Archipel (M12 E0, E1). */

@@ -26,6 +26,14 @@ import { SERVICE_BUILDING, SERVICE_IDS } from '../../src/sim/population';
 import { sellPrice } from '../../src/sim/trade';
 import type { GoodId } from '../../src/sim/types';
 import { ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from '../../src/sim/defs/sea';
+import {
+  MONUMENT_GOODS,
+  MONUMENT_PULL_TICKS,
+  MONUMENT_RESERVE_MIN,
+  MONUMENT_RESERVE_TICKS,
+  MONUMENT_STAGES,
+  MONUMENT_UNLOCK,
+} from '../../src/sim/defs/monument';
 import { createWorld } from '../../src/sim/world';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 
@@ -35,8 +43,8 @@ describe('defs', () => {
     expect(GOOD_IDS).toHaveLength(10);
     for (const id of GOOD_IDS) expect(GOODS[id].buy).toBeGreaterThan(GOODS[id].sell);
   });
-  it('has 21 building defs whose goods exist (M11 S2)', () => {
-    expect(BUILDING_IDS).toHaveLength(21); // bewusst, M12 T02: kontor2, spicefarm
+  it('has 22 building defs whose goods exist (M11 S2)', () => {
+    expect(BUILDING_IDS).toHaveLength(22); // bewusst, M12 T02: kontor2, spicefarm; M13-E2 T01: monument
     for (const id of BUILDING_IDS) {
       const d = BUILDING_DEFS[id];
       expect(d.id).toBe(id);
@@ -417,5 +425,55 @@ describe('M13-E1 Edikte (AK-M13E1-02)', () => {
     expect(Number.isInteger(PAUSED_UPKEEP_PCT)).toBe(true);
     expect(PAUSED_UPKEEP_PCT).toBeGreaterThanOrEqual(1);
     expect(PAUSED_UPKEEP_PCT).toBeLessThanOrEqual(99);
+  });
+});
+
+describe('M13-E2 Denkmal (AK-M13E2-02)', () => {
+  it('Abschnitte exakt nach Spec §4', () => {
+    expect(MONUMENT_STAGES).toEqual([
+      { name: 'Sockel', money: 4000, goods: { stone: 200, tools: 80, glass: 60, spice: 40 } },
+      { name: 'Terrassen', money: 6000, goods: { stone: 200, tools: 80, glass: 140, spice: 100 } },
+      {
+        name: 'Schaft und Feuerschale',
+        money: 8000,
+        goods: { stone: 200, tools: 80, glass: 160, spice: 100 },
+      },
+    ]);
+  });
+  it('Summen 18000 / 600 / 240 / 360 / 240', () => {
+    const sum = (f: (s: (typeof MONUMENT_STAGES)[number]) => number): number =>
+      MONUMENT_STAGES.reduce((a, s) => a + f(s), 0);
+    expect(sum((s) => s.money)).toBe(18000);
+    expect(sum((s) => s.goods.stone)).toBe(600);
+    expect(sum((s) => s.goods.tools)).toBe(240);
+    expect(sum((s) => s.goods.glass)).toBe(360);
+    expect(sum((s) => s.goods.spice)).toBe(240);
+  });
+  it('MONUMENT_GOODS gleich den Schlüsseln jedes goods, Mengen ganzzahlig > 0', () => {
+    expect(MONUMENT_GOODS).toEqual(['stone', 'tools', 'glass', 'spice']);
+    for (const s of MONUMENT_STAGES) {
+      expect(Object.keys(s.goods)).toEqual([...MONUMENT_GOODS]);
+      for (const g of MONUMENT_GOODS) {
+        expect(Number.isInteger(s.goods[g])).toBe(true);
+        expect(s.goods[g]).toBeGreaterThan(0);
+      }
+    }
+  });
+  it('Konstanten', () => {
+    for (const n of [MONUMENT_PULL_TICKS, MONUMENT_RESERVE_MIN, MONUMENT_RESERVE_TICKS]) {
+      expect(Number.isInteger(n)).toBe(true);
+      expect(n).toBeGreaterThan(0);
+    }
+    expect(MONUMENT_UNLOCK).toBe('wonMerchants');
+  });
+  it('BUILDING_DEFS.monument nach R1.1, letzter Schlüssel', () => {
+    const d = BUILDING_DEFS.monument;
+    expect(d.name).toBe('Denkmal');
+    expect([d.w, d.h, d.upkeep, d.category]).toEqual([3, 3, 0, 'public']);
+    expect(d.cost).toEqual({ money: 500, wood: 10, tools: 0, stone: 10 });
+    expect(d.flammable).toBeUndefined();
+    expect(d.maxCount).toEqual({ n: 1, reason: 'Es gibt schon ein Denkmal' });
+    expect(d.site).toEqual([{ kind: 'home' }, { kind: 'supply' }]);
+    expect(Object.keys(BUILDING_DEFS).at(-1)).toBe('monument');
   });
 });

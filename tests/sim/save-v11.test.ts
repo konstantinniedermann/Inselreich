@@ -5,7 +5,14 @@ import { FIRE_OUTAGE } from '../../src/sim/defs/timing';
 import { SAVE_VERSION, deserialize, migrateV10ToV11, serialize } from '../../src/sim/save';
 import type { Building, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
-import { foldBackToV10, foldBackToV9, placeTownhall, prepareEast, putBuilding } from './helpers';
+import {
+  foldBackToV10,
+  foldBackToV11,
+  foldBackToV9,
+  placeTownhall,
+  prepareEast,
+  putBuilding,
+} from './helpers';
 
 const BAD = { ok: false, reason: 'Beschädigter Spielstand' };
 
@@ -33,6 +40,10 @@ const onBuilding =
     (r.buildings as Record<string, Record<string, unknown>>)[String(id)]![k] = val;
   };
 
+function v11Of(w: World): Record<string, unknown> {
+  return foldBackToV11(JSON.parse(serialize(w)) as Record<string, unknown>);
+}
+
 function v10Of(w: World): Record<string, unknown> {
   return foldBackToV10(JSON.parse(serialize(w)) as Record<string, unknown>);
 }
@@ -42,9 +53,9 @@ describe('M13-E1 Save v11', () => {
     const w = createWorld(3);
     expect(w.edict).toBeNull();
     expect(w.edictLockedUntil).toBe(0);
-    expect(Object.keys(w).slice(-2)).toEqual(['edict', 'edictLockedUntil']);
-    expect(w.version).toBe(11);
-    expect(SAVE_VERSION).toBe(11);
+    expect(Object.keys(w).slice(-4, -2)).toEqual(['edict', 'edictLockedUntil']);
+    expect(w.version).toBe(12);
+    expect(SAVE_VERSION).toBe(12);
   });
 
   describe('AK-M13E1-22 foldBackToV10', () => {
@@ -57,7 +68,8 @@ describe('M13-E1 Save v11', () => {
       expect(out.version).toBe(10);
       const hand: Record<string, unknown> = {};
       for (const k of Object.keys(v11))
-        if (k !== 'edict' && k !== 'edictLockedUntil') hand[k] = v11[k];
+        if (!['edict', 'edictLockedUntil', 'monument', 'monumentDone'].includes(k))
+          hand[k] = v11[k];
       hand.version = 10;
       expect(JSON.stringify(out)).toBe(JSON.stringify(hand));
     });
@@ -75,8 +87,14 @@ describe('M13-E1 Save v11', () => {
       const v11 = JSON.parse(serialize(w)) as Record<string, unknown>;
       expect(() => foldBackToV10(v11)).toThrow('foldBackToV10: Stilllegung nicht rückfaltbar');
     });
-    it('unbekannter Schlüssel wirft', () => {
+    it('unbekannter Schlüssel wird entfernt', () => {
       const v11 = { ...JSON.parse(serialize(createWorld(3))), foo: 1 };
+      // Anhang 02 D1: foldBackToV11 entfernt Fremdschlüssel (M13-E2 T02)
+      expect(Object.keys(foldBackToV10(v11))).not.toContain('foo');
+    });
+    it('echter v11-Stand mit unbekanntem Schlüssel wirft', () => {
+      const v11: Record<string, unknown> = { ...v11Of(createWorld(3)), foo: 1 };
+      expect(v11.version).toBe(11);
       expect(() => foldBackToV10(v11)).toThrow('foldBackToV10: unbekannter Schlüssel foo');
     });
     it('foldBackToV9 auf v11 = foldBackToV9(foldBackToV10(x))', () => {
@@ -104,7 +122,7 @@ describe('M13-E1 Save v11', () => {
       const r = deserialize(JSON.stringify(v10Of(w)));
       expect(r.ok).toBe(true);
       if (!r.ok) return;
-      expect(r.world.version).toBe(11);
+      expect(r.world.version).toBe(12);
       expect(r.world.edict).toBeNull();
       expect(r.world.edictLockedUntil).toBe(0);
       expect(r.world.won).toBe(true);
@@ -116,7 +134,7 @@ describe('M13-E1 Save v11', () => {
         const r = deserialize(readFileSync(`tests/sim/fixtures/${f}`, 'utf8'));
         expect(r.ok, f).toBe(true);
         if (!r.ok) continue;
-        expect(r.world.version, f).toBe(11);
+        expect(r.world.version, f).toBe(12);
         expect(r.world.edict, f).toBeNull();
         expect(r.world.edictLockedUntil, f).toBe(0);
       }
@@ -189,7 +207,7 @@ describe('M13-E1 Save v11', () => {
 
   it('AK-M13E1-26 unbekannte Version und abgeschnittener Text', () => {
     const w = createWorld(3);
-    expect(deserialize(tampered(w, (r) => (r.version = 12)))).toEqual({
+    expect(deserialize(tampered(w, (r) => (r.version = SAVE_VERSION + 1)))).toEqual({
       ok: false,
       reason: 'Unbekannte Version',
     });

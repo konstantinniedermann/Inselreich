@@ -285,7 +285,9 @@ describe('M8 Bausperre (Änderung S11)', () => {
 
   it('AK-S1-21 buildLock ist für jedes Gebäude ausserhalb von U6 null (auch vor dem Sieg)', () => {
     for (const id of BUILDING_IDS)
-      if (entryOfBuilding(id)?.id !== 'U6') expect(buildLock(w, id), id).toBeNull();
+      // Denkmal: eigene Sperre über wonMerchants (M13-E2 R2.1), getestet in monument.test.ts
+      if (id !== 'monument' && entryOfBuilding(id)?.id !== 'U6')
+        expect(buildLock(w, id), id).toBeNull();
   });
 
   it('AK-S2-19 Glashütte vor dem Sieg gesperrt, placeBuilding bucht nichts; mit won frei', () => {
