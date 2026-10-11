@@ -56,7 +56,7 @@ describe('M13-E2 Save v12', () => {
     const w = createWorld(3);
     expect(w.monument).toBeNull();
     expect(w.monumentDone).toBe(false);
-    expect(Object.keys(w).slice(-2)).toEqual(['monument', 'monumentDone']);
+    expect(Object.keys(w).slice(-3, -1)).toEqual(['monument', 'monumentDone']);
     expect(w.version).toBe(12);
     expect(SAVE_VERSION).toBe(12);
   });
@@ -68,7 +68,7 @@ describe('M13-E2 Save v12', () => {
       expect(Object.keys(out)).toEqual([...V11_WORLD_KEYS]);
       const hand: Record<string, unknown> = {};
       for (const k of Object.keys(v12))
-        if (k !== 'monument' && k !== 'monumentDone') hand[k] = v12[k];
+        if (k !== 'monument' && k !== 'monumentDone' && k !== 'buyPct') hand[k] = v12[k];
       hand.version = 11;
       hand.islands = (hand.islands as Record<string, unknown>[]).map((isl) => {
         const rest = { ...isl };

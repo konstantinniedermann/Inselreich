@@ -370,7 +370,7 @@ describe('M13-E1 Edikte (AK-M13E1-02)', () => {
         name: 'Sparen',
         upkeepPct: 80,
         taxPoints: 7,
-        buyPct: 100,
+        buyFactorPct: 100,
         growthInterval: null,
         upgradeWait: null,
       },
@@ -379,7 +379,7 @@ describe('M13-E1 Edikte (AK-M13E1-02)', () => {
         name: 'Handel',
         upkeepPct: 100,
         taxPoints: 0,
-        buyPct: 80,
+        buyFactorPct: 80,
         growthInterval: null,
         upgradeWait: null,
       },
@@ -388,7 +388,7 @@ describe('M13-E1 Edikte (AK-M13E1-02)', () => {
         name: 'Wohlfahrt',
         upkeepPct: 100,
         taxPoints: 5,
-        buyPct: 100,
+        buyFactorPct: 100,
         growthInterval: 40,
         upgradeWait: 200,
       },
@@ -407,7 +407,10 @@ describe('M13-E1 Edikte (AK-M13E1-02)', () => {
       expect(Number.isInteger(e.upkeepPct) && e.upkeepPct >= 1 && e.upkeepPct <= 100, id).toBe(
         true,
       );
-      expect(Number.isInteger(e.buyPct) && e.buyPct >= 1 && e.buyPct <= 100, id).toBe(true);
+      expect(
+        Number.isInteger(e.buyFactorPct) && e.buyFactorPct >= 1 && e.buyFactorPct <= 100,
+        id,
+      ).toBe(true);
       expect(Number.isInteger(e.taxPoints) && e.taxPoints >= 0 && e.taxPoints < minTax, id).toBe(
         true,
       );

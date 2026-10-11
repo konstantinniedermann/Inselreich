@@ -1,7 +1,14 @@
 import { crisisWindow } from './crises';
 import { BUILDING_DEFS } from './defs/buildings';
 import { CRISIS_LEVELS } from './defs/crises';
-import { GOODS, GOOD_IDS, SELL_FLOOR, SPICE_GRACE_MAX, SPICE_GRACE_PER_HOUSE } from './defs/goods';
+import {
+  BUY_CAP,
+  GOODS,
+  GOOD_IDS,
+  SELL_FLOOR,
+  SPICE_GRACE_MAX,
+  SPICE_GRACE_PER_HOUSE,
+} from './defs/goods';
 import {
   CRISIS_FIRST_TICK,
   FIRE_OUTAGE,
@@ -163,6 +170,7 @@ export function migrateV11ToV12(raw: Record<string, unknown>): void {
       if (isObject(isl)) isl.reserve ??= { wood: 0, stone: 0 };
     }
   }
+  if (!('buyPct' in raw)) raw.buyPct = Object.fromEntries(GOOD_IDS.map((g) => [g, 100]));
   raw.version = 12;
 }
 
@@ -721,9 +729,15 @@ function isValidMonumentFields(raw: Record<string, unknown>): boolean {
   return raw.wonMerchants === true && isValidMonumentBuilding(monument, raw);
 }
 
-/** Felder von Save v12 (M13-E2): Denkmal. Weitere Pakete hängen hier eigene Teilprüfungen an. */
+/** Kaufanteil (I-048): Objekt, jedes Gut ganzzahlig von 100 bis `BUY_CAP`. */
+function isValidBuyPct(raw: Record<string, unknown>): boolean {
+  const { buyPct } = raw;
+  return isObject(buyPct) && GOOD_IDS.every((g) => isIntBetween(buyPct[g], 100, BUY_CAP));
+}
+
+/** Felder von Save v12 (M13-E2): Denkmal; I-048: Kaufanteil. Weitere Pakete hängen hier eigene Teilprüfungen an. */
 function isValidV12Fields(raw: Record<string, unknown>): boolean {
-  return isValidMonumentFields(raw) && isValidReserves(raw);
+  return isValidMonumentFields(raw) && isValidReserves(raw) && isValidBuyPct(raw);
 }
 
 /** Sperrbestand (I-049): je Insel genau `wood` und `stone`, Werte aus den Stufen. */

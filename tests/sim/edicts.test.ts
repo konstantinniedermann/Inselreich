@@ -15,7 +15,7 @@ import {
 import { upgradeDeficit } from '../../src/sim/flow';
 import { taxUnits, tickPopulation, tickTaxes, upgradeStatus } from '../../src/sim/population';
 import { TIERS } from '../../src/sim/defs/tiers';
-import { GOODS, GOOD_IDS } from '../../src/sim/defs/goods';
+import { GOODS, GOOD_IDS, ORDER_PREMIUM } from '../../src/sim/defs/goods';
 import { orderUnitReward } from '../../src/sim/orders';
 import { deserialize, serialize } from '../../src/sim/save';
 import { buy, buyPrice, sellPrice } from '../../src/sim/trade';
@@ -233,17 +233,33 @@ describe('M13-E1 Kaufpreis Handel', () => {
     for (const g of GOOD_IDS) expect(buyPrice(w, g, 1)).toBe(expected[g as keyof typeof expected]);
   });
 
-  it('AK-M13E1-10 Arbitrage: Kauf teurer als Prämie und Boom-Verkauf', () => {
-    const w = tradeWorld();
-    for (const g of GOOD_IDS) {
-      const boom = tradeWorld();
-      boom.crisis = { period: 1, kind: 'boom', from: 0, until: 9999, good: g };
-      boom.sellPct[g] = 100;
-      for (const n of [1, 10, 100]) {
-        if (GOODS[g].order !== undefined)
-          expect(buyPrice(w, g, n)).toBeGreaterThan(n * orderUnitReward(g));
-        expect(buyPrice(w, g, n)).toBeGreaterThan(sellPrice(boom, g, n));
+  it('AK-M13E1-10 Arbitrage: Kauf teurer als Prämie und Boom-Verkauf (AK-ZK-09: Kaufanteil 100 und 160)', () => {
+    for (const pct of [100, 160]) {
+      const w = tradeWorld();
+      for (const g of GOOD_IDS) w.buyPct[g] = pct;
+      for (const g of GOOD_IDS) {
+        const boom = tradeWorld();
+        boom.crisis = { period: 1, kind: 'boom', from: 0, until: 9999, good: g };
+        boom.sellPct[g] = 100;
+        for (const n of [1, 10, 100]) {
+          if (GOODS[g].order !== undefined)
+            expect(buyPrice(w, g, n)).toBeGreaterThan(n * orderUnitReward(g));
+          expect(buyPrice(w, g, n)).toBeGreaterThan(sellPrice(boom, g, n));
+        }
       }
+    }
+  });
+
+  it('AK-ZK-09 Prämie je Einheit bleibt bei Kaufanteil 160', () => {
+    const w = tradeWorld();
+    for (const g of GOOD_IDS) w.buyPct[g] = 160;
+    for (const [g, premium] of [
+      ['wood', 7],
+      ['rum', 30],
+      ['glass', 37],
+    ] as const) {
+      expect(orderUnitReward(g)).toBe(Math.floor(GOODS[g].buy * ORDER_PREMIUM));
+      expect(orderUnitReward(g)).toBe(premium);
     }
   });
 });
