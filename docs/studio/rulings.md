@@ -5904,3 +5904,19 @@ Final-Review opus, Puffer), Worktree `.worktrees/tool-e060`. Danach wiederholt d
 Regelbezug: R433, R520, R532, R542 · Kosten bei Irrtum: ein Werkzeug-Revert, `deny` eine Session später.
 
 Entscheider: L0 · Anlass: Bericht studio-coach Echtlauf E-060 · ADR: —
+
+## R544 · 2026-10-11 · Gate Merge I049-UI: OK (I-049 komplett)
+
+Ruling: `feat/i049-ui` @ `c972af5e` (T05–T07 Reviews OK bzw. BEDENKEN behoben, T08 Browser-Check OK bei 1280/1440 px,
+T09 Final-Review opus über Sim + UI BEDENKEN → behoben mit Tests `298b0820` und Doku `8de6bc79`; `make check`, `tsc`,
+`make lint`, `make zeittests`, `make docs-check` Exit 0) → **Gate Merge OK** (Stufe leicht; L0 prüft die lead-qa-Fragen
+anhand des Berichts). Kein Delta-Review nötig, da die Fixes nach T09 nur Tests und Doku betreffen. Abweichungen
+angenommen: Reserve in fester zweiter Zeile (Browser-Befund), «Stein, Holz» nach Spec über `reserveGoods`,
+Ownership-Abweichung `src/ui/hints.ts`, Start 9 für die R481-Tests. **Absagetexte** in `src/sim/reserve.ts` («Ungültiges
+Gut», «Ungültiger Wert») statt Spec R4 angenommen, da für Spieler unsichtbar (UI bietet nur gültige Werte). Befund
+`stateText` ohne Aufrufer steht in den Beobachtungen. Integrator mergt `feat/i049-ui` lokal; danach startet **I048-UI**
+(T04) von main, Budget 4 (Controller, Umsetzer, Review, Puffer), Parallelität 1.
+
+Regelbezug: gates.md Gate Merge, R505, R535, R537 · Kosten bei Irrtum: ein Rückmerge im UI-Strang.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I049-UI · ADR: —
