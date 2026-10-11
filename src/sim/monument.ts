@@ -7,10 +7,11 @@ import {
 } from './defs/monument';
 import { TIERS } from './defs/tiers';
 import { isSupplied } from './population';
+import { reserveOf } from './reserve';
 import { buyMonumentUnit } from './trade';
 import type { Monument, MonumentGood, Result, World } from './types';
 import { fail, ok } from './types';
-import { HOME } from './world';
+import { HOME, home } from './world';
 
 const NO_GOODS = (): Record<MonumentGood, number> => ({ stone: 0, tools: 0, glass: 0, spice: 0 });
 
@@ -64,10 +65,9 @@ export function setMonumentBuy(w: World, good: unknown, on: unknown): Result {
   return ok;
 }
 
-/** Sperrbestand je Gut (R6.1). In E2 immer 0; den Rumpf ersetzt I-049 (Fall K1). Signatur nicht ändern. */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Signatur fest für I-049
-export function monumentLock(_w: World, _g: MonumentGood): number {
-  return 0;
+/** Sperrbestand je Gut (R6.1, Fall K1): beim Stein der Sperrbestand der Heimat (nur mit Kontor), sonst 0. */
+export function monumentLock(w: World, g: MonumentGood): number {
+  return g === 'stone' ? reserveOf(home(w), 'stone') : 0;
 }
 
 /** Hausverbrauch der Heimat in Tausendstel je Einwohner und 100 Ticks, ganzzahlig (Spec R6.2, A3). */

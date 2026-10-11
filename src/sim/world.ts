@@ -95,6 +95,7 @@ function foreignIslands(seed: number, homeIsland: Island): Island[] {
     ox: p.ox,
     oy: p.oy,
     anchor: p.anchor,
+    reserve: { wood: 0, stone: 0 },
   }));
 }
 
@@ -115,6 +116,7 @@ export function createWorld(
     ox: 0,
     oy: 0,
     anchor,
+    reserve: { wood: 0, stone: 0 },
   };
   const world: World = {
     version: 12,

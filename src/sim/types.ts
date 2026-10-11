@@ -1,4 +1,5 @@
 import type { IslandKind, IslandTrait } from './defs/sea';
+import type { ReserveGood, ReserveStep } from './defs/reserve';
 
 export type GoodId =
   'wood' | 'tools' | 'stone' | 'food' | 'wool' | 'cloth' | 'cane' | 'rum' | 'glass' | 'spice';
@@ -113,6 +114,7 @@ export interface TierDef {
 export type BuildingState =
   | 'ok'
   | 'waitingInput'
+  | 'waitingReserve'
   | 'storageFull'
   | 'notConnected'
   | 'burning'
@@ -307,6 +309,8 @@ export interface Island {
   oy: number;
   /** Ankerkachel für den Seeweg, innerhalb der Insel. */
   anchor: { x: number; y: number };
+  /** Sperrbestand je Reserve-Gut (I-049); immer vollständig. */
+  reserve: Record<ReserveGood, ReserveStep>;
 }
 /** Ergebnis von `deserialize`; `notice` nur beim ersten Laden eines alten Standes mit Übergangsbestand. */
 export type LoadResult =

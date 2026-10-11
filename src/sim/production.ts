@@ -4,6 +4,7 @@ import { EFF_MAX, EFF_WINDOW } from './defs/timing';
 import { addStock, takeStock } from './economy';
 import { cycleOf } from './levels';
 import { siteRuleOk } from './placement';
+import { reserveOf } from './reserve';
 import { serviceAvailable } from './population';
 import type { Building, World } from './types';
 import { islandOf } from './world';
@@ -54,7 +55,12 @@ function advance(world: World, b: Building): boolean {
       b.state = 'waitingInput';
       return false;
     }
-    for (const g of def.consumes) takeStock(islandOf(world, b), g, 1);
+    const isl = islandOf(world, b);
+    if (def.consumes.some((g) => isl.stock[g] <= reserveOf(isl, g))) {
+      b.state = 'waitingReserve'; // Sperrbestand (I-049): kein Fortschritt, keine Entnahme
+      return false;
+    }
+    for (const g of def.consumes) takeStock(isl, g, 1);
   }
   b.progress += 1;
   if (b.state !== 'storageFull') b.state = 'ok';

@@ -73,6 +73,7 @@ export function stateTone(b: Building): Tone {
     case 'notConnected':
       return 'ok';
     case 'waitingInput':
+    case 'waitingReserve':
     case 'storageFull':
     case 'paused':
       return 'warn';
