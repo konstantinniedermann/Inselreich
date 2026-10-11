@@ -290,6 +290,8 @@ export interface World {
   monument: Monument | null;
   /** Denkmal vollendet (Abschnitt 3 fertig); wird nie zurückgesetzt. */
   monumentDone: boolean;
+  /** Kaufanteil je Gut in % des Listenpreises (I-048); 100 = Listenpreis, höchstens `BUY_CAP`. */
+  buyPct: Record<GoodId, number>;
 }
 
 /** Eine Insel: Raster, Kontor, Lager und Lage im Archipel (M12 E0, E1). */

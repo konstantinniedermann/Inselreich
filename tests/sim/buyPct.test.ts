@@ -31,10 +31,6 @@ function withTrade(w: World): World {
   return w;
 }
 
-const setAll = (w: World, pct: number): void => {
-  for (const g of GOOD_IDS) w.buyPct[g] = pct;
-};
-
 const tickAt = (w: World, tick: number): void => {
   w.tick = tick;
   tickMarket(w);

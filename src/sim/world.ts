@@ -148,6 +148,7 @@ export function createWorld(
     edictLockedUntil: 0,
     monument: null,
     monumentDone: false,
+    buyPct: Object.fromEntries(GOOD_IDS.map((g) => [g, 100])) as Record<GoodId, number>,
   };
   world.buildings[1] = {
     id: 1,

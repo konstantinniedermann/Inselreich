@@ -156,6 +156,7 @@ export function migrateV10ToV11(raw: Record<string, unknown>): void {
 export function migrateV11ToV12(raw: Record<string, unknown>): void {
   if (!('monument' in raw)) raw.monument = null;
   if (!('monumentDone' in raw)) raw.monumentDone = false;
+  if (!('buyPct' in raw)) raw.buyPct = Object.fromEntries(GOOD_IDS.map((g) => [g, 100]));
   raw.version = 12;
 }
 

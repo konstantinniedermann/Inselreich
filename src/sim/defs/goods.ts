@@ -17,6 +17,10 @@ export const GOOD_IDS = Object.keys(GOODS) as GoodId[];
 export const SELL_FLOOR = 30;
 /** Abschlag je verkaufter Einheit (Prozentpunkte des Verkaufsanteils). */
 export const SELL_DROP = 1;
+/** Anstieg des Kaufanteils je gekaufter Einheit (Prozentpunkte); Schritt A 0, Schritt B 2 (I-048 T06). */
+export const BUY_RISE = 0;
+/** Obergrenze für den Kaufanteil je Gut (in %). */
+export const BUY_CAP = 160;
 /** Stückprämie eines Handelsauftrags: `floor(buy × ORDER_PREMIUM)`. */
 export const ORDER_PREMIUM = 0.75;
 export const STORAGE_CAP = 100;
