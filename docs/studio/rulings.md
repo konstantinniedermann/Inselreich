@@ -5481,3 +5481,17 @@ ein Platz frei ist (Deckel 8, R424).
 Regelbezug: R424, R464, R502, R509 · Kosten bei Irrtum: Wartezeit an der Testsperre.
 
 Entscheider: L0 · Anlass: Push REL-19 · ADR: —
+
+## R514 · 2026-10-11 · Prozess-Aussensicht REL-19 angenommen: V1–V3, V4 zurückgestellt
+
+Ruling: Retro `docs/studio/retros/2026-10-11-rel-19-prozess.md` (`e21e1a9e`) angenommen. Push-Weg 60,6 min statt ≈ 15 min;
+Hauptursache: der Fix des benannten Blockers war durch R464 selbst gesperrt. **V1** Handbuch: Ausnahme von R464 für
+Fixes eines benannten Push-Blockers (Ruling nennt Test und Paket; nur gezielte Läufe der berührten Dateien). **V2**
+`make push-check` loggt 1-min-Load je Stufe im Ereignis `push_check` — als kleiner Zusatz in TOOL-BUENDEL-6 Strang B (T05
+oder eigener Mini-Task). **V3** Ende-Routine: `make zeitreserve-push` einmal im Ruhefenster vor Session-Ende, wenn seit
+dem letzten Push Code gemergt wurde (ab TOOL-BUENDEL-6: `make push-check` ohne Push). **V4** (Integrator-Wartegrenze 15 min)
+zurückgestellt bis V2 Daten liefert. V1 und V3 setzt `studio-coach` als Handbuch-Minor um.
+
+Regelbezug: STUDIO.md Verbesserungsschleife, R464, R488 · Kosten bei Irrtum: eine zu weite Ausnahme von R464.
+
+Entscheider: L0 · Anlass: Bericht studio-process-coach retro-rel-19 · ADR: —
