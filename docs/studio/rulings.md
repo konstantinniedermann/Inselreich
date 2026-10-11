@@ -5965,3 +5965,15 @@ Regelbezug: R487 P-1, R490, R505, Spec I-048 §6/P-5 · Kosten bei Irrtum: Versp
 verwässert schleichend; Abhilfe zweite Grenze nur Werkzeug ≤ 10 %, Playtest-Hebel P-5.
 
 Entscheider: L0 · Anlass: Stopp lead-tech I048-B, Urteil lead-design · ADR: —
+
+## R548 · 2026-10-11 · UI-TEXTE-1 startet parallel zu I048-B; Merge danach
+
+Ruling: Die Startbedingung aus R533/R534 (Merges I-049-UI und I-048-UI) ist erfüllt (`ae20a9af`, `9d01765f`). UI-TEXTE-1 startet
+jetzt als zweiter Strang: Controller `lead-tech` sonnet, Worktree `.worktrees/ui-texte-1`, Budget **6** (R534 B3), Parallelität 1.
+Dateiüberschneidung mit I048-B nur in `tests/ui/trade.test.ts` und `README.md` (andere Abschnitte): UI-TEXTE-1 mergt **nach**
+I048-B und holt vorher `main` per Merge (kein Rebase); Konflikte in diesen beiden Dateien löst der Controller in eigener
+Ownership. Danach Release M13 (R505).
+
+Regelbezug: R505, R533, R534, R535 (≤ 2 Umsetzungsstränge) · Kosten bei Irrtum: ein Merge-Konflikt in einer Testdatei.
+
+Entscheider: L0 · Anlass: Merges I-049-UI, I-048-UI · ADR: —
