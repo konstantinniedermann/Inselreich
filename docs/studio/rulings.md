@@ -5355,3 +5355,23 @@ Merge A vor B, T07 nach Prod-B4. Start, sobald `make zeitreserve-push` Exit 0 (R
 Regelbezug: gates.md Gate Plan, R503, R464 · Kosten bei Irrtum: ein Werkzeug-Paket nachbessern.
 
 Entscheider: L0 · Anlass: Nachtrag-Bericht lead-tech · ADR: —
+
+## R505 · 2026-10-11 · Gate Plan I-048: BEDENKEN → Plan-Nachtrag; M13 teilt Save v12, Release-Sperre bis M13-Ende
+
+Ruling: lead-qa BEDENKEN (B1–B8), lead-production BEDENKEN (B1–B7), kein ZURÜCK. **Save:** E7 des M13-E2-Plans wird
+ausgedehnt — **kein Release von main, bis M13-E2, I-049 und I-048 gemergt sind**; alle drei teilen **Save v12** (eine
+Migration v11→v12, der jeweils spätere Strang erweitert sie). Muss doch vorher released werden: feste Vergabe in
+Merge-Reihenfolge (E2 v12, I-049 v13, I-048 v14), neues Ruling. Spielfremde Pushes (Werkzeug, Doku) bleiben erlaubt.
+**Merge-Reihenfolge:** (1) M13-E2-SIM, (2) I-049-Sim, (3) M13-E2-ART → M13-E2-UI; I-048-Sim (T01–T03) zweigt nach (1) ab
+und läuft parallel zu (2)/(3); (4) I-049-UI → I-048-UI (seriell, `src/ui/trade.ts`); (5) I-048 Schritt B (T06–T08)
+zuletzt. Der zuletzt mergende Strang prüft die `foldBackToV11`-Regeln der anderen im Test (Prod-B4). **Entscheide des
+Planverfassers:** (1) Testklasse **S** «Erwartung, die I-048 Z2/Z5 ausdrücklich ändert» zugelassen mit QA-B3 (Rundung
+n > 1 bleibt geprüft, `buyQuote` mit rise 2) und QA-B4 (`buyPct` erst vergleichen, dann entfernen); Test ausserhalb
+N/R/S bleibt Stopp an L0. (2) AK-ZK-15 Messbasis = Listenpreis mit Edikt, `rise` 0, mit QA-B5. (3) AK-ZK-13 mit
+`--diff-filter=MDR`; Versionszeilen-Prüfung mit dem Befehl aus QA-B2 (wegen gemeinsamem v12 meist leer). Dieses Ruling
+ist die Spec-Klarstellung für §6, AK-ZK-13 und AK-ZK-15. **Plan-Nachtrag** (Planverfasser): QA-B2–B7 in T05/T06,
+Prod-B4–B6 (Zählweise Starts inkl. Controller, Merge-Weg über Gate Merge), Abzweig- und Save-Regel oben in Index/T01.
+
+Regelbezug: gates.md Gate Plan, R481, R487, R490, R492 · Kosten bei Irrtum: Releases verzögern sich bis M13-Ende.
+
+Entscheider: L0 · Anlass: Gate-Berichte lead-qa und lead-production · ADR: —
