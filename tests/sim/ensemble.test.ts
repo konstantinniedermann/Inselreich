@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { serialize } from '../../src/sim/save';
 import { createWorld } from '../../src/sim/world';
-import { runColony, startColony, type ColonyOptions } from './controller';
+import { buySurcharge, buyVolume, runColony, startColony, type ColonyOptions } from './controller';
 
 function stateAt1500(opts: ColonyOptions): string {
   const w = createWorld(3);
@@ -17,5 +17,15 @@ describe('Controller-Phase (Gate-Ensemble)', () => {
 
   it('GE-2: phase 20 ergibt einen anderen Zustand als phase 0', () => {
     expect(stateAt1500({ phase: 20 })).not.toBe(stateAt1500({ phase: 0 }));
+  });
+});
+
+describe('Messweg trackedBuy (Gate-Ensemble)', () => {
+  it('GE-3: Zukauf-Volumen wird gemessen, Aufpreis ist auf main 0', () => {
+    const w = createWorld(3);
+    const { layout, t } = startColony(w);
+    runColony(w, layout, t, { phase: 0 }, (x) => x.tick >= 1500);
+    expect(buyVolume(w)).toBeGreaterThan(0);
+    expect(buySurcharge(w)).toBe(0);
   });
 });
