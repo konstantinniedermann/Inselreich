@@ -6126,3 +6126,21 @@ Regelbezug: gates.md Gate Plan, R500, R501, R553 V1, R554, R556 · Kosten bei Ir
 Teilhash-Belege; Regressionsschutz der Pins bleibt erhalten.
 
 Entscheider: L0 · Anlass: Berichte lead-qa gate-plan-M14-E1, lead-production gate-plan-M14-E1-prod · ADR: —
+
+## R558 · 2026-10-11 · Gate Merge TOOL-GATE-ENSEMBLE: OK; Verdikt OHNE GRENZE; Controller kippt bei Phase 60/80
+
+Ruling: Stufe leicht, Final-Review `qa-code-reviewer` opus BEDENKEN → Fix-Runde → Delta-Review **OK** (Handbuch 1.51). L0 prüft die
+lead-qa-Fragen anhand Review und Bericht: Rot-Belege vorhanden (GE-1 als Wächter ohne Rot-Fall, zulässig), `make check` Exit 0
+(3545 Tests), `make gate-ensemble` 1,8 s, Testzeiten ohne Ausschlag (R392), kein `src/`, kein Save. Entscheid: (1) **Merge** von
+`tool/gate-ensemble` @ `d30a3f88` nach `main` durch `production-integrator`, **nach** dem Commit der Beobachtungs-Auswertung
+BEOB-2026-10-11b (beide ändern `docs/beobachtungen.md`), lokal, kein Push. (2) Vierter Verdikt-Wert **OHNE GRENZE** (Messgrösse
+ohne Grenze im Balance-Test) angenommen; er zählt nie als bestanden. (3) Befund: Auf `main` gewinnt der Controller Seed 3 nur bei
+Phase 0/20/40; Phase 60/80 erreicht bis Tick 9000 keinen Sieg → Sieg-Tick und minMoney sind schon auf der Basis AUSREISSER.
+Gates mit Wertgrenzen (M14-E1 Auflage 3 aus R557, I-048 B) vergleichen deshalb **gegen das Basis-Ensemble** desselben main-Commits,
+nicht gegen „alles OK“. Ursache ist unbelegt (Controller-Fragilität oder echte Spielhärte) → Probe `lead-tech` (Diagnose ohne
+Code-Änderung) nach dem Merge.
+
+Regelbezug: gates.md Gate Merge (Stufe leicht), R553 V1, R556, R557 · Kosten bei Irrtum: ein Werkzeug mit Basis-Ausreissern, die
+Gates bis zur Diagnose relativ statt absolut lesen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GATE-ENSEMBLE · ADR: —
