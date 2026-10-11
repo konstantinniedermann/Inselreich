@@ -26,7 +26,7 @@ export interface Row {
   verdict: 'OK' | 'AUSREISSER' | 'GERISSEN';
 }
 export function judge(limit: Limit, values: readonly number[]): Row; // OK: alle innerhalb; AUSREISSER: Median innerhalb, mind. einer ausserhalb; GERISSEN: Median ausserhalb
-export function formatTable(rows: readonly Row[]): string; // Spalten: Grenze | Median | Min | Max | Spannweite | gehalten k/n | Urteil
+export function formatTable(rows: readonly Row[]): string; // Kopfzeile: „Robustheit gegen Entscheidungszeitpunkte (Controller-Phase), nicht gegen Layout oder Seed“; Spalten: Grenze | Median | Min | Max | Spannweite | gehalten k/n | Urteil
 export function runEnsemble<T>(measure: (phase: number) => T, phases?: readonly number[]): T[]; // seriell, Reihenfolge = phases
 ```
 

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 TESTLOCK := tools/testlock/testlock.ts
-.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push conflicts check-ci-perf messfenster check-run check-push push-check
+.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push gate-ensemble conflicts check-ci-perf messfenster check-run check-push push-check
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -31,6 +31,9 @@ zeitreserve: ## CI-Reserve prüfen (lokal × 4, R270; und geschätzte Runner-Zei
 
 zeitreserve-push: ## Streng vor dem Push (R338): Messung mit Commit = HEAD und Last vor dem Lauf <= 4 (R394), sonst Exit 2 "nicht belastbar"; aktuelle Last zählt nicht (R438 V3); nach make test; ohne Testsperre (liest nur die Messung)
 	@node tools/zeitreserve/check.ts --push
+
+gate-ensemble: ## Gate-Messung: 5 Controller-Phasen, Median/Min/Max (nicht Teil von check)
+	VITE_ENSEMBLE=1 npx vitest run tests/sim/ensemble.test.ts --silent=false
 
 check-ci-perf: ## Nur die Perf-Budget-Tests mit CI=true (ersetzt den zweiten vollen Lauf CI=true make check, R353); schreibt kein zeitreserve.json
 	CI=true npx vitest run $$(grep -rl perfBudget tests --include='*.test.ts')

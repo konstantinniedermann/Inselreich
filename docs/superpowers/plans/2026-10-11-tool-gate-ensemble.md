@@ -2,17 +2,17 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans. Steps use checkbox (`- [ ]`) syntax.
 
-**Goal:** Gate-Grenzen des Balancing-Controllers nicht mehr an einem Einzellauf festmachen, sondern an 5 unabhängigen, deterministischen Läufen (Median plus Min/Max je Grenze). Fürs Spielerlebnis: Balancing-Entscheide (Zukauf, M14-Werte) hängen nicht an einem zufällig passenden Lauf.
+**Goal:** Gate-Grenzen des Balancing-Controllers nicht mehr an einem Einzellauf festmachen, sondern an 5 unabhängigen, deterministischen Läufen (Median plus Min/Max je Grenze). Fürs Spielerlebnis: Balancing-Entscheide (Zukauf, M14-Werte) hängen nicht an einem zufällig passenden Lauf. **Das Ensemble belegt Robustheit gegen Entscheidungszeitpunkte, nicht gegen Layout oder Seed (R556 d).**
 
 **Quelle:** Beobachtung „Balancing-Controller: Seed wirkt nicht auf die Heimkolonie“ (2026-10-11), R549 (3), R551, R553 V1, R554 · Werkzeug-Paket, Prozessstufe leicht (E-010: Index plus je Task eine Datei ≤ 10 KB in [`2026-10-11-tool-gate-ensemble/`](2026-10-11-tool-gate-ensemble/)) · Plan: `lead-tech`, sonnet (E-054).
 
 ## Entscheide dieses Plans
 
 1. **Robustheitsachse = Controller-Phase.** Der Controller entscheidet heute bei `tick % 100 === 0`. Neu: `ColonyOptions.phase` (ganzzahlig 0..99, Standard 0), Entscheidung bei `tick % CONTROL_INTERVAL === phase`. Ensemble = Phasen {0, 20, 40, 60, 80}. Das verschiebt Bau- und Kaufzeitpunkte (Preisstand, Reserve, Aufstiegsmoment) um bis zu 80 Ticks, bleibt reine Funktion von (Seed, Phase), braucht keinen RNG und ändert `src/` nicht. Phase 0 ist bitgleich zum heutigen Lauf (alle bestehenden Tests unverändert).
-2. **Warum nicht Startvarianten der Heimkolonie:** Layout-Verschiebung/Spiegelung berührt `forceTerrain` und die festen Bauplätze (`layoutFor`), also das ganze Gelände-Gerüst aller Klasse-N-Tests; Kosten hoch, Aussage („anderer Startplatz“) für Spielwerte unerheblich. Der Seed scheidet aus (Läufe für Seeds 3/5/7/11 bitgleich, nur Fremdinseln ändern sich). **Rückfall**, falls die Phasen in T01 keine Streuung zeigen: Kontrollintervall {90, 100, 110} oder Startverzögerung der ersten Entscheidung; Entscheid dann per Bericht an L0, kein Umbau des Plans.
+2. **Warum nicht Startvarianten der Heimkolonie:** Layout-Verschiebung/Spiegelung berührt `forceTerrain` und die festen Bauplätze (`layoutFor`), also das ganze Gelände-Gerüst aller Klasse-N-Tests; Kosten hoch, Aussage („anderer Startplatz“) für Spielwerte unerheblich. Der Seed scheidet aus (Läufe für Seeds 3/5/7/11 bitgleich, nur Fremdinseln ändern sich). **Rückfall (R556 c)**: Zeigt die Sieg-Tick-Spannweite der Phasen weniger als 1 % von `MAX_TICKS`, Stopp (`blocked`), Eintrag in `docs/beobachtungen.md`, dann in fester Reihenfolge zuerst Kontrollintervalle {90, 100, 110}, danach Startverzögerung der ersten Entscheidung; erst wenn beide scheitern, Bericht an L0.
 3. **Ort = Test-Helfer** `tests/sim/ensemble.ts` (Statistik, Tabelle) plus gesteuerter Messlauf `tests/sim/ensemble.test.ts`; kein `tools/`-Python (der Controller ist TypeScript, Wiederverwendung statt Zweitimplementierung). `tools/studio/` bleibt unberührt, also kein `make studio-test`-Eingriff (trotzdem im Abschluss grün zu bestätigen, falls die Umsetzung doch dort landet).
 4. **Laufzeit-Budget: Ensemble nur im Gate-Messlauf.** Der Messlauf ist ein `describe.runIf(import.meta.env.VITE_ENSEMBLE)`; `make check` führt ihn nicht aus (übersprungen, 0 ms). Zu `make check` kommen nur Millisekunden-Tests (Statistik mit Fake-Werten, Phase-Default bis Tick 1500). Aufruf: neues Make-Ziel `gate-ensemble` (`VITE_ENSEMBLE=1 npx vitest run tests/sim/ensemble.test.ts --silent=false`). **Ziel** ≤ 5 × Dauer eines vollen Controller-Laufs je Messgrösse; die Einzellaufzeit misst T01 (Messung statt Schätzung), Obergrenze 90 s Gesamt bei Load ≤ 4, sonst Bericht an L0.
-5. **Ausgabeformat:** je Grenze eine Zeile: `Grenze | Median | Min | Max | Spannweite | gehalten k/5`. Grenzen: Sieg-Tick, erster Siedler, erster Bürger, minimales Geld, End-Geld, Zukauf-Mehrkosten in % (nur mit Messweg `trackedBuy`). Urteilsvorschlag (L0 entscheidet): Eine Grenze gilt als **gehalten**, wenn Median und Min/Max beide innerhalb liegen; „Median ok, Ausreisser ausserhalb“ wird als eigene Zeile `AUSREISSER` gemeldet, nie stillschweigend als OK.
+5. **Ausgabeformat:** je Grenze eine Zeile: `Grenze | Median | Min | Max | Spannweite | gehalten k/5`. Grenzen: Sieg-Tick, erster Siedler, erster Bürger, minimales Geld, End-Geld, Zukauf-Mehrkosten in % (nur mit Messweg `trackedBuy`). Urteilsvorschlag (L0 entscheidet): Verdikt je Grenze (R556 a): **OK** (Median und Min/Max innerhalb) · **AUSREISSER** (nur der Median innerhalb) · **GERISSEN** (Median ausserhalb); Grenzen ohne Limit: **OHNE GRENZE** (nur gemessen). Ein Gate gilt nur bei OK als bestanden; AUSREISSER und GERISSEN gehen als Bedenken an L0, nie stillschweigend als OK. Die Ausgabe trägt im Kopf den Hinweis „Robustheit gegen Entscheidungszeitpunkte (Controller-Phase), nicht gegen Layout oder Seed“.
 
 ## Global Constraints
 
@@ -33,7 +33,7 @@
 
 ## Worktree und Datei-Ownership (Parallelität 1, ein Umsetzer seriell)
 
-Worktree `.worktrees/tool-gate-ensemble`, Branch `feat/tool-gate-ensemble` von `main`. Vor Start `make conflicts`; `controller.ts` wird von sieben Testdateien importiert, daher nur additive Optionen.
+Worktree `.worktrees/tool-gate-ensemble`, Branch `tool/gate-ensemble` von `main` @ ade26b56. Vor Start `make conflicts`; `controller.ts` wird von sieben Testdateien importiert, daher nur additive Optionen.
 
 | Task | Titel                         | Dateien (Eigentum)                                               | AK-ID  | blocked-by | Modell |
 | ---- | ----------------------------- | ---------------------------------------------------------------- | ------ | ---------- | ------ |
@@ -51,5 +51,4 @@ Abnahme-Kriterien (Plan-intern, Werkzeug ohne Spec): **GE-1** Phase 0 bitgleich 
 
 ## Entscheidungsbedarf an L0
 
-- Urteilsregel „gehalten“ (Median und Min/Max innerhalb) als Standard für Gates, die dieses Werkzeug nutzen, per Ruling-Entwurf (Text im Bericht).
-- Ob die Phasenzahl 5 bleibt (Alternativen: 3 = billiger, 9 = glatter); Empfehlung 5, nach T01-Laufzeit überprüfbar.
+- Entschieden durch R556: 5 Phasen; Verdikte OK/AUSREISSER/GERISSEN; Streuungsschwelle 1 % `MAX_TICKS`. Budget nach R556: 4 Starts.

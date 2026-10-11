@@ -6,7 +6,8 @@ import { TIERS, WIN_CITIZENS } from '../../src/sim/defs/tiers';
 import { canPlace } from '../../src/sim/placement';
 import { citizens, populationByTier, serviceAvailable } from '../../src/sim/population';
 import { step } from '../../src/sim/tick';
-import { buy, buyPrice, sell } from '../../src/sim/trade';
+import { BUY_CAP, GOODS } from '../../src/sim/defs/goods';
+import { buy, buyPrice, buyQuote, edictBuyPct, sell } from '../../src/sim/trade';
 import type { Building, BuildingDefId, Cost, GoodId, Tier, World } from '../../src/sim/types';
 import { buildingsOfType, home } from '../../src/sim/world';
 import { forceRect } from './helpers';
@@ -15,6 +16,30 @@ import { forceRect } from './helpers';
 export const MAX_TICKS = 9000;
 /** Strengere Grenze für den Sieg nach Übernahme der Eskalationswerte (Entscheid in der Kurz-Spec). */
 export const WIN_TICK_LIMIT = 7500;
+/** Mehrkosten des Zukaufs gegenüber Listenpreis (mit Edikt) je Welt; ohne Sim-Schalter. */
+const surcharge = new WeakMap<World, number>();
+export function buySurcharge(w: World): number {
+  return surcharge.get(w) ?? 0;
+}
+/** Zukauf-Volumen zum Listenpreis (Messbasis wie die Mehrkosten, mit Edikt) je Welt. */
+const volume = new WeakMap<World, number>();
+export function buyVolume(w: World): number {
+  return volume.get(w) ?? 0;
+}
+
+/** `buy` mit Messung: gezahlter Preis minus Listenpreis-Basis (Anteil 100, Edikt) wird aufsummiert. */
+function trackedBuy(w: World, g: GoodId, n: number): ReturnType<typeof buy> {
+  const before = w.money;
+  const edictPct = edictBuyPct(w);
+  const r = buy(w, g, n);
+  if (r.ok) {
+    const base = buyQuote(GOODS[g].buy, 100, n, 0, BUY_CAP, edictPct).price;
+    surcharge.set(w, buySurcharge(w) + (before - w.money) - base);
+    volume.set(w, buyVolume(w) + base);
+  }
+  return r;
+}
+
 /** Der Controller entscheidet alle 100 Ticks, was gebaut oder gekauft wird. */
 export const CONTROL_INTERVAL = 100;
 /** Geld, das nach jedem Bau oder Kauf übrig bleiben muss (deckt einen Aufstieg zum Bürger). */
@@ -180,7 +205,7 @@ function buyMissing(w: World, cost: Cost, keep = RESERVE): boolean {
   );
   const price = missing.reduce((sum, [g, n]) => sum + buyPrice(w, g, n), 0);
   if (w.money - price - cost.money - reserve.money < keep) return false;
-  for (const [g, n] of missing) if (n > 0) expect(buy(w, g, n).ok).toBe(true);
+  for (const [g, n] of missing) if (n > 0) expect(trackedBuy(w, g, n).ok).toBe(true);
   return true;
 }
 
@@ -259,6 +284,8 @@ export function control(w: World, layout: Layout, opts: ColonyOptions): void {
 export interface ColonyOptions {
   /** Krisen-Lauf normal: eine Feuerwache, sobald die Kapelle steht, auf layout.fireStation (Spec 15). */
   fireStation?: boolean;
+  /** Versatz der Entscheidungs-Ticks im Intervall, Robustheitsachse des Gate-Ensembles. */
+  phase?: number;
 }
 
 export interface Trajectory {
@@ -303,8 +330,13 @@ export function runColony(
   opts: ColonyOptions = {},
   stop?: (w: World) => boolean,
 ): boolean {
+  const phase = opts.phase ?? 0;
+  if (!Number.isInteger(phase) || phase < 0 || phase >= CONTROL_INTERVAL)
+    throw new Error(
+      `runColony: phase muss eine ganze Zahl von 0 bis ${CONTROL_INTERVAL - 1} sein, war ${phase}`,
+    );
   while (w.tick < MAX_TICKS && citizens(w) < WIN_CITIZENS) {
-    if (w.tick % CONTROL_INTERVAL === 0) control(w, layout, opts);
+    if (w.tick % CONTROL_INTERVAL === phase) control(w, layout, opts);
     step(w);
     const pop = populationByTier(w);
     if (t.firstSettler === null && pop[2] > 0) t.firstSettler = w.tick;

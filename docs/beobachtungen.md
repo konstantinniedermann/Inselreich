@@ -34,24 +34,24 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 ## Ausgewertet 2026-10-11 (2)
 
-**Bilanz** (12 Einträge, `lead-production`, Paket BEOB-2026-10-11b, gegen `60144cdb`): 1 erledigt, 6 abgehakt (mit Trigger), 1 eingeplant
-(Board: UI-AUFRAEUM-2), 4 offen und laufenden Paketen zugeordnet (I-048 R555 dreimal, TOOL-GATE-ENSEMBLE R556), 0 Ideen, 0 verworfen.
-Die vier offenen Einträge stehen unten unter „Offen“ mit Zuordnung.
+**Bilanz** (12 Einträge, `lead-production`, Paket BEOB-2026-10-11b, gegen `60144cdb`): 2 erledigt, 6 abgehakt (mit Trigger), 1 eingeplant
+(Board: UI-AUFRAEUM-2), 3 offen und laufenden Paketen zugeordnet (I-048 R555 dreimal), 0 Ideen, 0 verworfen.
+Die drei offenen Einträge (dazu der neue Eintrag zur Controller-Phase, probe-CONTROLLER-PHASE R558) stehen unten unter „Offen“ mit Zuordnung.
 
-| Eintrag                                          | Ausgang                              | Begründung · Trigger / Beleg                                                                                                                                      |
-| ------------------------------------------------ | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Verkaufssättigung erholt sich schnell            | zugeordnet I-048 (R555)              | Abwägung, läuft in Schritt B; kein eigenes Paket                                                                                                                  |
-| Zahlen in I-031 weichen vom README ab            | abgehakt                             | `docs/ideen.md` I-031 nennt −5 %/−10 %, README Edikt-Tabelle −7/−5 Punkte (belegt); Historie eines gelieferten Eintrags · wenn I-031 neu bewertet wird            |
-| Formatvorlage in `ideen.md` zählt im grep mit    | abgehakt                             | Zeile `### I-001 · neu · <Kurzname>` im Codeblock belegt; Zählung mit `grep -v '<Kurz'` · nächste Ideen-Runde führt die Zählung so oder ohne `###` in der Vorlage |
-| `buyPct` fehlt in arc42                          | zugeordnet I-048 (R555)              | 0 Treffer in `docs/arc42.md`; T08 deckt es                                                                                                                        |
-| Doppelter Test `edicts.test.ts:252-264`          | abgehakt                             | belegt (`AK-ZK-09` in `buyPct.test.ts:113`, gleiche Erwartungen 7/30/37); niedrig, `tests/` nicht in diesem Scope · nächster Eingriff in `edicts.test.ts`         |
-| Budget-Hook `warning()` / `tablecheck` Randfälle | erledigt                             | im Eintrag bereits entschieden (TOOL-BUENDEL-8 T04), kein Code offen                                                                                              |
-| Last-Flake `terrain.test.ts`                     | abgehakt                             | Diagnose im Eintrag, kein Fix auf Verdacht · nächster roter Lauf mit Fehlermeldung (`test_failed.messages`): «timed out» → Timeout anheben                        |
-| `stateText` ohne Aufrufer                        | eingeplant (Board)                   | belegt: `src/ui/texts.ts:112` Definition, `src/ui/inspect.ts:82` nur Re-Export, sonst 0 Treffer; gehört in UI-AUFRAEUM-2                                          |
-| Budget-Zuordnung Namenstreffer vs. Lead-Freigabe | abgehakt                             | nur Altdaten mit Präfix-Phasen (R543 vergibt reine IDs) · zweiter E-060-Echtlauf zeigt Fehlzuordnung                                                              |
-| Sieg-Tick im Balancing sprunghaft                | zugeordnet I-048 (R555)              | Robustheitsachse kommt aus TOOL-GATE-ENSEMBLE (R556)                                                                                                              |
-| Balancing-Controller: Seed wirkt nicht           | zugeordnet TOOL-GATE-ENSEMBLE (R556) | Paket in Umsetzung                                                                                                                                                |
-| Gesperrte Edikt-Knöpfe: Kontrast                 | abgehakt                             | niedrig, ungemessen · nächste Kontrast-Runde in `tests/ui/contrast.test.ts` misst das Paar                                                                        |
+| Eintrag                                          | Ausgang                 | Begründung · Trigger / Beleg                                                                                                                                      |
+| ------------------------------------------------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Verkaufssättigung erholt sich schnell            | zugeordnet I-048 (R555) | Abwägung, läuft in Schritt B; kein eigenes Paket                                                                                                                  |
+| Zahlen in I-031 weichen vom README ab            | abgehakt                | `docs/ideen.md` I-031 nennt −5 %/−10 %, README Edikt-Tabelle −7/−5 Punkte (belegt); Historie eines gelieferten Eintrags · wenn I-031 neu bewertet wird            |
+| Formatvorlage in `ideen.md` zählt im grep mit    | abgehakt                | Zeile `### I-001 · neu · <Kurzname>` im Codeblock belegt; Zählung mit `grep -v '<Kurz'` · nächste Ideen-Runde führt die Zählung so oder ohne `###` in der Vorlage |
+| `buyPct` fehlt in arc42                          | zugeordnet I-048 (R555) | 0 Treffer in `docs/arc42.md`; T08 deckt es                                                                                                                        |
+| Doppelter Test `edicts.test.ts:252-264`          | abgehakt                | belegt (`AK-ZK-09` in `buyPct.test.ts:113`, gleiche Erwartungen 7/30/37); niedrig, `tests/` nicht in diesem Scope · nächster Eingriff in `edicts.test.ts`         |
+| Budget-Hook `warning()` / `tablecheck` Randfälle | erledigt                | im Eintrag bereits entschieden (TOOL-BUENDEL-8 T04), kein Code offen                                                                                              |
+| Last-Flake `terrain.test.ts`                     | abgehakt                | Diagnose im Eintrag, kein Fix auf Verdacht · nächster roter Lauf mit Fehlermeldung (`test_failed.messages`): «timed out» → Timeout anheben                        |
+| `stateText` ohne Aufrufer                        | eingeplant (Board)      | belegt: `src/ui/texts.ts:112` Definition, `src/ui/inspect.ts:82` nur Re-Export, sonst 0 Treffer; gehört in UI-AUFRAEUM-2                                          |
+| Budget-Zuordnung Namenstreffer vs. Lead-Freigabe | abgehakt                | nur Altdaten mit Präfix-Phasen (R543 vergibt reine IDs) · zweiter E-060-Echtlauf zeigt Fehlzuordnung                                                              |
+| Sieg-Tick im Balancing sprunghaft                | zugeordnet I-048 (R555) | Robustheitsachse kommt aus TOOL-GATE-ENSEMBLE (R556)                                                                                                              |
+| Balancing-Controller: Seed wirkt nicht           | erledigt                | durch TOOL-GATE-ENSEMBLE (R558/R559): `make gate-ensemble` liefert die Robustheitsachse                                                                           |
+| Gesperrte Edikt-Knöpfe: Kontrast                 | abgehakt                | niedrig, ungemessen · nächste Kontrast-Runde in `tests/ui/contrast.test.ts` misst das Paar                                                                        |
 
 **Ruling-Entwurf (R471, nur Entwurf, schreibt L0):** UI-AUFRAEUM-2 um «`stateText` samt Re-Export in `inspect.ts` streichen» ergänzen
 (Owner `lead-tech`, Gr. S–M, blocked-by M13-Final-Review). Kein neues Paket, kein Issue.
@@ -204,10 +204,8 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
   «Wohlfahrt echt früher» 60 Ticks, Krisen normal 150 Ticks. Einschätzung: hoch, Einzellauf-Gates blockieren jede Wirtschaftsänderung.
 - **Zuordnung:** I-048 (R555); die Robustheitsachse liefert TOOL-GATE-ENSEMBLE (R556). Offen, bis I-048 Schritt B entschieden ist.
 
-### 2026-10-11 · Balancing-Controller: Seed wirkt nicht auf die Heimkolonie
+### 2026-10-11 · Balancing-Controller kippt bei verschobenen Entscheidungszeitpunkten
 
-- **Fundort:** `tests/sim/controller.ts` / `createWorld`-Seed in den Balancing-Tests. Beobachtung: Läufe für Seeds 3, 5, 7, 11
-  bitgleich; der Seed ändert nur Fremdinseln. Damit gibt es keine Robustheitsachse für Gates (jede Grenze ist ein Einzellauf,
-  vgl. „Sieg-Tick sprunghaft“). Ursprung: Probe I048-TOTZONE (R551). Einschätzung: hoch für künftige Balancing-Arbeit;
-  Kandidat für ein Werkzeug-/Test-Häppchen (Startvarianten oder Controller-Phasen, Median).
-- **Zuordnung:** TOOL-GATE-ENSEMBLE (R556, in Umsetzung, `lead-tech`). Offen bis zum Merge des Pakets.
+Fundort: `make gate-ensemble` (TOOL-GATE-ENSEMBLE, `tests/sim/ensemble.test.ts`), Seed 3, Phasen 0/20/40/60/80. Beobachtung: Nur Phase 0, 20 und 40 gewinnen (Sieg-Tick 6750 / 7250 / 6650); Phase 60 und 80 erreichen bis Tick 9000 keinen Sieg und fallen im Geld ins Minus (minMoney -91 / -51). Die Referenz-Baseline (Sieg 6750, minMoney 117) hängt also am Entscheidungsraster `tick % 100 === 0`. Ursprung: TOOL-GATE-ENSEMBLE T01/T04. Einschätzung: kein Spielfehler (der Controller ist ein Test-Spieler), aber Gates mit Wertgrenzen auf Basis eines Einzellaufs sind weniger belastbar als gedacht; Verdikt AUSREISSER für Sieg-Tick und minMoney. Für M14-Werte: Grenzen mit Ensemble prüfen, und ob der Controller bei Reserve/Aufstiegsmoment robuster werden soll, ist ein Design-/Tech-Entscheid an L0.
+
+- **Zuordnung:** probe-CONTROLLER-PHASE (R558). Offen.

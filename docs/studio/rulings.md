@@ -6155,3 +6155,20 @@ geschlossen; ein Merge-Konflikt in `docs/beobachtungen.md` löst nicht der Integ
 Regelbezug: STUDIO.md Session-Start Punkt 6, R287, R288, R471 · Kosten bei Irrtum: ein abgehakter Befund taucht erneut auf.
 
 Entscheider: L0 · Anlass: Bericht lead-production BEOB-2026-10-11b · ADR: —
+
+## R560 · 2026-10-11 · Probe Controller-Phase: Bot-Artefakt; Werkzeug-Paket TOOL-CONTROLLER-HAERTUNG
+
+Ruling: Probe `lead-tech` angenommen (belegt, Load 3,9–5,7, wenige Läufe): Bei Phase 60/80 fällt ein Entscheidungstick in das
+Fenster, in dem erst ein Haus Stufe 2 voll ist; `producersNeeded(cloth)` = 1 hält die Stoffkette für fertig, der Controller baut
+Schule, Zuckerrohr und Brennerei, das Geld fällt unter die Schwelle, Stoff bleibt ab Tick 780 auf 0 — Stillstand bis Tick 9000.
+Reihenfolge-Lücke in `control()`, kein belegtes Spielerproblem. Entscheid: (1) **TOOL-CONTROLLER-HAERTUNG** (Stufe leicht,
+Werkzeug-Paket): Schule erst, wenn der Stoffbedarf der Zielstufe aller Häuser gedeckt ist; nur `tests/sim/controller.ts` und Tests,
+keine Spielwerte. Danach Basis-Ensemble neu messen; geänderte Werte im Balance-Test (Sieg-Tick, `minMoney`) sind bewusste
+Änderungen und brauchen das Gate-Ruling. Zeitpunkt: vor dem Start von M14-E1 (T00 zieht die Basis nach, R557 (4)). (2) Bis dahin
+gilt R558 (3): Gates lesen relativ zum Basis-Ensemble; Phasen 60/80 gelten als Controller-Artefakt. (3) Die Frage „Armutsfalle
+ohne Notausgang bei Stoffmangel“ geht als Idee in die Ideen-Runde nach dem Release (lead-design, R445), nicht als Paket.
+
+Regelbezug: R553 V1, R556, R557, R558; Verfassung §3 (Balancing-Test, bewusste Änderung als Ruling) · Kosten bei Irrtum: eine
+Baseline-Neumessung; die Härtung kann eine echte Spielhärte verdecken (Gegenmittel: Idee Armutsfalle).
+
+Entscheider: L0 · Anlass: Bericht lead-tech probe-CONTROLLER-PHASE · ADR: —

@@ -1128,6 +1128,8 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
 | Krisen-Lauf                         | Controller-Kolonie mit Krisenstufe `normal` und `mild`                     | Sieg bis Tick 8000, Geld am Ende > 0; `off` bitgleich zur Referenz                                            | `tests/sim/balance-crises.test.ts`                                              |
 | Plattformgrenze Pages               | Gebaute Seite ≥ 500 MB oder eine Datei ≥ 50 MiB                            | `make check` und Pages-Workflow schlagen fehl, Alternativen prüfen (R130)                                     | `tests/assets/pagesLimit.test.ts`, `tools/pages/check.ts`                       |
 
+**Gate-Messung:** `make gate-ensemble` fährt den Balancing-Controller mit 5 Phasen (0, 20, 40, 60, 80) und gibt Median, Min, Max und Urteil je Grenze aus; Einzelläufe reichen für Gates nicht (Seed ändert nur Fremdinseln). Nicht Teil von `make check`. Pflichtschritt der Gate-Prüffrage (R553 V1, R556 e) für jedes Paket mit Wertgrenzen: `make gate-ensemble` aufrufen; Urteil nur bei OK je Grenze (Grenzen ohne Limit zeigen OHNE GRENZE, nur gemessen). Das Ensemble belegt Robustheit gegen Entscheidungszeitpunkte, nicht gegen Layout oder Seed. Pfade: `tests/sim/ensemble.ts`, `tests/sim/ensemble.test.ts`, Option `ColonyOptions.phase` in `tests/sim/controller.ts`.
+
 ## 11. Risiken und technische Schulden
 
 Offene Befunde werden in [`docs/beobachtungen.md`](beobachtungen.md) gesammelt. Die wichtigsten:
