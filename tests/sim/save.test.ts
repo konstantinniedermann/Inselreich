@@ -397,7 +397,7 @@ describe('M6 Save v3', () => {
     const b = createWorld(3, { crisisLevel: 'normal' });
     expect(b.crisisLevel).toBe('normal');
     expect({ ...b, crisisLevel: 'off' }).toEqual(a);
-    expect(Object.keys(a).slice(-14, -12)).toEqual(['crisisLevel', 'crisis']); // Key-Reihenfolge (AK-B1-02)
+    expect(Object.keys(a).slice(-15, -13)).toEqual(['crisisLevel', 'crisis']); // Key-Reihenfolge (AK-B1-02)
   });
 
   // Fixture erzeugt auf main 3fcb678 über den temporären Test tests/sim/gen-save-v2.test.ts
@@ -555,7 +555,7 @@ describe('M8 Save v4', () => {
     expect(a.sellPct.glass).toBe(100);
     const keys = Object.keys(a);
     expect(keys.indexOf('wonMerchants')).toBe(keys.indexOf('won') + 1);
-    expect(keys.slice(-14, -12)).toEqual(['crisisLevel', 'crisis']);
+    expect(keys.slice(-15, -13)).toEqual(['crisisLevel', 'crisis']);
   });
 
   it('AK-S1-11 lädt einen echten v3-Stand und migriert ihn nach v4', () => {

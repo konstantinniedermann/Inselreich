@@ -53,7 +53,7 @@ describe('M13-E1 Save v11', () => {
     const w = createWorld(3);
     expect(w.edict).toBeNull();
     expect(w.edictLockedUntil).toBe(0);
-    expect(Object.keys(w).slice(-4, -2)).toEqual(['edict', 'edictLockedUntil']);
+    expect(Object.keys(w).slice(-5, -3)).toEqual(['edict', 'edictLockedUntil']);
     expect(w.version).toBe(12);
     expect(SAVE_VERSION).toBe(12);
   });
@@ -68,7 +68,7 @@ describe('M13-E1 Save v11', () => {
       expect(out.version).toBe(10);
       const hand: Record<string, unknown> = {};
       for (const k of Object.keys(v11))
-        if (!['edict', 'edictLockedUntil', 'monument', 'monumentDone'].includes(k))
+        if (!['edict', 'edictLockedUntil', 'monument', 'monumentDone', 'buyPct'].includes(k))
           hand[k] = v11[k];
       hand.version = 10;
       expect(JSON.stringify(out)).toBe(JSON.stringify(hand));
