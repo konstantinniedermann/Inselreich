@@ -5847,3 +5847,18 @@ Worktree `.worktrees/tool-b8` (Branch `tool/b8`), spielfremd, darf neben I-049-U
 Regelbezug: gates.md Gate Plan, R329, R380, R535, R538 · Kosten bei Irrtum: Flake-Ursache eine Runde später belegt.
 
 Entscheider: L0 · Anlass: Urteil lead-qa gate-plan-TOOL-BUENDEL-8 · ADR: —
+
+## R540 · 2026-10-11 · Gate Merge TOOL-BUENDEL-8: OK
+
+Ruling: `tool/b8` (T01 `990b3025`, T02 `aab8c8de`, T05 `35063079`, T04 `ebdf8ca2`; T03 Diagnose als Beobachtungstext)
+mit Task-Reviews OK und Final-Review opus OK (Stufe leicht, gilt als Final-Review); `make studio-test`, `make lint`,
+`make docs-check` Exit 0, Rot-Belege T01/T02/T05 `EXIT=1`, Echtläufe belegt → **Gate Merge OK**. L0 hat die Prüffragen
+von lead-qa selbst anhand des Berichts geprüft (spielfremd, kein `src/`, keine Secrets, Commit-Konvention). Abweichungen
+angenommen: Rückrechnung über 6 statt 10 Metrik-Dateien; `--amend` eines lokalen, ungepushten Commits. Die drei
+niedrigen Hinweise (Meldung nur am letzten FAIL-Namen, `messages` ist freier Text und muss bei späterer Anzeige im
+Dashboard escaped werden, Testzeile ohne `_adjusted_line`) gehen ins nächste Werkzeug-Bündel. Der Integrator mergt
+`tool/b8` lokal, kein Push. **E-060 `deny`** entscheidet L0 nach dem Merge in einem eigenen Ruling.
+
+Regelbezug: gates.md Gate Merge (Stufe leicht), R538, R539 · Kosten bei Irrtum: ein Werkzeug-Revert.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-8 · ADR: —
