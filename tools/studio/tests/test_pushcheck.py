@@ -200,6 +200,41 @@ class PushCheckTest(unittest.TestCase):
         h.handlers[CHECK_PUSH] = (2, "FAIL tests/x")
         self.assertEqual(h.go(), 1)
 
+    def _retry_harness(self, retry_code: int):
+        h = Harness(self)
+        h.check_ts(2, marked='["tests/a.test.ts"]')
+        base = h.handlers[CHECK_TS]
+
+        def handler(cmd):
+            return (retry_code, "") if "--retry" in cmd else base(cmd)
+
+        h.handlers[CHECK_TS] = handler
+        return h
+
+    def test_ergebnis_der_nachmessung_wird_durchgereicht(self):
+        for retry_code in (1, 2):
+            with self.subTest(retry_code=retry_code):
+                h = self._retry_harness(retry_code)
+                self.assertEqual(h.go(), retry_code)
+                self.assertEqual(h.count(PERF), 0)
+
+    def test_testsperre_in_der_nachmessung_gibt_exit_3(self):
+        h = Harness(self)
+        h.check_ts(2, marked='["tests/a.test.ts"]')
+        h.handlers[VITEST] = (2, "testlock: ABBRUCH, voller Testlauf läuft bereits")
+        self.assertEqual(h.go(), 3)
+        self.assertEqual(h.count(VITEST), 1)
+        self.assertEqual(sum("--retry" in k for k in h.names()), 0)
+
+    def test_exit_1_mit_hohem_loadstart_und_leerer_oder_ungueltiger_liste(self):
+        for marked, expected in (("[]", 1), (None, 2), ("kein json", 2)):
+            with self.subTest(marked=marked):
+                h = Harness(self)
+                h.check_ts(1, marked=marked, load_start=3.6)
+                self.assertEqual(h.go(), expected)
+                self.assertEqual(h.count(VITEST), 0)
+                self.assertEqual(h.count(PERF), 0)
+
     def test_ereignis_schlusszeile_und_schreibfehler(self):
         h = Harness(self)
         h.check_ts(0, marked="[]")
