@@ -9,6 +9,9 @@ Grundlage: [Brainstorming M14](2026-10-10-m14-brainstorming.md) §2, §3 Ansatz 
 (verbindlich für alle Zahlen); [Hauptspec](2026-09-29-inselreich-design.md). Muster:
 [Spec M13-E2](2026-10-10-m13-e2-denkmal-design.md). Code-Stand: `main` adb7e28e.
 
+Nachtrag Gate Spec (R500): [Anhang 04](2026-10-10-m14-e1-inselcharakter-design/anhang-04-nachtrag-gate.md) ändert
+AK-M14E1-09, -11, -14, -15, -31, neu -42 und R3.4 (Befund → Änderung dort).
+
 Anhänge: [01 Werte und Messung](2026-10-10-m14-e1-inselcharakter-design/anhang-01-werte.md) ·
 [02 Save, Migration, Rückfaltung](2026-10-10-m14-e1-inselcharakter-design/anhang-02-save.md) ·
 [03 UI-Texte](2026-10-10-m14-e1-inselcharakter-design/anhang-03-ui-texte.md).
@@ -113,15 +116,19 @@ Rückfaltung; Seed-Läufe; README, arc42.
   `ISLANDS_SALT` **nach** A und B erzeugt. Alle Zufallszüge für A und B bleiben in Zahl und Reihenfolge gleich → A und B
   bitgleich (A3: 0 / 300 Seeds anders). `lanesClear` prüft alle Paare inklusive C.
 - **R3.4** **Die Erzeugung von C wirft nie** (Entscheid E-5). Gemessen findet `place` für C in 1 / 1000 Seeds keine
-  Lage (Seed 963, A3). Pflicht: eine deterministische Ersatzregel für C nach den heutigen zwei Stufen (50 Zufallslagen,
+  Lage (Seed 963, A3; 963 ist **Messseed**, im Bestand nirgends gepinnt, wird mit AK-M14E1-12 neu gepinnt). Pflicht: eine deterministische Ersatzregel für C nach den heutigen zwei Stufen (50 Zufallslagen,
   dann 16 Richtungen im Band). Vorschlag des Leads: (a) Band schrittweise nach aussen erweitern, (b) zuletzt
   Ersatzlage ohne Bandbedingung, deren letzte Stufe konstruktiv ist (ohne Prüfung, die scheitern kann). Genaue Regel,
   Schrittweiten und Konstanten [Tech]; Konstanten in `src/sim/defs/sea.ts`. Prüfbar gefordert:
-  1. `createWorld(seed)` wirft für keinen Seed in 1…1000 und keinen gepinnten Seed (1, 3, 7, 13, 42, 963).
+  1. `createWorld(seed)` wirft für keinen Seed in 1…1000 und keinen der Pin-Seeds (1, 3, 7, 13, 42) und nicht den Messseed 963.
   2. A und B bleiben bitgleich, auch bei Seeds mit Ersatzregel für C.
   3. C überlappt kein Land und hält `ISLAND_GAP_MIN` ein; der Seeweg 0–3 existiert. Ob die letzte Stufe `lanesClear`
      oder `ARCHIPEL_SPAN_MAX` lockern muss, entscheidet `lead-tech` und hält es im Plan fest.
   4. Eine Testoption erzwingt die letzte Stufe (Muster `failShapes`) [Tech: Name].
+  5. Beobachtbares Signal (R500): `generateForeignIslands` liefert über einen Testhook (Muster `failShapes`,
+     Optionsfeld oder Rückgabewert) je Seed die erreichte Stufe von C [Tech: Name]: **Stufe 1** Zufallslage (50
+     Versuche), **Stufe 2** 16 Richtungen im Band, **Stufe 3** neue Ersatzregel. Seed 963 meldet Stufe 3, die
+     meisten Seeds Stufe 1.
 - **R3.5** `createWorld` und die Migration (R9) nutzen dieselbe Funktion; C hängt nur von `seed` und der Heimat-Lage
   (`ox`, `oy`, `width`, `height`, `anchor`) ab.
 
@@ -281,11 +288,16 @@ Werkzeug 20. Datei `tests/sim/islandTraits.test.ts`, sofern nicht anders genannt
 - **AK-M14E1-08** Altstand-`progress`: Steinbruch auf der Felsbucht mit `progress 45` → nach einem `step` Stein +1,
   `progress 0`.
 - **AK-M14E1-09** Bilanz: `flow.ts` meldet für die Felsbucht mit einem Steinbruch Stein-Erzeugung 20 / min
-  [Tech: Funktion und Einheit wie bestehende Flow-Tests].
+  (`goodsBalance(world, 1).stone.produced === 20`, Einheit wie `ui/time.ts`: Bilanz je 100 Ticks; Muster
+  `tests/sim/flow.test.ts`, Wert unverändert).
 - **AK-M14E1-10** Lager voll: Felsbucht Stein 100 (`STORAGE_CAP`), Steinbruch → nach 30 Ticks Zustand `storageFull`,
   Stein 100.
 - **AK-M14E1-11** Sturm: Zuckerrohrplantage auf Weidenau im aktiven Sturm verhält sich wie eine gleiche Plantage in
-  der Heimat (gleiche Zustandsfolge über 600 Ticks, Ausstoss im Verhältnis der Zyklen).
+  der Heimat : tickgenauer Vergleich über 600 Ticks bei aktivem
+  Sturm (`world.crisis` storm, `from` ≤ Starttick, Dauer ≥ 600). Pro Tick sind `state` und `progress` beider
+  Plantagen gleich; der Zuckerrohr-Bestand wächst auf beiden um dieselbe Zahl (Erwartung im Test aus
+  `STORM_TICK_DIVISOR` und Zykluslänge der Def berechnet, kein neuer Wert). Ist Fruchtbar auf Weidenau ohne Wirkung auf
+  Zuckerrohr (Anhang 01), sind auch die Bestandswerte gleich.
 
 ### 10.2 Vitest Weltgenerierung, Seed-Läufe, Baseline, Save
 
@@ -294,10 +306,10 @@ Werkzeug 20. Datei `tests/sim/islandTraits.test.ts`, sofern nicht anders genannt
   Seed, auf `main` vor T01 erzeugt].
 - **AK-M14E1-13** C wirft nie: `createWorld(seed)` für Seeds 1…1000 und 963 wirft nicht, `islands.length === 4`,
   `islands[3].kind === 'C'`, 24 × 24.
-- **AK-M14E1-14** Band: Seeweg 0–3 liegt in [30, 35] für alle Seeds 1…1000 ohne Ersatzregel; Seeds mit Ersatzregel
-  werden gezählt, erwartet ≤ 3 (gemessen 1: Seed 963).
+- **AK-M14E1-14** Band: Seeweg 0–3 liegt in [30, 35] für alle Seeds 1…1000 ohne Ersatzregel; Seeds, bei denen der Testhook (R3.4 Punkt 5)
+  **Stufe 3** meldet, werden gezählt: ≤ 3 (gemessen 1: Seed 963). Stufe 1 und 2 sind erlaubt und zählen nicht.
 - **AK-M14E1-15** Seed 963 und erzwungene letzte Stufe (R3.4 Punkt 4): C liegt ohne Landüberlappung, Abstand ≥
-  `ISLAND_GAP_MIN` zu jeder Insel, Seeweg 0–3 vorhanden, A und B wie AK-12.
+  `ISLAND_GAP_MIN` zu jeder Insel, Seeweg 0–3 vorhanden, A und B wie AK-M14E1-12.
 - **AK-M14E1-16** C-Gelände: Seeds 1…300 → keine Kachel `mountain` auf C; C hat ≥ 6 freie Plätze nach
   `PLANTATION_SITE` (Garantie aus `buildShape`); mit `failShapes` ebenso (Ersatzform).
 - **AK-M14E1-17** Felsbucht: Seeds 1…300 → nach dem Kontor II ≥ 3 Plätze, an denen `canPlace(w, 'quarry', x, y, 2)`
@@ -311,6 +323,10 @@ tests/sim/e0Pins.ts tests/sim/e1Pins.ts tests/sim/seePins.ts` ohne Änderung.
   gleich.
 - **AK-M14E1-21** Migration Vorversion → neu: `islands.length` 3 → 4; `islands[3]` tief gleich
   `createWorld(seed).islands[3]` desselben Seeds; Inseln 0–2, Gebäude, Schiffe, Geld unverändert; `version` neu.
+- **AK-M14E1-42** Schiff unterwegs (`tests/sim/save.test.ts` [Tech]): Vorversion-Stand mit einem Schiff auf See
+  (`to !== null`, `left > 0`) → nach der Migration sind `port`, `to`, `left`, `cargo`, `route`, `homing` dieses Schiffs
+  tief gleich; nach `left` Ticks `step` kommt es im selben Tick an wie im ungemigrierten Vergleichsstand (gleiche
+  Ankunftszeit, gleiche Fracht gelöscht).
 - **AK-M14E1-22** Kette: Fixtures v1 … Vorversion → `version` neu, genau 4 Inseln, Insel 3 `'C'`; ein v7-Stand
   bekommt C schon in `migrateV7ToV8` und kein fünftes Element.
 - **AK-M14E1-23** Ladeprüfung: Fälle 23a–23f aus Anhang 02 F, jeweils genau das genannte Ergebnis.
@@ -331,7 +347,9 @@ tests/sim/e0Pins.ts tests/sim/e1Pins.ts tests/sim/seePins.ts` ohne Änderung.
   Heimat und Gewürzplantage auf Weidenau ohne Inselvorteil-Zeile. Inspektor-Panel zeigt dieselbe Zeile [Tech: Ort].
 - **AK-M14E1-30** Bauleisten-Tooltip (`tests/ui/buildMenu.test.ts`): aktive Insel Felsbucht, Steinbruch → Zeile aus
   Anhang 03 C; aktive Insel Heimat → keine Zusatzzeile; Gewürzplantage auf Weidenau → keine.
-- **AK-M14E1-31** `UNLOCK_NOTICE` (`tests/ui/goal.test.ts`): genau der Text aus Anhang 03 B.
+- **AK-M14E1-31** `UNLOCK_NOTICE` (`tests/ui/goal.test.ts`): der Bestandstext von `UNLOCK_NOTICE` (wie vor der Änderung, nicht hier gepinnt) bleibt als Präfix
+  unverändert; angehängt ist genau der Satz aus Anhang 03 B (`. Jede Insel hat ihre Stärke: …`). Test: `startsWith(Bestandstext)`
+  und Rest gleich dem Satz; ein Wortlautwechsel des Bestandstexts (z. B. M13) bricht ihn nicht.
 - **AK-M14E1-32** Inselwechsel und Liste (`tests/ui/`): `islandList` liefert vier Einträge, Index 3 «Weidenau»;
   Taste `9` viermal ab der Heimat → Möweninsel, Felsbucht, Weidenau, Heimat; Lagerleisten-Präfix auf Insel 3
   «Weidenau».
