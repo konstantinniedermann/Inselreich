@@ -324,7 +324,7 @@ export interface EdictDef {
   /** Prozentpunkte Abzug auf den Steuersatz, 0 = keine Wirkung. */
   taxPoints: number;
   /** 100 = keine Wirkung. */
-  buyPct: number;
+  buyFactorPct: number;
   /** null = GROWTH_INTERVAL. */
   growthInterval: number | null;
   /** null = keine Wirkung. */

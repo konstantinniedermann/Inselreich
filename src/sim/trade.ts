@@ -10,9 +10,9 @@ import { islandName } from './islands';
 import { islandAt } from './placement';
 import { HOME } from './world';
 
-/** Kaufpreis für n Stück; mit wirkendem Edikt Handel (`buyPct < 100`) über die Gesamtmenge aufgerundet (Spec R4). */
+/** Kaufpreis für n Stück; mit wirkendem Edikt Handel (`buyFactorPct < 100`) über die Gesamtmenge aufgerundet (Spec R4). */
 export function buyPrice(world: World, good: GoodId, n: number): number {
-  const pct = activeEdictDef(world)?.buyPct ?? 100;
+  const pct = activeEdictDef(world)?.buyFactorPct ?? 100;
   const base = n * GOODS[good].buy;
   return pct < 100 ? Math.floor((base * pct + 99) / 100) : base;
 }
