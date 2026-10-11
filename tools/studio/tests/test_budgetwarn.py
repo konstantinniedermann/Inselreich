@@ -182,9 +182,6 @@ class PrefixRuleTest(unittest.TestCase):
 
 FIXTURE = Path(__file__).parent / "fixtures" / "budget_pairs.json"
 RULE_FROM = "2026-10-10T15:16:00Z"  # Handbuch 1.45 (Commit e5563696, 17:16 MESZ): `Paket:` gleich Phase
-# Echte Abweichung nach 1.45 (Paket `design-m14-e1`, Freigabe `design-m14-richtung`):
-# blockt mit E-060. Merge-Voraussetzung R503 B4: laufende Stränge vorher angleichen.
-KNOWN_MISMATCH = {("lead-design", "design-m14-e1")}
 
 
 class RealPairsTest(unittest.TestCase):
@@ -199,11 +196,7 @@ class RealPairsTest(unittest.TestCase):
                 for phase in pair["phases"]
             ]
             result = budgetwarn.check(start(prompt, pair["role"]), given)
-            if (pair["role"], pair["package"]) in KNOWN_MISMATCH:
-                # wird die Ausnahme angeglichen, hier rot: KNOWN_MISMATCH-Eintrag löschen
-                self.assertIsNotNone(result, pair)
-            else:
-                self.assertIsNone(result, pair)
+            self.assertIsNone(result, pair)
 
 
 if __name__ == "__main__":
