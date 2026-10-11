@@ -5818,3 +5818,16 @@ Stränge nach dem UI-Strang). Konfliktlösung `save.ts` (`ef0b214a`) und Rückfa
 Regelbezug: R505, R506, R535, R536 · Kosten bei Irrtum: ein Rückmerge im Sim-Strang.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I048-SIM · ADR: —
+
+## R538 · 2026-10-11 · Retro adhoc-ampel-1011: V1 ins nächste Werkzeug-Bündel, V2 Messauftrag
+
+Ruling: **V1** angenommen: `effort.ampel_incidents` meldet `steuerung` nur noch, wenn die **bereinigte** Zeile (E-049) in
+zwei Sessions rot ist; Rohzeile und Schwellen bleiben sichtbar. Umsetzung als Task im nächsten Werkzeug-Bündel
+(TOOL-BUENDEL-8, spielfremd, darf vor M13-Ende laufen). **V2** angenommen als Messauftrag: Die nächste Session-Retro trennt
+bei Plan-Instanzen über 60 Turns Erstfassung und Nachtrag (Cache-Write je Phase). Das Experiment „Turnkappe 60 für
+Plan-Instanzen“ trägt der Coach als E-062 „vorgeschlagen (wartet auf Platz)“ ein. **V3** angenommen. Der Last-Flake in
+`terrain.test.ts` steht in `docs/beobachtungen.md` und geht mit in TOOL-BUENDEL-8 zur Prüfung.
+
+Regelbezug: R316, R523, E-049 · Kosten bei Irrtum: ein verdecktes Steuerungsproblem (Revert einer Funktion).
+
+Entscheider: L0 · Anlass: Bericht studio-coach adhoc-ampel-1011 · ADR: —

@@ -604,3 +604,15 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: 2026-10-11 (erster Fall: Spec-Nachtrag M14-E1)
 - Datenpunkt 1 von 3, S-2026-10-11-dc50be15 (Retro [session-dc50be15-ende](retros/2026-10-11-session-dc50be15-ende.md) B4): `design-m14-e1-nachtrag` (sonnet) 0,078 M gegen Ausgang 0,70 M (≈ 11 %, Schwelle ≤ 60 % erfüllt); Gate danach ohne weitere Befunde, 0 ZURÜCK (R501); Kurzdesign `design-ui-naechster-schritt` (sonnet) 0,056 M gegen 0,16 M (≈ 35 %); opus-Anteil 55,6 % (≤ 70 % erfüllt). Weiter beobachten.
 - Bewertung: –
+
+## E-062 · vorgeschlagen (wartet auf Platz) · Turnkappe 60 Turns für Plan-Instanzen
+
+- Hypothese: Wenn das Plan-Briefing „höchstens 60 Turns, Rest als frische Instanz mit Übergabe“ verlangt, sinkt der Cache-Write der Plan-Instanzen (Vorarbeits-Leads schreiben 66–81 % der Lead-Schreibmenge; `plan-m13-e2` 105 und `plan-i048` 96 Turns gegen 55 bei `plan-tool-buendel-6`), ohne dass Plan-Qualität leidet (Retro [ampel-adhoc](retros/2026-10-11-ampel-adhoc.md) B2, V2).
+- Messgrösse: Cache-Write-Tokens je Plan-Instanz ≤ 1,5 M und 0 blockierende Gate-Plan-Befunde, über 3 Pläne. Vorab Messauftrag (Frist nächste Session-Retro): Plan-Instanzen > 60 Turns in Erstfassung und Nachtrag trennen.
+- Messbarkeit: `lead_stats.rows` (Turns, Gewicht je Instanz) und Cache-Write je Rolle in den Metrik-Dateien bleiben unverändert; Folgeinstanzen tragen den Paketnamen `plan-…`.
+- Zeitraum: 3 Pläne, höchstens bis 2026-11-19; Start erst bei freiem Platz (laufend: E-057, E-059, E-061).
+- Rückfall: Satz aus dem Plan-Briefing (`lead-tech.md`, Vorlage) entfernen; Handbuch auf die Fassung davor. Kosten bei Irrtum ≈ 0,2 M je Plan.
+- Dateien: `.claude/agents/lead-tech.md`, `docs/studio/STUDIO.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
+- Ruling: R538 (Messauftrag angenommen; Experiment wartet auf Platz)
+- Start: –
+- Bewertung: –
