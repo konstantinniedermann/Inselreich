@@ -54,7 +54,7 @@ jeden startest du im Panel des Denkmals selbst, dabei zahlst du das Geld des Abs
 - **Abriss:** Wer das Denkmal abreisst, bekommt nur die Hälfte des Bauplatzes zurück, **nicht** das Geld des Abschnitts
   und nicht die gelieferte Ware. Ein Neubau beginnt wieder bei Abschnitt 1; ein bereits erreichtes Wahlziel bleibt erreicht.
 - **Anzeige:** Ab dem dritten Ziel (Gewürz) zeigt der Chip «Ziel» «Denkmal 1/3 · n %», am Ende «Wahlziel erreicht»; die Inselchronik führt dazu
-  eine Zeile «Wahlziel». Jeder fertige Abschnitt steht im Ereignis-Log, der letzte lässt die Feuerschale aufflammen.
+  eine Zeile «Wahlziel». Jeder fertige Abschnitt steht im Ereignis-Log, der letzte lässt die Feuerschale aufflammen und die Glocke «Denkmal fertig» läuten (Wahlziel erreicht).
 
 Ohne zusätzliche Betriebe (Steinbruch, Werkzeugmacher, Glashütte, Plantage) wird schon der erste Abschnitt nicht fertig:
 In der Messung (Lauf B: 6000 Ticks, kein Zukauf, keine zusätzlichen Betriebe) lieferte das Lager nichts, der Bestand
@@ -233,7 +233,7 @@ Tab verborgen ist.
 
 - **Effekte:** Klicks beim Bauen und Abreissen, Münzen bei Steuern und Verkauf, Signale für neue und
   gelieferte Aufträge, Aufstieg, Fehler und Sieg; bei Krisen Glocke (Brand), Nebelhorn (Sturmwarnung)
-  und Fanfare (Boom). Wichtige Signale senken Musik und Umgebung kurz ab.
+  und Fanfare (Boom); beim Erreichen des Wahlziels Denkmal läutet die Glocke. Wichtige Signale senken Musik und Umgebung kurz ab.
   Geht ein Gut aus, das deine Häuser brauchen, ertönt ein tiefer Doppelton (je Gut höchstens einmal pro
   Minute; Krisensignale haben Vorrang). Betriebe in Kameranähe geben beim Fertigstellen einer Lieferung ein
   leises Arbeitsgeräusch von sich (Klopfen, Tick, Plätschern), nie dichter als etwa einmal pro Sekunde.
