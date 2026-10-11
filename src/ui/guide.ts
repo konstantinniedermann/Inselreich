@@ -158,6 +158,7 @@ export function nextStep(w: World): string {
     }
   const shortage = shortageSentence(w, houses);
   if (shortage) return shortage;
+  if (w.money < 0) return cashSentence(w); // akuter Kassenmangel (R499), vor den Gütern der nächsten Stufe
   for (const h of full) {
     const next = (h.house!.tier + 1) as Tier;
     for (const g of GOOD_IDS) {
@@ -192,7 +193,7 @@ export function nextStep(w: World): string {
   // C.11: ab U6 bis zum ersten Kontor auf einer Fremdinsel
   if (isUnlocked(w, 'U6') && !has(w, 'kontor2'))
     return 'Gründe ein Kontor auf einer Insel mit Gewürz';
-  if (w.money < 0 || w.stats.taxes - w.stats.upkeep < 0) return cashSentence(w);
+  if (w.stats.taxes - w.stats.upkeep < 0) return cashSentence(w);
   const blocked = TIER_IDS.find(
     (t) =>
       TAX_LEVELS[effectiveTaxLevel(w, t)].upgradeWait === null &&

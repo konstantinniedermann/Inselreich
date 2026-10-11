@@ -629,3 +629,25 @@ describe('UI-NAECHSTER-SCHRITT akuter Warenmangel (R499)', () => {
     expect(nextStep(w)).not.toContain('aufgebraucht');
   });
 });
+
+describe('UI-NAECHSTER-SCHRITT akuter Kassenmangel (R499, AK-NS-05)', () => {
+  it('AK-NS-05 money < 0 schlägt die Stoffkette', () => {
+    const w = world(1, TIERS[1].maxInhabitants, []);
+    w.money = -1;
+    expect(nextStep(w)).toMatch(/^Deine Kasse schrumpft: /);
+  });
+  it('AK-NS-05 Saldo −1 bei Geld im Plus: Stoff-Satz bleibt', () => {
+    const w = world(1, TIERS[1].maxInhabitants, []);
+    w.money = 1000;
+    w.stats = { taxes: 4, upkeep: 5 };
+    expect(nextStep(w)).toMatch(/^Deine Siedler brauchen Stoff: /);
+  });
+  it('AK-NS-06 Nahrungsmangel plus money < 0: Nahrung gewinnt', () => {
+    const w = world(1, 2, []);
+    const h = Object.values(w.buildings).find((b) => b.house)!;
+    setHouse(h, 1, 2, []);
+    home(w).stock.food = 0;
+    w.money = -1;
+    expect(nextStep(w)).toBe(MANGEL_FOOD);
+  });
+});
