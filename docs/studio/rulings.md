@@ -6054,3 +6054,20 @@ nächste Session-Retro (Anteil L0-Gate-Rulings vs. Lead-Steuerung). Cache-Write:
 Regelbezug: R316, R538, R549–R552, Verfassung §9 · Kosten bei Irrtum: eine Prüffrage bzw. ein Delta-Review je ZURÜCK.
 
 Entscheider: L0 · Anlass: Retro session-f2a404fd-ende · ADR: —
+
+## R554 · 2026-10-11 · Session-Plan bis Release M13: Plan M14-E1, Designfrage I-048 B, Werkzeug Gate-Messung
+
+Ruling: Auftrag „mach weiter“ = Plan aus state.md fortsetzen. Release M13 bleibt auf 2026-10-12 (ein Push je Tag, R335).
+Wochenfenster 84 %: höchstens 4 Agenten gleichzeitig (STUDIO.md Limits, R69). Auslegung R486/R501 „Plan erst nach Abschluss
+M13“: Der **Inhalt** von M13 ist abgeschlossen (R552), main ändert sich bis zum Release nur bei einem Release-Fehler; der Plan
+M14-E1 darf daher jetzt als Vorarbeit (R475) entstehen, Vergleichsbasis (QA-B3) ist main @ `9113e574`, **Umsetzung erst nach
+dem Release M13**. Start: (1) `plan-M14-E1` an `lead-tech` opus mit allen Auflagen R500/R501; (2) `design-I048-B` an
+`lead-design` opus: Designfrage Schritt B (Mengenstaffel o. ä. oder Verzicht), Ergebnis als Vorschlag mit Empfehlung, keine
+Werte, keine Spec; (3) `plan-TOOL-GATE-ENSEMBLE` an `lead-tech` sonnet (Werkzeug-Paket): robustere Gate-Messung
+(Controller-Phasen oder Startvarianten, Median) als Plan, Voraussetzung jeder Neumessung (R551, R553 V1). Ideen-Runde erst
+nach dem Release (state.md Punkt 3).
+
+Regelbezug: R335, R475, R486, R500, R501, R551, R553, STUDIO.md Limits · Kosten bei Irrtum: Plan M14-E1 muss bei einem
+Release-Fix an `main` die Vergleichsbasis nachziehen (eine Zeile im Plan-Index).
+
+Entscheider: L0 · Anlass: Session-Start, Nutzer „mach weiter“ · ADR: —
