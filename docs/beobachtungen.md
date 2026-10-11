@@ -215,3 +215,6 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
   `BUY_RISE` 1 → Sieg 7550 (milderer Aufschlag, späterer Sieg). Die Grenze 7500 ist damit ein brüchiges Gate (heute 350 Ticks
   Luft). Ursprung: Designurteil D-I048-B-GRENZE. Einschätzung: mittel; bei der nächsten Balancing-Runde mehrere Seeds oder
   ein Mittel statt eines Einzellaufs prüfen.
+- **Nachtrag 2026-10-11 (D-I048-B-WERTE):** 27 Messungen (Scratchpad lead-design): Antwort auch ohne Zukauf-Aufschlag nicht
+  monoton (`SELL_RECOVERY_INTERVAL` 15 → Sieg 6750, 16 → 7350, 18 → Krisen normal ohne Sieg). Schmalste Ränder: Edikt reich
+  «Wohlfahrt echt früher» 60 Ticks, Krisen normal 150 Ticks. Einschätzung: hoch, Einzellauf-Gates blockieren jede Wirtschaftsänderung.
