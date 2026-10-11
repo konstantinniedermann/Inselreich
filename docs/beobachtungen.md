@@ -208,3 +208,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
   Rohphase vor der eigenen Freigabe des Leads, der Plan-Arbeiter zählt auf `ui-tasten` (auf main schon so). Ursprung:
   TOOL-E060-FIX. Einschätzung: gering (nur Altdaten mit Präfix-Phasen; seit R543 vergibt L0 reine Paket-IDs); im zweiten
   E-060-Echtlauf beobachten.
+
+### 2026-10-11 · Sieg-Tick im Balancing reagiert sprunghaft auf Spielwerte
+
+- **Fundort:** `tests/sim/balance.test.ts` (Seed 3, `WIN_TICK_LIMIT` 7500). Beobachtung: `BUY_RISE` 2 → Sieg 7150,
+  `BUY_RISE` 1 → Sieg 7550 (milderer Aufschlag, späterer Sieg). Die Grenze 7500 ist damit ein brüchiges Gate (heute 350 Ticks
+  Luft). Ursprung: Designurteil D-I048-B-GRENZE. Einschätzung: mittel; bei der nächsten Balancing-Runde mehrere Seeds oder
+  ein Mittel statt eines Einzellaufs prüfen.

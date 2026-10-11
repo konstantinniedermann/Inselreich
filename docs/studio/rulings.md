@@ -5947,3 +5947,21 @@ prüfen (betrifft nur Altdaten mit Präfix-Phasen). Integrator mergt lokal; dana
 Regelbezug: R532, R542, R543 · Kosten bei Irrtum: ein Werkzeug-Revert.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-E060-FIX · ADR: —
+
+## R547 · 2026-10-11 · I-048 AK-ZK-15: Grenze als Anteil am Zukauf-Volumen (≤ 15 %)
+
+Ruling: Designurteil lead-design (D-I048-B-GRENZE) angenommen, **Option 1 mit neuer Bezugsgrösse**. Die Mechanik wirkt wie
+gedacht (Werkzeug klein gekauft +7 %, Holz-Engpass +27 %); falsch war die Kalibrierung in Anhang b (nur Werkzeug gerechnet).
+Werte bleiben `BUY_RISE` 2, `SELL_RECOVERY_INTERVAL` 20. **AK-ZK-15 neu:** zwei Asserts — Festwert der Mehrkosten (heute 544,
+Toleranz 0) und **Mehrkosten ≤ 15 % des Zukauf-Volumens zum Listenpreis** (heute 11,1 %); der Controller summiert das Volumen
+mit (`trackedBuy`). Die Startgeld-Grenze 250 entfällt. Option 2 (Erholung, `BUY_CAP`) und 3 (`BUY_RISE` 1) verworfen
+(Wirkung zu klein bzw. Biss halbiert, Sieg-Tick 7550). AK-ZK-02–05, -20–22 bleiben. **Spec-Nachtrag** (`design-spec-author`
+sonnet, E-061): §1 «≈ 4 % des Startgelds» → «≈ 11 % des Zukauf-Volumens, Holz-Engpass 27 %», §6 Schritt B und AK-ZK-15 nach
+diesem Ruling, Fussnote Anhang b. **README** (T08): «Bis rund 30 Einheiten je Minute …» ersetzen durch eine Aussage über
+verteilte Käufe («Käufe kurz nacheinander addieren sich»). I048-B setzt B3–B7 sofort nach diesem Ruling fort; der
+Spec-Nachtrag läuft parallel auf main. Sieg-Tick-Sprunghaftigkeit steht in den Beobachtungen.
+
+Regelbezug: R487 P-1, R490, R505, Spec I-048 §6/P-5 · Kosten bei Irrtum: Versprechen „wer klein zukauft, merkt nichts“
+verwässert schleichend; Abhilfe zweite Grenze nur Werkzeug ≤ 10 %, Playtest-Hebel P-5.
+
+Entscheider: L0 · Anlass: Stopp lead-tech I048-B, Urteil lead-design · ADR: —
