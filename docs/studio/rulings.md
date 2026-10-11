@@ -5622,3 +5622,15 @@ Session-Ende: Limit-Ampel gelb, keine neue Welle; Übergabe in state.md (`955efb
 Regelbezug: STUDIO.md Verbesserungsschleife, R316, R497, R520 · Kosten bei Irrtum: ein Experiment-Platz falsch belegt.
 
 Entscheider: L0 · Anlass: Kurz-Retro Session dc50be15 · ADR: —
+
+## R524 · 2026-10-11 · Sicherungs-Push `backup/main-lokal`; Session-Start bei Limit-Ampel gelb
+
+Ruling: Auf Nutzerfrage „wieso kein Push“: `main` bleibt unter Release-Sperre (R505, Save v12 geteilt) und Actions-Prognose
+rot. Die lokalen Commits auf `main` (`e841f5dd`) werden als Sicherung nach `origin/backup/main-lokal` gepusht — kein
+CI-Auslöser (CI nur `push` auf `main` und `pull_request`), kein Pages-Lauf; geprüft mit `gh run list`. Der Branch wird beim
+Release M13 nachgeführt oder gelöscht. Limit-Ampel gelb (5 h 72 %, Woche 78 %): nur Angefangenes — Coach R523 V1 und
+M13-E2 Controller E; I-049-Sim und I-048-Sim starten erst bei grüner Ampel (Budgetzeilen I049-SIM/I048-SIM verfallen).
+
+Regelbezug: R505, R334, STUDIO.md Tempo/Herunterfahren · Kosten bei Irrtum: ein überflüssiger Remote-Branch.
+
+Entscheider: L0 · Anlass: Nutzerfrage · ADR: —
