@@ -5644,3 +5644,19 @@ E-059, E-061. Die Kostengewicht-Schwelle aus E-054 verfolgt künftig die Ampel �
 Regelbezug: R523, R497 · Kosten bei Irrtum: ein Plan auf schwächerem Modell, Hochstufen jederzeit möglich.
 
 Entscheider: L0 · Anlass: Bericht studio-coach COACH-R523 · ADR: —
+
+## R526 · 2026-10-11 · Gate Merge M13-E2-ART → UI: OK; AK-M13E2-48 nach Desktop-first ausgelegt
+
+Ruling: Controller E fertig (`feat/m13-e2-ui` @ `946a87b4`, enthält ART `5295021d`; Handoff
+`.studio/handoffs/2026-10-11-lead-tech-m13-e2-ctrl-e.md`). T14–T16 und T18 erledigt, Final-Review opus BEDENKEN nur
+wegen AK-48, Code mergebereit; Fix-Runde mit Review OK; `make check` Exit 0; Zeitvergleich ohne Ausreisser.
+**AK-M13E2-48** (800×600 „keine Überlappung“) widerspricht der Desktop-first-Regel in `CLAUDE.md` (schmale Fenster nur
+„stürzt nicht ab“); die Überlappung (161 px) zeigen alle Panels vorbestehend. Auslegung: AK-48 gilt als erfüllt mit
+„kein Absturz, keine Konsolenfehler“ (belegt in T15); Spec-Wortlaut korrigiert der nächste Spec-Nachtrag M13. Fehlende
+Rot-Belege im Ledger (T09–T13, T19) liegen im Berichtsarchiv: hingenommen. **Gate Merge OK**: `production-integrator`
+mergt `feat/m13-e2-ui` lokal nach `main` (kein Push, Release-Sperre R505). Hörprobe der Glocke geht als „Bitte testen“
+in die Release-Notiz M13.
+
+Regelbezug: R505 Schritt 3, R521, CLAUDE.md UI-Regel, gates.md Gate Merge · Kosten bei Irrtum: ein Layout-Nachtrag für kleine Fenster.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M13-E2-CTRL-E-1011 · ADR: —
