@@ -6088,3 +6088,20 @@ Regelbezug: gates.md Gate Brainstorming, R486, R547, R549, R551, R553 V1 · Kost
 Option 1 endet; `main` bleibt bis dahin inaktiv.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I048-B · ADR: —
+
+## R556 · 2026-10-11 · Kombiniertes Gate TOOL-GATE-ENSEMBLE: OK mit Auflagen, Umsetzung frei
+
+Ruling: Plan `18178c26` (lead-tech), Urteil lead-qa BEDENKEN (1–4, nicht blockierend). L0-Prüffragen: ein Owner je Datei, ein
+Worktree `.worktrees/tool-gate-ensemble`; Budget nach Formel 1 × 2 + 1 Final-Review = 3 × 1,3 → **4 Starts**, Parallelität 1;
+bleibt leicht (kein `src/`, kein Save). Entscheide: (a) Verdikte je Grenze **OK** (Median und Min/Max innerhalb) · **AUSREISSER**
+(nur Median innerhalb) · **GERISSEN** (Median ausserhalb); ein Gate gilt nur bei OK als bestanden, AUSREISSER/GERISSEN gehen als
+Bedenken an L0. (b) **5 Phasen** (0, 20, 40, 60, 80). (c) Streuungsschwelle T01: Spannweite des Sieg-Ticks ≥ 1 % von `MAX_TICKS`;
+sonst Stopp `blocked`, Eintrag in `docs/beobachtungen.md`, Rückfall in fester Reihenfolge: zuerst Kontrollintervalle
+{90, 100, 110}, dann Startverzögerung; erst danach L0. (d) Das Ensemble belegt Robustheit gegen **Entscheidungszeitpunkte**, nicht
+gegen Layout oder Seed — so in Plan-Index und Ausgabe-Kopf. (e) T05 nennt den Aufruf `make gate-ensemble` als Pflichtschritt der
+Gate-Prüffrage R553 V1 für Pakete mit Wertgrenzen. Nacharbeit 1–4 in Plan-Dateien durch den Controller vor T01, ohne Zweitprüfung.
+
+Regelbezug: gates.md Kombiniertes Gate, R551, R553 V1, Budget-Formel · Kosten bei Irrtum: ein Werkzeug, das nur Timing-Robustheit
+misst; Rückfall in (c).
+
+Entscheider: L0 · Anlass: Berichte lead-tech plan-TOOL-GATE-ENSEMBLE, lead-qa gate-TOOL-GATE-ENSEMBLE · ADR: —
