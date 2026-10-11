@@ -4,7 +4,7 @@
 
 Dateien: `README.md`, `docs/arc42.md` (nur bei geänderter Beschreibung). Kein Test (Prüfart B/Lesen).
 
-- [ ] `README.md` Abschnitt «Stilllegen» (`grep -n 'Stilllegen' README.md`, Zeile ~454–460; nur diesen Abschnitt lesen, Datei > 30 KB, E-057): «zahlt **N % des Unterhalts** (je Betrieb aufgerundet)», N aus dem Entscheid zum Blocker (Empfehlung A: 50, sonst Spec-Wert 60 bei Option B).
+- [ ] `README.md` Abschnitt «Stilllegen» (`grep -n 'Stilllegen' README.md`, Zeile ~454–460; nur diesen Abschnitt lesen, Datei > 30 KB, E-057): «zahlt **50 % des Unterhalts** (je Betrieb aufgerundet)» (Wortlaut R533, Zahl = `PAUSED_UPKEEP_PCT`).
 - [ ] README Zeile ~53 «**Bau pausieren:**» → «**Bau anhalten:**»; Tastenhinweis Abriss «Entf / ⌫», falls die Spielanleitung «Entf» nennt (`grep -n 'Entf' README.md`).
 - [ ] arc42: `grep -n 'halber Unterhalt\|pausier' docs/arc42.md`; nur Treffer zu den hier geänderten Texten anpassen.
 - [ ] Controller: `make docs-check; echo EXIT=$?` → 0; Commit `docs: README Stilllegen und Bau anhalten (AK-UT-04)`.
