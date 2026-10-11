@@ -5300,3 +5300,15 @@ konstruktiv), Tech-B5/B6/B8, Nachtrag zu ADR-010 beim Plan. Plan erst nach Absch
 Regelbezug: gates.md Gate Spec, R486, R495, E-061 · Kosten bei Irrtum: ein weiterer Nachtrag.
 
 Entscheider: L0 · Anlass: Gate-Berichte lead-qa und lead-tech · ADR: —
+
+## R501 · 2026-10-11 · Spec-Nachtrag M14-E1 abgenommen; Handbuch 1.46 abgenommen
+
+Ruling: Nachtrag `eef88dc1` (Anhang 04, QA-B1/B4–B9, neues AK-M14E1-42) abgenommen; Spec M14-E1 gegatet, Plan erst nach
+Abschluss M13 (R486) mit den Auflagen aus R500. Zusatzauflage an den Plan: AK-11 setzt voraus, dass «Fruchtbar» den
+Zyklus der Zuckerrohrplantage nicht ändert — am Code gegen Anhang 01 A1 prüfen, sonst Vergleich nach Zyklus-Skalierung.
+Handbuch **1.46** (`b5826181`, studio-coach): E-061 läuft (erster Fall dieser Nachtrag, sonnet), R488 V3 in der
+Integrator-Persona; E-054-Kopfzeile auf „behalten“ nachgeführt.
+
+Regelbezug: gates.md Gate Spec, R497, R500, E-061 · Kosten bei Irrtum: ein weiterer Nachtrag.
+
+Entscheider: L0 · Anlass: Berichte lead-design und studio-coach · ADR: —
