@@ -5874,3 +5874,17 @@ läuft (R520), mit Echtlauf gegen Lagerdaten (R539). `studio-coach` prüft jetzt
 Regelbezug: R520, R539, R540, experimente.md · Kosten bei Irrtum: E-060 startet eine Session später.
 
 Entscheider: L0 · Anlass: Bericht Integrator MERGE-TOOL-BUENDEL-8 · ADR: —
+
+## R542 · 2026-10-11 · E-059 läuft passiv ohne Platz; E-060 startet mit `deny`
+
+Ruling: E-059 (Merge-Treiber) braucht keine Verhaltensänderung, misst nur, und hat in 7 Merges nie gegriffen (0 von 3,
+Bericht EXP-BEWERTUNG-1011). Es läuft **passiv ohne Platz** weiter (Muster E-058), Bewertung bei 3 beidseitigen Merges
+oder spätestens 2026-11-19. E-061 bleibt laufend (verlängern, Bewertung beim dritten sauber getrennten Datenpunkt).
+Der freie Platz geht an **E-060**: `studio-coach` macht zuerst den Echtlauf (R539) — Hook-Entscheid gegen alle
+Lead-Starts mit Budgetzeile in `.studio/events.jsonl` seit 2026-10-10 — und stellt `BUDGET_MODE` nur dann auf `deny`,
+wenn kein Fehlblock bei „Budget: keins“ und bei Folge-Controllern auftritt; sonst Bericht ohne Umstellung. Bedingung
+„nur eine Session läuft“ (R520) ist erfüllt (eine aktive L0-Session). Rückfall: `git revert`.
+
+Regelbezug: R520, R539, R541, experimente.md Obergrenze 3 · Kosten bei Irrtum: ein blockierter Lead-Start (ein Aufruf mehr).
+
+Entscheider: L0 · Anlass: Bericht studio-coach EXP-BEWERTUNG-1011 · ADR: —
