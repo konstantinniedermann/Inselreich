@@ -5862,3 +5862,15 @@ Dashboard escaped werden, Testzeile ohne `_adjusted_line`) gehen ins nächste We
 Regelbezug: gates.md Gate Merge (Stufe leicht), R538, R539 · Kosten bei Irrtum: ein Werkzeug-Revert.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-8 · ADR: —
+
+## R541 · 2026-10-11 · Merge TOOL-BUENDEL-8 angenommen; E-060 wartet auf Platz
+
+Ruling: Integrator-Merge `ecf9972b` (keine Konflikte, `make check`, `make studio-test`, `make check-ci-perf` Exit 0)
+angenommen. **E-060 (`deny`)** startet noch nicht: Die drei Experiment-Plätze sind belegt (E-057, E-059, E-061;
+experimente.md Obergrenze 3). Der Schalter bleibt `warn`; Start per Ruling, sobald ein Platz frei ist und nur eine Session
+läuft (R520), mit Echtlauf gegen Lagerdaten (R539). `studio-coach` prüft jetzt, ob E-059 (3 Merges) und E-061
+(3 Instanzen) bewertbar sind; Reihenfolge freier Plätze: E-060 vor E-062.
+
+Regelbezug: R520, R539, R540, experimente.md · Kosten bei Irrtum: E-060 startet eine Session später.
+
+Entscheider: L0 · Anlass: Bericht Integrator MERGE-TOOL-BUENDEL-8 · ADR: —
