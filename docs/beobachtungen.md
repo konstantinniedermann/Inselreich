@@ -167,3 +167,14 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - **Fundort:** `docs/ideen.md` Zeile `### I-001 · neu · <Kurzname>` im Formatblock. Beobachtung: `grep '^### I-'` zählt die Vorlage
   mit, die Zählung der Obergrenze 40 liegt um 1 zu hoch. Ursprung: Scouts B und C IDEEN-07 (lead-design). Einschätzung: gering;
   Zählung mit `grep -v '<Kurz'` oder die Vorlage im Codeblock ohne `###` führen.
+
+### 2026-10-11 · `buyPct` fehlt in der arc42-Persistenz bis I-048 T08
+
+- **Fundort:** `docs/arc42.md`, Persistenz/Zeile `save.ts`. Beobachtung: Das neue Weltfeld `buyPct` (I048-SIM) ist nicht
+  beschrieben, bis Strang I048-B (T08) die Doku nachführt. Ursprung: Controller I048-SIM. Einschätzung: gering; T08 deckt es,
+  vor dem Release M13 prüfen.
+
+### 2026-10-11 · Doppelter Regressionstest `edicts.test.ts:252-264`
+
+- **Fundort:** `tests/sim/edicts.test.ts:252-264`. Beobachtung: deckt dasselbe wie `buyPct.test.ts:113-118`. Ursprung:
+  Final-Review I048-SIM. Einschätzung: gering; optional streichen beim nächsten Aufräum-Häppchen.
