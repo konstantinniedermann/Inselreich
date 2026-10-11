@@ -120,12 +120,24 @@ class Gate:
     def step(
         self, name: str, cmd: list[str], env: dict | None = None
     ) -> tuple[int, str]:
+        load = self._load_now()
         began = time.monotonic()
         code, output = self.run(cmd, env)
         self.steps.append(
-            {"name": name, "exit": code, "s": round(time.monotonic() - began, 1)}
+            {
+                "name": name,
+                "exit": code,
+                "s": round(time.monotonic() - began, 1),
+                "load": load,  # 1-min-Load zu Beginn der Stufe (R514 V2)
+            }
         )
         return code, output
+
+    def _load_now(self) -> float | None:
+        try:
+            return round(self.load(), 1)
+        except (OSError, ValueError, TypeError):
+            return None
 
     def wait_quiet(self) -> bool:
         waited = 0
