@@ -25,7 +25,7 @@ export interface Row {
   limit: Limit;
   s: Summary;
   held: number;
-  verdict: 'OK' | 'AUSREISSER' | 'GERISSEN';
+  verdict: 'OK' | 'AUSREISSER' | 'GERISSEN' | 'OHNE GRENZE';
 }
 
 /** Median (gerade n: Mittel der zwei mittleren Werte), Min, Max, Spannweite; wirft bei leerer Eingabe. */
@@ -45,10 +45,12 @@ function within(limit: Limit, v: number): boolean {
   return (limit.lo === undefined || v >= limit.lo) && (limit.hi === undefined || v <= limit.hi);
 }
 
-/** OK: alle innerhalb; AUSREISSER: Median innerhalb, mindestens einer ausserhalb; GERISSEN: Median ausserhalb. */
+/** OHNE GRENZE: weder lo noch hi (nur gemessen); OK: alle innerhalb; AUSREISSER: Median innerhalb, mindestens einer ausserhalb; GERISSEN: Median ausserhalb. */
 export function judge(limit: Limit, values: readonly number[]): Row {
   const s = summarize(values);
   const held = values.filter((v) => within(limit, v)).length;
+  if (limit.lo === undefined && limit.hi === undefined)
+    return { limit, s, held, verdict: 'OHNE GRENZE' };
   const verdict = held === s.n ? 'OK' : within(limit, s.median) ? 'AUSREISSER' : 'GERISSEN';
   return { limit, s, held, verdict };
 }
@@ -69,7 +71,7 @@ export function formatTable(rows: readonly Row[]): string {
     num(r.s.min),
     num(r.s.max),
     num(r.s.spread),
-    `${r.held}/${r.s.n}`,
+    r.verdict === 'OHNE GRENZE' ? '-' : `${r.held}/${r.s.n}`,
     r.verdict,
   ]);
   const cells = [head, ...body];

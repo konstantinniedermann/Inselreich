@@ -88,6 +88,15 @@ describe('Ensemble-Statistik (Gate-Ensemble)', () => {
     expect(table).toContain('Robustheit gegen Entscheidungszeitpunkte (Controller-Phase)');
   });
 
+  it('GE-5f: judge urteilt OHNE GRENZE statt OK, formatTable zeigt es mit - als gehalten', () => {
+    const row = judge({ name: 'x' }, [1, 2, 3]);
+    expect(row.verdict).toBe('OHNE GRENZE');
+    const line = formatTable([row]).split('\n').pop() ?? '';
+    expect(line).toContain('OHNE GRENZE');
+    expect(line).not.toContain('3/3');
+    expect(line).toContain('| - ');
+  });
+
   it('GE-5e: runEnsemble ruft measure je Phase genau einmal in Reihenfolge', () => {
     const calls: number[] = [];
     const out = runEnsemble((phase) => {
@@ -100,6 +109,14 @@ describe('Ensemble-Statistik (Gate-Ensemble)', () => {
 });
 
 describe('Ensemble-Wächter (Gate-Ensemble)', () => {
+  it('GE-6b: runColony weist ungültige Phasen mit sprechendem Fehler ab', () => {
+    for (const phase of [-1, 100, 1.5, Number.NaN]) {
+      const w = createWorld(3);
+      const { layout, t } = startColony(w);
+      expect(() => runColony(w, layout, t, { phase })).toThrow(/phase/);
+    }
+  });
+
   it('GE-6: fünf paarweise verschiedene Phasen unterhalb des Kontrollintervalls', () => {
     expect(PHASES.length).toBe(5);
     expect(new Set(PHASES).size).toBe(PHASES.length);
@@ -138,38 +155,45 @@ function measurePhase(phase: number): Measurement {
   };
 }
 
+function ensembleEnabled(value: unknown): boolean {
+  return typeof value === 'string' && value !== '' && value !== '0';
+}
+
 // Messlauf: nur mit VITE_ENSEMBLE=1 (make gate-ensemble); das Werkzeug misst, die Gates urteilen.
-describe.runIf(Boolean(import.meta.env.VITE_ENSEMBLE))('Ensemble-Messlauf (Gate-Ensemble)', () => {
-  it('GE-7: misst alle Phasen und gibt die Tabelle aus', () => {
-    const ms = runEnsemble(measurePhase);
-    const col = (pick: (m: Measurement) => number): number[] => ms.map(pick);
-    const rows: Row[] = [
-      judge(
-        LIMIT_WIN_TICK,
-        col((m) => m.winTick),
-      ),
-      judge(
-        { name: 'erster Siedler' },
-        col((m) => m.firstSettler),
-      ),
-      judge(
-        { name: 'erster Bürger' },
-        col((m) => m.firstCitizen),
-      ),
-      judge(
-        LIMIT_MIN_MONEY,
-        col((m) => m.minMoney),
-      ),
-      judge(
-        LIMIT_END_MONEY,
-        col((m) => m.endMoney),
-      ),
-      judge(
-        { name: 'Zukauf-Mehrkosten %' },
-        col((m) => m.surchargePct),
-      ),
-    ];
-    console.log(`\n${formatTable(rows)}`);
-    expect(rows.length).toBeGreaterThan(0);
-  });
-});
+describe.runIf(ensembleEnabled(import.meta.env.VITE_ENSEMBLE))(
+  'Ensemble-Messlauf (Gate-Ensemble)',
+  () => {
+    it('GE-7: misst alle Phasen und gibt die Tabelle aus', () => {
+      const ms = runEnsemble(measurePhase);
+      const col = (pick: (m: Measurement) => number): number[] => ms.map(pick);
+      const rows: Row[] = [
+        judge(
+          LIMIT_WIN_TICK,
+          col((m) => m.winTick),
+        ),
+        judge(
+          { name: 'erster Siedler' },
+          col((m) => m.firstSettler),
+        ),
+        judge(
+          { name: 'erster Bürger' },
+          col((m) => m.firstCitizen),
+        ),
+        judge(
+          LIMIT_MIN_MONEY,
+          col((m) => m.minMoney),
+        ),
+        judge(
+          LIMIT_END_MONEY,
+          col((m) => m.endMoney),
+        ),
+        judge(
+          { name: 'Zukauf-Mehrkosten %' },
+          col((m) => m.surchargePct),
+        ),
+      ];
+      console.log(`\n${formatTable(rows)}`);
+      expect(rows.length).toBeGreaterThan(0);
+    });
+  },
+);

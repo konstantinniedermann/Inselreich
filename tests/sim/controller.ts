@@ -331,6 +331,10 @@ export function runColony(
   stop?: (w: World) => boolean,
 ): boolean {
   const phase = opts.phase ?? 0;
+  if (!Number.isInteger(phase) || phase < 0 || phase >= CONTROL_INTERVAL)
+    throw new Error(
+      `runColony: phase muss eine ganze Zahl von 0 bis ${CONTROL_INTERVAL - 1} sein, war ${phase}`,
+    );
   while (w.tick < MAX_TICKS && citizens(w) < WIN_CITIZENS) {
     if (w.tick % CONTROL_INTERVAL === phase) control(w, layout, opts);
     step(w);
