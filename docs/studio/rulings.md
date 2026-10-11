@@ -5312,3 +5312,18 @@ Integrator-Persona; E-054-Kopfzeile auf „behalten“ nachgeführt.
 Regelbezug: gates.md Gate Spec, R497, R500, E-061 · Kosten bei Irrtum: ein weiterer Nachtrag.
 
 Entscheider: L0 · Anlass: Berichte lead-design und studio-coach · ADR: —
+
+## R502 · 2026-10-11 · Kombiniertes Gate UI-NAECHSTER-SCHRITT: OK; Umsetzung nach Push REL-19
+
+Ruling: Plan `lead-tech` (Bericht, archiviert unter `.studio/archiv/berichte/`) angenommen: T1 Warenmangel (AK-NS-01–04,
+06, 07 + Kolonie über `islandOf(w, h).stock`), T2 `money < 0` (AK-NS-05), T3 Zustandsfreiheit + README Z. 57 (AK-NS-08),
+Browser-Check, Final-Review opus. Entscheide: (1) gemeinsamer Baustein **mit Taste** («baue mehr Fischerhütte (F) oder
+kaufe Nahrung am Kontor»), Sollwerte `tests/ui/guide.test.ts:153` und `:507` ändern sich bewusst; die Tabelle in
+`docs/superpowers/specs/2026-10-01-m7-ux-design.md:305` wird im selben Paket nachgeführt (D1, Trivial-Fix). (2) AK-UX-08
+R3c erhält in der Testwelt `stock.cloth = 5` — Absicht bleibt, Regel 3 schaltet erst ab Lager ≥ 1 weiter (Folge aus R499).
+Budget 6 Starts, Parallelität 1, L0 briefet direkt (ohne Controller, E-037). Hinweis «baue mehr» bei Erzeuger nur auf
+anderer Insel bleibt wie heute. Start, sobald `make zeitreserve-push` Exit 0 (R464).
+
+Regelbezug: STUDIO.md Stufe leicht, gates.md Kombiniertes Gate, R499, R464 · Kosten bei Irrtum: ein UI-Paket nachbessern.
+
+Entscheider: L0 · Anlass: Plan-Bericht lead-tech · ADR: —
