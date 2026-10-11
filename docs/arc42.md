@@ -610,7 +610,7 @@ flowchart LR
   `make check-push` (= `make check` ohne das lockere `zeitreserve`, unter der Testsperre), danach die strenge
   Zeitreserve (`check.ts --push`), bei Exit 2 oder Exit 1 mit `loadStart` > 3 höchstens eine Nachmessung der markierten
   Dateien, zuletzt `make check-ci-perf`. Exit 0 grün, 1 rot oder Arbeitsbaum verändert, 2 nicht belastbar, 3 Testsperre
-  belegt; Ereignis `push_check` (HEAD, Exit, `full_checks`, `retry_files`, Schritte mit Dauer). `make test` und `make studio-test` laufen über `tools/studio/testrun.py`: rote Läufe schreiben das Ereignis
+  belegt; Ereignis `push_check` (HEAD, Exit, `full_checks`, `retry_files`, Schritte mit Dauer und 1-min-Load zu Stufenbeginn, R514 V2). `make test` und `make studio-test` laufen über `tools/studio/testrun.py`: rote Läufe schreiben das Ereignis
   `test_failed` mit Testnamen, grüne `test_passed` (je mit Commit und Diff-Prüfsumme, die ungetrackte, nicht
   ignorierte Dateien nach Name, Grösse und `mtime_ns` einschliesst); in CI (`CI` gesetzt) und
   bei Testsperre-Abbruch (`--skip-exit 3`) entsteht kein Ereignis. Das Kommando läuft in einer eigenen
