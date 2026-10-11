@@ -1,7 +1,14 @@
 import { crisisWindow } from './crises';
 import { BUILDING_DEFS } from './defs/buildings';
 import { CRISIS_LEVELS } from './defs/crises';
-import { GOODS, GOOD_IDS, SELL_FLOOR, SPICE_GRACE_MAX, SPICE_GRACE_PER_HOUSE } from './defs/goods';
+import {
+  BUY_CAP,
+  GOODS,
+  GOOD_IDS,
+  SELL_FLOOR,
+  SPICE_GRACE_MAX,
+  SPICE_GRACE_PER_HOUSE,
+} from './defs/goods';
 import {
   CRISIS_FIRST_TICK,
   FIRE_OUTAGE,
@@ -713,9 +720,15 @@ function isValidMonumentFields(raw: Record<string, unknown>): boolean {
   return raw.wonMerchants === true && isValidMonumentBuilding(monument, raw);
 }
 
-/** Felder von Save v12 (M13-E2): Denkmal. Weitere Pakete hängen hier eigene Teilprüfungen an. */
+/** Kaufanteil (I-048): Objekt, jedes Gut ganzzahlig von 100 bis `BUY_CAP`. */
+function isValidBuyPct(raw: Record<string, unknown>): boolean {
+  const { buyPct } = raw;
+  return isObject(buyPct) && GOOD_IDS.every((g) => isIntBetween(buyPct[g], 100, BUY_CAP));
+}
+
+/** Felder von Save v12 (M13-E2): Denkmal; I-048: Kaufanteil. Weitere Pakete hängen hier eigene Teilprüfungen an. */
 function isValidV12Fields(raw: Record<string, unknown>): boolean {
-  return isValidMonumentFields(raw);
+  return isValidMonumentFields(raw) && isValidBuyPct(raw);
 }
 
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
