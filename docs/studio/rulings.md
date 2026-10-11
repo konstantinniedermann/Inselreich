@@ -5763,3 +5763,15 @@ Gate Plan durch `lead-qa`; Umsetzung erst nach den Merges von I-049-UI und I-048
 Regelbezug: R467, R530 · Kosten bei Irrtum: ein Wortlaut.
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-UI-TEXTE-1 · ADR: —
+
+## R534 · 2026-10-11 · Gate Plan UI-TEXTE-1: BEDENKEN → Nacharbeit ohne Zweitprüfung
+
+Ruling: lead-qa BEDENKEN (B1–B3), kein Blocker; Vorschlag übernommen. **B1** Plan nach R533 nachführen (Wortlaut
+«Stillgelegt — Unterhalt auf ${PAUSED_UPKEEP_PCT} % (aufgerundet)», Blocker-Abschnitt und Option B streichen). **B2**
+AK-UT-14-Test mit einem Betrieb mit `produces` und `consumes` (z. B. Weberei). **B3** Budget **6** mit zwei Zwischen-Reviews
+(nach T02 und nach T04) und Final-Review opus, ein Puffer. Nacharbeit durch den Planverfasser; danach gilt der Plan als
+abgenommen (L0 prüft Stichprobe). Start erst nach den Merges von I-049-UI und I-048-UI.
+
+Regelbezug: gates.md Gate Plan, R530, R533 · Kosten bei Irrtum: ein Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Urteil lead-qa gate-plan-UI-TEXTE-1 · ADR: —
