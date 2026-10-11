@@ -5507,3 +5507,15 @@ ohne Verhaltensänderung, daher ohne erneutes Review; Playtest OK in allen 4 Pun
 Regelbezug: gates.md Gate Merge, R502, R505 · Kosten bei Irrtum: ein Revert eines kleinen UI-Pakets.
 
 Entscheider: L0 · Anlass: Berichte Final-Review, Umsetzer, Playtester · ADR: —
+
+## R516 · 2026-10-11 · M13-E2-SIM T01: Sprite-Matrix-Schranke 1,30 → 1,40 (Denkmal 3×3)
+
+Ruling: `tests/render/variants.test.ts` AK7 (Zoom 2 / DPR 2) wird mit `monument` (3×3) in `BUILDING_DEFS` rot: Matrix
+91,1 MB gegen 87,24 MB (Faktor 1,357 statt ≤ 1,30 zu `SPRITE_CACHE_MAX_BYTES` 67,1 MB); unabhängig vom Platzhalter-Sprite.
+Der Cache bleibt per LRU gedeckelt; das Denkmal existiert höchstens einmal je Spiel. Schranke wird **1,40** (Kommentar
+mit Verweis R516), als Einzeiler in T01 durch den SIM-Umsetzer, damit SIM, ART und UI von grünem Hash abzweigen.
+Leistung bei Zoom 2 prüft der Browser-Lauf T15/T16 (Bildrate mit Denkmal im Bild, keine sichtbaren Ruckler).
+
+Regelbezug: ISO §10/Obergrenzen (render), R509 · Kosten bei Irrtum: mehr Cache-Wechsel bei Zoom 2, messbar im Browser-Lauf.
+
+Entscheider: L0 · Anlass: Entscheidungsbedarf Controller A M13-E2-SIM · ADR: —
