@@ -5732,3 +5732,21 @@ bis Schritt B, `reserve`-Rückfaltung erst nach `git merge main` mit I-049-Sim) 
 Regelbezug: R505, R506, M13-E2-Muster · Kosten bei Irrtum: sechs Testzeilen zurückzudrehen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I048-SIM · ADR: —
+
+## R532 · 2026-10-11 · Gate Plan TOOL-BUENDEL-7: BEDENKEN → Plan-Nachtrag; Budget 8
+
+Ruling: lead-qa BEDENKEN (B1–B6), kein ZURÜCK. Bestätigt: Präfix-Regel wie R528 (3); T04 als eigenes Stdlib-Skript statt
+Prettier-Plugin (ADR-001). Entscheide: **B1** drei Task-Reviews (`qa-code-reviewer` sonnet nach T01/T02, T03, T04/T05),
+Budget **8 Starts**, Parallelität 1. **B2** Hook und Metrik gemeinsam: eine gemeinsame Funktion für die Freigabe-Namen,
+die `model.py` und `budgetwarn.py` nutzen; `budgetwarn.py`/`test_budgetwarn.py` fest in T03 mit Rot-Test (`X` bindet
+`X-T01`, nicht `XY-T01`). **B3** Bestands-Treffer: T04 darf die Maskierung `\|` in den gefundenen Doku-Dateien (auch
+`docs/studio/retros/`, `docs/superpowers/plans/`) als eigenen `docs:`-Commit beheben — reine Formatierung, kein Inhalt;
+keine Ausnahmeliste. Makefile-Exit als Maximum laut Vorschlag; Tests für eingerückte/zitierte Tabellen und Backtick-Regel.
+**B4** `gate-` zählt **nicht** in `produktiv` (Gates sind Steuerung); Mehrfachzählung zwischen `steuerung` und `produktiv`
+ausdrücklich im Plan, Test „`produktiv` ≤ 1, `Budget: keins` ohne Phase zählt nicht“. **B5** Abhängigkeit T05 → T03 streichen.
+**B6** übernehmen. Nach dem Nachtrag gilt der Plan ohne erneutes Review als abgenommen (L0 prüft Stichprobe); Umsetzung im
+Worktree `.worktrees/tool-b7` durch einen Controller `lead-tech` sonnet, spielfremd, darf vor M13-Ende laufen (R505).
+
+Regelbezug: gates.md Gate Plan, R392, R471, R523 V3, R528 · Kosten bei Irrtum: ein Werkzeug-Nachtrag.
+
+Entscheider: L0 · Anlass: Urteil lead-qa gate-TOOL-BUENDEL-7 · ADR: —
