@@ -5255,3 +5255,16 @@ Hebel Pflicht (R316). **L0-Kontext** gelb (272k): Messauftrag an die nächste Se
 Regelbezug: STUDIO.md Verbesserungsschleife, R316, R475 · Kosten bei Irrtum: ein Experiment-Platz falsch belegt.
 
 Entscheider: L0 · Anlass: Kurz-Retro Session f52039fc · ADR: —
+
+## R498 · 2026-10-11 · Session-Start: Push REL-19 zuerst, parallel Pläne M13-E2 und I-048, Gate Spec M14-E1
+
+Ruling: „mach weiter“ = Plan aus state.md. (0) `production-integrator` pusht REL-19 (main @ `e393aec8`, Code-Stand
+`4b3a3aac` + Doku) nach Handbuch 1.45 (kein `make push-check`, TOOL-PUSH-CHECK noch offen), Pages-Deploy, `ci.py`.
+1-min-Load beim Start 36 (Systemprozesse `softwareupdated`, kein Studio-Agent): der Integrator wartet mit `make check`
+bis Load ≤ 4, höchstens 30 min, sonst Bericht. Parallel laut R464 nur Arbeit ohne Testläufe: Plan M13-E2 (`lead-tech`,
+opus), Plan I-048 (`lead-tech`, opus), Gate Spec M14-E1 (`lead-tech` + `lead-qa`, sonnet). Umsetzer und Werkzeug-Bündel 6
+erst nach `make zeitreserve-push` Exit 0.
+
+Regelbezug: state.md „Fortsetzung“, R464, R475, R488, R496 · Kosten bei Irrtum: ein verschobener Push.
+
+Entscheider: L0 · Anlass: Session-Start · ADR: —
