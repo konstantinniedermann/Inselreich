@@ -5719,3 +5719,16 @@ AK-UT-13 gegen `--parchment`/`--parchment-edge`; AK-UT-01 ohne `tests/` und READ
 Regelbezug: gates.md Gate Spec, R467, R528 · Kosten bei Irrtum: ein Spec-Nachtrag.
 
 Entscheider: L0 · Anlass: Urteil lead-qa gate-UI-TEXTE-1 · ADR: —
+
+## R531 · 2026-10-11 · D-i048-01: Schlüsselfolge-Tests dürfen um `buyPct` nachgeführt werden
+
+Ruling: AK-ZK-01 (`buyPct` letzter Weltschlüssel) und AK-ZK-13 („`save*.test.ts` unverändert“) widersprechen sich in sechs
+Tests, die die Schlüsselfolge von hinten bzw. per Handvergleich prüfen (`save.test.ts` Z. 400/558, `save-v11.test.ts`
+ab Z. 56, `save-v12.test.ts` ab Z. 59). Auslegung: Nur diese Offsets und Handvergleiche werden um `buyPct` verschoben,
+keine Erwartung wird gelockert (Muster M13-E2). AK-ZK-13 gilt weiter für Fixtures, Pins und Balancing; der Diff-Beleg in
+T05 nennt genau diese Zeilen. Abweichungen aus T02 (Preistabelle 100/160 im Arbitrage-Test, `SELL_RECOVERY_INTERVAL` 10
+bis Schritt B, `reserve`-Rückfaltung erst nach `git merge main` mit I-049-Sim) angenommen.
+
+Regelbezug: R505, R506, M13-E2-Muster · Kosten bei Irrtum: sechs Testzeilen zurückzudrehen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I048-SIM · ADR: —
