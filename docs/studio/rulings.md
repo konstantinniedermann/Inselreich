@@ -6105,3 +6105,53 @@ Regelbezug: gates.md Kombiniertes Gate, R551, R553 V1, Budget-Formel · Kosten b
 misst; Rückfall in (c).
 
 Entscheider: L0 · Anlass: Berichte lead-tech plan-TOOL-GATE-ENSEMBLE, lead-qa gate-TOOL-GATE-ENSEMBLE · ADR: —
+
+## R557 · 2026-10-11 · Gate Plan M14-E1: OK mit Auflagen; R-c2 mit Auflage angenommen
+
+Ruling: Plan `44510be4` (lead-tech opus). lead-production OK mit Hinweisen, lead-qa BEDENKEN (kein ZURÜCK). Entscheid: **OK**,
+Budget 21 Starts / Parallelität 2 (Formel 7 × 2 + 1 + 1 = 16 × 1,3) wird beim Start nach Release M13 geloggt (Phasen
+`M14-E1-SIM`, `M14-E1-UI`, Pakete per `log.py package`), zwei Controller durch L0. Auflagen, durch die Controller in T00/T03/T05/T08
+umzusetzen (kein Plan-Nachtrag): (1) **R-c2 angenommen mit Auflage:** vor dem Neupinnen belegt T03 im Bericht für AK-E1-10, dass
+sich die Heimat-Aufrufliste nur in Meer-Zeichenaufrufen ändert (Land, Gebäude, Tiere identisch), und für AK-K1b/K2 einen Teilhash
+der Flächen um Heimat, A und B bitgleich zu `9113e574`; neu gepinnt wird nur der Gesamt-Hash, Kommentar `bewusst neu gepinnt
+(R557)`. Archipel-Speicher ≈ 56,8 MB (AK-E1-21) angenommen; `lead-art` erhält die Kenntnis im nächsten Start. (2) Der
+Controller-Lauf Seed 963 (QA-B3) wird nie gestrichen; reicht die Testzeit nicht, wandert er in einen eigenen Messlauf ausserhalb
+`make check`, nicht ins Nichts. (3) Die B3-Rangfolge P1 > P2 > P3 (QA-B2) wird **vor T08** mit TOOL-GATE-ENSEMBLE nachgemessen,
+sobald es gemergt ist (Verdikte nach R556); kippt sie → Entwurf an L0. (4) Merge-Reihenfolge: TOOL-GATE-ENSEMBLE vor dem Start
+von M14-E1; T00 zieht die Basis nach und nennt `tests/sim/controller.ts` ausdrücklich; T07 startet von `main` nach diesem Merge.
+(5) Ein Integrator-Merge `feat/m14-e1` nach `main` (UI per Controller-Merge), ein Merge-Gate. AK-11 nach Zyklus-Skalierung (E6)
+zur Kenntnis.
+
+Regelbezug: gates.md Gate Plan, R500, R501, R553 V1, R554, R556 · Kosten bei Irrtum: T03 braucht eine zweite Fix-Runde für die
+Teilhash-Belege; Regressionsschutz der Pins bleibt erhalten.
+
+Entscheider: L0 · Anlass: Berichte lead-qa gate-plan-M14-E1, lead-production gate-plan-M14-E1-prod · ADR: —
+
+## R558 · 2026-10-11 · Gate Merge TOOL-GATE-ENSEMBLE: OK; Verdikt OHNE GRENZE; Controller kippt bei Phase 60/80
+
+Ruling: Stufe leicht, Final-Review `qa-code-reviewer` opus BEDENKEN → Fix-Runde → Delta-Review **OK** (Handbuch 1.51). L0 prüft die
+lead-qa-Fragen anhand Review und Bericht: Rot-Belege vorhanden (GE-1 als Wächter ohne Rot-Fall, zulässig), `make check` Exit 0
+(3545 Tests), `make gate-ensemble` 1,8 s, Testzeiten ohne Ausschlag (R392), kein `src/`, kein Save. Entscheid: (1) **Merge** von
+`tool/gate-ensemble` @ `d30a3f88` nach `main` durch `production-integrator`, **nach** dem Commit der Beobachtungs-Auswertung
+BEOB-2026-10-11b (beide ändern `docs/beobachtungen.md`), lokal, kein Push. (2) Vierter Verdikt-Wert **OHNE GRENZE** (Messgrösse
+ohne Grenze im Balance-Test) angenommen; er zählt nie als bestanden. (3) Befund: Auf `main` gewinnt der Controller Seed 3 nur bei
+Phase 0/20/40; Phase 60/80 erreicht bis Tick 9000 keinen Sieg → Sieg-Tick und minMoney sind schon auf der Basis AUSREISSER.
+Gates mit Wertgrenzen (M14-E1 Auflage 3 aus R557, I-048 B) vergleichen deshalb **gegen das Basis-Ensemble** desselben main-Commits,
+nicht gegen „alles OK“. Ursache ist unbelegt (Controller-Fragilität oder echte Spielhärte) → Probe `lead-tech` (Diagnose ohne
+Code-Änderung) nach dem Merge.
+
+Regelbezug: gates.md Gate Merge (Stufe leicht), R553 V1, R556, R557 · Kosten bei Irrtum: ein Werkzeug mit Basis-Ausreissern, die
+Gates bis zur Diagnose relativ statt absolut lesen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GATE-ENSEMBLE · ADR: —
+
+## R559 · 2026-10-11 · Beobachtungs-Auswertung BEOB-2026-10-11b angenommen; UI-AUFRAEUM-2 ergänzt
+
+Ruling: Auswertung `94500464` (lead-production, 12 Einträge: 4 offen mit Paket-Zuordnung, 1 erledigt, 1 eingeplant, 6 abgehakt
+mit Trigger) angenommen. Board-Paket **UI-AUFRAEUM-2** um „`stateText` samt Re-Export in `src/ui/inspect.ts` streichen“ ergänzt
+(Owner `lead-tech`, Grösse S–M, nach Release M13). Der Eintrag „Seed wirkt nicht“ wird mit dem Merge TOOL-GATE-ENSEMBLE (R558)
+geschlossen; ein Merge-Konflikt in `docs/beobachtungen.md` löst nicht der Integrator, sondern L0 per Fortsetzung des Leads.
+
+Regelbezug: STUDIO.md Session-Start Punkt 6, R287, R288, R471 · Kosten bei Irrtum: ein abgehakter Befund taucht erneut auf.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-2026-10-11b · ADR: —

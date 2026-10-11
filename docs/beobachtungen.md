@@ -28,6 +28,36 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 **Stand 2026-10-11** (`lead-production`, Paket BEOB-AUSW-1011, gegen `22dcf081`): 29 Einträge gesichtet. Bilanz und Paket-Kandidaten stehen in „Ausgewertet 2026-10-11“. Der Abschnitt „Ausgewertet 2026-10-09 (2)“ ist unverändert nach [beobachtungen-archiv.md](beobachtungen-archiv.md) verschoben; Verweise darauf zeigen dorthin.
 
+**Stand 2026-10-11 (2)** (`lead-production`, Paket BEOB-2026-10-11b, gegen `60144cdb`): 12 Einträge gesichtet. Bilanz in „Ausgewertet 2026-10-11 (2)“; vier Einträge bleiben offen und sind I-048 (R555) bzw. TOOL-GATE-ENSEMBLE (R556) zugeordnet.
+
+---
+
+## Ausgewertet 2026-10-11 (2)
+
+**Bilanz** (12 Einträge, `lead-production`, Paket BEOB-2026-10-11b, gegen `60144cdb`): 2 erledigt, 6 abgehakt (mit Trigger), 1 eingeplant
+(Board: UI-AUFRAEUM-2), 3 offen und laufenden Paketen zugeordnet (I-048 R555 dreimal), 0 Ideen, 0 verworfen.
+Die drei offenen Einträge (dazu der neue Eintrag zur Controller-Phase, probe-CONTROLLER-PHASE R558) stehen unten unter „Offen“ mit Zuordnung.
+
+| Eintrag                                          | Ausgang                 | Begründung · Trigger / Beleg                                                                                                                                      |
+| ------------------------------------------------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Verkaufssättigung erholt sich schnell            | zugeordnet I-048 (R555) | Abwägung, läuft in Schritt B; kein eigenes Paket                                                                                                                  |
+| Zahlen in I-031 weichen vom README ab            | abgehakt                | `docs/ideen.md` I-031 nennt −5 %/−10 %, README Edikt-Tabelle −7/−5 Punkte (belegt); Historie eines gelieferten Eintrags · wenn I-031 neu bewertet wird            |
+| Formatvorlage in `ideen.md` zählt im grep mit    | abgehakt                | Zeile `### I-001 · neu · <Kurzname>` im Codeblock belegt; Zählung mit `grep -v '<Kurz'` · nächste Ideen-Runde führt die Zählung so oder ohne `###` in der Vorlage |
+| `buyPct` fehlt in arc42                          | zugeordnet I-048 (R555) | 0 Treffer in `docs/arc42.md`; T08 deckt es                                                                                                                        |
+| Doppelter Test `edicts.test.ts:252-264`          | abgehakt                | belegt (`AK-ZK-09` in `buyPct.test.ts:113`, gleiche Erwartungen 7/30/37); niedrig, `tests/` nicht in diesem Scope · nächster Eingriff in `edicts.test.ts`         |
+| Budget-Hook `warning()` / `tablecheck` Randfälle | erledigt                | im Eintrag bereits entschieden (TOOL-BUENDEL-8 T04), kein Code offen                                                                                              |
+| Last-Flake `terrain.test.ts`                     | abgehakt                | Diagnose im Eintrag, kein Fix auf Verdacht · nächster roter Lauf mit Fehlermeldung (`test_failed.messages`): «timed out» → Timeout anheben                        |
+| `stateText` ohne Aufrufer                        | eingeplant (Board)      | belegt: `src/ui/texts.ts:112` Definition, `src/ui/inspect.ts:82` nur Re-Export, sonst 0 Treffer; gehört in UI-AUFRAEUM-2                                          |
+| Budget-Zuordnung Namenstreffer vs. Lead-Freigabe | abgehakt                | nur Altdaten mit Präfix-Phasen (R543 vergibt reine IDs) · zweiter E-060-Echtlauf zeigt Fehlzuordnung                                                              |
+| Sieg-Tick im Balancing sprunghaft                | zugeordnet I-048 (R555) | Robustheitsachse kommt aus TOOL-GATE-ENSEMBLE (R556)                                                                                                              |
+| Balancing-Controller: Seed wirkt nicht           | erledigt                | durch TOOL-GATE-ENSEMBLE (R558/R559): `make gate-ensemble` liefert die Robustheitsachse                                                                           |
+| Gesperrte Edikt-Knöpfe: Kontrast                 | abgehakt                | niedrig, ungemessen · nächste Kontrast-Runde in `tests/ui/contrast.test.ts` misst das Paar                                                                        |
+
+**Ruling-Entwurf (R471, nur Entwurf, schreibt L0):** UI-AUFRAEUM-2 um «`stateText` samt Re-Export in `inspect.ts` streichen» ergänzen
+(Owner `lead-tech`, Gr. S–M, blocked-by M13-Final-Review). Kein neues Paket, kein Issue.
+
+**Ideen:** keine.
+
 ---
 
 ## Ausgewertet 2026-10-11
@@ -154,60 +184,14 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
   bringt rund 240 Geld/min nahe am Vollpreis gegen 30 Unterhalt je Holzfäller — mögliche Geldquelle ohne Wahl. Ursprung:
   Scout-Befund IDEEN-06 (lead-design). Einschätzung: mittel; mit I-048 „Zukauf-Aufschlag“ durch `design-economy-designer`
   nachrechnen, kein eigenes Paket vorher.
-
-### 2026-10-11 · Zahlen im Ideen-Eintrag I-031 weichen vom README ab
-
-- **Fundort:** `docs/ideen.md` I-031 (Edikte der Amtsstube) gegen `README.md` Abschnitt «Edikte». Beobachtung: I-031 nennt noch
-  Steuer −5 %, Verkaufssättigung und −10 %; das README nennt Sparen mit Unterhalt −20 % und Steuer −7 Punkte, Handel mit
-  Kaufpreise −20 %, Wohlfahrt mit Steuer −5 Punkte. Ursprung: Scout A IDEEN-07 (lead-design). Einschätzung: gering; Eintrag
-  ist Historie, bei Gelegenheit nachführen.
-
-### 2026-10-11 · Formatvorlage in `docs/ideen.md` zählt beim grep als offene Idee
-
-- **Fundort:** `docs/ideen.md` Zeile `### I-001 · neu · <Kurzname>` im Formatblock. Beobachtung: `grep '^### I-'` zählt die Vorlage
-  mit, die Zählung der Obergrenze 40 liegt um 1 zu hoch. Ursprung: Scouts B und C IDEEN-07 (lead-design). Einschätzung: gering;
-  Zählung mit `grep -v '<Kurz'` oder die Vorlage im Codeblock ohne `###` führen.
+- **Zuordnung:** I-048 Schritt B (R555, Brainstorming-Gate), Nachrechnung `design-economy-designer`; bleibt offen bis der Entscheid I-048 fällt.
 
 ### 2026-10-11 · `buyPct` fehlt in der arc42-Persistenz bis I-048 T08
 
 - **Fundort:** `docs/arc42.md`, Persistenz/Zeile `save.ts`. Beobachtung: Das neue Weltfeld `buyPct` (I048-SIM) ist nicht
   beschrieben, bis Strang I048-B (T08) die Doku nachführt. Ursprung: Controller I048-SIM. Einschätzung: gering; T08 deckt es,
   vor dem Release M13 prüfen.
-
-### 2026-10-11 · Doppelter Regressionstest `edicts.test.ts:252-264`
-
-- **Fundort:** `tests/sim/edicts.test.ts:252-264`. Beobachtung: deckt dasselbe wie `buyPct.test.ts:113-118`. Ursprung:
-  Final-Review I048-SIM. Einschätzung: gering; optional streichen beim nächsten Aufräum-Häppchen.
-
-### 2026-10-11 · Budget-Hook `warning()` und `tablecheck` Randfälle (TOOL-BUENDEL-7)
-
-- **Entschieden (TOOL-BUENDEL-8 T04, 2026-10-11), kein Code, kein Folgeissue:**
-  - `warning()` Phasenname/Gross-Kleinschreibung: erledigt (`_matches` vergleicht `casefold`, `_phase` trimmt; `test_phase_case_insensitive`).
-  - `tablecheck._open_backtick`: bleibt. Absichtlich strenger als CommonMark («jede ungepaarte Backtick-Folge in einer Tabellenzelle ist verdächtig»), im Repo 0 Treffer, `test_unmatched_run_length_is_reported` hält es fest; Fehlalarm per Maskierung behebbar.
-  - `testrun` Ctrl-C-Fenster nur per Mock: bleibt. Ein Test mit echten Signalen wäre zeitabhängig (Race) und erzeugte selbst Flakes; `pthread_sigmask` schliesst das Fenster ab dem ersten Moment.
-
-### 2026-10-11 · Last-Flake `terrain.test.ts` (R170 Kantenenergie) unter Load > 8
-
-- **Fundort:** `tests/render/terrain.test.ts` (R170 Kachelraster, Kantenenergie ≤ 2,3-fach), dazu einmal `tests/sim/save.test.ts`.
-  Beobachtung: Flake-Ampel zeigt 5 rote Läufe, vier davon in `terrain.test.ts`; Beleg `make check` auf `dcae12eb` rot bei
-  Load 8,5, unmittelbare Wiederholung grün. Ursprung: Retro adhoc-ampel-1011.
-- **Diagnose (TOOL-BUENDEL-8 T03, nur Quellcode gelesen, nichts gemessen):** Die Rechnungen sind deterministisch (feste Seeds 3, 5, 12588; in beiden Dateien kein `Math.random`/`Date.now`; `performance.now` nur in den Zeittests mit Budget, `terrain.test.ts` Z. 313 und 1113, `save.test.ts` Z. 1404). Die wechselnden Testnamen bei Wiederholung grün sprechen für eine Zeitüberschreitung unter Fremdlast (Hypothese H1, unbelegt) statt für einen Wertfehler.
-- **Timeouts je Test:** R170-Block (Z. 672–686) 60 s, patchGrid AK-R1-01 (Z. 746) 30 s (nicht ohne Timeout, wie die Planannahme war), AK-E1-11/Dünen-Tests 15–60 s; `save.test.ts` AK-S1-14 (Z. 624, 730) ohne eigenes Timeout, also Vitest-Standard 5 s. Der `save`-Fall hat damit den knappsten Spielraum (Setup-Kosten nicht gemessen).
-- **Empfehlung:** Kein Fix auf Verdacht. Seit TOOL-BUENDEL-8 T05 trägt `test_failed` die Fehlermeldung (`messages`). Beim nächsten roten Lauf entscheidet sie: «Test timed out» heisst Timeout je Test anheben (eigenes Häppchen, dann ist `tests/` bzw. `vite.config.ts` zulässig), Zahlenabweichung heisst Ursache im Code suchen. Schwellen bleiben unverändert.
-
-### 2026-10-11 · `stateText` ohne Aufrufer (nach Hinweis-Umstellung I-049)
-
-- **Fundort:** `src/ui/texts.ts:107` (`stateText`), nur noch Re-Export in `src/ui/inspect.ts:82`. Beobachtung: seit der
-  Umstellung des Maus-Hinweises auf `stateInfo` mit `missingInputs`/`reservedInputs` ruft niemand `stateText` auf. Ursprung:
-  I049-UI Final-Review. Einschätzung: gering; beim nächsten Aufräum-Häppchen samt Re-Export streichen.
-
-### 2026-10-11 · Budget-Zuordnung: Namenstreffer schlägt ausdrückliche Lead-Freigabe
-
-- **Fundort:** `tools/studio/model.py` (`budget_key`, `_named_grant`). Beobachtung: Im Echtlog verliert
-  `controller-TOOL-BUENDEL-3` drei Starts an `impl-TOOL-BUENDEL` (8 → 11); bei `plan-ui-tasten`/`ui-tasten` gewinnt die exakte
-  Rohphase vor der eigenen Freigabe des Leads, der Plan-Arbeiter zählt auf `ui-tasten` (auf main schon so). Ursprung:
-  TOOL-E060-FIX. Einschätzung: gering (nur Altdaten mit Präfix-Phasen; seit R543 vergibt L0 reine Paket-IDs); im zweiten
-  E-060-Echtlauf beobachten.
+- **Zuordnung:** I-048 (R555), T08 führt arc42 nach. **Verifiziert:** 2026-10-11 gegen `60144cdb` — belegt (`grep buyPct docs/arc42.md`: 0 Treffer).
 
 ### 2026-10-11 · Sieg-Tick im Balancing reagiert sprunghaft auf Spielwerte
 
@@ -218,18 +202,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - **Nachtrag 2026-10-11 (D-I048-B-WERTE):** 27 Messungen (Scratchpad lead-design): Antwort auch ohne Zukauf-Aufschlag nicht
   monoton (`SELL_RECOVERY_INTERVAL` 15 → Sieg 6750, 16 → 7350, 18 → Krisen normal ohne Sieg). Schmalste Ränder: Edikt reich
   «Wohlfahrt echt früher» 60 Ticks, Krisen normal 150 Ticks. Einschätzung: hoch, Einzellauf-Gates blockieren jede Wirtschaftsänderung.
-
-### 2026-10-11 · Balancing-Controller: Seed wirkt nicht auf die Heimkolonie
-
-- **Fundort:** `tests/sim/controller.ts` / `createWorld`-Seed in den Balancing-Tests. Beobachtung: Läufe für Seeds 3, 5, 7, 11
-  bitgleich; der Seed ändert nur Fremdinseln. Damit gibt es keine Robustheitsachse für Gates (jede Grenze ist ein Einzellauf,
-  vgl. „Sieg-Tick sprunghaft“). Ursprung: Probe I048-TOTZONE (R551). Einschätzung: hoch für künftige Balancing-Arbeit;
-  Kandidat für ein Werkzeug-/Test-Häppchen (Startvarianten oder Controller-Phasen, Median).
-
-### 2026-10-11 · Gesperrte Edikt-Knöpfe: heller Text auf graubeigem Grund
-
-- **Fundort:** Edikt-Karten, Knöpfe «Erlassen (600)» und «Aufheben» im gesperrten Zustand (Screenshot `.studio/qa/ui-texte-1/edikt-unten-1280x800.png`). Beobachtung: Der Kontrast wirkt gering, wurde nicht gemessen und gehört nicht zu AK-UT-11..13 (nur Pergament-Texte). Ursprung: Playtest UI-TEXTE-1 (T06). Einschätzung: gering; bei der nächsten Kontrast-Runde in `tests/ui/contrast.test.ts` das Paar messen.
+- **Zuordnung:** I-048 (R555); die Robustheitsachse liefert TOOL-GATE-ENSEMBLE (R556). Offen, bis I-048 Schritt B entschieden ist.
 
 ### 2026-10-11 · Balancing-Controller kippt bei verschobenen Entscheidungszeitpunkten
 
 Fundort: `make gate-ensemble` (TOOL-GATE-ENSEMBLE, `tests/sim/ensemble.test.ts`), Seed 3, Phasen 0/20/40/60/80. Beobachtung: Nur Phase 0, 20 und 40 gewinnen (Sieg-Tick 6750 / 7250 / 6650); Phase 60 und 80 erreichen bis Tick 9000 keinen Sieg und fallen im Geld ins Minus (minMoney -91 / -51). Die Referenz-Baseline (Sieg 6750, minMoney 117) hängt also am Entscheidungsraster `tick % 100 === 0`. Ursprung: TOOL-GATE-ENSEMBLE T01/T04. Einschätzung: kein Spielfehler (der Controller ist ein Test-Spieler), aber Gates mit Wertgrenzen auf Basis eines Einzellaufs sind weniger belastbar als gedacht; Verdikt AUSREISSER für Sieg-Tick und minMoney. Für M14-Werte: Grenzen mit Ensemble prüfen, und ob der Controller bei Reserve/Aufstiegsmoment robuster werden soll, ist ein Design-/Tech-Entscheid an L0.
+
+- **Zuordnung:** probe-CONTROLLER-PHASE (R558). Offen.
