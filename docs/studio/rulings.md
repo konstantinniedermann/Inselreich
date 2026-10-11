@@ -5591,3 +5591,46 @@ Controller E prüft in T15, ob die Spec ein Nachtlicht verlangt.
 Regelbezug: R505, R507, R509, R516 · Kosten bei Irrtum: ein Test-Nachtrag im ART-Strang.
 
 Entscheider: L0 · Anlass: Schlussbericht lead-art M13-E2-ART · ADR: —
+
+## R522 · 2026-10-11 · Gate Merge M13-E2-SIM: OK, lokaler Merge; UI-Strang bis T13 fertig
+
+Ruling: `feat/m13-e2-sim` @ `0efa5719` (T01 `46d82e00`, T02 `051efcc8`, T03 `48f4abcf`, T04 `348ac5ac`, T05 `a9de9c8f`, T06
+`94c5f09c`, T07 `39158b01`, Merge main `06d7ea13`, Final-Fix `0efa5719` nur Tests) abgenommen: Task-Reviews OK, T17
+Final-Review opus BEDENKEN niedrig → behoben; `make check` Exit 0 auf `06d7ea13` (3326 Tests); Balancing-Baseline
+unverändert (nur `balance-monument.test.ts` neu); Seed-Läufe im Soll (Pflicht-Stopp nicht ausgelöst; Lauf C bindet Werkzeug
+statt Stein, geloggt). Nachträglich getragen: mechanische Anpassungen bestehender Save-/Szenario-/Townhall-Tests durch
+Controller A (Ledger je Zeile, Anhang 02 D1). **Abweichung:** Rot-Belege T01–T04 fehlen im Ledger; ersetzt durch die
+Mutationsstichprobe des Final-Reviews (vier Mutationen rot) — Punkt für die Retro, kein Muster. Merge lokal durch
+`production-integrator`, **kein Push** (R505). Danach darf I-049-Sim starten (nächste Session; vorher Nachtrag R511 lesen).
+UI-Strang bis T13 fertig `feat/m13-e2-ui` @ `81c0b87b`; Controller E (T14–T16, T18) in der nächsten Session (Ampel gelb).
+
+Regelbezug: gates.md Gate Merge, R395, R505, R507, R509 · Kosten bei Irrtum: ein Revert des SIM-Strangs auf main (lokal).
+
+Entscheider: L0 · Anlass: Schlussbericht Controller B · ADR: —
+
+## R523 · 2026-10-11 · Kurz-Retro dc50be15 angenommen; Ende der Session
+
+Ruling: Retro `docs/studio/retros/2026-10-11-session-dc50be15-ende.md` (`ca898bb9`) angenommen. **V1** E-054
+(Plan-Instanzen kleiner Pakete auf sonnet) in Modelltabelle und `lead-tech.md` übernehmen — Handbuch-Minor durch
+`studio-coach` als erster Schritt der nächsten Session. **V2** nur Messauftrag L0-Kontext bis zur nächsten Session-Retro
+(Hebel zurückgestellt, Ursache unbelegt). **V3** Ampelzeile „Produktivanteil nach Phase“ (Plan-/Design-Leads zählen zu
+Design/Spec/Plan) ins nächste Werkzeug-Bündel. **V4** E-049 behalten (abgeschlossen, 3/3); der freie Platz geht an **E-059**
+(Merge-Treiber, R520), nicht an E-048. Ampel **Steuerungsanteil** zwei Sessions rot: quittiert — bereinigt (E-049) 30,1 %
+grün, Rohzeile zum Teil Messartefakt (V3). **Cache-Write** gelb 21,6 % (von 26,8 %): E-057 läuft weiter (2/3).
+Session-Ende: Limit-Ampel gelb, keine neue Welle; Übergabe in state.md (`955efbbc`).
+
+Regelbezug: STUDIO.md Verbesserungsschleife, R316, R497, R520 · Kosten bei Irrtum: ein Experiment-Platz falsch belegt.
+
+Entscheider: L0 · Anlass: Kurz-Retro Session dc50be15 · ADR: —
+
+## R524 · 2026-10-11 · Sicherungs-Push `backup/main-lokal`; Session-Start bei Limit-Ampel gelb
+
+Ruling: Auf Nutzerfrage „wieso kein Push“: `main` bleibt unter Release-Sperre (R505, Save v12 geteilt) und Actions-Prognose
+rot. Die lokalen Commits auf `main` (`e841f5dd`) werden als Sicherung nach `origin/backup/main-lokal` gepusht — kein
+CI-Auslöser (CI nur `push` auf `main` und `pull_request`), kein Pages-Lauf; geprüft mit `gh run list`. Der Branch wird beim
+Release M13 nachgeführt oder gelöscht. Limit-Ampel gelb (5 h 72 %, Woche 78 %): nur Angefangenes — Coach R523 V1 und
+M13-E2 Controller E; I-049-Sim und I-048-Sim starten erst bei grüner Ampel (Budgetzeilen I049-SIM/I048-SIM verfallen).
+
+Regelbezug: R505, R334, STUDIO.md Tempo/Herunterfahren · Kosten bei Irrtum: ein überflüssiger Remote-Branch.
+
+Entscheider: L0 · Anlass: Nutzerfrage · ADR: —

@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-10 (Studio-Session f52039fc, R472–R496; Ende: REL-18 live; UI-TASTEN, AUFRAEUM-01, TOOL-BUENDEL-5 lokal auf main @ `4b3a3aac` = Release-Kandidat REL-19, Push offen; CI auf main grün)
+Stand: 2026-10-11 (Studio-Session dc50be15, R498–R522; Ende: REL-19 live; lokal auf main @ `73837fd2` (nicht gepusht): UI-NAECHSTER-SCHRITT, TOOL-BUENDEL-6, M13-E2-SIM; Release-Sperre bis M13-Ende, R505)
 
 ## Release-Notizen
 
@@ -78,30 +78,30 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen. Daueraufträge: R445 (Ideen-Runde bei freier Kapazität, max. eine je Session), **R475 (Deckel
-≤ 8 voll halten; blockierte Umsetzung → Specs/Pläne/Gates/Scouting)**. Neues Claude-Gespräch empfohlen (R438 V4 b).
+Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475. **Release-Sperre** für Spiel-Releases bis M13-E2, I-049 und
+I-048 gemergt sind (R505, gemeinsames Save v12). **Actions-Prognose ROT** (1991/2000 min): höchstens ein Push je Tag.
+Push-Weg ist `make push-check` (Handbuch 1.48/1.49); Probelauf auf `73837fd2` Exit 0.
 
-0. **Push REL-19** (main @ `4b3a3aac` + Doku) nach Handbuch 1.45 als erstes, allein (R488: Push zuerst, dann Deckel
-   füllen); Integrator wartet auf CI mit `timeout 240 gh run watch` in Schleife (R488 V3); Pages-Deploy, `ci.py`.
-   Danach Prozess-Aussensicht REL-19.
-1. **Plan M13-E2** (`lead-tech`, opus) aus Spec `a39a1ccb` (gegatet R483/R489/R493; Plan-Punkte Anhang 08 E: Task
-   „Def-Kern“ zuerst, Szenario-Stände, A1–A6, Nachtrag Plan I-049 Fall K1). Dann Gate Plan, Umsetzung SIM/ART/UI.
-2. **Plan I-048** (`lead-tech`) aus Spec `12c98fd3` (gegatet R487/R490/R492), Merge erst nach M13-E2-SIM.
-3. **I-049** Plan gegatet (R481), Start nach Merge M13-E2-SIM.
-4. **Gate Spec M14-E1** (`ff2c2fd8`, R495; lead-tech + lead-qa); Umsetzung erst nach Abschluss M13 (R486).
-5. **Werkzeug-Bündel 6:** TOOL-PUSH-CHECK (R488 V1), Ampel Actions-Konto-Prognose (V2) und Produktivanteil (V4),
-   Merge-Treiber `beobachtungen.md` (E-059), Budget-Hook blockt Start ohne Freigabe (E-060) (R497). `studio-coach`:
-   V3-Persona-Zeile Integrator (R488), E-061 lead-design-Nachträge auf sonnet (R497).
-6. **Kurzdesign-Kandidat** aus Playtest REL-18: «Nächster Schritt» übersieht akuten Nahrungsmangel (docs/beobachtungen.md).
-7. **Aufräumen** (eigenes Ruling): Worktrees `.worktrees/b4`, `m13-e1-sim`, `m13-e1-ui`, `ui-gut-chip`, `b5`,
-   `aufraeum-01`, `ui-tasten` sind gemergt — nach dem Push REL-19 entfernen (`git worktree remove`, Branches bleiben;
-   vorher Screenshots `.worktrees/ui-tasten/.studio/qa/ui-tasten/` sichern).
-8. Beobachtungs-Auswertung, sobald > 30 Einträge seit 2026-10-10.
+1. **M13-E2 Controller E** (`lead-tech` sonnet): T14 Doku (README inkl. Lauf-B-Ziffern, arc42), T15/T16 Browser-Läufe
+   (Schritt 0: Szenarien nach `git merge main` neu schreiben; nie gleichzeitig mit I-048-T04; T15 prüft Leuchtfeuer AK-46),
+   T18 Final-Review opus über ART + UI. Stand: `feat/m13-e2-art` @ `5295021d` (R521), `feat/m13-e2-ui` @ `81c0b87b`
+   (enthält ART und Sim T06; vorher `git merge main` für Sim T07 — SIM ist seit `73837fd2` auf main). Handoffs
+   `.studio/handoffs/2026-10-11-lead-tech-m13-e2-ui.md`, `…-lead-art-m13-e2-art.md`. Budget: Rest aus 42 (R509).
+   Dann Gate Merge ART → UI (R505-Reihenfolge Schritt 3).
+2. **I-049-Sim** (darf jetzt starten, R522): Plan `docs/superpowers/plans/2026-10-10-i049-sperrbestand.md` +
+   `docs/superpowers/plans/2026-10-11-m13-e2-denkmal/nachtrag-i049.md` (R511, Auslegung B1). Parallel **I-048-Sim**
+   T01–T03 (R506; mergt **nach** I-049-Sim, vorher `git merge main`). Danach I-049-UI → I-048-UI → I-048 Schritt B.
+3. Nach allen M13-Merges: **Release M13** (E2 + I-049 + I-048 + UI-NAECHSTER-SCHRITT + TOOL-BUENDEL-6) mit `make push-check`.
+4. **Budget-Hook `deny`** (E-060) per Ruling, sobald nur eine Session läuft; vorher `design-m14-e1` im Phasenformat
+   nachtragen und `KNOWN_MISMATCH` entfernen (R520). E-059 startet, sobald ein Experiment-Platz frei ist.
+5. Plan **M14-E1** erst nach M13 (R486, Auflagen R500/R501).
+6. Beobachtungs-Auswertung, sobald > 30 Einträge seit 2026-10-10 (jetzt ≈ 28).
+7. Zuerst: `studio-coach` setzt R523 V1 um (E-054 in Modelltabelle/`lead-tech.md`) und startet E-059 (R523 V4). V3 ins nächste Werkzeug-Bündel; V2 Messauftrag L0-Kontext.
 
 ## Aktuelles Projekt und Phase
 
 - Projekt: **Inselreich**. **M12 abgeschlossen** (R352). Live: REL-01…REL-17, M1–M8, M10, M11, M9-Häppchen, M12. **M13 „Spätspiel mit Richtung“**: E1 (Edikte, Stilllegen)
-  lokal auf main (R467), E2 (Denkmal) offen. Verfassung **1.2**, Handbuch **1.44**.
+  lokal auf main (R467), E2 (Denkmal) offen. Verfassung **1.2**, Handbuch **1.49**.
 - Dauerregeln: Desktop-first (R78); kein Rebase; eine aktive L0-Session je Repo (R129, R324); studioweit **≤ 8 Agenten,
   davon ≤ 2 Browser-Läufe** (R424, ersetzt R241); vor Paketstart `git worktree list`, `git status`, fremde Heartbeats
   prüfen (R329); Messungen nur bei 1-min-Load ≤ 4 (R329).
@@ -121,14 +121,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Session 2026-10-11 (R498–R521). **REL-19 live** (Push `801bee89`). Lokal auf main (nicht gepusht, Release-Sperre R505,
-  Actions-Prognose ROT 1991/2000 → höchstens ein Push je Tag): UI-NAECHSTER-SCHRITT (R515), TOOL-BUENDEL-6 A+B (R517,
-  R520; `make push-check` ist der Push-Weg, Handbuch 1.49, Budget-Hook `warn`).
-- **M13-E2:** SIM-Strang (Controller A) bei T03/T04 auf `feat/m13-e2-sim` (T01 `46d82e00`, T02 `051efcc8`);
-  ART-Strang fertig `feat/m13-e2-art` @ `5295021d` (R521, inkl. Leuchtfeuer AK-46). Nächste: Controller B (T05–T07),
-  UI-Strang Controller D nach T04 (ART-Hash vor T12; Hinweis: `src/ui/messages.ts` ohne Icon für `monument`), dann E.
-- Danach: Gate Merge E2-SIM → I-049-Sim (Nachtrag `nachtrag-i049.md`, R511) → I-048-Sim (R506) usw. nach R505/R507.
-- Spec M14-E1 gegatet (R501), Plan nach M13.
+- Nichts (Session-Ende dc50be15).
 
 ## Parallele Sessions
 
@@ -137,19 +130,20 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Seit letzter Session erledigt
 
-- REL-18 live (R480): Push `a9f5336e..bfb6af44`, CI/Pages grün; Playtest REL-18 OK; Prozess-Aussensicht (R488).
-- Handbuch 1.45 (R471/R473); fällige Retros quittiert.
-- Ideen-Runde IDEEN-06 (R474), 15 Ideen, Pool 37/40.
-- Gegatete Specs: M13-E2 Denkmal (R483/R489/R493), I-048 Zukauf-Aufschlag (R487/R490/R492); Art-Vorschlag Denkmal
-  „Feuersäule“ prozedural; M14-Richtung B (R486); Spec M14-E1 eingereicht (R495).
-- Umgesetzt und lokal gemergt: UI-TASTEN, AUFRAEUM-01, TOOL-BUENDEL-5 (REL-19-Kandidat). I-049 Plan gegatet (R481).
+- **REL-19 live** (R512): Push `801bee89`, CI 38123931614, Pages 38124390332; Push-Weg mit drei Anläufen, Abhilfe
+  TOOL-BUENDEL-6 T01 vorgezogen (R508–R512); Prozess-Aussensicht angenommen (R514).
+- Gegatet: Pläne M13-E2 (R507/R509), I-048 (R505/R506), TOOL-BUENDEL-6 (R503/R504), UI-NAECHSTER-SCHRITT (R499/R502);
+  Spec M14-E1 mit Nachtrag (R500/R501); Nachtrag I-049 (R511).
+- Lokal gemergt: UI-NAECHSTER-SCHRITT (R515), TOOL-BUENDEL-6 A/B (R517/R520), M13-E2-SIM (R522). M13-E2-ART fertig
+  (R521), UI bis T13 fertig.
+- Handbuch 1.46–1.49 (E-061, push-check, R514 V1/V3, Budget-Hook `warn`). Worktrees aufgeräumt (R518).
 
 ## Pausierte Pakete
 
-- Keine. Worktrees: Hauptcheckout, `.worktrees/integrate` (detached auf main), gemergt und aufräumbar nach dem Push REL-19:
-  `.worktrees/b4`, `m13-e1-sim`, `m13-e1-ui`, `ui-gut-chip`, `b5`, `aufraeum-01`, `ui-tasten` (Symlink `node_modules`).
-- Branch `int/rel-07`, Alt-Branches (u. a. `fix/rel07-a-wood`, `feat/m7-fx`, gemergte `fix/…`, `feat/…`, `tool/…`),
-  Remote `wip/r118a-render-aufraeumen` und `stash@{0}` bleiben bis Ruling.
+- M13-E2-ART (`.worktrees/m13-e2-art`) und M13-E2-UI (`.worktrees/m13-e2-ui`) warten auf Controller E (Punkt 1).
+  `.worktrees/m13-e2-sim` und `.worktrees/b6b` sind gemergt und aufräumbar. `.worktrees/integrate` bleibt.
+  `.worktrees/erweiterung-1` gehört der Nutzer-Session (R519) — nicht anfassen.
+- Branch `int/rel-07`, Alt-Branches, Remote `wip/r118a-render-aufraeumen` und `stash@{0}` bleiben bis Ruling.
 
 ## Budget
 

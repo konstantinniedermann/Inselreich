@@ -281,3 +281,12 @@ Der gestärkte Test `tests/ui/goodFocus.test.ts` (AK-GC-08) belegt die Trennung 
 - **Fundort:** `feat/m13-e2-ui` T11 (`26d51c50`, Gründe/Abriss-Bestätigung). Beobachtung: Der Grund «Kein Kontor» erscheint
   spec-konform auch dann, wenn eigentlich der Sperrbestand eines Guts (`goodLock`) den Zug verhindert — Text ungenau.
   Ursprung: Controller D M13-E2-UI. Einschätzung: niedrig; mit I-049-UI (Sperrbestand-Anzeige) gemeinsam prüfen.
+
+### 2026-10-11 · M13-E2-UI: Kopplung über Texte, doppelte Kostenstruktur
+
+- **Fundort:** `feat/m13-e2-ui` @ `81c0b87b`; Handoff `.studio/handoffs/2026-10-11-lead-tech-m13-e2-ui.md`. Beobachtung:
+  (1) Abschluss-Banner wird in `src/ui/app.ts:~1431` am Text erkannt; (2) `src/ui/monumentSection.ts:~99` leitet den
+  Pausenzustand aus dem Knopftext ab; (3) Kostenstruktur doppelt (`monumentView.ts` und `app.ts:~727`); (4) springt `stage`
+  in einem Frame um mehr als einen Abschnitt, entsteht nur ein Chronik-Eintrag; (5) kein DOM-Test für die Zeile
+  `rest-monument`. Ursprung: Controller D M13-E2-UI. Einschätzung: niedrig bis mittel (1–3 sind Kopplung über Anzeigetexte,
+  bricht bei Textänderung still); Kandidat für Final-Review T18 oder ein Aufräum-Häppchen nach M13.

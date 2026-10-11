@@ -146,6 +146,20 @@ describe('M13-E2 Save v12', () => {
       expect(raw.monument).toBeNull();
       expect(raw.monumentDone).toBe(true);
     });
+    it('migrateV11ToV12 lässt ein vorhandenes monument-Objekt unverändert stehen', () => {
+      const monument = {
+        buildingId: 7,
+        stage: 1,
+        running: true,
+        delivered: { stone: 3, tools: 0, glass: 1, spice: 0 },
+        paused: true,
+        buy: { stone: false, tools: true, glass: false, spice: false },
+      };
+      const raw: Record<string, unknown> = { version: 11, monument: structuredClone(monument) };
+      migrateV11ToV12(raw);
+      expect(raw.monument).toEqual(monument);
+      expect(raw.monumentDone).toBe(false);
+    });
   });
 
   it('AK-M13E2-17 geladener v11-Stand erlaubt den Denkmalbau', () => {

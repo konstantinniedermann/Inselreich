@@ -87,7 +87,7 @@ describe('M13-E1 Save v11', () => {
       const v11 = JSON.parse(serialize(w)) as Record<string, unknown>;
       expect(() => foldBackToV10(v11)).toThrow('foldBackToV10: Stilllegung nicht rückfaltbar');
     });
-    it('unbekannter Schlüssel wirft', () => {
+    it('unbekannter Schlüssel wird entfernt', () => {
       const v11 = { ...JSON.parse(serialize(createWorld(3))), foo: 1 };
       // Anhang 02 D1: foldBackToV11 entfernt Fremdschlüssel (M13-E2 T02)
       expect(Object.keys(foldBackToV10(v11))).not.toContain('foo');
