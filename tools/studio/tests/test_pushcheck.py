@@ -293,6 +293,19 @@ class PushCheckTest(unittest.TestCase):
         self.assertEqual(event["exit"], 0)
         self.assertTrue(all(step["load"] is None for step in event["steps"]))
 
+    def test_wait_quiet_load_fehler_gilt_als_unruhig_und_wird_gezaehlt(self):
+        h = Harness(self)
+
+        def broken() -> float:
+            raise OSError("kein getloadavg")
+
+        h.load = broken
+        h.check_ts(0, marked="[]")
+        self.assertEqual(h.go(), 2)  # kein ruhiges Fenster bis zur Frist, kein Absturz
+        (event,) = h.events()
+        self.assertGreater(event["load_errors"], 0)
+        self.assertEqual(h.count(CHECK_PUSH), 0)
+
     def test_ereignis_schlusszeile_und_schreibfehler(self):
         h = Harness(self)
         h.check_ts(0, marked="[]")
