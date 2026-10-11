@@ -5532,3 +5532,17 @@ ohne Lastwarten → falsches Rot möglich) gehen nach `docs/beobachtungen.md`; B
 Regelbezug: gates.md Gate Merge, R503, R504, R514 · Kosten bei Irrtum: ein Werkzeug-Revert.
 
 Entscheider: L0 · Anlass: Schlussbericht Controller Strang A · ADR: —
+
+## R518 · 2026-10-11 · Merges UI-NAECHSTER-SCHRITT und Strang A erfolgt; Worktrees aufräumen; Handbuch-Folge push-check
+
+Ruling: Lokal gemergt `1a44799a` (UI-NAECHSTER-SCHRITT) und `1d6b0560` (TOOL-BUENDEL-6 Strang A), je `make check` und
+`make check-ci-perf` Exit 0; main `b5879e09`. Handbuch **1.47** (`4dfd2b87`, R514 V1/V3) abgenommen. **Aufräumen**
+(`lead-production`): Worktrees `b4`, `m13-e1-sim`, `m13-e1-ui`, `ui-gut-chip`, `b5`, `aufraeum-01`, `ui-tasten`,
+`ui-naechster-schritt`, `b6a` — alle Branches in main enthalten, getrackt sauber — per `git worktree remove` entfernen;
+vorher ungetrackte Ergebnisse (`.studio/qa/…`, Ledger `.superpowers/sdd/…`) nach `.studio/archiv/worktrees/<name>/`
+im Hauptcheckout sichern. Branches bleiben. **Handbuch-Folge** (`studio-coach`): Push-Ablauf und Integrator-Persona
+auf `make push-check` umstellen (ersetzt die Einzelkette; R503 D1–D4 nennen).
+
+Regelbezug: state.md „Fortsetzung“ Punkt 7, R496, R504, R517 · Kosten bei Irrtum: ein Worktree wird per `git worktree add` neu angelegt.
+
+Entscheider: L0 · Anlass: Berichte production-integrator · ADR: —
