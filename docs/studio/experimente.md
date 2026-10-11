@@ -587,11 +587,12 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Sessions nach dem Merge, höchstens bis 2026-11-19.
 - Rückfall: Hook-Zweig auf Warnen zurückstellen (`git revert`).
 - Dateien: `tools/studio/budgetwarn.py`, `tools/studio/modelguard.py`, `tools/studio/tests/` (nur nach Ruling; Werkzeug-Paket)
-- Ruling: R542
+- Ruling: R542, R546
 - Start: 2026-10-11
+- Start Messung: 2026-10-11 (deny)
 - Bewertung: –
 - Notiz (R520): Werkzeug gemergt, Start mit `deny` per Ruling, wenn nur eine Session läuft (R520); Standard bis dahin `warn`.
-- Echtlauf (R542, EXP-BEWERTUNG-1011): 113 Lead-Starts seit 2026-10-10, 8 mögliche Blocks, davon 3 berechtigt (keine Freigabe vor dem Start) und 5 Fehlblocks (Freigabe vorhanden, aber unter Phasenname `impl-…` bzw. `design-M13`, den `package_names` nicht trifft; zwei davon Folge-Controller bzw. Mehrfach-Controller). `BUDGET_MODE` bleibt `warn`, der Schalter ist nicht umgestellt; Messung startet erst nach Korrektur des Abgleichs (Ruling nötig).
+- Zweiter Echtlauf (R546, nach TOOL-E060-FIX `e230d5e9`): 117 Lead-Starts seit 2026-10-10, 3 Blocks (alle berechtigt: Freigabe erst nach dem Start), 0 Fehlblocks, `BUDGET_MODE = "deny"` gesetzt. Erster Echtlauf (R542, EXP-BEWERTUNG-1011): 113 Lead-Starts seit 2026-10-10, 8 mögliche Blocks, davon 3 berechtigt (keine Freigabe vor dem Start) und 5 Fehlblocks (Freigabe vorhanden, aber unter Phasenname `impl-…` bzw. `design-M13`, den `package_names` nicht trifft; zwei davon Folge-Controller bzw. Mehrfach-Controller). `BUDGET_MODE` bleibt `warn`, der Schalter ist nicht umgestellt; Messung startet erst nach Korrektur des Abgleichs (Ruling nötig).
 
 ## E-061 · laufend (R497) · Spec-Nachtrag und Kurzdesign Stufe leicht auf sonnet
 

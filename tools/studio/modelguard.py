@@ -15,7 +15,7 @@ import sys
 from collections.abc import Mapping
 
 # Standard "warn": Hinweis (E-055). "deny" blockt Lead-Starts ohne Freigabe (E-060); L0 schaltet per Ruling ein.
-BUDGET_MODE = "warn"
+BUDGET_MODE = "deny"
 MODE = "deny"  # aktiv seit TOOL-AKTIVIERUNG (ADR-014, R428); Startzustand war "warn"
 AGENT_TOOLS = ("Agent", "Task")
 SKIP_TYPES = {"fork"}
