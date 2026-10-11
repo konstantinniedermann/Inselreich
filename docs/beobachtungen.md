@@ -218,3 +218,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - **Nachtrag 2026-10-11 (D-I048-B-WERTE):** 27 Messungen (Scratchpad lead-design): Antwort auch ohne Zukauf-Aufschlag nicht
   monoton (`SELL_RECOVERY_INTERVAL` 15 → Sieg 6750, 16 → 7350, 18 → Krisen normal ohne Sieg). Schmalste Ränder: Edikt reich
   «Wohlfahrt echt früher» 60 Ticks, Krisen normal 150 Ticks. Einschätzung: hoch, Einzellauf-Gates blockieren jede Wirtschaftsänderung.
+
+### 2026-10-11 · Gesperrte Edikt-Knöpfe: heller Text auf graubeigem Grund
+
+- **Fundort:** Edikt-Karten, Knöpfe «Erlassen (600)» und «Aufheben» im gesperrten Zustand (Screenshot `.studio/qa/ui-texte-1/edikt-unten-1280x800.png`). Beobachtung: Der Kontrast wirkt gering, wurde nicht gemessen und gehört nicht zu AK-UT-11..13 (nur Pergament-Texte). Ursprung: Playtest UI-TEXTE-1 (T06). Einschätzung: gering; bei der nächsten Kontrast-Runde in `tests/ui/contrast.test.ts` das Paar messen.
