@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { step } from '../../src/sim/tick';
 import { demolish } from '../../src/sim/build';
 import { setEdict } from '../../src/sim/edicts';
-import { startMonumentStage } from '../../src/sim/monument';
+import { setMonumentPaused, startMonumentStage } from '../../src/sim/monument';
 import type { World } from '../../src/sim/types';
 import { home } from '../../src/sim/world';
 import {
@@ -10,6 +11,8 @@ import {
   monumentChronicleLine,
   monumentEtaText,
   monumentRows,
+  monumentSectionModel,
+  monumentStartedText,
   monumentStageLine,
   monumentStallReason,
   monumentStartState,
@@ -293,5 +296,71 @@ describe('AK-M13E2-34 monumentNeedsConfirm (U-14)', () => {
     expect(monumentNeedsConfirm(w, id + 999)).toBe(false);
     w.monument = null;
     expect(monumentNeedsConfirm(w, id)).toBe(false);
+  });
+});
+
+describe('AK-M13E2-35 monumentSectionModel (U-1 bis U-5)', () => {
+  it('Schlüssel und Reihenfolge bleiben über 50 Ticks gleich, nur Werte ändern sich', () => {
+    const w = running();
+    const keys = monumentSectionModel(w).entries.map((e) => e.key);
+    expect(keys).toEqual([
+      'stage',
+      'reason',
+      'eta',
+      'row:stone',
+      'row:tools',
+      'row:glass',
+      'row:spice',
+      'pause',
+      'start',
+    ]);
+    for (let i = 0; i < 50; i++) {
+      step(w);
+      expect(monumentSectionModel(w).entries.map((e) => e.key)).toEqual(keys);
+    }
+  });
+
+  it('Pause-Knopf: Text wechselt, bei Abschnitt 3 verborgen', () => {
+    const w = running();
+    const pause = (): { text: string; hidden: boolean } => {
+      const e = monumentSectionModel(w).entries.find((x) => x.key === 'pause')!;
+      if (e.kind !== 'pause') throw new Error('Typ');
+      return e;
+    };
+    expect(pause()).toMatchObject({ text: 'Bau pausieren', hidden: false });
+    expect(setMonumentPaused(w, true).ok).toBe(true);
+    expect(pause().text).toBe('Bau fortsetzen');
+    w.monument!.stage = 3;
+    expect(pause().hidden).toBe(true);
+  });
+
+  it('Grund- und ETA-Zeile verborgen, wenn leer', () => {
+    const w = running();
+    const m = monumentSectionModel(w);
+    const eta = m.entries.find((e) => e.key === 'eta')!;
+    expect(eta).toMatchObject({ hidden: false });
+    const idle = monumentSectionModel(monumentWorld());
+    expect(idle.entries.find((e) => e.key === 'eta')).toMatchObject({ hidden: true, text: '' });
+    expect(idle.entries.find((e) => e.key === 'reason')).toMatchObject({ hidden: true });
+  });
+
+  it('Start-Knopf unaffordable bei «Zu wenig Geld», klickbar, mit Titel', () => {
+    const w = monumentWorld();
+    placeMonument(w);
+    w.money = 10;
+    const e = monumentSectionModel(w).entries.find((x) => x.key === 'start')!;
+    if (e.kind !== 'start') throw new Error('Typ');
+    expect(e).toMatchObject({ hidden: false, disabled: false, unaffordable: true });
+    expect(e.title).toBe('Zu wenig Geld: 4000 nötig, 10 vorhanden');
+    expect(e.text).toBe('Abschnitt 1 beginnen (4000)');
+  });
+
+  it('Start-Knopf bei laufendem Abschnitt verborgen', () => {
+    const e = monumentSectionModel(running()).entries.find((x) => x.key === 'start')!;
+    expect(e).toMatchObject({ hidden: true });
+  });
+
+  it('Meldungstext nach Start', () => {
+    expect(monumentStartedText(0)).toBe('Abschnitt 1 begonnen: Sockel');
   });
 });

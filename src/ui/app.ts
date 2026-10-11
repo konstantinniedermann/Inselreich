@@ -111,6 +111,9 @@ import { clearForest, plantForest } from '../sim/forest';
 import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../sim/tax';
 import { lockedTierFor } from './taxView';
 import { setEdict } from '../sim/edicts';
+import { setMonumentBuy, setMonumentPaused, startMonumentStage } from '../sim/monument';
+import { MONUMENT_STAGES } from '../sim/defs/monument';
+import { monumentStartedText } from './monumentView';
 import { setPaused } from '../sim/pause';
 import { EDICT_COST } from '../sim/defs/edicts';
 import { edictSuccessText } from './edictView';
@@ -711,6 +714,35 @@ function launch(
                 cost: { money: EDICT_COST, wood: 0, tools: 0, stone: 0 },
               }),
             );
+          refresh();
+        },
+        startMonumentStage: () => {
+          const stage = world.monument?.stage ?? 0;
+          const r = startMonumentStage(world);
+          if (r.ok) {
+            showMessage(monumentStartedText(stage));
+            sound.play('build');
+          } else
+            showError(
+              friendlyReason(world, r.reason, {
+                cost: {
+                  money: MONUMENT_STAGES[stage]?.money ?? 0,
+                  wood: 0,
+                  tools: 0,
+                  stone: 0,
+                },
+              }),
+            );
+          refresh();
+        },
+        setMonumentPaused: (paused) => {
+          const r = setMonumentPaused(world, paused);
+          if (!r.ok) showError(friendlyReason(world, r.reason));
+          refresh();
+        },
+        setMonumentBuy: (good, on) => {
+          const r = setMonumentBuy(world, good, on);
+          if (!r.ok) showError(friendlyReason(world, r.reason));
           refresh();
         },
         setUpgradeStop: (tier, stopped) => {

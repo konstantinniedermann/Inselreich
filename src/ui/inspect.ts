@@ -15,9 +15,19 @@ import { townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { upgradeDeficit } from '../sim/flow';
 import { buildEdictSection, updateEdictSection } from './edictSection';
+import { buildMonumentSection, updateMonumentSection } from './monumentSection';
 import { feastView, houseFeastLine } from './feast';
 import { glassStoneHint } from './hints';
-import type { Building, BuildingDefId, EdictId, GoodId, TaxLevel, Tier, World } from '../sim/types';
+import type {
+  Building,
+  BuildingDefId,
+  EdictId,
+  GoodId,
+  MonumentGood,
+  TaxLevel,
+  Tier,
+  World,
+} from '../sim/types';
 import { costLine, setField } from './dom';
 import { deficitText, diagnosisText, refundText } from './texts';
 import { mapSigns, nextStep, remedyText, taxEffect } from './guide';
@@ -97,6 +107,12 @@ export interface InspectActions {
   setPaused(id: number, paused: boolean): void;
   /** Amtsstube: Edikt erlassen, wechseln oder (null) aufheben; die Rückmeldung zeigt der Aufrufer. */
   setEdict(id: EdictId | null): void;
+  /** Denkmal: Abschnitt beginnen; die Meldung bzw. Ablehnung zeigt der Aufrufer. */
+  startMonumentStage(): void;
+  /** Denkmal: Bau pausieren oder fortsetzen. */
+  setMonumentPaused(paused: boolean): void;
+  /** Denkmal: Zukauf eines Guts ein- oder ausschalten. */
+  setMonumentBuy(good: MonumentGood, on: boolean): void;
   /** Betrieb mit dem Kontor verbinden; die Ablehnung zeigt der Aufrufer. */
   connect(id: number): void;
   /** Kapelle: Fest feiern; die Ablehnung zeigt der Aufrufer. */
@@ -810,6 +826,16 @@ export function renderInspect(
     addLine(panel, '', 'fire-protection');
     if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
     addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', 'Entf');
+  } else if (b.defId === 'monument') {
+    addHead(panel, b, def.name);
+    panel.append(
+      buildMonumentSection({
+        start: () => actions.startMonumentStage(),
+        setPaused: (paused) => actions.setMonumentPaused(paused),
+        setBuy: (good, on) => actions.setMonumentBuy(good, on),
+      }),
+    );
+    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', 'Entf');
   } else {
     if (b.house) {
       renderHouse(panel, b);
@@ -991,10 +1017,15 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   const def = BUILDING_DEFS[b.defId];
   if (b.house) updateHouse(panel, world, b);
   if (b.defId === 'townhall') updateTownhall(panel, world);
+  if (b.defId === 'monument') {
+    const section = panel.querySelector<HTMLElement>('[data-field="monument"]');
+    if (section) updateMonumentSection(section, world);
+  }
   if (isKontor(b.defId)) updateShipSection(panel, world);
   setField(panel, 'refund', refundLine(world, b));
   if (b.defId === 'townhall') setField(panel, 'upkeep', upkeepText(b));
-  if (!b.house && !isKontor(b.defId) && b.defId !== 'townhall') updateBetrieb(panel, world, b);
+  if (!b.house && !isKontor(b.defId) && b.defId !== 'townhall' && b.defId !== 'monument')
+    updateBetrieb(panel, world, b);
   updateUpgradeBox(panel, world, b);
   updateConnect(panel, world, b);
   updateFeast(panel, world, b);

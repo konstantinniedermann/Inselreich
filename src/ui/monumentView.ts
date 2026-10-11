@@ -4,6 +4,7 @@ import { monumentProgress, monumentReserve, monumentStartReason } from '../sim/m
 import { buyPrice, monumentBuyBlock } from '../sim/trade';
 import type { Monument, MonumentGood, World } from '../sim/types';
 import { home } from '../sim/world';
+import { friendlyReason } from './hints';
 import { formatGameTime } from './time';
 
 // Reine, DOM-freie Helfer für Denkmal-Panel, Inselchronik und Ziel-Chip (M13-E2, Spec §7, Anhang 07).
@@ -162,4 +163,77 @@ export function monumentChip(w: World): MonumentChip | null {
 export function monumentNeedsConfirm(w: World, id: number): boolean {
   const m = w.monument;
   return m !== null && id === m.buildingId && (m.running || m.stage >= 1);
+}
+
+/** Meldung nach erfolgreichem Start des Abschnitts mit Index `stage` (vor dem Start gelesen). */
+export function monumentStartedText(stage: number): string {
+  return `Abschnitt ${stage + 1} begonnen: ${MONUMENT_STAGES[stage]!.name}`;
+}
+
+/** Ein Eintrag des Panel-Abschnitts «Bau»; `key` und Reihenfolge sind je Auswahl fest (U-5). */
+export type MonumentEntry =
+  | { key: 'stage' | 'reason' | 'eta'; kind: 'line'; text: string; hidden: boolean }
+  | ({ key: `row:${MonumentGood}`; kind: 'row'; hidden: boolean } & MonumentRow)
+  | { key: 'pause'; kind: 'pause'; text: string; hidden: boolean }
+  | {
+      key: 'start';
+      kind: 'start';
+      text: string;
+      hidden: boolean;
+      disabled: boolean;
+      unaffordable: boolean;
+      title: string;
+    };
+
+export interface MonumentSectionModel {
+  entries: MonumentEntry[];
+}
+
+/** Reines Modell des Abschnitts «Bau» (U-1 bis U-5): `monumentSection.ts` rendert nur dieses Modell. */
+export function monumentSectionModel(w: World): MonumentSectionModel {
+  const m = w.monument;
+  const stage = monumentStageLine(w) ?? '';
+  const reason = monumentStallReason(w);
+  const eta = monumentEtaText(w);
+  const rows = new Map(monumentRows(w).map((r) => [r.good, r]));
+  const entries: MonumentEntry[] = [
+    { key: 'stage', kind: 'line', text: stage, hidden: stage === '' },
+    { key: 'reason', kind: 'line', text: reason ?? '', hidden: reason === null },
+    { key: 'eta', kind: 'line', text: eta, hidden: eta === '' },
+  ];
+  for (const good of MONUMENT_GOODS) {
+    const r = rows.get(good);
+    entries.push({
+      key: `row:${good}`,
+      kind: 'row',
+      hidden: r === undefined,
+      good,
+      label: r?.label ?? GOODS[good].name,
+      pct: r?.pct ?? 0,
+      reserveText: r?.reserveText ?? '',
+      buyText: r?.buyText ?? '',
+      buyOn: r?.buyOn ?? false,
+    });
+  }
+  entries.push({
+    key: 'pause',
+    kind: 'pause',
+    text: m?.paused === true ? 'Bau fortsetzen' : 'Bau pausieren',
+    hidden: m === null || m.stage >= STAGE_COUNT,
+  });
+  const st = monumentStartState(w);
+  const money = m !== null && m.stage < STAGE_COUNT ? MONUMENT_STAGES[m.stage]!.money : 0;
+  entries.push({
+    key: 'start',
+    kind: 'start',
+    text: st.buttonText,
+    hidden: !st.visible,
+    disabled: st.disabled,
+    unaffordable: st.reason === 'Zu wenig Geld',
+    title:
+      st.visible && st.reason !== null
+        ? friendlyReason(w, st.reason, { cost: { money, wood: 0, tools: 0, stone: 0 } })
+        : '',
+  });
+  return { entries };
 }
