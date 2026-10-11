@@ -121,13 +121,14 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Session 2026-10-11 (R498–R509): Push REL-19 zweiter Versuch im Ruhefenster (R508; erster Versuch `zeitreserve-push`
-  Exit 1, 9 Tests ohne Reserve unter Last 7). Scheitert er: TOOL-BUENDEL-6 Strang A zuerst, dann Push mit `make push-check`.
-- Gegatet, bereit zur Umsetzung nach dem Push: UI-NAECHSTER-SCHRITT (R499/R502), TOOL-BUENDEL-6 (R503/R504, Stränge A/B),
-  M13-E2 (R507/R509, SIM + ART zuerst, Budget 42), I-048 (R505/R506, Sim erst nach Merge M13-E2-SIM, Budget 19).
-  **Release-Sperre** für Spiel-Releases bis M13-E2, I-049, I-048 gemergt sind, gemeinsames Save v12 (R505).
-- Spec M14-E1 gegatet mit Nachtrag (R500/R501); Plan erst nach M13. Handbuch 1.46 (E-061 läuft, R501).
-- Offen: `lead-qa`-Review `nachtrag-i049.md` vor I-049-Start (R509).
+- Session 2026-10-11 (R498–R521). **REL-19 live** (Push `801bee89`). Lokal auf main (nicht gepusht, Release-Sperre R505,
+  Actions-Prognose ROT 1991/2000 → höchstens ein Push je Tag): UI-NAECHSTER-SCHRITT (R515), TOOL-BUENDEL-6 A+B (R517,
+  R520; `make push-check` ist der Push-Weg, Handbuch 1.49, Budget-Hook `warn`).
+- **M13-E2:** SIM-Strang (Controller A) bei T03/T04 auf `feat/m13-e2-sim` (T01 `46d82e00`, T02 `051efcc8`);
+  ART-Strang fertig `feat/m13-e2-art` @ `5295021d` (R521, inkl. Leuchtfeuer AK-46). Nächste: Controller B (T05–T07),
+  UI-Strang Controller D nach T04 (ART-Hash vor T12; Hinweis: `src/ui/messages.ts` ohne Icon für `monument`), dann E.
+- Danach: Gate Merge E2-SIM → I-049-Sim (Nachtrag `nachtrag-i049.md`, R511) → I-048-Sim (R506) usw. nach R505/R507.
+- Spec M14-E1 gegatet (R501), Plan nach M13.
 
 ## Parallele Sessions
 
