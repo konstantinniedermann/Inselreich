@@ -593,10 +593,11 @@ flowchart LR
   `tools/studio/precommit.py`): Prettier-Check der gestagten Dateien, Ablehnung als Ereignis `commit_rejected`.
   Der Modell-Guard `tools/studio/modelguard.py` ist ein zusätzlicher PreToolUse-Hook neben `guard.py` und meldet
   Starts über der Modelltabelle als Ereignis `model_guard` und lehnt sie ab (`MODE = "deny"`, TOOL-AKTIVIERUNG, R428).
-  Im selben Hook-Prozess blockt `budgetwarn.py` einen Lead-Start mit „Budget: n“ ohne passende Freigabe der
-  Session (Rolle und Phase = `Paket:` oder dessen Phasenname) mit `permissionDecision: "deny"` samt fertigem
-  `log.py budget`-Befehl, Ereignis `budget_warn` mit `blocked: true` (E-060). Rückfallschalter `BUDGET_MODE = "warn"`
-  in `modelguard.py`: Kontext und Systemmeldung statt Ablehnung, `blocked: false` (E-055). Ein Modell-Guard-Deny
+  Im selben Hook-Prozess prüft `budgetwarn.py` einen Lead-Start mit „Budget: n“ gegen die Freigaben der
+  Session (Rolle und Phase = `Paket:` oder dessen Phasenname). Standard `BUDGET_MODE = "warn"` in `modelguard.py`:
+  Kontext und Systemmeldung, Ereignis `budget_warn` mit `blocked: false` (E-055). Mit `"deny"` (L0 schaltet per
+  Ruling ein) lehnt der Hook mit `permissionDecision: "deny"` samt fertigem `log.py budget`-Befehl ab,
+  `blocked: true` (E-060). Ein Modell-Guard-Deny
   hat Vorrang; eigene Fehler lassen zu. Die Testsperre weist auf
   verwaiste Vitest-Prozesse hin (PPID 1, ab 30 min) und beendet nichts. Im Dashboard melden Knoten ohne
   `agent_start` und ohne `spawned` keinen Inaktiv-Vorfall und werden nach 600 s ausgeblendet. Die Metriken

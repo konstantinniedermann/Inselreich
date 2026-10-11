@@ -263,8 +263,8 @@ class HookTest(unittest.TestCase):
         _, out, _ = self.run_budget_hook("warn", [], "warn", **over)
         self.assertIn("Budget-Warnung", json.loads(out)["systemMessage"])
 
-    def test_budget_mode_default_is_deny(self):
-        self.assertEqual(modelguard.BUDGET_MODE, "deny")
+    def test_budget_mode_default_is_warn(self):
+        self.assertEqual(modelguard.BUDGET_MODE, "warn")
 
     def test_lead_without_grant_is_denied_and_logged(self):
         data = {
