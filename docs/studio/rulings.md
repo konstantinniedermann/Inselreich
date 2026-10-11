@@ -5430,3 +5430,17 @@ REL-19 bzw. nach dem Ergebnis von R508. Offen: `lead-qa`-Review des Wortlauts `n
 Regelbezug: gates.md Gate Plan, R507 · Kosten bei Irrtum: ein Plan-Nachtrag.
 
 Entscheider: L0 · Anlass: Nachtrag-Bericht lead-tech · ADR: —
+
+## R510 · 2026-10-11 · Push REL-19 zweiter Versuch Exit 1 → TOOL-BUENDEL-6 Strang A, T01 vorgezogen
+
+Ruling: Zweiter Versuch (loadStart 2,2): `make check` 0, `make check-ci-perf` 0, `make zeitreserve-push` **1** — einziger
+Test ohne Reserve `tests/ui/time.test.ts` „AK-UX-13 kein Text enthält Tick“ (855 ms lokal, ×3 = 2565 ms bei 5000 ms
+Timeout). Nach R508 startet **TOOL-BUENDEL-6 Strang A** (`.worktrees/b6a`, `tool/b6a`, Controller `lead-tech` sonnet,
+4 Starts aus R504). **T01 vorgezogen und einzeln gemergt:** Controller meldet nach T01 (Review OK) `waiting`; L0 macht
+Gate Merge T01, Integrator mergt `tool/b6a` @ T01 nach main, dann Push REL-19 nach Handbuch-Kette (T01 behebt den
+Blocker). T02/T03 laufen danach weiter. Weitere Umsetzer bleiben bis zum Push gesperrt (R464); Lese-Arbeit
+(`lead-qa`-Review `nachtrag-i049.md`) darf laufen.
+
+Regelbezug: R464, R508, R503/R504 · Kosten bei Irrtum: ein Zwischen-Merge mehr.
+
+Entscheider: L0 · Anlass: Bericht production-integrator, zweiter Versuch · ADR: —
