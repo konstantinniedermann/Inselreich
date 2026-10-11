@@ -201,6 +201,7 @@ export function upgradeReasonTexts(world: World, b: Building): string[] {
 
 /** Hinweis am Abriss-Knopf: Entf und Rücktaste lösen den Abriss aus (U+232B). */
 const DEMOLISH_HINT = 'Entf / ⌫';
+const DEMOLISH_LABEL = `Abreissen (${DEMOLISH_HINT})`;
 
 function addButton(
   parent: HTMLElement,
@@ -822,14 +823,14 @@ export function renderInspect(
     addLine(panel, `Lagerkapazität ${STORAGE_CAP} je Gut`);
     addButton(buttons, 'Handeln', () => actions.openTrade());
     if (kontor.demolish)
-      addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
+      addButton(buttons, DEMOLISH_LABEL, () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
   } else if (b.defId === 'townhall') {
     renderTownhall(panel, actions);
     addRemedy(panel);
     addLine(panel, '', 'upkeep');
     addLine(panel, '', 'fire-protection');
     if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
-    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
+    addButton(buttons, DEMOLISH_LABEL, () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
   } else if (b.defId === 'monument') {
     addHead(panel, b, def.name);
     panel.append(
@@ -839,7 +840,7 @@ export function renderInspect(
         setBuy: (good, on) => actions.setMonumentBuy(good, on),
       }),
     );
-    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
+    addButton(buttons, DEMOLISH_LABEL, () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
   } else {
     if (b.house) {
       renderHouse(panel, b);
@@ -853,7 +854,7 @@ export function renderInspect(
     if (def.service === 'faith') addButton(buttons, '', () => actions.holdFeast(id), 'feast');
     if (needsConnection(b.defId)) addConnectButton(buttons, id, actions);
     if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
-    addButton(buttons, 'Abreissen', () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
+    addButton(buttons, DEMOLISH_LABEL, () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
   }
   panel.appendChild(buttons);
   if (kontor !== null) renderShipSection(panel, world, b.island, actions.ships);

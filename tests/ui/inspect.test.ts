@@ -541,18 +541,29 @@ function allButtons(e: FakeEl): FakeEl[] {
 describe('UI-TASTEN Tooltip «Entf» am Abreissen-Knopf (AK-UT-12)', () => {
   afterEach(() => vi.unstubAllGlobals());
   const noActions = new Proxy({}, { get: () => () => {} }) as unknown as InspectActions;
-  const demolishTitle = (w: World, id: number): string | undefined => {
+  const demolishBtn = (w: World, id: number) => {
     vi.stubGlobal('document', { createElement: fakeEl, createTextNode: () => fakeEl('#text') });
     const panel = fakeEl('div');
     renderInspect(panel as unknown as HTMLElement, w, id, noActions);
-    return allButtons(panel).find((b) => b.dataset.field === 'demolish')?.title;
+    return allButtons(panel).find((b) => b.dataset.field === 'demolish');
   };
-  it('Wohnhaus, Betrieb und Fern-Kontor tragen title «Entf / ⌫»', () => {
+  it('Wohnhaus, Betrieb, Fern-Kontor, Rathaus und Denkmal: Label und title «Entf / ⌫»', () => {
     const { w, house, fisher } = uxWorld();
-    expect(demolishTitle(w, house.id)).toBe('Entf / ⌫');
-    expect(demolishTitle(w, fisher.id)).toBe('Entf / ⌫');
-    const far = { ...w.buildings[home(w).kontorId]!, id: 9999, defId: 'kontor2' as const };
-    w.buildings[far.id] = far;
-    expect(demolishTitle(w, far.id)).toBe('Entf / ⌫');
+    const mk = (id: number, defId: 'kontor2' | 'townhall' | 'monument') => {
+      w.buildings[id] = { ...w.buildings[home(w).kontorId]!, id, defId };
+      return id;
+    };
+    const ids = [
+      house.id,
+      fisher.id,
+      mk(9999, 'kontor2'),
+      mk(9998, 'townhall'),
+      mk(9997, 'monument'),
+    ];
+    for (const id of ids) {
+      const btn = demolishBtn(w, id);
+      expect(btn?.title, String(id)).toBe('Entf / ⌫');
+      expect(btn?.textContent, String(id)).toBe('Abreissen (Entf / ⌫)');
+    }
   });
 });
