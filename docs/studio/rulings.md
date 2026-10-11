@@ -5458,3 +5458,14 @@ ohne erneutes Review als abgenommen (L0 prüft Stichprobe).
 Regelbezug: R481, R507 E8, R509 · Kosten bei Irrtum: ein Test im I-049-Strang nachbessern.
 
 Entscheider: L0 · Anlass: Review-Bericht lead-qa · ADR: —
+
+## R512 · 2026-10-11 · Gate Merge TOOL-BUENDEL-6 T01: OK; Merge und Push REL-19
+
+Ruling: `tool/b6a` @ `bb73123c` (nur `tests/ui/time.test.ts`: AK-UX-13 je Szenario, 44 + 1 Fälle, Prüfinhalt
+unverändert; langsamster Fall 147 ms statt 604–642 ms; Rot-Beleg, Review OK, schnelle Prüfungen Exit 0) abgenommen.
+`production-integrator` mergt den Commit lokal nach main und pusht REL-19 nach der Kette aus R508 (Ruhefenster). Strang A
+setzt danach mit T02/T03 fort.
+
+Regelbezug: gates.md Gate Merge, R508, R510 · Kosten bei Irrtum: ein Revert eines Test-Umbaus.
+
+Entscheider: L0 · Anlass: Zwischenbericht Controller Strang A · ADR: —
