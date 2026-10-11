@@ -4,6 +4,7 @@ import type { Building, BuildingDef, BuildingDefId, Category, World } from '../s
 import { hash2 } from '../sim/noise';
 import { HOME, home, tileAt } from '../sim/world';
 import { worldToScreen, type Camera } from './camera';
+import { drawMonument, type MonumentImageStage } from './monumentSprite';
 import { ISO_H, bodyHeight, project, setBodyShapes, spriteBounds, type Pt } from './iso';
 import { LIGHT } from './light';
 import {
@@ -129,7 +130,8 @@ export interface BodyEnv {
   waterU0?: boolean;
   waterV0?: boolean;
 }
-export type SilhouetteFn = (p: IsoPainter, b: Building) => void;
+/** Silhouette; `stage` = Bildstufe (nur das Denkmal liest sie). */
+export type SilhouetteFn = (p: IsoPainter, b: Building, stage?: number) => void;
 
 /** Zielton einer Variantenmischung (S1): Schwarz wird zum kühlen Schattenton, Weiss zum warmen Lichtton. */
 function variantTarget(target: string): string {
@@ -145,6 +147,8 @@ export class IsoPainter {
   env: BodyEnv = {};
   /** Hüllenhöhe des Körpers (für den Kategorie-Fallback, der keine eigene Höhe kennt). */
   height = 0;
+  /** Bildstufe des Körpers (nur Denkmal; sonst 0). */
+  stage = 0;
   /** Variante (H-R7): verschiebt nur Töne und Zubehör, nie den Umriss; 0 = bisheriger Look. */
   variant = 0;
   /** Bildmodus (L3): Hand-Linie, Silhouette, Lichtkante, Bodenkontakt. Aus für Picking und Flächenlisten. */
@@ -1947,7 +1951,7 @@ export function drawLevelTopper(p: IsoPainter, def: BuildingDef, b: Building): v
 /** Silhouetten aller heutigen Typen; unbekannte Ids zeichnen den Kategorie-Fallback (`FALLBACKS`). */
 export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   house: houseBody,
-  kontor: kontorBody,
+  kontor: (p, b) => kontorBody(p, b), // Dach-Parameter nicht mit der Bildstufe verwechseln
   kontor2: (p, b) => kontorBody(p, b, PALETTE.roofSlate), // M12: Aussenkontor, Schieferdach
   lumberjack: lumberjackBody,
   market: marketBody,
@@ -1967,7 +1971,7 @@ export const SILHOUETTES: Partial<Record<BuildingDefId, SilhouetteFn>> = {
   bathhouse: bathhouseBody, // M8-R1
   glassworks: glassworksBody, // M8-R1
   townhall: townhallBody, // M10-R1
-  monument: fallbackBody('public'), // Platzhalter M13-E2 T01, ersetzt in T09
+  monument: (p, b, stage = 0) => drawMonument(p, b, stage as MonumentImageStage), // M13-E2 T09
 };
 
 // --- Fensteranker (Spec 6.2, ISO D-20): Rechtecke auf der linken oder rechten Wand ---
@@ -2114,6 +2118,7 @@ const WINDOWS: Partial<Record<BuildingDefId, (b: Building, h: number) => WallWin
       { ...R(0.8, 1.0, 0.5 * wz, 0.85 * wz), plane: BATH_CUBE.u1 },
     ];
   },
+  monument: () => [], // M13-E2 T09: keine Wandfenster; das Leuchtfeuer der Stufe 4 ist keine Fensterleuchte
   townhall: (_b, h) => {
     const wz = 0.45 * h;
     return [
@@ -2147,8 +2152,9 @@ export function wallPolygon(
   b: Building,
   side: 'left' | 'right',
   plane?: number,
+  stage = 0,
 ): Pt[] {
-  const H = bodyHeight(def, b);
+  const H = bodyHeight(def, b, stage);
   const at = (u: number, v: number, z: number): Pt => {
     const q = project(b.x + u, b.y + v);
     return { x: q.x, y: q.y - z };
@@ -2180,10 +2186,10 @@ export function wallPolygon(
  * Fensteranker des Gebäudes (für den Lichtdurchgang R4): je Fenster das größte achsenparallele Rechteck im
  * Wand-Parallelogramm, als Anteile von `spriteBounds`.
  */
-export function lightAnchors(def: BuildingDef, b: Building): LightAnchor[] {
-  const h = bodyHeight(def, b);
+export function lightAnchors(def: BuildingDef, b: Building, stage = 0): LightAnchor[] {
+  const h = bodyHeight(def, b, stage);
   const wins = WINDOWS[def.id]?.(b, h) ?? fallbackWindows(def, h);
-  const box = spriteBounds(def, b);
+  const box = spriteBounds(def, b, stage);
   return wins.map((w) => {
     const fixed = w.plane ?? (w.wall === 'left' ? def.h - I : def.w - I);
     const corner = (a: number, z: number): Pt => {
@@ -2228,17 +2234,19 @@ function paintBody(
   env: BodyEnv | undefined,
   variant: number,
   hand: boolean,
+  stage = 0,
 ): void {
   const make = (c: CanvasRenderingContext2D): IsoPainter => {
     const p = new IsoPainter(c, cam, b.x, b.y, def.w, def.h);
     p.variant = variant;
-    p.height = bodyHeight(def, b);
+    p.height = bodyHeight(def, b, stage);
+    p.stage = stage;
     if (env) p.env = env;
     p.hand = hand;
     return p;
   };
   const draw = (p: IsoPainter): void => {
-    (SILHOUETTES[def.id] ?? FALLBACKS[def.category])(p, b);
+    (SILHOUETTES[def.id] ?? FALLBACKS[def.category])(p, b, stage);
     if (b.level !== undefined && LEVELS[def.id]) drawLevelTopper(p, def, b);
   };
   const p = make(ctx);
@@ -2262,9 +2270,10 @@ export function drawBody(
   timeMs: number,
   env?: BodyEnv,
   variant = 0,
+  stage = 0,
 ): void {
   void timeMs;
-  paintBody(ctx, cam, def, b, env, variant, true);
+  paintBody(ctx, cam, def, b, env, variant, true, stage);
 }
 
 /**
@@ -2279,9 +2288,10 @@ export function drawBodyPlain(
   timeMs: number,
   env?: BodyEnv,
   variant = 0,
+  stage = 0,
 ): void {
   void timeMs;
-  paintBody(ctx, cam, def, b, env, variant, false);
+  paintBody(ctx, cam, def, b, env, variant, false, stage);
 }
 
 /**
@@ -2291,8 +2301,8 @@ export function drawBodyPlain(
  * Verläufe (createLinearGradient …) und Clips lieferten dort `undefined` bzw. nichts und würden werfen oder
  * Flächen verlieren. Silhouetten dürfen deshalb keine Verläufe oder Clips benutzen.
  */
-export function bodyPolygons(def: BuildingDef, b: Building, variant = 0): Pt[][] {
-  return bodyFaces(def, b, variant).map((f) => f.pts);
+export function bodyPolygons(def: BuildingDef, b: Building, variant = 0, stage = 0): Pt[][] {
+  return bodyFaces(def, b, variant, undefined, stage).map((f) => f.pts);
 }
 
 /** Gefüllte Fläche des Körpers samt Füllfarbe (für die Materialschicht des Sprite-Caches). */
@@ -2307,6 +2317,7 @@ export function bodyFaces(
   b: Building,
   variant = 0,
   cam: Camera = { x: 0, y: 0, zoom: 1 },
+  stage = 0,
 ): BodyFace[] {
   const faces: BodyFace[] = [];
   let path: Pt[] = [];
@@ -2334,10 +2345,10 @@ export function bodyFaces(
       return true;
     },
   }) as unknown as CanvasRenderingContext2D;
-  paintBody(ctx, cam, def, b, undefined, variant, false);
+  paintBody(ctx, cam, def, b, undefined, variant, false, stage);
   return faces;
 }
-setBodyShapes(bodyPolygons);
+setBodyShapes((def, b, stage) => bodyPolygons(def, b, 0, stage)); // Picking: Variante 0, Bildstufe der Hülle
 
 /** Geist der Bauvorschau (D-13): derselbe Körper mit Deckkraft 0,5; gehört in die Signalebene. */
 export function drawGhost(
@@ -2359,7 +2370,7 @@ export function drawGhost(
   };
   ctx.save();
   ctx.globalAlpha = GHOST_ALPHA;
-  drawBodyPlain(ctx, cam, def, b, 0); // Vorschau ohne Bildmodus: bei Deckkraft 0,5 würden sich Silhouette und Zusatzflächen durchdrücken
+  drawBodyPlain(ctx, cam, def, b, 0, undefined, 0, def.id === 'monument' ? 4 : 0); // Ziel-Bildstufe 4; Vorschau ohne Bildmodus: bei Deckkraft 0,5 würden sich Silhouette und Zusatzflächen durchdrücken
   ctx.restore();
 }
 
@@ -2382,7 +2393,7 @@ function convexHull(pts: readonly Pt[]): Pt[] {
 }
 
 /** Schattenpolygon im Kachelraum: eingezogener Footprint ∪ derselbe, um `SHADOW_K · H / ISO_H` Kacheln nach (+3, +1) versetzt. */
-export function buildingShadow(def: BuildingDef, b: Building): Pt[] {
+export function buildingShadow(def: BuildingDef, b: Building, stage = 0): Pt[] {
   const i = BODY_INSET;
   const rect: Pt[] = [
     { x: b.x + i, y: b.y + i },
@@ -2390,7 +2401,7 @@ export function buildingShadow(def: BuildingDef, b: Building): Pt[] {
     { x: b.x + def.w - i, y: b.y + def.h - i },
     { x: b.x + i, y: b.y + def.h - i },
   ];
-  const k = (SHADOW_K * bodyHeight(def, b)) / ISO_H;
+  const k = (SHADOW_K * bodyHeight(def, b, stage)) / ISO_H;
   const moved = rect.map((p) => ({ x: p.x + SHADOW_DIR.x * k, y: p.y + SHADOW_DIR.y * k }));
   return convexHull([...rect, ...moved]);
 }

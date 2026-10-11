@@ -41,7 +41,7 @@ const CAPITAL_Z1 = SHAFT_Z1 + 8;
 const BOWL_HALF = 0.28;
 const BOWL_BACK = 1.5 - BOWL_HALF;
 /** Oberkante der Feuerschale: ihre hintere Ecke trifft genau H(4). */
-const BOWL_Z1 = zAt(BOWL_BACK, BOWL_BACK, MONUMENT_HEIGHTS[4]);
+export const BOWL_Z1 = zAt(BOWL_BACK, BOWL_BACK, MONUMENT_HEIGHTS[4]);
 
 const STONE = wallOf(PALETTE.wallStone);
 const STONE_TOP = PALETTE.rockLight;
@@ -201,7 +201,8 @@ export function drawMonument(p: IsoPainter, _b: Building, s: MonumentImageStage)
   const terraces = s === 1 ? 1 : 3;
   const ringRect: Rect = s === 1 ? TERRACES[0]![0] : TERRACES[1]![0];
   const ringZ0 = s === 1 ? TERRACES[0]![2] : TERRACES[1]![2];
-  const relTop = s === 1 ? MONUMENT_HEIGHTS[1] : s === 2 ? MONUMENT_HEIGHTS[2] : 2.3;
+  // Stufe 3: das Gerüst bestimmt H(3) an der hinteren Ecke (Hüllenkante); der Kran bleibt darunter (Hülle, T09)
+  const relTop = MONUMENT_HEIGHTS[s as 1 | 2 | 3];
   const ringTop = zAt(ringRect[0], ringRect[1], relTop);
   const scaffolded = s >= 1 && s <= 3;
 
@@ -216,9 +217,10 @@ export function drawMonument(p: IsoPainter, _b: Building, s: MonumentImageStage)
   if (s >= 2) shaft(p, s === 2 ? SHAFT_Z0 + (SHAFT_Z1 - SHAFT_Z0) / 3 : SHAFT_Z1);
   if (scaffolded) scaffold(p, ringRect, ringZ0, ringTop, true);
   if (s === 3) {
-    // Kran: Mast links der Terrasse, Ausleger über den Schaft, Seil mit Last; Spitze exakt auf H(3)
+    // Kran: Mast links der Terrasse, Ausleger über den Schaft, Seil mit Last; Spitze innerhalb der Hülle von H(3)
+    // (seitlich fällt die Hüllenkante um |u − v| · ISO_H / 2 ab: bei |u − v| = 1,02 liegt der Mast 0,51 darunter)
     const [mu, mv] = [0.98, 2.0];
-    const zMast = zAt(mu, mv, MONUMENT_HEIGHTS[3]);
+    const zMast = zAt(mu, mv, MONUMENT_HEIGHTS[3] - Math.abs(mu - mv) / 2 - 0.04);
     stake(p, mu, mv, 24, zMast);
     p.line([mu, mv, zMast], [1.55, mv, zMast - 4], TIMBER.left);
     p.line([1.55, mv, zMast - 4], [1.55, mv, zMast - 26], CORD);

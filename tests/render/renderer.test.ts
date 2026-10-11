@@ -47,7 +47,10 @@ import { placeBuilding } from '../../src/sim/build';
 import { home, center, createWorld, idx } from '../../src/sim/world';
 import type { BuildingDefId, World } from '../../src/sim/types';
 import { readFileSync } from 'node:fs';
-import { deserialize } from '../../src/sim/save';
+import { deserialize, serialize } from '../../src/sim/save';
+import { MONUMENT_AT, monumentWorld } from '../sim/monumentHelpers';
+import { cap } from '../../src/render/limits';
+import type { Monument } from '../../src/sim/types';
 import { fnv1a32, forceRect } from '../sim/helpers';
 import { fakeCtx, type Ev, type Mat } from './fakeCtx';
 
@@ -61,6 +64,7 @@ interface Call {
 const h = vi.hoisted(() => ({
   calls: [] as Call[],
   bodyCams: new Map<number, { x: number; y: number; zoom: number }>(),
+  bodyStages: new Map<number, number>(),
   treeSeeds: [] as number[],
   decorCalls: [] as { id: number; stamp: string; seed: number; zoom: number }[],
   decorShadows: [] as number[],
@@ -81,6 +85,7 @@ vi.mock('../../src/render/sprites', async (orig) => {
     drawBody: (...a: Parameters<typeof m.drawBody>) => {
       h.calls.push({ kind: 'body', id: a[3].id, at: at(a[0]) });
       h.bodyCams.set(a[3].id, { ...a[1] });
+      h.bodyStages.set(a[3].id, a[7] ?? 0);
       return m.drawBody(...a);
     },
     drawAir: (...a: Parameters<typeof m.drawAir>) => {
@@ -1687,5 +1692,89 @@ describe('M12 E4 Schiffe im Renderer (AK-E4-15)', () => {
     h.shipScales.length = 0;
     render(fakeCtx().ctx, w, cam, layer, null, null, { w: 1280, h: 800 }, { timeMs: 0 });
     expect(h.shipScales).toEqual([shipScale(0.125)]);
+  });
+});
+
+describe('M13-E2 T09 Denkmal im Renderer', () => {
+  function mono(stage = 3, running = false) {
+    const w = monumentWorld();
+    const r = placeBuilding(w, 'monument', MONUMENT_AT.x, MONUMENT_AT.y);
+    if (!r.ok) throw new Error('Denkmal nicht platzierbar');
+    const b = w.buildings[r.id!]!;
+    w.monument = { buildingId: b.id, stage, running } as Monument;
+    return { w, b };
+  }
+  const camAtMono = (w: World, zoom = 1) => {
+    const cam = { x: 0, y: 0, zoom };
+    const c = center(BUILDING_DEFS.monument, MONUMENT_AT.x, MONUMENT_AT.y);
+    centerOn(cam, c.cx, c.cy, VIEW, { w: home(w).width, h: home(w).height });
+    return cam;
+  };
+  const draw = (w: World, cam: ReturnType<typeof camAtMono>, fx: Partial<RenderFx> = {}) => {
+    h.calls.length = 0;
+    h.bodyStages.clear();
+    const f = fakeCtx();
+    render(f.ctx, w, cam, layer, null, null, VIEW, { timeMs: 10000, ...fx });
+    return f.log;
+  };
+
+  // Der Tag ohne Licht hat keinen additiven Durchgang; was 'lighter' zeichnet, ist das Aufflammen
+  const lighter = (log: ReturnType<typeof draw>) =>
+    log.events.filter((e) => e.composite === 'lighter');
+  it('AK-M13E2-39 Aufflammen: Funken unter CAPS, nach 3 s und bei reduzierter Bewegung nichts, Welt unverändert', () => {
+    const { w } = mono();
+    const cam = camAtMono(w);
+    const before = serialize(w);
+    expect(lighter(draw(w, cam))).toHaveLength(0);
+    const flare = (elapsed: number, reduce = false) =>
+      draw(w, cam, { monumentFlareStart: 10000 - elapsed, reduceMotion: reduce });
+    for (const t of [0, 300, 1500, 2900]) {
+      const log = flare(t);
+      const extra = lighter(log);
+      expect(extra.length).toBeGreaterThan(0);
+      const sparks = extra
+        .filter((e) => e.op === 'fill')
+        .reduce((n, e) => n + e.points.length / 4, 0);
+      expect(sparks).toBeLessThanOrEqual(cap('flareSparks'));
+      expect(log.saves).toBe(log.restores);
+      expect(log.underflow).toBe(0);
+    }
+    expect(lighter(flare(3000))).toHaveLength(0);
+    expect(lighter(flare(9000))).toHaveLength(0);
+    expect(lighter(flare(500, true))).toHaveLength(0);
+    expect(serialize(w)).toBe(before);
+  });
+
+  it('AK-M13E2-39 Aufflammen nur bei sichtbarem Denkmal', () => {
+    const { w } = mono();
+    const cam = camAtMono(w);
+    const away = { ...cam, x: cam.x + 5000 };
+    expect(lighter(draw(w, cam, { monumentFlareStart: 9800 })).length).toBeGreaterThan(0);
+    expect(lighter(draw(w, away, { monumentFlareStart: 9800 }))).toHaveLength(0);
+  });
+
+  it('AK-M13E2-39 render reicht die Bildstufe an drawBody durch', () => {
+    for (const [stage, running, want] of [
+      [0, false, 0],
+      [1, false, 2],
+      [3, false, 4],
+    ] as const) {
+      const { w, b } = mono(stage, running);
+      draw(w, camAtMono(w));
+      expect(h.bodyStages.get(b.id)).toBe(want);
+    }
+  });
+
+  it('AK-M13E2-39 A2 Denkmal Stufe 4 knapp unter dem Bildrand wird gezeichnet', () => {
+    const { w, b } = mono(3, false);
+    const top = project(b.x, b.y);
+    const cam = { x: top.x - VIEW.w / 2, y: top.y - VIEW.h - 84, zoom: 1 }; // Grundraute 84 px unterhalb des Bildrands (jenseits der Schattenrand-Marge 64), Spitze 93 px hoch im Bild
+    draw(w, cam);
+    expect(h.calls.some((c) => c.kind === 'body' && c.id === b.id)).toBe(true);
+    expect(h.bodyStages.get(b.id)).toBe(4);
+    // Stufe 0 (Höhe 0,2 · ISO_H) liegt an derselben Stelle ausserhalb der Marge
+    const { w: w0, b: b0 } = mono(0, false);
+    draw(w0, cam);
+    expect(h.calls.some((c) => c.kind === 'body' && c.id === b0.id)).toBe(false);
   });
 });

@@ -10,7 +10,13 @@ import {
 } from '../../src/render/monumentSprite';
 import { IsoPainter } from '../../src/render/sprites';
 import type { Building } from '../../src/sim/types';
-import { fakeCtx } from './fakeCtx';
+import { imageStageOf, monumentImageStage } from '../../src/render/monumentStage';
+import { bodyHeight, bodyHull } from '../../src/render/iso';
+import { drawBody, drawBodyPlain, drawGhost } from '../../src/render/sprites';
+import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { createWorld } from '../../src/sim/world';
+import type { Monument } from '../../src/sim/types';
+import { fakeCtx, inHull } from './fakeCtx';
 
 const CAM = { x: 0, y: 0, zoom: 1 };
 const STAGES: readonly MonumentImageStage[] = [0, 1, 2, 3, 4];
@@ -117,5 +123,68 @@ describe('M13-E2 T08 Denkmal-Maler', () => {
       expect(log.saves).toBe(log.restores);
       expect(log.underflow).toBe(0);
     }
+  });
+});
+
+describe('M13-E2 T09 Bildstufe in Höhe, Hülle und Ghost', () => {
+  const DEF = BUILDING_DEFS.monument;
+  const mono = (x = 10, y = 10): Building => ({ ...mk(x, y), defId: 'monument' });
+  const mm = (stage: number, running: boolean) => ({ stage, running });
+
+  it('AK-M13E2-36 monumentImageStage: alle sieben erreichbaren Paare', () => {
+    const pairs: [number, boolean, number][] = [
+      [0, false, 0],
+      [0, true, 1],
+      [1, false, 2],
+      [1, true, 2],
+      [2, false, 3],
+      [2, true, 3],
+      [3, false, 4],
+    ];
+    for (const [s, r, want] of pairs) expect(monumentImageStage(mm(s, r))).toBe(want);
+  });
+
+  it('AK-M13E2-36 imageStageOf: Denkmal aus world.monument, null und andere Gebäude 0', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const b = mono();
+    expect(imageStageOf(w, b)).toBe(0);
+    w.monument = { buildingId: b.id, stage: 2, running: true } as Monument;
+    expect(imageStageOf(w, b)).toBe(3);
+    expect(imageStageOf(w, { ...b, defId: 'townhall' })).toBe(0);
+  });
+
+  it('AK-M13E2-36 drawBody mit echter Def: H(s) streng steigend, Spanne, alle Punkte in bodyHull(def, b, s)', () => {
+    const b = mono();
+    const top = project(b.x, b.y);
+    const hs = STAGES.map((s) => {
+      const { ctx, log } = fakeCtx();
+      drawBody(ctx, CAM, DEF, b, 0, undefined, 0, s);
+      const hull = bodyHull(DEF, b, s);
+      for (const q of log.allPoints) expect(inHull(hull, q.x, q.y, 0.5)).toBe(true);
+      return (top.y - Math.min(...log.allPoints.map((q) => q.y))) / ISO_H;
+    });
+    for (let i = 1; i < 5; i++) expect(hs[i]!).toBeGreaterThan(hs[i - 1]!);
+    expect(hs[4]!).toBeGreaterThanOrEqual(2.8);
+    expect(hs[4]!).toBeLessThanOrEqual(3.0);
+    expect(hs[0]!).toBeLessThanOrEqual(0.3);
+  });
+
+  it('AK-M13E2-36 bodyHeight(def, b, s) streng steigend und Stufe 4 über der Amtsstube', () => {
+    const b = mono();
+    const hs = STAGES.map((s) => bodyHeight(DEF, b, s));
+    for (let i = 1; i < 5; i++) expect(hs[i]!).toBeGreaterThan(hs[i - 1]!);
+    expect(hs[4]!).toBeGreaterThan(bodyHeight(BUILDING_DEFS.townhall, mk()));
+    expect(bodyHeight(BUILDING_DEFS.townhall, mk())).toBe(2.0 * ISO_H);
+  });
+
+  it('AK-M13E2-36 drawGhost(monument) zeichnet dieselbe Aufzeichnung wie Stufe 4', () => {
+    const g = fakeCtx();
+    drawGhost(g.ctx, CAM, DEF, 10, 10);
+    const r = fakeCtx();
+    drawBodyPlain(r.ctx, CAM, DEF, { ...mono(), id: -1 }, 0, undefined, 0, 4);
+    const rec = (ev: typeof g.log.events) =>
+      JSON.stringify(ev.map((e) => [e.op, e.style, e.points]));
+    expect(rec(g.log.events)).toBe(rec(r.log.events));
+    expect(g.log.events.length).toBeGreaterThan(0);
   });
 });

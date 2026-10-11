@@ -12,6 +12,7 @@ import {
 import type { Building, BuildingDefId, GoodId, World } from '../sim/types';
 import { tileCorners, tileToScreen, worldToScreen, type Camera } from './camera';
 import { ISO_H, project, radiusEllipse, spriteBounds } from './iso';
+import { imageStageOf } from './monumentStage';
 import { INK_TONE, PALETTE, rgbaOfCss } from './palette';
 
 // --- Darstellungswerte ---
@@ -210,11 +211,12 @@ export function symbolFor(d: Diagnosis): Symbol {
 
 /** Mitte der Oberkante der Bildbox in Bildpunkten: Anker für Bedarfssymbol und roten Punkt. */
 function topAnchor(
+  world: World,
   cam: Camera,
   def: (typeof BUILDING_DEFS)[BuildingDefId],
   b: Building,
 ): { x: number; y: number } {
-  const box = spriteBounds(def, b);
+  const box = spriteBounds(def, b, imageStageOf(world, b));
   return worldToScreen(cam, { x: box.x + box.w / 2, y: box.y });
 }
 
@@ -229,7 +231,7 @@ export function drawUnconnected(
   for (const b of homeBuildings(world)) {
     if (b.connected || b.defId === 'house' || b.defId === 'kontor') continue;
     if (b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1) continue;
-    const a = topAnchor(cam, BUILDING_DEFS[b.defId], b);
+    const a = topAnchor(world, cam, BUILDING_DEFS[b.defId], b);
     ctx.beginPath();
     ctx.arc(a.x, a.y, r, 0, Math.PI * 2);
     ctx.fillStyle = PALETTE.signalRed;
@@ -255,7 +257,7 @@ export function drawNeedSymbols(
     const first = diag[0];
     if (!first) continue;
     const sym = symbolFor(first);
-    const { x: cx, y: cy } = topAnchor(cam, BUILDING_DEFS[b.defId], b);
+    const { x: cx, y: cy } = topAnchor(world, cam, BUILDING_DEFS[b.defId], b);
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, 7);
     ctx.fillStyle = BADGE_BG;

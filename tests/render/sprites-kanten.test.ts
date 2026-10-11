@@ -32,6 +32,8 @@ interface Case {
   def: BuildingDef;
   b: Building;
   variant: number;
+  /** Bildstufe (nur Denkmal; sonst 0). */
+  stage: number;
 }
 /** Jeder Typ × Wohnhaus-Stufen 1–4 × Ausbaustufen (falls LEVELS) × alle Varianten. */
 function cases(): Case[] {
@@ -39,28 +41,33 @@ function cases(): Case[] {
   for (const def of Object.values(BUILDING_DEFS)) {
     const tiers: (Tier | undefined)[] = def.id === 'house' ? [1, 2, 3, 4] : [undefined];
     const levels: (2 | 3 | undefined)[] = LEVELS[def.id] ? [undefined, 2, 3] : [undefined];
-    for (const tier of tiers)
-      for (const level of levels)
-        for (let variant = 0; variant < VARIANT_COUNT; variant++) {
-          const b: Building = {
-            id: 3,
-            defId: def.id,
-            x: 10,
-            y: 10,
-            connected: true,
-            progress: 0,
-            state: 'ok',
-            island: 0,
-          };
-          if (tier) b.house = { tier } as unknown as Building['house'];
-          if (level) b.level = level;
-          out.push({
-            name: `${def.id}${tier ?? ''}${level ? 'L' + level : ''}v${variant}`,
-            def,
-            b,
-            variant,
-          });
-        }
+    // Denkmal: Bildstufen 1–4. Stufe 0 (Baugrund) ist eine flache Erdfläche mit Pflöcken ohne Körper und zeichnet keine
+    // Silhouette (M13-E2 T09); AK-M13E2-36 prüft sie in monumentSprite.test.ts.
+    const stages = def.id === 'monument' ? [1, 2, 3, 4] : [0];
+    for (const stage of stages)
+      for (const tier of tiers)
+        for (const level of levels)
+          for (let variant = 0; variant < VARIANT_COUNT; variant++) {
+            const b: Building = {
+              id: 3,
+              defId: def.id,
+              x: 10,
+              y: 10,
+              connected: true,
+              progress: 0,
+              state: 'ok',
+              island: 0,
+            };
+            if (tier) b.house = { tier } as unknown as Building['house'];
+            if (level) b.level = level;
+            out.push({
+              name: `${def.id}${stage ? 'S' + stage : ''}${tier ?? ''}${level ? 'L' + level : ''}v${variant}`,
+              def,
+              b,
+              variant,
+              stage,
+            });
+          }
   }
   return out;
 }
@@ -90,7 +97,16 @@ function paint(c: Case, zoom = 1, plain = false) {
       return Reflect.get(t, k, t) as unknown;
     },
   });
-  (plain ? drawBodyPlain : drawBody)(spy, sceneCam(zoom), c.def, c.b, 0, undefined, c.variant);
+  (plain ? drawBodyPlain : drawBody)(
+    spy,
+    sceneCam(zoom),
+    c.def,
+    c.b,
+    0,
+    undefined,
+    c.variant,
+    c.stage,
+  );
   return { log, curves };
 }
 const strokes = (events: Ev[]) => events.filter((e) => e.op === 'stroke');
@@ -172,7 +188,9 @@ describe('L3 Kanten: Silhouette statt Strich je Fläche', () => {
 describe('L3 Kanten: Lichtkante', () => {
   it('AK-L3-b Lichtkante je Körper mit Dach oder Quader: 0,5–1 px, wärmer als die angrenzende Fläche', () => {
     let withEdge = 0;
-    for (const c of CASES.filter((x) => x.variant === 0)) {
+    // Denkmal ausgenommen: Sein Schaft ist verjüngt, die Lichtkante läuft über die Wandkante hinaus und wird von keiner
+    // einzelnen Fläche umschlossen (Heuristik für Quader und Dächer; M13-E2 T09, Kantenbild im Browser geprüft)
+    for (const c of CASES.filter((x) => x.variant === 0 && x.def.id !== 'monument')) {
       const { log } = paint(c);
       const light = lightEdges(log.events);
       if (light.length > 0) withEdge++;
@@ -309,7 +327,7 @@ describe('L3 Kanten: Bodenkontakt und Sprite-Fläche', () => {
     for (const zoom of [1, 2])
       for (const c of CASES) {
         const { log } = paint(c, zoom);
-        const bb = spriteBounds(c.def, c.b);
+        const bb = spriteBounds(c.def, c.b, c.stage);
         const [x0, y0, x1, y1] = [
           (bb.x - MARGIN) * zoom,
           (bb.y - MARGIN) * zoom,
