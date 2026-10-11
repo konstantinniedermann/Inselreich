@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-11 · Handbuch 1.47
+
+- Anlass: Prozess-Retro REL-19 (Push-Weg 60,6 min statt ≈ 15 min)
+- Datenbasis: `docs/studio/retros/2026-10-11-rel-19-prozess.md`
+- Ruling: R514
+- Änderungen: Push-Ablauf: Ausnahme von R464 für Fixes eines benannten Push-Blockers (V1); Ende-Routine Punkt 2a: `make zeitreserve-push` bzw. `make push-check` vor Session-Ende (V3)
+
 ## 2026-10-11 · Handbuch 1.46
 
 - Anlass: Kurz-Retro Studio-Session f52039fc, E-061 angenommen
