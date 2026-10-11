@@ -171,7 +171,13 @@ def _stop_group(proc: subprocess.Popen) -> None:
             _restore_handlers(previous)
 
 
-_INTERRUPTS = (signal.SIGINT, signal.SIGTERM, signal.SIGHUP)
+def _interrupt_signals(source=signal) -> tuple:
+    """SIGINT, SIGTERM und SIGHUP; fehlende Signale (Windows) entfallen, der Import bricht nie."""
+    names = ("SIGINT", "SIGTERM", "SIGHUP")
+    return tuple(s for s in (getattr(source, n, None) for n in names) if s is not None)
+
+
+_INTERRUPTS = _interrupt_signals()
 
 
 def _block_interrupts() -> set | None:

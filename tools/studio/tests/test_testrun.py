@@ -326,6 +326,16 @@ class RunTest(unittest.TestCase):
         self.assertGreater(calls.index(masks[-1]), first_ignore)
         self.assertIsNotNone(proc.poll())
 
+    def test_interrupt_signals_tolerate_missing_sighup(self):
+        class NoHup:
+            SIGINT = signal.SIGINT
+            SIGTERM = signal.SIGTERM
+
+        self.assertEqual(
+            testrun._interrupt_signals(NoHup), (signal.SIGINT, signal.SIGTERM)
+        )
+        self.assertIn(signal.SIGINT, testrun._INTERRUPTS)
+
     def test_child_gets_own_process_group(self):
         code, out, _ = self.run_main(
             ["--suite", "studio"], py("import os; print(os.getpgrp() == os.getpid())")
