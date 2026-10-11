@@ -378,7 +378,11 @@ button.chip {
   font-size: 12px;
 }
 .trade-reserve {
-  display: inline-flex;
+  /* Feste eigene Zeile unter Name/Lager/Preis: gleiche Höhe mit und ohne Zusatz, kein Springen (1280 px) */
+  flex: 0 0 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  white-space: nowrap;
   gap: 4px;
   align-items: center;
   font-weight: 400;
