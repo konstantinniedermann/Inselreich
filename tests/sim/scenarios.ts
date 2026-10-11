@@ -16,7 +16,7 @@ import { TIERS } from '../../src/sim/defs/tiers';
 import { maxHouseTier, orderForPeriod } from '../../src/sim/orders';
 import { newHouseState, SERVICE_IDS } from '../../src/sim/population';
 import { recomputeConnectivity } from '../../src/sim/roads';
-import { serialize } from '../../src/sim/save';
+import { SAVE_VERSION, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type {
   Building,
@@ -24,6 +24,7 @@ import type {
   CrisisKind,
   CrisisLevel,
   GoodId,
+  MonumentGood,
   ServiceId,
   Tier,
   World,
@@ -32,6 +33,8 @@ import { deriveUnlocks } from '../../src/sim/unlocks';
 import { createWorld, idx, home } from '../../src/sim/world';
 import { prepareLayout, runColony, startColony, type Layout } from './controller';
 import { forceGrass, forceRect, placeTownhall, setAllTax } from './helpers';
+import { MONUMENT_AT } from './monumentHelpers';
+import { MONUMENT_GOODS, MONUMENT_STAGES } from '../../src/sim/defs/monument';
 import { newMerchantTrajectory, runMerchants } from './merchantsController';
 import { verdeckung } from './scenarios-iso';
 
@@ -800,6 +803,91 @@ function m13VorZiel(): World {
   return w;
 }
 
+/** M13-E2: Basis der Denkmal-Stände (Anhang 08 D): Ziel 2 erreicht, Amtsstube, vier Kaufleute-Häuser, Bauplatz frei mit Weg. */
+function m13e2Base(): World {
+  const w = createWorld(SEED, { unlockAll: true, crisisLevel: 'off' });
+  w.won = true;
+  w.wonMerchants = true;
+  const k = w.buildings[home(w).kontorId]!;
+  for (let i = 0; i < 4; i++) {
+    forceGrass(w, k.x + 2 + i, k.y - 2);
+    const b = put(w, 'house', k.x + 2 + i, k.y - 2);
+    b.house!.tier = 4;
+    b.house!.inhabitants = 20;
+  }
+  // Weg Kontor → Bauplatz: Zeile k.y−1 bis zur Randkachel (MONUMENT_AT.x − 1, MONUMENT_AT.y)
+  roadRow(w, k.x, M13E2_AT.x - 1, k.y - 1);
+  roadCol(w, M13E2_AT.x - 1, k.y - 1, M13E2_AT.y);
+  forceRect(w, M13E2_AT.x, M13E2_AT.y, 3, 3, 'grass');
+  placeTownhall(w);
+  w.money = 30_000;
+  w.wonSpice = false;
+  const stock = home(w).stock;
+  for (const g of MONUMENT_GOODS) stock[g] = 20;
+  stock.wood = 100;
+  return w;
+}
+
+/** Bauplatz des Denkmals in den M13-E2-Ständen (feste Kachel, siehe `monumentHelpers.MONUMENT_AT`). */
+const M13E2_AT = MONUMENT_AT;
+
+/** Basis plus gebautes, angebundenes Denkmal; Lager und Geld bleiben wie in der Basis. */
+function m13e2Bauplatz(): World {
+  const w = m13e2Base();
+  put(w, 'monument', M13E2_AT.x, M13E2_AT.y);
+  recomputeConnectivity(w);
+  home(w).stock.stone = 20;
+  return w;
+}
+
+function m13e2Running(stage: number, delivered: (g: MonumentGood) => number, buy: boolean): World {
+  const w = m13e2Bauplatz();
+  const m = w.monument!;
+  m.stage = stage;
+  m.running = true;
+  for (const g of MONUMENT_GOODS) {
+    m.delivered[g] = delivered(g);
+    m.buy[g] = buy;
+  }
+  return w;
+}
+
+function m13e2Bild(level: number): World {
+  const w = m13e2Bauplatz();
+  const m = w.monument!;
+  if (level === 1) m.running = true;
+  if (level >= 2) m.stage = level - 1;
+  if (level === 4) w.monumentDone = true;
+  return w;
+}
+
+function m13e2Abschnitt1Rest(): World {
+  const w = m13e2Running(0, (g) => MONUMENT_STAGES[0]!.goods[g] - 5, true);
+  w.wonSpice = true;
+  return w;
+}
+
+function m13e2Abschnitt3Rest(): World {
+  const w = m13e2Running(2, (g) => MONUMENT_STAGES[2]!.goods[g] - 1, true);
+  w.wonSpice = true;
+  return w;
+}
+
+const M13E2_SCENARIOS: Record<string, () => World> = {
+  'm13e2-vor-ziel2': () => {
+    const w = m13e2Base();
+    w.wonMerchants = false;
+    return w;
+  },
+  'm13e2-ziel2': m13e2Base,
+  'm13e2-bauplatz': m13e2Bauplatz,
+  'm13e2-abschnitt1': () =>
+    m13e2Running(0, (g) => Math.floor(MONUMENT_STAGES[0]!.goods[g] / 4), false),
+  'm13e2-abschnitt1-rest': m13e2Abschnitt1Rest,
+  'm13e2-abschnitt3-rest': m13e2Abschnitt3Rest,
+  ...Object.fromEntries([0, 1, 2, 3, 4].map((i) => [`m13e2-bild-${i}`, () => m13e2Bild(i)])),
+};
+
 const RAW_SCENARIOS: Record<string, () => World> = {
   'bilanz-nahrung': bilanzNahrung,
   verdeckung,
@@ -842,6 +930,7 @@ const RAW_SCENARIOS: Record<string, () => World> = {
   'm11-stein': m11Stein,
   'm13-ziel1': m13Ziel1,
   'm13-vor-ziel': m13VorZiel,
+  ...M13E2_SCENARIOS,
 };
 
 /**
@@ -878,6 +967,21 @@ export function writeScenarios(
     n++;
   }
   return n;
+}
+
+/**
+ * Zusatz-Stände, die absichtlich nicht in `SCENARIOS` stehen (QA-B5): `m13e2-v13.json` ist `m13e2-ziel2` mit
+ * `version: SAVE_VERSION + 1` und lädt nicht («Unbekannte Version»). Ohne `out` passiert nichts (0).
+ */
+export function writeExtraSaves(
+  out: string | undefined,
+  write: (path: string, data: string) => void,
+): number {
+  if (out === undefined || out === '') return 0;
+  const raw = JSON.parse(serialize(SCENARIOS['m13e2-ziel2']!())) as Record<string, unknown>;
+  raw.version = SAVE_VERSION + 1;
+  write(`${out}/m13e2-v13.json`, JSON.stringify(raw));
+  return 1;
 }
 
 /** Prüfpunkte je Szenario aus Spec 18.1 (absolute Kacheln, Name → Kachel). */

@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { demolish, placeRoad, removeRoad } from '../../src/sim/build';
 import { step } from '../../src/sim/tick';
+import { fireTarget } from '../../src/sim/crises';
+import { createRng } from '../../src/sim/rng';
+import { deserialize } from '../../src/sim/save';
+import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { buyMonumentUnit, buyPrice } from '../../src/sim/trade';
 import {
   isMonumentGood,
@@ -11,6 +15,7 @@ import {
   monumentStartReason,
   newMonument,
   setMonumentBuy,
+  tickMonument,
   setMonumentPaused,
   startMonumentStage,
 } from '../../src/sim/monument';
@@ -35,9 +40,15 @@ import {
   MONUMENT_AT,
   monumentWorld,
   placeMonument,
+  monumentRunWorld,
   runningMonument,
   villageMonument,
 } from './monumentHelpers';
+
+vi.mock('../../src/sim/rng', async (orig) => {
+  const m = await orig<typeof import('../../src/sim/rng')>();
+  return { ...m, createRng: vi.fn(m.createRng) };
+});
 
 describe('AK-M13E2-03 Freischaltung', () => {
   const LOCK = 'Erst nach dem Kaufleute-Ziel';
@@ -763,5 +774,86 @@ describe('Tick-Platz (R5.1)', () => {
     );
     expect(calls[calls.indexOf('tickEconomy') + 1]).toBe('tickMonument');
     expect(calls.slice(-2)).toEqual(['checkWin', 'tickUnlocks']);
+  });
+});
+
+describe('AK-M13E2-16 Determinismus', () => {
+  it('(a) fireTarget wählt nie das Denkmal, auch nicht neben brennbaren Nachbarn', () => {
+    const { w, id } = runningMonument();
+    const { x, y } = MONUMENT_AT;
+    const hut = putBuilding(w, HOME, 'lumberjack', x + 3, y);
+    let hits = 0;
+    for (let tx = x - 3; tx <= x + 7; tx++) {
+      for (let ty = y - 3; ty <= y + 6; ty++) {
+        const t = fireTarget(w, { x: tx, y: ty });
+        if (t !== null) hits++;
+        expect(t?.id).not.toBe(id);
+      }
+    }
+    expect(hits).toBeGreaterThan(0);
+    expect(fireTarget(w, { x: x + 1, y: y + 1 })?.id).toBe(hut.id);
+    expect(BUILDING_DEFS.monument.flammable).not.toBe(true);
+  });
+
+  it('(b) zwei Kopien aus Speichern/Laden bleiben über 1000 Schritte gleich', () => {
+    const a = monumentRunWorld();
+    const r = deserialize(serialize(a));
+    if (!r.ok) throw new Error('laden');
+    const b = r.world;
+    for (let i = 0; i < 1000; i++) {
+      step(a);
+      step(b);
+    }
+    expect(serialize(b)).toBe(serialize(a));
+  });
+
+  it('(c) tickMonument ruft an einem Zug-Tick keinen Zufall auf', () => {
+    const w = monumentRunWorld();
+    stepTo(w, 1009);
+    w.tick = 1010;
+    vi.mocked(createRng).mockClear();
+    const random = vi.spyOn(Math, 'random');
+    tickMonument(w);
+    expect(w.monument!.delivered.stone).toBe(1);
+    expect(createRng).not.toHaveBeenCalled();
+    expect(random).not.toHaveBeenCalled();
+    random.mockRestore();
+  });
+});
+
+describe('AK-M13E2-49 Speichern und Laden mitten im Abschnitt', () => {
+  const END = 1500;
+  const withPause = (w: World, paused: boolean): void => {
+    // Pause zwischen den Schritten: bei Tick 1015 an, bei 1035 aus.
+    if (!paused) return;
+    if (w.tick === 1015) setMonumentPaused(w, true);
+    if (w.tick === 1035) setMonumentPaused(w, false);
+  };
+  const run = (w: World, to: number, paused: boolean): void => {
+    while (w.tick < to) {
+      withPause(w, paused);
+      step(w);
+    }
+  };
+
+  it.each([
+    [1007, false],
+    [1010, false],
+    [1013, false],
+    [1025, true],
+  ] as const)('Speicher-Tick %i (pausiert: %s): K′ gleich Zwilling Z', (s, paused) => {
+    const z = monumentRunWorld();
+    run(z, END, paused);
+    const k = monumentRunWorld();
+    run(k, s, paused);
+    const r = deserialize(serialize(k));
+    if (!r.ok) throw new Error('laden');
+    const k2 = r.world;
+    run(k2, END, paused);
+    expect(serialize(k2)).toBe(serialize(z));
+    expect(k2.monument!.running).toBe(true);
+    expect(k2.monument!.delivered.stone).toBeGreaterThanOrEqual(1);
+    expect(k2.monument!.delivered.glass).toBeGreaterThanOrEqual(1);
+    expect(Math.floor((END - s) / 10) - (paused ? 2 : 0)).toBeGreaterThanOrEqual(40);
   });
 });

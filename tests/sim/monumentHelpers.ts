@@ -1,8 +1,9 @@
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { startMonumentStage } from '../../src/sim/monument';
 import { recomputeConnectivity } from '../../src/sim/roads';
+import { deserialize, serialize } from '../../src/sim/save';
 import { createWorld, home } from '../../src/sim/world';
-import type { World } from '../../src/sim/types';
+import type { CrisisLevel, World } from '../../src/sim/types';
 import { forceRect, village } from './helpers';
 import type { Building } from '../../src/sim/types';
 
@@ -10,8 +11,8 @@ import type { Building } from '../../src/sim/types';
 export const MONUMENT_AT = { x: 39, y: 31 } as const;
 
 /** Testwelt M13-E2 (Spec §10): Kaufleute-Ziel erreicht, leere Stadt, Lager je 20, viel Geld, Tick 1000. */
-export function monumentWorld(): World {
-  const w = createWorld(3, { unlockAll: true });
+export function monumentWorld(opts: { crisisLevel?: CrisisLevel } = {}): World {
+  const w = createWorld(3, { unlockAll: true, ...opts });
   w.wonMerchants = true;
   w.money = 100_000;
   w.tick = 1000;
@@ -74,4 +75,23 @@ export function villageMonument(): { w: World; houses: Building[]; id: number } 
   }
   if (!startMonumentStage(w).ok) throw new Error('Abschnitt starten');
   return { w, houses, id: r.id };
+}
+
+/**
+ * Lauf-Welt für Speichern/Laden mitten im Abschnitt (Anhang 08 B.2): Krisen normal (RNG-Pfad aktiv), Stein 40,
+ * Werkzeug/Glas/Gewürz 20, Zukauf an für Werkzeug, Glas, Gewürz, `won` gesetzt (Ladeprüfung), Abschnitt 1 bei Tick 1000.
+ * Über `deserialize` geladen, damit Zwilling und Kopie vom selben Stand starten.
+ */
+export function monumentRunWorld(): World {
+  const w = monumentWorld({ crisisLevel: 'normal' });
+  w.won = true;
+  layMonumentRoad(w);
+  placeMonument(w);
+  recomputeConnectivity(w);
+  home(w).stock.stone = 40;
+  if (!startMonumentStage(w).ok) throw new Error('Abschnitt starten');
+  Object.assign(w.monument!.buy, { tools: true, glass: true, spice: true });
+  const r = deserialize(serialize(w));
+  if (!r.ok) throw new Error(`Lauf-Welt: ${r.reason}`);
+  return r.world;
 }
