@@ -39,6 +39,7 @@ MODEL_FACTOR = (("opus", 1.0), ("fable", 1.0), ("sonnet", 0.6), ("haiku", 0.2))
 THRESHOLDS = {
     "steuerung": {"gelb": 0.40, "rot": 0.50, "op": ">"},
     "umsetzer": {"gelb": 0.15, "rot": 0.08, "op": "<"},
+    "produktiv": {"gelb": 0.25, "rot": 0.15, "op": "<"},
     "cache_write_5m": {"gelb": 0.15, "rot": 0.25, "op": ">"},
     "lead_ctx": {"gelb": 80_000, "rot": 150_000, "op": ">"},
     "l0_ctx_max": {"gelb": 250_000, "rot": 500_000, "op": ">"},
@@ -52,6 +53,7 @@ THRESHOLDS = {
 LIGHT_LABELS = {
     "steuerung": "Steuerungsanteil (L0 + Leads)",
     "umsetzer": "Umsetzeranteil",
+    "produktiv": "Produktivanteil (Umsetzer + Design/Spec/Plan)",
     "cache_write_5m": "Cache-Write 5 min",
     "lead_ctx": "Lead-Kontext Median (Median der Instanz-Mittelwerte)",
     "l0_ctx_max": "L0-Kontext Max",
@@ -60,6 +62,8 @@ LIGHT_LABELS = {
     "largest_read": "Grösste gelesene Datei",
     "flake": "Tests rot, beim gleichen Stand später grün (Flake-Verdacht)",
 }
+# Zusatz der Umsetzer-Zeile bei grünem Produktivanteil; effort._RED erkennt ihn
+NO_FINDING = " — kein Befund: Produktivanteil grün (R488 V4)"
 MAX_FLAKE_NAMES = 10
 LABEL_KEYS = {label: key for key, label in LIGHT_LABELS.items()}
 
@@ -552,6 +556,7 @@ def _summary(
         "steuerung_heraus_n": removed,
         "steuerung_heraus_grund": grund,
         "umsetzer": share["Umsetzer"],
+        "produktiv": share["Umsetzer"] + share["Design/Spec/Plan"],
         "lead_ctx_median": _med(leads) if leads else None,
         "l0_ctx_max": l0_max,
         "persona_opus": split["ab_guard"][
@@ -757,6 +762,12 @@ def _lights(data: dict) -> list[str]:
             f"gelb < {t['umsetzer']['gelb'] * 100:.0f} %, rot < {t['umsetzer']['rot'] * 100:.0f} %",
         ),
         (
+            LIGHT_LABELS["produktiv"],
+            "produktiv",
+            _pct(data["produktiv"]),
+            f"gelb < {t['produktiv']['gelb'] * 100:.0f} %, rot < {t['produktiv']['rot'] * 100:.0f} %",
+        ),
+        (
             LIGHT_LABELS["cache_write_5m"],
             "cache_write_5m",
             _pct(data["kind_share"]["cache_write_5m"]),
@@ -803,7 +814,10 @@ def _lights(data: dict) -> list[str]:
     out = []
     for label, key, shown, rule in entries:
         value = values[key] if key in values else _raw_value(data, key)
-        out.append(f"- {ampel(key, value).upper()}: {label}: {shown} ({rule})")
+        line = f"- {ampel(key, value).upper()}: {label}: {shown} ({rule})"
+        if key == "umsetzer" and ampel("produktiv", data["produktiv"]) == "grün":
+            line += NO_FINDING  # R488 V4: Rohwert bleibt, effort liest die Zeile nicht als rot
+        out.append(line)
         if key == "flake" and flakes:
             out.append(f"  - Flake-Verdacht: {', '.join(flakes[:MAX_FLAKE_NAMES])}")
     return out

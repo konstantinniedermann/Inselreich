@@ -411,3 +411,24 @@ class FixRoundTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProduktivSuppressionTest(unittest.TestCase):
+    HEAD = "- erzeugt: 2026-10-09T10:00:00Z\n- Datenbasis: 1 Session(s), 20 Agenten, 5 Aufrufe.\n"
+    RAW = "- ROT: Umsetzeranteil: 5.7 % (gelb < 15 %, rot < 8 %)"
+    SUFFIX = " — kein Befund: Produktivanteil grün (R488 V4)"
+
+    def session(self, n, line):
+        parsed = effort.parse_ampel_session(f"S-{n}", self.HEAD + line + "\n")
+        parsed["t"] = n
+        return parsed
+
+    def test_suppressed_line_is_not_red_and_makes_no_incident(self):
+        sessions = [self.session(n, self.RAW + self.SUFFIX) for n in (1, 2)]
+        self.assertEqual(sessions[0]["red"], set())
+        self.assertEqual(effort.ampel_incidents(sessions, set()), [])
+
+    def test_line_without_suffix_stays_incident(self):
+        sessions = [self.session(n, self.RAW) for n in (1, 2)]
+        found = effort.ampel_incidents(sessions, set())
+        self.assertEqual([i["id"] for i in found], ["ampel:umsetzer:S-2"])
