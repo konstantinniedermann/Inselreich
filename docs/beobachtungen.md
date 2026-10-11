@@ -192,3 +192,9 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
   Beobachtung: Flake-Ampel zeigt 5 rote Läufe, vier davon in `terrain.test.ts`; Beleg `make check` auf `dcae12eb` rot bei
   Load 8,5, unmittelbare Wiederholung grün. Ursprung: Retro adhoc-ampel-1011. Einschätzung: mittel (kostet Wiederholungen
   im Integrator); prüfen, ob der Test zeitabhängig ist oder Zufall ohne festen Seed nutzt.
+
+### 2026-10-11 · `stateText` ohne Aufrufer (nach Hinweis-Umstellung I-049)
+
+- **Fundort:** `src/ui/texts.ts:107` (`stateText`), nur noch Re-Export in `src/ui/inspect.ts:82`. Beobachtung: seit der
+  Umstellung des Maus-Hinweises auf `stateInfo` mit `missingInputs`/`reservedInputs` ruft niemand `stateText` auf. Ursprung:
+  I049-UI Final-Review. Einschätzung: gering; beim nächsten Aufräum-Häppchen samt Re-Export streichen.
