@@ -121,8 +121,13 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Session 2026-10-11 (R498): Push REL-19 (`production-integrator`), Plan M13-E2 und Plan I-048 (je `lead-tech`
-  opus), Gate Spec M14-E1 (`lead-tech` + `lead-qa`), Kurzdesign «Nächster Schritt» bei akutem Mangel (`lead-design`).
+- Session 2026-10-11 (R498–R509): Push REL-19 zweiter Versuch im Ruhefenster (R508; erster Versuch `zeitreserve-push`
+  Exit 1, 9 Tests ohne Reserve unter Last 7). Scheitert er: TOOL-BUENDEL-6 Strang A zuerst, dann Push mit `make push-check`.
+- Gegatet, bereit zur Umsetzung nach dem Push: UI-NAECHSTER-SCHRITT (R499/R502), TOOL-BUENDEL-6 (R503/R504, Stränge A/B),
+  M13-E2 (R507/R509, SIM + ART zuerst, Budget 42), I-048 (R505/R506, Sim erst nach Merge M13-E2-SIM, Budget 19).
+  **Release-Sperre** für Spiel-Releases bis M13-E2, I-049, I-048 gemergt sind, gemeinsames Save v12 (R505).
+- Spec M14-E1 gegatet mit Nachtrag (R500/R501); Plan erst nach M13. Handbuch 1.46 (E-061 läuft, R501).
+- Offen: `lead-qa`-Review `nachtrag-i049.md` vor I-049-Start (R509).
 
 ## Parallele Sessions
 
