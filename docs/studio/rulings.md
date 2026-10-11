@@ -5634,3 +5634,13 @@ M13-E2 Controller E; I-049-Sim und I-048-Sim starten erst bei grüner Ampel (Bud
 Regelbezug: R505, R334, STUDIO.md Tempo/Herunterfahren · Kosten bei Irrtum: ein überflüssiger Remote-Branch.
 
 Entscheider: L0 · Anlass: Nutzerfrage · ADR: —
+
+## R525 · 2026-10-11 · R523 V1/V4 umgesetzt: Handbuch 1.50, lead-tech 1.13, E-059 laufend
+
+Ruling: Coach-Commit `88114db9` abgenommen (Stichprobe Diff). E-054 übernommen: Plan-Instanz bei Stufe leicht und
+Werkzeug-Paketen auf sonnet (Modelltabelle, `lead-tech.md` 1.13). E-059 läuft auf dem Platz von E-049; laufend E-057,
+E-059, E-061. Die Kostengewicht-Schwelle aus E-054 verfolgt künftig die Ampel „opus-Anteil“.
+
+Regelbezug: R523, R497 · Kosten bei Irrtum: ein Plan auf schwächerem Modell, Hochstufen jederzeit möglich.
+
+Entscheider: L0 · Anlass: Bericht studio-coach COACH-R523 · ADR: —
