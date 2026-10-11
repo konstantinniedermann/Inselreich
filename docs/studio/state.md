@@ -121,7 +121,8 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts (Session-Ende f52039fc).
+- Session 2026-10-11 (R498): Push REL-19 (`production-integrator`), Plan M13-E2 und Plan I-048 (je `lead-tech`
+  opus), Gate Spec M14-E1 (`lead-tech` + `lead-qa`), Kurzdesign «Nächster Schritt» bei akutem Mangel (`lead-design`).
 
 ## Parallele Sessions
 
