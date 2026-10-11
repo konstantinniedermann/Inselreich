@@ -5775,3 +5775,18 @@ abgenommen (L0 prüft Stichprobe). Start erst nach den Merges von I-049-UI und I
 Regelbezug: gates.md Gate Plan, R530, R533 · Kosten bei Irrtum: ein Plan-Nachtrag.
 
 Entscheider: L0 · Anlass: Urteil lead-qa gate-plan-UI-TEXTE-1 · ADR: —
+
+## R535 · 2026-10-11 · Gate Merge I049-SIM: OK; Mini-UI-Zweige zulässig
+
+Ruling: Sim-Strang T01–T04 (`feat/i049-sim` @ `ffccf116`, Reviews OK, `make check` Exit 0, Baseline unverändert, Zeiten ohne
+Ausreisser über 500 ms) → **Gate Merge OK** (Plan T04: Sim-Merge vor dem UI-Strang; Final-Review T09 über beide Branches
+nach dem UI-Strang). Save Fall A: v12 bleibt, `migrateV11ToV12` ergänzt `reserve`. Die Minimalzweige für `'waitingReserve'`
+in `src/ui/texts.ts`/`panelView.ts` (Ownership-Abweichung für `tsc` Exit 0) sind zulässig; I-049-UI T06 verfeinert sie.
+Golden-Hash in `reserve-bitgleich.test.ts`: I048-SIM erzeugt ihn nur neu, wenn sich die Sim bewusst ändert, mit Rezept im
+Dateikopf. Reihenfolge: Integrator mergt I049-SIM; danach führt I048-SIM `git merge main` aus (Konflikte in `save.ts`,
+`helpers.ts`, `types.ts`, `world.ts`), ergänzt die `reserve`-Rückfaltung, `make check`, dann Gate Merge I048-SIM; danach I-049-UI.
+Wochenfenster hoch: Parallelität halbiert (höchstens 2 Umsetzungsstränge).
+
+Regelbezug: R505, R506, R511, R531 · Kosten bei Irrtum: ein Rückmerge im Sim-Strang.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I049-SIM · ADR: —
