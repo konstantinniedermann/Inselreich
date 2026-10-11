@@ -1,4 +1,4 @@
-import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { BUILDING_DEFS, PAUSED_UPKEEP_PCT } from '../sim/defs/buildings';
 import { GOODS } from '../sim/defs/goods';
 import { SERVICE_BUILDING } from '../sim/population';
 import { refundCost } from '../sim/economy';
@@ -62,6 +62,11 @@ export function reserveGoods(
   return goods.length > 0 ? goods.map((g) => GOODS[g].name).join(', ') : 'Rohstoff';
 }
 
+/** Stilllegen-Text des Info-Panels; die Prozentzahl kommt aus der Def (R533). */
+export function pausedText(): string {
+  return `Stillgelegt — Unterhalt auf ${PAUSED_UPKEEP_PCT} % (aufgerundet)`;
+}
+
 /**
  * Zustandstext des Info-Panels. `missing` = fehlende Inputs (`missingInputs`); leer oder fehlend → alle Inputs
  * aus `consumes` (M8 14.4, Input seit dem letzten Schritt eingetroffen).
@@ -74,7 +79,7 @@ export function stateInfo(
 ): { text: string; ok: boolean } {
   const def = BUILDING_DEFS[b.defId];
   if (b.outageUntil !== undefined) return { text: burningText(b, tick), ok: false };
-  if (b.paused === true) return { text: 'Stillgelegt — halber Unterhalt', ok: false };
+  if (b.paused === true) return { text: pausedText(), ok: false };
   // Anbindung zuerst: `state` wird erst im nächsten Tick nachgeführt (z. B. bei Pause)
   if (!b.connected) return { text: 'Nicht an Kontor angebunden', ok: false };
   if (!def.produces) return { text: 'Angebunden', ok: true };
@@ -91,7 +96,7 @@ export function stateInfo(
     case 'storageFull':
       return { text: 'Lager voll', ok: false };
     case 'paused':
-      return { text: 'Stillgelegt — halber Unterhalt', ok: false };
+      return { text: pausedText(), ok: false };
     case 'burning':
       return { text: burningText(b, tick), ok: false };
     case 'noForest':

@@ -151,15 +151,17 @@ export function statTiles(b: Building): StatTile[] {
   if (b.house) return [];
   const cycle = cycleOf(b);
   const tiles: StatTile[] = [];
+  const stopped = b.paused === true;
   const perMin = cycle === undefined ? '' : `${perMinute(1, cycle)} / min`;
   if (def.produces && cycle !== undefined) {
     const good = GOODS[def.produces].name;
     tiles.push({
       key: 'output',
       label: TILE_LAYOUT.output.label,
-      value: perMin,
-      sub:
-        b.outageUntil !== undefined
+      value: stopped ? 'Stillgelegt' : perMin,
+      sub: stopped
+        ? null
+        : b.outageUntil !== undefined
           ? `${good} · ruht, Betrieb brennt`
           : `${good} · alle ${formatGameTime(cycle)}`,
     });
@@ -176,8 +178,8 @@ export function statTiles(b: Building): StatTile[] {
     tiles.push({
       key: 'input',
       label: TILE_LAYOUT.input.label,
-      value: def.consumes.length > 1 ? `je ${perMin}` : perMin,
-      sub: goodList(def.consumes),
+      value: stopped ? 'Stillgelegt' : def.consumes.length > 1 ? `je ${perMin}` : perMin,
+      sub: stopped ? null : goodList(def.consumes),
     });
   tiles.push({
     key: 'upkeep',
