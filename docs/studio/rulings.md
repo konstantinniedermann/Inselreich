@@ -5690,3 +5690,17 @@ UI-AUFRAEUM-2 nach M13.
 Regelbezug: R505, R514, R523 V3, E-054, E-061 · Kosten bei Irrtum: ein Werkzeug-Plan zu viel.
 
 Entscheider: L0 · Anlass: Bericht lead-production BEOB-AUSW-1011 · ADR: —
+
+## R529 · 2026-10-11 · Runden-Ruling IDEEN-07
+
+Ruling: Sieben neue Ideen I-061–I-067 angenommen, Streichungen I-069–I-072, I-074 und Zusammenfassungen I-068 → I-049,
+I-073 → I-047 bestätigt. **I-062 + I-063** (Betriebsrangliste nach Unterhalt, Weg mit Winkel) als ein UI-Häppchen nach M13.
+**I-064** (Edikt «Bauherr») **nicht** in I-049/v12 — der M13-Umfang bleibt fest (R505); geparkt bis zur ersten Save-Änderung
+nach M13. **I-061** Baustein fürs nächste Meilenstein-Brainstorming (Stadtplanung, mit I-045 und I-051). I-065, I-066,
+I-067 geparkt. Pool-Obergrenze: **I-056 und I-057** sind mit REL-19 live → Status „umgesetzt“; **I-052, I-055** verworfen;
+I-051 bleibt (Stadtplanung), I-034 bleibt geparkt. Pool damit 40. Die zwei Befunde (I-031-Zahlen, Formatvorlage zählt
+beim grep mit) trägt lead-design in docs/beobachtungen.md ein.
+
+Regelbezug: R445, R475, R505, docs/ideen.md Obergrenze · Kosten bei Irrtum: eine Idee zu früh verworfen (wieder aufnehmbar).
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-07 · ADR: —
