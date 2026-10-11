@@ -409,10 +409,6 @@ class FixRoundTest(unittest.TestCase):
         self.assertEqual(self.state(events)["quality"]["escalations"], 2)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class ProduktivSuppressionTest(unittest.TestCase):
     HEAD = "- erzeugt: 2026-10-09T10:00:00Z\n- Datenbasis: 1 Session(s), 20 Agenten, 5 Aufrufe.\n"
     RAW = "- ROT: Umsetzeranteil: 5.7 % (gelb < 15 %, rot < 8 %)"
@@ -432,3 +428,11 @@ class ProduktivSuppressionTest(unittest.TestCase):
         sessions = [self.session(n, self.RAW) for n in (1, 2)]
         found = effort.ampel_incidents(sessions, set())
         self.assertEqual([i["id"] for i in found], ["ampel:umsetzer:S-2"])
+
+    def test_red_regex_skips_suppressed_line_structurally(self):
+        self.assertEqual(effort._RED.findall(self.RAW + self.SUFFIX), [])
+        self.assertEqual(effort._RED.findall(self.RAW), ["Umsetzeranteil"])
+
+
+if __name__ == "__main__":
+    unittest.main()

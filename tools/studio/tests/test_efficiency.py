@@ -554,9 +554,7 @@ class ProduktivTest(unittest.TestCase):
             self.assertNotIn("kein Befund", line)
 
     def test_produktiv_not_measured_without_instances(self):
-        data = efficiency.compute([], {})
-        if data is not None:
-            self.assertIsNone(data["produktiv"])
+        self.assertIsNone(efficiency.compute([], {}))
 
 
 class AdjustedControlTest(unittest.TestCase):

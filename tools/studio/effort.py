@@ -24,7 +24,7 @@ _CREATED = re.compile(r"^- erzeugt:\s*(\S+)", re.MULTILINE)
 _AGENTS = re.compile(r"^- Sessions:\s*\d+,\s*Agenten:\s*(\d+)", re.MULTILINE)
 _MEASURED = re.compile(r"^- Datenbasis: \d+ Session\(s\), (\d+) Agenten", re.MULTILINE)
 # Zeilen mit dem Zusatz „— kein Befund“ (efficiency.NO_FINDING) zählen nicht als rot
-_RED = re.compile(r"^- ROT: (.+?): (?![^\n]*— kein Befund)", re.MULTILINE)
+_RED = re.compile(r"^- ROT: (?![^\n]*— kein Befund)(.+?): ", re.MULTILINE)
 
 
 def _lead(node: dict, nodes: dict[str, dict]) -> str:
