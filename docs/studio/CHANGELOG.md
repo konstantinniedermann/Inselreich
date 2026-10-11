@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-11 · Persona lead-tech 1.13
+
+- Anlass: Kurz-Retro dc50be15, V1 (E-054 übernehmen)
+- Datenbasis: `docs/studio/retros/2026-10-11-session-dc50be15-ende.md`, E-054 Datenpunkte 1–3
+- Ruling: R523
+- Änderungen: Abschnitt Modell: Plan bei Stufe leicht und Werkzeug-Paketen auf `sonnet` mit Kopfzeile `Modell: sonnet (Plan-Instanz bei Stufe leicht und Werkzeug-Paketen)`
+
+## 2026-10-11 · Handbuch 1.50
+
+- Anlass: Kurz-Retro dc50be15, V1 (E-054 übernehmen) und V4 (E-059 auf den freien Platz)
+- Datenbasis: `docs/studio/retros/2026-10-11-session-dc50be15-ende.md`, E-054 Datenpunkte 1–3
+- Ruling: R523
+- Änderungen: Modellwahl: Zeile sonnet und Kopfzeilen-Liste um „Plan-Instanz bei Stufe leicht und Werkzeug-Paketen“ ergänzt; E-054 übernommen; Persona siehe eigener Eintrag
+
 ## 2026-10-11 · Handbuch 1.49
 
 - Anlass: Nacharbeit R520 (Gate Merge TOOL-BUENDEL-6 Strang B)

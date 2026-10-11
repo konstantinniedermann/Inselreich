@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.49 · Stand: 2026-10-11 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.50 · Stand: 2026-10-11 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -130,11 +130,11 @@ roster.md) — sonst erbt der Agent das Modell der Session.
 Modellstufen zentral hier (R10); Aliase statt fester Modell-IDs. Die Wahl richtet sich nach der
 Aufgabe (R71).
 
-| Stufe  | Alias    | Einsatz                                                                                                                                                                   |
-| ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| stark  | `opus`   | Design-Lead, Tech-Lead beim Plan, Spec-Autor, Lizenzprüfung, Final-Review, Meilenstein-Retro                                                                              |
-| mittel | `sonnet` | Controller in der Umsetzung, `lead-qa`-Gate-Urteile, `lead-production`, Task-Reviews, Kurz-Retro, Umsetzung, Recherche, Spec-Nachtrag und Kurzdesign Stufe leicht (E-061) |
-| klein  | `haiku`  | mechanische Prüfungen (Formatierung, Links, Listen abgleichen)                                                                                                            |
+| Stufe  | Alias    | Einsatz                                                                                                                                                                                                                               |
+| ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| stark  | `opus`   | Design-Lead, Tech-Lead beim Plan, Spec-Autor, Lizenzprüfung, Final-Review, Meilenstein-Retro                                                                                                                                          |
+| mittel | `sonnet` | Controller in der Umsetzung, `lead-qa`-Gate-Urteile, `lead-production`, Task-Reviews, Kurz-Retro, Umsetzung, Recherche, Spec-Nachtrag und Kurzdesign Stufe leicht (E-061), Plan-Instanz bei Stufe leicht und Werkzeug-Paketen (E-054) |
+| klein  | `haiku`  | mechanische Prüfungen (Formatierung, Links, Listen abgleichen)                                                                                                                                                                        |
 
 Ein näher rückendes Nutzungslimit ist nie ein Grund für ein schwächeres Modell; L0 fährt
 stattdessen herunter (R69, R71).
@@ -142,7 +142,7 @@ stattdessen herunter (R69, R71).
 Die Persona-Frontmatter legt das Standardmodell fest. Weicht ein Einsatz davon ab (z. B.
 `qa-code-reviewer` im Final-Review), steht `model` **explizit im Agent-Aufruf** und in der
 Briefing-Kopfzeile `Modell:`. Ein Persona-Start als `general-purpose` braucht immer `model`
-(Guard, R167): Controller und Kurz-Retro `sonnet`, Tech-Lead beim Plan und Meilenstein-Retro `opus`.
+(Guard, R167): Controller und Kurz-Retro `sonnet`, Tech-Lead beim Plan und Meilenstein-Retro `opus`; Plan-Instanz bei Stufe leicht und Werkzeug-Paketen (kein Architekturentscheid, kein Save, kein neuer Spielwert) `sonnet` (E-054, R523).
 
 **Kopfzeile `Modell:` (R428, ADR-014).** Syntax: `Modell: <alias> (<Einsatz>)`. Das Werkzeug
 `tools/studio/modelguard.py` liest die Einsatz-Bezeichnungen aus der Spalte „Einsatz“ der Tabelle
@@ -156,7 +156,7 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
   `(Final-Review)`, `(Meilenstein-Retro)`
 - `sonnet`: `Modell: sonnet (Controller in der Umsetzung)`, `(lead-qa-Gate-Urteile)`,
   `(lead-production)`, `(Task-Reviews)`, `(Kurz-Retro)`, `(Umsetzung)`, `(Recherche)`,
-  `(Spec-Nachtrag und Kurzdesign Stufe leicht)`
+  `(Spec-Nachtrag und Kurzdesign Stufe leicht)`, `(Plan-Instanz bei Stufe leicht und Werkzeug-Paketen)`
 - `haiku`: `Modell: haiku (mechanische Prüfungen (Formatierung, Links, Listen abgleichen))`; die Kopfzeile
   ist für `haiku` nie erzwungen, weil es die unterste Stufe ist.
 

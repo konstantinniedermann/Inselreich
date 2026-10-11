@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R497): E-049, E-057, E-061. Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 (Ersatz durch E-059 vorgeschlagen); E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R523): E-057, E-059, E-061. Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 ---
 
@@ -443,7 +443,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Budget-Zählung, Gate Merge; nur nach Ruling)
 - Ruling: R344, R349 (angenommen; wartet auf Platz, höchstens 3 laufend, R350; Handbuch-Sätze und Version 1.31 zurückgenommen)
 
-## E-049 · laufend (angepasst R420) · Steuerungsanteil bereinigt um Plan- und Messpakete
+## E-049 · behalten (R523), abgeschlossen (angepasst R420) · Steuerungsanteil bereinigt um Plan- und Messpakete
 
 - Hypothese: Wenn `metrics.py --efficiency` neben dem Steuerungsanteil eine Zeile „Steuerungsanteil bereinigt“ ausweist, die Lead-Instanzen mit Plan-, Spec-, Brainstorm- oder Messpaketen (Paketname enthält `PLAN`, `SPEC`, `BRAIN`, `PERF` oder `MESS`; Liste in `efficiency.py`) herausrechnet, lässt sich die Wirkung von E-042 und E-038 auf die eigentliche Steuerung getrennt lesen (Retro [m12](retros/2026-10-08-m12.md) B4; Messauftrag R344).
 - Messgrösse: In 3 Session-Dateien steht die Zeile mit Wert (0 × „nicht erfasst“); Gegenprobe: bereinigt plus herausgerechnete Lead-Pakete plus L0 ergibt den Rohwert auf 0,1 Prozentpunkte. Ausgang M12: roh 59,3 %, bereinigt ≈ 41,7 % (Handrechnung aus `lead_stats.rows`). Schwellen wie die Rohzeile (gelb > 40 %, rot > 50 %).
@@ -509,7 +509,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/zeitreserve/rule.ts`, `tools/zeitreserve/reporter.ts`, `tests/tools/` (Paket lead-tech, ≈ 15 Tools)
 - Ruling: –
 
-## E-054 · behalten (R497) · Plan-Instanz bei Stufe leicht und Werkzeug-Paketen auf sonnet
+## E-054 · übernommen (R523) · Plan-Instanz bei Stufe leicht und Werkzeug-Paketen auf sonnet
 
 - Hypothese: Wenn Pläne für Stufe-leicht-Häppchen und Werkzeug-Bündel (kein Architekturentscheid, kein Save, kein neuer Spielwert) von `lead-tech` auf sonnet statt opus geschrieben werden, sinkt das Kostengewicht der Plan-Instanz um den Modellfaktor (0,6), ohne dass die Gate-Plan-Befunde zunehmen (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md) B2; Ausgang `REL-14-PLAN` 1,38 M, `TOOL-BUENDEL` 2,01 M, zusammen 35,4 % der Session).
 - Messgrösse: Kostengewicht je Plan-Instanz ≤ 60 % des Ausgangs bei vergleichbarem Umfang und Steuerungsanteil bereinigt (E-049) ≤ 40 % über 3 Pläne; Gegenprobe: Gate-Plan-Befunde je Plan nicht über Ausgang (REL-14: 5, Bündel: 12, alle nicht blockierend) und 0 blockierende, Review-Runden im Mittel ≤ 2, Erstabnahme nicht unter 90 %.
@@ -567,7 +567,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/production-integrator.md` (nur nach Ruling)
 - Ruling: R459, R464 (Umsetzung mit Handbuch 1.43 und Persona production-integrator 1.9; Beobachtung läuft über die nächsten 3 Merges)
 
-## E-059 · vorgeschlagen · Merge-Treiber für reines Anhängen in `docs/beobachtungen.md`
+## E-059 · laufend · Merge-Treiber für reines Anhängen in `docs/beobachtungen.md`
 
 - Hypothese: Wenn `docs/beobachtungen.md` einen eigenen Merge-Treiber bekommt, der Konflikte nur dann selbst löst, wenn beide Seiten im Konflikt-Abschnitt ausschliesslich Zeilen anhängen (Basis-Teil leer: erst „ours“, dann „theirs“), und sonst mit Konfliktmarken stehen bleibt, entfallen die manuellen Auflösungen am Dateiende, ohne dass gestrichene Zeilen zurückkehren wie unter `merge=union` (E-031) (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md) B3; 3 von 3 Merges der Session, vorher ≥ 3 Fälle bis R458).
 - Messgrösse: 0 manuelle Konfliktauflösungen in `docs/beobachtungen.md` in den nächsten 3 Merges, die die Datei auf beiden Seiten berühren (Ausgang 3 von 3); Gegenprobe: 0 zurückgekehrte gestrichene Zeilen und 0 verlorene Einträge (Überschriften nach dem Merge = Basis + Zugänge beider Seiten − Löschungen, per `git diff <merge-base>`), Konflikte mit Löschungen bleiben manuell.
@@ -575,8 +575,8 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Merges, höchstens bis 2026-11-19.
 - Rückfall: Zeile in `.gitattributes` entfernen; Integrator löst wie bisher (R303).
 - Dateien: `.gitattributes`, `tools/studio/merge_append.py` (neu, mit Tests unter `tools/studio/tests/`), `Makefile` (Ziel zum Setzen von `merge.beob-append.driver` in `.git/config`, gilt für alle Worktrees), `.claude/agents/production-integrator.md`, `docs/studio/STUDIO.md` (Merges), `docs/studio/CHANGELOG.md` (nur nach Ruling; Umsetzung als Werkzeug-Paket)
-- Ruling: R520 (Werkzeug gemergt, Merge-Treiber `beob-append`); Start wartet auf Platz, 3 Experimente laufen (E-049, E-057, E-061)
-- Start: –
+- Ruling: R520 (Werkzeug gemergt, Merge-Treiber `beob-append`); Start 2026-10-11 auf dem Platz von E-049 (R523 V4)
+- Start: 2026-10-11
 - Bewertung: –
 
 ## E-060 · vorgeschlagen · Budget-Hook blockt statt zu warnen (Anpassung E-055)
