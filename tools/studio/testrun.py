@@ -241,7 +241,7 @@ def _raise_interrupt(signum, frame) -> None:
 def _install_interrupt_handlers() -> dict:
     """SIGTERM/SIGHUP wie Ctrl-C behandeln, damit die Prozessgruppe nicht verwaist."""
     previous = {}
-    for sig in (signal.SIGTERM, signal.SIGHUP):
+    for sig in (s for s in _INTERRUPTS if s != signal.SIGINT):
         try:
             previous[sig] = signal.signal(sig, _raise_interrupt)
         except ValueError:  # nicht im Hauptthread
