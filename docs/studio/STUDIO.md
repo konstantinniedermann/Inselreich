@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.45 · Stand: 2026-10-10 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.46 · Stand: 2026-10-11 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -130,11 +130,11 @@ roster.md) — sonst erbt der Agent das Modell der Session.
 Modellstufen zentral hier (R10); Aliase statt fester Modell-IDs. Die Wahl richtet sich nach der
 Aufgabe (R71).
 
-| Stufe  | Alias    | Einsatz                                                                                                                |
-| ------ | -------- | ---------------------------------------------------------------------------------------------------------------------- |
-| stark  | `opus`   | Design-Lead, Tech-Lead beim Plan, Spec-Autor, Lizenzprüfung, Final-Review, Meilenstein-Retro                           |
-| mittel | `sonnet` | Controller in der Umsetzung, `lead-qa`-Gate-Urteile, `lead-production`, Task-Reviews, Kurz-Retro, Umsetzung, Recherche |
-| klein  | `haiku`  | mechanische Prüfungen (Formatierung, Links, Listen abgleichen)                                                         |
+| Stufe  | Alias    | Einsatz                                                                                                                                                                   |
+| ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| stark  | `opus`   | Design-Lead, Tech-Lead beim Plan, Spec-Autor, Lizenzprüfung, Final-Review, Meilenstein-Retro                                                                              |
+| mittel | `sonnet` | Controller in der Umsetzung, `lead-qa`-Gate-Urteile, `lead-production`, Task-Reviews, Kurz-Retro, Umsetzung, Recherche, Spec-Nachtrag und Kurzdesign Stufe leicht (E-061) |
+| klein  | `haiku`  | mechanische Prüfungen (Formatierung, Links, Listen abgleichen)                                                                                                            |
 
 Ein näher rückendes Nutzungslimit ist nie ein Grund für ein schwächeres Modell; L0 fährt
 stattdessen herunter (R69, R71).
@@ -155,7 +155,8 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
 - `opus`: `Modell: opus (Design-Lead)`, `(Tech-Lead beim Plan)`, `(Spec-Autor)`, `(Lizenzprüfung)`,
   `(Final-Review)`, `(Meilenstein-Retro)`
 - `sonnet`: `Modell: sonnet (Controller in der Umsetzung)`, `(lead-qa-Gate-Urteile)`,
-  `(lead-production)`, `(Task-Reviews)`, `(Kurz-Retro)`, `(Umsetzung)`, `(Recherche)`
+  `(lead-production)`, `(Task-Reviews)`, `(Kurz-Retro)`, `(Umsetzung)`, `(Recherche)`,
+  `(Spec-Nachtrag und Kurzdesign Stufe leicht)`
 - `haiku`: `Modell: haiku (mechanische Prüfungen (Formatierung, Links, Listen abgleichen))`; die Kopfzeile
   ist für `haiku` nie erzwungen, weil es die unterste Stufe ist.
 

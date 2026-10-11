@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R471): E-049, E-054, E-057. Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 (Ersatz durch E-059 vorgeschlagen); E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R497): E-049, E-057, E-061. Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 (Ersatz durch E-059 vorgeschlagen); E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 ---
 
@@ -508,7 +508,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/zeitreserve/rule.ts`, `tools/zeitreserve/reporter.ts`, `tests/tools/` (Paket lead-tech, ≈ 15 Tools)
 - Ruling: –
 
-## E-054 · laufend (R459) · Plan-Instanz bei Stufe leicht und Werkzeug-Paketen auf sonnet
+## E-054 · behalten (R497) · Plan-Instanz bei Stufe leicht und Werkzeug-Paketen auf sonnet
 
 - Hypothese: Wenn Pläne für Stufe-leicht-Häppchen und Werkzeug-Bündel (kein Architekturentscheid, kein Save, kein neuer Spielwert) von `lead-tech` auf sonnet statt opus geschrieben werden, sinkt das Kostengewicht der Plan-Instanz um den Modellfaktor (0,6), ohne dass die Gate-Plan-Befunde zunehmen (Retro [session-c64c0775-ende](retros/2026-10-09-session-c64c0775-ende.md) B2; Ausgang `REL-14-PLAN` 1,38 M, `TOOL-BUENDEL` 2,01 M, zusammen 35,4 % der Session).
 - Messgrösse: Kostengewicht je Plan-Instanz ≤ 60 % des Ausgangs bei vergleichbarem Umfang und Steuerungsanteil bereinigt (E-049) ≤ 40 % über 3 Pläne; Gegenprobe: Gate-Plan-Befunde je Plan nicht über Ausgang (REL-14: 5, Bündel: 12, alle nicht blockierend) und 0 blockierende, Review-Runden im Mittel ≤ 2, Erstabnahme nicht unter 90 %.
@@ -589,7 +589,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: –
 - Bewertung: –
 
-## E-061 · vorgeschlagen · Spec-Nachtrag und Kurzdesign Stufe leicht auf sonnet
+## E-061 · laufend (R497) · Spec-Nachtrag und Kurzdesign Stufe leicht auf sonnet
 
 - Hypothese: Wenn `lead-design` Spec-Nachträge (Einarbeitung von Gate-Befunden ohne neue Spielwerte) und Kurzdesigns der Stufe leicht (kein Save, kein neuer Spielwert) auf sonnet statt opus schreibt, sinkt das Kostengewicht dieser Instanzen um den Modellfaktor, ohne dass die Befunde im folgenden Gate zunehmen — analog E-054 (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md), Ampel opus-Anteil gelb 76,7 %; Nachträge M13-E2 0,71 M und I-048 0,70 M, Kurzdesign UI-TASTEN 0,16 M, alle opus).
 - Messgrösse: Kostengewicht je Nachtrag-Instanz ≤ 60 % des Ausgangs (0,70 M) und je Kurzdesign ≤ 60 % von 0,16 M über 3 Instanzen; opus-Anteil der Session ≤ 70 % in einer Session mit ≥ 2 Spec-Arbeiten. Gegenprobe: Befunde im folgenden Gate (Plan bzw. Kombi) zu Spec-Inhalten nicht über Ausgang (R492/R493: Gate Plan folgt), 0 ZURÜCK, kein zweiter Nachtrag zum selben Gate.
@@ -597,6 +597,6 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Instanzen, höchstens bis 2026-11-19; Start erst bei freiem Platz (nach Bewertung E-054).
 - Rückfall: Zeile in der Modelltabelle (`STUDIO.md`) und Satz in `lead-design.md` auf die Fassung davor.
 - Dateien: `docs/studio/STUDIO.md` (Modelltabelle), `.claude/agents/lead-design.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
-- Ruling: –
-- Start: –
+- Ruling: R497
+- Start: 2026-10-11 (erster Fall: Spec-Nachtrag M14-E1)
 - Bewertung: –

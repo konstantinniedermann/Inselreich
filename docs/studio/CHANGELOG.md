@@ -22,6 +22,27 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-11 · Handbuch 1.46
+
+- Anlass: Kurz-Retro Studio-Session f52039fc, E-061 angenommen
+- Datenbasis: `docs/studio/retros/2026-10-10-session-f52039fc-ende.md`
+- Ruling: R497
+- Änderungen: Modelltabelle (Zeile `sonnet`) und Kopfzeilen-Bezeichnungen: „Spec-Nachtrag und Kurzdesign Stufe leicht“ (E-061); E-054 behalten und abgeschlossen, E-061 laufend
+
+## 2026-10-11 · Persona lead-design 1.11
+
+- Anlass: E-061 angenommen
+- Datenbasis: `docs/studio/retros/2026-10-10-session-f52039fc-ende.md`
+- Ruling: R497
+- Änderungen: Spec-Nachträge und Kurzdesigns der Stufe leicht auf `sonnet`, Kopfzeile `Modell:` genannt
+
+## 2026-10-11 · Persona production-integrator 1.10
+
+- Anlass: Prozess-Aussensicht REL-18, V3
+- Datenbasis: `docs/studio/retros/2026-10-10-rel-18-prozess.md`
+- Ruling: R488
+- Änderungen: CI-Wartezeit mit `timeout 240 gh run watch <id>` in Schleife, keine Heartbeat-Ausnahme
+
 ## 2026-10-10 · Handbuch 1.45
 
 - Anlass: Kurz-Retro Studio-Session 5a00a316, V1–V3 angenommen
