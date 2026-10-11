@@ -48,9 +48,11 @@ describe('M10 Amtsstube (Spec 5.1, 5.2)', () => {
     });
     for (const k of ['stormAffected', 'service', 'serviceRadius', 'supplyRadius'] as const)
       expect(t[k]).toBeUndefined();
-    expect(BUILDING_IDS[BUILDING_IDS.length - 1]).toBe('townhall');
+    // M13-E2 T01: monument ist letzter Schlüssel
+    expect(BUILDING_IDS[BUILDING_IDS.length - 1]).toBe('monument');
     expect(BUILDING_IDS.filter((id) => BUILDING_DEFS[id].maxCount !== undefined)).toEqual([
       'townhall',
+      'monument',
     ]);
     expect(UNLOCKS.find((u) => u.id === 'U3')!.buildings).toEqual(['cattlefarm', 'townhall']);
     expect(BUILDING_DEFS.toolmaker.requiresService).toBe('school');
