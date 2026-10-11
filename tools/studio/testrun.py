@@ -23,6 +23,8 @@ GRACE = 5.0  # Sekunden zwischen SIGTERM und SIGKILL
 POLL = 0.02
 MAX_NAMES = 50
 MAX_NAME_LEN = 200
+MAX_MESSAGE_LEN = 200
+MESSAGE_RE = re.compile(r"^\s*(?:(?:\w+\.)*\w*(?:Error|Exception)\b|Test timed out)")
 UNITTEST_RE = re.compile(r"^(FAIL|ERROR): (\S+) \((.+)\)$")
 VITEST_RE = re.compile(
     r"^\s*FAIL\s+(?:\|[^|]+\|\s+)?(tests/\S+\.test\.ts)(?:\s+>\s+(.+?)|\s+\[.*\])?\s*$"
@@ -58,6 +60,33 @@ def parse_names(lines: list[str], suite: str) -> list[str]:
         if len(names) >= MAX_NAMES:
             break
     return names
+
+
+def _is_message(line: str) -> bool:
+    return MESSAGE_RE.match(line) is not None
+
+
+def parse_messages(lines: list[str], suite: str) -> dict[str, str]:
+    """Name -> erste Fehlerzeile (Error/Exception/Timeout) vor dem nächsten Namen.
+
+    Wirft nie; nicht erkennbare Meldungen fehlen einfach (``names`` bleibt gültig).
+    """
+    find = _vitest_name if suite == "vitest" else _unittest_name
+    messages: dict[str, str] = {}
+    current: str | None = None
+    try:
+        for raw in lines:
+            line = raw.rstrip("\n")
+            name = find(line)
+            if name is not None:
+                current = name[:MAX_NAME_LEN]
+            elif current is not None and _is_message(line):
+                if current not in messages and len(messages) < MAX_NAMES:
+                    messages[current] = line.strip()[:MAX_MESSAGE_LEN]
+                current = None
+    except Exception:  # noqa: BLE001 - testrun wirft nie
+        return messages  # bisher gefundene Meldungen bleiben gültig
+    return messages
 
 
 def _git(*args: str) -> bytes:
@@ -105,6 +134,9 @@ def build_event(suite: str, code: int, lines: list[str]) -> dict:
     event = _base_event(suite, "test_passed" if code == 0 else "test_failed")
     if code != 0:
         event["names"] = parse_names(lines, suite)
+        messages = parse_messages(lines, suite)
+        if messages:
+            event["messages"] = messages
         event["exit"] = code
         event["load"] = round(os.getloadavg()[0], 1)
     return event

@@ -181,14 +181,16 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 ### 2026-10-11 · Budget-Hook `warning()` und `tablecheck` Randfälle (TOOL-BUENDEL-7)
 
-- **Fundort:** `tools/studio/budgetwarn.py` (`warning()`: Phasenname/Gross-Kleinschreibung vor TOOL-BUENDEL-7 nicht berücksichtigt, Rest
-  prüfen), `tools/studio/tablecheck.py` (`_open_backtick`: meldet ersten Backtick-Lauf ohne Partner sofort, CommonMark scannt weiter),
-  `tools/studio/testrun.py` (Ctrl-C-Fenster zwischen zwei Signalen nur per Mock belegt). Ursprung: Reviews TOOL-BUENDEL-7.
-  Einschätzung: gering; im Repo ohne Treffer.
+- **Entschieden (TOOL-BUENDEL-8 T04, 2026-10-11), kein Code, kein Folgeissue:**
+  - `warning()` Phasenname/Gross-Kleinschreibung: erledigt (`_matches` vergleicht `casefold`, `_phase` trimmt; `test_phase_case_insensitive`).
+  - `tablecheck._open_backtick`: bleibt. Absichtlich strenger als CommonMark («jede ungepaarte Backtick-Folge in einer Tabellenzelle ist verdächtig»), im Repo 0 Treffer, `test_unmatched_run_length_is_reported` hält es fest; Fehlalarm per Maskierung behebbar.
+  - `testrun` Ctrl-C-Fenster nur per Mock: bleibt. Ein Test mit echten Signalen wäre zeitabhängig (Race) und erzeugte selbst Flakes; `pthread_sigmask` schliesst das Fenster ab dem ersten Moment.
 
 ### 2026-10-11 · Last-Flake `terrain.test.ts` (R170 Kantenenergie) unter Load > 8
 
 - **Fundort:** `tests/render/terrain.test.ts` (R170 Kachelraster, Kantenenergie ≤ 2,3-fach), dazu einmal `tests/sim/save.test.ts`.
   Beobachtung: Flake-Ampel zeigt 5 rote Läufe, vier davon in `terrain.test.ts`; Beleg `make check` auf `dcae12eb` rot bei
-  Load 8,5, unmittelbare Wiederholung grün. Ursprung: Retro adhoc-ampel-1011. Einschätzung: mittel (kostet Wiederholungen
-  im Integrator); prüfen, ob der Test zeitabhängig ist oder Zufall ohne festen Seed nutzt.
+  Load 8,5, unmittelbare Wiederholung grün. Ursprung: Retro adhoc-ampel-1011.
+- **Diagnose (TOOL-BUENDEL-8 T03, nur Quellcode gelesen, nichts gemessen):** Die Rechnungen sind deterministisch (feste Seeds 3, 5, 12588; in beiden Dateien kein `Math.random`/`Date.now`; `performance.now` nur in den Zeittests mit Budget, `terrain.test.ts` Z. 313 und 1113, `save.test.ts` Z. 1404). Die wechselnden Testnamen bei Wiederholung grün sprechen für eine Zeitüberschreitung unter Fremdlast (Hypothese H1, unbelegt) statt für einen Wertfehler.
+- **Timeouts je Test:** R170-Block (Z. 672–686) 60 s, patchGrid AK-R1-01 (Z. 746) 30 s (nicht ohne Timeout, wie die Planannahme war), AK-E1-11/Dünen-Tests 15–60 s; `save.test.ts` AK-S1-14 (Z. 624, 730) ohne eigenes Timeout, also Vitest-Standard 5 s. Der `save`-Fall hat damit den knappsten Spielraum (Setup-Kosten nicht gemessen).
+- **Empfehlung:** Kein Fix auf Verdacht. Seit TOOL-BUENDEL-8 T05 trägt `test_failed` die Fehlermeldung (`messages`). Beim nächsten roten Lauf entscheidet sie: «Test timed out» heisst Timeout je Test anheben (eigenes Häppchen, dann ist `tests/` bzw. `vite.config.ts` zulässig), Zahlenabweichung heisst Ursache im Code suchen. Schwellen bleiben unverändert.

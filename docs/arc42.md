@@ -628,7 +628,7 @@ merge-driver` setzt die Treiberkonfiguration einmal je Klon in `.git/config`; oh
   Zeitreserve (`check.ts --push`), bei Exit 2 oder Exit 1 mit `loadStart` > 3 höchstens eine Nachmessung der markierten
   Dateien, zuletzt `make check-ci-perf`. Exit 0 grün, 1 rot oder Arbeitsbaum verändert, 2 nicht belastbar, 3 Testsperre
   belegt; Ereignis `push_check` (HEAD, Exit, `full_checks`, `retry_files`, Schritte mit Dauer und 1-min-Load zu Stufenbeginn, R514 V2, `load_errors`). `make test` und `make studio-test` laufen über `tools/studio/testrun.py`: rote Läufe schreiben das Ereignis
-  `test_failed` mit Testnamen, grüne `test_passed` (je mit Commit und Diff-Prüfsumme, die ungetrackte, nicht
+  `test_failed` mit Testnamen und, sofern erkennbar, der ersten Fehlerzeile je Test (`messages`, ≤ 200 Zeichen), grüne `test_passed` (je mit Commit und Diff-Prüfsumme, die ungetrackte, nicht
   ignorierte Dateien nach Name, Grösse und `mtime_ns` einschliesst); in CI (`CI` gesetzt) und
   bei Testsperre-Abbruch (`--skip-exit 3`) entsteht kein Ereignis. Das Kommando läuft in einer eigenen
   Prozessgruppe; Ctrl-C, SIGTERM und SIGHUP beenden die ganze Gruppe (SIGTERM, nach 5 s SIGKILL), schreiben das
