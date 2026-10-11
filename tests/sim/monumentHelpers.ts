@@ -1,4 +1,4 @@
-import { placeRoad } from '../../src/sim/build';
+import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { createWorld, home } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
 import { forceRect } from './helpers';
@@ -21,4 +21,11 @@ export function monumentWorld(): World {
   forceRect(w, MONUMENT_AT.x - 1, MONUMENT_AT.y + 1, 1, 1, 'grass');
   if (!placeRoad(w, MONUMENT_AT.x - 1, MONUMENT_AT.y + 1).ok) throw new Error('Weg am Denkmal');
   return w;
+}
+
+/** Baut das Denkmal am festen Bauplatz; wirft nur im Test, wenn der Bau scheitert. */
+export function placeMonument(w: World): number {
+  const r = placeBuilding(w, 'monument', MONUMENT_AT.x, MONUMENT_AT.y);
+  if (!r.ok || r.id === undefined) throw new Error('Denkmal setzen');
+  return r.id;
 }
