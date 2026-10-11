@@ -458,6 +458,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Anpassung umgesetzt (R433 V2, TOOL-BUENDEL-2, 319fa8bc): herausgerechnet werden Lead-Instanzen mit Freigabephase `plan-*`/`design-*`/`gate-*` (Zuordnung `claim_budgets`) oder „Budget: keins“; die Zeile nennt den Anteil je Grund. Rohzeile und Klassen unverändert (Entscheid E1 im Plan); Messgrösse ‚Klasse Design/Spec/Plan > 0‘ gelesen als ‚herausgerechnet Plan > 0 bei Plan-Instanzen‘. Zählung der Datenpunkte beginnt mit der ersten Session nach dem Merge neu; Frist 2026-11-19 unverändert.
 - Datenpunkt 1 von 3 nach der Anpassung, S-2026-10-10-c64c0775 (Retro [session-c64c0775-b-ende](retros/2026-10-10-session-c64c0775-b-ende.md) B2): roh 68,7 %, bereinigt 37,6 %, herausgerechnet 31,1 Punkte (Plan 16,2, Design 1,7, Gate 0,0, nur Budget keins 13,2; 5 von 11 Lead-Instanzen); Gegenprobe erfüllt. Weiter beobachten.
 - Datenpunkt 2 von 3, S-2026-10-10-f52039fc (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md) B5): roh 58,3 %, bereinigt 23,4 %, herausgerechnet 34,9 Punkte (21 von 25 Lead-Instanzen; Plan 2,8, Design 22,7, Gate 9,5); Gegenprobe erfüllt. Lücke: `design-m14-e1` (1,36 M, ≈ 6,5 Punkte) hat in `lead_phases` keine Phase, weil die Freigabe 3 s nach dem Start kam; bereinigt wären ≈ 16,9 %. Weiter beobachten; Lücke adressiert E-060.
+- Datenpunkt 3 von 3, S-2026-10-11-dc50be15 (Retro [session-dc50be15-ende](retros/2026-10-11-session-dc50be15-ende.md) B4): roh 66,2 %, bereinigt 30,1 %, herausgerechnet 36,1 Punkte (16 von 22 Lead-Instanzen; Plan 32,1, Design 0,5, Gate 3,1, nur Budget keins 0,4); Gegenprobe erfüllt, 0 × „nicht erfasst“, die Lücke aus f52039fc trat nicht wieder auf. Bewertungsvorschlag: **behalten**; Status bis zum Ruling unverändert.
 
 ## E-050 · behalten (R459) · Fortsetzung nach Pause als frische Instanz (Umsetzer)
 
@@ -554,6 +555,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R471 (V3)
 - Start: 2026-10-10 (Handbuch 1.45): Pflichtzeile in `templates/briefing.md`. Der Persona-Satz in `.claude/agents/lead-*.md` ist nicht gesetzt (Umsetzungsauftrag nur `docs/studio/`); er folgt nur, wenn die Briefing-Zeile die Schwelle nach 2 Sessions verfehlt. Erster Datenpunkt: nächste Studio-Session.
 - Datenpunkt 1 von 3, S-2026-10-10-f52039fc (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md)): Lese-Ergebnisse > 30 KB = 2 (37,0 KB Spec M13-E2, 35,1 KB Tool-Ergebnis), Schwelle ≤ 2 erfüllt; Cache-Write 5 min 26,8 %, Schwelle ≤ 18 % verfehlt (Neuschreibungen > 20k vor allem `lead-design`, 8). Weiter beobachten.
+- Datenpunkt 2 von 3, S-2026-10-11-dc50be15 (Retro [session-dc50be15-ende](retros/2026-10-11-session-dc50be15-ende.md) B1): Lese-Ergebnisse > 30 KB = 3 (35,5 KB und 33,5 KB Tool-Ergebnisse, 31,7 KB Spec M14-E1), Schwelle ≤ 2 verfehlt; Cache-Write 5 min 21,6 %, Schwelle ≤ 18 % verfehlt, aber −5,2 Punkte gegenüber Datenpunkt 1. Neuschreibungen > 20k erklären nur ≈ 23 % der Kostenart (1,31 M von ≈ 5,7 M); Hebelgrösse klein. Weiter beobachten.
 
 ## E-058 · umgesetzt (Vorlagenzeile, kein Platz; R459, R464) · Integrator-Briefing nennt beide Prüfbefehle
 
@@ -600,4 +602,5 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Modelltabelle), `.claude/agents/lead-design.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
 - Ruling: R497
 - Start: 2026-10-11 (erster Fall: Spec-Nachtrag M14-E1)
+- Datenpunkt 1 von 3, S-2026-10-11-dc50be15 (Retro [session-dc50be15-ende](retros/2026-10-11-session-dc50be15-ende.md) B4): `design-m14-e1-nachtrag` (sonnet) 0,078 M gegen Ausgang 0,70 M (≈ 11 %, Schwelle ≤ 60 % erfüllt); Gate danach ohne weitere Befunde, 0 ZURÜCK (R501); Kurzdesign `design-ui-naechster-schritt` (sonnet) 0,056 M gegen 0,16 M (≈ 35 %); opus-Anteil 55,6 % (≤ 70 % erfüllt). Weiter beobachten.
 - Bewertung: –
