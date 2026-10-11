@@ -275,3 +275,9 @@ Der gestärkte Test `tests/ui/goodFocus.test.ts` (AK-GC-08) belegt die Trennung 
   (1) `monumentNightLight` (Leuchtfeuer bei Nacht) ist definiert, aber nirgends eingehängt. (2) In `tests/render/renderer.test.ts`
   schwankt die Zahl der Frame-Ereignisse zwischen Läufen. Ursprung: lead-art M13-E2-ART. Einschätzung: (1) mittel, falls die
   Spec ein Nachtlicht verlangt (Controller E prüft in T15), sonst niedrig; (2) niedrig, Flake-Kandidat.
+
+### 2026-10-11 · M13-E2-UI: «Kein Kontor» auch beim Gut-Sperr-Fall
+
+- **Fundort:** `feat/m13-e2-ui` T11 (`26d51c50`, Gründe/Abriss-Bestätigung). Beobachtung: Der Grund «Kein Kontor» erscheint
+  spec-konform auch dann, wenn eigentlich der Sperrbestand eines Guts (`goodLock`) den Zug verhindert — Text ungenau.
+  Ursprung: Controller D M13-E2-UI. Einschätzung: niedrig; mit I-049-UI (Sperrbestand-Anzeige) gemeinsam prüfen.
