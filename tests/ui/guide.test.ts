@@ -561,7 +561,7 @@ describe('UI-NAECHSTER-SCHRITT akuter Warenmangel (R499)', () => {
     expect(s).not.toContain('Schäferei');
   });
   it('AK-NS-02 Lager gefüllt → bisheriger Pfad', () => {
-    expect(nextStep(hunger(5))).not.toContain('aufgebraucht');
+    expect(nextStep(hunger(5))).toBe('Baue weitere Wohnhäuser und versorge sie');
   });
   it('AK-NS-03 volles Haus will Gut der nächsten Stufe, Mangel bei stehendem Erzeuger gewinnt', () => {
     const w = world(1, TIERS[1].maxInhabitants, []);
@@ -613,6 +613,22 @@ describe('UI-NAECHSTER-SCHRITT akuter Warenmangel (R499)', () => {
     const s = nextStep(w);
     expect(s).toContain('kaufe es am Kontor oder gründe ein Kontor auf einer Gewürzinsel');
     expect(s).not.toContain('baue mehr');
+  });
+  it('AK-NS-07 Kolonie: Heimat hat Gewürz, Insel des Hauses nicht, Plantage steht → kein «aufgebraucht»', () => {
+    const w = twoIslandWorld();
+    const k = w.buildings[home(w).kontorId]!;
+    putBuilding(w, 0, 'spicefarm', k.x + 4, k.y);
+    const h = putBuilding(w, 1, 'house', k.x + 2, k.y);
+    setHouse(h, 4, 20, ['food', 'cloth', 'rum', 'glass']); // nur Gewürz unerfüllt
+    w.islands[0]!.stock.spice = 50;
+    w.islands[1]!.stock.spice = 0;
+    w.money = 1000;
+    // Fremdgüter folgen weiter dem Heimatlager (`goodSentence`): mit Gewürz dort kein Gewürz-Satz.
+    expect(nextStep(w)).not.toContain('aufgebraucht');
+    w.islands[0]!.stock.spice = 0;
+    const s = nextStep(w);
+    expect(s).toContain('kaufe es am Kontor oder gründe ein Kontor auf einer Gewürzinsel');
+    expect(s).not.toContain('aufgebraucht');
   });
   it('Kolonie: Mangel zählt am Bestand der Insel des Hauses, nicht der Heimat', () => {
     const w = twoIslandWorld();
