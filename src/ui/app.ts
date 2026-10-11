@@ -2,6 +2,7 @@ import { BUILDING_DEFS, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
 import { crisisView } from '../sim/queries';
 import { buyPrice } from '../sim/trade';
+import { setReserve } from '../sim/reserve';
 import { deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { connectBuilding } from '../sim/connect';
@@ -767,6 +768,11 @@ function launch(
             if (!r.ok)
               showError(friendlyReason(world, r.reason, tradeCtx(op, good, n, tradeIsland)));
             else if (op === 'sell') sound.play('coin');
+            refresh();
+          },
+          reserve: (good, value) => {
+            const r = setReserve(world, tradeIsland, good, value);
+            if (!r.ok) showError(friendlyReason(world, r.reason));
             refresh();
           },
         },

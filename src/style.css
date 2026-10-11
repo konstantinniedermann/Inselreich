@@ -377,6 +377,12 @@ button.chip {
   font-weight: 400;
   font-size: 12px;
 }
+.trade-reserve {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  font-weight: 400;
+}
 .trade-cell {
   display: flex;
   flex-wrap: wrap;
