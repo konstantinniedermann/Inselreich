@@ -178,3 +178,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 - **Fundort:** `tests/sim/edicts.test.ts:252-264`. Beobachtung: deckt dasselbe wie `buyPct.test.ts:113-118`. Ursprung:
   Final-Review I048-SIM. Einschätzung: gering; optional streichen beim nächsten Aufräum-Häppchen.
+
+### 2026-10-11 · Budget-Hook `warning()` und `tablecheck` Randfälle (TOOL-BUENDEL-7)
+
+- **Fundort:** `tools/studio/budgetwarn.py` (`warning()`: Phasenname/Gross-Kleinschreibung vor TOOL-BUENDEL-7 nicht berücksichtigt, Rest
+  prüfen), `tools/studio/tablecheck.py` (`_open_backtick`: meldet ersten Backtick-Lauf ohne Partner sofort, CommonMark scannt weiter),
+  `tools/studio/testrun.py` (Ctrl-C-Fenster zwischen zwei Signalen nur per Mock belegt). Ursprung: Reviews TOOL-BUENDEL-7.
+  Einschätzung: gering; im Repo ohne Treffer.
