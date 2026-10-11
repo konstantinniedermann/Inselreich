@@ -1,6 +1,6 @@
 # T04 — UI A: Helfer, Feld «Kauf … %», «Verkauf … %», `tradeReasonCtx`
 
-**Persona:** `tech-ui-engineer` (sonnet) · Worktree `.worktrees/i048-ui`, Branch `feat/i048-ui`. Der Controller legt ihn nach dem T02-Review mit Urteil OK an: `git worktree add .worktrees/i048-ui -b feat/i048-ui feat/i048`. **Läuft parallel zu T03.** Desktop-first ab 1280 px, Card-UI, CSS Grid.
+**Persona:** `tech-ui-engineer` (sonnet) · Worktree `.worktrees/i048-ui`, Branch `feat/i048-ui`. Der Controller UI legt ihn erst an, wenn I048-SIM **und** I-049-UI auf `main` sind (R505 (4)): `git worktree add .worktrees/i048-ui -b feat/i048-ui main`. I-049-UI hat `src/ui/trade.ts` geändert, also vorher dort den Stand lesen. Nach Review OK: Bericht an L0 «bereit fürs Gate Merge I048-UI»; den Merge macht `production-integrator` (Prod-B6). Desktop-first ab 1280 px, Card-UI, CSS Grid.
 
 **Spec-Abschnitte:** §7 (7.1, 7.2), §9.3 AK-ZK-19, -21, -32. In Schritt A gilt `BUY_RISE` 0; die Texte bleiben dadurch bei Anteil 100 wortgleich zu heute.
 

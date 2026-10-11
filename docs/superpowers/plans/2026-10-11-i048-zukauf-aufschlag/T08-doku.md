@@ -1,6 +1,6 @@
 # T08 — Doku: README Handel/Denkmal, arc42
 
-**Persona:** `tech-sim-engineer`. Der T06-Arbeiter wird per SendMessage fortgesetzt (kein neuer Start). Ist sein Kontext zu voll, startet der Controller nach Meldung an L0 einen Puffer-Start. Worktree `.worktrees/i048`, Branch `feat/i048`. **D1-Dateien sind ausdrücklich erlaubt (E-017):** `README.md`, `docs/arc42.md`, `docs/beobachtungen.md`.
+**Persona:** `tech-sim-engineer`. Der T06-Arbeiter wird per SendMessage fortgesetzt (kein neuer Start). Ist sein Kontext zu voll, startet der Controller nach Meldung an L0 einen Puffer-Start. Worktree `.worktrees/i048-b`, Branch `feat/i048-b`. **D1-Dateien sind ausdrücklich erlaubt (E-017):** `README.md`, `docs/arc42.md`, `docs/beobachtungen.md`.
 
 **Spec-Abschnitte:** §10 (Doku-Folgen, Wortlaut dort). Kein AK. Das Review übernimmt das Final-Review (opus) über die ganze Branch, mit diesem Task als eigenem Prüfpunkt (Muster R485 B3).
 
@@ -20,3 +20,5 @@
 **Commit:** `docs: README und arc42 zu Zukauf-Aufschlag und Verkaufserholung (I-048)`.
 
 **Prüfpunkt im Final-Review:** README-Zahlen = `defs/` (2, 160, 10, 20 bzw. die Werte nach einem Ruling) und = Spec §10. arc42 nennt die tatsächliche Save-Version. Keine Doku-Aussage widerspricht den neu gemessenen Festwerten.
+
+**Danach (Controller B):** Abschluss laut Index (E-052-Vergleich mit Schwelle QA-B7, `make check`), dann das Final-Review opus über ganz I-048, also alle drei Strang-Diffs gegen den Stand vor I048-SIM; dazu dieser Prüfpunkt. Anschliessend Bericht an L0 «bereit fürs Gate Merge I048-B». Den Merge macht `production-integrator` (Prod-B6). Release erst nach dem Ende von M13 (R505).
