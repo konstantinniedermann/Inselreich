@@ -168,15 +168,17 @@ class RealPairsTest(unittest.TestCase):
         recent = [p for p in pairs if p["ts"] >= RULE_FROM]
         self.assertTrue(recent)
         for pair in recent:
-            if (pair["role"], pair["package"]) in KNOWN_MISMATCH:
-                continue
             prompt = f"Persona: {pair['role']}\nPaket: {pair['package']}\nBudget: 1"
             given = [
                 {"role": pair["role"], "budget": {"phase": phase}}
                 for phase in pair["phases"]
             ]
             result = budgetwarn.check(start(prompt, pair["role"]), given)
-            self.assertIsNone(result, pair)
+            if (pair["role"], pair["package"]) in KNOWN_MISMATCH:
+                # wird die Ausnahme angeglichen, hier rot: KNOWN_MISMATCH-Eintrag löschen
+                self.assertIsNotNone(result, pair)
+            else:
+                self.assertIsNone(result, pair)
 
 
 if __name__ == "__main__":
