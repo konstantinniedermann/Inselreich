@@ -90,16 +90,16 @@ Nicht vorgeschlagen: eine zusätzliche Auslöser-Regel für „Release gemergt".
 
 Quelle: `python3 tools/studio/metrics.py --efficiency` (32 Sessions, 29610 Aufrufe).
 
-| Kennzahl                             | Wert   | Ampel | Befund / Ursache                                                            |
-| ------------------------------------ | ------ | ----- | --------------------------------------------------------------------------- |
-| Steuerungsanteil                     | 49,8 % | gelb  | Leads 34,9 %; B2, Frage 3                                                   |
-| Umsetzeranteil                       | 24,6 % | grün  | –                                                                           |
-| Cache-Write 5 min                    | 29,2 % | rot   | B1 bis B4; V1 bis V3; E-037 läuft an                                        |
-| Lead-Kontext Median                  | 75k    | grün  | –                                                                           |
-| L0-Kontext Max                       | 774k   | rot   | kein Vorschlag: andere Ursache (Session-Länge), E-029 deckt die Übergabe ab |
-| opus-Anteil                          | 74,1 % | gelb  | steht in E-038 (sonnet-Leads)                                               |
-| Persona als general-purpose auf opus | 45     | rot   | Nachtrag (V2, R316): siehe Abschnitt „Nachtrag V2“                          | Messauftrag bis zum nächsten Metrik-Lauf nach TOOL-AMPEL |
-| Grösste gelesene Datei               | 59 KB  | gelb  | –                                                                           |
+| Kennzahl                             | Wert   | Ampel | Befund / Ursache                                                                                             |
+| ------------------------------------ | ------ | ----- | ------------------------------------------------------------------------------------------------------------ |
+| Steuerungsanteil                     | 49,8 % | gelb  | Leads 34,9 %; B2, Frage 3                                                                                    |
+| Umsetzeranteil                       | 24,6 % | grün  | –                                                                                                            |
+| Cache-Write 5 min                    | 29,2 % | rot   | B1 bis B4; V1 bis V3; E-037 läuft an                                                                         |
+| Lead-Kontext Median                  | 75k    | grün  | –                                                                                                            |
+| L0-Kontext Max                       | 774k   | rot   | kein Vorschlag: andere Ursache (Session-Länge), E-029 deckt die Übergabe ab                                  |
+| opus-Anteil                          | 74,1 % | gelb  | steht in E-038 (sonnet-Leads)                                                                                |
+| Persona als general-purpose auf opus | 45     | rot   | Nachtrag (V2, R316): siehe Abschnitt „Nachtrag V2“; Messauftrag bis zum nächsten Metrik-Lauf nach TOOL-AMPEL |
+| Grösste gelesene Datei               | 59 KB  | gelb  | –                                                                                                            |
 
 ## Bewertung laufender Experimente
 
