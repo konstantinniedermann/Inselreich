@@ -5998,3 +5998,15 @@ Regelbezug: R487 P-1/P-2, R505, R547, Spec I-048 §6/P-5 · Kosten bei Irrtum: I
 auf `main`.
 
 Entscheider: L0 · Anlass: D-150 lead-design (D-I048-B-WERTE), Stopp lead-tech I048-B · ADR: —
+
+## R550 · 2026-10-11 · UI-TEXTE-1 AK-UT-05: Wortlaut ohne Artikel («Nur einmal je Insel»)
+
+Ruling: Der Spec-Wortlaut «Nur ein <Name> je Insel» ergibt bei femininen Namen falsches Deutsch («Nur ein Amtsstube je
+Insel»); die Spec-Annahme Z. 48 („kein Artikel-Problem bei Amtsstube“) ist falsch. Neu: **«Nur einmal je Insel»** (ohne
+Namen, die Zeile steht ohnehin im Tooltip des Gebäudes). Test über alle Defs mit `maxCount.n === 1` bleibt (AK-UT-05);
+`tests/ui/tooltip.test.ts` und README entsprechend. Umsetzung im Strang vor dem Final-Review (Fortsetzung des Umsetzers,
+kein neuer Start); Spec-Zeile 32/48 berichtigt der Controller im Branch als `docs:`-Commit.
+
+Regelbezug: R530, R534 · Kosten bei Irrtum: ein Tooltip-Wortlaut.
+
+Entscheider: L0 · Anlass: Bericht lead-tech UI-TEXTE-1 (Testnachzug `tooltip.test.ts`) · ADR: —
