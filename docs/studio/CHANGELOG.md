@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-11 · Persona production-integrator 1.11
+
+- Anlass: Handbuch-Folge TOOL-BUENDEL-6 Strang A (`make push-check`)
+- Datenbasis: Auftrag coach-push-check, `docs/superpowers/plans/2026-10-11-tool-buendel-6/T03-push-check.md`
+- Ruling: R517, R518
+- Änderungen: Push-Schritt nutzt `make push-check` statt `make test` + `make zeitreserve-push`; Exit-Codes 0–3, D1, D2, gepusht wird der geprüfte Hash
+
+## 2026-10-11 · Handbuch 1.48
+
+- Anlass: Handbuch-Folge TOOL-BUENDEL-6 Strang A (`make push-check`)
+- Datenbasis: Auftrag coach-push-check, `docs/superpowers/plans/2026-10-11-tool-buendel-6/T03-push-check.md`
+- Ruling: R503, R517, R518
+- Änderungen: Push-Ablauf (Merge-Absatz) auf `make push-check` umgestellt (ersetzt Einzelkette; D1, D2, Schlusszeile, geprüfter Hash); Ende-Routine 2a vereinfacht auf `make push-check` ohne Push
+
 ## 2026-10-11 · Handbuch 1.47
 
 - Anlass: Prozess-Retro REL-19 (Push-Weg 60,6 min statt ≈ 15 min)

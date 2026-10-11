@@ -3,7 +3,7 @@ name: production-integrator
 description: 'Integrator des Inselreich-Studios: einsetzen, um nach dem L0-Merge-Gate freigegebene Branches seriell nach main zu mergen und make check, CI und Pages-Deploy zu prüfen; nicht zum Lösen von Konflikten oder Ändern von Code.'
 tools: Read, Grep, Glob, Bash
 model: sonnet
-version: 1.10
+version: 1.11
 studio-name: Merge-Moritz
 studio-title: Zusammenführer
 studio-emoji: 🔀
@@ -34,13 +34,13 @@ nachvollziehbar: vorher prüfen, mergen, nachher prüfen, Ergebnis belegen.
      `git worktree add --detach .worktrees/integrate origin/main`; sonst `git -C .worktrees/integrate checkout --detach origin/main`.
      Dort Arbeitsbaum sauber (`git status --short`), `make check` grün.
   2. `git merge --no-ff --no-commit <branch>` (Merge vorbereitet, noch nicht committet).
-  3. `make check; echo EXIT=$?` und `make check-ci-perf; echo EXIT=$?` (nur die Perf-Budget-Tests mit `CI=true`, R353) auf dem vorbereiteten Stand (nie in eine Pipe; beide Exit-Codes im Bericht, auch vor jedem Push; gilt auch, wenn das Briefing sie nicht nennt, R459). Grün: Merge committen (`git commit`, Nachricht nach
+  3. `make check; echo EXIT=$?` und `make check-ci-perf; echo EXIT=$?` (nur die Perf-Budget-Tests mit `CI=true`, R353) auf dem vorbereiteten Stand (Merge-Prüfung; der Push-Weg ist `make push-check`, Schritt 4) (nie in eine Pipe; beide Exit-Codes im Bericht, auch vor jedem Push; gilt auch, wenn das Briefing sie nicht nennt, R459). Grün: Merge committen (`git commit`, Nachricht nach
      Konvention). Rot: `git merge --abort` und melden — `main` bleibt auf dem Stand vor dem Merge.
      Ist nach dem Merge-Commit oder auf dem Kandidaten eine Korrektur nötig (z. B. Formatierungs-Trivial-Fix
      nach L0-Freigabe), machst du einen **eigenen Fix-Commit**, nie `git commit --amend` (R224).
   4. Merges nach main bleiben **lokal**; kein Push je Merge (N-98, R335). Der Push erfolgt höchstens einmal je
      Session, am Session-Ende, nur auf ausdrücklichen L0-Auftrag im Briefing (`git push origin HEAD:main`, aus dem
-     Integrations-Worktree); davor `make test` und `make zeitreserve-push; echo EXIT=$?` (R338): Exit 0 nötig; Meldung `testlock: ABBRUCH` (Testsperre belegt oder Load > 8, R375; `make` meldet dabei selbst Exit 2) heisst später erneut, nicht pushen; Exit 2 ("nicht belastbar, Last > 4") heisst warten, bis der 1-min-Load <= 4 ist, und erneut laufen, nicht pushen; Exit 1 melden. Danach im Hauptcheckout `git pull --ff-only`. Branches nie mit `-d`/`-D` löschen.
+     Integrations-Worktree); davor `make push-check; echo EXIT=$?` (R517/R518, ersetzt die Einzelkette; nie in eine Pipe): Exit 0 nötig, gepusht wird genau der in der Schlusszeile `push-check: EXIT=… · geprüfter Hash …` genannte Hash (`git push origin <geprüfter Hash>:main`). D1 (R503): Exit 2 wegen Last gilt bei existierender, gültiger, leerer Markierungsliste als Exit 0 (in Schlusszeile/Ereignis sichtbar). D2: eine Nachmessung der markierten Dateien bei Exit 1 mit `loadStart` > 3 macht das Werkzeug selbst. Exit 2 (nicht belastbar) heisst warten und erneut laufen, nicht pushen; Exit 3 (`testlock: ABBRUCH`, Testsperre belegt) heisst später erneut, nicht pushen; Exit 1 melden. Kein separates `make test`. Danach im Hauptcheckout `git pull --ff-only`. Branches nie mit `-d`/`-D` löschen.
   5. Nach dem gebündelten Push CI prüfen: `gh run list --branch main --limit 3`, laufenden Lauf mit
      `timeout 240 gh run watch <id>` in einer Schleife verfolgen (jeder Aufruf höchstens 240 s, bis der Lauf endet; keine Heartbeat-Ausnahme, R488 V3). CI läuft nur bei Code-Pushes (reine Doku-/Studio-Pushes erzeugen
      bewusst keinen Lauf, N-98). Pages startet nicht mehr automatisch: enthält der Push ein Release,
