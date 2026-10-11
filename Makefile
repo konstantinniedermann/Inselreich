@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 TESTLOCK := tools/testlock/testlock.ts
-.PHONY: help install hooks dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push conflicts check-ci-perf messfenster check-run
+.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push conflicts check-ci-perf messfenster check-run
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -80,3 +80,7 @@ check: ## Gleich wie CI: conflicts, lint, zeittests, test, zeitreserve, studio-t
 	@node $(TESTLOCK) $(MAKE) check-run
 
 check-run: conflicts lint zeittests test zeitreserve studio-test build pages-limit
+
+merge-driver: ## Merge-Treiber für docs/beobachtungen.md in .git/config setzen (E-059, einmal je Klon)
+	git config merge.beob-append.name "Beobachtungen: reine Anhänge selbst auflösen (E-059)"
+	git config merge.beob-append.driver "python3 tools/studio/merge_append.py %O %A %B %L %P"
