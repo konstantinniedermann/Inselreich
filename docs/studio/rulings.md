@@ -6071,3 +6071,20 @@ Regelbezug: R335, R475, R486, R500, R501, R551, R553, STUDIO.md Limits · Kosten
 Release-Fix an `main` die Vergleichsbasis nachziehen (eine Zeile im Plan-Index).
 
 Entscheider: L0 · Anlass: Session-Start, Nutzer „mach weiter“ · ADR: —
+
+## R555 · 2026-10-11 · Gate Brainstorming I-048 Schritt B: Option 2 Kontingent-Staffel als Richtung
+
+Ruling: Vorschlag `docs/superpowers/specs/2026-10-11-i048-b-designfrage.md` (`3a1ca5a6`) angenommen, Selbstprüfung lead-design
+BEDENKEN (Regel im ersten Spiel sichtbar, kostet selten) zur Kenntnis — gewollt, die Staffel ist Spätspiel-Druck. Entscheid:
+**Option 2** (je Gut weltweites Kontingent zum Listenpreis, darüber eine feste Stufe) als Richtung. Bedingungen: (a) **Massstab
+umgestellt:** Der Assert „Mehrkosten ≤ 15 % beim Controller“ (R547) entfällt für Schritt B; gilt künftig „Controller bitgleich,
+Wirkung per Szenario-Test am Preiskern `buyQuote`“, Neumessung nur `balance-merchants`. (b) Reihenfolge: Last-Probe,
+Werte (`design-economy-designer`) und Spec-Nachtrag (`design-spec-author` opus) erst nach Abnahme TOOL-GATE-ENSEMBLE und nach
+Release M13. (c) Abbruchkriterium: Controller-Last je Gut > 30/min oder Kontingent unter der Krisen-Last → Option 1 (Verzicht),
+ohne neues Brainstorming. (d) Save-Frage (`buyPct` mit neuer Bedeutung) klärt `lead-tech` im Plan. I-047 bleibt hinter I-048
+(R486 O3).
+
+Regelbezug: gates.md Gate Brainstorming, R486, R547, R549, R551, R553 V1 · Kosten bei Irrtum: ein Spec-Nachtrag, der in
+Option 1 endet; `main` bleibt bis dahin inaktiv.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I048-B · ADR: —
