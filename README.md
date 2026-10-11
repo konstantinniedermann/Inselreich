@@ -50,7 +50,7 @@ jeden startest du im Panel des Denkmals selbst, dabei zahlst du das Geld des Abs
   Häuser nicht leerzieht. Der Bau braucht eine Anbindung ans Kontor.
 - **Zukaufen:** Der Schalter «zukaufen» je Gut kauft fehlende Stücke zum Kontorpreis (mit Edikt Handel 20 % günstiger),
   sobald das Lager nichts über der Reserve hergibt. Das gekaufte Stück geht direkt ins Denkmal.
-- **Bau pausieren:** hält die Lieferung an, ohne etwas zu verlieren.
+- **Bau anhalten:** hält die Lieferung an, ohne etwas zu verlieren.
 - **Abriss:** Wer das Denkmal abreisst, bekommt nur die Hälfte des Bauplatzes zurück, **nicht** das Geld des Abschnitts
   und nicht die gelieferte Ware. Ein Neubau beginnt wieder bei Abschnitt 1; ein bereits erreichtes Wahlziel bleibt erreicht.
 - **Anzeige:** Ab dem dritten Ziel (Gewürz) zeigt der Chip «Ziel» «Denkmal 1/3 · n %», am Ende «Wahlziel erreicht»; die Inselchronik führt dazu
@@ -460,7 +460,7 @@ Einwohner und 10 s); es wächst nur auf Gewürzinseln und lässt sich am Kontor 
 
 Im Betriebs-Panel legt der Knopf «Stilllegen» einen Betrieb still, der etwas erzeugt (Farmen, Werkstätten und so weiter; Wohnhäuser und Dienste nicht).
 
-- Ein stillgelegter Betrieb zahlt den **halben Unterhalt** (je Betrieb aufgerundet), erzeugt nichts und verbraucht nichts. Die Kette dahinter läuft leer.
+- Ein stillgelegter Betrieb zahlt **50 % des Unterhalts** (je Betrieb aufgerundet), erzeugt nichts und verbraucht nichts. Die Kette dahinter läuft leer.
 - «Wieder anfahren» (derselbe Knopf) startet ihn mit einem Klick, ohne Kosten.
 - Stillgelegte Betriebe stehen nicht in der Problemliste: Die Pause ist gewollt.
 
