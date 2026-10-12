@@ -249,7 +249,7 @@ describe('Waldboden und Licht', () => {
     // gegen gleich breite Wiesenbänder weiter weg (das Mikrorelief mittelt sich über 8 Seeds nicht ganz heraus)
     expect(avg(16.15, 16.9, 9, 15) - avg(20.15, 20.9, 9, 15)).toBeGreaterThan(-0.02);
     expect(avg(9, 15, 16.15, 16.9) - avg(9, 15, 20.15, 20.9)).toBeGreaterThan(-0.02);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 
   // Timeout: lokal ≤ 1,0 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('R149 Plastik: mittlere |shade| auf Land ≥ 0,035 und auf Gebirge ≥ 0,05 (Seeds 3, 5, 12588)', () => {
@@ -283,7 +283,7 @@ describe('Waldboden und Licht', () => {
     const a = paintPixels(hot, 1, 0, 0, 8 * TEX, 8 * TEX); // Gras links oben (kein Gebirge)
     const b = paintPixels(flat, 1, 0, 0, 8 * TEX, 8 * TEX);
     expect(firstDiff(a, b)).toBe(-1);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 
   it('Spec 5.1 Gras: die Mischung ist gespreizt und nutzt grassDark, grass und grassLight', () => {
     const n = 24;
@@ -299,7 +299,7 @@ describe('Waldboden und Licht', () => {
     expect(q(0.9)).toBeGreaterThan(0.85);
     expect(sorted[0]).toBeGreaterThanOrEqual(0);
     expect(sorted[sorted.length - 1]).toBeLessThanOrEqual(1);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 });
 
 describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
@@ -336,7 +336,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
         expect(distinct.length).toBeGreaterThanOrEqual(3);
       }
     expect(found).toBe(true);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 
   it('AK-R1-08 I2 Flachwasser ~ waterShallow, Tiefwasser ~ waterDeep, Schaum am Saum', () => {
     const w = world3;
@@ -387,7 +387,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     expect(deepOk / deep).toBeGreaterThanOrEqual(0.9);
     expect(coastTiles).toBeGreaterThan(10);
     expect(foamTiles / coastTiles).toBeGreaterThanOrEqual(0.8);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 
   it('AK-R1-08 I5 Waldboden ohne Kronen, nicht der alte Waldgrund; Fels mit rockLight und rockDark', () => {
     const w = world3;
@@ -480,7 +480,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
         x += 3; // nicht überlappende Flächen
       }
     expect(checked).toBeGreaterThan(0);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 
   it('R149 Waldrand ist im Mittel heller als das Waldinnere', () => {
     const w = world3;
@@ -511,7 +511,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     expect(iN).toBeGreaterThan(5);
     expect(eN).toBeGreaterThan(5);
     expect(eSum / eN).toBeGreaterThan(iSum / iN);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 
   it('R149 Grastöne (Klee, trocken) liegen ΔE2000 ≥ 15 neben earth und earthEdge', () => {
     const w = world3;
@@ -531,7 +531,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
       }
     expect(n).toBeGreaterThan(1000);
     expect(minDe).toBeGreaterThanOrEqual(15);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 
   it('AK-R1-03 keine Signalfarbe in der Terrain-Ebene (Stichprobe über die ganze Karte)', () => {
     const labs = SIGNAL_NAMES.map((n) => hexToLab(PALETTE[n]));
@@ -540,7 +540,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
         const l = rgbToLab(painted.at(px, py));
         for (const s of labs) expect(deltaE2000(l, s)).toBeGreaterThan(5);
       }
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 
   it('AK-R1-06 paintPixels ist deterministisch und Faktor 2 liefert vierfache Pixelzahl', () => {
     const g = painted.grid;
@@ -550,7 +550,7 @@ describe('Terrain-Pixel (reine Rechnung, ohne Canvas)', () => {
     const c = paintPixels(g, 2, 200, 200, 32, 32);
     expect(c.length).toBe(32 * 32 * 4);
     expect(a.every((v) => v >= 0 && v <= 255)).toBe(true);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 });
 
 /**
@@ -722,7 +722,7 @@ describe('M10 Terrain nach Geländewechsel (Spec 7)', () => {
       home(w).height,
     )!;
     expect([edge.x0, edge.y0]).toEqual([0, 0]);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
   it('AK-R1-05 Tier-Anker (Fische, Vögel) und Küstenfeld (water.ts und life.ts nutzen coastField) bleiben gleich', () => {
     const w = createWorld(3, { unlockAll: true });
     const k = w.buildings[home(w).kontorId]!;
@@ -738,7 +738,7 @@ describe('M10 Terrain nach Geländewechsel (Spec 7)', () => {
     expect(clearForest(w, k.x + 6, k.y + 2).ok).toBe(true);
     expect(plantForest(w, k.x + 7, k.y + 2).ok).toBe(true);
     expect(snap()).toEqual(before);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 });
 
 describe('M10 Teil-Raster', () => {
@@ -856,7 +856,7 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
         n++;
       }
     expect(sxy / n).toBeGreaterThan(0);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 
   it('H-R11 (löst H-R9 R3 Senken ab) Schattenstufe auf Gras: dunkler, aber über den kühlen Farbton statt nur Abdunklung', () => {
     const g = buildGrid(flat(12, 'grass', 7));
@@ -873,7 +873,7 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
     // gemessen: Luma-Verhältnis 0,82, Blau/Rot-Verhältnis 1,18
     expect(L(d)).toBeLessThan(0.9 * L(n));
     expect(mean(d, 2) / mean(d, 0)).toBeGreaterThan(1.1 * (mean(n, 2) / mean(n, 0)));
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 
   it('H-R9 B1 Determinismus: gleiche Felder und Pixel bei zweitem Aufbau', () => {
     const w = flat(10, 'grass', 5);
@@ -882,7 +882,7 @@ describe('H-R9 B1 Mikrorelief Wiese', () => {
     for (const f of ['shade', 'tone', 'warm', 'mottle', 'veil'] as const)
       expect(firstDiff(a[f], b[f]), f).toBe(-1);
     expect(firstDiff(paintPixels(a, 1, 0, 0, 96, 96), paintPixels(b, 1, 0, 0, 96, 96))).toBe(-1);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 });
 
 describe('H-R9 B2 Dünen', () => {
@@ -905,7 +905,7 @@ describe('H-R9 B2 Dünen', () => {
     expect(wet).toBeGreaterThan(50);
     expect(dry).toBeGreaterThan(20);
     expect(dryMax).toBeGreaterThan(0.5);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 });
 
 describe('H-R9 R4 Wiese satt und fleckig wie main', () => {
@@ -1018,7 +1018,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
       if (Math.abs(a[i]! - b[i]!) + Math.abs(a[i + 2]! - b[i + 2]!) > 3) changed++;
     }
     expect(changed).toBeGreaterThan(450); // die Ebenen wirken tatsächlich
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 
   // Timeout: lokal ≤ 0,9 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('H-R9 B3 Kein Kachelraster: Farbsprung über Kachelkanten ≤ 1,08 × Sprung innerhalb der Kachel', () => {
@@ -1058,7 +1058,7 @@ describe('H-R9 B3 Wiesenvarianz', () => {
         expect(tuftsFor(3, x, y).length).toBeLessThanOrEqual(2);
       }
     expect(lush).toBeGreaterThan(dry * 1.5);
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 
   // Timeout: lokal ≤ 0,8 s (seriell, Last eher höher), CI bis ~4×, R270/R318
   it('H-R9 B3 Keine Signalfarbe auf Wiese mit Relief und Blumenschleier', () => {
@@ -1117,7 +1117,7 @@ describe('H-R9 B4 Teil-Neuzeichnung', () => {
     ts.sort((a, b) => a - b);
     // R235: Runner für paintPixels ≈ 4× langsamer als lokal; lokal bleibt 8 ms, CI 20 ms
     expect(ts[4]!).toBeLessThanOrEqual(perfBudget(8, undefined, 2.5));
-  });
+  }, 60_000); // Timeout: Rechenzeit steigt unter Volllast (R565 P2, Muster R270/R318)
 });
 
 describe('M12 E1 Terrain', () => {
