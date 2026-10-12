@@ -35,7 +35,6 @@ const written: Hashes = {};
 
 const BAND_MIN = 30;
 const BAND_MAX = 35;
-const MAX_STAGE3 = 3;
 const C_INDEX = 3;
 const C_SIZE = 24;
 const stage3Seeds = new Set<number>();
@@ -113,10 +112,9 @@ describe('M14-E1 A/B bitgleich, Seeds 1…500', () => {
     for (const seed of seeds) checkSeed(seed);
   });
 
-  it('AK-M14E1-14: höchstens 3 Seeds mit Stufe 3 (Seeds 1…500)', () => {
-    expect(stage3Seeds.size, `Stufe 3: ${[...stage3Seeds].join(', ')}`).toBeLessThanOrEqual(
-      MAX_STAGE3,
-    );
+  // AK-M14E1-14 verlangt höchstens 3 Stufe-3-Seeds über alle Seeds; gepinnt ist die gemessene Liste (strenger).
+  it('AK-M14E1-14: Stufe-3-Seeds exakt [] (Seeds 1…500)', () => {
+    expect([...stage3Seeds].sort((x, y) => x - y)).toEqual([]);
   });
 
   afterAll(() => {
