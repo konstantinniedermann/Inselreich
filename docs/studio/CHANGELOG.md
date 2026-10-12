@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-12 · Persona production-integrator 1.13
+
+- Anlass: Retro M13, V2/E-063
+- Datenbasis: `docs/studio/retros/2026-10-12-m13.md` B1, `docs/studio/retros/2026-10-12-m13-prozess.md` B1
+- Ruling: R565
+- Änderungen: Bei Briefing mit anderem Arbeitsort gilt die Persona, Widerspruch wird gemeldet; abweichender Hash wird nur nach Meldung gepusht; Briefing-Vorlage um Arbeitsort-Zeile ergänzt
+
+## 2026-10-12 · Handbuch 1.52
+
+- Anlass: Retro M13 und Prozess-Aussensicht M13
+- Datenbasis: `docs/studio/retros/2026-10-12-m13.md`, `docs/studio/retros/2026-10-12-m13-prozess.md`
+- Ruling: R565
+- Änderungen: P1 Integrator nur in `.worktrees/integrate`, Zwischenregel R562 entfällt; V2/E-063 Briefing nennt Arbeitsort, Persona vor Briefing, anderer Hash nur nach Meldung; P2 R464 auch vor Gate Merge auf seriellem Pfad; P3 Werte-Probe vor Gate Plan bei Wertgrenzen; P4 Push-Takt nach Live-Ampel statt „ein Push je Tag“; P5 bereinigte Steuerungszeile als Ampelzeile, Session-Minuten gelb erst > 10 (Werkzeugcode `efficiency.py`/`actions.py` im nächsten Werkzeug-Bündel); V1 E-057 und E-061 abgeschlossen, E-062 und E-063 gestartet
+
 ## 2026-10-11 · Persona lead-tech 1.14
 
 - Anlass: Kurz-Retro f2a404fd, V2 (Delta-Review nach Final-Review ZURÜCK)

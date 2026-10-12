@@ -6233,3 +6233,80 @@ Regelbezug: Verfassung §7, STUDIO.md Push-Gate (R335, R429), R549, R552 · Kost
 (Actions-Prognose rot).
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R565 · 2026-10-12 · Retro M13 und Prozess-Aussensicht M13: P1–P5, V1–V3 angenommen
+
+Ruling: Berichte `docs/studio/retros/2026-10-12-m13.md` (studio-coach) und `2026-10-12-m13-prozess.md` (studio-process-coach).
+Angenommen: **P1** Integrator arbeitet nur in `.worktrees/integrate` (Merge, `push-check`, Push); Zwischenregel R562 entfällt
+mit der Umsetzung; bis dahin committet L0 nichts, solange Integrator oder `push-check` laufen. **V2 / E-063** als Auflage zu P1:
+Briefing-Vorlage nennt `.worktrees/integrate`; bei Widerspruch gilt die Persona und der Integrator meldet; ein anderer Hash als im
+Ruling wird nur nach Meldung gepusht. **P2** R464 gilt auch vor Gate Merge auf seriellem Pfad; Timeout `terrain.test.ts` ins nächste
+Werkzeug-Bündel. **P3** Werte-Probe vor Gate Plan bei Paketen mit Wertgrenzen (ab jetzt; M14-E1 deckt R557 (3) vor T08).
+**P4** Push-Takt nach Live-Ampel statt Festregel „ein Push je Tag“. **P5** bereinigte Steuerungszeile wird Ampelzeile;
+Session-Minuten gelb erst > 10. **V1** E-057 und E-061 abschliessen, E-062 und E-063 starten. **V3** Flake-Zeile nur im
+Zeitraum zählen, Arbeitsbaum mitschreiben; Aufgabe im nächsten Werkzeug-Bündel. Umsetzung der Handbuch-Änderungen
+(Handbuch-Minor) durch `studio-coach`.
+
+Regelbezug: STUDIO.md Verbesserungsschleife, R127, R316, R562, R564 · Kosten bei Irrtum: ein Handbuch-Minor zurücknehmen; P4 kann
+einen zusätzlichen Actions-Lauf kosten.
+
+Entscheider: L0 · Anlass: Retro M13, Prozess-Aussensicht M13 · ADR: —
+
+## R566 · 2026-10-12 · Runden-Ruling IDEEN-08
+
+Ruling: Bericht lead-design IDEEN-08 (`99f0f29b`, Rangliste in `docs/ideen.md`), 13 neue Ideen I-075…I-087, Pool 35/40, keine
+§5.3-Frage. Entscheide wie empfohlen: **einplanen** I-085 «Lager voll» als Problem mit Sprung, I-078 Bilanz-Vorschau, I-083
+Hinweis unbelegte Zifferntaste (Beipack); **geteilt in zwei Häppchen** wegen ≈ +140 Tools: **UI-HAEPPCHEN-A** = I-062, I-063,
+I-083 · **UI-HAEPPCHEN-B** = I-085, I-078. Beide nach dem Merge M14-E1 und nach UI-AUFRAEUM-2 (Überschneidung `src/ui/`),
+Prozessstufe leicht. **Parken:** I-077 (bis Wirtschaftsrunde nach Erweiterung 1 K2), I-086 (mit I-059, Playtest-Anlass), I-084,
+I-082, I-081. **Verwerfen:** I-075, I-076, I-079, I-080; I-087 → zusammengefasst in I-045. **Pool-Bereinigung bestätigt**
+(live-Setzungen, Verweise auf Erweiterung 1, Statuskorrekturen I-017/I-062/I-063) mit einer Abweichung: **I-018 Story-Rahmen
+wird geparkt statt gestrichen** (Ursprung Spielerwunsch; Erzählung als Säule nur auf Nutzeranlass, keine Warteschlange).
+Verweise auf Erweiterung 1 sind beim Merge von `design/erweiterung-1` zu bestätigen (RE-2 A5).
+
+Regelbezug: docs/ideen.md Ablauf, R445, R474, R529, Verfassung §5.3 · Kosten bei Irrtum: eine geparkte Idee später neu bewerten.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-08 · ADR: —
+
+## R567 · 2026-10-12 · M14-E1 T03: Auslegung Auflage R557 (1b) angenommen; UI-Strang nach TOOL-CONTROLLER-HAERTUNG
+
+Ruling: Bericht Controller M14-E1-SIM, T03 abgenommen (`00db07fe`). (1) **D-M14E1-1B:** Teilhash Heimat/A/B ist mit Insel C nicht
+bitgleich erreichbar (Meer-Deko zieht über Rang/Belegung nach; 303/405 Flächen gleich); belegt ist die kontrafaktische
+Bitgleichheit (Welt ohne C = Basis), neu gepinnt nur der Gesamt-Hash mit `bewusst neu gepinnt (R557)`. Angenommen als
+Auslegung, Sim unberührt; kein zusätzlicher Fahrlinien-Teilhash. Befund in `docs/beobachtungen.md`, Sichtprüfung in T08.
+(2) **Reihenfolge wegen halbierter Parallelität (≤ 4 Agenten):** SIM-Controller setzt T04/T05 fort; der UI-Controller (T06,
+Worktree `.worktrees/m14-e1-ui` ab `00db07fe`) startet, sobald TOOL-CONTROLLER-HAERTUNG fertig ist. (3) AK-09-Einheit
+(`goodsBalance` je 100 Ticks) präzisiert T07 in der Spec; Testzeit 320 ms in `islands-c.test.ts` zur Kenntnis.
+
+Regelbezug: R557, R329, Verfassung §3 · Kosten bei Irrtum: UI-Strang startet ≈ 1 h später; Meer-Deko-Verschiebung fällt erst im
+Playtest auf.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M14-E1-SIM T03 · ADR: —
+
+## R568 · 2026-10-12 · Gate Merge TOOL-CONTROLLER-HAERTUNG: OK; Streuung Sieg-Tick als Werte-Frage; UI-Strang M14-E1 startet
+
+Ruling: Bericht lead-tech, Branch `tool/controller-haertung` @ `fa46de0b`, Final-Review opus OK, `make check` Exit 0. Stillstand
+Phasen 50–90 behoben (alle zehn Phasen siegen, Seed 3), Phase 0/20/40 bitgleich, keine Pin-Änderung; Auflagen R561 (1)–(4) belegt.
+Entscheid: **Gate Merge OK.** Merge durch `production-integrator` in `.worktrees/integrate` (R565 P1), sobald ein Platz frei ist,
+spätestens vor der Nachmessung R557 (3) von M14-E1; dabei Beobachtung „Controller-Stillstand Phasen 50/70/90“ auf „Stillstand
+behoben, Streuung offen“ setzen. **Streuung** (Sieg-Tick 6650–7900; Phasen 60/70 über `WIN_TICK_LIMIT` 7500): kein Fehler der
+Härtung; die Grenze bleibt vorerst 7500, die Werte-Frage entscheidet L0 bei der Nachmessung vor M14-E1 T08 (mit P3 aus R565),
+Seed-Achse dort mitmessen. **UI-Strang M14-E1 (T06)** startet jetzt (R567 (2)).
+
+Regelbezug: gates.md Gate Merge, R561, R565, R567 · Kosten bei Irrtum: Nachmessung vor T08 meldet zwei Ausreisser, die erst dort
+eingeordnet werden.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-CONTROLLER-HAERTUNG · ADR: —
+
+## R569 · 2026-10-12 · M14-E1 T06 abgenommen; Controller-Merge UI in `feat/m14-e1` frei, danach T07
+
+Ruling: Bericht Controller M14-E1-UI, `da9ea9b0`, Review OK. Angenommen: (1) zwei Bestandstests prüfen Präfix bzw. `startsWith`
+statt Literal (`UNLOCK_NOTICE` in `tests/ui/goal.test.ts`, AK-S11 in `tests/ui/seaMapView.test.ts`), weil die Texte um den
+Inselbezug wachsen — bewusst, keine Abschwächung der übrigen Asserts; (2) `tooltipLines(tool, world?, island?)` optional,
+Inspektorzeile `island-trait`, CSS `.tooltip .tt-island[hidden]`. Review-Hinweise (Doppel-Import, Trait-Typ) im T07- oder
+Final-Review-Durchgang mitnehmen. **Merge jetzt frei:** UI-Controller mergt `feat/m14-e1-ui` in `feat/m14-e1` (Merge-Commit, SIM-
+Strang wartet), danach T07 durch den SIM-Controller. Zeitmessungen unter Last (> 4) vor T09 bei ruhiger Last wiederholen.
+
+Regelbezug: R557 (5), R567, R568 · Kosten bei Irrtum: ein Text-Pin fängt eine spätere Wortlautänderung nicht mehr ganz.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M14-E1-UI · ADR: —
