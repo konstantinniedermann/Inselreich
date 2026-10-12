@@ -44,6 +44,12 @@ function distToPolyline(px: number, py: number, pts: { x: number; y: number }[])
   return d;
 }
 
+/** Welt ohne Insel C (Heimat, Möweninsel, Felsbucht): der Stand der Basis 62da7923 vor M14-E1 (R557). */
+const withoutC = (w: ReturnType<typeof createWorld>): ReturnType<typeof createWorld> => ({
+  ...w,
+  islands: w.islands.slice(0, 3),
+});
+
 const worlds = new Map<number, ReturnType<typeof createWorld>>();
 const worldOf = (seed: number): ReturnType<typeof createWorld> => {
   let w = worlds.get(seed);
@@ -79,13 +85,15 @@ function messen(): { near: number; total: number; nearNoNeedle: number; totalNoN
 }
 
 /** Hash (FNV-1a) ueber Tint-Felder, Seeds 1-40. */
-function tintHash(): number {
+function tintHash(
+  pick: (w: ReturnType<typeof createWorld>) => ReturnType<typeof createWorld> = (w) => w,
+): number {
   let h = 2166136261;
   const mix = (v: number): void => {
     h = Math.imul(h ^ (v | 0), 16777619) >>> 0;
   };
   for (let seed = 1; seed <= 40; seed++) {
-    const t = seaTintFor(worldOf(seed));
+    const t = seaTintFor(pick(worldOf(seed)));
     mix(seed);
     if (!t) {
       mix(-1);
@@ -121,18 +129,27 @@ describe('SEE-F1-KORRIDOR K1', () => {
 
   it('AK-K1b Pin: Hash seaTintFor Seeds 1-40 (Flaechen bleiben bitgleich zu main)', () => {
     // Auf main aufgenommen; bleibt bis zum Ende von SEE-F1-KORRIDOR unveraendert.
-    expect(tintHash()).toBe(683761494);
+    // M14-E1: bewusst neu gepinnt (R557), nur dieser Gesamt-Hash. Mit Insel C (Weidenau) kommt die Fahrlinie Heimat–C dazu,
+    // `seaKeepOut` sperrt entlang ihr, und die Flächen werden dort neu gewählt (gemessen: 303 von 405 Flächen, Seeds 1-40,
+    // bleiben Kachel für Kachel gleich; 66 trifft die neue Sperre, 36 folgen über die Belegung).
+    expect(tintHash()).toBe(392400604);
+  });
+
+  it('AK-K1b Teilhash (R557): ohne Insel C sind die Flaechen bitgleich zur Basis 62da7923', () => {
+    expect(tintHash(withoutC)).toBe(683761494);
   });
 });
 
 /** Hash ueber seaKeepOut (pad 0/1) und seaClearance (auf 1e-6) einer Kachelstichprobe, Seeds 1-5. */
-function clearanceHash(): number {
+function clearanceHash(
+  pick: (w: ReturnType<typeof createWorld>) => ReturnType<typeof createWorld> = (w) => w,
+): number {
   let h = 2166136261;
   const mix = (v: number): void => {
     h = Math.imul(h ^ (v | 0), 16777619) >>> 0;
   };
   for (let seed = 1; seed <= 5; seed++) {
-    const ctx = seaContext(worldOf(seed));
+    const ctx = seaContext(pick(worldOf(seed)));
     for (let y = 0; y < 120; y += 3)
       for (let x = 0; x < 120; x += 3) {
         mix(seaKeepOut(ctx, x, y) ? 1 : 0);
@@ -176,7 +193,12 @@ describe('SEE-F1-KORRIDOR K2', () => {
   });
 
   it('AK-K2 seaKeepOut und seaClearance bitgleich zu main (Stichprobe, Hash auf main aufgenommen)', () => {
-    expect(clearanceHash()).toBe(1496395851);
+    // M14-E1: bewusst neu gepinnt (R557), nur dieser Gesamt-Hash (alt 1496395851): `ctx.lanes` führt die neue Fahrlinie Heimat–C.
+    expect(clearanceHash()).toBe(1215940871);
+  });
+
+  it('AK-K2 Teilhash (R557): ohne Insel C sind seaKeepOut und seaClearance bitgleich zur Basis 62da7923', () => {
+    expect(clearanceHash(withoutC)).toBe(1496395851);
   });
 
   it('AK-K2 routes sind Kopien: Mutation wirkt nicht auf seaRoute', () => {
