@@ -10,11 +10,10 @@ import {
 } from '../sim/defs/sea';
 import { islandCycle, traitOf } from '../sim/levels';
 import { HOME } from '../sim/world';
-import { seaLanes, travelTicks } from '../sim/islands';
+import { islandName, seaLanes, travelTicks } from '../sim/islands';
 import { GOODS } from '../sim/defs/goods';
 import { perMinute } from './time';
 import type { Building, World } from '../sim/types';
-import { islandName } from '../sim/islands';
 
 const clock = (seconds: number): string => {
   const s = Math.round(seconds);
