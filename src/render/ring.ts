@@ -20,17 +20,21 @@ const TRACK = PALETTE.wallTimber;
 const MAX_FRACTION = 0.99999;
 
 /** Anteil des laufenden Zyklus 0 … 0,99999; 0 ohne Zyklus. `frac` = Bruchteil des aktuellen Ticks. */
-export function ringFraction(b: Building, frac: number): number {
-  const cycle = cycleOf(b);
+export function ringFraction(world: World, b: Building, frac: number): number {
+  const cycle = cycleOf(world, b);
   if (cycle === undefined || cycle <= 0) return 0;
   return Math.min(MAX_FRACTION, (b.progress + frac) / cycle);
 }
 
 /** Ringzustand; `null` ohne `produces`. Eingefroren (nicht `ok`/angebunden): ohne Tick-Bruchteil. */
-export function ringView(b: Building, frac: number): { fraction: number; running: boolean } | null {
+export function ringView(
+  world: World,
+  b: Building,
+  frac: number,
+): { fraction: number; running: boolean } | null {
   if (!BUILDING_DEFS[b.defId].produces) return null;
   const running = b.state === 'ok' && b.connected;
-  return { fraction: ringFraction(b, running ? frac : 0), running };
+  return { fraction: ringFraction(world, b, running ? frac : 0), running };
 }
 
 /** Zeichnet die Ringe (höchstens `MAX_RINGS`); liefert die Anzahl gezeichneter Ringe. */
@@ -47,7 +51,7 @@ export function drawProgressRings(
   for (const b of homeBuildings(world)) {
     if (n >= MAX_RINGS) break;
     if (b.x < range.x0 || b.x > range.x1 || b.y < range.y0 || b.y > range.y1) continue;
-    const view = ringView(b, frac);
+    const view = ringView(world, b, frac);
     if (!view) continue;
     const box = spriteBounds(BUILDING_DEFS[b.defId], b, imageStageOf(world, b));
     const top = worldToScreen(cam, { x: box.x + box.w / 2, y: box.y });

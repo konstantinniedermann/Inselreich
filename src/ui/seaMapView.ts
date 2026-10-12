@@ -3,6 +3,7 @@ import { hitIsland, mapDots, tileToMap, type MapLayout } from '../render/seaMap'
 import { functionLock } from '../sim/unlocks';
 import type { World } from '../sim/types';
 import { islandList } from './islandJump';
+import { islandEffectTexts } from './islandCard';
 
 /** Kartengrösse in CSS-Pixeln und Rand; `style.css` zeichnet dieselbe Grösse. */
 export const SEA_MAP_W = 360;
@@ -29,8 +30,10 @@ export function seaMapPick(world: World, l: MapLayout, px: number, py: number): 
   return hitIsland(world, l, px, py);
 }
 
-/** Hover-Text wie die Inselliste («Heimat», «Möweninsel · Kontor», «Felsbucht»), sonst `null`. */
+/** Hover-Text: Label der Inselliste plus Abschnitte der Traits mit Wirkung («Felsbucht · Gebirge+: Steinbruch, Glashütte ×2»), sonst `null`. */
 export function seaMapTip(world: World, l: MapLayout, px: number, py: number): string | null {
   const i = hitIsland(world, l, px, py);
-  return i === null ? null : (islandList(world).find((e) => e.index === i)?.label ?? null);
+  if (i === null) return null;
+  const label = islandList(world).find((e) => e.index === i)?.label;
+  return label === undefined ? null : [label, ...islandEffectTexts(world, i)].join(' · ');
 }

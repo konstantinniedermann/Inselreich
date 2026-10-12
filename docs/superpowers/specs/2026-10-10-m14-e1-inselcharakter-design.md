@@ -287,9 +287,9 @@ Werkzeug 20. Datei `tests/sim/islandTraits.test.ts`, sofern nicht anders genannt
   allen Stufen gleich `levels.ts` bzw. `BUILDING_DEFS`.
 - **AK-M14E1-08** Altstand-`progress`: Steinbruch auf der Felsbucht mit `progress 45` → nach einem `step` Stein +1,
   `progress 0`.
-- **AK-M14E1-09** Bilanz: `flow.ts` meldet für die Felsbucht mit einem Steinbruch Stein-Erzeugung 20 / min
-  (`goodsBalance(world, 1).stone.produced === 20`, Einheit wie `ui/time.ts`: Bilanz je 100 Ticks; Muster
-  `tests/sim/flow.test.ts`, Wert unverändert).
+- **AK-M14E1-09** Bilanz: `flow.ts` meldet für die Felsbucht mit einem Steinbruch Stein-Erzeugung 100/30 (≈ 3,33)
+  (`goodsBalance(world, 1).stone.produced`; `goodsBalance` rechnet je 100 Ticks, der Steinbruch mit Zyklus 30 liefert
+  also 100/30 statt «20»; die Felsbucht ist Welt-Insel 2, Insel 1 ist die Möweninsel; Muster `tests/sim/flow.test.ts`).
 - **AK-M14E1-10** Lager voll: Felsbucht Stein 100 (`STORAGE_CAP`), Steinbruch → nach 30 Ticks Zustand `storageFull`,
   Stein 100.
 - **AK-M14E1-11** Sturm: Zuckerrohrplantage auf Weidenau im aktiven Sturm verhält sich wie eine gleiche Plantage in
@@ -361,6 +361,7 @@ tests/sim/e0Pins.ts tests/sim/e1Pins.ts tests/sim/seePins.ts` ohne Änderung.
 Screenshots `.studio/qa/m14-e1/<ak>-<breite>x<höhe>.png`, 1280×720 und 1920×1080. Szenario-Stände werden in
 `tests/sim/scenarios.ts` erzeugt und wie die übrigen Browser-Szenarien als Slot geladen [Tech: Namen; Vorschlag
 unten]. Jede AK nennt ihren Ausgangsstand.
+Die Szenarien `m14e1-start`, `m14e1-felsbucht` und `m14e1-weidenau` setzen `crisisLevel: 'off'` (Stabilität des Browser-Checks).
 
 - **AK-M14E1-34** Stand `m14e1-start` (Seed 3, `unlockAll`, Geld 20 000, keine Kontore auf Fremdinseln), Zoom 1/8:
   drei Fremdinseln sichtbar, Weidenau ohne Gebirge; Hover über jede Fremdinsel zeigt die Karte aus Anhang 03 A.

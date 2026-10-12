@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { center, createWorld } from '../../src/sim/world';
 import { islandList, jumpTarget, nextIsland } from '../../src/ui/islandJump';
+import { stockPrefix } from '../../src/ui/hud';
 
 describe('M12 E2 UI Inseln: Inselsprung', () => {
   it('nextIsland reihum 0 → 1 → 2 → 0', () => {
@@ -34,14 +35,35 @@ describe('M12 E2 UI Inseln: Inselsprung', () => {
     const c = center(BUILDING_DEFS[k.defId], k.x, k.y);
     expect(jumpTarget(w, 0)).toEqual({ x: c.cx, y: c.cy });
   });
-  it('islandList: Heimat, Möweninsel, Felsbucht; „· Kontor" erst mit Kontor', () => {
+  it('islandList: Heimat, Möweninsel, Felsbucht, Weidenau; „· Kontor" erst mit Kontor', () => {
     const w = createWorld(3);
     expect(islandList(w)).toEqual([
       { index: 0, label: 'Heimat' },
       { index: 1, label: 'Möweninsel' },
       { index: 2, label: 'Felsbucht' },
+      { index: 3, label: 'Weidenau' },
     ]);
     w.islands[1]!.kontorId = 901;
     expect(islandList(w)[1]).toEqual({ index: 1, label: 'Möweninsel · Kontor' });
+  });
+});
+
+describe('M14-E1 Inselwechsel (AK-M14E1-32)', () => {
+  it('vier Einträge, Index 3 «Weidenau»; Taste 9 viermal ab der Heimat', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const list = islandList(w);
+    expect(list).toHaveLength(4);
+    expect(list[3]!.label).toBe('Weidenau');
+    let cur = 0;
+    const names: string[] = [];
+    for (let i = 0; i < 4; i++) {
+      cur = nextIsland(cur, w.islands.length);
+      names.push(list[cur]!.label);
+    }
+    expect(names).toEqual(['Möweninsel', 'Felsbucht', 'Weidenau', 'Heimat']);
+  });
+  it('Lagerleisten-Präfix auf Insel 3 «Weidenau»', () => {
+    const w = createWorld(3, { unlockAll: true });
+    expect(stockPrefix(w, 3)).toBe('Weidenau');
   });
 });

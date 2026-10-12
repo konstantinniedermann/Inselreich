@@ -7,6 +7,7 @@ import {
   ISLAND_RIM,
   ISLANDS,
   PLANTATION_SITE,
+  type IslandKind,
 } from '../../src/sim/defs/sea';
 import {
   clipInside,
@@ -54,7 +55,7 @@ const footprint = (p: Pt, w: number, h: number): Pt[] => {
   return out;
 };
 
-function checkTerrainGuarantees(isl: PlacedIsland, kind: 'A' | 'B'): void {
+function checkTerrainGuarantees(isl: PlacedIsland, kind: IslandKind): void {
   const def = ISLANDS.find((d) => d.kind === kind)!;
   const { width: w, height: h, terrain } = isl;
   const at = (x: number, y: number) =>
@@ -70,7 +71,7 @@ function checkTerrainGuarantees(isl: PlacedIsland, kind: 'A' | 'B'): void {
         expect(x >= ISLAND_RIM && x <= w - ISLAND_RIM - 1).toBe(true);
         expect(y >= ISLAND_RIM && y <= h - ISLAND_RIM - 1).toBe(true);
       }
-      if (kind === 'A') expect(t).not.toBe('mountain');
+      if (kind !== 'B') expect(t).not.toBe('mountain');
     }
   expect(isl.plantationSites.length).toBe(def.plantations);
   expect(isl.quarrySites.length).toBe(def.quarries);
@@ -151,7 +152,7 @@ function checkLayout(home: LaneIsland, isles: PlacedIsland[]): void {
       expect(Math.max(gx, gy)).toBeGreaterThanOrEqual(ISLAND_GAP_MIN);
     }
   const lanes = seaLanes(all);
-  expect(lanes.length).toBe(3);
+  expect(lanes.length).toBe((all.length * (all.length - 1)) / 2);
   isles.forEach((isl, k) => {
     const def = ISLANDS[k]!;
     const lane = lanes.find((l) => l.a === 0 && l.b === k + 1)!;
@@ -176,9 +177,8 @@ describe('M12 E1 Generator', () => {
     (...seeds) => {
       for (const seed of seeds) {
         const isles = generateForeignIslands(seed, homeOf(seed));
-        expect(isles.map((i) => i.kind)).toEqual(['A', 'B']);
-        checkTerrainGuarantees(isles[0]!, 'A');
-        checkTerrainGuarantees(isles[1]!, 'B');
+        expect(isles.map((i) => i.kind)).toEqual(ISLANDS.map((d) => d.kind));
+        isles.forEach((isl, k) => checkTerrainGuarantees(isl, ISLANDS[k]!.kind));
       }
     },
   );
@@ -195,8 +195,7 @@ describe('M12 E1 Generator', () => {
     for (let seed = 1; seed <= 20; seed++) {
       const home = homeOf(seed);
       const a = generateForeignIslands(seed, home, { failShapes: true });
-      checkTerrainGuarantees(a[0]!, 'A');
-      checkTerrainGuarantees(a[1]!, 'B');
+      a.forEach((isl, k) => checkTerrainGuarantees(isl, ISLANDS[k]!.kind));
       checkLayout(home, a);
       expect(generateForeignIslands(seed, home, { failShapes: true })).toEqual(a);
     }

@@ -19,7 +19,7 @@ import type { Building, BuildingDefId, Terrain, World } from '../sim/types';
 import { HOUSE_TITLES } from './texts';
 import { costLine } from './dom';
 import { friendlyReason } from './hints';
-import { islandCard } from './islandCard';
+import { islandCard, traitLine } from './islandCard';
 import { levelText, protectedCount, utilizationText } from './inspect';
 import { diagnosisText, goodList, reserveGoods, stateInfo } from './texts';
 import { formatGameTime, perMinute } from './time';
@@ -133,7 +133,12 @@ function workshopInfo(world: World, b: Building): HoverInfo {
     );
   else if (b.state === 'notConnected') lines.push('nicht angebunden');
   else if (b.state === 'noForest') lines.push(stateInfo(b, world.tick).text);
-  else lines.push(`arbeitet — ${perMinute(1, cycleOf(b) ?? 1)} ${GOODS[def.produces!].name} / min`);
+  else
+    lines.push(
+      `arbeitet — ${perMinute(1, cycleOf(world, b) ?? 1)} ${GOODS[def.produces!].name} / min`,
+    );
+  const advantage = traitLine(world, b);
+  if (advantage !== null) lines.push(advantage);
   const level = levelText(b);
   const title = level === null ? def.name : `${def.name}, ${level} · ${utilizationText(b)}`;
   return { title, lines };
@@ -171,7 +176,7 @@ function townhallInfo(world: World, b: Building): HoverInfo {
   };
 }
 
-function buildingInfo(world: World, b: Building): HoverInfo {
+export function buildingInfo(world: World, b: Building): HoverInfo {
   const def = BUILDING_DEFS[b.defId];
   if (b.house) return houseInfo(world, b);
   if (b.defId === 'townhall') return townhallInfo(world, b);

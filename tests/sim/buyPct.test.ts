@@ -14,7 +14,7 @@ import {
 } from '../../src/sim/trade';
 import type { GoodId, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
-import { foldBackToV11, placeTownhall } from './helpers';
+import { foldBackToV11, foldBackToV12, placeTownhall } from './helpers';
 import { runningMonument } from './monumentHelpers';
 
 /** Testwelt Spec §9: freigeschaltet, Kontor auf der Heimat, 10 000 Geld, Tick 1000. */
@@ -248,7 +248,7 @@ describe('AK-ZK-31 kein Kauf-Verkauf-Gewinn', () => {
 
 describe('AK-ZK-33 Rueckfaltung', () => {
   const v12Of = (x: World): Record<string, unknown> =>
-    JSON.parse(serialize(x)) as Record<string, unknown>;
+    foldBackToV12(JSON.parse(serialize(x)) as Record<string, unknown>);
 
   /** Stand der Vorversion von Hand: ohne monument, monumentDone, buyPct und islands[*].reserve. */
   const v11ByHand = (v12: Record<string, unknown>): Record<string, unknown> => {

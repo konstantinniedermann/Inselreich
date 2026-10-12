@@ -43,6 +43,7 @@ import { DIM_FIRE } from '../../src/render/renderer';
 import { LIGHT_COLORS, mixRgb } from '../../src/render/light';
 import { AIR_COLORS } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { ISLANDS } from '../../src/sim/defs/sea';
 import { placeBuilding } from '../../src/sim/build';
 import { home, center, createWorld, idx } from '../../src/sim/world';
 import type { BuildingDefId, World } from '../../src/sim/types';
@@ -1184,7 +1185,14 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   // meiden jetzt die Schiffsrouten (`seaContext.routes`, `seaPlanKeepOut`) statt nur der Geraden; ihre Meer-Stempel stehen
   // anderswo, daher ändert sich der Ereignisindex `at` im Hash. Flächen (Sandbank, Riff, Tang) und Tönung sind bitgleich
   // (Pin AK-K1b in seaKorridor.test.ts); HOME_ORDER (Art und Id ohne `at`) bleibt.
-  const HOME_CALLS = { hash: 2887272513, length: 19050 };
+  // M14-E1: bewusst neu gepinnt (R557). Mit Insel C (Weidenau) kommt der Seeweg Heimat–C dazu; der Meer-Plan (Felsen, Schaum)
+  // der Heimat ändert sich, also ändert sich der Ereignisindex `at` aller späteren Aufrufe (Hash neu, Länge 19050 gleich).
+  // Belege (Messung gegen die Basis 62da7923, src/ gleich main 9113e574): Körper, Luft, Bäume, Figuren und Schiff sind nach Art,
+  // Id und Pose gleich (HOME_ORDER, HOME_NOAT unten), die Land-Deko-Stempel gleich; nur Meer-Stempel (seaRock) und ihr Schaum
+  // sind anders. Die Welt ohne C ist bitgleich zum alten Pin (HOME_CALLS_OHNE_C).
+  const HOME_CALLS = { hash: 2304340450, length: 19050 };
+  // Alter Pin der Basis: gilt unverändert für die Welt ohne Insel C (Heimat, Möweninsel, Felsbucht).
+  const HOME_CALLS_OHNE_C = { hash: 2887272513, length: 19050 };
   // Zusätzlicher Pin ohne `at`: nur Art und Id der Aufrufe in Reihenfolge (davon unberührt von Deko-Ereignissen)
   const HOME_ORDER = { hash: 3471626267, length: 5152 };
   // REL-06: HOME_CALLS im Kandidaten neu gepinnt (L3 + L4 zusammen, reiner Hash-Pin); HOME_ORDER unverändert.
@@ -1193,16 +1201,27 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   /** Die gemerkten Zeichenaufrufe (Körper, Luft, Bäume, Schiff, Figuren) eines Frames auf der Heimat. */
   const callList = (world: World, cam: ReturnType<typeof camFor>, view: typeof V1280): Call[] => {
     h.calls.length = 0;
+    h.decorCalls.length = 0;
     const { ctx } = fakeCtx();
     render(ctx, world, cam, layer, null, null, view, { timeMs: 5000, dayNight: true });
+    landStamps.push(
+      h.decorCalls
+        .filter((c) => !SEA_STAMPS.includes(c.stamp))
+        .map((c) => `${c.stamp}${c.id}@${c.zoom}`),
+    );
     return h.calls.slice();
   };
-  it('Heimat-Aufrufliste bei 1280 × 800, Zoom 1 und 2 unverändert (vor dem Terrain-Merge gepinnt)', () => {
+  const SEA_STAMPS = ['wreck', 'islet', 'seaRock'];
+  /** Land-Deko-Stempel (ohne Meer-Stempel) je Frame des letzten `homeLists`-Laufs. */
+  let landStamps: string[][] = [];
+  /** Aufrufliste der Heimat-Fixtur bei Zoom 1 und 2 (der Welt `pick(world)`). */
+  const homeLists = (pick: (w: World) => World): Call[][] => {
     const loaded = deserialize(readFileSync('tests/sim/fixtures/save-v7.json', 'utf8'));
     if (!loaded.ok) throw new Error(loaded.reason);
-    const world = loaded.world;
+    const world = pick(loaded.world);
     const hm = home(world);
     const all: Call[][] = [];
+    landStamps = [];
     for (const zoom of [1, 2]) {
       const cam = { x: 0, y: 0, zoom };
       centerOn(cam, hm.width / 2, hm.height / 2, V1280, { w: hm.width, h: hm.height });
@@ -1211,10 +1230,43 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
       for (const v of [r.x1, r.y1]) expect(v).toBeLessThanOrEqual(59);
       all.push(callList(world, cam, V1280));
     }
+    return all;
+  };
+  const pinOf = (text: string): { hash: number; length: number } => ({
+    hash: fnv1a32(text),
+    length: text.length,
+  });
+  // Ohne Ereignisindex `at`: Art, Id und Pose der Aufrufe (Körper, Luft, Bäume, Figuren, Schiff) auf der Basis 62da7923 gemessen.
+  const HOME_NOAT = { hash: 2070843153, length: 13945 };
+  const noAt = (all: Call[][]): string =>
+    JSON.stringify(all.map((l) => l.map((c) => ({ kind: c.kind, id: c.id, pose: c.pose }))));
+  const withoutC = (w: World): World => ({ ...w, islands: w.islands.slice(0, 3) });
+
+  it('Heimat-Aufrufliste bei 1280 × 800, Zoom 1 und 2 unverändert (vor dem Terrain-Merge gepinnt)', () => {
+    const all = homeLists((w) => w);
     const json = JSON.stringify(all);
-    expect({ hash: fnv1a32(json), length: json.length }).toEqual(HOME_CALLS);
+    expect(pinOf(json)).toEqual(HOME_CALLS);
     const seq = JSON.stringify(all.map((l) => l.map((c) => `${c.kind}${c.id}`)));
-    expect({ hash: fnv1a32(seq), length: seq.length }).toEqual(HOME_ORDER);
+    expect(pinOf(seq)).toEqual(HOME_ORDER);
+  });
+
+  it('M14-E1 (R557): ohne Insel C ist die Heimat-Aufrufliste bitgleich zum alten Pin', () => {
+    expect(pinOf(JSON.stringify(homeLists(withoutC)))).toEqual(HOME_CALLS_OHNE_C);
+  });
+
+  // Land-Deko-Stempel (ohne wreck, islet, seaRock) beider Frames, auf der Basis 62da7923 gemessen.
+  const HOME_LAND_STAMPS = { hash: 3827322530, length: 635 };
+  it('M14-E1 (R557): Land-Deko-Stempel der Heimat gleich der Basis, nur Meer-Stempel ändern sich', () => {
+    homeLists((w) => w);
+    expect(pinOf(JSON.stringify(landStamps))).toEqual(HOME_LAND_STAMPS);
+    const full = landStamps;
+    homeLists(withoutC);
+    expect(full).toEqual(landStamps);
+  });
+
+  it('M14-E1 (R557): Körper, Luft, Bäume, Figuren und Schiff gleich der Basis, nur der Ereignisindex ändert sich', () => {
+    expect(pinOf(noAt(homeLists((w) => w)))).toEqual(HOME_NOAT);
+    expect(noAt(homeLists((w) => w))).toBe(noAt(homeLists(withoutC)));
   });
 });
 
@@ -1474,7 +1526,7 @@ describe('M12 E1 Renderer', () => {
     const { world } = scene();
     const cam = camOn(-5, 40, 0.125);
     const all = run(world, cam);
-    expect(renderStats.islandsDrawn).toBe(3);
+    expect(renderStats.islandsDrawn).toBe(1 + ISLANDS.length);
     const solo = run(homeOnly(world), cam);
     expect(all.log.events.length).toBeLessThanOrEqual(2 * solo.log.events.length);
     const t = (w: World): number => {

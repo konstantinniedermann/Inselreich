@@ -250,7 +250,7 @@ export interface Ship {
   homing: boolean;
 }
 export interface World {
-  version: 12;
+  version: 13;
   seed: number;
   islands: Island[];
   tick: number;

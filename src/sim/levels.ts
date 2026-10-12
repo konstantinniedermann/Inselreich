@@ -1,15 +1,39 @@
 import { BUILDING_DEFS, PAUSED_UPKEEP_PCT } from './defs/buildings';
 import { LEVELS, type LevelDef } from './defs/levels';
+import { ISLANDS, TRAIT_BUILDINGS, TRAIT_CYCLE_PCT, type IslandTrait } from './defs/sea';
 import { EFF_MAX, EFF_WINDOW } from './defs/timing';
-import type { Building } from './types';
+import type { Building, BuildingDefId, World } from './types';
 
 const levelDef = (b: Building): LevelDef | undefined =>
   b.level === undefined ? undefined : LEVELS[b.defId]?.[b.level - 2];
-/** Zyklus (Ticks) des stehenden Betriebs; `undefined` ohne Zyklus. Einziger Leseort (Spec 3.1). */
-export const cycleOf = (b: Building): number | undefined =>
-  BUILDING_DEFS[b.defId].cycle === undefined
-    ? undefined
-    : (levelDef(b)?.cycle ?? BUILDING_DEFS[b.defId].cycle);
+/** Trait der Insel, der den Zyklus von `defId` verkürzt (erster in Def-Reihenfolge); Heimat nie (Spec R1.2, R1.6). */
+export function traitOf(
+  world: World,
+  island: number,
+  defId: BuildingDefId,
+): IslandTrait | undefined {
+  const kind = world.islands[island]?.kind;
+  if (kind === undefined || kind === 'home') return undefined;
+  return ISLANDS.find((d) => d.kind === kind)?.traits.find((t) =>
+    TRAIT_BUILDINGS[t]?.includes(defId),
+  );
+}
+/** Zyklus auf `island` nach Inselvorteil: abgerundet, mindestens 1 (Spec R1.4). Einzige Stelle des Faktors. */
+export const islandCycle = (
+  world: World,
+  island: number,
+  defId: BuildingDefId,
+  cycle: number,
+): number =>
+  traitOf(world, island, defId) === undefined
+    ? cycle
+    : Math.max(1, Math.floor((cycle * TRAIT_CYCLE_PCT) / 100));
+/** Zyklus (Ticks) des stehenden Betriebs; `undefined` ohne Zyklus. Einziger Leseort (Spec 3.1, R1.8). */
+export function cycleOf(world: World, b: Building): number | undefined {
+  const base = BUILDING_DEFS[b.defId].cycle;
+  if (base === undefined) return undefined;
+  return islandCycle(world, b.island, b.defId, levelDef(b)?.cycle ?? base);
+}
 /** Unterhalt je 100 Ticks des stehenden Gebäudes. */
 export const upkeepOf = (b: Building): number =>
   levelDef(b)?.upkeep ?? BUILDING_DEFS[b.defId].upkeep;

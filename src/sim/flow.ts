@@ -33,7 +33,7 @@ export function goodsBalance(
     }
     if (!b.connected || b.paused === true) continue;
     const def = BUILDING_DEFS[b.defId];
-    const cycle = cycleOf(b);
+    const cycle = cycleOf(world, b);
     if (cycle === undefined) continue;
     if (def.produces) out[def.produces].produced += 100 / cycle;
     for (const g of def.consumes ?? []) out[g].consumed += 100 / cycle;

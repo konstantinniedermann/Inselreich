@@ -3,8 +3,10 @@
 // Alle Szenarien nutzen Seed 3 (Kontor an der Westküste) und legen ihr Gelände östlich des Kontors selbst an.
 import { writeFileSync } from 'node:fs';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
+import { generateForeignIslands } from '../../src/sim/islands';
+import { canPlace, canPlaceRoad } from '../../src/sim/placement';
 import { beginCrisis, flammableRect, rollCrisis } from '../../src/sim/crises';
-import { BUILDING_IDS } from '../../src/sim/defs/buildings';
+import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { CRISIS_LEVELS } from '../../src/sim/defs/crises';
 import {
   CRISIS_FIRST_TICK,
@@ -30,9 +32,9 @@ import type {
   World,
 } from '../../src/sim/types';
 import { deriveUnlocks } from '../../src/sim/unlocks';
-import { createWorld, idx, home } from '../../src/sim/world';
+import { adjacentOf, createWorld, footprint, idx, home } from '../../src/sim/world';
 import { prepareLayout, runColony, startColony, type Layout } from './controller';
-import { forceGrass, forceRect, placeTownhall, setAllTax } from './helpers';
+import { forceGrass, forceRect, foldBackToV12, placeTownhall, setAllTax } from './helpers';
 import { MONUMENT_AT } from './monumentHelpers';
 import { MONUMENT_GOODS, MONUMENT_STAGES } from '../../src/sim/defs/monument';
 import { newMerchantTrajectory, runMerchants } from './merchantsController';
@@ -888,6 +890,131 @@ const M13E2_SCENARIOS: Record<string, () => World> = {
   ...Object.fromEntries([0, 1, 2, 3, 4].map((i) => [`m13e2-bild-${i}`, () => m13e2Bild(i)])),
 };
 
+/** M14-E1 (Spec 10.4): Seed 3, alles frei, Geld 20 000, Krisen aus (stabile Browser-Prüfung), keine Fremdkontore. */
+function m14e1Start(): World {
+  const w = createWorld(SEED, { unlockAll: true, crisisLevel: 'off' });
+  w.money = 20_000;
+  return w;
+}
+
+const FELSBUCHT = 2;
+const WEIDENAU = 3;
+
+/** Baut `fn` mit reichlich Geld und Lager (Heimat und `island`); danach gilt wieder der vorherige Stand. */
+function withFundsOn<T>(w: World, island: number, fn: () => T): T {
+  const money = w.money;
+  const homeStock = { ...home(w).stock };
+  const stock = { ...w.islands[island]!.stock };
+  w.money = 1_000_000;
+  for (const isl of [home(w), w.islands[island]!])
+    for (const g of Object.keys(isl.stock) as GoodId[]) isl.stock[g] = 100;
+  try {
+    return fn();
+  } finally {
+    w.money = money;
+    home(w).stock = homeStock;
+    w.islands[island]!.stock = stock;
+  }
+}
+
+/** Kontor II am Kontorplatz aus dem Generator (wie der Spieler: Kosten aus der Heimat, die hier ausgeglichen sind). */
+function foundKontor(w: World, island: number): void {
+  const site = generateForeignIslands(w.seed, home(w))[island - 1]!.kontorSite;
+  const r = withFundsOn(w, island, () => placeBuilding(w, 'kontor2', site.x, site.y, island));
+  if (!r.ok) throw new Error(`kontor2 auf ${island}: ${r.reason}`);
+}
+
+/** Kürzester Wegpfad (BFS) von den Kontor-Anrainern zu einem Anrainer von `goal`, ohne `goal` zu überbauen. */
+function roadPath(w: World, island: number, goal: Set<number>): number[] | null {
+  const isl = w.islands[island]!;
+  const k = w.buildings[isl.kontorId!]!;
+  const kd = BUILDING_DEFS[k.defId];
+  const free = (x: number, y: number): boolean =>
+    x >= 0 &&
+    y >= 0 &&
+    x < isl.width &&
+    y < isl.height &&
+    !goal.has(idx(isl, x, y)) &&
+    (isl.tiles[idx(isl, x, y)]!.road || canPlaceRoad(w, x, y, island).ok);
+  const prev = new Map<number, number>();
+  const queue = adjacentOf(isl, k.x, k.y, kd.w, kd.h)
+    .filter((p) => free(p.x, p.y))
+    .map((p) => idx(isl, p.x, p.y));
+  queue.forEach((i) => prev.set(i, -1));
+  for (let head = 0; head < queue.length; head++) {
+    const cur = queue[head]!;
+    const [x, y] = [cur % isl.width, Math.floor(cur / isl.width)];
+    if (adjacentOf(isl, x, y, 1, 1).some((p) => goal.has(idx(isl, p.x, p.y)))) {
+      const path: number[] = [];
+      for (let i = cur; i !== -1; i = prev.get(i)!) path.push(i);
+      return path.reverse();
+    }
+    for (const p of adjacentOf(isl, x, y, 1, 1)) {
+      const ni = idx(isl, p.x, p.y);
+      if (!prev.has(ni) && free(p.x, p.y)) {
+        prev.set(ni, cur);
+        queue.push(ni);
+      }
+    }
+  }
+  return null;
+}
+
+/** Baut `defId` auf `island` am Platz nahe dem Kontor, der sich per Weg anbinden lässt (feste Reihenfolge). */
+function buildConnected(w: World, island: number, defId: BuildingDefId): Building {
+  const isl = w.islands[island]!;
+  const k = w.buildings[isl.kontorId!]!;
+  const sites: { x: number; y: number; d: number }[] = [];
+  for (let y = 0; y < isl.height; y++)
+    for (let x = 0; x < isl.width; x++)
+      if (canPlace(w, defId, x, y, island).ok)
+        sites.push({ x, y, d: Math.abs(x - k.x) + Math.abs(y - k.y) });
+  sites.sort((a, b) => a.d - b.d || a.y - b.y || a.x - b.x);
+  for (const s of sites) {
+    const goal = new Set(footprint(BUILDING_DEFS[defId], s.x, s.y).map((p) => idx(isl, p.x, p.y)));
+    const path = roadPath(w, island, goal);
+    if (path === null) continue;
+    return withFundsOn(w, island, () => {
+      for (const i of path) {
+        const r = placeRoad(w, i % isl.width, Math.floor(i / isl.width), island);
+        if (!r.ok) throw new Error(`road: ${r.reason}`);
+      }
+      const r = placeBuilding(w, defId, s.x, s.y, island);
+      if (!r.ok || r.id === undefined)
+        throw new Error(`${defId} auf ${island}: ${r.ok ? '' : r.reason}`);
+      return w.buildings[r.id]!;
+    });
+  }
+  throw new Error(`${defId} auf ${island}: kein anbindbarer Platz`);
+}
+
+/** Felsbucht (B) mit Kontor II, Steinbruch und Glashütte (angebunden), Lager Stein 20, Holz 20. */
+function m14e1Felsbucht(): World {
+  const w = m14e1Start();
+  foundKontor(w, FELSBUCHT);
+  buildConnected(w, FELSBUCHT, 'quarry');
+  buildConnected(w, FELSBUCHT, 'glassworks');
+  const stock = w.islands[FELSBUCHT]!.stock;
+  stock.stone = 20;
+  stock.wood = 20;
+  return w;
+}
+
+/** Weidenau (C) mit Kontor II, einer Zuckerrohrplantage und einer Schäferei (angebunden). */
+function m14e1Weidenau(): World {
+  const w = m14e1Start();
+  foundKontor(w, WEIDENAU);
+  buildConnected(w, WEIDENAU, 'canefarm');
+  buildConnected(w, WEIDENAU, 'sheepfarm');
+  return w;
+}
+
+const M14E1_SCENARIOS: Record<string, () => World> = {
+  'm14e1-start': m14e1Start,
+  'm14e1-felsbucht': m14e1Felsbucht,
+  'm14e1-weidenau': m14e1Weidenau,
+};
+
 const RAW_SCENARIOS: Record<string, () => World> = {
   'bilanz-nahrung': bilanzNahrung,
   verdeckung,
@@ -931,13 +1058,21 @@ const RAW_SCENARIOS: Record<string, () => World> = {
   'm13-ziel1': m13Ziel1,
   'm13-vor-ziel': m13VorZiel,
   ...M13E2_SCENARIOS,
+  ...M14E1_SCENARIOS,
 };
 
 /**
  * Ohne Nachbearbeitung: `verdeckung` (Welt aus `scenarios-iso.ts`, dort nicht Teil von Task 2; ein Test vergleicht sie
  * mit dem Original) und `auftrag` (bleibt „Alles frei", damit der Auftrag lieferbar ist, Spec 4.4).
  */
-const KEEP_UNLOCKS = new Set(['verdeckung', 'auftrag', 'm11-fluss', 'm11-wald', 'm11-ausbau']);
+const KEEP_UNLOCKS = new Set([
+  'verdeckung',
+  'auftrag',
+  'm11-fluss',
+  'm11-wald',
+  'm11-ausbau',
+  ...Object.keys(M14E1_SCENARIOS), // Seefahrt bleibt frei (unlockAll)
+]);
 
 export const SCENARIOS: Record<string, () => World> = Object.fromEntries(
   Object.entries(RAW_SCENARIOS).map(([name, build]) => [
@@ -969,9 +1104,16 @@ export function writeScenarios(
   return n;
 }
 
+/** Vorversion (v12, drei Inseln): Rückfaltung der Felsbucht-Welt, Insel C ist dort unberührt (Spec 10.4, AK-39). */
+function m14e1Altstand(): Record<string, unknown> {
+  return foldBackToV12(
+    JSON.parse(serialize(SCENARIOS['m14e1-felsbucht']!())) as Record<string, unknown>,
+  );
+}
+
 /**
  * Zusatz-Stände, die absichtlich nicht in `SCENARIOS` stehen (QA-B5): `m13e2-v13.json` ist `m13e2-ziel2` mit
- * `version: SAVE_VERSION + 1` und lädt nicht («Unbekannte Version»). Ohne `out` passiert nichts (0).
+ * `version: SAVE_VERSION + 1` und lädt nicht («Unbekannte Version»); `m14e1-altstand.json` ist `m14e1-felsbucht` als v12. Ohne `out` passiert nichts (0).
  */
 export function writeExtraSaves(
   out: string | undefined,
@@ -981,7 +1123,8 @@ export function writeExtraSaves(
   const raw = JSON.parse(serialize(SCENARIOS['m13e2-ziel2']!())) as Record<string, unknown>;
   raw.version = SAVE_VERSION + 1;
   write(`${out}/m13e2-v13.json`, JSON.stringify(raw));
-  return 1;
+  write(`${out}/m14e1-altstand.json`, JSON.stringify(m14e1Altstand()));
+  return 2;
 }
 
 /** Prüfpunkte je Szenario aus Spec 18.1 (absolute Kacheln, Name → Kachel). */

@@ -272,11 +272,83 @@ export const V11_WORLD_KEYS = [...V10_WORLD_KEYS, 'edict', 'edictLockedUntil'] a
 /** Stand v11, nicht erweitern: Inselschlüssel in Erzeugungsreihenfolge. */
 export const V11_ISLAND_KEYS = V8_ISLAND_KEYS;
 
+/** Stand v12, nicht erweitern: Weltschlüssel in `createWorld`-Reihenfolge (main @ 62da7923). */
+export const V12_WORLD_KEYS = [...V11_WORLD_KEYS, 'monument', 'monumentDone', 'buyPct'] as const;
+/** Stand v12, nicht erweitern: Inselschlüssel in Erzeugungsreihenfolge (mit `reserve`, I-049). */
+export const V12_ISLAND_KEYS = [...V11_ISLAND_KEYS, 'reserve'] as const;
+
+const C_FOLD_ERROR = 'foldBackToV12: Insel C nicht rückfaltbar';
+const C_INDEX = 3;
+
+const isC = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && (v as Record<string, unknown>).kind === 'C';
+
+/** Insel C ist unberührt (Anhang 02 D Regel 3): kein Kontor, leeres Lager, keine Bauten, Wege, Schiffe, Krise. */
+function assertUntouchedC(x: Record<string, unknown>, c: Record<string, unknown>): void {
+  const fail = (): never => {
+    throw new Error(C_FOLD_ERROR);
+  };
+  if (c.kontorId !== null) fail();
+  if (Object.keys(c).some((k) => !(V12_ISLAND_KEYS as readonly string[]).includes(k))) fail();
+  const counts = [c.stock, c.reserve].flatMap((m) =>
+    Object.values((m ?? {}) as Record<string, number>),
+  );
+  if (counts.some((v) => v !== 0)) fail();
+  if (
+    (c.tiles as { buildingId: unknown; road: unknown }[]).some(
+      (t) => t.buildingId !== null || t.road,
+    )
+  )
+    fail();
+  const buildings = Object.values(x.buildings as Record<string, { island: number }>);
+  if (buildings.some((b) => b.island === C_INDEX)) fail();
+  const ships = x.ships as {
+    port: number;
+    to: number | null;
+    route: { a: number; b: number } | null;
+  }[];
+  if (ships.some((s) => s.port === C_INDEX || s.to === C_INDEX)) fail();
+  if (ships.some((s) => s.route !== null && (s.route.a === C_INDEX || s.route.b === C_INDEX)))
+    fail();
+  const tile = (x.crisis as { tile?: { island: number } } | null)?.tile;
+  if (tile?.island === C_INDEX) fail();
+}
+
+/**
+ * Formt ein v13-JSON-Objekt in die v12-Form zurück (M14-E1): ohne `islands[3]` (Weidenau), `version 12`. Weltschlüssel
+ * ausserhalb von `V12_WORLD_KEYS` → Fehler; Insel C muss unberührt sein; Inselschlüssel ausserhalb von
+ * `V12_ISLAND_KEYS` entfallen auf den Inseln 0 bis 2 ohne Umordnen.
+ */
+export function foldBackToV12(x: Record<string, unknown>): Record<string, unknown> {
+  const worldKeys: readonly string[] = V12_WORLD_KEYS;
+  for (const k of Object.keys(x))
+    if (!worldKeys.includes(k)) throw new Error(`foldBackToV12: unbekannter Schlüssel ${k}`);
+  return dropIslandC(x);
+}
+
+/** Kern der Rückfaltung v13 → v12 ohne Prüfung der Weltschlüssel (die Kette v11 und tiefer filtert sie selbst). */
+function dropIslandC(x: Record<string, unknown>): Record<string, unknown> {
+  const islands = x.islands as Record<string, unknown>[];
+  if (islands.length !== 4 || !isC(islands[C_INDEX]))
+    throw new Error('foldBackToV12: 4 Inseln erwartet');
+  assertUntouchedC(x, islands[C_INDEX]);
+  const islandKeys: readonly string[] = V12_ISLAND_KEYS;
+  const out: Record<string, unknown> = { ...x };
+  out.islands = islands.slice(0, C_INDEX).map((isl) => {
+    const kept: Record<string, unknown> = {};
+    for (const k of Object.keys(isl)) if (islandKeys.includes(k)) kept[k] = isl[k];
+    return kept;
+  });
+  out.version = 12;
+  return out;
+}
+
 /**
  * Formt ein v12-JSON-Objekt in die v11-Form zurück (M13-E2): Schlüssel ausserhalb der v11-Listen entfallen ohne
  * Umordnen, `monument`/`monumentDone` müssen neutral sein; `version 11`. Denkmal → Fehler im Test.
  */
-export function foldBackToV11(v12: Record<string, unknown>): Record<string, unknown> {
+export function foldBackToV11(input: Record<string, unknown>): Record<string, unknown> {
+  const v12 = input.version === 13 ? dropIslandC(input) : input;
   if (v12.monument !== null || v12.monumentDone !== false) throw new Error(MONUMENT_FOLD_ERROR);
   const shares = Object.values((v12.buyPct ?? {}) as Record<string, number>);
   if (shares.some((p) => p !== 100)) throw new Error('foldBackToV11: Kaufanteil nicht rückfaltbar');
@@ -311,7 +383,7 @@ const MONUMENT_FOLD_ERROR = 'foldBackToV11: Denkmal nicht rückfaltbar';
  * Edikt, Sperre oder stillgelegte Gebäude sind nicht rückfaltbar → Fehler im Test.
  */
 export function foldBackToV10(x: Record<string, unknown>): Record<string, unknown> {
-  const v11 = x.version === 12 ? foldBackToV11(x) : x;
+  const v11 = (x.version as number) >= 12 ? foldBackToV11(x) : x;
   const allowed = [...V10_WORLD_KEYS, 'edict', 'edictLockedUntil'];
   for (const k of Object.keys(v11))
     if (!allowed.includes(k)) throw new Error(`foldBackToV10: unbekannter Schlüssel ${k}`);

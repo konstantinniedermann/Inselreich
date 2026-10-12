@@ -134,7 +134,7 @@ function expectFailure(json: string, reason: string): void {
 
 describe('save', () => {
   it('uses version 5', () => {
-    expect(SAVE_VERSION).toBe(12);
+    expect(SAVE_VERSION).toBe(13);
   });
 
   it('AK-S1-01 createWorld starts with the v2 fields', () => {
@@ -914,7 +914,7 @@ describe('M11 Save v6 (Spec 5)', () => {
       expect(deserialize(tampered(v, ok)).ok).toBe(true);
   });
   it('AK-SAV-05 version 7 → Unbekannte Version; SAVE_VERSION 6', () => {
-    expect(SAVE_VERSION).toBe(12);
+    expect(SAVE_VERSION).toBe(13);
     expect(deserialize(tampered(createWorld(3), (r) => (r.version = SAVE_VERSION + 1)))).toEqual({
       ok: false,
       reason: 'Unbekannte Version',
@@ -1042,7 +1042,7 @@ describe('M12 E0 Save v7', () => {
     const keys = Object.keys(fresh);
     for (const gone of ['width', 'height', 'tiles', 'kontorId', 'stock'])
       expect(keys).not.toContain(gone);
-    expect(SAVE_VERSION).toBe(12);
+    expect(SAVE_VERSION).toBe(13);
   });
 
   it.each(Object.keys(FORMS))('AK-E0-02 Fold-back der Form %s = V6_FORMS', (k) => {
@@ -1262,9 +1262,9 @@ describe('M12 E1 Save v8', () => {
 
   it('AK-E1-05 createWorld(3): Heimat plus A und B, Fremdinseln ohne Kontor und Lager 0', () => {
     const fresh = createWorld(3);
-    expect(SAVE_VERSION).toBe(12);
+    expect(SAVE_VERSION).toBe(13);
     expect(fresh.version).toBe(SAVE_VERSION);
-    expect(fresh.islands).toHaveLength(3);
+    expect(fresh.islands).toHaveLength(1 + ISLANDS.length);
     expect(fresh.islands.map((i) => i.kind)).toEqual(['home', ...ISLANDS.map((d) => d.kind)]);
     expect(ISLANDS.some((d) => (d.kind as string) === 'home')).toBe(false);
     expect(Object.keys(fresh.islands[0]!)).toEqual([
@@ -1291,7 +1291,7 @@ describe('M12 E1 Save v8', () => {
   it('AK-E1-05 save-v7.json lädt als v8 mit den Fremdinseln von createWorld(seed)', () => {
     const world = load(readFileSync(FIX7, 'utf8'));
     expect(world.version).toBe(SAVE_VERSION);
-    expect(world.islands).toHaveLength(3);
+    expect(world.islands).toHaveLength(1 + ISLANDS.length);
     expect(world.islands.slice(1)).toEqual(foreignOf(world));
   });
 
@@ -1395,7 +1395,7 @@ describe('M12 E1 Save v8', () => {
     it.each([1, 2, 3, 4, 5, 6, 7])('qa-B4 save-v%i: Fremdinseln wie createWorld(seed)', (n) => {
       const world = load(readFileSync(`tests/sim/fixtures/save-v${n}.json`, 'utf8'));
       expect(world.islands.slice(1)).toEqual(foreignOf(world));
-      expect(world.islands.map((i) => i.kind)).toEqual(['home', 'A', 'B']);
+      expect(world.islands.map((i) => i.kind)).toEqual(['home', ...ISLANDS.map((d) => d.kind)]);
     });
   });
 
@@ -1473,7 +1473,7 @@ describe('M12 Seefahrt Save v9', () => {
     it('save-v8.json lädt als v9 mit neuen Feldern', () => {
       const { world } = loadOk(fix8());
       expect(world.version).toBe(SAVE_VERSION);
-      expect(SAVE_VERSION).toBe(12);
+      expect(SAVE_VERSION).toBe(13);
       for (const isl of world.islands) expect(isl.stock.spice).toBeDefined();
       expect(world.sellPct.spice).toBe(100);
       expect(world.ships).toEqual([]);
@@ -1619,7 +1619,7 @@ describe('M12 Seefahrt Save v9', () => {
     const lane20 = (): number => laneTicks(createWorld(3).islands, 2, 0);
     const cases: Array<[string, () => string]> = [
       ['V01 5 Schiffe', () => withShips([1, 2, 3, 4, 5].map((id) => ship({ id })))],
-      ['V02 port 3', () => withShips([ship({ port: 3 })])],
+      ['V02 port 4', () => withShips([ship({ port: 1 + ISLANDS.length })])],
       ['V03 to ohne Kontor', () => withShips([ship({ to: 1 })])],
       ['V04 to = port', () => withShips([ship({ to: 0 })])],
       ['V05 left > Lane', () => withShips([ship({ port: 2, to: 0, left: lane20() + 1 })])],
@@ -1864,8 +1864,8 @@ describe('I-028 Save v10', () => {
     expect(v.taxLevels).toEqual({ 1: 'normal', 2: 'normal', 3: 'normal', 4: 'normal' });
     expect(v.taxLockedUntil).toEqual({ 1: 0, 2: 0, 3: 0, 4: 0 });
     expect('taxLevel' in v).toBe(false);
-    expect(SAVE_VERSION).toBe(12);
-    expect(createWorld(3).version).toBe(12);
+    expect(SAVE_VERSION).toBe(13);
+    expect(createWorld(3).version).toBe(13);
   });
 
   it('AK-T03 Bitgleichheit: taxUnits = pct × Σ Basis je Stufe (Stufen 1-3, alle Regler gleich)', () => {
@@ -1919,7 +1919,7 @@ describe('I-028 Save v10', () => {
       if (!r.ok) continue;
       expect(r.world.taxLevels).toEqual(ALL(level));
       expect(r.world.taxLockedUntil).toEqual(ALL(lock));
-      expect(r.world.version).toBe(12);
+      expect(r.world.version).toBe(13);
       expect('taxLevel' in r.world).toBe(false);
     }
   });
@@ -1941,7 +1941,7 @@ describe('I-028 Save v10', () => {
     for (const f of files) {
       const r = deserialize(readFileSync(`${FIX_DIR}${f}`, 'utf8'));
       expect(r.ok, f).toBe(true);
-      if (r.ok) expect(r.world.version, f).toBe(12);
+      if (r.ok) expect(r.world.version, f).toBe(13);
     }
   });
 

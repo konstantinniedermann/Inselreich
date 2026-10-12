@@ -6,10 +6,14 @@ import { wildlifeAt } from '../../src/render/wildlife';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { newHouseState } from '../../src/sim/population';
 import { home, createWorld, idx } from '../../src/sim/world';
+import { islandView } from '../../src/render/archipel';
+import { islandCard } from '../../src/ui/islandCard';
+import { foundKontor2Literal } from '../sim/seaHelpers';
 import type { Building, BuildingDefId, BuildingState, Order, World } from '../../src/sim/types';
 import { friendlyReason } from '../../src/ui/hints';
 import { deriveUnlocks } from '../../src/sim/unlocks';
 import {
+  buildingInfo,
   cursorHintVisible,
   foreignHoverTitle,
   HOVER_DELAY_MS,
@@ -26,6 +30,7 @@ import {
   forceGrass,
   forceRect,
   houseFar,
+  putBuilding,
   placeService,
   placeTownhall,
   setHouse,
@@ -463,6 +468,46 @@ describe('I-049 T06 Hover waitingReserve (AK-SB-13)', () => {
     );
     expect(hoverInfo(w, mk('glassworks', k.x + 10, k.y - 6), 0, none)!.lines[0]).toBe(
       'wartet auf Stein, Holz (Reserve)',
+    );
+  });
+});
+
+describe('M14-E1 Hover Inselstärken', () => {
+  it('AK-M14E1-27 Weidenau-Karte: vor der Seefahrt mit Zusatz, danach ohne', () => {
+    const w = createWorld(3);
+    const card = islandCard(w, 3)!;
+    expect(foreignHoverTitle(w, card)).toBe(`${card} · Seefahrt mit den Kaufleuten`);
+    w.won = true;
+    w.unlocked = deriveUnlocks(w);
+    expect(foreignHoverTitle(w, card)).toBe(card);
+  });
+
+  it('AK-M14E1-29 Zustandszeile mit Ausstoss, Inselvorteil direkt darunter, sonst keine Zeile', () => {
+    const w = createWorld(3, { unlockAll: true });
+    foundKontor2Literal(w, 2);
+    foundKontor2Literal(w, 3);
+    const at = (island: number, defId: BuildingDefId, slot: number, level?: 2 | 3): Building => {
+      const k = w.buildings[w.islands[island]!.kontorId ?? home(w).kontorId]!;
+      const b = putBuilding(w, island, defId, k.x + 4 + slot * 3, k.y);
+      if (level !== undefined) b.level = level;
+      return b;
+    };
+    const quarry = at(2, 'quarry', 0);
+    expect(buildingInfo(w, quarry).lines).toEqual([
+      'arbeitet — 20 Stein / min',
+      'Inselvorteil ×2 (Gebirge+)',
+    ]);
+    expect(buildingInfo(w, at(2, 'quarry', 1, 3)).lines[0]).toBe('arbeitet — 50 Stein / min');
+    expect(buildingInfo(w, at(3, 'sheepfarm', 0)).lines).toEqual([
+      'arbeitet — 24 Wolle / min',
+      'Inselvorteil ×2 (Fruchtbar)',
+    ]);
+    expect(buildingInfo(w, at(0, 'quarry', 5)).lines).toEqual(['arbeitet — 10 Stein / min']);
+    expect(buildingInfo(w, at(3, 'spicefarm', 1)).lines).toHaveLength(1);
+    // Inselansicht (Fremdgebäude-Hover): Kopie mit island 0 in der Ansicht
+    const view = islandView(w, 2);
+    expect(buildingInfo(view, view.buildings[quarry.id]!).lines[1]).toBe(
+      'Inselvorteil ×2 (Gebirge+)',
     );
   });
 });
