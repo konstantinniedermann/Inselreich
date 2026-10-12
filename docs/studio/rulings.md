@@ -6297,3 +6297,16 @@ Regelbezug: gates.md Gate Merge, R561, R565, R567 · Kosten bei Irrtum: Nachmess
 eingeordnet werden.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-CONTROLLER-HAERTUNG · ADR: —
+
+## R569 · 2026-10-12 · M14-E1 T06 abgenommen; Controller-Merge UI in `feat/m14-e1` frei, danach T07
+
+Ruling: Bericht Controller M14-E1-UI, `da9ea9b0`, Review OK. Angenommen: (1) zwei Bestandstests prüfen Präfix bzw. `startsWith`
+statt Literal (`UNLOCK_NOTICE` in `tests/ui/goal.test.ts`, AK-S11 in `tests/ui/seaMapView.test.ts`), weil die Texte um den
+Inselbezug wachsen — bewusst, keine Abschwächung der übrigen Asserts; (2) `tooltipLines(tool, world?, island?)` optional,
+Inspektorzeile `island-trait`, CSS `.tooltip .tt-island[hidden]`. Review-Hinweise (Doppel-Import, Trait-Typ) im T07- oder
+Final-Review-Durchgang mitnehmen. **Merge jetzt frei:** UI-Controller mergt `feat/m14-e1-ui` in `feat/m14-e1` (Merge-Commit, SIM-
+Strang wartet), danach T07 durch den SIM-Controller. Zeitmessungen unter Last (> 4) vor T09 bei ruhiger Last wiederholen.
+
+Regelbezug: R557 (5), R567, R568 · Kosten bei Irrtum: ein Text-Pin fängt eine spätere Wortlautänderung nicht mehr ganz.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M14-E1-UI · ADR: —
