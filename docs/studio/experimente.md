@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R542): E-057, E-060, E-061; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R565): E-060, E-062, E-063; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 ---
 
@@ -544,7 +544,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: –
 - Ersetzungsvorschlag (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md) B3): In f52039fc konfliktierten alle 3 Merges (`ae050073`, `adb7e28e`, `4b3a3aac`), obwohl die Stränge nacheinander gemergt wurden; die Reihenfolge der Commits im Strang ändert daran nichts. Vorschlag: abgelehnt, ersetzt durch E-059.
 
-## E-057 · laufend (R471) · Grosse Dateien gezielt lesen
+## E-057 · angepasst (R565), abgeschlossen · Grosse Dateien gezielt lesen
 
 - Hypothese: Wenn Briefings für Dateien über 30 KB (README, `docs/ideen.md`, Specs, Pläne) den benötigten Abschnitt oder Zeilenbereich nennen und Teillesen (`offset`/`limit`) vorschreiben, sinken die Lese-Ergebnisse über 30 KB und mit ihnen der Cache-Write-Anteil (Retro [session-2cfa57e0-ende](retros/2026-10-10-session-2cfa57e0-ende.md) Ampel; Pflichthebel R316).
 - Messgrösse: Lese-Ergebnisse > 30 KB je Session ≤ 2 (Ausgang 4) und Cache-Write-5-min-Anteil der Session ≤ 18 % (Ausgang als Spanne 20,2–27,2 %, Sessions 2cfa57e0 und 5a00a316) über 3 Sessions; Gegenprobe: Review-Runden im Mittel ≤ 1,5, Erstabnahme ≥ 90 % (bei ≥ 10 geprüften Ergebnissen).
@@ -556,7 +556,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: 2026-10-10 (Handbuch 1.45): Pflichtzeile in `templates/briefing.md`. Der Persona-Satz in `.claude/agents/lead-*.md` ist nicht gesetzt (Umsetzungsauftrag nur `docs/studio/`); er folgt nur, wenn die Briefing-Zeile die Schwelle nach 2 Sessions verfehlt. Erster Datenpunkt: nächste Studio-Session.
 - Datenpunkt 1 von 3, S-2026-10-10-f52039fc (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md)): Lese-Ergebnisse > 30 KB = 2 (37,0 KB Spec M13-E2, 35,1 KB Tool-Ergebnis), Schwelle ≤ 2 erfüllt; Cache-Write 5 min 26,8 %, Schwelle ≤ 18 % verfehlt (Neuschreibungen > 20k vor allem `lead-design`, 8). Weiter beobachten.
 - Datenpunkt 2 von 3, S-2026-10-11-dc50be15 (Retro [session-dc50be15-ende](retros/2026-10-11-session-dc50be15-ende.md) B1): Lese-Ergebnisse > 30 KB = 3 (35,5 KB und 33,5 KB Tool-Ergebnisse, 31,7 KB Spec M14-E1), Schwelle ≤ 2 verfehlt; Cache-Write 5 min 21,6 %, Schwelle ≤ 18 % verfehlt, aber −5,2 Punkte gegenüber Datenpunkt 1. Neuschreibungen > 20k erklären nur ≈ 23 % der Kostenart (1,31 M von ≈ 5,7 M); Hebelgrösse klein. Weiter beobachten.
-- Datenpunkt 3 von 3, S-2026-10-11-f2a404fd ([Retro M13](retros/2026-10-12-m13.md), Bewertung): Lese-Ergebnisse > 30 KB = 0 (≤ 2 erfüllt), Cache-Write 5 min 26,1 % (≤ 18 % verfehlt). Über 3 Sessions: Lesen 2 von 3 erfüllt (2, 3, 0), Cache-Write 0 von 3 (26,8 / 21,6 / 26,1 %); Gegenprobe Review-Runden 1,29 erfüllt, Erstabnahme M13 71 % verfehlt (Ursache Umsetzung). Neuschreibungen nach Pause tragen nur 7,1 % des Gewichts, der Cache-Write kommt aus dem Kontextaufbau langer Instanzen. Bewertungsvorschlag: **angepasst** — Briefingzeile bleibt als Regel ohne Platz, die Cache-Write-Hypothese ist widerlegt (Hebel dafür E-062); Status bis zum Ruling unverändert.
+- Datenpunkt 3 von 3, S-2026-10-11-f2a404fd ([Retro M13](retros/2026-10-12-m13.md), Bewertung): Lese-Ergebnisse > 30 KB = 0 (≤ 2 erfüllt), Cache-Write 5 min 26,1 % (≤ 18 % verfehlt). Über 3 Sessions: Lesen 2 von 3 erfüllt (2, 3, 0), Cache-Write 0 von 3 (26,8 / 21,6 / 26,1 %); Gegenprobe Review-Runden 1,29 erfüllt, Erstabnahme M13 71 % verfehlt (Ursache Umsetzung). Neuschreibungen nach Pause tragen nur 7,1 % des Gewichts, der Cache-Write kommt aus dem Kontextaufbau langer Instanzen. Bewertungsvorschlag: **angepasst** — Briefingzeile bleibt als Regel ohne Platz, die Cache-Write-Hypothese ist widerlegt (Hebel dafür E-062); Bewertung R565: **angepasst**, abgeschlossen; Briefingzeile bleibt als Regel ohne Platz.
 
 ## E-058 · umgesetzt (Vorlagenzeile, kein Platz; R459, R464) · Integrator-Briefing nennt beide Prüfbefehle
 
@@ -597,7 +597,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zweiter Echtlauf (R546, nach TOOL-E060-FIX `e230d5e9`): 117 Lead-Starts seit 2026-10-10, 3 Blocks (alle berechtigt: Freigabe erst nach dem Start), 0 Fehlblocks, `BUDGET_MODE = "deny"` gesetzt. Erster Echtlauf (R542, EXP-BEWERTUNG-1011): 113 Lead-Starts seit 2026-10-10, 8 mögliche Blocks, davon 3 berechtigt (keine Freigabe vor dem Start) und 5 Fehlblocks (Freigabe vorhanden, aber unter Phasenname `impl-…` bzw. `design-M13`, den `package_names` nicht trifft; zwei davon Folge-Controller bzw. Mehrfach-Controller). `BUDGET_MODE` bleibt `warn`, der Schalter ist nicht umgestellt; Messung startet erst nach Korrektur des Abgleichs (Ruling nötig).
 - Datenpunkt 1 von 3 ([Retro M13](retros/2026-10-12-m13.md)): seit `deny` (2026-10-11 16:40) 23 Freigaben, 0 Blocks, 0 Fehlblocks; S-2026-10-11-5500c465 14 Lead-Instanzen, 0 ohne Phase. Session 309376bf ohne Lead-Start. Weiter beobachten.
 
-## E-061 · laufend (R497) · Spec-Nachtrag und Kurzdesign Stufe leicht auf sonnet
+## E-061 · behalten (R565), abgeschlossen · Spec-Nachtrag und Kurzdesign Stufe leicht auf sonnet
 
 - Hypothese: Wenn `lead-design` Spec-Nachträge (Einarbeitung von Gate-Befunden ohne neue Spielwerte) und Kurzdesigns der Stufe leicht (kein Save, kein neuer Spielwert) auf sonnet statt opus schreibt, sinkt das Kostengewicht dieser Instanzen um den Modellfaktor, ohne dass die Befunde im folgenden Gate zunehmen — analog E-054 (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md), Ampel opus-Anteil gelb 76,7 %; Nachträge M13-E2 0,71 M und I-048 0,70 M, Kurzdesign UI-TASTEN 0,16 M, alle opus).
 - Messgrösse: Kostengewicht je Nachtrag-Instanz ≤ 60 % des Ausgangs (0,70 M) und je Kurzdesign ≤ 60 % von 0,16 M über 3 Instanzen; opus-Anteil der Session ≤ 70 % in einer Session mit ≥ 2 Spec-Arbeiten. Gegenprobe: Befunde im folgenden Gate (Plan bzw. Kombi) zu Spec-Inhalten nicht über Ausgang (R492/R493: Gate Plan folgt), 0 ZURÜCK, kein zweiter Nachtrag zum selben Gate.
@@ -609,9 +609,9 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: 2026-10-11 (erster Fall: Spec-Nachtrag M14-E1)
 - Datenpunkt 1 von 3, S-2026-10-11-dc50be15 (Retro [session-dc50be15-ende](retros/2026-10-11-session-dc50be15-ende.md) B4): `design-m14-e1-nachtrag` (sonnet) 0,078 M gegen Ausgang 0,70 M (≈ 11 %, Schwelle ≤ 60 % erfüllt); Gate danach ohne weitere Befunde, 0 ZURÜCK (R501); Kurzdesign `design-ui-naechster-schritt` (sonnet) 0,056 M gegen 0,16 M (≈ 35 %); opus-Anteil 55,6 % (≤ 70 % erfüllt). Weiter beobachten.
 - Bewertung: verlängert (R542). Entwurf 2026-10-11 (Studio-Coach, EXP-BEWERTUNG-1011): noch nicht bewertbar. Datenpunkt 2, S-2026-10-11-d665682d (`lead_stats.rows`): `design-UI-TEXTE-1` (sonnet, eine Instanz, 18 Turns) 0,129 M für Kurzdesign samt Spec-Nachtrag (R530) und Berichtigung (R533), gegen 0,16 M Ausgang Kurzdesign = ≈ 81 % (Schwelle ≤ 60 % verfehlt, aber Nachtrag-Anteil nicht trennbar, weil dieselbe Instanz); opus-Anteil der Session 38,2 % (≤ 70 % erfüllt); Gate Spec BEDENKEN (R530, 9 Punkte, kein Blocker). Tendenz: Nachtrag klar unter Schwelle (11 %, Datenpunkt 1), Kurzdesign mit Spec nahe 80 %. Fehlend: ein dritter, sauber getrennter Datenpunkt und der Ausgangswert der Gate-Befunde (Gegenprobe); Empfehlung: Schwelle für Kurzdesign inklusive Spec und Nachtrag in einer Instanz neu fassen oder weiter beobachten (verlängern).
-- Bewertung ([Retro M13](retros/2026-10-12-m13.md)): drei Instanzen, Kostenschwelle 3 von 3 erfüllt — Nachtrag M14-E1 11 % von 0,70 M, Kurzdesign UI-NAECHSTER-SCHRITT 35 % von 0,16 M, UI-TEXTE-1 (Kurzdesign samt Nachtrag in einer Instanz) 0,129 M = 15 % der Summe beider Ausgänge (0,86 M); opus-Anteil der Sessions 55,6 % und 38,2 %. Gegenprobe 2 von 3: 0 ZURÜCK, Gate-Befunde 0 / OK / 9 (R501, R502, R530) gegen 13–14 bei opus-Specs (R489, R490), aber UI-TEXTE-1 brauchte zwei Nachkorrekturen (R533, R550, falsche Artikel-Annahme). Bewertungsvorschlag: **behalten** (Modelltabellen-Zeile steht seit R497); Status bis zum Ruling unverändert.
+- Bewertung ([Retro M13](retros/2026-10-12-m13.md)): drei Instanzen, Kostenschwelle 3 von 3 erfüllt — Nachtrag M14-E1 11 % von 0,70 M, Kurzdesign UI-NAECHSTER-SCHRITT 35 % von 0,16 M, UI-TEXTE-1 (Kurzdesign samt Nachtrag in einer Instanz) 0,129 M = 15 % der Summe beider Ausgänge (0,86 M); opus-Anteil der Sessions 55,6 % und 38,2 %. Gegenprobe 2 von 3: 0 ZURÜCK, Gate-Befunde 0 / OK / 9 (R501, R502, R530) gegen 13–14 bei opus-Specs (R489, R490), aber UI-TEXTE-1 brauchte zwei Nachkorrekturen (R533, R550, falsche Artikel-Annahme). Bewertungsvorschlag: **behalten** (Modelltabellen-Zeile steht seit R497); Bewertung R565: **behalten**, abgeschlossen; Modelltabellen-Zeile bleibt Regel.
 
-## E-062 · vorgeschlagen (wartet auf Platz) · Turnkappe 60 Turns für Plan-Instanzen
+## E-062 · laufend (R565) · Turnkappe 60 Turns für Plan-Instanzen
 
 - Hypothese: Wenn das Plan-Briefing „höchstens 60 Turns, Rest als frische Instanz mit Übergabe“ verlangt, sinkt der Cache-Write der Plan-Instanzen (Vorarbeits-Leads schreiben 66–81 % der Lead-Schreibmenge; `plan-m13-e2` 105 und `plan-i048` 96 Turns gegen 55 bei `plan-tool-buendel-6`), ohne dass Plan-Qualität leidet (Retro [ampel-adhoc](retros/2026-10-11-ampel-adhoc.md) B2, V2).
 - Messgrösse: Cache-Write-Tokens je Plan-Instanz ≤ 1,5 M und 0 blockierende Gate-Plan-Befunde, über 3 Pläne. Vorab Messauftrag (Frist nächste Session-Retro): Plan-Instanzen > 60 Turns in Erstfassung und Nachtrag trennen.
@@ -621,10 +621,10 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `.claude/agents/lead-tech.md`, `docs/studio/STUDIO.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
 - Ruling: R538 (Messauftrag angenommen; Experiment wartet auf Platz)
 - Ausgang M13 ([Retro M13](retros/2026-10-12-m13.md) B4, `lead_stats.rows`, Kostengewicht): `plan-m13-e2` 105 Turns 4,26 M, `plan-i048` 96 / 2,69 M, `plan-M14-E1` 90 / 2,46 M gegen `plan-tool-buendel-6` 55 / 1,28 M. Trennung Erstfassung/Nachtrag weiter nicht möglich (Retro session-f2a404fd). Startvorschlag: auf dem Platz von E-057 (Retro M13 V1).
-- Start: –
+- Start: 2026-10-12 (R565 V1, Platz von E-057; Beginn mit dem nächsten Plan-Briefing)
 - Bewertung: –
 
-## E-063 · vorgeschlagen · Integrator nur im Worktree `integrate`, Briefing nennt ihn
+## E-063 · laufend (R565) · Integrator nur im Worktree `integrate`, Briefing nennt ihn
 
 - Hypothese: Wenn Merge und `make push-check` immer in `.worktrees/integrate` (detached auf dem Kandidaten) laufen, die Integrator-Pflichtzeile der Briefing-Vorlage diesen Arbeitsort nennt und die Persona bei einem Briefing mit Hauptcheckout „Schritt 1 gilt, melden“ vorschreibt, dann treffen L0-Commits auf `main` keinen laufenden Integrator mehr (Prozess-Retro [M13](retros/2026-10-12-m13-prozess.md) B1/P1; [Retro M13](retros/2026-10-12-m13.md) B1/V2: beide Vorfälle R562 und REL-M13 kamen aus Briefings mit Hauptcheckout, 2 bzw. 3 von 27 Briefings).
 - Messgrösse: in den nächsten 10 Integrator-Läufen 0 Briefings mit Hauptcheckout als Arbeitsort (Grep `.studio/archiv/briefings/*production-integrator*`), 0 × push-check Exit 1 „Arbeitsbaum verändert“ (Ereignis `push_check`) und 0 Merge-Commits mit fremder Nachricht (`git log --merges`); Gegenprobe: Integrator-Dauer je Lauf nicht über Ausgang, gepushter Hash = Ruling-Hash oder vor dem Push gemeldet.
@@ -632,6 +632,6 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 10 Integrator-Läufe, höchstens bis 2026-11-19.
 - Rückfall: Zeilen in Vorlage und Persona streichen; Zwischenregel R562 („L0 committet nur, wenn kein Integrator läuft“) als Handbuch-Satz.
 - Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/production-integrator.md`, `docs/studio/STUDIO.md` (Push-Ablauf), `docs/studio/CHANGELOG.md` (nur nach Ruling); Probe, ob `pushcheck.py` im Worktree läuft (≈ 5 Tools).
-- Ruling: –
-- Start: –
+- Ruling: R565 (P1, V2)
+- Start: 2026-10-12 (Handbuch 1.52: Merge und Push nur in `.worktrees/integrate`; Briefing-Vorlagenzeile; Persona production-integrator 1.13)
 - Bewertung: –
