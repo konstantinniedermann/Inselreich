@@ -200,7 +200,8 @@ function clothProducersForTarget(w: World): number {
 
 /**
  * Deckt die Stoffkette den Bedarf der Zielstufe? Vorbedingung für die Schule: genug Webereien, oder
- * ein Lagervorrat, der den Zielbedarf eines Kontrollintervalls übersteigt.
+ * ein Lagervorrat, der den Zielbedarf je 100 Ticks übersteigt. Bedarf (`needs.cloth` je Bewohner) und
+ * Ausstoss (`100 / cycle`) sind beide je 100 Ticks gerechnet, das entspricht `CONTROL_INTERVAL`.
  */
 function clothCoversTarget(w: World): boolean {
   return (

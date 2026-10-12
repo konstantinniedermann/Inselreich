@@ -118,12 +118,10 @@ describe('Controller-Härtung: kein Stillstand (Gate-Ensemble)', () => {
     return { w, winTick: t.winTick ?? MAX_TICKS + 1 };
   }
 
-  it('GE-8: Phase 60 und 80 siegen vor MAX_TICKS', () => {
-    for (const phase of [60, 80]) {
-      const { w, winTick } = runPhase(phase);
-      expect(w.won, `Phase ${phase}: kein Sieg bis MAX_TICKS`).toBe(true);
-      expect(winTick, `Phase ${phase}`).toBeLessThanOrEqual(MAX_TICKS);
-    }
+  it.each([60, 80])('GE-8: Phase %i siegt vor MAX_TICKS', (phase) => {
+    const { w, winTick } = runPhase(phase);
+    expect(w.won, `Phase ${phase}: kein Sieg bis MAX_TICKS`).toBe(true);
+    expect(winTick, `Phase ${phase}`).toBeLessThanOrEqual(MAX_TICKS);
   });
 
   it.each(PHASES)('GE-9: Phase %i baut die Schule bis MAX_TICKS', (phase) => {
