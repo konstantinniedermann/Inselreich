@@ -16,6 +16,12 @@ import { forceRect } from './helpers';
 export const MAX_TICKS = 9000;
 /** Strengere Grenze für den Sieg nach Übernahme der Eskalationswerte (Entscheid in der Kurz-Spec). */
 export const WIN_TICK_LIMIT = 7500;
+/**
+ * Sieg-Tick-Grenze des Gate-Ensembles (Testgrenze, kein Spielwert). Abgeleitet aus der Messung
+ * 2026-10-12 auf main: Median 7250, Spanne 6650-7900; Ensemble-Maximum 7900, auf 50 gerundet
+ * (7900) plus 350 Luft = 8250. Die Einzellauf-Gates balance*.test.ts bleiben bei WIN_TICK_LIMIT.
+ */
+export const ENSEMBLE_WIN_TICK_LIMIT = 8250;
 /** Mehrkosten des Zukaufs gegenüber Listenpreis (mit Edikt) je Welt; ohne Sim-Schalter. */
 const surcharge = new WeakMap<World, number>();
 export function buySurcharge(w: World): number {

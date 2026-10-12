@@ -145,6 +145,25 @@ class MessagesTest(unittest.TestCase):
         self.assertNotIn("names", event)
         self.assertNotIn("messages", event)
 
+    def test_event_carries_working_tree(self):
+        event = testrun.build_event("vitest", 0, [])
+        self.assertIn("tree", event)
+        self.assertIsInstance(event["tree"], str)
+        self.assertNotIn("/Users", event["tree"])  # relativ zur Repo-Wurzel
+
+    def test_tree_failure_drops_field_but_event_stays(self):
+        real = testrun._git
+
+        def broken(*args):
+            if "--show-toplevel" in args or "--git-common-dir" in args:
+                raise OSError("kein git")
+            return real(*args)
+
+        with mock.patch.object(testrun, "_git", broken):
+            event = testrun.build_event("vitest", 0, [])
+        self.assertNotIn("tree", event)
+        self.assertEqual(event["kind"], "test_passed")
+
     def test_unparsable_input_never_raises(self):
         self.assertEqual(testrun.parse_messages([None, 3], "vitest"), {})
 

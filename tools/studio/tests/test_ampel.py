@@ -227,3 +227,30 @@ class AmpelWiringTest(unittest.TestCase):
             )
         self.assertIn("Ad-hoc-Retro fällig", text)
         self.assertIn("Cache-Write 5 min", text)
+
+
+class AmpelSteuerungNewLineTest(unittest.TestCase):
+    """R565 P5: bereinigte Ampelzeile plus Rohzeile als Info ergibt keinen Doppelvorfall."""
+
+    def text(self):
+        return (
+            "- erzeugt: 2026-10-11T09:00:00+02:00\n"
+            "- Datenbasis: 1 Session(s), 20 Agenten, 100 Aufrufe.\n"
+            "- ROT: Steuerungsanteil (L0 + Leads): 60.0 % (gelb > 40 %, rot > 50 %)\n"
+            "- Steuerungsanteil roh: 66.0 %, nur Info\n"
+            "- Steuerungsanteil bereinigt (E-049, ohne 2 Lead-Instanzen): "
+            "60.0 %, Bewertung rot (Schwellen wie die Rohzeile)\n"
+        )
+
+    def test_one_incident_not_two(self):
+        a = effort.parse_ampel_session("S-a", self.text())
+        b = {**a, "id": "S-b", "t": a["t"] + 1}
+        self.assertEqual(a["red"], {"steuerung"})
+        found = effort.ampel_incidents([a, b], set())
+        self.assertEqual(ids(found), ["ampel:steuerung:S-b"])
+
+    def test_info_line_alone_is_not_red(self):
+        text = self.text().replace(
+            "- ROT: Steuerungsanteil (L0", "- GRÜN: Steuerungsanteil (L0"
+        )
+        self.assertEqual(effort.parse_ampel_session("S-a", text)["red"], set())

@@ -190,7 +190,7 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
   Gate-Instanzen tragen die Phase mit Präfix `plan-<paket>`, `design-<paket>` bzw. `gate-<paket>`
   (z. B. `--phase plan-M13-E1`); die Kopfzeile `Paket:` dieser Lead-Instanz nennt dieselbe ID. Nur
   so rechnet die Zeile „Steuerungsanteil bereinigt“ diese Instanzen heraus. Gate-Instanzen ohne
-  eigene Arbeiter schreiben zusätzlich „Budget: keins“ ins Briefing. **Ampel (R565 P5):** Die bereinigte Steuerungszeile gilt als Ampelzeile (Schwellen der Rohzeile, E-049; `efficiency.py` wertet bis zur Werkzeug-Umstellung noch die Rohzeile, die Retro liest bis dahin die bereinigte Zeile); die Session-Minuten der Live-Ampel stehen erst über 10 min auf gelb (`actions.py` `SESSION_LIMITS` steht noch auf 8, Umstellung im Werkzeug-Bündel).
+  eigene Arbeiter schreiben zusätzlich „Budget: keins“ ins Briefing. **Ampel (R565 P5):** Die bereinigte Steuerungszeile gilt als Ampelzeile (Schwellen der Rohzeile, E-049; die Rohzeile steht nur als Info); die Session-Minuten der Live-Ampel stehen erst über 10 min auf gelb (`actions.py` `SESSION_LIMITS`).
 - **Formel Umsetzung:** `Pakete × 2 + QA-Checks + 1 Final-Review`, darauf 30 % Puffer, aufgerundet.
   Beispiel: 4 Pakete, 2 UI-Checks → 8 + 2 + 1 = 11 → × 1,3 → **15**. Fix-Runden per `SendMessage`
   zählen nicht als Start. L0 teilt auf (Stufe voll: Final-Review an `lead-qa`, Rest an `lead-tech`;

@@ -214,7 +214,7 @@ Fundort: `make gate-ensemble` (TOOL-GATE-ENSEMBLE, `tests/sim/ensemble.test.ts`)
 
 Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Phasen 10/30/50/70/90, vor der Härtung). Beobachtung: Phase 10/30 siegen (7950 / 7250), Phase 50/70/90 stehen bis Tick 9000 still (Schule bei Tick 551/571/591, minMoney 3 / -88 / 19); nach der Härtung siegen alle zehn Phasen (50: 7000, 60: 7900, 70: 7600, 80: 7500, 90: 6900; Phase 0-40 unverändert). Phase 60 (7900) und 70 (7600) liegen über `WIN_TICK_LIMIT` 7500, Verdikt im Ensemble: AUSREISSER. Ursprung: TOOL-CONTROLLER-HAERTUNG T03. Einschätzung: Ursache war nur die zu frühe Schule; die verbleibende Streuung 6650-7900 ist ein Befund für M14-Werte (Grenzen mit Ensemble prüfen). Die Härtung nutzt einen Lagervorrat-Ausweg (`stock.cloth` > Zielbedarf), sonst verschöbe sich Phase 0.
 
-- **Zuordnung:** probe-CONTROLLER-PHASE (R558). Stillstand behoben (R568), Streuung offen.
+- **Zuordnung:** probe-CONTROLLER-PHASE (R558). Stillstand behoben (R568); Streuung (Sieg-Tick-Grenze) erledigt durch T04 (R572): `ENSEMBLE_WIN_TICK_LIMIT` 8250.
 
 ### 2026-10-11 · L0-Commit im Hauptcheckout fängt offenen Integrator-Merge ein
 
@@ -249,20 +249,12 @@ Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Pha
   darstellend; migrierte Spielstände zeigen verschobene Sandbänke/Riffe. Kandidat für den Browser-Check T08 (sichtbar störend?).
 - **Zuordnung:** R567.
 
-### 2026-10-12 · Gate-Ensemble: Sieg-Tick-Grenze 7500 meldet Phasen 60/70 als AUSREISSER
-
-- **Fundort:** `make gate-ensemble` auf `main` `c20c4f3a` und `feat/m14-e1` `d6f37233`: Sieg-Tick Median 7250, Spanne 6650–7900,
-  4/5 ≤ 7500 (Phasen 60/70 darüber, seit TOOL-CONTROLLER-HAERTUNG siegen sie überhaupt). Ursprung: Nachmessung R557 (3).
-  Einschätzung: niedrig; Werte-Frage (`WIN_TICK_LIMIT` aus Ensemble ableiten oder Controller-Pfad) — Kandidat nächstes
-  Werkzeug-Bündel.
-- **Zuordnung:** R570.
-
 ### 2026-10-12 · `make studio-lint` endet auf `main` mit Exit 2 (`model.py`, `test_model.py`)
 
 - **Fundort:** `tools/studio/model.py`, `tools/studio/tests/test_model.py`; gemeldet vom Controller TOOL-BUENDEL-9, auf `main`
   identisch. Ursprung: TOOL-BUENDEL-9 (ausserhalb Scope). Einschätzung: niedrig; Kandidat Trivial-Fix im TOOL-BUENDEL-9
   (gleicher Themenbereich) oder nächstes Werkzeug-Bündel.
-- **Zuordnung:** offen.
+- **Zuordnung:** erledigt durch TOOL-BUENDEL-9 (`d3841a34`, ruff format).
 
 ### 2026-10-12 · Befunde Browser-Check M14-E1 (T08), ausserhalb Scope
 

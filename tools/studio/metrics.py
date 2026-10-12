@@ -401,12 +401,48 @@ def _from_since(events: list[dict], since: datetime | None) -> list[dict]:
     return [e for e in events if model.parse_ts(e.get("ts")) >= since.timestamp()]
 
 
-def _with_flakes(data: dict | None, events: list[dict]) -> dict | None:
+def _transcript_start(path: Path) -> datetime | None:
+    """Zeitstempel des ersten datierten Eintrags eines Transkripts; unlesbar: None."""
+    try:
+        with path.open(encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                try:
+                    entry = json.loads(line)
+                except ValueError:
+                    continue
+                when = (
+                    efficiency._entry_time(entry) if isinstance(entry, dict) else None
+                )
+                if when is not None:
+                    return datetime.fromtimestamp(when, UTC)
+    except OSError:
+        return None
+    return None
+
+
+def flake_since(
+    files: list[Path], sessions: int | None, since: datetime | None
+) -> datetime | None:
+    """Beginn des Flake-Zeitraums: bei ``--sessions N`` die älteste gewählte Session,
+    nie früher als ``--since``; ohne ``--sessions`` unverändert ``since`` (R565 V3)."""
+    if sessions is None:
+        return since
+    starts = [t for t in map(_transcript_start, files) if t is not None]
+    if not starts:
+        return since
+    start = min(starts)
+    return start if since is None else max(start, since)
+
+
+def _with_flakes(
+    data: dict | None, events: list[dict], since: datetime | None = None
+) -> dict | None:
     """Ampelwert Flake-Verdacht; ``None`` ohne Test-Events im Zeitraum (nicht gemessen)."""
     if data is None:
         return None
+    events = _from_since(events, since)
     has_tests = any(e.get("kind") in ("test_failed", "test_passed") for e in events)
-    data["flakes"] = efficiency.flake_suspects(events) if has_tests else None
+    data["flakes"] = efficiency.flake_suspects(events, since) if has_tests else None
     return data
 
 
@@ -495,6 +531,7 @@ def main(argv: list[str] | None = None) -> int:
                 files, _persona_models(), state["lead_phases"], args.since
             ),
             events,
+            flake_since(files, args.sessions, args.since),
         )
         print(efficiency.render_section(data))
         print(efficiency.render_rewrites(data))
