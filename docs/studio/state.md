@@ -4,11 +4,21 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-11 (Studio-Session f2a404fd, R537–R552; Ende: M13-Inhalt vollständig; lokal auf main @ `24ba6d03` (nicht gepusht; Sicherung `origin/backup/main-lokal` @ `24ba6d03`); Release M13 frühestens 2026-10-12)
+Stand: 2026-10-12 (Studio-Session 1a73e6c1, R564–R577; Ende: M13 live, M14-E1 + TOOL-CONTROLLER-HAERTUNG + TOOL-BUENDEL-9 + UI-AUFRAEUM-2 lokal auf main @ `98ccd94b`+ (nicht gepusht; `origin/main` = `origin/backup/main-lokal` = `19683ddf`))
 
 ## Release-Notizen
 
-**M13 „Spätspiel mit Richtung“ (live, R564)** — Push `801bee89..19683ddf`, CI 38212898470, Pages 38213478460 grün. Save v12. Inhalt: M13-E2 Denkmal, I-049
+**REL-20 „Inselcharakter“ (bereit, nicht gepusht, R574–R576)** — Entwurf. Save **v13** (Migration v12→v13). Inhalt: M14-E1
+(Felsbucht «Gebirge+», dritte Fremdinsel Weidenau «Fruchtbar», Trait-Anzeige), UI-AUFRAEUM-2 (Refactor ohne Spieländerung),
+TOOL-CONTROLLER-HAERTUNG, TOOL-BUENDEL-9 (nur Werkzeug/Tests). Opus-Final-Reviews je Strang OK.
+
+- **Neu:** Felsbucht ist «Gebirge+» (Steinbruch und Glashütte ×2); neue Fremdinsel «Weidenau», «Fruchtbar» (Zuckerrohr und
+  Schäferei ×2); Seekarte, Tooltip, Inspektor und Bauleiste nennen die Inselstärke.
+- **Bitte testen:** (1) Seekarte: drei Fremdinseln, Tooltip nennt Stärke; (2) Steinbruch auf der Felsbucht erzeugt doppelt;
+  (3) Zuckerrohr auf Weidenau doppelt; (4) alter Spielstand (v12) lädt, Felsbucht/Weidenau vorhanden; (5) Denkmal-Banner
+  und Pause wie bisher.
+
+**M13 „Spätspiel mit Richtung“ (REL-M13, live, R564)** — Push `801bee89..19683ddf`, CI 38212898470, Pages 38213478460 grün. Save v12. Inhalt: M13-E2 Denkmal, I-049
 Sperrbestand, I-048 Schritt A (Mechanik eingebaut, **inaktiv**: Anzeige «Kauf 100 %», kein Aufschlag), UI-TEXTE-1,
 UI-NAECHSTER-SCHRITT, TOOL-Bündel 6–8, E-060 (Budget-Hook `deny`). Actions-Prognose rot: Push-Takt nach Live-Ampel (R565 P4).
 
@@ -87,24 +97,26 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475. **Actions-Prognose ROT:** Push-Takt nach Live-Ampel (R565 P4; REL-19 am
-2026-10-11). Release-Sperre endet mit UI-TEXTE-1 (R549/R552); M13-Inhalt ist vollständig.
+Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475. **Neues Claude-Gespräch empfohlen** (R438 V4 b). Wochenfenster
+91 % (Reset 2026-10-14 12:00): Parallelität halbiert (≤ 4 Agenten). Actions-Ampel GELB (1784/2000): Push erlaubt, R335 gilt.
 
-1. ~~Release M13~~ erledigt 2026-10-12 (R564); nächster Push nach Live-Ampel (R565 P4).
-2. Meilenstein-Retro M13 (`studio-coach` opus) und Prozess-Aussensicht nach dem Release (R127, R316).
-3. Ideen-Runde nach dem Release (R445, 3 Scouts).
-4. **I-048 Schritt B** als Designfrage (R551, `lead-design` mit M14-Vorlauf) und robustere Gate-Messung (Beobachtung
-   „Seed wirkt nicht“; Controller-Phasen oder Startvarianten, Median).
-5. Plan **M14-E1** nach M13 (R486, Auflagen R500/R501).
-6. Retro-Vorschläge f2a404fd: V1 Gate-Frage Robustheit, V2 Delta-Review nach Final-Review ZURÜCK (Handbuch-Minor),
-   V3 beobachten — L0-Ruling ausstehend ([Retro](retros/2026-10-11-session-f2a404fd-ende.md)).
-7. Experimente: E-057, E-060 (`deny`, Messung ab 2026-10-11), E-061 laufend; E-059 passiv; E-062 wartet auf Platz
-   (Messauftrag Plan-Instanzen > 60 Turns geht auf die nächste Plan-Session).
+1. **Release REL-20** (Entwurf oben): Push-Gate nach Handbuch 1.53 durch `production-integrator` **im Worktree
+   `.worktrees/integrate`** (R565 P1), `git push origin <geprüfter Hash>:main`, Pages per `gh workflow run Pages --ref main`,
+   `backup/main-lokal` per Fast-Forward. Vorher `make check` bei ruhiger Last (zeitreserve-Hinweise `seaKorridor`,
+   `islands-c`, R570; Coach-Befund: `islands-c.test.ts` «Spanne protokollieren» ≈ 6981 ms Runner-Schätzung > 5000 ms
+   Timeout — vor dem Push klären, sonst CI-Risiko). Danach Prozess-Aussensicht (R127).
+2. **UI-HAEPPCHEN-A** umsetzen (Plan `2026-10-12-ui-haeppchen-a.md`, Gate R573: Auflagen (4)–(7) vor T01; 11 Starts).
+3. Danach **UI-HAEPPCHEN-B** (Plan `2026-10-12-ui-haeppchen-b.md`, Gate R577: Auflagen (1)(2)(4) vor T01; 11 Starts, Parallelität 2).
+4. Retro-Vorschläge Session 1a73e6c1 entscheiden ([Retro](retros/2026-10-12-session-1a73e6c1-ende.md)), V1 = E-064 Guard sperrt
+   `git stash`, V2 = E-065 Warnung state.md-Rückstand; Ampel-Vorfälle Cache-Write/Flake quittiert (adhoc-2026-10-12-ampel).
+5. Nächster Meilenstein-Schritt: Erweiterung 1 «Stände und Segel» liegt in der Nutzer-Session (`design/erweiterung-1`, K2
+   Spec gegatet); M14-E2/E3 gehen dort als K3/K4 auf. L0 plant nichts davon ohne Merge jener Branch. I-047 Stammkunde ist frei (R571).
+6. Experimente: E-060 (`deny`), E-062, E-063 laufend (R565 V1).
 
 ## Aktuelles Projekt und Phase
 
-- Projekt: **Inselreich**. **M12 abgeschlossen** (R352). Live: REL-01…REL-19, M1–M8, M10, M11, M9-Häppchen, M12. **M13 „Spätspiel mit Richtung“**: E1 (Edikte, Stilllegen)
-  lokal auf main (R467), E2 (Denkmal) lokal gemergt, Inhalt vollständig (R552). Verfassung **1.2**, Handbuch **1.52**.
+- Projekt: **Inselreich**. **M13 abgeschlossen** (live, R564). Live: REL-01…REL-19, M1–M8, M10, M11, M9-Häppchen, M12, M13. **M14 „Archipel mit Wert“**: E1 Inselcharakter
+  lokal auf main (R574, Save v13), Release REL-20 offen. Verfassung **1.2**, Handbuch **1.53**.
 - Dauerregeln: Desktop-first (R78); kein Rebase; eine aktive L0-Session je Repo (R129, R324); studioweit **≤ 8 Agenten,
   davon ≤ 2 Browser-Läufe** (R424, ersetzt R241); vor Paketstart `git worktree list`, `git status`, fremde Heartbeats
   prüfen (R329); Messungen nur bei 1-min-Load ≤ 4 (R329).
@@ -124,7 +136,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts (Session-Ende f2a404fd).
+- Nichts (Session-Ende 1a73e6c1).
 
 ## Parallele Sessions
 
@@ -133,18 +145,21 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Seit letzter Session erledigt
 
-- Lokal gemergt (Gate OK): M13-E2 (ART, UI, Denkmal), I-049 (Sim, UI R544), I-048 Sim/UI (R537, R545), TOOL-BUENDEL-7/8
-  (R540/R541), TOOL-E060-FIX (R546), UI-TEXTE-1 (R552). Budget-Hook `deny` (E-060, R546).
-- I-048 Schritt B angehalten (R549), Probe Totzone ohne Formel (R551); `feat/i048-b` geparkt.
-- Retro: [session-f2a404fd-ende](retros/2026-10-11-session-f2a404fd-ende.md) (V1–V3 offen).
+- **Live:** Release M13 (R564, CI 38212898470, Pages 38213478460).
+- **Lokal gemergt (Gate OK):** TOOL-CONTROLLER-HAERTUNG (R568, `1a00eb61`), M14-E1 Inselcharakter (R574, `9b5fc2b7`, Save v13),
+  TOOL-BUENDEL-9 (R575, `d7f68071`), UI-AUFRAEUM-2 (R576, `bdeb04c1`).
+- **Entschieden:** Retro M13 + Prozess-Aussensicht (R565 → Handbuch 1.52, 1.53 «Live-Ampel»); IDEEN-08 (R566, Pool 36/40);
+  I-048 Schritt B Verzicht (R571); Gates Pläne UI-HAEPPCHEN-A (R573) und -B (R577).
+- Die Vorsession 5500c465 (R553–R563) hatte state.md nicht nachgeführt; ihre Pakete sind hier eingearbeitet.
 
 ## Pausierte Pakete
 
-- `.worktrees/i048-b` (`feat/i048-b` @ `bc57f8ba`): geparkt (R549), kein Merge; Messweg `trackedBuy` wiederverwendbar.
+- `.worktrees/i048-b` (`feat/i048-b` @ `bc57f8ba`): verworfen, nicht mergen (R571); Aufräumen nur per Worktree-Ruling.
 - Gemergte, aufräumbare Worktrees (nur per Ruling, `git worktree remove` ohne `--force`): `i048-sim`, `i048-ui`, `i049-sim`,
-  `i049-ui`, `tool-b7`, `tool-b8`, `tool-e060`, `ui-texte-1`. `.worktrees/integrate` bleibt.
+  `i049-ui`, `tool-b7`, `tool-b8`, `tool-e060`, `ui-texte-1`, `tool-gate-ensemble`,
+  `tool-controller-haertung`, `m14-e1`, `m14-e1-ui`, `tool-b9`, `ui-aufraeum-2`. `.worktrees/integrate` bleibt.
   `.worktrees/erweiterung-1` gehört der Nutzer-Session (R519) — nicht anfassen.
-- Branch `int/rel-07`, Alt-Branches, Remote `wip/r118a-render-aufraeumen` und `stash@{0}` bleiben bis Ruling.
+- Branch `int/rel-07`, Alt-Branches, Remote `wip/r118a-render-aufraeumen`, `stash@{0}` (950f61d5) und `stash@{1}` (e20340a9) bleiben bis Ruling.
 
 ## Budget
 
@@ -153,4 +168,4 @@ Offen: keine Freigaben (Restbudgets verfallen mit Session-Ende).
 ## Offene Entscheide
 
 - Nutzer: N-99 (Kenntnis R434), ohne Antwort gilt R434.
-- L0: Retro-Vorschläge V1–V3 (siehe Fortsetzung Punkt 6).
+- L0: Retro-Vorschläge Session 1a73e6c1 (Fortsetzung Punkt 4).
