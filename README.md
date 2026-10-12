@@ -100,8 +100,8 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 
 - **Zoomen:** Mausrad (Stufen 1/8 bis 2); auf Touch mit zwei Fingern (Pinch). Bei 1/8 ist die ganze Inselwelt zu
   sehen. Ab Zoom 1/4 zeigt die Karte nur noch Gelände ohne Figuren, Tiere, Rauch und Wellen.
-- **Ferne Inseln:** Neben deiner Insel liegen zwei weitere, die Möweninsel und die Felsbucht. Fährst du mit dem
-  Mauszeiger über eine von ihnen, nennt eine Karte Name, Grösse, Merkmale und Fahrzeit. Bauen kannst du dort noch nicht;
+- **Ferne Inseln:** Neben deiner Insel liegen drei weitere: die Möweninsel, die Felsbucht und Weidenau. Fährst du mit dem
+  Mauszeiger über eine von ihnen, nennt eine Karte Name, Grösse, Merkmale (samt Inselvorteil, siehe «Seefahrt und Gewürz») und Fahrzeit. Bauen kannst du dort noch nicht;
   du siehst sie nur.
 - **Verschieben:** mittlere Maustaste ziehen, Leertaste halten und mit der linken Maustaste ziehen (die Leertaste nur kurz antippen pausiert dagegen), im
   Werkzeug «Auswahl» einfach mit der linken Maustaste ziehen (ab 4 Pixel Bewegung schwenkt die Karte, es wird
@@ -418,11 +418,16 @@ mehr als der Verkauf, aber Waren dafür zuzukaufen lohnt sich nie. Werkzeug wird
 
 ### Seefahrt und Gewürz
 
-Die Seefahrt wird mit dem Bürger-Ziel frei (U6). Danach liegen zwei weitere Inseln im Archipel: die **Möweninsel**
-(24 × 24 Kacheln, Gewürz) und die **Felsbucht** (36 × 36, Gewürz und Gebirge). Kaufleute brauchen **Gewürz** (0,1 je
+Die Seefahrt wird mit dem Bürger-Ziel frei (U6). Danach liegen drei weitere Inseln im Archipel: die **Möweninsel**
+(24 × 24 Kacheln, Gewürz), die **Felsbucht** (36 × 36, Gewürz und Gebirge) und **Weidenau** (24 × 24, Gewürz und Fruchtbar). Kaufleute brauchen **Gewürz** (0,1 je
 Einwohner und 10 s); es wächst nur auf Gewürzinseln und lässt sich am Kontor zu 40 Geld kaufen (Verkauf 12).
 
-- **Inseln wechseln:** Taste `0` springt zur Heimat, Taste `9` zur nächsten Insel; der Knopf «Inseln» in der Kopfzeile
+- **Inselvorteil:** Zwei Inseln haben eine Stärke, die bestimmte Betriebe doppelt so schnell arbeiten lässt (Zyklus
+  halbiert, ×2): die Felsbucht mit **Gebirge+** beim **Steinbruch** und bei der **Glashütte**, Weidenau mit **Fruchtbar**
+  bei der **Zuckerrohrplantage** und der **Schäferei**. Die Möweninsel hat keinen Vorteil; die Heimat nie. Du siehst ihn
+  an vier Stellen: in der Karte beim Überfahren einer Insel und in der Seekarte als Zusatzzeile, im Gebäude-Info als
+  «Inselvorteil ×2 (…)» und in der Bauleiste als Zeile «Auf <Insel>: <Stärke> ×2 — … / min» für die aktive Insel.
+- **Inseln wechseln:** Taste `0` springt zur Heimat, Taste `9` läuft der Reihe nach über alle vier Inseln; der Knopf «Inseln» in der Kopfzeile
   öffnet ein Fenster mit einer kleinen **Seekarte** über der Liste: Silhouetten aller Inseln, die Fahrlinien der Routen und
   je ein Punkt für jedes Schiff mit Route (ein Schiff ohne Route fehlt; im Hafen liegt der Punkt am Anker der Insel; Inseln mit Kontor tragen eine helle Marke knapp über dem Anker).
   Ein Klick auf das Land einer Insel springt dorthin wie die Tasten `0`/`9` und schliesst das Fenster; ein Klick ins
@@ -621,7 +626,7 @@ Boom verkaufen lohnt sich nie, und ein Auftrag bringt je Einheit immer mehr als 
 - **Neue Insel:** Menü → «Neue Insel» fragt zuerst «Neue Insel beginnen?» (Ja / Abbrechen), dann entsteht
   eine neue Insel mit Tempo 1× und der gewählten Krisenstufe. Der Autosave bleibt, bis der nächste ihn
   überschreibt. Die Kartennummer steht im Menü («Karte …»).
-- **Spielstand-Version 11** (Edikte und Stilllegen): Ältere Stände laden weiter und werden über die Migrationskette ergänzt (kein Edikt, nichts stillgelegt). Ein Stand aus einer neueren Version wird mit Hinweis («Unbekannte Version») abgewiesen; das laufende Spiel bleibt unverändert.
+- **Spielstand-Version 13** (dritte Fremdinsel Weidenau): Ältere Stände laden weiter und werden über die Migrationskette ergänzt; die Fremdinsel «Weidenau» kommt beim Laden dazu (ohne Kontor). Ein Stand aus einer neueren Version wird mit Hinweis («Unbekannte Version») abgewiesen; das laufende Spiel bleibt unverändert.
 - Spielstände vom Stand vor der Seefahrt (Version 8) lassen sich laden: Sie bekommen je Kaufmannshaus 10 Gewürz
   (höchstens 100) im Heimatlager als Übergang und eine einmalige Meldung.
 - Spielstände älterer Versionen (vor M5 bzw. vor M6) lassen sich laden und werden danach im neuen Format

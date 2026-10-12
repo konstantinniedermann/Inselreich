@@ -14,6 +14,8 @@ aufsteigen lassen, Geld über Steuern verdienen, Waren handeln, Spielstand speic
 **Nicht-Ziele (Backlog, nicht MVP):** Isometrie, Schiffe/Navigation, mehrere Inseln,
 KI-Gegner, Piraten, Feuer/Pest, Sound, Militär, Multiplayer.
 
+Fremdinseln (seit M12, drei seit M14-E1 mit Inselvorteilen): siehe [Spec M14-E1 Inselcharakter](2026-10-10-m14-e1-inselcharakter-design.md).
+
 Mit M5 gibt es synthetischen Ton (standardmässig an, abschaltbar), siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitt 9.3.
 
 **Rechtliches:** Nur die _Mechanik_ ist inspiriert. Keine Original-Grafiken, -Sounds,
