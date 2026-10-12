@@ -6360,3 +6360,21 @@ Regelbezug: gates.md Kombiniertes Gate, R565, R570 · Kosten bei Irrtum: Ensembl
 bis 8250 Ticks; Einzellauf-Gates bleiben scharf.
 
 Entscheider: L0 · Anlass: Berichte lead-tech plan-TOOL-BUENDEL-9, lead-qa gate-TOOL-BUENDEL-9 · ADR: —
+
+## R573 · 2026-10-12 · Kombiniertes Gate UI-HAEPPCHEN-A: OK mit Auflagen
+
+Ruling: Plan `74d17b10` (lead-tech), Urteil lead-qa BEDENKEN (3 hoch, 2 mittel, nicht blockierend). Entscheid **OK**, Budget 11
+Starts, Parallelität 1; Start nach Merge M14-E1 und UI-AUFRAEUM-2. Entscheide: (a) Zeile «Kauf n %» **ganz entfernen**,
+`buyPctText` und Test entfallen; der Knopftitel «im Mittel n %» bleibt als bewusst schlafender Code (erscheint nur > 100 %, also bei
+`BUY_RISE` 0 nie) für ein späteres Aktivieren. (b) I-062 mit echtem 50-%-Unterhalt der Stillgelegten, markiert; T04 korrigiert den
+Ideen-Text in `docs/ideen.md`. **Auflagen vor T01 durch den Controller in den Plan (ohne Zweitprüfung):** (4) Test Abgleich
+Fusszeile vs. `stats.upkeep` auf einer Welt mit Stillgelegten, Schiffen, Häusern — weicht die Definition ab, AK-7 vorher
+präzisieren und L0 melden; (5) AK-8/9 rot-testbar: `hud.test.ts` auf Knopf-Semantik (`button`/`tabindex`, `aria-label`, Enter)
+plus Playtest-Schritt nur Tastatur; (6) AK-9 ergänzt «Karte ≤ Fensterhöhe bei 1280×720, Scrollbar, Fokusring»; (7) Rot-Tests je
+Randfall Umschalt (Aufsetzen, Loslassen, Release mitten im Zug) plus neue AK «Abbruch per Esc/Pointer-Cancel baut nichts».
+Befunde 1–3, 8–10 im Report bzw. T04; aus (8) mindestens der Test «Linienbau = gleiche Einzelklicks» und Randfälle Wasser/
+Inselgrenze, Start = Ende.
+
+Regelbezug: gates.md Kombiniertes Gate, E-061, R566, R571 · Kosten bei Irrtum: eine Fix-Runde in T02 für den Unterhalt-Abgleich.
+
+Entscheider: L0 · Anlass: Berichte lead-tech plan-UI-HAEPPCHEN-A, lead-qa gate-UI-HAEPPCHEN-A · ADR: —
