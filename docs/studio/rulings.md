@@ -6392,3 +6392,15 @@ Beobachtung (`docs/beobachtungen.md`). Budget M14-E1: 14 + 2 (UI) von 21 Starts.
 Regelbezug: gates.md Gate Merge, R557, R567, R570 · Kosten bei Irrtum: ein Hotfix auf `main` vor dem Release M14-E1.
 
 Entscheider: L0 · Anlass: Schlussbericht lead-tech M14-E1-SIM · ADR: —
+
+## R575 · 2026-10-12 · Gate Merge TOOL-BUENDEL-9: OK; Abschnitt «Live-Ampel» an den Coach
+
+Ruling: Schlussbericht Controller TOOL-BUENDEL-9, `tool/b9` @ `da656819`, Final-Review opus OK, `make check` Exit 0 (3666 Tests),
+`make studio-test` Exit 0 (822). T04 belegt: Ensemble-Verdikt 4/5 AUSREISSER → 5/5 OK bei gleicher Spanne, `WIN_TICK_LIMIT` 7500
+unverändert, `src/sim/defs/` unberührt. Entscheid: **Gate Merge OK**, Merge durch `production-integrator` in
+`.worktrees/integrate`, kein Push. Danach setzt `studio-coach` den Handbuch-Abschnitt «Live-Ampel» aus dem Entwurf des
+Controllers um und prüft die zwei ungeprüften Aussagen (Definition «bereinigt», Verweis R565 P4) am Code (Handbuch-Minor).
+
+Regelbezug: gates.md Gate Merge, R565, R570, R572 · Kosten bei Irrtum: eine Ampelzeile zeigt bis zum nächsten Bündel falsch.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech TOOL-BUENDEL-9 · ADR: —
