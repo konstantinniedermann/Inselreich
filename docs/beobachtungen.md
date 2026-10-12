@@ -210,6 +210,12 @@ Fundort: `make gate-ensemble` (TOOL-GATE-ENSEMBLE, `tests/sim/ensemble.test.ts`)
 
 - **Zuordnung:** probe-CONTROLLER-PHASE (R558). Offen.
 
+### 2026-10-11 · Controller-Stillstand auch bei Phase 50, 70 und 90 (Gegenprüfung)
+
+Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Phasen 10/30/50/70/90, vor der Härtung). Beobachtung: Phase 10/30 siegen (7950 / 7250), Phase 50/70/90 stehen bis Tick 9000 still (Schule bei Tick 551/571/591, minMoney 3 / -88 / 19); nach der Härtung siegen alle zehn Phasen (50: 7000, 60: 7900, 70: 7600, 80: 7500, 90: 6900; Phase 0-40 unverändert). Phase 60 (7900) und 70 (7600) liegen über `WIN_TICK_LIMIT` 7500, Verdikt im Ensemble: AUSREISSER. Ursprung: TOOL-CONTROLLER-HAERTUNG T03. Einschätzung: Ursache war nur die zu frühe Schule; die verbleibende Streuung 6650-7900 ist ein Befund für M14-Werte (Grenzen mit Ensemble prüfen). Die Härtung nutzt einen Lagervorrat-Ausweg (`stock.cloth` > Zielbedarf), sonst verschöbe sich Phase 0.
+
+- **Zuordnung:** probe-CONTROLLER-PHASE (R558). Offen.
+
 ### 2026-10-11 · L0-Commit im Hauptcheckout fängt offenen Integrator-Merge ein
 
 - **Fundort:** `main` @ `6ffa7f81` (Eltern `49f66078`, `a8d9dcac`). Beobachtung: Der Integrator bereitete `git merge --no-ff

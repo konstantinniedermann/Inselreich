@@ -10,6 +10,13 @@ Bei Phase 60/80 liegt der Entscheidungstick (≈ 560/580) im Fenster, in dem ers
 **Entscheid (Änderung nur in `tests/sim/controller.ts`):** Neue Hilfsfunktion `clothCoversTarget(w)`: Stoffbedarf = Summe über alle Häuser von `maxInhabitants × needs.cloth` der Stufe `max(planTier(b), 2)`-bis-Zielstufe, d. h. jedes Haus, das schon Stufe 2 ist oder dorthin steuert, zählt mit seiner Zielstufe; Bedarf ÷ Ausstoss je 100 Ticks, aufgerundet ≤ `count(w, weaver)`. Schritt 5 (Schule) verlangt zusätzlich `clothCoversTarget(w)`; sonst `return` (spätere Stufen warten, wie bei fehlendem Geld). Kein neuer Spielwert, keine neue Konstante ausser dieser Funktion. Die genaue Formel legt der Umsetzer test-first fest; Leitplanke ist AK-3.
 **Alternative (verworfen):** `producersNeeded` für alle Häuser auf Zielstufe hochziehen — verschiebt auch Schritt 4 (Stoffkette) und damit Phase 0 sicher. **Rückfall:** verschiebt die Funktion Phase 0 (AK-3 rot), engere Bedingung wählen (z. B. nur Schule gaten, nur wenn `home(w).stock.cloth === 0` und Stoffbedarf > Webereien); scheitert auch das, Stopp (`blocked`) und Bericht an L0.
 
+## Auflagen aus R561 (vor T01 eingetragen)
+
+1. **Erfüllbarkeit:** Weber-Bau (`buildChain('cloth')`/`producersNeeded`) und die Schul-Bedingung nutzen dieselbe Zielbedarf-Formel, damit die Schule nie dauerhaft wartet. Neuer Test "Schule wird bis `MAX_TICKS` gebaut" je Phase (0/20/40/60/80). Verschiebt das Phase 0, gilt der Rückfall; bleibt eine Verschiebung, ist sie als Tabelle alt→neu eine bewusste Pin-Änderung für Gate Merge (Verfassung §3, R560 (1)).
+2. **Tick-Gleichheit Phase 0** vor/nach (Schul-Tick, Zustand nach N Ticks) im Bericht, nicht nur Pins.
+3. **Stillstand** = kein Sieg bis `MAX_TICKS`. Gegenprüfung Phasen 10/30/50/70/90 als Tabelle im Bericht; Treffer nach `docs/beobachtungen.md`.
+4. **Zeitbudget AK-2:** zeigt T00 > 500 ms je Test, liegen die Vollläufe von Anfang an hinter `VITE_ENSEMBLE`. Restrisiko: nur Seed 3 (Beobachtung "Seed wirkt nicht", R553 V1).
+
 ## Abnahmekriterien
 
 | ID   | Kriterium                                                                                                                                                                                                                                                                                                                                                             |

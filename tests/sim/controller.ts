@@ -171,8 +171,43 @@ function producersNeeded(w: World, good: Need): number {
     demand += tier.maxInhabitants * (tier.needs[good] ?? 0);
     if (TIERS[planTier(b)].needs[good] !== undefined) upcoming = true;
   }
-  const output = 100 / BUILDING_DEFS[CHAINS[good].producer].cycle!;
+  const output = producerOutput(good);
   return Math.max(Math.ceil(demand / output), upcoming ? 1 : 0);
+}
+
+/** Ausstoss eines Verarbeiters je 100 Ticks. */
+function producerOutput(good: Need): number {
+  return 100 / BUILDING_DEFS[CHAINS[good].producer].cycle!;
+}
+
+/**
+ * Stoffbedarf bei Vollbelegung der Zielstufe: jedes Haus, das Stufe 2 ist oder dorthin steuert, zählt
+ * mit seiner Zielstufe (`planTier`). Ein volles Siedlerhaus rechnet so schon mit dem Bürger-Bedarf.
+ */
+function clothDemandForTarget(w: World): number {
+  let demand = 0;
+  for (const b of houses(w)) {
+    const target = TIERS[planTier(b)];
+    if (target.tier >= 2) demand += target.maxInhabitants * (target.needs.cloth ?? 0);
+  }
+  return demand;
+}
+
+/** Webereien, die den Stoffbedarf der Zielstufe decken; Grundlage für Weber-Bau und Schul-Bedingung. */
+function clothProducersForTarget(w: World): number {
+  return Math.ceil(clothDemandForTarget(w) / producerOutput('cloth'));
+}
+
+/**
+ * Deckt die Stoffkette den Bedarf der Zielstufe? Vorbedingung für die Schule: genug Webereien, oder
+ * ein Lagervorrat, der den Zielbedarf je 100 Ticks übersteigt. Bedarf (`needs.cloth` je Bewohner) und
+ * Ausstoss (`100 / cycle`) sind beide je 100 Ticks gerechnet, das entspricht `CONTROL_INTERVAL`.
+ */
+function clothCoversTarget(w: World): boolean {
+  return (
+    count(w, 'weaver') >= clothProducersForTarget(w) ||
+    home(w).stock.cloth > clothDemandForTarget(w)
+  );
 }
 
 /**
@@ -237,10 +272,15 @@ function build(w: World, defId: BuildingDefId, slots: readonly Slot[]): boolean 
 }
 
 /** Baut eine Kette (Rohstoffbetrieb + Verarbeiter) paarweise aus, bis der Bedarf gedeckt ist. */
-function buildChain(w: World, good: Need, layout: Layout): boolean {
+function buildChain(
+  w: World,
+  good: Need,
+  layout: Layout,
+  needed: (w: World) => number = (x) => producersNeeded(x, good),
+): boolean {
   const { producer, raw } = CHAINS[good];
   const producerSlots = producer === 'fisher' ? layout.fishers : layout.farms;
-  while (count(w, producer) < producersNeeded(w, good)) {
+  while (count(w, producer) < needed(w)) {
     if (raw && count(w, raw) <= count(w, producer) && !build(w, raw, layout.farms)) return false;
     if (!build(w, producer, producerSlots)) return false;
   }
@@ -274,8 +314,12 @@ export function control(w: World, layout: Layout, opts: ColonyOptions): void {
   // 5. Bürger: Schule erst, wenn auch das erste Rum-Paar bezahlbar ist (sonst Unterhalt ohne Nutzen)
   if (anyPlan(3) && count(w, 'school') === 0) {
     const start: BuildingDefId[] = ['school', 'canefarm', 'distillery'];
-    const budget = start.reduce((sum, id) => sum + fullPrice(w, BUILDING_DEFS[id].cost), 0);
-    if (w.money < budget + RESERVE) return;
+    const affordable = (): boolean =>
+      w.money >= start.reduce((sum, id) => sum + fullPrice(w, BUILDING_DEFS[id].cost), 0) + RESERVE;
+    if (!affordable()) return;
+    // Schule erst, wenn die Stoffkette den Zielbedarf deckt: fehlende Webereien zuerst (gleiche Formel)
+    if (!clothCoversTarget(w) && !buildChain(w, 'cloth', layout, clothProducersForTarget)) return;
+    if (!clothCoversTarget(w) || !affordable()) return;
     if (!build(w, 'school', [layout.school])) return;
   }
   buildChain(w, 'rum', layout);
