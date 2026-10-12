@@ -273,3 +273,7 @@ Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Pha
   (e) Seekarten-Hover ist natives `title`, im Headless-Screenshot unsichtbar. Ursprung: qa-playtester M14-E1 T08.
   Einschätzung: alle niedrig; (a)/(c)/(d) Kandidaten Werkzeug-Bündel (Szenarien), (b) bleibt nach Desktop-first-Regel.
 - **Zuordnung:** R574.
+
+- **2026-10-12 · `src/ui/buildMenu.ts:221` Tooltip-Zeile am Text erkannt.** `text.startsWith('Erzeugt:')` erkennt die Zeile am
+  Anzeigetext, dieselbe Kopplung wie in UI-AUFRAEUM-2. Dazu `tests/ui/input.test.ts:385`: `not.toContain("textContent = 'Abreissen'")`
+  fängt nur genau dieses Literal. Ursprung: Final-Review UI-AUFRAEUM-2. Einschätzung: niedrig, bündeln mit nächstem UI-Aufräumpaket.
