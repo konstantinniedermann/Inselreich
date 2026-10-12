@@ -37,6 +37,8 @@ import { setHouse, uxWorld } from './worlds';
 import { home, createWorld } from '../../src/sim/world';
 import { taxEffect } from '../../src/ui/guide';
 import { SCENARIOS } from '../sim/scenarios';
+import { putBuilding } from '../sim/helpers';
+import { foundKontor2Literal } from '../sim/seaHelpers';
 import { setGoodLock } from '../../src/sim/tax';
 import { placeTownhall, setAllTax, setHouse as setHouseTo, village } from '../sim/helpers';
 
@@ -565,5 +567,31 @@ describe('AK-UT-08 Abreissen-Knopf: Label und Tooltip «Entf / ⌫»', () => {
       expect(btn?.title, String(id)).toBe('Entf / ⌫');
       expect(btn?.textContent, String(id)).toBe('Abreissen (Entf / ⌫)');
     }
+  });
+});
+
+describe('M14-E1 Inspektor: Inselvorteil-Zeile (AK-M14E1-29)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const noActions = new Proxy({}, { get: () => () => {} }) as unknown as InspectActions;
+  const lineOf = (w: World, id: number): string | undefined => {
+    vi.stubGlobal('document', { createElement: fakeEl, createTextNode: () => fakeEl('#text') });
+    const panel = fakeEl('div');
+    renderInspect(panel as unknown as HTMLElement, w, id, noActions);
+    const find = (e: FakeEl): FakeEl | undefined =>
+      e.dataset?.field === 'island-trait'
+        ? e
+        : (Array.isArray(e.children) ? e.children : []).map(find).find((x) => x !== undefined);
+    const hit = find(panel);
+    return hit === undefined ? undefined : hit.textContent;
+  };
+  it('Steinbruch Felsbucht trägt die Zeile, Steinbruch Heimat nicht', () => {
+    const w = createWorld(3, { unlockAll: true });
+    foundKontor2Literal(w, 2);
+    const k = w.buildings[w.islands[2]!.kontorId!]!;
+    const fels = putBuilding(w, 2, 'quarry', k.x + 4, k.y);
+    const hk = w.buildings[home(w).kontorId]!;
+    const heim = putBuilding(w, 0, 'quarry', hk.x + 4, hk.y + 8);
+    expect(lineOf(w, fels.id)).toBe('Inselvorteil ×2 (Gebirge+)');
+    expect(lineOf(w, heim.id)).toBeUndefined();
   });
 });

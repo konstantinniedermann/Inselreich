@@ -8,7 +8,13 @@ import { MONUMENT_STAGES } from '../../src/sim/defs/monument';
 import { step } from '../../src/sim/tick';
 import { createWorld } from '../../src/sim/world';
 import { friendlyReason } from '../../src/ui/hints';
-import { V11_WORLD_KEYS, foldBackToV10, foldBackToV11, foldBackToV9 } from './helpers';
+import {
+  V11_WORLD_KEYS,
+  foldBackToV10,
+  foldBackToV11,
+  foldBackToV12,
+  foldBackToV9,
+} from './helpers';
 import { MONUMENT_AT, monumentWorld } from './monumentHelpers';
 
 const BAD = { ok: false, reason: 'Beschädigter Spielstand' };
@@ -57,13 +63,13 @@ describe('M13-E2 Save v12', () => {
     expect(w.monument).toBeNull();
     expect(w.monumentDone).toBe(false);
     expect(Object.keys(w).slice(-3, -1)).toEqual(['monument', 'monumentDone']);
-    expect(w.version).toBe(12);
-    expect(SAVE_VERSION).toBe(12);
+    expect(w.version).toBe(13);
+    expect(SAVE_VERSION).toBe(13);
   });
 
   describe('AK-M13E2-22 foldBackToV11', () => {
     it('ohne Denkmal: v11-Schlüssel in Folge, version 11, Rest unverändert', () => {
-      const v12 = JSON.parse(serialize(createWorld(3))) as Record<string, unknown>;
+      const v12 = foldBackToV12(JSON.parse(serialize(createWorld(3))) as Record<string, unknown>);
       const out = foldBackToV11(v12);
       expect(Object.keys(out)).toEqual([...V11_WORLD_KEYS]);
       const hand: Record<string, unknown> = {};
@@ -127,7 +133,7 @@ describe('M13-E2 Save v12', () => {
       const r = deserialize(JSON.stringify(v11Of(w)));
       expect(r.ok).toBe(true);
       if (!r.ok) return;
-      expect(r.world.version).toBe(12);
+      expect(r.world.version).toBe(13);
       expect(r.world.monument).toBeNull();
       expect(r.world.monumentDone).toBe(false);
       expect(r.world.wonMerchants).toBe(true);
@@ -139,7 +145,7 @@ describe('M13-E2 Save v12', () => {
         const r = deserialize(readFileSync(`tests/sim/fixtures/${f}`, 'utf8'));
         expect(r.ok, f).toBe(true);
         if (!r.ok) continue;
-        expect(r.world.version, f).toBe(12);
+        expect(r.world.version, f).toBe(13);
         expect(r.world.monument, f).toBeNull();
         expect(r.world.monumentDone, f).toBe(false);
       }

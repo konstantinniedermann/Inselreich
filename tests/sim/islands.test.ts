@@ -70,7 +70,7 @@ describe('M12 E0 Inselbezug', () => {
     const { x, y } = kontorPos(w);
     const b = putBuilding(w, 1, 'fisher', x + 4, y);
     const before0 = snap(w, 0);
-    for (let i = 0; i < cycleOf(b)!; i++) tickProduction(w);
+    for (let i = 0; i < cycleOf(w, b)!; i++) tickProduction(w);
     expect(w.islands[1]!.stock.food).toBe(1);
     expect(w.islands[0]!.stock).toEqual(before0);
   });

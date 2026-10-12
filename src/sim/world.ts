@@ -83,7 +83,7 @@ export function buildingsOfType(world: World, defId: BuildingDefId): Building[] 
 const emptyStock = (): Record<GoodId, number> =>
   Object.fromEntries(GOOD_IDS.map((g) => [g, 0])) as Record<GoodId, number>;
 
-/** Fremdinseln A, B in `ISLANDS`-Reihenfolge: nur Gelände, kein Kontor, leeres Lager. */
+/** Fremdinseln A, B, C in `ISLANDS`-Reihenfolge: nur Gelände, kein Kontor, leeres Lager. */
 function foreignIslands(seed: number, homeIsland: Island): Island[] {
   return generateForeignIslands(seed, homeIsland).map((p) => ({
     kind: p.kind,
@@ -119,7 +119,7 @@ export function createWorld(
     reserve: { wood: 0, stone: 0 },
   };
   const world: World = {
-    version: 12,
+    version: 13,
     seed: seedUsed,
     islands: [homeIsland, ...foreignIslands(seedUsed, homeIsland)],
     tick: 0,

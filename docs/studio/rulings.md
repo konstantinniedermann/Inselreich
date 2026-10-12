@@ -6378,3 +6378,17 @@ Inselgrenze, Start = Ende.
 Regelbezug: gates.md Kombiniertes Gate, E-061, R566, R571 · Kosten bei Irrtum: eine Fix-Runde in T02 für den Unterhalt-Abgleich.
 
 Entscheider: L0 · Anlass: Berichte lead-tech plan-UI-HAEPPCHEN-A, lead-qa gate-UI-HAEPPCHEN-A · ADR: —
+
+## R574 · 2026-10-12 · Gate Merge M14-E1 Inselcharakter: OK
+
+Ruling: Schlussbericht Controller M14-E1-SIM, `feat/m14-e1` @ `4b6e1d48`; T08 Browser-Check AK-34–41 OK (0 Konsolenfehler,
+Meer-Deko-Verschiebung nicht sichtbar, U6 bei 1280×720 lesbar, Trait-Anzeige vollständig); T09 Final-Review opus BEDENKEN
+(B1 AK-14 über alle Seeds, B2 arc42 `save.ts`) — beide behoben, 41/42 AK; `make check` Exit 0 (3664 Tests, Last 2,0). Entscheid:
+**Gate Merge OK.** Merge durch `production-integrator` in `.worktrees/integrate` (R565 P1), Merge-Commit, kein Push (Ampel P4,
+Release-Entscheid separat). Zur Kenntnis: Commit `4b6e1d48` bündelt beide Fix-Runden (gemischte Historie, kein Rebase); B3-
+Rangfolge im Spiel nicht spürbar, kippt nicht — kein Entwurf nötig, Thema für den M14-E2/Erweiterung-Playtest. T08-Befunde als
+Beobachtung (`docs/beobachtungen.md`). Budget M14-E1: 14 + 2 (UI) von 21 Starts.
+
+Regelbezug: gates.md Gate Merge, R557, R567, R570 · Kosten bei Irrtum: ein Hotfix auf `main` vor dem Release M14-E1.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech M14-E1-SIM · ADR: —

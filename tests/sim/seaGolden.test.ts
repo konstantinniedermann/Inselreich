@@ -1,5 +1,6 @@
 // Goldwerte des Seewegs vor SEE-F1: Fahrlinien, Fahrzeiten und Weltzustand nach 2000 Ticks.
 // SEE-F1 darf Sim und Save nicht verändern; dieser Test belegt es. Werte aus unverändertem main erzeugt.
+// M14-E1 (AK-M14E1-19): die Einträge 0-1, 0-2, 1-2 und der Hash sind unverändert; die Einträge mit Insel 3 (Weidenau) sind gemessen und ergänzt.
 import { describe, expect, it } from 'vitest';
 import { laneTicks, seaLanes } from '../../src/sim/islands';
 import { buyShip, setRoute } from '../../src/sim/ships';
@@ -67,6 +68,15 @@ const GOLD: Record<number, Gold> = {
         d: 37,
       },
       {
+        a: 0,
+        b: 3,
+        points: [
+          { x: 30.5, y: 21.5 },
+          { x: -1.5, y: 97.5 },
+        ],
+        d: 33,
+      },
+      {
         a: 1,
         b: 2,
         points: [
@@ -74,6 +84,24 @@ const GOLD: Record<number, Gold> = {
           { x: -31.5, y: -33.5 },
         ],
         d: 36,
+      },
+      {
+        a: 1,
+        b: 3,
+        points: [
+          { x: -47.5, y: 34.5 },
+          { x: -1.5, y: 97.5 },
+        ],
+        d: 61,
+      },
+      {
+        a: 2,
+        b: 3,
+        points: [
+          { x: -31.5, y: -33.5 },
+          { x: -1.5, y: 97.5 },
+        ],
+        d: 111,
       },
     ],
     ticks: {
@@ -86,6 +114,13 @@ const GOLD: Record<number, Gold> = {
       '2-0': 370,
       '2-1': 360,
       '2-2': 0,
+      '0-3': 330,
+      '1-3': 610,
+      '2-3': 1110,
+      '3-0': 330,
+      '3-1': 610,
+      '3-2': 1110,
+      '3-3': 0,
     },
     hash: 'e13a5ab2',
   },
@@ -110,6 +145,15 @@ const GOLD: Record<number, Gold> = {
         d: 36,
       },
       {
+        a: 0,
+        b: 3,
+        points: [
+          { x: 40.5, y: 39.5 },
+          { x: -42.5, y: 53.5 },
+        ],
+        d: 32,
+      },
+      {
         a: 1,
         b: 2,
         points: [
@@ -117,6 +161,24 @@ const GOLD: Record<number, Gold> = {
           { x: -51.5, y: 15.5 },
         ],
         d: 87,
+      },
+      {
+        a: 1,
+        b: 3,
+        points: [
+          { x: 24.5, y: 95.5 },
+          { x: -42.5, y: 53.5 },
+        ],
+        d: 56,
+      },
+      {
+        a: 2,
+        b: 3,
+        points: [
+          { x: -51.5, y: 15.5 },
+          { x: -42.5, y: 53.5 },
+        ],
+        d: 17,
       },
     ],
     ticks: {
@@ -129,6 +191,13 @@ const GOLD: Record<number, Gold> = {
       '2-0': 360,
       '2-1': 870,
       '2-2': 0,
+      '0-3': 320,
+      '1-3': 560,
+      '2-3': 170,
+      '3-0': 320,
+      '3-1': 560,
+      '3-2': 170,
+      '3-3': 0,
     },
     hash: '980bc9c9',
   },
@@ -153,6 +222,15 @@ const GOLD: Record<number, Gold> = {
         d: 39,
       },
       {
+        a: 0,
+        b: 3,
+        points: [
+          { x: 20.5, y: 42.5 },
+          { x: 111.5, y: 43.5 },
+        ],
+        d: 31,
+      },
+      {
         a: 1,
         b: 2,
         points: [
@@ -160,6 +238,24 @@ const GOLD: Record<number, Gold> = {
           { x: 49.5, y: 115.5 },
         ],
         d: 88,
+      },
+      {
+        a: 1,
+        b: 3,
+        points: [
+          { x: 102.5, y: 5.5 },
+          { x: 111.5, y: 43.5 },
+        ],
+        d: 11,
+      },
+      {
+        a: 2,
+        b: 3,
+        points: [
+          { x: 49.5, y: 115.5 },
+          { x: 111.5, y: 43.5 },
+        ],
+        d: 60,
       },
     ],
     ticks: {
@@ -172,6 +268,13 @@ const GOLD: Record<number, Gold> = {
       '2-0': 390,
       '2-1': 880,
       '2-2': 0,
+      '0-3': 310,
+      '1-3': 110,
+      '2-3': 600,
+      '3-0': 310,
+      '3-1': 110,
+      '3-2': 600,
+      '3-3': 0,
     },
     hash: '9dfb908f',
   },

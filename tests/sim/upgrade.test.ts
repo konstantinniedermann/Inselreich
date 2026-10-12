@@ -90,7 +90,7 @@ describe('M11 Ausbau (Spec 3.6)', () => {
       s.tools - home(w).stock.tools,
       s.cloth - home(w).stock.cloth,
     ]).toEqual([950, 3, 1, 2]);
-    expect([f.level, cycleOf(f), upkeepOf(f)]).toEqual([2, 24, 7]);
+    expect([f.level, cycleOf(w, f), upkeepOf(f)]).toEqual([2, 24, 7]);
     expect(goodsBalance(w).food.produced).toBeCloseTo(100 / 24, 9);
     expect(totalUpkeep(w) - up).toBe(2);
   });

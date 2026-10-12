@@ -41,6 +41,7 @@ import {
 } from './taxView';
 import { taxTarget } from '../sim/tax';
 import { friendlyReason } from './hints';
+import { traitLine } from './islandCard';
 import { renderShipSection, updateShipSection, type ShipActions } from './ships';
 import { goalTexts } from './goal';
 import type { IconId } from './icons';
@@ -767,6 +768,7 @@ export function kontorActions(defId: BuildingDefId): { trade: boolean; demolish:
 /** Gerüst des Betriebs-Panels (Betriebe und Dienste): Kopf, Kennzahlen, Ausbau-Karte (Spec 5). */
 function renderBetrieb(
   panel: HTMLElement,
+  world: World,
   b: Building,
   onUpgrade: () => void,
   onPause: (paused: boolean) => void,
@@ -777,6 +779,8 @@ function renderBetrieb(
   if (levels !== undefined) addLevelChip(row, 'level-chip', 'level', levels.length + 1);
   addToneChip(head, 'state-chip', 'state');
   addRemedy(head);
+  const advantage = traitLine(world, b);
+  if (advantage !== null) addLine(panel, advantage, 'island-trait');
   if (pauseButton(b) !== null) {
     const btn = node('button', 'btn pause-btn', 'pause') as HTMLButtonElement;
     btn.type = 'button';
@@ -787,7 +791,7 @@ function renderBetrieb(
     panel.appendChild(btn);
   }
   const stats = addStats(panel, statKeys(b.defId));
-  if (progressView(b) !== null) {
+  if (progressView(world, b) !== null) {
     const bar = node('div', 'progress', 'progress-bar');
     bar.setAttribute('role', 'progressbar');
     bar.setAttribute('aria-valuemin', '0');
@@ -847,6 +851,7 @@ export function renderInspect(
     } else
       renderBetrieb(
         panel,
+        world,
         b,
         () => actions.upgrade(id),
         (paused) => actions.setPaused(id, paused),
@@ -1061,8 +1066,8 @@ function updateBetrieb(panel: HTMLElement, world: World, b: Building): void {
   }
   setField(panel, 'level', levelText(b) ?? '');
   setPips(panel, 'level-chip', 'level', levelPips(b));
-  setTiles(panel, statTiles(b));
-  const view = progressView(b);
+  setTiles(panel, statTiles(world, b));
+  const view = progressView(world, b);
   const fill = panel.querySelector<HTMLElement>('[data-field="progress"]');
   const bar = panel.querySelector<HTMLElement>('[data-field="progress-bar"]');
   if (view && fill && bar) {

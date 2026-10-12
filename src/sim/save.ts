@@ -26,7 +26,14 @@ import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
 import { EDICTS } from './defs/edicts';
 import { UNLOCK_IDS } from './defs/unlocks';
 import { ISLANDS, ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
-import { generateForeignIslands, homeAnchor, laneTicks, type LaneIsland } from './islands';
+import {
+  fitIsland,
+  generateForeignIslands,
+  homeAnchor,
+  laneTicks,
+  type LaneIsland,
+  type PlacedIsland,
+} from './islands';
 import { MAP_H, MAP_W } from './mapgen';
 import { recomputeConnectivity } from './roads';
 import { canRiseTier, taxTarget } from './tax';
@@ -44,7 +51,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 export type { LoadResult };
 
@@ -172,6 +179,54 @@ export function migrateV11ToV12(raw: Record<string, unknown>): void {
   }
   if (!('buyPct' in raw)) raw.buyPct = Object.fromEntries(GOOD_IDS.map((g) => [g, 100]));
   raw.version = 12;
+}
+
+const isPoint = (v: unknown): v is { x: number; y: number } =>
+  isObject(v) && isInt(v.x) && isInt(v.y);
+
+/** Gespeicherte Lage einer Insel (Heimat, A, B); `null`, wenn ein Feld fehlt oder unbrauchbar ist. */
+function storedLayout(v: unknown): LaneIsland | null {
+  if (!isObject(v) || !isPoint(v.anchor)) return null;
+  const { ox, oy, width, height } = v;
+  if (!isInt(ox) || !isInt(oy) || !isInt(width) || !isInt(height)) return null;
+  return { ox, oy, width, height, anchor: v.anchor };
+}
+
+const sameLayout = (a: LaneIsland, b: LaneIsland): boolean =>
+  a.ox === b.ox &&
+  a.oy === b.oy &&
+  a.width === b.width &&
+  a.height === b.height &&
+  a.anchor.x === b.anchor.x &&
+  a.anchor.y === b.anchor.y;
+
+/** Insel C aus Seed und gespeicherter Heimat; weicht die Erzeugung von A oder B vom Stand ab, per Ersatzregel. */
+function buildIslandC(seed: number, stored: LaneIsland[]): Record<string, unknown> {
+  const generated = generateForeignIslands(seed, stored[0]!);
+  const [a, b, c] = ['A', 'B', 'C'].map((k) => generated.find((g) => g.kind === k)!) as [
+    PlacedIsland,
+    PlacedIsland,
+    PlacedIsland,
+  ];
+  const defC = ISLANDS.find((d) => d.kind === 'C')!;
+  const same = sameLayout(a, stored[1]!) && sameLayout(b, stored[2]!);
+  return foreignLiteral(same ? c : fitIsland(stored, c, defC));
+}
+
+/**
+ * v12 → v13 (M14-E1): wirft nie. Hat der Stand genau drei Inseln mit gültiger Lage, hängt Weidenau (Insel C) an;
+ * Inseln 0 bis 2, Gebäude und Schiffe bleiben unberührt. Sonst nur die Version (die Ladeprüfung entscheidet).
+ */
+export function migrateV12ToV13(raw: Record<string, unknown>): void {
+  try {
+    if (Array.isArray(raw.islands) && raw.islands.length === 3 && typeof raw.seed === 'number') {
+      const stored = raw.islands.map(storedLayout);
+      if (stored.every((l) => l !== null)) raw.islands.push(buildIslandC(raw.seed, stored));
+    }
+  } catch {
+    // unbrauchbarer Stand: die Ladeprüfung meldet ihn
+  }
+  raw.version = 13;
 }
 
 const CRISIS_KINDS: readonly string[] = ['fire', 'storm', 'boom'];
@@ -359,14 +414,9 @@ export function migrateV7ToV8(raw: Record<string, unknown>): void {
   raw.version = 8;
 }
 
-function addForeignIslands(raw: Record<string, unknown>, isl: Record<string, unknown>): void {
-  const tiles = isl.tiles as Array<Record<string, unknown>>;
-  const kontor = (raw.buildings as Record<number, Record<string, number>>)[isl.kontorId as number]!;
-  const terrain = tiles.map((t) => t.terrain) as Terrain[];
-  const anchor = homeAnchor(terrain, MAP_W, MAP_H, { x: kontor.x!, y: kontor.y! });
-  const homeIsland = { kind: 'home', ...isl, ox: 0, oy: 0, anchor };
-  const layout = { ox: 0, oy: 0, width: MAP_W, height: MAP_H, anchor };
-  const foreign = generateForeignIslands(raw.seed as number, layout).map((p) => ({
+/** Fremdinsel als eingefrorenes v8-Literal (Schlüsselfolge wie `createWorld`), nur Gelände, leeres Lager. */
+function foreignLiteral(p: PlacedIsland): Record<string, unknown> {
+  return {
     kind: p.kind,
     width: p.width,
     height: p.height,
@@ -377,7 +427,17 @@ function addForeignIslands(raw: Record<string, unknown>, isl: Record<string, unk
     oy: p.oy,
     anchor: p.anchor,
     reserve: { wood: 0, stone: 0 },
-  }));
+  };
+}
+
+function addForeignIslands(raw: Record<string, unknown>, isl: Record<string, unknown>): void {
+  const tiles = isl.tiles as Array<Record<string, unknown>>;
+  const kontor = (raw.buildings as Record<number, Record<string, number>>)[isl.kontorId as number]!;
+  const terrain = tiles.map((t) => t.terrain) as Terrain[];
+  const anchor = homeAnchor(terrain, MAP_W, MAP_H, { x: kontor.x!, y: kontor.y! });
+  const homeIsland = { kind: 'home', ...isl, ox: 0, oy: 0, anchor };
+  const layout = { ox: 0, oy: 0, width: MAP_W, height: MAP_H, anchor };
+  const foreign = generateForeignIslands(raw.seed as number, layout).map(foreignLiteral);
   raw.islands = [homeIsland, ...foreign];
 }
 
@@ -807,6 +867,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 9) migrateV9ToV10(raw);
   if (raw.version === 10) migrateV10ToV11(raw);
   if (raw.version === 11) migrateV11ToV12(raw);
+  if (raw.version === 12) migrateV12ToV13(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

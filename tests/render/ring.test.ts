@@ -49,6 +49,7 @@ const camAt = (world: World, zoom: number): Camera => {
 };
 
 describe('M11 Fortschrittsring (Spec 8)', () => {
+  const w = createWorld(3);
   const mk = (defId: BuildingDefId, extra: Partial<Building> = {}): Building => ({
     id: 1,
     defId,
@@ -61,27 +62,27 @@ describe('M11 Fortschrittsring (Spec 8)', () => {
     ...extra,
   });
   it('AK-RND-04 ringFraction: Fischer progress 20 → 0,5; Stufe 2 progress 12 → 0,5; höchstens 0,99999', () => {
-    expect(ringFraction(mk('fisher', { progress: 20 }), 0)).toBe(0.5);
-    expect(ringFraction(mk('fisher', { progress: 12, level: 2 }), 0)).toBe(0.5);
-    expect(ringFraction(mk('fisher', { progress: 39 }), 1)).toBe(0.99999);
-    expect(ringFraction(mk('fisher', { progress: 10 }), 0.5)).toBeCloseTo(10.5 / 40, 12);
-    expect(ringFraction(mk('chapel', { progress: 10 }), 0.5)).toBe(0);
+    expect(ringFraction(w, mk('fisher', { progress: 20 }), 0)).toBe(0.5);
+    expect(ringFraction(w, mk('fisher', { progress: 12, level: 2 }), 0)).toBe(0.5);
+    expect(ringFraction(w, mk('fisher', { progress: 39 }), 1)).toBe(0.99999);
+    expect(ringFraction(w, mk('fisher', { progress: 10 }), 0.5)).toBeCloseTo(10.5 / 40, 12);
+    expect(ringFraction(w, mk('chapel', { progress: 10 }), 0.5)).toBe(0);
   });
   it('AK-RND-04 ringView: läuft nur bei ok und angebunden, sonst eingefroren ohne Bruchteil; ohne produces null', () => {
-    expect(ringView(mk('fisher', { progress: 20 }), 0.6)).toEqual({
+    expect(ringView(w, mk('fisher', { progress: 20 }), 0.6)).toEqual({
       fraction: 20.6 / 40,
       running: true,
     });
-    expect(ringView(mk('fisher', { progress: 20, state: 'waitingInput' }), 0.6)).toEqual({
+    expect(ringView(w, mk('fisher', { progress: 20, state: 'waitingInput' }), 0.6)).toEqual({
       fraction: 0.5,
       running: false,
     });
-    expect(ringView(mk('lumberjack', { progress: 15, state: 'noForest' }), 0.6)).toEqual({
+    expect(ringView(w, mk('lumberjack', { progress: 15, state: 'noForest' }), 0.6)).toEqual({
       fraction: 0.5,
       running: false,
     });
-    expect(ringView(mk('fisher', { progress: 20, connected: false }), 0.6)!.running).toBe(false);
-    expect(ringView(mk('chapel'), 0.6)).toBeNull();
+    expect(ringView(w, mk('fisher', { progress: 20, connected: false }), 0.6)!.running).toBe(false);
+    expect(ringView(w, mk('chapel'), 0.6)).toBeNull();
   });
   it('AK-RND-04 drawProgressRings: Farben laufend/grau, Culling, MAX_RINGS, save/restore, Welt unverändert', () => {
     const world = worldWith([

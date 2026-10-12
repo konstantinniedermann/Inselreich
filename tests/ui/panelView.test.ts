@@ -166,40 +166,40 @@ describe('AK-PU-06..09 Kacheln', () => {
   const w = createWorld(3, { unlockAll: true });
   const pm = (b: Building) => perMinute(1, BUILDING_DEFS[b.defId].cycle!);
   it('AK-PU-06 Fischerhütte', () => {
-    expect(statTiles(put(w, 'fisher'))).toEqual([
+    expect(statTiles(w, put(w, 'fisher'))).toEqual([
       { key: 'output', label: 'Ausstoss', value: '15 / min', sub: 'Nahrung · alle 4 s' },
       { key: 'utilization', label: 'Auslastung', value: '100 %', sub: null },
       { key: 'upkeep', label: 'Unterhalt', value: '30 / min', sub: 'Geld' },
     ]);
-    const t2 = statTiles(put(w, 'fisher', { level: 2 }));
+    const t2 = statTiles(w, put(w, 'fisher', { level: 2 }));
     expect(t2[0]).toMatchObject({ value: '25 / min', sub: 'Nahrung · alle 3 s' });
     expect(t2[2]).toMatchObject({ value: '42 / min' });
-    expect(statTiles(put(w, 'fisher', { eff: 94_208 }))[1]!.value).toBe('36 %');
+    expect(statTiles(w, put(w, 'fisher', { eff: 94_208 }))[1]!.value).toBe('36 %');
   });
   it('AK-PU-07 Verbrauch', () => {
     const wv = put(w, 'weaver');
-    const keys = statTiles(wv).map((t) => t.key);
+    const keys = statTiles(w, wv).map((t) => t.key);
     expect(keys).toEqual(['output', 'utilization', 'input', 'upkeep']);
-    expect(statTiles(wv)[2]).toMatchObject({
+    expect(statTiles(w, wv)[2]).toMatchObject({
       key: 'input',
       label: 'Verbrauch',
       value: `${pm(wv)} / min`,
       sub: 'Wolle',
     });
     const gl = put(w, 'glassworks');
-    expect(statTiles(gl)[2]).toMatchObject({
+    expect(statTiles(w, gl)[2]).toMatchObject({
       value: `je ${pm(gl)} / min`,
       sub: 'Stein und Holz',
     });
-    expect(statTiles(put(w, 'spicefarm')).map((t) => t.key)).toEqual([
+    expect(statTiles(w, put(w, 'spicefarm')).map((t) => t.key)).toEqual([
       'output',
       'utilization',
       'upkeep',
     ]);
   });
   it('AK-PU-08 Kapelle, Brand', () => {
-    expect(statTiles(put(w, 'chapel')).map((t) => t.key)).toEqual(['upkeep']);
-    const f = statTiles(put(w, 'fisher', { outageUntil: 100, state: 'burning' }))[0]!;
+    expect(statTiles(w, put(w, 'chapel')).map((t) => t.key)).toEqual(['upkeep']);
+    const f = statTiles(w, put(w, 'fisher', { outageUntil: 100, state: 'burning' }))[0]!;
     expect(f.sub).toBe('Nahrung · ruht, Betrieb brennt');
     expect(f.value).toBe('15 / min');
   });
@@ -222,9 +222,9 @@ describe('AK-PU-06..09 Kacheln', () => {
     const h = put(w, 'house');
     setHouse(h, 1, 3, []);
     const tiles = [
-      ...statTiles(put(w, 'fisher')),
-      ...statTiles(put(w, 'weaver')),
-      ...statTiles(put(w, 'chapel')),
+      ...statTiles(w, put(w, 'fisher')),
+      ...statTiles(w, put(w, 'weaver')),
+      ...statTiles(w, put(w, 'chapel')),
       ...houseTiles(h),
     ];
     expect(new Set(tiles.map((t) => t.key)).size).toBeGreaterThanOrEqual(4);
@@ -308,12 +308,12 @@ describe('AK-PU-10..13 upgradeCard', () => {
 describe('AK-PU-14 upgradeGain Rundung', () => {
   const w = createWorld(3, { unlockAll: true });
   it('Fischer 2 -> 3', () => {
-    const g = upgradeGain(put(w, 'fisher', { level: 2 }), 3);
+    const g = upgradeGain(w, put(w, 'fisher', { level: 2 }), 3);
     expect(g[0]).toMatchObject({ key: 'output', before: 25, after: 37.5, delta: '+12.5' });
     expect(g[1]).toMatchObject({ key: 'upkeep', before: 42, after: 54, delta: '+12' });
   });
   it('Steinbruch 1 -> 2', () => {
-    const g = upgradeGain(put(w, 'quarry'), 2);
+    const g = upgradeGain(w, put(w, 'quarry'), 2);
     expect(g[0]).toMatchObject({ before: 10, after: 16.7, delta: '+6.7' });
     expect(g[0]!.text).toBe('10 → 16.7 / min');
     expect(g[0]!.label).toBe('Ausstoss');
@@ -349,9 +349,9 @@ describe('AK-PU-16 progressView', () => {
   const w = createWorld(3, { unlockAll: true });
   it('Fischer halber Zyklus, Kapelle null', () => {
     const f = put(w, 'fisher', { progress: BUILDING_DEFS.fisher.cycle! / 2 });
-    expect(progressView(f)).toEqual({ pct: 50, label: 'Fortschritt 50 %' });
-    expect(progressView(f)!.pct).toBe(progressPct(f));
-    expect(progressView(put(w, 'chapel'))).toBeNull();
+    expect(progressView(w, f)).toEqual({ pct: 50, label: 'Fortschritt 50 %' });
+    expect(progressView(w, f)!.pct).toBe(progressPct(w, f));
+    expect(progressView(w, put(w, 'chapel'))).toBeNull();
   });
 });
 
@@ -372,7 +372,7 @@ describe('AK-PU-17 Struktur-Stabilität', () => {
                   ...(eff === undefined ? {} : { eff }),
                   ...(burning ? { outageUntil: 10 } : {}),
                 });
-                expect(statTiles(b).map((t) => t.key)).toEqual(statKeys(defId));
+                expect(statTiles(w, b).map((t) => t.key)).toEqual(statKeys(defId));
               }
     }
   });
@@ -400,10 +400,10 @@ describe('AK-UT-14 Kacheln stillgelegt', () => {
   const w = createWorld(3, { unlockAll: true });
   it('Ausstoss und Verbrauch ohne Rate, Unterhalt aufgerundet', () => {
     const wv = put(w, 'weaver');
-    const normal = statTiles(wv);
+    const normal = statTiles(w, wv);
     expect(normal.find((t) => t.key === 'output')!.value).toMatch(/ \/ min$/);
     wv.paused = true;
-    const t = statTiles(wv);
+    const t = statTiles(w, wv);
     for (const key of ['output', 'input'] as const) {
       const tile = t.find((x) => x.key === key)!;
       expect(tile.value).toBe('Stillgelegt');
@@ -439,7 +439,7 @@ describe('M13-E1 Stilllegen im Panel (AK-M13STL-09)', () => {
   });
   it('AK-M13STL-09 Kachel «Unterhalt» zeigt den wirksamen Unterhalt', () => {
     const g = put(w, 'glassworks');
-    const tile = (): string => statTiles(g).find((t) => t.key === 'upkeep')!.value;
+    const tile = (): string => statTiles(w, g).find((t) => t.key === 'upkeep')!.value;
     expect(tile()).toBe(`${perMinute(buildingUpkeep(g), UPKEEP_INTERVAL)} / min`);
     const run = tile();
     expect(setPaused(w, g.id, true).ok).toBe(true);

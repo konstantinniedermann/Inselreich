@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
+import type { BuildingDefId } from '../../src/sim/types';
 import { lockedToolText } from '../../src/ui/goal';
 import { TOOL_HOTKEYS } from '../../src/ui/hotkeys';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
@@ -47,5 +48,30 @@ describe('AK-M13E2-35 Bauleisten-Eintrag Denkmal', () => {
   it('kein Hotkey für das Denkmal', () => {
     const tools = Object.values(TOOL_HOTKEYS);
     expect(tools.some((t) => t?.kind === 'build' && t.defId === 'monument')).toBe(false);
+  });
+});
+
+describe('M14-E1 Bauleisten-Zusatzzeile (AK-M14E1-30)', () => {
+  const w = createWorld(3, { unlockAll: true });
+  const lines = (defId: BuildingDefId, island: number) =>
+    tooltipLines({ kind: 'build', defId }, w, island);
+  const extra = (ls: string[]) => ls.filter((l) => l.startsWith('Auf '));
+  it('Zeile nur, wenn die aktive Insel den Trait trägt; direkt nach «Erzeugt: …»', () => {
+    expect(extra(lines('quarry', 2))).toEqual(['Auf Felsbucht: Gebirge+ ×2 — 20 Stein / min']);
+    expect(extra(lines('glassworks', 2))).toEqual(['Auf Felsbucht: Gebirge+ ×2 — 24 Glas / min']);
+    expect(extra(lines('canefarm', 3))).toEqual([
+      'Auf Weidenau: Fruchtbar ×2 — 24 Zuckerrohr / min',
+    ]);
+    expect(extra(lines('sheepfarm', 3))).toEqual(['Auf Weidenau: Fruchtbar ×2 — 24 Wolle / min']);
+    const ls = lines('quarry', 2);
+    expect(ls[ls.findIndex((l) => l.startsWith('Erzeugt:')) + 1]).toBe(
+      'Auf Felsbucht: Gebirge+ ×2 — 20 Stein / min',
+    );
+  });
+  it('Heimat, Möweninsel, Gewürzplantage auf Weidenau und ohne Welt: keine Zusatzzeile', () => {
+    expect(extra(lines('quarry', 0))).toEqual([]);
+    expect(extra(lines('quarry', 1))).toEqual([]);
+    expect(extra(lines('spicefarm', 3))).toEqual([]);
+    expect(extra(tooltipLines({ kind: 'build', defId: 'quarry' }))).toEqual([]);
   });
 });

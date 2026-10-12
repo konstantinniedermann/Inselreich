@@ -1,4 +1,5 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
@@ -16,13 +17,22 @@ import {
 } from '../../src/sim/population';
 import { upgradeDeficit } from '../../src/sim/flow';
 import { houseDiagnosis, unprotectedFlammables } from '../../src/sim/queries';
+import { cycleOf } from '../../src/sim/levels';
 import { upgradeStatus } from '../../src/sim/population';
 import { deserialize, SAVE_VERSION, serialize } from '../../src/sim/save';
 import { sellPrice } from '../../src/sim/trade';
 import { step } from '../../src/sim/tick';
 import type { Building, World } from '../../src/sim/types';
 import { deriveUnlocks } from '../../src/sim/unlocks';
-import { buildingsOfType, center, idx, inBounds, tilesInRadius, home } from '../../src/sim/world';
+import {
+  buildingsOfType,
+  center,
+  createWorld,
+  idx,
+  inBounds,
+  tilesInRadius,
+  home,
+} from '../../src/sim/world';
 import {
   PROBES,
   SCENARIOS,
@@ -31,6 +41,7 @@ import {
   writeProbes,
   writeScenarios,
 } from './scenarios';
+import { foldBackToV12 } from './helpers';
 import { MONUMENT_AT } from './monumentHelpers';
 import { MONUMENT_STAGES } from '../../src/sim/defs/monument';
 
@@ -54,6 +65,9 @@ const M13E2 = [
   'm13e2-bild-3',
   'm13e2-bild-4',
 ] as const;
+
+const M14E1 = ['m14e1-start', 'm14e1-felsbucht', 'm14e1-weidenau'] as const;
+const ALTSTAND_FILE = join(process.cwd(), 'tests', 'sim', 'fixtures', 'save-v12-felsbucht.json');
 
 const houses = (w: World): Building[] => buildingsOfType(w, 'house');
 
@@ -132,6 +146,7 @@ describe('Szenario-Saves', () => {
         'm13-ziel1',
         'm13-vor-ziel',
         ...M13E2,
+        ...M14E1,
       ].sort(),
     );
   });
@@ -799,11 +814,84 @@ describe('M13-E2 Szenario-Stände (Anhang 08 D)', () => {
     expect(Object.keys(SCENARIOS)).not.toContain('m13e2-v13');
     const written: [string, string][] = [];
     expect(writeExtraSaves(undefined, (p, d) => void written.push([p, d]))).toBe(0);
-    expect(writeExtraSaves('out', (p, d) => void written.push([p, d]))).toBe(1);
-    expect(written.map(([p]) => p)).toEqual(['out/m13e2-v13.json']);
+    expect(writeExtraSaves('out', (p, d) => void written.push([p, d]))).toBe(2);
+    expect(written.map(([p]) => p)).toEqual(['out/m13e2-v13.json', 'out/m14e1-altstand.json']);
     const raw = JSON.parse(written[0]![1]) as { version: number };
     expect(raw.version).toBe(SAVE_VERSION + 1);
     expect(deserialize(written[0]![1])).toEqual({ ok: false, reason: 'Unbekannte Version' });
+  });
+});
+
+describe('M14-E1 Szenario-Stände (Spec 10.4)', () => {
+  const foreign = (w: World, i: number): Building[] =>
+    Object.values(w.buildings).filter((b) => b.island === i);
+  const byDef = (w: World, i: number, defId: string): Building[] =>
+    foreign(w, i).filter((b) => b.defId === defId);
+
+  it('m14e1-start: Seed 3, Geld 20 000, vier Inseln, keine Fremdkontore, alles frei', () => {
+    const w = load('m14e1-start');
+    expect([w.seed, w.money, w.islands.length]).toEqual([3, 20_000, 4]);
+    expect(w.islands.slice(1).map((i) => i.kontorId)).toEqual([null, null, null]);
+    expect(Object.values(w.buildings).every((b) => b.island === 0)).toBe(true);
+    expect(w.unlocked).toEqual(createWorld(3, { unlockAll: true }).unlocked);
+  });
+
+  it('m14e1-felsbucht: Kontor II, Steinbruch und Glashütte angebunden mit halbem Zyklus, Lager 20/20', () => {
+    const w = load('m14e1-felsbucht');
+    expect(w.islands[2]!.kontorId).not.toBeNull();
+    expect([w.islands[1]!.kontorId, w.islands[3]!.kontorId]).toEqual([null, null]);
+    const [quarry] = byDef(w, 2, 'quarry');
+    const [glass] = byDef(w, 2, 'glassworks');
+    expect([byDef(w, 2, 'quarry').length, byDef(w, 2, 'glassworks').length]).toEqual([1, 1]);
+    expect([quarry!.connected, glass!.connected]).toEqual([true, true]);
+    expect([cycleOf(w, quarry!), cycleOf(w, glass!)]).toEqual([30, 25]);
+    expect([w.islands[2]!.stock.stone, w.islands[2]!.stock.wood]).toEqual([20, 20]);
+  });
+
+  it('m14e1-weidenau: Kontor II, Zuckerrohrplantage und Schäferei angebunden mit halbem Zyklus', () => {
+    const w = load('m14e1-weidenau');
+    expect(w.islands[3]!.kontorId).not.toBeNull();
+    expect([w.islands[1]!.kontorId, w.islands[2]!.kontorId]).toEqual([null, null]);
+    const cane = byDef(w, 3, 'canefarm');
+    const sheep = byDef(w, 3, 'sheepfarm');
+    expect([cane.length, sheep.length, foreign(w, 3).length]).toEqual([1, 1, 3]);
+    expect([cane[0]!.connected, sheep[0]!.connected]).toEqual([true, true]);
+    expect([cycleOf(w, cane[0]!), cycleOf(w, sheep[0]!)]).toEqual([25, 25]);
+  });
+
+  it('m14e1-altstand: nur als Extra-Datei, v12 mit drei Inseln, lädt als v13 mit vier', () => {
+    expect(Object.keys(SCENARIOS)).not.toContain('m14e1-altstand');
+    const written: [string, string][] = [];
+    writeExtraSaves('out', (p, d) => void written.push([p, d]));
+    const text = written.find(([p]) => p === 'out/m14e1-altstand.json')![1];
+    const raw = JSON.parse(text) as { version: number; islands: unknown[] };
+    expect([raw.version, raw.islands.length]).toEqual([12, 3]);
+    const r = deserialize(text);
+    expect(r.ok && r.world.islands.length).toBe(4);
+  });
+});
+
+describe('M14-E1 Fixture save-v12-felsbucht.json (QA-B11)', () => {
+  const read = (): string => readFileSync(ALTSTAND_FILE, 'utf8');
+
+  it('lädt als v13 mit vier Inseln, Felsbucht-Betrieben mit Zyklus 30 und 25, Weidenau ohne Kontor', () => {
+    const r = deserialize(read());
+    if (!r.ok) throw new Error(r.reason);
+    const w = r.world;
+    expect([w.version, w.islands.length, w.islands[3]!.kind]).toEqual([SAVE_VERSION, 4, 'C']);
+    expect(w.islands[3]!.kontorId).toBeNull();
+    const cycle = (defId: string): number | undefined => {
+      const b = Object.values(w.buildings).find((x) => x.island === 2 && x.defId === defId);
+      return b && cycleOf(w, b);
+    };
+    expect([cycle('quarry'), cycle('glassworks')]).toEqual([30, 25]);
+  });
+
+  it('ist gleich der Rückfaltung des Rezepts m14e1-felsbucht (läuft nicht auseinander)', () => {
+    const recipe = foldBackToV12(
+      JSON.parse(serialize(SCENARIOS['m14e1-felsbucht']!())) as Record<string, unknown>,
+    );
+    expect(read().trim()).toBe(JSON.stringify(recipe));
   });
 });
 

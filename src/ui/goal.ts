@@ -3,6 +3,7 @@ import type { Tool } from '../render/renderer';
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
 import { FUNCTION_LABELS, UNLOCKS } from '../sim/defs/unlocks';
 import { GOODS } from '../sim/defs/goods';
+import { ISLANDS, TRAIT_BUILDINGS, TRAIT_LABELS, type IslandTrait } from '../sim/defs/sea';
 import { TICK_MS } from '../sim/defs/timing';
 import {
   TIERS,
@@ -145,8 +146,14 @@ const withKey = (id: BuildingDefId): string => {
   return k === null ? BUILDING_DEFS[id].name : `${BUILDING_DEFS[id].name} (${k})`;
 };
 
+/** Stärke einer Fremdinsel für die Freischaltmeldung: Labels der Traits mit Wirkung, sonst «liegt nah» (Anhang 03 B). */
+const strengthOf = (traits: readonly IslandTrait[]): string => {
+  const labels = traits.filter((t) => TRAIT_BUILDINGS[t] !== undefined).map((t) => TRAIT_LABELS[t]);
+  return labels.length === 0 ? 'liegt nah' : labels.join(' / ');
+};
+
 /** Freischalt-Meldung (Spec M8 4.3 Punkt 5, Änderung S11); Namen, Tasten und Stufen aus den Defs. */
-export const UNLOCK_NOTICE = `Neu freigeschaltet: ${withKey('bathhouse')}, ${withKey('glassworks')} und ${FUNCTION_LABELS.seafaring[0]} (Inseln: ${ISLAND_CYCLE_KEY}) — deine ${TIERS[3].name} wollen ${TIERS[4].name} werden; ${TIERS[4].name} brauchen ${GOODS.spice.name} von fernen Inseln`;
+export const UNLOCK_NOTICE = `Neu freigeschaltet: ${withKey('bathhouse')}, ${withKey('glassworks')} und ${FUNCTION_LABELS.seafaring[0]} (Inseln: ${ISLAND_CYCLE_KEY}) — deine ${TIERS[3].name} wollen ${TIERS[4].name} werden; ${TIERS[4].name} brauchen ${GOODS.spice.name} von fernen Inseln. Jede Insel hat ihre Stärke: ${ISLANDS.map((d) => `${d.name} ${strengthOf(d.traits)}`).join(', ')}`;
 
 /** Forst-Werkzeuge in `FUNCTION_LABELS.forest`-Reihenfolge (Roden, Aufforsten); Tasten aus `hotkeyLabel`. */
 const FOREST_TOOLS: readonly Tool[] = [{ kind: 'clearForest' }, { kind: 'plantForest' }];
