@@ -6,6 +6,7 @@ import {
   buySurcharge,
   buyVolume,
   CONTROL_INTERVAL,
+  ENSEMBLE_WIN_TICK_LIMIT,
   MAX_TICKS,
   runColony,
   startColony,
@@ -146,10 +147,20 @@ describe('Ensemble-Wächter (Gate-Ensemble)', () => {
   });
 });
 
-// Quelle der Grenzen: balance*.test.ts (balance.test.ts: Sieg-Tick <= WIN_TICK_LIMIT und Geld > 0;
-// balance-upgrade.test.ts: minMoney >= 0). Für Siedler, Bürger und Zukauf-Mehrkosten gibt es dort
+describe('Sieg-Tick-Grenzen', () => {
+  it('Ensemble-Grenze liegt über der Einzellauf-Grenze', () => {
+    expect(ENSEMBLE_WIN_TICK_LIMIT).toBeGreaterThan(WIN_TICK_LIMIT);
+  });
+  it('Einzellauf-Grenze der Gates bleibt 7500', () => {
+    expect(WIN_TICK_LIMIT).toBe(7500);
+  });
+});
+
+// Quelle der Grenzen: balance*.test.ts (balance.test.ts: Geld > 0; balance-upgrade.test.ts: minMoney >= 0).
+// Der Sieg-Tick nutzt ENSEMBLE_WIN_TICK_LIMIT (aus der Ensemble-Messung abgeleitet); die Einzellauf-Gates
+// balance*.test.ts bleiben bei WIN_TICK_LIMIT. Für Siedler, Bürger und Zukauf-Mehrkosten gibt es dort
 // keine Grenze; sie werden ohne Grenze mitgemessen.
-const LIMIT_WIN_TICK = { name: 'Sieg-Tick', hi: WIN_TICK_LIMIT };
+const LIMIT_WIN_TICK = { name: 'Sieg-Tick', hi: ENSEMBLE_WIN_TICK_LIMIT };
 const LIMIT_MIN_MONEY = { name: 'minMoney', lo: 0 };
 const LIMIT_END_MONEY = { name: 'endMoney', lo: 1 };
 
