@@ -6282,3 +6282,18 @@ Regelbezug: R557, R329, Verfassung §3 · Kosten bei Irrtum: UI-Strang startet �
 Playtest auf.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M14-E1-SIM T03 · ADR: —
+
+## R568 · 2026-10-12 · Gate Merge TOOL-CONTROLLER-HAERTUNG: OK; Streuung Sieg-Tick als Werte-Frage; UI-Strang M14-E1 startet
+
+Ruling: Bericht lead-tech, Branch `tool/controller-haertung` @ `fa46de0b`, Final-Review opus OK, `make check` Exit 0. Stillstand
+Phasen 50–90 behoben (alle zehn Phasen siegen, Seed 3), Phase 0/20/40 bitgleich, keine Pin-Änderung; Auflagen R561 (1)–(4) belegt.
+Entscheid: **Gate Merge OK.** Merge durch `production-integrator` in `.worktrees/integrate` (R565 P1), sobald ein Platz frei ist,
+spätestens vor der Nachmessung R557 (3) von M14-E1; dabei Beobachtung „Controller-Stillstand Phasen 50/70/90“ auf „Stillstand
+behoben, Streuung offen“ setzen. **Streuung** (Sieg-Tick 6650–7900; Phasen 60/70 über `WIN_TICK_LIMIT` 7500): kein Fehler der
+Härtung; die Grenze bleibt vorerst 7500, die Werte-Frage entscheidet L0 bei der Nachmessung vor M14-E1 T08 (mit P3 aus R565),
+Seed-Achse dort mitmessen. **UI-Strang M14-E1 (T06)** startet jetzt (R567 (2)).
+
+Regelbezug: gates.md Gate Merge, R561, R565, R567 · Kosten bei Irrtum: Nachmessung vor T08 meldet zwei Ausreisser, die erst dort
+eingeordnet werden.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-CONTROLLER-HAERTUNG · ADR: —
