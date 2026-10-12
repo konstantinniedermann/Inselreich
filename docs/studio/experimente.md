@@ -635,3 +635,25 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R565 (P1, V2)
 - Start: 2026-10-12 (Handbuch 1.52: Merge und Push nur in `.worktrees/integrate`; Briefing-Vorlagenzeile; Persona production-integrator 1.13)
 - Bewertung: –
+
+## E-064 · vorgeschlagen (wartet auf Platz) · Guard sperrt `git stash` ausser Lesezugriffen
+
+- Hypothese: Wenn der Guard `git stash` (`push`, `pop`, `apply`, `save`, ohne Unterbefehl) sperrt und das Umsetzer-Briefing „kein `git stash`, WIP-Commit“ nennt, wendet kein Arbeiter mehr einen fremden Stash an (Retro [session-1a73e6c1-ende](retros/2026-10-12-session-1a73e6c1-ende.md) B1; `docs/beobachtungen.md` 2026-10-12; Klasse seit R116).
+- Messgrösse: 0 Stash-Anwendungen in Arbeiter-Worktrees (Ereignis `guard_block` mit `git stash` zählt als Abweisung, nicht als Fehler) über die nächsten 10 Umsetzer-Pakete; Gegenprobe: 0 Rückmeldungen „Stash nötig, Guard im Weg“ von L0 oder Leads.
+- Messbarkeit: Guard-Ereignisse und Briefing-Archiv bleiben unverändert lesbar; die Sperre erzeugt zusätzlich ein zählbares Ereignis.
+- Zeitraum: 10 Umsetzer-Pakete, höchstens bis 2026-11-19.
+- Rückfall: Regel in `guard.py` entfernen (zurück auf `clear`/`drop`), Briefing-Zeile bleibt.
+- Dateien: `tools/studio/guard.py`, `tools/studio/tests/`, `docs/studio/templates/briefing.md` (Werkzeug-Bündel und Vorlage; Vorlage nur nach Ruling)
+- Ruling: –
+- Bewertung: –
+
+## E-065 · vorgeschlagen (wartet auf Platz) · Warnung bei veraltetem `state.md`
+
+- Hypothese: Wenn der Session-Start (oder `make check`) warnt, sobald die höchste R-Nr. in `rulings.md` die im `Stand`-Satz von `state.md` genannte um mehr als 5 übersteigt, fehlt am Session-Start keine Nachführung mehr (Retro [session-1a73e6c1-ende](retros/2026-10-12-session-1a73e6c1-ende.md) B3: R553–R563 fehlten).
+- Messgrösse: Differenz höchste R-Nr. minus Stand-R-Nr. beim Session-Start ≤ 5 in den nächsten 3 Session-Starts; Gegenprobe: 0 Fehlalarme (Warnung bei aktuell nachgeführtem Stand).
+- Messbarkeit: Differenz aus `rulings.md` und `state.md` jederzeit rechenbar, unabhängig vom Werkzeug.
+- Zeitraum: 3 Session-Starts, höchstens bis 2026-11-19.
+- Rückfall: Prüfung entfernen; Textregel (R66) bleibt.
+- Dateien: `tools/studio/` (Session-Start-Skript oder `check`), `tools/studio/tests/`; kein Eingriff in Handbuch.
+- Ruling: –
+- Bewertung: –

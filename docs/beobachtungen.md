@@ -278,3 +278,5 @@ Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Pha
 - **2026-10-12 · `src/ui/buildMenu.ts:221` Tooltip-Zeile am Text erkannt.** `text.startsWith('Erzeugt:')` erkennt die Zeile am
   Anzeigetext, dieselbe Kopplung wie in UI-AUFRAEUM-2. Dazu `tests/ui/input.test.ts:385`: `not.toContain("textContent = 'Abreissen'")`
   fängt nur genau dieses Literal. Ursprung: Final-Review UI-AUFRAEUM-2. Einschätzung: niedrig, bündeln mit nächstem UI-Aufräumpaket.
+
+- **2026-10-12 · `make check` rot an `zeitreserve`: `tests/sim/islands-c.test.ts` «Spanne protokollieren (Seeds 1..300)».** 2327 ms lokal gegen 5000 ms Timeout (geschätzte Runner-Zeit 6981 ms, R270/E-043); sonst alle Prüfungen grün. Ursprung: Retro-Lauf `make check` des studio-coach, Last nicht gemessen. Einschätzung: mittel, gefährdet den Push-Gate; Timeout anheben (Vorschlag 15000 ms) oder Test aufteilen, in ein TOOL-/UI-Bündel; Lastmessung (`uptime`) vor Bewertung (R353 P4).
