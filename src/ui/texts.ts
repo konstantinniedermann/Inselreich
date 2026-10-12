@@ -7,6 +7,9 @@ import type { Building, Cost, GoodId, Tier, World } from '../sim/types';
 import { paidCost } from '../sim/upgrade';
 import { formatGameTime } from './time';
 
+/** Verb für Abriss in Hinweisen und Knopf. */
+export const DEMOLISH_VERB = 'Abreissen';
+
 export const HOUSE_TITLES: Record<Tier, string> = {
   1: 'Pionierhaus',
   2: 'Siedlerhaus',

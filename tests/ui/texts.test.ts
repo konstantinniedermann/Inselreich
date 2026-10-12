@@ -2,7 +2,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { PAUSED_UPKEEP_PCT } from '../../src/sim/defs/buildings';
 import { createWorld } from '../../src/sim/world';
-import { stateInfo } from '../../src/ui/texts';
+import { DEMOLISH_VERB, stateInfo } from '../../src/ui/texts';
+import { DEMOLISH_LABEL } from '../../src/ui/inspect';
 import type { Building } from '../../src/sim/types';
 
 const EXPECTED = `Stillgelegt — Unterhalt auf ${PAUSED_UPKEEP_PCT} % (aufgerundet)`;
@@ -29,5 +30,12 @@ describe('AK-UT-01/02 Stilllegen-Text', () => {
     for (const f of readdirSync(dir).filter((n) => n.endsWith('.ts'))) {
       expect(readFileSync(dir + f, 'utf8'), f).not.toMatch(/halber/i);
     }
+  });
+});
+
+describe('T03 (a) DEMOLISH_VERB', () => {
+  it('Konstante und Knopf-Label (Wortlaut byte-gleich)', () => {
+    expect(DEMOLISH_VERB).toBe('Abreissen');
+    expect(DEMOLISH_LABEL).toBe('Abreissen (Entf / ⌫)');
   });
 });
