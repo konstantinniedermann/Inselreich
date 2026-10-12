@@ -117,8 +117,20 @@ def _diff_hash() -> str:
     return hashlib.sha1(material).hexdigest()[:12] if material else ""
 
 
+def _tree() -> str | None:
+    """Arbeitsbaum relativ zur Hauptrepo-Wurzel (``.`` oder ``.worktrees/x``); Fehler: None."""
+    try:
+        top = os.path.realpath(_git("rev-parse", "--show-toplevel").decode().strip())
+        common = os.path.realpath(
+            _git("rev-parse", "--git-common-dir").decode().strip()
+        )
+        return os.path.relpath(top, os.path.dirname(common))
+    except Exception:  # noqa: BLE001 - testrun wirft nie
+        return None
+
+
 def _base_event(suite: str, kind: str) -> dict:
-    return {
+    event = {
         "ts": paths.now_iso(),
         "session_id": os.environ.get("CLAUDE_CODE_SESSION_ID", "manual"),
         "agent_id": "",
@@ -128,6 +140,10 @@ def _base_event(suite: str, kind: str) -> dict:
         "commit": _git("rev-parse", "--short", "HEAD").decode().strip(),
         "diff": _diff_hash(),
     }
+    tree = _tree()
+    if tree is not None:
+        event["tree"] = tree
+    return event
 
 
 def build_event(suite: str, code: int, lines: list[str]) -> dict:

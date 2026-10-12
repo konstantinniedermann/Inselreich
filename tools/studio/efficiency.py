@@ -699,13 +699,24 @@ def _event_time(event: dict) -> float:
 
 
 def _test_state(event: dict) -> tuple:
-    return (event.get("suite"), event.get("commit"), event.get("diff"))
+    return (
+        event.get("suite"),
+        event.get("commit"),
+        event.get("diff"),
+        event.get("tree"),
+    )
 
 
-def flake_suspects(events: list[dict]) -> list[str]:
-    """Testnamen, die rot waren und beim gleichen Stand (Suite, Commit, Diff) später grün."""
+def flake_suspects(events: list[dict], since: datetime | None = None) -> list[str]:
+    """Testnamen, die rot waren und beim gleichen Stand (Suite, Commit, Diff, Arbeitsbaum)
+    später grün; mit ``since`` zählen nur Läufe ab diesem Zeitpunkt (R565 V3)."""
     ordered = sorted(
-        (e for e in events if e.get("kind") in ("test_failed", "test_passed")),
+        (
+            e
+            for e in events
+            if e.get("kind") in ("test_failed", "test_passed")
+            and (since is None or _event_time(e) >= since.timestamp())
+        ),
         key=_event_time,
     )
     red: dict[tuple, set[str]] = {}

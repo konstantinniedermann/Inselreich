@@ -1030,3 +1030,54 @@ class SteuerungLightTest(Fixture):
         self.assertEqual(len(info), 1)
         self.assertIn("66.0 %", info[0])
         self.assertIn("nur Info", info[0])
+
+
+class FlakeWindowTest(Fixture):
+    """R565 V3: Zeitraum und Arbeitsbaum begrenzen den Flake-Verdacht."""
+
+    T1, T2, T3 = "2026-10-10T08:00:00Z", "2026-10-10T08:05:00Z", "2026-10-10T08:10:00Z"
+
+    def test_since_drops_pairs_with_red_before_the_window(self):
+        events = [
+            test_event("test_failed", self.T1, ["A.test_a"]),
+            test_event("test_passed", self.T3),
+        ]
+        since = datetime.fromisoformat(self.T2)
+        self.assertEqual(efficiency.flake_suspects(events, since=since), [])
+        self.assertEqual(efficiency.flake_suspects(events), ["A.test_a"])
+
+    def test_since_keeps_pairs_inside_the_window(self):
+        events = [
+            test_event("test_failed", self.T2, ["A.test_a"]),
+            test_event("test_passed", self.T3),
+        ]
+        since = datetime.fromisoformat(self.T2)
+        self.assertEqual(efficiency.flake_suspects(events, since=since), ["A.test_a"])
+
+    def test_different_trees_are_different_states(self):
+        events = [
+            {**test_event("test_failed", self.T1, ["A.test_a"]), "tree": "."},
+            {**test_event("test_passed", self.T2), "tree": ".worktrees/tool-b9"},
+        ]
+        self.assertEqual(efficiency.flake_suspects(events), [])
+
+    def test_same_tree_is_same_state(self):
+        events = [
+            {**test_event("test_failed", self.T1, ["A.test_a"]), "tree": "."},
+            {**test_event("test_passed", self.T2), "tree": "."},
+        ]
+        self.assertEqual(efficiency.flake_suspects(events), ["A.test_a"])
+
+    def test_events_without_tree_behave_as_before(self):
+        events = [
+            test_event("test_failed", self.T1, ["A.test_a"]),
+            test_event("test_passed", self.T2),
+        ]
+        self.assertEqual(efficiency.flake_suspects(events), ["A.test_a"])
+
+    def test_mixed_old_red_without_tree_new_green_with_tree_is_no_flake(self):
+        events = [
+            test_event("test_failed", self.T1, ["A.test_a"]),
+            {**test_event("test_passed", self.T2), "tree": "."},
+        ]
+        self.assertEqual(efficiency.flake_suspects(events), [])
