@@ -1,11 +1,16 @@
 // M14-E1 Seed-Läufe a (Seeds 1…500): A/B bitgleich zur Referenz vor M14-E1 (AK-M14E1-12).
 // Referenz schreiben (nur auf der Basis): M14E1_WRITE_AB=1 npx vitest run --no-file-parallelism tests/sim/islands-seeds-*.test.ts
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
+import { canPlace } from '../../src/sim/placement';
 import { createWorld } from '../../src/sim/world';
+import { foundKontor2Literal } from './seaHelpers';
 
-const FIXTURE = new URL('./fixtures/m14e1-ab-hashes.json', import.meta.url);
-const WRITE = process.env.M14E1_WRITE_AB === '1';
+const FIXTURE = join(process.cwd(), 'tests', 'sim', 'fixtures', 'm14e1-ab-hashes.json');
+const nodeEnv = (globalThis as unknown as { process: { env: Record<string, string | undefined> } })
+  .process.env;
+const WRITE = nodeEnv.M14E1_WRITE_AB === '1';
 type Hashes = Record<string, [string, string]>;
 
 /** FNV-1a (32 Bit) als Hex. */
@@ -17,6 +22,8 @@ function fnv1a(text: string): string {
 
 const reference: Hashes =
   !WRITE && existsSync(FIXTURE) ? JSON.parse(readFileSync(FIXTURE, 'utf8')) : {};
+const QUARRY_SEEDS = 300;
+const MIN_QUARRY_SITES = 3;
 const written: Hashes = {};
 
 /** Hash von Insel 1 (A) und 2 (B) der frisch erzeugten Welt. */
@@ -30,6 +37,19 @@ function checkSeed(seed: number): void {
   const hashes = abHashes(w);
   if (WRITE) written[String(seed)] = hashes;
   else expect(hashes, `Seed ${seed} A/B`).toEqual(reference[String(seed)]);
+  if (!WRITE && seed <= QUARRY_SEEDS) checkQuarrySites(w, seed);
+}
+
+/** AK-M14E1-17: nach dem Kontor II hat die Felsbucht mindestens 3 Steinbruch-Plätze. */
+function checkQuarrySites(w: ReturnType<typeof createWorld>, seed: number): void {
+  foundKontor2Literal(w, 2); // nach dem Hash: verändert die Insel
+  const isl = w.islands[2]!;
+  let sites = 0;
+  for (let y = 0; y < isl.height; y++)
+    for (let x = 0; x < isl.width; x++) if (canPlace(w, 'quarry', x, y, 2).ok) sites++;
+  expect(sites, `Seed ${seed} Steinbruch-Plätze Felsbucht`).toBeGreaterThanOrEqual(
+    MIN_QUARRY_SITES,
+  );
 }
 
 const range = (from: number, to: number): number[] =>

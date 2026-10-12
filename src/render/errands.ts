@@ -258,7 +258,8 @@ export function errandPose(
   g: RoadGraph = roadGraph(world),
 ): ErrandPose | null {
   const def = BUILDING_DEFS[b.defId];
-  if (!def.produces || cycleOf(b) === undefined || b.state !== 'ok' || !b.connected) return null;
+  if (!def.produces || cycleOf(world, b) === undefined || b.state !== 'ok' || !b.connected)
+    return null;
   if (!Number.isFinite(p)) return null;
   const k = Math.min(1, Math.max(0, p));
   const plan = errandPlan(world, b, g);
@@ -336,7 +337,8 @@ export function errandsFrom(
   const cands: { b: Building; key: number }[] = [];
   for (const b of homeBuildings(world)) {
     const def = BUILDING_DEFS[b.defId];
-    if (!def.produces || cycleOf(b) === undefined || b.state !== 'ok' || !b.connected) continue;
+    if (!def.produces || cycleOf(world, b) === undefined || b.state !== 'ok' || !b.connected)
+      continue;
     if (
       b.x < range.x0 - RANGE_PAD ||
       b.x > range.x1 + RANGE_PAD ||
@@ -354,7 +356,7 @@ export function errandsFrom(
   const g = roadGraph(world); // einmal je Frame: `layoutKey` läuft über alle Kacheln
   for (const { b } of cands) {
     if (out.length >= limit) break;
-    const p = Math.min(0.99999, (b.progress + clock.frac) / cycleOf(b)!);
+    const p = Math.min(0.99999, (b.progress + clock.frac) / cycleOf(world, b)!);
     const pose = errandPose(world, b, p, g);
     if (pose && pose.alpha > 0.01) out.push(pose);
   }

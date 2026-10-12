@@ -133,7 +133,10 @@ function workshopInfo(world: World, b: Building): HoverInfo {
     );
   else if (b.state === 'notConnected') lines.push('nicht angebunden');
   else if (b.state === 'noForest') lines.push(stateInfo(b, world.tick).text);
-  else lines.push(`arbeitet — ${perMinute(1, cycleOf(b) ?? 1)} ${GOODS[def.produces!].name} / min`);
+  else
+    lines.push(
+      `arbeitet — ${perMinute(1, cycleOf(world, b) ?? 1)} ${GOODS[def.produces!].name} / min`,
+    );
   const level = levelText(b);
   const title = level === null ? def.name : `${def.name}, ${level} · ${utilizationText(b)}`;
   return { title, lines };

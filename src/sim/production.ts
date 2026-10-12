@@ -25,7 +25,7 @@ const forestOk = (world: World, b: Building): boolean =>
 /** Ein Schritt eines Betriebs (Prüfreihenfolge Anhang 01 D); true, wenn progress in diesem Schritt gestiegen ist. */
 function advance(world: World, b: Building): boolean {
   const def = BUILDING_DEFS[b.defId];
-  const cycle = cycleOf(b);
+  const cycle = cycleOf(world, b);
   if (!def.produces || cycle === undefined) return false;
   if (b.outageUntil !== undefined) {
     b.state = 'burning'; // Ausfall hat Vorrang (Spec 10.1)

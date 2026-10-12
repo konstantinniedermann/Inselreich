@@ -27,6 +27,7 @@ vi.mock('../../src/sim/defs/levels', async (orig) => {
   };
 });
 
+const w = createWorld(3);
 const mk = (defId: Building['defId'], extra: Partial<Building> = {}): Building => ({
   id: 1,
   defId,
@@ -47,20 +48,20 @@ describe('M11 Zugriffsersatz cycleOf/upkeepOf (Spec 7)', () => {
         `Unterhalt ${perMinute(def.upkeep, UPKEEP_INTERVAL)} / min`,
       );
       if (!def.produces || def.cycle === undefined) continue;
-      expect(producesText(def, false, cycleOf(b)!)).toBe(producesText(def, false));
+      expect(producesText(def, false, cycleOf(w, b)!)).toBe(producesText(def, false));
       b.progress = Math.floor(def.cycle / 2);
-      expect(progressPct(b)).toBe(Math.min(100, Math.round((b.progress / def.cycle) * 100)));
+      expect(progressPct(w, b)).toBe(Math.min(100, Math.round((b.progress / def.cycle) * 100)));
     }
   });
   it('AK-UI-10 Vorlauf: Fischer Stufe 2 und 3 (alle 3 s / 2 s, 42 / 54 je min, Balken 50 %)', () => {
     const f2 = mk('fisher', { level: 2, progress: 12 });
-    expect(producesText(BUILDING_DEFS.fisher, false, cycleOf(f2)!)).toBe(
+    expect(producesText(BUILDING_DEFS.fisher, false, cycleOf(w, f2)!)).toBe(
       'Erzeugt Nahrung alle 3 s',
     );
     expect(upkeepText(f2)).toBe('Unterhalt 42 / min');
-    expect(progressPct(f2)).toBe(50);
+    expect(progressPct(w, f2)).toBe(50);
     const f3 = mk('fisher', { level: 3 });
-    expect(producesText(BUILDING_DEFS.fisher, false, cycleOf(f3)!)).toBe(
+    expect(producesText(BUILDING_DEFS.fisher, false, cycleOf(w, f3)!)).toBe(
       'Erzeugt Nahrung alle 2 s',
     );
     expect(upkeepText(f3)).toBe('Unterhalt 54 / min');

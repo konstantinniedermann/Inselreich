@@ -767,6 +767,7 @@ export function kontorActions(defId: BuildingDefId): { trade: boolean; demolish:
 /** Gerüst des Betriebs-Panels (Betriebe und Dienste): Kopf, Kennzahlen, Ausbau-Karte (Spec 5). */
 function renderBetrieb(
   panel: HTMLElement,
+  world: World,
   b: Building,
   onUpgrade: () => void,
   onPause: (paused: boolean) => void,
@@ -787,7 +788,7 @@ function renderBetrieb(
     panel.appendChild(btn);
   }
   const stats = addStats(panel, statKeys(b.defId));
-  if (progressView(b) !== null) {
+  if (progressView(world, b) !== null) {
     const bar = node('div', 'progress', 'progress-bar');
     bar.setAttribute('role', 'progressbar');
     bar.setAttribute('aria-valuemin', '0');
@@ -847,6 +848,7 @@ export function renderInspect(
     } else
       renderBetrieb(
         panel,
+        world,
         b,
         () => actions.upgrade(id),
         (paused) => actions.setPaused(id, paused),
@@ -1061,8 +1063,8 @@ function updateBetrieb(panel: HTMLElement, world: World, b: Building): void {
   }
   setField(panel, 'level', levelText(b) ?? '');
   setPips(panel, 'level-chip', 'level', levelPips(b));
-  setTiles(panel, statTiles(b));
-  const view = progressView(b);
+  setTiles(panel, statTiles(world, b));
+  const view = progressView(world, b);
   const fill = panel.querySelector<HTMLElement>('[data-field="progress"]');
   const bar = panel.querySelector<HTMLElement>('[data-field="progress-bar"]');
   if (view && fill && bar) {

@@ -1,3 +1,5 @@
+import type { BuildingDefId } from '../types';
+
 /** Höchstzahl Schiffe (M12 Seefahrt). */
 export const SHIP_MAX = 4;
 export const SHIP = {
@@ -10,7 +12,7 @@ export const ROUTE_GOODS_PER_DIRECTION = 2;
 export const ROUTE_RESERVE = { default: 10, step: 10, max: 90 } as const;
 
 export type IslandKind = 'A' | 'B';
-export type IslandTrait = 'spice' | 'mountain';
+export type IslandTrait = 'spice' | 'mountain' | 'mountainRich' | 'fertile';
 
 export interface IslandDef {
   kind: IslandKind;
@@ -44,13 +46,25 @@ export const ISLANDS: readonly IslandDef[] = [
     dMin: 35,
     dMax: 40,
     size: 36,
-    traits: ['spice', 'mountain'],
+    traits: ['spice', 'mountain', 'mountainRich'],
     plantations: 3,
-    quarries: 1,
+    quarries: 3,
   },
 ];
 
-export const TRAIT_LABELS: Record<IslandTrait, string> = { spice: 'Gewürz', mountain: 'Gebirge' };
+export const TRAIT_LABELS: Record<IslandTrait, string> = {
+  spice: 'Gewürz',
+  mountain: 'Gebirge',
+  mountainRich: 'Gebirge+',
+  fertile: 'Fruchtbar',
+};
+/** Zyklus-Faktor in Prozent für Betriebe mit Inselvorteil (50 = doppelter Ausstoss). */
+export const TRAIT_CYCLE_PCT = 50;
+/** Betriebe, deren Zyklus ein Trait verkürzt; Traits ohne Eintrag wirken nicht auf Zyklen. */
+export const TRAIT_BUILDINGS: Partial<Record<IslandTrait, readonly BuildingDefId[]>> = {
+  mountainRich: ['quarry', 'glassworks'],
+  fertile: ['canefarm', 'sheepfarm'],
+};
 
 export const ISLANDS_SALT = 0x27d4eb2f; // eigener Strom, ≠ Auftrag 0x9e3779b1, ≠ CRISIS_SALT
 export const ISLAND_TRIES = 50;

@@ -3,7 +3,7 @@ import { GOODS } from '../sim/defs/goods';
 import { LEVELS } from '../sim/defs/levels';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
-import { buildingUpkeep, cycleOf, upkeepOf, utilization } from '../sim/levels';
+import { buildingUpkeep, cycleOf, islandCycle, upkeepOf, utilization } from '../sim/levels';
 import { isSupplied } from '../sim/population';
 import { missingInputs, reservedInputs } from '../sim/queries';
 import { upgradeBuilding } from '../sim/upgrade';
@@ -146,10 +146,10 @@ export function statKeys(defId: BuildingDefId): StatKey[] {
   return keys;
 }
 
-export function statTiles(b: Building): StatTile[] {
+export function statTiles(world: World, b: Building): StatTile[] {
   const def = BUILDING_DEFS[b.defId];
   if (b.house) return [];
-  const cycle = cycleOf(b);
+  const cycle = cycleOf(world, b);
   const tiles: StatTile[] = [];
   const stopped = b.paused === true;
   const perMin = cycle === undefined ? '' : `${perMinute(1, cycle)} / min`;
@@ -220,14 +220,20 @@ function gainRow(
 }
 
 /** Gewinn des Ausbaus auf Zielstufe `to` (2 oder 3): Ausstoss und Unterhalt je Minute. */
-export function upgradeGain(b: Building, to: 2 | 3): GainRow[] {
+export function upgradeGain(world: World, b: Building, to: 2 | 3): GainRow[] {
   const next = LEVELS[b.defId]?.[to - 2];
   if (next === undefined) return [];
   const rows: GainRow[] = [];
-  const cycle = cycleOf(b);
+  const cycle = cycleOf(world, b);
   if (cycle !== undefined)
     rows.push(
-      gainRow('output', 'Ausstoss', perMinute(1, cycle), perMinute(1, next.cycle), ' / min'),
+      gainRow(
+        'output',
+        'Ausstoss',
+        perMinute(1, cycle),
+        perMinute(1, islandCycle(world, b.island, b.defId, next.cycle)),
+        ' / min',
+      ),
     );
   rows.push(
     gainRow(
@@ -246,7 +252,7 @@ export function upgradeCard(world: World, b: Building): UpgradeCard | null {
   const level = b.level ?? 1;
   if (level >= 3) return { kind: 'max', title: 'Höchste Stufe' };
   const to = (level + 1) as 2 | 3;
-  const gains = upgradeGain(b, to);
+  const gains = upgradeGain(world, b, to);
   const lock = functionLock(world, level === 1 ? 'upgrade2' : 'upgrade3');
   if (lock !== null) return { kind: 'locked', title: `Ausbau zu Stufe ${to}`, gains, lock };
   const v = upgradeView(world, b);
@@ -285,9 +291,9 @@ export function riseCard(
   };
 }
 
-export function progressView(b: Building): { pct: number; label: string } | null {
-  if (cycleOf(b) === undefined) return null;
-  const pct = progressPct(b);
+export function progressView(world: World, b: Building): { pct: number; label: string } | null {
+  if (cycleOf(world, b) === undefined) return null;
+  const pct = progressPct(world, b);
   return { pct, label: `Fortschritt ${pct} %` };
 }
 
@@ -318,7 +324,7 @@ export function upgradeView(world: World, b: Building): UpgradeView | null {
     buildings: { ...world.buildings, [b.id]: { ...b } },
   };
   const r = upgradeBuilding(probe, b.id);
-  const out = `${perMinute(1, cycleOf(b) ?? 1)} → ${perMinute(1, next.cycle)}`;
+  const out = `${perMinute(1, cycleOf(world, b) ?? 1)} → ${perMinute(1, islandCycle(world, b.island, b.defId, next.cycle))}`;
   const upkeep = `${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} → ${perMinute(next.upkeep, UPKEEP_INTERVAL)}`;
   return {
     title: `Ausbau zu Stufe ${lvl + 1}`,
@@ -333,8 +339,8 @@ export function upgradeView(world: World, b: Building): UpgradeView | null {
 }
 
 /** Fortschrittsbalken in Prozent, bezogen auf den Zyklus der Stufe. */
-export function progressPct(b: Building): number {
-  return Math.min(100, Math.round((b.progress / (cycleOf(b) ?? 1)) * 100));
+export function progressPct(world: World, b: Building): number {
+  return Math.min(100, Math.round((b.progress / (cycleOf(world, b) ?? 1)) * 100));
 }
 
 /** Knopf «Stilllegen» / «Wieder anfahren»; nur für Betriebe mit Erzeugung (U-11). */

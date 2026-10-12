@@ -1,11 +1,14 @@
 // M14-E1 Seed-Läufe b (Seeds 501…1000): A/B bitgleich zur Referenz vor M14-E1 (AK-M14E1-12).
 // Referenz schreiben (nur auf der Basis): M14E1_WRITE_AB=1 npx vitest run --no-file-parallelism tests/sim/islands-seeds-*.test.ts
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
 
-const FIXTURE = new URL('./fixtures/m14e1-ab-hashes.json', import.meta.url);
-const WRITE = process.env.M14E1_WRITE_AB === '1';
+const FIXTURE = join(process.cwd(), 'tests', 'sim', 'fixtures', 'm14e1-ab-hashes.json');
+const nodeEnv = (globalThis as unknown as { process: { env: Record<string, string | undefined> } })
+  .process.env;
+const WRITE = nodeEnv.M14E1_WRITE_AB === '1';
 type Hashes = Record<string, [string, string]>;
 
 /** FNV-1a (32 Bit) als Hex. */

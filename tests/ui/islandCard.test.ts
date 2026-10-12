@@ -10,7 +10,7 @@ describe('M12 E1 Inselkarte', () => {
       'Möweninsel · 24 × 24 · Gewürz · Fahrzeit 0:27',
     );
     expect(formatIslandCard(ISLANDS[1]!, 36, 36, 38)).toBe(
-      'Felsbucht · 36 × 36 · Gewürz, Gebirge · Fahrzeit 0:38',
+      'Felsbucht · 36 × 36 · Gewürz, Gebirge · Gebirge+: Steinbruch, Glashütte ×2 · Fahrzeit 0:38',
     );
     expect(formatIslandCard(ISLANDS[0]!, 24, 24, 65)).toContain('Fahrzeit 1:05');
   });
