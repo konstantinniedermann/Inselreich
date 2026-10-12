@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.51 · Stand: 2026-10-11 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.52 · Stand: 2026-10-12 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -190,7 +190,7 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
   Gate-Instanzen tragen die Phase mit Präfix `plan-<paket>`, `design-<paket>` bzw. `gate-<paket>`
   (z. B. `--phase plan-M13-E1`); die Kopfzeile `Paket:` dieser Lead-Instanz nennt dieselbe ID. Nur
   so rechnet die Zeile „Steuerungsanteil bereinigt“ diese Instanzen heraus. Gate-Instanzen ohne
-  eigene Arbeiter schreiben zusätzlich „Budget: keins“ ins Briefing.
+  eigene Arbeiter schreiben zusätzlich „Budget: keins“ ins Briefing. **Ampel (R565 P5):** Die bereinigte Steuerungszeile gilt als Ampelzeile (Schwellen der Rohzeile, E-049; `efficiency.py` wertet bis zur Werkzeug-Umstellung noch die Rohzeile, die Retro liest bis dahin die bereinigte Zeile); die Session-Minuten der Live-Ampel stehen erst über 10 min auf gelb (`actions.py` `SESSION_LIMITS` steht noch auf 8, Umstellung im Werkzeug-Bündel).
 - **Formel Umsetzung:** `Pakete × 2 + QA-Checks + 1 Final-Review`, darauf 30 % Puffer, aufgerundet.
   Beispiel: 4 Pakete, 2 UI-Checks → 8 + 2 + 1 = 11 → × 1,3 → **15**. Fix-Runden per `SendMessage`
   zählen nicht als Start. L0 teilt auf (Stufe voll: Final-Review an `lead-qa`, Rest an `lead-tech`;
@@ -282,7 +282,7 @@ Ablauf eines Meilensteins (Stufe voll):
    Zählungen gegen `src/` geprüft, AK- und Pin-Verweise vollständig, je Mechanik mit Zahlen ein
    Rechenbeispiel mit realen Weltmassen (R233 V3).
 3. Tech-Lead schreibt Plan (superpowers:writing-plans) inkl. Datei-Ownership und Budgetantrag →
-   **Gate Plan** (L0).
+   **Gate Plan** (L0). **Werte-Probe (R565 P3):** Bei Paketen mit Wertgrenzen (Zahlen, die Balancing, Kosten oder Schwellen festlegen) rechnet der Plan die Grenzwerte vor dem Gate Plan gegen die Spec nach; L0 nimmt den Plan erst mit dieser Probe ab.
 4. Tech-Lead führt aus (superpowers:subagent-driven-development als Controller, im Worktree):
    Implementierer (`tech-*`) + Task-Review durch `qa-code-reviewer`; UI-Pakete zusätzlich
    Browser-Check durch `qa-playtester`. Art-Pakete parallel durch den Art-Lead in eigenem Worktree.
@@ -297,7 +297,7 @@ Ablauf eines Meilensteins (Stufe voll):
    per `SendMessage` fortgesetzt, nicht durch eine neue Instanz ersetzt (Ausnahme: die Ablösung nach
    Abschlussbericht oder bei 200k Kontext, E-042, R319).
 5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
-6. **Gate Merge** (L0, eines je Meilenstein) → Production-Lead lässt `production-integrator` die
+6. **Gate Merge** (L0, eines je Meilenstein; R464 gilt auch hier auf seriellem Pfad: vor dem Gate startet L0 keine Umsetzer und Controller, solange `make check`/`make push-check` im Hauptbaum oder in `.worktrees/integrate` läuft, R565 P2) → Production-Lead lässt `production-integrator` die
    Stränge seriell mergen, CI und Pages prüfen.
 7. L0 beendet den Meilenstein (`log.py milestone --id M5 --status done`), lässt die Metriken
    verdichten (`python3 tools/studio/metrics.py --milestone M5`) und startet die Pflicht-Retro
@@ -374,10 +374,10 @@ Regeln dazu:
   Release); sonst main zuerst. Geprüft wird bei der Auswahl, nicht erst im Plan.
 - **Merge** (Meilenstein oder Release): nur nach dem L0-Gate, davor Konflikt-Probe (R330 (5)): L0 oder
   Production-Lead prüft vor dem Integrator-Start je Branch `git merge-tree --write-tree main <branch>` (ändert
-  weder Index noch Arbeitsbaum, kein Push); Konflikte gehen vor dem Start an den Production-Lead (§6), seriell durch `production-integrator` im
-  Worktree `.worktrees/integrate` (Merges bleiben lokal; der gebündelte Push erfolgt von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
+  weder Index noch Arbeitsbaum, kein Push); Konflikte gehen vor dem Start an den Production-Lead (§6), seriell durch `production-integrator` ausschliesslich im
+  Worktree `.worktrees/integrate` (Merge, `make push-check` und Push laufen nur dort, nie im Hauptcheckout, R565 P1; solange Integrator oder `push-check` laufen, committet L0 nichts auf `main`; die Zwischenregel R562 entfällt damit. **Briefing (R565 V2, E-063):** die Integrator-Pflichtzeile nennt `.worktrees/integrate` als Arbeitsort; widerspricht das Briefing der Persona, gilt die Persona und der Integrator meldet; ein anderer Hash als im Ruling wird nur nach Meldung an L0 gepusht) (Merges bleiben lokal; der gebündelte Push erfolgt von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
   je Branch `git merge --no-ff --no-commit`, `make check` — grün: committen, rot: `git merge --abort` und
-  melden. Kein Push je Merge (N-98, R335): höchstens ein Push je Session, nach Abschluss des zu pushenden Stands (nicht zwingend am Session-Ende, R421; siehe „Session-Start und -Ende“), immer gezielt per `git push origin <geprüfter Hash>:main`, und erst nach grünem **`make push-check`** (R517/R518, ersetzt die Einzelkette `tsc`/`lint`/`zeittests`/`conflicts`/`check`/`zeitreserve-push`/`check-ci-perf`; `pushcheck.py`). Ablauf (R503): Vorprüfungen (`make conflicts`, `npx tsc --noEmit`, `make lint`, `make zeittests`, Abbruch beim ersten Fehler), Warten auf 1-min-Load ≤ 4, genau ein `make check-push` (= `make check` ohne lockeres `zeitreserve`), strenge Zeitreserve-Bewertung, `make check-ci-perf`. Exit 0 = pushbar, 1 = rot, 2 = nicht belastbar (Last), 3 = Testsperre belegt. **D1:** Exit 2 wegen Last gilt als Exit 0, wenn die Markierungsliste existiert, gültig und leer ist (sichtbar in Schlusszeile und Ereignis `push_check`); fehlt die Datei oder ist sie ungültig, bleibt es Exit 2. **D2:** Nachmessung der markierten Dateien höchstens einmal, bei Exit 2 (Last) oder Exit 1 mit `loadStart` > 3. Die Schlusszeile `push-check: EXIT=… · geprüfter Hash …` nennt den geprüften Hash; gepusht wird genau dieser (`git push origin <geprüfter Hash>:main`); verändert sich HEAD oder der getrackte Arbeitsbaum während des Laufs, ist es Exit 1. Aufruf immer als `make push-check; echo EXIT=$?`, nie in eine Pipe. Die Einzelschritte bleiben für die Fehlersuche nutzbar. Steht ein Push an, startet L0 keine Umsetzer und Controller, bis `make push-check` Exit 0 meldet; Gates, Kurzdesigns und Pläne ohne Testläufe dürfen parallel laufen (R464). Ausnahme (R514 V1): Fixes eines benannten Push-Blockers dürfen vor dem Push laufen, wenn ein Ruling Test und Paket nennt; es laufen nur gezielte Tests der berührten Dateien, `make check` nur durch den Integrator. Danach CI (`gh run list --branch main --limit 3`; nur bei Code-Pushes
+  melden. Kein Push je Merge (N-98, R335): der Push-Takt richtet sich nach der Live-Ampel (`python3 tools/studio/actions.py`, Actions-Prognose; R565 P4): bei GRÜN/GELB nach Abschluss jedes zu pushenden Stands, bei ROT höchstens ein Push, bis die Prognose wieder unter Rot liegt (statt der Festregel „ein Push je Tag“); je Push nach Abschluss des zu pushenden Stands (nicht zwingend am Session-Ende, R421; siehe „Session-Start und -Ende“), immer gezielt per `git push origin <geprüfter Hash>:main`, und erst nach grünem **`make push-check`** (R517/R518, ersetzt die Einzelkette `tsc`/`lint`/`zeittests`/`conflicts`/`check`/`zeitreserve-push`/`check-ci-perf`; `pushcheck.py`). Ablauf (R503): Vorprüfungen (`make conflicts`, `npx tsc --noEmit`, `make lint`, `make zeittests`, Abbruch beim ersten Fehler), Warten auf 1-min-Load ≤ 4, genau ein `make check-push` (= `make check` ohne lockeres `zeitreserve`), strenge Zeitreserve-Bewertung, `make check-ci-perf`. Exit 0 = pushbar, 1 = rot, 2 = nicht belastbar (Last), 3 = Testsperre belegt. **D1:** Exit 2 wegen Last gilt als Exit 0, wenn die Markierungsliste existiert, gültig und leer ist (sichtbar in Schlusszeile und Ereignis `push_check`); fehlt die Datei oder ist sie ungültig, bleibt es Exit 2. **D2:** Nachmessung der markierten Dateien höchstens einmal, bei Exit 2 (Last) oder Exit 1 mit `loadStart` > 3. Die Schlusszeile `push-check: EXIT=… · geprüfter Hash …` nennt den geprüften Hash; gepusht wird genau dieser (`git push origin <geprüfter Hash>:main`); verändert sich HEAD oder der getrackte Arbeitsbaum während des Laufs, ist es Exit 1. Aufruf immer als `make push-check; echo EXIT=$?`, nie in eine Pipe. Die Einzelschritte bleiben für die Fehlersuche nutzbar. Steht ein Push an, startet L0 keine Umsetzer und Controller, bis `make push-check` Exit 0 meldet; Gates, Kurzdesigns und Pläne ohne Testläufe dürfen parallel laufen (R464). Ausnahme (R514 V1): Fixes eines benannten Push-Blockers dürfen vor dem Push laufen, wenn ein Ruling Test und Paket nennt; es laufen nur gezielte Tests der berührten Dateien, `make check` nur durch den Integrator. Danach CI (`gh run list --branch main --limit 3`; nur bei Code-Pushes
   erwartbar, N-98), enthält der Push ein Release, Pages per `gh workflow run Pages --ref main` (bei roter CI nur, wenn ausschliesslich Studio-Werkzeuge (`tools/studio`) rot sind und alle Spiel-Tests grün, R450) und
   `python3 tools/studio/ci.py`. CI rot → Behebung hat Vorrang, Ad-hoc-Retro. Konflikt: stoppen (§6).
 

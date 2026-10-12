@@ -6190,3 +6190,80 @@ Regelbezug: gates.md Kombiniertes Gate, R553 V1, R558, R560 · Kosten bei Irrtum
 im Gate Merge per Ruling bestätigt wird.
 
 Entscheider: L0 · Anlass: Berichte lead-tech plan-TOOL-CONTROLLER-HAERTUNG, lead-qa gate-TOOL-CONTROLLER-HAERTUNG · ADR: —
+
+## R562 · 2026-10-11 · Merge-Commit TOOL-GATE-ENSEMBLE bleibt; Vorfall an die Retro
+
+Ruling: Der Merge `a8d9dcac` → `main` liegt als `6ffa7f81` mit der Nachricht von R560 vor, weil der L0-Commit den offenen
+`--no-commit`-Merge des Integrators einfing (Ursache bei L0). Inhalt geprüft (`make check`, `make check-ci-perf` Exit 0). Kein
+Umschreiben der Historie (Verfassung §6). Bis zur Retro: L0 committet auf `main` nur, wenn kein Integrator läuft und kein
+`.git/MERGE_HEAD` besteht. Befund in `docs/beobachtungen.md`, Abhilfe (Merge im Worktree `integrate` oder Guard) entscheidet die
+Session-Ende-Retro.
+
+Regelbezug: Verfassung §6, R224, STUDIO.md Integrator · Kosten bei Irrtum: eine irreführende Commit-Nachricht in der Historie.
+
+Entscheider: L0 · Anlass: Bericht production-integrator MERGE-TOOL-GATE-ENSEMBLE · ADR: —
+
+## R563 · 2026-10-11 · Kombiniertes Gate UI-AUFRAEUM-2: OK mit Auflagen, gebündelt auf 13 Starts
+
+Ruling: Plan `fe8dd8b3` (lead-tech), Urteil lead-qa BEDENKEN (nicht blockierend). L0-Prüffragen: ein Umsetzer-Strang, ein Worktree;
+Überschneidung nur `src/ui/inspect.ts` mit M14-E1 → **Umsetzung erst nach dem M14-E1-Merge**; bleibt leicht. Entscheide:
+(1) **Bündeln** T03+T04+T05 zu einem Task „Konstanten und Importe“ (`inspect.ts` zuletzt) → 4 Tasks × 2 + 1 Playtester + 1
+Final-Review = 10 × 1,3 → **13 Starts**. (2) **DOM-Testweg ohne neue Abhängigkeit** (ADR-001): T00 baut Fake-Elemente nach dem
+Muster `tests/render/fakeCtx.ts`; kein jsdom/happy-dom. T00 belegt Pause an/aus (`dataset.paused`), Abschlusszeile, `setText`/
+`setHidden`; Mutationsbeleg mutiert auch die `paused`-Quelle. (3) **Stage-Sprung > 1:** ein Chronik-Eintrag je Abschnitt, aber
+**nur der letzte mit Toast**; Pins: Sprung = 1 genau ein Eintrag (unverändert), `prev.stage = -1` kein Eintrag. (4) T05:
+`RESERVE_TICKS` nur kommentieren; Angleichen nur per eigenem Ruling. (5) Statt Quelltext-Zählung „Abreissen“: Test auf
+`DEMOLISH_VERB` plus Textvergleichs-Pin je Fundort (Liste nach Neuzählung); `isSaveChord` per Verhaltenstest (Import ohne
+`hotkeys`). (6) Test Fehlerpfad `startMonumentStage` bei zu wenig Geld: Meldung unverändert. Nacharbeit (1)–(6) im Plan durch die
+Plan-Instanz jetzt, ohne Zweitprüfung. Budget wird beim Start geloggt.
+
+Regelbezug: gates.md Kombiniertes Gate, ADR-001, Verfassung §3, R557 · Kosten bei Irrtum: ein Toast-Verhalten im seltenen Ladefall.
+
+Entscheider: L0 · Anlass: Berichte lead-tech plan-UI-AUFRAEUM-2, lead-qa gate-UI-AUFRAEUM-2 · ADR: —
+
+## R564 · 2026-10-12 · Release M13: Push des geprüften main-Stands `883b64f9`
+
+Ruling: Nutzerauftrag „mach den M13 push release“. Gepusht wird der main-Stand `883b64f9` statt des M13-Inhaltsstands
+`24ba6d03`: dazwischen keine Änderung in `src/`, `public/`, `index.html`, `package.json` (nur Doku, Werkzeug, Tests aus
+TOOL-GATE-ENSEMBLE, R558). Ablauf über `production-integrator`: `make push-check`, `git push origin <Hash>:main`, CI, Pages per
+`gh workflow run Pages --ref main`, `backup/main-lokal` per Fast-Forward nachführen. Worktree-Aufräumen bleibt eigenes Ruling.
+Release-Notiz aus dem M13-Entwurf in state.md.
+
+Regelbezug: Verfassung §7, STUDIO.md Push-Gate (R335, R429), R549, R552 · Kosten bei Irrtum: ein Folge-Push am nächsten Tag
+(Actions-Prognose rot).
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R565 · 2026-10-12 · Retro M13 und Prozess-Aussensicht M13: P1–P5, V1–V3 angenommen
+
+Ruling: Berichte `docs/studio/retros/2026-10-12-m13.md` (studio-coach) und `2026-10-12-m13-prozess.md` (studio-process-coach).
+Angenommen: **P1** Integrator arbeitet nur in `.worktrees/integrate` (Merge, `push-check`, Push); Zwischenregel R562 entfällt
+mit der Umsetzung; bis dahin committet L0 nichts, solange Integrator oder `push-check` laufen. **V2 / E-063** als Auflage zu P1:
+Briefing-Vorlage nennt `.worktrees/integrate`; bei Widerspruch gilt die Persona und der Integrator meldet; ein anderer Hash als im
+Ruling wird nur nach Meldung gepusht. **P2** R464 gilt auch vor Gate Merge auf seriellem Pfad; Timeout `terrain.test.ts` ins nächste
+Werkzeug-Bündel. **P3** Werte-Probe vor Gate Plan bei Paketen mit Wertgrenzen (ab jetzt; M14-E1 deckt R557 (3) vor T08).
+**P4** Push-Takt nach Live-Ampel statt Festregel „ein Push je Tag“. **P5** bereinigte Steuerungszeile wird Ampelzeile;
+Session-Minuten gelb erst > 10. **V1** E-057 und E-061 abschliessen, E-062 und E-063 starten. **V3** Flake-Zeile nur im
+Zeitraum zählen, Arbeitsbaum mitschreiben; Aufgabe im nächsten Werkzeug-Bündel. Umsetzung der Handbuch-Änderungen
+(Handbuch-Minor) durch `studio-coach`.
+
+Regelbezug: STUDIO.md Verbesserungsschleife, R127, R316, R562, R564 · Kosten bei Irrtum: ein Handbuch-Minor zurücknehmen; P4 kann
+einen zusätzlichen Actions-Lauf kosten.
+
+Entscheider: L0 · Anlass: Retro M13, Prozess-Aussensicht M13 · ADR: —
+
+## R566 · 2026-10-12 · Runden-Ruling IDEEN-08
+
+Ruling: Bericht lead-design IDEEN-08 (`99f0f29b`, Rangliste in `docs/ideen.md`), 13 neue Ideen I-075…I-087, Pool 35/40, keine
+§5.3-Frage. Entscheide wie empfohlen: **einplanen** I-085 «Lager voll» als Problem mit Sprung, I-078 Bilanz-Vorschau, I-083
+Hinweis unbelegte Zifferntaste (Beipack); **geteilt in zwei Häppchen** wegen ≈ +140 Tools: **UI-HAEPPCHEN-A** = I-062, I-063,
+I-083 · **UI-HAEPPCHEN-B** = I-085, I-078. Beide nach dem Merge M14-E1 und nach UI-AUFRAEUM-2 (Überschneidung `src/ui/`),
+Prozessstufe leicht. **Parken:** I-077 (bis Wirtschaftsrunde nach Erweiterung 1 K2), I-086 (mit I-059, Playtest-Anlass), I-084,
+I-082, I-081. **Verwerfen:** I-075, I-076, I-079, I-080; I-087 → zusammengefasst in I-045. **Pool-Bereinigung bestätigt**
+(live-Setzungen, Verweise auf Erweiterung 1, Statuskorrekturen I-017/I-062/I-063) mit einer Abweichung: **I-018 Story-Rahmen
+wird geparkt statt gestrichen** (Ursprung Spielerwunsch; Erzählung als Säule nur auf Nutzeranlass, keine Warteschlange).
+Verweise auf Erweiterung 1 sind beim Merge von `design/erweiterung-1` zu bestätigen (RE-2 A5).
+
+Regelbezug: docs/ideen.md Ablauf, R445, R474, R529, Verfassung §5.3 · Kosten bei Irrtum: eine geparkte Idee später neu bewerten.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-08 · ADR: —

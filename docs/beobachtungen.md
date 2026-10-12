@@ -215,3 +215,29 @@ Fundort: `make gate-ensemble` (TOOL-GATE-ENSEMBLE, `tests/sim/ensemble.test.ts`)
 Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Phasen 10/30/50/70/90, vor der Härtung). Beobachtung: Phase 10/30 siegen (7950 / 7250), Phase 50/70/90 stehen bis Tick 9000 still (Schule bei Tick 551/571/591, minMoney 3 / -88 / 19); nach der Härtung siegen alle zehn Phasen (50: 7000, 60: 7900, 70: 7600, 80: 7500, 90: 6900; Phase 0-40 unverändert). Phase 60 (7900) und 70 (7600) liegen über `WIN_TICK_LIMIT` 7500, Verdikt im Ensemble: AUSREISSER. Ursprung: TOOL-CONTROLLER-HAERTUNG T03. Einschätzung: Ursache war nur die zu frühe Schule; die verbleibende Streuung 6650-7900 ist ein Befund für M14-Werte (Grenzen mit Ensemble prüfen). Die Härtung nutzt einen Lagervorrat-Ausweg (`stock.cloth` > Zielbedarf), sonst verschöbe sich Phase 0.
 
 - **Zuordnung:** probe-CONTROLLER-PHASE (R558). Offen.
+
+### 2026-10-11 · L0-Commit im Hauptcheckout fängt offenen Integrator-Merge ein
+
+- **Fundort:** `main` @ `6ffa7f81` (Eltern `49f66078`, `a8d9dcac`). Beobachtung: Der Integrator bereitete `git merge --no-ff
+--no-commit tool/gate-ensemble` im Hauptcheckout vor und lief `make check`; L0 committete in dieser Zeit ein Ruling
+  (`git add docs/studio/rulings.md && git commit`) — Git schloss dabei den offenen Merge mit ab. Merge-Commit trägt die
+  Ruling-Nachricht statt „feat: Merge …“, Inhalt geprüft (`make check` Exit 0). Ursprung: MERGE-TOOL-GATE-ENSEMBLE.
+  Einschätzung: mittel; Abhilfe Werkzeug-Kandidat: Integrator mergt im Worktree `.worktrees/integrate` oder L0/Leads prüfen
+  vor jedem Commit auf `main` `.git/MERGE_HEAD` (Guard-Hook möglich).
+- **Zuordnung:** Retro M13 (`docs/studio/retros/2026-10-12-m13.md` B1, V2) und Prozess-Retro M13 P1; Abhilfe als E-063 vorgeschlagen.
+
+### 2026-10-12 · `README.md` und `docs/ideen.md` werden ganz gelesen und wachsen
+
+- **Fundort:** Ampelzeile „Grösste gelesene Datei“ M13 (`docs/studio/metriken/M13.md`): `README.md` 48,2 KB und `docs/ideen.md`
+  42,9 KB als volle Lese-Ergebnisse; auf der Platte 58,7 KB bzw. 79,3 KB. Beobachtung: Die Briefingzeile E-057 (Teillesen ab
+  30 KB) greift bei diesen beiden Dateien nicht immer; beide wachsen mit jedem Release bzw. jeder Ideen-Runde. Ursprung: Retro
+  M13 (Ampel). Einschätzung: niedrig; Kandidat für eine Auswertung durch `lead-production` (z. B. Archiv-Abschnitt für
+  umgesetzte Ideen, README-Anhang für Spielwerte), keine Regel.
+- **Zuordnung:** offen.
+
+### 2026-10-12 · `README.md` nennt Spielstand-Version 11, Code hat 12
+
+- **Fundort:** `README.md` Z. 624 «Spielstand-Version 11»; `src/sim/save.ts:47` `SAVE_VERSION = 12` (seit Release M13).
+  Ursprung: lead-design IDEEN-08 (ausserhalb Scope). Einschätzung: niedrig; wird mit M14-E1 T07 (README, Save v13) ohnehin
+  nachgeführt — dort mitprüfen, sonst Doku-Audit vor dem nächsten Release.
+- **Zuordnung:** M14-E1 T07 (R566).
