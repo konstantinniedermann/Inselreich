@@ -6220,3 +6220,16 @@ Plan-Instanz jetzt, ohne Zweitprüfung. Budget wird beim Start geloggt.
 Regelbezug: gates.md Kombiniertes Gate, ADR-001, Verfassung §3, R557 · Kosten bei Irrtum: ein Toast-Verhalten im seltenen Ladefall.
 
 Entscheider: L0 · Anlass: Berichte lead-tech plan-UI-AUFRAEUM-2, lead-qa gate-UI-AUFRAEUM-2 · ADR: —
+
+## R564 · 2026-10-12 · Release M13: Push des geprüften main-Stands `883b64f9`
+
+Ruling: Nutzerauftrag „mach den M13 push release“. Gepusht wird der main-Stand `883b64f9` statt des M13-Inhaltsstands
+`24ba6d03`: dazwischen keine Änderung in `src/`, `public/`, `index.html`, `package.json` (nur Doku, Werkzeug, Tests aus
+TOOL-GATE-ENSEMBLE, R558). Ablauf über `production-integrator`: `make push-check`, `git push origin <Hash>:main`, CI, Pages per
+`gh workflow run Pages --ref main`, `backup/main-lokal` per Fast-Forward nachführen. Worktree-Aufräumen bleibt eigenes Ruling.
+Release-Notiz aus dem M13-Entwurf in state.md.
+
+Regelbezug: Verfassung §7, STUDIO.md Push-Gate (R335, R429), R549, R552 · Kosten bei Irrtum: ein Folge-Push am nächsten Tag
+(Actions-Prognose rot).
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
