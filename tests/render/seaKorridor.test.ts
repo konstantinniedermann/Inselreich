@@ -128,10 +128,11 @@ describe('SEE-F1-KORRIDOR K1', () => {
   });
 
   it('AK-K1b Pin: Hash seaTintFor Seeds 1-40 (Flaechen bleiben bitgleich zu main)', () => {
-    // Auf main aufgenommen; bleibt bis zum Ende von SEE-F1-KORRIDOR unveraendert.
+    // Auf main aufgenommen (alt 683761494, Basis 62da7923).
     // M14-E1: bewusst neu gepinnt (R557), nur dieser Gesamt-Hash. Mit Insel C (Weidenau) kommt die Fahrlinie Heimat–C dazu,
     // `seaKeepOut` sperrt entlang ihr, und die Flächen werden dort neu gewählt (gemessen: 303 von 405 Flächen, Seeds 1-40,
-    // bleiben Kachel für Kachel gleich; 66 trifft die neue Sperre, 36 folgen über die Belegung).
+    // bleiben Kachel für Kachel gleich; 66 trifft die neue Sperre, 36 folgen über Rang und Belegung, also auch Flächen fern der
+    // Fahrlinie). Die Welt ohne C ist bitgleich zur Basis (kontrafaktischer Teilhash im Test darunter), mit C nicht.
     expect(tintHash()).toBe(392400604);
   });
 

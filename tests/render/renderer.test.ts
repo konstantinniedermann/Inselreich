@@ -1201,10 +1201,19 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
   /** Die gemerkten Zeichenaufrufe (Körper, Luft, Bäume, Schiff, Figuren) eines Frames auf der Heimat. */
   const callList = (world: World, cam: ReturnType<typeof camFor>, view: typeof V1280): Call[] => {
     h.calls.length = 0;
+    h.decorCalls.length = 0;
     const { ctx } = fakeCtx();
     render(ctx, world, cam, layer, null, null, view, { timeMs: 5000, dayNight: true });
+    landStamps.push(
+      h.decorCalls
+        .filter((c) => !SEA_STAMPS.includes(c.stamp))
+        .map((c) => `${c.stamp}${c.id}@${c.zoom}`),
+    );
     return h.calls.slice();
   };
+  const SEA_STAMPS = ['wreck', 'islet', 'seaRock'];
+  /** Land-Deko-Stempel (ohne Meer-Stempel) je Frame des letzten `homeLists`-Laufs. */
+  let landStamps: string[][] = [];
   /** Aufrufliste der Heimat-Fixtur bei Zoom 1 und 2 (der Welt `pick(world)`). */
   const homeLists = (pick: (w: World) => World): Call[][] => {
     const loaded = deserialize(readFileSync('tests/sim/fixtures/save-v7.json', 'utf8'));
@@ -1212,6 +1221,7 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
     const world = pick(loaded.world);
     const hm = home(world);
     const all: Call[][] = [];
+    landStamps = [];
     for (const zoom of [1, 2]) {
       const cam = { x: 0, y: 0, zoom };
       centerOn(cam, hm.width / 2, hm.height / 2, V1280, { w: hm.width, h: hm.height });
@@ -1242,6 +1252,16 @@ describe('M12 E1 Heimat-Aufrufliste (AK-E1-10)', () => {
 
   it('M14-E1 (R557): ohne Insel C ist die Heimat-Aufrufliste bitgleich zum alten Pin', () => {
     expect(pinOf(JSON.stringify(homeLists(withoutC)))).toEqual(HOME_CALLS_OHNE_C);
+  });
+
+  // Land-Deko-Stempel (ohne wreck, islet, seaRock) beider Frames, auf der Basis 62da7923 gemessen.
+  const HOME_LAND_STAMPS = { hash: 3827322530, length: 635 };
+  it('M14-E1 (R557): Land-Deko-Stempel der Heimat gleich der Basis, nur Meer-Stempel ändern sich', () => {
+    homeLists((w) => w);
+    expect(pinOf(JSON.stringify(landStamps))).toEqual(HOME_LAND_STAMPS);
+    const full = landStamps;
+    homeLists(withoutC);
+    expect(full).toEqual(landStamps);
   });
 
   it('M14-E1 (R557): Körper, Luft, Bäume, Figuren und Schiff gleich der Basis, nur der Ereignisindex ändert sich', () => {
