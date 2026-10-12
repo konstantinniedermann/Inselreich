@@ -3,8 +3,15 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
+import {
+  generateForeignIslands,
+  seaLanes,
+  type IslandStage,
+  type PlacedIsland,
+} from '../../src/sim/islands';
 import { canPlace } from '../../src/sim/placement';
-import { createWorld } from '../../src/sim/world';
+import type { IslandKind } from '../../src/sim/defs/sea';
+import { createWorld, home } from '../../src/sim/world';
 import { foundKontor2Literal } from './seaHelpers';
 
 const FIXTURE = join(process.cwd(), 'tests', 'sim', 'fixtures', 'm14e1-ab-hashes.json');
@@ -26,6 +33,48 @@ const QUARRY_SEEDS = 300;
 const MIN_QUARRY_SITES = 3;
 const written: Hashes = {};
 
+const BAND_MIN = 30;
+const BAND_MAX = 35;
+const MAX_STAGE3 = 3;
+const C_INDEX = 3;
+const C_SIZE = 24;
+const stage3Seeds = new Set<number>();
+
+/** AK-M14E1-13/-14: C vorhanden und 24 × 24; Seeweg 0–3 im Band, ausser bei Stufe 3 (zählt, E7). */
+function checkIslandC(w: ReturnType<typeof createWorld>, seed: number): PlacedIsland[] {
+  expect(w.islands.length, `Seed ${seed} Inseln`).toBe(4);
+  const c = w.islands[C_INDEX]!;
+  expect([c.kind, c.width, c.height], `Seed ${seed} C`).toEqual(['C', C_SIZE, C_SIZE]);
+  const stages: Partial<Record<IslandKind, IslandStage>> = {};
+  const gen = generateForeignIslands(seed, home(w), {
+    onStage: (kind, stage) => void (stages[kind] = stage),
+  });
+  if (stages.C === 3) stage3Seeds.add(seed);
+  else {
+    const lane = seaLanes(w.islands).find((l) => l.a === 0 && l.b === C_INDEX)!;
+    expect(lane.d, `Seed ${seed} Seeweg 0-3`).toBeGreaterThanOrEqual(BAND_MIN);
+    expect(lane.d, `Seed ${seed} Seeweg 0-3`).toBeLessThanOrEqual(BAND_MAX);
+  }
+  return gen;
+}
+const TERRAIN_SEEDS = 300;
+const MIN_PLANTATION_SITES = 6;
+
+/** AK-M14E1-16: kein Gebirge auf C, mindestens 6 Plantagenplätze, auch mit Ersatzform (`failShapes`). */
+function checkTerrainC(w: ReturnType<typeof createWorld>, gen: PlacedIsland[], seed: number): void {
+  expect(
+    w.islands[C_INDEX]!.tiles.some((t) => t.terrain === 'mountain'),
+    `Seed ${seed} Gebirge auf C`,
+  ).toBe(false);
+  const fallback = generateForeignIslands(seed, home(w), { failShapes: true })[C_INDEX - 1]!;
+  for (const c of [gen[C_INDEX - 1]!, fallback]) {
+    expect(c.terrain.includes('mountain'), `Seed ${seed} Gebirge (Form)`).toBe(false);
+    expect(c.plantationSites.length, `Seed ${seed} Plantagenplätze`).toBeGreaterThanOrEqual(
+      MIN_PLANTATION_SITES,
+    );
+  }
+}
+
 /** Hash von Insel 1 (A) und 2 (B) der frisch erzeugten Welt. */
 function abHashes(w: ReturnType<typeof createWorld>): [string, string] {
   return [fnv1a(JSON.stringify(w.islands[1])), fnv1a(JSON.stringify(w.islands[2]))];
@@ -37,7 +86,10 @@ function checkSeed(seed: number): void {
   const hashes = abHashes(w);
   if (WRITE) written[String(seed)] = hashes;
   else expect(hashes, `Seed ${seed} A/B`).toEqual(reference[String(seed)]);
-  if (!WRITE && seed <= QUARRY_SEEDS) checkQuarrySites(w, seed);
+  if (WRITE) return;
+  const gen = checkIslandC(w, seed);
+  if (seed <= TERRAIN_SEEDS) checkTerrainC(w, gen, seed);
+  if (seed <= QUARRY_SEEDS) checkQuarrySites(w, seed);
 }
 
 /** AK-M14E1-17: nach dem Kontor II hat die Felsbucht mindestens 3 Steinbruch-Plätze. */
@@ -59,6 +111,12 @@ const BLOCKS = Array.from({ length: 5 }, (_, k) => range(1 + k * 100, 1 + k * 10
 describe('M14-E1 A/B bitgleich, Seeds 1…500', () => {
   it.each(BLOCKS)('AK-M14E1-12: Seeds (Block ab %i)', (...seeds) => {
     for (const seed of seeds) checkSeed(seed);
+  });
+
+  it('AK-M14E1-14: höchstens 3 Seeds mit Stufe 3 (Seeds 1…500)', () => {
+    expect(stage3Seeds.size, `Stufe 3: ${[...stage3Seeds].join(', ')}`).toBeLessThanOrEqual(
+      MAX_STAGE3,
+    );
   });
 
   afterAll(() => {
