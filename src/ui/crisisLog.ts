@@ -19,6 +19,8 @@ export interface LogEntry {
   tick: number;
   /** Schauplatz (Gebäude und Kachel); fehlt bei Einträgen ohne Ort. */
   target?: LogTarget;
+  /** Kennung für Sonderdarstellung (Abschluss-Banner); unabhängig vom Text. */
+  tag?: 'monument-done';
 }
 
 /** Krisen-Log und Brand-/Sturm-Legende sind sichtbar, sobald Krisen laufen und die erste Periode begonnen hat (Spec 11.10). */

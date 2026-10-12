@@ -35,24 +35,22 @@ function build(calls: string[] = []) {
 }
 
 describe('AK-1 Denkmal-Abschnitt: Pause an/aus', () => {
-  it('Knopf zeigt «Bau anhalten», dataset.paused false; Klick fragt Pause an', () => {
+  it('laufend: dataset.paused false, sichtbar; Klick fragt Pause an', () => {
     const { root, calls } = build();
     updateMonumentSection(asEl(root), running());
     const btn = root.querySelector('[data-field="monument-pause"]')!;
-    expect(btn.textContent).toBe('Bau anhalten');
     expect(btn.hidden).toBe(false);
     expect(btn.dataset.paused).toBe('false');
     btn.fire('click');
     expect(calls).toEqual(['paused:true']);
   });
 
-  it('angehalten: «Bau fortsetzen», dataset.paused true; Klick fragt Fortsetzen an', () => {
+  it('angehalten: dataset.paused true; Klick fragt Fortsetzen an', () => {
     const { root, calls } = build();
     const w = running();
     expect(setMonumentPaused(w, true).ok).toBe(true);
     updateMonumentSection(asEl(root), w);
     const btn = root.querySelector('[data-field="monument-pause"]')!;
-    expect(btn.textContent).toBe('Bau fortsetzen');
     expect(btn.dataset.paused).toBe('true');
     btn.fire('click');
     expect(calls).toEqual(['paused:false']);
@@ -66,13 +64,31 @@ describe('AK-1 Denkmal-Abschnitt: Pause an/aus', () => {
     setMonumentPaused(w, false);
     updateMonumentSection(asEl(root), w);
     const btn = root.querySelector('[data-field="monument-pause"]')!;
-    expect(btn.textContent).toBe('Bau anhalten');
     expect(btn.dataset.paused).toBe('false');
+  });
+
+  it('Knopftexte: «Bau anhalten» laufend, «Bau fortsetzen» angehalten', () => {
+    const { root } = build();
+    const w = running();
+    updateMonumentSection(asEl(root), w);
+    const btn = root.querySelector('[data-field="monument-pause"]')!;
+    expect(btn.textContent).toBe('Bau anhalten');
+    setMonumentPaused(w, true);
+    updateMonumentSection(asEl(root), w);
+    expect(btn.textContent).toBe('Bau fortsetzen');
   });
 });
 
 describe('setText/setHidden im Abschnitt', () => {
-  it('schreibt Zeilen und Sichtbarkeit; ohne Denkmal sind Reihen versteckt', () => {
+  it('ohne Denkmal sind Abschnittszeilen, Reihen und Knöpfe versteckt', () => {
+    const { root } = build();
+    updateMonumentSection(asEl(root), monumentWorld());
+    for (const f of ['monument-stage', 'monument-reason', 'monument-eta', 'monument-pause']) {
+      expect(root.querySelector(`[data-field="${f}"]`)!.hidden).toBe(true);
+    }
+  });
+
+  it('schreibt Zeilen und Sichtbarkeit: Abschnittszeile gefüllt, Grund-Zeile nur bei Text sichtbar', () => {
     const { root } = build();
     updateMonumentSection(asEl(root), running());
     const stage = root.querySelector('[data-field="monument-stage"]')!;

@@ -101,7 +101,7 @@ export function updateMonumentSection(root: HTMLElement, w: World): void {
       const btn = field<HTMLButtonElement>(root, 'monument-pause');
       setText(btn, e.text);
       setHidden(btn, e.hidden);
-      btn.dataset.paused = String(e.text === 'Bau fortsetzen');
+      btn.dataset.paused = String(e.paused);
     } else {
       const btn = field<HTMLButtonElement>(root, 'monument-start');
       setText(btn, e.text);

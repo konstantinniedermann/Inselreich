@@ -175,7 +175,7 @@ export function monumentStartedText(stage: number): string {
 export type MonumentEntry =
   | { key: 'stage' | 'reason' | 'eta'; kind: 'line'; text: string; hidden: boolean }
   | ({ key: `row:${MonumentGood}`; kind: 'row'; hidden: boolean } & MonumentRow)
-  | { key: 'pause'; kind: 'pause'; text: string; hidden: boolean }
+  | { key: 'pause'; kind: 'pause'; text: string; paused: boolean; hidden: boolean }
   | {
       key: 'start';
       kind: 'start';
@@ -220,6 +220,7 @@ export function monumentSectionModel(w: World): MonumentSectionModel {
     key: 'pause',
     kind: 'pause',
     text: m?.paused === true ? 'Bau fortsetzen' : 'Bau anhalten',
+    paused: m?.paused === true,
     hidden: m === null || m.stage >= STAGE_COUNT,
   });
   const st = monumentStartState(w);
@@ -259,10 +260,17 @@ export function monumentEvents(
 ): LogEntry[] {
   const out: LogEntry[] = [];
   if (prev.stage >= 0 && cur.stage > prev.stage) {
-    out.push({ text: `Denkmal: Abschnitt ${cur.stage} fertig`, toast: 'info', tick });
+    // Ein Eintrag je fertigem Abschnitt (Sprung > 1 nur beim Laden); Meldung nur zum letzten.
+    for (let s = prev.stage + 1; s <= cur.stage; s++) {
+      out.push({
+        text: `Denkmal: Abschnitt ${s} fertig`,
+        toast: s === cur.stage ? 'info' : null,
+        tick,
+      });
+    }
   }
   if (!prev.monumentDone && cur.monumentDone) {
-    out.push({ text: MONUMENT_DONE_TEXT, toast: null, tick });
+    out.push({ text: MONUMENT_DONE_TEXT, toast: null, tick, tag: 'monument-done' });
   }
   return out;
 }

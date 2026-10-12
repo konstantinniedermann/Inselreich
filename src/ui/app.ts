@@ -132,7 +132,7 @@ import { resolveLogClick } from './logTarget';
 import { renderEventLog, updateEventLog } from './eventLogView';
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
-import { MONUMENT_DONE_TEXT, monumentEvents, monumentSnapshot } from './monumentView';
+import { monumentEvents, monumentSnapshot } from './monumentView';
 import { crisisLogEntries, crisisLogVisible, pushLog, type LogEntry } from './crisisLog';
 import { bindMessages, closeClosableToast, replaceMessage, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
@@ -1434,7 +1434,7 @@ function launch(
       if (monumentLogged.length > 0) {
         state.eventLog = pushLog(state.eventLog, monumentLogged);
         for (const e of monumentLogged) {
-          if (e.text === MONUMENT_DONE_TEXT) showMessage(e.text, 'info', true, true);
+          if (e.tag === 'monument-done') showMessage(e.text, 'info', true, true);
           else if (e.toast !== null) showMessage(e.text, e.toast);
         }
       }
