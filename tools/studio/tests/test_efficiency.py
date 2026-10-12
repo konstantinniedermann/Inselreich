@@ -993,3 +993,40 @@ class FlakeTest(Fixture):
         lines = efficiency.render_section(data).splitlines()
         line = next(x for x in lines if "Flake-Verdacht)" in x)
         self.assertIn("nicht gemessen", line)
+
+
+class SteuerungLightTest(Fixture):
+    """R565 P5: die Ampelzeile bewertet den bereinigten Steuerungsanteil."""
+
+    def lines(self, roh, bereinigt):
+        data = {**self.data, "steuerung": roh}
+        if bereinigt is None:
+            data.pop("steuerung_bereinigt")
+        else:
+            data["steuerung_bereinigt"] = bereinigt
+        return efficiency.render_section(data).splitlines()
+
+    def light(self, lines):
+        return next(x for x in lines if "Steuerungsanteil (L0 + Leads)" in x)
+
+    def test_raw_red_but_adjusted_green_is_green(self):
+        line = self.light(self.lines(0.66, 0.30))
+        self.assertTrue(line.startswith("- GRÜN:"), line)
+        self.assertIn("30.0 %", line)
+
+    def test_raw_and_adjusted_high_is_red(self):
+        line = self.light(self.lines(0.66, 0.60))
+        self.assertTrue(line.startswith("- ROT:"), line)
+
+    def test_missing_adjusted_falls_back_to_raw(self):
+        line = self.light(self.lines(0.66, None))
+        self.assertTrue(line.startswith("- ROT:"), line)
+        self.assertIn("66.0 %", line)
+
+    def test_raw_value_is_extra_info_line_without_color(self):
+        info = [
+            x for x in self.lines(0.66, 0.30) if x.startswith("- Steuerungsanteil roh")
+        ]
+        self.assertEqual(len(info), 1)
+        self.assertIn("66.0 %", info[0])
+        self.assertIn("nur Info", info[0])

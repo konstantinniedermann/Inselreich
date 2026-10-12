@@ -22,7 +22,7 @@ PROGNOSIS_LIMITS = (1600, 1900)
 RATE_DAYS = 3
 ACCOUNT_QUOTA = 2000
 # Session-Minuten (gelb über, rot über)
-SESSION_LIMITS = (8, 15)
+SESSION_LIMITS = (10, 15)
 
 
 def run_gh(args: list[str]) -> str:

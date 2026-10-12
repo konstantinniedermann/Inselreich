@@ -186,7 +186,7 @@ class SessionMinutesTest(unittest.TestCase):
             actions.session_minutes(self.SINCE, self.runner(runs, jobs)), 0
         )
 
-    def test_limits_exactly_eight_and_red(self):
+    def test_limits_exactly_ten_fifteen_and_red(self):
         runs = [{"databaseId": 1, "createdAt": "2026-10-08T11:00:00Z"}]
 
         def line(minutes):
@@ -198,8 +198,11 @@ class SessionMinutesTest(unittest.TestCase):
             ]
             return actions.render_session(self.SINCE, self.runner(runs, jobs))
 
-        self.assertTrue(line(8).startswith("- GRÜN"))
+        self.assertTrue(line(10).startswith("- GRÜN"))
+        self.assertTrue(line(11).startswith("- GELB"))
+        self.assertTrue(line(15).startswith("- GELB"))
         self.assertTrue(line(16).startswith("- ROT"))
+        self.assertIn("(gelb > 10, rot > 15)", line(10))
 
     def test_light_and_missing(self):
         def broken(args):
@@ -209,7 +212,7 @@ class SessionMinutesTest(unittest.TestCase):
         self.assertIn("nicht erfasst", actions.render_session(None, broken))
         runs = [{"databaseId": 1, "createdAt": "2026-10-08T11:00:00Z"}]
         jobs = [
-            {"startedAt": "2026-10-08T11:00:00Z", "completedAt": "2026-10-08T11:09:00Z"}
+            {"startedAt": "2026-10-08T11:00:00Z", "completedAt": "2026-10-08T11:11:00Z"}
         ]
         line = actions.render_session(self.SINCE, self.runner(runs, jobs))
         self.assertTrue(line.startswith("- GELB"), line)
