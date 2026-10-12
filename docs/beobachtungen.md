@@ -248,3 +248,11 @@ Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Pha
   1–40: 303 von 405 Flächen kachelgleich. Ursprung: Controller M14-E1-SIM, Auflage R557 (1b). Einschätzung: niedrig, rein
   darstellend; migrierte Spielstände zeigen verschobene Sandbänke/Riffe. Kandidat für den Browser-Check T08 (sichtbar störend?).
 - **Zuordnung:** R567.
+
+### 2026-10-12 · Gate-Ensemble: Sieg-Tick-Grenze 7500 meldet Phasen 60/70 als AUSREISSER
+
+- **Fundort:** `make gate-ensemble` auf `main` `c20c4f3a` und `feat/m14-e1` `d6f37233`: Sieg-Tick Median 7250, Spanne 6650–7900,
+  4/5 ≤ 7500 (Phasen 60/70 darüber, seit TOOL-CONTROLLER-HAERTUNG siegen sie überhaupt). Ursprung: Nachmessung R557 (3).
+  Einschätzung: niedrig; Werte-Frage (`WIN_TICK_LIMIT` aus Ensemble ableiten oder Controller-Pfad) — Kandidat nächstes
+  Werkzeug-Bündel.
+- **Zuordnung:** R570.

@@ -6310,3 +6310,18 @@ Strang wartet), danach T07 durch den SIM-Controller. Zeitmessungen unter Last (>
 Regelbezug: R557 (5), R567, R568 · Kosten bei Irrtum: ein Text-Pin fängt eine spätere Wortlautänderung nicht mehr ganz.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M14-E1-UI · ADR: —
+
+## R570 · 2026-10-12 · M14-E1 Nachmessung R557 (3): unverändert zur Basis; T08/T09 frei; Sieg-Tick-Grenze getrennt
+
+Ruling: Bericht Controller M14-E1-SIM (T07 `7a760176`/`3d4a7616`, Basis nachgezogen `d6f37233`, `make check` Exit 0). Ensemble
+auf `feat/m14-e1` identisch zur Basis `c20c4f3a` (auch Seeds 5/7); B3-Rangfolge P1 > P2 > P3 kippt nicht (Defs ausser `sea.ts`
+unverändert). Entscheid: (1) Auflage R557 (3) **erfüllt**; das Verdikt AUSREISSER beim Sieg-Tick (Phasen 60/70, 6650–7900) ist
+Basisbefund, **kein Blocker für M14-E1**. (2) **T08** (Playtester, Szenarien `m14e1-*`, Sichtprüfung Meer-Deko R567, Umbruch U6
+bei 1280×720, B3 im Spiel) und danach **T09** (Final-Review opus) startet der Controller jetzt. (3) Die Sieg-Tick-Grenze 7500 bleibt;
+die Werte-Frage (Grenze aus dem Ensemble ableiten, z. B. ≈ 8000, oder Controller-Pfad Phasen 60/70) wird als Beobachtung
+geführt und im nächsten Werkzeug-Bündel entschieden (mit P2, P5, V3 aus R565). Zeitreserve-Hinweise (11 Tests) prüft der
+Integrator beim Merge bei Load ≤ 4.
+
+Regelbezug: R557, R565, R568 · Kosten bei Irrtum: das Ensemble meldet bis zum Werkzeug-Bündel weiter AUSREISSER.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M14-E1-SIM T07 · ADR: —
