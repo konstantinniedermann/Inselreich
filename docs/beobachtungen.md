@@ -265,3 +265,12 @@ Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Pha
   (e) Seekarten-Hover ist natives `title`, im Headless-Screenshot unsichtbar. Ursprung: qa-playtester M14-E1 T08.
   Einschätzung: alle niedrig; (a)/(c)/(d) Kandidaten Werkzeug-Bündel (Szenarien), (b) bleibt nach Desktop-first-Regel.
 - **Zuordnung:** R574.
+
+### 2026-10-12 · Arbeiter nutzt nacktes `git stash; git stash pop` und wendet fremden Stash an
+
+- **Fundort:** UI-AUFRAEUM-2 T02 (Worktree `.worktrees/ui-aufraeum-2`): `git stash; git stash pop` holte einen alten fremden Stash
+  (Konflikt in `tools/studio/tests/test_metrics.py`, per `git restore` zurückgesetzt); dazu T01 verlor ungesicherte Änderungen
+  durch `git checkout`. Stash-Liste danach geprüft: `stash@{0}` (950f61d5) und `stash@{1}` (e20340a9) unverändert vorhanden.
+  Ursprung: Schlussbericht Controller UI-AUFRAEUM-2. Einschätzung: mittel — der Stash-Stapel ist allen Worktrees gemeinsam;
+  Kandidat Guard-Regel (nacktes `git stash`/`stash pop` sperren, WIP-Commit statt Stash) oder Briefing-Zeile für Arbeiter.
+- **Zuordnung:** R576, Retro.

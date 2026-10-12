@@ -6404,3 +6404,31 @@ Controllers um und prüft die zwei ungeprüften Aussagen (Definition «bereinigt
 Regelbezug: gates.md Gate Merge, R565, R570, R572 · Kosten bei Irrtum: eine Ampelzeile zeigt bis zum nächsten Bündel falsch.
 
 Entscheider: L0 · Anlass: Schlussbericht lead-tech TOOL-BUENDEL-9 · ADR: —
+
+## R576 · 2026-10-12 · Gate Merge UI-AUFRAEUM-2: OK; Stash-Vorfall an die Retro
+
+Ruling: Schlussbericht Controller UI-AUFRAEUM-2, `refactor/ui-aufraeum-2` (8 Commits ab main), Final-Review opus OK, Playtest OK
+(1280×800, 1920×1080, 0 Konsolenfehler), `make check` Exit 0 (3682 Tests, +18). Auflagen R563 (1)–(6) umgesetzt. Entscheid:
+**Gate Merge OK**, Merge durch `production-integrator` in `.worktrees/integrate`, kein Push; beim Merge Zusatz «wartet auf
+Merge-Gate» in `docs/beobachtungen.md` entfernen. Restkopplung `buildMenu.ts:221` (`'Erzeugt:'`) ist als Beobachtung geführt.
+**Vorfall:** Arbeiter T02 nutzte nacktes `git stash; git stash pop` (fremder Stash angewendet, zurückgesetzt; Stash-Liste geprüft,
+beide Einträge intakt) — an die nächste Retro mit Vorschlag Guard-Regel oder Briefing-Zeile.
+
+Regelbezug: gates.md Gate Merge, R563 · Kosten bei Irrtum: ein Hotfix in `src/ui/` vor dem nächsten Release.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech UI-AUFRAEUM-2 · ADR: —
+
+## R577 · 2026-10-12 · Kombiniertes Gate UI-HAEPPCHEN-B: OK mit Auflagen
+
+Ruling: Plan `f451ef2c` (lead-tech), Urteil lead-qa BEDENKEN (1 hoch, 3 mittel). Entscheid **OK**, Budget 11 Starts, Parallelität 2
+(getrennte Dateien), Start nach Merge UI-HAEPPCHEN-A. `fullSince` als UI-Zustand ohne Save angenommen. Auflagen durch den
+Controller vor T01 in den Plan, ohne Zweitprüfung: (1) AK-14 ergänzt: Probe-Gebäude mit gültiger Insel/Position,
+`structuredClone(world)` vorher = nachher auch mit Wohnhaus-Probe, Rot-Test Obergrenze auf Mehrinsel-Welt; kein Neurechnen je
+Frame bei unverändertem Hover (Test oder Cache je `defId`/`world.tick`). (2) AK-4 ergänzt: Laden mit gleichem/höherem Tick und
+«Neues Spiel» setzen `fullSince` zurück (Reset in `app.ts` oder Welt-Identität). (4) Kontrakt-Test für `balanceText`, `spot`,
+`jumpTarget` gegen Umbenennung durch A. Ausserdem: Rot-Test gegen Flackern beim Übergang `storageFull`; Rollen im Plan
+benennen; 1280×720 Ausbau-Karte ohne Überlauf mit Fokusring; Haus-Aufstieg als Beobachtung.
+
+Regelbezug: gates.md Kombiniertes Gate, E-061, R566, R573 · Kosten bei Irrtum: verspäteter «Lager voll»-Hinweis nach dem Laden.
+
+Entscheider: L0 · Anlass: Berichte lead-tech plan-UI-HAEPPCHEN-B, lead-qa gate-UI-HAEPPCHEN-B · ADR: —
