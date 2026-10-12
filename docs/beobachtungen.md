@@ -263,3 +263,13 @@ Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Pha
   identisch. Ursprung: TOOL-BUENDEL-9 (ausserhalb Scope). Einschätzung: niedrig; Kandidat Trivial-Fix im TOOL-BUENDEL-9
   (gleicher Themenbereich) oder nächstes Werkzeug-Bündel.
 - **Zuordnung:** offen.
+
+### 2026-10-12 · Befunde Browser-Check M14-E1 (T08), ausserhalb Scope
+
+- **Fundort:** `.studio/qa/m14-e1/`, Szenarien. Beobachtungen: (a) AK-36 «Stein nach 1 min gestiegen» in `m14e1-felsbucht` nicht
+  wörtlich sichtbar (Glashütte verbraucht Stein, Holz geht nach ≈ 500 Ticks aus; Verdopplung +20/min belegt); (b) Inseln-Popover
+  ragt bei 800×600 über den rechten Rand (Desktop-first: nur «stürzt nicht ab», kein Absturz); (c) Szenario `m13-vor-ziel` erreicht
+  das Ziel nicht von selbst; (d) Name `m13e2-v13` in `scenario-saves.test.ts` meint inzwischen `SAVE_VERSION + 1` (v14);
+  (e) Seekarten-Hover ist natives `title`, im Headless-Screenshot unsichtbar. Ursprung: qa-playtester M14-E1 T08.
+  Einschätzung: alle niedrig; (a)/(c)/(d) Kandidaten Werkzeug-Bündel (Szenarien), (b) bleibt nach Desktop-first-Regel.
+- **Zuordnung:** R574.
