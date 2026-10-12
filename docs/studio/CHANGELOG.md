@@ -27,7 +27,7 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
 - Anlass: Controller-Entwurf TOOL-BUENDEL-9, am Code geprüft (HANDBUCH-R575)
 - Datenbasis: `tools/studio/actions.py`, `tools/studio/efficiency.py`, `tools/studio/metrics.py`, `tools/studio/effort.py`
 - Ruling: R575
-- Änderungen: Abschnitt „Live-Ampel“ (Aufruf, bereinigte Steuerungszeile, Session-Minuten, Prognose und Push-Takt, Flake-Zeitraum, Vorfallregel); Push-Takt-Verweis nennt `metrics.py --efficiency` statt des aufruflosen `actions.py`
+- Änderungen: Abschnitt „Live-Ampel“ (Aufruf, bereinigte Steuerungszeile, Session-Minuten, Prognose und Push-Takt, Flake-Zeitraum, Vorfallregel); Push-Takt-Verweis nennt `metrics.py --efficiency` statt des aufruflosen `actions.py`; Push-Takt bei Rot auf „höchstens ein Push je Tag“ (R488 V2) angeglichen, R335 bleibt
 
 ## 2026-10-12 · Persona production-integrator 1.13
 
