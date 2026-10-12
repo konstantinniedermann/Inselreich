@@ -74,14 +74,7 @@ import {
   type StatTile,
 } from './panelView';
 
-export {
-  burningText,
-  diagnosisText,
-  producesText,
-  refundText,
-  stateInfo,
-  stateText,
-} from './texts';
+export { burningText, diagnosisText, producesText, refundText, stateInfo } from './texts';
 
 export const BUILD_SAME_TITLE =
   'Diesen Gebäudetyp als Bauwerkzeug wählen (Strg/Cmd+Klick auf ein Gebäude)';

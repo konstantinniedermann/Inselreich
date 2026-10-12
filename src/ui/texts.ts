@@ -109,8 +109,6 @@ export function stateInfo(
   }
 }
 
-export const stateText = (b: Building, tick: number): string => stateInfo(b, tick).text;
-
 /** Rückerstattungstext: tatsächlicher Betrag, je Gut mit Verfall-Hinweis (nur wenn etwas verfällt). */
 export function refundText(nominal: Cost, effective: Cost): string {
   const parts = [`${effective.money} Geld`];
