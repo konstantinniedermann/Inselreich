@@ -6341,3 +6341,22 @@ Regelbezug: R486, R549, R551, R555, R565 P3 · Kosten bei Irrtum: der Zielsatz �
 offen bis zu einem neuen Brainstorming.
 
 Entscheider: L0 · Anlass: Bericht lead-design I-048-B · ADR: —
+
+## R572 · 2026-10-12 · Kombiniertes Gate TOOL-BUENDEL-9: OK mit Auflagen; T04 Option B
+
+Ruling: Plan `16b13860` (lead-tech), Urteil lead-qa BEDENKEN (1 hoch, 1 mittel, Rest niedrig, nicht blockierend). Entscheid **OK**,
+Budget 7 Starts, Parallelität 1, ein Worktree, T02 → T03 seriell (`efficiency.py`). Entscheide: (1) **T01** Timeout in
+`terrain.test.ts` anheben **ohne Beleg-Treffer** (0 × «timed out» in 16 `test_failed`): R565 P2 ordnet es an, `make zeittests` fängt
+echte Verlangsamung; Rot-Beleg = `grep -n` der Blöcke ohne Timeout-Parameter. (2) **T04 Option B:** eigene Testgrenze
+`ENSEMBLE_WIN_TICK_LIMIT = 8250` (Maximum 7900 + 350 Luft) nur im Ensemble; `WIN_TICK_LIMIT` 7500 bleibt in den Einzellauf-Gates;
+**Testgrenze, kein Spielwert** — `src/sim/defs/` unberührt. T04 nach dem Merge M14-E1. (3) Auflagen durch den Controller, ohne
+Zweitprüfung: T02 Rückfall bereinigt→roh und kein Doppelvorfall testen; T03 gemischter Altfall (Rot ohne `tree`, Grün mit
+`tree`), andere Leser von `events.jsonl` tolerieren `tree`, `build_event` wirft nie; **vor dem Rot-Test belegen**, dass
+`efficiency.compute(since=…)` den Zeitpunkt liefert; T04 Ableitungskommentar, Unit-Test `ENSEMBLE_WIN_TICK_LIMIT > WIN_TICK_LIMIT`
+und `WIN_TICK_LIMIT === 7500`, Rot-Beleg als Ensemble-Verdikt AUSREISSER vorher/nachher. (4) T05 nur Entwurf an `studio-coach`.
+Start, sobald ein Platz frei ist (Parallelität halbiert).
+
+Regelbezug: gates.md Kombiniertes Gate, R565, R570 · Kosten bei Irrtum: Ensemble-Grenze 8250 verdeckt eine echte Verlangsamung
+bis 8250 Ticks; Einzellauf-Gates bleiben scharf.
+
+Entscheider: L0 · Anlass: Berichte lead-tech plan-TOOL-BUENDEL-9, lead-qa gate-TOOL-BUENDEL-9 · ADR: —
