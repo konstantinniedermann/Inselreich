@@ -869,13 +869,16 @@ class _Builder:
             hits = [g for g in candidates if phase_matches(g["phase"], name)]
             if not hits:
                 continue
-            pool = [g for g in hits if str(g["phase"]).strip().casefold() == name.casefold()]
+            pool = [
+                g for g in hits if str(g["phase"]).strip().casefold() == name.casefold()
+            ]
             pool = pool or hits
             claimed = [
                 g
                 for g in pool
                 if lead_key is not None
-                and self.claims.get((g["lead"], g["phase"], g["session_id"])) == lead_key
+                and self.claims.get((g["lead"], g["phase"], g["session_id"]))
+                == lead_key
             ]
             grant = max(claimed or pool, key=lambda g: g["since"])
             return (grant["lead"], grant["phase"], grant["session_id"])
@@ -890,9 +893,7 @@ class _Builder:
             and g["session_id"] in ("", lead_node["session_id"])
             and g["since"] <= lead_node["started"]
         ]
-        named = self._named_grant(
-            candidates, _grant_names(lead_node), lead_node["key"]
-        )
+        named = self._named_grant(candidates, _grant_names(lead_node), lead_node["key"])
         return None if named is None else named[1]
 
     def lead_phases(self) -> dict[str, str]:
@@ -970,7 +971,9 @@ class _Builder:
                     and grant["session_id"] in ("", lead["session_id"])
                     and (
                         not by_name
-                        or self._name_hit(grant, names[lead["key"]][rank : rank + 1], exact)
+                        or self._name_hit(
+                            grant, names[lead["key"]][rank : rank + 1], exact
+                        )
                     )
                 ):
                     self.claims[key] = lead["key"]
@@ -980,7 +983,9 @@ class _Builder:
     @staticmethod
     def _name_hit(grant: dict, names: list[str], exact: bool) -> bool:
         if exact:
-            return any(str(grant["phase"]).strip().casefold() == n.casefold() for n in names)
+            return any(
+                str(grant["phase"]).strip().casefold() == n.casefold() for n in names
+            )
         return any(phase_matches(grant["phase"], n) for n in names)
 
     def on_package(self, event, ts, sid):

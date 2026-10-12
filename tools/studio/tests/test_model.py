@@ -2709,10 +2709,14 @@ class ClaimRolePrefixTest(unittest.TestCase):
         return build(events, now=2000, session="all")["lead_phases"]
 
     def test_prefixed_phase_is_assigned_and_stays_raw(self):
-        self.assertEqual(self.phases("impl-REL-15", "REL-15"), {f"{SA}:L1": "impl-REL-15"})
+        self.assertEqual(
+            self.phases("impl-REL-15", "REL-15"), {f"{SA}:L1": "impl-REL-15"}
+        )
 
     def test_prefix_of_package_name_matches(self):
-        self.assertEqual(self.phases("design-M13", "M13-BRAINSTORM"), {f"{SA}:L1": "design-M13"})
+        self.assertEqual(
+            self.phases("design-M13", "M13-BRAINSTORM"), {f"{SA}:L1": "design-M13"}
+        )
 
     def test_x_does_not_bind_xy(self):
         events = [
@@ -2733,7 +2737,9 @@ class ClaimRolePrefixTest(unittest.TestCase):
             *lead_node(10, SA, "LA", package="REL-15"),
             *worker(20, SA, "LA", "W1", stop_at=25, package="REL-15"),
         ]
-        rows = {b["phase"]: b for b in build(events, now=2000, session="all")["budgets"]}
+        rows = {
+            b["phase"]: b for b in build(events, now=2000, session="all")["budgets"]
+        }
         self.assertEqual(rows["impl-REL-15"]["used"], 1)
         self.assertEqual(rows["other"]["used"], 0)
 
@@ -2741,7 +2747,10 @@ class ClaimRolePrefixTest(unittest.TestCase):
 class PlanAndImplGrantTest(unittest.TestCase):
     """Plan- und Umsetzungs-Freigabe desselben Pakets bleiben getrennt (Review R543)."""
 
-    PAIRS = (("plan-REL-14", "impl-REL-14", "REL-14"), ("plan-ui-tasten", "ui-tasten", "ui-tasten"))
+    PAIRS = (
+        ("plan-REL-14", "impl-REL-14", "REL-14"),
+        ("plan-ui-tasten", "ui-tasten", "ui-tasten"),
+    )
 
     def test_counts_and_phases_per_grant(self):
         for plan, impl, pkg in self.PAIRS:
