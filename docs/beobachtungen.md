@@ -254,7 +254,7 @@ Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Pha
 - **Fundort:** `tools/studio/model.py`, `tools/studio/tests/test_model.py`; gemeldet vom Controller TOOL-BUENDEL-9, auf `main`
   identisch. Ursprung: TOOL-BUENDEL-9 (ausserhalb Scope). Einschätzung: niedrig; Kandidat Trivial-Fix im TOOL-BUENDEL-9
   (gleicher Themenbereich) oder nächstes Werkzeug-Bündel.
-- **Zuordnung:** offen.
+- **Zuordnung:** erledigt durch TOOL-BUENDEL-9 (`d3841a34`, ruff format).
 
 ### 2026-10-12 · Befunde Browser-Check M14-E1 (T08), ausserhalb Scope
 
