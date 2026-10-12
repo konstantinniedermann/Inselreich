@@ -74,6 +74,9 @@ export const ISLAND_RIM = 4; // Land nur in [RIM, size − RIM − 1] (P-2)
 export const SHIP_TICKS_PER_SEA_TILE = 10;
 /** Ersatzlage: Anzahl gleichmässig verteilter Richtungen. */
 export const FALLBACK_DIRECTIONS = 16;
+/** Stufe 3 (Ersatzregel): Suche ab dMax in Schritten von FALLBACK_FAR_STEP Kacheln, FALLBACK_FAR_STEPS Mal. */
+export const FALLBACK_FAR_STEP = 4;
+export const FALLBACK_FAR_STEPS = 10;
 /** Ersatzform der Insel B: Kantenlänge des Gebirgsblocks in der Land-Ecke oben links. */
 export const FALLBACK_MOUNTAIN_SIDE = 4;
 

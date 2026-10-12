@@ -3,6 +3,8 @@ import { BUILDING_DEFS } from './defs/buildings';
 import {
   ARCHIPEL_SPAN_MAX,
   FALLBACK_DIRECTIONS,
+  FALLBACK_FAR_STEP,
+  FALLBACK_FAR_STEPS,
   FALLBACK_MOUNTAIN_SIDE,
   ISLAND_GAP_MIN,
   ISLAND_RIM,
@@ -408,38 +410,103 @@ function originFor(home: LaneIsland, shape: IslandShape, theta: number, t: numbe
   };
 }
 
+export type IslandStage = 1 | 2 | 3;
+export interface ForeignIslandOpts {
+  failShapes?: boolean;
+  /** Testhook: Diese Def wird ohne Stufe 1, 2 und Suche per Stufe 3 konstruktiv platziert. */
+  forceLastStage?: IslandKind;
+  /** Meldet je Def die Stufe, mit der die Lage gefunden wurde. */
+  onStage?: (kind: IslandKind, stage: IslandStage) => void;
+}
+
+const asIsland = (shape: IslandShape, o: Pt): PlacedIsland & LaneIsland => ({
+  ...shape,
+  ox: o.x,
+  oy: o.y,
+});
+
+/** Stufe 3.1: Suche weiter ausserhalb, gleiche Prüfung wie Stufe 1 und 2, ohne Zufall. */
+function searchFar(
+  home: LaneIsland,
+  placed: readonly LaneIsland[],
+  shape: IslandShape,
+  def: IslandDef,
+): PlacedIsland | null {
+  for (let k = 0; k < FALLBACK_DIRECTIONS; k++)
+    for (let j = 1; j <= FALLBACK_FAR_STEPS; j++) {
+      const t = def.dMax + j * FALLBACK_FAR_STEP;
+      const c = asIsland(shape, originFor(home, shape, (k * 2 * Math.PI) / FALLBACK_DIRECTIONS, t));
+      if (
+        placed.every((p) => gapBetween(p, c) >= ISLAND_GAP_MIN) &&
+        spanOk([...placed, c]) &&
+        lanesClear([...placed, c])
+      )
+        return c;
+    }
+  return null;
+}
+
+/** Stufe 3.2: rechts neben allen Inseln auf Höhe des Heimatankers; kann nicht scheitern. */
+function buildBeside(placed: readonly LaneIsland[], shape: IslandShape): PlacedIsland {
+  const home = placed[0]!;
+  const ox = Math.max(...placed.map((p) => p.ox + p.width)) + ISLAND_GAP_MIN;
+  const oy = Math.round(home.oy + home.anchor.y + 0.5) - shape.anchor.y;
+  return asIsland(shape, { x: ox, y: oy });
+}
+
+/** Stufe 3 allein: `placed[0]` ist die Heimat. Wirft nie. */
+export function fitIsland(
+  placed: readonly LaneIsland[],
+  shape: IslandShape,
+  def: IslandDef,
+): PlacedIsland {
+  return searchFar(placed[0]!, placed, shape, def) ?? buildBeside(placed, shape);
+}
+
 function place(
   home: LaneIsland,
   placed: readonly LaneIsland[],
   shape: IslandShape,
   def: IslandDef,
   rng: () => number,
+  opts: ForeignIslandOpts,
 ): PlacedIsland {
-  const cand = (o: Pt): PlacedIsland & LaneIsland => ({ ...shape, ox: o.x, oy: o.y });
+  const forced = opts.forceLastStage === def.kind;
   for (let i = 0; i < ISLAND_TRIES; i++) {
     const theta = rng() * 2 * Math.PI;
     const t = def.dMin + rng() * (def.dMax - def.dMin + 1);
-    const c = cand(originFor(home, shape, theta, t));
-    if (layoutValid(placed, c, def)) return c;
+    const c = asIsland(shape, originFor(home, shape, theta, t));
+    if (!layoutValid(placed, c, def)) continue;
+    if (forced) break; // Züge enden wie ohne Hook, damit spätere Defs gleich bleiben
+    opts.onStage?.(def.kind, 1);
+    return c;
+  }
+  if (forced) {
+    opts.onStage?.(def.kind, 3);
+    return buildBeside(placed, shape);
   }
   for (let k = 0; k < FALLBACK_DIRECTIONS; k++)
     for (let t = def.dMin; t <= def.dMax; t++) {
-      const c = cand(originFor(home, shape, (k * 2 * Math.PI) / FALLBACK_DIRECTIONS, t));
-      if (layoutValid(placed, c, def)) return c;
+      const c = asIsland(shape, originFor(home, shape, (k * 2 * Math.PI) / FALLBACK_DIRECTIONS, t));
+      if (layoutValid(placed, c, def)) {
+        opts.onStage?.(def.kind, 2);
+        return c;
+      }
     }
-  throw new Error(`generateForeignIslands: keine Lage für Insel ${def.kind}`);
+  opts.onStage?.(def.kind, 3);
+  return fitIsland(placed, shape, def);
 }
 
 export function generateForeignIslands(
   seed: number,
   home: LaneIsland,
-  opts: { failShapes?: boolean } = {},
+  opts: ForeignIslandOpts = {},
 ): PlacedIsland[] {
   const rng = createRng((seed ^ ISLANDS_SALT) >>> 0);
   const placed: PlacedIsland[] = [];
   for (const def of ISLANDS) {
     const shape = makeShape(def, rng, opts.failShapes === true);
-    placed.push(place(home, [home, ...placed], shape, def, rng));
+    placed.push(place(home, [home, ...placed], shape, def, rng, opts));
   }
   return placed;
 }
