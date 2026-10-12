@@ -8,7 +8,7 @@ Stand: 2026-10-11 (Studio-Session f2a404fd, R537–R552; Ende: M13-Inhalt vollst
 
 ## Release-Notizen
 
-**M13 „Spätspiel mit Richtung“ (bereit, nicht gepusht, R549/R552)** — Entwurf. Save v12. Inhalt: M13-E2 Denkmal, I-049
+**M13 „Spätspiel mit Richtung“ (live, R564)** — Push `801bee89..19683ddf`, CI 38212898470, Pages 38213478460 grün. Save v12. Inhalt: M13-E2 Denkmal, I-049
 Sperrbestand, I-048 Schritt A (Mechanik eingebaut, **inaktiv**: Anzeige «Kauf 100 %», kein Aufschlag), UI-TEXTE-1,
 UI-NAECHSTER-SCHRITT, TOOL-Bündel 6–8, E-060 (Budget-Hook `deny`). Actions-Prognose rot: ein Push je Tag.
 
@@ -90,9 +90,7 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475. **Actions-Prognose ROT:** höchstens ein Push je Tag (REL-19 am
 2026-10-11). Release-Sperre endet mit UI-TEXTE-1 (R549/R552); M13-Inhalt ist vollständig.
 
-1. **Release M13** am 2026-10-12: `make push-check`, dann `git push origin <Hash>:main` (geprüfter Hash), Pages per
-   `gh workflow run Pages --ref main`; Release-Notiz aus dem Entwurf oben. Danach `origin/backup/main-lokal` nachführen
-   (Löschen remote ist Guard-verboten).
+1. ~~Release M13~~ erledigt 2026-10-12 (R564); nächster Push frühestens 2026-10-13.
 2. Meilenstein-Retro M13 (`studio-coach` opus) und Prozess-Aussensicht nach dem Release (R127, R316).
 3. Ideen-Runde nach dem Release (R445, 3 Scouts).
 4. **I-048 Schritt B** als Designfrage (R551, `lead-design` mit M14-Vorlauf) und robustere Gate-Messung (Beobachtung
