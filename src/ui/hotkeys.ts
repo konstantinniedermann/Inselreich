@@ -3,6 +3,10 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { buildingShown, functionLock } from '../sim/unlocks';
 import type { Category, World } from '../sim/types';
 import type { PanelState } from './app';
+import { isSaveChord, type Mods } from './saveChord';
+
+// Wiederausfuhr: bestehende Importe (Tests) bleiben gültig.
+export { isSaveChord };
 
 /** Werkzeug-Hotkeys (Spec 10.6), Schlüssel klein. W/A/S/D bleiben beim Schwenken. */
 export const TOOL_HOTKEYS: Partial<Record<string, Tool>> = {
@@ -55,13 +59,6 @@ export type HotkeyAction =
 
 /** Tasten für „markiertes Gebäude abreissen" (KeyboardEvent.key, klein). */
 export const DEMOLISH_KEYS: readonly string[] = ['delete', 'backspace'];
-
-type Mods = { ctrl: boolean; meta: boolean; alt: boolean; shift?: boolean };
-
-/** Reine Tastenform Strg/Cmd+S (ohne Alt, ohne Umschalt), unabhängig von Feld und Modal. */
-export function isSaveChord(key: string, mods: Mods): boolean {
-  return key.toLowerCase() === 's' && (mods.ctrl || mods.meta) && !mods.alt && mods.shift !== true;
-}
 
 /**
  * Entscheidung für einen keydown: `act` = Aktion ausführen, `preventDefault` = Browser-Standard
