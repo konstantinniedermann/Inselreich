@@ -208,7 +208,7 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Nutzen/Aufwand: Einstieg in neue Kapitel geführt · M · ≈ 1 Kurzdesign + 2 Pakete
 - Entscheid: IDEEN-08 Empfehlung parken bis Kurzdesign «geführte Aufträge» zu Erweiterung 1 K2–K4 (Brainstorming §11); die Seefahrt-Führung selbst deckt I-015 in K3
 
-### I-018 · verworfen · Story-Rahmen — IDEEN-08 Streichung lead-design (Bestätigung im Runden-Ruling): Raster 2 × 1 + 1 + 1 + 1 = 5 (Text ohne Entscheidung, L mit Save und Lizenz); Erzählung als eigene Säule wäre Verfassung §5.3 und nur auf Nutzerwunsch über die Warteschlange wieder zu öffnen; der Spielerwunsch «storyline?» (Playtest REL-05) bekommt mit den Kapiteln und dem vierten Ziel der Erweiterung 1 einen Rahmen
+### I-018 · geparkt · Story-Rahmen — IDEEN-08 geparkt statt gestrichen (R566); Bewertung lead-design: Raster 2 × 1 + 1 + 1 + 1 = 5 (Text ohne Entscheidung, L mit Save und Lizenz); Erzählung als eigene Säule wäre Verfassung §5.3 und nur auf Nutzerwunsch über die Warteschlange wieder zu öffnen; der Spielerwunsch «storyline?» (Playtest REL-05) bekommt mit den Kapiteln und dem vierten Ziel der Erweiterung 1 einen Rahmen
 
 ### I-019 · zusammengefasst · Schiffsangebot am Kontor — IDEEN-08: aufgegangen in Erweiterung 1 «Stände und Segel» (Brainstorming `docs/superpowers/specs/2026-10-11-erweiterung-1-brainstorming.md` §7 auf Branch `design/erweiterung-1`, Gate RE-2), Kapitel K3 «Werft und Flotte» (= M14-E2, R486; Marke zieht ggf. zur Werft, Liegeplatz-Befund H-R14 beachten)
 

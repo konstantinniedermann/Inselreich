@@ -6251,3 +6251,19 @@ Regelbezug: STUDIO.md Verbesserungsschleife, R127, R316, R562, R564 · Kosten be
 einen zusätzlichen Actions-Lauf kosten.
 
 Entscheider: L0 · Anlass: Retro M13, Prozess-Aussensicht M13 · ADR: —
+
+## R566 · 2026-10-12 · Runden-Ruling IDEEN-08
+
+Ruling: Bericht lead-design IDEEN-08 (`99f0f29b`, Rangliste in `docs/ideen.md`), 13 neue Ideen I-075…I-087, Pool 35/40, keine
+§5.3-Frage. Entscheide wie empfohlen: **einplanen** I-085 «Lager voll» als Problem mit Sprung, I-078 Bilanz-Vorschau, I-083
+Hinweis unbelegte Zifferntaste (Beipack); **geteilt in zwei Häppchen** wegen ≈ +140 Tools: **UI-HAEPPCHEN-A** = I-062, I-063,
+I-083 · **UI-HAEPPCHEN-B** = I-085, I-078. Beide nach dem Merge M14-E1 und nach UI-AUFRAEUM-2 (Überschneidung `src/ui/`),
+Prozessstufe leicht. **Parken:** I-077 (bis Wirtschaftsrunde nach Erweiterung 1 K2), I-086 (mit I-059, Playtest-Anlass), I-084,
+I-082, I-081. **Verwerfen:** I-075, I-076, I-079, I-080; I-087 → zusammengefasst in I-045. **Pool-Bereinigung bestätigt**
+(live-Setzungen, Verweise auf Erweiterung 1, Statuskorrekturen I-017/I-062/I-063) mit einer Abweichung: **I-018 Story-Rahmen
+wird geparkt statt gestrichen** (Ursprung Spielerwunsch; Erzählung als Säule nur auf Nutzeranlass, keine Warteschlange).
+Verweise auf Erweiterung 1 sind beim Merge von `design/erweiterung-1` zu bestätigen (RE-2 A5).
+
+Regelbezug: docs/ideen.md Ablauf, R445, R474, R529, Verfassung §5.3 · Kosten bei Irrtum: eine geparkte Idee später neu bewerten.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-08 · ADR: —

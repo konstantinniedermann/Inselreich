@@ -228,3 +228,10 @@ Fundort: `make gate-ensemble` (TOOL-GATE-ENSEMBLE, `tests/sim/ensemble.test.ts`)
   M13 (Ampel). Einschätzung: niedrig; Kandidat für eine Auswertung durch `lead-production` (z. B. Archiv-Abschnitt für
   umgesetzte Ideen, README-Anhang für Spielwerte), keine Regel.
 - **Zuordnung:** offen.
+
+### 2026-10-12 · `README.md` nennt Spielstand-Version 11, Code hat 12
+
+- **Fundort:** `README.md` Z. 624 «Spielstand-Version 11»; `src/sim/save.ts:47` `SAVE_VERSION = 12` (seit Release M13).
+  Ursprung: lead-design IDEEN-08 (ausserhalb Scope). Einschätzung: niedrig; wird mit M14-E1 T07 (README, Save v13) ohnehin
+  nachgeführt — dort mitprüfen, sonst Doku-Audit vor dem nächsten Release.
+- **Zuordnung:** M14-E1 T07 (R566).
