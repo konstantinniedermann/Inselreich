@@ -65,13 +65,13 @@ describe('seaMapKey (AK-S10)', () => {
 });
 
 describe('Hover-Text und Treffer (AK-S11)', () => {
-  it('nutzt die Texte von islandList, ohne eigenen Text', () => {
+  it('beginnt mit dem Text von islandList; Stärken-Abschnitte siehe AK-M14E1-28', () => {
     const w = seaWorld();
     w.islands[1]!.kontorId = 99;
     const list = islandList(w);
     for (let i = 0; i < w.islands.length; i++) {
       const p = landPoint(w, i);
-      expect(seaMapTip(w, layoutOf(w), p.x, p.y)).toBe(list[i]!.label);
+      expect(seaMapTip(w, layoutOf(w), p.x, p.y)!.startsWith(list[i]!.label)).toBe(true);
       expect(seaMapPick(w, layoutOf(w), p.x, p.y)).toBe(i);
     }
     expect(list[0]!.label).toBe('Heimat');
@@ -90,5 +90,25 @@ describe('seaMapUnavailable (AK-S12)', () => {
   });
   it('mit Seefahrt: null', () => {
     expect(seaMapUnavailable(seaWorld())).toBeNull();
+  });
+});
+
+describe('seaMapTip Inselstärken (AK-M14E1-28)', () => {
+  it('fünf Zeilen nach Anhang 03 A', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const l = mapLayout(w, SEA_MAP_W, SEA_MAP_H, SEA_MAP_PAD);
+    const tip = (i: number) => {
+      const s = w.islands[i]!;
+      const k = s.tiles.findIndex((t) => t.terrain !== 'water');
+      const p = tileToMap(l, s.ox + (k % s.width) + 0.5, s.oy + Math.floor(k / s.width) + 0.5);
+      return seaMapTip(w, l, p.x, p.y);
+    };
+    expect(tip(0)).toBe('Heimat');
+    w.islands[1]!.kontorId = 901;
+    expect(tip(1)).toBe('Möweninsel · Kontor');
+    expect(tip(2)).toBe('Felsbucht · Gebirge+: Steinbruch, Glashütte ×2');
+    w.islands[2]!.kontorId = 902;
+    expect(tip(2)).toBe('Felsbucht · Kontor · Gebirge+: Steinbruch, Glashütte ×2');
+    expect(tip(3)).toBe('Weidenau · Fruchtbar: Zuckerrohrplantage, Schäferei ×2');
   });
 });

@@ -41,6 +41,7 @@ import {
 } from './taxView';
 import { taxTarget } from '../sim/tax';
 import { friendlyReason } from './hints';
+import { traitLine } from './islandCard';
 import { renderShipSection, updateShipSection, type ShipActions } from './ships';
 import { goalTexts } from './goal';
 import type { IconId } from './icons';
@@ -778,6 +779,8 @@ function renderBetrieb(
   if (levels !== undefined) addLevelChip(row, 'level-chip', 'level', levels.length + 1);
   addToneChip(head, 'state-chip', 'state');
   addRemedy(head);
+  const advantage = traitLine(world, b);
+  if (advantage !== null) addLine(panel, advantage, 'island-trait');
   if (pauseButton(b) !== null) {
     const btn = node('button', 'btn pause-btn', 'pause') as HTMLButtonElement;
     btn.type = 'button';
