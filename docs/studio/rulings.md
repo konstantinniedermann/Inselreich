@@ -6325,3 +6325,19 @@ Integrator beim Merge bei Load ≤ 4.
 Regelbezug: R557, R565, R568 · Kosten bei Irrtum: das Ensemble meldet bis zum Werkzeug-Bündel weiter AUSREISSER.
 
 Entscheider: L0 · Anlass: Bericht lead-tech M14-E1-SIM T07 · ADR: —
+
+## R571 · 2026-10-12 · I-048 Schritt B: Abbruchkriterium R555 (c) erfüllt → Option 1 (Verzicht)
+
+Ruling: Bericht lead-design I-048-B, Last-Probe `docs/superpowers/specs/2026-10-10-i048-zukauf-aufschlag-design/anhang-02-last-probe.md`
+(`1739575f`). Basis-Controller kauft Holz in Spitzen 71–90/min (> 30/min), der reiche Lauf `balance-edicts` 292 Holz/min; jedes
+wirksame Kontingent liegt unter der Krisen-Last. Entscheid: (1) **Option 1 Verzicht** für Schritt B, ohne neues Brainstorming
+(R555 (c)); Mechanik bleibt inaktiv (`BUY_RISE` 0), kein Save-Sprung. (2) `feat/i048-b` und `.worktrees/i048-b` werden **nicht
+gemergt**, bleiben geparkt; Aufräumen nur mit dem Worktree-Ruling (ohne `--force`, kein Branch-Löschen ohne eigenes Ruling).
+(3) Anzeige «Kauf 100 %» ausblenden (≈ 15 Tools, `buyPct` bleibt) wird **Teil von UI-HAEPPCHEN-A**. (4) **I-047 Stammkunde** ist
+frei (R486 O3) → Baustein für das nächste Handels-/Wirtschafts-Brainstorming. Die Idee «Staffel nur für Konsumgüter» bleibt als
+Hinweis im Pool ohne Pitch. Kein Gate Spec nötig (keine neue Regel).
+
+Regelbezug: R486, R549, R551, R555, R565 P3 · Kosten bei Irrtum: der Zielsatz «wer jeden Engpass mit Geld löst, zahlt drauf» bleibt
+offen bis zu einem neuen Brainstorming.
+
+Entscheider: L0 · Anlass: Bericht lead-design I-048-B · ADR: —
