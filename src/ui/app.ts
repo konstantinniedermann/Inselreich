@@ -112,8 +112,7 @@ import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../si
 import { lockedTierFor } from './taxView';
 import { setEdict } from '../sim/edicts';
 import { setMonumentBuy, setMonumentPaused, startMonumentStage } from '../sim/monument';
-import { MONUMENT_STAGES } from '../sim/defs/monument';
-import { monumentStartedText } from './monumentView';
+import { monumentStageCost, monumentStartedText } from './monumentView';
 import { setPaused } from '../sim/pause';
 import { EDICT_COST } from '../sim/defs/edicts';
 import { edictSuccessText } from './edictView';
@@ -132,7 +131,7 @@ import { resolveLogClick } from './logTarget';
 import { renderEventLog, updateEventLog } from './eventLogView';
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
-import { MONUMENT_DONE_TEXT, monumentEvents, monumentSnapshot } from './monumentView';
+import { monumentEvents, monumentSnapshot } from './monumentView';
 import { crisisLogEntries, crisisLogVisible, pushLog, type LogEntry } from './crisisLog';
 import { bindMessages, closeClosableToast, replaceMessage, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
@@ -727,7 +726,7 @@ function launch(
             showError(
               friendlyReason(world, r.reason, {
                 cost: {
-                  money: MONUMENT_STAGES[stage]?.money ?? 0,
+                  money: monumentStageCost(world.monument),
                   wood: 0,
                   tools: 0,
                   stone: 0,
@@ -1434,7 +1433,7 @@ function launch(
       if (monumentLogged.length > 0) {
         state.eventLog = pushLog(state.eventLog, monumentLogged);
         for (const e of monumentLogged) {
-          if (e.text === MONUMENT_DONE_TEXT) showMessage(e.text, 'info', true, true);
+          if (e.tag === 'monument-done') showMessage(e.text, 'info', true, true);
           else if (e.toast !== null) showMessage(e.text, e.toast);
         }
       }

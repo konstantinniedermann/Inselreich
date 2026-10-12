@@ -45,6 +45,8 @@ const C_MAX = 8736;
 /** Bauplatz des Denkmals im K'-Stand: Versatz vom Kontor (32, 31), frei, angebunden, versorgt (einmal bestimmt). */
 const K_MONUMENT = { x: 31, y: 38 } as const;
 const B_TICKS = 6000;
+// Beobachtungsfenster der Reserve-Prüfung: 1000 Ticks, bewusst länger als MONUMENT_RESERVE_TICKS (800,
+// src/sim/defs/monument.ts), damit mindestens ein voller Reserve-Zeitraum durchlaufen wird. Kein Spielwert.
 const RESERVE_TICKS = 1000;
 
 const log = (label: string, data: unknown): void => {

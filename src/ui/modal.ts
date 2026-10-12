@@ -1,6 +1,6 @@
 // Gemeinsame Modalkarten: ein Stapel, ein Tasten-Listener (Capture), Fokusfalle (Spec L2).
 // Keine Regeln: nur Darstellung und Bedienung.
-import { isSaveChord } from './hotkeys';
+import { isSaveChord } from './saveChord';
 
 export interface ModalOptions {
   host: HTMLElement;

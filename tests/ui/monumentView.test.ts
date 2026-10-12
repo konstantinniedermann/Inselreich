@@ -380,8 +380,34 @@ describe('AK-M13E2-33 monumentEvents (U-10, U-11)', () => {
   it('2 → 3 mit monumentDone: zwei Einträge in dieser Reihenfolge', () => {
     expect(monumentEvents(snap(2), snap(3, true), 5)).toEqual([
       { text: 'Denkmal: Abschnitt 3 fertig', toast: 'info', tick: 5 },
-      { text: 'Wahlziel erreicht: Das Denkmal steht!', toast: null, tick: 5 },
+      { text: 'Wahlziel erreicht: Das Denkmal steht!', toast: null, tick: 5, tag: 'monument-done' },
     ]);
+  });
+
+  it('Sprung 0 → 2: ein Eintrag je Abschnitt, nur der letzte mit Toast', () => {
+    expect(monumentEvents(snap(0), snap(2), 9)).toEqual([
+      { text: 'Denkmal: Abschnitt 1 fertig', toast: null, tick: 9 },
+      { text: 'Denkmal: Abschnitt 2 fertig', toast: 'info', tick: 9 },
+    ]);
+  });
+
+  it('Sprung um 1 ergibt genau einen Eintrag mit Toast; prev.stage −1 keinen', () => {
+    expect(monumentEvents(snap(1), snap(2), 3)).toHaveLength(1);
+    expect(monumentEvents(snap(-1), snap(2), 3)).toEqual([]);
+  });
+
+  it('Abschluss-Eintrag trägt tag «monument-done», der Abschnitts-Eintrag keinen', () => {
+    const [a, b] = monumentEvents(snap(2), snap(3, true), 5);
+    expect(a!.tag).toBeUndefined();
+    expect(b!.tag).toBe('monument-done');
+  });
+
+  it('Pause-Eintrag trägt paused passend zum Denkmal', () => {
+    const w = running();
+    const pause = (): unknown => monumentSectionModel(w).entries.find((x) => x.key === 'pause');
+    expect(pause()).toMatchObject({ paused: false });
+    w.monument!.paused = true;
+    expect(pause()).toMatchObject({ paused: true });
   });
 
   it('gleicher Stand, Abriss (→ −1) und Neubau (−1 → 0): []', () => {

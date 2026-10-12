@@ -24,7 +24,7 @@ import { HOME, home, adjacentOf, idx, isKontor, tileAt } from '../sim/world';
 import { toolAfford } from './islandTools';
 import { costLine } from './dom';
 import { hotkeyLabel } from './hotkeys';
-import { diagnosisText, refundText, stateInfo } from './texts';
+import { DEMOLISH_VERB, diagnosisText, refundText, stateInfo } from './texts';
 import { formatGameTime } from './time';
 
 export interface ReasonCtx {
@@ -358,7 +358,7 @@ export function placementHint(
       const cost = paidCost(b);
       return {
         tone: 'bad',
-        text: `Abreissen: ${BUILDING_DEFS[b.defId].name} · zurück ${refundText(refundCost(cost), effectiveRefund(world, cost))}`,
+        text: `${DEMOLISH_VERB}: ${BUILDING_DEFS[b.defId].name} · zurück ${refundText(refundCost(cost), effectiveRefund(world, cost))}`,
       };
     }
     if (tile?.road)

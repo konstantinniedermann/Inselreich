@@ -30,7 +30,7 @@ import type {
   World,
 } from '../sim/types';
 import { costLine, setField } from './dom';
-import { deficitText, diagnosisText, refundText } from './texts';
+import { DEMOLISH_VERB, deficitText, diagnosisText, refundText } from './texts';
 import { mapSigns, nextStep, remedyText, taxEffect } from './guide';
 import {
   taxLockText,
@@ -74,14 +74,7 @@ import {
   type StatTile,
 } from './panelView';
 
-export {
-  burningText,
-  diagnosisText,
-  producesText,
-  refundText,
-  stateInfo,
-  stateText,
-} from './texts';
+export { burningText, diagnosisText, producesText, refundText, stateInfo } from './texts';
 
 export const BUILD_SAME_TITLE =
   'Diesen Gebäudetyp als Bauwerkzeug wählen (Strg/Cmd+Klick auf ein Gebäude)';
@@ -202,7 +195,7 @@ export function upgradeReasonTexts(world: World, b: Building): string[] {
 
 /** Hinweis am Abriss-Knopf: Entf und Rücktaste lösen den Abriss aus (U+232B). */
 const DEMOLISH_HINT = 'Entf / ⌫';
-export const DEMOLISH_LABEL = `Abreissen (${DEMOLISH_HINT})`;
+export const DEMOLISH_LABEL = `${DEMOLISH_VERB} (${DEMOLISH_HINT})`;
 
 function addButton(
   parent: HTMLElement,

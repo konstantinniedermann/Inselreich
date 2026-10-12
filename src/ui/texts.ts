@@ -7,6 +7,9 @@ import type { Building, Cost, GoodId, Tier, World } from '../sim/types';
 import { paidCost } from '../sim/upgrade';
 import { formatGameTime } from './time';
 
+/** Verb für Abriss in Hinweisen und Knopf. */
+export const DEMOLISH_VERB = 'Abreissen';
+
 export const HOUSE_TITLES: Record<Tier, string> = {
   1: 'Pionierhaus',
   2: 'Siedlerhaus',
@@ -108,8 +111,6 @@ export function stateInfo(
       };
   }
 }
-
-export const stateText = (b: Building, tick: number): string => stateInfo(b, tick).text;
 
 /** Rückerstattungstext: tatsächlicher Betrag, je Gut mit Verfall-Hinweis (nur wenn etwas verfällt). */
 export function refundText(nominal: Cost, effective: Cost): string {
