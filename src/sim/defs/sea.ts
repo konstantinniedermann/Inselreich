@@ -11,7 +11,9 @@ export const SHIP = {
 export const ROUTE_GOODS_PER_DIRECTION = 2;
 export const ROUTE_RESERVE = { default: 10, step: 10, max: 90 } as const;
 
-export type IslandKind = 'A' | 'B';
+export type IslandKind = 'A' | 'B' | 'C';
+/** Arten, auf denen Gebirge zu Gras wird und die Ersatzform reines Gras ist (kein Gebirgsblock). */
+export const GRASS_ONLY_KINDS: readonly IslandKind[] = ['A', 'C'];
 export type IslandTrait = 'spice' | 'mountain' | 'mountainRich' | 'fertile';
 
 export interface IslandDef {
@@ -49,6 +51,16 @@ export const ISLANDS: readonly IslandDef[] = [
     traits: ['spice', 'mountain', 'mountainRich'],
     plantations: 3,
     quarries: 3,
+  },
+  {
+    kind: 'C',
+    name: 'Weidenau',
+    dMin: 30,
+    dMax: 35,
+    size: 24,
+    traits: ['spice', 'fertile'],
+    plantations: 6,
+    quarries: 0,
   },
 ];
 

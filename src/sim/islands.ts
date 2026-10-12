@@ -6,6 +6,7 @@ import {
   FALLBACK_FAR_STEP,
   FALLBACK_FAR_STEPS,
   FALLBACK_MOUNTAIN_SIDE,
+  GRASS_ONLY_KINDS,
   ISLAND_GAP_MIN,
   ISLAND_RIM,
   ISLAND_TRIES,
@@ -249,7 +250,7 @@ function clipRim(terrain: Terrain[], size: number, kind: IslandKind): Terrain[] 
     const inner =
       x >= ISLAND_RIM && y >= ISLAND_RIM && x < size - ISLAND_RIM && y < size - ISLAND_RIM;
     if (!inner) return 'water';
-    return kind === 'A' && t === 'mountain' ? 'grass' : t;
+    return GRASS_ONLY_KINDS.includes(kind) && t === 'mountain' ? 'grass' : t;
   });
 }
 
@@ -260,7 +261,7 @@ function fallbackTerrain(size: number, kind: IslandKind): Terrain[] {
       const inner =
         x >= ISLAND_RIM && y >= ISLAND_RIM && x < size - ISLAND_RIM && y < size - ISLAND_RIM;
       const block =
-        kind === 'B' &&
+        !GRASS_ONLY_KINDS.includes(kind) &&
         x < ISLAND_RIM + FALLBACK_MOUNTAIN_SIDE &&
         y < ISLAND_RIM + FALLBACK_MOUNTAIN_SIDE;
       out[y * size + x] = !inner ? 'water' : block ? 'mountain' : 'grass';

@@ -34,12 +34,13 @@ describe('M12 E2 UI Inseln: Inselsprung', () => {
     const c = center(BUILDING_DEFS[k.defId], k.x, k.y);
     expect(jumpTarget(w, 0)).toEqual({ x: c.cx, y: c.cy });
   });
-  it('islandList: Heimat, Möweninsel, Felsbucht; „· Kontor" erst mit Kontor', () => {
+  it('islandList: Heimat, Möweninsel, Felsbucht, Weidenau; „· Kontor" erst mit Kontor', () => {
     const w = createWorld(3);
     expect(islandList(w)).toEqual([
       { index: 0, label: 'Heimat' },
       { index: 1, label: 'Möweninsel' },
       { index: 2, label: 'Felsbucht' },
+      { index: 3, label: 'Weidenau' },
     ]);
     w.islands[1]!.kontorId = 901;
     expect(islandList(w)[1]).toEqual({ index: 1, label: 'Möweninsel · Kontor' });

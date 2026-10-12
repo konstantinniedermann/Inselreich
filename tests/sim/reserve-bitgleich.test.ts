@@ -8,7 +8,7 @@ import type { Building, BuildingDefId, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
 import { step } from '../../src/sim/tick';
 import { runColony, startColony } from './controller';
-import { fnv1a32, foldBackToV11 } from './helpers';
+import { fnv1a32, foldBackToV11, foldBackToV12 } from './helpers';
 
 const SEED = 3;
 const GOLD = { tick: 6750, length: 310877, hash: '28bf89ff' };
@@ -78,7 +78,8 @@ function tally(run: Run): void {
  * aus main vor beiden Paketen; `buyPct` wird vor dem Hash entfernt, nur wenn alle Anteile 100 sind (sonst Fehler).
  */
 function withoutReserve(world: World): string {
-  const raw = JSON.parse(serialize(world)) as {
+  // M14-E1: erst auf die v12-Form (ohne unberührte Insel C) falten, dann wie bisher
+  const raw = foldBackToV12(JSON.parse(serialize(world)) as Record<string, unknown>) as {
     islands: Record<string, unknown>[];
     buyPct?: Record<string, number>;
   };

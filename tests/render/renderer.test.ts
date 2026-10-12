@@ -43,6 +43,7 @@ import { DIM_FIRE } from '../../src/render/renderer';
 import { LIGHT_COLORS, mixRgb } from '../../src/render/light';
 import { AIR_COLORS } from '../../src/render/sprites';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { ISLANDS } from '../../src/sim/defs/sea';
 import { placeBuilding } from '../../src/sim/build';
 import { home, center, createWorld, idx } from '../../src/sim/world';
 import type { BuildingDefId, World } from '../../src/sim/types';
@@ -1474,7 +1475,7 @@ describe('M12 E1 Renderer', () => {
     const { world } = scene();
     const cam = camOn(-5, 40, 0.125);
     const all = run(world, cam);
-    expect(renderStats.islandsDrawn).toBe(3);
+    expect(renderStats.islandsDrawn).toBe(1 + ISLANDS.length);
     const solo = run(homeOnly(world), cam);
     expect(all.log.events.length).toBeLessThanOrEqual(2 * solo.log.events.length);
     const t = (w: World): number => {

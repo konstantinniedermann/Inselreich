@@ -4,6 +4,7 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { LEVELS } from '../../src/sim/defs/levels';
 import { ISLANDS, TRAIT_BUILDINGS, TRAIT_CYCLE_PCT, TRAIT_LABELS } from '../../src/sim/defs/sea';
 import { STORAGE_CAP } from '../../src/sim/defs/goods';
+import { STORM_TICK_DIVISOR } from '../../src/sim/defs/crises';
 import { demolish, placeBuilding } from '../../src/sim/build';
 import { goodsBalance } from '../../src/sim/flow';
 import { canPlace } from '../../src/sim/placement';
@@ -284,5 +285,86 @@ describe('M14-E1 Abriss, Neubau, Ausbau auf der Felsbucht (QA-B10)', () => {
       if (island === FELS) expect(cycleOf(w, b)).toBe(18);
     }
     expect(results[0]).toEqual(results[1]);
+  });
+});
+
+// ---------- T03: Insel C «Weidenau» (Welt-Insel 3) ----------
+
+const WEIDEN = 3;
+
+/** Testwelt mit Kontor II auf Weidenau; Lager von Heimat und Weidenau gefüllt. */
+function weidenWorld(): World {
+  const w = createWorld(3, { unlockAll: true });
+  foundKontor2Literal(w, WEIDEN);
+  w.money = 100_000;
+  for (const i of [HEIMAT, WEIDEN]) {
+    const s = w.islands[i]!.stock;
+    s.wood = 50;
+    s.stone = 50;
+    s.tools = 20;
+  }
+  return w;
+}
+
+describe('M14-E1 T03 Weidenau (AK-01, AK-03, AK-04, AK-11)', () => {
+  it('AK-M14E1-01: ISLANDS hat drei Einträge, ISLANDS[2] ist Weidenau', () => {
+    expect(ISLANDS).toHaveLength(3);
+    expect(ISLANDS[2]).toEqual({
+      kind: 'C',
+      name: 'Weidenau',
+      dMin: 30,
+      dMax: 35,
+      size: 24,
+      traits: ['spice', 'fertile'],
+      plantations: 6,
+      quarries: 0,
+    });
+  });
+
+  it.each([
+    ['canefarm', [25, 15, 10], [50, 30, 20]],
+    ['sheepfarm', [25, 15, 10], [50, 30, 20]],
+  ] as const)('AK-M14E1-03: %s Weidenau und Heimat', (id, weiden, heimat) => {
+    for (const [i, level] of ([undefined, 2, 3] as const).entries()) {
+      const w = weidenWorld();
+      expect(cycleOf(w, farm(w, WEIDEN, id, 0, level))).toBe(weiden[i]);
+      const h = weidenWorld();
+      expect(cycleOf(h, farm(h, HEIMAT, id, 0, level))).toBe(heimat[i]);
+    }
+  });
+
+  it('AK-M14E1-03: Gewürzplantage auf Weidenau 50', () => {
+    const w = weidenWorld();
+    expect(cycleOf(w, farm(w, WEIDEN, 'spicefarm'))).toBe(50);
+  });
+
+  it('AK-M14E1-04: Zuckerrohrplantage Weidenau liefert 24 in 600 Ticks', () => {
+    const w = weidenWorld();
+    farm(w, WEIDEN, 'canefarm');
+    run(w, 600);
+    expect(stock(w, WEIDEN, 'cane')).toBe(24);
+  });
+
+  it('AK-M14E1-11: Sturm, Weidenau gegen Heimat tickgenau (nach Zyklus-Skalierung)', () => {
+    const w = weidenWorld();
+    w.crisisLevel = 'off';
+    const t0 = w.tick;
+    w.crisis = { period: 0, kind: 'storm', from: t0, until: t0 + 700 };
+    const heim = farm(w, HEIMAT, 'canefarm', 0);
+    const weid = farm(w, WEIDEN, 'canefarm', 0);
+    const cycleH = cycleOf(w, heim)!;
+    const cycleW = cycleOf(w, weid)!;
+    const c0H = stock(w, HEIMAT, 'cane');
+    const c0W = stock(w, WEIDEN, 'cane');
+    for (let t = 0; t < 600; t++) {
+      step(w);
+      expect(w.crisis?.kind, `Sturm aktiv bei ${t}`).toBe('storm');
+      expect(weid.state, `Tick ${t}`).toBe(heim.state);
+      expect(weid.progress, `Tick ${t}`).toBe(heim.progress % cycleW);
+    }
+    let n = 0;
+    for (let t = t0 + 1; t <= t0 + 600; t++) if (t % STORM_TICK_DIVISOR === 0) n++;
+    expect(stock(w, HEIMAT, 'cane') - c0H).toBe(Math.floor(n / cycleH));
+    expect(stock(w, WEIDEN, 'cane') - c0W).toBe(Math.floor(n / cycleW));
   });
 });

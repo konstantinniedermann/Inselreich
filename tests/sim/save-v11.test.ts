@@ -8,6 +8,7 @@ import { createWorld, home } from '../../src/sim/world';
 import {
   foldBackToV10,
   foldBackToV11,
+  foldBackToV12,
   foldBackToV9,
   placeTownhall,
   prepareEast,
@@ -54,14 +55,14 @@ describe('M13-E1 Save v11', () => {
     expect(w.edict).toBeNull();
     expect(w.edictLockedUntil).toBe(0);
     expect(Object.keys(w).slice(-5, -3)).toEqual(['edict', 'edictLockedUntil']);
-    expect(w.version).toBe(12);
-    expect(SAVE_VERSION).toBe(12);
+    expect(w.version).toBe(13);
+    expect(SAVE_VERSION).toBe(13);
   });
 
   describe('AK-M13E1-22 foldBackToV10', () => {
     it('ohne Edikt: v10-Schlüssel, version 10, gleiche Zeichenkette wie von Hand gebaut', () => {
       const w = createWorld(3);
-      const v11 = JSON.parse(serialize(w)) as Record<string, unknown>;
+      const v11 = foldBackToV12(JSON.parse(serialize(w)) as Record<string, unknown>);
       const out = foldBackToV10(v11);
       expect(Object.keys(out)).not.toContain('edict');
       expect(Object.keys(out)).not.toContain('edictLockedUntil');
@@ -127,7 +128,7 @@ describe('M13-E1 Save v11', () => {
       const r = deserialize(JSON.stringify(v10Of(w)));
       expect(r.ok).toBe(true);
       if (!r.ok) return;
-      expect(r.world.version).toBe(12);
+      expect(r.world.version).toBe(13);
       expect(r.world.edict).toBeNull();
       expect(r.world.edictLockedUntil).toBe(0);
       expect(r.world.won).toBe(true);
@@ -139,7 +140,7 @@ describe('M13-E1 Save v11', () => {
         const r = deserialize(readFileSync(`tests/sim/fixtures/${f}`, 'utf8'));
         expect(r.ok, f).toBe(true);
         if (!r.ok) continue;
-        expect(r.world.version, f).toBe(12);
+        expect(r.world.version, f).toBe(13);
         expect(r.world.edict, f).toBeNull();
         expect(r.world.edictLockedUntil, f).toBe(0);
       }

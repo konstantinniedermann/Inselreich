@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ISLAND_GAP_MIN, ISLANDS, type IslandKind } from '../../src/sim/defs/sea';
 import {
@@ -10,6 +12,8 @@ import {
   type PlacedIsland,
 } from '../../src/sim/islands';
 import { generateMap, MAP_H, MAP_W } from '../../src/sim/mapgen';
+import { createWorld } from '../../src/sim/world';
+import { fnv1a32 } from './helpers';
 
 const SEEDS_50 = Array.from({ length: 50 }, (_, i) => i + 1);
 
@@ -121,5 +125,61 @@ describe('Ersatzregel Stufe 3 (M14-E1 T02)', () => {
       max = Math.max(max, w + h);
     }
     console.info(`SPANNE_MAX=${max}`);
+  });
+});
+
+// ---------- T03: Insel C «Weidenau» (AK-M14E1-15) ----------
+
+const PIN_SEEDS = [1, 3, 7, 13, 42];
+const FIXTURE = join(process.cwd(), 'tests', 'sim', 'fixtures', 'm14e1-ab-hashes.json');
+const reference = JSON.parse(readFileSync(FIXTURE, 'utf8')) as Record<string, [string, string]>;
+const hex = (v: string): string => fnv1a32(v).toString(16).padStart(8, '0');
+
+/** Land der Insel als Menge absoluter Kacheln. */
+function landOf(i: PlacedIsland): Set<string> {
+  const out = new Set<string>();
+  i.terrain.forEach((t, k) => {
+    if (t !== 'water') out.add(`${i.ox + (k % i.width)},${i.oy + Math.floor(k / i.width)}`);
+  });
+  return out;
+}
+
+function expectValidC(seed: number, forced: boolean): void {
+  const home = homeOf(seed);
+  const isl = generateForeignIslands(seed, home, forced ? { forceLastStage: 'C' } : {});
+  expect(isl).toHaveLength(3);
+  if (forced) expect(isl.slice(0, 2)).toEqual(generateForeignIslands(seed, home).slice(0, 2));
+  const c = isl[2]!;
+  expect(c.kind).toBe('C');
+  for (const o of [home, isl[0]!, isl[1]!])
+    expect(gap(o, c), `Seed ${seed}`).toBeGreaterThanOrEqual(ISLAND_GAP_MIN);
+  const cLand = landOf(c);
+  for (const o of [isl[0]!, isl[1]!]) for (const k of landOf(o)) expect(cLand.has(k)).toBe(false);
+  const lane = seaLanes([home, ...isl]).find((l) => l.a === 0 && l.b === 3);
+  expect(lane).toBeDefined();
+}
+
+describe('Insel C Lage (M14-E1 T03, AK-M14E1-15)', () => {
+  it('Seed 963 meldet für C Stufe 3, gültige Lage', () => {
+    expect(stagesOf(963).get('C')).toEqual([3]);
+    expectValidC(963, false);
+  });
+
+  it('erzwungene letzte Stufe C für Pin-Seeds: gültig, A und B gleich der T01-Referenz', () => {
+    for (const seed of PIN_SEEDS) {
+      expectValidC(seed, true);
+      expect(stagesOf(seed, 'C').get('C')).toEqual([3]);
+      const w = createWorld(seed);
+      expect([hex(JSON.stringify(w.islands[1])), hex(JSON.stringify(w.islands[2]))]).toEqual(
+        reference[String(seed)],
+      );
+    }
+  });
+
+  it('Seed 963: A und B gleich der T01-Referenz', () => {
+    const w = createWorld(963);
+    expect([hex(JSON.stringify(w.islands[1])), hex(JSON.stringify(w.islands[2]))]).toEqual(
+      reference['963'],
+    );
   });
 });
