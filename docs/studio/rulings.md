@@ -6233,3 +6233,21 @@ Regelbezug: Verfassung §7, STUDIO.md Push-Gate (R335, R429), R549, R552 · Kost
 (Actions-Prognose rot).
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R565 · 2026-10-12 · Retro M13 und Prozess-Aussensicht M13: P1–P5, V1–V3 angenommen
+
+Ruling: Berichte `docs/studio/retros/2026-10-12-m13.md` (studio-coach) und `2026-10-12-m13-prozess.md` (studio-process-coach).
+Angenommen: **P1** Integrator arbeitet nur in `.worktrees/integrate` (Merge, `push-check`, Push); Zwischenregel R562 entfällt
+mit der Umsetzung; bis dahin committet L0 nichts, solange Integrator oder `push-check` laufen. **V2 / E-063** als Auflage zu P1:
+Briefing-Vorlage nennt `.worktrees/integrate`; bei Widerspruch gilt die Persona und der Integrator meldet; ein anderer Hash als im
+Ruling wird nur nach Meldung gepusht. **P2** R464 gilt auch vor Gate Merge auf seriellem Pfad; Timeout `terrain.test.ts` ins nächste
+Werkzeug-Bündel. **P3** Werte-Probe vor Gate Plan bei Paketen mit Wertgrenzen (ab jetzt; M14-E1 deckt R557 (3) vor T08).
+**P4** Push-Takt nach Live-Ampel statt Festregel „ein Push je Tag“. **P5** bereinigte Steuerungszeile wird Ampelzeile;
+Session-Minuten gelb erst > 10. **V1** E-057 und E-061 abschliessen, E-062 und E-063 starten. **V3** Flake-Zeile nur im
+Zeitraum zählen, Arbeitsbaum mitschreiben; Aufgabe im nächsten Werkzeug-Bündel. Umsetzung der Handbuch-Änderungen
+(Handbuch-Minor) durch `studio-coach`.
+
+Regelbezug: STUDIO.md Verbesserungsschleife, R127, R316, R562, R564 · Kosten bei Irrtum: ein Handbuch-Minor zurücknehmen; P4 kann
+einen zusätzlichen Actions-Lauf kosten.
+
+Entscheider: L0 · Anlass: Retro M13, Prozess-Aussensicht M13 · ADR: —
