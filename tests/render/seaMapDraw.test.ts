@@ -5,6 +5,7 @@ import {
   MARK,
   createSilhouetteCache,
   drawSeaMap,
+  hitIsland,
   mapDots,
   mapLayout,
   tileToMap,
@@ -12,6 +13,7 @@ import {
 } from '../../src/render/seaMap';
 import { lanePoints } from '../../src/render/shipLane';
 import { seaWorld, shipLiteral } from '../sim/seaHelpers';
+import { createWorld } from '../../src/sim/world';
 import { fakeCtx } from './fakeCtx';
 
 const factory: RasterFactory = () => ({ ctx: fakeCtx().ctx, image: {} as CanvasImageSource });
@@ -153,4 +155,29 @@ describe('drawSeaMap Kontor-Marke und dpr (REL-15, UI-SEEKARTE-NACHZUG)', () => 
       expect(lanes.length).toBeGreaterThan(0);
       for (const e of lanes) expect(e.lineWidth).toBe(dpr);
     });
+});
+
+describe('drawSeaMap mit vier Inseln (AK-M14E1-33)', () => {
+  it('Layout umfasst alle vier Inseln, vier Silhouetten, Pick auf Land von C liefert 3', () => {
+    const w = createWorld(3, { unlockAll: true });
+    expect(w.islands).toHaveLength(4);
+    const { l, log } = draw(w);
+    for (const s of w.islands) {
+      for (const [x, y] of [
+        [s.ox, s.oy],
+        [s.ox + s.width, s.oy + s.height],
+      ] as const) {
+        const m = tileToMap(l, x, y);
+        expect(m.x).toBeGreaterThanOrEqual(11.9);
+        expect(m.x).toBeLessThanOrEqual(348.1);
+        expect(m.y).toBeGreaterThanOrEqual(11.9);
+        expect(m.y).toBeLessThanOrEqual(228.1);
+      }
+    }
+    expect(log.events.filter((e) => e.op === 'drawImage')).toHaveLength(4);
+    const c = w.islands[3]!;
+    const k = c.tiles.findIndex((t) => t.terrain !== 'water');
+    const p = tileToMap(l, c.ox + (k % c.width) + 0.5, c.oy + Math.floor(k / c.width) + 0.5);
+    expect(hitIsland(w, l, p.x, p.y)).toBe(3);
+  });
 });

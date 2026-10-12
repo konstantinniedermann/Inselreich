@@ -27,6 +27,7 @@ import { paidFromHome, toolAfford, toolBlockReason } from './islandTools';
 import type { IconId } from './icons';
 import { iconChip, showMessage } from './messages';
 import { perMinute } from './time';
+import { traitBuildLine } from './islandCard';
 
 export const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'infrastructure', label: 'Infrastruktur' },
@@ -100,8 +101,8 @@ function monumentToolLine(): string {
   return `Wahlziel in drei Abschnitten: ${MONUMENT_GOODS.map((g) => GOODS[g].name).join(', ')}`;
 }
 
-/** Tooltip-Zeilen ohne Sperrgrund (der kommt live dazu); alle Zahlen aus `src/sim/defs/`. */
-export function tooltipLines(tool: Tool): string[] {
+/** Tooltip-Zeilen ohne Sperrgrund (der kommt live dazu); alle Zahlen aus `src/sim/defs/`. Mit `world` kommt die Inselvorteil-Zeile der aktiven Insel dazu. */
+export function tooltipLines(tool: Tool, world?: World, island: number = HOME): string[] {
   const key = hotkeyLabel(tool);
   const withKey = (name: string): string => (key ? `${name} (${key})` : name);
   if (tool.kind === 'select') return [withKey('Auswahl')];
@@ -134,6 +135,8 @@ export function tooltipLines(tool: Tool): string[] {
   if (def.id === 'townhall') lines.push('Steuer und Ausgabesperre einstellen');
   if (def.produces && def.cycle) {
     lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(def.cycle)}`);
+    const advantage = world === undefined ? null : traitBuildLine(world, island, def.id);
+    if (advantage !== null) lines.push(advantage);
     const lv = LEVELS[def.id];
     if (lv) {
       const rates = [def.cycle, lv[0].cycle, lv[1].cycle].map((c) => num(perMinute(1, c)));
@@ -215,6 +218,13 @@ function attachTooltip(
     line.className = i === 0 ? 'tt-title' : 'tt-line';
     line.textContent = text;
     tip.appendChild(line);
+    if (text.startsWith('Erzeugt:')) {
+      // Inselvorteil der aktiven Insel: `updateBuildMenu` füllt Text und Sichtbarkeit
+      const advantage = document.createElement('span');
+      advantage.className = 'tt-line tt-island';
+      advantage.hidden = true;
+      tip.appendChild(advantage);
+    }
   });
   if (tool.kind === 'build' && BUILDING_DEFS[tool.defId].fireProtection === true) {
     const live = document.createElement('span');
@@ -445,6 +455,12 @@ export function updateBuildMenu(nav: HTMLElement, world: World, island: number =
     const { tool, cost } = meta;
     const why = toolReason(world, tool, island);
     btn.classList.toggle('unaffordable', why !== null);
+    const advantageEl = btn.querySelector<HTMLElement>('.tt-island');
+    if (advantageEl && tool.kind === 'build') {
+      const line = traitBuildLine(world, island, tool.defId) ?? '';
+      if (advantageEl.textContent !== line) advantageEl.textContent = line;
+      if (advantageEl.hidden !== (line === '')) advantageEl.hidden = line === '';
+    }
     const reason = btn.querySelector('.tt-reason');
     const text = why === null ? '' : friendlyReason(world, why, { cost, island });
     if (reason && reason.textContent !== text) reason.textContent = text;

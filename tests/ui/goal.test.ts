@@ -159,9 +159,7 @@ describe('M8 U1 Freischaltung (Änderung S11)', () => {
     w.won = true;
     w.unlocked = deriveUnlocks(w);
     // R230 B1: U6 nennt auch die Seefahrt und den Gewürz-Bedarf der Kaufleute.
-    expect(unlockNoticeText(['U0', 'U2', 'U3', 'U4', 'U5'], w)).toBe(
-      'Neu freigeschaltet: Badehaus (J), Glashütte (O) und Seefahrt (Inseln: 9) — deine Bürger wollen Kaufleute werden; Kaufleute brauchen Gewürz von fernen Inseln',
-    );
+    expect(unlockNoticeText(['U0', 'U2', 'U3', 'U4', 'U5'], w)).toBe(UNLOCK_NOTICE);
     expect(unlockNoticeText(w.unlocked, w)).toBeNull();
     expect(UNLOCK_NOTICE).not.toContain('Tick');
   });
@@ -205,8 +203,12 @@ describe('M10 Freischalt-Meldung und gesperrte Werkzeuge (Spec 11.2, 11.6)', () 
       UNLOCK_NOTICE,
     );
     // R230 B1: neuer Wortlaut mit Seefahrt und Gewürz-Bedarf.
-    expect(UNLOCK_NOTICE).toBe(
-      'Neu freigeschaltet: Badehaus (J), Glashütte (O) und Seefahrt (Inseln: 9) — deine Bürger wollen Kaufleute werden; Kaufleute brauchen Gewürz von fernen Inseln',
+    // M14-E1 AK-31: Bestandstext nicht gepinnt (Präfix bis zum Satzpunkt vor «Jede Insel»), Rest wörtlich.
+    const cut = UNLOCK_NOTICE.indexOf('. Jede Insel');
+    expect(cut).toBeGreaterThan(0);
+    expect(UNLOCK_NOTICE.startsWith('Neu freigeschaltet:')).toBe(true);
+    expect(UNLOCK_NOTICE.slice(cut)).toBe(
+      '. Jede Insel hat ihre Stärke: Möweninsel liegt nah, Felsbucht Gebirge+, Weidenau Fruchtbar',
     );
     expect(t(['U0'], ['U0', 'U2', 'U3'])).toBe(
       `Neu: Jagdhütte (Y), Steinbruch (B), Schäferei (G), Weberei (V), Kapelle (K), Feuerwache (E), Roden (C), Aufforsten (Q), Rinderfarm, Amtsstube (I), Handelsaufträge, Ausbau Stufe 2 — die ersten Siedler sind da${tail}`,

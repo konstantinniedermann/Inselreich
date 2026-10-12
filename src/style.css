@@ -601,6 +601,9 @@ button.chip {
 .tooltip .tt-reason:empty {
   display: none;
 }
+.tooltip .tt-island[hidden] {
+  display: none;
+}
 .tooltip .tt-reason {
   margin-top: 2px;
   padding-left: 6px;
