@@ -6267,3 +6267,18 @@ Verweise auf Erweiterung 1 sind beim Merge von `design/erweiterung-1` zu bestät
 Regelbezug: docs/ideen.md Ablauf, R445, R474, R529, Verfassung §5.3 · Kosten bei Irrtum: eine geparkte Idee später neu bewerten.
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-08 · ADR: —
+
+## R567 · 2026-10-12 · M14-E1 T03: Auslegung Auflage R557 (1b) angenommen; UI-Strang nach TOOL-CONTROLLER-HAERTUNG
+
+Ruling: Bericht Controller M14-E1-SIM, T03 abgenommen (`00db07fe`). (1) **D-M14E1-1B:** Teilhash Heimat/A/B ist mit Insel C nicht
+bitgleich erreichbar (Meer-Deko zieht über Rang/Belegung nach; 303/405 Flächen gleich); belegt ist die kontrafaktische
+Bitgleichheit (Welt ohne C = Basis), neu gepinnt nur der Gesamt-Hash mit `bewusst neu gepinnt (R557)`. Angenommen als
+Auslegung, Sim unberührt; kein zusätzlicher Fahrlinien-Teilhash. Befund in `docs/beobachtungen.md`, Sichtprüfung in T08.
+(2) **Reihenfolge wegen halbierter Parallelität (≤ 4 Agenten):** SIM-Controller setzt T04/T05 fort; der UI-Controller (T06,
+Worktree `.worktrees/m14-e1-ui` ab `00db07fe`) startet, sobald TOOL-CONTROLLER-HAERTUNG fertig ist. (3) AK-09-Einheit
+(`goodsBalance` je 100 Ticks) präzisiert T07 in der Spec; Testzeit 320 ms in `islands-c.test.ts` zur Kenntnis.
+
+Regelbezug: R557, R329, Verfassung §3 · Kosten bei Irrtum: UI-Strang startet ≈ 1 h später; Meer-Deko-Verschiebung fällt erst im
+Playtest auf.
+
+Entscheider: L0 · Anlass: Bericht lead-tech M14-E1-SIM T03 · ADR: —

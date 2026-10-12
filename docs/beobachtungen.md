@@ -235,3 +235,10 @@ Fundort: `make gate-ensemble` (TOOL-GATE-ENSEMBLE, `tests/sim/ensemble.test.ts`)
   Ursprung: lead-design IDEEN-08 (ausserhalb Scope). Einschätzung: niedrig; wird mit M14-E1 T07 (README, Save v13) ohnehin
   nachgeführt — dort mitprüfen, sonst Doku-Audit vor dem nächsten Release.
 - **Zuordnung:** M14-E1 T07 (R566).
+
+### 2026-10-12 · Insel C verschiebt Meer-Deko auch fern der neuen Fahrlinie
+
+- **Fundort:** M14-E1 T03 (`feat/m14-e1` @ `00db07fe`), Meer-Plan: Sand, Riff und Tang ziehen über Rang und Belegung nach; Seeds
+  1–40: 303 von 405 Flächen kachelgleich. Ursprung: Controller M14-E1-SIM, Auflage R557 (1b). Einschätzung: niedrig, rein
+  darstellend; migrierte Spielstände zeigen verschobene Sandbänke/Riffe. Kandidat für den Browser-Check T08 (sichtbar störend?).
+- **Zuordnung:** R567.
