@@ -1,6 +1,6 @@
 # I-048 Schritt B — Designfrage: Staffel statt Preisformel, oder Verzicht
 
-Datum: 2026-10-11 · Paket design-I048-B · Prozessstufe leicht · Status: **Vorschlag für das Design-Gate (L0)** · Kein
+Datum: 2026-10-11 · Paket design-I048-B · Prozessstufe leicht · Status: **Option 2 angenommen (R555), Last-Probe 2026-10-12: Abbruch R555 (c) → Option 1 (Verzicht)** · Kein
 Spec-Nachtrag, keine Werte, kein Code (R551).
 
 Grundlage: [Spec I-048](2026-10-10-i048-zukauf-aufschlag-design.md) (Z2–Z4, §6, P-5),
@@ -8,6 +8,15 @@ Grundlage: [Spec I-048](2026-10-10-i048-zukauf-aufschlag-design.md) (Z2–Z4, §
 R551, R553 V1; Handoff `.studio/handoffs/2026-10-11-lead-design-D-I048-B-WERTE.md`; Beobachtung «Balancing-Controller:
 Seed wirkt nicht auf die Heimkolonie». Stand `main`: `BUY_RISE` 0, `BUY_CAP` 160, `BUY_RECOVERY_INTERVAL` 10,
 `SELL_RECOVERY_INTERVAL` 10 (Mechanik eingebaut, inaktiv).
+
+## Ergebnis Last-Probe (R555 c, 2026-10-12)
+
+Abbruchkriterium erfüllt. Der Basis-Controller kauft Holz in Spitzen von 71–90 Stück je Minute (Ensemble-Phasen
+0–80, auch in den Krisenstufen). Der reiche Lauf aus `balance-edicts` kauft 292 Holz, 107 Werkzeug und 120 Stein je
+Minute. Ein bitgleiches Kontingent läge über dem Bedarf einer Stadt-Insel. In `balance-merchants` bisse es nicht
+(Gewürz ≤ 28/min). Damit gilt **Option 1**: Die Mechanik bleibt mit `BUY_RISE` 0 inaktiv, und es kommen keine Werte und kein
+Spec-Nachtrag zur Staffel. Zahlen und Messweg stehen in
+[Anhang 02](2026-10-10-i048-zukauf-aufschlag-design/anhang-02-last-probe.md).
 
 ## Befund in einem Absatz
 

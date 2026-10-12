@@ -13,6 +13,12 @@ Kennzeichnung: **Setzung Spec** (hier ergänzt, im Anhang nicht festgelegt), **[
 entscheidet im Plan, die Spec legt nur das prüfbare Verhalten fest). Verweise «Anhang a) … i)» meinen die Abschnitte
 von Anhang 01.
 
+**Nachtrag I-048-B (2026-10-12):** Schritt B entfällt. Die Last-Probe erfüllt das Abbruchkriterium R555 (c)
+([Anhang 02](2026-10-10-i048-zukauf-aufschlag-design/anhang-02-last-probe.md)), also gilt Option 1 (Verzicht). Die
+Mechanik bleibt wie Schritt A auf `main`: `BUY_RISE` 0, `SELL_RECOVERY_INTERVAL` 10. §6 Schritt B, AK-ZK-14/-15,
+die Werte in Z2/Z4/Z5 und §10 README gelten nicht. Massgeblich für die Richtung ist die
+[Designfrage](2026-10-11-i048-b-designfrage.md).
+
 **Nachtrag R490** (Gate-Urteile `.studio/handoffs/2026-10-10-lead-qa-GATE-SPEC-I048.md`,
 `…-lead-tech-GATE-SPEC-I048.md`; Rulings R487, R489, R490):
 

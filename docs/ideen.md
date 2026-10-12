@@ -367,7 +367,7 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Entscheid: R486 (O3) → eingeplant als Paket nach I-048, nur in der Fassung mit Gewicht (≈ 25 % der Erzeugung zu 120 %, M14-Anhang 01 C.1); I-029 und I-006 bleiben geparkt; Stand: wartet auf den Entscheid I-048 Schritt B (bei Verzicht sofort frei)
 - Verweis IDEEN-08: bleibt hinter I-048 Schritt B (R551) eingereiht; Erweiterung 1 ändert daran nichts
 
-### I-048 · eingeplant (Schritt A auf main inaktiv, Schritt B im Design, R551) · Zukauf-Aufschlag (Kaufsättigung)
+### I-048 · eingeplant (Schritt A auf main inaktiv; Schritt B: Last-Probe → Option 1 Verzicht, Ruling offen) · Zukauf-Aufschlag (Kaufsättigung)
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Beobachtung (Kaufpreise fest, `src/sim/defs/goods.ts` `buy`; jeder Mangel lässt sich mit Geld beheben, README „Handel"); Genre-Mechanik Nachfragepreis; IDEEN-06 Scout A
 - Spielerwirkung: „Der Spieler merkt, dass Dauer-Zukauf teurer wird («Preis 140 %»), und baut die Kette selbst aus, statt jeden Engpass mit Geld zu beheben."
@@ -381,6 +381,8 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Nutzen/Aufwand: hoher Nutzen (Bauen statt Kaufen wird eine Entscheidung) · S–M · ≈ 1–2 Pakete (Rechnung ≈ 40 Tools, Sim+Handelsdialog ≈ 120 Tools)
 - Entscheid: Empfehlung einplanen als Wirtschafts-Baustein (M13-Rest oder nächstes Meilenstein-Brainstorming); R474 bestätigt
 - Stand: Schritt A (Mechanik, `BUY_RISE` 0) auf main, inaktiv (R549); Schritt B ohne Werte zurück ins Design (R551). Designfrage `docs/superpowers/specs/2026-10-11-i048-b-designfrage.md`: Empfehlung Kontingent-Staffel (Controller bitgleich, Biss per Szenario-Test), sonst Verzicht; wartet auf Design-Gate L0 und Ensemble-Messung (plan-TOOL-GATE-ENSEMBLE)
+- Stand 2026-10-12: R555 nahm Option 2 an. Die Last-Probe erfüllt das Abbruchkriterium R555 (c): Holz 71–90/min im Basis-Controller, 292/min im reichen Lauf `balance-edicts`; `balance-merchants` Gewürz ≤ 28/min ([Anhang 02](superpowers/specs/2026-10-10-i048-zukauf-aufschlag-design/anhang-02-last-probe.md)). Damit gilt Option 1 (Verzicht), sobald L0 ein Ruling fasst: Mechanik bleibt inaktiv, I-047 wird frei (R486 O3).
+- Hinweis für später, nicht gepitcht: eine Staffel nur für Konsumgüter (Stoff, Rum, Glas, Gewürz) bliebe gegen den Controller bitgleich, weil er sie kaum kauft. Sie wäre eine neue Regel und bräuchte ein eigenes Gate Brainstorming.
 
 ### I-049 · live · Sperrbestand (Reserve je Gut) — R474 (3), R477 → Kurzdesign, live mit Release M13 (R564, Save v12); I-068 (Denkmal-Reserve) darin aufgegangen
 
