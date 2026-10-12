@@ -22,6 +22,12 @@ export interface MonumentRow {
   buyOn: boolean;
 }
 
+/** Geldkosten des laufenden Abschnitts; 0 ohne Denkmal oder nach dem letzten Abschnitt. Einzige Kostenquelle der UI. */
+export function monumentStageCost(m: Monument | null | undefined): number {
+  if (m === null || m === undefined || m.stage >= STAGE_COUNT) return 0;
+  return MONUMENT_STAGES[m.stage]!.money;
+}
+
 /** Soll des angezeigten Abschnitts je Gut; `null` ohne Denkmal oder nach dem letzten Abschnitt. */
 function shownGoal(m: Monument | null): Readonly<Record<MonumentGood, number>> | null {
   if (m === null || m.stage >= STAGE_COUNT) return null;
@@ -63,7 +69,7 @@ export function monumentStartState(w: World): MonumentStart {
     visible: true,
     disabled: reason !== null && reason !== 'Zu wenig Geld',
     reason,
-    buttonText: `Abschnitt ${m.stage + 1} beginnen (${MONUMENT_STAGES[m.stage]!.money})`,
+    buttonText: `Abschnitt ${m.stage + 1} beginnen (${monumentStageCost(m)})`,
   };
 }
 
@@ -224,7 +230,7 @@ export function monumentSectionModel(w: World): MonumentSectionModel {
     hidden: m === null || m.stage >= STAGE_COUNT,
   });
   const st = monumentStartState(w);
-  const money = m !== null && m.stage < STAGE_COUNT ? MONUMENT_STAGES[m.stage]!.money : 0;
+  const money = monumentStageCost(m);
   entries.push({
     key: 'start',
     kind: 'start',

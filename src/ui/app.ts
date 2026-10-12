@@ -112,8 +112,7 @@ import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../si
 import { lockedTierFor } from './taxView';
 import { setEdict } from '../sim/edicts';
 import { setMonumentBuy, setMonumentPaused, startMonumentStage } from '../sim/monument';
-import { MONUMENT_STAGES } from '../sim/defs/monument';
-import { monumentStartedText } from './monumentView';
+import { monumentStageCost, monumentStartedText } from './monumentView';
 import { setPaused } from '../sim/pause';
 import { EDICT_COST } from '../sim/defs/edicts';
 import { edictSuccessText } from './edictView';
@@ -727,7 +726,7 @@ function launch(
             showError(
               friendlyReason(world, r.reason, {
                 cost: {
-                  money: MONUMENT_STAGES[stage]?.money ?? 0,
+                  money: monumentStageCost(world.monument),
                   wood: 0,
                   tools: 0,
                   stone: 0,
