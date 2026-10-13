@@ -88,7 +88,7 @@ describe('I-092 Inselmarkt-Vorliebe', () => {
 
   it('AK-IM-02 Gegenprobe Edikt Handel + Boom', () => {
     expect(EDICTS.trade.buyFactorPct).toBe(80);
-    const f = 150;
+    const f = Math.max(BOOM_PCT, PREFER_PCT);
     expect((f * GOODS.rum.sell) / 100).toBe(27);
     expect((80 * GOODS.rum.buy) / 100).toBe(32);
     expect((f * GOODS.glass.sell) / 100).toBe(30);
@@ -189,21 +189,22 @@ describe('I-092 Inselmarkt-Vorliebe', () => {
 
   it('AK-IM-09 Fehlerfälle ohne Zustandsänderung', () => {
     const w = seaWorld();
-    let before = serialize(w);
+    const noKontorState = serialize(w);
     expect(sell(w, 'glass', 1, WEIDENAU)).toEqual({
       ok: false,
       reason: 'Kein Kontor auf Weidenau',
     });
+    expect(serialize(w)).toBe(noKontorState);
     foundKontor2Literal(w, WEIDENAU);
-    before = serialize(w);
+    const before = serialize(w);
     expect(sell(w, 'glass', 1, WEIDENAU)).toEqual({ ok: false, reason: 'Nicht genug Ware' });
     expect(sell(w, 'glass', 1, 99)).toEqual({ ok: false, reason: 'Unbekannte Insel' });
     expect(serialize(w)).toBe(before);
   });
 
   it('AK-IM-10 Alter Spielstand lädt, Vorliebe wirkt danach', () => {
-    expect(SAVE_VERSION).toBe(SAVE_VERSION); // gegen die Konstante, keine Zahl
     const json = readFileSync('tests/sim/fixtures/save-v12-felsbucht.json', 'utf8');
+    expect(JSON.parse(json).version).toBeLessThan(SAVE_VERSION);
     const loaded = deserialize(json);
     expect(loaded.ok).toBe(true);
     if (!loaded.ok) return;
