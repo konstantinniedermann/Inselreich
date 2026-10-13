@@ -6480,3 +6480,17 @@ angenommen, aufs Board nach UI-HAEPPCHEN-B; (3) Szenarien-Punkte (a)(c)(d) und U
 Regelbezug: gates.md Gate Merge, R287, R580 · Kosten bei Irrtum: ein Eintrag wird später erneut geöffnet.
 
 Entscheider: L0 · Anlass: Bericht lead-production BEOB-AUSWERTUNG-13 · ADR: —
+
+## R582 · 2026-10-13 · TOOL-BUENDEL-10: Nacharbeit seaKorridor-Timeout und Wortanker, dann make check
+
+Ruling: Bericht lead-tech TOOL-BUENDEL-10, `tool/b10` @ `0d383d1b`, Review BEDENKEN (alle niedrig), `make check` offen (Testlock,
+Last > 8). Entscheide: (1) Ownership von TOOL-BUENDEL-10 um `tests/render/seaKorridor.test.ts` erweitert: Fall «AK-K1b Teilhash
+(R557)» bekommt einen expliziten Timeout von 20000 ms mit Kommentar (Grund: Runner-Schätzung ≈ 7,9 s > 5 s, R570); bevorzugt,
+falls ohne Aussageverlust in wenigen Minuten möglich, den Fall beschleunigen. (2) `stampcheck.py` Wortanker `\bR(\d+)` und
+Test — Trivial-Fix im selben Zug. (3) `git stash --help/-h` bleibt gesperrt (Meldung nennt WIP-Commit; harmlos). (4) Guard-Umgehung
+per Alias/`$(…)`/`xargs` → Eintrag `docs/beobachtungen.md` durch den Controller. (5) Danach `make check` Exit 0, sobald die Last es
+zulässt; L0 entscheidet dann Gate Merge und Push REL-20. Budget unverändert (2 Starts frei).
+
+Regelbezug: R570, R579, gates.md Gate Merge · Kosten bei Irrtum: ein langsamer Test bleibt mit grosszügigem Timeout unbemerkt langsamer.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-10 · ADR: —
