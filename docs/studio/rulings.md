@@ -6458,3 +6458,13 @@ Retro mit Plan-Briefing). Budgets: UI-HAEPPCHEN-A 11 Starts/P1 (R573), TOOL-BUEN
 Regelbezug: R578, R571 (4), Verfassung §5 · Kosten bei Irrtum: ein legitimer Stash-Fall bei L0 wird geblockt (Rückfall: Regel streichen).
 
 Entscheider: L0 · Anlass: Retro Session 1a73e6c1, state.md Fortsetzung Punkt 1, 4 · ADR: —
+
+## R580 · 2026-10-13 · Freier Platz: Beobachtungs-Auswertung statt Ideen-Runde
+
+Ruling: Ideen-Pool 35/40 (R566), UI-HAEPPCHEN-A/B aus IDEEN-08 noch offen — eine neue Ideen-Runde (R445) brächte jetzt wenig.
+Freier Platz geht an `lead-production`: Auswertung der 12 Beobachtungen seit 2026-10-11 (Skill `beobachtungen-auswerten`,
+STUDIO.md Start-Routine 6), Budget 1 Start/P1, Worktree `.worktrees/beob-13`. Ideen-Runde IDEEN-09 erst nach Merge UI-HAEPPCHEN-B.
+
+Regelbezug: R445, R475, R287 · Kosten bei Irrtum: eine Ideen-Runde einen Tag später.
+
+Entscheider: L0 · Anlass: freie Kapazität nach R578 · ADR: —
