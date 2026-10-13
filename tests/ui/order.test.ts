@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { FakeElement, fakeDocument } from './fakeDom';
 import type { ContractEvent, Order } from '../../src/sim/types';
 import type { StepReport } from '../../src/sim/tick';
 import { islandName } from '../../src/sim/islands';
@@ -16,6 +17,9 @@ import {
   orderMessage,
   orderMessageFor,
   orderVisible,
+  renderOrder,
+  runContractAction,
+  updateOrder,
 } from '../../src/ui/order';
 import { diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
 import { HOME, home, createWorld } from '../../src/sim/world';
@@ -227,5 +231,92 @@ describe('I-047 Stammkunde: Meldungen (AK-SK-28)', () => {
     announceContract([rep(null)], out3, w);
     expect(out3.show).not.toHaveBeenCalled();
     expect(out3.play).not.toHaveBeenCalled();
+  });
+});
+
+describe('I-047 Stammkunde: Knöpfe und Warnfarbe (AK-SK-28)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const setup = () => {
+    vi.stubGlobal('document', fakeDocument);
+    const actions = { deliver: vi.fn(), accept: vi.fn(), decline: vi.fn(), cancel: vi.fn() };
+    const w = createWorld(3, { unlockAll: true });
+    w.order = null;
+    w.tick = 750;
+    const el = new FakeElement('span');
+    renderOrder(el as unknown as HTMLElement, w, actions);
+    const btn = (f: string) => el.querySelector(`[data-field="${f}"]`)!;
+    const shown = () =>
+      ['order-deliver', 'order-accept', 'order-decline', 'order-cancel'].filter(
+        (f) => !btn(f).hidden,
+      );
+    const upd = () => updateOrder(el as unknown as HTMLElement, w);
+    return { actions, w, el, btn, shown, upd };
+  };
+
+  it('Angebot: Annehmen und Ablehnen', () => {
+    const { actions, w, btn, shown, upd } = setup();
+    w.contractOffer = { good: 'rum', island: HOME };
+    upd();
+    expect(shown()).toEqual(['order-accept', 'order-decline']);
+    expect(btn('order-accept').textContent).toBe('Annehmen');
+    expect(btn('order-decline').textContent).toBe('Ablehnen');
+    btn('order-accept').fire('click');
+    btn('order-decline').fire('click');
+    expect(actions.accept).toHaveBeenCalledTimes(1);
+    expect(actions.decline).toHaveBeenCalledTimes(1);
+  });
+
+  it('Vertrag: nur Kündigen', () => {
+    const { actions, w, btn, shown, upd } = setup();
+    w.contract = { good: 'rum', amount: 5, price: 27, island: HOME };
+    upd();
+    expect(shown()).toEqual(['order-cancel']);
+    expect(btn('order-cancel').textContent).toBe('Kündigen');
+    btn('order-cancel').fire('click');
+    expect(actions.cancel).toHaveBeenCalledTimes(1);
+  });
+
+  it('Auftrag: nur Liefern; nichts: kein Knopf', () => {
+    const { actions, w, btn, shown, upd } = setup();
+    upd();
+    expect(shown()).toEqual([]);
+    w.order = { period: 1, good: 'wood', amount: 20, reward: 140, due: 1500 };
+    upd();
+    expect(shown()).toEqual(['order-deliver']);
+    btn('order-deliver').fire('click');
+    expect(actions.deliver).toHaveBeenCalledTimes(1);
+  });
+
+  it('Warnklasse folgt contractWarn', () => {
+    const { w, el, upd } = setup();
+    w.contract = { good: 'rum', amount: 5, price: 27, island: HOME };
+    home(w).stock.rum = 4;
+    upd();
+    expect(el.classList.contains('order-card--warn')).toBe(true);
+    home(w).stock.rum = 5;
+    upd();
+    expect(el.classList.contains('order-card--warn')).toBe(false);
+  });
+});
+
+describe('I-047 Stammkunde: Fehlerpfad (Spec B.4)', () => {
+  const out = () => ({ showError: vi.fn(), show: vi.fn() });
+  it.each(['Kein Angebot', 'Kein Vertrag', 'Anderer Grund'])(
+    'fail zeigt den Grund als Fehler (%s), keine Erfolgsmeldung',
+    (reason) => {
+      const o = out();
+      runContractAction({ ok: false, reason }, () => 'erfolg', o);
+      expect(o.showError).toHaveBeenCalledWith(reason);
+      expect(o.show).not.toHaveBeenCalled();
+    },
+  );
+  it('ok: Meldung aus onOk, oder still bei null', () => {
+    const o = out();
+    runContractAction({ ok: true }, () => 'vereinbart', o);
+    expect(o.show).toHaveBeenCalledWith('vereinbart');
+    const o2 = out();
+    runContractAction({ ok: true }, () => null, o2);
+    expect(o2.show).not.toHaveBeenCalled();
+    expect(o2.showError).not.toHaveBeenCalled();
   });
 });

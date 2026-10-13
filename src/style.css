@@ -920,6 +920,10 @@ button.chip {
   font-size: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
+.notice-stack .order-card.order-card--warn {
+  border-left-color: var(--warn-amber);
+  background: var(--warn-parchment);
+}
 .notice-stack [hidden] {
   display: none;
 }

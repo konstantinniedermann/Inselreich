@@ -13,7 +13,7 @@ import type { GoodId, TaxLevel, Tier, UnlockId, World } from '../sim/types';
 import type { GameState } from './app';
 import { blurAfterClick, setField } from './dom';
 import type { Settings } from './settings';
-import { renderOrder, updateOrder } from './order';
+import { renderOrder, updateOrder, type OrderActions } from './order';
 import { crisisCardText } from './crisis';
 import { taxEffect } from './guide';
 import { taxButtonTitle, taxSummaryText } from './taxView';
@@ -497,13 +497,13 @@ export function bindIslandMenu(header: HTMLElement, state: GameState, actions: H
 export function renderNoticeStack(
   gameEl: HTMLElement,
   world: World,
-  deliver: () => void,
+  actions: OrderActions,
 ): HTMLElement {
   const stack = document.createElement('div');
   stack.className = 'notice-stack';
   const order = document.createElement('span');
   order.className = 'order-card';
-  renderOrder(order, world, { deliver });
+  renderOrder(order, world, actions);
   const crisis = document.createElement('span');
   crisis.className = 'card card--crisis';
   crisis.dataset.field = 'crisis-card';
