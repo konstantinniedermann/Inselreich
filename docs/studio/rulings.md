@@ -6817,3 +6817,16 @@ mit Archivregel R599.
 Regelbezug: gates.md Konflikte, R445, R580, R599, R602, R603 · Kosten bei Irrtum: ein weiterer Merge-Anlauf.
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-21 (failed) · ADR: —
+
+## R605 · 2026-10-13 · Nachtrag R602/R603: TOOL-BUENDEL-11 @ `fe4eb787` OK
+
+Ruling: Bericht lead-tech: main `2917d77c` per Merge `907b8f34` in `tool/b11`, arc42-Konflikt gelöst (v12 `buyPct` vor v14 I-047),
+Doku-Auflage R603 durch Arbeiter (`fe4eb787`: arc42-Modulzeilen, README Zifferntasten und Esc/Rechtsklick, README 28,5 KB),
+Delta-Review sonnet OK, `make docs-check`/`make check` Exit 0. Neuer geprüfter Hash **`fe4eb787`** ersetzt `940707d3` aus R602
+(R565 V2). Entscheid: Merge lokal durch `production-integrator`, `make check` Exit 0; danach ist REL-21 vollständig (A, B, I-047,
+DOC-ARCHIV, TOOL-BUENDEL-11, Doku-Fix R603). Push in der nächsten Session per `make push-check`. Die Esc/Rechtsklick-Beobachtung bleibt
+als Designfrage offen (README beschreibt jetzt den Ist-Zustand).
+
+Regelbezug: R565 V2, R602, R603, R604 · Kosten bei Irrtum: —
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-11 · ADR: —
