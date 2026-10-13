@@ -17,6 +17,25 @@ def reason(cmd, allow=False, cwd=ROOT):
 
 
 class BashTest(unittest.TestCase):
+    def test_stash_blocked_except_list_show(self):
+        for cmd in [
+            "git stash",
+            "git stash push -m x",
+            "git stash pop",
+            "git stash apply",
+            "git stash save x",
+            "git stash drop",
+            "git -C .worktrees/x stash",
+            "git stash -u",
+        ]:
+            with self.subTest(cmd=cmd):
+                found = reason(cmd)
+                self.assertIsNotNone(found)
+                self.assertIn("wip:", found)
+        for cmd in ["git stash list", "git stash show -p", "git -C x stash list"]:
+            with self.subTest(cmd=cmd):
+                self.assertIsNone(reason(cmd))
+
     def test_allowed_everyday_work(self):
         for cmd in [
             "git status && git diff --stat",

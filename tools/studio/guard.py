@@ -233,6 +233,12 @@ def _outputs(args: list[str]) -> list[str]:
     return found
 
 
+STASH_HINT = (
+    " (stattdessen WIP-Commit auf dem Branch: "
+    '`git add -A && git commit -m "wip: ..."`; erlaubt: stash list, stash show)'
+)
+
+
 def _git_sub(args: list[str]) -> tuple[str | None, list[str]]:
     index = 0
     while index < len(args) and args[index].startswith("-"):
@@ -315,8 +321,8 @@ def _git_reason(args: list[str], cwd: Path, allow: bool) -> str | None:
         return f"{FORBIDDEN}: git update-ref -d"
     elif sub == "reflog" and rest[:1] and rest[0] in ("expire", "delete"):
         return f"{FORBIDDEN}: git reflog {rest[0]}"
-    elif sub == "stash" and rest[:1] and rest[0] in ("clear", "drop"):
-        return f"{FORBIDDEN}: git stash {rest[0]}"
+    elif sub == "stash" and rest[:1] not in (["list"], ["show"]):
+        return f"{FORBIDDEN}: git stash {rest[0] if rest else ''}".rstrip() + STASH_HINT
     elif sub == "clean" and _has_force(rest):
         return f"{FORBIDDEN}: git clean -f"
     elif sub == "worktree" and rest[:1] == ["remove"] and _has_force(rest):
