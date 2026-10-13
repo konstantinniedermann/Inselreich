@@ -13,6 +13,8 @@ export interface LinePlan {
   newCount: number;
   cost: number;
   affordable: boolean;
+  /** Wie viele der neuen Kacheln das Geld bezahlt (wie beim Bau, Kachel für Kachel). */
+  payableCount: number;
   /** Erster Grund (aus der Sim), warum nicht alles gebaut wird; `null`, wenn alles baubar ist. */
   stopReason: string | null;
 }
@@ -52,14 +54,26 @@ export function linePlan(world: World, island: number, path: readonly Pos[]): Li
   const newCount = tiles.filter((t) => t.state === 'new').length;
   const cost = newCount * ROAD_COST;
   let affordable = true;
+  let payableCount = newCount;
   if (newCount > 0) {
     const a = affordBuild(world, island, { money: cost, wood: 0, tools: 0, stone: 0 });
     if (!a.ok) {
       affordable = false;
+      payableCount = 0;
+      while (
+        payableCount < newCount &&
+        affordBuild(world, island, {
+          money: (payableCount + 1) * ROAD_COST,
+          wood: 0,
+          tools: 0,
+          stone: 0,
+        }).ok
+      )
+        payableCount++;
       stopReason ??= a.reason;
     }
   }
-  return { tiles, newCount, cost, affordable, stopReason };
+  return { tiles, newCount, cost, affordable, payableCount, stopReason };
 }
 
 /** Baut den Pfad in Reihenfolge mit `placeRoad` (gleiche Einzelaufrufe); endet an der ersten nicht bezahlbaren Kachel. */
@@ -88,7 +102,14 @@ export function lineHintText(
   const blocked = plan.tiles.filter((t) => t.state === 'blocked').length;
   const head = `Weg-Linie · ${plan.newCount} neue ${plan.newCount === 1 ? 'Weg' : 'Wege'} · ${plan.cost} Geld`;
   if (blocked === 0 && plan.affordable) return { tone: 'ok', text: head };
-  const why = plan.stopReason === null ? '' : `: ${friendly(plan.stopReason)}`;
   const lead = blocked > 0 ? `${head} · ${blocked} blockiert` : head;
-  return { tone: 'bad', text: `${lead}${why}` };
+  // Geldmangel: Zählung wie beim Bau statt Einzelkachel-Zahlen der Sim (kein Widerspruch zu den Gesamtkosten)
+  const money = plan.affordable
+    ? ''
+    : ` · Geld reicht für ${plan.payableCount} von ${plan.newCount}`;
+  const why =
+    blocked > 0 && plan.stopReason !== null && plan.affordable
+      ? `: ${friendly(plan.stopReason)}`
+      : '';
+  return { tone: 'bad', text: `${lead}${money}${why}` };
 }
