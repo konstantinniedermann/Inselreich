@@ -97,21 +97,21 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475. **Neues Claude-Gespräch empfohlen** (R438 V4 b). Wochenfenster
-91 % (Reset 2026-10-14 12:00): Parallelität halbiert (≤ 4 Agenten). Actions-Ampel GELB (1784/2000): Push erlaubt, R335 gilt.
+Zwischenstand Session 6584aaa4 (R578–R609; Nutzerauftrag: Wochenlimit ignorieren, R578). Daueraufträge: R445, R475.
+**Neues Claude-Gespräch empfohlen** (R438 V4 b). Ein Push je Session (R335); «push-bereit» = `make push-check`-Schwelle (R598 V2).
 
-1. **Release REL-20** (Entwurf oben): Push-Gate nach Handbuch 1.53 durch `production-integrator` **im Worktree
-   `.worktrees/integrate`** (R565 P1), `git push origin <geprüfter Hash>:main`, Pages per `gh workflow run Pages --ref main`,
-   `backup/main-lokal` per Fast-Forward. Vorher `make check` bei ruhiger Last (zeitreserve-Hinweise `seaKorridor`,
-   `islands-c`, R570; Coach-Befund: `islands-c.test.ts` «Spanne protokollieren» ≈ 6981 ms Runner-Schätzung > 5000 ms
-   Timeout — vor dem Push klären, sonst CI-Risiko). Danach Prozess-Aussensicht (R127).
-2. **UI-HAEPPCHEN-A** umsetzen (Plan `2026-10-12-ui-haeppchen-a.md`, Gate R573: Auflagen (4)–(7) vor T01; 11 Starts).
-3. Danach **UI-HAEPPCHEN-B** (Plan `2026-10-12-ui-haeppchen-b.md`, Gate R577: Auflagen (1)(2)(4) vor T01; 11 Starts, Parallelität 2).
-4. Retro-Vorschläge Session 1a73e6c1 entscheiden ([Retro](retros/2026-10-12-session-1a73e6c1-ende.md)), V1 = E-064 Guard sperrt
-   `git stash`, V2 = E-065 Warnung state.md-Rückstand; Ampel-Vorfälle Cache-Write/Flake quittiert (adhoc-2026-10-12-ampel).
-5. Nächster Meilenstein-Schritt: Erweiterung 1 «Stände und Segel» liegt in der Nutzer-Session (`design/erweiterung-1`, K2
-   Spec gegatet); M14-E2/E3 gehen dort als K3/K4 auf. L0 plant nichts davon ohne Merge jener Branch. I-047 Stammkunde ist frei (R571).
-6. Experimente: E-060 (`deny`), E-062, E-063 laufend (R565 V1).
+1. **Push REL-21** (Release-Check OK R603/R605): main lokal ab `67661df1`+ enthält UI-HAEPPCHEN-A, -B, I-047 (Save **v14**),
+   DOC-ARCHIV, TOOL-BUENDEL-11, IDEEN-09. Integrator: `make push-check` im Worktree `.worktrees/integrate` (Exit 1 bei ruhiger Last =
+   Substanz, nicht wiederholen, R598 V3), Push per geprüftem Hash, Pages, `backup/main-lokal`. N-100 (Dropbox pausieren) offen.
+2. **UI-HAEPPCHEN-C** (I-088 + I-090, Gate R607): Umsetzung läuft/lief in `.worktrees/ui-haeppchen-c` (`feat/ui-haeppchen-c`);
+   Schlussbericht → Gate Merge → lokaler Merge.
+3. **I092 Inselmarkt-Vorliebe** (Gate Spec R609, Spec `design/i092` @ `f5dec181`, Plan `plan/i092` @ `39859bbc`): Kombiniertes
+   Gate (lead-qa) offen; danach Controller (8 Starts beantragt), vorher `design/i092` in `plan/i092` mergen.
+4. Danach I-100 «Neu»-Zähler (R606), UI-Aufräum-Sammelpaket (I-089, I-098 Rechtsklick wie Esc, I-099, Kleinbefunde REL-21).
+5. Ende-Routine offen: `studio-coach` setzt R588 V1, R598 V1–V3, R599 (4), R602-Vermerk, Einzeiler `make zeitreserve-gate` in
+   gates.md/Handbuch um; E-060 bewerten → E-064/E-065 nachrücken; Cache-Write-Hebel lead-tech (Pflicht).
+6. Erweiterung 1 «Stände und Segel» bleibt in der Nutzer-Session; beim Merge jener Branch: Save-Nummer (v14 belegt durch I-047, R583),
+   Pflichtfeld `prefers` in `IslandDef` (I-092, R609).
 
 ## Aktuelles Projekt und Phase
 

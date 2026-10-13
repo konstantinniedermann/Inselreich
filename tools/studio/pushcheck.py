@@ -3,6 +3,10 @@
 Vorprüfungen, Warten auf ruhige Last, genau ein ``make check-push``, strenge Zeitreserve
 (``check.ts --push``), höchstens eine Nachmessung der markierten Dateien, ``check-ci-perf``.
 Exit 0 grün · 1 rot · 2 kein ruhiges Fenster / nicht belastbar · 3 Testsperre belegt.
+
+Modus ``--gate`` (make zeitreserve-gate, R598 V1): nur die Nachmessung der aktuell
+markierten Dateien (``MARKED``), vor dem Push-Gate. Gleiche Exit-Codes, Schlusszeile
+``zeitreserve-gate: grün | SUBSTANZ | nicht belastbar``.
 """
 
 from __future__ import annotations
@@ -15,6 +19,7 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+import loadsnap
 import paths
 
 LOAD_WAIT = 3.0
@@ -116,6 +121,7 @@ class Gate:
         self.retried = False
         self.d1 = False
         self.main_load_start: float | None = None
+        self.gate_note = ""
         self.started = time.monotonic()
 
     def step(
@@ -141,6 +147,18 @@ class Gate:
             self.load_errors += 1
             return None
 
+    @staticmethod
+    def _load_protocol(current: float | None) -> None:
+        """Lastprotokoll (R588 V3): Ausgabezeile und Event; Fehler werden geschluckt."""
+        try:
+            snap = loadsnap.real_snapshot(current)
+            _say(f"push-check: {loadsnap.format_line(snap)}")
+            loadsnap.record("kein_ruhiges_fenster", "pushcheck", snap)
+        except Exception as error:  # noqa: BLE001 - nie wegen des Protokolls abbrechen
+            print(
+                f"push-check: Lastprotokoll fehlgeschlagen ({error})", file=sys.stderr
+            )
+
     def wait_quiet(self) -> bool:
         waited = 0
         while True:
@@ -154,6 +172,7 @@ class Gate:
                 return True
             if waited >= WAIT_MAX_S:
                 _say(f"push-check: kein ruhiges Fenster nach {waited} s (Load {shown})")
+                self._load_protocol(current)
                 return False
             if waited % 60 == 0:
                 _say(
@@ -200,6 +219,17 @@ class Gate:
                 return 0 if code == 2 else 1
             return self.retry(files)
         return 1
+
+    def gate(self) -> int:
+        """Nur Nachmessung der Markierungsliste (kein check-push); Exit 0, 1, 2 oder 3."""
+        files = _read_list(self.marked)
+        if files is None:
+            self.gate_note = "Markierungsliste fehlt oder ist ungültig"
+            return 2
+        if not files:
+            self.gate_note = "Markierungsliste leer, nichts zu messen"
+            return 0
+        return self.retry(files)
 
     def sequence(self) -> int:
         for name, cmd in PRECHECKS:
@@ -272,5 +302,61 @@ def main(
     return code
 
 
+def main_gate(
+    run: Run = real_run,
+    load=real_load,
+    sleep=time.sleep,
+    git=real_git,
+    marked: Path = MARKED,
+    retry_out: Path = RETRY_OUT,
+    measurement: Path = MEASUREMENT,
+) -> int:
+    """Einstieg für ``--gate``: strenge Zeitreserve nur für die markierten Dateien."""
+    gate = Gate(run, load, sleep, git, marked, retry_out, measurement)
+    retry_out.unlink(missing_ok=True)
+    code = gate.gate()
+    duration = time.monotonic() - gate.started
+    if code == 0:
+        note = f" ({gate.gate_note})" if gate.gate_note else ""
+        _say(f"zeitreserve-gate: grün{note}")
+    elif code == 1:
+        _say(
+            f"zeitreserve-gate: SUBSTANZ ({gate.retry_files} Dateien, "
+            "Nachmessung bei ruhiger Last bestätigt die Verletzung)"
+        )
+    elif code == 3:
+        _say("zeitreserve-gate: Testsperre belegt (Exit 3), später erneut starten")
+    else:
+        if gate.gate_note:
+            reason = gate.gate_note
+        else:
+            now = gate._load_now()
+            shown = "unbekannt" if now is None else f"{now:.1f}"
+            quiet = now is not None and now <= LOAD_WAIT
+            reason = (
+                f"Last {shown}, check.ts meldet nicht belastbar, Hauptmessung fehlt?"
+                if quiet and gate.steps
+                else f"Last {shown}, kein ruhiges Fenster"
+            )
+        _say(f"zeitreserve-gate: nicht belastbar ({reason})")
+    try:
+        paths.append_event(
+            {
+                "ts": paths.now_iso(),
+                "session_id": os.environ.get("CLAUDE_CODE_SESSION_ID", "manual"),
+                "kind": "zeitreserve_gate",
+                "exit": code,
+                "retry_files": gate.retry_files,
+                "steps": gate.steps,
+                "duration_s": round(duration, 1),
+            }
+        )
+    except Exception as error:  # noqa: BLE001 - nie wegen des Events abbrechen
+        print(
+            f"zeitreserve-gate: Ereignis nicht geschrieben ({error})", file=sys.stderr
+        )
+    return code
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main_gate() if "--gate" in sys.argv[1:] else main())

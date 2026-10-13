@@ -1,6 +1,6 @@
 // R375 V1: studioweite Testsperre (tools/testlock/testlock.ts); Last per TESTLOCK_FAKE_LOAD simuliert.
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -10,8 +10,12 @@ const nodeEnv = (globalThis as unknown as { process: { env: Record<string, strin
   .process.env;
 const script = new URL('../../tools/testlock/testlock.ts', import.meta.url).pathname;
 
+const loadPs = join(mkdtempSync(join(tmpdir(), 'loadps-')), 'ps.txt');
+writeFileSync(loadPs, '  11 90.0 node vitest worker\n  12 5.0 bash\n');
+
 function setup() {
   const lock = join(mkdtempSync(join(tmpdir(), 'testlock-')), 'lock');
+  const studio = mkdtempSync(join(tmpdir(), 'studio-home-'));
   const run = (extra: Record<string, string | undefined>, ...cmd: string[]) =>
     spawnSync('node', [script, ...cmd], {
       encoding: 'utf8',
@@ -22,10 +26,21 @@ function setup() {
         STUDIO_TESTLOCK_HELD: undefined,
         TESTLOCK_PATH: lock,
         TESTLOCK_FAKE_LOAD: '1',
+        STUDIO_HOME: studio, // Abbruch-Events nie ins echte .studio
+        LOADSNAP_PS_FIXTURE: loadPs,
         ...extra,
       },
     });
-  return { lock, run };
+  const events = () => {
+    const f = join(studio, 'events.jsonl');
+    return existsSync(f)
+      ? readFileSync(f, 'utf8')
+          .trim()
+          .split('\n')
+          .map((l) => JSON.parse(l) as Record<string, unknown>)
+      : [];
+  };
+  return { lock, run, events };
 }
 
 const holder = (pid: number, cmd: string) =>
@@ -46,6 +61,25 @@ describe('testlock', () => {
     expect(p.status).toBe(3);
     expect(p.stderr).toContain('Load');
     expect(p.stdout).not.toContain('GELAUFEN');
+  });
+
+  it('Lastabbruch: Lastprotokoll auf stderr und Event load_abort, Exit bleibt 3', () => {
+    const { run, events } = setup();
+    const p = run({ TESTLOCK_FAKE_LOAD: '9' }, 'node', '-e', '0');
+    expect(p.status).toBe(3);
+    expect(p.stderr).toContain('Lastprotokoll: Load 9.00');
+    expect(p.stderr).toContain('Vitest-Worker: 1');
+    const [e] = events();
+    expect(e).toMatchObject({ kind: 'load_abort', source: 'testlock', reason: 'load', load: 9 });
+  });
+
+  it('belegte Sperre: Lastprotokoll und Event mit Grund lock', () => {
+    const { lock, run, events } = setup();
+    writeFileSync(lock, holder(1, 'make test'));
+    const p = run({}, 'node', '-e', '0');
+    expect(p.status).toBe(3);
+    expect(p.stderr).toContain('Lastprotokoll:');
+    expect(events()[0]).toMatchObject({ kind: 'load_abort', source: 'testlock', reason: 'lock' });
   });
 
   it('Last genau 8 ist erlaubt', () => {
