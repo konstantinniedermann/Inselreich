@@ -6894,3 +6894,17 @@ es; wer später merged, ergänzt neue Inseln (Hinweis an die Nutzer-Session beim
 Regelbezug: gates.md Gate Spec, Kombiniertes Gate, R417, R553, R608 · Kosten bei Irrtum: ein Test mehr in der Umsetzung.
 
 Entscheider: L0 · Anlass: Urteile lead-tech und lead-qa gate-I-092 · ADR: —
+
+## R610 · 2026-10-13 · Kombiniertes Gate I092: OK mit Auflagen
+
+Ruling: Kurzplan `plan/i092` @ `39859bbc`, Urteil lead-qa BEDENKEN (3 mittel, 3 niedrig), AK-Abdeckung vollständig. L0: Ownership
+disjunkt zu UI-HAEPPCHEN-C, kein Save, Abhängigkeiten erfüllt. Entscheid **OK**, Budget **7 Starts / P1** (Review T02 auf opus über die
+ganze Branch ersetzt den Final-Review, QA (6)). Auflagen vor T01 durch den Controller ohne Zweitprüfung: (1) AK-IM-03 nur per Route
+über `tickShips` entladen, «oder direkt gesetzt» streichen; (2) **Weltkarten-Hover zeigt die Markt-Zeile auch** (Entscheid), T02
+erhält `tests/ui/islandCard.test.ts` mit begründet angepassten Erwartungen; (3) Branch `feat/i092` ab `plan/i092`, vorher
+`design/i092` @ `f5dec181` und main per Merge holen, Rückfall-Satz streichen; (4) `tests/ui/trade.test.ts` in den Grün-Lauf T02;
+(5) Beleg AK-IM-10 = leerer Diff `save.ts`/`types.ts`.
+
+Regelbezug: gates.md Kombiniertes Gate, R609 · Kosten bei Irrtum: eine Textzeile im Hover.
+
+Entscheider: L0 · Anlass: Berichte lead-tech plan-I092, lead-qa gate-plan-I092 · ADR: —
