@@ -6830,3 +6830,20 @@ als Designfrage offen (README beschreibt jetzt den Ist-Zustand).
 Regelbezug: R565 V2, R602, R603, R604 · Kosten bei Irrtum: —
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-11 · ADR: —
+
+## R606 · 2026-10-13 · Runden-Ruling IDEEN-09
+
+Ruling: Bericht lead-design IDEEN-09, `docs/ideen-09` @ `91e65e2f`: 13 neue Ideen I-088…I-100, Pool 15/40, `docs/ideen.md` 28,6 KB,
+keine §5.3-Frage. Entscheide wie empfohlen: (1) **einplanen** I-092 Inselmarkt-Vorliebe (zuerst Kurzdesign mit Werterechnung durch
+lead-design, Budget 2 Starts; Rechnung muss zeigen, dass sich nur Konsumgüter spürbar lohnen), **UI-HAEPPCHEN-C** = I-088
+Marktvergleich auf der Stammkunden-Angebotskarte + I-090 Sprung Vertragskarte → Erzeuger (Plan durch lead-tech, Stufe leicht,
+Kombiniertes Gate), danach I-100 «Neu»-Zähler am Ereignis-Log (ersetzt I-058). (2) Beipack zum nächsten UI-Aufräum-Sammelpaket:
+I-089, I-098, I-099 sowie die Kleinbefunde aus REL-21. (3) **I-098 entschieden:** Rechtsklick im Linienzug beendet zuerst nur den
+Zug, der zweite Rechtsklick legt das Werkzeug ab — wie Esc; README wird mit dem Paket angeglichen. (4) parken I-091, I-093, I-094,
+I-095, I-097; verwerfen I-096. (5) Bereinigung nach R599 bestätigt (IDEEN-08-Rangliste und zehn geparkte Ideen ins Archiv). Merge
+`docs/ideen-09` lokal durch den Integrator. UI-HAEPPCHEN-C plant gegen main mit I-047 (lokal), Umsetzung nach dem Push REL-21
+oder gestapelt.
+
+Regelbezug: docs/ideen.md Ablauf, R445, R566, R599, R603, Verfassung §5.3 · Kosten bei Irrtum: eine geparkte Idee später neu bewerten.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-09 · ADR: —
