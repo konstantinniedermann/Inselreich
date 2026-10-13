@@ -6494,3 +6494,17 @@ zulässt; L0 entscheidet dann Gate Merge und Push REL-20. Budget unverändert (2
 Regelbezug: R570, R579, gates.md Gate Merge · Kosten bei Irrtum: ein langsamer Test bleibt mit grosszügigem Timeout unbemerkt langsamer.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-10 · ADR: —
+
+## R583 · 2026-10-13 · Gate Brainstorming I-047 Stammkunde: OK Option 3; Gate Spec starten
+
+Ruling: Bericht lead-design design-I-047, `design/i047` @ `b8b5477a`, Selbstprüfung BEDENKEN (geringes Spielgewicht). L0-Prüfung
+der fünf Fragen: stärkt die Säule Handel (planbare Einnahme statt nur Zufallsauftrag), Spielerzweck in einem Satz sagbar («sichere
+Abnahme gegen höhere Prämie»), Scope klar (zwei Pakete SIM/UI), nur Mechanik, Option 3 ist die einfachste (nutzt den bestehenden
+Auftragsplatz). Abgrenzung zu Erweiterung 1 belegt (I-047 nur in deren verworfener Variante B). Entscheide: (1) **Gate Brainstorming
+OK, Option 3** «Stammkunde im Auftragsplatz». (2) Save v14: wer zuerst merged, erhält v14, der andere zieht nach (R487 P-4). (3)
+Verlustfreie Migration v13→v14 bestätigt (Verfassung §3 erlaubt Abweisen, verlangt es nicht; unbekannte Versionen weiter abweisen
+mit Test). (4) R7 (Zufallsauftrag im selben Tick nach Bruch) bleibt. Gate Spec: `lead-tech` und `lead-qa` (beide opus) parallel.
+
+Regelbezug: gates.md Gate Brainstorming, Gate Spec, R571 (4), R487 · Kosten bei Irrtum: zwei kleine Pakete für eine Mechanik mit geringem Gewicht.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-047 · ADR: —
