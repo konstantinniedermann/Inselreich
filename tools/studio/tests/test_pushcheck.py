@@ -352,5 +352,90 @@ class PushCheckTest(unittest.TestCase):
             self.assertEqual(h.go(), 0)
 
 
+class GateTest(unittest.TestCase):
+    """main_gate: strenge Zeitreserve nur für die markierten Dateien (R598 V1)."""
+
+    def go(self, h: Harness) -> int:
+        with contextlib.redirect_stdout(h.output):
+            return pushcheck.main_gate(
+                run=h.run,
+                load=h.load,
+                sleep=h.sleep,
+                git=h.git,
+                marked=h.marked,
+                retry_out=h.retry_out,
+                measurement=h.measurement,
+            )
+
+    def test_gruen_nach_nachmessung(self):
+        h = Harness(self)
+        h.marked.write_text('["tests/a.test.ts"]')
+        self.assertEqual(self.go(h), 0)
+        self.assertEqual(h.count(VITEST), 1)
+        self.assertEqual(h.count(CHECK_PUSH), 0)
+        self.assertIn("zeitreserve-gate: grün", h.output.getvalue())
+
+    def test_leere_liste_ist_gruen_mit_hinweis(self):
+        h = Harness(self)
+        h.marked.write_text("[]")
+        self.assertEqual(self.go(h), 0)
+        self.assertEqual(h.count(VITEST), 0)
+        self.assertIn("nichts zu messen", h.output.getvalue())
+        self.assertIn("zeitreserve-gate: grün", h.output.getvalue())
+
+    def test_substanz_gibt_exit_1(self):
+        h = Harness(self)
+        h.marked.write_text('["a.ts", "b.ts"]')
+        h.handlers[CHECK_TS] = (1, "")
+        self.assertEqual(self.go(h), 1)
+        self.assertIn("zeitreserve-gate: SUBSTANZ (2 Dateien", h.output.getvalue())
+
+    def test_last_gibt_exit_2(self):
+        h = Harness(self, loads=(5,))
+        h.marked.write_text('["a.ts"]')
+        self.assertEqual(self.go(h), 2)
+        self.assertEqual(h.count(VITEST), 0)
+        self.assertIn(
+            "zeitreserve-gate: nicht belastbar (Last 5.0", h.output.getvalue()
+        )
+
+    def test_fehlende_liste_gibt_exit_2(self):
+        h = Harness(self)
+        self.assertEqual(self.go(h), 2)
+        self.assertIn("zeitreserve-gate: nicht belastbar", h.output.getvalue())
+        self.assertIn("Markierungsliste", h.output.getvalue())
+
+    def test_ungueltige_liste_gibt_exit_2(self):
+        h = Harness(self)
+        h.marked.write_text("{kaputt")
+        self.assertEqual(self.go(h), 2)
+
+    def test_testsperre_gibt_exit_3(self):
+        h = Harness(self)
+        h.marked.write_text('["a.ts"]')
+        h.handlers[VITEST] = (1, "testlock: ABBRUCH belegt")
+        self.assertEqual(self.go(h), 3)
+        self.assertIn("Testsperre", h.output.getvalue())
+
+    def test_ereignis(self):
+        h = Harness(self)
+        h.marked.write_text('["a.ts"]')
+        self.go(h)
+        (event,) = [e for e in h.events() if e["kind"] == "zeitreserve_gate"]
+        self.assertEqual(event["exit"], 0)
+        self.assertEqual(event["retry_files"], 1)
+        self.assertIn("duration_s", event)
+        self.assertTrue(event["steps"])
+
+    def test_ereignis_schreibfehler_aendert_exit_nicht(self):
+        h = Harness(self)
+        h.marked.write_text("[]")
+        with (
+            mock.patch.object(pushcheck.paths, "append_event", side_effect=OSError),
+            contextlib.redirect_stderr(io.StringIO()),
+        ):
+            self.assertEqual(self.go(h), 0)
+
+
 if __name__ == "__main__":
     unittest.main()
