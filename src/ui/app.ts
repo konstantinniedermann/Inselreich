@@ -62,6 +62,7 @@ import {
   type FocusState,
 } from './goodFocus';
 import { cutOffIds, newlyCut, runProblemJump, spot, type ProblemCursor } from './problems';
+import { trackFullSince } from './storageFull';
 import { openUpkeepCard } from './upkeepCard';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
@@ -457,10 +458,13 @@ function launch(
 
   /** Problem-Sprung (I-042): Cursor nur in der Closure, nie im Spielstand. */
   let problemCursor: ProblemCursor | null = null;
+  /** «Lager voll» (I-085): Zähler nur hier; Laden/Neues Spiel bauen über `restart` eine frische Closure, `trackFullSince` verwirft zudem Zähler fremder Welten. */
+  const fullSince = new Map<string, number>();
   const jumpToProblem = (dir: 1 | -1): void =>
     runProblemJump(
       {
         world,
+        fullSince,
         activeIsland: () => state.activeIsland,
         getCursor: () => problemCursor,
         setCursor: (c) => {
@@ -816,6 +820,7 @@ function launch(
       showMessage(unlock.text, 'info', true, true, { label: 'Hilfe', onClick: () => openHelp() });
       renderBuildMenu(navEl, state, selectTool, toggleCategory); // neue Einträge ohne Kategoriewechsel
     }
+    trackFullSince(fullSince, world);
     updateHud(hudEl, state, actions);
     updateNoticeStack(noticeStack, world, state.activeIsland);
     updateEventLog(logBox, state.eventLog, crisisLogVisible(world), (t) => {
