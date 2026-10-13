@@ -6661,3 +6661,16 @@ Nachtrag in `adhoc-testlock` in der Ende-Retro (Final-Reviews prüfen die CI-Res
 Regelbezug: R270, R585, R591, E-043, gates.md Prüfliste · Kosten bei Irrtum: ein weiteres Werkzeug-Paket vor dem Push.
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-20 (failed) · ADR: —
+
+## R594 · 2026-10-13 · Gate Merge TOOL-ZEITRESERVE-M14: OK; Push-Gate REL-20 neu
+
+Ruling: Bericht lead-tech, `tool/zeitreserve-m14` @ `ea7bff9c`, nur 6 Testdateien, Task-Review OK (keine Assertion gelockert, Seeds
+lückenlos), `make check` Exit 0. Fünf Fälle beschleunigt, `islands-c` Spanne und `wildlife` E5 Delfine mit Timeout 10000 ms und
+Kommentar, `fauna` CAPS knapp unter der Grenze (662 ms × 3 < 2000 ms, Restrisiko). Der gemeldete Fall `seaKorridor` «AK-K1b Teilhash»
+ist schon durch `tool/b10` (Timeout 20000 ms, R582) abgedeckt; die Branch basiert auf main ohne b10 — kein Folgepaket. Entscheid
+**Gate Merge OK**; `production-integrator` merged `tool/b10` und `tool/zeitreserve-m14` in `.worktrees/integrate`, `make push-check`
+(höchstens 3 Läufe), Push REL-20. I047-UI läuft parallel (eine Test-Instanz, R588 V1).
+
+Regelbezug: gates.md Gate Merge, R582, R585, R588, R593 · Kosten bei Irrtum: `fauna` CAPS blockiert den nächsten push-check knapp.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-ZEITRESERVE-M14 · ADR: —
