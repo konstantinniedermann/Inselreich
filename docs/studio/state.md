@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-13 (Studio-Session 6584aaa4, R578–R599, laufend: REL-20 live `0d1db8f3`; UI-HAEPPCHEN-A/B + I-047 (Save v14) lokal auf main @ `0a19ad53`, REL-21 offen; TOOL-BUENDEL-11 und DOC-ARCHIV in Arbeit)
+Stand: 2026-10-13 (Studio-Session 6584aaa4, R578–R612, laufend: REL-20 live `0d1db8f3`; lokal auf main @ `600bf8bb`: REL-21 (UI-HAEPPCHEN-A/B, I-047 Save v14, DOC-ARCHIV, TOOL-BUENDEL-11, IDEEN-09) und UI-HAEPPCHEN-C; I092 in Umsetzung)
 
 ## Release-Notizen
 
@@ -103,8 +103,7 @@ Zwischenstand Session 6584aaa4 (R578–R609; Nutzerauftrag: Wochenlimit ignorier
 1. **Push REL-21** (Release-Check OK R603/R605): main lokal ab `67661df1`+ enthält UI-HAEPPCHEN-A, -B, I-047 (Save **v14**),
    DOC-ARCHIV, TOOL-BUENDEL-11, IDEEN-09. Integrator: `make push-check` im Worktree `.worktrees/integrate` (Exit 1 bei ruhiger Last =
    Substanz, nicht wiederholen, R598 V3), Push per geprüftem Hash, Pages, `backup/main-lokal`. N-100 (Dropbox pausieren) offen.
-2. **UI-HAEPPCHEN-C** (I-088 + I-090, Gate R607): Umsetzung läuft/lief in `.worktrees/ui-haeppchen-c` (`feat/ui-haeppchen-c`);
-   Schlussbericht → Gate Merge → lokaler Merge.
+2. **UI-HAEPPCHEN-C** (I-088 + I-090) lokal gemergt `600bf8bb` (R612); fährt mit dem nächsten Push.
 3. **I092 Inselmarkt-Vorliebe** (Gate Spec R609, Spec `design/i092` @ `f5dec181`, Plan `plan/i092` @ `39859bbc`): Kombiniertes
    Gate (lead-qa) offen; danach Controller (8 Starts beantragt), vorher `design/i092` in `plan/i092` mergen.
 4. Danach I-100 «Neu»-Zähler (R606), UI-Aufräum-Sammelpaket (I-089, I-098 Rechtsklick wie Esc, I-099, Kleinbefunde REL-21).
