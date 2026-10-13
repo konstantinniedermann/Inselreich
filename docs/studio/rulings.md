@@ -6936,3 +6936,18 @@ Archiv-Trenner, Lücken in der Rangliste) → UI-Aufräum-Sammelpaket (R606).
 Regelbezug: gates.md Gate Merge, R607, R611 · Kosten bei Irrtum: zwei Zählregeln laufen auseinander (Gleichheitstest fängt das).
 
 Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-C (Nacharbeit) · ADR: —
+
+## R613 · 2026-10-13 · Gate Merge I092 Inselmarkt-Vorliebe: OK
+
+Ruling: Bericht lead-tech I092, `feat/i092` @ `cb1c2436` (enthält `design/i092` @ `f5dec181` und main), T01/T02 mit Rot-Belegen,
+Review T01 BEDENKEN → behoben, Review opus über die Branch ZURÜCK (`seaMapView.test.ts` rot) → behoben → Delta OK, Playtest AK-IM-14
+pausiert OK, `make check` Exit 0, `make zeitreserve-gate` Exit 0, Diff `save.ts`/`types.ts`/`balance.test.ts`/`controller.ts` leer.
+Entscheide: (1) **Gate Merge OK**; lokaler Merge durch `production-integrator`, `make check` Exit 0, kein Push (REL-22).
+(2) Ownership-Erweiterung nachträglich bestätigt (`tests/ui/seaMapView.test.ts` + Doc-Kommentar `src/ui/seaMapView.ts` wegen R610 (2),
+`tests/sim/islandTraits.test.ts` wegen Pflichtfeld `prefers`) — künftig vor der Änderung melden. (3) Zeit-Abnahme Basis vs. Branch
+fehlt; ersetzt durch grünen `zeitreserve-gate` — als Vermerk an die Ende-Retro. (4) Badge-Verwechslung `prefer-*`/`badge--boom` und
+toter README-Verweis «Seefahrt und Gewürz» → UI-Aufräum-Sammelpaket.
+
+Regelbezug: gates.md Gate Merge, R609, R610 · Kosten bei Irrtum: ein Hotfix im Inselmarkt vor REL-22.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech I092 · ADR: —
