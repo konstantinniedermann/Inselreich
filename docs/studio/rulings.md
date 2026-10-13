@@ -6782,7 +6782,7 @@ Entscheid **Gate Merge OK**, lokaler Merge durch `production-integrator` nach DO
 gates.md → `studio-coach` (Ende-Routine, zusammen mit R598 V1); (2) Spec AK-M14E1-36 «Holz 20» → «Holz 10» als Beipack beim
 nächsten Design-Durchgang (Beobachtung); (3) alte Fundstellen `m13e2-v13` in Plänen bleiben (historisch). **Prozess-Vermerk an die
 Ende-Retro:** Controller machte T02/T04 selbst und ersetzte die Task-Reviews durch ein gemeinsames Review — gegen Briefing («Prüfschritte
-nicht streichen», L1 macht keine Inhaltsarbeit). Leeres `/tmp/x` von L0 entfernt.
+nicht streichen», L1 macht keine Inhaltsarbeit). `/tmp/x` ist kein leeres Verzeichnis, sondern eine Agenten-Ausgabedatei (52 KB, 17:45) — bleibt liegen, harmlos.
 
 Regelbezug: gates.md Gate Merge, R581, R588, R595, R598 · Kosten bei Irrtum: ein Fehler in Werkzeug-Code fällt erst im nächsten push-check auf.
 
