@@ -1,10 +1,16 @@
-import { GOODS, GOOD_IDS, ORDER_PREMIUM } from './defs/goods';
+import {
+  CONTRACT_PENALTY_PCT,
+  CONTRACT_PREMIUM,
+  GOODS,
+  GOOD_IDS,
+  ORDER_PREMIUM,
+} from './defs/goods';
 import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from './defs/timing';
 import { islandName } from './islands';
 import { islandAt } from './placement';
 import { createRng } from './rng';
 import { functionLock } from './unlocks';
-import type { GoodId, Result, Tier, World } from './types';
+import type { Contract, GoodId, Result, Tier, World } from './types';
 import { fail, ok } from './types';
 import { noKontorTrade } from './trade';
 import { HOME } from './world';
@@ -91,4 +97,14 @@ export function nextOrderTick(world: World): number {
   const t = world.tick;
   if (t < ORDER_FIRST_TICK) return ORDER_FIRST_TICK;
   return ORDER_FIRST_TICK + ORDER_PERIOD * (Math.floor((t - ORDER_FIRST_TICK) / ORDER_PERIOD) + 1);
+}
+
+/** Stückpreis eines Liefervertrags (I-047). */
+export function contractUnitPrice(good: GoodId): number {
+  return Math.floor(GOODS[good].buy * CONTRACT_PREMIUM);
+}
+
+/** Strafe bei Vertragsbruch, aus den beim Annehmen festgeschriebenen Werten. */
+export function contractPenalty(c: Contract): number {
+  return Math.ceil((c.amount * c.price * CONTRACT_PENALTY_PCT) / 100);
 }

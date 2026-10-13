@@ -88,6 +88,20 @@ export interface OrderDef {
   tier: Tier;
   min: number;
   max: number;
+  /** Menge je Vertragslieferung, I-047. */
+  contract: number;
+}
+/** Liefervertrag (I-047): Menge und Stückpreis beim Annehmen festgeschrieben. */
+export interface Contract {
+  good: GoodId;
+  amount: number;
+  price: number;
+  island: number;
+}
+/** Angebot nach einer Auftragslieferung, gilt bis zum nächsten Periodenbeginn. */
+export interface ContractOffer {
+  good: GoodId;
+  island: number;
 }
 export interface GoodDef {
   id: GoodId;
