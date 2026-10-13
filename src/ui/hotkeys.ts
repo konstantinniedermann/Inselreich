@@ -106,6 +106,21 @@ export function hotkeyAction(
   return tool ? { kind: 'tool', tool } : null;
 }
 
+/**
+ * Hinweistext für unbelegte Zifferntasten 4 bis 8 (ohne Modifier, nicht im Feld, kein Dialog),
+ * sonst `null`. 9 und 0 bleiben ohne Seefahrt stumm.
+ */
+export function unboundDigitHint(
+  key: string,
+  mods: Mods,
+  inFormField: boolean,
+  modalOpen: boolean,
+): string | null {
+  if (inFormField || modalOpen || mods.ctrl || mods.meta || mods.alt) return null;
+  if (!/^[4-8]$/.test(key) || SPEED_KEYS[key] !== undefined) return null;
+  return `Tempo: ${Object.keys(SPEED_KEYS).join(', ')}`;
+}
+
 /** Gleiches Werkzeug (Art und Gebäudetyp). */
 export function sameTool(a: Tool, b: Tool): boolean {
   if (a.kind !== b.kind) return false;
@@ -143,6 +158,7 @@ export const NAV_KEYS: readonly { key: string; label: string }[] = [
   { key: 'Leertaste + Ziehen', label: 'Karte schwenken mit der Maus' },
   { key: 'Leertaste (antippen)', label: 'Pause / weiter' },
   { key: 'Strg/Cmd + Klick auf Gebäude', label: 'Gebäudetyp als Bauwerkzeug (Pipette)' },
+  { key: 'Umschalt + Weg ziehen', label: 'Weg als gerade Linie oder mit einem Winkel bauen' },
   { key: 'Mausrad', label: 'Zoomen' },
   { key: 'Esc', label: 'Werkzeug ablegen, Karte schliessen' },
   { key: 'Rechtsklick', label: 'Werkzeug ablegen' },

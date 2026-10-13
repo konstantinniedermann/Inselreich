@@ -9,10 +9,11 @@ import { makeVisibleHeight } from './cameraView';
 import { shipAt } from '../render/shipLane';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
-import { hotkeyAction, keyDownVerdict, type HotkeyAction } from './hotkeys';
+import { hotkeyAction, keyDownVerdict, unboundDigitHint, type HotkeyAction } from './hotkeys';
 import { isSaveChord } from './saveChord';
 import { mapDemolishAllowed } from './demolishConfirm';
 import { isModalOpen } from './modal';
+import { showMessage } from './messages';
 import { pickTarget, type IslandTile } from './islandTools';
 import { createSpaceTap } from './spaceTap';
 
@@ -24,7 +25,15 @@ export type InputAction =
   | { type: 'cancel' }
   | { type: 'hotkey'; action: HotkeyAction }
   | { type: 'pipette'; island: number; x: number; y: number }
-  | { type: 'dragEnd' };
+  | { type: 'dragEnd' }
+  | {
+      type: 'roadLine';
+      phase: 'update';
+      island: number;
+      from: { x: number; y: number };
+      to: { x: number; y: number };
+    }
+  | { type: 'roadLine'; phase: 'commit' | 'cancel' };
 
 /** Tastatur-Pan in Bildschirm-Pixeln je Sekunde (= 16 px je Frame bei 60 fps). */
 export const PAN_PX_PER_S = 960;
@@ -201,6 +210,8 @@ export function bindInput(
     downTile: IslandTile | null;
     /** Maus-Auswahl: wirkt erst beim Loslassen, Ziehen ab der Schwelle schwenkt stattdessen. */
     select: boolean;
+    /** Linienmodus: beim Aufsetzen mit Umschalt erfasst (Werkzeug Weg); der Zug setzt nichts, bis zum Loslassen. */
+    line: boolean;
   } | null = null;
   /** Aktive Finger (nur Touch). Bei zwei Fingern läuft eine Pinch-/Pan-Geste. */
   const touches = new Map<number, { sx: number; sy: number }>();
@@ -297,8 +308,10 @@ export function bindInput(
   /** Bricht Ein-Zeiger-Aktion ab; eine Weg-Zug-Serie wird mit `dragEnd` sauber beendet. */
   const cancelPointerAction = (): void => {
     const wasRoadDrag = drag !== null && !drag.panning && drag.road;
+    const wasLine = drag?.line === true;
     drag = null;
     gesture = null;
+    if (wasLine) onAction({ type: 'roadLine', phase: 'cancel' });
     if (wasRoadDrag) onAction({ type: 'dragEnd' });
     updateHover();
   };
@@ -322,6 +335,15 @@ export function bindInput(
 
   const onContextMenu = (e: MouseEvent): void => e.preventDefault();
 
+  const lineUpdate = (from: IslandTile, to: IslandTile): void =>
+    onAction({
+      type: 'roadLine',
+      phase: 'update',
+      island: from.island,
+      from: { x: from.x, y: from.y },
+      to: { x: to.x, y: to.y },
+    });
+
   const onPointerDown = (e: PointerEvent): void => {
     const p = local(e);
     const isTouch = e.pointerType === 'touch';
@@ -337,6 +359,7 @@ export function bindInput(
       }
     }
     if (e.button === 2) {
+      if (drag?.line === true) cancelPointerAction();
       onAction({ type: 'cancel' });
       return;
     }
@@ -351,6 +374,7 @@ export function bindInput(
     }
     canvas.setPointerCapture(e.pointerId);
     const hullTile = pickTarget(state.world, state.cam, state.tool, p.sx, p.sy);
+    const line = !wantsPan && !isTouch && e.shiftKey && state.tool.kind === 'road';
     const stroke =
       !wantsPan && state.tool.kind === 'demolish' && demolishStroke(state.world, hullTile);
     drag = {
@@ -361,7 +385,12 @@ export function bindInput(
       lastY: p.sy,
       panning: wantsPan,
       lastTile: null,
-      road: !wantsPan && isDragPaintTool(state.tool) && (state.tool.kind !== 'demolish' || stroke),
+      road:
+        !wantsPan &&
+        !line &&
+        isDragPaintTool(state.tool) &&
+        (state.tool.kind !== 'demolish' || stroke),
+      line,
       demolish: stroke,
       pointerId: e.pointerId,
       touch: isTouch,
@@ -371,6 +400,13 @@ export function bindInput(
       select: !wantsPan && !isTouch && state.tool.kind === 'select',
     };
     if (wantsPan) return;
+    if (line) {
+      // Linienmodus: nichts setzen, Vorschau ab der Drück-Kachel (Bau beim Loslassen)
+      pointer = p;
+      if (drag.downTile) lineUpdate(drag.downTile, drag.downTile);
+      updateHover();
+      return;
+    }
     if (drag.road && !isTouch) {
       // Maus: erste Weg-Kachel sofort; Touch wartet auf Ziehen oder Loslassen (Zwei-Finger-Geste baut nichts)
       drag.lastTile = drag.downTile ? tileKey(drag.downTile) : null;
@@ -422,6 +458,17 @@ export function bindInput(
         state.cam.x -= (p.sx - drag.lastX) / state.cam.zoom;
         state.cam.y -= (p.sy - drag.lastY) / state.cam.zoom;
         clamp();
+      } else if (drag.line) {
+        const t = pickTarget(state.world, state.cam, state.tool, p.sx, p.sy);
+        if (
+          t &&
+          drag.downTile &&
+          t.island === drag.downTile.island &&
+          tileKey(t) !== drag.lastTile
+        ) {
+          drag.lastTile = tileKey(t);
+          lineUpdate(drag.downTile, t);
+        }
       } else if (drag.road) {
         if (drag.touch && drag.lastTile === null && drag.downTile) {
           // Touch: erst über der Zieh-Schwelle beginnt die Serie auf der Drück-Kachel
@@ -476,7 +523,9 @@ export function bindInput(
     const d = drag;
     drag = null;
     if (d.panning || d.button !== 0) return;
-    if (d.select && !d.touch) {
+    if (d.line) {
+      onAction({ type: 'roadLine', phase: 'commit' });
+    } else if (d.select && !d.touch) {
       const up = local(e);
       const ship = exceedsDrag({ x: d.startX, y: d.startY }, { x: up.sx, y: up.sy })
         ? null
@@ -575,11 +624,15 @@ export function bindInput(
     if (verdict.act && hot) onAction({ type: 'hotkey', action: hot });
     if (verdict.preventDefault) e.preventDefault();
     if (hot) return;
+    const hint = unboundDigitHint(e.key, mods, isTextField(e.target), modal);
+    if (hint !== null && e.repeat === false) showMessage(hint);
     if (!panKeyAllowed(target, modal)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
     if (k === 'escape') {
-      onAction({ type: 'cancel' });
+      if (drag?.line === true)
+        cancelPointerAction(); // Esc im Linienzug: nur der Zug endet, Werkzeug bleibt
+      else onAction({ type: 'cancel' });
     } else if (k === ' ') {
       // Auf Knöpfen bleibt die Leertaste deren Aktivierung (R121 Punkt 3)
       const role = spaceKeyRole(target, modal, {
