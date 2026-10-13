@@ -13,6 +13,7 @@ import {
   unbindIslandMenu,
   chipRole,
   chipView,
+  createBalanceButton,
   houseConsumers,
   shouldBlurAfterClick,
   moneyView,
@@ -37,6 +38,10 @@ import { houseNearKontor, placeTownhall, setAllTax } from '../sim/helpers';
 import { uxWorld } from './worlds';
 import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
 import { GOODS_BALANCE_TICKS, perMinute, signedNum } from '../../src/ui/time';
+import { tickEconomy } from '../../src/sim/economy';
+import { putBuilding, twoIslandWorld } from '../sim/helpers';
+import { renderUpkeepList, UPKEEP_EMPTY_TEXT } from '../../src/ui/upkeepCard';
+import { fakeDocument, type FakeElement } from './fakeDom';
 
 describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
   it('AK-UX-07 tierTooltip und tierPath aus TIERS', () => {
@@ -392,5 +397,76 @@ describe('I-043 Chip-Tooltip, Zeile 2 (AK-GC-10)', () => {
   it('AK-GC-14 Mausklick gibt den Fokus ab, Tastatur nicht', () => {
     expect(shouldBlurAfterClick(1)).toBe(true);
     expect(shouldBlurAfterClick(0)).toBe(false);
+  });
+});
+
+describe('Bilanz-Knopf und Betriebsliste (I-062, AK-8, AK-9)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('AK-8 Bilanz-Chip ist ein echter Knopf (Enter und Leertaste lösen click aus) und öffnet per Klick', () => {
+    vi.stubGlobal('document', fakeDocument);
+    const opened: unknown[] = [];
+    const btn = createBalanceButton((b) => opened.push(b)) as unknown as FakeElement;
+    expect(btn.tagName).toBe('BUTTON');
+    expect(btn.type).toBe('button');
+    expect(btn.dataset.field).toBe('balance');
+    expect(btn.getAttribute('aria-haspopup')).toBe('dialog');
+    btn.fire('click', { detail: 1 });
+    btn.fire('click', { detail: 0 }); // Enter/Leertaste am Knopf: detail 0
+    expect(opened).toHaveLength(2);
+  });
+
+  const world = () => {
+    const w = twoIslandWorld();
+    const mk = (island: number, d: 'fisher' | 'toolmaker', n: number) =>
+      putBuilding(w, island, d, 2 + n * 3, 2);
+    const fisher = mk(0, 'fisher', 0);
+    const big = mk(1, 'toolmaker', 1);
+    const paused = mk(0, 'toolmaker', 2);
+    paused.paused = true;
+    tickEconomy(w);
+    return { w, big, paused, fisher };
+  };
+  const rowButtons = (root: FakeElement) =>
+    root.descendants().filter((e) => e.tagName === 'BUTTON' && e.dataset.building !== undefined);
+
+  it('AK-8 Zeilen sind Knöpfe mit aria-label; Klick springt zum Gebäude (ferne Insel)', () => {
+    vi.stubGlobal('document', fakeDocument);
+    const { w, big, paused, fisher } = world();
+    const jumps: number[] = [];
+    const root = renderUpkeepList(w, (id) => jumps.push(id)) as unknown as FakeElement;
+    const rows = rowButtons(root);
+    expect(rows).toHaveLength(3);
+    expect(rows.map((r) => r.dataset.building)).toEqual([big.id, paused.id, fisher.id].map(String));
+    for (const r of rows) {
+      expect(r.type).toBe('button');
+      expect(r.getAttribute('aria-label')).toMatch(/pro Minute/);
+    }
+    expect(rows[1]!.getAttribute('aria-label')).toMatch(/stillgelegt/);
+    rows[0]!.fire('click');
+    expect(jumps).toEqual([big.id]);
+  });
+
+  it('AK-7 Fusszeile entspricht dem Unterhalt des Tooltips (stats.upkeep je Minute)', () => {
+    vi.stubGlobal('document', fakeDocument);
+    const { w } = world();
+    const root = renderUpkeepList(w, () => {}) as unknown as FakeElement;
+    const foot = root.descendants().find((e) => e.dataset.part === 'total')!;
+    expect(foot.textContent).toBe(`Unterhalt −${perMinute(w.stats.upkeep, 100)} / min`);
+  });
+
+  it('AK-9 mehr als 20 Betriebe: «und n weitere»; 0 Betriebe: Hinweistext', () => {
+    vi.stubGlobal('document', fakeDocument);
+    const w = twoIslandWorld();
+    for (let i = 0; i < 23; i++)
+      putBuilding(w, i % 2, 'fisher', 2 + (i % 8) * 3, 2 + Math.floor(i / 8) * 3);
+    tickEconomy(w);
+    const root = renderUpkeepList(w, () => {}) as unknown as FakeElement;
+    expect(rowButtons(root)).toHaveLength(20);
+    const more = root.descendants().find((e) => e.dataset.part === 'more')!;
+    expect(more.textContent).toMatch(/^und 3 weitere/);
+    const empty = renderUpkeepList(twoIslandWorld(), () => {}) as unknown as FakeElement;
+    expect(rowButtons(empty)).toHaveLength(0);
+    expect(empty.descendants().some((e) => e.textContent === UPKEEP_EMPTY_TEXT)).toBe(true);
   });
 });

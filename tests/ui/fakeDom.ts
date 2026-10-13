@@ -15,7 +15,8 @@ export class FakeElement {
   style: Record<string, string> = {};
   children: FakeElement[] = [];
   private classes = new Set<string>();
-  private listeners: Record<string, Array<() => void>> = {};
+  private listeners: Record<string, Array<(ev: unknown) => void>> = {};
+  private attrs: Record<string, string> = {};
 
   constructor(tag: string) {
     this.tagName = tag.toUpperCase();
@@ -38,14 +39,28 @@ export class FakeElement {
     this.children.push(node);
     return node;
   }
-  addEventListener(type: string, fn: () => void): void {
+  addEventListener(type: string, fn: (ev: unknown) => void): void {
     (this.listeners[type] ??= []).push(fn);
   }
-  /** Löst die registrierten Listener aus (Klick, Änderung). */
-  fire(type: string): void {
-    for (const fn of this.listeners[type] ?? []) fn();
+  /** Löst die registrierten Listener aus (Klick, Änderung); `ev` ist das Ereignis-Fake. */
+  fire(type: string, ev: unknown = { detail: 0 }): void {
+    for (const fn of this.listeners[type] ?? []) fn(ev);
   }
   blur(): void {}
+  focus(): void {}
+  setAttribute(name: string, value: string): void {
+    this.attrs[name] = value;
+  }
+  getAttribute(name: string): string | null {
+    return this.attrs[name] ?? null;
+  }
+  replaceChildren(...nodes: FakeElement[]): void {
+    this.children = [...nodes];
+  }
+  /** Alle Nachkommen (Tiefensuche) für Testabfragen. */
+  descendants(): FakeElement[] {
+    return this.children.flatMap((c) => [c, ...c.descendants()]);
+  }
 
   querySelector<T = FakeElement>(selector: string): T | null {
     const m = /^\[data-([a-z-]+)="([^"]*)"\]$/.exec(selector);
