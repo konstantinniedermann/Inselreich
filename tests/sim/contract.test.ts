@@ -387,6 +387,29 @@ describe('R6/R7 Periodenbeginn mit Vertrag (AK-SK-09..17)', () => {
     expect(v.money).toBe(vref.money + 135);
   });
 
+  it('Bruchgrund-Priorität: lock > island > kontor > stock', () => {
+    const reasonOf = (w: World): string | undefined => {
+      const r = stepAt(w, T).contract;
+      return r?.kind === 'broken' ? r.reason : undefined;
+    };
+    const lockIsland = withRum(0);
+    lockIsland.contract = { ...rumContract(), island: lockIsland.islands.length };
+    lockOrders(lockIsland);
+    expect(reasonOf(lockIsland)).toBe('lock');
+
+    const lockStock = withRum(0);
+    lockOrders(lockStock);
+    expect(reasonOf(lockStock)).toBe('lock');
+
+    const islandStock = withRum(0);
+    islandStock.contract = { ...rumContract(), island: islandStock.islands.length };
+    expect(reasonOf(islandStock)).toBe('island');
+
+    const kontorStock = withRum(0, 1);
+    kontorStock.islands[1]!.kontorId = null;
+    expect(reasonOf(kontorStock)).toBe('kontor');
+  });
+
   it('17 Strafe aller Auftragsgüter', () => {
     for (const g of ORDER_GOODS) {
       const w = base();
@@ -485,6 +508,14 @@ describe('Determinismus (AK-SK-24)', () => {
     home(x).stock.rum = 0;
     step(x);
     expect(x.contract).toBeNull();
+    x.order = orderOf(x, 'rum', 5);
+    home(x).stock.rum = 40;
+    expect(deliverOrder(x).ok).toBe(true);
+    expect(acceptContract(x).ok).toBe(true);
+    x = maybeReload(x);
+    while (x.tick < periodStart(6) - 1) step(x);
+    expect(cancelContract(x).ok).toBe(true);
+    step(x);
     return x;
   }
 
