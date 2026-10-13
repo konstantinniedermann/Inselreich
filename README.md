@@ -89,7 +89,8 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   Bodenkachel unter dem Zeiger. Mit **`Umschalt` beim Aufsetzen** zieht man eine gerade oder L-förmige Strecke
   (längerer Schenkel zuerst): Die Vorschau zeigt neue Kacheln, Gesamtkosten und blockierte Kacheln; gebaut wird
   beim Loslassen. Reicht das Geld nicht, wird bis zur letzten bezahlbaren Kachel gebaut (mit Grund). `Esc`
-  bricht den Zug ab, ohne etwas zu bauen.
+  beendet nur den Zug, ohne etwas zu bauen; das Werkzeug «Weg» bleibt gewählt. Ein Rechtsklick beendet den Zug
+  ebenfalls und legt zusätzlich das Werkzeug ab.
 - **Gebäude:** In der Bauleiste eine **Kategorie** wählen (Infrastruktur, Wohnen, Produktion, Öffentlich); darüber
   öffnet sich eine Leiste mit den Einträgen samt Kosten. Sie bleibt offen, solange ein Werkzeug dieser Kategorie
   aktiv ist, und schliesst mit `Esc`, «Auswahl» oder erneutem Klick auf die Kategorie; ein Bau-Hotkey öffnet sie
@@ -156,7 +157,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 Die Werkzeugtasten wirken nur ohne Strg, Cmd oder Alt; Gross- und Kleinschreibung ist egal. Ausnahmen sind `Strg`/`Cmd` + `S` (Speichern; der Browser-Dialog «Seite speichern» wird im Spiel unterdrückt, Varianten mit `Umschalt` oder `Alt` bleiben dem Browser), `Umschalt` + `U` (Ausbau; `U` allein bleibt die Schule) und `Cmd`/`Strg` + Linksklick auf ein Gebäude (Pipette; auf dem Mac ist `Cmd` + Klick der Hauptweg, `Strg` + Klick geht auch). Die Pipette wirkt in jedem Werkzeug, beim Kontor meldet sie, dass es sich nicht nachbauen lässt. Leertaste halten und Ziehen hat Vorrang vor der Pipette. Dieselbe
 Werkzeugtaste bei schon aktivem Werkzeug schaltet zurück zur Auswahl. Der Tooltip in der Bauleiste
 nennt die Taste; alle Kürzel stehen auch im Menü unter «Tastenkürzel». Bei offener Karte (Start, Menü,
-Einstellungen) sind alle Kürzel stumm. Auf einem fokussierten Knopf aktiviert die Leertaste den Knopf.
+Einstellungen) sind alle Kürzel stumm. Die Ziffern `4` bis `8` sind unbelegt und melden «Tempo: 1, 2, 3»; `9` und `0` bleiben ohne Seefahrt stumm. Auf einem fokussierten Knopf aktiviert die Leertaste den Knopf.
 
 Probleme sind, nach Dringlichkeit: nicht angebundene Gebäude und Häuser ausserhalb der Versorgung, stehende Betriebe (wartet auf Ware, kein Wald, kein Dienst), Häuser ohne Dienst, fehlende Waren (ein Eintrag je Gut und Insel) und zuletzt **«Lager voll»**: Ist das Lager eines Guts bei 100 und steht seit mindestens 30 Sekunden Spielzeit ein Erzeuger deswegen still (die Ware verfällt), erscheint ein Eintrag je Gut und Insel («Holz-Lager voll (100): Ware verfällt — stilllegen oder verkaufen»); `.` springt zum nächsten Erzeuger des Guts. Nach dem Laden oder einem neuen Spiel läuft die Frist neu. Innerhalb einer Klasse kommt zuerst die Insel, auf der du gerade bist, dann die übrigen Inseln, dann der nähere Eintrag. Die Meldung zählt mit («Problem 2 von 5: …»); ohne Problem: «Alles versorgt, kein Problem offen». Brände zählen nicht.
 

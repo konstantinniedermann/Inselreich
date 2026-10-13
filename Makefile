@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 TESTLOCK := tools/testlock/testlock.ts
-.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint stampcheck studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push gate-ensemble conflicts check-ci-perf messfenster check-run check-push push-check
+.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint stampcheck studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push zeitreserve-gate gate-ensemble conflicts check-ci-perf messfenster check-run check-push push-check
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -92,6 +92,9 @@ check-run: $(CHECK_PUSH_STEPS) zeitreserve
 
 check-push: ## make check ohne lockeres zeitreserve, nur für push-check (R503 B3); mit Testsperre
 	@node $(TESTLOCK) $(MAKE) $(CHECK_PUSH_STEPS)
+
+zeitreserve-gate: ## Gate Merge (R598 V1): strenge Zeitreserve nur für die markierten Dateien (.studio/zeitreserve-marked.json), wie push-check: Load-Warten, Testsperre, Nachmessung; Exit 1 Substanz, 2 nicht belastbar, 3 Testsperre
+	@python3 tools/studio/pushcheck.py --gate
 
 push-check: ## Push-Gate in einem Schritt (R488 V1, R503): Vorprüfungen, Load-Warten, ein check-push, strenge Zeitreserve, höchstens eine Nachmessung, check-ci-perf
 	@python3 tools/studio/pushcheck.py

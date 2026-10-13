@@ -19,7 +19,8 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { constants, loadavg } from 'node:os';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { findOrphans, orphanNotice } from './orphans.ts';
 
 export const LOAD_MAX = 8;
@@ -67,6 +68,18 @@ function reportOrphans(): void {
   }
 }
 
+// Lastprotokoll bei Abbruch (R588 V3): Python-CLI druckt die Zeile und schreibt das Event; Fehler egal.
+function loadProtocol(reason: 'load' | 'lock', load?: number): void {
+  try {
+    const script = resolve(dirname(fileURLToPath(import.meta.url)), '../studio/loadsnap.py');
+    const args = [script, '--reason', reason, '--source', 'testlock'];
+    if (load !== undefined && Number.isFinite(load)) args.push('--load', String(load));
+    execFileSync('python3', args, { stdio: ['ignore', 'inherit', 'inherit'], timeout: 15_000 });
+  } catch {
+    /* Protokoll ist Zugabe: Abbruch bleibt Exit 3 */
+  }
+}
+
 const isSet = (v: string | undefined): boolean => !!v && v !== 'false' && v !== '0';
 if (isSet(env.CI) || isSet(env.GITHUB_ACTIONS) || env.STUDIO_TESTLOCK_HELD) {
   run();
@@ -77,6 +90,7 @@ if (isSet(env.CI) || isSet(env.GITHUB_ACTIONS) || env.STUDIO_TESTLOCK_HELD) {
     console.error(
       `testlock: ABBRUCH, 1-min-Load ${load.toFixed(2)} > ${LOAD_MAX}. Voller Testlauf nicht belastbar; warten oder gezielt per "npx vitest run <datei>" testen.`,
     );
+    loadProtocol('load', load);
     process.exit(EXIT_BLOCKED);
   }
   const lockPath =
@@ -179,6 +193,7 @@ if (isSet(env.CI) || isSet(env.GITHUB_ACTIONS) || env.STUDIO_TESTLOCK_HELD) {
         console.error(
           `testlock: ABBRUCH, voller Testlauf läuft bereits (PID ${holder.pid}, seit ${holder.since}, in ${holder.cwd}: ${holder.cmd}). Sperrdatei: ${lockPath}. Nicht warten; später erneut oder gezielt per "npx vitest run <datei>".`,
         );
+        loadProtocol('lock', load);
         process.exit(EXIT_BLOCKED);
       }
       takeOver(holder);
