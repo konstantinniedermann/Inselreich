@@ -33,6 +33,13 @@ class StampCheckTest(unittest.TestCase):
         make(self.root, "Stand: R1\n", "kein ruling")
         self.assertEqual(stampcheck.stale_warning(self.root), "")
 
+    def test_word_anchor_ignores_pr_and_cr(self):
+        make(self.root, "Stand: PR12 CR5 (R570)\n", "## R575\n PR900 CR901\n")
+        self.assertEqual(stampcheck.stale_warning(self.root), "")
+        make(self.root, "Stand: PR1 (R570)\n", "## R575\n")
+        self.assertEqual(stampcheck._highest("PR12 CR5 R3"), 3)
+        self.assertIsNone(stampcheck._highest("PR12 CR5"))
+
 
 if __name__ == "__main__":
     unittest.main()

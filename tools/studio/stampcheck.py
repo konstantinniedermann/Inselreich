@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 THRESHOLD = 5
-R_RE = re.compile(r"R(\d+)")
+R_RE = re.compile(r"\bR(\d+)")
 
 
 def _highest(text: str) -> int | None:
