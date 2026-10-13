@@ -6631,3 +6631,17 @@ dem Push zurück.
 Regelbezug: R335, R380, R565 V2, R587, R588, R589, Verfassung §5 · Kosten bei Irrtum: REL-20 erst in der nächsten Session live.
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-20 (failed) · ADR: —
+
+## R592 · 2026-10-13 · I047-SIM abgenommen; I047-UI startet gestapelt auf UI-HAEPPCHEN-B
+
+Ruling: Bericht lead-tech I047-SIM, `feat/i047` @ `ca4c1881`, T01–T03 je Task-Review OK, Zwischen-Review OK, `make check` Exit 0 (3745),
+Save v14 verlustfrei, balance unverändert, Zeiten ohne Verschlechterung. Lesart «kein bestehender Test > 500 ms» als «keine
+Verschlechterung» bestätigt (137 Render-Tests liegen schon auf main darüber). Zwei niedrige Hinweise in `docs/beobachtungen.md`.
+Entscheid: R589 Auflage (2) wird angepasst, weil der Merge von B wegen des ausstehenden Pushs (R591) nicht absehbar ist: I047-UI
+**stapelt** auf `feat/ui-haeppchen-b` @ `1f067a4c` (gates.md Dateimatrix: fachliche Abhängigkeit → Branch des Vorgängers per Merge
+holen, kein Rebase). Der Controller merged B in `feat/i047` vor T04. Merge-Reihenfolge nach dem Push: A → B → I-047. Budget
+I047-UI 5 Starts / P1 (Rest der Freigabe 8 plus 1 für den Final-Review opus über die ganze Branch).
+
+Regelbezug: gates.md Gate Merge Release (Dateimatrix), R589, R591 · Kosten bei Irrtum: ein Fix auf B erzwingt einen Merge in I-047.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I047-SIM · ADR: —
