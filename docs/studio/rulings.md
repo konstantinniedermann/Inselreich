@@ -6600,3 +6600,17 @@ Vitest-Spy — angenommen. Start I047-SIM erst nach dem Push REL-20 (R588 V1: Re
 Regelbezug: gates.md Kombiniertes Gate, R584, R588, R553 · Kosten bei Irrtum: I047-UI verschiebt sich um ein Häppchen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-I-047, Urteil lead-qa gate-plan-I-047 · ADR: —
+
+## R590 · 2026-10-13 · Gate Merge UI-HAEPPCHEN-B: OK; Integrator-Lauf Push REL-20, danach Merges A und B lokal
+
+Ruling: Schlussbericht lead-tech UI-HAEPPCHEN-B, `feat/ui-haeppchen-b` @ `1f067a4c` (Basis A @ `d4f6420d`), AK-1…18, Final-Review opus
+ZURÜCK → Fix (Schlüssel `s:<insel>:<gut>`, Rot-Test) → Delta-Review OK, Playtest 1280×720/1920×1080 OK mit Screenshots unter
+`.studio/qa/ui-haeppchen-b/`, `make check` Exit 0 (Last 6). Entscheid **Gate Merge OK**; `FULL_GRACE_TICKS` (5 s Karenz gegen
+Flackern, UI-Wert, kein Spielwert) bestätigt. Integrator-Lauf in einer Instanz, seriell in `.worktrees/integrate`: (1) `tool/b10`
+@ `6f48387a` mergen, Push-Gate REL-20 und Push (R585); (2) danach lokal `feat/ui-haeppchen-a` @ `d4f6420d` (R586) und (3)
+`feat/ui-haeppchen-b` @ `1f067a4c`, je mit `make check` Exit 0, kein zweiter Push (R335). A+B bilden REL-21 für die nächste
+Session (Release-Check am Kandidaten dort). Die Lastprüfung im Hintergrund entfällt (Last bei B-Check 6).
+
+Regelbezug: gates.md Gate Merge, R335, R577, R585, R586, R588 · Kosten bei Irrtum: ein Fix auf main vor REL-21.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech UI-HAEPPCHEN-B · ADR: —
