@@ -8,13 +8,14 @@ import { needsConnection } from '../sim/roads';
 import type { Building, GoodId, World } from '../sim/types';
 import { center, HOME } from '../sim/world';
 import { jumpTarget } from './islandJump';
+import { storageProblems } from './storageFull';
 import { diagnosisText, goodList, HOUSE_TITLES } from './texts';
 
-export type ProblemClass = 1 | 2 | 3 | 4;
+export type ProblemClass = 1 | 2 | 3 | 4 | 5;
 /** Sortierschlüssel: [Klasse, Inselrang (Anker = -1, sonst Index), Abstand, Gebäude-ID]. */
 export type ProblemSort = readonly [number, number, number, number];
 export interface Problem {
-  key: string; // `b:<id>` bzw. `g:<insel>:<gut>`
+  key: string; // `b:<id>`, `g:<insel>:<gut>` (Klasse 4), `s:<insel>:<gut>` (Klasse 5)
   cls: ProblemClass;
   island: number;
   id: number; // Gebäude, dessen Panel öffnet (Klasse 4: erstes Haus)
@@ -53,7 +54,11 @@ export function spot(world: World, b: Building): { x: number; y: number } {
 }
 
 /** Alle offenen Probleme, sortiert; `anchor` = Insel, deren Einträge zuerst kommen. */
-export function problemList(world: World, anchor: number): Problem[] {
+export function problemList(
+  world: World,
+  anchor: number,
+  fullSince: Map<string, number> = new Map(),
+): Problem[] {
   const out: Problem[] = [];
   const targets = new Map<number, { x: number; y: number }>();
   const target = (island: number): { x: number; y: number } => {
@@ -156,6 +161,28 @@ export function problemList(world: World, anchor: number): Problem[] {
     );
   }
 
+  for (const sp of storageProblems(world, fullSince)) {
+    const j = target(sp.island);
+    let rep = sp.producers[0]!;
+    let best = Infinity;
+    for (const p of sp.producers) {
+      const q = spot(world, p);
+      const d = Math.hypot(q.x - j.x, q.y - j.y);
+      if (d < best || (d === best && p.id < rep.id)) {
+        best = d;
+        rep = p;
+      }
+    }
+    out.push(
+      make(
+        `s:${sp.island}:${sp.good}`,
+        5,
+        rep,
+        `${GOODS[sp.good].name}-Lager voll (${sp.stock}): Ware verfällt — stilllegen oder verkaufen`,
+      ),
+    );
+  }
+
   return out.sort((a, b) => compareSort(a.sort, b.sort));
 }
 
@@ -200,13 +227,14 @@ export function problemStep(
   cursor: ProblemCursor | null,
   activeIsland: number,
   dir: 1 | -1,
+  fullSince: Map<string, number> = new Map(),
 ): {
   problem: Problem;
   index: number;
   count: number;
   cursor: Omit<ProblemCursor, 'landed'>;
 } | null {
-  const s = stepList((a) => problemList(world, a), cursor, activeIsland, dir);
+  const s = stepList((a) => problemList(world, a, fullSince), cursor, activeIsland, dir);
   return s === null ? null : { problem: s.item, index: s.index, count: s.count, cursor: s.cursor };
 }
 
@@ -230,6 +258,7 @@ export function newlyCut(before: Set<number>, world: World): number {
 /** Abhängigkeiten des Sprungs (B1, R453): `app.ts` verdrahtet sie, Tests übergeben protokollierende Fakes. */
 export interface ProblemJumpDeps {
   world: World;
+  fullSince?: Map<string, number>; // «Lager voll» (I-085); fehlt = Klasse 5 leer
   activeIsland(): number; // liest den Stand zum Zeitpunkt des Aufrufs (nach refresh = gefolgte Kamera)
   getCursor(): ProblemCursor | null;
   setCursor(c: ProblemCursor | null): void;
@@ -243,7 +272,7 @@ export interface ProblemJumpDeps {
 /** Reiner Ablauf des Problem-Sprungs (AK-R17-10, E1, E3, E6). */
 export function runProblemJump(deps: ProblemJumpDeps, dir: 1 | -1): void {
   deps.cancelPointerAction();
-  const step = problemStep(deps.world, deps.getCursor(), deps.activeIsland(), dir);
+  const step = problemStep(deps.world, deps.getCursor(), deps.activeIsland(), dir, deps.fullSince);
   if (step === null) {
     deps.setCursor(null);
     deps.message(NO_PROBLEM_TEXT);

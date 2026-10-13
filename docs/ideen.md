@@ -586,7 +586,7 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Nutzen/Aufwand: jede Kette bekommt im Mittel- und Spätspiel eine Ausrichtung · M · ≈ 2 Pakete (Rechnung ≈ 40 Tools, Sim und Panel ≈ 150 Tools)
 - Entscheid: IDEEN-08 Empfehlung parken als Baustein des Wirtschafts-Brainstormings nach Erweiterung 1 K2 (mit I-008, I-033)
 
-### I-078 · bewertet · Bilanz-Vorschau bei Bau und Ausbau
+### I-078 · live · Bilanz-Vorschau bei Bau und Ausbau
 
 - Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-08 Scout A; Kopfzeile «Bilanz ±n / min» (`README.md`), Bau-Tooltip zeigt nur «Unterhalt: n / min» (`src/ui/buildMenu.ts:132`), Ausbau-Karte nur Betrieb vorher → nachher
 - Spielerwirkung: „Der Spieler sieht beim Planen eines Baus oder Ausbaus «Bilanz danach: +120 → +95 / min» und weiss vor dem Klick, ob er sich den Unterhalt leisten kann."
@@ -642,7 +642,7 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Nutzen/Aufwand: ein Tastendruck weniger im Dauerbau · S · ≈ 40 Tools
 - Entscheid: IDEEN-08 Empfehlung parken (Lückenfüller für ein Tasten-Häppchen)
 
-### I-085 · bewertet · «Lager voll» als Problem mit Sprung
+### I-085 · live · «Lager voll» als Problem mit Sprung
 
 - Bereich: Bedienung · Säule: Produktionsketten · Quelle: IDEEN-08 Scout C; Playtest `.studio/qa/rel-18/report.md` Z. 24 («Holz-Lager bei 100 voll, Holzfäller leerlaufen», Bild 25); `src/ui/problems.ts` kennt «Lager voll» nicht (grep ohne Treffer); README Zustand «Lager voll»
 - Spielerwirkung: „Der Spieler sieht, dass Holz bei 100 verfällt, springt mit `.` zu den Holzfällern und entscheidet: stilllegen, verkaufen oder Sperrbestand senken."

@@ -891,6 +891,7 @@ function renderUpgradeBox(panel: HTMLElement, onUpgrade: () => void): void {
   addGainRow(box, 'gain-output');
   addGainRow(box, 'gain-upkeep');
   addLine(box, '', 'level-lock');
+  addLine(box, '', 'level-balance');
   addLine(box, '', 'level-cost');
   addLine(box, '', 'level-fee');
   addList(box, 'reasons', 'level-reasons');
@@ -931,6 +932,7 @@ function updateUpgradeBox(panel: HTMLElement, world: World, b: Building): void {
   const lock = setField(box, 'level-lock', c.kind === 'locked' ? c.lock : '');
   if (lock) lock.hidden = c.kind !== 'locked';
   for (const [field, text] of [
+    ['level-balance', c.kind === 'next' ? c.balance : ''],
     ['level-cost', c.kind === 'next' ? c.cost : ''],
     ['level-fee', c.kind === 'next' ? c.fee : ''],
   ] as const) {

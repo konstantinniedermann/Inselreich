@@ -595,3 +595,27 @@ describe('M14-E1 Inspektor: Inselvorteil-Zeile (AK-M14E1-29)', () => {
     expect(lineOf(w, heim.id)).toBeUndefined();
   });
 });
+
+describe('AK-15 Ausbau-Karte: Gerüst enthält die Zeile «Bilanz danach»', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const noActions = new Proxy({}, { get: () => () => {} }) as unknown as InspectActions;
+  it('level-balance ist Textzeile in der Karte, vor den Kosten, ohne neues Bedienelement', () => {
+    const { w, fisher } = uxWorld();
+    vi.stubGlobal('document', { createElement: fakeEl, createTextNode: () => fakeEl('#text') });
+    const panel = fakeEl('div');
+    renderInspect(panel as unknown as HTMLElement, w, fisher.id, noActions);
+    const fields: string[] = [];
+    const walk = (e: FakeEl): void => {
+      if (e.dataset?.field) fields.push(e.dataset.field);
+      (Array.isArray(e.children) ? e.children : []).forEach(walk);
+    };
+    walk(panel);
+    expect(fields).toContain('level-balance');
+    expect(fields.indexOf('level-balance')).toBeLessThan(fields.indexOf('level-cost'));
+    const find = (e: FakeEl): FakeEl | undefined =>
+      e.dataset?.field === 'level-balance'
+        ? e
+        : (Array.isArray(e.children) ? e.children : []).map(find).find((x) => x !== undefined);
+    expect(find(panel)?.tag).toBe('p');
+  });
+});
