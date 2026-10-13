@@ -133,7 +133,7 @@ export function tooltipLines(tool: Tool, world?: World, island: number = HOME): 
     `Kosten: ${costLine(def.cost)}${paidFromHome(tool) ? ' (aus der Heimat)' : ''}`,
     `Unterhalt: ${num(perMinute(def.upkeep, UPKEEP_INTERVAL))} / min`,
   ];
-  if (world !== undefined) lines.push(balanceLine(balanceAfterBuild(world, def.id, island)));
+  if (world !== undefined) lines.push(cachedBalanceLine(world, def.id, island));
   if (def.id === 'townhall') lines.push('Steuer und Ausgabesperre einstellen');
   if (def.produces && def.cycle) {
     lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(def.cycle)}`);
@@ -203,6 +203,29 @@ function hideTooltip(tip: HTMLElement): void {
   tip.classList.remove('show');
 }
 
+/** Welt und Insel des letzten `updateBuildMenu`; Tooltips lesen daraus beim Öffnen (lazy, I-078). */
+let liveView: { world: World; island: number } | null = null;
+
+/** Setzt die Bilanz-Zeile(n) der Elemente, die `selector` unter `root` findet. */
+function fillBalance(
+  root: ParentNode,
+  world: World,
+  island: number,
+  selector = '.tt-balance',
+): void {
+  for (const el of root.querySelectorAll<HTMLElement>(selector)) {
+    const id = el.dataset.defId as BuildingDefId | undefined;
+    if (id === undefined) continue;
+    const line = cachedBalanceLine(world, id, island);
+    if (el.textContent !== line) el.textContent = line;
+  }
+}
+
+/** Aktualisiert die Bilanz-Zeile der gerade sichtbaren Tooltips; ohne sichtbaren Tooltip wird nichts gerechnet. */
+export function refreshShownBalance(nav: ParentNode, world: World, island: number): void {
+  fillBalance(nav, world, island, '.tooltip.show .tt-balance');
+}
+
 /** Hängt ein Tooltip-Element an den Button: Hover, Tastaturfokus, Touch-Langdruck. */
 function attachTooltip(
   btn: HTMLButtonElement,
@@ -224,6 +247,7 @@ function attachTooltip(
       // Bilanz-Vorschau: `updateBuildMenu` füllt den Text (braucht die Welt)
       const balance = document.createElement('span');
       balance.className = 'tt-line tt-balance';
+      balance.dataset.defId = tool.defId;
       tip.appendChild(balance);
     }
     if (text.startsWith('Erzeugt:')) {
@@ -247,9 +271,13 @@ function attachTooltip(
   btn.setAttribute('aria-describedby', tip.id);
   btn.appendChild(tip);
 
-  btn.addEventListener('mouseenter', () => showTooltip(btn, tip, anchorOf()));
+  const open = (): void => {
+    if (liveView !== null) fillBalance(tip, liveView.world, liveView.island);
+    showTooltip(btn, tip, anchorOf());
+  };
+  btn.addEventListener('mouseenter', open);
   btn.addEventListener('mouseleave', () => hideTooltip(tip));
-  btn.addEventListener('focus', () => showTooltip(btn, tip, anchorOf()));
+  btn.addEventListener('focus', open);
   btn.addEventListener('blur', () => hideTooltip(tip));
 
   // Touch-Langdruck: Tooltip nach 500 ms; der folgende Klick wählt dann kein Werkzeug
@@ -265,7 +293,7 @@ function attachTooltip(
     timer = setTimeout(() => {
       timer = null;
       btn.dataset.longPress = '1';
-      showTooltip(btn, tip, anchorOf());
+      open();
     }, LONG_PRESS_MS);
   });
   btn.addEventListener('pointerup', () => {
@@ -491,6 +519,8 @@ export function cachedBalanceLine(world: World, defId: BuildingDefId, island: nu
 
 /** Markiert Bau-Buttons, deren Kosten gerade nicht bezahlbar sind (bleiben klickbar). */
 export function updateBuildMenu(nav: HTMLElement, world: World, island: number = HOME): void {
+  liveView = { world, island };
+  refreshShownBalance(nav, world, island);
   const live = nav.querySelector('.tt-unprotected');
   if (live) {
     const text = unprotectedLine(unprotectedFlammables(world).length);
@@ -507,11 +537,6 @@ export function updateBuildMenu(nav: HTMLElement, world: World, island: number =
       const line = traitBuildLine(world, island, tool.defId) ?? '';
       if (advantageEl.textContent !== line) advantageEl.textContent = line;
       if (advantageEl.hidden !== (line === '')) advantageEl.hidden = line === '';
-    }
-    const balanceEl = btn.querySelector<HTMLElement>('.tt-balance');
-    if (balanceEl && tool.kind === 'build') {
-      const line = cachedBalanceLine(world, tool.defId, island);
-      if (balanceEl.textContent !== line) balanceEl.textContent = line;
     }
     const reason = btn.querySelector('.tt-reason');
     const text = why === null ? '' : friendlyReason(world, why, { cost, island });

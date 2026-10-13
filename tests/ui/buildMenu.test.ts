@@ -4,7 +4,13 @@ import type { BuildingDefId } from '../../src/sim/types';
 import { lockedToolText } from '../../src/ui/goal';
 import { TOOL_HOTKEYS } from '../../src/ui/hotkeys';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { cachedBalanceLine, tierPreviewLine, tooltipLines } from '../../src/ui/buildMenu';
+import {
+  cachedBalanceLine,
+  refreshShownBalance,
+  tierPreviewLine,
+  tooltipLines,
+  updateBuildMenu,
+} from '../../src/ui/buildMenu';
 
 const spy = vi.hoisted(() => ({ n: 0 }));
 vi.mock('../../src/ui/balancePreview', async (orig) => {
@@ -133,5 +139,43 @@ describe('I-078 Cache der Bilanz-Zeile (AK-14: kein Neurechnen je Takt)', () => 
     w.ships.push({ id: 99, port: 0, to: null, left: 0, cargo: {}, route: null, homing: false });
     cachedBalanceLine(w, 'fisher', 0);
     expect(spy.n).toBe(4);
+  });
+});
+
+describe('I-078 lazy: Bilanz nur für sichtbare Tooltips (AK-14)', () => {
+  const fakeEl = (defId: string) => ({ dataset: { defId }, textContent: '' });
+  const navWith = (shown: ReturnType<typeof fakeEl>[]) =>
+    ({
+      querySelector: () => null,
+      querySelectorAll: (sel: string) => (sel === '.tooltip.show .tt-balance' ? shown : []),
+    }) as unknown as HTMLElement;
+
+  it('ohne sichtbaren Tooltip läuft keine Probe-Rechnung, auch nicht bei neuem Tick', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const nav = navWith([]);
+    spy.n = 0;
+    updateBuildMenu(nav, w, 0);
+    w.tick += 1;
+    updateBuildMenu(nav, w, 0);
+    expect(spy.n).toBe(0);
+  });
+
+  it('mit einem sichtbaren Tooltip wird genau dessen Zeile gerechnet und gesetzt', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const el = fakeEl('chapel');
+    spy.n = 0;
+    refreshShownBalance(navWith([el]), w, 0);
+    expect(spy.n).toBe(1);
+    expect(el.textContent).toMatch(/^Bilanz danach: /);
+    refreshShownBalance(navWith([el]), w, 0);
+    expect(spy.n).toBe(1); // Cache
+  });
+
+  it('tooltipLines(…, world) nutzt den Cache (zweiter Aufruf rechnet nicht)', () => {
+    const w = createWorld(3, { unlockAll: true });
+    tooltipLines({ kind: 'build', defId: 'quarry' }, w);
+    spy.n = 0;
+    tooltipLines({ kind: 'build', defId: 'quarry' }, w);
+    expect(spy.n).toBe(0);
   });
 });
