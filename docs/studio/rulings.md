@@ -6688,3 +6688,62 @@ Session-Vorgabe).
 Regelbezug: R127, R335, R586, R590, R594 · Kosten bei Irrtum: —
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-20 (done) · ADR: —
+
+## R596 · 2026-10-13 · Gate Merge I-047 Stammkunde: OK; Merge nach B, lokal
+
+Ruling: Berichte lead-tech I047-SIM (R592) und I047-UI, `feat/i047` @ `65f6ec2f` (enthält B @ `1f067a4c` und main `07c22fbd`),
+T04–T07, Task-Reviews OK (T06 (A) BEDENKEN zur Krisendauer), Playtest 1280×720/1920×1080 OK mit Screenshots, **Final-Review opus OK**
+über die ganze Branch, `make check` Exit 0 (3841), Zeiten ohne Verschlechterung, Save **v14** (main 13 → v14 frei, T07 ohne
+Änderung). Entscheide: (1) **Gate Merge OK**; Merge lokal durch `production-integrator` nach A und B (Reihenfolge A → B → I-047),
+`make check` Exit 0, T07 «Version festlegen» unmittelbar vor dem Merge erneut prüfen (Erweiterung 1 nicht gemergt → v14). Kein Push
+(R335); I-047 fährt mit REL-21. (2) Playtest-Aufbau mit 30-s-Krise, zur Laufzeit per Dev-Sonde verlängert, genügt R589 (1)
+(Abstand 6 px, keine Überlappung). (3) Wertfrage (Vertrag 27 je Rum gegen Auftrag 30, Strafe = eine Lieferung) ist gewollt
+(sichere Abnahme gegen Prämie) und geht an die Playtest-Prüfung nach Spec B.5 (Auswerter lead-design, Rückfall per Ruling).
+
+Regelbezug: gates.md Gate Merge, R584, R589, R592, R553 · Kosten bei Irrtum: ein Werte-Ruling nach dem ersten Spielertest.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech I047-UI · ADR: —
+
+## R597 · 2026-10-13 · Freie Plätze: TOOL-BUENDEL-11 und DOC-ARCHIV
+
+Ruling: Nach den Gates A, B, I-047 sind Plätze frei (R475). Start (1) **TOOL-BUENDEL-11** (lead-tech, sonnet, 5 Starts/P1, Branch
+`tool/b11`): T01 Lastprotokoll beim Testlock-Abbruch und beim push-check «kein ruhiges Fenster» (Top-Prozesse, Zahl Vitest-Worker;
+R588 V3), T02 Isolation `test_hook.py` (`<tmp>/x`, R595), T03 Szenarien (a) `m14e1-felsbucht` für AK-36, (c) `m13-vor-ziel`,
+(d) Umbenennung `m13e2-v13` (R581 (3)); Beipack arc42 `buyPct` (R581 (1)). (2) **DOC-ARCHIV** (lead-production, 1 Start, Branch
+`docs/archiv`): `docs/ideen.md` (≈ 80 KB) in aktiven Pool plus Archiv (erledigt/verworfen/live) aufteilen, README-Spielwerte-Anhang
+auslagern, alle Verweise nachführen; Ziel: beide Hauptdateien < 30 KB (E-057). Die Ideen-Runde IDEEN-09 folgt nach DOC-ARCHIV.
+
+Regelbezug: R475, R580, R581, R588, R595 · Kosten bei Irrtum: tote Links nach dem Auslagern (Prüfung `make docs-check`).
+
+Entscheider: L0 · Anlass: freie Kapazität · ADR: —
+
+## R598 · 2026-10-13 · Prozess-Retro REL-20: V1–V3 angenommen
+
+Ruling: Retro `retros/2026-10-13-prozess-rel20.md` (`d5a9e6b2`): Freigabe bis CI grün 2 h 47 min, Wurzeln: L0 prüfte «Last ≤ 7»
+statt der push-check-Schwelle 3,0 (R587, 62 min Warten), strenge Zeitreserve erst am letzten Gate gemessen, «Lastartefakt» ohne
+Messung festgehalten (R585). Entscheide: **V1** strenge Zeitreserve der markierten Dateien schon beim Gate Merge; ein
+«Lastartefakt» darf ein Ruling nur nach dieser Messung festhalten — Make-Ziel als T05 in TOOL-BUENDEL-11 (Budget +1 Start),
+Regel in `gates.md` durch `studio-coach` in der Ende-Routine (Handbuch-Minor). **V2** ein Kriterium «push-bereit» = push-check-
+Schwelle (`LOAD_WAIT`), L0 nennt keine eigene Lastzahl; R587 (1) entsprechend überholt. **V3** push-check Exit 1 bei ruhiger
+Startlast = Substanz, kein erneuter Lauf; «höchstens 3 Läufe» gilt nur für Exit 2 (Integrator-Briefing). Cache-Write-Hebel für
+lead-tech schlägt `studio-coach` in der Ende-Retro vor (Pflicht, dritte Retro in Folge). B5-Befunde (Prettier-Abweisungen,
+E-060-Datenpunkt) an die Ende-Retro.
+
+Regelbezug: R316, R429, R585, R587, R594 · Kosten bei Irrtum: ein Gate Merge dauert einige Minuten länger.
+
+Entscheider: L0 · Anlass: Bericht studio-process-coach RETRO-PROZESS-REL20 · ADR: —
+
+## R599 · 2026-10-13 · DOC-ARCHIV: geparkte Ideen ins Archiv; Merge nach A/B/I-047
+
+Ruling: Bericht lead-production DOC-ARCHIV, `docs/archiv` @ `a8304aab`: README 59,5 → 29,6 KB (vier Regelabschnitte wortgleich nach
+`docs/spielwerte.md`), `docs/ideen.md` 80 → 66,6 KB, Archiv 13,7 KB, 88 Überschriften erhalten, `make docs-check`/`studio-test` grün.
+Entscheide: (1) **Geparkte Ideen liegen im Archiv**; der Pool `docs/ideen.md` führt nur neu, bewertet, eingeplant, dazu die jüngste
+Rangliste; ältere Ranglisten (IDEEN-06/07) ins Archiv. Ein Wiederaufnehmen einer geparkten Idee verschiebt sie zurück. (2) Der
+Pool-Deckel 40 zählt nur den Pool. (3) Merge-Reihenfolge: **DOC-ARCHIV nach A → B → I-047**; vor dem Gate holt lead-production
+main per Merge und verschiebt deren README-Änderungen in den verschobenen Abschnitten nach `docs/spielwerte.md` (Eigentümer des
+späteren Branches löst, gates.md). (4) Persona-Hinweis (`lead-design`, `design-idea-scout`): Archivieren beim Statuswechsel — Entwurf
+an `studio-coach` für die Ende-Routine.
+
+Regelbezug: R581 (2), R597, E-057, gates.md Konflikte · Kosten bei Irrtum: eine geparkte Idee wird übersehen.
+
+Entscheider: L0 · Anlass: Bericht lead-production DOC-ARCHIV · ADR: —
