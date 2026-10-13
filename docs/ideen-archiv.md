@@ -180,6 +180,32 @@ Ideen aus `docs/ideen.md` (Status `geparkt`, `live`, `verworfen`, `zusammengefas
 
 ### I-087 · zusammengefasst · Betriebszustand-Ebene auf der Karte — IDEEN-08 Scout C, in I-045 (Versorgungsebene) aufgegangen: gleicher Mechanismus (Karten-Ebene auf gehaltene Taste), andere Inhalte (✓ / ! / ✗ je Betrieb statt Dienstreichweite); die Tastenfrage (alle Buchstaben belegt, `Tab` kollidiert mit dem Fokus) ist für beide zusammen zu lösen
 
+### I-088 · live · Angebotskarte mit Marktvergleich (Stammkunde)
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout A; Screenshot `.studio/qa/REL-21/i047/1920x1080-01b-angebot.png` (Karte nennt nur «23 Holz alle 1:30 zu 6 je Stück», daneben läuft «Boom: Holz +50 %») · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler liest auf der Angebotskarte «Markt jetzt ≈ 5 je Stück · deine Erzeugung 31 / min» und nimmt den Vertrag mit Zahlen an oder lehnt ab."
+- Grösse: S · Save nein · Baseline nein · Abhängigkeiten: I-047 (auf main, REL-21); Verkaufspreis mit Sättigung und Boom aus derselben Sim-Funktion wie der Handelsdialog, keine zweite Rechnung in `src/ui/`; `src/ui/order.ts`
+- Randfälle: Marktpreis schwankt (Boom, Sättigung) → «≈» und Stand beim Anzeigen; Erzeugung 0 → «keine Erzeugung»; keine Empfehlung aussprechen, nur Zahlen.
+- Doppelung: keine (I-078 Bilanz, I-047 nennt die Abwägung nur).
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13 · Raster (lead-design): Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Bewertung lead-design: Passung 3 → 2 wie bei I-078 (macht eine Entscheidung lesbar, ändert keine Regel). Die Wahl des frisch gelieferten Stammkunden ist heute ein Bauchentscheid; der Vergleich ist die billigste Hebelstelle. Mit I-090 (gleiche Karte) ein Häppchen.
+- Nutzen/Aufwand: Stammkunde wird eine informierte Wahl · S · ≈ 60 Tools (mit I-090 ≈ 110)
+- Entscheid: IDEEN-09 Empfehlung einplanen ins nächste UI-Häppchen (mit I-090), Stufe leicht Umgesetzt in UI-HAEPPCHEN-C (R607), Karte nennt Marktpreis und Erzeugung.
+- Archiviert IDEEN-09: live, Statuspflege nach R599
+
+### I-090 · live · Vertragskarte springt zum Erzeuger
+
+- Bereich: Bedienung · Säule: Produktionsketten · Quelle: IDEEN-09 Scout A; Screenshot `.studio/qa/REL-21/i047/1920x1080-02-vertrag.png` («Lager 20/23», nur «Kündigen»); Sprungmuster aus I-085 (`src/ui/problems.ts`) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht «Lager 20/23», klickt die Vertragskarte und landet bei seinen Holzfällern, bevor die Strafe fällig wird."
+- Grösse: S · Save nein · Baseline nein · Abhängigkeiten: I-047; `src/ui/order.ts`, Sprunglogik `problems.ts`
+- Randfälle: mehrere Erzeuger auf mehreren Inseln → wiederholter Klick wechselt; kein Erzeuger → Meldung statt Sprung; Klickfläche verschiebt das Layout nicht (6 px zur Krisenkarte, R589).
+- Doppelung: keine (I-042, I-085 springen aus der Problemliste).
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 10
+- Bewertung lead-design: Spass 2 → 1 (spart Suchen, keine neue Wahl; Massstab I-084), Passung 3 → 2. Trägt als Beipack zu I-088, gleiche Datei.
+- Nutzen/Aufwand: Warnung wird Handlung · S · ≈ 50 Tools
+- Entscheid: IDEEN-09 Empfehlung Beipack zu I-088 Umgesetzt in UI-HAEPPCHEN-C (R607), Knopf «Zum Erzeuger».
+- Archiviert IDEEN-09: live, Statuspflege nach R599
+
 ## Ältere Ranglisten
 
 ### Rangliste IDEEN-06 (Ruling R474)
@@ -242,6 +268,13 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 | —    | I-079 | Bauhof                              | S–M    | 8     | ja / nein        | senkt eine Geldsenke, Abriss-Kreislauf             | verwerfen                                     |
 | —    | I-076 | Missernte                           | S–M    | 7     | ja / ja          | doppelt den Sturm                                  | verwerfen                                     |
 | —    | I-087 | Betriebszustand-Ebene               | M      | 10    | nein / nein      | gleicher Mechanismus wie I-045                     | zusammengefasst in I-045                      |
+
+### Rangliste IDEEN-09, live gegangene Zeilen (R599)
+
+| Rang | ID    | Name                               | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                           | Empfehlung                                 |
+| ---- | ----- | ---------------------------------- | ------ | ----- | --------------- | ---------------------------------------- | ------------------------------------------ |
+| 2    | I-088 | Angebotskarte mit Marktvergleich   | S      | 12    | nein / nein     | Stammkunde wird entscheidbar, ≈ 60 Tools | einplanen nächstes UI-Häppchen (mit I-090) |
+| 7    | I-090 | Vertragskarte springt zum Erzeuger | S      | 10    | nein / nein     | Warnung wird Handlung, ≈ 50 Tools        | Beipack zu I-088                           |
 
 ## Geparkte Ideen
 
