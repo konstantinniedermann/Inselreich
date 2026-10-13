@@ -6571,3 +6571,16 @@ als Regel, Last-Grenze relativ zur Grundlast, Testlauf-Warteschlange statt Abbru
 Regelbezug: R380, R335, R578, Handbuch «Verbesserungsschleife» · Kosten bei Irrtum: REL-20 erst in der nächsten Session live.
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-20 (failed) · ADR: —
+
+## R588 · 2026-10-13 · Ad-hoc-Retro Testlock: V1 Regel, V3 in TOOL-BUENDEL-11, V2 geparkt
+
+Ruling: Retro `retros/2026-10-13-adhoc-testlock.md` (`964476e9`). Entscheide: **V1 angenommen als Regel** (kein Experiment, Plätze
+3/3): Zwischen Gate Merge eines Releases und Push startet L0 höchstens 2 weitere Test-Arbeiter; Umsetzung als Handbuch-Minor in
+`gates.md` durch `studio-coach` in der Ende-Routine; Messgrösse (≤ 1 Testlock-Abbruch je Push-Gate über 3 Releases) beobachtet die
+Retro. **V3** Lastprotokoll beim Testlock-Abbruch (Top-Prozesse, Vitest-Worker) → TOOL-BUENDEL-11. **V2** (Warteschlange statt
+Abbruch) geparkt bis V3-Daten vorliegen. Experimente: `studio-coach` bewertet E-060 in der Ende-Retro; bei Abschluss rückt E-064 nach,
+E-065 danach. lernen.md: Coach streicht eine Zeile und nimmt «Deckel und Testlock-Grenze abstimmen» auf.
+
+Regelbezug: R380, R429, R475, R578, R587 · Kosten bei Irrtum: zwei ungenutzte Agentenplätze während eines Push-Gates.
+
+Entscheider: L0 · Anlass: Bericht studio-coach RETRO-ADHOC-TESTLOCK · ADR: —
