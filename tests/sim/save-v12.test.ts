@@ -62,9 +62,8 @@ describe('M13-E2 Save v12', () => {
     const w = createWorld(3);
     expect(w.monument).toBeNull();
     expect(w.monumentDone).toBe(false);
-    expect(Object.keys(w).slice(-3, -1)).toEqual(['monument', 'monumentDone']);
-    expect(w.version).toBe(13);
-    expect(SAVE_VERSION).toBe(13);
+    expect(Object.keys(w).slice(-5, -3)).toEqual(['monument', 'monumentDone']);
+    expect(w.version).toBe(SAVE_VERSION);
   });
 
   describe('AK-M13E2-22 foldBackToV11', () => {
@@ -133,7 +132,7 @@ describe('M13-E2 Save v12', () => {
       const r = deserialize(JSON.stringify(v11Of(w)));
       expect(r.ok).toBe(true);
       if (!r.ok) return;
-      expect(r.world.version).toBe(13);
+      expect(r.world.version).toBe(SAVE_VERSION);
       expect(r.world.monument).toBeNull();
       expect(r.world.monumentDone).toBe(false);
       expect(r.world.wonMerchants).toBe(true);
@@ -145,7 +144,7 @@ describe('M13-E2 Save v12', () => {
         const r = deserialize(readFileSync(`tests/sim/fixtures/${f}`, 'utf8'));
         expect(r.ok, f).toBe(true);
         if (!r.ok) continue;
-        expect(r.world.version, f).toBe(13);
+        expect(r.world.version, f).toBe(SAVE_VERSION);
         expect(r.world.monument, f).toBeNull();
         expect(r.world.monumentDone, f).toBe(false);
       }

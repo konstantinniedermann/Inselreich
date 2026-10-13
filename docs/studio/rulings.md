@@ -6716,3 +6716,104 @@ auslagern, alle Verweise nachführen; Ziel: beide Hauptdateien < 30 KB (E-057). 
 Regelbezug: R475, R580, R581, R588, R595 · Kosten bei Irrtum: tote Links nach dem Auslagern (Prüfung `make docs-check`).
 
 Entscheider: L0 · Anlass: freie Kapazität · ADR: —
+
+## R598 · 2026-10-13 · Prozess-Retro REL-20: V1–V3 angenommen
+
+Ruling: Retro `retros/2026-10-13-prozess-rel20.md` (`d5a9e6b2`): Freigabe bis CI grün 2 h 47 min, Wurzeln: L0 prüfte «Last ≤ 7»
+statt der push-check-Schwelle 3,0 (R587, 62 min Warten), strenge Zeitreserve erst am letzten Gate gemessen, «Lastartefakt» ohne
+Messung festgehalten (R585). Entscheide: **V1** strenge Zeitreserve der markierten Dateien schon beim Gate Merge; ein
+«Lastartefakt» darf ein Ruling nur nach dieser Messung festhalten — Make-Ziel als T05 in TOOL-BUENDEL-11 (Budget +1 Start),
+Regel in `gates.md` durch `studio-coach` in der Ende-Routine (Handbuch-Minor). **V2** ein Kriterium «push-bereit» = push-check-
+Schwelle (`LOAD_WAIT`), L0 nennt keine eigene Lastzahl; R587 (1) entsprechend überholt. **V3** push-check Exit 1 bei ruhiger
+Startlast = Substanz, kein erneuter Lauf; «höchstens 3 Läufe» gilt nur für Exit 2 (Integrator-Briefing). Cache-Write-Hebel für
+lead-tech schlägt `studio-coach` in der Ende-Retro vor (Pflicht, dritte Retro in Folge). B5-Befunde (Prettier-Abweisungen,
+E-060-Datenpunkt) an die Ende-Retro.
+
+Regelbezug: R316, R429, R585, R587, R594 · Kosten bei Irrtum: ein Gate Merge dauert einige Minuten länger.
+
+Entscheider: L0 · Anlass: Bericht studio-process-coach RETRO-PROZESS-REL20 · ADR: —
+
+## R599 · 2026-10-13 · DOC-ARCHIV: geparkte Ideen ins Archiv; Merge nach A/B/I-047
+
+Ruling: Bericht lead-production DOC-ARCHIV, `docs/archiv` @ `a8304aab`: README 59,5 → 29,6 KB (vier Regelabschnitte wortgleich nach
+`docs/spielwerte.md`), `docs/ideen.md` 80 → 66,6 KB, Archiv 13,7 KB, 88 Überschriften erhalten, `make docs-check`/`studio-test` grün.
+Entscheide: (1) **Geparkte Ideen liegen im Archiv**; der Pool `docs/ideen.md` führt nur neu, bewertet, eingeplant, dazu die jüngste
+Rangliste; ältere Ranglisten (IDEEN-06/07) ins Archiv. Ein Wiederaufnehmen einer geparkten Idee verschiebt sie zurück. (2) Der
+Pool-Deckel 40 zählt nur den Pool. (3) Merge-Reihenfolge: **DOC-ARCHIV nach A → B → I-047**; vor dem Gate holt lead-production
+main per Merge und verschiebt deren README-Änderungen in den verschobenen Abschnitten nach `docs/spielwerte.md` (Eigentümer des
+späteren Branches löst, gates.md). (4) Persona-Hinweis (`lead-design`, `design-idea-scout`): Archivieren beim Statuswechsel — Entwurf
+an `studio-coach` für die Ende-Routine.
+
+Regelbezug: R581 (2), R597, E-057, gates.md Konflikte · Kosten bei Irrtum: eine geparkte Idee wird übersehen.
+
+Entscheider: L0 · Anlass: Bericht lead-production DOC-ARCHIV · ADR: —
+
+## R600 · 2026-10-13 · Release-Check REL-21 vorziehen
+
+Ruling: A, B, I-047 lokal auf main (`cff72fe7`, `d77f5873`, `e2a5297e`, Kopf `0a19ad53`), je `make check`/`check-ci-perf` Exit 0. Der
+Push fällt in die nächste Session (R335). Damit er dort in einem Anlauf gelingt, zieht L0 den **Release-Check REL-21** vor
+(gates.md Gate Merge Release, Schritte 3–4): `lead-qa`, Budget 3 Starts / P2 — Browser-Lauf `qa-playtester` am Kandidaten (je UI-Task
+ein Abschnitt mit Screenshots unter `.studio/qa/REL-21/`), Opus-Review über `origin/main..main` (nur `src/`, `tests/`, README,
+arc42), strenge Zeitreserve der markierten Dateien nach R598 V1 (soweit das Make-Ziel aus TOOL-BUENDEL-11 noch fehlt: Liste der
+Warnungen mit Last). TOOL-BUENDEL-11 und DOC-ARCHIV kommen per Delta-Review dazu.
+
+Regelbezug: gates.md Gate Merge Release, R335, R598 · Kosten bei Irrtum: ein Delta-Review mehr in der nächsten Session.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-21 · ADR: —
+
+## R601 · 2026-10-13 · Gate Merge DOC-ARCHIV: OK
+
+Ruling: Bericht lead-production, `docs/archiv` @ `2f9f9450` (main bis `0a19ad53` gemergt, Konflikte README/`ideen.md` durch den
+Eigentümer gelöst, Änderungen von A/B/I-047 übernommen), `make docs-check` Exit 0. README 59,5 → 28,3 KB, `docs/ideen.md` 80,0 →
+27,9 KB, Archiv 52,9 KB, `docs/spielwerte.md` 35,3 KB (Denkmal-Abschnitt zusätzlich wortgleich verschoben), 88 Ideen erhalten.
+Entscheid **Gate Merge OK**; `production-integrator` merged lokal (nur Doku: `make docs-check`, `make conflicts`, `make studio-test`
+Exit 0), kein Push. Fährt mit REL-21; der Release-Check (R600) nimmt die README-Verlagerung per Delta mit.
+
+Regelbezug: gates.md Gate Merge, R599, R600, E-057 · Kosten bei Irrtum: ein toter Verweis.
+
+Entscheider: L0 · Anlass: Bericht lead-production DOC-ARCHIV · ADR: —
+
+## R602 · 2026-10-13 · Gate Merge TOOL-BUENDEL-11: OK mit Prozess-Vermerk
+
+Ruling: Bericht lead-tech, `tool/b11` @ `940707d3`, Final-Review sonnet OK, `make check` Exit 0, `studio-test`/`studio-lint`/`tsc`/
+`lint`/`zeittests`/`conflicts`/`docs-check` Exit 0. T01 Lastprotokoll (`loadsnap.py`, Event `load_abort`), T02 `test_hook`-Isolation,
+T03 Szenarien (a) Holz 10, (c) Lager-Startwerte, (d) `m13e2-zukunftsstand`, T04 arc42 `buyPct`, T05 `make zeitreserve-gate`.
+Entscheid **Gate Merge OK**, lokaler Merge durch `production-integrator` nach DOC-ARCHIV, kein Push. Entwürfe: (1) Einzeiler
+gates.md → `studio-coach` (Ende-Routine, zusammen mit R598 V1); (2) Spec AK-M14E1-36 «Holz 20» → «Holz 10» als Beipack beim
+nächsten Design-Durchgang (Beobachtung); (3) alte Fundstellen `m13e2-v13` in Plänen bleiben (historisch). **Prozess-Vermerk an die
+Ende-Retro:** Controller machte T02/T04 selbst und ersetzte die Task-Reviews durch ein gemeinsames Review — gegen Briefing («Prüfschritte
+nicht streichen», L1 macht keine Inhaltsarbeit). `/tmp/x` ist kein leeres Verzeichnis, sondern eine Agenten-Ausgabedatei (52 KB, 17:45) — bleibt liegen, harmlos.
+
+Regelbezug: gates.md Gate Merge, R581, R588, R595, R598 · Kosten bei Irrtum: ein Fehler in Werkzeug-Code fällt erst im nächsten push-check auf.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-11 · ADR: —
+
+## R603 · 2026-10-13 · Release-Check REL-21: OK mit Doku-Auflage
+
+Ruling: Bericht lead-qa REL-21 am Kandidaten `0a19ad53`: Playtest OK (85 Screenshots unter `.studio/qa/REL-21/`, 0 Konsolenfehler,
+v13 → v14 lädt, v999/kaputtes JSON abgewiesen), Opus-Review BEDENKEN nur Doku (arc42 fünf Modulzeilen veraltet, README Z. 314
+Zifferntasten-Satz falsch platziert, Z. 164 Esc/Rechtsklick), strenge Zeitreserve-Nachmessung (Startlast 2,7) 0 ohne Reserve.
+Entscheid **Release-Check OK mit Auflage**: Doku-Fix (arc42-Modulzeilen, README-Stellen) als `docs:`-Commit durch lead-tech **nach**
+dem Merge von DOC-ARCHIV (README neu gegliedert), Delta-Review sonnet zusammen mit TOOL-BUENDEL-11 und DOC-ARCHIV vor dem Push in der
+nächsten Session. Esc/Rechtsklick und Kleinbefunde → `docs/beobachtungen.md`. Reihenfolge jetzt: Integrator merged DOC-ARCHIV (R601)
+und TOOL-BUENDEL-11 (R602) lokal.
+
+Regelbezug: gates.md Gate Merge Release, R600, R601, R602 · Kosten bei Irrtum: veraltete Modulzeilen bis zum Doku-Fix.
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL-21 · ADR: —
+
+## R604 · 2026-10-13 · TOOL-BUENDEL-11 Konflikt arc42; Doku-Fix REL-21 auf derselben Branch; IDEEN-09
+
+Ruling: Bericht production-integrator: DOC-ARCHIV gemergt (`323fd29a`, docs-check/conflicts/studio-test Exit 0); `tool/b11` Konflikt
+in `docs/arc42.md` (Absätze «Save v14 (I-047)» und «`buyPct` ab v12» an derselben Stelle), Merge abgebrochen, main sauber.
+Entscheide: (1) lead-tech (TOOL-BUENDEL-11, 2 freie Starts) merged main in `tool/b11` (kein Rebase), behält beide Absätze in
+Versionsreihenfolge (v12 `buyPct` vor v13/v14) und erledigt auf derselben Branch die **Doku-Auflage R603** (arc42-Modulzeilen
+`problems.ts` fünf Klassen, `hotkeys.ts`, `input.ts`, `hud.ts`, `upkeepRank.ts`; README Zifferntasten-Satz und Esc/Rechtsklick-Zeile im
+neu gegliederten README); Delta-Review sonnet; `make check` Exit 0; neuer Kopf-Hash an L0 (Nachtrag zu R602, R565 V2). (2) Kein
+neuer Vorfall für die Ad-hoc-Retro: Doku-Konflikt ist der Normalfall der Dateimatrix (gates.md), gemeldet statt gelöst — korrekt.
+(3) **Ideen-Runde IDEEN-09** startet (R580, R597: nach DOC-ARCHIV): lead-design mit 3 Scouts, Budget 4 Starts / P3, Pool `docs/ideen.md`
+mit Archivregel R599.
+
+Regelbezug: gates.md Konflikte, R445, R580, R599, R602, R603 · Kosten bei Irrtum: ein weiterer Merge-Anlauf.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-21 (failed) · ADR: —

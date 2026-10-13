@@ -920,6 +920,10 @@ button.chip {
   font-size: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
+.notice-stack .order-card.order-card--warn {
+  border-left-color: var(--warn-amber);
+  background: var(--warn-parchment);
+}
 .notice-stack [hidden] {
   display: none;
 }
@@ -1272,4 +1276,80 @@ button.chip {
 .monument-start[hidden],
 .monument-row[hidden] {
   display: none;
+}
+
+/* Bilanz-Chip als Knopf und Betriebsliste (I-062) */
+button.hud-balance {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+button.hud-balance:hover {
+  border-color: var(--gold);
+}
+button.hud-balance:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.upkeep-row:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+.card--upkeep {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card--upkeep h2 {
+  margin: 0;
+}
+.upkeep-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.upkeep-scroll {
+  min-height: 0;
+  overflow-y: auto;
+}
+.upkeep-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.upkeep-row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 4px 8px;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom-color: var(--parchment-edge);
+  cursor: pointer;
+}
+.upkeep-row:hover {
+  border-color: var(--gold);
+}
+.upkeep-cell:first-child {
+  flex: 1;
+  font-weight: 600;
+}
+.upkeep-extra {
+  padding: 4px 8px;
+  font-style: italic;
+}
+.upkeep-total {
+  margin: 8px 0 0;
+  padding: 4px 8px;
+  font-weight: 600;
+  border-top: 2px solid var(--gold);
 }

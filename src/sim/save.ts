@@ -51,7 +51,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 13;
+export const SAVE_VERSION = 14;
 
 export type { LoadResult };
 
@@ -227,6 +227,13 @@ export function migrateV12ToV13(raw: Record<string, unknown>): void {
     // unbrauchbarer Stand: die Ladeprüfung meldet ihn
   }
   raw.version = 13;
+}
+
+/** v13 → v14 (I-047): Stammkunde. Neue Schlüssel am Ende, verlustfrei; wirft nie. */
+export function migrateV13ToV14(raw: Record<string, unknown>): void {
+  if (!('contract' in raw)) raw.contract = null;
+  if (!('contractOffer' in raw)) raw.contractOffer = null;
+  raw.version = 14;
 }
 
 const CRISIS_KINDS: readonly string[] = ['fire', 'storm', 'boom'];
@@ -815,6 +822,41 @@ function isValidReserve(r: unknown): boolean {
   return RESERVE_GOODS.every((g) => (RESERVE_STEPS as readonly unknown[]).includes(r[g]));
 }
 
+/** Gut mit Auftragsdef und Insel im Bereich: gemeinsame Teilprüfung von Vertrag und Angebot (I-047). */
+function isOrderGoodOnIsland(o: Record<string, unknown>, islandCount: number): boolean {
+  return (
+    typeof o.good === 'string' &&
+    Object.hasOwn(GOODS, o.good) &&
+    GOODS[o.good as keyof typeof GOODS].order !== undefined &&
+    isInt(o.island) &&
+    o.island >= 0 &&
+    o.island < islandCount
+  );
+}
+
+/** Vertrag und Angebot (v14): `null` oder strukturell gültig; Vertrag schliesst Auftrag und Angebot aus. */
+function isValidContractFields(raw: Record<string, unknown>): boolean {
+  const { contract, contractOffer, order } = raw;
+  const count = (raw.islands as unknown[]).length;
+  if (contract !== null) {
+    if (
+      !isObject(contract) ||
+      !isOrderGoodOnIsland(contract, count) ||
+      !isInt(contract.amount) ||
+      contract.amount < 1 ||
+      !isInt(contract.price) ||
+      contract.price < 0
+    )
+      return false;
+    if (order !== null || contractOffer !== null) return false;
+  }
+  if (contractOffer !== null) {
+    if (!isObject(contractOffer) || !isOrderGoodOnIsland(contractOffer, count)) return false;
+    if (order !== null) return false;
+  }
+  return true;
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { stats } = raw;
@@ -828,6 +870,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidV9Fields(raw)) return false;
   if (!isValidV11Fields(raw)) return false;
   if (!isValidV12Fields(raw)) return false;
+  if (!isValidContractFields(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -868,6 +911,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 10) migrateV10ToV11(raw);
   if (raw.version === 11) migrateV11ToV12(raw);
   if (raw.version === 12) migrateV12ToV13(raw);
+  if (raw.version === 13) migrateV13ToV14(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

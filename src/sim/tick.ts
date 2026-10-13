@@ -9,7 +9,7 @@ import { tickMarket } from './trade';
 import { tickUnlocks } from './unlocks';
 import { WIN_CITIZENS, WIN_MERCHANTS, WIN_SPICE_MERCHANTS } from './defs/tiers';
 import { spiceLoop, spiceMerchants } from './goal3';
-import type { World } from './types';
+import type { ContractEvent, World } from './types';
 
 /**
  * Setzt erst `won` (genug Bürger+), dann `wonMerchants` (genug Kaufleute, nur nach `won`), dann `wonSpice`
@@ -29,6 +29,8 @@ export function checkWin(world: World): void {
 
 export interface StepReport {
   lost: ShipLoss[];
+  /** Vertragsereignis dieses Schritts (I-047, R12), sonst `null`. */
+  contract: ContractEvent | null;
 }
 
 /** Ein Simulationsschritt: Zähler, Produktion, Schiffe, Bevölkerung, Steuern, Wirtschaft (Unterhalt), Markt, Aufträge, Krisen, Sieg, Freischaltung. */
@@ -41,9 +43,9 @@ export function step(world: World): StepReport {
   tickEconomy(world);
   tickMonument(world);
   tickMarket(world);
-  tickOrders(world);
+  const contract = tickOrders(world);
   tickCrises(world);
   checkWin(world);
   tickUnlocks(world); // letzter Aufruf: Bitgleichheit, Spec 4.3, ADR-005-Nachtrag
-  return { lost };
+  return { lost, contract };
 }

@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-12 (Studio-Session 1a73e6c1, R564–R577; Ende: M13 live, M14-E1 + TOOL-CONTROLLER-HAERTUNG + TOOL-BUENDEL-9 + UI-AUFRAEUM-2 lokal auf main @ `98ccd94b`+ (nicht gepusht; `origin/main` = `origin/backup/main-lokal` = `19683ddf`))
+Stand: 2026-10-13 (Studio-Session 6584aaa4, R578–R599, laufend: REL-20 live `0d1db8f3`; UI-HAEPPCHEN-A/B + I-047 (Save v14) lokal auf main @ `0a19ad53`, REL-21 offen; TOOL-BUENDEL-11 und DOC-ARCHIV in Arbeit)
 
 ## Release-Notizen
 

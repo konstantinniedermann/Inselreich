@@ -54,9 +54,8 @@ describe('M13-E1 Save v11', () => {
     const w = createWorld(3);
     expect(w.edict).toBeNull();
     expect(w.edictLockedUntil).toBe(0);
-    expect(Object.keys(w).slice(-5, -3)).toEqual(['edict', 'edictLockedUntil']);
-    expect(w.version).toBe(13);
-    expect(SAVE_VERSION).toBe(13);
+    expect(Object.keys(w).slice(-7, -5)).toEqual(['edict', 'edictLockedUntil']);
+    expect(w.version).toBe(SAVE_VERSION);
   });
 
   describe('AK-M13E1-22 foldBackToV10', () => {
@@ -128,7 +127,7 @@ describe('M13-E1 Save v11', () => {
       const r = deserialize(JSON.stringify(v10Of(w)));
       expect(r.ok).toBe(true);
       if (!r.ok) return;
-      expect(r.world.version).toBe(13);
+      expect(r.world.version).toBe(SAVE_VERSION);
       expect(r.world.edict).toBeNull();
       expect(r.world.edictLockedUntil).toBe(0);
       expect(r.world.won).toBe(true);
@@ -140,7 +139,7 @@ describe('M13-E1 Save v11', () => {
         const r = deserialize(readFileSync(`tests/sim/fixtures/${f}`, 'utf8'));
         expect(r.ok, f).toBe(true);
         if (!r.ok) continue;
-        expect(r.world.version, f).toBe(13);
+        expect(r.world.version, f).toBe(SAVE_VERSION);
         expect(r.world.edict, f).toBeNull();
         expect(r.world.edictLockedUntil, f).toBe(0);
       }

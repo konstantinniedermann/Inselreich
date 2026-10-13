@@ -35,6 +35,11 @@ import { UPKEEP_INTERVAL } from '../../src/sim/economy';
 import { perMinute, signedNum } from '../../src/ui/time';
 import type { Building, BuildingDefId, BuildingState, Tier, World } from '../../src/sim/types';
 import { setHouse, uxWorld } from './worlds';
+import { setEdict } from '../../src/sim/edicts';
+import { upgradeBuilding } from '../../src/sim/upgrade';
+import { totalTaxes } from '../../src/sim/population';
+import { totalUpkeep } from '../../src/sim/economy';
+import { balanceLine } from '../../src/ui/balancePreview';
 
 /** Betrieb roh einsetzen (ohne Kachel); die Helfer lesen nur Gebäude und Welt. */
 const put = (w: World, defId: BuildingDefId, extra: Partial<Building> = {}): Building => {
@@ -302,6 +307,51 @@ describe('AK-PU-10..13 upgradeCard', () => {
     expect(upgradeCard(w, put(w, 'chapel'))).toBeNull();
     expect(upgradeCard(w, put(w, 'spicefarm'))).toBeNull();
     expect(upgradeCard(w, put(w, 'house'))).toBeNull();
+  });
+});
+
+describe('AK-15 Ausbau-Karte «Bilanz danach»', () => {
+  const balance = (w: World): number => totalTaxes(w) - totalUpkeep(w);
+  const rich = (edict: boolean): World => {
+    const w = createWorld(3, { unlockAll: true });
+    if (edict) {
+      w.won = true;
+      w.tick = 1000;
+      w.money = 10_000;
+      put(w, 'townhall');
+      expect(setEdict(w, 'saving').ok).toBe(true);
+    }
+    w.money = 10_000;
+    home(w).stock.cloth = 20;
+    home(w).stock.rum = 20;
+    home(w).stock.wood = 200;
+    home(w).stock.tools = 200;
+    home(w).stock.stone = 200;
+    return w;
+  };
+  it('Stufe 1 -> 2 und 2 -> 3 stimmen mit dem echten upgradeBuilding überein, mit und ohne Edikt Sparen', () => {
+    for (const edict of [false, true]) {
+      const w = rich(edict);
+      const f = put(w, 'fisher');
+      for (const level of [1, 2]) {
+        const c = upgradeCard(w, f)!;
+        if (c.kind !== 'next') throw new Error('next erwartet');
+        const before = balance(w);
+        expect(upgradeBuilding(w, f.id).ok, `edict=${edict} level=${level}`).toBe(true);
+        const after = balance(w);
+        expect(f.level).toBe(level + 1);
+        expect(c.balance, `edict=${edict} level=${level}`).toBe(balanceLine({ before, after }));
+        expect(c.balance).toMatch(/^Bilanz danach: /);
+      }
+    }
+  });
+  it('Höchste Stufe und gesperrte Karte haben keine Zeile', () => {
+    const w = rich(false);
+    expect('balance' in upgradeCard(w, put(w, 'fisher', { level: 3 }))!).toBe(false);
+    const w2 = createWorld(3);
+    const c = upgradeCard(w2, put(w2, 'fisher'))!;
+    expect(c.kind).toBe('locked');
+    expect('balance' in c).toBe(false);
   });
 });
 

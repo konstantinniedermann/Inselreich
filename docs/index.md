@@ -74,3 +74,6 @@ Lokal, nicht Teil des Spiels.
 
 - [Beobachtungen](beobachtungen.md) — Posteingang für Befunde ausserhalb des Scopes
 - [Beobachtungen-Archiv](beobachtungen-archiv.md) — ausgewertete Altabschnitte des Posteingangs
+- [Ideen-Pool](ideen.md) — aktive Funktionsideen (neu, bewertet, eingeplant, geparkt)
+- [Ideen-Archiv](ideen-archiv.md) — abgeschlossene Ideen (live, verworfen, zusammengefasst)
+- [Spielwerte](spielwerte.md) — Denkmal, Freischaltung, Wirtschaft, Bevölkerung und Krisen mit allen Zahlen (aus dem README)
