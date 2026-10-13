@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R588, Vorschlag Coach 2026-10-13): E-062, E-063, E-064; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R614 2026-10-13): E-062, E-063, E-064; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 ---
 

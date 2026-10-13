@@ -6951,3 +6951,17 @@ toter README-Verweis «Seefahrt und Gewürz» → UI-Aufräum-Sammelpaket.
 Regelbezug: gates.md Gate Merge, R609, R610 · Kosten bei Irrtum: ein Hotfix im Inselmarkt vor REL-22.
 
 Entscheider: L0 · Anlass: Schlussbericht lead-tech I092 · ADR: —
+
+## R614 · 2026-10-13 · Handbuch 1.54 angenommen; E-060 behalten, E-064 laufend
+
+Ruling: Bericht studio-coach HANDBUCH-1.54 (`7c73247d`): gates.md (Release-Fenster ≤ 2 Test-Arbeiter, `make zeitreserve-gate`,
+Lastartefakt nur nach Messung, push-bereit = `LOAD_WAIT`), STUDIO.md 1.54 (Integrator Exit-1-Regel, Stash-Sperre, Stand-Warnung),
+briefing.md (Integrator-Pflichtzeile), Personas lead-design 1.12 / design-idea-scout 1.1 (Archivregel), lernen.md (40 Zeilen),
+CHANGELOG; `make studio-test` 847 grün, `make docs-check` Exit 0. Entscheide: (1) **Handbuch 1.54 angenommen**. (2) **E-060
+behalten** (Budget-Hook `deny`; 0 Fehlblocks, korrekte Blocks ohne Freigabe; Rückfall `BUDGET_MODE = "warn"`). (3) **E-064 laufend**
+ab 2026-10-13 (R579); E-065 bleibt vorgeschlagen bis ein Platz frei ist (die Warnung ist als Werkzeug schon aktiv). (4) Die
+Experiment-Kopfzeile «R588, Vorschlag Coach» gilt als R614.
+
+Regelbezug: R429, R579, R588, R598, R599 · Kosten bei Irrtum: eine Handbuchzeile zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach HANDBUCH-1.54 · ADR: —
