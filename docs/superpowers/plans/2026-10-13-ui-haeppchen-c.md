@@ -76,3 +76,14 @@ Je Task: Umsetzer `tech-ui-engineer`, danach Task-Review `qa-code-reviewer` (son
 | Puffer 30 %, aufgerundet               | **10** |
 
 Parallelität 1 (Datei-Eigentum, siehe oben); Fix-Runden und Delta-Review per `SendMessage`, nicht gezählt. Schätzung ≈ 110 Tools (Ideen: 60 + 50). Abschluss: `make check` Exit 0, Exit-Codes im Bericht, Handoff nach `.studio/handoffs/`.
+
+## Nachtrag R607 (Auflagen QA, vom Controller eingetragen, vor T01)
+
+Strang/Worktree ist `.worktrees/ui-haeppchen-c`, Branch `feat/ui-haeppchen-c` (statt `-impl`). Entscheide: «Markt ≈» = Preis der ersten Einheit; Auftragsprämie entfällt; Wortlaut-Delta zu I-047 B.4 bewusst (Spec-Vermerk, `order.test.ts` mit T01).
+
+1. **Rechenzeit (T01, AK-HC-01/03):** Messwelt Spätspiel ≥ 1000 Gebäude; `orderCardText` im Angebotszweig ≤ 1 ms je Frame (Messung im Task-Bericht, Median über ≥ 200 Aufrufe). Rückfall bei Überschreitung: Cache je `world.tick` / Insel / Gut (Schlüssel `tick|island|good`, nur in `order.ts`-Closure, nicht im Spielstand).
+2. **N = 0 (AK-HC-01):** Wortlaut bei Marktpreis 0 (Gut nicht handelbar/ausverkauft): `Markt jetzt ≈ 0`; Erzeugung 0: `keine Erzeugung`. Test für beide Fälle.
+3. **Cursor (AK-HC-07):** `contractCursor` wird bei Vertragsende, Vertragswechsel (anderes Gut oder andere Insel) und `restart` auf `null` gesetzt; Test: nach Wechsel beginnt Klick 1 wieder beim ersten Erzeuger. Inselwechsel (Sprung auf ferne Insel, Spieler wechselt zurück): `stepList` setzt den Cursor bei `landed !== activeIsland` zurück; als Test festhalten.
+4. **Stillgelegte Erzeuger (AK-HC-06/07):** werden angesprungen (Liste filtert nur Rolle, nicht Zustand); Test mit stillgelegtem Betrieb. `runContractJump` bei `world.contract === null` tut nichts (keine Meldung, keine Kamera, kein Cursor); Test.
+5. **Rot-Beleg / Signatur:** Rot-Lauf je Testgruppe im Bericht; wo kein Rot möglich ist (z. B. Kontrakt-Test auf bestehende Signaturen), Vermerk «kein Rot möglich, Beleg = <Grund>». Signaturen: `contractProducers(world: World): FocusEntry[]`; `runContractJump(deps: ContractJumpDeps, dir: 1 | -1): void`; `contractNoProducerMessage(world: World, c: { good: GoodId; island: number }): string`; `OrderActions.toProducer(): void`.
+6. **Meldung kein Erzeuger:** `contractNoProducerMessage` = `noProducerMessage(world, good)` plus Inselzusatz: `Noch kein Erzeuger für Holz auf <Insel> — Bauen: …` (Name via `islandName`; Zusatz auch auf der Heimatinsel). Test.
