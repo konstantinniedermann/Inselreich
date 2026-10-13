@@ -1148,7 +1148,8 @@ const polyDist = (p: Pos, pts: readonly Pos[]): number =>
 describe('L5 Meer-Plan und R4', () => {
   // Gemeinsamer Aufbau (Welt, Kontext, Plan) ausserhalb der Testzeit; Seeds 1–200 prüft `tools/render-qa/korridor.mjs`.
   beforeAll(() => {
-    for (let seed = 1; seed <= 40; seed++) {
+    // Zeitreserve (R593): bis Seed 80 vorwärmen, damit D11/E2/E6 (60 Seeds) und Palmen (80 Seeds) nur noch lesen.
+    for (let seed = 1; seed <= 80; seed++) {
       const w = W200[seed - 1]!.w;
       seaPlan(seed, home(w), seaContext(w));
     }

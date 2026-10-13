@@ -500,11 +500,17 @@ describe('Wasser- und Luftleben (H-R2)', () => {
     expect(bg).toBeGreaterThan(0);
   });
 
+  // Zeitreserve (R593): eigene, nur hier gelesene Welten Seeds 1–40 ausserhalb der Testzeit (vorher 701 ms bei Last 4,1).
+  const rf10Worlds: World[] = [];
+  beforeAll(() => {
+    for (let seed = 1; seed <= 40; seed++) rf10Worlds.push(createWorld(seed));
+  }, 30_000);
+
   it('RF-10 Startansicht am Kontor (Zoom 1, 980×650) zeigt bei Tag und klar Fische und Vögel, Seeds 1 bis 40', () => {
     const view = { w: 980, h: 650 };
     const bad: number[] = [];
     for (let seed = 1; seed <= 40; seed++) {
-      const world = createWorld(seed);
+      const world = rf10Worlds[seed - 1]!;
       const k = world.buildings[home(world).kontorId]!;
       const c = center(BUILDING_DEFS[k.defId], k.x, k.y);
       const cam = { x: 0, y: 0, zoom: 1 };
@@ -633,7 +639,7 @@ describe('Delfine (ART-STIL-02 L7 E5)', () => {
         }
     }
     expect(checked).toBeGreaterThan(100);
-  });
+  }, 10_000); // Zeitreserve (R593): 737 ms bei Last 4,2 (40 Seeds, je Delfin-Pose geprüft); Timeout 10 s
 
   it('E5 springen nacheinander in Bögen: Höhe ≤ 0,45 · ISO_H, Verlauf 0…1, mehrere Tiere zu verschiedenen Zeiten', () => {
     let jumps = 0;

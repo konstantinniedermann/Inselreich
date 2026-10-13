@@ -123,7 +123,8 @@ describe('Ersatzregel Stufe 3 (M14-E1 T02)', () => {
       max = Math.max(max, w + h);
     }
     console.info(`SPANNE_MAX=${max}`);
-  });
+    // Zeitreserve (R593): 300 Seeds mit Inselerzeugung, 946 ms bei Last 4,2 (Home nur noch einmal je Seed); Timeout daher 10 s.
+  }, 10_000);
 });
 
 // ---------- T03: Insel C «Weidenau» (AK-M14E1-15) ----------
