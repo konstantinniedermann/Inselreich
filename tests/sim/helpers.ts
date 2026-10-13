@@ -277,6 +277,30 @@ export const V12_WORLD_KEYS = [...V11_WORLD_KEYS, 'monument', 'monumentDone', 'b
 /** Stand v12, nicht erweitern: Inselschlüssel in Erzeugungsreihenfolge (mit `reserve`, I-049). */
 export const V12_ISLAND_KEYS = [...V11_ISLAND_KEYS, 'reserve'] as const;
 
+/** Stand v13, nicht erweitern: v13 fügte keinen Weltschlüssel hinzu. */
+export const V13_WORLD_KEYS = V12_WORLD_KEYS;
+
+/**
+ * Formt ein v14-JSON-Objekt in die v13-Form zurück (I-047): ohne `contract`, `contractOffer` (ohne Umordnen),
+ * `version 13`. Vertrag oder Angebot sind nicht rückfaltbar; unbekannte Weltschlüssel → Fehler.
+ */
+export function foldBackToV13(x: Record<string, unknown>): Record<string, unknown> {
+  const allowed: readonly string[] = [...V13_WORLD_KEYS, 'contract', 'contractOffer'];
+  for (const k of Object.keys(x))
+    if (!allowed.includes(k)) throw new Error(`foldBackToV13: unbekannter Schlüssel ${k}`);
+  return dropContractFields(x);
+}
+
+/** Kern der Rückfaltung v14 → v13 ohne Prüfung der Weltschlüssel (die Ketten darunter filtern sie selbst). */
+function dropContractFields(x: Record<string, unknown>): Record<string, unknown> {
+  if (x.contract !== null || x.contractOffer !== null)
+    throw new Error('foldBackToV13: Vertrag nicht rückfaltbar');
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(x)) if (k !== 'contract' && k !== 'contractOffer') out[k] = x[k];
+  out.version = 13;
+  return out;
+}
+
 const C_FOLD_ERROR = 'foldBackToV12: Insel C nicht rückfaltbar';
 const C_INDEX = 3;
 
@@ -319,7 +343,8 @@ function assertUntouchedC(x: Record<string, unknown>, c: Record<string, unknown>
  * ausserhalb von `V12_WORLD_KEYS` → Fehler; Insel C muss unberührt sein; Inselschlüssel ausserhalb von
  * `V12_ISLAND_KEYS` entfallen auf den Inseln 0 bis 2 ohne Umordnen.
  */
-export function foldBackToV12(x: Record<string, unknown>): Record<string, unknown> {
+export function foldBackToV12(input: Record<string, unknown>): Record<string, unknown> {
+  const x = (input.version as number) >= 14 ? dropContractFields(input) : input;
   const worldKeys: readonly string[] = V12_WORLD_KEYS;
   for (const k of Object.keys(x))
     if (!worldKeys.includes(k)) throw new Error(`foldBackToV12: unbekannter Schlüssel ${k}`);
@@ -348,7 +373,8 @@ function dropIslandC(x: Record<string, unknown>): Record<string, unknown> {
  * Umordnen, `monument`/`monumentDone` müssen neutral sein; `version 11`. Denkmal → Fehler im Test.
  */
 export function foldBackToV11(input: Record<string, unknown>): Record<string, unknown> {
-  const v12 = input.version === 13 ? dropIslandC(input) : input;
+  const v13 = (input.version as number) >= 14 ? dropContractFields(input) : input;
+  const v12 = v13.version === 13 ? dropIslandC(v13) : v13;
   if (v12.monument !== null || v12.monumentDone !== false) throw new Error(MONUMENT_FOLD_ERROR);
   const shares = Object.values((v12.buyPct ?? {}) as Record<string, number>);
   if (shares.some((p) => p !== 100)) throw new Error('foldBackToV11: Kaufanteil nicht rückfaltbar');

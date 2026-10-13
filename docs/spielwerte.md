@@ -1,6 +1,38 @@
 # Spielwerte und Spielregeln im Detail
 
-Auslagerung aus dem [README](../README.md) (Abschnitte unverändert): Freischaltung, Wirtschaft, Bevölkerung und Krisen mit allen Zahlen. Bei Änderungen an Spielwerten hier mitführen.
+Auslagerung aus dem [README](../README.md) (Abschnitte unverändert): Denkmal, Freischaltung, Wirtschaft, Bevölkerung und Krisen mit allen Zahlen. Bei Änderungen an Spielwerten hier mitführen.
+
+## Denkmal (Wahlziel)
+
+Nach dem Kaufleute-Ziel (60 Kaufleute) schaltet die Bauleiste unter «Öffentlich» das **Denkmal** frei. Es ist ein
+**Wahlziel** ohne Lohn: Du kannst es bauen, musst es aber nicht. Es gibt nur **eines**, nur auf der **Heimatinsel**, es
+ist 3 × 3 Kacheln gross, und der Bauplatz kostet **500 Geld, 10 Holz und 10 Stein**. Gebaut wird es in drei Abschnitten;
+jeden startest du im Panel des Denkmals selbst, dabei zahlst du das Geld des Abschnitts:
+
+| Abschnitt | Name                   | Geld | Stein | Werkzeug | Glas | Gewürz |
+| --------- | ---------------------- | ---: | ----: | -------: | ---: | -----: |
+| 1         | Sockel                 | 4000 |   200 |       80 |   60 |     40 |
+| 2         | Terrassen              | 6000 |   200 |       80 |  140 |    100 |
+| 3         | Schaft und Feuerschale | 8000 |   200 |       80 |  160 |    100 |
+
+- **Lieferung:** Das Denkmal holt sich **1 Stück je Gut und Sekunde** aus dem Lager der Heimat, aber nur, was **über der
+  Reserve** liegt. Die Reserve ist je Gut «mindestens 20, sonst 8 × Hausverbrauch je 100 Ticks, beim Stein mindestens der Sperrbestand der Heimat (nur mit Kontor)», damit der Bau deine
+  Häuser nicht leerzieht. Der Bau braucht eine Anbindung ans Kontor.
+- **Zukaufen:** Der Schalter «zukaufen» je Gut kauft fehlende Stücke zum Kontorpreis (mit Edikt Handel 20 % günstiger),
+  sobald das Lager nichts über der Reserve hergibt. Das gekaufte Stück geht direkt ins Denkmal.
+- **Bau anhalten:** hält die Lieferung an, ohne etwas zu verlieren.
+- **Abriss:** Wer das Denkmal abreisst, bekommt nur die Hälfte des Bauplatzes zurück, **nicht** das Geld des Abschnitts
+  und nicht die gelieferte Ware. Ein Neubau beginnt wieder bei Abschnitt 1; ein bereits erreichtes Wahlziel bleibt erreicht.
+- **Anzeige:** Ab dem dritten Ziel (Gewürz) zeigt der Chip «Ziel» «Denkmal 1/3 · n %», am Ende «Wahlziel erreicht»; die Inselchronik führt dazu
+  eine Zeile «Wahlziel». Jeder fertige Abschnitt steht im Ereignis-Log, der letzte lässt die Feuerschale aufflammen und die Glocke «Denkmal fertig» läuten (Wahlziel erreicht).
+
+Ohne zusätzliche Betriebe (Steinbruch, Werkzeugmacher, Glashütte, Plantage) wird schon der erste Abschnitt nicht fertig:
+In der Messung (Lauf B: 6000 Ticks, kein Zukauf, keine zusätzlichen Betriebe) lieferte das Lager nichts, der Bestand
+war am Ende 0 und die Kaufleute sanken von 60 auf 3. Plane Ausbau oder Zukauf ein. Voll zugekauft dauert der Bau 10
+Minuten und kostet 64 200 Geld.
+
+Alle Zeitangaben sind **Spielzeit bei 1×** (Minuten und Sekunden); bei 2× und 4× läuft sie entsprechend
+schneller. Mengen pro Zeit stehen «pro Minute» (`/ min`).
 
 ## Freischaltung Schritt für Schritt
 
@@ -58,6 +90,7 @@ Im Panel der Amtsstube erlässt du **ein** Edikt zur Zeit. Es wirkt nur, solange
 - **Start:** 5000 Geld, 40 Holz, 20 Werkzeug, 10 Stein, 20 Nahrung.
 - **Lager:** Alle Waren liegen im Kontor-Lager, höchstens 100 je Gut. Ist das Lager voll, verfällt
   neu erzeugte Ware (Zustand «Lager voll»).
+- **Betriebsrangliste:** Ein Klick (oder `Enter`) auf die **Bilanz** in der Kopfzeile öffnet eine Karte mit den Betrieben nach Unterhalt (höchster zuerst, bei Gleichstand geringere Auslastung zuerst; Stillgelegte mit ihrem halben Unterhalt und der Marke «stillgelegt»; Schiffe als eine Zeile; bei einem Sparedikt eine Zeile «Edikt»). Die Fusszeile nennt den Unterhalt je Minute wie die Bilanz. Ein Klick auf eine Zeile springt zum Gebäude, `Esc` schliesst; gezeigt werden 20 Zeilen, danach «und n weitere». Die Tasten `4`–`8` ohne Funktion nennen die Tempo-Tasten («Tempo: 1, 2, 3»).
 - **Lagerleiste und Warenbilanz:** Die Lagerleiste in der Kopfzeile (zweite Zeile) zeigt je Gut den Bestand und die
   Bilanz mit Trendpfeil (↑ / → / ↓, negative Bilanz hervorgehoben). Die Chips «Glas» und «Kaufleute» erscheinen erst nach der Freischaltung der Stufe 4 oder sobald es Glas bzw. Kaufleute gibt. Der Tooltip nennt Bilanz, Erzeugung und
   Verbrauch je Minute. Gerechnet wird nominal aus den angebundenen Betrieben und dem Bedarf der
@@ -167,6 +200,30 @@ Auftrag verfällt ohne Strafe. Ohne Auftrag zeigt die Karte «Nächster Auftrag 
 
 Welche Waren bestellt werden, richtet sich nach der höchsten Stufe deiner Häuser. Ein Auftrag bringt
 mehr als der Verkauf, aber Waren dafür zuzukaufen lohnt sich nie. Werkzeug wird nicht bestellt.
+
+#### Stammkunde
+
+Hast du einen Auftrag geliefert und steht ein Haus der Stufe 3 (Bürger), bietet der Händler einen
+**Stammkunden** an: dasselbe Gut, immer wieder. Das Angebot steht als Karte («Stammkunde: Menge Gut alle
+1:30 zu Preis je Stück · Angebot noch m:ss») bis zum nächsten Auftragstakt; **Annehmen** oder **Ablehnen**.
+Menge und Stückpreis sind je Gut fest und gelten ab dem Annehmen unverändert:
+
+| Gut        | Menge | Stückpreis | Wert je Lieferung |
+| ---------- | ----- | ---------- | ----------------- |
+| Holz       | 23    | 6          | 138               |
+| Nahrung    | 28    | 5          | 140               |
+| Stein      | 14    | 10         | 140               |
+| Wolle      | 17    | 8          | 136               |
+| Stoff      | 7     | 20         | 140               |
+| Zuckerrohr | 17    | 8          | 136               |
+| Rum        | 5     | 27         | 135               |
+| Glas       | 4     | 34         | 136               |
+
+Alle 1:30 bucht der Vertrag die Menge vom Lager der Lieferinsel ab und zahlt den Wert; die Karte zeigt
+«nächste Lieferung m:ss · Lager x/Menge» und färbt sich warm, wenn das Lager zu klein ist oder das
+Kontor fehlt. Solange der Vertrag läuft, gibt es keine Zufallsaufträge. **Kündigen** ist jederzeit
+kostenlos. Fehlen bei der Lieferung Ware oder Kontor, springt der Kunde ab und es kostet eine Strafe in
+Höhe einer Lieferung (Wert je Lieferung), danach geht es mit Zufallsaufträgen weiter.
 
 ### Seefahrt und Gewürz
 

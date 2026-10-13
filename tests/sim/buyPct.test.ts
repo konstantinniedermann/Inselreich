@@ -48,7 +48,7 @@ describe('AK-ZK-01 Zustand', () => {
     expect(Object.values(fresh.buyPct).every((v) => v === 100)).toBe(true);
     expect(fresh.version).toBe(SAVE_VERSION);
     const keys = Object.keys(JSON.parse(serialize(fresh)) as object);
-    expect(keys[keys.length - 1]).toBe('buyPct');
+    expect(keys.slice(-3)).toEqual(['buyPct', 'contract', 'contractOffer']);
   });
 });
 

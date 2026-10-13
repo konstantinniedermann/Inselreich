@@ -1,15 +1,63 @@
 import type { GoodDef, GoodId } from '../types';
 
 export const GOODS: Record<GoodId, GoodDef> = {
-  wood: { id: 'wood', name: 'Holz', buy: 10, sell: 4, order: { tier: 1, min: 20, max: 40 } },
+  wood: {
+    id: 'wood',
+    name: 'Holz',
+    buy: 10,
+    sell: 4,
+    order: { tier: 1, min: 20, max: 40, contract: 23 },
+  },
   tools: { id: 'tools', name: 'Werkzeug', buy: 40, sell: 15 },
-  stone: { id: 'stone', name: 'Stein', buy: 15, sell: 6, order: { tier: 2, min: 10, max: 20 } },
-  food: { id: 'food', name: 'Nahrung', buy: 8, sell: 3, order: { tier: 1, min: 10, max: 20 } },
-  wool: { id: 'wool', name: 'Wolle', buy: 12, sell: 5, order: { tier: 2, min: 10, max: 20 } },
-  cloth: { id: 'cloth', name: 'Stoff', buy: 30, sell: 12, order: { tier: 2, min: 6, max: 12 } },
-  cane: { id: 'cane', name: 'Zuckerrohr', buy: 12, sell: 5, order: { tier: 3, min: 10, max: 20 } },
-  rum: { id: 'rum', name: 'Rum', buy: 40, sell: 18, order: { tier: 3, min: 6, max: 12 } },
-  glass: { id: 'glass', name: 'Glas', buy: 50, sell: 20, order: { tier: 4, min: 4, max: 8 } },
+  stone: {
+    id: 'stone',
+    name: 'Stein',
+    buy: 15,
+    sell: 6,
+    order: { tier: 2, min: 10, max: 20, contract: 14 },
+  },
+  food: {
+    id: 'food',
+    name: 'Nahrung',
+    buy: 8,
+    sell: 3,
+    order: { tier: 1, min: 10, max: 20, contract: 28 },
+  },
+  wool: {
+    id: 'wool',
+    name: 'Wolle',
+    buy: 12,
+    sell: 5,
+    order: { tier: 2, min: 10, max: 20, contract: 17 },
+  },
+  cloth: {
+    id: 'cloth',
+    name: 'Stoff',
+    buy: 30,
+    sell: 12,
+    order: { tier: 2, min: 6, max: 12, contract: 7 },
+  },
+  cane: {
+    id: 'cane',
+    name: 'Zuckerrohr',
+    buy: 12,
+    sell: 5,
+    order: { tier: 3, min: 10, max: 20, contract: 17 },
+  },
+  rum: {
+    id: 'rum',
+    name: 'Rum',
+    buy: 40,
+    sell: 18,
+    order: { tier: 3, min: 6, max: 12, contract: 5 },
+  },
+  glass: {
+    id: 'glass',
+    name: 'Glas',
+    buy: 50,
+    sell: 20,
+    order: { tier: 4, min: 4, max: 8, contract: 4 },
+  },
   spice: { id: 'spice', name: 'Gewürz', buy: 40, sell: 12 },
 };
 export const GOOD_IDS = Object.keys(GOODS) as GoodId[];
@@ -23,6 +71,12 @@ export const BUY_RISE = 0;
 export const BUY_CAP = 160;
 /** Stückprämie eines Handelsauftrags: `floor(buy × ORDER_PREMIUM)`. */
 export const ORDER_PREMIUM = 0.75;
+/** Stückpreis eines Liefervertrags (I-047): `floor(buy × CONTRACT_PREMIUM)`. */
+export const CONTRACT_PREMIUM = 0.68;
+/** Vertragsstrafe bei Bruch in Prozent des Vertragswerts (I-047). */
+export const CONTRACT_PENALTY_PCT = 100;
+/** Niedrigste Stufe, ab der Liefergüter für Verträge infrage kommen (I-047). */
+export const CONTRACT_MIN_TIER = 3;
 export const STORAGE_CAP = 100;
 export const START_MONEY = 5000;
 export const START_STOCK: Record<GoodId, number> = {

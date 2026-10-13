@@ -32,37 +32,7 @@ Schiffsroute, steht «Fehlt: Schiffsroute, die Gewürz von deiner Plantage heimh
 erreicht, erscheint «Drittes Ziel erreicht: Gewürzstadt mit 80 Kaufleuten! Das Spiel läuft weiter.»; danach spielst
 du frei weiter («Gewürzstadt · n Kaufleute»).
 
-### Denkmal (Wahlziel)
-
-Nach dem Kaufleute-Ziel (60 Kaufleute) schaltet die Bauleiste unter «Öffentlich» das **Denkmal** frei. Es ist ein
-**Wahlziel** ohne Lohn: Du kannst es bauen, musst es aber nicht. Es gibt nur **eines**, nur auf der **Heimatinsel**, es
-ist 3 × 3 Kacheln gross, und der Bauplatz kostet **500 Geld, 10 Holz und 10 Stein**. Gebaut wird es in drei Abschnitten;
-jeden startest du im Panel des Denkmals selbst, dabei zahlst du das Geld des Abschnitts:
-
-| Abschnitt | Name                   | Geld | Stein | Werkzeug | Glas | Gewürz |
-| --------- | ---------------------- | ---: | ----: | -------: | ---: | -----: |
-| 1         | Sockel                 | 4000 |   200 |       80 |   60 |     40 |
-| 2         | Terrassen              | 6000 |   200 |       80 |  140 |    100 |
-| 3         | Schaft und Feuerschale | 8000 |   200 |       80 |  160 |    100 |
-
-- **Lieferung:** Das Denkmal holt sich **1 Stück je Gut und Sekunde** aus dem Lager der Heimat, aber nur, was **über der
-  Reserve** liegt. Die Reserve ist je Gut «mindestens 20, sonst 8 × Hausverbrauch je 100 Ticks, beim Stein mindestens der Sperrbestand der Heimat (nur mit Kontor)», damit der Bau deine
-  Häuser nicht leerzieht. Der Bau braucht eine Anbindung ans Kontor.
-- **Zukaufen:** Der Schalter «zukaufen» je Gut kauft fehlende Stücke zum Kontorpreis (mit Edikt Handel 20 % günstiger),
-  sobald das Lager nichts über der Reserve hergibt. Das gekaufte Stück geht direkt ins Denkmal.
-- **Bau anhalten:** hält die Lieferung an, ohne etwas zu verlieren.
-- **Abriss:** Wer das Denkmal abreisst, bekommt nur die Hälfte des Bauplatzes zurück, **nicht** das Geld des Abschnitts
-  und nicht die gelieferte Ware. Ein Neubau beginnt wieder bei Abschnitt 1; ein bereits erreichtes Wahlziel bleibt erreicht.
-- **Anzeige:** Ab dem dritten Ziel (Gewürz) zeigt der Chip «Ziel» «Denkmal 1/3 · n %», am Ende «Wahlziel erreicht»; die Inselchronik führt dazu
-  eine Zeile «Wahlziel». Jeder fertige Abschnitt steht im Ereignis-Log, der letzte lässt die Feuerschale aufflammen und die Glocke «Denkmal fertig» läuten (Wahlziel erreicht).
-
-Ohne zusätzliche Betriebe (Steinbruch, Werkzeugmacher, Glashütte, Plantage) wird schon der erste Abschnitt nicht fertig:
-In der Messung (Lauf B: 6000 Ticks, kein Zukauf, keine zusätzlichen Betriebe) lieferte das Lager nichts, der Bestand
-war am Ende 0 und die Kaufleute sanken von 60 auf 3. Plane Ausbau oder Zukauf ein. Voll zugekauft dauert der Bau 10
-Minuten und kostet 64 200 Geld.
-
-Alle Zeitangaben sind **Spielzeit bei 1×** (Minuten und Sekunden); bei 2× und 4× läuft sie entsprechend
-schneller. Mengen pro Zeit stehen «pro Minute» (`/ min`).
+Das Denkmal als Wahlziel steht in [`docs/spielwerte.md`](docs/spielwerte.md#denkmal-wahlziel).
 
 ## Bedienung
 
@@ -116,7 +86,10 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   (Wände und Dach), nicht nur die Bodenkachel; steht ein Gebäude hinter einem höheren, wählt ein Klick auf
   seinen sichtbaren Teil trotzdem dieses Gebäude. Beim Überfahren zeigt ein Umriss, was getroffen wird.
 - **Weg:** klicken oder mit gedrückter Maustaste über mehrere Kacheln ziehen; massgeblich ist die
-  Bodenkachel unter dem Zeiger.
+  Bodenkachel unter dem Zeiger. Mit **`Umschalt` beim Aufsetzen** zieht man eine gerade oder L-förmige Strecke
+  (längerer Schenkel zuerst): Die Vorschau zeigt neue Kacheln, Gesamtkosten und blockierte Kacheln; gebaut wird
+  beim Loslassen. Reicht das Geld nicht, wird bis zur letzten bezahlbaren Kachel gebaut (mit Grund). `Esc`
+  bricht den Zug ab, ohne etwas zu bauen.
 - **Gebäude:** In der Bauleiste eine **Kategorie** wählen (Infrastruktur, Wohnen, Produktion, Öffentlich); darüber
   öffnet sich eine Leiste mit den Einträgen samt Kosten. Sie bleibt offen, solange ein Werkzeug dieser Kategorie
   aktiv ist, und schliesst mit `Esc`, «Auswahl» oder erneutem Klick auf die Kategorie; ein Bau-Hotkey öffnet sie
@@ -130,6 +103,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   unter dem Zeiger (der Abriss-Zug über Wege wirkt wie der Weg-Zug sofort je Kachel); die **Auswahl** erst beim Loslassen und nur, wenn der Zeiger nie weiter als 4 Pixel vom
   Druckpunkt wegwanderte (sonst war es ein Schwenken). Auf Touch beim Loslassen, aber auf der Kachel, auf die der Finger zuerst getippt hat — und nur, wenn
   kein zweiter Finger dazukam und nicht verschoben wurde.
+- **Bilanz danach:** Der Tooltip eines Betriebs oder Dienstes in der Bauleiste nennt «Bilanz danach: +120 → +95 / min» (Bilanz heute gegen Bilanz nach dem Bau, inselübergreifend wie die Kopfzeile); beim Wohnhaus «→ bis zu … (Steuer bei voller Belegung)». Die Ausbau-Karte im Info-Panel zeigt dieselbe Zeile für die nächste Stufe. Der Aufstieg eines Hauses ist darin noch nicht eingerechnet.
 - **Tooltips:** Ein Eintrag der Bauleiste zeigt beim Überfahren, bei Tastaturfokus oder bei langem
   Drücken auf Touch (0,5 s) Name und Taste, Kosten, Unterhalt, was er erzeugt und braucht, die
   Standortregel, den Radius und — falls gesperrt — den Grund.
@@ -152,38 +126,39 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 
 ### Tastatur und Maus
 
-| Eingabe                | Wirkung                                                                                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| WASD / Pfeiltasten     | Karte verschieben                                                                                                                         |
-| Leertaste antippen     | Pause an/aus (wie `P`)                                                                                                                    |
-| Leertaste halten       | Mit gedrückter linker Maustaste die Karte verschieben                                                                                     |
-| `Esc` oder Rechtsklick | Zurück zum Werkzeug «Auswahl», Panel zu, löscht auch die Lager-Markierung (`Esc` auch bei Knopffokus)                                     |
-| Mausrad                | Zoomen                                                                                                                                    |
-| `P`                    | Pause an/aus (setzt danach das letzte Tempo fort)                                                                                         |
-| `Umschalt` + `U`       | Markiertes Gebäude ausbauen (wie «Ausbauen», erst nach der Freischaltung)                                                                 |
-| `Entf` / `Rücktaste`   | Markiertes Gebäude abreissen (wie «Abreissen» im Info-Panel)                                                                              |
-| `Strg`/`Cmd` + `S`     | Spiel speichern (wie Menü → «Speichern»)                                                                                                  |
-| `Cmd`/`Strg` + Klick   | Gebäudetyp unter dem Zeiger als Bauwerkzeug wählen (Pipette)                                                                              |
-| `1` / `2` / `3`        | Tempo 1× / 2× / 4× (hebt die Pause auf)                                                                                                   |
-| `R` / `X`              | Weg / Abriss                                                                                                                              |
-| `H` / `M` / `K` / `U`  | Wohnhaus / Marktplatz / Kapelle / Schule                                                                                                  |
-| `F` / `L` / `B` / `G`  | Fischerhütte / Holzfäller / Steinbruch / Schäferei                                                                                        |
-| `V` / `Z` / `N` / `T`  | Weberei / Zuckerrohrplantage / Brennerei / Werkzeugmacher                                                                                 |
-| `E`                    | Feuerwache                                                                                                                                |
-| `I`                    | Amtsstube (erst ab U3, höchstens eine)                                                                                                    |
-| `C` / `Q`              | Roden / Aufforsten (erst ab U2)                                                                                                           |
-| `Y`                    | Jagdhütte (erst ab U2); die Rinderfarm hat keine Taste                                                                                    |
-| `?`                    | Hilfe (Karte mit Legende und Freischaltungen)                                                                                             |
-| `.` / `,`              | Zum nächsten / vorigen Problem springen (öffnet das Info-Panel, Werkzeug bleibt); bei aktiver Lager-Markierung durch die Gebäude des Guts |
-| `J` / `O`              | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                                                                                          |
-| `0` / `9`              | Kamera zur Heimat / zur nächsten Insel (erst mit der Seefahrt)                                                                            |
+| Eingabe                 | Wirkung                                                                                                                                   |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| WASD / Pfeiltasten      | Karte verschieben                                                                                                                         |
+| Leertaste antippen      | Pause an/aus (wie `P`)                                                                                                                    |
+| Leertaste halten        | Mit gedrückter linker Maustaste die Karte verschieben                                                                                     |
+| `Esc` oder Rechtsklick  | Zurück zum Werkzeug «Auswahl», Panel zu, löscht auch die Lager-Markierung (`Esc` auch bei Knopffokus)                                     |
+| Mausrad                 | Zoomen                                                                                                                                    |
+| `P`                     | Pause an/aus (setzt danach das letzte Tempo fort)                                                                                         |
+| `Umschalt` + `U`        | Markiertes Gebäude ausbauen (wie «Ausbauen», erst nach der Freischaltung)                                                                 |
+| `Entf` / `Rücktaste`    | Markiertes Gebäude abreissen (wie «Abreissen» im Info-Panel)                                                                              |
+| `Strg`/`Cmd` + `S`      | Spiel speichern (wie Menü → «Speichern»)                                                                                                  |
+| `Cmd`/`Strg` + Klick    | Gebäudetyp unter dem Zeiger als Bauwerkzeug wählen (Pipette)                                                                              |
+| `1` / `2` / `3`         | Tempo 1× / 2× / 4× (hebt die Pause auf)                                                                                                   |
+| `Umschalt` + Weg ziehen | Gerade oder L-förmige Wegstrecke (Vorschau, Bau beim Loslassen)                                                                           |
+| `R` / `X`               | Weg / Abriss                                                                                                                              |
+| `H` / `M` / `K` / `U`   | Wohnhaus / Marktplatz / Kapelle / Schule                                                                                                  |
+| `F` / `L` / `B` / `G`   | Fischerhütte / Holzfäller / Steinbruch / Schäferei                                                                                        |
+| `V` / `Z` / `N` / `T`   | Weberei / Zuckerrohrplantage / Brennerei / Werkzeugmacher                                                                                 |
+| `E`                     | Feuerwache                                                                                                                                |
+| `I`                     | Amtsstube (erst ab U3, höchstens eine)                                                                                                    |
+| `C` / `Q`               | Roden / Aufforsten (erst ab U2)                                                                                                           |
+| `Y`                     | Jagdhütte (erst ab U2); die Rinderfarm hat keine Taste                                                                                    |
+| `?`                     | Hilfe (Karte mit Legende und Freischaltungen)                                                                                             |
+| `.` / `,`               | Zum nächsten / vorigen Problem springen (öffnet das Info-Panel, Werkzeug bleibt); bei aktiver Lager-Markierung durch die Gebäude des Guts |
+| `J` / `O`               | Badehaus / Glashütte (erst nach dem Bürger-Ziel)                                                                                          |
+| `0` / `9`               | Kamera zur Heimat / zur nächsten Insel (erst mit der Seefahrt)                                                                            |
 
 Die Werkzeugtasten wirken nur ohne Strg, Cmd oder Alt; Gross- und Kleinschreibung ist egal. Ausnahmen sind `Strg`/`Cmd` + `S` (Speichern; der Browser-Dialog «Seite speichern» wird im Spiel unterdrückt, Varianten mit `Umschalt` oder `Alt` bleiben dem Browser), `Umschalt` + `U` (Ausbau; `U` allein bleibt die Schule) und `Cmd`/`Strg` + Linksklick auf ein Gebäude (Pipette; auf dem Mac ist `Cmd` + Klick der Hauptweg, `Strg` + Klick geht auch). Die Pipette wirkt in jedem Werkzeug, beim Kontor meldet sie, dass es sich nicht nachbauen lässt. Leertaste halten und Ziehen hat Vorrang vor der Pipette. Dieselbe
 Werkzeugtaste bei schon aktivem Werkzeug schaltet zurück zur Auswahl. Der Tooltip in der Bauleiste
 nennt die Taste; alle Kürzel stehen auch im Menü unter «Tastenkürzel». Bei offener Karte (Start, Menü,
 Einstellungen) sind alle Kürzel stumm. Auf einem fokussierten Knopf aktiviert die Leertaste den Knopf.
 
-Probleme sind, nach Dringlichkeit: nicht angebundene Gebäude und Häuser ausserhalb der Versorgung, stehende Betriebe (wartet auf Ware, kein Wald, kein Dienst), Häuser ohne Dienst, fehlende Waren (ein Eintrag je Gut und Insel). Innerhalb einer Klasse kommt zuerst die Insel, auf der du gerade bist, dann die übrigen Inseln, dann der nähere Eintrag. Die Meldung zählt mit («Problem 2 von 5: …»); ohne Problem: «Alles versorgt, kein Problem offen». «Lager voll» und Brände zählen nicht.
+Probleme sind, nach Dringlichkeit: nicht angebundene Gebäude und Häuser ausserhalb der Versorgung, stehende Betriebe (wartet auf Ware, kein Wald, kein Dienst), Häuser ohne Dienst, fehlende Waren (ein Eintrag je Gut und Insel) und zuletzt **«Lager voll»**: Ist das Lager eines Guts bei 100 und steht seit mindestens 30 Sekunden Spielzeit ein Erzeuger deswegen still (die Ware verfällt), erscheint ein Eintrag je Gut und Insel («Holz-Lager voll (100): Ware verfällt — stilllegen oder verkaufen»); `.` springt zum nächsten Erzeuger des Guts. Nach dem Laden oder einem neuen Spiel läuft die Frist neu. Innerhalb einer Klasse kommt zuerst die Insel, auf der du gerade bist, dann die übrigen Inseln, dann der nähere Eintrag. Die Meldung zählt mit («Problem 2 von 5: …»); ohne Problem: «Alles versorgt, kein Problem offen». Brände zählen nicht.
 
 ### Geschwindigkeit
 
@@ -254,6 +229,7 @@ Ersatzschrift zurück.
 
 Die Regeln mit allen Zahlen stehen in [`docs/spielwerte.md`](docs/spielwerte.md):
 
+- Denkmal (Wahlziel)
 - Freischaltung Schritt für Schritt (inkl. Edikte)
 - Wirtschaft: Produktionsketten, Handel, Handelsaufträge, Seefahrt und Gewürz, Unterhalt, Stilllegen, Abriss
 - Bevölkerung: Stufen, Versorgung, Bedürfnisse, Aufstieg, Steuern

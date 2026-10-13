@@ -42,9 +42,8 @@ function felsWorld(): World {
 }
 
 describe('M14-E1 Save v13', () => {
-  it('Version 13 in SAVE_VERSION und createWorld', () => {
-    expect(SAVE_VERSION).toBe(13);
-    expect(createWorld(3).version).toBe(13);
+  it('createWorld trägt SAVE_VERSION', () => {
+    expect(createWorld(3).version).toBe(SAVE_VERSION);
   });
 
   it('AK-M14E1-20: Rundlauf mit Gebäuden und Lager auf Weidenau', () => {
@@ -66,7 +65,7 @@ describe('M14-E1 Save v13', () => {
     expect((old.islands as unknown[]).length).toBe(3);
     const reference = loaded(serialize(w));
     const m = loaded(JSON.stringify(old));
-    expect(m.version).toBe(13);
+    expect(m.version).toBe(SAVE_VERSION);
     expect(m.islands).toHaveLength(4);
     expect(JSON.stringify(m.islands[3])).toBe(JSON.stringify(createWorld(3).islands[3]));
     expect(m.islands.slice(0, 3)).toEqual(reference.islands.slice(0, 3));
@@ -119,7 +118,7 @@ const FIXTURES = [
 describe('AK-M14E1-22: Fixture-Kette', () => {
   it.each(FIXTURES)('%s → Version 13, vier Inseln, Insel 3 «C»', (f) => {
     const w = loaded(readFixture(f));
-    expect(w.version).toBe(13);
+    expect(w.version).toBe(SAVE_VERSION);
     expect(w.islands).toHaveLength(4);
     expect(w.islands[3]!.kind).toBe('C');
   });
@@ -253,7 +252,7 @@ describe('AK-M14E1-24: Rückfaltung, Fehlerfälle', () => {
 describe('AK-M14E1-25: Unbekannte Version, Ungültiges Format', () => {
   it('Version 14 wird abgewiesen', () => {
     const j = v13Json();
-    j.version = 14;
+    j.version = SAVE_VERSION + 1;
     expect(reasonOf(j)).toBe('Unbekannte Version');
   });
 

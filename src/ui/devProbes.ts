@@ -43,6 +43,8 @@ export interface DevProbe {
   slices(): number[];
   /** Kopie der Notfall-Dauern (ms) seit Start/Laden. */
   emergency(): number[];
+  /** Kopie der letzten Vertragsklänge (I-047, Klang-Spy AK-SK-29). */
+  contractSounds(): string[];
 }
 
 /** Hängt die Sonde nur im Dev-Build an `window.__inselDev` ; sonst nichts. */

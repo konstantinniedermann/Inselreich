@@ -98,7 +98,7 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Bewertung lead-design (IDEEN-04): Verkaufsseite je Gut ist neu, aber Boom (alle Güter 150 %) und Sättigung decken schon einen Teil; der Mehrwert gegen heute ist eine kleine Umlenkung des Verkaufs. Gleicher Eingriffstyp (Weltzustand, eigener Strom, Krisen-Test) wie I-006; beide gemeinsam im Handels-Brainstorming denken (Kaufseite I-006 ≤ −20 %, Verkaufsseite hier ≤ Kaufpreis ohne Kauf-und-Verkauf-Gewinn). Nicht gepitcht.
 - Entscheid: Empfehlung parken bis Handels-Brainstorming (mit I-006); Ruling IDEEN-04 offen
 
-### I-047 · eingeplant · Stammkunde (Liefervertrag)
+### I-047 · eingeplant (Spec `2026-10-13-i047-stammkunde-design.md`, Option 3 Stammkunde im Auftragsplatz, Gate Spec offen) · Stammkunde (Liefervertrag)
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik (Dauerabnahme gegen Festpreis, nur Mechanik, ADR-006); IDEEN-06 Scout A; Pfade `src/sim/orders.ts` (Aufträge einmalig), `src/sim/defs/goods.ts` (`ORDER_PREMIUM`, Sättigung)
 - Spielerwirkung: „Der Spieler nimmt nach einem erfüllten Auftrag das Angebot «Stammkunde: 12 Rum alle 3 min zu 130 %» an und wägt feste Abnahme gegen Verkauf am freien Markt ab."
@@ -178,30 +178,6 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Nutzen/Aufwand: hoher Nutzen · M · ≈ 3 Pakete
 - Entscheid: R529: Baustein fürs nächste Meilenstein-Brainstorming (Stadtplanung, mit I-045 und I-051).
 
-### I-062 · eingeplant · Betriebsrangliste nach Unterhalt
-
-- Bereich: Bedienung · Säule: Produktionsketten · Quelle: Genre-Mechanik (Gebäudeliste mit Kosten); Ist-Stand: der Bilanz-Tooltip nennt nur Summen; IDEEN-07 Scout B
-- Spielerwirkung: „Der Spieler klickt auf die Bilanz, sieht alle Betriebe nach Unterhalt und Auslastung sortiert und springt zum Verlustbringer, um ihn stillzulegen oder abzureissen."
-- Grösse: S · Risiko: keins (Auswertung vorhandener Werte, nicht im Save)
-- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13
-- Randfälle: Obergrenze oder Scrollen bei vielen Gebäuden; Stillgelegte am Ende mit Hinweis «kostet nichts»; Tastaturbedienung; keine neue Wirtschaftsregel.
-- Doppelung: keine; ergänzt I-035 (Stilllegen) und I-043 (güterbezogen, hier kostenbezogen).
-- Bewertung lead-design (IDEEN-07): bestätigt (13). Gibt dem Stilllegen erst einen Anlass; risikofrei.
-- Nutzen/Aufwand: mittlerer Nutzen (Bilanz im Mittelspiel lesbar) · S · ≈ 80 Tools
-- Entscheid: R529: eingeplant als UI-Häppchen nach M13 (mit I-063).
-
-### I-063 · eingeplant · Weg mit Winkel ziehen (Umschalt)
-
-- Bereich: Bedienung · Säule: Insel besiedeln · Quelle: Genre-Mechanik (Linien- und L-Bauen); IDEEN-07 Scout B
-- Spielerwirkung: „Der Spieler hält `Umschalt` beim Wegziehen, bekommt eine gerade oder L-förmige Strecke mit Vorschau und Gesamtkosten und baut Strassenraster ohne Zickzack."
-- Grösse: S · Risiko: keins (bestehende Weg-Aktion, Vorschau nur UI)
-- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
-- Randfälle: nicht baubare Kacheln rot, nur gültige gesetzt; zu wenig Geld baut bis zur letzten bezahlbaren Kachel mit Grund; `Umschalt` darf nicht mit `Umschalt`+`U` kollidieren.
-- Doppelung: keine (I-041 betrifft nur das Abreissen).
-- Bewertung lead-design (IDEEN-07): bestätigt (12). Reiner Komfort, aber jede Partie mehrfach spürbar; passt zu I-063 + I-062 in ein UI-Häppchen.
-- Nutzen/Aufwand: Komfort in jeder Partie · S · ≈ 70 Tools
-- Entscheid: R529: eingeplant als UI-Häppchen nach M13 (mit I-062).
-
 ### I-077 · bewertet · Spezialisierung ab Stufe 3
 
 - Bereich: Inhalt · Säule: Produktionsketten · Quelle: IDEEN-08 Scout A; Genre-Mechanik Betriebsausrichtung (nur Mechanik); `README.md` Ausbau Stufe 1–3 (nur «mehr vom Gleichen»), `src/sim/defs/buildings.ts` (Unterhalt 5–30 / min)
@@ -212,17 +188,6 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Bewertung lead-design: Spass 3 → 2, weil Stufe 3 erst im Mittelspiel kommt (Fortgeschrittene). **Entartung in der Scout-Fassung:** «Sparbetrieb» (Eingang −25 %, Unterhalt −30 %, Ausstoss gleich) ist besser als der Standard in jeder Lage; der Standard wird tote Option, die Wahl schrumpft auf 300 Geld für einen Dauerrabatt. Tragfähig nur mit Preis: Sparbetrieb Unterhalt −40 % bei Ausstoss −25 % (liegt zwischen «voll» und «Stilllegen»), Massenfertigung wie vorgeschlagen; die Masse verfällt bei Lager 100 und Verkaufsboden 30 %, darum keine Geldquelle. Werte erst nach dem Controller-Lauf «Ziel 4» (Erweiterung 1 K2, Auflage A1), weil die neuen Manufakturen dieselbe Bilanz teilen. Randfälle: Abriss löscht die Wahl, Sperrzeit 3 min, Betriebe ohne Eingang nur mit Unterhaltsteil.
 - Nutzen/Aufwand: jede Kette bekommt im Mittel- und Spätspiel eine Ausrichtung · M · ≈ 2 Pakete (Rechnung ≈ 40 Tools, Sim und Panel ≈ 150 Tools)
 - Entscheid: IDEEN-08 Empfehlung parken als Baustein des Wirtschafts-Brainstormings nach Erweiterung 1 K2 (mit I-008, I-033)
-
-### I-078 · bewertet · Bilanz-Vorschau bei Bau und Ausbau
-
-- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-08 Scout A; Kopfzeile «Bilanz ±n / min» (`README.md`), Bau-Tooltip zeigt nur «Unterhalt: n / min» (`src/ui/buildMenu.ts:132`), Ausbau-Karte nur Betrieb vorher → nachher
-- Spielerwirkung: „Der Spieler sieht beim Planen eines Baus oder Ausbaus «Bilanz danach: +120 → +95 / min» und weiss vor dem Klick, ob er sich den Unterhalt leisten kann."
-- Grösse: S · Risiko: keins (reine Anzeige aus Defs und Weltzustand; Sim, Save und Baseline unverändert)
-- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 14
-- Raster (lead-design): Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
-- Bewertung lead-design: Passung 3 → 2, weil sie die Wirtschaft nur lesbar macht, nicht ändert. Vereinfachung: nur die Differenz, die sicher ist: Unterhalt neu (Bau, Ausbau, Stilllegen) gegen Bilanz heute; bei Häusern die Steuer bei voller Belegung als «bis zu +n», nie als feste Zahl (sonst Fehlinformation, weil Häuser erst wachsen). Edikt Sparen und Steuer je Stufe müssen in der Rechnung stecken; die Zahl kommt aus derselben Sim-Funktion wie die Kopfzeile (keine zweite Rechnung in `src/ui/`). Passt thematisch zum Häppchen I-062 + I-063 («Unterhalt lesbar»).
-- Nutzen/Aufwand: Pleite-Fehler im Mittelspiel vermeiden, jeder Bau wird eine informierte Wahl · S · ≈ 70 Tools
-- Entscheid: IDEEN-08 Empfehlung einplanen ins UI-Häppchen nach M13 zusammen mit I-062 und I-063 (Stufe leicht, kein Save)
 
 ### I-081 · bewertet · Fischschwarm (befristetes Küstenereignis)
 
@@ -245,16 +210,6 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Nutzen/Aufwand: längere Holzkette, Mittelspiel · M · ≈ 3 Pakete mit Neumessung
 - Entscheid: IDEEN-08 Empfehlung parken bis Wirtschafts-Brainstorming nach Erweiterung 1 K2
 
-### I-083 · bewertet · Hinweis bei unbelegter Zifferntaste
-
-- Bereich: Bedienung · Säule: Bevölkerung versorgen und aufsteigen lassen (indirekt, Einstieg) · Quelle: IDEEN-08 Scout C; Playtest `.studio/qa/rel-18/report.md` Z. 25 («Taste `4` tut nichts, kein Hinweis»); `src/ui/hotkeys.ts` (Tempo nur `1`/`2`/`3`, `9`/`0` Inselwechsel)
-- Spielerwirkung: „Der Spieler drückt `4` bis `8` und liest «Tempo: 1, 2, 3» statt nichts zu merken."
-- Grösse: S · Risiko: keins
-- Raster: Spass 1 · Passung 1 · Aufwand 3 · Risiko 3 = 9 (Scout: Passung 2 = 10)
-- Bewertung lead-design: Passung 2 → 1 (reine Tastenhilfe). Unter der Pitch-Schwelle, aber fast kostenlos und ein Playtest-Befund. Randfall: nur ohne Eingabefokus und ohne offenen Dialog; `9`/`0` vor der Seefahrt bleiben stumm.
-- Nutzen/Aufwand: kleine Reibung weg · S · ≈ 10 Tools als Beipack
-- Entscheid: IDEEN-08 Empfehlung als Beipack ins UI-Häppchen nach M13 (I-062, I-063), kein eigener Platz
-
 ### I-084 · bewertet · Letztes Werkzeug mit Enter wieder aufnehmen
 
 - Bereich: Bedienung · Säule: Insel besiedeln (Bauen in Folge) · Quelle: IDEEN-08 Scout C; Genre-Mechanik Werkzeug-Rückgriff; README «Tastatur und Maus» (`Esc`/Rechtsklick legt das Werkzeug ab, die Pipette braucht ein Gebäude unter dem Zeiger); `Enter` ist in `hotkeys.ts` und `input.ts` frei
@@ -264,16 +219,6 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Bewertung lead-design: Spass 2 → 1: Werkzeugtasten und Pipette decken den Rückgriff fast immer in einem Druck oder Klick ab; der Gewinn ist ein Tastendruck. Randfälle: Fokus-`Enter` auf Bauleisten-Einträgen bleibt unberührt; Typ inzwischen gesperrt (Freischaltung, «Nur einmal je Insel», Denkmal) → Meldung mit Grund; nach «Neue Insel» und «Laden» leer.
 - Nutzen/Aufwand: ein Tastendruck weniger im Dauerbau · S · ≈ 40 Tools
 - Entscheid: IDEEN-08 Empfehlung parken (Lückenfüller für ein Tasten-Häppchen)
-
-### I-085 · bewertet · «Lager voll» als Problem mit Sprung
-
-- Bereich: Bedienung · Säule: Produktionsketten · Quelle: IDEEN-08 Scout C; Playtest `.studio/qa/rel-18/report.md` Z. 24 («Holz-Lager bei 100 voll, Holzfäller leerlaufen», Bild 25); `src/ui/problems.ts` kennt «Lager voll» nicht (grep ohne Treffer); README Zustand «Lager voll»
-- Spielerwirkung: „Der Spieler sieht, dass Holz bei 100 verfällt, springt mit `.` zu den Holzfällern und entscheidet: stilllegen, verkaufen oder Sperrbestand senken."
-- Grösse: S · Risiko: keins (reine Anzeige aus dem Weltzustand, kein Save-Feld)
-- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13 (Scout und lead-design gleich)
-- Bewertung lead-design: Macht die drei Antworten auf Überschuss sichtbar, die das Spiel schon hat (Stilllegen I-035, Verkauf, Sperrbestand I-049), und schliesst die Lücke, die I-046 (Überlauf-Ausfuhr, verworfen) offen liess. **Rauschen-Gefahr:** Gewollter Überschuss (Holz im Spätspiel) füllt sonst die Problemliste dauerhaft. Regel darum: ein Eintrag je Gut und Insel (nicht je Betrieb), erst nach 30 s «voll», stillgelegte Betriebe zählen nicht; der Eintrag nennt die Abhilfe («stilllegen oder verkaufen»). Die Problem-Zählung der Kopfzeile darf durch ihn nicht rot werden (eigene Farbe wie Hinweis).
-- Nutzen/Aufwand: verschenkte Ware wird eine Entscheidung, Playtest-Befund · S · ≈ 60–80 Tools
-- Entscheid: IDEEN-08 Empfehlung einplanen ins UI-Häppchen nach M13 (mit I-062, I-063, I-078)
 
 ### I-086 · bewertet · Häuserzeile ziehen (Wohnhaus-Werkzeug)
 

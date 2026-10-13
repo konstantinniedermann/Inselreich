@@ -8,7 +8,6 @@ import { setEdict } from '../../src/sim/edicts';
 import {
   boomGood,
   buyHeadNote,
-  buyPctText,
   buyTitle,
   buyTitleText,
   sellPctText,
@@ -241,12 +240,18 @@ describe('I-049 T05 Reserve-Zeile im Handelsdialog (AK-SB-16)', () => {
 });
 
 describe('I-048 Kaufanteil', () => {
-  it('AK-ZK-19 buyPctText zeigt den Kaufanteil', () => {
-    const w = createWorld(3);
-    w.buyPct.tools = 109;
-    expect(buyPctText(w, 'tools')).toBe('Kauf 109 %');
-    w.buyPct.tools = 100;
-    expect(buyPctText(w, 'tools')).toBe('Kauf 100 %');
+  it('AK-3 Handelsfenster rendert kein buy-pct-Feld', () => {
+    vi.stubGlobal('document', { createElement: fakeEl });
+    const w = createWorld(3, { unlockAll: true });
+    placeTownhall(w);
+    const panel = fakeEl('div');
+    renderTrade(panel as unknown as HTMLElement, w, {
+      back: () => {},
+      changed: () => {},
+      reserve: () => {},
+    });
+    expect(flat(panel).filter((e) => (e.dataset.field ?? '').startsWith('buy-pct-'))).toEqual([]);
+    vi.unstubAllGlobals();
   });
 
   it('AK-ZK-32 sellPctText statt «Preis … %»', () => {

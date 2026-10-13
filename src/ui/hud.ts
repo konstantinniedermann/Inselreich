@@ -13,7 +13,7 @@ import type { GoodId, TaxLevel, Tier, UnlockId, World } from '../sim/types';
 import type { GameState } from './app';
 import { blurAfterClick, setField } from './dom';
 import type { Settings } from './settings';
-import { renderOrder, updateOrder } from './order';
+import { renderOrder, updateOrder, type OrderActions } from './order';
 import { crisisCardText } from './crisis';
 import { taxEffect } from './guide';
 import { taxButtonTitle, taxSummaryText } from './taxView';
@@ -100,6 +100,20 @@ export function balanceView(world: World): ChipView {
   return { icon: 'balance', text: text.slice(BALANCE_PREFIX.length), label: text };
 }
 
+/** Bilanz-Chip als Knopf (Enter, Leertaste, Klick öffnen die Betriebsliste; I-062). */
+export function createBalanceButton(open: (btn: HTMLElement) => void): HTMLButtonElement {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'hud-balance';
+  btn.dataset.field = 'balance';
+  btn.setAttribute('aria-haspopup', 'dialog');
+  btn.addEventListener('click', (ev) => {
+    if (blurAfterClick(ev.detail)) btn.blur();
+    open(btn);
+  });
+  return btn;
+}
+
 /** Steuer-Knopf: Steuer-Symbol und Stufenname, oder `null` ohne aktive Amtsstube. */
 export function taxView(world: World): ChipView | null {
   const label = taxButtonText(world);
@@ -166,6 +180,8 @@ export interface HudActions {
   deliverOrder(): void;
   /** Springt mit der Kamera zur Insel `index` (Knopf „Inseln", M12 E2). */
   jumpToIsland(index: number): void;
+  /** Bilanz-Chip geklickt: öffnet die Betriebsliste nach Unterhalt (I-062); `opener` bekommt den Fokus zurück. */
+  openUpkeep(opener: HTMLElement): void;
   /** Lager-Chip geklickt: schaltet den Gut-Fokus um (I-043). */
   toggleGoodFocus(good: GoodId): void;
   /** Das Gut mit aktivem Fokus, sonst `null`. */
@@ -215,7 +231,7 @@ function renderSoundControls(box: Element, actions: HudActions): void {
 export function updateHud(header: HTMLElement, state: GameState, actions: HudActions): void {
   if (!header.querySelector('.hud-row')) {
     header.innerHTML =
-      '<div class="hud-row"><span class="hud-balance" data-field="balance"></span>' +
+      '<div class="hud-row">' +
       '<span class="pop-chips"></span><span class="chip" data-field="goal"></span>' +
       '<span class="hud-money" data-field="money"></span>' +
       '<span class="hud-tax" hidden><button class="btn" data-field="tax" type="button"></button></span>' +
@@ -224,6 +240,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       '<ul class="island-list" role="menu"></ul></div></span>' +
       '<span class="hud-speed"></span><span class="hud-sound"></span></div>' +
       '<div class="stock-row"><span class="island-name" data-field="island-name" hidden></span></div>';
+    header.querySelector('.hud-row')?.prepend(createBalanceButton((b) => actions.openUpkeep(b)));
     const popBox = header.querySelector('.pop-chips');
     for (const tier of TIER_IDS) {
       const chip = document.createElement('span');
@@ -480,13 +497,13 @@ export function bindIslandMenu(header: HTMLElement, state: GameState, actions: H
 export function renderNoticeStack(
   gameEl: HTMLElement,
   world: World,
-  deliver: () => void,
+  actions: OrderActions,
 ): HTMLElement {
   const stack = document.createElement('div');
   stack.className = 'notice-stack';
   const order = document.createElement('span');
   order.className = 'order-card';
-  renderOrder(order, world, { deliver });
+  renderOrder(order, world, actions);
   const crisis = document.createElement('span');
   crisis.className = 'card card--crisis';
   crisis.dataset.field = 'crisis-card';
