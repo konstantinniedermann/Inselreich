@@ -214,3 +214,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 ### 2026-10-13 · Heimat-Kontor fehlt in der Unterhalt-Rangliste
 
 - Fundort: Playtest UI-HAEPPCHEN-A. Beobachtung: Das Heimat-Kontor (Unterhalt 0) steht nicht in der Rangliste, ein Kontor auf einer fernen Insel schon (60 / min). Passt zum Code, kann irritieren. Ursprung: Playtest. Einschätzung: niedrig, ggf. Hinweistext oder Konsistenz prüfen.
+
+### 2026-10-13 · Bilanz-Vorschau ohne Haus-Aufstieg und ohne Stilllegen
+
+- Fundort: `src/ui/balancePreview.ts` (UI-HAEPPCHEN-B, R577). Beobachtung: Die Vorschau «Bilanz danach» rechnet Bau und Ausbau von Betrieben, beim Wohnhaus nur die Steuer-Obergrenze. Der Aufstieg Haus → nächste Stufe (Steuer steigt) und das Stilllegen (halber Unterhalt, I-078 nennt es) sind ausgeklammert. Ursprung: Plan UI-HAEPPCHEN-B, Punkt 3. Einschätzung: Folgehäppchen, klein; erst bei Spielerfragen nach dem Aufstieg lohnend.
