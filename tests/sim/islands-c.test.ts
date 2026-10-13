@@ -116,10 +116,8 @@ describe('Ersatzregel Stufe 3 (M14-E1 T02)', () => {
     const last = ISLANDS[ISLANDS.length - 1]!.kind;
     let max = 0;
     for (let seed = 1; seed <= 300; seed++) {
-      const all = [
-        homeOf(seed),
-        ...generateForeignIslands(seed, homeOf(seed), { forceLastStage: last }),
-      ];
+      const home = homeOf(seed);
+      const all = [home, ...generateForeignIslands(seed, home, { forceLastStage: last })];
       const w = Math.max(...all.map((i) => i.ox + i.width)) - Math.min(...all.map((i) => i.ox));
       const h = Math.max(...all.map((i) => i.oy + i.height)) - Math.min(...all.map((i) => i.oy));
       max = Math.max(max, w + h);

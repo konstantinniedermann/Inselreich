@@ -206,3 +206,5 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 3. In das Werkzeug-Bündel Szenarien (nächstes TOOL-BUENDEL): Szenario `m13-vor-ziel` erreicht das Ziel nicht von selbst (c), AK-36-Szenario `m14e1-felsbucht` (a), Umbenennung `m13e2-v13` (d).
 
 ## Offen (neue Einträge unten anhängen)
+
+- **2026-10-13 · `tools/studio/guard.py` Stash-Sperre (E-064) umgehbar.** Sie lässt sich über Git-Alias (`git -c alias.s=stash s`), Befehlssubstitution (`git $(echo stash)`) und `xargs git stash` umgehen; war schon bei der bestehenden Sperre so. Sie schützt gegen Versehen, kein Sicherheitsmerkmal. Ursprung: Final-Review TOOL-BUENDEL-10. Einschätzung: hinnehmen.

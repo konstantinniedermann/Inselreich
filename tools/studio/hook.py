@@ -19,6 +19,7 @@ from pathlib import Path
 import clock
 import context
 import limits
+import stampcheck
 import studio_docs
 import usage
 from model import EventStore, load_ampel_sessions, pending_incidents
@@ -375,6 +376,10 @@ def start_context(port: str, sid: str = "") -> str:
         text = context.build_context(docs_dir(), incidents, port)
     except Exception:  # noqa: BLE001
         return START_CONTEXT
+    with contextlib.suppress(Exception):  # Stand-Warnung nie fatal (E-065)
+        warning = stampcheck.stale_warning(docs_dir())
+        if warning:
+            text = f"{text}\n{warning}"
     if sid:
         with contextlib.suppress(Exception):  # im Kontext gelistete Vorfälle
             mark_incidents(sid, incidents[: context.LIST_MAX])
