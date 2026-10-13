@@ -6877,3 +6877,20 @@ Gate Spec: lead-tech und lead-qa (opus) parallel.
 Regelbezug: gates.md Gate Brainstorming, Gate Spec, R606 · Kosten bei Irrtum: ein Faktor im Erlös, kein Save.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I-092 · ADR: —
+
+## R609 · 2026-10-13 · Gate Spec I-092 Inselmarkt-Vorliebe: OK mit Auflagen; Plan Stufe leicht
+
+Ruling: Urteile lead-tech BEDENKEN (1 mittel, 3 niedrig) und lead-qa BEDENKEN (1 hoch, 1 mittel, 5 niedrig) zu `design/i092` @
+`44e439fb`. Entscheid **Gate Spec OK mit Auflagen**; AK-Präfix **AK-IM-01…14** bestätigt (R417). Spec-Nachtrag durch lead-design
+ohne neues Gate (Fortsetzung des Starts, kein neues Budget): QA (1) AK-IM-14 im pausierten Spiel, plus zwei Schritte (Boom auf Glas
+«statt Vorliebe», Wechsel nach Felsbucht); QA (2) B.5 «analytisch, Rückfall `PREFER_PCT` per Ruling senken, ein Def-Wert, kein
+Save»; QA (4) AK-IM-03 per Schiff entladenem Glas; QA (5) Kontor/Glas erst nach dem Laden der Fixture; Tech (1) AK-IM-10 auf
+`save-v12-felsbucht.json` mit 1 Rum ins Felsbucht-Lager (+23 Geld). Auflagen an den Plan: QA (3) `buyFactorPct` aus den Defs statt
+80, Gegenprobe Edikt Handel + Boom; Tech (2) `sellTexts` exportieren; Tech (3) `prefersGood` in `sim/trade.ts` mit Absicherung
+unbekannter Insel; Tech (4) Kettenrekursion mit besuchter Menge. **Prozessstufe leicht** (S–M, kein Save, kein ADR): Kurzplan durch
+lead-tech (sonnet), Kombiniertes Gate. **Merge-Risiko Erweiterung 1:** neues Pflichtfeld `prefers` in `IslandDef` — der Plan nennt
+es; wer später merged, ergänzt neue Inseln (Hinweis an die Nutzer-Session beim Merge jener Branch).
+
+Regelbezug: gates.md Gate Spec, Kombiniertes Gate, R417, R553, R608 · Kosten bei Irrtum: ein Test mehr in der Umsetzung.
+
+Entscheider: L0 · Anlass: Urteile lead-tech und lead-qa gate-I-092 · ADR: —
