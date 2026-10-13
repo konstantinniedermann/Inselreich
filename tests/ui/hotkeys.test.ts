@@ -556,3 +556,20 @@ describe('unboundDigitHint (AK-1, AK-2)', () => {
     expect(unboundDigitHint('5', NONE, false, true)).toBeNull();
   });
 });
+
+describe('Umschalt + Weg ziehen (AK-15)', () => {
+  it('NAV_KEYS führt den Eintrag genau einmal, ohne Doppelbelegung in der Tastenliste', () => {
+    const e = NAV_KEYS.filter((n) => n.key === 'Umschalt + Weg ziehen');
+    expect(e).toHaveLength(1);
+    const keys = hotkeyList(createWorld(3, { crisisLevel: 'normal', unlockAll: true })).map(
+      (x) => x.key,
+    );
+    expect(keys.filter((k) => k === 'Umschalt + Weg ziehen')).toHaveLength(1);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+  it('Umschalt allein belegt keine Taste', () => {
+    expect(
+      hotkeyAction('Shift', { ctrl: false, meta: false, alt: false, shift: true }, false),
+    ).toBeNull();
+  });
+});

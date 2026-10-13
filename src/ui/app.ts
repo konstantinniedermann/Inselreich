@@ -68,6 +68,7 @@ import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/te
 import { createIslandLayers, idleSchedule } from './islandLayers';
 import { drawPathPreview } from '../render/pathPreview';
 import { connectView } from './connect';
+import { buildLine, linePath, linePlan, lineHintText, type LinePlan } from './roadLine';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
 import { newBuildEntries, renderBuildMenu, updateBuildMenu } from './buildMenu';
@@ -979,7 +980,39 @@ function launch(
   const tradeCtx = (op: 'buy' | 'sell', good: GoodId, n: number, island: number): ReasonCtx =>
     tradeReasonCtx(world, op, good, n, island);
 
+  /** Weg mit Winkel (Umschalt-Zug): Pfad und Plan der laufenden Vorschau; gebaut wird erst beim Loslassen. */
+  let roadLine: { island: number; path: Pos[]; plan: LinePlan } | null = null;
+  const clearRoadLine = (): void => {
+    roadLine = null;
+    connectPreview = null;
+  };
+  const onRoadLine = (a: Extract<InputAction, { type: 'roadLine' }>): void => {
+    if (a.phase === 'update') {
+      const path = linePath(a.from, a.to);
+      const plan = linePlan(world, a.island, path);
+      roadLine = { island: a.island, path, plan };
+      // Fallback ohne Rotfärbung im Pfad-Overlay: nur neue Kacheln zeigen, Blockaden stehen in der Zeigerzeile
+      connectPreview = plan.tiles.filter((t) => t.state === 'new');
+      return;
+    }
+    const line = roadLine;
+    clearRoadLine();
+    if (a.phase === 'cancel' || line === null) return;
+    const before = unconnectedIds(world);
+    const r = buildLine(world, line.island, line.path);
+    if (r.built > 0) {
+      sound.playBuild('road');
+      reportConnections(before);
+    }
+    if (r.stopReason !== null) showRoadFailure(r.stopReason, false, line.island);
+    refresh();
+  };
+
   const onAction = (a: InputAction): void => {
+    if (a.type === 'roadLine') {
+      onRoadLine(a);
+      return;
+    }
     if (a.type === 'ship') {
       // Klick auf ein Schiff: Panel des Heimatkontors mit hervorgehobener Schiffszeile
       const k = home(world).kontorId;
@@ -1000,6 +1033,7 @@ function launch(
       return;
     }
     if (a.type === 'cancel') {
+      clearRoadLine();
       clearGoodFocus();
       demolishConfirm = confirmStep(world, demolishConfirm, { kind: 'reset' }).state; // auch wenn nur ein Toast schliesst
       const demolishBtn = panelEl.querySelector<HTMLElement>('[data-field="demolish"]');
@@ -1113,9 +1147,17 @@ function launch(
       hintNow = null;
       return;
     }
-    const key = hintKey(hover);
-    if (force || key !== hintFor) {
-      hintFor = key;
+    const lineNow = roadLine;
+    if (lineNow !== null) {
+      // Linien-Vorschau: Zählung, Kosten und erster Grund statt der Einzelkachel-Zeile
+      hintFor = null;
+      hintNow = lineHintText(lineNow.plan, (r) =>
+        friendlyReason(world, r, { cost: ROAD_COST_OBJ, island: lineNow.island }),
+      );
+      hintEl.textContent = hintNow.text;
+      hintEl.className = `cursor-hint cursor-hint--${hintNow.tone}`;
+    } else if (force || hintKey(hover) !== hintFor) {
+      hintFor = hintKey(hover);
       hintNow = placementHint(
         world,
         hover.tool ?? state.tool,

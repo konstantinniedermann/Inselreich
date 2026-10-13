@@ -23,11 +23,16 @@ import { project } from '../../src/render/iso';
 import { targetTile } from '../../src/ui/target';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { tileAt } from '../../src/sim/world';
+import { canPlaceRoad } from '../../src/sim/placement';
 import { uxWorld } from './worlds';
 import type { Camera } from '../../src/render/camera';
 
 const modalFlag = vi.hoisted(() => ({ open: false }));
 vi.mock('../../src/ui/modal', () => ({ isModalOpen: () => modalFlag.open }));
+const toast = vi.hoisted(() => ({ calls: [] as string[] }));
+vi.mock('../../src/ui/messages', () => ({
+  showMessage: (t: string) => toast.calls.push(t),
+}));
 
 describe('panDelta (Q2, AK-U1a-02)', () => {
   it('Q2: 960 Pixel je Sekunde bei Zoom 1', () => {
@@ -215,6 +220,195 @@ describe('REL-17 Abriss-Zug (AK-R17-12…16)', () => {
     expect(src.slice(cpa, src.indexOf('\n  };', cpa))).toContain("type: 'dragEnd'");
   });
 
+  describe('Weg mit Winkel: Zugmodus (AK-17, AK-18, AK-14)', () => {
+    type Handler = (e: unknown) => void;
+    class FakeEl {
+      tagName = 'BODY';
+      isContentEditable = false;
+    }
+    const listeners = new Map<string, Handler[]>();
+    const fakeWindow = {
+      addEventListener: (t: string, h: Handler) =>
+        listeners.set(t, [...(listeners.get(t) ?? []), h]),
+      removeEventListener: () => {},
+    };
+    const canvasHandlers = new Map<string, Handler>();
+    const fakeCanvas = {
+      ownerDocument: { getElementById: () => null },
+      clientWidth: 800,
+      clientHeight: 600,
+      getBoundingClientRect: () => ({ left: 0, top: 0, right: 800, bottom: 600 }),
+      addEventListener: (t: string, h: Handler) => canvasHandlers.set(t, h),
+      removeEventListener: () => {},
+      setPointerCapture: () => {},
+      releasePointerCapture: () => {},
+      hasPointerCapture: () => false,
+    };
+
+    function setup(): {
+      actions: InputAction[];
+      at: (dx: number, dy: number) => { clientX: number; clientY: number };
+      ptr: (type: string, init: Record<string, unknown>) => void;
+      key: (
+        type: 'keydown' | 'keyup',
+        init: Record<string, unknown>,
+      ) => { defaultPrevented: boolean };
+      a: { x: number; y: number };
+    } {
+      vi.stubGlobal('window', fakeWindow);
+      vi.stubGlobal('HTMLElement', FakeEl);
+      vi.stubGlobal('HTMLInputElement', class {});
+      vi.stubGlobal('HTMLTextAreaElement', class {});
+      vi.stubGlobal('HTMLSelectElement', class {});
+      const { w } = uxWorld();
+      // Drei Wegkacheln in einer Reihe (x, x+1, x+2) auf gleicher Zeile
+      const isl = w.islands[0]!;
+      let a = { x: 0, y: 0 };
+      outer: for (let y = 0; y < isl.height; y++)
+        for (let x = 0; x + 3 < isl.width; x++)
+          if ([0, 1, 2, 3].every((d) => canPlaceRoad(w, x + d, y, 0).ok)) {
+            a = { x, y };
+            break outer;
+          }
+      const p = project(a.x + 0.5, a.y + 0.5);
+      const cam: Camera = { x: p.x - 400, y: p.y - 300, zoom: 1 };
+      const state = { world: w, cam, tool: { kind: 'road' }, hover: null } as unknown as GameState;
+      const actions: InputAction[] = [];
+      bindInput(fakeCanvas as unknown as HTMLCanvasElement, state, (act) => actions.push(act));
+      const at = (dx: number, dy: number): { clientX: number; clientY: number } => {
+        const s = worldToScreen(cam, project(a.x + dx + 0.5, a.y + dy + 0.5));
+        return { clientX: s.x, clientY: s.y };
+      };
+      const ptr = (type: string, init: Record<string, unknown>): void =>
+        canvasHandlers.get(type)!({
+          button: 0,
+          pointerType: 'mouse',
+          pointerId: 1,
+          ctrlKey: false,
+          metaKey: false,
+          shiftKey: false,
+          preventDefault() {},
+          ...init,
+        });
+      const key = (
+        type: 'keydown' | 'keyup',
+        init: Record<string, unknown>,
+      ): { defaultPrevented: boolean } => {
+        const e = {
+          key: 'x',
+          ctrlKey: false,
+          metaKey: false,
+          altKey: false,
+          shiftKey: false,
+          repeat: false,
+          timeStamp: 0,
+          target: new FakeEl(),
+          defaultPrevented: false,
+          preventDefault() {
+            this.defaultPrevented = true;
+          },
+          ...init,
+        };
+        for (const h of listeners.get(type) ?? []) h(e);
+        return e;
+      };
+      return { actions, at, ptr, key, a };
+    }
+
+    afterEach(() => {
+      listeners.clear();
+      canvasHandlers.clear();
+      toast.calls.length = 0;
+      vi.unstubAllGlobals();
+    });
+
+    it('AK-17 Umschalt beim Aufsetzen: kein Bau beim Drücken, Vorschau beim Ziehen, Bau beim Loslassen', () => {
+      const { actions, at, ptr, a } = setup();
+      ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+      // nur Vorschau der Start-Kachel, nichts gebaut
+      expect(actions).toEqual([{ type: 'roadLine', phase: 'update', island: 0, from: a, to: a }]);
+      ptr('pointermove', { ...at(2, 0), shiftKey: true });
+      expect(actions.at(-1)).toEqual({
+        type: 'roadLine',
+        phase: 'update',
+        island: 0,
+        from: a,
+        to: { x: a.x + 2, y: a.y },
+      });
+      ptr('pointerup', { ...at(2, 0), shiftKey: true });
+      expect(actions.at(-1)).toEqual({ type: 'roadLine', phase: 'commit' });
+      expect(actions.some((x) => x.type === 'tile')).toBe(false);
+    });
+
+    it('AK-17 ohne Umschalt unverändert: Kachel beim Drücken, kein roadLine', () => {
+      const { actions, at, ptr } = setup();
+      ptr('pointerdown', { ...at(0, 0) });
+      ptr('pointermove', { ...at(2, 0) });
+      ptr('pointerup', { ...at(2, 0) });
+      expect(actions.some((x) => x.type === 'tile')).toBe(true);
+      expect(actions.some((x) => x.type === 'roadLine')).toBe(false);
+    });
+
+    it('AK-17 Umschalt erst später gedrückt: kein Linienmodus', () => {
+      const { actions, at, ptr, key } = setup();
+      ptr('pointerdown', { ...at(0, 0) });
+      key('keydown', { key: 'Shift', shiftKey: true });
+      ptr('pointermove', { ...at(2, 0), shiftKey: true });
+      ptr('pointerup', { ...at(2, 0), shiftKey: true });
+      expect(actions.some((x) => x.type === 'roadLine')).toBe(false);
+      expect(actions.filter((x) => x.type === 'tile').length).toBeGreaterThan(1);
+    });
+
+    it('AK-14/17 Umschalt loslassen mitten im Zug ändert den Modus nicht', () => {
+      const { actions, at, ptr, key } = setup();
+      ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+      ptr('pointermove', { ...at(1, 0), shiftKey: true });
+      key('keyup', { key: 'Shift' });
+      ptr('pointermove', { ...at(3, 0), shiftKey: false });
+      ptr('pointerup', { ...at(3, 0), shiftKey: false });
+      expect(
+        actions.filter((x) => x.type === 'roadLine').map((x) => (x as { phase: string }).phase),
+      ).toEqual(['update', 'update', 'update', 'commit']);
+      expect(actions.some((x) => x.type === 'tile')).toBe(false);
+    });
+
+    it('AK-18 Esc im Zug: Abbruch ohne Bau, späteres Loslassen tut nichts', () => {
+      const { actions, at, ptr, key } = setup();
+      ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+      ptr('pointermove', { ...at(2, 0), shiftKey: true });
+      actions.length = 0;
+      key('keydown', { key: 'Escape' });
+      expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
+      ptr('pointerup', { ...at(2, 0), shiftKey: true });
+      expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
+    });
+
+    it('AK-18 pointercancel im Zug: Abbruch ohne Bau', () => {
+      const { actions, at, ptr } = setup();
+      ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+      ptr('pointermove', { ...at(2, 0), shiftKey: true });
+      actions.length = 0;
+      ptr('pointercancel', {});
+      expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
+    });
+
+    it('AK-14 Umschalt allein löst keine Taste aus; Umschalt+U bleibt Ausbau', () => {
+      const { actions, key } = setup();
+      key('keydown', { key: 'Shift', shiftKey: true });
+      expect(actions).toEqual([]);
+      key('keydown', { key: 'U', shiftKey: true });
+      expect(actions).toEqual([{ type: 'hotkey', action: { kind: 'upgrade' } }]);
+    });
+
+    it('Ziffernhinweis (T01-Review): Toast bei 5, keiner bei e.repeat', () => {
+      const { key } = setup();
+      key('keydown', { key: '5' });
+      expect(toast.calls).toEqual(['Tempo: 1, 2, 3']);
+      key('keydown', { key: '5', repeat: true });
+      expect(toast.calls).toHaveLength(1);
+    });
+  });
+
   // app.ts braucht das DOM und ist in Vitest (Node) nicht startbar: Quelltext prüfen (wie AK-R16-06).
   it('AK-R17-13/15 Abriss-Zug in app.ts (Quelltext)', () => {
     const src = readFileSync('src/ui/app.ts', 'utf8');
@@ -260,6 +454,7 @@ describe('UI-TASTEN keydown-Verdrahtung (AK-UT-05, 06, 10)', () => {
     removeEventListener: () => {},
     setPointerCapture: () => {},
     releasePointerCapture: () => {},
+    hasPointerCapture: () => false,
   };
 
   function setup(tool: GameState['tool'] = { kind: 'select' }): {
