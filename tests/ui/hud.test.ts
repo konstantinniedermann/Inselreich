@@ -455,6 +455,16 @@ describe('Bilanz-Knopf und Betriebsliste (I-062, AK-8, AK-9)', () => {
     expect(foot.textContent).toBe(`Unterhalt −${perMinute(w.stats.upkeep, 100)} / min`);
   });
 
+  it('AK-9 Fusszeile liegt ausserhalb des scrollenden Bereichs', () => {
+    vi.stubGlobal('document', fakeDocument);
+    const { w } = world();
+    const root = renderUpkeepList(w, () => {}) as unknown as FakeElement;
+    const scroller = root.descendants().find((e) => e.className === 'upkeep-scroll')!;
+    expect(scroller).toBeDefined();
+    expect(scroller.descendants().some((e) => e.dataset.part === 'total')).toBe(false);
+    expect(root.children.some((e) => e.dataset.part === 'total')).toBe(true);
+  });
+
   it('AK-9 mehr als 20 Betriebe: «und n weitere»; 0 Betriebe: Hinweistext', () => {
     vi.stubGlobal('document', fakeDocument);
     const w = twoIslandWorld();

@@ -53,8 +53,10 @@ function rowParts(world: World, r: UpkeepRow): { label: string; cells: string[] 
 export function renderUpkeepList(world: World, onJump: (id: number) => void): HTMLElement {
   const s = upkeepSummary(world);
   const root = el('div', 'upkeep-list');
+  const scroll = el('div', 'upkeep-scroll');
+  root.appendChild(scroll);
   if (s.shown.length === 0 && s.ships === null) {
-    root.appendChild(el('p', 'note', UPKEEP_EMPTY_TEXT));
+    scroll.appendChild(el('p', 'note', UPKEEP_EMPTY_TEXT));
   }
   const list = el('ul', 'upkeep-rows');
   for (const r of s.shown) {
@@ -77,7 +79,7 @@ export function renderUpkeepList(world: World, onJump: (id: number) => void): HT
   if (s.more > 0) extra('more', `und ${s.more} weitere (${pm(s.moreUpkeep)} / min)`);
   if (s.ships) extra('ships', `Schiffe ×${s.ships.count} · ${pm(s.ships.upkeep)} / min`);
   if (s.edict !== 0) extra('edict', `Edikt: ${signedNum(-pm(-s.edict))} / min`);
-  root.appendChild(list);
+  scroll.appendChild(list);
   const foot = el('p', 'upkeep-total', `Unterhalt −${pm(s.total)} / min`);
   foot.dataset.part = 'total';
   root.appendChild(foot);

@@ -1287,10 +1287,13 @@ button.hud-balance {
 button.hud-balance:hover {
   border-color: var(--gold);
 }
-button.hud-balance:focus-visible,
-.upkeep-row:focus-visible {
+button.hud-balance:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
+}
+.upkeep-row:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
 }
 .card--upkeep {
   width: min(560px, 100%);
@@ -1303,6 +1306,11 @@ button.hud-balance:focus-visible,
   margin: 0;
 }
 .upkeep-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.upkeep-scroll {
   min-height: 0;
   overflow-y: auto;
 }
