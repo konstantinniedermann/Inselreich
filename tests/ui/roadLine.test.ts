@@ -173,4 +173,17 @@ describe('lineHintText', () => {
     expect(h.text).toContain('1 blockiert');
     expect(h.text).toContain('[Ausserhalb der Karte]');
   });
+  it('zu wenig Geld (12 für 10 neue Wege): Text nennt, wie viele bezahlbar sind, ohne Zahlenwiderspruch', () => {
+    const w = uxWorld().w;
+    const s = freeRun(w, 9);
+    w.money = 12;
+    const plan = linePlan(w, HOME, linePath(s, { x: s.x + 9, y: s.y }));
+    expect(plan.newCount).toBe(10);
+    expect(plan.payableCount).toBe(2);
+    const h = lineHintText(plan, (r) => `[${r}]`);
+    expect(h.tone).toBe('bad');
+    expect(h.text).toBe(
+      `Weg-Linie · 10 neue Wege · ${10 * ROAD_COST} Geld · Geld reicht für 2 von 10`,
+    );
+  });
 });
