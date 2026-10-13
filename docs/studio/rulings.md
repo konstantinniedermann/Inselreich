@@ -6703,3 +6703,16 @@ T04–T07, Task-Reviews OK (T06 (A) BEDENKEN zur Krisendauer), Playtest 1280×72
 Regelbezug: gates.md Gate Merge, R584, R589, R592, R553 · Kosten bei Irrtum: ein Werte-Ruling nach dem ersten Spielertest.
 
 Entscheider: L0 · Anlass: Schlussbericht lead-tech I047-UI · ADR: —
+
+## R597 · 2026-10-13 · Freie Plätze: TOOL-BUENDEL-11 und DOC-ARCHIV
+
+Ruling: Nach den Gates A, B, I-047 sind Plätze frei (R475). Start (1) **TOOL-BUENDEL-11** (lead-tech, sonnet, 5 Starts/P1, Branch
+`tool/b11`): T01 Lastprotokoll beim Testlock-Abbruch und beim push-check «kein ruhiges Fenster» (Top-Prozesse, Zahl Vitest-Worker;
+R588 V3), T02 Isolation `test_hook.py` (`<tmp>/x`, R595), T03 Szenarien (a) `m14e1-felsbucht` für AK-36, (c) `m13-vor-ziel`,
+(d) Umbenennung `m13e2-v13` (R581 (3)); Beipack arc42 `buyPct` (R581 (1)). (2) **DOC-ARCHIV** (lead-production, 1 Start, Branch
+`docs/archiv`): `docs/ideen.md` (≈ 80 KB) in aktiven Pool plus Archiv (erledigt/verworfen/live) aufteilen, README-Spielwerte-Anhang
+auslagern, alle Verweise nachführen; Ziel: beide Hauptdateien < 30 KB (E-057). Die Ideen-Runde IDEEN-09 folgt nach DOC-ARCHIV.
+
+Regelbezug: R475, R580, R581, R588, R595 · Kosten bei Irrtum: tote Links nach dem Auslagern (Prüfung `make docs-check`).
+
+Entscheider: L0 · Anlass: freie Kapazität · ADR: —
