@@ -353,7 +353,7 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 
 ### I-046 · verworfen · Überlauf-Ausfuhr — IDEEN-06 Scout A; Streichung lead-design (Bestätigung im Runden-Ruling): Ware, die bei vollem Lager verfiele, ginge automatisch zum halben Preis ans Kontor. Entartet zur passiven Einnahme (Holzfäller ≈ 40 Geld/min Überlauf gegen 30 Unterhalt) und nimmt dem Zustand «Lager voll» die Entscheidung; die Antwort auf Überschuss ist Stilllegen (I-035) oder Verkauf von Hand.
 
-### I-047 · eingeplant · Stammkunde (Liefervertrag)
+### I-047 · eingeplant (Spec `2026-10-13-i047-stammkunde-design.md`, Option 3 Stammkunde im Auftragsplatz, Gate Spec offen) · Stammkunde (Liefervertrag)
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik (Dauerabnahme gegen Festpreis, nur Mechanik, ADR-006); IDEEN-06 Scout A; Pfade `src/sim/orders.ts` (Aufträge einmalig), `src/sim/defs/goods.ts` (`ORDER_PREMIUM`, Sättigung)
 - Spielerwirkung: „Der Spieler nimmt nach einem erfüllten Auftrag das Angebot «Stammkunde: 12 Rum alle 3 min zu 130 %» an und wägt feste Abnahme gegen Verkauf am freien Markt ab."
