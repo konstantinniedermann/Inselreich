@@ -6614,3 +6614,20 @@ Session (Release-Check am Kandidaten dort). Die Lastprüfung im Hintergrund entf
 Regelbezug: gates.md Gate Merge, R335, R577, R585, R586, R588 · Kosten bei Irrtum: ein Fix auf main vor REL-21.
 
 Entscheider: L0 · Anlass: Schlussbericht lead-tech UI-HAEPPCHEN-B · ADR: —
+
+## R591 · 2026-10-13 · Push-Gate REL-20 zweimal an Grundlast gescheitert: keine Ausnahme, N-100, I047-SIM startet
+
+Ruling: Bericht production-integrator: Merge `tool/b10` im Integrate-Worktree als `d3eabfb3` (nicht auf main), `make check` Exit 0,
+`make check-ci-perf` Exit 0 (351), `make push-check` sechsmal Exit 2 («kein ruhiges Fenster», Last 5,8–9,8 gegen `LOAD_WAIT` 3,0).
+Beleg: keine Studio-Prozesse (kein node/vitest), Grundlast `fileproviderd` ≈ 97 %, `rtcreportingd` ≈ 66 %, Dropbox ≈ 62 %. Merges A/B
+richtig zurückgehalten. Entscheide: (1) **Keine Ausnahme** von `push-check` (strenge Zeitreserve ist Regressionsschutz gegen rote
+CI-Zeittests; ein Abweichen bräuchte einen Handbuch-Minor). (2) Nutzer-Warteschlange **N-100** «Dropbox während des Push-Gates
+pausieren». (3) Push-Gate erneut beim Session-Ende bzw. sobald Last ≤ 3; `d3eabfb3` bleibt verwendbar, solange main nur
+`docs/studio/` ändert — sonst neu mergen. (4) Der Vorfall gehört zur Retro `adhoc-testlock` (Nachtrag durch den Coach in der
+Ende-Retro: Push-Check-Schwelle 3 gegen Dauerlast der Maschine, V3-Lastprotokoll auch in `pushcheck.py`). (5) R589 geändert:
+**I047-SIM startet jetzt** (Parallelität 1 ist innerhalb R588 V1), weil der Push nicht absehbar ist; Merges A/B bleiben bis nach
+dem Push zurück.
+
+Regelbezug: R335, R380, R565 V2, R587, R588, R589, Verfassung §5 · Kosten bei Irrtum: REL-20 erst in der nächsten Session live.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-20 (failed) · ADR: —
