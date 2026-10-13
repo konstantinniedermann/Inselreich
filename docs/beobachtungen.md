@@ -221,3 +221,8 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 ### 2026-10-13 · Bilanz-Vorschau ohne Haus-Aufstieg und ohne Stilllegen
 
 - Fundort: `src/ui/balancePreview.ts` (UI-HAEPPCHEN-B, R577). Beobachtung: Die Vorschau «Bilanz danach» rechnet Bau und Ausbau von Betrieben, beim Wohnhaus nur die Steuer-Obergrenze. Der Aufstieg Haus → nächste Stufe (Steuer steigt) und das Stilllegen (halber Unterhalt, I-078 nennt es) sind ausgeklammert. Ursprung: Plan UI-HAEPPCHEN-B, Punkt 3. Einschätzung: Folgehäppchen, klein; erst bei Spielerfragen nach dem Aufstieg lohnend.
+
+### 2026-10-13 · Stammkunde: Karte ohne Kündigen bei gesperrter Funktion, ungesicherter Inselzugriff
+
+- Fundort: `src/ui/order.ts` (`updateOrder` ca. Z. 216, `contractWarn`/Kartentext ca. Z. 47 und 78), Final-Review I-047. Beobachtung: (1) Bei gesperrter Funktion `orders` blendet `updateOrder` die ganze Karte aus, also auch «Kündigen», obwohl die Sim das Kündigen erlaubt (AK-SK-15); nur über einen manipulierten Stand erreichbar, da Freischaltungen nie zurückgenommen werden. (2) `world.islands[c.island]!` ohne Absicherung; die Sim behandelt eine ungültige Insel als Bruch `island`, die UI würde werfen; Ladeprüfung weist solche Stände ab. Ursprung: Final-Review opus. Einschätzung: niedrig, bei Gelegenheit `islandAt` nutzen und Karte zeigen, solange `contract !== null`.
+- Ausserdem: Der Fehlerpfad-Test prüft `runContractAction`, nicht die `app.ts`-Verdrahtung (Task-Review T05, niedrig).
