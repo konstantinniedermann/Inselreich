@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 TESTLOCK := tools/testlock/testlock.ts
-.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push gate-ensemble conflicts check-ci-perf messfenster check-run check-push push-check
+.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint stampcheck studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push gate-ensemble conflicts check-ci-perf messfenster check-run check-push push-check
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -53,6 +53,9 @@ build: ## Typprüfung + Produktions-Build
 studio-test: ## Tests der Studio-Werkzeuge (Python unittest); rot → Event test_failed (R450 V1)
 	python3 tools/studio/testrun.py --suite studio -- python3 -m unittest discover -s tools/studio/tests -t tools/studio
 
+stampcheck: ## Warnung (kein Fehler), wenn state.md-Stand >5 Rulings hinter rulings.md liegt (E-065); Teil von check
+	@python3 tools/studio/stampcheck.py
+
 RUFF = uvx ruff@0.17.0
 
 studio-lint: ## Ruff über tools/studio (gepinnt, via uvx; vor Commits an tools/studio, nicht Teil von check) und Warnung bei direktem Uhraufruf (R450 V2)
@@ -80,6 +83,7 @@ messfenster: ## Messfenster prüfen (Last, fremde vitest/vite/Chrome); Serie: AR
 	node tools/render-qa/messfenster.mjs $(ARGS)
 
 check: ## Gleich wie CI: conflicts, lint, zeittests, test, zeitreserve, studio-test, build, pages-limit; mit Testsperre (R375)
+	@python3 tools/studio/stampcheck.py
 	@node $(TESTLOCK) $(MAKE) check-run
 
 CHECK_PUSH_STEPS := conflicts lint zeittests test studio-test build pages-limit

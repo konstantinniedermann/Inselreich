@@ -574,6 +574,14 @@ class FixRoundTest(unittest.TestCase):
             self.assertIn("CI rot", text)
             self.assertEqual(hook.incident_notice(payload("UserPromptSubmit")), "")
 
+    def test_session_start_appends_stale_stand_warning(self):
+        with mock.patch.object(
+            hook.stampcheck, "stale_warning", return_value="Warnung: X"
+        ):
+            self.assertIn("Warnung: X", hook.start_context("8765", ""))
+        with mock.patch.object(hook.stampcheck, "stale_warning", side_effect=OSError):
+            self.assertTrue(hook.start_context("8765", ""))
+
     def test_subagent_notice_does_not_read_events(self):
         with mock.patch.object(hook, "open_incidents") as opened:
             out = hook.incident_notice(payload("UserPromptSubmit", agent_id="a1"))
