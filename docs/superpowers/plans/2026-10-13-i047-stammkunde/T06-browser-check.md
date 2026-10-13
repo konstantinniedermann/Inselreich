@@ -13,7 +13,8 @@ Nur hinter `SCENARIO_OUT` (sonst übersprungen, kostet im normalen Lauf nichts; 
   2. Schritte bis zum nächsten Periodenbeginn `T` (`step` bis `(w.tick − ORDER_FIRST_TICK) % ORDER_PERIOD === 0`).
   3. `k = (T − ORDER_FIRST_TICK) / ORDER_PERIOD`; Auftrag setzen: `w.order = { period: k, good: 'rum', amount: 8,`
      `reward: 8 * orderUnitReward('rum'), due: T + ORDER_DURATION }`; `home(w).stock.rum = 12`;
-     `contract`/`contractOffer` bleiben `null`.
+     `contract`/`contractOffer` bleiben `null`. Zusätzlich lange Krise: `w.crisis = { period: k, kind: 'boom', from: T,
+until: T + 99999, good: 'wood' }` (Feldnamen am Typ `Crisis` prüfen; Gut ≠ Rum).
   4. Prüfen: `functionLock(w, 'orders') === null`, `maxHouseTier(w) >= 3`, `home(w).kontorId !== null`,
      `deserialize(serialize(w)).ok`, `w.version === SAVE_VERSION`.
   5. `writeFileSync(join(out, 'i047-stammkunde.json'), serialize(w))`.
@@ -32,16 +33,16 @@ Klang über `window.__inselDev.contractSounds()` (Dev-Sonde aus T05), nicht nach
       5 Rum alle 1:30 zu 27 je Stück · Angebot noch m:ss» mit **Annehmen**/**Ablehnen**; Countdown läuft.
 - [ ] 02 **Annehmen** → Meldung «Stammkunde: 5 Rum alle 1:30 vereinbart», Karte «Stammkunde: 5 Rum · nächste
       Lieferung m:ss · Lager 4/5» (12 − 8 = 4, also Warnfarbe sichtbar) und Knopf **Kündigen**.
-- [ ] 03 Rum auf ≥ 5 bringen (Kontor «Kaufen» 1–2 Rum), Warnfarbe weg; am nächsten Periodenbeginn Meldung «Stammkunde:
+- [ ] 03 Rum auf **≥ 10** bringen (Puffer gegen Verbrauch bis zum Periodenbeginn, R589 6) (Kontor «Kaufen» 1–2 Rum), Warnfarbe weg; am nächsten Periodenbeginn Meldung «Stammkunde:
       5 Rum geliefert, +135»; `contractSounds()` endet mit `'orderDone'`.
 - [ ] 04 Rum am Kontor auf 0 verkaufen → Warnfarbe; am nächsten Periodenbeginn Warnmeldung «Stammkunde abgesprungen: zu
       wenig Rum. Strafe 135», `contractSounds()` endet mit `'error'`; danach Auftragskarte mit Zufallsauftrag (Meldung
       «Neuer Auftrag …»).
 - [ ] 05 Neuen Auftrag liefern (bei Bedarf Ware kaufen), erneut **Annehmen**, dann **Kündigen** → «Stammkunde
       gekündigt», Karte «Nächster Auftrag in m:ss».
-- [ ] 06 Bei 1280×720 überlappt die Auftragskarte (mit drei Zeilen und zwei Knöpfen) die Krisenkarte nicht
-      (`getBoundingClientRect` beider Karten, falls eine Krise aktiv; sonst Stapel-Layout `flex-direction: column`
-      belegen). Konsole ohne Fehler.
+- [ ] 06 Bei 1280×720 überlappt die Auftragskarte (mit drei Zeilen und zwei Knöpfen) die Krisenkarte nicht.
+      **Reproduzierbar (R589 1):** der präparierte Stand (A) trägt eine lange Krise (Boom auf ein anderes Gut als Rum, `until` weit in der Zukunft), damit die Krisenkarte in den Zuständen 01 und 02 sichtbar ist; beide Rechtecke per
+      `getBoundingClientRect` messen (kein Überlappen), Werte in den Report. Konsole ohne Fehler.
 - [ ] Schritt 03 vor 04 nötig, weil 02 mit Lager 4/5 startet; ist kein Rum kaufbar, Bestand über
       `__inselDev.world().islands[0].stock.rum` setzen und im Report vermerken.
 - [ ] Playtest-Report als Schlussbericht: je Schritt OK/Befund mit Screenshot-Pfad, Urteil OK/BEDENKEN/ZURÜCK.

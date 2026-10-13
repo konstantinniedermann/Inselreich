@@ -46,6 +46,10 @@ Angebot')`.
       Schleife über alle Auftragsgüter: `amount = order.contract`, `price = contractUnitPrice(g)`.
 - [ ] **08** Angebot auf Insel ohne Kontor → `fail('Kein Kontor auf …')`, `serialize` gleich; `orders` gesperrt
       (`unlocked` ohne Freischaltung, konstruiert) → Sperrgrund, `serialize` gleich.
+- [ ] **Lagerwerte (R589 4):** in 09, 10 und 13 den Lagerstand nicht gegen feste Zahlen, sondern gegen den Vergleichslauf
+      (`twin(w)` ohne Vertrag; Lieferung = −Menge, Bruch = ±0) prüfen; Welt ohne Rum-Verbraucher oder Differenz.
+- [ ] **Lagerwerte (R589 4):** in 09, 10 und 13 den Lagerstand gegen den Vergleichslauf `twin(w)` ohne Vertrag prüfen
+      (Lieferung = −Menge, Bruch = ±0), nicht gegen feste Zahlen; Verbrauch anderer Systeme fällt so heraus.
 - [ ] **09** Lager 12, Geld 1000, Schritt auf `T`: Lager 7, Geld = Vergleichslauf (ohne Vertrag) + 135, `order null`,
       Vertrag besteht, `report.contract = { kind: 'delivered', good: 'rum', amount: 5, pay: 135, island: HOME }`;
       zwischen zwei Periodenbeginnen keine Abbuchung. Inselfall: Vertrag Insel 1, Heimat Rum 0, Insel 1 Rum 12 →
@@ -69,14 +73,18 @@ maxHouseTier)`, `report.contract.kind 'broken'`, `reason 'stock'`, `penalty 135`
 ORDER_PERIOD`, bis dahin `order null`.
 - [ ] **20** Stufe nach Annehmen auf 2 senken → nächste Lieferung findet statt.
 - [ ] **24** Zwei Läufe gleicher Seed, Folge Liefern → Annehmen → 5 Perioden → Lager leeren → Bruch → neuer Auftrag
-      liefern → Annehmen → Kündigen: `serialize` bitgleich.
+      liefern → Annehmen → Kündigen: `serialize` bitgleich; zusätzlich Speichern und Laden mitten im Lauf bei aktivem Vertrag (`deserialize(serialize(w))` nach
+      Annehmen und nochmals in der dritten Periode), danach weiter: `serialize` bitgleich zum Lauf ohne Unterbrechung (R589 8a).
+- [ ] **24c (R589 8a)** Speichern und Laden mitten im Lauf bei aktivem Vertrag: `deserialize(serialize(w))` nach dem Annehmen
+      und nochmals in der dritten Periode, beide Läufe weiter bis Periode 5: `serialize` bitgleich zum ununterbrochenen Lauf.
 - [ ] **24b (R11)** Zufallsauftrag der Periode `k` nach einem Vertrag gleich `orderForPeriod(seed, k, maxHouseTier)`.
 - [ ] **AK-SK-27 echt:** in T01-Test die rechnerische Gutschrift durch eine echte Lieferung (Vertrag gesetzt, Schritt
       auf `T`, Geld gegen Vergleichslauf) ersetzen.
 - [ ] **25 Controller:** `w = createWorld(3)`, `{ layout, t } = startColony(w)`, `runColony(w, layout, t, {}, (x) => {
 if (x.contract !== null || x.contractOffer !== null) seen++; return false; })` → `seen === 0`, Endwelt beide
       `null`. Zusätzlich `readFileSync('tests/sim/controller.ts')` enthält weder `deliverOrder` noch `acceptContract`.
-      Laufzeit im Bericht; `balance.test.ts` unverändert.
+      Eigenes Zeitlimit am `it` (`10_000` ms als dritter Parameter, R589 5); gemessene Laufzeit im Bericht, > 3 s →
+      Beobachtung; `balance.test.ts` unverändert.
 - [ ] `npx vitest run tests/sim/contract.test.ts tests/sim/tick.test.ts; echo EXIT=$?` → `EXIT=1`, Beleg.
 
 ## Umsetzung (`orders.ts`)
@@ -117,4 +125,4 @@ tests/sim/unlocks.test.ts tests/sim/save-contract.test.ts tests/ui/ships.test.ts
 
 ## Hinweis
 
-Lehnt L0 Entwurf 1 (`island` im Ereignis) ab, entfällt das Feld; der Kontor-Text in T04 nutzt dann keinen Inselnamen.
+Entwurf 1 (`island` im Ereignis) ist mit R589 angenommen; kein Rückfall nötig.

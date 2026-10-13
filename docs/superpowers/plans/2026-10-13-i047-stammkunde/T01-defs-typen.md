@@ -22,7 +22,7 @@ Neue Datei `tests/sim/contract.test.ts`, `describe('AK-SK-26 Werte und Invariant
       `p < 0.8 * GOODS[g].buy` (streng).
 - [ ] `m = GOODS[g].order.contract`: `Number.isInteger(m)`, `1 ≤ m ≤ STORAGE_CAP`; `V = m × p` mit `135 ≤ V ≤ 140`.
 - [ ] `contractPenalty({ good: g, amount: m, price: p, island: HOME })` ist
-      `Math.ceil((m * p * CONTRACT_PENALTY_PCT) / 100)` (AK-SK-17 wird in T02 über `tickOrders` geprüft).
+      `Math.ceil((m * p * CONTRACT_PENALTY_PCT) / 100)` (AK-SK-17 wird in T03 über `tickOrders` geprüft).
 - [ ] Konstanten: `CONTRACT_PREMIUM === 0.68`, `CONTRACT_PENALTY_PCT === 100` und `≥ 1`, `CONTRACT_MIN_TIER === 3` und
       `TIER_IDS` (bzw. die Stufenliste aus `defs/tiers`) enthält sie.
 - [ ] Mengen-Pin: Objekt `{ wood: 23, food: 28, stone: 14, wool: 17, cloth: 7, cane: 17, rum: 5, glass: 4 }` gleich den
@@ -34,14 +34,14 @@ Neue Datei `tests/sim/contract.test.ts`, `describe('AK-SK-26 Werte und Invariant
 true })`, `edict = 'trade'`, Geld 10 000, Lager des Guts 0:
 
 - [ ] `const before = w.money; expect(buy(w, g, m).ok).toBe(true);` dann **nur rechnerisch** die Vertragszahlung
-      `m × contractUnitPrice(g)` gutschreiben (die Regel kommt in T02; T02 ersetzt diese Zeile durch eine echte
-      Lieferung über `tickOrders`, siehe T02). Erwartung: `w.money < before`, Verlust zwischen 24 und 46 (W.3).
+      `m × contractUnitPrice(g)` gutschreiben (die Regel kommt in T03; T03 ersetzt diese Zeile durch eine echte
+      Lieferung über `tickOrders`, siehe T03). Erwartung: `w.money < before`, Verlust zwischen 24 und 46 (W.3).
 - [ ] `npx vitest run tests/sim/contract.test.ts; echo EXIT=$?` → `EXIT=1` (Import fehlt), Beleg in den Bericht.
 
 ## Umsetzung
 
 - [ ] `types.ts`: `OrderDef` um `contract: number` (Pflicht, JSDoc «Menge je Vertragslieferung, I-047»). Neue Typen
-      (noch ohne `World`-Felder, die kommen in T02/T03):
+      (noch ohne `World`-Felder, die kommen in T03/T03):
 
 ```ts
 /** Liefervertrag (I-047): Menge und Stückpreis beim Annehmen festgeschrieben. */

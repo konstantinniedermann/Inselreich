@@ -25,6 +25,9 @@ Step-Schleife, Dev-Sonde), `src/ui/devProbes.ts` (ein Feld), `src/style.css` (nu
       («Ablehnen») sichtbar, `order-deliver`/`order-cancel` verborgen; Vertrag → nur `order-cancel` («Kündigen»);
       Auftrag → nur `order-deliver`; nichts → keiner. Klick ruft die passende Aktion (Spy).
 - [ ] Warnzustand: `contractWarn` wahr → Karte hat Klasse `order-card--warn`; sonst nicht.
+- [ ] **Fehlerpfad Spec B.4 (R589 8b):** `actions.acceptContract/declineContract/cancelContract` bei `fail`: `showError(reason)`
+      zeigt den Grund und spielt `error`; je eine Prüfung für Annehmen, Ablehnen, Kündigen (falls `app.ts` nicht testbar:
+      die Aktionen als reine Funktionen aus `order.ts` mit Spy auf `show`/`play` herausziehen).
 - [ ] `npx vitest run tests/ui/order.test.ts; echo EXIT=$?` → `EXIT=1`, Beleg.
 
 ## Umsetzung
