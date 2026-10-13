@@ -41,7 +41,7 @@ Zu beiden Ideen gibt es **keine Spec mit AK**; die AK stehen unten im Plan, das 
 - **AK-1** Ein Eintrag je (Insel, Gut), nicht je Betrieb: drei Holzfäller im Stau ergeben einen Eintrag.
 - **AK-2** Rot-Test Grenze: bei 29,9 s Spielzeit (aus `TICK_MS` abgeleitet) kein Eintrag, bei 30 s einer; Frist zählt in Ticks, bei Pause (keine Ticks) läuft sie nicht.
 - **AK-3** Bedingung: `stock ≥ STORAGE_CAP` und ≥ 1 nicht stillgelegter, angebundener Erzeuger in `storageFull`. Kein Eintrag bei vollem Lager ohne Erzeuger-Stau, bei nur stillgelegten Erzeugern, bei Stock 99.
-- **AK-4** Fällt der Stock unter 100 oder endet der Stau, wird der Zähler gelöscht (nächstes «voll» startet neu); sinkt `world.tick` (Laden), werden alle Zähler gelöscht.
+- **AK-4** Fällt der Stock unter 100 oder endet der Stau, wird der Zähler gelöscht (nächstes «voll» startet neu); sinkt `world.tick` (Laden), werden alle Zähler gelöscht. **R577 (2):** Laden mit gleichem oder höherem Tick und «Neues Spiel» setzen `fullSince` ebenfalls zurück (Reset in `app.ts` an den Lade-/Neustart-Pfaden oder über die Welt-Identität, Test). **R577 Zusatz:** Rot-Test gegen Flackern: wechselt ein Erzeuger nur kurz aus `storageFull` (ein Tick), bleibt der Zähler nicht fälschlich stehen oder springt der Eintrag nicht an/aus — der Test legt das gewünschte Verhalten fest (Zähler nur bei echtem Ende des Staus löschen, sonst Eintrag stabil).
 - **AK-5** Text nennt Gut, Menge und Abhilfe («stilllegen oder verkaufen»); Fremdinsel bekommt den Insel-Suffix wie die anderen Klassen.
 - **AK-6** Klasse 5 sortiert hinter 1–4; `.`/`,` springen zum Erzeuger mit kleinstem Abstand zu `jumpTarget` (dann ID), öffnen sein Panel und funktionieren auf fernen Inseln über den bestehenden Pfad (`runProblemJump`); fällt der Eintrag während des Umlaufs weg, gilt das bestehende Verhalten für verschwundene Schlüssel (`stepList`).
 - **AK-7** Kopfzeile, Bilanz-Chip und `hud.ts` unverändert; Toast-Art `info` (nie `error`); Gewollter Überschuss unter 30 s erzeugt nichts (kein Rauschen).
@@ -54,9 +54,10 @@ Zu beiden Ideen gibt es **keine Spec mit AK**; die AK stehen unten im Plan, das 
 - **AK-11** «Heute» = Zahl des Bilanz-Chips: `balanceText(world.stats).text` nach einem Tick gleich dem «Bilanz heute»-Teil der Vorschau (gleiche Funktion, kein zweiter Formatierer).
 - **AK-12** Wohnhaus: Anzeige «→ bis zu +c / min (Steuer bei voller Belegung)»; Rot-Test: reales Haus gebaut, auf `houseCap` gefüllt und voll versorgt ⇒ tatsächliche Steueränderung ≤ Obergrenze; bei Welt ohne andere Häuser gleich; Test bei anderer Steuerstufe und bei Edikt mit Steuerpunkten.
 - **AK-13** Randfälle: Welt ohne Gebäude (Bilanz 0, «±0»); negative Bilanz mit Minus (`signedNum`); Gebäude mit Unterhalt 0 zeigt «gleich» statt Pfeil; Bau-Tooltip auch bei gesperrtem Eintrag (Zahlen bleiben, Sperrgrund kommt wie heute dazu).
-- **AK-14** Die Probe verändert die Welt nicht (JSON vorher gleich nachher), keine Dauer-Schleife: Berechnung nur beim Tooltip- bzw. Panel-Update, nicht je Frame (≈ 1000 Gebäude × 2 `totalUpkeep`-Läufe je Aufruf, unkritisch).
+- **AK-14** Die Probe verändert die Welt nicht (`structuredClone(world)` vorher = nachher, auch bei der Wohnhaus-Probe), keine Dauer-Schleife: Berechnung nur beim Tooltip- bzw. Panel-Update, nicht je Frame (≈ 1000 Gebäude × 2 `totalUpkeep`-Läufe je Aufruf, unkritisch). **R577 (1):** Probe-Gebäude mit gültiger Insel und Position; Rot-Test Obergrenze (Wohnhaus «bis zu») auf einer Mehrinsel-Welt; kein Neurechnen je Frame bei unverändertem Hover (Test oder Cache je `defId`/`world.tick`).
+- **AK-18 (R577 (4))** Kontrakt-Test: `balanceText` (hud.ts), `spot` (problems.ts), `jumpTarget` (islandJump.ts) existieren mit der erwarteten Signatur und liefern bekannte Werte; Umbenennung durch A bricht den Test laut.
 - **AK-15** Ausbau-Karte: Zeile «Bilanz danach: a → b / min»; Rot-Test Abgleich gegen echtes `upgradeBuilding` für Stufe 1 → 2 und 2 → 3, mit Edikt; Karte «Höchste Stufe» und gesperrte Karte zeigen keine Zeile.
-- **AK-16** Bedienung: Die Zeile ist Text im bestehenden Tooltip bzw. in der Karte (kein neues Bedienelement, Tastatur wie heute); bei 1280×720 läuft die Ausbau-Karte nicht über und die Bauleisten-Tooltips bleiben im Fenster.
+- **AK-16** Bedienung: Die Zeile ist Text im bestehenden Tooltip bzw. in der Karte (kein neues Bedienelement, Tastatur wie heute); bei 1280×720 läuft die Ausbau-Karte nicht über (kein Überlauf, **Fokusring sichtbar** am fokussierten Knopf der Karte, Browser-Beleg) und die Bauleisten-Tooltips bleiben im Fenster.
 
 **Doku**
 
@@ -93,3 +94,10 @@ Branches `feat/ui-haeppchen-b-bilanz` und `feat/ui-haeppchen-b-lager`; Lead füh
 ## Risiken
 
 (1) Die Probe-Welt für das Wohnhaus muss `allNeedsMet` erfüllen; ändert sich `HouseState`, bricht der Abgleichtest laut (gewollt). (2) Frist nach Laden neu (Gate-Punkt 1). (3) `TIERS[1]` als «Wohnhaus» fest verdrahtet: stattdessen Stufe aus `newHouseState(world).tier` lesen. (4) A benennt `balanceText` oder `spot` um → B im Briefing zur Prüfung beim Start. (5) Tooltip wird breiter: 1280×720 im Browser-Check.
+
+## Nachtrag Controller (R577 Auflagen, R586)
+
+- **Rollen:** Umsetzer `tech-ui-engineer` (sonnet), Task-Review `qa-code-reviewer` (sonnet), Final-Review `qa-code-reviewer` (opus), Browser-Check `qa-playtester` (sonnet); Lead steuert und schreibt T04.
+- **Stränge:** Basis `feat/ui-haeppchen-a` @ `d4f6420d`. Strang 1 im Worktree `.worktrees/ui-haeppchen-b` (Branch `feat/ui-haeppchen-b`, T01, T02), Strang 2 in `.worktrees/ui-haeppchen-b-lager` (Branch `feat/ui-haeppchen-b-lager`, T03); Zusammenführung per Merge in `feat/ui-haeppchen-b`.
+- **Beobachtung:** Haus-Aufstieg in der Bilanz-Vorschau bleibt ausgeklammert; Eintrag in `docs/beobachtungen.md` (Lead).
+- **Zeit-Basis** (`npx vitest related --run` auf den geplanten src-Dateien, Basis `d4f6420d`, unter Last 17–26): Einzeltests > 200 ms: monument.test.ts «Eingaben ergeben { ok, reason }» 536 ms; geisterbauten.test.ts (4 Fälle 237–391 ms); cursorHint.test.ts RF-4 284 ms; hover.test.ts AK-U3-06 249 ms; input.test.ts AK-R17-12 241 ms; islandTools.test.ts foreignBuildingHover 292 ms; time.test.ts AK-UX-13 268/386 ms. Dateien der Strang-Dateien: buildMenu 12 ms, inspect 253 ms, panelView 200 ms, problems/goodFocus unter 100 ms. Abnahme: dieselben Dateien Basis vs. Branch nacheinander, kein bestehender Test > 500 ms oder > +50 %. Rohdaten: Scratchpad `base.json`.
