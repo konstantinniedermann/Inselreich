@@ -19,6 +19,7 @@ import {
   nextOpenCategory,
   NO_SELECTION_TEXT,
   toolName,
+  unboundDigitHint,
   upgradeTarget,
   withSpeed,
 } from '../../src/ui/hotkeys';
@@ -537,5 +538,21 @@ describe('UI-TASTEN T01 (AK-UT-01, 02, 07, 11, 12)', () => {
     const tool = { kind: 'tool', tool: { kind: 'road' } } as const;
     expect(keyDownVerdict(tool, false, true, false)).toEqual({ act: false, preventDefault: true });
     expect(keyDownVerdict(tool, false, false, false)).toEqual({ act: true, preventDefault: true });
+  });
+});
+
+describe('unboundDigitHint (AK-1, AK-2)', () => {
+  it('AK-1 4 bis 8 nennen die Tempotasten', () => {
+    for (const k of ['4', '5', '6', '7', '8'])
+      expect(unboundDigitHint(k, NONE, false, false)).toBe('Tempo: 1, 2, 3');
+  });
+  it('AK-2 sonst null', () => {
+    for (const k of ['1', '2', '3', '9', '0', 'a'])
+      expect(unboundDigitHint(k, NONE, false, false)).toBeNull();
+    expect(unboundDigitHint('5', { ...NONE, ctrl: true }, false, false)).toBeNull();
+    expect(unboundDigitHint('5', { ...NONE, meta: true }, false, false)).toBeNull();
+    expect(unboundDigitHint('5', { ...NONE, alt: true }, false, false)).toBeNull();
+    expect(unboundDigitHint('5', NONE, true, false)).toBeNull();
+    expect(unboundDigitHint('5', NONE, false, true)).toBeNull();
   });
 });
