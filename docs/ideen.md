@@ -484,19 +484,19 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Nutzen/Aufwand: hoher Nutzen · M · ≈ 3 Pakete
 - Entscheid: R529: Baustein fürs nächste Meilenstein-Brainstorming (Stadtplanung, mit I-045 und I-051).
 
-### I-062 · eingeplant · Betriebsrangliste nach Unterhalt
+### I-062 · live · Betriebsrangliste nach Unterhalt
 
 - Bereich: Bedienung · Säule: Produktionsketten · Quelle: Genre-Mechanik (Gebäudeliste mit Kosten); Ist-Stand: der Bilanz-Tooltip nennt nur Summen; IDEEN-07 Scout B
 - Spielerwirkung: „Der Spieler klickt auf die Bilanz, sieht alle Betriebe nach Unterhalt und Auslastung sortiert und springt zum Verlustbringer, um ihn stillzulegen oder abzureissen."
 - Grösse: S · Risiko: keins (Auswertung vorhandener Werte, nicht im Save)
 - Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13
-- Randfälle: Obergrenze oder Scrollen bei vielen Gebäuden; Stillgelegte am Ende mit Hinweis «kostet nichts»; Tastaturbedienung; keine neue Wirtschaftsregel.
+- Randfälle: Obergrenze oder Scrollen bei vielen Gebäuden; Stillgelegte nach ihrem tatsächlichen Wert (50 % Unterhalt, `PAUSED_UPKEEP_PCT`) mit Marke «stillgelegt», nicht «kostet nichts» (Korrektur R573 (b)); Tastaturbedienung; keine neue Wirtschaftsregel.
 - Doppelung: keine; ergänzt I-035 (Stilllegen) und I-043 (güterbezogen, hier kostenbezogen).
 - Bewertung lead-design (IDEEN-07): bestätigt (13). Gibt dem Stilllegen erst einen Anlass; risikofrei.
 - Nutzen/Aufwand: mittlerer Nutzen (Bilanz im Mittelspiel lesbar) · S · ≈ 80 Tools
-- Entscheid: R529: eingeplant als UI-Häppchen nach M13 (mit I-063).
+- Entscheid: R529: eingeplant als UI-Häppchen nach M13 (mit I-063). Umgesetzt in UI-HAEPPCHEN-A (R573).
 
-### I-063 · eingeplant · Weg mit Winkel ziehen (Umschalt)
+### I-063 · live · Weg mit Winkel ziehen (Umschalt)
 
 - Bereich: Bedienung · Säule: Insel besiedeln · Quelle: Genre-Mechanik (Linien- und L-Bauen); IDEEN-07 Scout B
 - Spielerwirkung: „Der Spieler hält `Umschalt` beim Wegziehen, bekommt eine gerade oder L-förmige Strecke mit Vorschau und Gesamtkosten und baut Strassenraster ohne Zickzack."
@@ -506,7 +506,7 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Doppelung: keine (I-041 betrifft nur das Abreissen).
 - Bewertung lead-design (IDEEN-07): bestätigt (12). Reiner Komfort, aber jede Partie mehrfach spürbar; passt zu I-063 + I-062 in ein UI-Häppchen.
 - Nutzen/Aufwand: Komfort in jeder Partie · S · ≈ 70 Tools
-- Entscheid: R529: eingeplant als UI-Häppchen nach M13 (mit I-062).
+- Entscheid: R529: eingeplant als UI-Häppchen nach M13 (mit I-062). Umgesetzt in UI-HAEPPCHEN-A (R573).
 
 ### I-064 · geparkt · Edikt «Bauherr» (viertes Edikt)
 
@@ -622,7 +622,7 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Nutzen/Aufwand: längere Holzkette, Mittelspiel · M · ≈ 3 Pakete mit Neumessung
 - Entscheid: IDEEN-08 Empfehlung parken bis Wirtschafts-Brainstorming nach Erweiterung 1 K2
 
-### I-083 · bewertet · Hinweis bei unbelegter Zifferntaste
+### I-083 · live · Hinweis bei unbelegter Zifferntaste
 
 - Bereich: Bedienung · Säule: Bevölkerung versorgen und aufsteigen lassen (indirekt, Einstieg) · Quelle: IDEEN-08 Scout C; Playtest `.studio/qa/rel-18/report.md` Z. 25 («Taste `4` tut nichts, kein Hinweis»); `src/ui/hotkeys.ts` (Tempo nur `1`/`2`/`3`, `9`/`0` Inselwechsel)
 - Spielerwirkung: „Der Spieler drückt `4` bis `8` und liest «Tempo: 1, 2, 3» statt nichts zu merken."
