@@ -136,9 +136,10 @@ describe('SEE-F1-KORRIDOR K1', () => {
     expect(tintHash()).toBe(392400604);
   });
 
+  // Timeout 20000 ms: Runner-Schaetzung ca. 7,9 s gegen 5000 ms Default (R570).
   it('AK-K1b Teilhash (R557): ohne Insel C sind die Flaechen bitgleich zur Basis 62da7923', () => {
     expect(tintHash(withoutC)).toBe(683761494);
-  });
+  }, 20000);
 });
 
 /** Hash ueber seaKeepOut (pad 0/1) und seaClearance (auf 1e-6) einer Kachelstichprobe, Seeds 1-5. */
