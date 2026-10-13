@@ -22,6 +22,27 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-13 · Handbuch 1.54
+
+- Anlass: Ad-hoc-Retro Testlock (V1) und Prozess-Retro REL-20 (V1–V3); Fakten E-064/E-065
+- Datenbasis: `docs/studio/retros/2026-10-13-adhoc-testlock.md`, `docs/studio/retros/2026-10-13-prozess-rel20.md`
+- Ruling: R579, R588, R598, R602
+- Änderungen: gates.md Gate Merge Release: Release-Fenster (höchstens 2 weitere Test-Arbeiter), `make zeitreserve-gate` mit Exit-Codes, Lastartefakt nur nach Messung, «push-bereit» = `LOAD_WAIT`; STUDIO.md Integrator-Abschnitt (Exit 1 = Substanz, n Läufe nur für Exit 2) und Guard-Fakten (`git stash` gesperrt, Stand-Warnung); Briefing-Vorlage Integrator-Pflichtzeile; lernen.md eine Zeile gestrichen, zwei ergänzt; E-060 bewertet, E-064 nachgerückt
+
+## 2026-10-13 · Persona lead-design 1.12
+
+- Anlass: Archivregel für den Ideen-Pool
+- Datenbasis: Ruling R599
+- Ruling: R599
+- Änderungen: geparkte, erledigte und verworfene Ideen ins `docs/ideen-archiv.md`; Pool-Deckel zählt nur `docs/ideen.md`
+
+## 2026-10-13 · Persona design-idea-scout 1.1
+
+- Anlass: Archivregel für den Ideen-Pool
+- Datenbasis: Ruling R599
+- Ruling: R599
+- Änderungen: Doppelprüfung auch gegen das Archiv; Pool-Zählung nur `docs/ideen.md`
+
 ## 2026-10-12 · Handbuch 1.53
 
 - Anlass: Controller-Entwurf TOOL-BUENDEL-9, am Code geprüft (HANDBUCH-R575)

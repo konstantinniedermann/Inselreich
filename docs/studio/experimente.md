@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R565): E-060, E-062, E-063; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R614 2026-10-13): E-062, E-063, E-064; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 ---
 
@@ -581,7 +581,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Bewertung: läuft passiv ohne Platz (R542), Bewertung bei 3 beidseitigen Merges oder spätestens 2026-11-19. Entwurf 2026-10-11 (Studio-Coach, EXP-BEWERTUNG-1011): noch nicht bewertbar, 0 von 3 Merges mit beidseitiger Änderung von `docs/beobachtungen.md` seit Treiber (`712e63f2`, 10:37). Geprüft per `git diff <merge-base>` je Elternteil: `cda5fdb7` und `e8b462de` nur ours, `ecf9972b`, `1cbbdf89`, `9be27dab` nur theirs, `0a8ee0c2` und `612856dc` keine Änderung; der Treiber lief also nie. Fehlender Datenpunkt: 3 Merges mit Änderung auf beiden Seiten.
 - Datenpunkt ([Retro M13](retros/2026-10-12-m13.md)): 3 Merges mit Konflikt in der Datei auf beiden Seiten seit dem Treiber. `24ba6d03` (beidseitig nur angehängt, +7/+4) löste der Treiber, Ergebnis = Merge-Commit, 0 verlorene oder zurückgekehrte Zeilen; `a8d9dcac` (theirs +34/−52) und `c972af5e` (theirs +8/−6) enthielten Löschungen einer Beobachtungs-Auswertung und blieben wie vorgesehen manuell. Schwelle formal verfehlt (2 von 3 manuell), im Geltungsbereich erfüllt (1 von 1). Bewertungsvorschlag: **behalten** (passiv, Regel); die Restklasse Auswertung gegen Anhängen deckt die Reihenfolge-Regel R558/R559. Status bis zum Ruling unverändert.
 
-## E-060 · laufend (R542) · Budget-Hook blockt statt zu warnen (Anpassung E-055)
+## E-060 · behalten (Vorschlag Coach, Bestätigung R588-Folge durch L0), abgeschlossen · Budget-Hook blockt statt zu warnen (Anpassung E-055)
 
 - Hypothese: Wenn der Spawn-Hook einen Lead-Start mit „Budget: n“ (n > 0) ohne vorherige `log.py budget`-Zeile derselben Rolle und Phase blockt (wie der Modell-Guard, R167) statt nur zu warnen, bindet jede Freigabe ihre Lead-Instanz und E-049 rechnet alle Freigabephasen heraus (Retro [session-f52039fc-ende](retros/2026-10-10-session-f52039fc-ende.md) B5: Warnung 0,9 s nach dem Start, Freigabe 3 s später, Instanz ohne Phase; vorher REL-15, R440).
 - Messgrösse: 0 Lead-Instanzen mit „Budget: n > 0“ und Phase `None` in `lead_stats.rows` über 3 Sessions (Ausgang 1 in f52039fc); Gegenprobe: 0 Fehlblocks bei „Budget: keins“ und bei Folge-Controllern eines freigegebenen Pakets (R433 V3 b), höchstens 1 zusätzlicher Agent-Aufruf je Block.
@@ -592,7 +592,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R542, R546
 - Start: 2026-10-11
 - Start Messung: 2026-10-11 (deny)
-- Bewertung: –
+- Bewertung: **behalten** (Vorschlag, L0 bestätigt per Ruling): `BUDGET_MODE = "deny"` bleibt. Messgrösse 0 Lead-Instanzen mit „Budget: n > 0“ und Phase `None` erfüllt (Datenpunkt 1: 0; 2026-10-13: der Hook blockte 3 Starts ohne Freigabe korrekt, 0 Fehlblocks). Kosten: 13:04 hielt der Block 3 Lead-Starts ≈ 80 s auf (Freigabe nachgeholt, innerhalb „höchstens 1 zusätzlicher Agent-Aufruf“). Nur 2 von 3 Datenpunkten (M13, heute), Frist 2026-11-19 nicht erreicht; Rückfall `warn` bleibt per Schalter möglich.
 - Notiz (R520): Werkzeug gemergt, Start mit `deny` per Ruling, wenn nur eine Session läuft (R520); Standard bis dahin `warn`.
 - Zweiter Echtlauf (R546, nach TOOL-E060-FIX `e230d5e9`): 117 Lead-Starts seit 2026-10-10, 3 Blocks (alle berechtigt: Freigabe erst nach dem Start), 0 Fehlblocks, `BUDGET_MODE = "deny"` gesetzt. Erster Echtlauf (R542, EXP-BEWERTUNG-1011): 113 Lead-Starts seit 2026-10-10, 8 mögliche Blocks, davon 3 berechtigt (keine Freigabe vor dem Start) und 5 Fehlblocks (Freigabe vorhanden, aber unter Phasenname `impl-…` bzw. `design-M13`, den `package_names` nicht trifft; zwei davon Folge-Controller bzw. Mehrfach-Controller). `BUDGET_MODE` bleibt `warn`, der Schalter ist nicht umgestellt; Messung startet erst nach Korrektur des Abgleichs (Ruling nötig).
 - Datenpunkt 1 von 3 ([Retro M13](retros/2026-10-12-m13.md)): seit `deny` (2026-10-11 16:40) 23 Freigaben, 0 Blocks, 0 Fehlblocks; S-2026-10-11-5500c465 14 Lead-Instanzen, 0 ohne Phase. Session 309376bf ohne Lead-Start. Weiter beobachten.
@@ -636,7 +636,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: 2026-10-12 (Handbuch 1.52: Merge und Push nur in `.worktrees/integrate`; Briefing-Vorlagenzeile; Persona production-integrator 1.13)
 - Bewertung: –
 
-## E-064 · vorgeschlagen (wartet auf Platz) · Guard sperrt `git stash` ausser Lesezugriffen
+## E-064 · laufend (R579, nachgerückt für E-060) · Guard sperrt `git stash` ausser Lesezugriffen
 
 - Hypothese: Wenn der Guard `git stash` (`push`, `pop`, `apply`, `save`, ohne Unterbefehl) sperrt und das Umsetzer-Briefing „kein `git stash`, WIP-Commit“ nennt, wendet kein Arbeiter mehr einen fremden Stash an (Retro [session-1a73e6c1-ende](retros/2026-10-12-session-1a73e6c1-ende.md) B1; `docs/beobachtungen.md` 2026-10-12; Klasse seit R116).
 - Messgrösse: 0 Stash-Anwendungen in Arbeiter-Worktrees (Ereignis `guard_block` mit `git stash` zählt als Abweisung, nicht als Fehler) über die nächsten 10 Umsetzer-Pakete; Gegenprobe: 0 Rückmeldungen „Stash nötig, Guard im Weg“ von L0 oder Leads.
@@ -644,7 +644,8 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 10 Umsetzer-Pakete, höchstens bis 2026-11-19.
 - Rückfall: Regel in `guard.py` entfernen (zurück auf `clear`/`drop`), Briefing-Zeile bleibt.
 - Dateien: `tools/studio/guard.py`, `tools/studio/tests/`, `docs/studio/templates/briefing.md` (Werkzeug-Bündel und Vorlage; Vorlage nur nach Ruling)
-- Ruling: –
+- Ruling: R579
+- Start: 2026-10-13 (Guard in TOOL-BUENDEL-10 gemergt; Handbuch 1.54 nennt die Sperre)
 - Bewertung: –
 
 ## E-065 · vorgeschlagen (wartet auf Platz) · Warnung bei veraltetem `state.md`

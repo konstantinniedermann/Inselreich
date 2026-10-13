@@ -234,6 +234,10 @@ Häppchen mit disjunkten Dateien laufen parallel in eigenen Worktrees (§5.8).
 (`.studio/qa/REL-nn/…`) und Playtest-Abschnitt. **Fehlt ein Eintrag, gibt es keinen Merge.** Zusätzlich
 `make check` grün auf dem Kandidaten, Review ohne offene ZURÜCK-Punkte, Doku und CREDITS nachgeführt, CI-Reserve aller Zeittests im Diff (lokal unter `CI=true` ≤ 50 % des Timeouts, auch Fix-Runden nach dem Final-Review, R270).
 
+**Release-Fenster (R588 V1):** Zwischen Gate Merge eines Releases und Push startet L0 höchstens 2 weitere Test-Arbeiter (Testlock-Abbrüche, Retro `retros/2026-10-13-adhoc-testlock.md`).
+
+**Strenge Zeitreserve schon im Gate (R598 V1):** Vor dem Urteil läuft `make zeitreserve-gate` (markierte Dateien, wie `push-check` mit Load-Warten und Testsperre). Exit 0 grün, 1 Substanz, 2 nicht belastbar/Last, 3 Testsperre. Ein «Lastartefakt» darf ein Ruling nur nach dieser Messung festhalten (R585, Retro `retros/2026-10-13-prozess-rel20.md`). «Push-bereit» heisst: Schwelle von `make push-check` (`LOAD_WAIT`, R598 V2); L0 nennt keine eigene Lastzahl.
+
 **Leistungs-AK (R417):** Hat das AK einen deterministischen Test, entfällt die Browser-Messung; sonst wird nur ohne paralleles Lastpaket gemessen, damit die Messung gültig ist.
 
 **Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Ruling, danach Push durch den Integrator.
