@@ -105,10 +105,14 @@ describe('seaMapTip Inselstärken (AK-M14E1-28)', () => {
     };
     expect(tip(0)).toBe('Heimat');
     w.islands[1]!.kontorId = 901;
-    expect(tip(1)).toBe('Möweninsel · Kontor');
-    expect(tip(2)).toBe('Felsbucht · Gebirge+: Steinbruch, Glashütte ×2');
+    expect(tip(1)).toBe('Möweninsel · Kontor · Markt: Stoff +30 %');
+    expect(tip(2)).toBe('Felsbucht · Gebirge+: Steinbruch, Glashütte ×2 · Markt: Rum +30 %');
     w.islands[2]!.kontorId = 902;
-    expect(tip(2)).toBe('Felsbucht · Kontor · Gebirge+: Steinbruch, Glashütte ×2');
-    expect(tip(3)).toBe('Weidenau · Fruchtbar: Zuckerrohrplantage, Schäferei ×2');
+    expect(tip(2)).toBe(
+      'Felsbucht · Kontor · Gebirge+: Steinbruch, Glashütte ×2 · Markt: Rum +30 %',
+    );
+    expect(tip(3)).toBe(
+      'Weidenau · Fruchtbar: Zuckerrohrplantage, Schäferei ×2 · Markt: Glas +30 %',
+    );
   });
 });

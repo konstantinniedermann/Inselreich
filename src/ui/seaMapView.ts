@@ -30,7 +30,7 @@ export function seaMapPick(world: World, l: MapLayout, px: number, py: number): 
   return hitIsland(world, l, px, py);
 }
 
-/** Hover-Text: Label der Inselliste plus Abschnitte der Traits mit Wirkung («Felsbucht · Gebirge+: Steinbruch, Glashütte ×2»), sonst `null`. */
+/** Hover-Text: Label der Inselliste plus Abschnitte der Traits mit Wirkung und Markt-Vorliebe («Felsbucht · Gebirge+: Steinbruch, Glashütte ×2»), sonst `null`. */
 export function seaMapTip(world: World, l: MapLayout, px: number, py: number): string | null {
   const i = hitIsland(world, l, px, py);
   if (i === null) return null;

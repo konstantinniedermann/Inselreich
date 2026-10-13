@@ -244,7 +244,7 @@ Einwohner und 10 s); es wächst nur auf Gewürzinseln und lässt sich am Kontor 
   | Felsbucht  | Rum          | +30 %                |
   | Weidenau   | Glas         | +30 %                |
 
-  Die Sättigung (`sellPct`) bleibt global. Boom und Vorliebe stapeln nicht; es gilt der höhere Faktor, ein Boom auf dem Vorliebe-Gut gilt also «statt Vorliebe». Die Heimat hat keine Vorliebe. Anzeige: Karte «Markt: Glas +30 %», Handelsdialog Marke «Vorliebe +30 %» (bei Boom «statt Vorliebe +30 %»).
+  Die Sättigung (`sellPct`) bleibt global. Boom und Vorliebe stapeln nicht; es gilt der höhere Faktor, ein Boom auf dem Vorliebe-Gut gilt also «statt Vorliebe». Die Heimat hat keine Vorliebe. Anzeige: Karte (Hover) und Seekarten-Zusatzzeile «Markt: Glas +30 %», Handelsdialog Marke «Vorliebe +30 %» (bei Boom «statt Vorliebe +30 %»).
 
 - **Inseln wechseln:** Taste `0` springt zur Heimat, Taste `9` läuft der Reihe nach über alle vier Inseln; der Knopf «Inseln» in der Kopfzeile
   öffnet ein Fenster mit einer kleinen **Seekarte** über der Liste: Silhouetten aller Inseln, die Fahrlinien der Routen und
