@@ -6458,3 +6458,39 @@ Retro mit Plan-Briefing). Budgets: UI-HAEPPCHEN-A 11 Starts/P1 (R573), TOOL-BUEN
 Regelbezug: R578, R571 (4), Verfassung §5 · Kosten bei Irrtum: ein legitimer Stash-Fall bei L0 wird geblockt (Rückfall: Regel streichen).
 
 Entscheider: L0 · Anlass: Retro Session 1a73e6c1, state.md Fortsetzung Punkt 1, 4 · ADR: —
+
+## R580 · 2026-10-13 · Freier Platz: Beobachtungs-Auswertung statt Ideen-Runde
+
+Ruling: Ideen-Pool 35/40 (R566), UI-HAEPPCHEN-A/B aus IDEEN-08 noch offen — eine neue Ideen-Runde (R445) brächte jetzt wenig.
+Freier Platz geht an `lead-production`: Auswertung der 12 Beobachtungen seit 2026-10-11 (Skill `beobachtungen-auswerten`,
+STUDIO.md Start-Routine 6), Budget 1 Start/P1, Worktree `.worktrees/beob-13`. Ideen-Runde IDEEN-09 erst nach Merge UI-HAEPPCHEN-B.
+
+Regelbezug: R445, R475, R287 · Kosten bei Irrtum: eine Ideen-Runde einen Tag später.
+
+Entscheider: L0 · Anlass: freie Kapazität nach R578 · ADR: —
+
+## R581 · 2026-10-13 · Gate Merge BEOB-AUSWERTUNG-13: OK; drei Vorschläge
+
+Ruling: Bericht lead-production, `docs/beob-13` @ `72c3f3d3`, `make docs-check` Exit 0, 8 erledigt / 3 eingeplant / 3 abgehakt mit
+Trigger, Marke 2026-10-13. Entscheid **Gate Merge OK** (nur Doku), Merge durch `production-integrator` in `.worktrees/integrate`,
+kein Push (geht mit REL-20). Vorschläge: (1) `buyPct` in `docs/arc42.md` nachführen — angenommen, als Beipack im Doku-Audit vor
+dem Release REL-20; (2) Paket **DOC-ARCHIV** (S, lead-production: `docs/ideen.md` und README-Spielwerte-Anhang auslagern) —
+angenommen, aufs Board nach UI-HAEPPCHEN-B; (3) Szenarien-Punkte (a)(c)(d) und Umbenennung `m13e2-v13` → **TOOL-BUENDEL-11**.
+
+Regelbezug: gates.md Gate Merge, R287, R580 · Kosten bei Irrtum: ein Eintrag wird später erneut geöffnet.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-AUSWERTUNG-13 · ADR: —
+
+## R582 · 2026-10-13 · TOOL-BUENDEL-10: Nacharbeit seaKorridor-Timeout und Wortanker, dann make check
+
+Ruling: Bericht lead-tech TOOL-BUENDEL-10, `tool/b10` @ `0d383d1b`, Review BEDENKEN (alle niedrig), `make check` offen (Testlock,
+Last > 8). Entscheide: (1) Ownership von TOOL-BUENDEL-10 um `tests/render/seaKorridor.test.ts` erweitert: Fall «AK-K1b Teilhash
+(R557)» bekommt einen expliziten Timeout von 20000 ms mit Kommentar (Grund: Runner-Schätzung ≈ 7,9 s > 5 s, R570); bevorzugt,
+falls ohne Aussageverlust in wenigen Minuten möglich, den Fall beschleunigen. (2) `stampcheck.py` Wortanker `\bR(\d+)` und
+Test — Trivial-Fix im selben Zug. (3) `git stash --help/-h` bleibt gesperrt (Meldung nennt WIP-Commit; harmlos). (4) Guard-Umgehung
+per Alias/`$(…)`/`xargs` → Eintrag `docs/beobachtungen.md` durch den Controller. (5) Danach `make check` Exit 0, sobald die Last es
+zulässt; L0 entscheidet dann Gate Merge und Push REL-20. Budget unverändert (2 Starts frei).
+
+Regelbezug: R570, R579, gates.md Gate Merge · Kosten bei Irrtum: ein langsamer Test bleibt mit grosszügigem Timeout unbemerkt langsamer.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-10 · ADR: —
