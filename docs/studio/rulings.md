@@ -6508,3 +6508,20 @@ mit Test). (4) R7 (Zufallsauftrag im selben Tick nach Bruch) bleibt. Gate Spec: 
 Regelbezug: gates.md Gate Brainstorming, Gate Spec, R571 (4), R487 · Kosten bei Irrtum: zwei kleine Pakete für eine Mechanik mit geringem Gewicht.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I-047 · ADR: —
+
+## R584 · 2026-10-13 · Gate Spec I-047 Stammkunde: OK mit Auflagen
+
+Ruling: Urteile lead-tech BEDENKEN (3 mittel, 2 niedrig) und lead-qa BEDENKEN (2 hoch, 6 niedrig) zu `design/i047` @ `b8b5477a`.
+Entscheid **Gate Spec OK mit Auflagen**; AK-Präfix **AK-SK-01…29** bestätigt (R417), neue AK fortlaufend ab AK-SK-30.
+**Spec-Nachtrag durch lead-design ohne neues Gate** (Budget 1 Start): QA (1) Inselwechsel in AK-SK-09/28; (2) AK-SK-22 gegen
+`SAVE_VERSION − 1` statt «v13», bitgleich 10 Perioden; (3) B.5 Risiko mit Rückfall (`CONTRACT_PREMIUM` senken oder
+`CONTRACT_MIN_TIER` 4) und Playtest-Prüfung; (4)–(5) Sätze in AK-SK-11/12/15/18; (6) Controller-Prüfung in
+`tests/sim/contract.test.ts` statt balance; (7) AK-SK-29 Aufbau (präparierter Stand) und Klang per Aufruf; (8) Anhang W.7 angleichen.
+**Auflagen an den Plan (lead-tech):** Tech (1) Schritt `foldBackToV13`, neue Schlüssel am Ende; (2) I047-SIM ≈ 60 Tools in drei Tasks
+(a)/(b)/(c); (3) Merge-Schritt «Version festlegen» mit Sechs-Stellen-Liste, Testdateien nach Thema, Tests gegen `SAVE_VERSION`;
+(4)–(5) `World.version`-Literal und Rückgabe von `tickOrders` in den Task-Dateien. Danach Plan (opus), Kombiniertes Gate durch L0
+und lead-qa.
+
+Regelbezug: gates.md Gate Spec, R417, R553, R583 · Kosten bei Irrtum: eine Plan-Überarbeitung.
+
+Entscheider: L0 · Anlass: Urteile lead-tech und lead-qa gate-I-047 · ADR: —
