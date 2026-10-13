@@ -6747,3 +6747,16 @@ an `studio-coach` für die Ende-Routine.
 Regelbezug: R581 (2), R597, E-057, gates.md Konflikte · Kosten bei Irrtum: eine geparkte Idee wird übersehen.
 
 Entscheider: L0 · Anlass: Bericht lead-production DOC-ARCHIV · ADR: —
+
+## R600 · 2026-10-13 · Release-Check REL-21 vorziehen
+
+Ruling: A, B, I-047 lokal auf main (`cff72fe7`, `d77f5873`, `e2a5297e`, Kopf `0a19ad53`), je `make check`/`check-ci-perf` Exit 0. Der
+Push fällt in die nächste Session (R335). Damit er dort in einem Anlauf gelingt, zieht L0 den **Release-Check REL-21** vor
+(gates.md Gate Merge Release, Schritte 3–4): `lead-qa`, Budget 3 Starts / P2 — Browser-Lauf `qa-playtester` am Kandidaten (je UI-Task
+ein Abschnitt mit Screenshots unter `.studio/qa/REL-21/`), Opus-Review über `origin/main..main` (nur `src/`, `tests/`, README,
+arc42), strenge Zeitreserve der markierten Dateien nach R598 V1 (soweit das Make-Ziel aus TOOL-BUENDEL-11 noch fehlt: Liste der
+Warnungen mit Last). TOOL-BUENDEL-11 und DOC-ARCHIV kommen per Delta-Review dazu.
+
+Regelbezug: gates.md Gate Merge Release, R335, R598 · Kosten bei Irrtum: ein Delta-Review mehr in der nächsten Session.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-21 · ADR: —
