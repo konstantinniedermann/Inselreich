@@ -1,10 +1,24 @@
 // I-047 T02: Save-Felder `contract` und `contractOffer` (AK-SK-21, -22, -23).
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from '../../src/sim/defs/timing';
+
+declare const process: { env: Record<string, string | undefined> };
+import { CRISIS_LEVELS } from '../../src/sim/defs/crises';
+import { crisisWindow } from '../../src/sim/crises';
+import {
+  CRISIS_FIRST_TICK,
+  ORDER_DURATION,
+  ORDER_FIRST_TICK,
+  ORDER_PERIOD,
+} from '../../src/sim/defs/timing';
 import { SAVE_VERSION, deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { home, createWorld } from '../../src/sim/world';
+import { maxHouseTier, orderUnitReward } from '../../src/sim/orders';
+import { functionLock } from '../../src/sim/unlocks';
+import { runColony, startColony } from './controller';
 import { foldBackToV12, foldBackToV13 } from './helpers';
 import { foundKontor2Literal } from './seaHelpers';
 
@@ -139,4 +153,46 @@ describe('Rückfaltung foldBackToV13', () => {
     expect(out.version).toBe(12);
     expect('contract' in out).toBe(false);
   });
+});
+
+// Präparierter Stand für den Browser-Check (I-047 T06, AK-SK-29); nur mit SCENARIO_OUT.
+it.skipIf(!process.env.SCENARIO_OUT)('schreibt i047-stammkunde.json (AK-SK-29)', () => {
+  const w = createWorld(3);
+  const { layout, t } = startColony(w);
+  runColony(w, layout, t, {}, (x) => maxHouseTier(x) >= 3);
+  // Periodenbeginn von Auftrag und Krise zugleich (alle 3600 Ticks); sonst ist der Stand nicht ladbar
+  const P = CRISIS_LEVELS.normal.period!;
+  while ((w.tick - ORDER_FIRST_TICK) % ORDER_PERIOD !== 0 || (w.tick - CRISIS_FIRST_TICK) % P !== 0)
+    step(w);
+  const T = w.tick;
+  const k = (T - ORDER_FIRST_TICK) / ORDER_PERIOD;
+  w.order = {
+    period: k,
+    good: 'rum',
+    amount: 8,
+    reward: 8 * orderUnitReward('rum'),
+    due: T + ORDER_DURATION,
+  };
+  home(w).stock.rum = 12;
+  w.contract = null;
+  w.contractOffer = null;
+  // Boom auf Holz für die Überlappungsmessung der Karten; die Dauer legt das Save-Format fest (BOOM_DURATION)
+  w.crisisLevel = 'normal';
+  const win = crisisWindow('boom', T);
+  w.crisis = {
+    period: (T - CRISIS_FIRST_TICK) / P,
+    kind: 'boom',
+    from: win.from,
+    until: win.until,
+    good: 'wood',
+  };
+  expect(functionLock(w, 'orders')).toBeNull();
+  expect(maxHouseTier(w)).toBeGreaterThanOrEqual(3);
+  expect(home(w).kontorId).not.toBeNull();
+  const back = deserialize(serialize(w));
+  expect(back.ok ? 'ok' : back.reason).toBe('ok');
+  expect(w.version).toBe(SAVE_VERSION);
+  const out = process.env.SCENARIO_OUT!;
+  mkdirSync(out, { recursive: true });
+  writeFileSync(join(out, 'i047-stammkunde.json'), serialize(w));
 });
