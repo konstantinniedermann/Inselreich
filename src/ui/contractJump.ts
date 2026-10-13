@@ -17,6 +17,16 @@ export function contractKey(world: World): string | null {
   return c === null ? null : `${c.good}|${c.island}`;
 }
 
+/** Cursor samt Vertragsschlüssel; Vertragsende oder -wechsel (Gut/Insel) verwirft den Cursor. */
+export interface ContractCursorState {
+  cursor: ProblemCursor | null;
+  key: string | null;
+}
+export function nextContractCursor(world: World, st: ContractCursorState): ContractCursorState {
+  const key = contractKey(world);
+  return key === st.key ? st : { cursor: null, key };
+}
+
 /** Meldung «kein Erzeuger» mit Inselzusatz (auch auf der Heimatinsel). */
 export function contractNoProducerMessage(
   world: World,

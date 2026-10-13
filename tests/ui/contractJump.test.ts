@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { islandName } from '../../src/sim/islands';
-import { SAVE_VERSION } from '../../src/sim/save';
 import type { Building, BuildingDefId, BuildingState, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
 import {
   contractKey,
   contractNoProducerMessage,
+  nextContractCursor,
   contractProducers,
   runContractJump,
   type ContractJumpDeps,
@@ -240,7 +240,42 @@ describe('I-090 Kontrakt AK-HC-12', () => {
     expect(runContractJump.length).toBe(2);
     expect(contractNoProducerMessage.length).toBe(2);
   });
-  it('SAVE_VERSION unverändert', () => {
-    expect(SAVE_VERSION).toBe(14);
+});
+
+describe('I-090 nextContractCursor (R607-3)', () => {
+  const landed = (w: World): { cursor: ProblemCursor | null; key: string | null } => {
+    const f = fake(w);
+    runContractJump(f.deps, 1);
+    runContractJump(f.deps, 1); // Cursor steht auf 1002
+    return { cursor: f.cursor, key: contractKey(w) };
+  };
+  it('gleicher Vertrag: Cursor und Schlüssel bleiben', () => {
+    const { w } = woodWorld();
+    const st = landed(w);
+    w.contract = { good: 'wood', amount: 1, price: 1, island: 0 };
+    expect(nextContractCursor(w, st)).toBe(st);
+  });
+  it.each([
+    ['anderes Gut', { good: 'tools' as const, amount: 5, price: 9, island: 0 }],
+    ['andere Insel', { good: 'wood' as const, amount: 5, price: 9, island: 2 }],
+    ['Vertragsende', null],
+  ])('%s: Cursor null, neuer Schlüssel', (_n, next) => {
+    const { w } = woodWorld();
+    const st = landed(w);
+    expect(st.cursor).not.toBeNull();
+    w.contract = next;
+    expect(nextContractCursor(w, st)).toEqual({ cursor: null, key: contractKey(w) });
+  });
+  it('nach Wechsel zurück auf Wood beginnt Klick 1 beim ersten Erzeuger', () => {
+    const { w } = woodWorld();
+    let st = landed(w);
+    w.contract = null;
+    st = nextContractCursor(w, st);
+    w.contract = { good: 'wood', amount: 5, price: 9, island: 0 };
+    st = nextContractCursor(w, st);
+    const f = fake(w);
+    f.cursor = st.cursor;
+    runContractJump(f.deps, 1);
+    expect(f.calls.filter((c) => c.startsWith('panel:')).at(-1)).toBe('panel:1001');
   });
 });

@@ -61,7 +61,7 @@ import {
   type FocusDeps,
   type FocusState,
 } from './goodFocus';
-import { contractKey, runContractJump } from './contractJump';
+import { contractKey, nextContractCursor, runContractJump } from './contractJump';
 import { cutOffIds, newlyCut, runProblemJump, spot, type ProblemCursor } from './problems';
 import { trackFullSince } from './storageFull';
 import { openUpkeepCard } from './upkeepCard';
@@ -557,13 +557,10 @@ function launch(
       1,
     );
   };
-  /** Vertragsende oder -wechsel (anderes Gut/andere Insel) verwirft den Cursor. */
   const syncContractCursor = (): void => {
-    const key = contractKey(world);
-    if (key !== contractCursorKey) {
-      contractCursorKey = key;
-      contractCursor = null;
-    }
+    const next = nextContractCursor(world, { cursor: contractCursor, key: contractCursorKey });
+    contractCursor = next.cursor;
+    contractCursorKey = next.key;
   };
 
   /** Betriebsliste (I-062): Sprung zum Gebäude wie beim Problem-Sprung (Kamera, Panel, gefolgte Insel). */
