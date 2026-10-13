@@ -116,16 +116,15 @@ describe('Ersatzregel Stufe 3 (M14-E1 T02)', () => {
     const last = ISLANDS[ISLANDS.length - 1]!.kind;
     let max = 0;
     for (let seed = 1; seed <= 300; seed++) {
-      const all = [
-        homeOf(seed),
-        ...generateForeignIslands(seed, homeOf(seed), { forceLastStage: last }),
-      ];
+      const home = homeOf(seed);
+      const all = [home, ...generateForeignIslands(seed, home, { forceLastStage: last })];
       const w = Math.max(...all.map((i) => i.ox + i.width)) - Math.min(...all.map((i) => i.ox));
       const h = Math.max(...all.map((i) => i.oy + i.height)) - Math.min(...all.map((i) => i.oy));
       max = Math.max(max, w + h);
     }
     console.info(`SPANNE_MAX=${max}`);
-  });
+    // Zeitreserve (R593): 300 Seeds mit Inselerzeugung, 946 ms bei Last 4,2 (Home nur noch einmal je Seed); Timeout daher 10 s.
+  }, 10_000);
 });
 
 // ---------- T03: Insel C «Weidenau» (AK-M14E1-15) ----------

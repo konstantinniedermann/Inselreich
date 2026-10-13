@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { createWorld, home } from '../../src/sim/world';
 import { seaContext, seaPlan } from '../../src/render/decor';
 import { PALETTE, rgbOfCss } from '../../src/render/palette';
@@ -18,6 +18,17 @@ const lab = (c: string | number[]) =>
 const SCALE = 0.25; // 8 px je Kachel
 
 describe('L5-T3 Wasserfelder im Bodenbild (Sandbank, Riff, Tang)', () => {
+  // Zeitreserve (R593): eigene Welten Seeds 1–12 samt Plan und Tönung ausserhalb der Testzeit (vorher 701 ms bei Last 4,1).
+  const visibleWorlds: ReturnType<typeof createWorld>[] = [];
+  beforeAll(() => {
+    for (let seed = 1; seed <= 12; seed++) {
+      const w = createWorld(seed);
+      seaPlan(w.seed, home(w), seaContext(w));
+      seaTintFor(w);
+      visibleWorlds.push(w);
+    }
+  }, 30_000);
+
   it('Töne: Sandbank ist aufgehelltes Flachwasser, nie trockener Sand; ΔE ≥ 20 zu den Signalfarben', () => {
     const d = (a: string, b: string) => deltaE2000(lab(a), lab(b));
     expect(d(SEA_TONES.sandbank, PALETTE.waterShallow)).toBeLessThan(
@@ -81,7 +92,7 @@ describe('L5-T3 Wasserfelder im Bodenbild (Sandbank, Riff, Tang)', () => {
       reefSpots = 0,
       kelp = 0;
     for (let seed = 1; seed <= 12; seed++) {
-      const w = createWorld(seed);
+      const w = visibleWorlds[seed - 1]!;
       const plan = seaPlan(w.seed, home(w), seaContext(w));
       const t = seaTintFor(w);
       if (!t) continue;

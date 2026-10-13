@@ -810,13 +810,14 @@ describe('Fauna T2: Orte und Haltung', () => {
       for (const reduce of [false, true])
         for (const phase of PHASES)
           for (let t = 0; t < 70000; t += 2300) {
-            const fauna = faunaAt(world, FULL, t, { phase, reduce }).length;
+            const hits = faunaAt(world, FULL, t, { phase, reduce });
+            const fauna = hits.length;
             const d = dolphinsAt(world, t, reduce)?.dolphins.length ?? 0;
             expect(fauna + d, `seed ${seed} reduce ${reduce}`).toBeLessThanOrEqual(reduce ? 9 : 69);
             for (const [id, key] of Object.entries(CAP_OF))
-              expect(
-                faunaAt(world, FULL, t, { phase, reduce }).filter((x) => x.id === id).length,
-              ).toBeLessThanOrEqual(CAPS[key][reduce ? 1 : 0]);
+              expect(hits.filter((x) => x.id === id).length).toBeLessThanOrEqual(
+                CAPS[key][reduce ? 1 : 0],
+              );
             if (!reduce) peak = Math.max(peak, fauna + d);
           }
     }

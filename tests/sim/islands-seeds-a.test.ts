@@ -105,7 +105,11 @@ function checkQuarrySites(w: ReturnType<typeof createWorld>, seed: number): void
 
 const range = (from: number, to: number): number[] =>
   Array.from({ length: to - from + 1 }, (_, i) => from + i);
-const BLOCKS = Array.from({ length: 5 }, (_, k) => range(1 + k * 100, 1 + k * 100 + 99));
+// Zeitreserve (R593): Blöcke à 50 statt 100 Seeds, gleiche Stichprobe 1…500, halbe Laufzeit je Test.
+const BLOCK_SIZE = 50;
+const BLOCKS = Array.from({ length: 10 }, (_, k) =>
+  range(1 + k * BLOCK_SIZE, (k + 1) * BLOCK_SIZE),
+);
 
 describe('M14-E1 A/B bitgleich, Seeds 1…500', () => {
   it.each(BLOCKS)('AK-M14E1-12: Seeds (Block ab %i)', (...seeds) => {
