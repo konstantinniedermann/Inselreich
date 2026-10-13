@@ -6645,3 +6645,19 @@ I047-UI 5 Starts / P1 (Rest der Freigabe 8 plus 1 für den Final-Review opus üb
 Regelbezug: gates.md Gate Merge Release (Dateimatrix), R589, R591 · Kosten bei Irrtum: ein Fix auf B erzwingt einen Merge in I-047.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I047-SIM · ADR: —
+
+## R593 · 2026-10-13 · Push-Gate REL-20: Zeitreserve-Substanz statt Last → TOOL-ZEITRESERVE-M14; I047-UI startet
+
+Ruling: Bericht production-integrator: Ruhefenster erreicht (Last 2,9–5), `make push-check` dreimal Exit 1 bei grünen Tests (3684):
+Zeitreserve-Gate (lokal × 3 > 50 % von 5000 ms) meldet wiederkehrend 7–8 Tests, überwiegend aus M14-E1 (`decor` D11/E2/E6,
+`islands-c` Spanne, `islands-seeds-a` Blöcke, `wildlife` Delfine, `terrainSea` L5-T3, `fauna` CAPS; 850–1220 ms lokal). Die Lesart
+«Lastartefakt» aus R585 trifft für diese Tests **nicht** zu. Entscheide: (1) Paket **TOOL-ZEITRESERVE-M14** (lead-tech, sonnet,
+4 Starts/P1, Branch `tool/zeitreserve-m14` ab main): je Test bevorzugt beschleunigen (gemeinsame Welt, kleinere Stichprobe ohne
+Aussageverlust), sonst begründeter Timeout 10000 ms nach E-043-Vorschlag; Zeiten vorher/nachher; kein `src/`. (2) Danach Push-Gate
+REL-20 neu (Merge `tool/b10` + `tool/zeitreserve-m14`). (3) **I047-UI startet jetzt** (R592), disjunkte Dateien. (4) Ad-hoc-Retro:
+Nachtrag in `adhoc-testlock` in der Ende-Retro (Final-Reviews prüfen die CI-Reserve neuer Tests nicht wirksam; gates.md fordert
+≤ 50 % unter `CI=true`, R270).
+
+Regelbezug: R270, R585, R591, E-043, gates.md Prüfliste · Kosten bei Irrtum: ein weiteres Werkzeug-Paket vor dem Push.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-20 (failed) · ADR: —
