@@ -6555,3 +6555,19 @@ gates.md) auf `feat/ui-haeppchen-b` ab `feat/ui-haeppchen-a` @ `d4f6420d`, Budge
 Regelbezug: gates.md Gate Merge Release (Pipelining), R573, R577, R335 · Kosten bei Irrtum: ein Fix auf A erzwingt einen Merge in B.
 
 Entscheider: L0 · Anlass: Schlussbericht lead-tech UI-HAEPPCHEN-A · ADR: —
+
+## R587 · 2026-10-13 · Push-Gate REL-20 gescheitert (Testlock): Ruhefenster, Ad-hoc-Retro
+
+Ruling: Bericht production-integrator REL-20: `make check` viermal Exit 2 (Testlock, 1-min-Last 20,0 / 25,6 / 8,8 / 13,0 > 8), Merge
+abgebrochen, main unverändert `dd004a53`, nichts gepusht. Beleg Grundlast: ohne Studio-Testlauf ziehen `fileproviderd`, Dropbox und
+WebKit allein ≈ 1,5–2 Kerne (15:48: fileproviderd 107 %, Dropbox 41 %+37 %+18 %); der Repo-Pfad liegt nicht in Dropbox (unbelegt,
+woher die Synchronisationslast stammt). Entscheide: (1) Push-Gate REL-20 neu im **Ruhefenster**: L0 wartet per Hintergrund-Prüfung auf
+1-min-Last ≤ 7, dann startet der Integrator neu (bis 6 Versuche, ≥ 3 min Pause); in dieser Zeit startet L0 keine neuen Test-lastigen
+Arbeiter (Plan-/Gate-/Doku-Agenten erlaubt). Kein Umgehen des Testlocks (R380). (2) Integrator-Trailer: Session-Attribution gilt
+(Opus 5.5 laut Session-Vorgabe; Abweichung «Sonnet» im Merge `c151dad4` bleibt stehen). (3) **Ad-hoc-Retro** durch `studio-coach`
+(Kurz-Retro, sonnet): Konflikt Deckel 8 (R578) gegen Testlock-Grenze 8 bei Grundlast; Hebel-Vorschlag (z. B. Push-Gate-Ruhefenster
+als Regel, Last-Grenze relativ zur Grundlast, Testlauf-Warteschlange statt Abbruch).
+
+Regelbezug: R380, R335, R578, Handbuch «Verbesserungsschleife» · Kosten bei Irrtum: REL-20 erst in der nächsten Session live.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-20 (failed) · ADR: —
