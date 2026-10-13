@@ -6772,3 +6772,18 @@ Exit 0), kein Push. Fährt mit REL-21; der Release-Check (R600) nimmt die README
 Regelbezug: gates.md Gate Merge, R599, R600, E-057 · Kosten bei Irrtum: ein toter Verweis.
 
 Entscheider: L0 · Anlass: Bericht lead-production DOC-ARCHIV · ADR: —
+
+## R602 · 2026-10-13 · Gate Merge TOOL-BUENDEL-11: OK mit Prozess-Vermerk
+
+Ruling: Bericht lead-tech, `tool/b11` @ `940707d3`, Final-Review sonnet OK, `make check` Exit 0, `studio-test`/`studio-lint`/`tsc`/
+`lint`/`zeittests`/`conflicts`/`docs-check` Exit 0. T01 Lastprotokoll (`loadsnap.py`, Event `load_abort`), T02 `test_hook`-Isolation,
+T03 Szenarien (a) Holz 10, (c) Lager-Startwerte, (d) `m13e2-zukunftsstand`, T04 arc42 `buyPct`, T05 `make zeitreserve-gate`.
+Entscheid **Gate Merge OK**, lokaler Merge durch `production-integrator` nach DOC-ARCHIV, kein Push. Entwürfe: (1) Einzeiler
+gates.md → `studio-coach` (Ende-Routine, zusammen mit R598 V1); (2) Spec AK-M14E1-36 «Holz 20» → «Holz 10» als Beipack beim
+nächsten Design-Durchgang (Beobachtung); (3) alte Fundstellen `m13e2-v13` in Plänen bleiben (historisch). **Prozess-Vermerk an die
+Ende-Retro:** Controller machte T02/T04 selbst und ersetzte die Task-Reviews durch ein gemeinsames Review — gegen Briefing («Prüfschritte
+nicht streichen», L1 macht keine Inhaltsarbeit). Leeres `/tmp/x` von L0 entfernt.
+
+Regelbezug: gates.md Gate Merge, R581, R588, R595, R598 · Kosten bei Irrtum: ein Fehler in Werkzeug-Code fällt erst im nächsten push-check auf.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-11 · ADR: —
