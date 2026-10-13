@@ -6732,3 +6732,18 @@ E-060-Datenpunkt) an die Ende-Retro.
 Regelbezug: R316, R429, R585, R587, R594 · Kosten bei Irrtum: ein Gate Merge dauert einige Minuten länger.
 
 Entscheider: L0 · Anlass: Bericht studio-process-coach RETRO-PROZESS-REL20 · ADR: —
+
+## R599 · 2026-10-13 · DOC-ARCHIV: geparkte Ideen ins Archiv; Merge nach A/B/I-047
+
+Ruling: Bericht lead-production DOC-ARCHIV, `docs/archiv` @ `a8304aab`: README 59,5 → 29,6 KB (vier Regelabschnitte wortgleich nach
+`docs/spielwerte.md`), `docs/ideen.md` 80 → 66,6 KB, Archiv 13,7 KB, 88 Überschriften erhalten, `make docs-check`/`studio-test` grün.
+Entscheide: (1) **Geparkte Ideen liegen im Archiv**; der Pool `docs/ideen.md` führt nur neu, bewertet, eingeplant, dazu die jüngste
+Rangliste; ältere Ranglisten (IDEEN-06/07) ins Archiv. Ein Wiederaufnehmen einer geparkten Idee verschiebt sie zurück. (2) Der
+Pool-Deckel 40 zählt nur den Pool. (3) Merge-Reihenfolge: **DOC-ARCHIV nach A → B → I-047**; vor dem Gate holt lead-production
+main per Merge und verschiebt deren README-Änderungen in den verschobenen Abschnitten nach `docs/spielwerte.md` (Eigentümer des
+späteren Branches löst, gates.md). (4) Persona-Hinweis (`lead-design`, `design-idea-scout`): Archivieren beim Statuswechsel — Entwurf
+an `studio-coach` für die Ende-Routine.
+
+Regelbezug: R581 (2), R597, E-057, gates.md Konflikte · Kosten bei Irrtum: eine geparkte Idee wird übersehen.
+
+Entscheider: L0 · Anlass: Bericht lead-production DOC-ARCHIV · ADR: —
