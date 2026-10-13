@@ -1,19 +1,63 @@
 import { HOME } from '../sim/world';
 import { islandName } from '../sim/islands';
 import { GOODS } from '../sim/defs/goods';
-import { nextOrderTick } from '../sim/orders';
+import { contractUnitPrice, nextOrderTick } from '../sim/orders';
+import { ORDER_PERIOD } from '../sim/defs/timing';
+import type { StepReport } from '../sim/tick';
+import type { SoundEvent } from '../audio/sound';
 import { functionLock } from '../sim/unlocks';
-import type { Order, World } from '../sim/types';
+import type { ContractEvent, Order, Result, World } from '../sim/types';
 import { setField } from './dom';
 import { formatGameTime } from './time';
 
 export interface OrderActions {
   /** Liefert aus dem Lager der aktiven Insel. */
   deliver(): void;
+  /** Nimmt das Stammkunde-Angebot an. */
+  accept(): void;
+  /** Lehnt das Angebot ab. */
+  decline(): void;
+  /** Kündigt den laufenden Vertrag. */
+  cancel(): void;
+}
+
+/**
+ * Wertet das Ergebnis einer Vertragsaktion aus: bei `fail` zeigt `showError` den Grund (Meldung und
+ * Fehlerklang), bei `ok` die Meldung aus `onOk` (`null` = still).
+ */
+export function runContractAction(
+  r: Result,
+  onOk: () => string | null,
+  out: { showError(reason: string): void; show(text: string): void },
+): void {
+  if (!r.ok) {
+    out.showError(r.reason);
+    return;
+  }
+  const text = onOk();
+  if (text !== null) out.show(text);
 }
 
 /** Text der Auftragskarte: aktiver Auftrag mit Lagerstand, sonst die Wartezeit bis zum nächsten. */
 export function orderCardText(world: World, island: number = HOME): string {
+  const rest = (): string => formatGameTime(nextOrderTick(world) - world.tick);
+  const takt = formatGameTime(ORDER_PERIOD);
+  const c = world.contract;
+  if (c !== null) {
+    const stock = world.islands[c.island]!.stock[c.good];
+    return (
+      `Stammkunde: ${c.amount} ${GOODS[c.good].name}${islandSuffix(world, c.island)}` +
+      ` · nächste Lieferung ${rest()} · Lager ${stock}/${c.amount}`
+    );
+  }
+  const offer = world.contractOffer;
+  if (offer !== null) {
+    const def = GOODS[offer.good];
+    return (
+      `Stammkunde: ${def.order!.contract} ${def.name}${islandSuffix(world, offer.island)}` +
+      ` alle ${takt} zu ${contractUnitPrice(offer.good)} je Stück · Angebot noch ${rest()}`
+    );
+  }
   const o = world.order;
   if (o === null) return `Nächster Auftrag in ${formatGameTime(nextOrderTick(world) - world.tick)}`;
   const name = GOODS[o.good].name;
@@ -21,6 +65,69 @@ export function orderCardText(world: World, island: number = HOME): string {
     `Auftrag: ${o.amount} ${name} · Prämie ${o.reward} · noch ${formatGameTime(o.due - world.tick)}` +
     ` · Lager ${world.islands[island]!.stock[o.good]}/${o.amount}`
   );
+}
+
+function islandSuffix(world: World, island: number): string {
+  return island === HOME ? '' : ` auf ${islandName(world, island)}`;
+}
+
+/** Warnzustand des Vertrags: Lager der Lieferinsel unter der Liefermenge oder kein Kontor dort. */
+export function contractWarn(world: World): boolean {
+  const c = world.contract;
+  if (c === null) return false;
+  const isl = world.islands[c.island]!;
+  return isl.kontorId === null || isl.stock[c.good] < c.amount;
+}
+
+/** Meldung direkt nach dem Annehmen (liest `world.contract`). */
+export function contractAgreedMessage(world: World): string {
+  const c = world.contract!;
+  return (
+    `Stammkunde: ${c.amount} ${GOODS[c.good].name}${islandSuffix(world, c.island)}` +
+    ` alle ${formatGameTime(ORDER_PERIOD)} vereinbart`
+  );
+}
+
+export const CONTRACT_CANCELLED = 'Stammkunde gekündigt';
+
+/** Text, Art und Klang zu einem Vertragsereignis. */
+export function contractNotice(
+  ev: ContractEvent,
+  world: World,
+): { text: string; kind: 'info' | 'warn'; sound: SoundEvent } {
+  const name = GOODS[ev.good].name;
+  if (ev.kind === 'delivered') {
+    return {
+      text: `Stammkunde: ${ev.amount} ${name} geliefert, +${ev.pay}`,
+      kind: 'info',
+      sound: 'orderDone',
+    };
+  }
+  const why =
+    ev.reason === 'stock'
+      ? `: zu wenig ${name}`
+      : ev.reason === 'kontor'
+        ? `: kein Kontor auf ${islandName(world, ev.island)}`
+        : '';
+  return {
+    text: `Stammkunde abgesprungen${why}. Strafe ${ev.penalty}`,
+    kind: 'warn',
+    sound: 'error',
+  };
+}
+
+/** Meldet und vertont die Vertragsereignisse der Schritte eines Frames. */
+export function announceContract(
+  reports: readonly StepReport[],
+  out: { show(text: string, kind: 'info' | 'warn'): void; play(e: SoundEvent): void },
+  world: World,
+): void {
+  for (const r of reports) {
+    if (r.contract === null) continue;
+    const n = contractNotice(r.contract, world);
+    out.show(n.text, n.kind);
+    out.play(n.sound);
+  }
 }
 
 /**
@@ -83,7 +190,24 @@ export function renderOrder(
     btn.blur();
     actions.deliver();
   });
-  el.append(text, btn);
+  const extra = (field: string, label: string, run: () => void): HTMLElement => {
+    const b = document.createElement('button');
+    b.className = 'btn';
+    b.textContent = label;
+    b.dataset.field = field;
+    b.addEventListener('click', () => {
+      b.blur();
+      run();
+    });
+    return b;
+  };
+  el.append(
+    text,
+    btn,
+    extra('order-accept', 'Annehmen', () => actions.accept()),
+    extra('order-decline', 'Ablehnen', () => actions.decline()),
+    extra('order-cancel', 'Kündigen', () => actions.cancel()),
+  );
   updateOrder(el, world, island);
 }
 
@@ -92,6 +216,15 @@ export function updateOrder(el: HTMLElement, world: World, island: number = HOME
   const visible = orderVisible(world);
   if (el.hidden === visible) el.hidden = !visible;
   setField(el, 'order-text', orderCardText(world, island));
+  const offer = world.contractOffer !== null;
+  const setHidden = (field: string, hidden: boolean): void => {
+    const b = el.querySelector<HTMLElement>(`[data-field="${field}"]`);
+    if (b && b.hidden !== hidden) b.hidden = hidden;
+  };
+  setHidden('order-accept', !offer);
+  setHidden('order-decline', !offer);
+  setHidden('order-cancel', world.contract === null);
+  el.classList.toggle('order-card--warn', contractWarn(world));
   const btn = el.querySelector<HTMLElement>('[data-field="order-deliver"]');
   if (btn) btn.hidden = world.order === null;
   if (btn) {

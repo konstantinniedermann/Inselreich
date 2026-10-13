@@ -88,6 +88,25 @@ export interface OrderDef {
   tier: Tier;
   min: number;
   max: number;
+  /** Menge je Vertragslieferung, I-047. */
+  contract: number;
+}
+export type ContractBreakReason = 'lock' | 'island' | 'kontor' | 'stock';
+/** Vertragsereignis eines Schritts (R12), nur im StepReport, nie im Save. `island` = Lieferinsel. */
+export type ContractEvent =
+  | { kind: 'delivered'; good: GoodId; amount: number; pay: number; island: number }
+  | { kind: 'broken'; good: GoodId; reason: ContractBreakReason; penalty: number; island: number };
+/** Liefervertrag (I-047): Menge und Stückpreis beim Annehmen festgeschrieben. */
+export interface Contract {
+  good: GoodId;
+  amount: number;
+  price: number;
+  island: number;
+}
+/** Angebot nach einer Auftragslieferung, gilt bis zum nächsten Periodenbeginn. */
+export interface ContractOffer {
+  good: GoodId;
+  island: number;
 }
 export interface GoodDef {
   id: GoodId;
@@ -250,7 +269,7 @@ export interface Ship {
   homing: boolean;
 }
 export interface World {
-  version: 13;
+  version: 14;
   seed: number;
   islands: Island[];
   tick: number;
@@ -294,6 +313,10 @@ export interface World {
   monumentDone: boolean;
   /** Kaufanteil je Gut in % des Listenpreises (I-048); 100 = Listenpreis, höchstens `BUY_CAP`. */
   buyPct: Record<GoodId, number>;
+  /** Laufender Liefervertrag (I-047); `null` = keiner. Nie zugleich mit `order` oder `contractOffer`. */
+  contract: Contract | null;
+  /** Angebot nach einer Auftragslieferung (I-047); nie zugleich mit `order`. */
+  contractOffer: ContractOffer | null;
 }
 
 /** Eine Insel: Raster, Kontor, Lager und Lage im Archipel (M12 E0, E1). */

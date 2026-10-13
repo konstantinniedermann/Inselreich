@@ -2,7 +2,7 @@ import { BUILDING_DEFS, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
 import { crisisView } from '../sim/queries';
 import { setReserve } from '../sim/reserve';
-import { deliverOrder } from '../sim/orders';
+import { acceptContract, cancelContract, declineContract, deliverOrder } from '../sim/orders';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { connectBuilding } from '../sim/connect';
 import { step, type StepReport } from '../sim/tick';
@@ -120,7 +120,15 @@ import { setPaused } from '../sim/pause';
 import { EDICT_COST } from '../sim/defs/edicts';
 import { edictSuccessText } from './edictView';
 import { DEMOLISH_LABEL, renderInspect, renderRest, updateInspect, updateRest } from './inspect';
-import { deliveredMessage, orderMessageFor, orderVisible } from './order';
+import {
+  CONTRACT_CANCELLED,
+  announceContract,
+  contractAgreedMessage,
+  deliveredMessage,
+  orderMessageFor,
+  orderVisible,
+  runContractAction,
+} from './order';
 import {
   friendlyReason,
   hintPosition,
@@ -348,6 +356,13 @@ function launch(
     showMessage(reason, 'error');
     sound.play('error');
   };
+  const contractOut = { showError, show: (text: string): void => showMessage(text) };
+  /** Letzte Vertragsklänge (höchstens 20), nur für die Dev-Sonde. */
+  const contractSoundLog: string[] = [];
+  const recordContractSound = (e: string): void => {
+    contractSoundLog.push(e);
+    if (contractSoundLog.length > 20) contractSoundLog.shift();
+  };
 
   // Ereignis-Log schwebt unten links über der Spielfläche (R112)
   const logBox = document.createElement('div');
@@ -355,7 +370,21 @@ function launch(
   renderEventLog(logBox);
   gameEl.appendChild(logBox);
 
-  const noticeStack = renderNoticeStack(gameEl, world, () => actions.deliverOrder());
+  const noticeStack = renderNoticeStack(gameEl, world, {
+    deliver: () => actions.deliverOrder(),
+    accept: () => {
+      runContractAction(acceptContract(world), () => contractAgreedMessage(world), contractOut);
+      refresh();
+    },
+    decline: () => {
+      runContractAction(declineContract(world), () => null, contractOut);
+      refresh();
+    },
+    cancel: () => {
+      runContractAction(cancelContract(world), () => CONTRACT_CANCELLED, contractOut);
+      refresh();
+    },
+  });
 
   const map = { w: home(world).width, h: home(world).height };
   const bounds = cameraBounds(world.islands); // Kamera-Rahmen: Archipel + Rand
@@ -1400,6 +1429,7 @@ function launch(
   if (import.meta.env.DEV) {
     exposeDevProbe({
       world: () => state.world,
+      contractSounds: () => [...contractSoundLog],
       // Mitte der Raute (obere und untere Ecke) in CSS-Pixeln der Seite
       tileCenter: (x, y) => {
         const c = tileCorners(state.cam, x, y);
@@ -1455,6 +1485,17 @@ function launch(
           ticks += 1;
         }
         for (const text of lossMessages(reports)) showMessage(text, 'warn');
+        announceContract(
+          reports,
+          {
+            show: (t, k) => showMessage(t, k),
+            play: (e) => {
+              recordContractSound(e);
+              sound.play(e);
+            },
+          },
+          world,
+        );
         if (ticks === MAX_TICKS_PER_FRAME) acc = 0;
       }
       input?.applyKeys(dt);

@@ -133,7 +133,7 @@ describe('M8 defs', () => {
       name: 'Glas',
       buy: 50,
       sell: 20,
-      order: { tier: 4, min: 4, max: 8 },
+      order: { tier: 4, min: 4, max: 8, contract: 4 },
     });
     // Bewusst geändert (R226 F-03): Glas war das letzte Gut, jetzt steht Gewürz am Ende.
     expect(GOOD_IDS).toHaveLength(10);
