@@ -16,8 +16,8 @@ Persona `tech-sim-engineer`, Modell sonnet, Worktree `.worktrees/i092-impl`. Dat
     aus `defs/edicts.ts` (**nicht 80 hartkodiert**). Gegenproben: Stoff auf Weidenau, Glas auf Felsbucht verletzen die
     Kettenregel; Gegenprobe **Edikt Handel + Boom** (`buyFactorPct` 80, Faktor 150): Rum 27 < 32, Glas 30 < 40, Stoff 18 < 24.
   - AK-IM-03 `sellPrice(w,'glass',1,weidenau)` 26; 10 → 248; 50 → 981; Stoff Möweninsel 1 → 15; Rum Felsbucht 1 → 23;
-    `sell(w,'glass',10,weidenau)` erhöht `money` um 248; per Schiff entladenes Glas (Lager Felsbucht → Schiff → Lager
-    Weidenau, oder Lager direkt gesetzt, Ware hat keine Herkunft) erlöst in Weidenau 248 für 10.
+    `sell(w,'glass',10,weidenau)` erhöht `money` um 248; per Route über `tickShips` entladenes Glas (Lager Felsbucht → Schiff → Lager
+    Weidenau; Ware hat keine Herkunft) erlöst in Weidenau 248 für 10.
   - AK-IM-04 Heimat bitgleich: je Gut, `n ∈ {1,10,50}`, `sellPct ∈ {100,30}`, mit/ohne Boom:
     `sellPrice(w,g,n) === sellPrice(w,g,n,HOME)` === im Test ausgeschriebene Referenz der alten Formel (1 Glas 20, 10 → 191, 50 → 755).
   - AK-IM-05 Kein Vorliebe-Gut: 1 Glas Felsbucht 20, Möweninsel 20; 10 Stoff Weidenau = 10 Stoff Heimat.
@@ -37,5 +37,7 @@ Persona `tech-sim-engineer`, Modell sonnet, Worktree `.worktrees/i092-impl`. Dat
 - [ ] **3. Grün:** `npx vitest run tests/sim/inselmarkt.test.ts tests/sim/trade.test.ts tests/sim/defs.test.ts tests/sim/buyPct.test.ts tests/sim/edicts.test.ts tests/sim/scenario-saves.test.ts; echo EXIT=$?`
       und `npx tsc --noEmit; echo EXIT=$?`. Neue Datei einzeln ×3 mit Dauer melden.
 - [ ] **4. Commit** `feat: Inselmarkt-Vorliebe in Defs und Erlös (I-092)`; Diff-Prüfung `git diff plan/i092 --stat` zeigt nur die drei Dateien.
+
+Beleg AK-IM-10 (R610 5): `git diff main -- src/sim/save.ts src/sim/types.ts` leer.
 
 Fertig, wenn: AK-IM-01…10 grün, AK-IM-11 (`balance.test.ts` grün, kein Diff an Controller) vom Controller geprüft.
