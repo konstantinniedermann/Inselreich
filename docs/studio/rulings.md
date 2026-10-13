@@ -6540,3 +6540,18 @@ Release. UI-HAEPPCHEN-A bleibt für das nächste Release (R335: ein Push je Sess
 Regelbezug: gates.md Gate Merge, R335, R429, R565 P1, R582 · Kosten bei Irrtum: ein roter CI-Lauf, Hotfix im nächsten Push.
 
 Entscheider: L0 · Anlass: Schlussbericht lead-tech TOOL-BUENDEL-10 · ADR: —
+
+## R586 · 2026-10-13 · Gate Merge UI-HAEPPCHEN-A: OK unter Bedingung make check; UI-HAEPPCHEN-B starten
+
+Ruling: Schlussbericht lead-tech UI-HAEPPCHEN-A, `feat/ui-haeppchen-a` @ `d4f6420d` (main `dd004a53` gemergt), AK-1…19, Final-Review
+opus OK, Playtest 1280×720/1920×1080 mit Screenshots unter `.studio/qa/ui-haeppchen-a/` (AK-14/15 per Unit-Test), gezielte Tests 2156
+grün; `make check` zweimal am Testlock (Last 22–24). Entscheid **Gate Merge OK unter Bedingung**: `production-integrator` merged nach
+dem Push REL-20 in `.worktrees/integrate` mit `make check` Exit 0 — ohne Exit 0 kein Merge, Meldung an L0. Lokal, kein Push
+(R335). Entscheide: (1) AK-7 präzisiert: `stats.upkeep` ist nach Edikt «Sparen» gerundet, die Karte zeigt eine eigene Zeile
+«Edikt: −n», damit Zeilen und Fusszeile aufgehen; (2) Gebäude mit Unterhalt 0 (auch Heimat-Kontor) fehlen in der Rangliste — bestätigt;
+(3) Pfad-Overlay ohne Rotfärbung, Fallback Hover-Zeile — bestätigt. **UI-HAEPPCHEN-B** startet jetzt (Pipelining nach Review-OK,
+gates.md) auf `feat/ui-haeppchen-b` ab `feat/ui-haeppchen-a` @ `d4f6420d`, Budget 11 Starts / Parallelität 2 (R577).
+
+Regelbezug: gates.md Gate Merge Release (Pipelining), R573, R577, R335 · Kosten bei Irrtum: ein Fix auf A erzwingt einen Merge in B.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech UI-HAEPPCHEN-A · ADR: —
