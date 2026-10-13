@@ -73,6 +73,8 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 - **Ferne Inseln:** Neben deiner Insel liegen drei weitere: die Möweninsel, die Felsbucht und Weidenau. Fährst du mit dem
   Mauszeiger über eine von ihnen, nennt eine Karte Name, Grösse, Merkmale (samt Inselvorteil, siehe «Seefahrt und Gewürz») und Fahrzeit. Bauen kannst du dort noch nicht;
   du siehst sie nur.
+- **Inselmarkt:** Jede Fremdinsel zahlt für ein Konsumgut 30 % mehr (Möweninsel Stoff, Felsbucht Rum, Weidenau Glas), aber nur am Kontor dort; die Karte
+  zeigt «Markt: Glas +30 %», der Handelsdialog die Marke «Vorliebe +30 %». Ein Boom auf demselben Gut gilt statt der Vorliebe, nie beide zusammen.
 - **Verschieben:** mittlere Maustaste ziehen, Leertaste halten und mit der linken Maustaste ziehen (die Leertaste nur kurz antippen pausiert dagegen), im
   Werkzeug «Auswahl» einfach mit der linken Maustaste ziehen (ab 4 Pixel Bewegung schwenkt die Karte, es wird
   nichts ausgewählt) — oder WASD/Pfeiltasten; diese wirken auch, wenn nach einem Klick ein Knopf den

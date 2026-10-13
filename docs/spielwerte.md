@@ -236,6 +236,16 @@ Einwohner und 10 s); es wächst nur auf Gewürzinseln und lässt sich am Kontor 
   bei der **Zuckerrohrplantage** und der **Schäferei**. Die Möweninsel hat keinen Vorteil; die Heimat nie. Du siehst ihn
   an vier Stellen: in der Karte beim Überfahren einer Insel und in der Seekarte als Zusatzzeile, im Gebäude-Info als
   «Inselvorteil ×2 (…)» und in der Bauleiste als Zeile «Auf <Insel>: <Stärke> ×2 — … / min» für die aktive Insel.
+- **Inselmarkt:** Jede Fremdinsel hat ein Vorliebe-Gut (`PREFER_PCT` = 130 %, `IslandDef.prefers` in `src/sim/defs/sea.ts`):
+
+  | Insel      | Vorliebe-Gut | Erlös am Kontor dort |
+  | ---------- | ------------ | -------------------- |
+  | Möweninsel | Stoff        | +30 %                |
+  | Felsbucht  | Rum          | +30 %                |
+  | Weidenau   | Glas         | +30 %                |
+
+  Die Sättigung (`sellPct`) bleibt global. Boom und Vorliebe stapeln nicht; es gilt der höhere Faktor, ein Boom auf dem Vorliebe-Gut gilt also «statt Vorliebe». Die Heimat hat keine Vorliebe. Anzeige: Karte «Markt: Glas +30 %», Handelsdialog Marke «Vorliebe +30 %» (bei Boom «statt Vorliebe +30 %»).
+
 - **Inseln wechseln:** Taste `0` springt zur Heimat, Taste `9` läuft der Reihe nach über alle vier Inseln; der Knopf «Inseln» in der Kopfzeile
   öffnet ein Fenster mit einer kleinen **Seekarte** über der Liste: Silhouetten aller Inseln, die Fahrlinien der Routen und
   je ein Punkt für jedes Schiff mit Route (ein Schiff ohne Route fehlt; im Hafen liegt der Punkt am Anker der Insel; Inseln mit Kontor tragen eine helle Marke knapp über dem Anker).
@@ -245,6 +255,7 @@ Einwohner und 10 s); es wächst nur auf Gewürzinseln und lässt sich am Kontor 
 - **Kontor II:** Ein zweites **Kontor** (2×2, Küste, 800 Geld, 20 Holz, 8 Werkzeug, 10 Stein, Unterhalt 60 / min, Versorgungsradius 8) gründest du an der Küste einer Fremdinsel. Seine Baukosten zahlst du aus dem **Heimatlager**.
   Auf jeder Fremdinsel ist ein Kontor erlaubt; ohne Kontor lässt sich dort nichts bauen, und Handel, Aufträge und
   Versorgung laufen über das Kontor der jeweiligen Insel.
+  Preise am Fremdkontor gelten global, ausser beim Vorliebe-Gut der Insel: dort Verkauf ×1,30 (nicht mit dem Boom gestapelt, siehe «Inselmarkt»).
 - **Bauen auf Fremdinseln:** Alle anderen Gebäude zahlen aus dem Lager der Insel, auf der sie stehen; fehlt dort eine
   Ware, steht im Grund «Nicht genug … auf <Insel>». Ware kommt per Handel am dortigen Kontor oder per Schiff dorthin.
 - **Gewürzplantage** (2×2, 200 Geld, 12 Holz, 3 Werkzeug, Unterhalt 90 / min, Zyklus 5 s): nur auf einer Insel mit
