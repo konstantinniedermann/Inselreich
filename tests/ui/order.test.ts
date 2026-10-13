@@ -23,6 +23,10 @@ import {
 } from '../../src/ui/order';
 import { diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
 import { HOME, home, createWorld } from '../../src/sim/world';
+import { sellPrice } from '../../src/sim/trade';
+import { goodsBalance } from '../../src/sim/flow';
+import { GOODS_BALANCE_TICKS, perMinute } from '../../src/ui/time';
+import type { BuildingDefId, GoodId, World } from '../../src/sim/types';
 
 describe('orderCardText (Spec 10.7)', () => {
   it('zeigt den aktiven Auftrag mit Lagerstand', () => {
@@ -109,15 +113,18 @@ describe('I-047 Stammkunde: Kartentexte (AK-SK-28)', () => {
   };
 
   it('Angebot Heimat', () => {
-    expect(orderCardText(withOffer(HOME))).toBe(
-      'Stammkunde: 5 Rum alle 1:30 zu 27 je Stück · Angebot noch 1:15',
+    const w = withOffer(HOME);
+    expect(orderCardText(w)).toBe(
+      `Stammkunde: 5 Rum alle 1:30 zu 27 je Stück · Markt jetzt ≈ ${sellPrice(w, 'rum', 1)}` +
+        ' · keine Erzeugung · Angebot noch 1:15',
     );
   });
 
   it('Angebot Fremdinsel nennt die Insel', () => {
     const w = withOffer(1);
     expect(orderCardText(w)).toBe(
-      `Stammkunde: 5 Rum auf ${islandName(w, 1)} alle 1:30 zu 27 je Stück · Angebot noch 1:15`,
+      `Stammkunde: 5 Rum auf ${islandName(w, 1)} alle 1:30 zu 27 je Stück` +
+        ` · Markt jetzt ≈ ${sellPrice(w, 'rum', 1)} · keine Erzeugung · Angebot noch 1:15`,
     );
   });
 
@@ -155,6 +162,94 @@ describe('I-047 Stammkunde: Kartentexte (AK-SK-28)', () => {
     w.islands[HOME]!.kontorId = null;
     expect(contractWarn(w)).toBe(true);
     expect(contractWarn(base())).toBe(false);
+  });
+});
+
+/** Angebundener Betrieb ohne Kacheln auf `island`. */
+function addProducer(w: World, defId: BuildingDefId, island: number): void {
+  const id = w.nextBuildingId++;
+  w.buildings[id] = { id, defId, x: 0, y: 0, connected: true, progress: 0, state: 'ok', island };
+}
+
+describe('I-088 Angebotskarte: Marktpreis und Erzeugung (AK-HC-01 bis 04)', () => {
+  const offerWorld = (good: GoodId, island = HOME): World => {
+    const w = createWorld(3, { unlockAll: true });
+    w.order = null;
+    w.tick = 750;
+    w.contractOffer = { good, island };
+    return w;
+  };
+  const marketN = (t: string): number => Number(/Markt jetzt ≈ (\d+)/.exec(t)![1]);
+
+  it('AK-HC-01 nennt je Gut den Marktpreis aus sellPrice', () => {
+    for (const good of ['wood', 'rum', 'food'] as const) {
+      const w = offerWorld(good);
+      const t = orderCardText(w);
+      expect(t).toContain(`Markt jetzt ≈ ${sellPrice(w, good, 1)} · `);
+      expect(marketN(t)).toBe(sellPrice(w, good, 1));
+    }
+    expect(marketN(orderCardText(offerWorld('wood')))).not.toBe(
+      marketN(orderCardText(offerWorld('rum'))),
+    );
+  });
+
+  it('AK-HC-02 Boom und gesenktes sellPct ändern N gegenüber der Grundwelt', () => {
+    const base = marketN(orderCardText(offerWorld('wood')));
+    const boom = offerWorld('wood');
+    boom.crisis = { period: 1, kind: 'boom', from: 0, until: 9999, good: 'wood' };
+    expect(marketN(orderCardText(boom))).toBe(sellPrice(boom, 'wood', 1));
+    expect(marketN(orderCardText(boom))).toBeGreaterThan(base);
+    const sat = offerWorld('wood');
+    sat.sellPct.wood = 40;
+    expect(marketN(orderCardText(sat))).toBe(sellPrice(sat, 'wood', 1));
+    expect(marketN(orderCardText(sat))).toBeLessThan(base);
+  });
+
+  it('AK-HC-03 Erzeugung der Lieferinsel: keine / x pro Minute', () => {
+    const w = offerWorld('wood');
+    expect(orderCardText(w)).toContain(' · keine Erzeugung · ');
+    addProducer(w, 'lumberjack', HOME);
+    w.tick += 1; // Erzeugung wird je Tick zwischengespeichert
+    const pm = perMinute(goodsBalance(w, HOME).wood.produced, GOODS_BALANCE_TICKS);
+    expect(pm).toBeGreaterThan(0);
+    expect(orderCardText(w)).toContain(` · Erzeugung ${pm} / min · Angebot noch 1:15`);
+  });
+
+  it('AK-HC-03 Erzeuger auf anderer Insel, stillgelegt oder unangebunden zählt nicht', () => {
+    const w = offerWorld('wood');
+    addProducer(w, 'lumberjack', 1);
+    addProducer(w, 'lumberjack', HOME);
+    w.buildings[w.nextBuildingId - 1]!.paused = true;
+    addProducer(w, 'lumberjack', HOME);
+    w.buildings[w.nextBuildingId - 1]!.connected = false;
+    expect(orderCardText(w)).toContain(' · keine Erzeugung · ');
+  });
+
+  it('AK-HC-03/04 Fremdinsel: Erzeugung der Lieferinsel, Inselzusatz bleibt', () => {
+    const w = offerWorld('wood', 1);
+    addProducer(w, 'lumberjack', HOME);
+    expect(orderCardText(w)).toContain(' · keine Erzeugung · ');
+    addProducer(w, 'lumberjack', 1);
+    w.tick += 1;
+    const pm = perMinute(goodsBalance(w, 1).wood.produced, GOODS_BALANCE_TICKS);
+    const t = orderCardText(w);
+    expect(t).toContain(`auf ${islandName(w, 1)} alle 1:30`);
+    expect(t).toContain(`Erzeugung ${pm} / min`);
+  });
+
+  it('R607-2 Marktpreis 0 zeigt «Markt jetzt ≈ 0»', () => {
+    const w = offerWorld('wood');
+    w.sellPct.wood = 0;
+    expect(sellPrice(w, 'wood', 1)).toBe(0);
+    expect(orderCardText(w)).toContain('Markt jetzt ≈ 0 · ');
+  });
+
+  it('AK-HC-05 orderCardText verändert die Welt nicht', () => {
+    const w = offerWorld('wood');
+    addProducer(w, 'lumberjack', HOME);
+    const before = structuredClone(w);
+    orderCardText(w);
+    expect(w).toEqual(before);
   });
 });
 
@@ -319,4 +414,15 @@ describe('I-047 Stammkunde: Fehlerpfad (Spec B.4)', () => {
     expect(o2.show).not.toHaveBeenCalled();
     expect(o2.showError).not.toHaveBeenCalled();
   });
+});
+
+it('AK-HC-03 Erzeugung wird je Tick neu gelesen', () => {
+  const w = createWorld(3, { unlockAll: true });
+  w.order = null;
+  w.contractOffer = { good: 'wood', island: HOME };
+  expect(orderCardText(w)).toContain('keine Erzeugung');
+  addProducer(w, 'lumberjack', HOME);
+  w.tick += 1;
+  expect(orderCardText(w)).toContain('Erzeugung ');
+  expect(orderCardText(w)).not.toContain('keine Erzeugung');
 });

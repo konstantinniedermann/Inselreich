@@ -6,9 +6,11 @@ import { ORDER_PERIOD } from '../sim/defs/timing';
 import type { StepReport } from '../sim/tick';
 import type { SoundEvent } from '../audio/sound';
 import { functionLock } from '../sim/unlocks';
-import type { ContractEvent, Order, Result, World } from '../sim/types';
+import type { ContractEvent, GoodId, Order, Result, World } from '../sim/types';
 import { setField } from './dom';
-import { formatGameTime } from './time';
+import { sellPrice } from '../sim/trade';
+import { goodsBalance } from '../sim/flow';
+import { GOODS_BALANCE_TICKS, formatGameTime, perMinute } from './time';
 
 export interface OrderActions {
   /** Liefert aus dem Lager der aktiven Insel. */
@@ -38,6 +40,22 @@ export function runContractAction(
   if (text !== null) out.show(text);
 }
 
+/** Zwischenspeicher der Erzeugung je Welt; Schlüssel `tick|island|good`, nicht im Spielstand. */
+const producedCache = new WeakMap<World, { key: string; value: number }>();
+
+/**
+ * Erzeugung von `good` auf `island` je Minute (aus `goodsBalance`). `goodsBalance` läuft über alle
+ * Gebäude; die Karte fragt jeden Frame, daher einmal je Tick, Insel und Gut (Messung: R607).
+ */
+function producedPerMinute(world: World, island: number, good: GoodId): number {
+  const key = `${world.tick}|${island}|${good}`;
+  const hit = producedCache.get(world);
+  if (hit !== undefined && hit.key === key) return hit.value;
+  const value = perMinute(goodsBalance(world, island)[good].produced, GOODS_BALANCE_TICKS);
+  producedCache.set(world, { key, value });
+  return value;
+}
+
 /** Text der Auftragskarte: aktiver Auftrag mit Lagerstand, sonst die Wartezeit bis zum nächsten. */
 export function orderCardText(world: World, island: number = HOME): string {
   const rest = (): string => formatGameTime(nextOrderTick(world) - world.tick);
@@ -53,9 +71,12 @@ export function orderCardText(world: World, island: number = HOME): string {
   const offer = world.contractOffer;
   if (offer !== null) {
     const def = GOODS[offer.good];
+    const made = producedPerMinute(world, offer.island, offer.good);
+    const production = made > 0 ? `Erzeugung ${made} / min` : 'keine Erzeugung';
     return (
       `Stammkunde: ${def.order!.contract} ${def.name}${islandSuffix(world, offer.island)}` +
-      ` alle ${takt} zu ${contractUnitPrice(offer.good)} je Stück · Angebot noch ${rest()}`
+      ` alle ${takt} zu ${contractUnitPrice(offer.good)} je Stück` +
+      ` · Markt jetzt ≈ ${sellPrice(world, offer.good, 1)} · ${production} · Angebot noch ${rest()}`
     );
   }
   const o = world.order;
