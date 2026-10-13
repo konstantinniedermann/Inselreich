@@ -206,3 +206,6 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 3. In das Werkzeug-Bündel Szenarien (nächstes TOOL-BUENDEL): Szenario `m13-vor-ziel` erreicht das Ziel nicht von selbst (c), AK-36-Szenario `m14e1-felsbucht` (a), Umbenennung `m13e2-v13` (d).
 
 ## Offen (neue Einträge unten anhängen)
+
+- 2026-10-13 · `src/sim/save.ts` `isValidContractFields` · Das Laden prüft `contract.amount`/`price` nur als ganze Zahlen (≥ 1 bzw. ≥ 0), nicht gegen `GOODS[g].order.contract` und `contractUnitPrice`; ein manipulierter Spielstand kann eine beliebige Strafe oder Zahlung festschreiben. · Ursprung: Zwischen-Review I047-SIM · Einschätzung: Single-Player, kein Sicherheitsproblem; bei Bedarf strengere Prüfung, Trigger: Cheat-/Missbrauchsmeldung oder spätere Wertänderung der Mengen (alte Saves tragen festgeschriebene Werte absichtlich).
+- 2026-10-13 · `tests/sim/save.test.ts` (`slice(-17, -15)` u. ä.) · Magic-Number-Indizes auf Weltschlüssel verschieben sich bei jedem neuen Schlüssel; Titel «uses version 5» (Z. 137) ist veraltet. · Ursprung: Zwischen-Review I047-SIM · Einschätzung: nach Schlüsselnamen indexieren; Trigger: nächster neuer Weltschlüssel.
