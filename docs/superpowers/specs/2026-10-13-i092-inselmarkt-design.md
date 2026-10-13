@@ -195,6 +195,10 @@ aus `GOODS`; kein Wert steht hart in `src/ui/`.
 - **Keine dominante Strategie** (W.4): Rendite auf Unterhalt Rum-Paar Felsbucht 36 % gegen Holzfäller daheim 167 %;
   Wohnen bleibt Pfad 1.
 - **Kauf-und-Verkauf ausgeschlossen** (W.5): wirksamer Faktor höchstens 150; Stoff 18 < 24, Rum 27 < 32, Glas 30 < 40.
+- **Herkunft der Zahlen und Rückfall:** Die Wirkung ist **analytisch** gerechnet (Anhang 01), nicht simuliert. Die
+  Erholung von 60 Punkten/min stammt aus `src/sim/defs/timing.ts` (`SELL_RECOVERY_INTERVAL` 10 Ticks, 600 Ticks/min).
+  Zeigt das Spiel mehr Wirkung als gerechnet, ist der Rückfall: `PREFER_PCT` per Ruling senken — ein Def-Wert, kein
+  Save.
 
 ### B.6 Abgrenzung und Doku-Folgen
 
@@ -237,7 +241,8 @@ jeweiligen `kind` (C, B, A). Alle Erlöse aus B.2.
 **Erlös**
 
 - **AK-IM-03** Faktor: `sellPrice` mit Inselargument liefert 1 Glas Weidenau 26, 10 Glas Weidenau 248, 50 Glas
-  Weidenau 981, 1 Stoff Möweninsel 15, 1 Rum Felsbucht 23. `sell(w, 'glass', 10, weidenau)` erhöht `money` um genau 248. Glas, das vorher per Schiff von Felsbucht kam, erzielt in Weidenau denselben Erlös (R5).
+  Weidenau 981, 1 Stoff Möweninsel 15, 1 Rum Felsbucht 23. `sell(w, 'glass', 10, weidenau)` erhöht `money` um genau 248. Verkaufsort zählt (R5): Ein Schiff entlädt Glas per
+  Route ins Weidenau-Lager (`tickShips`), danach erhöht `sell(w, 'glass', 1, weidenau)` `money` um 26.
 - **AK-IM-04** Heimat bitgleich: Für jedes Gut, `n ∈ {1, 10, 50}` und `sellPct ∈ {100, 30}` gilt
   `sellPrice(w, g, n) === sellPrice(w, g, n, HOME)` und gleich einer im Test ausgeschriebenen Referenz der heutigen
   Formel (mit und ohne Boom auf dem Gut). Beispiel: 1 Glas 20, 10 Glas 191, 50 Glas 755.
@@ -255,8 +260,9 @@ jeweiligen `kind` (C, B, A). Alle Erlöse aus B.2.
   Lager → `fail('Nicht genug Ware')`; unbekannte Insel → `fail('Unbekannte Insel')`; jeweils `serialize` unverändert,
   keine Ausnahme.
 - **AK-IM-10** Kein Save-Wechsel: `SAVE_VERSION` gleich dem Wert vor dem Paket; die bestehenden Save-Tests laufen
-  unverändert grün; ein vor dem Paket gespeicherter Stand (Fixture aus den Save-Tests) lädt ok und verkauft danach 1
-  Glas in Weidenau für 26. Review: `src/sim/save.ts` und der Typ `World` ohne Diff.
+  unverändert grün. Die Fixture `tests/sim/fixtures/save-v12-felsbucht.json` lädt ok; **erst nach dem Laden** setzt
+  der Test Kontor auf Felsbucht (falls keins vorhanden), 1 Rum ins Felsbucht-Lager und `sellPct.rum` 100; danach
+  erhöht `sell(w, 'rum', 1, felsbucht)` `money` um genau 23. Review: `src/sim/save.ts` und der Typ `World` ohne Diff.
 - **AK-IM-11** Baseline: `tests/sim/balance.test.ts` und `tests/sim/controller.ts` ohne Diff und grün; `make check`
   Exit 0.
 
@@ -267,11 +273,19 @@ jeweiligen `kind` (C, B, A). Alle Erlöse aus B.2.
 - **AK-IM-13** Handelstexte: `sellTexts(w, 'glass', 1, weidenau)` → `price` «26 Geld», `title` «1 Glas verkaufen für
   26 Geld»; mit `HOME` «20 Geld». `preferTag`: Weidenau Glas «Vorliebe +30 %»; mit Boom auf Glas «statt Vorliebe
   +30 %»; Weidenau Stoff, Heimat Glas → leer.
-- **AK-IM-14** Browser-Check bei 1280×720 und 1920×1080: präparierter Spielstand (Seefahrt frei, Kontor auf Weidenau,
-  Glas im Weidenau-Lager, `sellPct.glass` 100), per «Laden» eingespielt. Mouse-over Weidenau auf der Seekarte → Karte
-  zeigt «Markt: Glas +30 %». Handelsdialog «Handel · Weidenau» → Glas-Zeile mit Marke «Vorliebe +30 %», Knopf −1 zeigt
-  26 Geld; nach Klick steigt das Geld um 26, «Verkauf 99 %». Handelsdialog Heimat → Glas −1 zeigt 19 Geld (pct 99),
-  keine Marke. Texte überlappen nicht und brechen bei 1280 px nicht aus der Zeile.
+- **AK-IM-14** Browser-Check bei 1280×720 und 1920×1080, **alle Schritte im pausierten Spiel** (Pause direkt nach dem
+  Laden; es laufen keine Ticks, `sellPct` erholt sich zwischen den Schritten nicht). Spielstand 1 (Seefahrt frei,
+  Kontor auf Weidenau und Felsbucht, Glas in beiden Lagern, `sellPct.glass` 100, kein Boom), per «Laden» eingespielt:
+  1. Mouse-over Weidenau auf der Seekarte → Karte zeigt «Markt: Glas +30 %».
+  2. Handelsdialog «Handel · Felsbucht» → Glas −1 zeigt 20 Geld, keine Marke.
+  3. Handelsdialog «Handel · Weidenau» → Glas-Zeile mit Marke «Vorliebe +30 %», Knopf −1 zeigt 26 Geld; nach Klick
+     steigt das Geld um 26, «Verkauf 99 %».
+  4. Handelsdialog Heimat → Glas −1 zeigt 19 Geld (pct 99), keine Marke.
+
+  Spielstand 2 (wie 1, zusätzlich laufender Boom auf Glas), per «Laden» eingespielt, pausiert: 5. Handelsdialog «Handel · Weidenau» → Glas-Zeile mit Boom-Marke und «statt Vorliebe +30 %», Knopf −1 zeigt 30 Geld
+  (floor(20 · 100 · 150 ÷ 10⁴)).
+
+  Texte überlappen nicht und brechen bei 1280 px nicht aus der Zeile.
 
 ### B.8 Paketschnitt-Vorschlag und offene Punkte
 
