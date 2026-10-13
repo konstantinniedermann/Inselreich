@@ -2,7 +2,8 @@
 
 Stand: 2026-10-13 · Paket `design-I-047` · Autor: lead-design (Teil A), design-spec-author (Teil B), Werte:
 design-economy-designer ([Anhang 01](2026-10-13-i047-stammkunde-design/anhang-01-werte.md)) · Grundlage: `docs/ideen.md`
-I-047, R486 O3, R555, R571 (4), M14-Anhang 01 C.1/C.2 · Prozessstufe voll.
+I-047, R486 O3, R555, R571 (4), M14-Anhang 01 C.1/C.2 · Prozessstufe voll · Gate Spec OK mit Auflagen (R584), Nachtrag QA
+(1)–(8) eingearbeitet.
 
 ## Teil A · Designvorschlag (Gate Brainstorming)
 
@@ -265,6 +266,11 @@ werden in reinen, DOM-freien Helfern gebildet (testbar unter `tests/ui/`). Zeite
   `p < orderUnitReward(g)`; `p < 0,8 × buy` (strenger als `ceil(0,8 × buy)`, W.3); `135 ≤ V ≤ 140`;
   `1 ≤ m ≤ STORAGE_CAP` (100) und ganzzahlig; `CONTRACT_PENALTY_PCT ≥ 1`; `CONTRACT_MIN_TIER` ist eine gültige Stufe.
   Wer die Werte später nachstellt, muss diesen Test grün halten oder per Ruling ändern.
+- **Risiko weiche Wertgrenzen (Nachtrag R584):** Die Bänder 74–81 % (L2) und ≤ 2,9 % / 1,9 % (L6) stammen aus einer
+  Rechnung (Anhang 01), nicht aus einer Simulation; der Balancing-Test prüft sie nicht. Prüfung im ersten Playtest nach
+  I047-UI: Hält der Spieler den Vertrag dauerhaft, obwohl er die meisten Aufträge liefern könnte, oder dominiert ein Gut,
+  gilt der Rückfall per Ruling, in dieser Reihenfolge: (1) `CONTRACT_PREMIUM` 0,68 → 0,62 (Mengen nach L1 nachziehen,
+  Invarianten-Test anpassen), (2) `CONTRACT_MIN_TIER` 3 → 4. Beides ändert nur `src/sim/defs/`, keine Save-Folge.
 
 ### B.6 Abgrenzung und Doku-Folgen
 
@@ -306,20 +312,24 @@ genannt. Beispielgut Rum (m 5, p 27, V 135, P 135), sofern nicht anders genannt.
 - **AK-SK-09** Lieferung: Vertrag Rum, Lager 12, Geld 1000, Schritt auf Periodenbeginn → Lager 7, Geld genau
   135 über einem Vergleichslauf ohne Vertrag (gleiche übrige Tick-Wirkungen), `order` `null`, Vertrag
   besteht, `StepReport.contract` = `delivered` mit `pay` 135. Zwischen zwei Periodenbeginnen keine Abbuchung.
+  Inselfall (Nachtrag R584): Vertrag auf Insel 1, Heimat-Lager Rum 0, Insel-1-Lager Rum 12 → Lieferung, Insel 1
+  danach 7, Heimat bleibt 0.
 - **AK-SK-10** Lager genau 5 → Lieferung, Lager 0, Vertrag besteht.
 - **AK-SK-11** Boom auf Rum aktiv und Edikt Handel aktiv: Lieferung zahlt weiterhin 135; `sellPct.rum` vor und nach
-  der Lieferung gleich.
+  der Lieferung gleich. Ausgabesperre (`goodLocks`) auf Rum gesetzt → Lieferung findet trotzdem statt (R9).
 
 **Bruch**
 
 - **AK-SK-12** Leeres Lager: Vertrag Rum, Lager 0, → nach dem Periodenbeginn Geld genau 135 unter dem Vergleichslauf,
   `contract` `null`, Zufallsauftrag der Periode aktiv und gleich `orderForPeriod(seed, k, maxHouseTier)`,
-  `StepReport.contract` = `broken`, `reason: 'stock'`, `penalty` 135.
+  `StepReport.contract` = `broken`, `reason: 'stock'`, `penalty` 135. Weder Bruch noch Lieferung (AK-SK-09) setzen
+  `contractOffer` (R7).
 - **AK-SK-13** Teilbestand: Lager 4 → Bruch wie AK-SK-12, Lager bleibt 4 (keine Teilabbuchung).
 - **AK-SK-14** Abriss Kontor: Vertrag auf Insel 1, Kontor dort abgerissen, Lager ausreichend → am Periodenbeginn Bruch
   mit `reason: 'kontor'`, Lager unverändert.
 - **AK-SK-15** Funktionssperre (konstruierter Stand, `orders` nicht freigeschaltet): Bruch mit `reason: 'lock'`;
-  Reihenfolge der Gründe: bei Sperre und leerem Lager zugleich lautet der Grund `lock`.
+  Reihenfolge der Gründe: bei Sperre und leerem Lager zugleich lautet der Grund `lock`. `cancelContract` bei gesperrter
+  Funktion → `ok`, `contract` `null`, kein Geldabzug (R5).
 - **AK-SK-16** Geld negativ: Geld −50 vor dem Periodenbeginn, Bruch → Geld 135 unter dem Vergleichslauf (also
   negativ, kein Abschneiden bei 0); Lieferung bei Geld −50 zahlt voll 135.
 - **AK-SK-17** Strafe skaliert: für jedes Auftragsgut gilt `penalty = ceil(m × p × CONTRACT_PENALTY_PCT ÷ 100)`.
@@ -327,7 +337,9 @@ genannt. Beispielgut Rum (m 5, p 27, V 135, P 135), sofern nicht anders genannt.
 **Kündigen und Reihenfolge**
 
 - **AK-SK-18** `cancelContract` mitten in der Periode → `ok`, `contract` `null`, kein Geldabzug, `order` bleibt `null`
-  bis zum nächsten Periodenbeginn, dort Zufallsauftrag; ohne Vertrag → `fail('Kein Vertrag')`.
+  bis zum nächsten Periodenbeginn, dort Zufallsauftrag; ohne Vertrag → `fail('Kein Vertrag')`. Bruchgrund `island`
+  auf Sim-Ebene (R6.2): konstruierter Stand mit `contract.island` ausserhalb von `world.islands`, Schritt auf
+  Periodenbeginn → `broken`, `reason: 'island'`, Strafe abgezogen, keine Ausnahme.
 - **AK-SK-19** Kündigen am Fälligkeitstick: `world.tick = T − 1`, `cancelContract`, `step` → keine Abbuchung, kein
   Geldabzug, Zufallsauftrag der Periode aktiv. Gegenprobe: `step` auf T (Lieferung), dann `cancelContract` → Lager
   und Geld wie nach der Lieferung, nächster Auftrag erst bei `T + ORDER_PERIOD`.
@@ -337,15 +349,18 @@ genannt. Beispielgut Rum (m 5, p 27, V 135, P 135), sofern nicht anders genannt.
 
 - **AK-SK-21** Save/Laden: Welt mit aktivem Vertrag (Insel 1) und Welt mit offenem Angebot →
   `deserialize(serialize(w))` ok und `serialize` gleich; danach gleicher Verlauf über 2 Perioden wie das Original.
-- **AK-SK-22** Version: `createWorld().version === SAVE_VERSION` (gegen die Konstante); ein v13-Stand wird migriert,
-  hat `contract` und `contractOffer` `null` und verläuft danach über 10 Perioden gleich wie vor der Migration; ein
+- **AK-SK-22** Version: `createWorld().version === SAVE_VERSION` (gegen die Konstante). Migration (Nachtrag R584, keine
+  feste Nummer): aus einer Welt der aktuellen Version ohne Vertrag und Angebot einen Stand `SAVE_VERSION − 1` bauen
+  (`version` − 1, `contract` und `contractOffer` entfernt), laden und migrieren → `contract` und `contractOffer` `null`,
+  `serialize` gleich dem Original, danach 10 Perioden bitgleich mit dem Original; ein
   Stand mit `version` `SAVE_VERSION + 1` → `{ ok: false, reason: 'Unbekannte Version' }`, keine Ausnahme.
 - **AK-SK-23** Validierung: je ein Fall `contract` mit Gut ohne `order` (Werkzeug), `amount` 0, unbekannte Insel,
   `contract` und `order` zugleich gesetzt, `contractOffer` und `order` zugleich gesetzt → `'Beschädigter Spielstand'`.
 - **AK-SK-24** Determinismus: zwei Läufe mit gleichem Seed und gleicher Aktionsfolge (Liefern, Annehmen, 5 Perioden,
   Bruch, Kündigen) ergeben bitgleiches `serialize`.
-- **AK-SK-25** Baseline: `tests/sim/balance.test.ts` unverändert grün; im Controller-Lauf bleiben `contract` und
-  `contractOffer` bis zum Ende `null`.
+- **AK-SK-25** Baseline: `tests/sim/balance.test.ts` bleibt unverändert (keine Änderung an der Datei) und grün. Die
+  Controller-Prüfung steht in `tests/sim/contract.test.ts`: Lauf mit `buildColony` (Controller) bis zum Ende,
+  `contract` und `contractOffer` bleiben in jedem Schritt `null` (Nachtrag R584).
 
 **Werte**
 
@@ -357,10 +372,14 @@ genannt. Beispielgut Rum (m 5, p 27, V 135, P 135), sofern nicht anders genannt.
 **UI (Vitest reine Helfer und Browser)**
 
 - **AK-SK-28** Kartentext-Helfer (`tests/ui/`): Angebot, aktiv (mit und ohne Insel-Zusatz), Warnzustand bei Lager 4/5
-  und ohne Kontor, Meldungstexte für `delivered` und jede Bruchart liefern genau den Wortlaut aus B.4.
-- **AK-SK-29** Browser-Check: Rum-Auftrag in Stufe-3-Stadt liefern → Karte zeigt das Angebot mit Countdown;
+  und ohne Kontor, Meldungstexte für `delivered` und jede Bruchart liefern genau den Wortlaut aus B.4. Ist die aktive
+  Insel nicht die Lieferinsel, zeigt die Karte «Lager x/5» aus dem Lager der **Lieferinsel** (Nachtrag R584).
+- **AK-SK-29** Browser-Check. Aufbau (Nachtrag R584): präparierter Spielstand (aktuelle `SAVE_VERSION`), erzeugt per
+  Sim-Skript aus Seed 3 mit `buildColony` bis Höchststufe 3, dann Rum 12 ins Heimatlager und aktiver Rum-Auftrag
+  (Menge ≤ 12) gesetzt; im Browser über «Laden» eingespielt, Ablage unter `.studio/qa/<paket>/`. Klang wird über einen
+  Spy auf die Klang-Schnittstelle der UI geprüft (Aufruf mit `orderDone` bzw. `error`), nicht nach Gehör. Ablauf: Rum-Auftrag liefern → Karte zeigt das Angebot mit Countdown;
   **Annehmen** → aktiver Zustand mit Lager x/5; am nächsten Periodenbeginn Meldung «Stammkunde: 5 Rum geliefert,
-  +135», Klang `orderDone`; Rum auf 0 verkaufen → Warnfarbe, beim nächsten Periodenbeginn Warnmeldung mit Strafe und
+  +135», Klang-Aufruf `orderDone`; Rum auf 0 verkaufen → Warnfarbe, beim nächsten Periodenbeginn Warnmeldung mit Strafe und
   danach Auftragskarte mit Zufallsauftrag; **Kündigen** → «Stammkunde gekündigt», Karte «Nächster Auftrag in m:ss».
   Bei 1280 px überlappt die Karte die Krisenkarte nicht.
 

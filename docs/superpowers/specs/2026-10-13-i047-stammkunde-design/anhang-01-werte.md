@@ -152,8 +152,8 @@ Letzte Zeile: `Menge/min · (p − Stückkosten)`, Stückkosten = Unterhalt/min 
 Wolle/Rohr 5, Stoff 12,5, Rum 15, Glas 20 (eigener Stein) bzw. 29 (gekauft). Holz 15,3 · 4,5 = 69; Glas mit
 gekauftem Stein 2,7 · 5 = 13. **L6 hält** in (b) und (c).
 
-**Controller:** `deliverOrder` wird nur aus `src/ui/hud.ts` und `src/ui/app.ts` aufgerufen (grep), nie vom
-Controller. Er bekommt kein Angebot und nimmt nie an; der Vertragszustand bleibt `null`, `tickOrders` unverändert,
+**Controller:** `deliverOrder` wird nur aus `src/ui/app.ts` aufgerufen (`app.ts:552`); `src/ui/hud.ts:166` ist nur die
+Schnittstelle (Nachtrag R584). Nie vom Controller. Er bekommt kein Angebot und nimmt nie an; der Vertragszustand bleibt `null`, `tickOrders` unverändert,
 Baseline **bitgleich**, `tests/sim/balance.test.ts` unberührt, kein Ruling nötig. Bedingung für Teil B: Angebot nur in
 `deliverOrder`, ein offenes Angebot sperrt keinen Auftrag, neue Felder mit `null` vorbelegt (Save-Version, AN-8).
 
