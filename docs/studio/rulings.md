@@ -6965,3 +6965,16 @@ Experiment-Kopfzeile «R588, Vorschlag Coach» gilt als R614.
 Regelbezug: R429, R579, R588, R598, R599 · Kosten bei Irrtum: eine Handbuchzeile zurücknehmen.
 
 Entscheider: L0 · Anlass: Bericht studio-coach HANDBUCH-1.54 · ADR: —
+
+## R615 · 2026-10-13 · Kurz-Retro Session 6584aaa4: V2 TOOL-BUENDEL-12, V1/V3 als wartende Experimente
+
+Ruling: Retro `retros/2026-10-13-session-6584aaa4-ende.md` (`84b75292`). Entscheide: **V2** Cache-Write-Aufteilung in `metrics.py`
+(Neuschreibung nach Pause vs. übriges Wachstum, Info-Zeile) → **TOOL-BUENDEL-12** (Messauftrag, Frist: Retro der nächsten Session).
+**V1** «Folgeinstanz statt Fortsetzung bei lead-tech» (Pflicht-Hebel Cache-Write) und **V3** «drei Pflichtzeilen im lead-tech-Bericht»
+(Selbstarbeit, Ownership-Erweiterung mit Meldezeitpunkt, Soll/Ist der Gate-Auflage) als **E-066/E-067 vorgeschlagen**, Reihenfolge
+E-066 vor E-065 vor E-067; Start, sobald E-062 oder E-063 bewertet ist (nächste Ende-Retro). V3 gilt bis dahin als Briefing-Satz für
+Controller-Briefings von L0 (ohne Experiment-Messung).
+
+Regelbezug: R316, R429, R614 · Kosten bei Irrtum: ein ungenutzter Experimentplatz eine Session länger.
+
+Entscheider: L0 · Anlass: Bericht studio-coach RETRO-SESSION-6584aaa4 · ADR: —

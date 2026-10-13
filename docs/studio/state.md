@@ -4,9 +4,18 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-13 (Studio-Session 6584aaa4, R578–R612, laufend: REL-20 live `0d1db8f3`; lokal auf main @ `600bf8bb`: REL-21 (UI-HAEPPCHEN-A/B, I-047 Save v14, DOC-ARCHIV, TOOL-BUENDEL-11, IDEEN-09) und UI-HAEPPCHEN-C; I092 in Umsetzung)
+Stand: 2026-10-13 (Studio-Session 6584aaa4, R578–R615; Ende: REL-20 live `0d1db8f3`; lokal auf main @ `8a163b32`+: REL-21-Kandidat (UI-HAEPPCHEN-A/B, I-047 Save v14, DOC-ARCHIV, TOOL-BUENDEL-11, IDEEN-09; Release-Check OK R603/R605, geprüfter Kandidat `67661df1`) plus UI-HAEPPCHEN-C (R612) und I092 (R613); Handbuch 1.54)
 
 ## Release-Notizen
+
+**REL-21 „Stammkunde und Inselmarkt“ (Entwurf, lokal)** — Save **v14** (Migration v13→v14). Inhalt: UI-HAEPPCHEN-A, -B, I-047
+Stammkunde, UI-HAEPPCHEN-C, I092 Inselmarkt-Vorliebe; dazu DOC-ARCHIV, TOOL-BUENDEL-11 (nur Doku/Werkzeug).
+
+- **Neu:** Stammkunde im Auftragsplatz (Liefervertrag, Kündigen, Abspringen mit Strafe; vom Studio vorgeschlagen, I-047) mit
+  Marktvergleich und Knopf «Zum Erzeuger»; jede Fremdinsel zahlt für ein Konsumgut +30 % (Möweninsel Stoff, Weidenau Glas, Felsbucht
+  Rum); «Lager voll» als Problem mit Sprung; «Bilanz danach» beim Bauen; Unterhalt-Fusszeile; Linienbau mit Umschalt.
+- **Bitte testen:** (1) Stammkunden-Angebot annehmen, Lieferung nach 1:30, Kündigen; (2) Glas in Weidenau verkaufen (+30 %, Marke);
+  (3) Lager voll → `.` springt hin; (4) Umschalt gedrückt Wege ziehen, Esc beendet; (5) alter Spielstand (v13) lädt.
 
 **REL-20 „Inselcharakter“ (live, R594/R595)** — Push `19683ddf..0d1db8f3`, CI 38429087293, Pages 38429091182 grün. Dazu TOOL-ZEITRESERVE-M14. Save **v13** (Migration v12→v13). Inhalt: M14-E1
 (Felsbucht «Gebirge+», dritte Fremdinsel Weidenau «Fruchtbar», Trait-Anzeige), UI-AUFRAEUM-2 (Refactor ohne Spieländerung),
@@ -97,20 +106,21 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Zwischenstand Session 6584aaa4 (R578–R609; Nutzerauftrag: Wochenlimit ignorieren, R578). Daueraufträge: R445, R475.
-**Neues Claude-Gespräch empfohlen** (R438 V4 b). Ein Push je Session (R335); «push-bereit» = `make push-check`-Schwelle (R598 V2).
+Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475. **Neues Claude-Gespräch empfohlen** (R438 V4 b). Wochenfenster am
+Session-Ende 99 % (R578: Nutzer liess das Limit ignorieren; Reset 2026-10-14 12:00). Ein Push je Session (R335); «push-bereit» =
+`make push-check`-Schwelle (Handbuch 1.54). N-100 (Dropbox während des Push-Gates pausieren) offen.
 
-1. **Push REL-21** (Release-Check OK R603/R605): main lokal ab `67661df1`+ enthält UI-HAEPPCHEN-A, -B, I-047 (Save **v14**),
-   DOC-ARCHIV, TOOL-BUENDEL-11, IDEEN-09. Integrator: `make push-check` im Worktree `.worktrees/integrate` (Exit 1 bei ruhiger Last =
-   Substanz, nicht wiederholen, R598 V3), Push per geprüftem Hash, Pages, `backup/main-lokal`. N-100 (Dropbox pausieren) offen.
-2. **UI-HAEPPCHEN-C** (I-088 + I-090) lokal gemergt `600bf8bb` (R612); fährt mit dem nächsten Push.
-3. **I092 Inselmarkt-Vorliebe** (Gate Spec R609, Spec `design/i092` @ `f5dec181`, Plan `plan/i092` @ `39859bbc`): Kombiniertes
-   Gate (lead-qa) offen; danach Controller (8 Starts beantragt), vorher `design/i092` in `plan/i092` mergen.
-4. Danach I-100 «Neu»-Zähler (R606), UI-Aufräum-Sammelpaket (I-089, I-098 Rechtsklick wie Esc, I-099, Kleinbefunde REL-21).
-5. Ende-Routine offen: `studio-coach` setzt R588 V1, R598 V1–V3, R599 (4), R602-Vermerk, Einzeiler `make zeitreserve-gate` in
-   gates.md/Handbuch um; E-060 bewerten → E-064/E-065 nachrücken; Cache-Write-Hebel lead-tech (Pflicht).
-6. Erweiterung 1 «Stände und Segel» bleibt in der Nutzer-Session; beim Merge jener Branch: Save-Nummer (v14 belegt durch I-047, R583),
-   Pflichtfeld `prefers` in `IslandDef` (I-092, R609).
+1. **Push REL-21** (Entwurf unten): main enthält zusätzlich UI-HAEPPCHEN-C und I092 (beide Final-Review/Playtest OK). Empfehlung:
+   Delta-Release-Check (lead-qa, Playtest C + I092 am Kandidaten, Opus-Review `67661df1..main`), dann **ein** Push von main als
+   REL-21 mit fünf Häppchen per Ruling (Ausnahme vom Deckel 4, gates.md) — sonst `git push origin 67661df1:main` und C/I092 als
+   REL-22 in der Folgesession. `make zeitreserve-gate`, dann `make push-check` im Worktree `.worktrees/integrate`.
+2. **UI-Aufräum-Sammelpaket** (R606, R612, R613): I-089, I-098 (Rechtsklick im Linienzug wie Esc), I-099, Kleinbefunde REL-21,
+   Badge `prefer-*` vs. Boom, toter README-Verweis, gemeinsame Zählregel `flow.ts`/`production.ts`, Archiv-Trenner/Ranglisten-Lücken.
+3. **I-100** «Neu»-Zähler am Ereignis-Log (R606): Kurzplan Stufe leicht.
+4. **TOOL-BUENDEL-12**: Cache-Write-Aufteilung in `metrics.py` (R615 V2).
+5. Experimente: E-062, E-063 bewerten → E-066 (Folgeinstanz lead-tech), dann E-065, E-067 nachrücken (R615).
+6. Erweiterung 1 «Stände und Segel» bleibt in der Nutzer-Session; beim Merge jener Branch: Save v14 ist durch I-047 belegt (R583),
+   neues Pflichtfeld `prefers` in `IslandDef` (I092, R609).
 
 ## Aktuelles Projekt und Phase
 
