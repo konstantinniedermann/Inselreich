@@ -333,7 +333,13 @@ describe('I-047 Stammkunde: Knöpfe und Warnfarbe (AK-SK-28)', () => {
   afterEach(() => vi.unstubAllGlobals());
   const setup = () => {
     vi.stubGlobal('document', fakeDocument);
-    const actions = { deliver: vi.fn(), accept: vi.fn(), decline: vi.fn(), cancel: vi.fn() };
+    const actions = {
+      deliver: vi.fn(),
+      accept: vi.fn(),
+      decline: vi.fn(),
+      cancel: vi.fn(),
+      toProducer: vi.fn(),
+    };
     const w = createWorld(3, { unlockAll: true });
     w.order = null;
     w.tick = 750;
@@ -425,4 +431,54 @@ it('AK-HC-03 Erzeugung wird je Tick neu gelesen', () => {
   w.tick += 1;
   expect(orderCardText(w)).toContain('Erzeugung ');
   expect(orderCardText(w)).not.toContain('keine Erzeugung');
+});
+
+describe('I-090 Knopf «Zum Erzeuger» (AK-HC-10)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const setup = () => {
+    vi.stubGlobal('document', fakeDocument);
+    const actions = {
+      deliver: vi.fn(),
+      accept: vi.fn(),
+      decline: vi.fn(),
+      cancel: vi.fn(),
+      toProducer: vi.fn(),
+    };
+    const w = createWorld(3, { unlockAll: true });
+    w.order = null;
+    w.tick = 750;
+    const el = new FakeElement('span');
+    renderOrder(el as unknown as HTMLElement, w, actions);
+    const btn = (f: string) => el.querySelector(`[data-field="${f}"]`)!;
+    const upd = () => updateOrder(el as unknown as HTMLElement, w);
+    return { actions, w, el, btn, upd };
+  };
+
+  it('nur bei Vertrag sichtbar, «Kündigen» bleibt letzter Knopf', () => {
+    const { actions, w, el, btn, upd } = setup();
+    expect(btn('order-producer').textContent).toBe('Zum Erzeuger');
+    expect(btn('order-producer').hidden).toBe(true);
+    w.contractOffer = { good: 'rum', island: HOME };
+    upd();
+    expect(btn('order-producer').hidden).toBe(true);
+    w.contractOffer = null;
+    w.order = { period: 1, good: 'wood', amount: 20, reward: 140, due: 1500 };
+    upd();
+    expect(btn('order-producer').hidden).toBe(true);
+    w.order = null;
+    w.contract = { good: 'rum', amount: 5, price: 27, island: HOME };
+    upd();
+    expect(btn('order-producer').hidden).toBe(false);
+    expect(btn('order-cancel').hidden).toBe(false);
+    btn('order-producer').fire('click');
+    expect(actions.toProducer).toHaveBeenCalledTimes(1);
+    const fields = el.children
+      .map((c) => (c as unknown as FakeElement).dataset?.field)
+      .filter((f) => f !== undefined);
+    expect(fields.at(-1)).toBe('order-cancel');
+    expect(fields.indexOf('order-producer')).toBe(fields.indexOf('order-cancel') - 1);
+    w.contract = null;
+    upd();
+    expect(btn('order-producer').hidden).toBe(true);
+  });
 });

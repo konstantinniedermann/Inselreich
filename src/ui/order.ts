@@ -19,6 +19,8 @@ export interface OrderActions {
   accept(): void;
   /** Lehnt das Angebot ab. */
   decline(): void;
+  /** Springt zum Erzeuger des Vertragsguts. */
+  toProducer(): void;
   /** Kündigt den laufenden Vertrag. */
   cancel(): void;
 }
@@ -227,6 +229,7 @@ export function renderOrder(
     btn,
     extra('order-accept', 'Annehmen', () => actions.accept()),
     extra('order-decline', 'Ablehnen', () => actions.decline()),
+    extra('order-producer', 'Zum Erzeuger', () => actions.toProducer()),
     extra('order-cancel', 'Kündigen', () => actions.cancel()),
   );
   updateOrder(el, world, island);
@@ -244,6 +247,7 @@ export function updateOrder(el: HTMLElement, world: World, island: number = HOME
   };
   setHidden('order-accept', !offer);
   setHidden('order-decline', !offer);
+  setHidden('order-producer', world.contract === null);
   setHidden('order-cancel', world.contract === null);
   el.classList.toggle('order-card--warn', contractWarn(world));
   const btn = el.querySelector<HTMLElement>('[data-field="order-deliver"]');

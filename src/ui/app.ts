@@ -61,6 +61,7 @@ import {
   type FocusDeps,
   type FocusState,
 } from './goodFocus';
+import { contractKey, runContractJump } from './contractJump';
 import { cutOffIds, newlyCut, runProblemJump, spot, type ProblemCursor } from './problems';
 import { trackFullSince } from './storageFull';
 import { openUpkeepCard } from './upkeepCard';
@@ -380,6 +381,7 @@ function launch(
       runContractAction(declineContract(world), () => null, contractOut);
       refresh();
     },
+    toProducer: () => jumpToContractProducer(),
     cancel: () => {
       runContractAction(cancelContract(world), () => CONTRACT_CANCELLED, contractOut);
       refresh();
@@ -531,6 +533,37 @@ function launch(
     openPanel: (id) => setPanel({ kind: 'inspect', id }), // kein selectTool
     refresh: () => refresh(),
     message: (t) => replaceMessage('gut', t),
+  };
+
+  /** Vertragssprung (I-090): eigener Cursor nur in der Closure; Laden/Neues Spiel starten über `restart` neu. */
+  let contractCursor: ProblemCursor | null = null;
+  let contractCursorKey: string | null = contractKey(world);
+  const jumpToContractProducer = (): void => {
+    syncContractCursor();
+    runContractJump(
+      {
+        world,
+        activeIsland: () => state.activeIsland,
+        getCursor: () => contractCursor,
+        setCursor: (c) => {
+          contractCursor = c;
+        },
+        cancelPointerAction: () => input?.cancelPointerAction(),
+        centerOn: (x, y) => centerOn(state.cam, x, y, clampView(), bounds),
+        openPanel: (id) => setPanel({ kind: 'inspect', id }), // kein selectTool
+        refresh,
+        message: (t) => replaceMessage('vertrag', t),
+      },
+      1,
+    );
+  };
+  /** Vertragsende oder -wechsel (anderes Gut/andere Insel) verwirft den Cursor. */
+  const syncContractCursor = (): void => {
+    const key = contractKey(world);
+    if (key !== contractCursorKey) {
+      contractCursorKey = key;
+      contractCursor = null;
+    }
   };
 
   /** Betriebsliste (I-062): Sprung zum Gebäude wie beim Problem-Sprung (Kamera, Panel, gefolgte Insel). */
@@ -850,6 +883,7 @@ function launch(
       renderBuildMenu(navEl, state, selectTool, toggleCategory); // neue Einträge ohne Kategoriewechsel
     }
     trackFullSince(fullSince, world);
+    syncContractCursor();
     updateHud(hudEl, state, actions);
     updateNoticeStack(noticeStack, world, state.activeIsland);
     updateEventLog(logBox, state.eventLog, crisisLogVisible(world), (t) => {
