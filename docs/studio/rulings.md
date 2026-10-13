@@ -6908,3 +6908,18 @@ erhält `tests/ui/islandCard.test.ts` mit begründet angepassten Erwartungen; (3
 Regelbezug: gates.md Kombiniertes Gate, R609 · Kosten bei Irrtum: eine Textzeile im Hover.
 
 Entscheider: L0 · Anlass: Berichte lead-tech plan-I092, lead-qa gate-plan-I092 · ADR: —
+
+## R611 · 2026-10-13 · UI-HAEPPCHEN-C: Nacharbeit Rechenzeit vor Gate Merge
+
+Ruling: Bericht lead-tech, `feat/ui-haeppchen-c` @ `1378c764`, Reviews/Playtests OK, Final-Review opus BEDENKEN → Fix → Delta OK,
+`make check` Exit 0. **Auflage R607 (1) nicht erfüllt:** der erste Aufruf je Tick kostet bei 1200 Gebäuden ≈ 15–18 ms (Ziel ≤ 1 ms),
+weil `goodsBalance` die ganze Bilanz inkl. Versorgung rechnet — bei offenem Angebot ein Ruckler je Tick im Spätspiel. Entscheid
+**Nacharbeit vor dem Gate Merge** (2 freie Starts): «Erzeugung x / min» nur aus den Erzeugern des einen Vertragsguts berechnen
+(Betriebe mit diesem Output × Rate, Zustand/Trait berücksichtigt wie in `goodsBalance`, ohne Verbrauch/Versorgung), Gleichheit mit
+dem Produktionsanteil von `goodsBalance` per Test auf ≥ 3 Welten; Messung erster Aufruf bei ≥ 1000 Gebäuden ≤ 1 ms (Median); Cache je
+Tick darf bleiben. Zusätzlich in Ownership: Spec I-047 Z. 237 Angebots-Wortlaut nachführen, `docs/ideen.md` I-088/I-090 auf `live`
+(beim Merge, R599: dann ins Archiv). Delta-Review opus, `make check` Exit 0.
+
+Regelbezug: R593, R607, gates.md Gate Merge · Kosten bei Irrtum: ein Ruckler je Tick bei offenem Angebot im Spätspiel.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech UI-HAEPPCHEN-C · ADR: —
