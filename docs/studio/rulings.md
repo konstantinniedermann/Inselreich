@@ -6923,3 +6923,16 @@ Tick darf bleiben. Zusätzlich in Ownership: Spec I-047 Z. 237 Angebots-Wortlaut
 Regelbezug: R593, R607, gates.md Gate Merge · Kosten bei Irrtum: ein Ruckler je Tick bei offenem Angebot im Spätspiel.
 
 Entscheider: L0 · Anlass: Schlussbericht lead-tech UI-HAEPPCHEN-C · ADR: —
+
+## R612 · 2026-10-13 · Gate Merge UI-HAEPPCHEN-C: OK
+
+Ruling: Bericht lead-tech Nacharbeit R611, `feat/ui-haeppchen-c` @ `116139a4`: Erzeugung aus `goodProductionPer100` (nur Erzeuger des
+Vertragsguts, gleiche Zählregel), erster Aufruf je Tick bei 1200 Gebäuden 15,05 → 0,026 ms (Median), Gleichheitstest gegen
+`goodsBalance().produced` auf drei Welten, Delta-Review opus OK, `make check` Exit 0, `src/sim/` unverändert, Spec-Wortlaut I-047 und
+Ideen-Status (live, Archiv) nachgeführt. Entscheid **Gate Merge OK**; lokaler Merge durch `production-integrator`, `make check`
+Exit 0, kein Push (REL-22). Restpunkte (Haus-Zweig im Test, doppelte Zählregel `flow.ts`/`production.ts` → gemeinsame Funktion,
+Archiv-Trenner, Lücken in der Rangliste) → UI-Aufräum-Sammelpaket (R606).
+
+Regelbezug: gates.md Gate Merge, R607, R611 · Kosten bei Irrtum: zwei Zählregeln laufen auseinander (Gleichheitstest fängt das).
+
+Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-C (Nacharbeit) · ADR: —
