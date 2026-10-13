@@ -1,9 +1,12 @@
 import { HOME } from '../sim/world';
 import { islandName } from '../sim/islands';
 import { GOODS } from '../sim/defs/goods';
-import { nextOrderTick } from '../sim/orders';
+import { contractUnitPrice, nextOrderTick } from '../sim/orders';
+import { ORDER_PERIOD } from '../sim/defs/timing';
+import type { StepReport } from '../sim/tick';
+import type { SoundEvent } from '../audio/sound';
 import { functionLock } from '../sim/unlocks';
-import type { Order, World } from '../sim/types';
+import type { ContractEvent, Order, World } from '../sim/types';
 import { setField } from './dom';
 import { formatGameTime } from './time';
 
@@ -14,6 +17,24 @@ export interface OrderActions {
 
 /** Text der Auftragskarte: aktiver Auftrag mit Lagerstand, sonst die Wartezeit bis zum nächsten. */
 export function orderCardText(world: World, island: number = HOME): string {
+  const rest = (): string => formatGameTime(nextOrderTick(world) - world.tick);
+  const takt = formatGameTime(ORDER_PERIOD);
+  const c = world.contract;
+  if (c !== null) {
+    const stock = world.islands[c.island]!.stock[c.good];
+    return (
+      `Stammkunde: ${c.amount} ${GOODS[c.good].name}${islandSuffix(world, c.island)}` +
+      ` · nächste Lieferung ${rest()} · Lager ${stock}/${c.amount}`
+    );
+  }
+  const offer = world.contractOffer;
+  if (offer !== null) {
+    const def = GOODS[offer.good];
+    return (
+      `Stammkunde: ${def.order!.contract} ${def.name}${islandSuffix(world, offer.island)}` +
+      ` alle ${takt} zu ${contractUnitPrice(offer.good)} je Stück · Angebot noch ${rest()}`
+    );
+  }
   const o = world.order;
   if (o === null) return `Nächster Auftrag in ${formatGameTime(nextOrderTick(world) - world.tick)}`;
   const name = GOODS[o.good].name;
@@ -21,6 +42,69 @@ export function orderCardText(world: World, island: number = HOME): string {
     `Auftrag: ${o.amount} ${name} · Prämie ${o.reward} · noch ${formatGameTime(o.due - world.tick)}` +
     ` · Lager ${world.islands[island]!.stock[o.good]}/${o.amount}`
   );
+}
+
+function islandSuffix(world: World, island: number): string {
+  return island === HOME ? '' : ` auf ${islandName(world, island)}`;
+}
+
+/** Warnzustand des Vertrags: Lager der Lieferinsel unter der Liefermenge oder kein Kontor dort. */
+export function contractWarn(world: World): boolean {
+  const c = world.contract;
+  if (c === null) return false;
+  const isl = world.islands[c.island]!;
+  return isl.kontorId === null || isl.stock[c.good] < c.amount;
+}
+
+/** Meldung direkt nach dem Annehmen (liest `world.contract`). */
+export function contractAgreedMessage(world: World): string {
+  const c = world.contract!;
+  return (
+    `Stammkunde: ${c.amount} ${GOODS[c.good].name}${islandSuffix(world, c.island)}` +
+    ` alle ${formatGameTime(ORDER_PERIOD)} vereinbart`
+  );
+}
+
+export const CONTRACT_CANCELLED = 'Stammkunde gekündigt';
+
+/** Text, Art und Klang zu einem Vertragsereignis. */
+export function contractNotice(
+  ev: ContractEvent,
+  world: World,
+): { text: string; kind: 'info' | 'warn'; sound: SoundEvent } {
+  const name = GOODS[ev.good].name;
+  if (ev.kind === 'delivered') {
+    return {
+      text: `Stammkunde: ${ev.amount} ${name} geliefert, +${ev.pay}`,
+      kind: 'info',
+      sound: 'orderDone',
+    };
+  }
+  const why =
+    ev.reason === 'stock'
+      ? `: zu wenig ${name}`
+      : ev.reason === 'kontor'
+        ? `: kein Kontor auf ${islandName(world, ev.island)}`
+        : '';
+  return {
+    text: `Stammkunde abgesprungen${why}. Strafe ${ev.penalty}`,
+    kind: 'warn',
+    sound: 'error',
+  };
+}
+
+/** Meldet und vertont die Vertragsereignisse der Schritte eines Frames. */
+export function announceContract(
+  reports: readonly StepReport[],
+  out: { show(text: string, kind: 'info' | 'warn'): void; play(e: SoundEvent): void },
+  world: World,
+): void {
+  for (const r of reports) {
+    if (r.contract === null) continue;
+    const n = contractNotice(r.contract, world);
+    out.show(n.text, n.kind);
+    out.play(n.sound);
+  }
 }
 
 /**
