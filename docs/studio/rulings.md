@@ -6760,3 +6760,15 @@ Warnungen mit Last). TOOL-BUENDEL-11 und DOC-ARCHIV kommen per Delta-Review dazu
 Regelbezug: gates.md Gate Merge Release, R335, R598 · Kosten bei Irrtum: ein Delta-Review mehr in der nächsten Session.
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-21 · ADR: —
+
+## R601 · 2026-10-13 · Gate Merge DOC-ARCHIV: OK
+
+Ruling: Bericht lead-production, `docs/archiv` @ `2f9f9450` (main bis `0a19ad53` gemergt, Konflikte README/`ideen.md` durch den
+Eigentümer gelöst, Änderungen von A/B/I-047 übernommen), `make docs-check` Exit 0. README 59,5 → 28,3 KB, `docs/ideen.md` 80,0 →
+27,9 KB, Archiv 52,9 KB, `docs/spielwerte.md` 35,3 KB (Denkmal-Abschnitt zusätzlich wortgleich verschoben), 88 Ideen erhalten.
+Entscheid **Gate Merge OK**; `production-integrator` merged lokal (nur Doku: `make docs-check`, `make conflicts`, `make studio-test`
+Exit 0), kein Push. Fährt mit REL-21; der Release-Check (R600) nimmt die README-Verlagerung per Delta mit.
+
+Regelbezug: gates.md Gate Merge, R599, R600, E-057 · Kosten bei Irrtum: ein toter Verweis.
+
+Entscheider: L0 · Anlass: Bericht lead-production DOC-ARCHIV · ADR: —
