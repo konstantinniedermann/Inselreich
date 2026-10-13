@@ -209,3 +209,15 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 - 2026-10-13 · `src/sim/save.ts` `isValidContractFields` · Das Laden prüft `contract.amount`/`price` nur als ganze Zahlen (≥ 1 bzw. ≥ 0), nicht gegen `GOODS[g].order.contract` und `contractUnitPrice`; ein manipulierter Spielstand kann eine beliebige Strafe oder Zahlung festschreiben. · Ursprung: Zwischen-Review I047-SIM · Einschätzung: Single-Player, kein Sicherheitsproblem; bei Bedarf strengere Prüfung, Trigger: Cheat-/Missbrauchsmeldung oder spätere Wertänderung der Mengen (alte Saves tragen festgeschriebene Werte absichtlich).
 - 2026-10-13 · `tests/sim/save.test.ts` (`slice(-17, -15)` u. ä.) · Magic-Number-Indizes auf Weltschlüssel verschieben sich bei jedem neuen Schlüssel; Titel «uses version 5» (Z. 137) ist veraltet. · Ursprung: Zwischen-Review I047-SIM · Einschätzung: nach Schlüsselnamen indexieren; Trigger: nächster neuer Weltschlüssel.
+
+### 2026-10-13 · Unterhalt-Karte bei Pause: Fusszeile gegen Zeilen leicht verschoben
+
+- Fundort: `src/ui/upkeepRank.ts` (UI-HAEPPCHEN-A, Final-Review). Beobachtung: Die Fusszeile nimmt `stats.upkeep`, das nur je Tick nachgeführt wird. Baut man in der Pause oder wechselt das Edikt und öffnet dann die Karte, weichen Zeilen und Fusszeile bis zum nächsten Tick ab (mit Sparedikt landet die Abweichung in der Edikt-Zeile). Ursprung: Final-Review. Einschätzung: niedrig; Abhilfe `totalUpkeep(world)` beim Öffnen, falls es im Spiel auffällt.
+
+### 2026-10-13 · Heimat-Kontor fehlt in der Unterhalt-Rangliste
+
+- Fundort: Playtest UI-HAEPPCHEN-A. Beobachtung: Das Heimat-Kontor (Unterhalt 0) steht nicht in der Rangliste, ein Kontor auf einer fernen Insel schon (60 / min). Passt zum Code, kann irritieren. Ursprung: Playtest. Einschätzung: niedrig, ggf. Hinweistext oder Konsistenz prüfen.
+
+### 2026-10-13 · Bilanz-Vorschau ohne Haus-Aufstieg und ohne Stilllegen
+
+- Fundort: `src/ui/balancePreview.ts` (UI-HAEPPCHEN-B, R577). Beobachtung: Die Vorschau «Bilanz danach» rechnet Bau und Ausbau von Betrieben, beim Wohnhaus nur die Steuer-Obergrenze. Der Aufstieg Haus → nächste Stufe (Steuer steigt) und das Stilllegen (halber Unterhalt, I-078 nennt es) sind ausgeklammert. Ursprung: Plan UI-HAEPPCHEN-B, Punkt 3. Einschätzung: Folgehäppchen, klein; erst bei Spielerfragen nach dem Aufstieg lohnend.

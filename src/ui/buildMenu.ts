@@ -28,6 +28,7 @@ import type { IconId } from './icons';
 import { iconChip, showMessage } from './messages';
 import { perMinute } from './time';
 import { traitBuildLine } from './islandCard';
+import { balanceAfterBuild, balanceLine } from './balancePreview';
 
 export const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'infrastructure', label: 'Infrastruktur' },
@@ -132,6 +133,7 @@ export function tooltipLines(tool: Tool, world?: World, island: number = HOME): 
     `Kosten: ${costLine(def.cost)}${paidFromHome(tool) ? ' (aus der Heimat)' : ''}`,
     `Unterhalt: ${num(perMinute(def.upkeep, UPKEEP_INTERVAL))} / min`,
   ];
+  if (world !== undefined) lines.push(cachedBalanceLine(world, def.id, island));
   if (def.id === 'townhall') lines.push('Steuer und Ausgabesperre einstellen');
   if (def.produces && def.cycle) {
     lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(def.cycle)}`);
@@ -201,6 +203,29 @@ function hideTooltip(tip: HTMLElement): void {
   tip.classList.remove('show');
 }
 
+/** Welt und Insel des letzten `updateBuildMenu`; Tooltips lesen daraus beim Öffnen (lazy, I-078). */
+let liveView: { world: World; island: number } | null = null;
+
+/** Setzt die Bilanz-Zeile(n) der Elemente, die `selector` unter `root` findet. */
+function fillBalance(
+  root: ParentNode,
+  world: World,
+  island: number,
+  selector = '.tt-balance',
+): void {
+  for (const el of root.querySelectorAll<HTMLElement>(selector)) {
+    const id = el.dataset.defId as BuildingDefId | undefined;
+    if (id === undefined) continue;
+    const line = cachedBalanceLine(world, id, island);
+    if (el.textContent !== line) el.textContent = line;
+  }
+}
+
+/** Aktualisiert die Bilanz-Zeile der gerade sichtbaren Tooltips; ohne sichtbaren Tooltip wird nichts gerechnet. */
+export function refreshShownBalance(nav: ParentNode, world: World, island: number): void {
+  fillBalance(nav, world, island, '.tooltip.show .tt-balance');
+}
+
 /** Hängt ein Tooltip-Element an den Button: Hover, Tastaturfokus, Touch-Langdruck. */
 function attachTooltip(
   btn: HTMLButtonElement,
@@ -218,6 +243,13 @@ function attachTooltip(
     line.className = i === 0 ? 'tt-title' : 'tt-line';
     line.textContent = text;
     tip.appendChild(line);
+    if (text.startsWith('Unterhalt:') && tool.kind === 'build') {
+      // Bilanz-Vorschau: `updateBuildMenu` füllt den Text (braucht die Welt)
+      const balance = document.createElement('span');
+      balance.className = 'tt-line tt-balance';
+      balance.dataset.defId = tool.defId;
+      tip.appendChild(balance);
+    }
     if (text.startsWith('Erzeugt:')) {
       // Inselvorteil der aktiven Insel: `updateBuildMenu` füllt Text und Sichtbarkeit
       const advantage = document.createElement('span');
@@ -239,9 +271,13 @@ function attachTooltip(
   btn.setAttribute('aria-describedby', tip.id);
   btn.appendChild(tip);
 
-  btn.addEventListener('mouseenter', () => showTooltip(btn, tip, anchorOf()));
+  const open = (): void => {
+    if (liveView !== null) fillBalance(tip, liveView.world, liveView.island);
+    showTooltip(btn, tip, anchorOf());
+  };
+  btn.addEventListener('mouseenter', open);
   btn.addEventListener('mouseleave', () => hideTooltip(tip));
-  btn.addEventListener('focus', () => showTooltip(btn, tip, anchorOf()));
+  btn.addEventListener('focus', open);
   btn.addEventListener('blur', () => hideTooltip(tip));
 
   // Touch-Langdruck: Tooltip nach 500 ms; der folgende Klick wählt dann kein Werkzeug
@@ -257,7 +293,7 @@ function attachTooltip(
     timer = setTimeout(() => {
       timer = null;
       btn.dataset.longPress = '1';
-      showTooltip(btn, tip, anchorOf());
+      open();
     }, LONG_PRESS_MS);
   });
   btn.addEventListener('pointerup', () => {
@@ -442,8 +478,49 @@ export function renderBuildMenu(
   }
 }
 
+/** Cache der Bilanz-Zeilen: gilt, solange Welt, Tick und Gebäudestand (Zahl, Ausbaustufen, Stilllegung), Schiffe und Edikt gleich sind. */
+let balanceCache: { world: World; sig: string; lines: Map<string, string> } | null = null;
+
+function worldSignature(world: World): string {
+  let n = 0;
+  let levels = 0;
+  let paused = 0;
+  for (const b of Object.values(world.buildings)) {
+    n++;
+    levels += b.level ?? 1;
+    if (b.paused === true) paused++;
+  }
+  return [
+    world.tick,
+    world.nextBuildingId,
+    n,
+    levels,
+    paused,
+    world.ships.length,
+    world.edict,
+    JSON.stringify(world.taxLevels),
+  ].join('|');
+}
+
+/** Bilanz-Zeile für den Bau-Tooltip; rechnet nur bei geändertem Stand neu, nicht je HUD-Takt. */
+export function cachedBalanceLine(world: World, defId: BuildingDefId, island: number): string {
+  const sig = worldSignature(world);
+  if (balanceCache === null || balanceCache.world !== world || balanceCache.sig !== sig) {
+    balanceCache = { world, sig, lines: new Map() };
+  }
+  const key = `${island}:${defId}`;
+  let line = balanceCache.lines.get(key);
+  if (line === undefined) {
+    line = balanceLine(balanceAfterBuild(world, defId, island));
+    balanceCache.lines.set(key, line);
+  }
+  return line;
+}
+
 /** Markiert Bau-Buttons, deren Kosten gerade nicht bezahlbar sind (bleiben klickbar). */
 export function updateBuildMenu(nav: HTMLElement, world: World, island: number = HOME): void {
+  liveView = { world, island };
+  refreshShownBalance(nav, world, island);
   const live = nav.querySelector('.tt-unprotected');
   if (live) {
     const text = unprotectedLine(unprotectedFlammables(world).length);

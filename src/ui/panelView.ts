@@ -9,6 +9,7 @@ import { missingInputs, reservedInputs } from '../sim/queries';
 import { upgradeBuilding } from '../sim/upgrade';
 import { functionLock } from '../sim/unlocks';
 import type { Building, BuildingDefId, Tier, World } from '../sim/types';
+import { balanceAfterUpgrade, balanceLine } from './balancePreview';
 import { costLine } from './dom';
 import { friendlyReason } from './hints';
 import { goodList, stateInfo } from './texts';
@@ -55,6 +56,8 @@ export type UpgradeCard =
       reasons: string[];
       ok: boolean;
       key: string;
+      /** «Bilanz danach: a → b / min» (Unterhalt der nächsten Stufe, Edikt inklusive). */
+      balance: string;
     }
   | { kind: 'locked'; title: string; gains: GainRow[]; lock: string }
   | { kind: 'max'; title: 'Höchste Stufe' };
@@ -266,6 +269,7 @@ export function upgradeCard(world: World, b: Building): UpgradeCard | null {
     reasons: v.reasons,
     ok: v.ok,
     key: UPGRADE_KEY_LABEL,
+    balance: balanceLine(balanceAfterUpgrade(world, b)),
   };
 }
 

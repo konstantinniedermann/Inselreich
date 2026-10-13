@@ -61,12 +61,15 @@ import {
   type FocusDeps,
   type FocusState,
 } from './goodFocus';
-import { cutOffIds, newlyCut, runProblemJump, type ProblemCursor } from './problems';
+import { cutOffIds, newlyCut, runProblemJump, spot, type ProblemCursor } from './problems';
+import { trackFullSince } from './storageFull';
+import { openUpkeepCard } from './upkeepCard';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
 import { createIslandLayers, idleSchedule } from './islandLayers';
 import { drawPathPreview } from '../render/pathPreview';
 import { connectView } from './connect';
+import { buildLine, linePath, linePlan, lineHintText, type LinePlan } from './roadLine';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
 import { newBuildEntries, renderBuildMenu, updateBuildMenu } from './buildMenu';
@@ -455,10 +458,13 @@ function launch(
 
   /** Problem-Sprung (I-042): Cursor nur in der Closure, nie im Spielstand. */
   let problemCursor: ProblemCursor | null = null;
+  /** «Lager voll» (I-085): Zähler nur hier; Laden/Neues Spiel bauen über `restart` eine frische Closure, `trackFullSince` verwirft zudem Zähler fremder Welten. */
+  const fullSince = new Map<string, number>();
   const jumpToProblem = (dir: 1 | -1): void =>
     runProblemJump(
       {
         world,
+        fullSince,
         activeIsland: () => state.activeIsland,
         getCursor: () => problemCursor,
         setCursor: (c) => {
@@ -498,8 +504,20 @@ function launch(
     message: (t) => replaceMessage('gut', t),
   };
 
+  /** Betriebsliste (I-062): Sprung zum Gebäude wie beim Problem-Sprung (Kamera, Panel, gefolgte Insel). */
+  const jumpToBuilding = (id: number): void => {
+    const b = world.buildings[id];
+    if (!b) return; // inzwischen abgerissen
+    input?.cancelPointerAction();
+    const at = spot(world, b);
+    centerOn(state.cam, at.x, at.y, clampView(), bounds);
+    setPanel({ kind: 'inspect', id }); // kein selectTool
+    refresh();
+  };
+
   const actions: HudActions = {
     jumpToIsland,
+    openUpkeep: (opener) => openUpkeepCard(gameEl, world, jumpToBuilding, opener),
     toggleGoodFocus: (good) => runFocusToggle(focusDeps, good),
     focusedGood: () => goodFocus?.good ?? null,
     setSpeed: (speed) => setSpeed(speed),
@@ -802,6 +820,7 @@ function launch(
       showMessage(unlock.text, 'info', true, true, { label: 'Hilfe', onClick: () => openHelp() });
       renderBuildMenu(navEl, state, selectTool, toggleCategory); // neue Einträge ohne Kategoriewechsel
     }
+    trackFullSince(fullSince, world);
     updateHud(hudEl, state, actions);
     updateNoticeStack(noticeStack, world, state.activeIsland);
     updateEventLog(logBox, state.eventLog, crisisLogVisible(world), (t) => {
@@ -966,7 +985,39 @@ function launch(
   const tradeCtx = (op: 'buy' | 'sell', good: GoodId, n: number, island: number): ReasonCtx =>
     tradeReasonCtx(world, op, good, n, island);
 
+  /** Weg mit Winkel (Umschalt-Zug): Pfad und Plan der laufenden Vorschau; gebaut wird erst beim Loslassen. */
+  let roadLine: { island: number; path: Pos[]; plan: LinePlan } | null = null;
+  const clearRoadLine = (): void => {
+    roadLine = null;
+    connectPreview = null;
+  };
+  const onRoadLine = (a: Extract<InputAction, { type: 'roadLine' }>): void => {
+    if (a.phase === 'update') {
+      const path = linePath(a.from, a.to);
+      const plan = linePlan(world, a.island, path);
+      roadLine = { island: a.island, path, plan };
+      // Fallback ohne Rotfärbung im Pfad-Overlay: nur neue Kacheln zeigen, Blockaden stehen in der Zeigerzeile
+      connectPreview = plan.tiles.filter((t) => t.state === 'new');
+      return;
+    }
+    const line = roadLine;
+    clearRoadLine();
+    if (a.phase === 'cancel' || line === null) return;
+    const before = unconnectedIds(world);
+    const r = buildLine(world, line.island, line.path);
+    if (r.built > 0) {
+      sound.playBuild('road');
+      reportConnections(before);
+    }
+    if (r.stopReason !== null) showRoadFailure(r.stopReason, false, line.island);
+    refresh();
+  };
+
   const onAction = (a: InputAction): void => {
+    if (a.type === 'roadLine') {
+      onRoadLine(a);
+      return;
+    }
     if (a.type === 'ship') {
       // Klick auf ein Schiff: Panel des Heimatkontors mit hervorgehobener Schiffszeile
       const k = home(world).kontorId;
@@ -987,6 +1038,7 @@ function launch(
       return;
     }
     if (a.type === 'cancel') {
+      clearRoadLine();
       clearGoodFocus();
       demolishConfirm = confirmStep(world, demolishConfirm, { kind: 'reset' }).state; // auch wenn nur ein Toast schliesst
       const demolishBtn = panelEl.querySelector<HTMLElement>('[data-field="demolish"]');
@@ -1100,9 +1152,17 @@ function launch(
       hintNow = null;
       return;
     }
-    const key = hintKey(hover);
-    if (force || key !== hintFor) {
-      hintFor = key;
+    const lineNow = roadLine;
+    if (lineNow !== null) {
+      // Linien-Vorschau: Zählung, Kosten und erster Grund statt der Einzelkachel-Zeile
+      hintFor = null;
+      hintNow = lineHintText(lineNow.plan, (r) =>
+        friendlyReason(world, r, { cost: ROAD_COST_OBJ, island: lineNow.island }),
+      );
+      hintEl.textContent = hintNow.text;
+      hintEl.className = `cursor-hint cursor-hint--${hintNow.tone}`;
+    } else if (force || hintKey(hover) !== hintFor) {
+      hintFor = hintKey(hover);
       hintNow = placementHint(
         world,
         hover.tool ?? state.tool,

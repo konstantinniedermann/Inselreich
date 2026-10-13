@@ -37,6 +37,13 @@ Dateien: `roadLine.ts` (neu), `input.ts`, `app.ts`, `hotkeys.ts` (`NAV_KEYS`-Ein
 
 **T04 (Lead).** `README.md` (Bedienung: Rangliste, Umschalt-Weg, Hinweis), `docs/arc42.md` (neue Dateien `upkeepRank.ts`, `roadLine.ts`), `docs/ideen.md` I-062/I-063/I-083 auf `live`, I-048 unverändert. D1 erlaubt (E-017).
 
+## Auflagen R573 (vom Controller eingetragen) und Entscheide
+
+- Entscheid (a): Zeile «Kauf n %» ganz entfernt, `buyPctText` + Test entfallen; Knopftitel «im Mittel n %» (`buyTitleText`) bleibt als schlafender Code.
+- Entscheid (b): I-062 mit echtem 50-%-Unterhalt der Stillgelegten, markiert; T04 korrigiert den Ideen-Text in `docs/ideen.md`.
+- Auflagen (4)–(7) sind in AK-7, AK-8, AK-9, AK-17, AK-18 verarbeitet; T02 und T03 testen entsprechend.
+- Zeit-Baseline: siehe Abschnitt «Testzeiten» unten.
+
 ## Abnahmekriterien
 
 - **AK-1** `4`–`8` zeigen «Tempo: 1, 2, 3», Text aus `SPEED_KEYS` abgeleitet.
@@ -45,14 +52,17 @@ Dateien: `roadLine.ts` (neu), `input.ts`, `app.ts`, `hotkeys.ts` (`NAV_KEYS`-Ein
 - **AK-4** `buyPct`, `buyPrice` und Save unberührt (`git diff` auf `src/sim/` leer, Balancing grün).
 - **AK-5** Rangliste sortiert nach `buildingUpkeep` absteigend, Gleichstand Auslastung aufsteigend, dann ID.
 - **AK-6** Stillgelegte stehen mit ihrem tatsächlichen Wert und Marke «stillgelegt»; Häuser fehlen.
-- **AK-7** Fusszeile = `stats.upkeep` je Minute; Schiffe als eine Zeile; kein zweiter Rechenweg.
-- **AK-8** Klick oder `Enter` auf eine Zeile springt zum Gebäude (auch auf fernen Inseln); `Esc` schliesst; Tastaturbedienung per Tab.
-- **AK-9** Mehr als 20 Betriebe: «und n weitere», Karte scrollt, kein Absturz bei 0 Betrieben (Hinweistext).
+- **AK-7** Fusszeile = `stats.upkeep` je Minute (`perMinute(x, UPKEEP_INTERVAL)`); Schiffe als eine Zeile; kein zweiter Rechenweg. **Präzisiert (R573 (4)):** `stats.upkeep` = `totalUpkeep` = Summe `buildingUpkeep` (Stillgelegte 50 % aufgerundet, Häuser 0 bei `upkeep` 0 bzw. ihr Def-Wert) + Schiffe × `SHIP.upkeep`, **danach** bei Edikt «Sparen» `⌊S × upkeepPct / 100⌋`. Die Zeilen zeigen die Werte **vor** dem Edikt; bei `upkeepPct < 100` steht eine Zeile «Edikt: −n» (= `stats.upkeep` − Zeilensumme), sodass Zeilen + Edikt-Zeile = Fusszeile. Test auf einer Welt mit Stillgelegten, Schiffen, Häusern, mit und ohne Edikt: Zeilensumme (+ Edikt-Zeile) == `totalUpkeep(world)` == `stats.upkeep` nach einem Tick. **L0-Meldung:** Abweichung Edikt/Rundung zur Ideen-Annahme.
+- **AK-8** Klick oder `Enter` auf eine Zeile springt zum Gebäude (auch auf fernen Inseln); `Esc` schliesst; Tastaturbedienung per Tab. **Rot-testbar (R573 (5)):** `hud.test.ts` prüft Chip und Zeilen auf Knopf-Semantik (`<button>` bzw. `tabindex`, `aria-label`, Enter löst Sprung aus); Playtest-Schritt nur Tastatur (Tab bis Chip, Enter, Tab/Enter auf Zeile, Esc).
+- **AK-9** Mehr als 20 Betriebe: «und n weitere», Karte scrollt, kein Absturz bei 0 Betrieben (Hinweistext). **Ergänzt (R573 (6)):** Karte ≤ Fensterhöhe bei 1280×720, Scrollbar vorhanden, Fokusring sichtbar (Playtest 1280×720 und 1920×1080).
 - **AK-10** `linePath` gerade bei gleicher Achse, sonst L mit längerem Schenkel zuerst; beide Enden enthalten.
 - **AK-11** `linePlan` zählt neue Kacheln und Kosten (`ROAD_COST` je neue Kachel); vorhandene Wege kosten nichts; blockierte werden markiert und übersprungen.
 - **AK-12** Mit `Umschalt` beim Aufsetzen: Vorschau mit Gesamtkosten, gebaut wird beim Loslassen; ohne `Umschalt` unverändertes Verhalten (bestehende Input-Tests grün).
 - **AK-13** Zu wenig Geld: Bau bis zur letzten bezahlbaren Kachel, Meldung mit Grund aus der Sim.
 - **AK-14** `Umschalt` löst keine Taste aus: `Umschalt+U` (Ausbau) bleibt unverändert, Loslassen von `Umschalt` mitten im Zug ändert den Modus nicht.
+- **AK-17 (R573 (7))** Rot-Tests je Randfall `Umschalt`: Aufsetzen mit Umschalt (Linienmodus), Aufsetzen ohne Umschalt und Umschalt später gedrückt (kein Linienmodus), Loslassen von Umschalt mitten im Zug (Modus bleibt, Bau beim Loslassen der Maus).
+- **AK-18 (R573 (7))** Abbruch per `Esc` oder `pointercancel` während des Linienzugs baut nichts, Vorschau verschwindet, kein Geld abgebucht.
+- **AK-19 (R573 (8))** Test «Linienbau = gleiche Einzelklicks» (Ergebnis-Welt identisch zu Einzelaufrufen von `placeRoad` in Pfadreihenfolge); Randfälle Wasser/Inselgrenze (Kacheln übersprungen bzw. blockiert), Start = Ende (eine Kachel).
 - **AK-15** Eintrag im Menü «Tastenkürzel» (`NAV_KEYS`), keine Doppelbelegung gegen `TOOL_HOTKEYS`, `SPEED_KEYS`, Inselwechsel, Problem-Sprung.
 - **AK-16** README, arc42, `ideen.md` nachgeführt.
 
@@ -87,3 +97,7 @@ Nicht anfassen: `src/sim/`, `src/audio/`, Spielwerte, `docs/studio/rulings.md`. 
 ## Risiken
 
 (1) Pfad-Overlay kennt keine Rotfärbung → Fallback in T03. (2) `Umschalt`-Erfassung beim Aufsetzen: Pointer-Events tragen `shiftKey`, getestet über `input.test.ts`. (3) Bilanz-Chip heute ohne Knopf-Semantik: Tastaturbedienung und Fokus müssen ergänzt werden (AK-8). (4) Reihenfolge-Abhängigkeit von UI-AUFRAEUM-2 verschiebt den Start.
+
+## Testzeiten (Baseline main `89f12a94`, `npx vitest related --run hotkeys.ts trade.ts hud.ts input.ts app.ts`)
+
+36 Dateien, 793 Tests, Summe 13,3 s. Tests > 200 ms (ms): monument.test.ts «Eingaben ergeben { ok, reason }…» 536 (schon auf main > 500, Grundlast), geisterbauten.test.ts 391 / 311 / 292 / 237, time.test.ts AK-UX-13 386 und 268, islandTools.test.ts 292, cursorHint.test.ts 284, hover.test.ts 249, input.test.ts 241. Abnahme: dieselben Dateien auf Branch, kein Test > 500 ms (ausser Grundlast monument) oder > +50 %. Messskript: `--reporter=json --outputFile`.
