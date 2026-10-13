@@ -6525,3 +6525,18 @@ und lead-qa.
 Regelbezug: gates.md Gate Spec, R417, R553, R583 · Kosten bei Irrtum: eine Plan-Überarbeitung.
 
 Entscheider: L0 · Anlass: Urteile lead-tech und lead-qa gate-I-047 · ADR: —
+
+## R585 · 2026-10-13 · Gate Merge TOOL-BUENDEL-10: OK; Push REL-20 freigegeben
+
+Ruling: Schlussbericht lead-tech TOOL-BUENDEL-10, `tool/b10` @ `6f48387a` (main gemergt, Konflikt `docs/beobachtungen.md` durch
+Eigentümer gelöst, Task-Review OK), `make check` Exit 0 im dritten Versuch, `make studio-test` 828 grün. T01 islands-c 1963 → 859 ms,
+seaKorridor-Fall Timeout 20000 ms (R582), T02 Stash-Sperre (E-064), T03 Stand-Warnung (E-065). Kein UI-Task, daher kein Browser-Lauf.
+Entscheid: **Gate Merge OK**; `production-integrator` merged `tool/b10` in `.worktrees/integrate` und führt das **Push-Gate REL-20**
+durch (`make check`, `make check-ci-perf` mit Exit-Codes, Push per geprüftem Hash `git push origin <hash>:main`, Pages per
+`gh workflow run Pages --ref main`, `backup/main-lokal` per Fast-Forward). Zeitreserve-Warnungen aus Lastphasen (trees-farn, rauten,
+decorSea, forest) gelten als Lastartefakt; CI-Ergebnis entscheidet. Der Beipack arc42 `buyPct` (R581 (1)) fährt mit dem nächsten
+Release. UI-HAEPPCHEN-A bleibt für das nächste Release (R335: ein Push je Session).
+
+Regelbezug: gates.md Gate Merge, R335, R429, R565 P1, R582 · Kosten bei Irrtum: ein roter CI-Lauf, Hotfix im nächsten Push.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech TOOL-BUENDEL-10 · ADR: —
