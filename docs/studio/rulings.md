@@ -6445,3 +6445,16 @@ Plan: (1) Release REL-20 per Push-Gate (`production-integrator`, `.worktrees/int
 Regelbezug: Verfassung §5 (Nutzerauftrag), R424, R475 · Kosten bei Irrtum: Wochenfenster vor Reset 2026-10-14 12:00 erschöpft, Studio pausiert bis Reset.
 
 Entscheider: L0 · Anlass: Nutzerauftrag Session-Start · ADR: —
+
+## R579 · 2026-10-13 · Retro-Vorschläge 1a73e6c1: V1/V2 angenommen als TOOL-BUENDEL-10; Budgets der Session
+
+Ruling: Retro `retros/2026-10-12-session-1a73e6c1-ende.md`. **V1 (E-064)** Guard sperrt `git stash` ausser `list`/`show` — angenommen;
+**V2 (E-065)** Warnung bei Rückstand der R-Nummer in state.md (> 5) — angenommen, nur Warnung. Beide als T02/T03 in
+**TOOL-BUENDEL-10**, zusammen mit T01 Klärung `islands-c.test.ts`-Timeout (Coach-Befund, blockiert den Push REL-20). Die
+Experiment-Buchführung (höchstens 3 laufend) macht `studio-coach` nach dem Merge. **V3** Messauftrag bleibt beim Coach (Frist: nächste
+Retro mit Plan-Briefing). Budgets: UI-HAEPPCHEN-A 11 Starts/P1 (R573), TOOL-BUENDEL-10 5 Starts/P1, design-I-047 2 Starts/P1
+(Abgrenzung zu Erweiterung 1 zuerst).
+
+Regelbezug: R578, R571 (4), Verfassung §5 · Kosten bei Irrtum: ein legitimer Stash-Fall bei L0 wird geblockt (Rückfall: Regel streichen).
+
+Entscheider: L0 · Anlass: Retro Session 1a73e6c1, state.md Fortsetzung Punkt 1, 4 · ADR: —
