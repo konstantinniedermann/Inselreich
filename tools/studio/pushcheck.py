@@ -15,6 +15,7 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+import loadsnap
 import paths
 
 LOAD_WAIT = 3.0
@@ -141,6 +142,18 @@ class Gate:
             self.load_errors += 1
             return None
 
+    @staticmethod
+    def _load_protocol(current: float | None) -> None:
+        """Lastprotokoll (R588 V3): Ausgabezeile und Event; Fehler werden geschluckt."""
+        try:
+            snap = loadsnap.real_snapshot(current)
+            _say(f"push-check: {loadsnap.format_line(snap)}")
+            loadsnap.record("kein_ruhiges_fenster", "pushcheck", snap)
+        except Exception as error:  # noqa: BLE001 - nie wegen des Protokolls abbrechen
+            print(
+                f"push-check: Lastprotokoll fehlgeschlagen ({error})", file=sys.stderr
+            )
+
     def wait_quiet(self) -> bool:
         waited = 0
         while True:
@@ -154,6 +167,7 @@ class Gate:
                 return True
             if waited >= WAIT_MAX_S:
                 _say(f"push-check: kein ruhiges Fenster nach {waited} s (Load {shown})")
+                self._load_protocol(current)
                 return False
             if waited % 60 == 0:
                 _say(

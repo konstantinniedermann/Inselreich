@@ -31,7 +31,12 @@ class Harness:
         self.handlers: dict[str, object] = {}
         self.git_states = [("abc", ""), ("abc", "")]
         self.output = io.StringIO()
-        patcher = mock.patch.dict(os.environ, {"STUDIO_HOME": str(self.studio)})
+        ps = self.dir / "ps.txt"
+        ps.write_text("  11 90.0 node vitest worker\n  12 5.0 bash\n")
+        patcher = mock.patch.dict(
+            os.environ,
+            {"STUDIO_HOME": str(self.studio), "LOADSNAP_PS_FIXTURE": str(ps)},
+        )
         patcher.start()
         test.addCleanup(patcher.stop)
 
@@ -302,9 +307,28 @@ class PushCheckTest(unittest.TestCase):
         h.load = broken
         h.check_ts(0, marked="[]")
         self.assertEqual(h.go(), 2)  # kein ruhiges Fenster bis zur Frist, kein Absturz
-        (event,) = h.events()
+        (event,) = [e for e in h.events() if e["kind"] == "push_check"]
         self.assertGreater(event["load_errors"], 0)
         self.assertEqual(h.count(CHECK_PUSH), 0)
+
+    def test_kein_ruhiges_fenster_schreibt_lastprotokoll(self):
+        h = Harness(self, loads=(9.0,))
+        h.check_ts(0, marked="[]")
+        self.assertEqual(h.go(), 2)
+        out = h.output.getvalue()
+        self.assertIn("Lastprotokoll: Load 9.00", out)
+        self.assertIn("Vitest-Worker: 1", out)
+        snaps = [e for e in h.events() if e["kind"] == "load_abort"]
+        (snap,) = snaps
+        self.assertEqual(snap["source"], "pushcheck")
+        self.assertEqual(snap["reason"], "kein_ruhiges_fenster")
+        self.assertEqual(snap["top5"][0]["pid"], 11)
+
+    def test_lastprotokoll_fehler_aendern_exit_nicht(self):
+        h = Harness(self, loads=(9.0,))
+        h.check_ts(0, marked="[]")
+        with mock.patch("loadsnap.record", side_effect=OSError("voll")):
+            self.assertEqual(h.go(), 2)
 
     def test_ereignis_schlusszeile_und_schreibfehler(self):
         h = Harness(self)
