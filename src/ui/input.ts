@@ -9,10 +9,11 @@ import { makeVisibleHeight } from './cameraView';
 import { shipAt } from '../render/shipLane';
 import type { Tool } from '../render/renderer';
 import type { GameState } from './app';
-import { hotkeyAction, keyDownVerdict, type HotkeyAction } from './hotkeys';
+import { hotkeyAction, keyDownVerdict, unboundDigitHint, type HotkeyAction } from './hotkeys';
 import { isSaveChord } from './saveChord';
 import { mapDemolishAllowed } from './demolishConfirm';
 import { isModalOpen } from './modal';
+import { showMessage } from './messages';
 import { pickTarget, type IslandTile } from './islandTools';
 import { createSpaceTap } from './spaceTap';
 
@@ -575,6 +576,8 @@ export function bindInput(
     if (verdict.act && hot) onAction({ type: 'hotkey', action: hot });
     if (verdict.preventDefault) e.preventDefault();
     if (hot) return;
+    const hint = unboundDigitHint(e.key, mods, isTextField(e.target), modal);
+    if (hint !== null && e.repeat === false) showMessage(hint);
     if (!panKeyAllowed(target, modal)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();

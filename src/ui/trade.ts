@@ -59,11 +59,6 @@ export function buyUnitText(w: World, good: GoodId): string {
   return `${buyPrice(w, good, 1)} Geld`;
 }
 
-/** Kaufanteil des Guts, z. B. «Kauf 109 %» (I-048). */
-export function buyPctText(w: World, good: GoodId): string {
-  return `Kauf ${w.buyPct[good]} %`;
-}
-
 /** Verkaufsanteil des Guts, z. B. «Verkauf 80 %». */
 export function sellPctText(w: World, good: GoodId): string {
   return `Verkauf ${w.sellPct[good]} %`;
@@ -202,9 +197,6 @@ export function renderTrade(
     const stock = document.createElement('small');
     stock.dataset.field = `stock-${good}`;
     name.appendChild(stock);
-    const buyPct = document.createElement('small');
-    buyPct.dataset.field = `buy-pct-${good}`;
-    name.appendChild(buyPct);
     const pct = document.createElement('small');
     pct.dataset.field = `price-${good}`;
     name.appendChild(pct);
@@ -252,7 +244,6 @@ export function updateTrade(panel: HTMLElement, world: World, island: number = H
   const stock = world.islands[island]!.stock;
   for (const good of GOOD_IDS) {
     setField(panel, `stock-${good}`, `Lager ${stock[good]}`);
-    setField(panel, `buy-pct-${good}`, buyPctText(world, good));
     setField(panel, `price-${good}`, sellPctText(world, good));
     const boom = setField(panel, `boom-${good}`, `Boom +${BOOM_PCT - 100} %`);
     if (boom) boom.hidden = !boomGood(world, good);
