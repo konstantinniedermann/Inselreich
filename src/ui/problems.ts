@@ -15,7 +15,7 @@ export type ProblemClass = 1 | 2 | 3 | 4 | 5;
 /** Sortierschlüssel: [Klasse, Inselrang (Anker = -1, sonst Index), Abstand, Gebäude-ID]. */
 export type ProblemSort = readonly [number, number, number, number];
 export interface Problem {
-  key: string; // `b:<id>` bzw. `g:<insel>:<gut>`
+  key: string; // `b:<id>`, `g:<insel>:<gut>` (Klasse 4), `s:<insel>:<gut>` (Klasse 5)
   cls: ProblemClass;
   island: number;
   id: number; // Gebäude, dessen Panel öffnet (Klasse 4: erstes Haus)
@@ -175,7 +175,7 @@ export function problemList(
     }
     out.push(
       make(
-        `g:${sp.island}:${sp.good}`,
+        `s:${sp.island}:${sp.good}`,
         5,
         rep,
         `${GOODS[sp.good].name}-Lager voll (${sp.stock}): Ware verfällt — stilllegen oder verkaufen`,

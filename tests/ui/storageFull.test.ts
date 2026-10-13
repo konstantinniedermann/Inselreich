@@ -4,7 +4,13 @@ import { STORAGE_CAP } from '../../src/sim/defs/goods';
 import { TICK_MS } from '../../src/sim/defs/timing';
 import type { Building, BuildingDefId, BuildingState, World } from '../../src/sim/types';
 import { createWorld, home, idx } from '../../src/sim/world';
-import { problemList } from '../../src/ui/problems';
+import { newHouseState } from '../../src/sim/population';
+import {
+  problemList,
+  problemStep,
+  runProblemJump,
+  type ProblemCursor,
+} from '../../src/ui/problems';
 import {
   FULL_PROBLEM_SECONDS,
   FULL_PROBLEM_TICKS,
@@ -178,7 +184,7 @@ describe('I-085 Lager voll: Problemliste', () => {
     expect(list).toHaveLength(1);
     expect(list[0]).toMatchObject({
       cls: 5,
-      key: 'g:0:wood',
+      key: 's:0:wood',
       text: 'Holz-Lager voll (100): Ware verfällt — stilllegen oder verkaufen',
     });
     expect(j.lj.map((b) => b.id)).toContain(list[0]!.id);
@@ -204,5 +210,78 @@ describe('I-085 Lager voll: Problemliste', () => {
     j.w.tick += FULL_PROBLEM_TICKS - 1;
     trackFullSince(j.since, j.w);
     expect(problemList(j.w, 0, j.since)).toEqual([]);
+  });
+
+  it('Klasse 4 und 5 mit demselben Gut: eigene Schlüssel, Umlauf erreicht beide', () => {
+    const w = newWorld();
+    const k = w.buildings[home(w).kontorId]!;
+    home(w).stock.food = STORAGE_CAP;
+    raw(w, 'fisher', k.x + 6, k.y - 6, 'storageFull');
+    const h = raw(w, 'house', k.x + 3, k.y + 3, 'ok');
+    h.house = { ...newHouseState(w), inhabitants: 4, supplied: true, satisfied: { food: false } };
+    const since = new Map<string, number>();
+    trackFullSince(since, w);
+    w.tick += FULL_PROBLEM_TICKS;
+    trackFullSince(since, w);
+    const list = problemList(w, 0, since);
+    expect(list.map((p) => p.cls)).toEqual([4, 5]);
+    expect(new Set(list.map((p) => p.key)).size).toBe(2);
+    let cur: ProblemCursor | null = null;
+    const seen: number[] = [];
+    for (let i = 0; i < 4; i++) {
+      const st: NonNullable<ReturnType<typeof problemStep>> = problemStep(w, cur, 0, 1, since)!;
+      seen.push(st.problem.cls);
+      cur = { ...st.cursor, landed: 0 };
+    }
+    expect(seen).toEqual([4, 5, 4, 5]);
+  });
+
+  it('Insel-Suffix für Klasse 5 auf einer Fremdinsel', () => {
+    const w = newWorld();
+    w.islands[2]!.stock.wood = STORAGE_CAP;
+    w.buildings[950] = {
+      id: 950,
+      defId: 'lumberjack',
+      x: 6,
+      y: 8,
+      island: 2,
+      connected: true,
+      progress: 0,
+      state: 'storageFull',
+    } as Building;
+    const since = new Map<string, number>();
+    trackFullSince(since, w);
+    w.tick += FULL_PROBLEM_TICKS;
+    trackFullSince(since, w);
+    const list = problemList(w, 0, since);
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({ cls: 5, key: 's:2:wood', island: 2 });
+    expect(list[0]!.text).toMatch(/ \(Felsbucht\)$/);
+  });
+
+  it('runProblemJump reicht fullSince an die Liste weiter', () => {
+    const j = jammed();
+    aged(j);
+    const panel: number[] = [];
+    const msgs: string[] = [];
+    let cursor: ProblemCursor | null = null;
+    const deps = (fullSince?: Map<string, number>): Parameters<typeof runProblemJump>[0] => ({
+      world: j.w,
+      fullSince,
+      activeIsland: () => 0,
+      getCursor: () => cursor,
+      setCursor: (c) => (cursor = c),
+      cancelPointerAction: () => {},
+      centerOn: () => {},
+      openPanel: (id) => panel.push(id),
+      refresh: () => {},
+      message: (t) => msgs.push(t),
+    });
+    runProblemJump(deps(j.since), 1);
+    expect(panel).toEqual([j.lj[0]!.id]);
+    expect(msgs[0]).toMatch(/^Problem 1 von 1: Holz-Lager voll/);
+    cursor = null;
+    runProblemJump(deps(), 1); // ohne Zähler keine Klasse 5
+    expect(msgs[1]).toBe('Alles versorgt, kein Problem offen');
   });
 });
