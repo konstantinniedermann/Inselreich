@@ -280,3 +280,11 @@ Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Pha
   fängt nur genau dieses Literal. Ursprung: Final-Review UI-AUFRAEUM-2. Einschätzung: niedrig, bündeln mit nächstem UI-Aufräumpaket.
 
 - **2026-10-12 · `make check` rot an `zeitreserve`: `tests/sim/islands-c.test.ts` «Spanne protokollieren (Seeds 1..300)».** 2327 ms lokal gegen 5000 ms Timeout (geschätzte Runner-Zeit 6981 ms, R270/E-043); sonst alle Prüfungen grün. Ursprung: Retro-Lauf `make check` des studio-coach, Last nicht gemessen. Einschätzung: mittel, gefährdet den Push-Gate; Timeout anheben (Vorschlag 15000 ms) oder Test aufteilen, in ein TOOL-/UI-Bündel; Lastmessung (`uptime`) vor Bewertung (R353 P4).
+
+### 2026-10-13 · Unterhalt-Karte bei Pause: Fusszeile gegen Zeilen leicht verschoben
+
+- Fundort: `src/ui/upkeepRank.ts` (UI-HAEPPCHEN-A, Final-Review). Beobachtung: Die Fusszeile nimmt `stats.upkeep`, das nur je Tick nachgeführt wird. Baut man in der Pause oder wechselt das Edikt und öffnet dann die Karte, weichen Zeilen und Fusszeile bis zum nächsten Tick ab (mit Sparedikt landet die Abweichung in der Edikt-Zeile). Ursprung: Final-Review. Einschätzung: niedrig; Abhilfe `totalUpkeep(world)` beim Öffnen, falls es im Spiel auffällt.
+
+### 2026-10-13 · Heimat-Kontor fehlt in der Unterhalt-Rangliste
+
+- Fundort: Playtest UI-HAEPPCHEN-A. Beobachtung: Das Heimat-Kontor (Unterhalt 0) steht nicht in der Rangliste, ein Kontor auf einer fernen Insel schon (60 / min). Passt zum Code, kann irritieren. Ursprung: Playtest. Einschätzung: niedrig, ggf. Hinweistext oder Konsistenz prüfen.

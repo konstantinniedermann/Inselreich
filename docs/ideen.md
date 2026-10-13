@@ -630,7 +630,7 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Raster: Spass 1 · Passung 1 · Aufwand 3 · Risiko 3 = 9 (Scout: Passung 2 = 10)
 - Bewertung lead-design: Passung 2 → 1 (reine Tastenhilfe). Unter der Pitch-Schwelle, aber fast kostenlos und ein Playtest-Befund. Randfall: nur ohne Eingabefokus und ohne offenen Dialog; `9`/`0` vor der Seefahrt bleiben stumm.
 - Nutzen/Aufwand: kleine Reibung weg · S · ≈ 10 Tools als Beipack
-- Entscheid: IDEEN-08 Empfehlung als Beipack ins UI-Häppchen nach M13 (I-062, I-063), kein eigener Platz
+- Entscheid: IDEEN-08 Empfehlung als Beipack ins UI-Häppchen nach M13 (I-062, I-063), kein eigener Platz. Umgesetzt in UI-HAEPPCHEN-A (R573).
 
 ### I-084 · bewertet · Letztes Werkzeug mit Enter wieder aufnehmen
 
