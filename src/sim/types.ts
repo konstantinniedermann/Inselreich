@@ -264,7 +264,7 @@ export interface Ship {
   homing: boolean;
 }
 export interface World {
-  version: 13;
+  version: 14;
   seed: number;
   islands: Island[];
   tick: number;
@@ -308,6 +308,10 @@ export interface World {
   monumentDone: boolean;
   /** Kaufanteil je Gut in % des Listenpreises (I-048); 100 = Listenpreis, höchstens `BUY_CAP`. */
   buyPct: Record<GoodId, number>;
+  /** Laufender Liefervertrag (I-047); `null` = keiner. Nie zugleich mit `order` oder `contractOffer`. */
+  contract: Contract | null;
+  /** Angebot nach einer Auftragslieferung (I-047); nie zugleich mit `order`. */
+  contractOffer: ContractOffer | null;
 }
 
 /** Eine Insel: Raster, Kontor, Lager und Lage im Archipel (M12 E0, E1). */
