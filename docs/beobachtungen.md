@@ -4,7 +4,7 @@ Aufbau je Eintrag: Datum · Fundort · Beobachtung · Ursprung · erste Einschä
 Auswertung mit dem Skill `beobachtungen-auswerten`. Ein Folgeissue entsteht nur auf
 ausdrückliche Zustimmung des Nutzers; im Studio gehen Paket-Kandidaten an L0.
 
-Letzte Auswertung: 2026-10-11
+Letzte Auswertung: 2026-10-13
 
 **Marke (R287, R288):** Die Zeile „Letzte Auswertung: JJJJ-MM-TT“ ist die Zählmarke des SessionStart-Hooks. Als
 Eintrag zählt jede Überschrift der Ebene 2 oder 3 unter der Marke, ausser „Offen …“ und „Ausgewertet …“. Neue
@@ -31,6 +31,8 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 **Stand 2026-10-11 (2)** (`lead-production`, Paket BEOB-2026-10-11b, gegen `60144cdb`): 12 Einträge gesichtet. Bilanz in „Ausgewertet 2026-10-11 (2)“; vier Einträge bleiben offen und sind I-048 (R555) bzw. TOOL-GATE-ENSEMBLE (R556) zugeordnet.
 
 ---
+
+**Stand 2026-10-13** (`lead-production`, Paket BEOB-AUSWERTUNG-13, gegen `ee83d2e6`): 12 Einträge und 2 Stichpunkt-Zeilen gesichtet. Bilanz und Board-Vorschläge stehen in „Ausgewertet 2026-10-13“.
 
 ## Ausgewertet 2026-10-11 (2)
 
@@ -176,110 +178,34 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 ---
 
+## Ausgewertet 2026-10-13
+
+12 Einträge und 2 Stichpunkt-Zeilen am Stand `ee83d2e6` geprüft (R580). Bilanz: 8 erledigt, 3 eingeplant bzw. als Board-Vorschlag, 3 abgehakt mit Trigger; 0 neue Ideen (Pool ≫ 40, `docs/ideen.md` nur per grep gelesen).
+
+| Eintrag (Datum · Titel)                                            | Ergebnis                                                                                              | Beleg                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-10 · Verkaufssättigung / Dauerverkauf Holz                 | abgehakt, Trigger: nächstes Handels-/Wirtschafts-Brainstorming (I-047 Stammkunde, Paket design-I-047) | I-048 Schritt B entschieden: Verzicht (R571), `BUY_RISE = 0` in `src/sim/defs/goods.ts`; `SELL_RECOVERY_INTERVAL = 10` in `src/sim/defs/timing.ts`; Dauerverkauf-Zahlen nicht neu gemessen                                         |
+| 2026-10-11 · `buyPct` fehlt in arc42                               | eingeplant (Trivial-Fix-Vorschlag an L0)                                                              | `grep buyPct docs/arc42.md`: 0 Treffer; `buyPct` lebt in `src/sim/{types,world,save,trade}.ts`; T08 von `feat/i048-b` wird nie gemergt (R571), also deckt es niemand                                                               |
+| 2026-10-11 · Sieg-Tick im Balancing sprunghaft                     | erledigt                                                                                              | `BUY_RISE = 0` (R571); Robustheit über Ensemble: `ENSEMBLE_WIN_TICK_LIMIT` in `tests/sim/ensemble.test.ts:9`, R558, R572                                                                                                           |
+| 2026-10-11 · Controller kippt bei verschobenen Zeitpunkten         | erledigt                                                                                              | Härtung TOOL-CONTROLLER-HAERTUNG (R568), Gate-Ensemble (R558)                                                                                                                                                                      |
+| 2026-10-11 · Controller-Stillstand Phase 50/70/90                  | erledigt                                                                                              | R568 (Stillstand), R572 (Streuung, `ENSEMBLE_WIN_TICK_LIMIT` 8250)                                                                                                                                                                 |
+| 2026-10-11 · L0-Commit fängt offenen Integrator-Merge ein          | erledigt                                                                                              | Integrator mergt nur in `.worktrees/integrate` (R565 P1, `docs/studio/STUDIO.md` Abschnitt Gate Merge), E-063                                                                                                                      |
+| 2026-10-12 · `README.md` und `docs/ideen.md` werden ganz gelesen   | eingeplant (Board-Vorschlag)                                                                          | `wc -c`: README 59461 B, ideen 79954 B (gewachsen); E-057 greift nur beim Teillesen. Vorschlag: Paket DOC-ARCHIV (S, `lead-production`): umgesetzte/verworfene Ideen und README-Spielwerte in Archivdateien                        |
+| 2026-10-12 · README nennt Spielstand-Version 11                    | erledigt                                                                                              | `README.md:629` «Spielstand-Version 13», `src/sim/save.ts:54` `SAVE_VERSION = 13`                                                                                                                                                  |
+| 2026-10-12 · Insel C verschiebt Meer-Deko                          | abgehakt, Trigger: Spieler- oder Playtest-Meldung über verschobene Sandbänke/Riffe                    | R574: Browser-Check T08 «Meer-Deko-Verschiebung nicht sichtbar»                                                                                                                                                                    |
+| 2026-10-12 · `make studio-lint` Exit 2                             | erledigt                                                                                              | `make studio-lint` in `main` am `ee83d2e6`: Exit 0; Fix `d3841a34`                                                                                                                                                                 |
+| 2026-10-12 · Befunde Browser-Check M14-E1 (a)–(e)                  | (b), (e) abgehakt; (a), (c), (d) eingeplant (Werkzeug-Bündel Szenarien)                               | (b) Desktop-first-Regel, Trigger: Mindestbreite wird angehoben; (e) natives `title`, Trigger: Tooltip-Überarbeitung. (d) belegt: `tests/sim/scenarios.ts:1115-1125` `m13e2-v13` trägt `SAVE_VERSION + 1` (= v14), Name irreführend |
+| 2026-10-12 · nacktes `git stash` / `stash pop`                     | eingeplant: TOOL-BUENDEL-10 (T02, E-064)                                                              | R579 V1 (Guard sperrt `git stash` ausser `list`/`show`); bisher `tools/studio/guard.py:318` sperrt nur `drop`/`clear`                                                                                                              |
+| Stichpunkt · `buildMenu.ts` Tooltip-Zeile am Text erkannt          | abgehakt, Trigger: nächstes UI-Aufräumpaket                                                           | `src/ui/buildMenu.ts:221` `startsWith('Erzeugt:')` besteht; `tests/ui/input.test.ts:385` unverändert; UI-HAEPPCHEN-A fasst `buildMenu.ts` nicht an (Plan Z. 61)                                                                    |
+| Stichpunkt · `make check` rot an `islands-c.test.ts` (Zeitreserve) | eingeplant: TOOL-BUENDEL-10 (T01)                                                                     | R579; Test ohne eigenen Timeout (`tests/sim/islands-c.test.ts:115`, Standard 5000 ms)                                                                                                                                              |
+
+**Vorschläge fürs Board (Entscheid L0):**
+
+1. `buyPct` in `docs/arc42.md` (Persistenz/`save.ts`) nachführen: Trivial-Fix, eine Zeile, am besten im nächsten Doku-Audit vor dem Release.
+2. Paket DOC-ARCHIV (Grösse S, Owner `lead-production`): `docs/ideen.md` (79,9 KB) und README-Spielwerte-Anhang auslagern, damit E-057 nicht mehr greifen muss.
+3. In das Werkzeug-Bündel Szenarien (nächstes TOOL-BUENDEL): Szenario `m13-vor-ziel` erreicht das Ziel nicht von selbst (c), AK-36-Szenario `m14e1-felsbucht` (a), Umbenennung `m13e2-v13` (d).
+
 ## Offen (neue Einträge unten anhängen)
-
-### 2026-10-10 · Verkaufssättigung erholt sich schnell: Dauerverkauf Holz fast zum Vollpreis
-
-- **Fundort:** `src/sim/defs/` (Sättigung, Erholung 60 Punkte/min), Ideen-Runde IDEEN-06. Beobachtung: Dauerverkauf von Holz
-  bringt rund 240 Geld/min nahe am Vollpreis gegen 30 Unterhalt je Holzfäller — mögliche Geldquelle ohne Wahl. Ursprung:
-  Scout-Befund IDEEN-06 (lead-design). Einschätzung: mittel; mit I-048 „Zukauf-Aufschlag“ durch `design-economy-designer`
-  nachrechnen, kein eigenes Paket vorher.
-- **Zuordnung:** I-048 Schritt B (R555, Brainstorming-Gate), Nachrechnung `design-economy-designer`; bleibt offen bis der Entscheid I-048 fällt.
-
-### 2026-10-11 · `buyPct` fehlt in der arc42-Persistenz bis I-048 T08
-
-- **Fundort:** `docs/arc42.md`, Persistenz/Zeile `save.ts`. Beobachtung: Das neue Weltfeld `buyPct` (I048-SIM) ist nicht
-  beschrieben, bis Strang I048-B (T08) die Doku nachführt. Ursprung: Controller I048-SIM. Einschätzung: gering; T08 deckt es,
-  vor dem Release M13 prüfen.
-- **Zuordnung:** I-048 (R555), T08 führt arc42 nach. **Verifiziert:** 2026-10-11 gegen `60144cdb` — belegt (`grep buyPct docs/arc42.md`: 0 Treffer).
-
-### 2026-10-11 · Sieg-Tick im Balancing reagiert sprunghaft auf Spielwerte
-
-- **Fundort:** `tests/sim/balance.test.ts` (Seed 3, `WIN_TICK_LIMIT` 7500). Beobachtung: `BUY_RISE` 2 → Sieg 7150,
-  `BUY_RISE` 1 → Sieg 7550 (milderer Aufschlag, späterer Sieg). Die Grenze 7500 ist damit ein brüchiges Gate (heute 350 Ticks
-  Luft). Ursprung: Designurteil D-I048-B-GRENZE. Einschätzung: mittel; bei der nächsten Balancing-Runde mehrere Seeds oder
-  ein Mittel statt eines Einzellaufs prüfen.
-- **Nachtrag 2026-10-11 (D-I048-B-WERTE):** 27 Messungen (Scratchpad lead-design): Antwort auch ohne Zukauf-Aufschlag nicht
-  monoton (`SELL_RECOVERY_INTERVAL` 15 → Sieg 6750, 16 → 7350, 18 → Krisen normal ohne Sieg). Schmalste Ränder: Edikt reich
-  «Wohlfahrt echt früher» 60 Ticks, Krisen normal 150 Ticks. Einschätzung: hoch, Einzellauf-Gates blockieren jede Wirtschaftsänderung.
-- **Zuordnung:** I-048 (R555); die Robustheitsachse liefert TOOL-GATE-ENSEMBLE (R556). Offen, bis I-048 Schritt B entschieden ist.
-
-### 2026-10-11 · Balancing-Controller kippt bei verschobenen Entscheidungszeitpunkten
-
-Fundort: `make gate-ensemble` (TOOL-GATE-ENSEMBLE, `tests/sim/ensemble.test.ts`), Seed 3, Phasen 0/20/40/60/80. Beobachtung: Nur Phase 0, 20 und 40 gewinnen (Sieg-Tick 6750 / 7250 / 6650); Phase 60 und 80 erreichen bis Tick 9000 keinen Sieg und fallen im Geld ins Minus (minMoney -91 / -51). Die Referenz-Baseline (Sieg 6750, minMoney 117) hängt also am Entscheidungsraster `tick % 100 === 0`. Ursprung: TOOL-GATE-ENSEMBLE T01/T04. Einschätzung: kein Spielfehler (der Controller ist ein Test-Spieler), aber Gates mit Wertgrenzen auf Basis eines Einzellaufs sind weniger belastbar als gedacht; Verdikt AUSREISSER für Sieg-Tick und minMoney. Für M14-Werte: Grenzen mit Ensemble prüfen, und ob der Controller bei Reserve/Aufstiegsmoment robuster werden soll, ist ein Design-/Tech-Entscheid an L0.
-
-- **Zuordnung:** probe-CONTROLLER-PHASE (R558). Offen.
-
-### 2026-10-11 · Controller-Stillstand auch bei Phase 50, 70 und 90 (Gegenprüfung)
-
-Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Phasen 10/30/50/70/90, vor der Härtung). Beobachtung: Phase 10/30 siegen (7950 / 7250), Phase 50/70/90 stehen bis Tick 9000 still (Schule bei Tick 551/571/591, minMoney 3 / -88 / 19); nach der Härtung siegen alle zehn Phasen (50: 7000, 60: 7900, 70: 7600, 80: 7500, 90: 6900; Phase 0-40 unverändert). Phase 60 (7900) und 70 (7600) liegen über `WIN_TICK_LIMIT` 7500, Verdikt im Ensemble: AUSREISSER. Ursprung: TOOL-CONTROLLER-HAERTUNG T03. Einschätzung: Ursache war nur die zu frühe Schule; die verbleibende Streuung 6650-7900 ist ein Befund für M14-Werte (Grenzen mit Ensemble prüfen). Die Härtung nutzt einen Lagervorrat-Ausweg (`stock.cloth` > Zielbedarf), sonst verschöbe sich Phase 0.
-
-- **Zuordnung:** probe-CONTROLLER-PHASE (R558). Stillstand behoben (R568); Streuung (Sieg-Tick-Grenze) erledigt durch T04 (R572): `ENSEMBLE_WIN_TICK_LIMIT` 8250.
-
-### 2026-10-11 · L0-Commit im Hauptcheckout fängt offenen Integrator-Merge ein
-
-- **Fundort:** `main` @ `6ffa7f81` (Eltern `49f66078`, `a8d9dcac`). Beobachtung: Der Integrator bereitete `git merge --no-ff
---no-commit tool/gate-ensemble` im Hauptcheckout vor und lief `make check`; L0 committete in dieser Zeit ein Ruling
-  (`git add docs/studio/rulings.md && git commit`) — Git schloss dabei den offenen Merge mit ab. Merge-Commit trägt die
-  Ruling-Nachricht statt „feat: Merge …“, Inhalt geprüft (`make check` Exit 0). Ursprung: MERGE-TOOL-GATE-ENSEMBLE.
-  Einschätzung: mittel; Abhilfe Werkzeug-Kandidat: Integrator mergt im Worktree `.worktrees/integrate` oder L0/Leads prüfen
-  vor jedem Commit auf `main` `.git/MERGE_HEAD` (Guard-Hook möglich).
-- **Zuordnung:** Retro M13 (`docs/studio/retros/2026-10-12-m13.md` B1, V2) und Prozess-Retro M13 P1; Abhilfe als E-063 vorgeschlagen.
-
-### 2026-10-12 · `README.md` und `docs/ideen.md` werden ganz gelesen und wachsen
-
-- **Fundort:** Ampelzeile „Grösste gelesene Datei“ M13 (`docs/studio/metriken/M13.md`): `README.md` 48,2 KB und `docs/ideen.md`
-  42,9 KB als volle Lese-Ergebnisse; auf der Platte 58,7 KB bzw. 79,3 KB. Beobachtung: Die Briefingzeile E-057 (Teillesen ab
-  30 KB) greift bei diesen beiden Dateien nicht immer; beide wachsen mit jedem Release bzw. jeder Ideen-Runde. Ursprung: Retro
-  M13 (Ampel). Einschätzung: niedrig; Kandidat für eine Auswertung durch `lead-production` (z. B. Archiv-Abschnitt für
-  umgesetzte Ideen, README-Anhang für Spielwerte), keine Regel.
-- **Zuordnung:** offen.
-
-### 2026-10-12 · `README.md` nennt Spielstand-Version 11, Code hat 12
-
-- **Fundort:** `README.md` Z. 624 «Spielstand-Version 11»; `src/sim/save.ts:47` `SAVE_VERSION = 12` (seit Release M13).
-  Ursprung: lead-design IDEEN-08 (ausserhalb Scope). Einschätzung: niedrig; wird mit M14-E1 T07 (README, Save v13) ohnehin
-  nachgeführt — dort mitprüfen, sonst Doku-Audit vor dem nächsten Release.
-- **Zuordnung:** M14-E1 T07 (R566).
-
-### 2026-10-12 · Insel C verschiebt Meer-Deko auch fern der neuen Fahrlinie
-
-- **Fundort:** M14-E1 T03 (`feat/m14-e1` @ `00db07fe`), Meer-Plan: Sand, Riff und Tang ziehen über Rang und Belegung nach; Seeds
-  1–40: 303 von 405 Flächen kachelgleich. Ursprung: Controller M14-E1-SIM, Auflage R557 (1b). Einschätzung: niedrig, rein
-  darstellend; migrierte Spielstände zeigen verschobene Sandbänke/Riffe. Kandidat für den Browser-Check T08 (sichtbar störend?).
-- **Zuordnung:** R567.
-
-### 2026-10-12 · `make studio-lint` endet auf `main` mit Exit 2 (`model.py`, `test_model.py`)
-
-- **Fundort:** `tools/studio/model.py`, `tools/studio/tests/test_model.py`; gemeldet vom Controller TOOL-BUENDEL-9, auf `main`
-  identisch. Ursprung: TOOL-BUENDEL-9 (ausserhalb Scope). Einschätzung: niedrig; Kandidat Trivial-Fix im TOOL-BUENDEL-9
-  (gleicher Themenbereich) oder nächstes Werkzeug-Bündel.
-- **Zuordnung:** erledigt durch TOOL-BUENDEL-9 (`d3841a34`, ruff format).
-
-### 2026-10-12 · Befunde Browser-Check M14-E1 (T08), ausserhalb Scope
-
-- **Fundort:** `.studio/qa/m14-e1/`, Szenarien. Beobachtungen: (a) AK-36 «Stein nach 1 min gestiegen» in `m14e1-felsbucht` nicht
-  wörtlich sichtbar (Glashütte verbraucht Stein, Holz geht nach ≈ 500 Ticks aus; Verdopplung +20/min belegt); (b) Inseln-Popover
-  ragt bei 800×600 über den rechten Rand (Desktop-first: nur «stürzt nicht ab», kein Absturz); (c) Szenario `m13-vor-ziel` erreicht
-  das Ziel nicht von selbst; (d) Name `m13e2-v13` in `scenario-saves.test.ts` meint inzwischen `SAVE_VERSION + 1` (v14);
-  (e) Seekarten-Hover ist natives `title`, im Headless-Screenshot unsichtbar. Ursprung: qa-playtester M14-E1 T08.
-  Einschätzung: alle niedrig; (a)/(c)/(d) Kandidaten Werkzeug-Bündel (Szenarien), (b) bleibt nach Desktop-first-Regel.
-- **Zuordnung:** R574.
-
-### 2026-10-12 · Arbeiter nutzt nacktes `git stash; git stash pop` und wendet fremden Stash an
-
-- **Fundort:** UI-AUFRAEUM-2 T02 (Worktree `.worktrees/ui-aufraeum-2`): `git stash; git stash pop` holte einen alten fremden Stash
-  (Konflikt in `tools/studio/tests/test_metrics.py`, per `git restore` zurückgesetzt); dazu T01 verlor ungesicherte Änderungen
-  durch `git checkout`. Stash-Liste danach geprüft: `stash@{0}` (950f61d5) und `stash@{1}` (e20340a9) unverändert vorhanden.
-  Ursprung: Schlussbericht Controller UI-AUFRAEUM-2. Einschätzung: mittel — der Stash-Stapel ist allen Worktrees gemeinsam;
-  Kandidat Guard-Regel (nacktes `git stash`/`stash pop` sperren, WIP-Commit statt Stash) oder Briefing-Zeile für Arbeiter.
-- **Zuordnung:** R576, Retro.
-
-- **2026-10-12 · `src/ui/buildMenu.ts:221` Tooltip-Zeile am Text erkannt.** `text.startsWith('Erzeugt:')` erkennt die Zeile am
-  Anzeigetext, dieselbe Kopplung wie in UI-AUFRAEUM-2. Dazu `tests/ui/input.test.ts:385`: `not.toContain("textContent = 'Abreissen'")`
-  fängt nur genau dieses Literal. Ursprung: Final-Review UI-AUFRAEUM-2. Einschätzung: niedrig, bündeln mit nächstem UI-Aufräumpaket.
-
-- **2026-10-12 · `make check` rot an `zeitreserve`: `tests/sim/islands-c.test.ts` «Spanne protokollieren (Seeds 1..300)».** 2327 ms lokal gegen 5000 ms Timeout (geschätzte Runner-Zeit 6981 ms, R270/E-043); sonst alle Prüfungen grün. Ursprung: Retro-Lauf `make check` des studio-coach, Last nicht gemessen. Einschätzung: mittel, gefährdet den Push-Gate; Timeout anheben (Vorschlag 15000 ms) oder Test aufteilen, in ein TOOL-/UI-Bündel; Lastmessung (`uptime`) vor Bewertung (R353 P4).
 
 ### 2026-10-13 · Unterhalt-Karte bei Pause: Fusszeile gegen Zeilen leicht verschoben
 
