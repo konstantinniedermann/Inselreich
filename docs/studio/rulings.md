@@ -6787,3 +6787,17 @@ nicht streichen», L1 macht keine Inhaltsarbeit). `/tmp/x` ist kein leeres Verze
 Regelbezug: gates.md Gate Merge, R581, R588, R595, R598 · Kosten bei Irrtum: ein Fehler in Werkzeug-Code fällt erst im nächsten push-check auf.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-11 · ADR: —
+
+## R603 · 2026-10-13 · Release-Check REL-21: OK mit Doku-Auflage
+
+Ruling: Bericht lead-qa REL-21 am Kandidaten `0a19ad53`: Playtest OK (85 Screenshots unter `.studio/qa/REL-21/`, 0 Konsolenfehler,
+v13 → v14 lädt, v999/kaputtes JSON abgewiesen), Opus-Review BEDENKEN nur Doku (arc42 fünf Modulzeilen veraltet, README Z. 314
+Zifferntasten-Satz falsch platziert, Z. 164 Esc/Rechtsklick), strenge Zeitreserve-Nachmessung (Startlast 2,7) 0 ohne Reserve.
+Entscheid **Release-Check OK mit Auflage**: Doku-Fix (arc42-Modulzeilen, README-Stellen) als `docs:`-Commit durch lead-tech **nach**
+dem Merge von DOC-ARCHIV (README neu gegliedert), Delta-Review sonnet zusammen mit TOOL-BUENDEL-11 und DOC-ARCHIV vor dem Push in der
+nächsten Session. Esc/Rechtsklick und Kleinbefunde → `docs/beobachtungen.md`. Reihenfolge jetzt: Integrator merged DOC-ARCHIV (R601)
+und TOOL-BUENDEL-11 (R602) lokal.
+
+Regelbezug: gates.md Gate Merge Release, R600, R601, R602 · Kosten bei Irrtum: veraltete Modulzeilen bis zum Doku-Fix.
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL-21 · ADR: —
