@@ -6468,3 +6468,15 @@ STUDIO.md Start-Routine 6), Budget 1 Start/P1, Worktree `.worktrees/beob-13`. Id
 Regelbezug: R445, R475, R287 · Kosten bei Irrtum: eine Ideen-Runde einen Tag später.
 
 Entscheider: L0 · Anlass: freie Kapazität nach R578 · ADR: —
+
+## R581 · 2026-10-13 · Gate Merge BEOB-AUSWERTUNG-13: OK; drei Vorschläge
+
+Ruling: Bericht lead-production, `docs/beob-13` @ `72c3f3d3`, `make docs-check` Exit 0, 8 erledigt / 3 eingeplant / 3 abgehakt mit
+Trigger, Marke 2026-10-13. Entscheid **Gate Merge OK** (nur Doku), Merge durch `production-integrator` in `.worktrees/integrate`,
+kein Push (geht mit REL-20). Vorschläge: (1) `buyPct` in `docs/arc42.md` nachführen — angenommen, als Beipack im Doku-Audit vor
+dem Release REL-20; (2) Paket **DOC-ARCHIV** (S, lead-production: `docs/ideen.md` und README-Spielwerte-Anhang auslagern) —
+angenommen, aufs Board nach UI-HAEPPCHEN-B; (3) Szenarien-Punkte (a)(c)(d) und Umbenennung `m13e2-v13` → **TOOL-BUENDEL-11**.
+
+Regelbezug: gates.md Gate Merge, R287, R580 · Kosten bei Irrtum: ein Eintrag wird später erneut geöffnet.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-AUSWERTUNG-13 · ADR: —
