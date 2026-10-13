@@ -2,21 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { buildLine, linePath, linePlan, lineHintText } from '../../src/ui/roadLine';
 import { ROAD_COST } from '../../src/sim/defs/buildings';
 import { placeRoad } from '../../src/sim/build';
+import { canPlaceRoad } from '../../src/sim/placement';
 import { HOME, tileAt } from '../../src/sim/world';
 import { uxWorld } from './worlds';
 import type { World } from '../../src/sim/types';
 
-/** Erste Zeile frei begehbarer Kacheln (Land, kein Weg, kein Bau) mit `n` Kacheln in x-Richtung. */
+/** Erster Block aus Kacheln, auf denen ein Weg baubar ist: `n` + 1 breit, 3 hoch. */
 function freeRun(w: World, n: number): { x: number; y: number } {
   const isl = w.islands[HOME]!;
-  for (let y = 0; y < isl.h; y++)
-    for (let x = 0; x + n < isl.w; x++) {
+  for (let y = 0; y + 2 < isl.height; y++)
+    for (let x = 0; x + n < isl.width; x++) {
       let okRun = true;
-      for (let dy = 0; dy <= n && okRun; dy++)
-        for (let dx = 0; dx <= n && okRun; dx++) {
-          const t = tileAt(isl, x + dx, y + dy);
-          if (!t || t.terrain !== 'grass' || t.road || t.buildingId !== null) okRun = false;
-        }
+      for (let dy = 0; dy < 3 && okRun; dy++)
+        for (let dx = 0; dx <= n && okRun; dx++)
+          if (!canPlaceRoad(w, x + dx, y + dy, HOME).ok) okRun = false;
       if (okRun) return { x, y };
     }
   throw new Error('kein freier Block');
@@ -87,15 +86,15 @@ describe('linePlan (AK-11)', () => {
     const isl = w.islands[HOME]!;
     const plan = linePlan(w, HOME, [
       { x: -1, y: 0 },
-      { x: isl.w, y: 0 },
+      { x: isl.width, y: 0 },
     ]);
     expect(plan.tiles.map((t) => t.state)).toEqual(['blocked', 'blocked']);
     expect(plan.newCount).toBe(0);
     expect(plan.cost).toBe(0);
     expect(plan.stopReason).toBe('Ausserhalb der Karte');
     let water: { x: number; y: number } | null = null;
-    for (let y = 0; y < isl.h && !water; y++)
-      for (let x = 0; x < isl.w; x++)
+    for (let y = 0; y < isl.height && !water; y++)
+      for (let x = 0; x < isl.width; x++)
         if (tileAt(isl, x, y)!.terrain === 'water') {
           water = { x, y };
           break;
