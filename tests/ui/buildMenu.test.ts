@@ -1,10 +1,22 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createWorld } from '../../src/sim/world';
 import type { BuildingDefId } from '../../src/sim/types';
 import { lockedToolText } from '../../src/ui/goal';
 import { TOOL_HOTKEYS } from '../../src/ui/hotkeys';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { tierPreviewLine, tooltipLines } from '../../src/ui/buildMenu';
+import { cachedBalanceLine, tierPreviewLine, tooltipLines } from '../../src/ui/buildMenu';
+
+const spy = vi.hoisted(() => ({ n: 0 }));
+vi.mock('../../src/ui/balancePreview', async (orig) => {
+  const m = await orig<typeof import('../../src/ui/balancePreview')>();
+  return {
+    ...m,
+    balanceAfterBuild: (...a: Parameters<typeof m.balanceAfterBuild>) => {
+      spy.n++;
+      return m.balanceAfterBuild(...a);
+    },
+  };
+});
 
 const MONUMENT_TOOL = { kind: 'build', defId: 'monument' } as const;
 
@@ -73,5 +85,53 @@ describe('M14-E1 Bauleisten-Zusatzzeile (AK-M14E1-30)', () => {
     expect(extra(lines('quarry', 1))).toEqual([]);
     expect(extra(lines('spicefarm', 3))).toEqual([]);
     expect(extra(tooltipLines({ kind: 'build', defId: 'quarry' }))).toEqual([]);
+  });
+});
+
+describe('I-078 Bilanz-Zeile im Bau-Tooltip (AK-10, AK-13, AK-14)', () => {
+  const w = createWorld(3, { unlockAll: true });
+  const lineOf = (defId: BuildingDefId, world = w) =>
+    tooltipLines({ kind: 'build', defId }, world).find((l) => l.startsWith('Bilanz danach:'));
+  it('Zeile steht direkt unter «Unterhalt», auch bei gesperrtem Eintrag (Zahlen bleiben)', () => {
+    const ls = tooltipLines({ kind: 'build', defId: 'fisher' }, w);
+    const i = ls.findIndex((l) => l.startsWith('Unterhalt:'));
+    expect(ls[i + 1]).toMatch(/^Bilanz danach: .* → .* \/ min$/);
+    const locked = createWorld(3);
+    expect(lineOf('fisher', locked)).toMatch(/^Bilanz danach: /);
+  });
+  it('ohne Welt keine Bilanz-Zeile', () => {
+    const ls = tooltipLines({ kind: 'build', defId: 'fisher' });
+    expect(ls.some((l) => l.startsWith('Bilanz danach:'))).toBe(false);
+  });
+  it('Wohnhaus: «bis zu … (Steuer bei voller Belegung)»', () => {
+    expect(lineOf('house')).toMatch(/→ bis zu .* \/ min \(Steuer bei voller Belegung\)$/);
+  });
+  it('Betrieb mit Unterhalt zeigt einen Pfeil, kein «gleich»', () => {
+    expect(BUILDING_DEFS.market.upkeep).toBeGreaterThan(0);
+    expect(lineOf('market')).not.toMatch(/gleich/);
+  });
+});
+
+describe('I-078 Cache der Bilanz-Zeile (AK-14: kein Neurechnen je Takt)', () => {
+  it('gleicher Stand: eine Rechnung; neuer Tick, Steuerstufe oder Schiff: neue Rechnung', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const first = cachedBalanceLine(w, 'fisher', 0);
+    spy.n = 0;
+    expect(cachedBalanceLine(w, 'fisher', 0)).toBe(first);
+    expect(cachedBalanceLine(w, 'fisher', 0)).toBe(first);
+    expect(spy.n).toBe(0);
+    w.tick += 1;
+    cachedBalanceLine(w, 'fisher', 0);
+    expect(spy.n).toBe(1);
+    cachedBalanceLine(w, 'fisher', 0);
+    expect(spy.n).toBe(1);
+    cachedBalanceLine(w, 'chapel', 0);
+    expect(spy.n).toBe(2);
+    w.taxLevels = { ...w.taxLevels, 1: 'high' };
+    cachedBalanceLine(w, 'fisher', 0);
+    expect(spy.n).toBe(3);
+    w.ships.push({ id: 99, port: 0, to: null, left: 0, cargo: {}, route: null, homing: false });
+    cachedBalanceLine(w, 'fisher', 0);
+    expect(spy.n).toBe(4);
   });
 });

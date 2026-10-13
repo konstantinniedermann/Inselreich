@@ -28,6 +28,7 @@ import type { IconId } from './icons';
 import { iconChip, showMessage } from './messages';
 import { perMinute } from './time';
 import { traitBuildLine } from './islandCard';
+import { balanceAfterBuild, balanceLine } from './balancePreview';
 
 export const CATEGORIES: { id: Category; label: string }[] = [
   { id: 'infrastructure', label: 'Infrastruktur' },
@@ -132,6 +133,7 @@ export function tooltipLines(tool: Tool, world?: World, island: number = HOME): 
     `Kosten: ${costLine(def.cost)}${paidFromHome(tool) ? ' (aus der Heimat)' : ''}`,
     `Unterhalt: ${num(perMinute(def.upkeep, UPKEEP_INTERVAL))} / min`,
   ];
+  if (world !== undefined) lines.push(balanceLine(balanceAfterBuild(world, def.id, island)));
   if (def.id === 'townhall') lines.push('Steuer und Ausgabesperre einstellen');
   if (def.produces && def.cycle) {
     lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(def.cycle)}`);
@@ -218,6 +220,12 @@ function attachTooltip(
     line.className = i === 0 ? 'tt-title' : 'tt-line';
     line.textContent = text;
     tip.appendChild(line);
+    if (text.startsWith('Unterhalt:') && tool.kind === 'build') {
+      // Bilanz-Vorschau: `updateBuildMenu` füllt den Text (braucht die Welt)
+      const balance = document.createElement('span');
+      balance.className = 'tt-line tt-balance';
+      tip.appendChild(balance);
+    }
     if (text.startsWith('Erzeugt:')) {
       // Inselvorteil der aktiven Insel: `updateBuildMenu` füllt Text und Sichtbarkeit
       const advantage = document.createElement('span');
@@ -442,6 +450,45 @@ export function renderBuildMenu(
   }
 }
 
+/** Cache der Bilanz-Zeilen: gilt, solange Welt, Tick und Gebäudestand (Zahl, Ausbaustufen, Stilllegung), Schiffe und Edikt gleich sind. */
+let balanceCache: { world: World; sig: string; lines: Map<string, string> } | null = null;
+
+function worldSignature(world: World): string {
+  let n = 0;
+  let levels = 0;
+  let paused = 0;
+  for (const b of Object.values(world.buildings)) {
+    n++;
+    levels += b.level ?? 1;
+    if (b.paused === true) paused++;
+  }
+  return [
+    world.tick,
+    world.nextBuildingId,
+    n,
+    levels,
+    paused,
+    world.ships.length,
+    world.edict,
+    JSON.stringify(world.taxLevels),
+  ].join('|');
+}
+
+/** Bilanz-Zeile für den Bau-Tooltip; rechnet nur bei geändertem Stand neu, nicht je HUD-Takt. */
+export function cachedBalanceLine(world: World, defId: BuildingDefId, island: number): string {
+  const sig = worldSignature(world);
+  if (balanceCache === null || balanceCache.world !== world || balanceCache.sig !== sig) {
+    balanceCache = { world, sig, lines: new Map() };
+  }
+  const key = `${island}:${defId}`;
+  let line = balanceCache.lines.get(key);
+  if (line === undefined) {
+    line = balanceLine(balanceAfterBuild(world, defId, island));
+    balanceCache.lines.set(key, line);
+  }
+  return line;
+}
+
 /** Markiert Bau-Buttons, deren Kosten gerade nicht bezahlbar sind (bleiben klickbar). */
 export function updateBuildMenu(nav: HTMLElement, world: World, island: number = HOME): void {
   const live = nav.querySelector('.tt-unprotected');
@@ -460,6 +507,11 @@ export function updateBuildMenu(nav: HTMLElement, world: World, island: number =
       const line = traitBuildLine(world, island, tool.defId) ?? '';
       if (advantageEl.textContent !== line) advantageEl.textContent = line;
       if (advantageEl.hidden !== (line === '')) advantageEl.hidden = line === '';
+    }
+    const balanceEl = btn.querySelector<HTMLElement>('.tt-balance');
+    if (balanceEl && tool.kind === 'build') {
+      const line = cachedBalanceLine(world, tool.defId, island);
+      if (balanceEl.textContent !== line) balanceEl.textContent = line;
     }
     const reason = btn.querySelector('.tt-reason');
     const text = why === null ? '' : friendlyReason(world, why, { cost, island });
