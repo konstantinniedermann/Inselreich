@@ -6468,3 +6468,166 @@ STUDIO.md Start-Routine 6), Budget 1 Start/P1, Worktree `.worktrees/beob-13`. Id
 Regelbezug: R445, R475, R287 · Kosten bei Irrtum: eine Ideen-Runde einen Tag später.
 
 Entscheider: L0 · Anlass: freie Kapazität nach R578 · ADR: —
+
+## R581 · 2026-10-13 · Gate Merge BEOB-AUSWERTUNG-13: OK; drei Vorschläge
+
+Ruling: Bericht lead-production, `docs/beob-13` @ `72c3f3d3`, `make docs-check` Exit 0, 8 erledigt / 3 eingeplant / 3 abgehakt mit
+Trigger, Marke 2026-10-13. Entscheid **Gate Merge OK** (nur Doku), Merge durch `production-integrator` in `.worktrees/integrate`,
+kein Push (geht mit REL-20). Vorschläge: (1) `buyPct` in `docs/arc42.md` nachführen — angenommen, als Beipack im Doku-Audit vor
+dem Release REL-20; (2) Paket **DOC-ARCHIV** (S, lead-production: `docs/ideen.md` und README-Spielwerte-Anhang auslagern) —
+angenommen, aufs Board nach UI-HAEPPCHEN-B; (3) Szenarien-Punkte (a)(c)(d) und Umbenennung `m13e2-v13` → **TOOL-BUENDEL-11**.
+
+Regelbezug: gates.md Gate Merge, R287, R580 · Kosten bei Irrtum: ein Eintrag wird später erneut geöffnet.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-AUSWERTUNG-13 · ADR: —
+
+## R582 · 2026-10-13 · TOOL-BUENDEL-10: Nacharbeit seaKorridor-Timeout und Wortanker, dann make check
+
+Ruling: Bericht lead-tech TOOL-BUENDEL-10, `tool/b10` @ `0d383d1b`, Review BEDENKEN (alle niedrig), `make check` offen (Testlock,
+Last > 8). Entscheide: (1) Ownership von TOOL-BUENDEL-10 um `tests/render/seaKorridor.test.ts` erweitert: Fall «AK-K1b Teilhash
+(R557)» bekommt einen expliziten Timeout von 20000 ms mit Kommentar (Grund: Runner-Schätzung ≈ 7,9 s > 5 s, R570); bevorzugt,
+falls ohne Aussageverlust in wenigen Minuten möglich, den Fall beschleunigen. (2) `stampcheck.py` Wortanker `\bR(\d+)` und
+Test — Trivial-Fix im selben Zug. (3) `git stash --help/-h` bleibt gesperrt (Meldung nennt WIP-Commit; harmlos). (4) Guard-Umgehung
+per Alias/`$(…)`/`xargs` → Eintrag `docs/beobachtungen.md` durch den Controller. (5) Danach `make check` Exit 0, sobald die Last es
+zulässt; L0 entscheidet dann Gate Merge und Push REL-20. Budget unverändert (2 Starts frei).
+
+Regelbezug: R570, R579, gates.md Gate Merge · Kosten bei Irrtum: ein langsamer Test bleibt mit grosszügigem Timeout unbemerkt langsamer.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-10 · ADR: —
+
+## R583 · 2026-10-13 · Gate Brainstorming I-047 Stammkunde: OK Option 3; Gate Spec starten
+
+Ruling: Bericht lead-design design-I-047, `design/i047` @ `b8b5477a`, Selbstprüfung BEDENKEN (geringes Spielgewicht). L0-Prüfung
+der fünf Fragen: stärkt die Säule Handel (planbare Einnahme statt nur Zufallsauftrag), Spielerzweck in einem Satz sagbar («sichere
+Abnahme gegen höhere Prämie»), Scope klar (zwei Pakete SIM/UI), nur Mechanik, Option 3 ist die einfachste (nutzt den bestehenden
+Auftragsplatz). Abgrenzung zu Erweiterung 1 belegt (I-047 nur in deren verworfener Variante B). Entscheide: (1) **Gate Brainstorming
+OK, Option 3** «Stammkunde im Auftragsplatz». (2) Save v14: wer zuerst merged, erhält v14, der andere zieht nach (R487 P-4). (3)
+Verlustfreie Migration v13→v14 bestätigt (Verfassung §3 erlaubt Abweisen, verlangt es nicht; unbekannte Versionen weiter abweisen
+mit Test). (4) R7 (Zufallsauftrag im selben Tick nach Bruch) bleibt. Gate Spec: `lead-tech` und `lead-qa` (beide opus) parallel.
+
+Regelbezug: gates.md Gate Brainstorming, Gate Spec, R571 (4), R487 · Kosten bei Irrtum: zwei kleine Pakete für eine Mechanik mit geringem Gewicht.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-047 · ADR: —
+
+## R584 · 2026-10-13 · Gate Spec I-047 Stammkunde: OK mit Auflagen
+
+Ruling: Urteile lead-tech BEDENKEN (3 mittel, 2 niedrig) und lead-qa BEDENKEN (2 hoch, 6 niedrig) zu `design/i047` @ `b8b5477a`.
+Entscheid **Gate Spec OK mit Auflagen**; AK-Präfix **AK-SK-01…29** bestätigt (R417), neue AK fortlaufend ab AK-SK-30.
+**Spec-Nachtrag durch lead-design ohne neues Gate** (Budget 1 Start): QA (1) Inselwechsel in AK-SK-09/28; (2) AK-SK-22 gegen
+`SAVE_VERSION − 1` statt «v13», bitgleich 10 Perioden; (3) B.5 Risiko mit Rückfall (`CONTRACT_PREMIUM` senken oder
+`CONTRACT_MIN_TIER` 4) und Playtest-Prüfung; (4)–(5) Sätze in AK-SK-11/12/15/18; (6) Controller-Prüfung in
+`tests/sim/contract.test.ts` statt balance; (7) AK-SK-29 Aufbau (präparierter Stand) und Klang per Aufruf; (8) Anhang W.7 angleichen.
+**Auflagen an den Plan (lead-tech):** Tech (1) Schritt `foldBackToV13`, neue Schlüssel am Ende; (2) I047-SIM ≈ 60 Tools in drei Tasks
+(a)/(b)/(c); (3) Merge-Schritt «Version festlegen» mit Sechs-Stellen-Liste, Testdateien nach Thema, Tests gegen `SAVE_VERSION`;
+(4)–(5) `World.version`-Literal und Rückgabe von `tickOrders` in den Task-Dateien. Danach Plan (opus), Kombiniertes Gate durch L0
+und lead-qa.
+
+Regelbezug: gates.md Gate Spec, R417, R553, R583 · Kosten bei Irrtum: eine Plan-Überarbeitung.
+
+Entscheider: L0 · Anlass: Urteile lead-tech und lead-qa gate-I-047 · ADR: —
+
+## R585 · 2026-10-13 · Gate Merge TOOL-BUENDEL-10: OK; Push REL-20 freigegeben
+
+Ruling: Schlussbericht lead-tech TOOL-BUENDEL-10, `tool/b10` @ `6f48387a` (main gemergt, Konflikt `docs/beobachtungen.md` durch
+Eigentümer gelöst, Task-Review OK), `make check` Exit 0 im dritten Versuch, `make studio-test` 828 grün. T01 islands-c 1963 → 859 ms,
+seaKorridor-Fall Timeout 20000 ms (R582), T02 Stash-Sperre (E-064), T03 Stand-Warnung (E-065). Kein UI-Task, daher kein Browser-Lauf.
+Entscheid: **Gate Merge OK**; `production-integrator` merged `tool/b10` in `.worktrees/integrate` und führt das **Push-Gate REL-20**
+durch (`make check`, `make check-ci-perf` mit Exit-Codes, Push per geprüftem Hash `git push origin <hash>:main`, Pages per
+`gh workflow run Pages --ref main`, `backup/main-lokal` per Fast-Forward). Zeitreserve-Warnungen aus Lastphasen (trees-farn, rauten,
+decorSea, forest) gelten als Lastartefakt; CI-Ergebnis entscheidet. Der Beipack arc42 `buyPct` (R581 (1)) fährt mit dem nächsten
+Release. UI-HAEPPCHEN-A bleibt für das nächste Release (R335: ein Push je Session).
+
+Regelbezug: gates.md Gate Merge, R335, R429, R565 P1, R582 · Kosten bei Irrtum: ein roter CI-Lauf, Hotfix im nächsten Push.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech TOOL-BUENDEL-10 · ADR: —
+
+## R586 · 2026-10-13 · Gate Merge UI-HAEPPCHEN-A: OK unter Bedingung make check; UI-HAEPPCHEN-B starten
+
+Ruling: Schlussbericht lead-tech UI-HAEPPCHEN-A, `feat/ui-haeppchen-a` @ `d4f6420d` (main `dd004a53` gemergt), AK-1…19, Final-Review
+opus OK, Playtest 1280×720/1920×1080 mit Screenshots unter `.studio/qa/ui-haeppchen-a/` (AK-14/15 per Unit-Test), gezielte Tests 2156
+grün; `make check` zweimal am Testlock (Last 22–24). Entscheid **Gate Merge OK unter Bedingung**: `production-integrator` merged nach
+dem Push REL-20 in `.worktrees/integrate` mit `make check` Exit 0 — ohne Exit 0 kein Merge, Meldung an L0. Lokal, kein Push
+(R335). Entscheide: (1) AK-7 präzisiert: `stats.upkeep` ist nach Edikt «Sparen» gerundet, die Karte zeigt eine eigene Zeile
+«Edikt: −n», damit Zeilen und Fusszeile aufgehen; (2) Gebäude mit Unterhalt 0 (auch Heimat-Kontor) fehlen in der Rangliste — bestätigt;
+(3) Pfad-Overlay ohne Rotfärbung, Fallback Hover-Zeile — bestätigt. **UI-HAEPPCHEN-B** startet jetzt (Pipelining nach Review-OK,
+gates.md) auf `feat/ui-haeppchen-b` ab `feat/ui-haeppchen-a` @ `d4f6420d`, Budget 11 Starts / Parallelität 2 (R577).
+
+Regelbezug: gates.md Gate Merge Release (Pipelining), R573, R577, R335 · Kosten bei Irrtum: ein Fix auf A erzwingt einen Merge in B.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech UI-HAEPPCHEN-A · ADR: —
+
+## R587 · 2026-10-13 · Push-Gate REL-20 gescheitert (Testlock): Ruhefenster, Ad-hoc-Retro
+
+Ruling: Bericht production-integrator REL-20: `make check` viermal Exit 2 (Testlock, 1-min-Last 20,0 / 25,6 / 8,8 / 13,0 > 8), Merge
+abgebrochen, main unverändert `dd004a53`, nichts gepusht. Beleg Grundlast: ohne Studio-Testlauf ziehen `fileproviderd`, Dropbox und
+WebKit allein ≈ 1,5–2 Kerne (15:48: fileproviderd 107 %, Dropbox 41 %+37 %+18 %); der Repo-Pfad liegt nicht in Dropbox (unbelegt,
+woher die Synchronisationslast stammt). Entscheide: (1) Push-Gate REL-20 neu im **Ruhefenster**: L0 wartet per Hintergrund-Prüfung auf
+1-min-Last ≤ 7, dann startet der Integrator neu (bis 6 Versuche, ≥ 3 min Pause); in dieser Zeit startet L0 keine neuen Test-lastigen
+Arbeiter (Plan-/Gate-/Doku-Agenten erlaubt). Kein Umgehen des Testlocks (R380). (2) Integrator-Trailer: Session-Attribution gilt
+(Opus 5.5 laut Session-Vorgabe; Abweichung «Sonnet» im Merge `c151dad4` bleibt stehen). (3) **Ad-hoc-Retro** durch `studio-coach`
+(Kurz-Retro, sonnet): Konflikt Deckel 8 (R578) gegen Testlock-Grenze 8 bei Grundlast; Hebel-Vorschlag (z. B. Push-Gate-Ruhefenster
+als Regel, Last-Grenze relativ zur Grundlast, Testlauf-Warteschlange statt Abbruch).
+
+Regelbezug: R380, R335, R578, Handbuch «Verbesserungsschleife» · Kosten bei Irrtum: REL-20 erst in der nächsten Session live.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-20 (failed) · ADR: —
+
+## R588 · 2026-10-13 · Ad-hoc-Retro Testlock: V1 Regel, V3 in TOOL-BUENDEL-11, V2 geparkt
+
+Ruling: Retro `retros/2026-10-13-adhoc-testlock.md` (`964476e9`). Entscheide: **V1 angenommen als Regel** (kein Experiment, Plätze
+3/3): Zwischen Gate Merge eines Releases und Push startet L0 höchstens 2 weitere Test-Arbeiter; Umsetzung als Handbuch-Minor in
+`gates.md` durch `studio-coach` in der Ende-Routine; Messgrösse (≤ 1 Testlock-Abbruch je Push-Gate über 3 Releases) beobachtet die
+Retro. **V3** Lastprotokoll beim Testlock-Abbruch (Top-Prozesse, Vitest-Worker) → TOOL-BUENDEL-11. **V2** (Warteschlange statt
+Abbruch) geparkt bis V3-Daten vorliegen. Experimente: `studio-coach` bewertet E-060 in der Ende-Retro; bei Abschluss rückt E-064 nach,
+E-065 danach. lernen.md: Coach streicht eine Zeile und nimmt «Deckel und Testlock-Grenze abstimmen» auf.
+
+Regelbezug: R380, R429, R475, R578, R587 · Kosten bei Irrtum: zwei ungenutzte Agentenplätze während eines Push-Gates.
+
+Entscheider: L0 · Anlass: Bericht studio-coach RETRO-ADHOC-TESTLOCK · ADR: —
+
+## R589 · 2026-10-13 · Kombiniertes Gate Plan I-047: OK mit Auflagen; Start nach Push REL-20
+
+Ruling: Plan `design/i047` @ `3fc1f528` (lead-tech), Urteil lead-qa BEDENKEN (2 hoch, 6 niedrig), AK-Abdeckung vollständig, R584
+erfüllt. L0-Prüfung Ownership/Budget/Abhängigkeiten. Entscheid **OK mit Auflagen**, Budget **8 Starts / Parallelität 1**, zwei
+Controller-Instanzen (SIM T01–T03, UI T04–T07). Auflagen vor T01 durch den Controller, ohne Zweitprüfung: (1) T06 (A) Krise
+reproduzierbar einbauen (Boom auf anderes Gut, lange Laufzeit), Überlappung bei 1280×720 messen; (2) **I047-UI (T04–T07) startet
+erst nach Merge von UI-HAEPPCHEN-B** (seriell statt Konfliktpfad, KISS); (3)–(8) wie im Urteil (Verweise T01→T03, Lagerwerte
+gegen Vergleichslauf, Zeitlimit AK-SK-25, Puffer Rum ≥ 10, Risiko R553 im Index mit Auswerter lead-design, Save/Load mitten im Lauf,
+Fehlerpfad B.4 mit Klang `error`, Task-Review für T06 (A)). Entwürfe lead-tech: (E1) `island` im `ContractEvent` — angenommen
+(Spec-R12 erweitert, AK unverändert); (E2) Insel-Zusatz hinter dem Gut — angenommen; (E3) Dev-Sonde `contractSounds()` plus
+Vitest-Spy — angenommen. Start I047-SIM erst nach dem Push REL-20 (R588 V1: Release-Fenster).
+
+Regelbezug: gates.md Kombiniertes Gate, R584, R588, R553 · Kosten bei Irrtum: I047-UI verschiebt sich um ein Häppchen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-I-047, Urteil lead-qa gate-plan-I-047 · ADR: —
+
+## R590 · 2026-10-13 · Gate Merge UI-HAEPPCHEN-B: OK; Integrator-Lauf Push REL-20, danach Merges A und B lokal
+
+Ruling: Schlussbericht lead-tech UI-HAEPPCHEN-B, `feat/ui-haeppchen-b` @ `1f067a4c` (Basis A @ `d4f6420d`), AK-1…18, Final-Review opus
+ZURÜCK → Fix (Schlüssel `s:<insel>:<gut>`, Rot-Test) → Delta-Review OK, Playtest 1280×720/1920×1080 OK mit Screenshots unter
+`.studio/qa/ui-haeppchen-b/`, `make check` Exit 0 (Last 6). Entscheid **Gate Merge OK**; `FULL_GRACE_TICKS` (5 s Karenz gegen
+Flackern, UI-Wert, kein Spielwert) bestätigt. Integrator-Lauf in einer Instanz, seriell in `.worktrees/integrate`: (1) `tool/b10`
+@ `6f48387a` mergen, Push-Gate REL-20 und Push (R585); (2) danach lokal `feat/ui-haeppchen-a` @ `d4f6420d` (R586) und (3)
+`feat/ui-haeppchen-b` @ `1f067a4c`, je mit `make check` Exit 0, kein zweiter Push (R335). A+B bilden REL-21 für die nächste
+Session (Release-Check am Kandidaten dort). Die Lastprüfung im Hintergrund entfällt (Last bei B-Check 6).
+
+Regelbezug: gates.md Gate Merge, R335, R577, R585, R586, R588 · Kosten bei Irrtum: ein Fix auf main vor REL-21.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech UI-HAEPPCHEN-B · ADR: —
+
+## R591 · 2026-10-13 · Push-Gate REL-20 zweimal an Grundlast gescheitert: keine Ausnahme, N-100, I047-SIM startet
+
+Ruling: Bericht production-integrator: Merge `tool/b10` im Integrate-Worktree als `d3eabfb3` (nicht auf main), `make check` Exit 0,
+`make check-ci-perf` Exit 0 (351), `make push-check` sechsmal Exit 2 («kein ruhiges Fenster», Last 5,8–9,8 gegen `LOAD_WAIT` 3,0).
+Beleg: keine Studio-Prozesse (kein node/vitest), Grundlast `fileproviderd` ≈ 97 %, `rtcreportingd` ≈ 66 %, Dropbox ≈ 62 %. Merges A/B
+richtig zurückgehalten. Entscheide: (1) **Keine Ausnahme** von `push-check` (strenge Zeitreserve ist Regressionsschutz gegen rote
+CI-Zeittests; ein Abweichen bräuchte einen Handbuch-Minor). (2) Nutzer-Warteschlange **N-100** «Dropbox während des Push-Gates
+pausieren». (3) Push-Gate erneut beim Session-Ende bzw. sobald Last ≤ 3; `d3eabfb3` bleibt verwendbar, solange main nur
+`docs/studio/` ändert — sonst neu mergen. (4) Der Vorfall gehört zur Retro `adhoc-testlock` (Nachtrag durch den Coach in der
+Ende-Retro: Push-Check-Schwelle 3 gegen Dauerlast der Maschine, V3-Lastprotokoll auch in `pushcheck.py`). (5) R589 geändert:
+**I047-SIM startet jetzt** (Parallelität 1 ist innerhalb R588 V1), weil der Push nicht absehbar ist; Merges A/B bleiben bis nach
+dem Push zurück.
+
+Regelbezug: R335, R380, R565 V2, R587, R588, R589, Verfassung §5 · Kosten bei Irrtum: REL-20 erst in der nächsten Session live.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-20 (failed) · ADR: —
