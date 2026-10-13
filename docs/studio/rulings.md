@@ -6688,3 +6688,18 @@ Session-Vorgabe).
 Regelbezug: R127, R335, R586, R590, R594 · Kosten bei Irrtum: —
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-20 (done) · ADR: —
+
+## R596 · 2026-10-13 · Gate Merge I-047 Stammkunde: OK; Merge nach B, lokal
+
+Ruling: Berichte lead-tech I047-SIM (R592) und I047-UI, `feat/i047` @ `65f6ec2f` (enthält B @ `1f067a4c` und main `07c22fbd`),
+T04–T07, Task-Reviews OK (T06 (A) BEDENKEN zur Krisendauer), Playtest 1280×720/1920×1080 OK mit Screenshots, **Final-Review opus OK**
+über die ganze Branch, `make check` Exit 0 (3841), Zeiten ohne Verschlechterung, Save **v14** (main 13 → v14 frei, T07 ohne
+Änderung). Entscheide: (1) **Gate Merge OK**; Merge lokal durch `production-integrator` nach A und B (Reihenfolge A → B → I-047),
+`make check` Exit 0, T07 «Version festlegen» unmittelbar vor dem Merge erneut prüfen (Erweiterung 1 nicht gemergt → v14). Kein Push
+(R335); I-047 fährt mit REL-21. (2) Playtest-Aufbau mit 30-s-Krise, zur Laufzeit per Dev-Sonde verlängert, genügt R589 (1)
+(Abstand 6 px, keine Überlappung). (3) Wertfrage (Vertrag 27 je Rum gegen Auftrag 30, Strafe = eine Lieferung) ist gewollt
+(sichere Abnahme gegen Prämie) und geht an die Playtest-Prüfung nach Spec B.5 (Auswerter lead-design, Rückfall per Ruling).
+
+Regelbezug: gates.md Gate Merge, R584, R589, R592, R553 · Kosten bei Irrtum: ein Werte-Ruling nach dem ersten Spielertest.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech I047-UI · ADR: —
