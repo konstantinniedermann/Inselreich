@@ -232,3 +232,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - **2026-10-13 · Spec M14-E1 AK-M14E1-36 nennt «Holz 20», Szenario `m14e1-felsbucht` nutzt seit TOOL-BUENDEL-11 Holz 10** (sonst verbraucht die Glashütte den Stein). Fundort `docs/superpowers/specs/2026-10-10-m14-e1-inselcharakter-design.md` Z. 371–373. Ursprung: TOOL-BUENDEL-11 T03. Einschätzung: Beipack beim nächsten Design-Durchgang (R602).
 - **2026-10-13 · Linienzug mit Umschalt: Esc und Rechtsklick wirken verschieden**; README Z. 164 passt nur für Rechtsklick. Ursprung: Release-Check REL-21 (Opus-Review). Einschätzung: Designfrage an lead-design, README beim Doku-Fix angleichen.
 - **2026-10-13 · Kleinbefunde Release-Check REL-21:** Testname `'uses version 5'` veraltet (`tests/sim/save.test.ts:136`); `balanceAfterUpgrade` ohne Cache je Panel-Refresh (`panelView.ts`); Präfix `g:` doppelt belegt (`storageFull.ts:20`); Vertragskarte liegt genau 6 px neben der Krisenkarte (Grenzwert R589). Ursprung: Release-Check REL-21. Einschätzung: Sammelpaket UI-Aufräumen.
+
+### 2026-10-13 · UI-HAEPPCHEN-C: Kleinbefunde Vertragskarte
+
+- a) `goodsBalance` wird in `refresh()` mehrfach je Aufruf berechnet (HUD, Chips) und neu für die Angebotskarte (ca. 18 ms Erstaufruf bei 1200 Gebäuden, Reichweitenprüfung der Häuser). Vorschlag: ein Ergebnis je `refresh` teilen. Ursprung: UI-HAEPPCHEN-C. Einschätzung: mittel, bei grossen Inseln spürbar.
+- b) Ein Inselwechsel hebt den Gut-Fokus des Chips auf (`shouldClearFocus`); beim Vertragssprung auf eine ferne Insel sichtbar. Bestehende Regel. Ursprung: UI-HAEPPCHEN-C. Einschätzung: niedrig, ggf. Designfrage.
+- c) `btn.blur()` greift nur bei Mausklick; nach `Enter` bleibt der Fokus auf «Zum Erzeuger» (vermutlich bei allen Karten-Knöpfen gleich). Ursprung: UI-HAEPPCHEN-C. Einschätzung: niedrig.
+- d) Mit `--disable-gpu` headless bei 1920×1080 und Brand ca. 27 ms/Frame; nur Testumgebung. Ursprung: UI-HAEPPCHEN-C. Einschätzung: kein Handlungsbedarf.
