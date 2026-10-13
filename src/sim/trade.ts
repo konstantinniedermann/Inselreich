@@ -1,4 +1,5 @@
 import { BOOM_PCT } from './defs/crises';
+import { ISLANDS, PREFER_PCT } from './defs/sea';
 import {
   BUY_CAP,
   BUY_RISE,
@@ -68,10 +69,22 @@ export function buyPrice(world: World, good: GoodId, n: number): number {
   return buyQuoteFor(world, good, n).price;
 }
 
-/** Erlös für `n` Einheiten: Sättigung je Einheit, im Boom auf dieses Gut × BOOM_PCT %. Ohne Boom bitgleich zu M5. Rein. */
-export function sellPrice(world: World, good: GoodId, n: number): number {
+/** Ob die Fremdinsel `island` für `good` die Vorliebe-Zulage zahlt; unbekannte Insel und Heimat: nein. */
+export function prefersGood(world: World, island: number, good: GoodId): boolean {
+  const kind = world.islands[island]?.kind;
+  if (kind === undefined || kind === 'home') return false;
+  return ISLANDS.some((d) => d.kind === kind && d.prefers.includes(good));
+}
+
+/**
+ * Erlös für `n` Einheiten auf `island`: Sättigung je Einheit (global), Faktor in %. Boom und Vorliebe stapeln
+ * nicht, es gilt der höhere. Ohne Boom und Vorliebe bitgleich zu M5. Rein.
+ */
+export function sellPrice(world: World, good: GoodId, n: number, island: number = HOME): number {
   const c = world.crisis;
-  const m = c !== null && c.kind === 'boom' && c.good === good ? BOOM_PCT : 100;
+  const boom = c !== null && c.kind === 'boom' && c.good === good ? BOOM_PCT : 100;
+  const prefer = prefersGood(world, island, good) ? PREFER_PCT : 100;
+  const m = Math.max(boom, prefer);
   let acc = 0;
   let pct = world.sellPct[good];
   for (let i = 0; i < n; i++) {
@@ -143,7 +156,7 @@ export function sell(world: World, good: GoodId, n: number, island: number = HOM
   // Rückgabe bewusst ignoriert: nach der Bestandsprüfung ist die Entnahme immer erfolgreich
   takeStock(isl, good, n);
   // Preis vor dem Absenken des Verkaufsanteils berechnen
-  world.money += sellPrice(world, good, n);
+  world.money += sellPrice(world, good, n, island);
   world.sellPct[good] = Math.max(SELL_FLOOR, world.sellPct[good] - n * SELL_DROP);
   return ok;
 }

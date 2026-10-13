@@ -1,4 +1,4 @@
-import type { BuildingDefId } from '../types';
+import type { BuildingDefId, GoodId } from '../types';
 
 /** Höchstzahl Schiffe (M12 Seefahrt). */
 export const SHIP_MAX = 4;
@@ -27,7 +27,12 @@ export interface IslandDef {
   traits: readonly IslandTrait[];
   plantations: number;
   quarries: number;
+  /** Konsumgüter, für die diese Insel `PREFER_PCT` % zahlt (höchstens eines). */
+  prefers: readonly GoodId[];
 }
+
+/** Erlösfaktor in Prozent für das Vorliebe-Gut einer Fremdinsel (stapelt nicht mit dem Boom). */
+export const PREFER_PCT = 130;
 
 export const HOME_NAME = 'Heimat';
 
@@ -41,6 +46,7 @@ export const ISLANDS: readonly IslandDef[] = [
     traits: ['spice'],
     plantations: 2,
     quarries: 0,
+    prefers: ['cloth'],
   },
   {
     kind: 'B',
@@ -51,6 +57,7 @@ export const ISLANDS: readonly IslandDef[] = [
     traits: ['spice', 'mountain', 'mountainRich'],
     plantations: 3,
     quarries: 3,
+    prefers: ['rum'],
   },
   {
     kind: 'C',
@@ -61,6 +68,7 @@ export const ISLANDS: readonly IslandDef[] = [
     traits: ['spice', 'fertile'],
     plantations: 6,
     quarries: 0,
+    prefers: ['glass'],
   },
 ];
 

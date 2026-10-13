@@ -5,6 +5,7 @@ import {
   ISLANDS,
   TRAIT_BUILDINGS,
   TRAIT_CYCLE_PCT,
+  PREFER_PCT,
   TRAIT_LABELS,
   type IslandDef,
 } from '../sim/defs/sea';
@@ -31,11 +32,16 @@ export function traitEffectTexts(def: IslandDef): string[] {
   });
 }
 
+/** Markt-Zeilen der Insel, z. B. `"Markt: Glas +30 %"` (ein Eintrag je Vorliebe-Gut). */
+export function marketTexts(def: IslandDef): string[] {
+  return def.prefers.map((g) => `Markt: ${GOODS[g].name} +${PREFER_PCT - 100} %`);
+}
+
 /** Abschnitte mit Wirkung der Insel `i` (leer für Heimat und Inseln ohne Wirkung). */
 export function islandEffectTexts(world: World, i: number): string[] {
   const kind = world.islands[i]?.kind;
   const def = ISLANDS.find((d) => d.kind === kind);
-  return def === undefined ? [] : traitEffectTexts(def);
+  return def === undefined ? [] : [...traitEffectTexts(def), ...marketTexts(def)];
 }
 
 /** Faktor-Text, z. B. `×2`; einzige Stelle im UI, die den Faktor aus `TRAIT_CYCLE_PCT` bildet. */
@@ -68,7 +74,7 @@ export function formatIslandCard(def: IslandDef, width: number, height: number, 
   const seconds = (travelTicks(d) * TICK_MS) / 1000;
   const parts = [def.name, `${width} × ${height}`];
   if (plain.length > 0) parts.push(plain.join(', '));
-  parts.push(...traitEffectTexts(def), `Fahrzeit ${clock(seconds)}`);
+  parts.push(...traitEffectTexts(def), ...marketTexts(def), `Fahrzeit ${clock(seconds)}`);
   return parts.join(' · ');
 }
 

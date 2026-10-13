@@ -2,7 +2,8 @@ import { HOME } from '../sim/world';
 import { islandName } from '../sim/islands';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { BOOM_PCT } from '../sim/defs/crises';
-import { buy, buyPrice, buyQuoteFor, sell, sellPrice } from '../sim/trade';
+import { PREFER_PCT } from '../sim/defs/sea';
+import { buy, buyPrice, buyQuoteFor, prefersGood, sell, sellPrice } from '../sim/trade';
 import { RESERVE_GOODS, RESERVE_STEPS } from '../sim/defs/reserve';
 import { reserveHolds } from '../sim/queries';
 import { reserveOf } from '../sim/reserve';
@@ -41,12 +42,13 @@ function stepFrom(value: number, dir: -1 | 1): number {
 }
 
 /** Beschriftung und Tooltip eines Verkaufsbuttons: genauer Erlös aus `sellPrice`, nie ein Stückpreis. */
-function sellTexts(
+export function sellTexts(
   world: World,
   good: GoodId,
   n: number,
+  island: number = HOME,
 ): { label: string; price: string; title: string } {
-  const price = sellPrice(world, good, n);
+  const price = sellPrice(world, good, n, island);
   return {
     label: `−${n}`,
     price: `${price} Geld`,
@@ -101,6 +103,13 @@ export function buyHeadNote(w: World): string {
 export function boomGood(world: World, good: GoodId): boolean {
   const c = world.crisis;
   return c !== null && c.kind === 'boom' && c.good === good;
+}
+
+/** Marke «Vorliebe +30 %» am Vorliebe-Gut einer Fremdinsel; bei laufendem Boom auf dem Gut «statt …»; sonst leer. */
+export function preferTag(world: World, island: number, good: GoodId): string {
+  if (!prefersGood(world, island, good)) return '';
+  const base = `Vorliebe +${PREFER_PCT - 100} %`;
+  return boomGood(world, good) ? `statt ${base}` : base;
 }
 
 /** Handelszeilen (Spec 11.4): Güter, die frei sind oder im Lager liegen; Kaufen nur für freie Güter. */
@@ -171,7 +180,7 @@ export function renderTrade(
   ): void => {
     const btn = document.createElement('button');
     btn.className = 'btn btn-small';
-    const sellT = op === 'sell' ? sellTexts(world, good, n) : null;
+    const sellT = op === 'sell' ? sellTexts(world, good, n, island) : null;
     btn.textContent = sellT ? sellT.label : `+${n}`;
     if (sellT) btn.appendChild(document.createElement('small'));
     btn.dataset.good = good;
@@ -194,6 +203,11 @@ export function renderTrade(
     boom.dataset.field = `boom-${good}`;
     boom.hidden = true;
     name.appendChild(boom);
+    const prefer = document.createElement('span');
+    prefer.className = 'badge--boom';
+    prefer.dataset.field = `prefer-${good}`;
+    prefer.hidden = true;
+    name.appendChild(prefer);
     const stock = document.createElement('small');
     stock.dataset.field = `stock-${good}`;
     name.appendChild(stock);
@@ -247,6 +261,9 @@ export function updateTrade(panel: HTMLElement, world: World, island: number = H
     setField(panel, `price-${good}`, sellPctText(world, good));
     const boom = setField(panel, `boom-${good}`, `Boom +${BOOM_PCT - 100} %`);
     if (boom) boom.hidden = !boomGood(world, good);
+    const tag = preferTag(world, island, good);
+    const prefer = setField(panel, `prefer-${good}`, tag);
+    if (prefer && prefer.hidden !== (tag === '')) prefer.hidden = tag === '';
   }
   for (const good of RESERVE_GOODS) {
     const value = reserveOf(world.islands[island]!, good);
@@ -278,7 +295,7 @@ export function updateTrade(panel: HTMLElement, world: World, island: number = H
       if (btn.title !== title) btn.title = title;
     }
     if (btn.dataset.op === 'sell') {
-      const t = sellTexts(world, good, n);
+      const t = sellTexts(world, good, n, island);
       const price = btn.querySelector('small');
       if (price && price.textContent !== t.price) price.textContent = t.price;
       if (btn.title !== t.title) btn.title = t.title;

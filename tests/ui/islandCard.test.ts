@@ -9,10 +9,10 @@ import { putBuilding } from '../sim/helpers';
 describe('M12 E1 Inselkarte', () => {
   it('formatiert Name, Groesse, Merkmale, Fahrzeit', () => {
     expect(formatIslandCard(ISLANDS[0]!, 24, 24, 27)).toBe(
-      'Möweninsel · 24 × 24 · Gewürz · Fahrzeit 0:27',
+      'Möweninsel · 24 × 24 · Gewürz · Markt: Stoff +30 % · Fahrzeit 0:27',
     );
     expect(formatIslandCard(ISLANDS[1]!, 36, 36, 38)).toBe(
-      'Felsbucht · 36 × 36 · Gewürz, Gebirge · Gebirge+: Steinbruch, Glashütte ×2 · Fahrzeit 0:38',
+      'Felsbucht · 36 × 36 · Gewürz, Gebirge · Gebirge+: Steinbruch, Glashütte ×2 · Markt: Rum +30 % · Fahrzeit 0:38',
     );
     expect(formatIslandCard(ISLANDS[0]!, 24, 24, 65)).toContain('Fahrzeit 1:05');
   });
@@ -28,14 +28,14 @@ describe('M12 E1 Inselkarte', () => {
 describe('M14-E1 Inselstärken (AK-M14E1-26)', () => {
   it('Weidenau: Fruchtbar-Abschnitt, Fahrzeit aus dem Seeweg', () => {
     expect(formatIslandCard(ISLANDS[2]!, 24, 24, 27)).toBe(
-      'Weidenau · 24 × 24 · Gewürz · Fruchtbar: Zuckerrohrplantage, Schäferei ×2 · Fahrzeit 0:27',
+      'Weidenau · 24 × 24 · Gewürz · Fruchtbar: Zuckerrohrplantage, Schäferei ×2 · Markt: Glas +30 % · Fahrzeit 0:27',
     );
     const w = createWorld(3, { unlockAll: true });
     const d = seaLanes(w.islands).find((l) => l.a === 0 && l.b === 3)!.d;
     const i3 = w.islands[3]!;
     expect(islandCard(w, 3)).toBe(formatIslandCard(ISLANDS[2]!, i3.width, i3.height, d));
     expect(islandCard(w, 3)).toMatch(
-      /^Weidenau · 24 × 24 · Gewürz · Fruchtbar: Zuckerrohrplantage, Schäferei ×2 · Fahrzeit \d+:\d\d$/,
+      /^Weidenau · 24 × 24 · Gewürz · Fruchtbar: Zuckerrohrplantage, Schäferei ×2 · Markt: Glas \+30 % · Fahrzeit \d+:\d\d$/,
     );
   });
 });

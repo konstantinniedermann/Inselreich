@@ -88,6 +88,7 @@ describe('M14-E1 Defs (AK-01, AK-02)', () => {
       traits: ['spice'],
       plantations: 2,
       quarries: 0,
+      prefers: ['cloth'], // I-092
     });
     expect(ISLANDS[1]).toEqual({
       kind: 'B',
@@ -98,6 +99,7 @@ describe('M14-E1 Defs (AK-01, AK-02)', () => {
       traits: ['spice', 'mountain', 'mountainRich'],
       plantations: 3,
       quarries: 3,
+      prefers: ['rum'], // I-092
     });
     expect(TRAIT_LABELS).toEqual({
       spice: 'Gewürz',
@@ -318,6 +320,7 @@ describe('M14-E1 T03 Weidenau (AK-01, AK-03, AK-04, AK-11)', () => {
       traits: ['spice', 'fertile'],
       plantations: 6,
       quarries: 0,
+      prefers: ['glass'], // I-092
     });
   });
 
