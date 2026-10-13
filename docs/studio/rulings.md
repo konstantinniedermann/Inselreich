@@ -6716,3 +6716,19 @@ auslagern, alle Verweise nachführen; Ziel: beide Hauptdateien < 30 KB (E-057). 
 Regelbezug: R475, R580, R581, R588, R595 · Kosten bei Irrtum: tote Links nach dem Auslagern (Prüfung `make docs-check`).
 
 Entscheider: L0 · Anlass: freie Kapazität · ADR: —
+
+## R598 · 2026-10-13 · Prozess-Retro REL-20: V1–V3 angenommen
+
+Ruling: Retro `retros/2026-10-13-prozess-rel20.md` (`d5a9e6b2`): Freigabe bis CI grün 2 h 47 min, Wurzeln: L0 prüfte «Last ≤ 7»
+statt der push-check-Schwelle 3,0 (R587, 62 min Warten), strenge Zeitreserve erst am letzten Gate gemessen, «Lastartefakt» ohne
+Messung festgehalten (R585). Entscheide: **V1** strenge Zeitreserve der markierten Dateien schon beim Gate Merge; ein
+«Lastartefakt» darf ein Ruling nur nach dieser Messung festhalten — Make-Ziel als T05 in TOOL-BUENDEL-11 (Budget +1 Start),
+Regel in `gates.md` durch `studio-coach` in der Ende-Routine (Handbuch-Minor). **V2** ein Kriterium «push-bereit» = push-check-
+Schwelle (`LOAD_WAIT`), L0 nennt keine eigene Lastzahl; R587 (1) entsprechend überholt. **V3** push-check Exit 1 bei ruhiger
+Startlast = Substanz, kein erneuter Lauf; «höchstens 3 Läufe» gilt nur für Exit 2 (Integrator-Briefing). Cache-Write-Hebel für
+lead-tech schlägt `studio-coach` in der Ende-Retro vor (Pflicht, dritte Retro in Folge). B5-Befunde (Prettier-Abweisungen,
+E-060-Datenpunkt) an die Ende-Retro.
+
+Regelbezug: R316, R429, R585, R587, R594 · Kosten bei Irrtum: ein Gate Merge dauert einige Minuten länger.
+
+Entscheider: L0 · Anlass: Bericht studio-process-coach RETRO-PROZESS-REL20 · ADR: —
