@@ -422,6 +422,30 @@ Auftrag verfällt ohne Strafe. Ohne Auftrag zeigt die Karte «Nächster Auftrag 
 Welche Waren bestellt werden, richtet sich nach der höchsten Stufe deiner Häuser. Ein Auftrag bringt
 mehr als der Verkauf, aber Waren dafür zuzukaufen lohnt sich nie. Werkzeug wird nicht bestellt.
 
+#### Stammkunde
+
+Hast du einen Auftrag geliefert und steht ein Haus der Stufe 3 (Bürger), bietet der Händler einen
+**Stammkunden** an: dasselbe Gut, immer wieder. Das Angebot steht als Karte («Stammkunde: Menge Gut alle
+1:30 zu Preis je Stück · Angebot noch m:ss») bis zum nächsten Auftragstakt; **Annehmen** oder **Ablehnen**.
+Menge und Stückpreis sind je Gut fest und gelten ab dem Annehmen unverändert:
+
+| Gut        | Menge | Stückpreis | Wert je Lieferung |
+| ---------- | ----- | ---------- | ----------------- |
+| Holz       | 23    | 6          | 138               |
+| Nahrung    | 28    | 5          | 140               |
+| Stein      | 14    | 10         | 140               |
+| Wolle      | 17    | 8          | 136               |
+| Stoff      | 7     | 20         | 140               |
+| Zuckerrohr | 17    | 8          | 136               |
+| Rum        | 5     | 27         | 135               |
+| Glas       | 4     | 34         | 136               |
+
+Alle 1:30 bucht der Vertrag die Menge vom Lager der Lieferinsel ab und zahlt den Wert; die Karte zeigt
+«nächste Lieferung m:ss · Lager x/Menge» und färbt sich warm, wenn das Lager zu klein ist oder das
+Kontor fehlt. Solange der Vertrag läuft, gibt es keine Zufallsaufträge. **Kündigen** ist jederzeit
+kostenlos. Fehlen bei der Lieferung Ware oder Kontor, springt der Kunde ab und es kostet eine Strafe in
+Höhe einer Lieferung (Wert je Lieferung), danach geht es mit Zufallsaufträgen weiter.
+
 ### Seefahrt und Gewürz
 
 Die Seefahrt wird mit dem Bürger-Ziel frei (U6). Danach liegen drei weitere Inseln im Archipel: die **Möweninsel**
