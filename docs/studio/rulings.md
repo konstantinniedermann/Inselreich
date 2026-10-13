@@ -6584,3 +6584,19 @@ E-065 danach. lernen.md: Coach streicht eine Zeile und nimmt «Deckel und Testlo
 Regelbezug: R380, R429, R475, R578, R587 · Kosten bei Irrtum: zwei ungenutzte Agentenplätze während eines Push-Gates.
 
 Entscheider: L0 · Anlass: Bericht studio-coach RETRO-ADHOC-TESTLOCK · ADR: —
+
+## R589 · 2026-10-13 · Kombiniertes Gate Plan I-047: OK mit Auflagen; Start nach Push REL-20
+
+Ruling: Plan `design/i047` @ `3fc1f528` (lead-tech), Urteil lead-qa BEDENKEN (2 hoch, 6 niedrig), AK-Abdeckung vollständig, R584
+erfüllt. L0-Prüfung Ownership/Budget/Abhängigkeiten. Entscheid **OK mit Auflagen**, Budget **8 Starts / Parallelität 1**, zwei
+Controller-Instanzen (SIM T01–T03, UI T04–T07). Auflagen vor T01 durch den Controller, ohne Zweitprüfung: (1) T06 (A) Krise
+reproduzierbar einbauen (Boom auf anderes Gut, lange Laufzeit), Überlappung bei 1280×720 messen; (2) **I047-UI (T04–T07) startet
+erst nach Merge von UI-HAEPPCHEN-B** (seriell statt Konfliktpfad, KISS); (3)–(8) wie im Urteil (Verweise T01→T03, Lagerwerte
+gegen Vergleichslauf, Zeitlimit AK-SK-25, Puffer Rum ≥ 10, Risiko R553 im Index mit Auswerter lead-design, Save/Load mitten im Lauf,
+Fehlerpfad B.4 mit Klang `error`, Task-Review für T06 (A)). Entwürfe lead-tech: (E1) `island` im `ContractEvent` — angenommen
+(Spec-R12 erweitert, AK unverändert); (E2) Insel-Zusatz hinter dem Gut — angenommen; (E3) Dev-Sonde `contractSounds()` plus
+Vitest-Spy — angenommen. Start I047-SIM erst nach dem Push REL-20 (R588 V1: Release-Fenster).
+
+Regelbezug: gates.md Kombiniertes Gate, R584, R588, R553 · Kosten bei Irrtum: I047-UI verschiebt sich um ein Häppchen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-I-047, Urteil lead-qa gate-plan-I-047 · ADR: —
