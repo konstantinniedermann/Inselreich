@@ -280,3 +280,5 @@ Fundort: Gegenprüfung TOOL-CONTROLLER-HAERTUNG (Scratchpad-Messung, Seed 3, Pha
   fängt nur genau dieses Literal. Ursprung: Final-Review UI-AUFRAEUM-2. Einschätzung: niedrig, bündeln mit nächstem UI-Aufräumpaket.
 
 - **2026-10-12 · `make check` rot an `zeitreserve`: `tests/sim/islands-c.test.ts` «Spanne protokollieren (Seeds 1..300)».** 2327 ms lokal gegen 5000 ms Timeout (geschätzte Runner-Zeit 6981 ms, R270/E-043); sonst alle Prüfungen grün. Ursprung: Retro-Lauf `make check` des studio-coach, Last nicht gemessen. Einschätzung: mittel, gefährdet den Push-Gate; Timeout anheben (Vorschlag 15000 ms) oder Test aufteilen, in ein TOOL-/UI-Bündel; Lastmessung (`uptime`) vor Bewertung (R353 P4).
+
+- **2026-10-13 · `tools/studio/guard.py` Stash-Sperre (E-064) umgehbar.** Sie lässt sich über Git-Alias (`git -c alias.s=stash s`), Befehlssubstitution (`git $(echo stash)`) und `xargs git stash` umgehen; war schon bei der bestehenden Sperre so. Sie schützt gegen Versehen, kein Sicherheitsmerkmal. Ursprung: Final-Review TOOL-BUENDEL-10. Einschätzung: hinnehmen.
