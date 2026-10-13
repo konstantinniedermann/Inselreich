@@ -6847,3 +6847,19 @@ oder gestapelt.
 Regelbezug: docs/ideen.md Ablauf, R445, R566, R599, R603, Verfassung §5.3 · Kosten bei Irrtum: eine geparkte Idee später neu bewerten.
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-09 · ADR: —
+
+## R607 · 2026-10-13 · Kombiniertes Gate UI-HAEPPCHEN-C: OK mit Auflagen
+
+Ruling: Kurzplan `plan/ui-haeppchen-c` @ `7d95b792` (lead-tech), Urteil lead-qa BEDENKEN (1 mittel, 5 niedrig). L0: Ownership
+(`src/ui/order.ts`, neue `src/ui/contractJump.ts`, Tests), keine Save-/Wertänderung, Abhängigkeit I-047 (lokal auf main) — erfüllt.
+Entscheid **OK**, Budget 10 Starts / P1, AK-Präfix **AK-HC-** bestätigt. Entscheide aus dem Plan: (1) Wortlaut-Delta zu I-047 B.4
+bewusst (Spec-Vermerk, `order.test.ts` mit T01 nachziehen); (2) «Markt ≈» = Preis der ersten Einheit; (3) Auftragsprämie entfällt
+(I-047 B.3). Auflagen vor T01 durch den Controller ohne Zweitprüfung: QA (1) Messwelt Spätspiel ≥ 1000 Gebäude, Grenze 1 ms je
+Frame, Rückfall Cache je `world.tick`/Insel/Gut; (2) Wortlaut für N = 0 in AK-HC-01 mit Test; (3) Cursor-Reset bei Vertragsende/
+-wechsel, Inselwechsel-Verhalten als Test; (4) stillgelegte Erzeuger werden angesprungen (Test), `runContractJump` bei
+`contract === null` tut nichts; (5) «kein Rot möglich, Beleg = …» markieren, Signatur konkret; (6) `noProducerMessage` mit «auf
+<Insel>». Branch `feat/ui-haeppchen-c` ab `plan/ui-haeppchen-c`, main (`67661df1`+) per Merge holen.
+
+Regelbezug: gates.md Kombiniertes Gate, R589, R606 · Kosten bei Irrtum: eine Fix-Runde für die Rechenzeit.
+
+Entscheider: L0 · Anlass: Berichte lead-tech plan-UI-HAEPPCHEN-C, lead-qa gate-UI-HAEPPCHEN-C · ADR: —

@@ -798,10 +798,18 @@ function m13Ziel1(): World {
   return w;
 }
 
-/** M13-E1: Tick 6000, kurz vor dem Sieg (6750), Amtsstube steht, 3000 Geld. */
+/**
+ * M13-E1: Tick 6000, kurz vor dem Sieg (6750), Amtsstube steht, 3000 Geld. Ohne Controller baut niemand mehr:
+ * die zwei Stufe-2-Häuser steigen nur mit Rum, Werkzeug und Stein im Lager auf (50 Bürger = Sieg). Diese Vorräte hat
+ * der Controller sonst nachgekauft; hier liegen sie im Lager, damit der Zeitraffer von selbst zum Ziel führt (~150 Ticks).
+ */
 function m13VorZiel(): World {
   const w = m13Base((x) => x.tick >= 6000);
   if (w.won) throw new Error('m13-vor-ziel: schon gewonnen');
+  const stock = home(w).stock;
+  stock.rum = 20;
+  stock.tools = 20;
+  stock.stone = 20;
   return w;
 }
 
@@ -988,7 +996,12 @@ function buildConnected(w: World, island: number, defId: BuildingDefId): Buildin
   throw new Error(`${defId} auf ${island}: kein anbindbarer Platz`);
 }
 
-/** Felsbucht (B) mit Kontor II, Steinbruch und Glashütte (angebunden), Lager Stein 20, Holz 20. */
+/**
+ * Felsbucht (B) mit Kontor II, Steinbruch und Glashütte (angebunden), Lager Stein 20, Holz 10.
+ * Abweichung von Spec 10.4 (Holz 20): Die Glashütte verbraucht Stein und Holz; bei Holz 20 läuft sie ~500 Ticks
+ * und Stein steht nach 1 min (600 Ticks) wieder bei 20 (AK-M14E1-36 «sichtbar gestiegen» nicht erfüllt).
+ * Mit Holz 10 stoppt sie nach ~250 Ticks, danach steigt Stein mit 20 / min netto.
+ */
 function m14e1Felsbucht(): World {
   const w = m14e1Start();
   foundKontor(w, FELSBUCHT);
@@ -996,7 +1009,7 @@ function m14e1Felsbucht(): World {
   buildConnected(w, FELSBUCHT, 'glassworks');
   const stock = w.islands[FELSBUCHT]!.stock;
   stock.stone = 20;
-  stock.wood = 20;
+  stock.wood = 10;
   return w;
 }
 
@@ -1112,7 +1125,7 @@ function m14e1Altstand(): Record<string, unknown> {
 }
 
 /**
- * Zusatz-Stände, die absichtlich nicht in `SCENARIOS` stehen (QA-B5): `m13e2-v13.json` ist `m13e2-ziel2` mit
+ * Zusatz-Stände, die absichtlich nicht in `SCENARIOS` stehen (QA-B5): `m13e2-zukunftsstand.json` ist `m13e2-ziel2` mit
  * `version: SAVE_VERSION + 1` und lädt nicht («Unbekannte Version»); `m14e1-altstand.json` ist `m14e1-felsbucht` als v12. Ohne `out` passiert nichts (0).
  */
 export function writeExtraSaves(
@@ -1122,7 +1135,7 @@ export function writeExtraSaves(
   if (out === undefined || out === '') return 0;
   const raw = JSON.parse(serialize(SCENARIOS['m13e2-ziel2']!())) as Record<string, unknown>;
   raw.version = SAVE_VERSION + 1;
-  write(`${out}/m13e2-v13.json`, JSON.stringify(raw));
+  write(`${out}/m13e2-zukunftsstand.json`, JSON.stringify(raw));
   write(`${out}/m14e1-altstand.json`, JSON.stringify(m14e1Altstand()));
   return 2;
 }

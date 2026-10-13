@@ -694,8 +694,11 @@ class OpenDashboardTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
+        # eigener Unterordner: "../x" landet in self.tmp, nie im gemeinsamen Systemtemp (R595)
+        self.home = Path(self.tmp.name) / "home"
+        self.home.mkdir()
         old = os.environ.get("STUDIO_HOME")
-        os.environ["STUDIO_HOME"] = self.tmp.name
+        os.environ["STUDIO_HOME"] = str(self.home)
         self.addCleanup(
             lambda: (
                 os.environ.pop("STUDIO_HOME")
@@ -748,7 +751,7 @@ class OpenDashboardTest(unittest.TestCase):
         bad = {**self.spawn(), "session_id": "../x"}
         self.assertFalse(self.run_hook(bad))
         self.assertEqual(self.calls, [])
-        self.assertFalse((Path(self.tmp.name).parent / "x").exists())
+        self.assertFalse((Path(self.tmp.name) / "x").exists())
 
 
 class SettingsTest(unittest.TestCase):

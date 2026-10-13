@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
-import { GROWTH_INTERVAL, UPGRADE_WAIT } from '../../src/sim/defs/timing';
+import { GROWTH_INTERVAL, TICK_MS, UPGRADE_WAIT } from '../../src/sim/defs/timing';
 import { TAX_CARRY_DIVISOR } from '../../src/sim/defs/tiers';
 import { totalUpkeep, UPKEEP_INTERVAL } from '../../src/sim/economy';
 import { deliverOrder } from '../../src/sim/orders';
@@ -811,11 +811,14 @@ describe('M13-E2 Szenario-Stände (Anhang 08 D)', () => {
   });
 
   it('v13 (QA-B5): nicht in SCENARIOS, eigene Datei, wird als unbekannte Version abgewiesen', () => {
-    expect(Object.keys(SCENARIOS)).not.toContain('m13e2-v13');
+    expect(Object.keys(SCENARIOS)).not.toContain('m13e2-zukunftsstand');
     const written: [string, string][] = [];
     expect(writeExtraSaves(undefined, (p, d) => void written.push([p, d]))).toBe(0);
     expect(writeExtraSaves('out', (p, d) => void written.push([p, d]))).toBe(2);
-    expect(written.map(([p]) => p)).toEqual(['out/m13e2-v13.json', 'out/m14e1-altstand.json']);
+    expect(written.map(([p]) => p)).toEqual([
+      'out/m13e2-zukunftsstand.json',
+      'out/m14e1-altstand.json',
+    ]);
     const raw = JSON.parse(written[0]![1]) as { version: number };
     expect(raw.version).toBe(SAVE_VERSION + 1);
     expect(deserialize(written[0]![1])).toEqual({ ok: false, reason: 'Unbekannte Version' });
@@ -836,7 +839,7 @@ describe('M14-E1 Szenario-Stände (Spec 10.4)', () => {
     expect(w.unlocked).toEqual(createWorld(3, { unlockAll: true }).unlocked);
   });
 
-  it('m14e1-felsbucht: Kontor II, Steinbruch und Glashütte angebunden mit halbem Zyklus, Lager 20/20', () => {
+  it('m14e1-felsbucht: Kontor II, Steinbruch und Glashütte angebunden mit halbem Zyklus, Lager Stein 20, Holz 10', () => {
     const w = load('m14e1-felsbucht');
     expect(w.islands[2]!.kontorId).not.toBeNull();
     expect([w.islands[1]!.kontorId, w.islands[3]!.kontorId]).toEqual([null, null]);
@@ -845,7 +848,15 @@ describe('M14-E1 Szenario-Stände (Spec 10.4)', () => {
     expect([byDef(w, 2, 'quarry').length, byDef(w, 2, 'glassworks').length]).toEqual([1, 1]);
     expect([quarry!.connected, glass!.connected]).toEqual([true, true]);
     expect([cycleOf(w, quarry!), cycleOf(w, glass!)]).toEqual([30, 25]);
-    expect([w.islands[2]!.stock.stone, w.islands[2]!.stock.wood]).toEqual([20, 20]);
+    expect([w.islands[2]!.stock.stone, w.islands[2]!.stock.wood]).toEqual([20, 10]);
+  });
+
+  it('m14e1-felsbucht (AK-M14E1-36): Stein ist nach 1 min Spielzeit höher als zu Beginn', () => {
+    const w = load('m14e1-felsbucht');
+    const stock = w.islands[2]!.stock;
+    const before = stock.stone;
+    for (let i = 0; i < 60_000 / TICK_MS; i++) step(w);
+    expect(stock.stone).toBeGreaterThan(before);
   });
 
   it('m14e1-weidenau: Kontor II, Zuckerrohrplantage und Schäferei angebunden mit halbem Zyklus', () => {
@@ -857,6 +868,13 @@ describe('M14-E1 Szenario-Stände (Spec 10.4)', () => {
     expect([cane.length, sheep.length, foreign(w, 3).length]).toEqual([1, 1, 3]);
     expect([cane[0]!.connected, sheep[0]!.connected]).toEqual([true, true]);
     expect([cycleOf(w, cane[0]!), cycleOf(w, sheep[0]!)]).toEqual([25, 25]);
+  });
+
+  it('m13-vor-ziel (AK-M14E1-35): nicht gewonnen, erreicht das Ziel im Zeitraffer von selbst', () => {
+    const w = load('m13-vor-ziel');
+    expect(w.won).toBe(false);
+    for (let i = 0; i < 600 && !w.won; i++) step(w);
+    expect(w.won).toBe(true);
   });
 
   it('m14e1-altstand: nur als Extra-Datei, v12 mit drei Inseln, lädt als v13 mit vier', () => {
@@ -903,7 +921,7 @@ it.runIf(out)('schreibt die Szenario-Saves nach SCENARIO_OUT', () => {
   writeProbes(out, writeFileSync);
 });
 
-it.runIf(out)('schreibt die Zusatz-Stände (m13e2-v13) nach SCENARIO_OUT', () => {
+it.runIf(out)('schreibt die Zusatz-Stände (m13e2-zukunftsstand) nach SCENARIO_OUT', () => {
   mkdirSync(out!, { recursive: true });
   writeExtraSaves(out, writeFileSync);
 });
