@@ -6863,3 +6863,63 @@ Frame, Rückfall Cache je `world.tick`/Insel/Gut; (2) Wortlaut für N = 0 in AK-
 Regelbezug: gates.md Kombiniertes Gate, R589, R606 · Kosten bei Irrtum: eine Fix-Runde für die Rechenzeit.
 
 Entscheider: L0 · Anlass: Berichte lead-tech plan-UI-HAEPPCHEN-C, lead-qa gate-UI-HAEPPCHEN-C · ADR: —
+
+## R608 · 2026-10-13 · Gate Brainstorming I-092 Inselmarkt-Vorliebe: OK Option 2; Gate Spec starten
+
+Ruling: Bericht lead-design design-I-092, `design/i092` @ `44e439fb` (Spec 21 KB + Anhang Werte), Selbstprüfung OK. L0-Prüfung: stärkt
+die Säule Handel (Ortswahl beim Verkauf), Spielerzweck in einem Satz («Weidenau zahlt Glas +30 %»), Scope ein Paket, nur Mechanik,
+O2 einfacher als O1/O3. Entscheide: (1) **Option 2** — je Fremdinsel genau ein Konsumgut mit `PREFER_PCT` 130 (Möweninsel Stoff,
+Weidenau Glas, Felsbucht Rum), kein Save-Wechsel, Baseline bitgleich. (2) **O-1: Boom und Inselvorliebe stapeln nicht, das Höhere
+gilt** (sonst Kauf-Verkauf-Schleife beim Rum). (3) **O-2:** Obergrenze 17–24 % von (b) nur bei extremem Spiel hingenommen, keine
+strengere Sättigung. Drei Rechenbefunde (Markterholung 60/min, Schiffsunterhalt 90/min, Spielwerte-Wortlaut) → `docs/beobachtungen.md`.
+Gate Spec: lead-tech und lead-qa (opus) parallel.
+
+Regelbezug: gates.md Gate Brainstorming, Gate Spec, R606 · Kosten bei Irrtum: ein Faktor im Erlös, kein Save.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-092 · ADR: —
+
+## R609 · 2026-10-13 · Gate Spec I-092 Inselmarkt-Vorliebe: OK mit Auflagen; Plan Stufe leicht
+
+Ruling: Urteile lead-tech BEDENKEN (1 mittel, 3 niedrig) und lead-qa BEDENKEN (1 hoch, 1 mittel, 5 niedrig) zu `design/i092` @
+`44e439fb`. Entscheid **Gate Spec OK mit Auflagen**; AK-Präfix **AK-IM-01…14** bestätigt (R417). Spec-Nachtrag durch lead-design
+ohne neues Gate (Fortsetzung des Starts, kein neues Budget): QA (1) AK-IM-14 im pausierten Spiel, plus zwei Schritte (Boom auf Glas
+«statt Vorliebe», Wechsel nach Felsbucht); QA (2) B.5 «analytisch, Rückfall `PREFER_PCT` per Ruling senken, ein Def-Wert, kein
+Save»; QA (4) AK-IM-03 per Schiff entladenem Glas; QA (5) Kontor/Glas erst nach dem Laden der Fixture; Tech (1) AK-IM-10 auf
+`save-v12-felsbucht.json` mit 1 Rum ins Felsbucht-Lager (+23 Geld). Auflagen an den Plan: QA (3) `buyFactorPct` aus den Defs statt
+80, Gegenprobe Edikt Handel + Boom; Tech (2) `sellTexts` exportieren; Tech (3) `prefersGood` in `sim/trade.ts` mit Absicherung
+unbekannter Insel; Tech (4) Kettenrekursion mit besuchter Menge. **Prozessstufe leicht** (S–M, kein Save, kein ADR): Kurzplan durch
+lead-tech (sonnet), Kombiniertes Gate. **Merge-Risiko Erweiterung 1:** neues Pflichtfeld `prefers` in `IslandDef` — der Plan nennt
+es; wer später merged, ergänzt neue Inseln (Hinweis an die Nutzer-Session beim Merge jener Branch).
+
+Regelbezug: gates.md Gate Spec, Kombiniertes Gate, R417, R553, R608 · Kosten bei Irrtum: ein Test mehr in der Umsetzung.
+
+Entscheider: L0 · Anlass: Urteile lead-tech und lead-qa gate-I-092 · ADR: —
+
+## R610 · 2026-10-13 · Kombiniertes Gate I092: OK mit Auflagen
+
+Ruling: Kurzplan `plan/i092` @ `39859bbc`, Urteil lead-qa BEDENKEN (3 mittel, 3 niedrig), AK-Abdeckung vollständig. L0: Ownership
+disjunkt zu UI-HAEPPCHEN-C, kein Save, Abhängigkeiten erfüllt. Entscheid **OK**, Budget **7 Starts / P1** (Review T02 auf opus über die
+ganze Branch ersetzt den Final-Review, QA (6)). Auflagen vor T01 durch den Controller ohne Zweitprüfung: (1) AK-IM-03 nur per Route
+über `tickShips` entladen, «oder direkt gesetzt» streichen; (2) **Weltkarten-Hover zeigt die Markt-Zeile auch** (Entscheid), T02
+erhält `tests/ui/islandCard.test.ts` mit begründet angepassten Erwartungen; (3) Branch `feat/i092` ab `plan/i092`, vorher
+`design/i092` @ `f5dec181` und main per Merge holen, Rückfall-Satz streichen; (4) `tests/ui/trade.test.ts` in den Grün-Lauf T02;
+(5) Beleg AK-IM-10 = leerer Diff `save.ts`/`types.ts`.
+
+Regelbezug: gates.md Kombiniertes Gate, R609 · Kosten bei Irrtum: eine Textzeile im Hover.
+
+Entscheider: L0 · Anlass: Berichte lead-tech plan-I092, lead-qa gate-plan-I092 · ADR: —
+
+## R611 · 2026-10-13 · UI-HAEPPCHEN-C: Nacharbeit Rechenzeit vor Gate Merge
+
+Ruling: Bericht lead-tech, `feat/ui-haeppchen-c` @ `1378c764`, Reviews/Playtests OK, Final-Review opus BEDENKEN → Fix → Delta OK,
+`make check` Exit 0. **Auflage R607 (1) nicht erfüllt:** der erste Aufruf je Tick kostet bei 1200 Gebäuden ≈ 15–18 ms (Ziel ≤ 1 ms),
+weil `goodsBalance` die ganze Bilanz inkl. Versorgung rechnet — bei offenem Angebot ein Ruckler je Tick im Spätspiel. Entscheid
+**Nacharbeit vor dem Gate Merge** (2 freie Starts): «Erzeugung x / min» nur aus den Erzeugern des einen Vertragsguts berechnen
+(Betriebe mit diesem Output × Rate, Zustand/Trait berücksichtigt wie in `goodsBalance`, ohne Verbrauch/Versorgung), Gleichheit mit
+dem Produktionsanteil von `goodsBalance` per Test auf ≥ 3 Welten; Messung erster Aufruf bei ≥ 1000 Gebäuden ≤ 1 ms (Median); Cache je
+Tick darf bleiben. Zusätzlich in Ownership: Spec I-047 Z. 237 Angebots-Wortlaut nachführen, `docs/ideen.md` I-088/I-090 auf `live`
+(beim Merge, R599: dann ins Archiv). Delta-Review opus, `make check` Exit 0.
+
+Regelbezug: R593, R607, gates.md Gate Merge · Kosten bei Irrtum: ein Ruckler je Tick bei offenem Angebot im Spätspiel.
+
+Entscheider: L0 · Anlass: Schlussbericht lead-tech UI-HAEPPCHEN-C · ADR: —

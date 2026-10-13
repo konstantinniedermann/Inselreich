@@ -239,3 +239,6 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - b) Ein Inselwechsel hebt den Gut-Fokus des Chips auf (`shouldClearFocus`); beim Vertragssprung auf eine ferne Insel sichtbar. Bestehende Regel. Ursprung: UI-HAEPPCHEN-C. Einschätzung: niedrig, ggf. Designfrage.
 - c) `btn.blur()` greift nur bei Mausklick; nach `Enter` bleibt der Fokus auf «Zum Erzeuger» (vermutlich bei allen Karten-Knöpfen gleich). Ursprung: UI-HAEPPCHEN-C. Einschätzung: niedrig.
 - d) Mit `--disable-gpu` headless bei 1920×1080 und Brand ca. 27 ms/Frame; nur Testumgebung. Ursprung: UI-HAEPPCHEN-C. Einschätzung: kein Handlungsbedarf.
+- **2026-10-13 · Markterholung 60 Punkte/min, nicht ≈ 6** (`src/sim/defs/timing.ts:18`, `tick.ts:45`); die Anhänge I-047 W.2/W.4 und Spätspiel B.5 rechnen mit dem zehnfach kleineren Wert, ihre Grenzen für Basis F sind zu streng (sichere Seite). Ursprung: design-I-092 (Wirtschaftsdesigner). Einschätzung: Anhänge beim nächsten Wirtschafts-Design korrigieren.
+- **2026-10-13 · Schiffsunterhalt 15 je 100 Ticks = 90 Geld/min**, nicht 15/min, in älteren Design-Rechnungen. Ursprung: design-I-092. Einschätzung: wie oben.
+- **2026-10-13 · `docs/spielwerte.md` nennt «Preise global» bei Kontor II nicht wörtlich**, eine Idee verweist darauf. Ursprung: design-I-092. Einschätzung: Doku-Beipack.
