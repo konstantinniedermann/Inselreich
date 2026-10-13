@@ -61,7 +61,8 @@ import {
   type FocusDeps,
   type FocusState,
 } from './goodFocus';
-import { cutOffIds, newlyCut, runProblemJump, type ProblemCursor } from './problems';
+import { cutOffIds, newlyCut, runProblemJump, spot, type ProblemCursor } from './problems';
+import { openUpkeepCard } from './upkeepCard';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
 import { createIslandLayers, idleSchedule } from './islandLayers';
@@ -498,8 +499,20 @@ function launch(
     message: (t) => replaceMessage('gut', t),
   };
 
+  /** Betriebsliste (I-062): Sprung zum Gebäude wie beim Problem-Sprung (Kamera, Panel, gefolgte Insel). */
+  const jumpToBuilding = (id: number): void => {
+    const b = world.buildings[id];
+    if (!b) return; // inzwischen abgerissen
+    input?.cancelPointerAction();
+    const at = spot(world, b);
+    centerOn(state.cam, at.x, at.y, clampView(), bounds);
+    setPanel({ kind: 'inspect', id }); // kein selectTool
+    refresh();
+  };
+
   const actions: HudActions = {
     jumpToIsland,
+    openUpkeep: (opener) => openUpkeepCard(gameEl, world, jumpToBuilding, opener),
     toggleGoodFocus: (good) => runFocusToggle(focusDeps, good),
     focusedGood: () => goodFocus?.good ?? null,
     setSpeed: (speed) => setSpeed(speed),

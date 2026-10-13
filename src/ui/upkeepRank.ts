@@ -12,7 +12,7 @@ export interface UpkeepRow {
   id: number;
   island: number;
   defId: BuildingDefId;
-  /** Wirksamer Unterhalt je 100 Ticks (Stillgelegte: halber Wert). */
+  /** Wirksamer Unterhalt je 100 Ticks (Stillgelegte: Wert nach Stilllegung). */
   upkeep: number;
   /** Auslastung in Promille; `null` ohne Erzeugung. */
   util: number | null;
