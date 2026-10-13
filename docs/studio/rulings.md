@@ -6801,3 +6801,19 @@ und TOOL-BUENDEL-11 (R602) lokal.
 Regelbezug: gates.md Gate Merge Release, R600, R601, R602 · Kosten bei Irrtum: veraltete Modulzeilen bis zum Doku-Fix.
 
 Entscheider: L0 · Anlass: Bericht lead-qa REL-21 · ADR: —
+
+## R604 · 2026-10-13 · TOOL-BUENDEL-11 Konflikt arc42; Doku-Fix REL-21 auf derselben Branch; IDEEN-09
+
+Ruling: Bericht production-integrator: DOC-ARCHIV gemergt (`323fd29a`, docs-check/conflicts/studio-test Exit 0); `tool/b11` Konflikt
+in `docs/arc42.md` (Absätze «Save v14 (I-047)» und «`buyPct` ab v12» an derselben Stelle), Merge abgebrochen, main sauber.
+Entscheide: (1) lead-tech (TOOL-BUENDEL-11, 2 freie Starts) merged main in `tool/b11` (kein Rebase), behält beide Absätze in
+Versionsreihenfolge (v12 `buyPct` vor v13/v14) und erledigt auf derselben Branch die **Doku-Auflage R603** (arc42-Modulzeilen
+`problems.ts` fünf Klassen, `hotkeys.ts`, `input.ts`, `hud.ts`, `upkeepRank.ts`; README Zifferntasten-Satz und Esc/Rechtsklick-Zeile im
+neu gegliederten README); Delta-Review sonnet; `make check` Exit 0; neuer Kopf-Hash an L0 (Nachtrag zu R602, R565 V2). (2) Kein
+neuer Vorfall für die Ad-hoc-Retro: Doku-Konflikt ist der Normalfall der Dateimatrix (gates.md), gemeldet statt gelöst — korrekt.
+(3) **Ideen-Runde IDEEN-09** startet (R580, R597: nach DOC-ARCHIV): lead-design mit 3 Scouts, Budget 4 Starts / P3, Pool `docs/ideen.md`
+mit Archivregel R599.
+
+Regelbezug: gates.md Konflikte, R445, R580, R599, R602, R603 · Kosten bei Irrtum: ein weiterer Merge-Anlauf.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-21 (failed) · ADR: —
