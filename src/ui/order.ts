@@ -9,7 +9,7 @@ import { functionLock } from '../sim/unlocks';
 import type { ContractEvent, GoodId, Order, Result, World } from '../sim/types';
 import { setField } from './dom';
 import { sellPrice } from '../sim/trade';
-import { goodsBalance } from '../sim/flow';
+import { goodProductionPer100 } from './production';
 import { GOODS_BALANCE_TICKS, formatGameTime, perMinute } from './time';
 
 export interface OrderActions {
@@ -46,14 +46,14 @@ export function runContractAction(
 const producedCache = new WeakMap<World, { key: string; value: number }>();
 
 /**
- * Erzeugung von `good` auf `island` je Minute (aus `goodsBalance`). `goodsBalance` läuft über alle
- * Gebäude; die Karte fragt jeden Frame, daher einmal je Tick, Insel und Gut (Messung: R607).
+ * Erzeugung von `good` auf `island` je Minute (Summe der Erzeuger, `goodProductionPer100`). Die Karte
+ * fragt jeden Frame, daher einmal je Tick, Insel und Gut (Messung: R607).
  */
 function producedPerMinute(world: World, island: number, good: GoodId): number {
   const key = `${world.tick}|${island}|${good}`;
   const hit = producedCache.get(world);
   if (hit !== undefined && hit.key === key) return hit.value;
-  const value = perMinute(goodsBalance(world, island)[good].produced, GOODS_BALANCE_TICKS);
+  const value = perMinute(goodProductionPer100(world, island, good), GOODS_BALANCE_TICKS);
   producedCache.set(world, { key, value });
   return value;
 }

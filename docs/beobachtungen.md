@@ -235,7 +235,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 ### 2026-10-13 · UI-HAEPPCHEN-C: Kleinbefunde Vertragskarte
 
-- a) `goodsBalance` wird in `refresh()` mehrfach je Aufruf berechnet (HUD, Chips) und neu für die Angebotskarte (ca. 18 ms Erstaufruf bei 1200 Gebäuden, Reichweitenprüfung der Häuser). Vorschlag: ein Ergebnis je `refresh` teilen. Ursprung: UI-HAEPPCHEN-C. Einschätzung: mittel, bei grossen Inseln spürbar.
+- a) `goodsBalance` wird in `refresh()` mehrfach je Aufruf berechnet (HUD, Chips) und neu für die Angebotskarte (ca. 18 ms Erstaufruf bei 1200 Gebäuden, Reichweitenprüfung der Häuser). Vorschlag: ein Ergebnis je `refresh` teilen. Ursprung: UI-HAEPPCHEN-C. Einschätzung: mittel, bei grossen Inseln spürbar. Stand R611: die Angebotskarte nutzt jetzt eine eigene Erzeuger-Summe (`goodProductionPer100`, `src/ui/production.ts`, Median ≈ 0,03 ms statt ≈ 15 ms); das mehrfache `goodsBalance` in `refresh()` (HUD, Chips) bleibt offen.
 - b) Ein Inselwechsel hebt den Gut-Fokus des Chips auf (`shouldClearFocus`); beim Vertragssprung auf eine ferne Insel sichtbar. Bestehende Regel. Ursprung: UI-HAEPPCHEN-C. Einschätzung: niedrig, ggf. Designfrage.
 - c) `btn.blur()` greift nur bei Mausklick; nach `Enter` bleibt der Fokus auf «Zum Erzeuger» (vermutlich bei allen Karten-Knöpfen gleich). Ursprung: UI-HAEPPCHEN-C. Einschätzung: niedrig.
 - d) Mit `--disable-gpu` headless bei 1920×1080 und Brand ca. 27 ms/Frame; nur Testumgebung. Ursprung: UI-HAEPPCHEN-C. Einschätzung: kein Handlungsbedarf.
