@@ -83,24 +83,27 @@ describe('AK-SK-21 Roundtrip', () => {
 });
 
 describe('AK-SK-23 Validierung', () => {
-  const bad = (mutate: (raw: Record<string, any>) => void): void => {
-    const raw = json(withContract()) as Record<string, any>;
+  const bad = (mutate: (raw: Record<string, unknown>) => void): void => {
+    const raw = json(withContract()) as Record<string, unknown>;
     mutate(raw);
     expect(deserialize(JSON.stringify(raw))).toEqual({
       ok: false,
       reason: 'Beschädigter Spielstand',
     });
   };
+  const contractOf = (r: Record<string, unknown>): Record<string, unknown> =>
+    r.contract as Record<string, unknown>;
   const validOrder = (): Record<string, unknown> => {
     const period = 0;
     const due = ORDER_FIRST_TICK + period * ORDER_PERIOD + ORDER_DURATION;
     return { period, good: 'wood', amount: 20, reward: 150, due };
   };
 
-  it('Gut ohne Auftragsgut', () => bad((r) => (r.contract.good = 'tools')));
-  it('Menge 0', () => bad((r) => (r.contract.amount = 0)));
-  it('Insel ausserhalb', () => bad((r) => (r.contract.island = r.islands.length)));
-  it('Preis negativ', () => bad((r) => (r.contract.price = -1)));
+  it('Gut ohne Auftragsgut', () => bad((r) => (contractOf(r).good = 'tools')));
+  it('Menge 0', () => bad((r) => (contractOf(r).amount = 0)));
+  it('Insel ausserhalb', () =>
+    bad((r) => (contractOf(r).island = (r.islands as unknown[]).length)));
+  it('Preis negativ', () => bad((r) => (contractOf(r).price = -1)));
   it('Vertrag kein Objekt', () => bad((r) => (r.contract = 5)));
   it('Vertrag und Auftrag zugleich', () => bad((r) => (r.order = validOrder())));
   it('Angebot und Auftrag zugleich', () =>
