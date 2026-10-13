@@ -91,6 +91,11 @@ export interface OrderDef {
   /** Menge je Vertragslieferung, I-047. */
   contract: number;
 }
+export type ContractBreakReason = 'lock' | 'island' | 'kontor' | 'stock';
+/** Vertragsereignis eines Schritts (R12), nur im StepReport, nie im Save. `island` = Lieferinsel. */
+export type ContractEvent =
+  | { kind: 'delivered'; good: GoodId; amount: number; pay: number; island: number }
+  | { kind: 'broken'; good: GoodId; reason: ContractBreakReason; penalty: number; island: number };
 /** Liefervertrag (I-047): Menge und Stückpreis beim Annehmen festgeschrieben. */
 export interface Contract {
   good: GoodId;

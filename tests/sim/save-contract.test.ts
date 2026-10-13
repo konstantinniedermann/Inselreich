@@ -131,7 +131,7 @@ describe('Rückfaltung foldBackToV13', () => {
     );
   });
 
-  it('foldBackToV12 läuft über v13 und bleibt auf dem Pin', () => {
+  it('foldBackToV12 faltet einen v14-Stand auf Version 12 ohne contract', () => {
     const out = foldBackToV12(json(createWorld(3)));
     expect(out.version).toBe(12);
     expect('contract' in out).toBe(false);
