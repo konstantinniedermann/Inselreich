@@ -6674,3 +6674,17 @@ ist schon durch `tool/b10` (Timeout 20000 ms, R582) abgedeckt; die Branch basier
 Regelbezug: gates.md Gate Merge, R582, R585, R588, R593 · Kosten bei Irrtum: `fauna` CAPS blockiert den nächsten push-check knapp.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-ZEITRESERVE-M14 · ADR: —
+
+## R595 · 2026-10-13 · REL-20 «Inselcharakter» live; Merges A/B lokal; Prozess-Aussensicht
+
+Ruling: Bericht production-integrator: `tool/b10` + `tool/zeitreserve-m14` gemergt, `make push-check` Lauf 2 Exit 0 (Zeitreserve 0
+ohne Reserve, check-ci-perf 351), Push `19683ddf..0d1db8f3`, CI 38429087293 success, Pages 38429091182 success, `backup/main-lokal`
+= `0d1db8f3`. Lauf 1 scheiterte an nicht isoliertem Studio-Test (`test_hook.py`, `<tmp>/x`) → Beobachtung, Trivial-Fix in
+TOOL-BUENDEL-11. Entscheide: (1) **REL-20 live**, Release-Notiz in state.md. (2) Integrator merged lokal `feat/ui-haeppchen-a`
+(R586) und `feat/ui-haeppchen-b` (R590), je `make check` Exit 0, kein Push (R335). (3) `studio-process-coach` liefert die
+Prozess-Aussensicht zu REL-20 (R127). (4) Trailer «Sonnet» der Integrator-Commits bleibt stehen (Subagenten erhalten eine eigene
+Session-Vorgabe).
+
+Regelbezug: R127, R335, R586, R590, R594 · Kosten bei Irrtum: —
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-20 (done) · ADR: —

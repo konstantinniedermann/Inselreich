@@ -208,3 +208,4 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 ## Offen (neue Einträge unten anhängen)
 
 - **2026-10-13 · `tools/studio/guard.py` Stash-Sperre (E-064) umgehbar.** Sie lässt sich über Git-Alias (`git -c alias.s=stash s`), Befehlssubstitution (`git $(echo stash)`) und `xargs git stash` umgehen; war schon bei der bestehenden Sperre so. Sie schützt gegen Versehen, kein Sicherheitsmerkmal. Ursprung: Final-Review TOOL-BUENDEL-10. Einschätzung: hinnehmen.
+- **2026-10-13 · `tools/studio/tests/test_hook.py` `test_malicious_session_id_skips` nicht isoliert.** Prüft, dass `<Systemtemp>/x` nicht existiert; ein Verzeichnis `x` eines parallelen Arbeiters (I047) liess `make push-check` Lauf 1 rot werden, Lauf 2 mit eigenem `TMPDIR` grün. Ursprung: Push-Gate REL-20 (Integrator). Einschätzung: Trivial-Fix im nächsten TOOL-BUENDEL (eigenes `tmp_path`).

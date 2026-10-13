@@ -8,7 +8,7 @@ Stand: 2026-10-12 (Studio-Session 1a73e6c1, R564–R577; Ende: M13 live, M14-E1 
 
 ## Release-Notizen
 
-**REL-20 „Inselcharakter“ (bereit, nicht gepusht, R574–R576)** — Entwurf. Save **v13** (Migration v12→v13). Inhalt: M14-E1
+**REL-20 „Inselcharakter“ (live, R594/R595)** — Push `19683ddf..0d1db8f3`, CI 38429087293, Pages 38429091182 grün. Dazu TOOL-ZEITRESERVE-M14. Save **v13** (Migration v12→v13). Inhalt: M14-E1
 (Felsbucht «Gebirge+», dritte Fremdinsel Weidenau «Fruchtbar», Trait-Anzeige), UI-AUFRAEUM-2 (Refactor ohne Spieländerung),
 TOOL-CONTROLLER-HAERTUNG, TOOL-BUENDEL-9 (nur Werkzeug/Tests). Opus-Final-Reviews je Strang OK.
 
