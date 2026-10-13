@@ -6432,3 +6432,16 @@ benennen; 1280×720 Ausbau-Karte ohne Überlauf mit Fokusring; Haus-Aufstieg als
 Regelbezug: gates.md Kombiniertes Gate, E-061, R566, R573 · Kosten bei Irrtum: verspäteter «Lager voll»-Hinweis nach dem Laden.
 
 Entscheider: L0 · Anlass: Berichte lead-tech plan-UI-HAEPPCHEN-B, lead-qa gate-UI-HAEPPCHEN-B · ADR: —
+
+## R578 · 2026-10-13 · Wochenlimit ignorieren: Deckel wieder 8 Agenten; Session-Plan
+
+Ruling: Nutzerauftrag «mach weiter und ignorier die limitation durch das wöchentliche claude limit». Die Halbierung der
+Parallelität bei Wochenfenster ≥ 90 % (state.md, ≤ 4 Agenten) entfällt für diese Session; es gilt der Studiodeckel R424
+(≤ 8 Agenten, davon ≤ 2 Browser-Läufe). Modellwahl bleibt nach der Modelltabelle (kein Hochstufen wegen des Auftrags).
+Plan: (1) Release REL-20 per Push-Gate (`production-integrator`, `.worktrees/integrate`), vorher Klärung
+`islands-c.test.ts`-Timeout; (2) UI-HAEPPCHEN-A umsetzen (lead-tech, R573); (3) UI-HAEPPCHEN-B nach Merge A (R577);
+(4) Retro-Vorschläge V1/V2 (E-064, E-065) an den Coach; (5) freie Plätze: I-047 Stammkunde (Design/Spec), Ideen-Runde (R445, R475).
+
+Regelbezug: Verfassung §5 (Nutzerauftrag), R424, R475 · Kosten bei Irrtum: Wochenfenster vor Reset 2026-10-14 12:00 erschöpft, Studio pausiert bis Reset.
+
+Entscheider: L0 · Anlass: Nutzerauftrag Session-Start · ADR: —
