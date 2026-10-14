@@ -8,6 +8,7 @@ import type { SoundEvent } from '../audio/sound';
 import { functionLock } from '../sim/unlocks';
 import type { ContractEvent, GoodId, Order, Result, World } from '../sim/types';
 import { setField } from './dom';
+import { farOrderText } from './farOrder';
 import { sellPrice } from '../sim/trade';
 import { goodProductionPer100 } from './production';
 import { GOODS_BALANCE_TICKS, formatGameTime, perMinute } from './time';
@@ -95,6 +96,7 @@ export function orderCardText(world: World, island: number = HOME): string {
   }
   const o = world.order;
   if (o === null) return `Nächster Auftrag in ${formatGameTime(nextOrderTick(world) - world.tick)}`;
+  if (o.island !== undefined) return farOrderText(world, o);
   const name = GOODS[o.good].name;
   return (
     `Auftrag: ${o.amount} ${name} · Prämie ${o.reward} · noch ${formatGameTime(o.due - world.tick)}` +
@@ -179,8 +181,10 @@ export function orderMessage(prev: Order | null, cur: Order | null): string | nu
   if (cur !== null && (prev === null || prev.period !== cur.period)) {
     return `Neuer Auftrag: ${cur.amount} ${GOODS[cur.good].name} · Prämie ${cur.reward}`;
   }
-  if (cur === null && prev !== null)
+  if (cur === null && prev !== null) {
+    if (prev.island !== undefined) return null;
     return `Auftrag verfallen: ${prev.amount} ${GOODS[prev.good].name}`;
+  }
   return null;
 }
 
