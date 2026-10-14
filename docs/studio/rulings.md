@@ -7063,3 +7063,21 @@ Heimatinsel** mit ihrem vollen Unterhalt (alle Betriebe der Insel, nicht nur das
 Regelbezug: gates.md Gate Merge, R606, R617, R620 · Kosten bei Irrtum: eine Zeile der Rangliste mehr oder weniger, Folgeänderung in T03.
 
 Entscheider: L0 · Anlass: Berichte lead-production BEOB-14, lead-tech Nacharbeit plan-ui-aufraeum-3 · ADR: —
+
+## R622 · 2026-10-14 · Release-Check REL-21: BEDENKEN → Hotfix Marktpreis Fremdinsel vor dem Push
+
+Ruling: Bericht lead-qa gate-rel-21 (Kandidat `c3a93534`, `make check` Exit 0 mit 3904 Tests, `check-ci-perf` Exit 0, Playtest A–F
+bestanden, Opus-Review BEDENKEN). Entscheide: (1) **Befund 1 (hoch) wird vor dem Push behoben**: HOTFIX-REL21-PREIS durch lead-tech
+(Controller, Umsetzer tech-ui-engineer, Branch `hotfix/rel21-preis` von main): `src/ui/order.ts:81` übergibt die Vertragsinsel an
+`sellPrice`, Test «Glas auf Weidenau → 26» mit Rot-Beleg, Spec-Korrektur AK-HC-01 und I092-Spec Z. 25; Beipack Befund 3
+(`docs/arc42.md` für I092 nachführen: `sellPrice(…, island)`, `prefersGood`, `PREFER_PCT`, Marke `prefer-*`). Task-Review sonnet,
+danach Delta-Check (Integrator: Merge in `.worktrees/integrate`, `make check`, `make zeitreserve-gate`) und Gate L0. Kein neuer
+Playtest-Vollauf: ein Browser-Punkt (Karte Weidenau zeigt 26) im Delta-Check. Budget 4 Starts/P1. (2) **Zeitreserve-Gate Exit 2
+bei ruhiger Last** («Hauptmessung fehlt?») wird als TOOL-HOTFIX-ZR untersucht (lead-tech, systematisches Debugging, Budget 3/P1);
+bis zur Klärung gilt ein Exit 2 bei Last ≤ 4 nicht als Push-Freigabe. (3) Befunde 2 (Cache im pausierten Spiel) und 4 (Testname
+`save-v13.test.ts:253`, Meldung «Noch kein Erzeuger für Glas auf Heimat») gehen als Beipack in UI-AUFRAEUM-3 (T06). Release-
+Fenster: zwei Test-Arbeiter (Hotfix, Werkzeug) gemäss R588 V1.
+
+Regelbezug: gates.md Release-Check, R588 V1, R598, R616 · Kosten bei Irrtum: Push REL-21 verschiebt sich um den Hotfix.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-rel-21 · ADR: —
