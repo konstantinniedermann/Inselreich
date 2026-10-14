@@ -7049,3 +7049,17 @@ Ruling: 5 Beobachtungen seit 2026-10-13 (Start-Hinweis). Freier Platz nach R475 
 Regelbezug: R475, R580, R287 · Kosten bei Irrtum: ein Eintrag wird später erneut geöffnet.
 
 Entscheider: L0 · Anlass: freie Kapazität im Release-Fenster (keine Test-Arbeiter) · ADR: —
+
+## R621 · 2026-10-14 · Gate Merge BEOB-AUSWERTUNG-14 OK; Auslegungen UI-AUFRAEUM-3
+
+Ruling: (1) `docs/beob-14` @ `402ac5db` (17 Einträge: 5 eingeplant, 2 Doku-Beipack, 10 abgehakt mit Trigger, Marke 2026-10-14,
+`make docs-check` Exit 0) → **Gate Merge OK** (nur Doku), Merge nach Push REL-21. Der Risiko-Hinweis «Task-Dateien veraltet» trifft
+nicht zu: `plan/ui-aufraeum-3` @ `0ba2bb21` hat T01–T07 aktuell (L0 geprüft). Die zwei Doku-Beipacks («Preise global» in
+`docs/spielwerte.md`, toter README-Verweis Zeile 74) gehen in UI-AUFRAEUM-3 T07. (2) **Rechtsklick-Staffelung nur im
+Linienzug** (Plan-Nacharbeit `0ba2bb21`): angenommen; Abriss- und Weide-/Strassen-Strich bleiben bei `cancel`, weil das
+Verhalten nach bereits gebauten Kacheln nicht abgesichert ist. Präzisiert R617 (4). (3) **Rangliste I-089 enthält die
+Heimatinsel** mit ihrem vollen Unterhalt (alle Betriebe der Insel, nicht nur das Kontor); geht als Pflichtzeile ins T03-Briefing.
+
+Regelbezug: gates.md Gate Merge, R606, R617, R620 · Kosten bei Irrtum: eine Zeile der Rangliste mehr oder weniger, Folgeänderung in T03.
+
+Entscheider: L0 · Anlass: Berichte lead-production BEOB-14, lead-tech Nacharbeit plan-ui-aufraeum-3 · ADR: —
