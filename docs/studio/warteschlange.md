@@ -144,7 +144,7 @@ schliesst den Eintrag.
 - Von: l0
 - Antwort: –
 
-## N-100 · offen · 2026-10-13 · Dropbox während des Push-Gates pausieren
+## N-100 · beantwortet · 2026-10-13 · Dropbox während des Push-Gates pausieren
 
 - Frage: Das Push-Gate braucht 10 min lang eine Last <= 3. Dropbox und der macOS-Dateidienst halten die Last heute dauerhaft bei 6-7, darum ist REL-20 lokal fertig, aber nicht live. Pausierst du Dropbox kurz, wenn ich dich darum bitte (oder generell während Studio-Sessions)?
 - Empfehlung: Ja: Dropbox-Synchronisation für ca. 20 min pausieren, dann pusht der Integrator REL-20.
@@ -152,4 +152,4 @@ schliesst den Eintrag.
 - Kosten des Wartens: REL-20 und danach REL-21 bleiben lokal, bis ein ruhiges Fenster kommt; Arbeit läuft weiter.
 - Blockiert: Push REL-20
 - Von: L0
-- Antwort: –
+- Antwort: Gegenstandslos: REL-20 ohne Pause live gepusht (R594/R595)

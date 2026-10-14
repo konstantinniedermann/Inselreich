@@ -7432,3 +7432,19 @@ im Hintergrund durch Leads; Entwurf und Test durch lead-tech.
 Regelbezug: gates.md Gate Merge, R645, R646 · Kosten bei Irrtum: eine Karte mit kleinen Hover-Mängeln; ein Guard mit Fehlblocks (Rückfall warn).
 
 Entscheider: L0 · Anlass: Bericht lead-tech tool-dash-versionen · ADR: —
+
+## R648 · 2026-10-14 · Nutzerauftrag «mach weiter, zeig im Dashboard, was läuft und wo das Session-Ziel je Task liegt»; Session-Plan
+
+Ruling: Auslegung „zeig mir im Dashboard, was du gerade umsetzt und wo das geplante Ziel der heutigen Session bzgl. der einzelnen Tasks ist“
+als (a) **sofort**: `releases.json` bildet den heutigen Plan ab (jedes Paket der Session mit aktueller Stufe und Ziel-Text «Ziel heute: …»
+in `note`), gepflegt durch lead-production; (b) **Paket TOOL-DASH-SESSIONZIEL**: die Karte «Versionen und Releases» zeigt je Paket ein
+Feld `goalStage` als gestrichelte Zielmarke hinter dem Balken (Abstand Ist → Ziel sichtbar) und oben eine Zeile «Jetzt in Arbeit» aus
+den aktiven Agenten/Paketen (`session_packages` + Status `active`). Plan sofort (ohne Testläufe, R464), Umsetzung erst nach `make push-check`
+Exit 0 für REL-22. Session-Plan: (1) Delta-Check + Push REL-22, (2) Handel 2 (REL-23) nach dem Push, (3) TOOL-DASH-SESSIONZIEL,
+(4) TOOL-GUARD-WARTEAGENT (R647 (2)), (5) freie Plätze → Ideen-Runde nach dem Push (R445/R475). N-100 erledigt (REL-20 live seit R594/R595).
+Zweck der Anweisung: Der Nutzer will den Fortschritt der Session gegen ein Ziel verfolgen. Die Auslegung widerspricht dem nicht, weil
+die Daten sofort sichtbar sind und die Zielmarke den Abstand Ist → Ziel grafisch zeigt, ohne die Push-Regel R464 zu brechen.
+
+Regelbezug: Verfassung §5, STUDIO.md Autonomie, R464, R645, R647 · Kosten bei Irrtum: eine Darstellung, die der Nutzer anders wollte (eine Karte nachbessern).
+
+Entscheider: L0 · Anlass: Nutzerprompt Session-Start · ADR: —
