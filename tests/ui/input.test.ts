@@ -383,6 +383,49 @@ describe('REL-17 Abriss-Zug (AK-R17-12…16)', () => {
       expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
     });
 
+    it('AK-UA3-01 Rechtsklick im Linienzug: nur der Zug endet, kein cancel (Werkzeug bleibt)', () => {
+      const { actions, at, ptr } = setup();
+      ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+      ptr('pointermove', { ...at(2, 0), shiftKey: true });
+      actions.length = 0;
+      ptr('pointerdown', { ...at(2, 0), button: 2, shiftKey: true });
+      expect(actions).toContainEqual({ type: 'roadLine', phase: 'cancel' });
+      expect(actions.some((x) => x.type === 'cancel')).toBe(false);
+    });
+
+    it('AK-UA3-02 zweiter Rechtsklick ohne Zug sendet cancel wie bisher', () => {
+      const { actions, at, ptr } = setup();
+      ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+      ptr('pointerdown', { ...at(0, 0), button: 2 });
+      actions.length = 0;
+      ptr('pointerdown', { ...at(0, 0), button: 2 });
+      expect(actions).toEqual([{ type: 'cancel' }]);
+    });
+
+    it('AK-UA3-03 Esc und erster Rechtsklick im Zug haben dieselbe Wirkung', () => {
+      const run = (how: 'esc' | 'right'): InputAction[] => {
+        const { actions, at, ptr, key } = setup();
+        ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+        ptr('pointermove', { ...at(2, 0), shiftKey: true });
+        actions.length = 0;
+        if (how === 'esc') key('keydown', { key: 'Escape' });
+        else ptr('pointerdown', { ...at(2, 0), button: 2 });
+        const out = [...actions];
+        listeners.clear();
+        canvasHandlers.clear();
+        return out;
+      };
+      expect(run('right')).toEqual(run('esc'));
+    });
+
+    it('Weg-Strich (drag.road): Rechtsklick sendet weiter cancel (unverändert)', () => {
+      const { actions, at, ptr } = setup();
+      ptr('pointerdown', { ...at(0, 0) });
+      actions.length = 0;
+      ptr('pointerdown', { ...at(0, 0), button: 2 });
+      expect(actions.some((x) => x.type === 'cancel')).toBe(true);
+    });
+
     it('AK-18 pointercancel im Zug: Abbruch ohne Bau', () => {
       const { actions, at, ptr } = setup();
       ptr('pointerdown', { ...at(0, 0), shiftKey: true });
