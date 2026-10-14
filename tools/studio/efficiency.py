@@ -86,6 +86,7 @@ IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".svg", ".ic
 TOP_READS = 5
 REWRITE_PAUSE_S = 300  # Cache-Frist; längere Pause zwischen zwei Aufrufen
 REWRITE_ROWS = 12
+SPLIT_ROLES = 5  # Rollen in der Info-Aufteilung des Cache-Write
 LEAD_ROWS = 12
 STATUS_CMD = "tools/studio/log.py status"
 GUARD_DATE = datetime(2026, 10, 4, tzinfo=UTC)  # Persona-Guard (R167) aktiv
@@ -373,6 +374,7 @@ def _rewrite_events(calls: list[dict], family: str) -> list[dict]:
                 "family": family,
                 "gap_s": gap,
                 "weight": weight,
+                "cw5": call["cache_write_5m"],
                 "wait": bool(before["tools"] & WAIT_TOOLS),
                 "turn_end": not before["tools"],
             }
@@ -411,6 +413,8 @@ def _instance(
         "persona_start": general_persona,
         "start_ts": calls[0]["ts"],
         "rewrite_events": _rewrite_events(calls, package_family(pkg)),
+        "cw5": sum(c["cache_write_5m"] for c in calls),
+        "cw5_factor": model_factor(model),
         "package": pkg,
         "budget_none": budget_none,
         "phase": phase,
@@ -572,6 +576,7 @@ def _summary(
         "roles": _roles(instances),
         "top_reads": ranked,
         "rewrite_stats": _rewrite_stats(instances, total),
+        "cache_write_split": _cache_write_split(instances, total),
         "lead_stats": _lead_stats(instances),
     }
 
@@ -637,6 +642,74 @@ def _rewrite_stats(instances: list[dict], total: float) -> dict:
         "by_role": sorted(roles, key=lambda r: (-r["weight"], r["role"])),
         "by_family": sorted(families, key=lambda f: (-f["weight"], f["family"])),
     }
+
+
+def _cache_write_split(instances: list[dict], total: float) -> dict:
+    """Cache-Write 5 min = «Neuschreibung nach Pause» + «übriges Wachstum» (R615 V2).
+
+    Neuschreibung nach Pause: Aufruf mit Cache-Write >= REWRITE_MIN (20k), dessen
+    Vorgänger-Aufruf der Instanz mehr als REWRITE_PAUSE_S (5 min) zurückliegt
+    (dieselben Ereignisse wie `_rewrite_events`; gezählt wird nur der 5-min-Anteil).
+    Übriges Wachstum: jeder andere 5-min-Cache-Write (Kontext wächst, kleine
+    Nachschreibungen, erster Aufruf). Anteile gewichtet wie die Ampel (Kostengewicht,
+    Faktor 1,25 und Modellfaktor), also in Punkten des Gesamt-Kostengewichts."""
+    unit = KIND_WEIGHT["cache_write_5m"]
+    roles: dict[str, dict] = {}
+    for item in instances:
+        pause = sum(e["cw5"] for e in item["rewrite_events"])
+        row = roles.setdefault(
+            item["role"], {"role": item["role"], "pause_tokens": 0, "total_tokens": 0}
+        )
+        row["pause_tokens"] += pause
+        row["total_tokens"] += item["cw5"]
+        row["pause_w"] = row.get("pause_w", 0.0) + pause * unit * item["cw5_factor"]
+        total_w = item["cw5"] * unit * item["cw5_factor"]
+        row["total_w"] = row.get("total_w", 0.0) + total_w
+    rows = []
+    for row in roles.values():
+        rows.append(
+            {
+                **row,
+                "other_tokens": row["total_tokens"] - row["pause_tokens"],
+                "pause_part": _ratio(row["pause_w"], row["total_w"]),
+                "pause_share": _ratio(row["pause_w"], total),
+                "other_share": _ratio(row["total_w"] - row["pause_w"], total),
+            }
+        )
+    pause_w = sum(r["pause_w"] for r in rows)
+    total_w = sum(r["total_w"] for r in rows)
+    return {
+        "pause_tokens": sum(r["pause_tokens"] for r in rows),
+        "other_tokens": sum(r["other_tokens"] for r in rows),
+        "pause_part": _ratio(pause_w, total_w),
+        "pause_share": _ratio(pause_w, total),
+        "other_share": _ratio(total_w - pause_w, total),
+        "by_role": sorted(rows, key=lambda r: (-r["total_w"], r["role"])),
+    }
+
+
+def _m(value: float) -> str:
+    return f"{value / 1_000_000:.1f} M"
+
+
+def _split_info(split: dict | None) -> list[str]:
+    if not split:
+        return []
+    line = (
+        "- Cache-Write 5 min aufgeteilt (nur Info, Anteil am Gesamt-Kostengewicht): "
+        f"Neuschreibung nach Pause {_pct(split['pause_share'])} "
+        f"({_m(split['pause_tokens'])} Tokens), "
+        f"übriges Wachstum {_pct(split['other_share'])} "
+        f"({_m(split['other_tokens'])} Tokens); "
+        f"Neuschreibung = {_pct(split['pause_part'])} des Cache-Write 5 min"
+    )
+    rows = [
+        f"  - {r['role']}: nach Pause {_pct(r['pause_share'])}, "
+        f"übriges Wachstum {_pct(r['other_share'])}"
+        for r in split["by_role"][:SPLIT_ROLES]
+        if r["total_tokens"]
+    ]
+    return [line, *rows]
 
 
 def _lead_stats(instances: list[dict]) -> dict:
@@ -857,6 +930,8 @@ def _lights(data: dict) -> list[str]:
         out.append(line)
         if key == "steuerung" and data.get("steuerung_bereinigt") is not None:
             out.append(f"- Steuerungsanteil roh: {_pct(data['steuerung'])}, nur Info")
+        if key == "cache_write_5m":
+            out += _split_info(data.get("cache_write_split"))
         if key == "flake" and flakes:
             out.append(f"  - Flake-Verdacht: {', '.join(flakes[:MAX_FLAKE_NAMES])}")
     return out

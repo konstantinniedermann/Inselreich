@@ -1081,3 +1081,61 @@ class FlakeWindowTest(Fixture):
             {**test_event("test_passed", self.T2), "tree": "."},
         ]
         self.assertEqual(efficiency.flake_suspects(events), [])
+
+
+class CacheWriteSplitTest(unittest.TestCase):
+    """R615 V2: Cache-Write 5 min = Neuschreibung nach Pause + übriges Wachstum."""
+
+    def build(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        m = "claude-opus-4"
+        write(
+            root / "s1.jsonl",
+            [
+                assistant("a", m, cc5=1000, ts="2026-10-01T10:00:00Z"),
+                assistant("b", m, cc5=5000, ts="2026-10-01T10:01:00Z"),
+                # Pause 9 min, grosser Cache-Write: Neuschreibung
+                assistant("c", m, cc5=40000, ts="2026-10-01T10:10:00Z"),
+                # Pause 9 min, aber unter 20k: zählt als Wachstum
+                assistant("d", m, cc5=3000, ts="2026-10-01T10:19:30Z"),
+            ],
+        )
+        return efficiency.compute([root / "s1.jsonl"])
+
+    def test_split_sums_to_cache_write_share(self):
+        data = self.build()
+        split = data["cache_write_split"]
+        self.assertAlmostEqual(
+            split["pause_share"] + split["other_share"],
+            data["kind_share"]["cache_write_5m"],
+        )
+
+    def test_pause_part_counts_only_rewrites(self):
+        split = self.build()["cache_write_split"]
+        self.assertAlmostEqual(split["pause_tokens"], 40000)
+        self.assertAlmostEqual(split["other_tokens"], 9000)
+        self.assertAlmostEqual(split["pause_part"], 40000 / 49000)
+
+    def test_by_role(self):
+        rows = self.build()["cache_write_split"]["by_role"]
+        self.assertEqual(rows[0]["role"], "L0")
+        self.assertEqual(rows[0]["pause_tokens"], 40000)
+
+    def test_render_info_line_not_a_light(self):
+        text = efficiency.render_section(self.build())
+        line = next(x for x in text.splitlines() if "Neuschreibung nach Pause" in x)
+        self.assertIn("übriges Wachstum", line)
+        for prefix in ("- ROT:", "- GELB:", "- GRÜN:"):
+            self.assertFalse(line.startswith(prefix))
+        self.assertIn("nur Info", line)
+
+    def test_no_cache_write_no_crash(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        p = Path(tmp.name) / "s.jsonl"
+        write(p, [assistant("a", "claude-opus-4", out=5)])
+        data = efficiency.compute([p])
+        self.assertEqual(data["cache_write_split"]["pause_part"], 0.0)
+        self.assertIn("Neuschreibung nach Pause", efficiency.render_section(data))
