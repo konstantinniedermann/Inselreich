@@ -47,6 +47,7 @@ WORK = re.compile(
 )
 SEGMENTS = re.compile(r";|&&|\|\||\||\n")
 SLEEP = re.compile(r"^(?:(?:timeout|nice|env)\s+(?:[-\w=.]+\s+)*?)?sleep\s+\d")
+LOOP_START = re.compile(r"(until|while|for)\s")
 LOOP_BODY = ("do ", "then ", "else ")
 
 
@@ -86,9 +87,14 @@ def bash_reason(tool_input: Mapping) -> str | None:
     """Regel B: Grund für den Block oder None."""
     if not tool_input.get("run_in_background"):
         return None
+    depth = 0  # Schleifentiefe über die Segmente: until/while/for … done
     for raw in SEGMENTS.split(str(tool_input.get("command") or "")):
         segment = raw.strip()
-        if segment.startswith(LOOP_BODY):
+        if LOOP_START.match(segment):
+            depth += 1
+        elif re.match(r"done\b", segment):
+            depth = max(0, depth - 1)
+        if depth or segment.startswith(LOOP_BODY):
             continue
         if SLEEP.match(segment):
             return (

@@ -71,6 +71,15 @@ class BashTest(unittest.TestCase):
         self.assertIsNone(bash("make check"))
         self.assertIsNone(bash("echo sleep 3"))
 
+    def test_multiline_loops_are_allowed(self):
+        self.assertIsNone(bash("until [ -f x ]; do\n  sleep 2\ndone"))
+        self.assertIsNone(bash("while ! test -f x\ndo\n  sleep 2\ndone"))
+        self.assertIsNone(bash("for i in 1 2; do\n  sleep 2\ndone"))
+
+    def test_sleep_outside_loop_stays_denied(self):
+        self.assertIsNotNone(bash("sleep 60\nuntil [ -f x ]; do sleep 2; done"))
+        self.assertIsNotNone(bash("until [ -f x ]; do\n  sleep 2\ndone\nsleep 60"))
+
     def test_foreground_sleep_is_not_subject(self):
         self.assertIsNone(bash("sleep 1", background=False))
         self.assertIsNone(waitguard.bash_reason({"command": "sleep 1"}))
