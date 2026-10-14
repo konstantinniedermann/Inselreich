@@ -72,7 +72,7 @@
       "hash": "878b492b",
       "date": "",
       "save": "v14",
-      "gate": "Kandidat vollständig · Delta-Check + Push in der Folgesession",
+      "gate": "Delta-Check läuft",
       "items": [
         {
           "pkg": "UI-AUFRAEUM-3",
@@ -81,7 +81,8 @@
           "startStage": 1,
           "stage": 4,
           "state": "done",
-          "note": "Final-Review OK, gemergt"
+          "note": "Final-Review OK, gemergt",
+          "goalStage": 4
         },
         {
           "pkg": "I-100",
@@ -90,7 +91,8 @@
           "startStage": 1,
           "stage": 4,
           "state": "done",
-          "note": "Final-Review OK, gemergt"
+          "note": "Final-Review OK, gemergt",
+          "goalStage": 4
         },
         {
           "pkg": "TOOL-ZEITRESERVE-21",
@@ -99,7 +101,8 @@
           "startStage": 4,
           "stage": 4,
           "state": "done",
-          "note": "gemergt"
+          "note": "gemergt",
+          "goalStage": 4
         },
         {
           "pkg": "TOOL-BUENDEL-12",
@@ -108,7 +111,8 @@
           "startStage": 4,
           "stage": 4,
           "state": "done",
-          "note": "gemergt"
+          "note": "gemergt",
+          "goalStage": 4
         },
         {
           "pkg": "BEOB-14",
@@ -117,7 +121,8 @@
           "startStage": 4,
           "stage": 4,
           "state": "done",
-          "note": "gemergt"
+          "note": "gemergt",
+          "goalStage": 4
         },
         {
           "pkg": "REL22-FIX",
@@ -126,28 +131,30 @@
           "startStage": 4,
           "stage": 4,
           "state": "done",
-          "note": "gemergt (R644)"
+          "note": "gemergt (R644)",
+          "goalStage": 4
         },
         {
-          "pkg": "REL-22:push",
+          "pkg": "REL22-PUSH",
           "name": "REL-22 Release (Gruppe)",
           "kind": "Delta-Check + Push",
           "startStage": 5,
           "stage": 5,
-          "state": "waiting",
-          "note": "Delta-Check + Push",
-          "frees": ["HANDEL-2"]
+          "state": "active",
+          "note": "Ziel heute: live (Push + Pages)",
+          "frees": ["HANDEL-2"],
+          "goalStage": 5
         }
       ]
     },
     {
       "id": "REL-23",
-      "title": "Handel 2 «Fernangebot»",
+      "title": "Fernangebot",
       "status": "planned",
       "hash": "",
       "date": "",
       "save": "v15",
-      "gate": "geplant · 9 Tasks",
+      "gate": "geplant · Spec + Plan fertig, 9 Tasks",
       "items": [
         {
           "pkg": "HANDEL-2",
@@ -156,15 +163,16 @@
           "startStage": 1,
           "stage": 3,
           "state": "waiting",
-          "note": "Gate Plan OK R639",
+          "note": "Ziel heute: umgesetzt + Gate Merge (lokal)",
           "waitsFor": {
-            "target": "REL-22:push",
-            "label": "REL-22: Delta-Check + Push (Folgesession)",
+            "target": "REL22-PUSH",
+            "label": "REL-22: Push (heute)",
             "hard": true
           },
           "frees": ["UI-HAEPPCHEN-D"],
           "chainLabel": "Handel 2: Umsetzung",
-          "ghost": "Umsetzung · Merge"
+          "ghost": "Umsetzung · Merge",
+          "goalStage": 4
         }
       ]
     },
@@ -184,13 +192,14 @@
           "startStage": 2,
           "stage": 2,
           "state": "waiting",
-          "note": "Kurzdesign R641",
+          "note": "Ziel heute: Plan, falls Handel 2 gemergt",
           "waitsFor": {
             "target": "HANDEL-2:merge",
             "label": "Merge Handel 2 (Save v15)",
             "hard": true
           },
-          "chainLabel": "UI-HAEPPCHEN-D: Umsetzung"
+          "chainLabel": "UI-HAEPPCHEN-D: Umsetzung",
+          "goalStage": 3
         }
       ]
     }
@@ -208,7 +217,8 @@
         "target": "HANDEL-2:merge",
         "label": "Erweiterung 1 (Nutzer-Session): wer zuerst merged, bekommt Save v15",
         "hard": false
-      }
+      },
+      "goalStage": 2
     },
     {
       "pkg": "I-094",
@@ -252,8 +262,39 @@
       "kind": "Werkzeug",
       "startStage": 4,
       "stage": 4,
+      "goalStage": 4,
       "state": "done",
       "note": "gemergt R647"
+    },
+    {
+      "pkg": "TOOL-DASH-SESSIONZIEL",
+      "name": "TOOL-DASH-SESSIONZIEL (Zielmarke)",
+      "kind": "Werkzeug",
+      "startStage": 2,
+      "stage": 2,
+      "goalStage": 4,
+      "state": "active",
+      "note": "Ziel heute: live im Dashboard"
+    },
+    {
+      "pkg": "TOOL-GUARD-WARTEAGENT",
+      "name": "TOOL-GUARD-WARTEAGENT",
+      "kind": "Werkzeug",
+      "startStage": 2,
+      "stage": 2,
+      "goalStage": 4,
+      "state": "active",
+      "note": "Ziel heute: gemergt, Modus deny"
+    },
+    {
+      "pkg": "IDEEN-RUNDE",
+      "name": "Ideen-Runde",
+      "kind": "Ideen",
+      "startStage": 1,
+      "stage": 1,
+      "goalStage": 2,
+      "state": "idea",
+      "note": "Ziel heute: Rangliste nach dem Push"
     }
   ],
   "pastSummary": "REL-01 … REL-20, M1 – M13"
