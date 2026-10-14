@@ -4,13 +4,24 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-14 (Studio-Session b54ed3bd, R616–R646; REL-21 live `ca46eb73`; lokal auf main: REL-22-Kandidat (UI-AUFRAEUM-3, I-100, TOOL-ZEITRESERVE-21, TOOL-BUENDEL-12, BEOB-14, REL22-FIX `878b492b`) — Delta-Check + Push offen; Handel 2 Spec+Plan freigegeben (R639); Dashboard-Karte «Versionen und Releases» (R645); Handbuch 1.54)
+Stand: 2026-10-14 (Studio-Session dbac5fc4, R648–R658; REL-22 live `fb1e5e46` (R651, CI 38571578702, Pages 38571610399); Handel 2 lokal gemergt `6faa189e` (R658), REL-23-Kandidat, Save v15; Handbuch 1.55)
 
 ## Release-Notizen
 
-**REL-22 „Aufgeräumt und nichts verpasst“ (Entwurf, lokal)** — kein Save-Wechsel (v14). Inhalt: UI-AUFRAEUM-3 (R636), I-100
-«Neu»-Zähler (R630), TOOL-ZEITRESERVE-21 (R631), TOOL-BUENDEL-12 (R618), BEOB-14 (R621), REL22-FIX (R644). Release-Check R642 ZURÜCK
-(Zeitreserve, Kontrast) → behoben; Delta-Check und Push in der Folgesession.
+**REL-23 „Fernangebot“ (Entwurf, lokal)** — Save **v15** (Migration v14→v15). Inhalt: Handel 2 (R658, gemergt `6faa189e`). Release-Check und Push
+offen. Quelle: `.studio/handoffs/2026-10-14-lead-qa-HANDEL-2-gate.md`.
+
+- **Neu:** Mit Kontor auf einer fernen Insel erscheint neben dem Auftrag ein grosses Angebot für das Lieblingsgut der Insel (Möweninsel
+  Stoff, Felsbucht Rum, Weidenau Glas); Annehmen ersetzt den Auftrag, Frist 2:50 ab Auftragsbeginn, geliefert wird am Kontor der Insel
+  (Liefern nennt die Insel); Verpasst kostet nur diesen Auftrag, bei Annahme entfällt der nächste Auftrag; neue Log-Einträge bei Lieferung;
+  ältere Spielstände laden verlustfrei.
+- **Bitte testen:** (1) Kontor auf Möweninsel, Felsbucht, Weidenau: Fernangebot mit richtigem Gut; (2) annehmen, liefern, Frist ablaufen
+  lassen: Belohnung, Meldung, Log-Zähler; (3) Spielstand v14 laden, speichern und mit offenem Fernangebot neu laden; (4) nach Lieferung
+  erscheint zuerst das Stammkunde-Angebot (R9), nicht «Nächster Auftrag» wie im AK-Text.
+
+**REL-22 „Aufgeräumt und nichts verpasst“ (live, R651)** — Push `ca46eb73..fb1e5e46`, CI 38571578702, Pages 38571610399. Kein Save-Wechsel
+(v14). Inhalt: UI-AUFRAEUM-3 (R636), I-100 «Neu»-Zähler (R630), TOOL-ZEITRESERVE-21 (R631), TOOL-BUENDEL-12 (R618), BEOB-14 (R621),
+REL22-FIX (R644).
 
 - **Neu:** «Ereignisse ▸ (3 neu)» zählt verpasste Meldungen, solange das Log eingeklappt ist (vom Studio vorgeschlagen, I-100); Rangliste
   Unterhalt je Insel inkl. Heimatinsel (I-089); Rechtsklick im Linienzug beendet erst den Zug, dann das Werkzeug (I-098); Kartenstapel
@@ -121,28 +132,22 @@ Keine Nutzer-Aufträge offen (Dashboard-Karte siehe Punkt 3). Daueraufträge: R4
 Ein Push je Session (R335); «push-bereit» = `make push-check`-Schwelle. Last durch macOS-Prozesse (Load bis 22) hat `make check`
 mehrfach blockiert — Testlock bricht ab, nicht warten.
 
-1. **Push REL-22** (Notiz oben): Delta-Check durch lead-qa am aktuellen main (`878b492b`+Doku): Integrator `.worktrees/integrate`
-   `git checkout --detach main`, `make check`, `make check-ci-perf`, `make zeitreserve-gate`; Browser-Punkt Kontrast `.btn--unread` im Spiel;
-   kein neues Opus-Review (Fix-Delta Task-Review OK). Dann Gate L0 und Push per geprüftem Hash, CI, `gh workflow run Pages --ref main`.
-2. **Handel 2 «Fernangebot» (REL-23)** nach dem Push: Plan `plan/handel-2` @ `f5d38fcf` (Spec `design/handel-2` @ `1ed91737`), Budget
-   26 Starts/P1, Controller C1 T01–T03, C2 T04–T06, C3 T07–T09 + Final-Review (E-066: Folgeinstanzen), Auflagen R639 (1)–(5).
-3. **Dashboard-Karte «Versionen und Releases»** ist live im Dashboard (R647). **Pflegeregel**: lead-production pflegt
-   `docs/studio/releases.json` bei jedem Release-Wechsel (Merge eines Pakets: `stage`/`state`; Release-Check: `gate`; Push: `status: live`,
-   `hash`, `date`; Pool → Release beim Einplanen; fertige Releases → `pastSummary`) im selben Commit wie state.md; Handbuch-Vorschlag
-   an studio-coach. **Tagesziel** (R648): L0 trägt je Session in `releases.json` pro Item `goalStage` (ganze Zahl 1 bis 5) ein; die
-   Dashboard-Karte zeigt «Ziel heute» bis dorthin und «Jetzt in Arbeit». Ziel erreicht = Zielstufe abgeschlossen (`stage > goalStage` oder `stage == goalStage` mit `state: done`, R656). Ungültige Werte werden ignoriert und als Warnung angezeigt.
-4. **UI-HAEPPCHEN-D** «Ereignis-Log vollständig» (Kurzdesign `design/ui-haeppchen-d` @ `ce2f3689`, R641): Plan + kombiniertes Gate erst
-   nach dem Merge von Handel 2.
-5. Retro-Aufträge R646: E-066 läuft; Messauftrag Cache-Write-Wachstum nach Rolle (V3) und Briefing-Verbote (a)(b)(c) in der nächsten
-   Session-Retro; Ad-hoc-Retro, falls Cache-Write oder Flake wieder rot.
-6. Erweiterung 1 «Stände und Segel» bleibt in der Nutzer-Session; wer zuerst nach main merged (Handel 2 oder E1), bekommt Save v15 (R638);
-   vor dem Merge von Handel 2 `git diff --stat main...design/erweiterung-1 -- src tests` prüfen (R639 (5)).
-7. **TOOL-GUARD-WARTEAGENT** (R647 (2)): Hook gegen Warte-Agenten und `sleep` im Hintergrund durch Leads, lead-tech, Rückfall `warn`.
+1. **Release-Check + Push REL-23** (Notiz oben): lead-qa Release-Check am aktuellen main, `make push-check` per geprüftem Hash, Push, CI,
+   `gh workflow run Pages --ref main`; `releases.json` im selben Commit pflegen.
+2. **UI-HAEPPCHEN-D** «Ereignis-Log vollständig» (Kurzdesign `ce2f3689`): Plan + kombiniertes Gate; danach **I-109** (Kurzdesign
+   `design/i109` @ `7e25d7cf`, R654) und **I-102** (R653); lead-tech prüft Bündelung.
+3. **Retro-Entscheide** aus der Kurz-Retro dieser Session: L0 trägt sie nach.
+4. **Erweiterung 1** «Stände und Segel» bleibt in der Nutzer-Session (R519); Save v16 für E1, da v15 an Handel 2 ging (R638).
+5. **Dashboard-Karte «Versionen und Releases»**: Pflegeregel: lead-production pflegt `docs/studio/releases.json` bei jedem Release-Wechsel
+   (Merge: `stage`/`state`; Release-Check: `gate`; Push: `status: live`, `hash`, `date`; Pool → Release beim Einplanen; fertige Releases →
+   `pastSummary`) im selben Commit wie state.md. **`goalStage` je Session setzen** (ganze Zahl 1 bis 5, R648); Ziel erreicht = Zielstufe
+   abgeschlossen (`stage > goalStage` oder `stage == goalStage` mit `state: done`, R656). Ungültige Werte werden als Warnung angezeigt.
+6. `docs/ideen.md`: Status I-093/I-095 («Gate Brainstorming offen») veraltet → lead-design.
 
 ## Aktuelles Projekt und Phase
 
 - Projekt: **Inselreich**. **M13 abgeschlossen** (live, R564). Live: REL-01…REL-19, M1–M8, M10, M11, M9-Häppchen, M12, M13. **M14 „Archipel mit Wert“**: E1 Inselcharakter
-  lokal auf main (R574, Save v13), Release REL-20 offen. Verfassung **1.2**, Handbuch **1.53**.
+  lokal auf main (R574, Save v13), Release REL-20 offen. Verfassung **1.2**, Handbuch **1.55**.
 - Dauerregeln: Desktop-first (R78); kein Rebase; eine aktive L0-Session je Repo (R129, R324); studioweit **≤ 8 Agenten,
   davon ≤ 2 Browser-Läufe** (R424, ersetzt R241); vor Paketstart `git worktree list`, `git status`, fremde Heartbeats
   prüfen (R329); Messungen nur bei 1-min-Load ≤ 4 (R329).
@@ -162,7 +167,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-Nichts (Session-Ende b54ed3bd).
+Nichts (Session-Ende dbac5fc4).
 
 ## Parallele Sessions
 
@@ -171,12 +176,9 @@ Nichts (Session-Ende b54ed3bd).
 
 ## Seit letzter Session erledigt
 
-- **Live:** REL-21 «Stammkunde und Inselmarkt» (R625, Push `0d1db8f3..ca46eb73`, CI 38553292584, Pages 38553994549) inkl.
-  HOTFIX-REL21-PREIS (R622/R623) und TOOL-HOTFIX-ZR (veraltete Markierungsliste im Zeitreserve-Gate).
-- **Lokal gemergt (Gate OK):** TOOL-BUENDEL-12, BEOB-14 (R627), TOOL-ZEITRESERVE-21, UI-AUFRAEUM-3, I-100 (R636), REL22-FIX (R644).
-- **Entschieden:** Handel 2 Brainstorming → V1 «Fernangebot» (R629), Spec + Nachtrag (R632–R635), PLAYTEST-I047 (R634), Plan (R639);
-  Kurzdesign UI-HAEPPCHEN-D (R641); Release-Check REL-22 ZURÜCK → REL22-FIX (R642); Nutzerauftrag Dashboard-Karte, Muster v1–v3 (R643–R645);
-  Retro b54ed3bd (R646: E-062 zurück, E-066 startet).
+- **Live:** REL-22 «Aufgeräumt und nichts verpasst» (R651, Push `ca46eb73..fb1e5e46`, CI 38571578702, Pages 38571610399).
+- **Lokal gemergt (Gate OK):** HANDEL-2 (R658, `6faa189e`, Save v15), TOOL-LINT-DASH, TOOL-GUARD-WARTEAGENT, TOOL-DASH-SESSIONZIEL +
+  ZIEL-FIX, IDEEN-10; Kurzdesign I-109 (`design/i109` @ `7e25d7cf`, R654).
 
 ## Pausierte Pakete
 
@@ -185,7 +187,8 @@ Nichts (Session-Ende b54ed3bd).
   `i049-ui`, `tool-b7`, `tool-b8`, `tool-e060`, `ui-texte-1`, `tool-gate-ensemble`,
   `tool-controller-haertung`, `m14-e1`, `m14-e1-ui`, `tool-b9`, `ui-aufraeum-2`, dazu aus b54ed3bd: `hotfix-rel21`, `tool-zr-hotfix`,
   `tool-b12`, `beob-14`, `tool-zr21`, `ui-aufraeum-3`, `i100`, `rel22-fix`, `plan-ui-aufraeum-3`, `design-i100`.
-  Aktiv behalten: `plan-handel-2`, `design-handel-2` (Handel 2), `design-ui-d` (UI-HAEPPCHEN-D). `.worktrees/integrate` bleibt.
+  Dazu gemergt bzw. erledigt: `tool-dash-sessionziel`, `tool-guard-warteagent`, `tool-dash-ziel-fix`, `ideen-10`, `handel-2`, `plan-handel-2`, `design-handel-2`.
+  Aktiv behalten: `design-ui-d` (UI-HAEPPCHEN-D), `design-i109`. `.worktrees/integrate` bleibt.
   `.worktrees/erweiterung-1` gehört der Nutzer-Session (R519) — nicht anfassen.
 - Branch `int/rel-07`, Alt-Branches, Remote `wip/r118a-render-aufraeumen`, `stash@{0}` (950f61d5) und `stash@{1}` (e20340a9) bleiben bis Ruling.
 
@@ -195,5 +198,5 @@ Offen: keine Freigaben (Restbudgets verfallen mit Session-Ende).
 
 ## Offene Entscheide
 
-- Nutzer: N-99 (Kenntnis R434), ohne Antwort gilt R434.
-- L0: keine offenen (Retro b54ed3bd entschieden, R646).
+- Nutzer: N-99 (Kenntnis R434), ohne Antwort gilt R434. N-100 erledigt.
+- L0: Retro-Entscheide der Kurz-Retro dbac5fc4 (L0 trägt nach).
