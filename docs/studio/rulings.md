@@ -7524,3 +7524,16 @@ I-109, I-102 (lead-tech prüft Bündelung). Tagesziel I-109 (Kurzdesign) erreich
 Regelbezug: gates.md Gate Brainstorming/Kurzdesign, E-061, R641, R653 · Kosten bei Irrtum: Schwellen nach Playtest anpassen.
 
 Entscheider: L0 · Anlass: Bericht lead-design I-109 · ADR: —
+
+## R655 · 2026-10-14 · Gate Merge TOOL-DASH-SESSIONZIEL: OK
+
+Ruling: `tool/dash-sessionziel` @ `b8e92453` (T01–T04 + Fix-Runde): `goalStage`-Zielmarke «Ziel heute» mit «✓ Ziel erreicht», Kopfzeile
+«Jetzt in Arbeit» mit «n von m am Tagesziel», S-Kennzeichen auch für per `log.py package` angemeldete Pakete, `Cache-Control: no-store`
+für Dashboard-Dateien; Rot-Belege je Task; `make lint`, `studio-test` (884), `studio-lint`, `docs-check` Exit 0; Final-Review opus ZURÜCK
+→ Fix → Delta OK; Echtlauf 1440/1280 OK. Lücke: Hinweiszeile nach dem JS-Fix nicht erneut im Browser gesehen → L0 prüft nach dem Merge
+per Headless-Screenshot am laufenden Dashboard. → **Gate Merge OK**. lead-production merged `--no-ff`, Paket done in releases.json, startet
+den Dashboard-Server neu (neuer Python-Code), damit der Nutzer die Karte sieht. Befunde favicon 404, Warnzeile im leeren Zustand → beobachtungen.md.
+
+Regelbezug: gates.md Gate Merge, R648, R649, R651 · Kosten bei Irrtum: eine falsch versetzte Hinweiszeile im Dashboard.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-DASH-SESSIONZIEL · ADR: —
