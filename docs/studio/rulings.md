@@ -7117,8 +7117,7 @@ Ruling: Delta-Check lead-qa OK: Kandidat `ca46eb73` (main mit HOTFIX-REL21-PREIS
 Handel 26 (`.studio/qa/REL-21/delta2-*`). Die Substanz aus dem Werkzeug-Echtlauf (R624) trat im Gate nicht auf: die drei Tests liegen
 an der Schwelle und schwanken; massgeblich ist das Gate (R598). Entscheide: (1) **Push REL-21** durch `production-integrator` aus
 `.worktrees/integrate`: `git push origin ca46eb73:main` (geprüfter Hash, R429; die Doku-Commits danach gehen mit dem nächsten Push),
-danach CI beobachten und `gh workflow run Pages --ref main`? — **nein**: Pages muss genau `ca46eb73` bauen; da `--ref main` den
-Remote-Kopf baut und dieser nach dem Push `ca46eb73` ist, ist `gh workflow run Pages --ref main` korrekt. (2) TOOL-ZEITRESERVE-21 läuft
+danach CI beobachten und `gh workflow run Pages --ref main` (der Remote-Kopf ist dann `ca46eb73`). (2) TOOL-ZEITRESERVE-21 läuft
 weiter (Reserve-Abstand), Merge mit REL-22. (3) Release-Notiz REL-21 in state.md ergänzt um den Hotfix.
 
 Regelbezug: gates.md Release-Check, R335, R429, R598, R622–R624 · Kosten bei Irrtum: CI rot durch einen Schwellen-Test → Rerun bzw.
