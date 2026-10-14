@@ -7095,3 +7095,17 @@ durch lead-qa (Restbudget gate-rel-21 + 2 Starts): Integrator merged beide Branc
 Regelbezug: gates.md Gate Merge und Release-Check, R598, R622 · Kosten bei Irrtum: ein weiterer Delta-Check.
 
 Entscheider: L0 · Anlass: Berichte lead-tech hotfix-rel21-preis und tool-hotfix-zr · ADR: —
+
+## R624 · 2026-10-14 · Zeitreserve-Substanz vor REL-21 → TOOL-ZEITRESERVE-21
+
+Ruling: Echtlauf `make zeitreserve-gate` mit Fix `91992546` (Hauptmessung Last 3,2, Nachmessung 2,4, 12 Dateien aus der aktuellen
+Messung) meldet **Substanz** bei drei Bestandstests: `tests/render/trees-farn.test.ts` («L6 B2 Farn», 3699 ms × 4 > 50 % von
+25000 ms), `tests/render/decorSea.test.ts` («L5-T1 Fernansicht», 5076 ms × 4 > 50 % von 40000 ms), `tests/sim/scenario-saves.test.ts`
+(«Szenario-Saves», ≈ 2694 ms bei 5000 ms). Kein Lastartefakt (R585). Entscheid wie R593: Paket **TOOL-ZEITRESERVE-21** (lead-tech,
+sonnet, 4 Starts/P1, Branch `tool/zeitreserve-21` ab main): je Test bevorzugt beschleunigen ohne Aussageverlust, sonst begründeter
+Timeout nach E-043 (≥ 2 × lokale Zeit × 4); Zeiten vorher/nachher; kein `src/`; Task-Review. Danach Merge und `make zeitreserve-gate`
+Exit 0 als Push-Bedingung REL-21. Der Werkzeug-Fix (R623 (2)) gilt mit diesem Echtlauf als belegt.
+
+Regelbezug: R270, R585, R593, R598, E-043 · Kosten bei Irrtum: ein weiteres Werkzeug-Paket vor dem Push.
+
+Entscheider: L0 · Anlass: Bericht lead-tech tool-hotfix-zr (Echtlauf) · ADR: —
