@@ -7513,3 +7513,14 @@ geparkt; I-106 vor Einplanung gegen UI-HAEPPCHEN-D prüfen. Keine Säulenfrage, 
 Regelbezug: gates.md Gate Ideen-Runde, R445, R475 · Kosten bei Irrtum: ein Kurzdesign, das später zurückgestellt wird.
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-10 · ADR: —
+
+## R654 · 2026-10-14 · Kurzdesign I-109 «Reichweite am Gut-Chip»: angenommen; Plan nach Merge Handel 2
+
+Ruling: `design/i109` @ `7e25d7cf` (reine UI-Funktion `reachView` aus `goodsBalance`, kein Sim-/Save-Diff, 9 AK) → angenommen. O-1: Schwellen
+3:00 / 1:00 / voll 1:00 als UI-Konstanten übernommen, Justierung nach Playtest ohne neues Ruling; Fallback «Suffix streichen» erlaubt.
+Plan + kombiniertes Gate erst nach dem Merge von Handel 2 (mögliche Überschneidung `src/ui/hud.ts`), Reihenfolge danach: UI-HAEPPCHEN-D,
+I-109, I-102 (lead-tech prüft Bündelung). Tagesziel I-109 (Kurzdesign) erreicht.
+
+Regelbezug: gates.md Gate Brainstorming/Kurzdesign, E-061, R641, R653 · Kosten bei Irrtum: Schwellen nach Playtest anpassen.
+
+Entscheider: L0 · Anlass: Bericht lead-design I-109 · ADR: —
