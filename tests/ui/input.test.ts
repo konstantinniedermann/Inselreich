@@ -245,7 +245,7 @@ describe('REL-17 Abriss-Zug (AK-R17-12…16)', () => {
       hasPointerCapture: () => false,
     };
 
-    function setup(): {
+    function setup(tool: { kind: string } = { kind: 'road' }): {
       actions: InputAction[];
       at: (dx: number, dy: number) => { clientX: number; clientY: number };
       ptr: (type: string, init: Record<string, unknown>) => void;
@@ -272,7 +272,7 @@ describe('REL-17 Abriss-Zug (AK-R17-12…16)', () => {
           }
       const p = project(a.x + 0.5, a.y + 0.5);
       const cam: Camera = { x: p.x - 400, y: p.y - 300, zoom: 1 };
-      const state = { world: w, cam, tool: { kind: 'road' }, hover: null } as unknown as GameState;
+      const state = { world: w, cam, tool, hover: null } as unknown as GameState;
       const actions: InputAction[] = [];
       bindInput(fakeCanvas as unknown as HTMLCanvasElement, state, (act) => actions.push(act));
       const at = (dx: number, dy: number): { clientX: number; clientY: number } => {
@@ -416,6 +416,14 @@ describe('REL-17 Abriss-Zug (AK-R17-12…16)', () => {
         return out;
       };
       expect(run('right')).toEqual(run('esc'));
+    });
+
+    it('Abriss-Strich (drag.demolish): Rechtsklick sendet weiter cancel (unverändert)', () => {
+      const { actions, at, ptr } = setup({ kind: 'demolish' });
+      ptr('pointerdown', { ...at(0, 0) });
+      actions.length = 0;
+      ptr('pointerdown', { ...at(0, 0), button: 2 });
+      expect(actions.some((x) => x.type === 'cancel')).toBe(true);
     });
 
     it('Weg-Strich (drag.road): Rechtsklick sendet weiter cancel (unverändert)', () => {
