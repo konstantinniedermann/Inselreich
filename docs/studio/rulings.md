@@ -7159,3 +7159,19 @@ Designvorschlag (2–3 Varianten, Empfehlung, Save/Baseline-Folgen, Abgrenzung z
 Regelbezug: R445, R475, IDEEN-09 · Kosten bei Irrtum: ein Designvorschlag, der mit Erweiterung 1 zusammengelegt werden muss.
 
 Entscheider: L0 · Anlass: freie Kapazität nach Push REL-21 · ADR: —
+
+## R629 · 2026-10-14 · Gate Brainstorming Handel 2: OK für V1 «Fernangebot»; Spec jetzt
+
+Ruling: Designvorschlag `design/handel-2` @ `faec2763` (Selbstprüfung lead-design BEDENKEN: kein Effekt in den ersten 15 min). L0 prüft
+dieselben Fragen: stärkt Säule Wirtschaft/Handel (zweiter Zweck bestehender Routen), Entartung begrenzt (Stückprämie < 0,8 × Kaufpreis
+wegen Edikt Handel, Kaufen-und-Liefern ohne Gewinn), kein §5.3-Vorbehalt; der 15-min-Punkt gilt gleich für I-047/I092 (Spätspiel-
+Inhalt) und ist kein Hindernis. Entscheide: (1) **V1 angenommen**, I-093 geht darin auf (Fassung mit 60 Geld Gebühr verworfen); V2/V3
+verworfen. (2) Handel 2 ist ein eigenes Handels-Paket ausserhalb Erweiterung 1; Auflage K4: Frist gegen Sturm/Piraten prüfen.
+(3) Save-Version vergibt die Merge-Reihenfolge (R583-Muster). (4) **Spec jetzt** durch design-spec-author (Restbudget design-handel-2,
+lead-design steuert); Gate Spec mit Pflichtpunkten: Baseline bitgleich (lead-tech bestätigt), Frist 2:30 gegen Seed-3-Karte, Rückfall
+nur über `src/sim/defs/`. (5) Die Umsetzung wartet nicht auf den Nutzer, sondern auf einen **Studio-Playtest I-047** (qa-playtester,
+lange Partie: verdrängen Fernaufträge den Stammkunden?) — als eigenes Paket PLAYTEST-I047 vor dem Plan.
+
+Regelbezug: gates.md Gate Brainstorming, R445, R475, R583 · Kosten bei Irrtum: eine Spec, die nach dem Playtest nachgeschärft wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-handel-2 · ADR: —
