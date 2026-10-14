@@ -240,3 +240,4 @@ I-081, I-082, I-084, I-086 (R566), dazu I-048 (R571 Verzicht, Mechanik inaktiv);
 - Bewertung lead-design: bestätigt (11). Billigste Antwort auf «verpasste Krisen bei 4×», ohne den Spielfluss anzuhalten.
 - Nutzen/Aufwand: verpasste Krisen lesbar · S–M · ≈ 70 Tools
 - Entscheid: IDEEN-09 Empfehlung einplanen als Häppchen nach I-088/I-090
+- Status 2026-10-14: Kurzdesign `docs/superpowers/specs/2026-10-14-i100-neu-zaehler.md` (Zähler nur für Meldungs-Einträge, UI-Zustand, kein Save)
