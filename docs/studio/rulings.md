@@ -6996,3 +6996,19 @@ Regelbezug: gates.md Release-Check, R335, R475, R588 V1, R615 · Kosten bei Irrt
 einen Fehler übersieht.
 
 Entscheider: L0 · Anlass: Session-Start, state.md «Fortsetzung» Punkte 1–4 · ADR: —
+
+## R617 · 2026-10-14 · Gate UI-AUFRAEUM-3 (kombiniert, leicht): BEDENKEN → Nacharbeit, dann frei
+
+Ruling: Urteil lead-qa BEDENKEN zum Plan `plan/ui-aufraeum-3` @ `be1be84f`. Nacharbeit durch eine Folgeinstanz lead-tech
+(Restbudget plan-ui-aufraeum-3, ohne Zweitprüfung): (1) T05 Determinismus-Test gleicher Seed, N Ticks, Save/Load-Roundtrip
+als JSON-Vergleich; Snapshot-Welt mit stillgelegten und nicht angebundenen Betrieben; (2) Playtest-Schrittliste T01–T04
+(Rechtsklick im Zug, Badge neben Boom, Rangliste zwei Inseln bei 1280×720 ohne Überlauf, Kartenstapel inkl. Krise aus→an);
+(3) R392-Abnahme mit `zeit-vor.json` und `zeit-nach.json` im Bericht; (4) Zugmenge für Rechtsklick (Abriss, Weide) als
+Testfall in T01 festlegen. L0-Prüffragen: ein Owner je Datei, ein Worktree, ein Strang seriell (style.css) — OK; Auftrag bleibt
+leicht (T05 reine Umformung in `src/sim/flow.ts` ohne Save/Spielwert, bitgleich belegt). **Budget 21 Starts / Parallelität 1**
+wie beantragt. Wortlaut-Änderungen «Krisen: aus» ohne Karte und gestaffelter Rechtsklick gelten nach R606 (3) als angenommen.
+Umsetzung erst nach Push REL-21 (Release-Fenster R588 V1).
+
+Regelbezug: gates.md Kombiniertes Gate, R392, R606, R616 · Kosten bei Irrtum: ein Fix-Task in der Umsetzung.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-ui-aufraeum-3 · ADR: —
