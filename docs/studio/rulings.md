@@ -7345,3 +7345,19 @@ nach dem Merge von Handel 2.
 Regelbezug: R634, R635, R640, E-061 · Kosten bei Irrtum: ein UI-Nachtrag.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-ui-haeppchen-d · ADR: —
+
+## R642 · 2026-10-14 · Release-Check REL-22: ZURÜCK → REL22-FIX (Zeitreserve + Kontrast)
+
+Ruling: Kandidat `1b6af811`: `make check` Exit 0 (3935), `check-ci-perf` Exit 0, Playtest OK (Screenshots `.studio/qa/REL-22/`), Opus-Review
+BEDENKEN (niedrig); `make zeitreserve-gate` **Substanz** bei ruhiger Nachmessung: `tests/tools/zeitreserve.test.ts` Z. 170 und Z. 417
+(≈ 2,08 s × 4 > 50 % von 5000 ms). Kein Lastartefakt (R585). Kontrast `.btn--unread` 2,42:1 (`src/style.css:1392`). Entscheid **ZURÜCK**
+und Paket **REL22-FIX** (lead-tech Controller, sonnet, Budget 4 Starts/P1, Branch `fix/rel22` ab main): (1) die zwei Zeitreserve-Tests
+beschleunigen oder begründeter Timeout nach E-043; (2) `.btn--unread` Kontrast ≥ 4,5:1 (Text) bzw. Hervorhebung über Rand/Hintergrund,
+Screenshot vorher/nachher; (3) Trivial-Fix `tests/ui/upkeepRank.test.ts:160` (`+ 5` → `buildingUpkeep`); (4) Beobachtungen aus dem
+Release-Check in `docs/beobachtungen.md` eintragen (Cache-Schlüssel `order.ts:57-65`, `merge:`-Präfix, Log-Position unten links,
+Log erst ab Tick 2400 — teils durch UI-HAEPPCHEN-D abgedeckt, Zeilenumbruch Boom+Vorliebe). Task-Review, `make zeitreserve-gate`
+Exit 0 im eigenen Worktree. Danach Gate Merge, Delta-Check und Push REL-22 in der Folgesession (R335).
+
+Regelbezug: gates.md Release-Check, R585, R598, R631, R637 · Kosten bei Irrtum: ein weiterer Delta-Check.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-rel-22 · ADR: —
