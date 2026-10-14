@@ -7361,3 +7361,16 @@ Exit 0 im eigenen Worktree. Danach Gate Merge, Delta-Check und Push REL-22 in de
 Regelbezug: gates.md Release-Check, R585, R598, R631, R637 · Kosten bei Irrtum: ein weiterer Delta-Check.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-rel-22 · ADR: —
+
+## R643 · 2026-10-14 · Nutzerauftrag: Dashboard-Karte «Versionen und Releases» — zuerst Muster
+
+Ruling: Nutzerauftrag 2026-10-14: neue Dashboard-Karte zuoberst im Studio-Dashboard: Live-Stand, kurze Vergangenheit (zusammengefasst),
+vor allem aktueller Entwicklungsstand: welche Stränge laufen in dieser Session, was kommt mit welchem Release, was ist geplant, welche
+künftigen Pakete/Themen. **Zuerst ein Muster zur Freigabe durch den Nutzer**, kein Einbau vorher. Auftrag an lead-tech (sonnet,
+Werkzeug), Budget 2 Starts/P1: statisches HTML-Muster im Stil von `tools/studio/dashboard/style.css` mit echten Daten (state.md,
+rulings R616–R642, docs/ideen.md Rangliste) unter `.studio/mockups/versionen/`, plus Screenshot bei 1440 px; dazu ein Vorschlag zur
+Datenquelle für den späteren Einbau (bevorzugt aus vorhandenen Dateien abgeleitet, keine Doppelpflege).
+
+Regelbezug: Nutzerauftrag, R475 · Kosten bei Irrtum: ein verworfenes Muster.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
