@@ -153,7 +153,7 @@
       "hash": "",
       "date": "",
       "save": "v15",
-      "gate": "geplant · Spec + Plan fertig, 9 Tasks",
+      "gate": "Release-Check offen",
       "items": [
         {
           "pkg": "HANDEL-2",
@@ -161,8 +161,8 @@
           "kind": "HANDEL-2",
           "startStage": 1,
           "stage": 4,
-          "state": "active",
-          "note": "Ziel heute: umgesetzt + Gate Merge (lokal)",
+          "state": "done",
+          "note": "gemergt lokal (R658)",
           "frees": ["UI-HAEPPCHEN-D"],
           "chainLabel": "Handel 2: Umsetzung",
           "ghost": "Umsetzung · Merge",
@@ -185,13 +185,8 @@
           "kind": "Ereignis-Log vollständig",
           "startStage": 2,
           "stage": 2,
-          "state": "waiting",
-          "note": "Ziel heute: Plan, falls Handel 2 gemergt",
-          "waitsFor": {
-            "target": "HANDEL-2:merge",
-            "label": "Merge Handel 2 (Save v15)",
-            "hard": true
-          },
+          "state": "open",
+          "note": "Plan in Folgesession (Ampel gelb, R658)",
           "chainLabel": "UI-HAEPPCHEN-D: Umsetzung",
           "goalStage": 3
         }
@@ -306,13 +301,8 @@
       "kind": "Ideen-Pool",
       "startStage": 1,
       "stage": 1,
-      "state": "waiting",
-      "note": "nach Handel 2",
-      "waitsFor": {
-        "target": "HANDEL-2:merge",
-        "label": "Merge Handel 2 (Save v15)",
-        "hard": false
-      }
+      "state": "open",
+      "note": "Handel 2 gemergt (R658)"
     }
   ],
   "pastSummary": "REL-01 … REL-20, M1 – M13"
