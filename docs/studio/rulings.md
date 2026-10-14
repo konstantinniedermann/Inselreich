@@ -7572,3 +7572,16 @@ neue Welle: UI-HAEPPCHEN-D-Plan (Tagesziel «Plan») verschoben, danach Session-
 Regelbezug: gates.md Gate Merge, R335, R638, R639 · Kosten bei Irrtum: ein lokaler Merge mit zwei niedrigen Restbefunden.
 
 Entscheider: L0 · Anlass: Bericht lead-qa HANDEL-2 · ADR: —
+
+## R659 · 2026-10-14 · Kurz-Retro dbac5fc4: V1 (E-068) und V2 (E-069) angenommen; Ad-hoc-Signal abgedeckt
+
+Ruling: Retro `retros/2026-10-14-session-dbac5fc4-ende.md` (`6f492120`). (1) **V2 angenommen, zuerst**: Paket TOOL-METRIK-ZEITRAUM (E-069)
+in der Folgesession — Session-Zeitraum an Flake- und Steuerungsanteil durchreichen, Cache-Write nach Erstladung/Wachstum aufteilen
+(Flake 8 → 0 und Steuerung 51,8 → 46,4 % mit `--since` = Messartefakt). (2) **V1 angenommen**: E-068 «ein Reviewer je Paket bei Stufe
+leicht (≥ 2 Tasks, ≤ 300 Diff-Zeilen)» startet, sobald E-063 oder E-064 einen Platz freigibt. (3) Das Ad-hoc-Signal (Cache-Write und Flake
+zwei Sessions rot) ist durch diese Retro abgedeckt: Cache-Write mit Hebel V1 und Messung V2, Flake als Messartefakt mit Werkzeug-Hebel V2.
+(4) Messauftrag nächste Retro: Briefing-Verbot (b) im Archiv prüfen, Guard-Blocks `wait_guard` seit R652 zählen.
+
+Regelbezug: STUDIO.md Verbesserungsschleife, R316, R646 · Kosten bei Irrtum: ein Experiment mit zu wenig Review-Tiefe (Rückfall Review je Task).
+
+Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —
