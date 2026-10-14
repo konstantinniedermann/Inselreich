@@ -155,3 +155,83 @@ class LiveTest(unittest.TestCase):
         self.assertEqual(
             (live["origin"], live["local"], live["ahead"]), ("1" * 8, "2" * 8, 3)
         )
+
+
+class GoalTest(unittest.TestCase):
+    def test_goal_stage_accepts_only_ints_1_to_5(self):
+        for value in (1, 3, 5):
+            self.assertEqual(releases.goal_stage({"goalStage": value}), value)
+        for value in (0, 6, 2.5, "3", True, None, -1):
+            with self.subTest(value=value):
+                self.assertIsNone(releases.goal_stage({"goalStage": value}))
+        self.assertIsNone(releases.goal_stage({}))
+        self.assertIsNone(releases.goal_stage("kein dict"))
+
+    def test_normalize_removes_invalid_and_warns_only_when_present(self):
+        data = {
+            "releases": [
+                {
+                    "items": [
+                        item("A", goalStage=3),
+                        item("B", goalStage="3"),
+                        item("C"),
+                        "kaputt",
+                    ]
+                }
+            ],
+            "pool": [item("D", goalStage=9)],
+        }
+        warnings = releases.normalize_goals(data)
+        items = data["releases"][0]["items"]
+        self.assertEqual(items[0]["goalStage"], 3)
+        self.assertNotIn("goalStage", items[1])
+        self.assertNotIn("goalStage", data["pool"][0])
+        self.assertEqual(
+            warnings,
+            [
+                "B: goalStage ungültig ('3') ignoriert",
+                "D: goalStage ungültig (9) ignoriert",
+            ],
+        )
+
+    def test_load_returns_data_with_goal_warnings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "releases.json"
+            path.write_text(
+                json.dumps(
+                    {"releases": [{"items": [item("A", goalStage=0)]}], "pool": []}
+                ),
+                "utf-8",
+            )
+            data, error = releases.load(path)
+            self.assertEqual(error, "")
+            self.assertEqual(len(data["goal_warnings"]), 1)
+            path.write_text('{"releases": []}', "utf-8")
+            data, _ = releases.load(path)
+            self.assertEqual(data["goal_warnings"], [])
+
+    def test_goal_progress_counts_session_packages_only(self):
+        data = {
+            "releases": [
+                {
+                    "items": [
+                        item("I-047-x", goalStage=3, stage=3),
+                        item("B", goalStage=4, stage=5),
+                        item("C", goalStage=4, stage=2),
+                        item("D", stage=5),
+                        item("E", goalStage=2, stage=1),
+                    ]
+                }
+            ],
+            "pool": [],
+        }
+        progress = releases.goal_progress(data, ["i-047", "B", "C", "D"])
+        self.assertEqual(progress["total"], 3)
+        self.assertEqual(progress["reached"], 2)
+        self.assertEqual(sorted(progress["pkgs"]), ["B", "C", "I-047-x"])
+
+    def test_goal_progress_without_data_is_zero(self):
+        self.assertEqual(
+            releases.goal_progress(None, ["A"]),
+            {"total": 0, "reached": 0, "pkgs": []},
+        )

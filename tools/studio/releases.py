@@ -103,10 +103,64 @@ def load(path: Path) -> tuple[dict | None, str]:
     if not isinstance(data, dict) or not isinstance(data.get("releases"), list):
         return None, f"{RELEASES_FILE}: Feld «releases» (Liste) fehlt"
     try:
+        data["goal_warnings"] = normalize_goals(data)
         data["chain"] = chain(data)
     except Exception as error:  # noqa: BLE001 — kaputte Struktur kippt die Karte nicht
         return None, f"{RELEASES_FILE}: Struktur ungültig ({type(error).__name__})"
     return data, ""
+
+
+def _dict_items(data: dict) -> list[dict]:
+    """Wie ``all_items``, aber überspringt Einträge, die kein dict sind."""
+    try:
+        return [i for i in all_items(data) if isinstance(i, dict)]
+    except (AttributeError, TypeError):
+        return []
+
+
+def goal_stage(item: dict) -> int | None:
+    """Tagesziel-Stufe 1..5 als ganze Zahl; alles andere (auch bool) ist ungültig."""
+    value = item.get("goalStage") if isinstance(item, dict) else None
+    if isinstance(value, int) and not isinstance(value, bool) and 1 <= value <= 5:
+        return value
+    return None
+
+
+def normalize_goals(data: dict) -> list[str]:
+    """Entfernt ungültige ``goalStage``; Warntexte nur bei vorhandenem, falschem Wert."""
+    warnings: list[str] = []
+    for entry in _dict_items(data):
+        if "goalStage" not in entry or goal_stage(entry) is not None:
+            continue
+        warnings.append(
+            f"{entry.get('pkg', '?')}: goalStage ungültig ({entry['goalStage']!r}) ignoriert"
+        )
+        del entry["goalStage"]
+    return warnings
+
+
+def in_session(pkg: str, session_pkgs: list[str]) -> bool:
+    """Wie ``inSession`` in releases.js: gleich oder Präfix ``<paket>-``, klein geschrieben."""
+    name = pkg.lower()
+    return any(
+        name == s.lower() or name.startswith(s.lower() + "-") for s in session_pkgs
+    )
+
+
+def goal_progress(data: dict | None, session_pkgs: list[str]) -> dict:
+    """Tagesziel: Pakete der Session mit gültigem ``goalStage``; erreicht bei stage >= Ziel."""
+    pkgs: list[str] = []
+    reached = 0
+    for entry in _dict_items(data) if data else []:
+        goal = goal_stage(entry)
+        pkg = str(entry.get("pkg", ""))
+        if goal is None or not in_session(pkg, session_pkgs):
+            continue
+        pkgs.append(pkg)
+        stage = entry.get("stage")
+        if isinstance(stage, int) and not isinstance(stage, bool) and stage >= goal:
+            reached += 1
+    return {"total": len(pkgs), "reached": reached, "pkgs": pkgs}
 
 
 def session_packages(tree: list[dict]) -> list[str]:
