@@ -250,7 +250,9 @@ function itemRow(item, ctx) {
   bar.append(el('span', { class: 'rv-mk', 'data-mk': item.pkg }, SYMBOL[state]));
   row.append(bar);
   const goal = Number.isInteger(item.goalStage) && item.goalStage >= 1 && item.goalStage <= 5;
-  const goalDone = goal && stage >= item.goalStage;
+  // R656: Ziel = Zielstufe abgeschlossen (wie goal_reached in releases.py).
+  const goalDone =
+    goal && (stage > item.goalStage || (stage === item.goalStage && item.state === 'done'));
   const goalOpen = goal && !goalDone;
   if (goalDone) bar.append(el('span', { class: 'rv-goal-ok' }, '✓ Ziel erreicht'));
   if (goalOpen) {

@@ -159,8 +159,18 @@ def clamp_stage(value: object) -> int:
         return 1
 
 
+def goal_reached(entry: dict, goal: int) -> bool:
+    """Wie ``goalDone`` in releases.js: Zielstufe abgeschlossen (R656).
+
+    Erreicht, wenn ``stage > goal`` oder ``stage == goal`` mit ``state == 'done'``;
+    ``stage`` ist ``max(startStage, stage)``.
+    """
+    stage = max(clamp_stage(entry.get("startStage")), clamp_stage(entry.get("stage")))
+    return stage > goal or (stage == goal and entry.get("state") == "done")
+
+
 def goal_progress(data: dict | None, session_pkgs: list[str]) -> dict:
-    """Tagesziel: Pakete der Session mit gültigem ``goalStage``; erreicht bei Stufe >= Ziel."""
+    """Tagesziel: Pakete der Session mit gültigem ``goalStage``; erreicht laut ``goal_reached``."""
     pkgs: list[str] = []
     reached = 0
     for entry in _dict_items(data) if data else []:
@@ -169,10 +179,7 @@ def goal_progress(data: dict | None, session_pkgs: list[str]) -> dict:
         if goal is None or not in_session(pkg, session_pkgs):
             continue
         pkgs.append(pkg)
-        stage = max(
-            clamp_stage(entry.get("startStage")), clamp_stage(entry.get("stage"))
-        )
-        if stage >= goal:
+        if goal_reached(entry, goal):
             reached += 1
     return {"total": len(pkgs), "reached": reached, "pkgs": pkgs}
 
