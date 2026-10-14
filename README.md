@@ -239,6 +239,8 @@ Die Regeln mit allen Zahlen stehen in [`docs/spielwerte.md`](docs/spielwerte.md)
 - Bevölkerung: Stufen, Versorgung, Bedürfnisse, Aufstieg, Steuern
 - Krisen: Krisenstufe, Brand und Feuerwache, Sturm, Boom, Krisenkarte
 
+Ereignisse zeigt ungelesene Meldungen als (n neu), ab 10 (9+ neu); Aufklappen setzt den Zähler zurück.
+
 ## Speichern, Laden, Neue Insel
 
 - **Speichern:** Menü → «Speichern» legt den Spielstand im Browser ab (ein Speicherplatz, nur in diesem

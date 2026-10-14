@@ -102,3 +102,19 @@ export function pushLog(
 ): LogEntry[] {
   return [...[...entries].reverse(), ...buffer].slice(0, max);
 }
+
+/** Zählt für den «Neu»-Zähler: Eintrag löst eine Meldung aus oder trägt ein Banner (I-100). */
+export function isNotable(e: LogEntry): boolean {
+  return e.toast !== null || e.tag !== undefined;
+}
+
+/** Neuer Zählerstand nach `added`; aufgeklappt sieht der Spieler alles, der Wert bleibt. Ungedeckelt. */
+export function nextUnread(unread: number, added: readonly LogEntry[], expanded: boolean): number {
+  return expanded ? unread : unread + added.filter(isNotable).length;
+}
+
+/** Knopfzusatz zum Zähler: leer bei 0, ab 10 gedeckelt auf «9+». */
+export function unreadLabel(unread: number): string {
+  if (unread <= 0) return '';
+  return unread >= 10 ? ' (9+ neu)' : ` (${unread} neu)`;
+}

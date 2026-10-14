@@ -140,11 +140,17 @@ import {
   type ReasonCtx,
 } from './hints';
 import { resolveLogClick } from './logTarget';
-import { renderEventLog, updateEventLog } from './eventLogView';
+import { isEventLogExpanded, renderEventLog, updateEventLog } from './eventLogView';
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
 import { monumentEvents, monumentSnapshot } from './monumentView';
-import { crisisLogEntries, crisisLogVisible, pushLog, type LogEntry } from './crisisLog';
+import {
+  crisisLogEntries,
+  crisisLogVisible,
+  nextUnread,
+  pushLog,
+  type LogEntry,
+} from './crisisLog';
 import { bindMessages, closeClosableToast, replaceMessage, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
@@ -204,6 +210,8 @@ export interface GameState {
   newEntries: Set<BuildingDefId>;
   /** Ereignis-Log der Krisen, neuester zuerst; nicht im Spielstand, leer nach Neu und Laden. */
   eventLog: LogEntry[];
+  /** Auffällige Ereignisse seit dem letzten Aufklappen des Logs; nur UI-Zustand, nicht gespeichert. */
+  logUnread: number;
   /** Insel, die der Spieler gerade ansieht (aus der Bildmitte, D-143); nur UI-Zustand, nicht gespeichert. */
   activeIsland: number;
 }
@@ -308,6 +316,7 @@ function launch(
     unlockedSeen: [...world.unlocked],
     newEntries: new Set(),
     eventLog: [],
+    logUnread: 0,
     activeIsland: 0,
   };
   const sound = createSound({
@@ -368,7 +377,9 @@ function launch(
   // Ereignis-Log schwebt unten links über der Spielfläche (R112)
   const logBox = document.createElement('div');
   logBox.className = 'log-box';
-  renderEventLog(logBox);
+  renderEventLog(logBox, () => {
+    state.logUnread = 0;
+  });
   gameEl.appendChild(logBox);
 
   const noticeStack = renderNoticeStack(gameEl, world, {
@@ -883,11 +894,17 @@ function launch(
     syncContractCursor();
     updateHud(hudEl, state, actions);
     updateNoticeStack(noticeStack, world, state.activeIsland);
-    updateEventLog(logBox, state.eventLog, crisisLogVisible(world), (t) => {
-      const r = resolveLogClick(t, world);
-      centerOn(state.cam, r.tile.x + 0.5, r.tile.y + 0.5, clampView(), bounds);
-      if (!r.exists) showMessage('Gebäude nicht mehr vorhanden', 'info');
-    });
+    updateEventLog(
+      logBox,
+      state.eventLog,
+      crisisLogVisible(world),
+      (t) => {
+        const r = resolveLogClick(t, world);
+        centerOn(state.cam, r.tile.x + 0.5, r.tile.y + 0.5, clampView(), bounds);
+        if (!r.exists) showMessage('Gebäude nicht mehr vorhanden', 'info');
+      },
+      state.logUnread,
+    );
     updateBuildMenu(navEl, world, state.activeIsland);
     const panel = state.panel;
     if (panel.kind === 'inspect') {
@@ -1555,6 +1572,7 @@ function launch(
       prevCrisis = curCrisis;
       if (logged.length > 0) {
         state.eventLog = pushLog(state.eventLog, logged);
+        state.logUnread = nextUnread(state.logUnread, logged, isEventLogExpanded(logBox));
         for (const e of logged) if (e.toast !== null) showMessage(e.text, e.toast);
       }
       const curMonument = monumentSnapshot(world);
@@ -1564,6 +1582,7 @@ function launch(
       prevMonument = curMonument;
       if (monumentLogged.length > 0) {
         state.eventLog = pushLog(state.eventLog, monumentLogged);
+        state.logUnread = nextUnread(state.logUnread, monumentLogged, isEventLogExpanded(logBox));
         for (const e of monumentLogged) {
           if (e.tag === 'monument-done') showMessage(e.text, 'info', true, true);
           else if (e.toast !== null) showMessage(e.text, e.toast);

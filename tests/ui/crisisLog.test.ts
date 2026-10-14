@@ -9,9 +9,12 @@ import { MAP_SIGNS, mapSigns } from '../../src/ui/guide';
 import {
   crisisLogEntries,
   crisisLogVisible,
+  isNotable,
   LOG_MAX,
   logLine,
+  nextUnread,
   pushLog,
+  unreadLabel,
   type LogEntry,
 } from '../../src/ui/crisisLog';
 import { SCENARIOS } from '../sim/scenarios';
@@ -155,5 +158,68 @@ describe('M10 Krisen-Log ab erster Periode (Spec 11.10, Kann K4)', () => {
     const off = createWorld(3, { crisisLevel: 'off' });
     off.tick = 9000;
     expect(crisisLogVisible(off)).toBe(false);
+  });
+});
+
+describe('Neu-Zähler (I-100)', () => {
+  const entry = (text: string, toast: LogEntry['toast'], tag?: 'monument-done'): LogEntry =>
+    tag ? { text, toast, tick: 1, tag } : { text, toast, tick: 1 };
+  const brand = entry('Brand: Brennerei brennt', 'warn');
+  const warnung = entry('Sturmwarnung: Sturm in 21 s', 'warn');
+  const still = entry('Sturm vorüber', null);
+
+  it('AK-1 isNotable: Meldungen und Banner zählen', () => {
+    const brandRun = run(SCENARIOS['krise-brand']!(), 205);
+    expect(isNotable(brandRun[0]!)).toBe(true);
+    const geloescht = run(SCENARIOS['krise-brand-geschuetzt']!(), 205);
+    expect(isNotable(geloescht[0]!)).toBe(true);
+    const sturm = run(SCENARIOS['krise-sturm']!(), 201 + 300 + 5);
+    expect(isNotable(sturm[0]!)).toBe(true);
+    const boom = run(SCENARIOS['krise-boom']!(), 305);
+    expect(isNotable(boom[0]!)).toBe(true);
+    expect(isNotable(entry('Denkmal fertig', null, 'monument-done'))).toBe(true);
+  });
+
+  it('AK-1 isNotable: stille Einträge zählen nicht', () => {
+    const brandRun = run(SCENARIOS['krise-brand']!(), 205);
+    expect(isNotable(brandRun[brandRun.length - 1]!)).toBe(false);
+    expect(brandRun[brandRun.length - 1]!.text).toMatch(/wieder in Betrieb$/);
+    const sturm = run(SCENARIOS['krise-sturm']!(), 201 + 300 + 5);
+    expect(isNotable(sturm[1]!)).toBe(false);
+    expect(isNotable(sturm[2]!)).toBe(false);
+    expect(isNotable(entry('Brand ohne Schaden', null))).toBe(false);
+  });
+
+  it('AK-2 nextUnread: eingeklappt zählt jeden auffälligen Eintrag', () => {
+    expect(nextUnread(0, [brand, warnung], false)).toBe(2);
+    expect(nextUnread(3, [brand, still, warnung], false)).toBe(5);
+  });
+
+  it('AK-2 nextUnread: aufgeklappt bleibt der Wert, stille Einträge ändern ihn nie', () => {
+    expect(nextUnread(0, [brand, warnung], true)).toBe(0);
+    expect(nextUnread(5, [brand], true)).toBe(5);
+    expect(nextUnread(4, [still], false)).toBe(4);
+    expect(nextUnread(0, [], false)).toBe(0);
+  });
+
+  it('AK-3 krise-brand: eingeklappt ergibt der Brandeintrag genau 1', () => {
+    const w = SCENARIOS['krise-brand']!();
+    let unread = 0;
+    let prev = crisisView(w);
+    for (let i = 0; i < 205; i++) {
+      step(w);
+      const cur = crisisView(w);
+      unread = nextUnread(unread, crisisLogEntries(prev, cur, w, w.tick), false);
+      prev = cur;
+    }
+    expect(unread).toBe(1);
+  });
+
+  it('AK-4 unreadLabel: Text und Deckel', () => {
+    expect(unreadLabel(0)).toBe('');
+    expect(unreadLabel(3)).toBe(' (3 neu)');
+    expect(unreadLabel(9)).toBe(' (9 neu)');
+    expect(unreadLabel(10)).toBe(' (9+ neu)');
+    expect(unreadLabel(25)).toBe(' (9+ neu)');
   });
 });

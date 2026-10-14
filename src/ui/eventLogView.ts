@@ -1,8 +1,16 @@
-import { logLine, type LogEntry } from './crisisLog';
+import { logLine, unreadLabel, type LogEntry } from './crisisLog';
 import type { LogTarget } from './logTarget';
 
+const syncByBox = new WeakMap<HTMLElement, (unread?: number) => void>();
+
+/** Ist die Liste aufgeklappt? */
+export function isEventLogExpanded(box: HTMLElement): boolean {
+  const list = box.querySelector<HTMLElement>('[data-field="event-log"]');
+  return !!list && !list.classList.contains('event-log--collapsed');
+}
+
 /** Ereignis-Log (M6 13.4): Kopf mit Einklappen, Liste neuester oben; Standard eingeklappt (R112). */
-export function renderEventLog(box: HTMLElement): void {
+export function renderEventLog(box: HTMLElement, onExpand?: () => void): void {
   const toggle = document.createElement('button');
   toggle.className = 'btn';
   toggle.dataset.field = 'log-toggle';
@@ -11,16 +19,23 @@ export function renderEventLog(box: HTMLElement): void {
   list.dataset.field = 'event-log';
   // Standard eingeklappt (R112): nur der neueste Eintrag in einer Zeile
   list.classList.add('event-log--collapsed');
-  const sync = (): void => {
+  const sync = (unread = 0): void => {
     const collapsed = list.classList.contains('event-log--collapsed');
-    toggle.textContent = collapsed ? 'Ereignisse ▸' : 'Ereignisse ▾';
+    // Aufgeklappt zeigt der Knopf nie einen Zähler (Spec Regel 3)
+    const n = collapsed ? unread : 0;
+    toggle.textContent = (collapsed ? 'Ereignisse ▸' : 'Ereignisse ▾') + unreadLabel(n);
+    if (n > 0) toggle.setAttribute('aria-label', `${n} neue Ereignisse`);
+    else toggle.removeAttribute('aria-label');
+    toggle.classList.toggle('btn--unread', n > 0);
     toggle.setAttribute('aria-expanded', String(!collapsed));
   };
   toggle.addEventListener('click', () => {
     toggle.blur();
     list.classList.toggle('event-log--collapsed');
+    if (!list.classList.contains('event-log--collapsed')) onExpand?.();
     sync();
   });
+  syncByBox.set(box, sync);
   sync();
   box.append(toggle, list);
 }
@@ -34,8 +49,11 @@ export function updateEventLog(
   entries: readonly LogEntry[],
   visible = true,
   onTarget?: (target: LogTarget) => void,
+  unread = 0,
 ): void {
   box.hidden = !visible || entries.length === 0;
+  // Knopftext vor dem Key-Cache-Return: der Zähler ändert sich auch ohne Listenänderung
+  syncByBox.get(box)?.(unread);
   const list = box.querySelector<HTMLElement>('[data-field="event-log"]');
   if (!list) return;
   // Ort gehört in den Schlüssel, sonst ginge die Klickbarkeit beim Cachen verloren
