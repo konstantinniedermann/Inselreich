@@ -7462,3 +7462,15 @@ der Guard die Datei, setzt L0 ihn. (3) Umsetzung beider Pakete erst nach `make p
 Regelbezug: gates.md Gate Plan, R464, R647, R648 · Kosten bei Irrtum: ein Guard mit Fehlblocks (Rückfall warn), eine Karte mit Zusatzzeile.
 
 Entscheider: L0 · Anlass: Berichte lead-tech Phase A · ADR: —
+
+## R650 · 2026-10-14 · Delta-Check REL-22 ZURÜCK (Lint); Push-Blocker-Fix TOOL-LINT-DASH
+
+Ruling: `make push-check` @ `c7da39d7` Exit 1: ESLint `no-undef` für `CSS` und `ResizeObserver` in `tools/studio/dashboard/releases.js`
+(aus TOOL-DASH-VERSIONEN, R647; das Gate prüfte `studio-lint`, nicht `make lint`). Kontrast `.btn--unread` 7,16:1 → OK. Nach R514 V1 läuft
+der benannte Push-Blocker-Fix vor dem Push: Paket **TOOL-LINT-DASH**, Fix in `eslint.config.js` (Browser-Globals `CSS`, `ResizeObserver` im
+Dashboard-Block), Test: `make lint` Exit 0 und `make studio-test` gezielt; danach neuer Delta-Lauf (`make push-check`, `make zeitreserve-gate`)
+durch eine neue lead-qa-Instanz. Befund an die Retro: Gate Merge für Dashboard-JS muss `make lint` enthalten.
+
+Regelbezug: R464, R514 V1, R647 · Kosten bei Irrtum: ein weiterer Delta-Lauf (≈ 10 min).
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL22-PUSH · ADR: —
