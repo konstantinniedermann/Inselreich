@@ -29,6 +29,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
 - Ruling: R646
 - Änderungen: Zeile «Folgeinstanz statt Fortsetzung» (Kontext über 100k, Wartezeit über 5 min nach Turn-Ende, Handoff und Folgeinstanz durch L0)
 
+## 2026-10-14 · Handbuch 1.55
+
+- Anlass: Warte-Guard für Agenten (TOOL-GUARD-WARTEAGENT)
+- Datenbasis: Paket TOOL-GUARD-WARTEAGENT, Branch `tool/guard-warteagent`
+- Ruling: R652
+- Änderungen: Warte-Guard `tools/studio/waitguard.py` (Sperre für wartende Bash-Aufrufe wie `sleep` im Hintergrund)
+
 ## 2026-10-13 · Handbuch 1.54
 
 - Anlass: Ad-hoc-Retro Testlock (V1) und Prozess-Retro REL-20 (V1–V3); Fakten E-064/E-065

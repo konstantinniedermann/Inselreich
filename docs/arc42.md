@@ -615,6 +615,7 @@ merge-driver` setzt die Treiberkonfiguration einmal je Klon in `.git/config`; oh
   `tools/studio/precommit.py`): Prettier-Check der gestagten Dateien, Ablehnung als Ereignis `commit_rejected`.
   Der Modell-Guard `tools/studio/modelguard.py` ist ein zusätzlicher PreToolUse-Hook neben `guard.py` und meldet
   Starts über der Modelltabelle als Ereignis `model_guard` und lehnt sie ab (`MODE = "deny"`, TOOL-AKTIVIERUNG, R428).
+  Der Warte-Guard `tools/studio/waitguard.py` (PreToolUse, Matcher `Bash|Agent|Task`) lehnt bei Leads (`agent_type` `lead-*`) Agent-Starts mit reinem Warte-Prompt und `sleep` im Hintergrund-Bash ab, Ereignis `wait_guard` (`MODE = "deny"`, Rückfall `"warn"`; R646/R647).
   Im selben Hook-Prozess prüft `budgetwarn.py` einen Lead-Start mit „Budget: n“ gegen die Freigaben der
   Session (Rolle und Phase = `Paket:`, dessen Phasenname oder ein Präfix davon bis zu einem `-`, längster Treffer zuerst,
   `model.package_names`, R528 (3)); die Freigabe-Phase verliert dabei ein Rollen-Präfix (`model.ROLE_PREFIXES`:

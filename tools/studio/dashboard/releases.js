@@ -130,6 +130,50 @@ function liveBar(data, live) {
   );
 }
 
+const WORK_STATUS = {
+  active: 'arbeitet',
+  delegated: 'lässt arbeiten',
+  waiting: 'wartet',
+  blocked: 'steckt fest',
+  review: 'im Review',
+};
+
+function nowBar(state) {
+  const work = Array.isArray(state.working_now) ? state.working_now : [];
+  const progress = state.releases && state.releases.goal_progress;
+  const warnings = (state.releases && state.releases.goal_warnings) || [];
+  const head = el('div', { class: 'rv-now-head' }, el('strong', {}, 'Jetzt in Arbeit'));
+  if (progress && progress.total > 0) {
+    const all = progress.reached >= progress.total;
+    head.append(
+      el(
+        'span',
+        { class: all ? 'rv-count all' : 'rv-count' },
+        `${progress.reached} von ${progress.total} am Tagesziel`,
+      ),
+    );
+  }
+  const box = el('div', { class: 'rv-now' }, head);
+  if (!work.length) box.append(el('span', { class: 'rv-now-empty' }, 'Gerade arbeitet niemand'));
+  for (const w of work) {
+    const line = el(
+      'div',
+      { class: `rv-now-row st-${WORK_STATUS[w.status] ? w.status : 'active'}` },
+      el('code', {}, w.package || '–'),
+      el('span', { class: 'rv-owner' }, w.owner || ''),
+    );
+    for (const a of w.agents || []) {
+      line.append(
+        el('span', { class: 'rv-agent' }, `${a.role} · ${WORK_STATUS[a.status] || a.status}`),
+      );
+    }
+    line.append(el('span', { class: 'rv-now-st' }, WORK_STATUS[w.status] || w.status || ''));
+    box.append(line);
+  }
+  for (const text of warnings) box.append(el('div', { class: 'rv-goal-warn' }, `⚠ ${text}`));
+  return box;
+}
+
 function chainRow(steps) {
   const row = el('div', { class: 'rv-chain', id: 'rv-chain' }, el('b', {}, 'Kritischer Pfad'));
   const hardSteps = steps.filter((s) => s.hard);
@@ -205,6 +249,23 @@ function itemRow(item, ctx) {
   }
   bar.append(el('span', { class: 'rv-mk', 'data-mk': item.pkg }, SYMBOL[state]));
   row.append(bar);
+  const goal = Number.isInteger(item.goalStage) && item.goalStage >= 1 && item.goalStage <= 5;
+  const goalDone = goal && stage >= item.goalStage;
+  const goalOpen = goal && !goalDone;
+  if (goalDone) bar.append(el('span', { class: 'rv-goal-ok' }, '✓ Ziel erreicht'));
+  if (goalOpen) {
+    row.append(
+      el(
+        'div',
+        {
+          class: 'rv-goal',
+          style: `grid-column: ${stage + 2} / ${item.goalStage + 2}`,
+          title: `Ziel heute: Stufe ${item.goalStage} · ${STAGES[item.goalStage - 1][0]}`,
+        },
+        el('span', {}, 'Ziel heute'),
+      ),
+    );
+  }
   const wantsGhost = ctx.items.some(
     (o) => o.waitsFor && String(o.waitsFor.target).startsWith(`${item.pkg}:`) && stage < 5,
   );
@@ -218,9 +279,10 @@ function itemRow(item, ctx) {
       ),
     );
   }
-  if (!two && stage < 5) {
+  const afterFrom = goalOpen ? item.goalStage : stage;
+  if (!two && afterFrom < 5) {
     row.append(
-      el('div', { class: 'rv-after', style: `grid-column: ${stage + 2} / 7` }, item.note || ''),
+      el('div', { class: 'rv-after', style: `grid-column: ${afterFrom + 2} / 7` }, item.note || ''),
     );
   }
   if (two) {
@@ -391,12 +453,12 @@ function applyChainFocus(root) {
 export function renderReleases(state) {
   const root = document.getElementById('releases');
   const data = state.releases;
-  const signature = JSON.stringify([data, state.releases_error, state.live]);
+  const signature = JSON.stringify([data, state.releases_error, state.live, state.working_now]);
   const first = root.dataset.ready !== '1';
   if (!first && signature === lastSignature) return;
   lastSignature = signature;
   root.dataset.ready = '1';
-  const parts = [liveBar(data, state.live)];
+  const parts = [nowBar(state), liveBar(data, state.live)];
   if (!data) {
     parts.push(
       empty(`Keine Release-Daten: ${state.releases_error || 'releases.json nicht lesbar'}`),

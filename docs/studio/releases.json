@@ -67,21 +67,21 @@
     },
     {
       "id": "REL-22",
-      "title": "Kandidat lokal auf main",
-      "status": "check",
-      "hash": "878b492b",
-      "date": "",
+      "title": "Aufgeräumt und nichts verpasst",
+      "status": "live",
+      "hash": "fb1e5e46",
+      "date": "2026-10-14",
       "save": "v14",
-      "gate": "Delta-Check läuft",
+      "gate": "Push OK (R651)",
       "items": [
         {
           "pkg": "UI-AUFRAEUM-3",
           "name": "UI-AUFRAEUM-3",
           "kind": "Sammelpaket",
           "startStage": 1,
-          "stage": 4,
+          "stage": 5,
           "state": "done",
-          "note": "Final-Review OK, gemergt",
+          "note": "live",
           "goalStage": 4
         },
         {
@@ -89,9 +89,9 @@
           "name": "I-100 «Neu»-Zähler",
           "kind": "I-100",
           "startStage": 1,
-          "stage": 4,
+          "stage": 5,
           "state": "done",
-          "note": "Final-Review OK, gemergt",
+          "note": "live",
           "goalStage": 4
         },
         {
@@ -99,9 +99,9 @@
           "name": "TOOL-ZEITRESERVE-21",
           "kind": "Werkzeug",
           "startStage": 4,
-          "stage": 4,
+          "stage": 5,
           "state": "done",
-          "note": "gemergt",
+          "note": "live",
           "goalStage": 4
         },
         {
@@ -109,9 +109,9 @@
           "name": "TOOL-BUENDEL-12",
           "kind": "Werkzeug",
           "startStage": 4,
-          "stage": 4,
+          "stage": 5,
           "state": "done",
-          "note": "gemergt",
+          "note": "live",
           "goalStage": 4
         },
         {
@@ -119,9 +119,9 @@
           "name": "BEOB-14",
           "kind": "Befund",
           "startStage": 4,
-          "stage": 4,
+          "stage": 5,
           "state": "done",
-          "note": "gemergt",
+          "note": "live",
           "goalStage": 4
         },
         {
@@ -129,9 +129,9 @@
           "name": "REL22-FIX",
           "kind": "Zeitreserve-Tests, Kontrast",
           "startStage": 4,
-          "stage": 4,
+          "stage": 5,
           "state": "done",
-          "note": "gemergt (R644)",
+          "note": "live",
           "goalStage": 4
         },
         {
@@ -140,9 +140,8 @@
           "kind": "Delta-Check + Push",
           "startStage": 5,
           "stage": 5,
-          "state": "active",
-          "note": "Ziel heute: live (Push + Pages)",
-          "frees": ["HANDEL-2"],
+          "state": "done",
+          "note": "live (Push R651, Pages-Lauf 38571610399)",
           "goalStage": 5
         }
       ]
@@ -161,14 +160,9 @@
           "name": "Handel 2 «Fernangebot»",
           "kind": "HANDEL-2",
           "startStage": 1,
-          "stage": 3,
-          "state": "waiting",
+          "stage": 4,
+          "state": "active",
           "note": "Ziel heute: umgesetzt + Gate Merge (lokal)",
-          "waitsFor": {
-            "target": "REL22-PUSH",
-            "label": "REL-22: Push (heute)",
-            "hard": true
-          },
           "frees": ["UI-HAEPPCHEN-D"],
           "chainLabel": "Handel 2: Umsetzung",
           "ghost": "Umsetzung · Merge",
@@ -271,30 +265,54 @@
       "name": "TOOL-DASH-SESSIONZIEL (Zielmarke)",
       "kind": "Werkzeug",
       "startStage": 2,
-      "stage": 2,
+      "stage": 4,
       "goalStage": 4,
-      "state": "active",
-      "note": "Ziel heute: live im Dashboard"
+      "state": "done",
+      "note": "gemergt (R655)"
     },
     {
       "pkg": "TOOL-GUARD-WARTEAGENT",
       "name": "TOOL-GUARD-WARTEAGENT",
       "kind": "Werkzeug",
       "startStage": 2,
-      "stage": 2,
-      "goalStage": 4,
-      "state": "active",
-      "note": "Ziel heute: gemergt, Modus deny"
+      "stage": 5,
+      "goalStage": 5,
+      "state": "done",
+      "note": "gemergt (R652)"
     },
     {
       "pkg": "IDEEN-RUNDE",
       "name": "Ideen-Runde",
       "kind": "Ideen",
       "startStage": 1,
-      "stage": 1,
+      "stage": 2,
       "goalStage": 2,
-      "state": "idea",
-      "note": "Ziel heute: Rangliste nach dem Push"
+      "state": "done",
+      "note": "IDEEN-10 entschieden (R653)"
+    },
+    {
+      "pkg": "I-109",
+      "name": "I-109 Reichweite am Gut-Chip",
+      "kind": "Ideen-Pool",
+      "startStage": 1,
+      "stage": 2,
+      "goalStage": 2,
+      "state": "done",
+      "note": "Kurzdesign angenommen (R654)"
+    },
+    {
+      "pkg": "I-102",
+      "name": "I-102 Auftragsvorschau",
+      "kind": "Ideen-Pool",
+      "startStage": 1,
+      "stage": 1,
+      "state": "waiting",
+      "note": "nach Handel 2",
+      "waitsFor": {
+        "target": "HANDEL-2:merge",
+        "label": "Merge Handel 2 (Save v15)",
+        "hard": false
+      }
     }
   ],
   "pastSummary": "REL-01 … REL-20, M1 – M13"

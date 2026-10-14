@@ -7487,3 +7487,65 @@ Starts, E-066. Pflege `releases.json` (REL-22 live) durch lead-production.
 Regelbezug: STUDIO.md Push-Abschnitt, R335, R464, R639, R649 · Kosten bei Irrtum: ein Release mit Lastrauschen in zwei Render-Tests (Reserve in der Nachmessung grün).
 
 Entscheider: L0 · Anlass: Bericht lead-qa REL22-PUSH, Nutzerfrage Dashboard · ADR: —
+
+## R652 · 2026-10-14 · Gate Merge TOOL-GUARD-WARTEAGENT: OK, Modus deny
+
+Ruling: `tool/guard-warteagent` @ `cb7dd1ac`: `tools/studio/waitguard.py` (Regel A Warte-Agent, Regel B `sleep` im Hintergrund, nur `lead-*`),
+21 Tests mit Rot-Beleg, PreToolUse-Eintrag `Bash|Agent|Task` in `.claude/settings.json` (fail-safe `|| true`, Timeout 5 s), Doku arc42 und
+STUDIO.md; `make studio-test` (888), `studio-lint`, `lint`, `docs-check` Exit 0; Review BEDENKEN → Fix → Delta-Review OK. Payload-Beleg
+`agent_type` indirekt über Events (kein direkter Hook-Mitschnitt) — hingenommen; der erste echte Block oder Fehlblock wird als
+Ereignis `wait_guard` sichtbar. → **Gate Merge OK, Modus deny**; Rückfall `MODE = "warn"` bei erstem Fehlblock ohne neues Ruling.
+lead-production merged `--no-ff`, Paket done, Handbuch-Minor 1.55 (Zeile STUDIO.md) im selben Zug; Fehlnegative (`(sleep 60)`,
+`bash -c 'sleep …'`, `sleep infinity`, `FOO=1 sleep 5`) als Eintrag in `docs/beobachtungen.md`.
+
+Regelbezug: gates.md Gate Merge, R429, R647 (2), R649 · Kosten bei Irrtum: Fehlblock eines Leads (Rückfall warn, eine Zeile).
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-WARTEAGENT · ADR: —
+
+## R653 · 2026-10-14 · Gate Ideen-Runde IDEEN-10: Priorisierung
+
+Ruling: `docs/ideen-10` @ `cc3072de` (I-101–I-109, Rangliste in docs/ideen.md) → angenommen, Merge durch lead-production. Priorisierung
+L0 nach Nutzen/Aufwand: (1) **I-109 «Reichweite am Gut-Chip»** (S–M, ohne Save, unabhängig von Handel 2) → Kurzdesign jetzt (freie
+Kapazität, R475), Stufe leicht, `design/i109`; (2) **I-102 Auftragsvorschau** → eingeplant als Häppchen nach dem Merge von Handel 2;
+(3) **I-101** → Beipack-Prüfung im Final-Review Handel 2 nur als Hinweis, kein Scope-Zuwachs; I-108, I-103 → Pool; I-104, I-105, I-107
+geparkt; I-106 vor Einplanung gegen UI-HAEPPCHEN-D prüfen. Keine Säulenfrage, nichts in die Warteschlange.
+
+Regelbezug: gates.md Gate Ideen-Runde, R445, R475 · Kosten bei Irrtum: ein Kurzdesign, das später zurückgestellt wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-10 · ADR: —
+
+## R654 · 2026-10-14 · Kurzdesign I-109 «Reichweite am Gut-Chip»: angenommen; Plan nach Merge Handel 2
+
+Ruling: `design/i109` @ `7e25d7cf` (reine UI-Funktion `reachView` aus `goodsBalance`, kein Sim-/Save-Diff, 9 AK) → angenommen. O-1: Schwellen
+3:00 / 1:00 / voll 1:00 als UI-Konstanten übernommen, Justierung nach Playtest ohne neues Ruling; Fallback «Suffix streichen» erlaubt.
+Plan + kombiniertes Gate erst nach dem Merge von Handel 2 (mögliche Überschneidung `src/ui/hud.ts`), Reihenfolge danach: UI-HAEPPCHEN-D,
+I-109, I-102 (lead-tech prüft Bündelung). Tagesziel I-109 (Kurzdesign) erreicht.
+
+Regelbezug: gates.md Gate Brainstorming/Kurzdesign, E-061, R641, R653 · Kosten bei Irrtum: Schwellen nach Playtest anpassen.
+
+Entscheider: L0 · Anlass: Bericht lead-design I-109 · ADR: —
+
+## R655 · 2026-10-14 · Gate Merge TOOL-DASH-SESSIONZIEL: OK
+
+Ruling: `tool/dash-sessionziel` @ `b8e92453` (T01–T04 + Fix-Runde): `goalStage`-Zielmarke «Ziel heute» mit «✓ Ziel erreicht», Kopfzeile
+«Jetzt in Arbeit» mit «n von m am Tagesziel», S-Kennzeichen auch für per `log.py package` angemeldete Pakete, `Cache-Control: no-store`
+für Dashboard-Dateien; Rot-Belege je Task; `make lint`, `studio-test` (884), `studio-lint`, `docs-check` Exit 0; Final-Review opus ZURÜCK
+→ Fix → Delta OK; Echtlauf 1440/1280 OK. Lücke: Hinweiszeile nach dem JS-Fix nicht erneut im Browser gesehen → L0 prüft nach dem Merge
+per Headless-Screenshot am laufenden Dashboard. → **Gate Merge OK**. lead-production merged `--no-ff`, Paket done in releases.json, startet
+den Dashboard-Server neu (neuer Python-Code), damit der Nutzer die Karte sieht. Befunde favicon 404, Warnzeile im leeren Zustand → beobachtungen.md.
+
+Regelbezug: gates.md Gate Merge, R648, R649, R651 · Kosten bei Irrtum: eine falsch versetzte Hinweiszeile im Dashboard.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-DASH-SESSIONZIEL · ADR: —
+
+## R656 · 2026-10-14 · Nachbesserung Zielmarke: «erreicht» erst bei abgeschlossener Zielstufe
+
+Ruling: L0-Sichtprüfung nach R655 (Headless-Screenshot 1440 px): HANDEL-2 (stage 4 = goalStage 4, state active) zeigt «✓ Ziel erreicht»,
+Zähler «4 von 4». Auslegung `goalStage`: Ziel ist das **Abschliessen** der Zielstufe. «Erreicht» gilt nur bei `stage > goalStage` oder
+`stage == goalStage` und `state == done` (Python `goal_progress` und JS identisch, Test zuerst rot). Paket **TOOL-DASH-ZIEL-FIX** (lead-tech,
+1 Start + Review). Daten: REL-22-Titel in releases.json «Kandidat lokal auf main» → «Aufgeräumt und nichts verpasst» (lead-production);
+Pflegeregel in state.md um die Semantik ergänzen.
+
+Regelbezug: R648, R655 · Kosten bei Irrtum: falscher Tagesstand im Dashboard bis zum Fix.
+
+Entscheider: L0 · Anlass: Sichtprüfung L0 · ADR: —

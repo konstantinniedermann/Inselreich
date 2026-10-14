@@ -56,6 +56,11 @@ class ChainTest(unittest.TestCase):
         tree = [{"package": "P1", "children": [{"package": "P2", "children": []}, {}]}]
         self.assertEqual(releases.session_packages(tree), ["P1", "P2"])
 
+    def test_session_packages_unites_registered(self):
+        tree = [{"package": "P1", "children": []}]
+        registered = {"P1": {"owner": "x", "status": "active"}, "P0": {}}
+        self.assertEqual(releases.session_packages(tree, registered), ["P0", "P1"])
+
 
 class LoadTest(unittest.TestCase):
     def setUp(self):
@@ -155,3 +160,218 @@ class LiveTest(unittest.TestCase):
         self.assertEqual(
             (live["origin"], live["local"], live["ahead"]), ("1" * 8, "2" * 8, 3)
         )
+
+
+class GoalTest(unittest.TestCase):
+    def test_goal_stage_accepts_only_ints_1_to_5(self):
+        for value in (1, 3, 5):
+            self.assertEqual(releases.goal_stage({"goalStage": value}), value)
+        for value in (0, 6, 2.5, "3", True, None, -1):
+            with self.subTest(value=value):
+                self.assertIsNone(releases.goal_stage({"goalStage": value}))
+        self.assertIsNone(releases.goal_stage({}))
+        self.assertIsNone(releases.goal_stage("kein dict"))
+
+    def test_normalize_removes_invalid_and_warns_only_when_present(self):
+        data = {
+            "releases": [
+                {
+                    "items": [
+                        item("A", goalStage=3),
+                        item("B", goalStage="3"),
+                        item("C"),
+                        "kaputt",
+                    ]
+                }
+            ],
+            "pool": [item("D", goalStage=9)],
+        }
+        warnings = releases.normalize_goals(data)
+        items = data["releases"][0]["items"]
+        self.assertEqual(items[0]["goalStage"], 3)
+        self.assertNotIn("goalStage", items[1])
+        self.assertNotIn("goalStage", data["pool"][0])
+        self.assertEqual(
+            warnings,
+            [
+                "B: goalStage ungültig ('3') ignoriert",
+                "D: goalStage ungültig (9) ignoriert",
+            ],
+        )
+
+    def test_load_returns_data_with_goal_warnings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "releases.json"
+            path.write_text(
+                json.dumps(
+                    {"releases": [{"items": [item("A", goalStage=0)]}], "pool": []}
+                ),
+                "utf-8",
+            )
+            data, error = releases.load(path)
+            self.assertEqual(error, "")
+            self.assertEqual(len(data["goal_warnings"]), 1)
+            path.write_text('{"releases": []}', "utf-8")
+            data, _ = releases.load(path)
+            self.assertEqual(data["goal_warnings"], [])
+
+    def test_goal_progress_counts_session_packages_only(self):
+        data = {
+            "releases": [
+                {
+                    "items": [
+                        item("I-047", goalStage=3, stage=3),
+                        item("I-047-x", goalStage=3, stage=3),
+                        item("B:merge", goalStage=4, stage=5),
+                        item("C", goalStage=4, stage=2),
+                        item("D", stage=5),
+                        item("E", goalStage=2, stage=1),
+                    ]
+                }
+            ],
+            "pool": [],
+        }
+        progress = releases.goal_progress(data, ["I-047-x", "b-neu", "C", "D"])
+        self.assertEqual(sorted(progress["pkgs"]), ["B:merge", "C", "I-047", "I-047-x"])
+        self.assertEqual((progress["total"], progress["reached"]), (4, 3))
+        self.assertEqual(releases.goal_progress(data, ["i-047"])["pkgs"], ["I-047"])
+        self.assertEqual(releases.goal_progress(data, ["B"])["pkgs"], ["B:merge"])
+
+    def test_goal_progress_uses_max_of_start_and_stage_like_js(self):
+        data = {
+            "releases": [
+                {
+                    "items": [
+                        item("A", goalStage=4, stage=2, startStage=4),
+                        item("B", goalStage=4, stage=2, startStage=9),
+                        item("C", goalStage=4, stage=3.6),
+                        item("D", goalStage=4, stage=1, startStage="x"),
+                    ]
+                }
+            ],
+            "pool": [],
+        }
+        progress = releases.goal_progress(data, ["A", "B", "C", "D"])
+        self.assertEqual(progress["reached"], 3)
+
+    def test_goal_progress_without_data_is_zero(self):
+        self.assertEqual(
+            releases.goal_progress(None, ["A"]),
+            {"total": 0, "reached": 0, "pkgs": []},
+        )
+
+
+def node(role, status, package="", children=None):
+    return {
+        "role": role,
+        "status": status,
+        "package": package,
+        "children": children or [],
+    }
+
+
+def pkg_event(pkg, status, owner="lead-tech", session="s1", key="package_id"):
+    return {
+        "kind": "package",
+        key: pkg,
+        "status": status,
+        "owner": owner,
+        "session_id": session,
+    }
+
+
+class WorkingNowTest(unittest.TestCase):
+    def test_one_entry_per_package_owner_is_topmost(self):
+        tree = [
+            node(
+                "main",
+                "idle",
+                "",
+                [
+                    node(
+                        "lead-tech",
+                        "active",
+                        "P1",
+                        [
+                            node("tech-sim-engineer", "delegated", "P1"),
+                            node("tech-sim-engineer", "delegated", "P1"),
+                            node("qa-code-reviewer", "idle", "P1"),
+                        ],
+                    ),
+                    node("lead-qa", "waiting", "P2"),
+                    node("lead-art", "idle", "P3"),
+                    node("lead-x", "active", ""),
+                ],
+            )
+        ]
+        self.assertEqual(
+            releases.working_now(tree),
+            [
+                {
+                    "package": "P1",
+                    "owner": "lead-tech",
+                    "agents": [{"role": "tech-sim-engineer", "status": "delegated"}],
+                    "status": "active",
+                },
+                {
+                    "package": "P2",
+                    "owner": "lead-qa",
+                    "agents": [],
+                    "status": "waiting",
+                },
+            ],
+        )
+
+    def test_empty_tree_is_empty_list(self):
+        self.assertEqual(releases.working_now([]), [])
+        self.assertEqual(releases.working_now(None), [])
+
+    def test_registered_package_without_node_is_listed(self):
+        tree = [node("lead-tech", "active", "P1")]
+        registered = {
+            "P1": {"owner": "andere", "status": "blocked"},
+            "P9": {"owner": "lead-art", "status": "review"},
+        }
+        result = releases.working_now(tree, registered)
+        self.assertEqual(
+            result,
+            [
+                {
+                    "package": "P1",
+                    "owner": "lead-tech",
+                    "agents": [],
+                    "status": "active",
+                },
+                {
+                    "package": "P9",
+                    "owner": "lead-art",
+                    "agents": [],
+                    "status": "review",
+                },
+            ],
+        )
+
+
+class RegisteredPackagesTest(unittest.TestCase):
+    def test_last_event_per_package_decides(self):
+        events = [
+            pkg_event("A", "active"),
+            pkg_event("A", "done"),
+            pkg_event("B", "planned"),
+            pkg_event("B", "review", owner="lead-qa"),
+            pkg_event("C", "blocked", key="package"),
+            {"kind": "status", "session_id": "s1"},
+        ]
+        self.assertEqual(
+            releases.registered_packages(events, "s1"),
+            {
+                "B": {"owner": "lead-qa", "status": "review"},
+                "C": {"owner": "lead-tech", "status": "blocked"},
+            },
+        )
+
+    def test_session_selection(self):
+        events = [pkg_event("A", "active"), pkg_event("B", "active", session="s2")]
+        self.assertEqual(list(releases.registered_packages(events, "s2")), ["B"])
+        self.assertEqual(list(releases.registered_packages(events, "all")), ["A", "B"])
+        self.assertEqual(releases.registered_packages(events, None), {})
