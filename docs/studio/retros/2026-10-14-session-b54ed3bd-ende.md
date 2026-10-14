@@ -75,3 +75,10 @@ Nicht vorgeschlagen, aber Messauftrag: B3 (Verbote nur im Text). Zählung in der
 ## Änderungen an lernen.md
 
 - neu: Zeitreserve-Gate-Zeile (Tests des Prüfwerkzeugs selbst, zwei Releases in Folge, R624/R642/R644) · gestrichen: Zeile „Die E-049-Bereinigung greift nur bei Budget-Phasen mit Präfix …“ (Werkzeug-Detail, durch die Budget-Zeile und die Zeile „nur Budget keins“ der Ampel abgedeckt).
+
+## Offene Aufträge für die nächste Session-Retro (R646)
+
+- V3: Cache-Write-Wachstum (übriges Wachstum 19,6 %) nach Rolle und Tool-Ergebnisgrösse aufschlüsseln (`lead-tech`, `qa-code-reviewer`, `qa-playtester`); Verantwortlich studio-coach.
+- (a)(b)(c): Briefing-Verbote zählen (Warte-Agent/`sleep`, Hintergrundstart durch Leads, Lastgrenze); Guard erst bei dreifacher Verletzung einer Klasse in einer Session.
+- Ampel Cache-Write und Flake: ist eine wieder rot, folgt die Ad-hoc-Retro dort (R646 (5)).
+- L0-Kontext Max: Kontext-Max je 100 Delegationen.

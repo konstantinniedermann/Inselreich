@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-14 · Persona lead-tech 1.15
+
+- Anlass: Kurz-Retro b54ed3bd, V1 (E-066 Folgeinstanz statt Fortsetzung)
+- Datenbasis: `docs/studio/retros/2026-10-14-session-b54ed3bd-ende.md` B1, Ampel Cache-Write 5 min (Session 26,9 %, davon nach Pause 7,3 %)
+- Ruling: R646
+- Änderungen: Zeile «Folgeinstanz statt Fortsetzung» (Kontext über 100k, Wartezeit über 5 min nach Turn-Ende, Handoff und Folgeinstanz durch L0)
+
 ## 2026-10-13 · Handbuch 1.54
 
 - Anlass: Ad-hoc-Retro Testlock (V1) und Prozess-Retro REL-20 (V1–V3); Fakten E-064/E-065

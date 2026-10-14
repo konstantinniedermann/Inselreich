@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R614 2026-10-13): E-062, E-063, E-064; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R646 2026-10-14): E-063, E-064, E-066; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 ---
 
@@ -611,7 +611,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Bewertung: verlängert (R542). Entwurf 2026-10-11 (Studio-Coach, EXP-BEWERTUNG-1011): noch nicht bewertbar. Datenpunkt 2, S-2026-10-11-d665682d (`lead_stats.rows`): `design-UI-TEXTE-1` (sonnet, eine Instanz, 18 Turns) 0,129 M für Kurzdesign samt Spec-Nachtrag (R530) und Berichtigung (R533), gegen 0,16 M Ausgang Kurzdesign = ≈ 81 % (Schwelle ≤ 60 % verfehlt, aber Nachtrag-Anteil nicht trennbar, weil dieselbe Instanz); opus-Anteil der Session 38,2 % (≤ 70 % erfüllt); Gate Spec BEDENKEN (R530, 9 Punkte, kein Blocker). Tendenz: Nachtrag klar unter Schwelle (11 %, Datenpunkt 1), Kurzdesign mit Spec nahe 80 %. Fehlend: ein dritter, sauber getrennter Datenpunkt und der Ausgangswert der Gate-Befunde (Gegenprobe); Empfehlung: Schwelle für Kurzdesign inklusive Spec und Nachtrag in einer Instanz neu fassen oder weiter beobachten (verlängern).
 - Bewertung ([Retro M13](retros/2026-10-12-m13.md)): drei Instanzen, Kostenschwelle 3 von 3 erfüllt — Nachtrag M14-E1 11 % von 0,70 M, Kurzdesign UI-NAECHSTER-SCHRITT 35 % von 0,16 M, UI-TEXTE-1 (Kurzdesign samt Nachtrag in einer Instanz) 0,129 M = 15 % der Summe beider Ausgänge (0,86 M); opus-Anteil der Sessions 55,6 % und 38,2 %. Gegenprobe 2 von 3: 0 ZURÜCK, Gate-Befunde 0 / OK / 9 (R501, R502, R530) gegen 13–14 bei opus-Specs (R489, R490), aber UI-TEXTE-1 brauchte zwei Nachkorrekturen (R533, R550, falsche Artikel-Annahme). Bewertungsvorschlag: **behalten** (Modelltabellen-Zeile steht seit R497); Bewertung R565: **behalten**, abgeschlossen; Modelltabellen-Zeile bleibt Regel.
 
-## E-062 · laufend (R565) · Turnkappe 60 Turns für Plan-Instanzen
+## E-062 · zurückgenommen (R646) — nie angewendet · Turnkappe 60 Turns für Plan-Instanzen
 
 - Hypothese: Wenn das Plan-Briefing „höchstens 60 Turns, Rest als frische Instanz mit Übergabe“ verlangt, sinkt der Cache-Write der Plan-Instanzen (Vorarbeits-Leads schreiben 66–81 % der Lead-Schreibmenge; `plan-m13-e2` 105 und `plan-i048` 96 Turns gegen 55 bei `plan-tool-buendel-6`), ohne dass Plan-Qualität leidet (Retro [ampel-adhoc](retros/2026-10-11-ampel-adhoc.md) B2, V2).
 - Messgrösse: Cache-Write-Tokens je Plan-Instanz ≤ 1,5 M und 0 blockierende Gate-Plan-Befunde, über 3 Pläne. Vorab Messauftrag (Frist nächste Session-Retro): Plan-Instanzen > 60 Turns in Erstfassung und Nachtrag trennen.
@@ -622,9 +622,9 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R538 (Messauftrag angenommen; Experiment wartet auf Platz)
 - Ausgang M13 ([Retro M13](retros/2026-10-12-m13.md) B4, `lead_stats.rows`, Kostengewicht): `plan-m13-e2` 105 Turns 4,26 M, `plan-i048` 96 / 2,69 M, `plan-M14-E1` 90 / 2,46 M gegen `plan-tool-buendel-6` 55 / 1,28 M. Trennung Erstfassung/Nachtrag weiter nicht möglich (Retro session-f2a404fd). Startvorschlag: auf dem Platz von E-057 (Retro M13 V1).
 - Start: 2026-10-12 (R565 V1, Platz von E-057; Beginn mit dem nächsten Plan-Briefing)
-- Bewertung: Entwurf 2026-10-14 (Studio-Coach, Retro [session-b54ed3bd-ende](retros/2026-10-14-session-b54ed3bd-ende.md) B1): **zurückgenommen, nie angewendet** — kein Plan-Briefing seit dem Start nennt die Kappe (`.studio/archiv/briefings/*lead-tech*`), `lead-tech.md`, `STUDIO.md` und Briefing-Vorlage enthalten sie nicht; Messwerte `plan-handel-2` 61 Turns / 1,54 M, `plan-ui-aufraeum-3` 0,28 M, `plan-i-100` 0,08 M, `plan-I-047` 70 / 1,48 M sind ohne Anwendung nicht zuzuschreiben. Rückfall = heutiger Zustand. L0-Ruling ausstehend.
+- Bewertung: Entwurf 2026-10-14 (Studio-Coach, Retro [session-b54ed3bd-ende](retros/2026-10-14-session-b54ed3bd-ende.md) B1): **zurückgenommen, nie angewendet** (Ruling R646) — kein Plan-Briefing seit dem Start nennt die Kappe (`.studio/archiv/briefings/*lead-tech*`), `lead-tech.md`, `STUDIO.md` und Briefing-Vorlage enthalten sie nicht; Messwerte `plan-handel-2` 61 Turns / 1,54 M, `plan-ui-aufraeum-3` 0,28 M, `plan-i-100` 0,08 M, `plan-I-047` 70 / 1,48 M sind ohne Anwendung nicht zuzuschreiben. Rückfall = heutiger Zustand. L0-Ruling R646 bestätigt.
 
-## E-063 · laufend (R565) · Integrator nur im Worktree `integrate`, Briefing nennt ihn
+## E-063 · laufend (R565, angepasst R646) · Integrator nur im Worktree `integrate`, Briefing nennt ihn
 
 - Hypothese: Wenn Merge und `make push-check` immer in `.worktrees/integrate` (detached auf dem Kandidaten) laufen, die Integrator-Pflichtzeile der Briefing-Vorlage diesen Arbeitsort nennt und die Persona bei einem Briefing mit Hauptcheckout „Schritt 1 gilt, melden“ vorschreibt, dann treffen L0-Commits auf `main` keinen laufenden Integrator mehr (Prozess-Retro [M13](retros/2026-10-12-m13-prozess.md) B1/P1; [Retro M13](retros/2026-10-12-m13.md) B1/V2: beide Vorfälle R562 und REL-M13 kamen aus Briefings mit Hauptcheckout, 2 bzw. 3 von 27 Briefings).
 - Messgrösse: in den nächsten 10 Integrator-Läufen 0 Briefings mit Hauptcheckout als Arbeitsort (Grep `.studio/archiv/briefings/*production-integrator*`), 0 × push-check Exit 1 „Arbeitsbaum verändert“ (Ereignis `push_check`) und 0 Merge-Commits mit fremder Nachricht (`git log --merges`); Gegenprobe: Integrator-Dauer je Lauf nicht über Ausgang, gepushter Hash = Ruling-Hash oder vor dem Push gemeldet.
@@ -634,7 +634,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/production-integrator.md`, `docs/studio/STUDIO.md` (Push-Ablauf), `docs/studio/CHANGELOG.md` (nur nach Ruling); Probe, ob `pushcheck.py` im Worktree läuft (≈ 5 Tools).
 - Ruling: R565 (P1, V2)
 - Start: 2026-10-12 (Handbuch 1.52: Merge und Push nur in `.worktrees/integrate`; Briefing-Vorlagenzeile; Persona production-integrator 1.13)
-- Bewertung: Entwurf 2026-10-14 (Studio-Coach, Retro session-b54ed3bd-ende B2): **angepasst** — 18 Integrator-Briefings seit dem Start, 15 mit Worktree, 3 mit Hauptcheckout per Ruling (R627, R636, R644, Doku-/Werkzeug-Merges), in R616–R645 kein Vorfall genannt. Neue Messgrösse: Briefings mit Hauptcheckout ohne Ruling-Nummer = 0 über weitere 10 Läufe, höchstens bis 2026-11-19; Ruling-Ausnahmen werden gezählt. L0-Ruling ausstehend.
+- Bewertung: Entwurf 2026-10-14 (Studio-Coach, Retro session-b54ed3bd-ende B2): **angepasst** — 18 Integrator-Briefings seit dem Start, 15 mit Worktree, 3 mit Hauptcheckout per Ruling (R627, R636, R644, Doku-/Werkzeug-Merges), in R616–R645 kein Vorfall genannt. Neue Messgrösse (R646): Integrator-Briefings mit Hauptcheckout ohne Ruling-Nummer, Soll 0 über weitere 10 Läufe, höchstens bis 2026-11-19; Ruling-Ausnahmen werden gezählt. L0-Ruling R646 bestätigt.
 
 ## E-064 · laufend (R579, nachgerückt für E-060) · Guard sperrt `git stash` ausser Lesezugriffen
 
@@ -659,7 +659,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: –
 - Bewertung: –
 
-## E-066 · vorgeschlagen (wartet auf Platz, R615) · Folgeinstanz statt Fortsetzung bei lead-tech
+## E-066 · laufend (R646) · Folgeinstanz statt Fortsetzung bei lead-tech
 
 - Hypothese: Ein `lead-tech`, der nach Turn-Ende länger als 5 min wartet (Gate, Ruling) und über 100k Kontext liegt, wird nicht per SendMessage fortgesetzt, sondern als Folgeinstanz mit Übergabe gestartet (Start-Kontext 32k statt Neuschreibung des vollen Kontexts); Anlass Retro [session-6584aaa4-ende](retros/2026-10-13-session-6584aaa4-ende.md) B2/V1.
 - Messgrösse: Neuschreibungen ≥ 20k von `lead-tech` ≤ 5 je Session (Ausgang 9 in 6584aaa4, 8 in b54ed3bd) und deren Kostengewicht ≤ 400k (Ausgang 562k) über 3 Sessions; Gegenprobe Rückfragen wegen fehlender Übergabe ≤ 1 je Session. Erwarteter Nutzen höchstens 2,6 Punkte Cache-Write (Pausenanteil lead-tech in b54ed3bd), Deutung.
@@ -667,7 +667,8 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Sessions, höchstens bis 2026-11-19.
 - Rückfall: Regel aus `lead-tech.md` streichen, Fortsetzung per SendMessage wie bisher.
 - Dateien: `.claude/agents/lead-tech.md` (Minor), `docs/studio/STUDIO.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
-- Ruling: R615 (als vorgeschlagen eingetragen, Reihenfolge E-066 vor E-065 vor E-067)
+- Ruling: R615, R646
+- Start: 2026-10-14 (Persona lead-tech 1.15)
 - Bewertung: –
 
 ## E-067 · vorgeschlagen (wartet auf Platz, R615) · Drei Pflichtzeilen im lead-tech-Bericht
