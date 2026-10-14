@@ -90,7 +90,7 @@ Im Panel der Amtsstube erlässt du **ein** Edikt zur Zeit. Es wirkt nur, solange
 - **Start:** 5000 Geld, 40 Holz, 20 Werkzeug, 10 Stein, 20 Nahrung.
 - **Lager:** Alle Waren liegen im Kontor-Lager, höchstens 100 je Gut. Ist das Lager voll, verfällt
   neu erzeugte Ware (Zustand «Lager voll»).
-- **Betriebsrangliste:** Ein Klick (oder `Enter`) auf die **Bilanz** in der Kopfzeile öffnet eine Karte mit den Betrieben nach Unterhalt (höchster zuerst, bei Gleichstand geringere Auslastung zuerst; Stillgelegte mit ihrem halben Unterhalt und der Marke «stillgelegt»; Schiffe als eine Zeile; bei einem Sparedikt eine Zeile «Edikt»). Die Fusszeile nennt den Unterhalt je Minute wie die Bilanz. Ein Klick auf eine Zeile springt zum Gebäude, `Esc` schliesst; gezeigt werden 20 Zeilen, danach «und n weitere». Die Tasten `4`–`8` ohne Funktion nennen die Tempo-Tasten («Tempo: 1, 2, 3»).
+- **Betriebsrangliste:** Ein Klick (oder `Enter`) auf die **Bilanz** in der Kopfzeile öffnet eine Karte mit den Betrieben nach Unterhalt (höchster zuerst, bei Gleichstand geringere Auslastung zuerst; Stillgelegte mit ihrem halben Unterhalt und der Marke «stillgelegt»; Schiffe als eine Zeile; bei einem Sparedikt eine Zeile «Edikt»; mit mindestens zwei Inseln mit Betrieben darüber je Insel eine Zeile «Insel · n Gebäude · Unterhalt / min», höchster Unterhalt zuerst). Die Fusszeile nennt den Unterhalt je Minute wie die Bilanz. Ein Klick auf eine Zeile springt zum Gebäude, `Esc` schliesst; gezeigt werden 20 Zeilen, danach «und n weitere». Die Tasten `4`–`8` ohne Funktion nennen die Tempo-Tasten («Tempo: 1, 2, 3»).
 - **Lagerleiste und Warenbilanz:** Die Lagerleiste in der Kopfzeile (zweite Zeile) zeigt je Gut den Bestand und die
   Bilanz mit Trendpfeil (↑ / → / ↓, negative Bilanz hervorgehoben). Die Chips «Glas» und «Kaufleute» erscheinen erst nach der Freischaltung der Stufe 4 oder sobald es Glas bzw. Kaufleute gibt. Der Tooltip nennt Bilanz, Erzeugung und
   Verbrauch je Minute. Gerechnet wird nominal aus den angebundenen Betrieben und dem Bedarf der
@@ -164,6 +164,7 @@ Schiffsabschnitt («Handeln» bleibt dort ein Knopf); sonst öffnet er direkt de
 | Kauf            | 10   | 40       | 15    | 8       | 12    | 30    | 12         | 40  | 50   | 40     |
 | Verkauf (100 %) | 4    | 15       | 6     | 3       | 5     | 12    | 5          | 18  | 20   | 12     |
 
+- **Preise sind global, nicht je Insel:** Kauf- und Verkaufspreise (und die Sättigung unten) gelten für jedes Kontor gleich; nur das Vorliebe-Gut einer Fremdinsel zahlt dort ×1,30 (siehe «Seefahrt und Gewürz»).
 - **Kaufpreise sind fest.** Mit dem Edikt Handel (Amtsstube) sinken sie um 20 % (über die ganze Menge aufgerundet).
 - **Verkaufssättigung:** Jede verkaufte Einheit senkt den Verkaufspreis dieses Guts um 1 Prozentpunkt,
   höchstens bis 30 %. Jede Sekunde erholt sich der Preis jedes Guts um 1 Prozentpunkt, bis 100 %.
@@ -420,10 +421,10 @@ Boom verkaufen lohnt sich nie, und ein Auftrag bringt je Einheit immer mehr als 
 
 ### Krisenkarte und Ereignis-Log
 
-- Die **Krisenkarte** steht oben rechts im Spielfeld, unter der Auftragskarte, und zeigt «Krisen: aus»,
+- Die **Krisenkarte** steht oben rechts im Spielfeld, unter der Auftragskarte, und zeigt
   «Krisen: normal · nächste Krise in m:ss» oder die laufende Krise mit Restzeit (z. B. «Brand: Weberei ·
   Ausfall noch 20 s · …», «Sturmwarnung: Sturm in 20 s, dauert 30 s …», «Boom: Rum +50 % Verkaufspreis ·
-  noch 30 s»).
+  noch 30 s»). Bei Krisenstufe «aus» erscheint keine Karte; die Stufe bleibt im Menü und in den Einstellungen sichtbar.
 - Das **Ereignis-Log** schwebt unten links über der Karte, sobald es Einträge gibt. Eingeklappt zeigt es
   nur den neuesten Eintrag; «Ereignisse ▸» klappt die letzten 10 auf («m:ss · …», Spielzeit seit Beginn). Es gehört nicht zum
   Spielstand und ist nach «Neue Insel» und «Laden» leer. Wichtige Ereignisse erscheinen zusätzlich als Meldung.

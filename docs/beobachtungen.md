@@ -205,6 +205,20 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 2. Paket DOC-ARCHIV (Grösse S, Owner `lead-production`): `docs/ideen.md` (79,9 KB) und README-Spielwerte-Anhang auslagern, damit E-057 nicht mehr greifen muss.
 3. In das Werkzeug-Bündel Szenarien (nächstes TOOL-BUENDEL): Szenario `m13-vor-ziel` erreicht das Ziel nicht von selbst (c), AK-36-Szenario `m14e1-felsbucht` (a), Umbenennung `m13e2-v13` (d).
 
+## Ausgewertet 2026-10-14
+
+UI-AUFRAEUM-3 (REL-22): 7 Einträge erledigt bzw. abgehakt, Belege am Branch `ui-aufraeum-3`.
+
+| Eintrag (Datum · Titel)                                      | Ergebnis | Beleg                                                                                                                                            |
+| ------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-10-13 · Unterhalt-Karte bei Pause: Fusszeile            | erledigt | `src/ui/upkeepRank.ts` Kopfkommentar: Fusszeile ist `totalUpkeep(world)`, nicht `stats.upkeep`                                                   |
+| 2026-10-13 · Heimat-Kontor fehlt in der Unterhalt-Rangliste  | abgehakt | Absicht: `upkeepRanking` überspringt Unterhalt 0 («Kontor u. Ä.»), Zeile 31; Inselzeilen aus I-089 (`498d2f26`) zeigen die Summe je Insel        |
+| 2026-10-13 · Linienzug mit Umschalt: Esc und Rechtsklick     | erledigt | `947ba819` (Rechtsklick beendet nur den Zug), `cec58318` (Abriss-Strich); README «Weg» und Tastentabelle angeglichen                             |
+| 2026-10-13 · Kleinbefunde REL-21: Präfix `g:`, Karten 6 px   | erledigt | `4af72553` (Präfix `f:`), `2402d418` (Kartenstapel mit festem Abstand); Rest (Testname, `balanceAfterUpgrade`) bleibt unter «Offen»              |
+| 2026-10-13 · I092: Marke `prefer-<good>` nutzt `badge--boom` | erledigt | `8449f223` (eigene Badge-Klasse)                                                                                                                 |
+| 2026-10-13 · README verweist auf «Seefahrt und Gewürz»       | erledigt | `grep -n "Seefahrt und Gewürz" README.md`: Verweis mit Link auf `docs/spielwerte.md#seefahrt-und-gewürz`                                         |
+| 2026-10-13 · `docs/spielwerte.md` nennt «Preise global»      | erledigt | `docs/spielwerte.md` Abschnitt Handel: «Preise sind global, nicht je Insel» (R621 (1)); Code: `world.sellPct[good]` global in `src/sim/trade.ts` |
+
 ## Offen (neue Einträge unten anhängen)
 
 - **2026-10-13 · `tools/studio/guard.py` Stash-Sperre (E-064) umgehbar.** Sie lässt sich über Git-Alias (`git -c alias.s=stash s`), Befehlssubstitution (`git $(echo stash)`) und `xargs git stash` umgehen; war schon bei der bestehenden Sperre so. Sie schützt gegen Versehen, kein Sicherheitsmerkmal. Ursprung: Final-Review TOOL-BUENDEL-10. Einschätzung: hinnehmen.
@@ -212,14 +226,6 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 - 2026-10-13 · `src/sim/save.ts` `isValidContractFields` · Das Laden prüft `contract.amount`/`price` nur als ganze Zahlen (≥ 1 bzw. ≥ 0), nicht gegen `GOODS[g].order.contract` und `contractUnitPrice`; ein manipulierter Spielstand kann eine beliebige Strafe oder Zahlung festschreiben. · Ursprung: Zwischen-Review I047-SIM · Einschätzung: Single-Player, kein Sicherheitsproblem; bei Bedarf strengere Prüfung, Trigger: Cheat-/Missbrauchsmeldung oder spätere Wertänderung der Mengen (alte Saves tragen festgeschriebene Werte absichtlich).
 - 2026-10-13 · `tests/sim/save.test.ts` (`slice(-17, -15)` u. ä.) · Magic-Number-Indizes auf Weltschlüssel verschieben sich bei jedem neuen Schlüssel; Titel «uses version 5» (Z. 137) ist veraltet. · Ursprung: Zwischen-Review I047-SIM · Einschätzung: nach Schlüsselnamen indexieren; Trigger: nächster neuer Weltschlüssel.
-
-### 2026-10-13 · Unterhalt-Karte bei Pause: Fusszeile gegen Zeilen leicht verschoben
-
-- Fundort: `src/ui/upkeepRank.ts` (UI-HAEPPCHEN-A, Final-Review). Beobachtung: Die Fusszeile nimmt `stats.upkeep`, das nur je Tick nachgeführt wird. Baut man in der Pause oder wechselt das Edikt und öffnet dann die Karte, weichen Zeilen und Fusszeile bis zum nächsten Tick ab (mit Sparedikt landet die Abweichung in der Edikt-Zeile). Ursprung: Final-Review. Einschätzung: niedrig; Abhilfe `totalUpkeep(world)` beim Öffnen, falls es im Spiel auffällt.
-
-### 2026-10-13 · Heimat-Kontor fehlt in der Unterhalt-Rangliste
-
-- Fundort: Playtest UI-HAEPPCHEN-A. Beobachtung: Das Heimat-Kontor (Unterhalt 0) steht nicht in der Rangliste, ein Kontor auf einer fernen Insel schon (60 / min). Passt zum Code, kann irritieren. Ursprung: Playtest. Einschätzung: niedrig, ggf. Hinweistext oder Konsistenz prüfen.
 
 ### 2026-10-13 · Bilanz-Vorschau ohne Haus-Aufstieg und ohne Stilllegen
 
@@ -230,8 +236,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Fundort: `src/ui/order.ts` (`updateOrder` ca. Z. 216, `contractWarn`/Kartentext ca. Z. 47 und 78), Final-Review I-047. Beobachtung: (1) Bei gesperrter Funktion `orders` blendet `updateOrder` die ganze Karte aus, also auch «Kündigen», obwohl die Sim das Kündigen erlaubt (AK-SK-15); nur über einen manipulierten Stand erreichbar, da Freischaltungen nie zurückgenommen werden. (2) `world.islands[c.island]!` ohne Absicherung; die Sim behandelt eine ungültige Insel als Bruch `island`, die UI würde werfen; Ladeprüfung weist solche Stände ab. Ursprung: Final-Review opus. Einschätzung: niedrig, bei Gelegenheit `islandAt` nutzen und Karte zeigen, solange `contract !== null`.
 - Ausserdem: Der Fehlerpfad-Test prüft `runContractAction`, nicht die `app.ts`-Verdrahtung (Task-Review T05, niedrig).
 - **2026-10-13 · Spec M14-E1 AK-M14E1-36 nennt «Holz 20», Szenario `m14e1-felsbucht` nutzt seit TOOL-BUENDEL-11 Holz 10** (sonst verbraucht die Glashütte den Stein). Fundort `docs/superpowers/specs/2026-10-10-m14-e1-inselcharakter-design.md` Z. 371–373. Ursprung: TOOL-BUENDEL-11 T03. Einschätzung: Beipack beim nächsten Design-Durchgang (R602).
-- **2026-10-13 · Linienzug mit Umschalt: Esc und Rechtsklick wirken verschieden**; README Z. 164 passt nur für Rechtsklick. Ursprung: Release-Check REL-21 (Opus-Review). Einschätzung: Designfrage an lead-design, README beim Doku-Fix angleichen.
-- **2026-10-13 · Kleinbefunde Release-Check REL-21:** Testname `'uses version 5'` veraltet (`tests/sim/save.test.ts:136`); `balanceAfterUpgrade` ohne Cache je Panel-Refresh (`panelView.ts`); Präfix `g:` doppelt belegt (`storageFull.ts:20`); Vertragskarte liegt genau 6 px neben der Krisenkarte (Grenzwert R589). Ursprung: Release-Check REL-21. Einschätzung: Sammelpaket UI-Aufräumen.
+- **2026-10-13 · Kleinbefunde Release-Check REL-21 (Rest):** Testname `'uses version 5'` veraltet (`tests/sim/save.test.ts:136`); `balanceAfterUpgrade` ohne Cache je Panel-Refresh (`panelView.ts`). Ursprung: Release-Check REL-21. Einschätzung: bleibt offen (Präfix `g:`/`f:` und Kartenabstand 6 px erledigt in UI-AUFRAEUM-3, siehe «Ausgewertet 2026-10-14»).
 
 ### 2026-10-13 · UI-HAEPPCHEN-C: Kleinbefunde Vertragskarte
 
@@ -241,7 +246,4 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - d) Mit `--disable-gpu` headless bei 1920×1080 und Brand ca. 27 ms/Frame; nur Testumgebung. Ursprung: UI-HAEPPCHEN-C. Einschätzung: kein Handlungsbedarf.
 - **2026-10-13 · Markterholung 60 Punkte/min, nicht ≈ 6** (`src/sim/defs/timing.ts:18`, `tick.ts:45`); die Anhänge I-047 W.2/W.4 und Spätspiel B.5 rechnen mit dem zehnfach kleineren Wert, ihre Grenzen für Basis F sind zu streng (sichere Seite). Ursprung: design-I-092 (Wirtschaftsdesigner). Einschätzung: Anhänge beim nächsten Wirtschafts-Design korrigieren.
 - **2026-10-13 · Schiffsunterhalt 15 je 100 Ticks = 90 Geld/min**, nicht 15/min, in älteren Design-Rechnungen. Ursprung: design-I-092. Einschätzung: wie oben.
-- **2026-10-13 · `docs/spielwerte.md` nennt «Preise global» bei Kontor II nicht wörtlich**, eine Idee verweist darauf. Ursprung: design-I-092. Einschätzung: Doku-Beipack.
-- **2026-10-13 · I092: Marke `prefer-<good>` nutzt `badge--boom`** (`src/ui/trade.ts` ca. Z. 207), optisch wie die Boom-Marke; nur der Text unterscheidet. Ursprung: Playtest/Final-Review I092. Einschätzung: niedrig; eigene Klasse `badge--prefer` (braucht `style.css`) bei Gelegenheit.
-- **2026-10-13 · README verweist auf Abschnitt «Seefahrt und Gewürz» (ca. Z. 74), den es nicht gibt**; die Seefahrt-Werte stehen in `docs/spielwerte.md`. Ursprung: Final-Review I092. Einschätzung: Verweis beim nächsten Doku-Durchgang korrigieren.
 - **2026-10-14 · Erzeugungs-Cache ignoriert `connected`-Änderungen im pausierten Spiel:** Strassenbau verbindet oder trennt einen Erzeuger ohne Tick, `producedPerMinute` zeigt bis zum nächsten Tick den alten Wert. Fundort `src/ui/order.ts` `producedPerMinute`. Ursprung: Review T06. Einschätzung: niedrig (nur Anzeige, korrigiert sich im nächsten Tick); Lösung bei Bedarf: `connected`-Zahl in den Schlüssel.

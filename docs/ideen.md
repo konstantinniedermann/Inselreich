@@ -69,18 +69,17 @@ grenzt an K2 «Stand halten». Sortiert nach Raster-Summe, bei Gleichstand nach 
 I-081, I-082, I-084, I-086 (R566), dazu I-048 (R571 Verzicht, Mechanik inaktiv); Rangliste IDEEN-08 ins Archiv. I-047 bleibt
 `eingeplant` bis REL-21 live ist. Pool danach: 15 von 40.
 
+Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu durchnummeriert (bisherige Ränge 2 und 7 = I-088/I-090, Zeilen im Archiv).
+
 | Rang | ID    | Name                             | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                    | Empfehlung                                        |
 | ---- | ----- | -------------------------------- | ------ | ----- | --------------- | ------------------------------------------------- | ------------------------------------------------- |
 | 1    | I-092 | Inselmarkt-Vorliebe              | S–M    | 12    | nein / nein     | jede Fremdinsel bekommt eine Handelsrolle, 1 Pkt. | einplanen: Design-Paket mit Rechnung, dann 1 Pkt. |
-| 3    | I-100 | «Neu»-Zähler am Ereignis-Log     | S–M    | 11    | nein / nein     | verpasste Krisen bei 4× lesbar, ≈ 70 Tools        | einplanen Häppchen danach; ersetzt I-058          |
-| 4    | I-095 | Fernauftrag an einem Fremdkontor | M      | 11    | ja / nein       | Routen bekommen einen zweiten Zweck, ≈ 2 Pakete   | parken: Handels-Brainstorming (mit I-092)         |
-| 5    | I-094 | Darlehen beim Händler            | S–M    | 11    | ja / nein       | Vorziehen gegen Dauerlast, Entartung offen        | parken: Wirtschafts-Brainstorming                 |
-| 6    | I-091 | Treuebonus beim Stammkunden      | M      | 11    | ja / nein       | Bindung belohnt, vor Playtest I-047 verfrüht      | parken: Playtest I-047                            |
-| 8    | I-089 | Unterhalt je Insel in Rangliste  | S      | 10    | nein / nein     | ferne Insel durchschauen, ≈ 60 Tools              | Beipack Sammelpaket UI-Aufräumen                  |
-| 9    | I-093 | Auftrag umtauschen               | S      | 10    | ja / nein       | Reroll gegen Geld, Wahl dünn                      | parken: Handels-Brainstorming                     |
-| 10   | I-098 | Rechtsklick staffelt wie Esc     | S      | 9     | nein / nein     | Designfrage REL-21 gelöst, ≈ 30 Tools             | einplanen Beipack UI-Aufräumen (Ruling Verhalten) |
-| 11   | I-099 | Kartenstapel oben rechts ordnen  | S      | 9     | nein / nein     | Befund 6 px gelöst, ≈ 50 Tools                    | Beipack Sammelpaket UI-Aufräumen                  |
-| 12   | I-097 | Pause sichtbar auf der Karte     | S      | 9     | nein / nein     | Orientierung, kein Playtest-Befund                | parken (Lückenfüller)                             |
+| 2    | I-100 | «Neu»-Zähler am Ereignis-Log     | S–M    | 11    | nein / nein     | verpasste Krisen bei 4× lesbar, ≈ 70 Tools        | einplanen Häppchen danach; ersetzt I-058          |
+| 3    | I-095 | Fernauftrag an einem Fremdkontor | M      | 11    | ja / nein       | Routen bekommen einen zweiten Zweck, ≈ 2 Pakete   | parken: Handels-Brainstorming (mit I-092)         |
+| 4    | I-094 | Darlehen beim Händler            | S–M    | 11    | ja / nein       | Vorziehen gegen Dauerlast, Entartung offen        | parken: Wirtschafts-Brainstorming                 |
+| 5    | I-091 | Treuebonus beim Stammkunden      | M      | 11    | ja / nein       | Bindung belohnt, vor Playtest I-047 verfrüht      | parken: Playtest I-047                            |
+| 6    | I-093 | Auftrag umtauschen               | S      | 10    | ja / nein       | Reroll gegen Geld, Wahl dünn                      | parken: Handels-Brainstorming                     |
+| 7    | I-097 | Pause sichtbar auf der Karte     | S      | 9     | nein / nein     | Orientierung, kein Playtest-Befund                | parken (Lückenfüller)                             |
 | —    | I-096 | Steuerstufe je Insel             | S–M    | 8     | ja / nein       | Stellschraube ohne neue Abwägung                  | verwerfen                                         |
 
 ## Ideen
@@ -110,18 +109,6 @@ I-081, I-082, I-084, I-086 (R566), dazu I-048 (R571 Verzicht, Mechanik inaktiv);
 - Bewertung lead-design (IDEEN-07): bestätigt (12). Stärkster Spielwert der Runde (Planung in der ersten Stunde), aber Regeländerung mit Baseline-Neumessung: Baustein für das nächste Meilenstein-Brainstorming, nicht Häppchen.
 - Nutzen/Aufwand: hoher Nutzen · M · ≈ 3 Pakete
 - Entscheid: R529: Baustein fürs nächste Meilenstein-Brainstorming (Stadtplanung, mit I-045 und I-051).
-
-### I-089 · bewertet · Unterhalt je Insel in der Rangliste
-
-- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout A; `docs/beobachtungen.md` 2026-10-13 «Heimat-Kontor fehlt in der Unterhalt-Rangliste»; `src/ui/upkeepRank.ts` (Zeilen tragen `island`, keine Summe je Insel) · Herkunft: vom Studio vorgeschlagen
-- Spielerwirkung: „Der Spieler sieht in der Unterhalt-Karte «Felsbucht · 3 Gebäude · 140 / min» und erkennt, was ihn eine ferne Insel kostet."
-- Grösse: S · Save nein · Baseline nein · Abhängigkeiten: I-062 (live); `src/ui/upkeepRank.ts`
-- Randfälle: Insel ohne Gebäude fehlt; Stillgelegte mit halbem Wert; Inselsummen und Fusszeile aus derselben Quelle (vgl. Beobachtung Fusszeile bei Pause); Heimat-Kontor mit 0 als Zeile klärt den Befund mit.
-- Doppelung: keine (I-062 je Betrieb, I-067 Verlauf, geparkt).
-- Raster (Scout): Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 10
-- Bewertung lead-design: Spass 2 → 1: Die Karte zeigt nur Kosten, nicht den Ertrag einer Insel; «kostet mehr, als sie bringt» bleibt ungesagt. Billig und räumt zwei Beobachtungen ab.
-- Nutzen/Aufwand: Lesbarkeit ab der zweiten Insel · S · ≈ 60 Tools
-- Entscheid: IDEEN-09 Empfehlung Beipack zum Sammelpaket UI-Aufräumen (mit Heimat-Kontor- und Fusszeilen-Befund)
 
 ### I-091 · bewertet · Treuebonus beim Stammkunden
 
@@ -206,28 +193,6 @@ I-081, I-082, I-084, I-086 (R566), dazu I-048 (R571 Verzicht, Mechanik inaktiv);
 - Bewertung lead-design: Genre-Standard, aber kein Playtest-Befund; Lückenfüller.
 - Nutzen/Aufwand: Orientierung · S · ≈ 40 Tools
 - Entscheid: IDEEN-09 Empfehlung parken (Lückenfüller)
-
-### I-098 · bewertet · Rechtsklick im Linienzug staffelt wie Esc
-
-- Bereich: Bedienung · Säule: Insel besiedeln · Quelle: IDEEN-09 Scout C; `docs/beobachtungen.md` 2026-10-13 (Release-Check REL-21: Esc und Rechtsklick wirken im Linienzug verschieden); `src/ui/input.ts` (Esc beendet im Zug nur den Zug, Rechtsklick zusätzlich das Werkzeug) · Herkunft: vom Studio vorgeschlagen
-- Spielerwirkung: „Der Spieler bricht einen angefangenen Wegzug mit Rechtsklick ab und hat das Weg-Werkzeug noch in der Hand; erst der zweite Rechtsklick legt es ab."
-- Grösse: S · Save nein · Baseline nein · Abhängigkeiten: `src/ui/input.ts`, README «Tastatur und Maus»
-- Randfälle: ohne laufenden Zug altes Verhalten; Abriss- und Weide-Zug gleich behandeln; Test für beide Wege.
-- Raster (Scout und lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 9
-- Bewertung lead-design: Beantwortet die offene Designfrage: Rechtsklick folgt Esc (erst den Zug, dann das Werkzeug), weil ein misslungener Zug meist sofort neu gezogen wird. README angleichen.
-- Nutzen/Aufwand: ein Bedienfehler und ein Doku-Widerspruch weniger · S · ≈ 30 Tools
-- Entscheid: IDEEN-09 Empfehlung einplanen als Beipack zum Sammelpaket UI-Aufräumen (Verhalten im Runden-Ruling festhalten)
-
-### I-099 · bewertet · Kartenstapel oben rechts ordnen
-
-- Bereich: Bedienung · Säule: Bedienung · Quelle: IDEEN-09 Scout C; `docs/beobachtungen.md` Kleinbefunde REL-21 (Vertragskarte 6 px neben der Krisenkarte, R589); `src/ui/crisis.ts` («Krisen: aus» als Dauerkarte) · Herkunft: vom Studio vorgeschlagen
-- Spielerwirkung: „Der Spieler sieht Auftrags-, Vertrags- und Krisenkarte in einer Spalte mit festem Abstand, und «Krisen: aus» belegt keinen Platz mehr."
-- Grösse: S · Save nein · Baseline nein · Abhängigkeiten: `src/style.css`, `src/ui/order.ts`, `src/ui/crisis.ts`
-- Randfälle: Krisenstufe bleibt im Menü lesbar; ab 1280 × 720 keine Verdeckung der Bauleiste.
-- Raster (Scout und lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 9
-- Bewertung lead-design: löst einen Release-Befund an der Wurzel (fester Stapel statt Pixelabstand).
-- Nutzen/Aufwand: mehr freie Karte · S · ≈ 50 Tools
-- Entscheid: IDEEN-09 Empfehlung Beipack zum Sammelpaket UI-Aufräumen
 
 ### I-100 · bewertet · «Neu»-Zähler am Ereignis-Log
 

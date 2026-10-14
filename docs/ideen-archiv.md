@@ -206,6 +206,46 @@ Ideen aus `docs/ideen.md` (Status `geparkt`, `live`, `verworfen`, `zusammengefas
 - Entscheid: IDEEN-09 Empfehlung Beipack zu I-088 Umgesetzt in UI-HAEPPCHEN-C (R607), Knopf «Zum Erzeuger».
 - Archiviert IDEEN-09: live, Statuspflege nach R599
 
+### I-089 · live · Unterhalt je Insel in der Rangliste
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout A; `docs/beobachtungen.md` 2026-10-13 «Heimat-Kontor fehlt in der Unterhalt-Rangliste»; `src/ui/upkeepRank.ts` (Zeilen tragen `island`, keine Summe je Insel) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht in der Unterhalt-Karte «Felsbucht · 3 Gebäude · 140 / min» und erkennt, was ihn eine ferne Insel kostet."
+- Grösse: S · Save nein · Baseline nein · Abhängigkeiten: I-062 (live); `src/ui/upkeepRank.ts`
+- Randfälle: Insel ohne Gebäude fehlt; Stillgelegte mit halbem Wert; Inselsummen und Fusszeile aus derselben Quelle (vgl. Beobachtung Fusszeile bei Pause); Heimat-Kontor mit 0 als Zeile klärt den Befund mit.
+- Doppelung: keine (I-062 je Betrieb, I-067 Verlauf, geparkt).
+- Raster (Scout): Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 10
+- Bewertung lead-design: Spass 2 → 1: Die Karte zeigt nur Kosten, nicht den Ertrag einer Insel; «kostet mehr, als sie bringt» bleibt ungesagt. Billig und räumt zwei Beobachtungen ab.
+- Nutzen/Aufwand: Lesbarkeit ab der zweiten Insel · S · ≈ 60 Tools
+- Entscheid: IDEEN-09 Empfehlung Beipack zum Sammelpaket UI-Aufräumen (mit Heimat-Kontor- und Fusszeilen-Befund)
+- Umgesetzt in UI-AUFRAEUM-3 (REL-22), Statuspflege nach R599
+- Archiviert IDEEN-09: live
+
+### I-098 · live · Rechtsklick im Linienzug staffelt wie Esc
+
+- Bereich: Bedienung · Säule: Insel besiedeln · Quelle: IDEEN-09 Scout C; `docs/beobachtungen.md` 2026-10-13 (Release-Check REL-21: Esc und Rechtsklick wirken im Linienzug verschieden); `src/ui/input.ts` (Esc beendet im Zug nur den Zug, Rechtsklick zusätzlich das Werkzeug) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler bricht einen angefangenen Wegzug mit Rechtsklick ab und hat das Weg-Werkzeug noch in der Hand; erst der zweite Rechtsklick legt es ab."
+- Grösse: S · Save nein · Baseline nein · Abhängigkeiten: `src/ui/input.ts`, README «Tastatur und Maus»
+- Randfälle: ohne laufenden Zug altes Verhalten; Abriss- und Weide-Zug gleich behandeln; Test für beide Wege.
+- Raster (Scout und lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 9
+- Bewertung lead-design: Beantwortet die offene Designfrage: Rechtsklick folgt Esc (erst den Zug, dann das Werkzeug), weil ein misslungener Zug meist sofort neu gezogen wird. README angleichen.
+- Nutzen/Aufwand: ein Bedienfehler und ein Doku-Widerspruch weniger · S · ≈ 30 Tools
+- Entscheid: IDEEN-09 Empfehlung einplanen als Beipack zum Sammelpaket UI-Aufräumen (Verhalten im Runden-Ruling festhalten)
+- Umgesetzt in UI-AUFRAEUM-3 (REL-22), Statuspflege nach R599
+- Archiviert IDEEN-09: live
+
+### I-099 · live · Kartenstapel oben rechts ordnen
+
+- Bereich: Bedienung · Säule: Bedienung · Quelle: IDEEN-09 Scout C; `docs/beobachtungen.md` Kleinbefunde REL-21 (Vertragskarte 6 px neben der Krisenkarte, R589); `src/ui/crisis.ts` («Krisen: aus» als Dauerkarte) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht Auftrags-, Vertrags- und Krisenkarte in einer Spalte mit festem Abstand, und «Krisen: aus» belegt keinen Platz mehr."
+- Grösse: S · Save nein · Baseline nein · Abhängigkeiten: `src/style.css`, `src/ui/order.ts`, `src/ui/crisis.ts`
+- Randfälle: Krisenstufe bleibt im Menü lesbar; ab 1280 × 720 keine Verdeckung der Bauleiste.
+- Raster (Scout und lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 9
+- Bewertung lead-design: löst einen Release-Befund an der Wurzel (fester Stapel statt Pixelabstand).
+- Nutzen/Aufwand: mehr freie Karte · S · ≈ 50 Tools
+- Entscheid: IDEEN-09 Empfehlung Beipack zum Sammelpaket UI-Aufräumen
+- Umgesetzt in UI-AUFRAEUM-3 (REL-22), Statuspflege nach R599
+- Archiviert IDEEN-09: live
+
 ## Ältere Ranglisten
 
 ### Rangliste IDEEN-06 (Ruling R474)
@@ -271,10 +311,13 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 
 ### Rangliste IDEEN-09, live gegangene Zeilen (R599)
 
-| Rang | ID    | Name                               | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                           | Empfehlung                                 |
-| ---- | ----- | ---------------------------------- | ------ | ----- | --------------- | ---------------------------------------- | ------------------------------------------ |
-| 2    | I-088 | Angebotskarte mit Marktvergleich   | S      | 12    | nein / nein     | Stammkunde wird entscheidbar, ≈ 60 Tools | einplanen nächstes UI-Häppchen (mit I-090) |
-| 7    | I-090 | Vertragskarte springt zum Erzeuger | S      | 10    | nein / nein     | Warnung wird Handlung, ≈ 50 Tools        | Beipack zu I-088                           |
+| Rang | ID    | Name                               | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                           | Empfehlung                                        |
+| ---- | ----- | ---------------------------------- | ------ | ----- | --------------- | ---------------------------------------- | ------------------------------------------------- |
+| 2    | I-088 | Angebotskarte mit Marktvergleich   | S      | 12    | nein / nein     | Stammkunde wird entscheidbar, ≈ 60 Tools | einplanen nächstes UI-Häppchen (mit I-090)        |
+| 7    | I-090 | Vertragskarte springt zum Erzeuger | S      | 10    | nein / nein     | Warnung wird Handlung, ≈ 50 Tools        | Beipack zu I-088                                  |
+| 8    | I-089 | Unterhalt je Insel in Rangliste    | S      | 10    | nein / nein     | ferne Insel durchschauen, ≈ 60 Tools     | Beipack Sammelpaket UI-Aufräumen                  |
+| 10   | I-098 | Rechtsklick staffelt wie Esc       | S      | 9     | nein / nein     | Designfrage REL-21 gelöst, ≈ 30 Tools    | einplanen Beipack UI-Aufräumen (Ruling Verhalten) |
+| 11   | I-099 | Kartenstapel oben rechts ordnen    | S      | 9     | nein / nein     | Befund 6 px gelöst, ≈ 50 Tools           | Beipack Sammelpaket UI-Aufräumen                  |
 
 ## Geparkte Ideen
 
