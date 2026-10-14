@@ -7292,3 +7292,17 @@ später erneut, höchstens 3 Versuche); ein qa-playtester-Lauf am Kandidaten (Zu
 Regelbezug: gates.md Release-Check, R335, R636 · Kosten bei Irrtum: ein erneuter Delta-Check, falls main bis zum Push wächst.
 
 Entscheider: L0 · Anlass: Merge-Bericht merge-rel22-a · ADR: —
+
+## R638 · 2026-10-14 · Plan Handel 2: Entwürfe P-A…P-E angenommen; Gate Plan startet
+
+Ruling: Plan `plan/handel-2` @ `f5d38fcf` (T01–T09, H2-SIM T01–T06, H2-UI T07–T08, T09 Version/Doku; Auflagen R633 vollständig).
+Entscheide: **P-A** ein Branch `feat/handel-2` (H2-UI hängt an H2-SIM; ein Merge); **P-B** Fehlertext `'Kein Auftrag'` als fünfte Prüfung;
+**P-C** Rückfaltung über Schlüssel statt Versionsnummer; **P-D** Knopf «Liefern · <Insel>»; **P-E** vorläufig v15 ab T03, T09 legt fest
+(wer zuerst nach main merged, bekommt die Version; Erweiterung 1 setzt später ihren Fold-Schritt davor). Gate Plan jetzt: lead-qa
+(Testbarkeit, Review-/Playtest-Abdeckung) und lead-production (Budget 26 Starts/P1 + 3 Controller-Instanzen, Ownership, Abhängigkeiten),
+je sonnet, je 1 Start. Umsetzung erst nach dem Push REL-22 (Folgesession), damit main bis dahin stabil bleibt. Befund
+`tests/render/terrain.test.ts` H-R12b (60-s-Timeout unter Last 16) → Beobachtung für das nächste Zeitreserve-Paket.
+
+Regelbezug: gates.md Gate Plan, R583, R633, R637 · Kosten bei Irrtum: ein Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-handel-2 · ADR: —
