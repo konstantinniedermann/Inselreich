@@ -61,3 +61,12 @@ Plan: [M14-E1 Inselcharakter](../superpowers/plans/2026-10-11-m14-e1-inselcharak
   (R3.5), baut den Inseldatensatz aber als **eingefrorenes Literal** der v12-Inselschlüssel (nie über `createWorld`).
   Weichen die neu berechneten A/B-Lagen von den gespeicherten ab, setzt die Stufe-3-Regel C gegen die gespeicherten
   Inseln (Tech-B3).
+
+## Nachtrag Handel 2 (2026-10-14): Fernangebot ohne Zufall
+
+Plan: [Handel 2](../superpowers/plans/2026-10-14-handel-2.md) · Spec: [Fernangebot](../superpowers/specs/2026-10-14-handel-2-fernangebot.md)
+
+- Das Fernangebot zieht **keinen** Zufall: Die Insel der Periode `k` ist `farEligible(world)[k mod n]` (Rotation in
+  Indexfolge), das Gut ist das erste Vorliebe-Gut mit `order.far`. Kein neuer Strom, keine neue Salz-Konstante.
+- `orderForPeriod` bleibt unverändert und zustandslos; der Zufallsauftrag der Periode ist mit und ohne Fernangebot derselbe
+  (Test `farOrder-offer.test.ts`, R13). Der Save trägt nur Ergebnisse (`farOffer`, `farSkip`, `order.island`), keinen RNG-Zustand.
