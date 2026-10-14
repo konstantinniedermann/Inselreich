@@ -22,7 +22,7 @@ statt ihn daheim zu verkaufen.
 ### A.3 Abgrenzung (vor der Option geprüft)
 
 - **I-029** (Zeitnachfrage) und **I-006** (Kaufseite) bleiben geparkt und werden nicht berührt.
-- **I-047 Stammkunde** liest weder `sell` noch `sellPct` (W.6 Punkt 5): keine Wechselwirkung.
+- **I-047 Stammkunde** liest `sell` nicht; die Angebotskarte (UI-HAEPPCHEN-C) liest `sellPct` über `sellPrice` und muss deshalb die Vertragsinsel übergeben, damit «Markt jetzt ≈ N» den Inselpreis inkl. Vorliebe zeigt (Korrektur R622, REL-21).
 - **I-095 Fernauftrag** ist geparkt (R606), nicht Teil.
 - **M14-E1 Traits** bleiben unverändert; die Trait-Regel (A.5) liest sie nur.
 - **Erweiterung 1** (Branch `design/erweiterung-1`, dort Spec §10: keine Änderung an bestehenden Preisen; neue Güter
