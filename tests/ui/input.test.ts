@@ -245,7 +245,7 @@ describe('REL-17 Abriss-Zug (AK-R17-12…16)', () => {
       hasPointerCapture: () => false,
     };
 
-    function setup(): {
+    function setup(tool: { kind: string } = { kind: 'road' }): {
       actions: InputAction[];
       at: (dx: number, dy: number) => { clientX: number; clientY: number };
       ptr: (type: string, init: Record<string, unknown>) => void;
@@ -272,7 +272,7 @@ describe('REL-17 Abriss-Zug (AK-R17-12…16)', () => {
           }
       const p = project(a.x + 0.5, a.y + 0.5);
       const cam: Camera = { x: p.x - 400, y: p.y - 300, zoom: 1 };
-      const state = { world: w, cam, tool: { kind: 'road' }, hover: null } as unknown as GameState;
+      const state = { world: w, cam, tool, hover: null } as unknown as GameState;
       const actions: InputAction[] = [];
       bindInput(fakeCanvas as unknown as HTMLCanvasElement, state, (act) => actions.push(act));
       const at = (dx: number, dy: number): { clientX: number; clientY: number } => {
@@ -381,6 +381,79 @@ describe('REL-17 Abriss-Zug (AK-R17-12…16)', () => {
       expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
       ptr('pointerup', { ...at(2, 0), shiftKey: true });
       expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
+    });
+
+    it('AK-UA3-01 Rechtsklick im Linienzug: nur der Zug endet, kein cancel (Werkzeug bleibt)', () => {
+      const { actions, at, ptr } = setup();
+      ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+      ptr('pointermove', { ...at(2, 0), shiftKey: true });
+      actions.length = 0;
+      ptr('pointerdown', { ...at(2, 0), button: 2, shiftKey: true });
+      expect(actions).toContainEqual({ type: 'roadLine', phase: 'cancel' });
+      expect(actions.some((x) => x.type === 'cancel')).toBe(false);
+    });
+
+    it('AK-UA3-02 zweiter Rechtsklick ohne Zug sendet cancel wie bisher', () => {
+      const { actions, at, ptr } = setup();
+      ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+      ptr('pointerdown', { ...at(0, 0), button: 2 });
+      actions.length = 0;
+      ptr('pointerdown', { ...at(0, 0), button: 2 });
+      expect(actions).toEqual([{ type: 'cancel' }]);
+    });
+
+    it('AK-UA3-03 Esc und erster Rechtsklick im Zug haben dieselbe Wirkung', () => {
+      const run = (how: 'esc' | 'right'): InputAction[] => {
+        const { actions, at, ptr, key } = setup();
+        ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+        ptr('pointermove', { ...at(2, 0), shiftKey: true });
+        actions.length = 0;
+        if (how === 'esc') key('keydown', { key: 'Escape' });
+        else ptr('pointerdown', { ...at(2, 0), button: 2 });
+        const out = [...actions];
+        listeners.clear();
+        canvasHandlers.clear();
+        return out;
+      };
+      expect(run('right')).toEqual(run('esc'));
+    });
+
+    it('I-098 Chrome: contextmenu im Linienzug beendet nur den Zug, danach baut pointerup nichts', () => {
+      const { actions, at, ptr } = setup();
+      ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+      ptr('pointermove', { ...at(2, 0), shiftKey: true });
+      actions.length = 0;
+      ptr('contextmenu', {});
+      expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
+      ptr('pointerup', { ...at(2, 0), shiftKey: true });
+      expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
+    });
+
+    it('I-098 contextmenu ohne Zug sendet nichts; nach pointerdown b2 im Zug kein Doppel-cancel', () => {
+      const { actions, at, ptr } = setup();
+      ptr('contextmenu', {});
+      expect(actions).toEqual([]);
+      ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+      actions.length = 0;
+      ptr('pointerdown', { ...at(0, 0), button: 2 });
+      ptr('contextmenu', {});
+      expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
+    });
+
+    it('Abriss-Strich (drag.demolish): Rechtsklick sendet weiter cancel (unverändert)', () => {
+      const { actions, at, ptr } = setup({ kind: 'demolish' });
+      ptr('pointerdown', { ...at(0, 0) });
+      actions.length = 0;
+      ptr('pointerdown', { ...at(0, 0), button: 2 });
+      expect(actions.some((x) => x.type === 'cancel')).toBe(true);
+    });
+
+    it('Weg-Strich (drag.road): Rechtsklick sendet weiter cancel (unverändert)', () => {
+      const { actions, at, ptr } = setup();
+      ptr('pointerdown', { ...at(0, 0) });
+      actions.length = 0;
+      ptr('pointerdown', { ...at(0, 0), button: 2 });
+      expect(actions.some((x) => x.type === 'cancel')).toBe(true);
     });
 
     it('AK-18 pointercancel im Zug: Abbruch ohne Bau', () => {

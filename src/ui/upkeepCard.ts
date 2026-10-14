@@ -58,6 +58,19 @@ export function renderUpkeepList(world: World, onJump: (id: number) => void): HT
   if (s.shown.length === 0 && s.ships === null) {
     scroll.appendChild(el('p', 'note', UPKEEP_EMPTY_TEXT));
   }
+  if (s.islands.length > 0) {
+    const isles = el('ul', 'upkeep-islands');
+    for (const i of s.islands) {
+      const name = islandName(world, i.island);
+      const li = el('li', 'upkeep-island', `${name} · ${i.count} Gebäude · ${pm(i.upkeep)} / min`);
+      li.setAttribute(
+        'aria-label',
+        `${name}, ${i.count} Gebäude, Unterhalt ${pm(i.upkeep)} pro Minute`,
+      );
+      isles.appendChild(li);
+    }
+    scroll.appendChild(isles);
+  }
   const list = el('ul', 'upkeep-rows');
   for (const r of s.shown) {
     const li = document.createElement('li');

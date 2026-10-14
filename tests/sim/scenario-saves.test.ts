@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
 import { GROWTH_INTERVAL, TICK_MS, UPGRADE_WAIT } from '../../src/sim/defs/timing';
@@ -45,9 +45,15 @@ import { foldBackToV12 } from './helpers';
 import { MONUMENT_AT } from './monumentHelpers';
 import { MONUMENT_STAGES } from '../../src/sim/defs/monument';
 
+/** Zeitreserve (R624): jedes Szenario einmal gebaut und serialisiert, ausserhalb der Testzeit; `load` liest nur noch. */
+const SAVED = new Map<string, string>();
+beforeAll(() => {
+  for (const name of Object.keys(SCENARIOS)) SAVED.set(name, serialize(SCENARIOS[name]!()));
+}, 30_000);
+
 /** Lädt ein Szenario so, wie der Browser es lädt: über Serialisierung und `deserialize`. */
 function load(name: string): World {
-  const r = deserialize(serialize(SCENARIOS[name]!()));
+  const r = deserialize(SAVED.get(name) ?? serialize(SCENARIOS[name]!()));
   if (!r.ok) throw new Error(`${name}: ${r.reason}`);
   return r.world;
 }
@@ -291,7 +297,7 @@ describe('Szenario-Saves', () => {
         .map((n) => `out/${n}.json`)
         .sort(),
     );
-  });
+  }, 15_000); // Zeitreserve (R624): baut und serialisiert alle Szenarien wie AK-S5-01; lokal ≈ 0,8 s, × 4 ≤ 50 % von 15 s
 });
 
 /** Geld, das ein Schritt bucht (M11 S10, Anhang 02 D): Überträge `c0`, `u0` vor dem Schritt, Raten nach dem Schritt. */

@@ -228,6 +228,46 @@ describe('I-088 Angebotskarte: Marktpreis und Erzeugung (AK-HC-01 bis 04)', () =
     expect(orderCardText(w)).toContain(` · Erzeugung ${pm} / min · Angebot noch 1:15`);
   });
 
+  it('R622 Stilllegen ohne Tick ändert die Erzeugung (pausiertes Spiel)', () => {
+    const w = offerWorld('wood');
+    addProducer(w, 'lumberjack', HOME);
+    const b = w.buildings[w.nextBuildingId - 1]!;
+    w.tick += 1;
+    const running = orderCardText(w);
+    expect(running).toContain('Erzeugung ');
+    b.paused = true;
+    expect(orderCardText(w)).toContain(' · keine Erzeugung · ');
+    delete b.paused;
+    expect(orderCardText(w)).toBe(running);
+  });
+
+  it('R622 Bau und Abriss ohne Tick ändern die Erzeugung', () => {
+    const w = offerWorld('wood');
+    w.tick += 1;
+    expect(orderCardText(w)).toContain(' · keine Erzeugung · ');
+    addProducer(w, 'lumberjack', HOME);
+    const id = w.nextBuildingId - 1;
+    expect(orderCardText(w)).toContain('Erzeugung ');
+    expect(orderCardText(w)).not.toContain('keine Erzeugung');
+    delete w.buildings[id];
+    expect(orderCardText(w)).toContain(' · keine Erzeugung · ');
+  });
+
+  it('R622 Tausch bei gleicher Zahl stillgelegter Betriebe ändert die Erzeugung', () => {
+    const w = offerWorld('wood');
+    addProducer(w, 'lumberjack', HOME);
+    const a = w.buildings[w.nextBuildingId - 1]!;
+    addProducer(w, 'lumberjack', 1);
+    const b = w.buildings[w.nextBuildingId - 1]!;
+    b.paused = true; // Betrieb auf der Lieferinsel läuft
+    w.tick += 1;
+    expect(orderCardText(w)).toContain('Erzeugung ');
+    expect(orderCardText(w)).not.toContain('keine Erzeugung');
+    delete b.paused;
+    a.paused = true; // Tausch: weiter genau ein Betrieb stillgelegt
+    expect(orderCardText(w)).toContain(' · keine Erzeugung · ');
+  });
+
   it('AK-HC-03 Erzeuger auf anderer Insel, stillgelegt oder unangebunden zählt nicht', () => {
     const w = offerWorld('wood');
     addProducer(w, 'lumberjack', 1);

@@ -4,6 +4,7 @@ import { EFF_WINDOW } from '../../src/sim/defs/timing';
 import { SHIP } from '../../src/sim/defs/sea';
 import { buildingUpkeep } from '../../src/sim/levels';
 import { tickEconomy, totalUpkeep } from '../../src/sim/economy';
+import { functionLock } from '../../src/sim/unlocks';
 import { createWorld } from '../../src/sim/world';
 import type { BuildingDefId, World } from '../../src/sim/types';
 import { placeTownhall, putBuilding, twoIslandWorld } from '../sim/helpers';
@@ -119,5 +120,85 @@ describe('Betriebsrangliste (I-062, AK-5 bis AK-7)', () => {
     expect(s.edict).toBeLessThan(0);
     expect(sumOf(s)).toBe(w.stats.upkeep);
     expect(s.total).toBe(totalUpkeep(w));
+  });
+
+  describe('Unterhalt je Insel (I-089, AK-UA3-06 bis 10)', () => {
+    const islSum = (s: ReturnType<typeof upkeepSummary>): number =>
+      s.islands.reduce((n, i) => n + i.upkeep, 0);
+
+    it('AK-UA3-06 je Insel Anzahl und Unterhalt, absteigend, dann Insel-ID; Heimatinsel voll dabei', () => {
+      const w = twoIslandWorld();
+      const a = put(w, 0, 'fisher');
+      const b = put(w, 0, 'weaver');
+      const c = put(w, 1, 'toolmaker');
+      const s = upkeepSummary(w);
+      expect(s.islands).toEqual([
+        { island: 1, count: 1, upkeep: buildingUpkeep(c) },
+        { island: 0, count: 2, upkeep: buildingUpkeep(a) + buildingUpkeep(b) },
+      ]);
+      const tie = twoIslandWorld();
+      put(tie, 1, 'fisher');
+      put(tie, 0, 'fisher');
+      expect(upkeepSummary(tie).islands.map((i) => i.island)).toEqual([0, 1]);
+    });
+
+    it('AK-UA3-07 Stillgelegte mit Restwert; Häuser, Kontor und leere Inseln zählen nicht', () => {
+      const w = twoIslandWorld();
+      put(w, 0, 'house');
+      const p = put(w, 1, 'toolmaker');
+      p.paused = true;
+      const f1 = put(w, 1, 'fisher');
+      const s = upkeepSummary(w);
+      // Insel 0 hat nur Kontor und Haus → eine Insel mit Betrieben → keine Inselzeilen
+      expect(s.islands).toEqual([]);
+      const f0 = put(w, 0, 'fisher');
+      const s2 = upkeepSummary(w);
+      expect(s2.islands.find((i) => i.island === 1)).toEqual({
+        island: 1,
+        count: 2,
+        upkeep: buildingUpkeep(p) + buildingUpkeep(f1),
+      });
+      expect(s2.islands.find((i) => i.island === 0)).toEqual({
+        island: 0,
+        count: 1,
+        upkeep: buildingUpkeep(f0),
+      });
+    });
+
+    it('AK-UA3-08 Inselzeilen + Schiffe + Edikt == Fusszeile (mit Schiffen und Sparedikt)', () => {
+      const w = twoIslandWorld();
+      placeTownhall(w);
+      put(w, 0, 'toolmaker');
+      put(w, 1, 'weaver');
+      ship(w);
+      const s = upkeepSummary(w);
+      expect(islSum(s) + (s.ships?.upkeep ?? 0) + s.edict).toBe(s.total);
+      w.edict = 'saving';
+      const e = upkeepSummary(w);
+      expect(e.edict).toBeLessThan(0);
+      expect(islSum(e) + (e.ships?.upkeep ?? 0) + e.edict).toBe(e.total);
+    });
+
+    it('AK-UA3-09 Pause: nach Bau ohne Tick stimmt die Fusszeile mit totalUpkeep', () => {
+      const w = twoIslandWorld();
+      put(w, 0, 'fisher');
+      tickEconomy(w);
+      put(w, 1, 'toolmaker');
+      expect(w.stats.upkeep).not.toBe(totalUpkeep(w));
+      const s = upkeepSummary(w);
+      expect(s.total).toBe(totalUpkeep(w));
+      expect(islSum(s) + s.edict).toBe(s.total);
+    });
+
+    it('AK-UA3-10 ohne Seefahrt oder mit nur einer Insel keine Inselzeilen', () => {
+      const w = twoIslandWorld();
+      put(w, 0, 'fisher');
+      expect(upkeepSummary(w).islands).toEqual([]);
+      const plain = createWorld(3);
+      expect(functionLock(plain, 'seafaring')).not.toBeNull();
+      put(plain, 0, 'fisher');
+      put(plain, 1, 'fisher');
+      expect(upkeepSummary(plain).islands).toEqual([]);
+    });
   });
 });

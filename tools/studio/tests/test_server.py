@@ -114,6 +114,32 @@ class ServerTest(unittest.TestCase):
             state = json.loads(self.get("/api/state?session=all")[2])
         self.assertIsNone(state["limits"])
 
+    def test_state_contains_releases_and_live(self):
+        (self.docs / "releases.json").write_text('{"releases": []}', "utf-8")
+        live = {"origin": "abc", "local": "def", "ahead": 2}
+        with mock.patch.object(server.releases, "live_state", return_value=live):
+            state = json.loads(self.get("/api/state?session=all")[2])
+        self.assertEqual(state["releases"]["releases"], [])
+        self.assertEqual(state["releases_error"], "")
+        self.assertEqual(state["live"], live)
+        self.assertEqual(state["releases"]["session_packages"], [])
+
+    def test_state_releases_null_when_file_missing_or_broken(self):
+        for text in (None, "{kaputt"):
+            with self.subTest(text=text):
+                path = self.docs / "releases.json"
+                if text is None:
+                    path.unlink(missing_ok=True)
+                else:
+                    path.write_text(text, "utf-8")
+                self.httpd.RequestHandlerClass.keywords["cache"]["entries"].clear()
+                status, _, body = self.get("/api/state?session=all")
+                state = json.loads(body)
+                self.assertEqual(status, 200)
+                self.assertIsNone(state["releases"])
+                self.assertTrue(state["releases_error"])
+                self.assertIn("live", state)
+
     def test_heartbeats_query_passes_through(self):
         with mock.patch.object(server, "build_state", wraps=server.build_state) as spy:
             self.assertEqual(self.get("/api/state?heartbeats=0")[0], 200)

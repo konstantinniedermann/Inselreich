@@ -1413,3 +1413,503 @@ time {
   flex: 1;
   min-width: 0;
 }
+
+/* --- Karte «Versionen und Releases» (releases.js); Klassen mit rv-, weil .bar/.row anderswo belegt sind.
+   Die Schranke (.rv-barrier) liegt im Balken: ein globales .bar mit overflow:hidden (Budget-Balken)
+   schnitt sie im Muster ab, darum dort der SVG-Umweg. */
+#releases {
+  --warn: var(--st-blocked);
+}
+
+.rv-live {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 16px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background: var(--subtle);
+  border-left: 5px solid var(--st-active);
+}
+
+.rv-live strong {
+  font-size: 1.1rem;
+}
+
+.rv-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.rv-ok::before,
+.rv-bad::before,
+.rv-unk::before {
+  content: '●';
+  margin-right: 4px;
+}
+
+.rv-ok::before {
+  color: var(--st-active);
+}
+
+.rv-bad::before {
+  color: var(--st-failed);
+}
+
+.rv-unk::before {
+  color: var(--st-idle);
+}
+
+.rv-chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 4px 0 10px;
+  font-size: 0.8rem;
+}
+
+.rv-chain b {
+  margin-right: 4px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rv-st {
+  padding: 2px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--subtle);
+}
+
+.rv-st.hard {
+  border-color: var(--warn);
+}
+
+.rv-ar {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+.rv-soft {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.rv-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.rv-tools label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+}
+
+.rv-lg {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+}
+
+.rv-dot::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--c);
+}
+
+.rv-sess {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rv-line {
+  display: inline-block;
+  width: 18px;
+  border-top: 2.2px solid var(--warn);
+}
+
+.rv-line.soft {
+  border-top-style: dashed;
+  border-top-color: var(--muted);
+}
+
+.d-done {
+  --c: var(--st-done);
+}
+
+.d-run {
+  --c: var(--st-delegated);
+}
+
+.d-wait {
+  --c: var(--st-waiting);
+}
+
+.d-back {
+  --c: var(--st-failed);
+}
+
+.d-user {
+  --c: var(--dep-extern);
+}
+
+.d-idea {
+  --c: var(--st-idle);
+}
+
+.rv-wrap {
+  position: relative;
+}
+
+.rv-row,
+.rv-stages {
+  display: grid;
+  grid-template-columns: 230px repeat(5, minmax(0, 1fr));
+  align-items: center;
+}
+
+.rv-stages {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin-right: 130px;
+  border-bottom: 2px solid var(--border);
+  background: var(--card);
+}
+
+.rv-stages div {
+  padding: 6px 8px;
+  border-left: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+
+.rv-stages div:first-child {
+  border: 0;
+}
+
+.rv-stages b {
+  display: block;
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.rv-stages small {
+  font-weight: 400;
+}
+
+.rv-groups {
+  position: relative;
+}
+
+.rv-grp {
+  position: relative;
+  margin: 10px 130px 0 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--lane);
+}
+
+.rv-grp::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 230px;
+  right: 0;
+  background-image: linear-gradient(to right, var(--border) 1px, transparent 1px);
+  background-size: 20% 100%;
+  pointer-events: none;
+}
+
+.rv-grp.live-g {
+  border: 2px solid var(--st-active);
+  background: var(--card);
+}
+
+.rv-grp.future {
+  border-style: dashed;
+}
+
+.rv-grp[hidden] {
+  display: none;
+}
+
+.rv-gh {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--subtle);
+}
+
+.rv-gh code {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.rv-gate {
+  padding: 1px 8px;
+  border: 1px solid var(--c, var(--border));
+  border-radius: 6px;
+  background: var(--card);
+  font-size: 0.78rem;
+}
+
+.rv-row {
+  position: relative;
+  min-height: 36px;
+  padding: 3px 0;
+}
+
+.rv-row + .rv-row {
+  border-top: 1px solid var(--border);
+}
+
+.rv-row.two {
+  grid-template-rows: 30px auto;
+  min-height: 64px;
+  padding-bottom: 4px;
+}
+
+.rv-row.two .rv-name {
+  grid-row: 1 / 3;
+  grid-column: 1;
+}
+
+.rv-row.two .rv-bar {
+  grid-row: 1;
+  align-self: center;
+}
+
+.rv-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 10px;
+  font-size: 0.85rem;
+}
+
+.rv-name small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.rv-s {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  color: var(--text);
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+}
+
+.rv-s.none {
+  visibility: hidden;
+}
+
+.rv-sess .rv-s {
+  display: inline-block;
+}
+
+.rv-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 22px;
+  margin: 0 4px;
+  border: 1px solid var(--c);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--c) 28%, var(--card));
+}
+
+.rv-bar.dashed {
+  border-style: dashed;
+}
+
+.rv-bar.ghost {
+  border: 1px dashed var(--muted);
+  background: transparent;
+}
+
+.rv-bar.ghost .rv-mk {
+  border: 2px dashed var(--muted);
+}
+
+.rv-lbl {
+  padding-right: 26px;
+  overflow: hidden;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rv-mk {
+  position: absolute;
+  top: 50%;
+  right: -2px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--c);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  transform: translateY(-50%);
+}
+
+.rv-barrier {
+  position: absolute;
+  top: 50%;
+  right: -9px;
+  z-index: 3;
+  width: 6px;
+  height: 36px;
+  margin-top: -18px;
+  border-radius: 3px;
+  background: var(--warn);
+}
+
+.rv-after {
+  padding-left: 14px;
+  overflow: hidden;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rv-chips {
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+.rv-c {
+  padding: 1px 8px;
+  border: 1px solid var(--c, var(--border));
+  border-radius: 10px;
+  background: var(--card);
+  font-size: 0.75rem;
+}
+
+.rv-c.wait {
+  --c: var(--warn);
+  font-weight: 600;
+}
+
+.rv-c.give {
+  --c: var(--st-done);
+}
+
+.rv-c.soft {
+  --c: var(--muted);
+  border-style: dashed;
+}
+
+#rv-dep {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+#rv-dep path.dep {
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  transition: opacity 0.15s;
+}
+
+#rv-dep path.hard {
+  stroke: var(--warn);
+}
+
+#rv-dep path.soft {
+  stroke: var(--muted);
+  stroke-dasharray: 6 5;
+}
+
+#rv-dep .rv-head {
+  stroke: none;
+}
+
+#rv-dep .rv-head.hard {
+  fill: var(--warn);
+}
+
+#rv-dep .rv-head.soft {
+  fill: var(--muted);
+}
+
+.rv-groups.hide-old .rv-row:not(.mine) {
+  display: none;
+}
+
+.rv-row.dep-row.on {
+  background: color-mix(in srgb, var(--warn) 9%, transparent);
+}
+
+#releases.focus .rv-row:not(.on),
+#releases.focus .rv-chain .rv-st:not(.on) {
+  opacity: 0.3;
+}
+
+#releases.focus #rv-dep .dep:not(.on) {
+  opacity: 0.12;
+}
+
+.rv-past {
+  margin-top: 10px;
+  padding: 7px 10px;
+  border: 1px dotted var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.rv-past summary {
+  color: var(--text);
+  cursor: pointer;
+}

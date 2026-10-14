@@ -7264,3 +7264,226 @@ zweimal im Hintergrund (ADR-007-Regel Vordergrund).
 Regelbezug: gates.md Gate Spec, R633, R634 · Kosten bei Irrtum: ein Nachtrag im Plan.
 
 Entscheider: L0 · Anlass: Bericht lead-design (Spec-Nachtrag) · ADR: —
+
+## R636 · 2026-10-14 · Gate Merge UI-AUFRAEUM-3: OK; gebündelter Merge mit TOOL-ZEITRESERVE-21 und I-100
+
+Ruling: `feat/ui-aufraeum-3` @ `7f2f282a`: 7 Tasks, Task-Reviews OK, Playtest OK (T01-Fix `fc670e11` über `contextmenu`), Final-Review opus
+OK, Diff auf `src/sim/defs`, `save.ts`, `types.ts`, `balance.test.ts` leer, `make zeitreserve-gate` grün; `make check` ohne Exit 0 nur wegen
+Last 10–22 (System-Prozesse) und `trees-farn` (wird durch `tool/zeitreserve-21` behoben) → **Gate Merge OK**. Bestätigt: Ownership-
+Erweiterung `src/ui/contractJump.ts` (Meldetext), Spec-Delta M6 «Krisen: aus» ohne Karte (R606 (3)). Merge durch den Integrator im
+Hauptcheckout seriell `--no-ff`: `tool/zeitreserve-21` @ `69698908`, `feat/ui-aufraeum-3` @ `7f2f282a`, `feat/i100` @ `b4541b7f`; Konflikt →
+`git merge --abort`, melden. Danach ein `make check` (Exit-Code; bei Testlock-/Lastabbruch melden, nicht warten) und `make docs-check`.
+Die beim Merge verworfenen Abhak-Einträge in `docs/beobachtungen.md` holt die nächste Auswertung nach; I-100-Status in `docs/ideen.md`
+pflegt die Ende-Routine.
+
+Regelbezug: gates.md Gate Merge, R617, R621, R626, R630, R631 · Kosten bei Irrtum: ein roter `make check` auf main → Fix vor REL-22.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ui-aufraeum-3 · ADR: —
+
+## R637 · 2026-10-14 · Release-Check REL-22 jetzt, Push in der Folgesession
+
+Ruling: main enthält nach R636 (`8e3e53c2`) UI-AUFRAEUM-3, I-100, TOOL-ZEITRESERVE-21, TOOL-BUENDEL-12, BEOB-14 (zwei Spiel-Häppchen).
+Der Push dieser Session war REL-21 (R335) — **REL-22 wird in der Folgesession gepusht**. Der Release-Check läuft jetzt, damit die
+Folgesession nur noch Gate und Push braucht: lead-qa (sonnet, Gate-Urteil), Budget 4 Starts/P2: Integrator `.worktrees/integrate`
+auf main (`git checkout --detach main`), `make check`, `make check-ci-perf`, `make zeitreserve-gate` (Testlock: bei Last abbrechen und
+später erneut, höchstens 3 Versuche); ein qa-playtester-Lauf am Kandidaten (Zusammenspiel UI-AUFRAEUM-3 + I-100: Kartenstapel mit
+«Neu»-Zähler, Rangliste, Rechtsklick im Linienzug); Opus-Review über `ca46eb73..<Kandidat>` (nur Spiel-Code und Tests). Kein Push.
+
+Regelbezug: gates.md Release-Check, R335, R636 · Kosten bei Irrtum: ein erneuter Delta-Check, falls main bis zum Push wächst.
+
+Entscheider: L0 · Anlass: Merge-Bericht merge-rel22-a · ADR: —
+
+## R638 · 2026-10-14 · Plan Handel 2: Entwürfe P-A…P-E angenommen; Gate Plan startet
+
+Ruling: Plan `plan/handel-2` @ `f5d38fcf` (T01–T09, H2-SIM T01–T06, H2-UI T07–T08, T09 Version/Doku; Auflagen R633 vollständig).
+Entscheide: **P-A** ein Branch `feat/handel-2` (H2-UI hängt an H2-SIM; ein Merge); **P-B** Fehlertext `'Kein Auftrag'` als fünfte Prüfung;
+**P-C** Rückfaltung über Schlüssel statt Versionsnummer; **P-D** Knopf «Liefern · <Insel>»; **P-E** vorläufig v15 ab T03, T09 legt fest
+(wer zuerst nach main merged, bekommt die Version; Erweiterung 1 setzt später ihren Fold-Schritt davor). Gate Plan jetzt: lead-qa
+(Testbarkeit, Review-/Playtest-Abdeckung) und lead-production (Budget 26 Starts/P1 + 3 Controller-Instanzen, Ownership, Abhängigkeiten),
+je sonnet, je 1 Start. Umsetzung erst nach dem Push REL-22 (Folgesession), damit main bis dahin stabil bleibt. Befund
+`tests/render/terrain.test.ts` H-R12b (60-s-Timeout unter Last 16) → Beobachtung für das nächste Zeitreserve-Paket.
+
+Regelbezug: gates.md Gate Plan, R583, R633, R637 · Kosten bei Irrtum: ein Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-handel-2 · ADR: —
+
+## R639 · 2026-10-14 · Gate Plan Handel 2: OK; Umsetzung nach Push REL-22
+
+Ruling: lead-qa OK (drei Review-Hinweise), lead-production OK (zwei Auflagen) zum Plan `plan/handel-2` @ `f5d38fcf` → **Plan freigegeben**.
+Budget **26 Starts / Parallelität 1** unter Phase `handel-2`, drei Controller-Instanzen (C1 T01–T03, C2 T04–T06, C3 T07–T09 + Final-Review)
+als Folgeinstanzen. Auflagen ins Controller-Briefing: (1) T03-Review listet jede Anpassung an Alt-Tests (`save-contract`, `buyPct`), nichts
+abgeschwächt; (2) AK-20 mit Grenzfällen (`due = P + 1500` lädt, ausserhalb `FAR_ORDER_DURATION` → «Beschädigter Spielstand»);
+(3) Final-Review mit Grep-Wächter: kein Versions-Literal in Tests; (4) `git merge main` vor T07; (5) vor dem Merge `git diff --stat
+main...design/erweiterung-1 -- src tests` prüfen, bei Code dort Hinweis an die Nutzer-Session; Worktree `erweiterung-1` nie anfassen.
+State.md führt `plan-handel-2` und `handel-2`. **Start der Umsetzung in der Folgesession nach dem Push REL-22.**
+
+Regelbezug: gates.md Gate Plan, R583, R633, R638 · Kosten bei Irrtum: ein Controller-Nachtrag.
+
+Entscheider: L0 · Anlass: Berichte lead-qa und lead-production gate-plan-handel-2 · ADR: —
+
+## R640 · 2026-10-14 · Freier Platz: Kurzdesign UI-HAEPPCHEN-D «Ereignis-Log vollständig»
+
+Ruling: Drei verwandte Befunde (R634 (3), R635 O-5): Ereignis-Log nur bei Krisen «an» sichtbar; verfallenes Stammkunden-Angebot ohne
+Meldung/Log; keine Auftragsereignisse im Log. Freier Platz nach R475 an `lead-design` (sonnet, Kurzdesign Stufe leicht), Budget
+2 Starts/P1, Worktree `.worktrees/design-ui-d`, Branch `design/ui-haeppchen-d`: Kurzdesign mit AK; Abgrenzung zu Handel 2 (dessen
+Fernauftrags-Log-Einträge, R635) und I-100 (Zähler). Umsetzung erst nach dem Merge von Handel 2 (gleiche Dateien `crisisLog.ts`,
+`eventLogView.ts`).
+
+Regelbezug: R475, R634, R635, E-061 · Kosten bei Irrtum: ein Kurzdesign, das nach Handel 2 nachgeschärft wird.
+
+Entscheider: L0 · Anlass: freie Kapazität nach R639 · ADR: —
+
+## R641 · 2026-10-14 · Kurzdesign UI-HAEPPCHEN-D angenommen
+
+Ruling: `design/ui-haeppchen-d` @ `ce2f3689` (9 AK, Selbstprüfung OK) → **angenommen**. Regel: ins Log kommt, was ohne Spielerhandlung
+eintritt; Meldung nur für Krisen, automatische Vertragslieferung/-bruch und angenommene Fernaufträge; Verfall unangenommener Angebote
+und Zufallsaufträge still (zählt nicht für I-100); Log-Box sichtbar bei Krisen «an» oder ≥ 1 Eintrag (`eventLogVisible`); `LOG_MAX` 10 → 20
+(UI-Konstante, kein Spielwert); kein `src/sim/`, kein Save. AK-H2-33 (Handel 2) bleibt im Handel-2-Strang gültig und wird von UI-HAEPPCHEN-D
+für den Verfall danach ersetzt — keine Änderung am laufenden Handel-2-Plan. Plan (lead-tech, Stufe leicht) und kombiniertes Gate erst
+nach dem Merge von Handel 2.
+
+Regelbezug: R634, R635, R640, E-061 · Kosten bei Irrtum: ein UI-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-ui-haeppchen-d · ADR: —
+
+## R642 · 2026-10-14 · Release-Check REL-22: ZURÜCK → REL22-FIX (Zeitreserve + Kontrast)
+
+Ruling: Kandidat `1b6af811`: `make check` Exit 0 (3935), `check-ci-perf` Exit 0, Playtest OK (Screenshots `.studio/qa/REL-22/`), Opus-Review
+BEDENKEN (niedrig); `make zeitreserve-gate` **Substanz** bei ruhiger Nachmessung: `tests/tools/zeitreserve.test.ts` Z. 170 und Z. 417
+(≈ 2,08 s × 4 > 50 % von 5000 ms). Kein Lastartefakt (R585). Kontrast `.btn--unread` 2,42:1 (`src/style.css:1392`). Entscheid **ZURÜCK**
+und Paket **REL22-FIX** (lead-tech Controller, sonnet, Budget 4 Starts/P1, Branch `fix/rel22` ab main): (1) die zwei Zeitreserve-Tests
+beschleunigen oder begründeter Timeout nach E-043; (2) `.btn--unread` Kontrast ≥ 4,5:1 (Text) bzw. Hervorhebung über Rand/Hintergrund,
+Screenshot vorher/nachher; (3) Trivial-Fix `tests/ui/upkeepRank.test.ts:160` (`+ 5` → `buildingUpkeep`); (4) Beobachtungen aus dem
+Release-Check in `docs/beobachtungen.md` eintragen (Cache-Schlüssel `order.ts:57-65`, `merge:`-Präfix, Log-Position unten links,
+Log erst ab Tick 2400 — teils durch UI-HAEPPCHEN-D abgedeckt, Zeilenumbruch Boom+Vorliebe). Task-Review, `make zeitreserve-gate`
+Exit 0 im eigenen Worktree. Danach Gate Merge, Delta-Check und Push REL-22 in der Folgesession (R335).
+
+Regelbezug: gates.md Release-Check, R585, R598, R631, R637 · Kosten bei Irrtum: ein weiterer Delta-Check.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-rel-22 · ADR: —
+
+## R643 · 2026-10-14 · Nutzerauftrag: Dashboard-Karte «Versionen und Releases» — zuerst Muster
+
+Ruling: Nutzerauftrag 2026-10-14: neue Dashboard-Karte zuoberst im Studio-Dashboard: Live-Stand, kurze Vergangenheit (zusammengefasst),
+vor allem aktueller Entwicklungsstand: welche Stränge laufen in dieser Session, was kommt mit welchem Release, was ist geplant, welche
+künftigen Pakete/Themen. **Zuerst ein Muster zur Freigabe durch den Nutzer**, kein Einbau vorher. Auftrag an lead-tech (sonnet,
+Werkzeug), Budget 2 Starts/P1: statisches HTML-Muster im Stil von `tools/studio/dashboard/style.css` mit echten Daten (state.md,
+rulings R616–R642, docs/ideen.md Rangliste) unter `.studio/mockups/versionen/`, plus Screenshot bei 1440 px; dazu ein Vorschlag zur
+Datenquelle für den späteren Einbau (bevorzugt aus vorhandenen Dateien abgeleitet, keine Doppelpflege).
+
+Regelbezug: Nutzerauftrag, R475 · Kosten bei Irrtum: ein verworfenes Muster.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R644 · 2026-10-14 · Gate Merge REL22-FIX: OK; Merge jetzt, Delta-Check und Push REL-22 in der Folgesession
+
+Ruling: `fix/rel22` @ `a8416ca9`: Zeitreserve-Tests mit 20-s-Timeout für die drei Spawn-Blöcke (`describeSpawn`, Kommentar nach E-043;
+Ursache: sporadische `spawnSync`-Startstocker ≈ 2 s, Testzeit sonst 74 ms), `.btn--unread` 7,16:1 (vorher 2,42:1), `upkeepRank` aus
+`buildingUpkeep` abgeleitet, 6 Beobachtungen; tsc/lint/zeittests/conflicts/docs-check Exit 0, `make test` 3935 grün, `make zeitreserve-gate`
+**Exit 0** (Last 1,9/2,4), Task-Review OK → **Gate Merge OK**. Merge durch den Integrator im Hauptcheckout `--no-ff`, danach `make docs-check`.
+Folgesession: Delta-Check REL-22 (`make check`, `check-ci-perf`, `zeitreserve-gate`, Browser-Punkt Kontrast im Spiel) und Push. Offen als
+Beobachtung: Spawn-Latenz unter Last (Messauftrag bei erneutem Auftreten).
+
+Regelbezug: gates.md Gate Merge, R585, R598, R642, E-043 · Kosten bei Irrtum: ein Timeout verdeckt einen echten Hänger bis 20 s.
+
+Entscheider: L0 · Anlass: Bericht lead-tech rel22-fix · ADR: —
+
+## R645 · 2026-10-14 · Nutzerfreigabe Muster v3: Einbau TOOL-DASH-VERSIONEN; Session-Ende vorbereiten
+
+Ruling: Nutzer 2026-10-14: «passt so. umsetzen.» Muster `.studio/mockups/versionen/v3.html` ist die Vorlage. Paket **TOOL-DASH-VERSIONEN**
+(lead-tech Controller, sonnet, Werkzeug-Paket, Budget 4 Starts/P1, Branch `tool/dash-versionen`): Karte «Versionen und Releases» als
+erste Karte im Studio-Dashboard; Zeitstrahl mit 5 Stufen, Gruppen je Release, Schranken/Pfeile/Chips für Abhängigkeiten, Kettenzeile
+«Kritischer Pfad», Hover-Kette, S-Kennzeichen für Pakete der laufenden Session, Filter «nur heute» (Standard: alles), «Früher»
+eingeklappt. Datenquelle `docs/studio/releases.json` (Zuordnung Paket → Release, Stufe, Status, Abhängigkeiten, Pool), gepflegt von
+lead-production mit state.md; Hash/CI/Pages aus git bzw. `ci.py`; Session-Kennzeichen aus den Events. Abnahme: `make studio-test` grün,
+Echtlauf gegen den laufenden Dashboard-Server mit Screenshot, Task-Review. Parallel: Session-Ende (Metriken, Kurz-Retro, state.md).
+
+Regelbezug: Nutzerauftrag, R643 · Kosten bei Irrtum: eine Dashboard-Karte, die nachgebessert wird.
+
+Entscheider: L0 · Anlass: Nutzerfreigabe · ADR: —
+
+## R646 · 2026-10-14 · Kurz-Retro b54ed3bd: E-062 zurückgenommen, E-066 startet, E-063 angepasst; Ad-hoc-Signal abgedeckt
+
+Ruling: Retro `retros/2026-10-14-session-b54ed3bd-ende.md` (`2e45a88b`). Entscheide: (1) **E-062 zurückgenommen** (nie angewendet, keine
+Briefing-Zeile; Messwerte nicht zuschreibbar). (2) **V1 angenommen: E-066 startet** (Folgeinstanz statt Fortsetzung bei lead-tech;
+Pflicht-Hebel Cache-Write/Steuerung) — studio-coach setzt die Zeile in `lead-tech.md` und experimente.md um. (3) **V2 angenommen:** E-063
+Messgrösse «Integrator-Briefings mit Hauptcheckout ohne Ruling-Nummer, Soll 0». (4) **V3 angenommen:** Messauftrag Cache-Write-Wachstum
+nach Rolle, Frist nächste Session-Retro. (5) Ad-hoc-Retro-Signal (Cache-Write rot und Flake rot in zwei Sessions): Cache-Write ist mit V1/V3
+belegt adressiert; Flake ist ein Zählartefakt der Historienliste (0 seit 2026-10-14, Beobachtung eingetragen) — **keine eigene Ad-hoc-Retro
+jetzt**; ist eine der beiden Ampeln in der nächsten Session wieder rot, folgt sie dort. (6) Messauftrag (a)(b)(c) aus der Retro (Briefing-
+Verbote Warte-Agenten, Hintergrund-Arbeiter, Lastgrenze): Guard erst bei dreifacher Verletzung einer Klasse in einer Session.
+
+Regelbezug: R316, R429, R615 · Kosten bei Irrtum: eine Session mit falschem Experiment-Platz.
+
+Entscheider: L0 · Anlass: Bericht studio-coach retro-session-b54ed3bd, Hook-Hinweis Ad-hoc-Retro · ADR: —
+
+## R647 · 2026-10-14 · Gate Merge TOOL-DASH-VERSIONEN: OK; Guard gegen Warte-Agenten fällig
+
+Ruling: `tool/dash-versionen` @ `45046433`: Karte «Versionen und Releases» als erste Karte im Live-Tab (Muster v3), `docs/studio/releases.json`
+(Schema im Handoff), `/api/state` liefert `releases`, `releases_error`, `live`; `make studio-test` 869 grün, `studio-lint`/`docs-check` Exit 0,
+Task-Review OK, Echtlauf Port 8791 mit Screenshots (`.studio/qa/tool-dash-versionen/`); Schranken-Ursache geklärt (`.bar { overflow: hidden }`,
+Präfix `rv-`). Lücke: kein Rot-Beleg für `test_releases.py` (Implementierung vor Test) — hingenommen für ein Werkzeug-Paket, Befund an die Retro.
+→ **Gate Merge OK**. lead-production merged `--no-ff` im Hauptcheckout, setzt TOOL-DASH-VERSIONEN in `releases.json` auf `done`, ergänzt die
+Pflegeregel in state.md (Fortsetzung 3) und prüft `make studio-test`, `make docs-check`. Die Pflegeregel geht als Handbuch-Vorschlag an den
+Coach in der Folgesession. (2) Dritter unnötiger Warte-Agent dieser Session (tool-buendel-12, tool-hotfix-zr, tool-dash-versionen) → nach
+R646 (6) **TOOL-GUARD-WARTEAGENT** in der Folgesession: Hook verweigert Agent-Starts ohne Auftrag (z. B. reines Warten/`ok`) bzw. `sleep`
+im Hintergrund durch Leads; Entwurf und Test durch lead-tech.
+
+Regelbezug: gates.md Gate Merge, R645, R646 · Kosten bei Irrtum: eine Karte mit kleinen Hover-Mängeln; ein Guard mit Fehlblocks (Rückfall warn).
+
+Entscheider: L0 · Anlass: Bericht lead-tech tool-dash-versionen · ADR: —
+
+## R648 · 2026-10-14 · Nutzerauftrag «mach weiter, zeig im Dashboard, was läuft und wo das Session-Ziel je Task liegt»; Session-Plan
+
+Ruling: Auslegung „zeig mir im Dashboard, was du gerade umsetzt und wo das geplante Ziel der heutigen Session bzgl. der einzelnen Tasks ist“
+als (a) **sofort**: `releases.json` bildet den heutigen Plan ab (jedes Paket der Session mit aktueller Stufe und Ziel-Text «Ziel heute: …»
+in `note`), gepflegt durch lead-production; (b) **Paket TOOL-DASH-SESSIONZIEL**: die Karte «Versionen und Releases» zeigt je Paket ein
+Feld `goalStage` als gestrichelte Zielmarke hinter dem Balken (Abstand Ist → Ziel sichtbar) und oben eine Zeile «Jetzt in Arbeit» aus
+den aktiven Agenten/Paketen (`session_packages` + Status `active`). Plan sofort (ohne Testläufe, R464), Umsetzung erst nach `make push-check`
+Exit 0 für REL-22. Session-Plan: (1) Delta-Check + Push REL-22, (2) Handel 2 (REL-23) nach dem Push, (3) TOOL-DASH-SESSIONZIEL,
+(4) TOOL-GUARD-WARTEAGENT (R647 (2)), (5) freie Plätze → Ideen-Runde nach dem Push (R445/R475). N-100 erledigt (REL-20 live seit R594/R595).
+Zweck der Anweisung: Der Nutzer will den Fortschritt der Session gegen ein Ziel verfolgen. Die Auslegung widerspricht dem nicht, weil
+die Daten sofort sichtbar sind und die Zielmarke den Abstand Ist → Ziel grafisch zeigt, ohne die Push-Regel R464 zu brechen.
+
+Regelbezug: Verfassung §5, STUDIO.md Autonomie, R464, R645, R647 · Kosten bei Irrtum: eine Darstellung, die der Nutzer anders wollte (eine Karte nachbessern).
+
+Entscheider: L0 · Anlass: Nutzerprompt Session-Start · ADR: —
+
+## R649 · 2026-10-14 · Gate Plan TOOL-DASH-SESSIONZIEL und TOOL-GUARD-WARTEAGENT: OK mit Auflagen; Start nach push-check REL-22
+
+Ruling: (1) **TOOL-DASH-SESSIONZIEL** Plan `tool/dash-sessionziel` @ `dd928fb4` (T01–T04, Logik in Python testbar, JS zeichnet) → OK,
+Budget 6 Starts, Parallelität 1. Auflage: S-Kennzeichen und «Jetzt in Arbeit» zählen zusätzlich Pakete, die in der laufenden Session per
+`log.py package` mit Status active/review/blocked angemeldet sind (Lücke aus dem Bericht lead-production, `session_packages` nur aus dem
+Agent-Baum). Rot-Beleg je Task im Bericht. (2) **TOOL-GUARD-WARTEAGENT** Plan `tool/guard-warteagent` @ `0ac5d308` (`waitguard.py`, Modus
+deny, Rückfall warn, nur `agent_type` lead-*) → OK, Budget 3 Starts. Auflage: zuerst die PreToolUse-Payload im Lead-Kontext belegen
+(`agent_type` vorhanden?); fehlt sie, Bericht an L0 vor der Umsetzung. Der neue Eintrag in `.claude/settings.json` ist freigegeben; blockt
+der Guard die Datei, setzt L0 ihn. (3) Umsetzung beider Pakete erst nach `make push-check` Exit 0 für REL-22 (R464).
+
+Regelbezug: gates.md Gate Plan, R464, R647, R648 · Kosten bei Irrtum: ein Guard mit Fehlblocks (Rückfall warn), eine Karte mit Zusatzzeile.
+
+Entscheider: L0 · Anlass: Berichte lead-tech Phase A · ADR: —
+
+## R650 · 2026-10-14 · Delta-Check REL-22 ZURÜCK (Lint); Push-Blocker-Fix TOOL-LINT-DASH
+
+Ruling: `make push-check` @ `c7da39d7` Exit 1: ESLint `no-undef` für `CSS` und `ResizeObserver` in `tools/studio/dashboard/releases.js`
+(aus TOOL-DASH-VERSIONEN, R647; das Gate prüfte `studio-lint`, nicht `make lint`). Kontrast `.btn--unread` 7,16:1 → OK. Nach R514 V1 läuft
+der benannte Push-Blocker-Fix vor dem Push: Paket **TOOL-LINT-DASH**, Fix in `eslint.config.js` (Browser-Globals `CSS`, `ResizeObserver` im
+Dashboard-Block), Test: `make lint` Exit 0 und `make studio-test` gezielt; danach neuer Delta-Lauf (`make push-check`, `make zeitreserve-gate`)
+durch eine neue lead-qa-Instanz. Befund an die Retro: Gate Merge für Dashboard-JS muss `make lint` enthalten.
+
+Regelbezug: R464, R514 V1, R647 · Kosten bei Irrtum: ein weiterer Delta-Lauf (≈ 10 min).
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL22-PUSH · ADR: —
+
+## R651 · 2026-10-14 · Push REL-22 «Aufgeräumt und nichts verpasst»; Freigabe Umsetzung Handel 2 und Werkzeug-Pakete
+
+Ruling: Delta-Check 2. Lauf OK (`make push-check` EXIT=0 und `make zeitreserve-gate` EXIT=0 @ `fb1e5e46`, Handoff
+`.studio/handoffs/2026-10-14-lead-qa-REL22-PUSH.md`) → Gate Push OK, gepusht `ca46eb73..fb1e5e46` per geprüftem Hash, Pages per
+`gh workflow run Pages --ref main`. Damit entfällt die Sperre aus R464: (1) TOOL-DASH-SESSIONZIEL Phase B (R649) startet, Zusatzauflage:
+`server.py` liefert die Dashboard-Dateien mit `Cache-Control: no-store` (Nutzer sah die Karte nicht, weil der Browser ein altes `app.js`
+aus dem Cache nutzte); (2) TOOL-GUARD-WARTEAGENT Phase B (R649); (3) HANDEL-2 Umsetzung nach Plan `f5d38fcf`, Auflagen R639, Budget 26
+Starts, E-066. Pflege `releases.json` (REL-22 live) durch lead-production.
+
+Regelbezug: STUDIO.md Push-Abschnitt, R335, R464, R639, R649 · Kosten bei Irrtum: ein Release mit Lastrauschen in zwei Render-Tests (Reserve in der Nachmessung grün).
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL22-PUSH, Nutzerfrage Dashboard · ADR: —

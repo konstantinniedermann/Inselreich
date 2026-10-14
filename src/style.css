@@ -891,6 +891,23 @@ button.chip {
   display: none;
 }
 
+/* Vorliebe-Marke: Rand und Schrift wie Boom, Füllung Pergament */
+.badge--prefer {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--parchment);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge--prefer[hidden] {
+  display: none;
+}
+
 /* Ereignis-Log: schwebende Pergament-Box unten links über der Spielfläche (R112) */
 .notice-stack {
   position: absolute;
@@ -899,12 +916,20 @@ button.chip {
   width: 300px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  --stack-gap: 8px;
+  gap: var(--stack-gap);
   z-index: 9;
   pointer-events: none;
 }
 .notice-stack > * {
   pointer-events: auto;
+  box-sizing: border-box;
+  width: 100%;
+}
+.notice-stack .card--crisis {
+  padding: 6px 8px;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 .notice-stack .order-card {
   display: flex;
@@ -1318,6 +1343,16 @@ button.hud-balance:focus-visible {
   min-height: 0;
   overflow-y: auto;
 }
+.upkeep-islands {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+}
+.upkeep-island {
+  padding: 4px 8px;
+  font-weight: 600;
+  border-bottom: 2px solid var(--gold);
+}
 .upkeep-rows {
   list-style: none;
   margin: 0;
@@ -1352,4 +1387,13 @@ button.hud-balance:focus-visible {
   padding: 4px 8px;
   font-weight: 600;
   border-top: 2px solid var(--gold);
+}
+
+/* Neu-Zähler: Hervorhebung über Hintergrund und Rand, Schrift bleibt Pergament
+   (Pergament auf #6b3d0f = 7,2:1; die frühere Amberschrift auf Holz lag bei 2,4:1). */
+.btn--unread,
+.btn--unread:hover {
+  background: #6b3d0f;
+  border-color: var(--warn-parchment);
+  font-weight: 600;
 }
