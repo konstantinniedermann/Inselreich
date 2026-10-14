@@ -150,10 +150,18 @@ describe('zeitreserve Lastabhängigkeit', () => {
   });
 });
 
+// Jeder Test hier startet einen eigenen Node-Prozess (spawnSync, ~75 ms). Unter Last oder bei kaltem
+// Start stockt ein einzelner Start gelegentlich ~2,1 s (nicht reproduzierbar: in R642 zwei Tests, in
+// zwei früheren Messungen je ein anderer). Das ist ein Umgebungsartefakt, kein Testinhalt: begründetes
+// Timeout nach E-043 (Faktor 4 und Runner-Faktor 3 bleiben auch bei 2,2 s eingehalten).
+const SPAWN_TIMEOUT_MS = 20_000;
+const describeSpawn = (name: string, fn: () => void) =>
+  describe(name, { timeout: SPAWN_TIMEOUT_MS }, fn);
+
 const nodeEnv = (globalThis as unknown as { process: { env: Record<string, string | undefined> } })
   .process.env;
 
-describe('zeitreserve CLI bei Last (Push-Gate, R338)', () => {
+describeSpawn('zeitreserve CLI bei Last (Push-Gate, R338)', () => {
   const check = new URL('../../tools/zeitreserve/check.ts', import.meta.url).pathname;
   const fixture = new URL('./zeitreserve-fixture.json', import.meta.url).pathname;
   const run = (load: string, ...flags: string[]) =>
@@ -230,7 +238,7 @@ describe('zeitreserve Messung mit Metadaten (R353 P1)', () => {
   });
 });
 
-describe('zeitreserve CLI --push mit Metadaten (R353 P1)', () => {
+describeSpawn('zeitreserve CLI --push mit Metadaten (R353 P1)', () => {
   const check = new URL('../../tools/zeitreserve/check.ts', import.meta.url).pathname;
   const dir = mkdtempSync(join(tmpdir(), 'zr-'));
   const ok = [{ file: 'a', name: 'x', durationMs: 10, timeoutMs: 5000 }];
@@ -347,7 +355,7 @@ describe('zeitreserve CLI --push mit Metadaten (R353 P1)', () => {
   });
 });
 
-describe('zeitreserve markierte Dateien und Nachmessung (R488 V1, AK-TB6-02..04)', () => {
+describeSpawn('zeitreserve markierte Dateien und Nachmessung (R488 V1, AK-TB6-02..04)', () => {
   const dir = mkdtempSync(join(tmpdir(), 'zr-retry-'));
   const check = new URL('../../tools/zeitreserve/check.ts', import.meta.url).pathname;
   const f = (file: string, durationMs: number, name = 'x'): TestTiming => ({

@@ -147,18 +147,22 @@ describe('Betriebsrangliste (I-062, AK-5 bis AK-7)', () => {
       put(w, 0, 'house');
       const p = put(w, 1, 'toolmaker');
       p.paused = true;
-      put(w, 1, 'fisher');
+      const f1 = put(w, 1, 'fisher');
       const s = upkeepSummary(w);
       // Insel 0 hat nur Kontor und Haus → eine Insel mit Betrieben → keine Inselzeilen
       expect(s.islands).toEqual([]);
-      put(w, 0, 'fisher');
+      const f0 = put(w, 0, 'fisher');
       const s2 = upkeepSummary(w);
       expect(s2.islands.find((i) => i.island === 1)).toEqual({
         island: 1,
         count: 2,
-        upkeep: buildingUpkeep(p) + 5,
+        upkeep: buildingUpkeep(p) + buildingUpkeep(f1),
       });
-      expect(s2.islands.find((i) => i.island === 0)).toEqual({ island: 0, count: 1, upkeep: 5 });
+      expect(s2.islands.find((i) => i.island === 0)).toEqual({
+        island: 0,
+        count: 1,
+        upkeep: buildingUpkeep(f0),
+      });
     });
 
     it('AK-UA3-08 Inselzeilen + Schiffe + Edikt == Fusszeile (mit Schiffen und Sparedikt)', () => {
