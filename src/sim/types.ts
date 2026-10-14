@@ -330,7 +330,7 @@ export interface World {
   contractOffer: ContractOffer | null;
   /** Offenes Fernangebot (Handel 2); `null` = keins. */
   farOffer: FarOffer | null;
-  /** Periode, in der kein Fernangebot mehr kommt (Sperre); `null` = keine. */
+  /** Periode, deren Zufallsauftrag und Fernangebot entfallen (Sperre nach angenommenem Fernauftrag, R7); `null` = keine. */
   farSkip: number | null;
 }
 

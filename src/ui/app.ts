@@ -675,6 +675,7 @@ function launch(
         if (o && o.island !== undefined) {
           const e = farDeliveredEntry(o, world.tick);
           state.eventLog = pushLog(state.eventLog, [e]);
+          state.logUnread = nextUnread(state.logUnread, [e], isEventLogExpanded(logBox));
           showMessage(e.text);
         } else if (o) showMessage(deliveredMessage(o));
         if (ev) {

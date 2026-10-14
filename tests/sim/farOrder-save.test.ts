@@ -79,6 +79,8 @@ describe('AK-H2-20 Fernauftrag: due', () => {
   it('Grenzfälle', () => {
     ok(farOrderRaw());
     ok(farOrderRaw(P(0) + 1500));
+    ok(farOrderRaw(P(0) + 601));
+    ok(farOrderRaw(P(0) + 1799));
     bad(farOrderRaw(P(0) + 600));
     bad(farOrderRaw(P(0) + 1800));
   });

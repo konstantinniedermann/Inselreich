@@ -204,3 +204,15 @@ describe('AK-H2-33 Log', () => {
     expect(farLogEntries(farSnap(y), y)).toEqual([]);
   });
 });
+
+describe('Log-Zähler bei Fernlieferung (T-16, Anhang 02 T.2)', () => {
+  it('farDeliveredEntry zählt als «neu» (nextUnread), zugeklappt +1, aufgeklappt unverändert', async () => {
+    const { nextUnread } = await import('../../src/ui/crisisLog');
+    const e = farDeliveredEntry(
+      { period: 0, good: 'rum', amount: 15, reward: 450, due: 1700, island: 1 },
+      100,
+    );
+    expect(nextUnread(0, [e], false)).toBe(1);
+    expect(nextUnread(3, [e], true)).toBe(3);
+  });
+});
