@@ -7,7 +7,7 @@ import {
   ORDER_PREMIUM,
 } from './defs/goods';
 import { ISLANDS } from './defs/sea';
-import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from './defs/timing';
+import { FAR_ORDER_DURATION, ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from './defs/timing';
 import { islandName } from './islands';
 import { islandAt } from './placement';
 import { createRng } from './rng';
@@ -154,12 +154,42 @@ export function tickOrders(world: World): ContractEvent | null {
   return ev;
 }
 
-/** Liefert den aktiven Auftrag aus dem Lager der Insel ab (auch bei negativem Geld, es ist eine Einnahme); keine Teillieferung. */
+/**
+ * Nimmt das Fernangebot an (R5): ersetzt den Zufallsauftrag der Periode durch den Fernauftrag mit langer Frist und
+ * sperrt die Folgeperiode. Prüfreihenfolge Sperre, Angebot, Vertrag, Kontor, Auftrag (Guard, Plan T4); kostet nichts.
+ */
+export function acceptFarOrder(world: World): Result {
+  const lock = functionLock(world, 'orders');
+  if (lock !== null) return fail(lock);
+  const offer = world.farOffer;
+  if (offer === null) return fail('Kein Fernangebot');
+  if (world.contract !== null) return fail('Vertrag läuft');
+  const noKontor = noKontorTrade(world, offer.island);
+  if (noKontor !== null) return fail(noKontor);
+  const o = world.order;
+  if (o === null) return fail('Kein Auftrag');
+  world.order = {
+    period: o.period,
+    good: offer.good,
+    amount: offer.amount,
+    reward: offer.reward,
+    due: ORDER_FIRST_TICK + o.period * ORDER_PERIOD + FAR_ORDER_DURATION,
+    island: offer.island,
+  };
+  world.farOffer = null;
+  world.farSkip = o.period + 1;
+  return ok;
+}
+
+/** Liefert den aktiven Auftrag aus dem Lager der Insel ab (auch bei negativem Geld, es ist eine Einnahme); keine Teillieferung.
+ * Ein Fernauftrag (R6) wird nur auf seiner Insel geliefert; jede Lieferung räumt das Fernangebot. */
 export function deliverOrder(world: World, island: number = HOME): Result {
   const lock = functionLock(world, 'orders');
   if (lock !== null) return fail(lock);
   const o = world.order;
   if (o === null) return fail('Kein Auftrag');
+  if (o.island !== undefined && island !== o.island)
+    return fail(`Nur auf ${islandName(world, o.island)}`);
   const isl = islandAt(world, island);
   if (isl === null) return fail('Unbekannte Insel');
   const noKontor = noKontorTrade(world, island);
@@ -171,6 +201,7 @@ export function deliverOrder(world: World, island: number = HOME): Result {
   isl.stock[o.good] -= o.amount;
   world.money += o.reward;
   world.order = null;
+  world.farOffer = null;
   if (world.contract === null && maxHouseTier(world) >= CONTRACT_MIN_TIER)
     world.contractOffer = { good: o.good, island };
   return ok;
