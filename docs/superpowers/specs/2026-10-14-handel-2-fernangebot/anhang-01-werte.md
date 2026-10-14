@@ -75,6 +75,7 @@ Reserve = `P + FAR_ORDER_DURATION − Ankunft`; die Lieferung geht bis einschlie
   Weidenau immer und für Felsbucht bis d 36; bei d 37–40 genügt Annehmen bis P + 1700 − 3 L (d 40: P + 500).
 - Obergrenze: Der Fernauftrag muss vor dem übernächsten Periodenbeginn P + 1800 verfallen, also D ≤ 1799. Fall B für
   Felsbucht d 40 bei Annehmen P + 600 braucht 1800: Er ist mit dem Angebotsfenster aus R629 nie ganz garantierbar.
+- **Gemessen (Plan T06, AK-27, Seed 3, Annehmen P + 600):** Fall A liefert bei P + 600 + 2 L (Lager nach P: Möweninsel 1120, Felsbucht 1380, Weidenau 1220), Fall B bei P + 600 + 3 L (1380, 1770, 1530). Felsbucht Fall B `<= P + 1700` ist **falsch** (70 Ticks über der Frist, Spec O-4); das ist der erwartete, strafelose Ausfall der Zeile Felsbucht/Fall B.
 - Untergrenze (Invariante, Rückfall «Frist kürzen»): `D ≥ ORDER_DURATION + 2 × 10 × max(dMax)` = 600 + 800 = 1400.
 - Nicht abgedeckt: Lagen der Stufe 3 (Ersatzregel, d > dMax, auf keinem geprüften Seed) und Routen zwischen zwei
   Fremdinseln (Seed 13: Weidenau ↔ Felsbucht 600 Ticks). Beides bleibt ohne Strafe; der Spieler sieht die Frist.
