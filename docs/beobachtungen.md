@@ -234,3 +234,6 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 **Hinweis an L0:** UI-AUFRAEUM-3 deckt T03 (Heimat-Kontor) nur dem Titel nach; ob das Heimat-Kontor in die Rangliste kommt, entscheidet der Task (Beobachtung bleibt sonst abgehakt).
 
 ## Offen (neue Einträge unten anhängen)
+
+- 2026-10-14 · `src/ui/eventLogView.ts`, Spec I-100 Regel 4: `aria-label` «3 neue Ereignisse» ersetzt den sichtbaren Knopfnamen «Ereignisse ▸ (3 neu)» (WCAG 2.5.3 Label in Name) und lässt ▸/▾ weg. Ursprung: Final-Review I-100. Einschätzung: niedrig; bei Spec-Pflege «Ereignisse, 3 neu» erwägen.
+- 2026-10-14 · `src/ui/app.ts` pushLog-Stellen (I-100): Denkmal-Einträge zählen auch bei `crisisLogVisible` false; erscheint die Box später, kann ein alter Zähler stehen. Ursprung: Final-Review I-100. Einschätzung: niedrig, nur theoretisch sichtbar.
