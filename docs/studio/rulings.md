@@ -7401,3 +7401,18 @@ Echtlauf gegen den laufenden Dashboard-Server mit Screenshot, Task-Review. Paral
 Regelbezug: Nutzerauftrag, R643 · Kosten bei Irrtum: eine Dashboard-Karte, die nachgebessert wird.
 
 Entscheider: L0 · Anlass: Nutzerfreigabe · ADR: —
+
+## R646 · 2026-10-14 · Kurz-Retro b54ed3bd: E-062 zurückgenommen, E-066 startet, E-063 angepasst; Ad-hoc-Signal abgedeckt
+
+Ruling: Retro `retros/2026-10-14-session-b54ed3bd-ende.md` (`2e45a88b`). Entscheide: (1) **E-062 zurückgenommen** (nie angewendet, keine
+Briefing-Zeile; Messwerte nicht zuschreibbar). (2) **V1 angenommen: E-066 startet** (Folgeinstanz statt Fortsetzung bei lead-tech;
+Pflicht-Hebel Cache-Write/Steuerung) — studio-coach setzt die Zeile in `lead-tech.md` und experimente.md um. (3) **V2 angenommen:** E-063
+Messgrösse «Integrator-Briefings mit Hauptcheckout ohne Ruling-Nummer, Soll 0». (4) **V3 angenommen:** Messauftrag Cache-Write-Wachstum
+nach Rolle, Frist nächste Session-Retro. (5) Ad-hoc-Retro-Signal (Cache-Write rot und Flake rot in zwei Sessions): Cache-Write ist mit V1/V3
+belegt adressiert; Flake ist ein Zählartefakt der Historienliste (0 seit 2026-10-14, Beobachtung eingetragen) — **keine eigene Ad-hoc-Retro
+jetzt**; ist eine der beiden Ampeln in der nächsten Session wieder rot, folgt sie dort. (6) Messauftrag (a)(b)(c) aus der Retro (Briefing-
+Verbote Warte-Agenten, Hintergrund-Arbeiter, Lastgrenze): Guard erst bei dreifacher Verletzung einer Klasse in einer Session.
+
+Regelbezug: R316, R429, R615 · Kosten bei Irrtum: eine Session mit falschem Experiment-Platz.
+
+Entscheider: L0 · Anlass: Bericht studio-coach retro-session-b54ed3bd, Hook-Hinweis Ad-hoc-Retro · ADR: —
