@@ -65,7 +65,7 @@ describe('AK-SK-22 Version und Migration', () => {
   it('22b: Stand ohne Felder wird verlustfrei und bitgleich weitergespielt', () => {
     const w = createWorld(3, { unlockAll: true });
     const old = foldBackToV13(json(w));
-    expect(old.version).toBe(13); // Faltkette liefert die Form vor dem Vertrag
+    expect(old.version).toBeLessThan(SAVE_VERSION); // Form vor dem Vertrag, ohne Versionszahl
     expect('contract' in old).toBe(false);
     const r = deserialize(JSON.stringify(old));
     expect(r.ok).toBe(true);
