@@ -7081,3 +7081,17 @@ Fenster: zwei Test-Arbeiter (Hotfix, Werkzeug) gemäss R588 V1.
 Regelbezug: gates.md Release-Check, R588 V1, R598, R616 · Kosten bei Irrtum: Push REL-21 verschiebt sich um den Hotfix.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-rel-21 · ADR: —
+
+## R623 · 2026-10-14 · Gate Merge HOTFIX-REL21-PREIS und TOOL-HOTFIX-ZR OK; Delta-Check REL-21
+
+Ruling: (1) `hotfix/rel21-preis` @ `6260d347` (Rot-Beleg 20 → 26, Task-Review OK, tsc/lint/zeittests/conflicts/docs-check Exit 0,
+Testzeit 2,5 → 1,9 s) → **OK**. (2) `tool/zr-hotfix` @ `91992546` (Ursache belegt: `pushcheck.Gate.gate()` las eine veraltete
+`zeitreserve-marked.json`; Fix berechnet sie per `check.ts --push --marked` neu; zwei Tests mit Rot-Beleg, `make studio-test` 849
+grün) → **OK**; der Echtlauf im eigenen Worktree läuft noch, der Lauf im Delta-Check gilt zugleich als Echtlauf. (3) Delta-Check
+durch lead-qa (Restbudget gate-rel-21 + 2 Starts): Integrator merged beide Branches `--no-ff` nach main, bringt
+`.worktrees/integrate` auf den neuen main, `make check`, `make check-ci-perf`, `make zeitreserve-gate`; ein Browser-Punkt
+(Stammkunde-Karte Glas Weidenau zeigt 26). Danach Push-Gate L0. TOOL-BUENDEL-12 und BEOB-14 folgen erst nach dem Push.
+
+Regelbezug: gates.md Gate Merge und Release-Check, R598, R622 · Kosten bei Irrtum: ein weiterer Delta-Check.
+
+Entscheider: L0 · Anlass: Berichte lead-tech hotfix-rel21-preis und tool-hotfix-zr · ADR: —
