@@ -7332,3 +7332,16 @@ Fernauftrags-Log-Einträge, R635) und I-100 (Zähler). Umsetzung erst nach dem M
 Regelbezug: R475, R634, R635, E-061 · Kosten bei Irrtum: ein Kurzdesign, das nach Handel 2 nachgeschärft wird.
 
 Entscheider: L0 · Anlass: freie Kapazität nach R639 · ADR: —
+
+## R641 · 2026-10-14 · Kurzdesign UI-HAEPPCHEN-D angenommen
+
+Ruling: `design/ui-haeppchen-d` @ `ce2f3689` (9 AK, Selbstprüfung OK) → **angenommen**. Regel: ins Log kommt, was ohne Spielerhandlung
+eintritt; Meldung nur für Krisen, automatische Vertragslieferung/-bruch und angenommene Fernaufträge; Verfall unangenommener Angebote
+und Zufallsaufträge still (zählt nicht für I-100); Log-Box sichtbar bei Krisen «an» oder ≥ 1 Eintrag (`eventLogVisible`); `LOG_MAX` 10 → 20
+(UI-Konstante, kein Spielwert); kein `src/sim/`, kein Save. AK-H2-33 (Handel 2) bleibt im Handel-2-Strang gültig und wird von UI-HAEPPCHEN-D
+für den Verfall danach ersetzt — keine Änderung am laufenden Handel-2-Plan. Plan (lead-tech, Stufe leicht) und kombiniertes Gate erst
+nach dem Merge von Handel 2.
+
+Regelbezug: R634, R635, R640, E-061 · Kosten bei Irrtum: ein UI-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-ui-haeppchen-d · ADR: —
