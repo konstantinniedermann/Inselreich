@@ -1,5 +1,6 @@
 // contractJump.ts — rein: Sprung von der Vertragskarte zum Erzeuger des Vertragsguts (I-090); nicht im Spielstand.
 import { islandName } from '../sim/islands';
+import { HOME } from '../sim/world';
 import type { GoodId, World } from '../sim/types';
 import { focusList, focusMessage, noProducerMessage, type FocusEntry } from './goodFocus';
 import { stepList, type ProblemCursor } from './problems';
@@ -35,7 +36,7 @@ export function contractNoProducerMessage(
   const base = noProducerMessage(world, c.good);
   const marker = ' — ';
   const at = base.indexOf(marker);
-  const suffix = ` auf ${islandName(world, c.island)}`;
+  const suffix = c.island === HOME ? ' auf der Heimatinsel' : ` auf ${islandName(world, c.island)}`;
   return at < 0 ? base + suffix : base.slice(0, at) + suffix + base.slice(at);
 }
 

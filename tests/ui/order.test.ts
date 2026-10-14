@@ -228,6 +228,19 @@ describe('I-088 Angebotskarte: Marktpreis und Erzeugung (AK-HC-01 bis 04)', () =
     expect(orderCardText(w)).toContain(` · Erzeugung ${pm} / min · Angebot noch 1:15`);
   });
 
+  it('R622 Stilllegen ohne Tick ändert die Erzeugung (pausiertes Spiel)', () => {
+    const w = offerWorld('wood');
+    addProducer(w, 'lumberjack', HOME);
+    const b = w.buildings[w.nextBuildingId - 1]!;
+    w.tick += 1;
+    const running = orderCardText(w);
+    expect(running).toContain('Erzeugung ');
+    b.paused = true;
+    expect(orderCardText(w)).toContain(' · keine Erzeugung · ');
+    b.paused = false;
+    expect(orderCardText(w)).toBe(running);
+  });
+
   it('AK-HC-03 Erzeuger auf anderer Insel, stillgelegt oder unangebunden zählt nicht', () => {
     const w = offerWorld('wood');
     addProducer(w, 'lumberjack', 1);

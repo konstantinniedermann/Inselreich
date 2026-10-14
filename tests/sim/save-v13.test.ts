@@ -250,7 +250,7 @@ describe('AK-M14E1-24: Rückfaltung, Fehlerfälle', () => {
 });
 
 describe('AK-M14E1-25: Unbekannte Version, Ungültiges Format', () => {
-  it('Version 14 wird abgewiesen', () => {
+  it('SAVE_VERSION + 1 (neuere Version) wird abgewiesen', () => {
     const j = v13Json();
     j.version = SAVE_VERSION + 1;
     expect(reasonOf(j)).toBe('Unbekannte Version');
