@@ -160,6 +160,7 @@ I-081, I-082, I-084, I-086 (R566), dazu I-048 (R571 Verzicht, Mechanik inaktiv);
 - Bewertung lead-design: Spass 2 → 1: Bei 60 Geld gegen Prämien ab ≈ 130 tauscht man immer, wenn das Lager leer ist; die Wahl schrumpft auf eine Gebühr. Ein verfallener Auftrag kostet heute nichts, der Schmerz ist klein.
 - Nutzen/Aufwand: kleiner Nutzen · S · ≈ 70 Tools
 - Entscheid: IDEEN-09 Empfehlung parken bis Handels-Brainstorming
+- Stand Handel 2 (design-handel-2, 2026-10-14): Vorschlag «geht in Handel 2 auf» (Wahl unter Bestellungen ohne Gebühr, V1 Fernangebot); Fassung mit 60 Geld verwerfen; Gate Brainstorming offen (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
 
 ### I-094 · bewertet · Darlehen beim Händler
 
@@ -186,6 +187,7 @@ I-081, I-082, I-084, I-086 (R566), dazu I-048 (R571 Verzicht, Mechanik inaktiv);
 - Bewertung lead-design: Spass 3 → 2 (Seefahrt, Mittelspiel). Gleiche Stossrichtung wie I-092, aber teurer und mit Save; im Handels-Brainstorming gegen I-092 abwägen, nicht beide.
 - Nutzen/Aufwand: Routen mit zweitem Zweck · M · ≈ 2 Pakete
 - Entscheid: IDEEN-09 Empfehlung parken bis Handels-Brainstorming (mit I-092, I-029, I-006)
+- Stand Handel 2 (design-handel-2, 2026-10-14): Empfehlung V1 Fernangebot neben dem Auftrag (Vorliebe-Gut der Insel, Stück 0,75 wegen Edikt-Grenze 0,8, Frist 2:30, kostet die nächste Periode); Gate Brainstorming offen (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
 
 ### I-096 · bewertet · Steuerstufe je Insel
 
