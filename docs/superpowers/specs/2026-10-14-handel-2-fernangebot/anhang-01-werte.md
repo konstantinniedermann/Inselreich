@@ -48,6 +48,8 @@ Stückprämie `u = floor(buy × ORDER_PREMIUM 0,75)` (`orderUnitReward`, unverä
 Zum Vergleich (gepinnt, `tests/sim/seaGolden.test.ts`): Seed 13 L = 290 / 370 / 330, Seed 7 270 / 360 / 320,
 Seed 42 280 / 390 / 310. Den genauen Seed-3-Wert pinnt AK-H2-27.
 
+Gemessen (Plan T01, Seed 3): Möweninsel L = 260, Felsbucht L = 390, Weidenau L = 310 (gepinnt in `tests/sim/farOrder-defs.test.ts`).
+
 **Fälle.** Annehmen im Schritt-Zwischenraum A ≤ P + 600 (Ende des Angebotsfensters), Ware im Heimatlager, Route
 Heimat ↔ Fern-Insel mit dem Gut in Richtung Heimat → Insel:
 

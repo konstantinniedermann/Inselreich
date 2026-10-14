@@ -90,6 +90,8 @@ export interface OrderDef {
   max: number;
   /** Menge je Vertragslieferung, I-047. */
   contract: number;
+  /** Menge eines Fernauftrags (Handel 2); nur Vorliebe-Güter der Fremdinseln. */
+  far?: number;
 }
 export type ContractBreakReason = 'lock' | 'island' | 'kontor' | 'stock';
 /** Vertragsereignis eines Schritts (R12), nur im StepReport, nie im Save. `island` = Lieferinsel. */
