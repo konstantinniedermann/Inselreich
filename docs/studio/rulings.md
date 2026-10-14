@@ -7203,3 +7203,16 @@ das Gate bei ruhiger Last, folgt TOOL-ZEITRESERVE-22 vor dem Push REL-22.
 Regelbezug: gates.md Gate Merge, R598, R624, R626 · Kosten bei Irrtum: ein weiteres Zeitreserve-Paket vor REL-22.
 
 Entscheider: L0 · Anlass: Bericht lead-tech tool-zeitreserve-21 · ADR: —
+
+## R632 · 2026-10-14 · Spec Handel 2: offene Punkte O-1/O-2/O-4; Gate Spec startet
+
+Ruling: Spec `design/handel-2` @ `8d1b9af1` (R1–R15, AK-H2-01…30, Anhänge Werte/UI-Texte). Entscheide: **O-1** Frist 1700 Ticks (2:50)
+statt 1500 — angenommen (≥ 30 s Reserve Felsbucht). **O-2** Save-Feld `farSkip` (Sperre der nächsten Periode auch bei Sofortlieferung)
+— angenommen; das Save-Format steigt ohnehin (R629 (3)). **O-4** Felsbucht bei spätem Annehmen ohne Fristgarantie — hingenommen (keine
+Strafe, frühes Annehmen reicht). Gate Spec jetzt parallel: lead-tech (Machbarkeit, Save-Format, Baseline bitgleich AK-H2-24) und
+lead-qa (Testbarkeit), je sonnet nach Modelltabelle, je 1 Start. Ergebnis von PLAYTEST-I047 fliesst als Nachtrag ein, falls es den
+Zuschnitt berührt; Umsetzung bleibt bis dahin gesperrt (R629 (5)).
+
+Regelbezug: gates.md Gate Spec, R583, R629 · Kosten bei Irrtum: ein Spec-Nachtrag nach dem Playtest.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-handel-2 (Spec) · ADR: —
