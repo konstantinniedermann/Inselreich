@@ -7025,3 +7025,17 @@ den Pausenanteil von lead-tech. Prozessbefund an die Retro: lead-tech startete e
 Regelbezug: gates.md Gate Merge (Werkzeug), R615 V2, R616 · Kosten bei Irrtum: eine Info-Zeile zurücknehmen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech tool-buendel-12 · ADR: —
+
+## R619 · 2026-10-14 · Gate I-100 (kombiniert, leicht): BEDENKEN, Auflagen ins Umsetzungs-Briefing
+
+Ruling: Kurzdesign + Plan `design/i100` @ `d05e67d1` → BEDENKEN angenommen, keine Plan-Nacharbeit: die Auflagen gehen als
+Pflichtzeilen ins Controller-Briefing (billiger als eine eigene Plan-Instanz): (1) T02 klärt vorab die DOM-Fähigkeit der
+Vitest-Umgebung; ohne DOM-Test prüft T03 ausdrücklich den Key-Cache-Fall (Brand erhöht den Zähler bei geschlossener Box ohne
+Klick); (2) T03 belegt Reset bei Laden und bei «Neue Insel» getrennt, jeweils mit Zähler ≥ 1 vorher; (3) R392-Zeitmessung vor
+T01 (vorher/nachher im Bericht); (4) Merge nach UI-AUFRAEUM-3, `git merge main` vor T04, Konfliktprüfung `style.css`, README,
+arc42. Kurzdesign gilt als angenommen (Zähler nur für Meldungs-Einträge, nur eingeklappt, Reset beim Aufklappen/Laden/Neue
+Insel, kein Save). Budget 10 Starts / Parallelität 1 bei Umsetzungsstart nach Push REL-21.
+
+Regelbezug: gates.md Kombiniertes Gate, R392, R606, R617 · Kosten bei Irrtum: ein Fix-Task bei T02/T03.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-i-100 · ADR: —
