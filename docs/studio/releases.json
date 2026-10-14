@@ -275,10 +275,10 @@
       "name": "TOOL-GUARD-WARTEAGENT",
       "kind": "Werkzeug",
       "startStage": 2,
-      "stage": 4,
-      "goalStage": 4,
-      "state": "active",
-      "note": "Ziel heute: gemergt, Modus deny"
+      "stage": 5,
+      "goalStage": 5,
+      "state": "done",
+      "note": "gemergt (R652)"
     },
     {
       "pkg": "IDEEN-RUNDE",

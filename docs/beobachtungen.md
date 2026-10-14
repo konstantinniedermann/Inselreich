@@ -255,3 +255,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Die Session-Datei weist 8 Flake-Verdachtstests aus (dieselbe Historienliste wie in 6584aaa4); mit `--since` ab Session-Beginn sind es 0 (grün). `flake_suspects(..., since)` (R565 V3) wird für die Session-Datei offenbar ohne `since` aufgerufen.
 - Ursprung: Retro session-b54ed3bd-ende (Studio-Coach)
 - Erste Einschätzung: Werkzeug-Mangel klein; die Ampel der Session-Datei zeigt rot, obwohl die Session keinen Verdachtsfall enthält. Prüfung in `tools/studio/metrics.py`, kein Eingriff in dieser Retro.
+
+## 2026-10-14 · Warte-Guard `waitguard.py`: Fehlnegative und eine strenge Stelle
+
+- Fundort: `tools/studio/waitguard.py`
+- Beobachtung: Nicht erkannt (Fehlnegative) werden `(sleep 60)`, `bash -c 'sleep …'`, `sleep infinity` und `FOO=1 sleep 5`. Streng: `sleep 2 && echo hi` im Hintergrund wird blockiert.
+- Ursprung: TOOL-GUARD-WARTEAGENT
+- Erste Einschätzung: niedrig; Muster bei Bedarf erweitern, kein Eingriff jetzt.
