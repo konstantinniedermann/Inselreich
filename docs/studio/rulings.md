@@ -7124,3 +7124,16 @@ Regelbezug: gates.md Release-Check, R335, R429, R598, R622–R624 · Kosten bei 
 Hotfix mit TOOL-ZEITRESERVE-21.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-rel-21-delta · ADR: —
+
+## R626 · 2026-10-14 · Umsetzung UI-AUFRAEUM-3 und I-100 startet
+
+Ruling: Release-Fenster REL-21 endet mit dem Push-Gate R625. Start der Umsetzung: **UI-AUFRAEUM-3** (lead-tech Controller, sonnet,
+21 Starts/P1 nach R617, Branch `feat/ui-aufraeum-3` ab main mit Merge von `plan/ui-aufraeum-3` @ `0ba2bb21`; Pflichtzeilen R617,
+R621 (2)(3), Beipacks R621 (1) und R622 (3)) und **I-100** (lead-tech Controller, sonnet, 10 Starts/P1 nach R619, Branch `feat/i100`
+ab main mit Merge von `design/i100` @ `d05e67d1`; Auflagen R619). Beide parallel in eigenen Worktrees; Dateiüberschneidung nur
+`src/style.css`, README, arc42 (andere Regeln/Abschnitte). Merge-Reihenfolge: UI-AUFRAEUM-3 zuerst, I-100 holt main per Merge vor
+seinem Doku-Task. Browser-Läufe: höchstens 2 gleichzeitig (R424).
+
+Regelbezug: R424, R475, R617, R619, R621, R622 · Kosten bei Irrtum: ein Merge-Konflikt in `style.css`.
+
+Entscheider: L0 · Anlass: Push-Gate R625 · ADR: —
