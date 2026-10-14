@@ -7159,3 +7159,95 @@ Designvorschlag (2–3 Varianten, Empfehlung, Save/Baseline-Folgen, Abgrenzung z
 Regelbezug: R445, R475, IDEEN-09 · Kosten bei Irrtum: ein Designvorschlag, der mit Erweiterung 1 zusammengelegt werden muss.
 
 Entscheider: L0 · Anlass: freie Kapazität nach Push REL-21 · ADR: —
+
+## R629 · 2026-10-14 · Gate Brainstorming Handel 2: OK für V1 «Fernangebot»; Spec jetzt
+
+Ruling: Designvorschlag `design/handel-2` @ `faec2763` (Selbstprüfung lead-design BEDENKEN: kein Effekt in den ersten 15 min). L0 prüft
+dieselben Fragen: stärkt Säule Wirtschaft/Handel (zweiter Zweck bestehender Routen), Entartung begrenzt (Stückprämie < 0,8 × Kaufpreis
+wegen Edikt Handel, Kaufen-und-Liefern ohne Gewinn), kein §5.3-Vorbehalt; der 15-min-Punkt gilt gleich für I-047/I092 (Spätspiel-
+Inhalt) und ist kein Hindernis. Entscheide: (1) **V1 angenommen**, I-093 geht darin auf (Fassung mit 60 Geld Gebühr verworfen); V2/V3
+verworfen. (2) Handel 2 ist ein eigenes Handels-Paket ausserhalb Erweiterung 1; Auflage K4: Frist gegen Sturm/Piraten prüfen.
+(3) Save-Version vergibt die Merge-Reihenfolge (R583-Muster). (4) **Spec jetzt** durch design-spec-author (Restbudget design-handel-2,
+lead-design steuert); Gate Spec mit Pflichtpunkten: Baseline bitgleich (lead-tech bestätigt), Frist 2:30 gegen Seed-3-Karte, Rückfall
+nur über `src/sim/defs/`. (5) Die Umsetzung wartet nicht auf den Nutzer, sondern auf einen **Studio-Playtest I-047** (qa-playtester,
+lange Partie: verdrängen Fernaufträge den Stammkunden?) — als eigenes Paket PLAYTEST-I047 vor dem Plan.
+
+Regelbezug: gates.md Gate Brainstorming, R445, R475, R583 · Kosten bei Irrtum: eine Spec, die nach dem Playtest nachgeschärft wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-handel-2 · ADR: —
+
+## R630 · 2026-10-14 · Gate Merge I-100: OK, Merge nach UI-AUFRAEUM-3; PLAYTEST-I047 startet
+
+Ruling: (1) `feat/i100` @ `b4541b7f`: Final-Review opus OK, Task-Reviews OK, `make check` Exit 0, Playtest AK-5/AK-6 belegt, Zeiten
+2,10 → 2,07 s → **Gate Merge OK**. Merge durch den Integrator erst nach UI-AUFRAEUM-3 (R626), dann `make check` erneut auf main
+(Konfliktprüfung style.css/README/arc42). Auflage R619 (1) gilt mit Review-Beleg des Code-Pfads als erfüllt (kein DOM in Vitest);
+R619 (2) erfüllt über `restart()` ohne Reset-Code. Prozessbefund an die Retro: `make check` lief bei Last 10,8 trotz Briefing-Grenze 8.
+(2) Browser-Platz frei: **PLAYTEST-I047** (lead-qa, 2 Starts/P1) nach R629 (5): lange Partie auf `main` (live-Stand REL-21) bis
+Seefahrt und Stammkunde; Fragen: Wie oft kommt ein Stammkunden-Angebot, wie viel Aufmerksamkeit bindet es, bleibt Platz für einen
+zweiten Auftragsstrom (Fernangebot)? Ergebnis als Playtest-Report an L0 und den Design-Lead (Gate Spec Handel 2).
+
+Regelbezug: gates.md Gate Merge, R424, R619, R626, R629 · Kosten bei Irrtum: Konfliktnacharbeit beim Merge nach UI-AUFRAEUM-3.
+
+Entscheider: L0 · Anlass: Bericht lead-tech i-100 · ADR: —
+
+## R631 · 2026-10-14 · Gate Merge TOOL-ZEITRESERVE-21: OK mit Vorbehalt; gebündelter Merge
+
+Ruling: `tool/zeitreserve-21` @ `69698908` (nur drei Testdateien, Welten in `beforeAll`, `decorSea` 5076 → 1 ms, `trees-farn`
+3699 → 788 ms, `scenario-saves` AK-B2-02 855 → 62 ms, AK-S5-02 Timeout 15 s mit Kommentar; tsc/lint/zeittests/conflicts/`make test`
+Exit 0; Task-Review OK) → **Gate Merge OK**, Vorbehalt: `make zeitreserve-gate` Exit 0 im Release-Check REL-22 (zweimal Exit 2 wegen
+Last durch das parallele UI-AUFRAEUM-3, kein Substanz-Befund). Merge gebündelt durch den Integrator nach dem Final-Review von
+UI-AUFRAEUM-3: `tool/zeitreserve-21`, `feat/ui-aufraeum-3`, `feat/i100` seriell, ein `make check` am Ende. Beobachtung: `forest`
+RF-L1-5, `buyPct` AK-ZK-07, `wildlife` RF-10, `fauna` CAPS und `decor` L4-T3 R5 lagen unter Last ~10 nahe der Schwelle; reissen sie
+das Gate bei ruhiger Last, folgt TOOL-ZEITRESERVE-22 vor dem Push REL-22.
+
+Regelbezug: gates.md Gate Merge, R598, R624, R626 · Kosten bei Irrtum: ein weiteres Zeitreserve-Paket vor REL-22.
+
+Entscheider: L0 · Anlass: Bericht lead-tech tool-zeitreserve-21 · ADR: —
+
+## R632 · 2026-10-14 · Spec Handel 2: offene Punkte O-1/O-2/O-4; Gate Spec startet
+
+Ruling: Spec `design/handel-2` @ `8d1b9af1` (R1–R15, AK-H2-01…30, Anhänge Werte/UI-Texte). Entscheide: **O-1** Frist 1700 Ticks (2:50)
+statt 1500 — angenommen (≥ 30 s Reserve Felsbucht). **O-2** Save-Feld `farSkip` (Sperre der nächsten Periode auch bei Sofortlieferung)
+— angenommen; das Save-Format steigt ohnehin (R629 (3)). **O-4** Felsbucht bei spätem Annehmen ohne Fristgarantie — hingenommen (keine
+Strafe, frühes Annehmen reicht). Gate Spec jetzt parallel: lead-tech (Machbarkeit, Save-Format, Baseline bitgleich AK-H2-24) und
+lead-qa (Testbarkeit), je sonnet nach Modelltabelle, je 1 Start. Ergebnis von PLAYTEST-I047 fliesst als Nachtrag ein, falls es den
+Zuschnitt berührt; Umsetzung bleibt bis dahin gesperrt (R629 (5)).
+
+Regelbezug: gates.md Gate Spec, R583, R629 · Kosten bei Irrtum: ein Spec-Nachtrag nach dem Playtest.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-handel-2 (Spec) · ADR: —
+
+## R633 · 2026-10-14 · Gate Spec Handel 2: angenommen mit Auflagen; Plan nach PLAYTEST-I047
+
+Ruling: lead-tech OK, lead-qa BEDENKEN (keine Blocker) zur Spec `design/handel-2` @ `8d1b9af1` → **Spec angenommen**. Auflagen für den
+Plan (Tech-Lead beim Plan, opus): (T1) Rückfaltung als eigener Task: neuer Fold-Schritt entfernt `farOffer`/`farSkip` nur bei `null`,
+vorgeschaltet in `foldBackToV13`/`foldBackToV9` (`tests/sim/helpers.ts`, ≈ 15 Testdateien), Merge-Reihenfolge zu Erweiterung 1 im Plan
+benennen; (T2) Controller-Test: über alle Ticks `farOffer === null`, `farSkip === null`, keine `order.island` (Baseline-Beleg AK-H2-24);
+(T3) `orderForPeriod` vor/nach der Änderung identisch (RNG-Beleg R13); (T4) Guard `order === null → fail` in `acceptFarOrder` mit AK;
+(T5) Versionsnummer als letzter Schritt, Tests nur gegen `SAVE_VERSION`; ADR-010-Nachtrag und arc42 (`orders.ts`, Save). QA:
+(A1) `laneTicks` Seed 3 in H2-SIM Task 1 messen und in AK-27 pinnen; (A2) Ersatzlage und Route Fremdinsel↔Fremdinsel als AK-H2-31
+oder Ausschluss in §1 (Spec-Nachtrag durch lead-design vor dem Plan); (A3) AK-19 mit Roundtrip mitten in der gesperrten Periode inkl.
+Vertrag; (A4) Fold-Schritt mit eigenem Test; (A5) AK-30 messbar `scrollWidth <= clientWidth` bei 1280 px; (A6) Task-Dateien ≤ 10 KB.
+Ablauf: PLAYTEST-I047 abwarten (R629 (5)); dann Spec-Nachtrag A2 + Playtest-Folgen (lead-design, sonnet, Spec-Nachtrag), dann Plan.
+
+Regelbezug: gates.md Gate Spec, R583, R629, R632 · Kosten bei Irrtum: ein Plan-Task mehr für die Rückfaltung.
+
+Entscheider: L0 · Anlass: Berichte lead-tech und lead-qa gate-handel-2 · ADR: —
+
+## R634 · 2026-10-14 · PLAYTEST-I047: Raum für Handel 2; Spec-Nachtrag vor dem Plan
+
+Ruling: Playtest-Report lead-qa (BEDENKEN, nur niedrige Befunde; `.studio/qa/playtest-i047/report.md`, Seed 3, 20 min, abgekürzter Aufbau
+per Dev-Sonde): ≤ 2 Entscheidungen je 90-s-Periode, Vertragslieferung ohne Klick, Fahrzeiten hin/zurück 52/62/78 s (worst ≈ 117 s) <
+Frist 2:50 (R632 O-1), Konsole leer. Entscheide: (1) **Handel 2 hat Raum** — R629 (5) erfüllt. (2) **Spec-Nachtrag** (lead-design,
+sonnet, «Spec-Nachtrag», Restbudget design-handel-2) auf `design/handel-2`: (a) A2 aus R633 (Ersatzlage, Route Fremdinsel↔Fremdinsel:
+AK oder Ausschluss); (b) Fernangebot mit eigener Karte statt des gemeinsamen Slots oben rechts — Empfehlung mit Layout bei 1280×720
+und Sturm-Dichte; (c) Fernangebot-Verfall und Fernlieferung als Einträge im Ereignis-Log (zählen für I-100 «Neu» nur, wenn sie eine
+Meldung tragen — festlegen); (d) ausdrücklich: während eines Stammkunden-Vertrags kein Zufallsauftrag und damit kein Fernangebot;
+(e) K4: es gibt keine Piraten (`ships.ts`), die Auflage ist mit dem Sturm-Beleg erfüllt. (3) Die drei niedrigen Befunde (verfallenes
+Angebot ohne Meldung/Log, enger Slot oben rechts bei Sturm, keine Auftragsereignisse im Log) trägt lead-design im selben Zug in
+`docs/beobachtungen.md` ein, mit Verweis, soweit Handel 2 sie abdeckt. (4) Danach Plan durch lead-tech (opus, Tech-Lead beim Plan).
+(5) Worktree `.worktrees/playtest-i047` (detached, sauber) wird ohne `--force` entfernt.
+
+Regelbezug: R629, R632, R633, R424 · Kosten bei Irrtum: ein UI-Task mehr in Handel 2.
+
+Entscheider: L0 · Anlass: Bericht lead-qa playtest-i047 · ADR: —
