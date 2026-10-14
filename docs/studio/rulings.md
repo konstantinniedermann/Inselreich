@@ -7233,3 +7233,21 @@ Ablauf: PLAYTEST-I047 abwarten (R629 (5)); dann Spec-Nachtrag A2 + Playtest-Folg
 Regelbezug: gates.md Gate Spec, R583, R629, R632 · Kosten bei Irrtum: ein Plan-Task mehr für die Rückfaltung.
 
 Entscheider: L0 · Anlass: Berichte lead-tech und lead-qa gate-handel-2 · ADR: —
+
+## R634 · 2026-10-14 · PLAYTEST-I047: Raum für Handel 2; Spec-Nachtrag vor dem Plan
+
+Ruling: Playtest-Report lead-qa (BEDENKEN, nur niedrige Befunde; `.studio/qa/playtest-i047/report.md`, Seed 3, 20 min, abgekürzter Aufbau
+per Dev-Sonde): ≤ 2 Entscheidungen je 90-s-Periode, Vertragslieferung ohne Klick, Fahrzeiten hin/zurück 52/62/78 s (worst ≈ 117 s) <
+Frist 2:50 (R632 O-1), Konsole leer. Entscheide: (1) **Handel 2 hat Raum** — R629 (5) erfüllt. (2) **Spec-Nachtrag** (lead-design,
+sonnet, «Spec-Nachtrag», Restbudget design-handel-2) auf `design/handel-2`: (a) A2 aus R633 (Ersatzlage, Route Fremdinsel↔Fremdinsel:
+AK oder Ausschluss); (b) Fernangebot mit eigener Karte statt des gemeinsamen Slots oben rechts — Empfehlung mit Layout bei 1280×720
+und Sturm-Dichte; (c) Fernangebot-Verfall und Fernlieferung als Einträge im Ereignis-Log (zählen für I-100 «Neu» nur, wenn sie eine
+Meldung tragen — festlegen); (d) ausdrücklich: während eines Stammkunden-Vertrags kein Zufallsauftrag und damit kein Fernangebot;
+(e) K4: es gibt keine Piraten (`ships.ts`), die Auflage ist mit dem Sturm-Beleg erfüllt. (3) Die drei niedrigen Befunde (verfallenes
+Angebot ohne Meldung/Log, enger Slot oben rechts bei Sturm, keine Auftragsereignisse im Log) trägt lead-design im selben Zug in
+`docs/beobachtungen.md` ein, mit Verweis, soweit Handel 2 sie abdeckt. (4) Danach Plan durch lead-tech (opus, Tech-Lead beim Plan).
+(5) Worktree `.worktrees/playtest-i047` (detached, sauber) wird ohne `--force` entfernt.
+
+Regelbezug: R629, R632, R633, R424 · Kosten bei Irrtum: ein UI-Task mehr in Handel 2.
+
+Entscheider: L0 · Anlass: Bericht lead-qa playtest-i047 · ADR: —
