@@ -36,13 +36,20 @@ describe('foldBackToV12', () => {
 });
 
 describe('foldBackFarOrders (Handel 2, A4)', () => {
-  const plain = (): Record<string, unknown> =>
+  const current = (): Record<string, unknown> =>
     JSON.parse(serialize(createWorld(3))) as Record<string, unknown>;
-  /** Stand «eine Version neuer» mit leeren Fernfeldern am Ende (Form nach T03). */
-  const withFar = (extra: Record<string, unknown> = {}): Record<string, unknown> => {
-    const x = plain();
-    return { ...x, farOffer: null, farSkip: null, ...extra, version: (x.version as number) + 1 };
+  /** Stand «eine Version älter», ohne Fernfelder. */
+  const plain = (): Record<string, unknown> => {
+    const x = current();
+    delete x.farOffer;
+    delete x.farSkip;
+    return { ...x, version: (x.version as number) - 1 };
   };
+  /** Aktueller Stand mit leeren Fernfeldern am Ende (Form nach T03). */
+  const withFar = (extra: Record<string, unknown> = {}): Record<string, unknown> => ({
+    ...current(),
+    ...extra,
+  });
   const chains = [foldBackToV13, foldBackToV12, foldBackToV11, foldBackToV10, foldBackToV9];
 
   it('ohne Fernschlüssel unverändert', () => {

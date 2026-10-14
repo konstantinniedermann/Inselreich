@@ -62,7 +62,11 @@ describe('M13-E2 Save v12', () => {
     const w = createWorld(3);
     expect(w.monument).toBeNull();
     expect(w.monumentDone).toBe(false);
-    expect(Object.keys(w).slice(-5, -3)).toEqual(['monument', 'monumentDone']);
+    const keys = Object.keys(w);
+    expect(keys.slice(keys.indexOf('monument'), keys.indexOf('monument') + 2)).toEqual([
+      'monument',
+      'monumentDone',
+    ]);
     expect(w.version).toBe(SAVE_VERSION);
   });
 

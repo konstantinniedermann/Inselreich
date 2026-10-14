@@ -54,7 +54,11 @@ describe('M13-E1 Save v11', () => {
     const w = createWorld(3);
     expect(w.edict).toBeNull();
     expect(w.edictLockedUntil).toBe(0);
-    expect(Object.keys(w).slice(-7, -5)).toEqual(['edict', 'edictLockedUntil']);
+    const keys = Object.keys(w);
+    expect(keys.slice(keys.indexOf('edict'), keys.indexOf('edict') + 2)).toEqual([
+      'edict',
+      'edictLockedUntil',
+    ]);
     expect(w.version).toBe(SAVE_VERSION);
   });
 
