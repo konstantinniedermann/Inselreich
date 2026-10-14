@@ -4,9 +4,19 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-13 (Studio-Session 6584aaa4, R578–R615; Ende: REL-20 live `0d1db8f3`; lokal auf main @ `8a163b32`+: REL-21-Kandidat (UI-HAEPPCHEN-A/B, I-047 Save v14, DOC-ARCHIV, TOOL-BUENDEL-11, IDEEN-09; Release-Check OK R603/R605, geprüfter Kandidat `67661df1`) plus UI-HAEPPCHEN-C (R612) und I092 (R613); Handbuch 1.54)
+Stand: 2026-10-14 (Studio-Session b54ed3bd, R616–R646; REL-21 live `ca46eb73`; lokal auf main: REL-22-Kandidat (UI-AUFRAEUM-3, I-100, TOOL-ZEITRESERVE-21, TOOL-BUENDEL-12, BEOB-14, REL22-FIX `878b492b`) — Delta-Check + Push offen; Handel 2 Spec+Plan freigegeben (R639); Dashboard-Karte «Versionen und Releases» (R645); Handbuch 1.54)
 
 ## Release-Notizen
+
+**REL-22 „Aufgeräumt und nichts verpasst“ (Entwurf, lokal)** — kein Save-Wechsel (v14). Inhalt: UI-AUFRAEUM-3 (R636), I-100
+«Neu»-Zähler (R630), TOOL-ZEITRESERVE-21 (R631), TOOL-BUENDEL-12 (R618), BEOB-14 (R621), REL22-FIX (R644). Release-Check R642 ZURÜCK
+(Zeitreserve, Kontrast) → behoben; Delta-Check und Push in der Folgesession.
+
+- **Neu:** «Ereignisse ▸ (3 neu)» zählt verpasste Meldungen, solange das Log eingeklappt ist (vom Studio vorgeschlagen, I-100); Rangliste
+  Unterhalt je Insel inkl. Heimatinsel (I-089); Rechtsklick im Linienzug beendet erst den Zug, dann das Werkzeug (I-098); Kartenstapel
+  oben rechts geordnet (I-099); Vorliebe-Badge neben Boom.
+- **Bitte testen:** (1) Log einklappen, Brand abwarten → «(1 neu)», aufklappen → weg; (2) Rangliste mit zwei Inseln; (3) Wege ziehen,
+  Rechtsklick zweimal; (4) Krisen «aus» → keine Krisenkarte; (5) Spielstand v14 lädt.
 
 **REL-21 „Stammkunde und Inselmarkt“ (live, R625)** — Push `0d1db8f3..ca46eb73`, CI 38553292584, Pages 38553994549 grün. Save **v14**
 (Migration v13→v14). Inhalt: UI-HAEPPCHEN-A, -B, I-047 Stammkunde, UI-HAEPPCHEN-C, I092 Inselmarkt-Vorliebe, HOTFIX-REL21-PREIS
@@ -107,21 +117,23 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475. **Neues Claude-Gespräch empfohlen** (R438 V4 b). Wochenfenster am
-Session-Ende 99 % (R578: Nutzer liess das Limit ignorieren; Reset 2026-10-14 12:00). Ein Push je Session (R335); «push-bereit» =
-`make push-check`-Schwelle (Handbuch 1.54). N-100 (Dropbox während des Push-Gates pausieren) offen.
+Keine Nutzer-Aufträge offen (Dashboard-Karte siehe Punkt 3). Daueraufträge: R445, R475. **Neues Claude-Gespräch** (Nutzer startet es).
+Ein Push je Session (R335); «push-bereit» = `make push-check`-Schwelle. Last durch macOS-Prozesse (Load bis 22) hat `make check`
+mehrfach blockiert — Testlock bricht ab, nicht warten.
 
-1. **Push REL-21** (Entwurf unten): main enthält zusätzlich UI-HAEPPCHEN-C und I092 (beide Final-Review/Playtest OK). Empfehlung:
-   Delta-Release-Check (lead-qa, Playtest C + I092 am Kandidaten, Opus-Review `67661df1..main`), dann **ein** Push von main als
-   REL-21 mit fünf Häppchen per Ruling (Ausnahme vom Deckel 4, gates.md) — sonst `git push origin 67661df1:main` und C/I092 als
-   REL-22 in der Folgesession. `make zeitreserve-gate`, dann `make push-check` im Worktree `.worktrees/integrate`.
-2. **UI-Aufräum-Sammelpaket** (R606, R612, R613): I-089, I-098 (Rechtsklick im Linienzug wie Esc), I-099, Kleinbefunde REL-21,
-   Badge `prefer-*` vs. Boom, toter README-Verweis, gemeinsame Zählregel `flow.ts`/`production.ts`, Archiv-Trenner/Ranglisten-Lücken.
-3. **I-100** «Neu»-Zähler am Ereignis-Log (R606): Kurzplan Stufe leicht.
-4. **TOOL-BUENDEL-12**: Cache-Write-Aufteilung in `metrics.py` (R615 V2).
-5. Experimente: E-062, E-063 bewerten → E-066 (Folgeinstanz lead-tech), dann E-065, E-067 nachrücken (R615).
-6. Erweiterung 1 «Stände und Segel» bleibt in der Nutzer-Session; beim Merge jener Branch: Save v14 ist durch I-047 belegt (R583),
-   neues Pflichtfeld `prefers` in `IslandDef` (I092, R609).
+1. **Push REL-22** (Notiz oben): Delta-Check durch lead-qa am aktuellen main (`878b492b`+Doku): Integrator `.worktrees/integrate`
+   `git checkout --detach main`, `make check`, `make check-ci-perf`, `make zeitreserve-gate`; Browser-Punkt Kontrast `.btn--unread` im Spiel;
+   kein neues Opus-Review (Fix-Delta Task-Review OK). Dann Gate L0 und Push per geprüftem Hash, CI, `gh workflow run Pages --ref main`.
+2. **Handel 2 «Fernangebot» (REL-23)** nach dem Push: Plan `plan/handel-2` @ `f5d38fcf` (Spec `design/handel-2` @ `1ed91737`), Budget
+   26 Starts/P1, Controller C1 T01–T03, C2 T04–T06, C3 T07–T09 + Final-Review (E-066: Folgeinstanzen), Auflagen R639 (1)–(5).
+3. **Dashboard-Karte «Versionen und Releases»** (R645, TOOL-DASH-VERSIONEN): Stand siehe «Laufend»; `docs/studio/releases.json` pflegt
+   lead-production bei jedem Release-Wechsel (Merge, Release-Check, Push) zusammen mit dieser Datei.
+4. **UI-HAEPPCHEN-D** «Ereignis-Log vollständig» (Kurzdesign `design/ui-haeppchen-d` @ `ce2f3689`, R641): Plan + kombiniertes Gate erst
+   nach dem Merge von Handel 2.
+5. Retro-Aufträge R646: E-066 läuft; Messauftrag Cache-Write-Wachstum nach Rolle (V3) und Briefing-Verbote (a)(b)(c) in der nächsten
+   Session-Retro; Ad-hoc-Retro, falls Cache-Write oder Flake wieder rot.
+6. Erweiterung 1 «Stände und Segel» bleibt in der Nutzer-Session; wer zuerst nach main merged (Handel 2 oder E1), bekommt Save v15 (R638);
+   vor dem Merge von Handel 2 `git diff --stat main...design/erweiterung-1 -- src tests` prüfen (R639 (5)).
 
 ## Aktuelles Projekt und Phase
 
@@ -146,7 +158,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts (Session-Ende 1a73e6c1).
+- TOOL-DASH-VERSIONEN (R645): Stand beim Session-Ende siehe Nachtrag unten in diesem Abschnitt.
 
 ## Parallele Sessions
 
@@ -155,19 +167,21 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Seit letzter Session erledigt
 
-- **Live:** Release M13 (R564, CI 38212898470, Pages 38213478460).
-- **Lokal gemergt (Gate OK):** TOOL-CONTROLLER-HAERTUNG (R568, `1a00eb61`), M14-E1 Inselcharakter (R574, `9b5fc2b7`, Save v13),
-  TOOL-BUENDEL-9 (R575, `d7f68071`), UI-AUFRAEUM-2 (R576, `bdeb04c1`).
-- **Entschieden:** Retro M13 + Prozess-Aussensicht (R565 → Handbuch 1.52, 1.53 «Live-Ampel»); IDEEN-08 (R566, Pool 36/40);
-  I-048 Schritt B Verzicht (R571); Gates Pläne UI-HAEPPCHEN-A (R573) und -B (R577).
-- Die Vorsession 5500c465 (R553–R563) hatte state.md nicht nachgeführt; ihre Pakete sind hier eingearbeitet.
+- **Live:** REL-21 «Stammkunde und Inselmarkt» (R625, Push `0d1db8f3..ca46eb73`, CI 38553292584, Pages 38553994549) inkl.
+  HOTFIX-REL21-PREIS (R622/R623) und TOOL-HOTFIX-ZR (veraltete Markierungsliste im Zeitreserve-Gate).
+- **Lokal gemergt (Gate OK):** TOOL-BUENDEL-12, BEOB-14 (R627), TOOL-ZEITRESERVE-21, UI-AUFRAEUM-3, I-100 (R636), REL22-FIX (R644).
+- **Entschieden:** Handel 2 Brainstorming → V1 «Fernangebot» (R629), Spec + Nachtrag (R632–R635), PLAYTEST-I047 (R634), Plan (R639);
+  Kurzdesign UI-HAEPPCHEN-D (R641); Release-Check REL-22 ZURÜCK → REL22-FIX (R642); Nutzerauftrag Dashboard-Karte, Muster v1–v3 (R643–R645);
+  Retro b54ed3bd (R646: E-062 zurück, E-066 startet).
 
 ## Pausierte Pakete
 
 - `.worktrees/i048-b` (`feat/i048-b` @ `bc57f8ba`): verworfen, nicht mergen (R571); Aufräumen nur per Worktree-Ruling.
 - Gemergte, aufräumbare Worktrees (nur per Ruling, `git worktree remove` ohne `--force`): `i048-sim`, `i048-ui`, `i049-sim`,
   `i049-ui`, `tool-b7`, `tool-b8`, `tool-e060`, `ui-texte-1`, `tool-gate-ensemble`,
-  `tool-controller-haertung`, `m14-e1`, `m14-e1-ui`, `tool-b9`, `ui-aufraeum-2`. `.worktrees/integrate` bleibt.
+  `tool-controller-haertung`, `m14-e1`, `m14-e1-ui`, `tool-b9`, `ui-aufraeum-2`, dazu aus b54ed3bd: `hotfix-rel21`, `tool-zr-hotfix`,
+  `tool-b12`, `beob-14`, `tool-zr21`, `ui-aufraeum-3`, `i100`, `rel22-fix`, `plan-ui-aufraeum-3`, `design-i100`.
+  Aktiv behalten: `plan-handel-2`, `design-handel-2` (Handel 2), `design-ui-d` (UI-HAEPPCHEN-D). `.worktrees/integrate` bleibt.
   `.worktrees/erweiterung-1` gehört der Nutzer-Session (R519) — nicht anfassen.
 - Branch `int/rel-07`, Alt-Branches, Remote `wip/r118a-render-aufraeumen`, `stash@{0}` (950f61d5) und `stash@{1}` (e20340a9) bleiben bis Ruling.
 
@@ -178,4 +192,4 @@ Offen: keine Freigaben (Restbudgets verfallen mit Session-Ende).
 ## Offene Entscheide
 
 - Nutzer: N-99 (Kenntnis R434), ohne Antwort gilt R434.
-- L0: Retro-Vorschläge Session 1a73e6c1 (Fortsetzung Punkt 4).
+- L0: keine offenen (Retro b54ed3bd entschieden, R646).
