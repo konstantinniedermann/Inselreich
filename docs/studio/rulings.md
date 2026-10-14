@@ -7448,3 +7448,17 @@ die Daten sofort sichtbar sind und die Zielmarke den Abstand Ist → Ziel grafis
 Regelbezug: Verfassung §5, STUDIO.md Autonomie, R464, R645, R647 · Kosten bei Irrtum: eine Darstellung, die der Nutzer anders wollte (eine Karte nachbessern).
 
 Entscheider: L0 · Anlass: Nutzerprompt Session-Start · ADR: —
+
+## R649 · 2026-10-14 · Gate Plan TOOL-DASH-SESSIONZIEL und TOOL-GUARD-WARTEAGENT: OK mit Auflagen; Start nach push-check REL-22
+
+Ruling: (1) **TOOL-DASH-SESSIONZIEL** Plan `tool/dash-sessionziel` @ `dd928fb4` (T01–T04, Logik in Python testbar, JS zeichnet) → OK,
+Budget 6 Starts, Parallelität 1. Auflage: S-Kennzeichen und «Jetzt in Arbeit» zählen zusätzlich Pakete, die in der laufenden Session per
+`log.py package` mit Status active/review/blocked angemeldet sind (Lücke aus dem Bericht lead-production, `session_packages` nur aus dem
+Agent-Baum). Rot-Beleg je Task im Bericht. (2) **TOOL-GUARD-WARTEAGENT** Plan `tool/guard-warteagent` @ `0ac5d308` (`waitguard.py`, Modus
+deny, Rückfall warn, nur `agent_type` lead-*) → OK, Budget 3 Starts. Auflage: zuerst die PreToolUse-Payload im Lead-Kontext belegen
+(`agent_type` vorhanden?); fehlt sie, Bericht an L0 vor der Umsetzung. Der neue Eintrag in `.claude/settings.json` ist freigegeben; blockt
+der Guard die Datei, setzt L0 ihn. (3) Umsetzung beider Pakete erst nach `make push-check` Exit 0 für REL-22 (R464).
+
+Regelbezug: gates.md Gate Plan, R464, R647, R648 · Kosten bei Irrtum: ein Guard mit Fehlblocks (Rückfall warn), eine Karte mit Zusatzzeile.
+
+Entscheider: L0 · Anlass: Berichte lead-tech Phase A · ADR: —
