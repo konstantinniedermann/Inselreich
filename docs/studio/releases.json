@@ -267,8 +267,8 @@
       "startStage": 2,
       "stage": 4,
       "goalStage": 4,
-      "state": "active",
-      "note": "Ziel heute: live im Dashboard"
+      "state": "done",
+      "note": "gemergt (R655)"
     },
     {
       "pkg": "TOOL-GUARD-WARTEAGENT",
@@ -297,8 +297,8 @@
       "startStage": 1,
       "stage": 2,
       "goalStage": 2,
-      "state": "active",
-      "note": "Ziel heute: Kurzdesign"
+      "state": "done",
+      "note": "Kurzdesign angenommen (R654)"
     },
     {
       "pkg": "I-102",

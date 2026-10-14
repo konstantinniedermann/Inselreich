@@ -262,3 +262,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Nicht erkannt (Fehlnegative) werden `(sleep 60)`, `bash -c 'sleep …'`, `sleep infinity` und `FOO=1 sleep 5`. Streng: `sleep 2 && echo hi` im Hintergrund wird blockiert.
 - Ursprung: TOOL-GUARD-WARTEAGENT
 - Erste Einschätzung: niedrig; Muster bei Bedarf erweitern, kein Eingriff jetzt.
+
+## 2026-10-14 · Dashboard: favicon 404 und Warnzeile im leeren Zustand
+
+- Fundort: `tools/studio/dashboard/` (Server liefert kein `/favicon.ico`; Warnzeile der Zielmarke erscheint auch ohne Daten)
+- Beobachtung: Der Browser fragt `/favicon.ico` an und erhält 404. Die Warnzeile wird auch im leeren Zustand angezeigt.
+- Ursprung: TOOL-DASH-SESSIONZIEL
+- Erste Einschätzung: niedrig; kosmetisch.
