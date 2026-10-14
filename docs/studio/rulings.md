@@ -7264,3 +7264,18 @@ zweimal im Hintergrund (ADR-007-Regel Vordergrund).
 Regelbezug: gates.md Gate Spec, R633, R634 · Kosten bei Irrtum: ein Nachtrag im Plan.
 
 Entscheider: L0 · Anlass: Bericht lead-design (Spec-Nachtrag) · ADR: —
+
+## R636 · 2026-10-14 · Gate Merge UI-AUFRAEUM-3: OK; gebündelter Merge mit TOOL-ZEITRESERVE-21 und I-100
+
+Ruling: `feat/ui-aufraeum-3` @ `7f2f282a`: 7 Tasks, Task-Reviews OK, Playtest OK (T01-Fix `fc670e11` über `contextmenu`), Final-Review opus
+OK, Diff auf `src/sim/defs`, `save.ts`, `types.ts`, `balance.test.ts` leer, `make zeitreserve-gate` grün; `make check` ohne Exit 0 nur wegen
+Last 10–22 (System-Prozesse) und `trees-farn` (wird durch `tool/zeitreserve-21` behoben) → **Gate Merge OK**. Bestätigt: Ownership-
+Erweiterung `src/ui/contractJump.ts` (Meldetext), Spec-Delta M6 «Krisen: aus» ohne Karte (R606 (3)). Merge durch den Integrator im
+Hauptcheckout seriell `--no-ff`: `tool/zeitreserve-21` @ `69698908`, `feat/ui-aufraeum-3` @ `7f2f282a`, `feat/i100` @ `b4541b7f`; Konflikt →
+`git merge --abort`, melden. Danach ein `make check` (Exit-Code; bei Testlock-/Lastabbruch melden, nicht warten) und `make docs-check`.
+Die beim Merge verworfenen Abhak-Einträge in `docs/beobachtungen.md` holt die nächste Auswertung nach; I-100-Status in `docs/ideen.md`
+pflegt die Ende-Routine.
+
+Regelbezug: gates.md Gate Merge, R617, R621, R626, R630, R631 · Kosten bei Irrtum: ein roter `make check` auf main → Fix vor REL-22.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ui-aufraeum-3 · ADR: —
