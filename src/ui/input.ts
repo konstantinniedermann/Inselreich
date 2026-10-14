@@ -333,7 +333,11 @@ export function bindInput(
     };
   };
 
-  const onContextMenu = (e: MouseEvent): void => e.preventDefault();
+  const onContextMenu = (e: MouseEvent): void => {
+    e.preventDefault();
+    // Chrome meldet Rechtsklick bei gehaltener linker Taste nicht als pointerdown b2: im Linienzug hier abbrechen
+    if (drag?.line === true) cancelPointerAction();
+  };
 
   const lineUpdate = (from: IslandTile, to: IslandTile): void =>
     onAction({
@@ -359,8 +363,9 @@ export function bindInput(
       }
     }
     if (e.button === 2) {
+      // Staffelung wie Esc: im Linienzug endet nur der Zug, erst der nächste Rechtsklick legt das Werkzeug ab
       if (drag?.line === true) cancelPointerAction();
-      onAction({ type: 'cancel' });
+      else onAction({ type: 'cancel' });
       return;
     }
     const wantsPan = e.button === 1 || (e.button === 0 && spaceDown);

@@ -40,7 +40,8 @@ export function stormAffectedNames(): string {
 
 export function crisisCardText(view: CrisisView, world: World): CrisisCard {
   if (view.phase === 'none') {
-    if (view.next === null) return { text: 'Krisen: aus', kind: null, level: null };
+    // Stufe aus: keine Karte (I-099); die Stufe steht im Menü.
+    if (view.next === null) return { text: '', kind: null, level: null };
     return {
       text: `Krisen: ${CRISIS_LEVELS[world.crisisLevel].name} · nächste Krise in ${formatGameTime(view.next - world.tick)}`,
       kind: null,

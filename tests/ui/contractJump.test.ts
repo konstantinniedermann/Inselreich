@@ -196,10 +196,10 @@ describe('I-090 contractNoProducerMessage (R607 Punkt 6)', () => {
     expect(msg).toBe(
       base.replace(
         'Noch kein Erzeuger für Holz',
-        `Noch kein Erzeuger für Holz auf ${islandName(w, 0)}`,
+        'Noch kein Erzeuger für Holz auf der Heimatinsel',
       ),
     );
-    expect(msg).toContain(`Holz auf ${islandName(w, 0)} — Bauen:`);
+    expect(msg).toContain('Holz auf der Heimatinsel — Bauen:');
   });
   it('ferne Insel nennt deren Namen', () => {
     const { w } = woodWorld();

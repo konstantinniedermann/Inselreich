@@ -285,3 +285,13 @@ describe('I-085 Lager voll: Problemliste', () => {
     expect(msgs[1]).toBe('Alles versorgt, kein Problem offen');
   });
 });
+
+describe('AK-UA3-19 Zähler-Schlüssel', () => {
+  it('kein Schlüssel des Zählers beginnt mit «g:» (Doppelbelegung mit problems.ts)', () => {
+    const { w, since } = jammed();
+    trackFullSince(since, w);
+    expect(since.size).toBeGreaterThan(0);
+    expect([...since.keys()].filter((k) => k.startsWith('g:'))).toEqual([]);
+    expect([...since.keys()].some((k) => k.startsWith('f:'))).toBe(true);
+  });
+});

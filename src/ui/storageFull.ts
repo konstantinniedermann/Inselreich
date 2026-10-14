@@ -17,7 +17,7 @@ export interface StorageProblem {
   producers: Building[]; // Kandidaten für den Sprung
 }
 
-const startKey = (island: number, good: GoodId): string => `g:${island}:${good}`;
+const startKey = (island: number, good: GoodId): string => `f:${island}:${good}`;
 const missKey = (island: number, good: GoodId): string => `x:${island}:${good}`;
 
 /** Welt, zu der ein Zähler gehört: anderes Objekt (Laden, Neues Spiel) = Zähler verwerfen. */
@@ -33,7 +33,7 @@ function producersOf(world: World, island: number, good: GoodId): Building[] {
   return out;
 }
 
-/** Zähler fortschreiben; im HUD-Takt aufrufen. Schlüssel `g:<insel>:<gut>` = Tick des ersten Beobachtens. */
+/** Zähler fortschreiben; im HUD-Takt aufrufen. Schlüssel `f:<insel>:<gut>` = Tick des ersten Beobachtens. */
 export function trackFullSince(since: Map<string, number>, world: World): void {
   if (owners.get(since) !== world) {
     since.clear();

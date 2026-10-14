@@ -15,9 +15,9 @@ function until(w: World, pred: () => boolean): void {
 const card = (w: World) => crisisCardText(crisisView(w), w);
 
 describe('crisisCardText (M6-AK-U2-02)', () => {
-  it('Stufe aus: „Krisen: aus"', () => {
+  it('Stufe aus ohne Krise: leerer Text, keine Karte (I-099, AK-UA3-11)', () => {
     expect(card(SCENARIOS['krise-aus']!())).toEqual({
-      text: 'Krisen: aus',
+      text: '',
       kind: null,
       level: null,
     });

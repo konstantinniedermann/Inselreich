@@ -42,15 +42,27 @@ export function runContractAction(
   if (text !== null) out.show(text);
 }
 
-/** Zwischenspeicher der Erzeugung je Welt; Schlüssel `tick|island|good`, nicht im Spielstand. */
+/** Zwischenspeicher der Erzeugung je Welt; Schlüssel `tick|island|good|Gebäude|stillgelegt`, nicht im Spielstand. */
 const producedCache = new WeakMap<World, { key: string; value: number }>();
 
 /**
  * Erzeugung von `good` auf `island` je Minute (Summe der Erzeuger, `goodProductionPer100`). Die Karte
- * fragt jeden Frame, daher einmal je Tick, Insel und Gut (Messung: R607).
+ * fragt jeden Frame, daher einmal je Tick, Insel und Gut (Messung: R607); Gebäudezahl sowie Zahl
+ * und Id-Summe der stillgelegten Betriebe im Schlüssel fangen Bau, Abriss, Stilllegen und Tausch im
+ * pausierten Spiel ab (R622). Ausser Scope: `connected`-Änderungen durch Strassenbau (docs/beobachtungen.md).
  */
 function producedPerMinute(world: World, island: number, good: GoodId): number {
-  const key = `${world.tick}|${island}|${good}`;
+  let count = 0;
+  let paused = 0;
+  let pausedIds = 0;
+  for (const b of Object.values(world.buildings)) {
+    count++;
+    if (b.paused === true) {
+      paused++;
+      pausedIds += b.id;
+    }
+  }
+  const key = `${world.tick}|${island}|${good}|${count}|${paused}|${pausedIds}`;
   const hit = producedCache.get(world);
   if (hit !== undefined && hit.key === key) return hit.value;
   const value = perMinute(goodProductionPer100(world, island, good), GOODS_BALANCE_TICKS);

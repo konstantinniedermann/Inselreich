@@ -13,6 +13,16 @@ export type Budget = Partial<Record<GoodId, number>>;
 /** Toleranz für Gleitkomma-Raten (z. B. 8 × 0,2); kein Spielwert. */
 const DEFICIT_EPSILON = 1e-9;
 
+/**
+ * Rate eines Betriebs je 100 Ticks (gemeinsame Zählregel von Bilanz und Produktionsanzeige):
+ * 0 für Häuser, nicht angebundene, stillgelegte und zyklusfreie Gebäude, sonst 100 / Zyklus.
+ */
+export function producedRate(world: World, b: Building): number {
+  if (b.house || !b.connected || b.paused === true) return 0;
+  const cycle = cycleOf(world, b);
+  return cycle === undefined ? 0 : 100 / cycle;
+}
+
 /** Erzeugung und Verbrauch je Gut über 100 Ticks auf `island` (nominal, ungerundet; Lager und Brand zählen nicht). */
 export function goodsBalance(
   world: World,
@@ -33,10 +43,10 @@ export function goodsBalance(
     }
     if (!b.connected || b.paused === true) continue;
     const def = BUILDING_DEFS[b.defId];
-    const cycle = cycleOf(world, b);
-    if (cycle === undefined) continue;
-    if (def.produces) out[def.produces].produced += 100 / cycle;
-    for (const g of def.consumes ?? []) out[g].consumed += 100 / cycle;
+    const rate = producedRate(world, b);
+    if (rate === 0) continue;
+    if (def.produces) out[def.produces].produced += rate;
+    for (const g of def.consumes ?? []) out[g].consumed += rate;
   }
   for (const g of GOOD_IDS) out[g].net = out[g].produced - out[g].consumed;
   return out;

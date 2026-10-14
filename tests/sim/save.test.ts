@@ -133,7 +133,7 @@ function expectFailure(json: string, reason: string): void {
 }
 
 describe('save', () => {
-  it('uses version 5', () => {
+  it('createWorld uses SAVE_VERSION', () => {
     expect(createWorld(3).version).toBe(SAVE_VERSION);
   });
 
