@@ -7189,3 +7189,17 @@ zweiten Auftragsstrom (Fernangebot)? Ergebnis als Playtest-Report an L0 und den 
 Regelbezug: gates.md Gate Merge, R424, R619, R626, R629 · Kosten bei Irrtum: Konfliktnacharbeit beim Merge nach UI-AUFRAEUM-3.
 
 Entscheider: L0 · Anlass: Bericht lead-tech i-100 · ADR: —
+
+## R631 · 2026-10-14 · Gate Merge TOOL-ZEITRESERVE-21: OK mit Vorbehalt; gebündelter Merge
+
+Ruling: `tool/zeitreserve-21` @ `69698908` (nur drei Testdateien, Welten in `beforeAll`, `decorSea` 5076 → 1 ms, `trees-farn`
+3699 → 788 ms, `scenario-saves` AK-B2-02 855 → 62 ms, AK-S5-02 Timeout 15 s mit Kommentar; tsc/lint/zeittests/conflicts/`make test`
+Exit 0; Task-Review OK) → **Gate Merge OK**, Vorbehalt: `make zeitreserve-gate` Exit 0 im Release-Check REL-22 (zweimal Exit 2 wegen
+Last durch das parallele UI-AUFRAEUM-3, kein Substanz-Befund). Merge gebündelt durch den Integrator nach dem Final-Review von
+UI-AUFRAEUM-3: `tool/zeitreserve-21`, `feat/ui-aufraeum-3`, `feat/i100` seriell, ein `make check` am Ende. Beobachtung: `forest`
+RF-L1-5, `buyPct` AK-ZK-07, `wildlife` RF-10, `fauna` CAPS und `decor` L4-T3 R5 lagen unter Last ~10 nahe der Schwelle; reissen sie
+das Gate bei ruhiger Last, folgt TOOL-ZEITRESERVE-22 vor dem Push REL-22.
+
+Regelbezug: gates.md Gate Merge, R598, R624, R626 · Kosten bei Irrtum: ein weiteres Zeitreserve-Paket vor REL-22.
+
+Entscheider: L0 · Anlass: Bericht lead-tech tool-zeitreserve-21 · ADR: —
