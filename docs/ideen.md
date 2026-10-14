@@ -58,6 +58,24 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 | Aufwand (`richtwerte.md`) | S: ≤ 1 Häppchen                                                            | M: 2–4 Pakete                | L: Meilenstein                                                             |
 | Risiko                    | berührt weder Save, Baseline, Perf noch Lizenz                             | berührt eines davon          | berührt mehrere                                                            |
 
+## Rangliste IDEEN-10 (Vorschlag lead-design, Ruling L0 offen)
+
+Breite Runde nach REL-22 (R445), Scouts A (Spätspiel und Handel nach Handel 2) und B (Komfort und Übersicht): 9 Vorschläge,
+eingetragen als I-101–I-109. Keine Idee ändert Kernsäule, Genre oder Titel (§5.3); keine doppelt Erweiterung 1 oder
+Handel 2 (I-101 und I-102 setzen Handel 2 live voraus, I-104 und I-105 nach Handel 2 bzw. K3 prüfen). Pool danach: 19 von 40 offen.
+
+| Rang | ID    | Name                                | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                | Empfehlung                                           |
+| ---- | ----- | ----------------------------------- | ------ | ----- | --------------- | --------------------------------------------- | ---------------------------------------------------- |
+| 1    | I-102 | Auftragsvorschau                    | S      | 13    | nein / nein     | Auftrag planbar, ≈ 60 Tools                   | einplanen Häppchen nach Handel 2                     |
+| 2    | I-104 | Ausschreibung                       | M      | 13    | ja / nein       | echte Spätspiel-Wahl «Vorrat statt Verkauf»   | parken: Baustein Handels-Brainstorming nach Handel 2 |
+| 3    | I-109 | Reichweite am Gut-Chip              | S–M    | 12    | nein / nein     | Mangel vorausplanen, ≈ 1 Paket                | einplanen Häppchen                                   |
+| 4    | I-108 | Einnahmen und Unterhalt getrennt    | S      | 12    | nein / nein     | Wirtschaftslage auf einen Blick, ≈ 60 Tools   | einplanen Häppchen                                   |
+| 5    | I-103 | Routen-Bilanz                       | S–M    | 12    | nein / nein     | Schiffsentscheid statt Bauchgefühl, ≈ 1 Paket | einplanen nach Handel 2 (mit I-101)                  |
+| 6    | I-101 | Fernauftrag-Marke Seekarte          | S      | 12    | nein / nein     | Fernauftrag auf einen Blick, ≈ 50 Tools       | einplanen mit Handel 2 als Beipack                   |
+| 7    | I-105 | Abfahrtsregel der Route             | M      | 11    | ja / nein       | Takt gegen Auslastung, ≈ 2 Pakete             | parken: K3-Spec klären (I-015)                       |
+| 8    | I-106 | «Neu»-Karte schlank und schliessbar | S      | 10    | nein / nein     | Sicht frei, ≈ 50 Tools                        | prüfen gegen UI-AUFRAEUM-3/-D, sonst verwerfen       |
+| 9    | I-107 | Tempo-Tasten + und −                | S      | 10    | nein / nein     | Lückenfüller, ≈ 40 Tools                      | parken (I-083 deckt den Kern)                        |
+
 ## Rangliste IDEEN-09 (Vorschlag lead-design, Ruling L0 offen)
 
 Breite Runde nach REL-21 (R604, R445), Scouts A (Playtests REL-20/21), B (Genre Aufbau und Handel), C (Bedienung Desktop)
@@ -206,3 +224,98 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Nutzen/Aufwand: verpasste Krisen lesbar · S–M · ≈ 70 Tools
 - Entscheid: IDEEN-09 Empfehlung einplanen als Häppchen nach I-088/I-090
 - Status 2026-10-14: Kurzdesign `docs/superpowers/specs/2026-10-14-i100-neu-zaehler.md` (Zähler nur für Meldungs-Einträge, UI-Zustand, kein Save)
+
+### I-101 · bewertet · Fernauftrag-Marke auf der Seekarte
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout A; Handel-2-Spec §1 «nicht im Umfang» (Marke auf der Seekarte, AN-7 «optional»); `world.order.island` (nach Handel 2) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht auf der Seekarte an der Felsbucht eine Münzmarke «15 Rum · 1:20» und lenkt das Schiff dorthin, statt in der Auftragskarte nach dem Ziel zu suchen."
+- Grösse: S · Risiko: keins (reine Anzeige; setzt Handel 2 live voraus)
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Randfälle: nur bei laufendem Fernauftrag; Marke ohne Mausfang; bei Verfall oder Lieferung weg.
+- Nutzen/Aufwand: Fernauftrag auf einen Blick planbar · S · ≈ 50 Tools
+- Entscheid: offen (IDEEN-10)
+
+### I-102 · bewertet · Auftragsvorschau «Als Nächstes: Rum»
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout A; Genre-Mechanik Vorschau auf kommende Bestellung; `src/sim/orders.ts` (`orderForPeriod(seed, k, maxHouseTier)` zustandslos, ADR-010) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler liest «Nächster Auftrag in 0:40 · voraussichtlich Rum» und lässt das Lager für Rum liegen, statt es vorher zu verkaufen."
+- Grösse: S · Risiko: keins (Save nein, Baseline nein; reine Ableitung, kein neuer Zufallsstrom)
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13
+- Randfälle: nur das Gut, nie die Menge; «voraussichtlich» (Stufenaufstieg kann das Gut ändern); bei Vertrag oder gesperrter Folgeperiode keine Vorschau. Entartung: Vorschau-Nutzer verkauft nie das nächste Auftragsgut; Preis ist Lagerplatz, kein Gewinn.
+- Doppelung: I-029 (Gefragte Ware, geparkt) ändert Preise; I-102 zeigt nur Vorhandenes. Handel 2: Fernangebot-Insel der Periode darf mitgenannt werden.
+- Nutzen/Aufwand: Auftrag planbar statt Zufall · S · ≈ 60 Tools
+- Entscheid: offen (IDEEN-10)
+
+### I-103 · bewertet · Routen-Bilanz (lohnt dieses Schiff?)
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout A; `docs/spielwerte.md` Handelsschiff (Unterhalt 90 / min), Warenbilanz nominal · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler liest im Schiff-Panel «Route Felsbucht: +310 / min Warenwert, Unterhalt 90 → +220» und streicht die Route, die nur 40 trägt."
+- Grösse: S–M · Risiko: Perf gering (nur bei offenem Panel); Save nein, Baseline nein
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 3 = 12
+- Randfälle: nominal wie die Lagerleiste (Handel, Aufträge, Vorliebe nicht eingerechnet, das Panel sagt es); Gewürz mit gespartem Kaufpreis; Schiff ohne Route zeigt nichts.
+- Doppelung: I-067 (Verlaufskurve, geparkt), I-078/I-089 (live) berühren keine Routen.
+- Nutzen/Aufwand: Schiffsentscheidung statt Bauchgefühl · S–M · ≈ 1 Paket
+- Entscheid: offen (IDEEN-10)
+
+### I-104 · bewertet · Ausschreibung (grosse Sammelbestellung)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout A; Genre-Mechanik Sammelbestellung mit Frist; `docs/spielwerte.md` Handelsaufträge (`ORDER_PREMIUM` 0,75, Lager 100, Reserve I-049 live); Handel-2-Spec R3/R7 · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht ab Stufe 4 alle 12 min «Ausschreibung: 60 Holz, 30 Stein, 20 Stoff · 4000 · noch 6:00», baut Vorrat auf, stellt die Reserve hoch und entscheidet, ob er dafür den Verkauf auslässt."
+- Grösse: M · Risiko: Save (Ausschreibungszustand neben dem Auftrag); Baseline nein, solange der Controller nicht annimmt
+- Raster: Spass 3 · Passung 3 · Aufwand 2 · Risiko 2 = 13
+- Randfälle: Stückprämie unter 0,8 × `buy` (Edikt Handel); Mengen je Gut ≤ 80; Teillieferung mit Abschlag erwägen; Verfall ohne Strafe. Entartung: reiner Überschuss ohne Wahl; Menge muss über dem Lager-Normalstand liegen (Rechnung `design-economy-designer`).
+- Doppelung: I-017 (Lernpfad, geparkt), I-047 (Dauerabnahme). Nach Handel 2 prüfen, nicht davor.
+- Nutzen/Aufwand: Spätspiel-Ziel «Vorrat statt Verkauf» · M · ≈ 2 Pakete (Rechnung ≈ 40 Tools)
+- Entscheid: offen (IDEEN-10)
+
+### I-105 · bewertet · Abfahrtsregel der Route (Warten bis halbvoll)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout A; Genre-Mechanik Abfahrtsbedingung; `docs/spielwerte.md` Route (Schiff fährt sofort, Frachtraum 50) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler stellt die Gewürzroute auf «wartet bis halbvoll» und nimmt längere Wartezeit im Hafen in Kauf, statt fast leer zu fahren."
+- Grösse: M · Risiko: Save (Regel je Route, Standard «sofort», Migration keine); Baseline nein
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Randfälle: Wartedeckel 0:30; zwei Güter je Richtung zählen gemeinsam; «wartet» im Panel sichtbar; Fernauftrag-Fracht darf nicht verklemmen.
+- Doppelung: I-015 (Leitsätze) ging in Erweiterung 1 K3 auf; vorher prüfen, ob K3 eine Abfahrtsregel enthält, sonst zusammenfassen.
+- Nutzen/Aufwand: Takt gegen Auslastung als echte Wahl · M · ≈ 2 Pakete
+- Entscheid: offen (IDEEN-10)
+
+### I-106 · bewertet · «Neu»-Karte schlank und schliessbar
+
+- Bereich: Bedienung · Säule: Bedienung · Quelle: IDEEN-10 Scout B; Playtest `.studio/qa/rel-18/report.md` (Ärgernis 2: «Neu: …»-Karte bleibt über 25 s, verdeckt oben links) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler schliesst die «Neu: …»-Karte mit einem Klick oder sieht bei mehreren Freischaltungen nur «Neu: 3 Gebäude»."
+- Grösse: S · Risiko: keins (UI-Zustand)
+- Raster: Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 10
+- Hinweis: vor Einplanung gegen UI-AUFRAEUM-3 (I-099, Kartenstapel) und UI-HAEPPCHEN-D prüfen; falls dort gelöst, verwerfen.
+- Nutzen/Aufwand: Sicht auf die Karte in der ersten Stunde · S · ≈ 50 Tools
+- Entscheid: offen (IDEEN-10)
+
+### I-107 · bewertet · Tempo-Tasten + und − (statt Ziffern)
+
+- Bereich: Bedienung · Säule: Bedienung · Quelle: IDEEN-10 Scout B; Playtest rel-18; `src/ui/hotkeys.ts`; Hinweis bei `4`–`8` ist schon live (I-083) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler drückt `+` bzw. `-` für schneller bzw. langsamer."
+- Grösse: S · Risiko: keins
+- Raster: Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 10
+- Randfälle: Pause bleibt auf `P`/Leertaste; `+` in der Pause: Entscheid im Kurzdesign. Mit I-083 teilweise gelöst, Lückenfüller.
+- Nutzen/Aufwand: Tastatur-Konsistenz · S · ≈ 40 Tools
+- Entscheid: offen (IDEEN-10)
+
+### I-108 · bewertet · Kopfzeile zeigt Einnahmen und Unterhalt getrennt
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout B; Playtest rel-18; Screenshot `.studio/qa/REL-22/05-unterhalt.png`; `src/ui/hud.ts`, `src/ui/upkeepCard.ts` · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler liest «+540 / −780» statt «−240», sieht, ob Einnahmen schwach oder Unterhalt zu hoch ist, und öffnet per Klick die Unterhaltskarte."
+- Grösse: S · Risiko: keins (abgeleitete Anzeige; Kopfzeilenbreite bei 1280 px prüfen)
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Doppelung: I-089 (live) und I-067 (geparkt) liegen daneben; ändert nur die Zahl in der Kopfzeile.
+- Nutzen/Aufwand: Wirtschaftslage auf einen Blick · S · ≈ 60 Tools
+- Entscheid: offen (IDEEN-10)
+
+### I-109 · bewertet · Reichweite am Gut-Chip («Nahrung noch 2:10»)
+
+- Bereich: Bedienung · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: IDEEN-10 Scout B; Playtest rel-18 (Ärgernis 3: Nahrung früh auf 0); `src/ui/hud.ts` (`goodsBalance`), `src/ui/goodFocus.ts` · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht beim fallenden Nahrungs-Chip «leer in 2:10» (beim vollen Holz «voll in 0:40») und baut den Fischer, bevor der Mangel eintritt."
+- Grösse: S–M · Risiko: Perf gering (eine Division je Gut und `refresh()`); Save nein, Baseline nein
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 3 = 12
+- Randfälle: nur bei Bilanz < 0 bzw. Lager fast voll; in der Pause eingefroren; im Tooltip oder in der Zeile unter dem Chip, damit die Leiste bei 1280 px nicht wächst.
+- Doppelung: I-043 und I-085 (live) zeigen die Gegenwart; diese Idee ergänzt die Zeitachse.
+- Nutzen/Aufwand: Mangel vorausplanen statt hinterherlaufen · S–M · ≈ 1 Paket
+- Entscheid: offen (IDEEN-10)
