@@ -7549,3 +7549,13 @@ Pflegeregel in state.md um die Semantik ergänzen.
 Regelbezug: R648, R655 · Kosten bei Irrtum: falscher Tagesstand im Dashboard bis zum Fix.
 
 Entscheider: L0 · Anlass: Sichtprüfung L0 · ADR: —
+
+## R657 · 2026-10-14 · Gate Merge TOOL-DASH-ZIEL-FIX: OK
+
+Ruling: `tool/dash-ziel-fix` @ `ed0ccc32` (`goal_reached`/`goalDone` identisch, Rot-Beleg 2 Fälle, `make lint`/`studio-test`/`studio-lint`/
+`docs-check` Exit 0, Review OK) → **Gate Merge OK**. lead-production merged `--no-ff`, setzt das Paket done, startet den Dashboard-Server
+neu; L0 prüft per Screenshot. Folge der Semantik: Items nach dem Merge immer auf `state: done` setzen (Pflegeregel).
+
+Regelbezug: gates.md Gate Merge, R656 · Kosten bei Irrtum: falscher Zähler im Dashboard.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-DASH-ZIEL-FIX · ADR: —

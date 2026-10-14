@@ -220,8 +220,8 @@ class GoalTest(unittest.TestCase):
             "releases": [
                 {
                     "items": [
-                        item("I-047", goalStage=3, stage=3),
-                        item("I-047-x", goalStage=3, stage=3),
+                        item("I-047", goalStage=3, stage=3, state="done"),
+                        item("I-047-x", goalStage=3, stage=3, state="done"),
                         item("B:merge", goalStage=4, stage=5),
                         item("C", goalStage=4, stage=2),
                         item("D", stage=5),
@@ -242,9 +242,9 @@ class GoalTest(unittest.TestCase):
             "releases": [
                 {
                     "items": [
-                        item("A", goalStage=4, stage=2, startStage=4),
+                        item("A", goalStage=4, stage=2, startStage=4, state="done"),
                         item("B", goalStage=4, stage=2, startStage=9),
-                        item("C", goalStage=4, stage=3.6),
+                        item("C", goalStage=4, stage=3.6, state="done"),
                         item("D", goalStage=4, stage=1, startStage="x"),
                     ]
                 }
@@ -253,6 +253,37 @@ class GoalTest(unittest.TestCase):
         }
         progress = releases.goal_progress(data, ["A", "B", "C", "D"])
         self.assertEqual(progress["reached"], 3)
+
+    def test_goal_reached_only_when_goal_stage_is_completed(self):
+        cases = [
+            (
+                "gleiche Stufe, active",
+                {"goalStage": 3, "stage": 3, "state": "active"},
+                False,
+            ),
+            (
+                "gleiche Stufe, done",
+                {"goalStage": 3, "stage": 3, "state": "done"},
+                True,
+            ),
+            ("darüber, active", {"goalStage": 3, "stage": 4, "state": "active"}, True),
+            ("darunter, done", {"goalStage": 3, "stage": 2, "state": "done"}, False),
+            (
+                "startStage darüber, active",
+                {"goalStage": 4, "stage": 2, "startStage": 5, "state": "active"},
+                True,
+            ),
+            (
+                "startStage gleich, active",
+                {"goalStage": 4, "stage": 2, "startStage": 4, "state": "active"},
+                False,
+            ),
+        ]
+        for label, extra, expected in cases:
+            with self.subTest(label):
+                data = {"releases": [{"items": [item("A", **extra)]}], "pool": []}
+                progress = releases.goal_progress(data, ["A"])
+                self.assertEqual(progress["reached"], 1 if expected else 0)
 
     def test_goal_progress_without_data_is_zero(self):
         self.assertEqual(
