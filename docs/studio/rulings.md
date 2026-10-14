@@ -7537,3 +7537,15 @@ den Dashboard-Server neu (neuer Python-Code), damit der Nutzer die Karte sieht. 
 Regelbezug: gates.md Gate Merge, R648, R649, R651 · Kosten bei Irrtum: eine falsch versetzte Hinweiszeile im Dashboard.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-DASH-SESSIONZIEL · ADR: —
+
+## R656 · 2026-10-14 · Nachbesserung Zielmarke: «erreicht» erst bei abgeschlossener Zielstufe
+
+Ruling: L0-Sichtprüfung nach R655 (Headless-Screenshot 1440 px): HANDEL-2 (stage 4 = goalStage 4, state active) zeigt «✓ Ziel erreicht»,
+Zähler «4 von 4». Auslegung `goalStage`: Ziel ist das **Abschliessen** der Zielstufe. «Erreicht» gilt nur bei `stage > goalStage` oder
+`stage == goalStage` und `state == done` (Python `goal_progress` und JS identisch, Test zuerst rot). Paket **TOOL-DASH-ZIEL-FIX** (lead-tech,
+1 Start + Review). Daten: REL-22-Titel in releases.json «Kandidat lokal auf main» → «Aufgeräumt und nichts verpasst» (lead-production);
+Pflegeregel in state.md um die Semantik ergänzen.
+
+Regelbezug: R648, R655 · Kosten bei Irrtum: falscher Tagesstand im Dashboard bis zum Fix.
+
+Entscheider: L0 · Anlass: Sichtprüfung L0 · ADR: —
