@@ -7306,3 +7306,17 @@ je sonnet, je 1 Start. Umsetzung erst nach dem Push REL-22 (Folgesession), damit
 Regelbezug: gates.md Gate Plan, R583, R633, R637 · Kosten bei Irrtum: ein Plan-Nachtrag.
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-handel-2 · ADR: —
+
+## R639 · 2026-10-14 · Gate Plan Handel 2: OK; Umsetzung nach Push REL-22
+
+Ruling: lead-qa OK (drei Review-Hinweise), lead-production OK (zwei Auflagen) zum Plan `plan/handel-2` @ `f5d38fcf` → **Plan freigegeben**.
+Budget **26 Starts / Parallelität 1** unter Phase `handel-2`, drei Controller-Instanzen (C1 T01–T03, C2 T04–T06, C3 T07–T09 + Final-Review)
+als Folgeinstanzen. Auflagen ins Controller-Briefing: (1) T03-Review listet jede Anpassung an Alt-Tests (`save-contract`, `buyPct`), nichts
+abgeschwächt; (2) AK-20 mit Grenzfällen (`due = P + 1500` lädt, ausserhalb `FAR_ORDER_DURATION` → «Beschädigter Spielstand»);
+(3) Final-Review mit Grep-Wächter: kein Versions-Literal in Tests; (4) `git merge main` vor T07; (5) vor dem Merge `git diff --stat
+main...design/erweiterung-1 -- src tests` prüfen, bei Code dort Hinweis an die Nutzer-Session; Worktree `erweiterung-1` nie anfassen.
+State.md führt `plan-handel-2` und `handel-2`. **Start der Umsetzung in der Folgesession nach dem Push REL-22.**
+
+Regelbezug: gates.md Gate Plan, R583, R633, R638 · Kosten bei Irrtum: ein Controller-Nachtrag.
+
+Entscheider: L0 · Anlass: Berichte lead-qa und lead-production gate-plan-handel-2 · ADR: —
