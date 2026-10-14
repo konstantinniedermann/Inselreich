@@ -11,7 +11,8 @@ Umsetzer `tech-ui-engineer` · Schätzung 30 Tools · AK-UA3-01 bis 03 · blocke
 
 - **AK-UA3-01** Zug mit Umschalt offen, Rechtsklick: `actions` enthält `{type:'roadLine',phase:'cancel'}`, aber **kein** `{type:'cancel'}`; Werkzeug bleibt (kein Abwurf).
 - **AK-UA3-02** Zweiter Rechtsklick ohne Zug: `{type:'cancel'}` wie heute (altes Verhalten ohne Zug bleibt, bestehender Test grün).
-- **AK-UA3-03** Esc und erster Rechtsklick im Zug haben dieselbe Wirkung (gleicher Vergleichstest); Abriss- und Weide-Zug: der Umsetzer prüft, ob `drag` dort bei Rechtsklick gesetzt ist; wenn ja gleiche Staffelung mit Test, wenn nein Test «unverändert» und Vermerk im Task-Bericht.
+- **AK-UA3-03** Esc und erster Rechtsklick im Zug haben dieselbe Wirkung (gleicher Vergleichstest).
+- **Zugmenge (festgelegt, Lead-Tech nach Lesen von `input.ts` Z. 361 und 379-394):** Heute unterbricht Rechtsklick nur `drag?.line === true`; Abriss-Strich (`drag.demolish`) und Weide-/Strassen-Strich (`drag.road`) sind Halte-Züge mit linker Taste, ein Rechtsklick dazwischen sendet bisher nur `cancel`. Entscheid: Staffelung gilt **nur für den Linienzug**; Abriss- und Weide-Strich bleiben **unverändert** (Rechtsklick sendet `cancel`, Werkzeug wird abgelegt). Grund: `cancelPointerAction()` nach bereits gebauten/abgerissenen Kacheln des Strichs ist nicht belegt, der Linienzug baut erst beim Loslassen. Zwei Charakterisierungstests (je ein Fall `demolish` mit Gebäude-Strich, `pickaxe`/Weide mit `drag.road`): Rechtsklick im Strich enthält `{type:'cancel'}`. Wird beim Test sichtbar, dass `drag` dort bei Rechtsklick nicht gesetzt werden kann, gilt der Test als «unverändert» mit Vermerk im Task-Bericht.
 
 ## Schritte
 

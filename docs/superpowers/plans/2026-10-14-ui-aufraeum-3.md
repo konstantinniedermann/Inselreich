@@ -12,7 +12,7 @@ Spielerwirkung: Rechtsklick im Wegzug wirkt wie Esc, die Unterhalt-Karte nennt d
 
 ## Kurz-Spec
 
-- **I-098** (R606 3): Rechtsklick mit laufendem Linienzug (`drag?.line === true`) beendet nur den Zug (`cancelPointerAction()`), **kein** `cancel`-Action; erst der zweite Rechtsklick (kein Zug) sendet `cancel` und legt das Werkzeug ab. Ohne Zug unverändert. `src/ui/input.ts` Z. 361 ff. Abriss-/Weide-Zug (`drag.road`/`drag.demolish`) sind keine Linienzüge; Randfall «gleich behandeln» laut Idee: dort gilt dieselbe Staffelung (`drag !== null && drag.button === 0` und Zug aktiv → nur Zug beenden). Der Umsetzer prüft in T01, welche Züge Rechtsklick heute abbrechen, und legt die Menge im Test fest.
+- **I-098** (R606 3): Rechtsklick mit laufendem Linienzug (`drag?.line === true`) beendet nur den Zug (`cancelPointerAction()`), **kein** `cancel`-Action; erst der zweite Rechtsklick (kein Zug) sendet `cancel` und legt das Werkzeug ab. Ohne Zug unverändert. `src/ui/input.ts` Z. 361 ff. Abriss-/Weide-Zug (`drag.road`/`drag.demolish`) sind keine Linienzüge; Randfall «gleich behandeln» laut Idee: dort gilt dieselbe Staffelung (`drag !== null && drag.button === 0` und Zug aktiv → nur Zug beenden). Festgelegt (T01): Staffelung nur für den Linienzug, Abriss-/Weide-Strich unverändert (Rechtsklick sendet `cancel`), mit Charakterisierungstests.
 - **I-089**: `upkeepSummary` bekommt `islands: { island, count, upkeep }[]` (Summe der Betriebe mit Unterhalt je Insel, Stillgelegte mit ihrem Wert nach Stilllegung, ohne Schiffe), nur mit Seefahrt (`islandLabel !== null`) und bei mindestens zwei Inseln mit Betrieben; Karte zeigt oben «Felsbucht · 3 Gebäude · 140 / min». Fusszeile aus `totalUpkeep(world)` statt `stats.upkeep` (Pausen-Befund); Heimat-Kontor erscheint als Inselzeile mit 0 nicht (Insel ohne Unterhalt-Betrieb fehlt), der Hinweis klärt sich über die Inselzeile. Summe der Inselzeilen + Schiffe + Edikt = Fusszeile (Test).
 - **I-099**: Meldungsstapel `.notice-stack` mit einem festen Abstand `--stack-gap` (Variable, ein Wert für alle Karten), «Krisen: aus» ist keine Karte mehr (`crisisCardText` liefert `''`, `updateNoticeStack` blendet bereits bei `''` aus); die Krisenstufe bleibt in Menü/Einstellungen lesbar (README Z. 206). Krisenkarte mit laufender Krise und «nächste Krise in …» bleibt.
 - **Badge**: `prefer-*` bekommt Klasse `badge--prefer` (neutraler Ton, Rand wie Boom, andere Füllung), Boom bleibt `badge--boom`.
@@ -36,22 +36,33 @@ Spielerwirkung: Rechtsklick im Wegzug wirkt wie Esc, die Unterhalt-Karte nennt d
 
 ## Tasks
 
-| Task | Titel                                  | Datei                     | AK-IDs           | Strang | blocked-by  | Modell | Tools |
-| ---- | -------------------------------------- | ------------------------- | ---------------- | ------ | ----------- | ------ | ----- |
-| T01  | Rechtsklick staffelt wie Esc (I-098)   | `T01-rechtsklick.md`      | AK-UA3-01 bis 03 | 1      | REL-21 live | sonnet | 30    |
-| T02  | Badge `prefer-*` eigene Klasse         | `T02-badge.md`            | AK-UA3-04, 05    | 1      | T01         | sonnet | 20    |
-| T03  | Unterhalt je Insel + Fusszeile (I-089) | `T03-unterhalt-inseln.md` | AK-UA3-06 bis 10 | 1      | T02         | sonnet | 60    |
-| T04  | Kartenstapel ordnen (I-099)            | `T04-kartenstapel.md`     | AK-UA3-11 bis 14 | 1      | T03         | sonnet | 50    |
-| T05  | Gemeinsame Zählregel                   | `T05-zaehlregel.md`       | AK-UA3-15 bis 17 | 1      | T04         | sonnet | 30    |
-| T06  | Kleinbefunde REL-21                    | `T06-kleinbefunde.md`     | AK-UA3-18, 19    | 1      | T05         | sonnet | 15    |
-| T07  | Doku und Ranglisten (D1, E-017)        | `T07-doku.md`             | AK-UA3-20 bis 22 | 1      | T06         | sonnet | 35    |
+| Task | Titel                                  | Datei                     | AK-IDs            | Strang | blocked-by  | Modell | Tools |
+| ---- | -------------------------------------- | ------------------------- | ----------------- | ------ | ----------- | ------ | ----- |
+| T01  | Rechtsklick staffelt wie Esc (I-098)   | `T01-rechtsklick.md`      | AK-UA3-01 bis 03  | 1      | REL-21 live | sonnet | 30    |
+| T02  | Badge `prefer-*` eigene Klasse         | `T02-badge.md`            | AK-UA3-04, 05     | 1      | T01         | sonnet | 20    |
+| T03  | Unterhalt je Insel + Fusszeile (I-089) | `T03-unterhalt-inseln.md` | AK-UA3-06 bis 10  | 1      | T02         | sonnet | 60    |
+| T04  | Kartenstapel ordnen (I-099)            | `T04-kartenstapel.md`     | AK-UA3-11 bis 14  | 1      | T03         | sonnet | 50    |
+| T05  | Gemeinsame Zählregel                   | `T05-zaehlregel.md`       | AK-UA3-15 bis 17b | 1      | T04         | sonnet | 30    |
+| T06  | Kleinbefunde REL-21                    | `T06-kleinbefunde.md`     | AK-UA3-18, 19     | 1      | T05         | sonnet | 15    |
+| T07  | Doku und Ranglisten (D1, E-017)        | `T07-doku.md`             | AK-UA3-20 bis 22  | 1      | T06         | sonnet | 35    |
 
-Summe ≈ 240 Tools Umsetzer. Je Task Umsetzer `tech-ui-engineer` (T05 `tech-sim-engineer`), danach `qa-code-reviewer` (sonnet) je Task; T01–T04 zusätzlich ein gemeinsamer Browser-Check `qa-playtester` 1280×720 und 1920×1080 (Screenshots `.studio/qa/ui-aufraeum-3/`); letzter Review über die Branch mit `model: opus` als Final-Review (Stufe leicht). Fix-Runden per SendMessage.
+Summe ≈ 240 Tools Umsetzer. Je Task Umsetzer `tech-ui-engineer` (T05 `tech-sim-engineer`), danach `qa-code-reviewer` (sonnet) je Task; T01–T04 zusätzlich ein gemeinsamer Browser-Check `qa-playtester` 1280×720 und 1920×1080 (Screenshots `.studio/qa/ui-aufraeum-3/`) nach der Schrittliste im Abschnitt «Playtest-Schritte»; letzter Review über die Branch mit `model: opus` als Final-Review (Stufe leicht). Fix-Runden per SendMessage.
 **Budgetantrag:** 7 Pakete × 2 + 1 Playtest + 1 Final-Review = 16, + 30 % Puffer = **21 Starts**, Parallelität 1 (ein Strang, gemeinsame Dateien).
 
 ## Zeitmessung berührter Tests (R392)
 
 Nicht gemessen: 1-min-Load 13,8 (> 8, Testlock-Regel R380) und `node_modules` im neuen Worktree fehlt; Abbruch laut Auftrag. Der Controller misst **vor T01** auf main `npx vitest related --run src/ui/input.ts src/ui/trade.ts src/ui/upkeepRank.ts src/ui/upkeepCard.ts src/ui/crisis.ts src/ui/hud.ts src/ui/production.ts src/ui/storageFull.ts src/sim/flow.ts` nach `.studio/qa/ui-aufraeum-3/zeit-vor.json`, bei Load ≤ 4. Umfang als Anhalt: `input` 38, `hud` 37, `trade` 16, `crisis` 8, `upkeepRank` 8, `inselmarkt` 7, `production` 2 Testfälle; `related` zieht über `flow.ts` viele Sim-Tests mit (grösster Posten, T05). Neue Tests lokal × 3 grün, je ≤ 50 % des Timeouts (R593).
+
+## Playtest-Schritte (T01–T04, qa-playtester, 1280×720 und 1920×1080)
+
+1. **T01:** Strassenwerkzeug, Umschalt gedrückt, Linienzug beginnen, Rechtsklick: Zug verschwindet, Werkzeug bleibt aktiv. Zweiter Rechtsklick: Werkzeug abgelegt. Abriss-Strich und Weide-Strich mit Rechtsklick: Werkzeug abgelegt wie bisher. Esc im Zug: gleiche Wirkung wie erster Rechtsklick.
+2. **T02:** Inselmarkt mit Vorliebe-Marke (`prefer-*`) neben einer Boom-Marke: beide auf einem Screenshot, unterscheidbar (Füllung, Ton).
+3. **T03:** Zwei Inseln mit Unterhalt-Betrieben (Seefahrt): Unterhalt-Karte bei 1280×720, Rangliste zeigt beide Inselzeilen ohne Überlauf oder Abschneiden; Summe Inselzeilen + Schiffe + Edikt = Fusszeile.
+4. **T04:** Kartenstapel oben rechts mit mehreren Karten gleichzeitig (Meldung, Vertrag, Krise): gleicher Abstand, keine Überlappung; Krisen auf «aus»: keine Karte; Krisen aus, dann an: Karte erscheint ohne Sprung im Stapel. Je Schritt Screenshot unter `.studio/qa/ui-aufraeum-3/`.
+
+## Abnahme Zeitmessung (R392)
+
+Der Controller schreibt `.studio/qa/ui-aufraeum-3/zeit-vor.json` (vor T01, Befehl im Abschnitt «Zeitmessung berührter Tests») und `zeit-nach.json` (gleicher Befehl nach T07, gleiche Load-Bedingung ≤ 4). Sein Bericht enthält eine Vergleichstabelle (Datei, Dauer vor/nach, Differenz); Abnahme, wenn kein berührter Testfall um mehr als 25 % und kein Lauf über 50 % des Timeouts liegt, sonst Beobachtung oder Fix-Task.
 
 ## Pflichtläufe
 

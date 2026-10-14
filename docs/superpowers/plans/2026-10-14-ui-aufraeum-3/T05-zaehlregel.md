@@ -11,7 +11,8 @@ Umsetzer `tech-sim-engineer` · Schätzung 30 Tools · AK-UA3-15 bis 17 · block
 
 - **AK-UA3-15** `producedRate`: 0 für Haus, nicht angebundene, stillgelegte und zyklusfreie Gebäude; sonst `100 / cycleOf(world, b)` (Rot: Funktion fehlt).
 - **AK-UA3-16** Gleichheit `goodProductionPer100(w,i,g) === goodsBalance(w,i)[g].produced` per `toBe` (bitgleich) auf mindestens drei Welten (bestehender Test in `production.test.ts` bleibt, nun streng).
-- **AK-UA3-17** `goodsBalance` unverändert: Snapshot aller Güter einer Messwelt vor und nach (Wert vor dem Umbau als Konstante festhalten); `tests/sim/balance.test.ts` unberührt grün.
+- **AK-UA3-17** `goodsBalance` unverändert: Snapshot-Welt (fester Seed) mit stillgelegten (`paused`) und nicht angebundenen (`connected` false) Betrieben neben normalen; alle Güter von `goodsBalance` je Insel vor dem Umbau als Konstante festhalten, nach dem Umbau per `toEqual`/`toBe` identisch. `tests/sim/balance.test.ts` unberührt grün.
+- **AK-UA3-17b Determinismus:** Gleicher Seed, N = 600 Ticks, zweimal gerechnet: `JSON.stringify(world)` beider Läufe gleich; dritter Lauf mit Save/Load-Roundtrip nach Tick 300 (`serialize` dann `load`, weiter bis 600): JSON-Vergleich mit dem durchgehenden Lauf gleich. Gilt auch für `goodsBalance`-Ergebnis am Ende. Läuft in `tests/sim/flow-count.test.ts`, Zeit ≤ 50 % Timeout (R593).
 
 ## Schritte
 
