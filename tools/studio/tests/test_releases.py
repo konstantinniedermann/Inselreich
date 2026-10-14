@@ -220,8 +220,9 @@ class GoalTest(unittest.TestCase):
             "releases": [
                 {
                     "items": [
+                        item("I-047", goalStage=3, stage=3),
                         item("I-047-x", goalStage=3, stage=3),
-                        item("B", goalStage=4, stage=5),
+                        item("B:merge", goalStage=4, stage=5),
                         item("C", goalStage=4, stage=2),
                         item("D", stage=5),
                         item("E", goalStage=2, stage=1),
@@ -230,10 +231,28 @@ class GoalTest(unittest.TestCase):
             ],
             "pool": [],
         }
-        progress = releases.goal_progress(data, ["i-047", "B", "C", "D"])
-        self.assertEqual(progress["total"], 3)
-        self.assertEqual(progress["reached"], 2)
-        self.assertEqual(sorted(progress["pkgs"]), ["B", "C", "I-047-x"])
+        progress = releases.goal_progress(data, ["I-047-x", "b-neu", "C", "D"])
+        self.assertEqual(sorted(progress["pkgs"]), ["B:merge", "C", "I-047", "I-047-x"])
+        self.assertEqual((progress["total"], progress["reached"]), (4, 3))
+        self.assertEqual(releases.goal_progress(data, ["i-047"])["pkgs"], ["I-047"])
+        self.assertEqual(releases.goal_progress(data, ["B"])["pkgs"], ["B:merge"])
+
+    def test_goal_progress_uses_max_of_start_and_stage_like_js(self):
+        data = {
+            "releases": [
+                {
+                    "items": [
+                        item("A", goalStage=4, stage=2, startStage=4),
+                        item("B", goalStage=4, stage=2, startStage=9),
+                        item("C", goalStage=4, stage=3.6),
+                        item("D", goalStage=4, stage=1, startStage="x"),
+                    ]
+                }
+            ],
+            "pool": [],
+        }
+        progress = releases.goal_progress(data, ["A", "B", "C", "D"])
+        self.assertEqual(progress["reached"], 3)
 
     def test_goal_progress_without_data_is_zero(self):
         self.assertEqual(

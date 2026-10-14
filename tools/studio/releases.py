@@ -142,15 +142,25 @@ def normalize_goals(data: dict) -> list[str]:
 
 
 def in_session(pkg: str, session_pkgs: list[str]) -> bool:
-    """Wie ``inSession`` in releases.js: gleich oder Präfix ``<paket>-``, klein geschrieben."""
-    name = pkg.lower()
+    """Wie ``inSession`` in releases.js: Session-Paket gleich ``<item>`` oder ``<item>-…``."""
+    item = base(pkg).lower()
     return any(
-        name == s.lower() or name.startswith(s.lower() + "-") for s in session_pkgs
+        s.lower() == item or s.lower().startswith(item + "-")
+        for s in map(str, session_pkgs)
     )
 
 
+def clamp_stage(value: object) -> int:
+    """Wie ``clampStage`` in releases.js: runden, 1..5, sonst 1."""
+    try:
+        number = float(value)  # type: ignore[arg-type]
+        return min(5, max(1, int(number + 0.5)))
+    except (TypeError, ValueError, OverflowError):
+        return 1
+
+
 def goal_progress(data: dict | None, session_pkgs: list[str]) -> dict:
-    """Tagesziel: Pakete der Session mit gültigem ``goalStage``; erreicht bei stage >= Ziel."""
+    """Tagesziel: Pakete der Session mit gültigem ``goalStage``; erreicht bei Stufe >= Ziel."""
     pkgs: list[str] = []
     reached = 0
     for entry in _dict_items(data) if data else []:
@@ -159,8 +169,10 @@ def goal_progress(data: dict | None, session_pkgs: list[str]) -> dict:
         if goal is None or not in_session(pkg, session_pkgs):
             continue
         pkgs.append(pkg)
-        stage = entry.get("stage")
-        if isinstance(stage, int) and not isinstance(stage, bool) and stage >= goal:
+        stage = max(
+            clamp_stage(entry.get("startStage")), clamp_stage(entry.get("stage"))
+        )
+        if stage >= goal:
             reached += 1
     return {"total": len(pkgs), "reached": reached, "pkgs": pkgs}
 
