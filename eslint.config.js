@@ -20,6 +20,8 @@ export default tseslint.config(
         AbortSignal: 'readonly',
         URLSearchParams: 'readonly',
         console: 'readonly',
+        CSS: 'readonly',
+        ResizeObserver: 'readonly',
       },
     },
   },
