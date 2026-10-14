@@ -1389,6 +1389,11 @@ button.hud-balance:focus-visible {
   border-top: 2px solid var(--gold);
 }
 
-.btn--unread {
-  color: var(--warn-amber);
+/* Neu-Zähler: Hervorhebung über Hintergrund und Rand, Schrift bleibt Pergament
+   (Pergament auf #6b3d0f = 7,2:1; die frühere Amberschrift auf Holz lag bei 2,4:1). */
+.btn--unread,
+.btn--unread:hover {
+  background: #6b3d0f;
+  border-color: var(--warn-parchment);
+  font-weight: 600;
 }
