@@ -1,9 +1,9 @@
 # Handel 2 · Fernangebot — Spec
 
-Stand: 2026-10-14 · Paket `design-handel-2` · Autor: design-spec-author · Grundlage: Designvorschlag
+Stand: 2026-10-14 (Nachtrag R633/R634) · Paket `design-handel-2` · Autor: design-spec-author · Grundlage: Designvorschlag
 [`2026-10-14-handel-2-brainstorming.md`](2026-10-14-handel-2-brainstorming.md) §3 V1, §5, §7; R629 (Gate
 Brainstorming OK V1) · Prozessstufe voll · Anhänge: [01 Werte und Fristrechnung](2026-10-14-handel-2-fernangebot/anhang-01-werte.md),
-[02 UI-Texte](2026-10-14-handel-2-fernangebot/anhang-02-ui-texte.md). Code-Stellen beziehen sich auf `main` zum Datum
+[02 UI-Texte](2026-10-14-handel-2-fernangebot/anhang-02-ui-texte.md), [03 Nachtrag-AK](2026-10-14-handel-2-fernangebot/anhang-03-nachtrag-ak.md). Code-Stellen beziehen sich auf `main` zum Datum
 dieser Spec (`SAVE_VERSION` 14).
 
 **Abweichungen vom Designvorschlag** (Begründung in den genannten Abschnitten, Entscheid in §8):
@@ -16,6 +16,11 @@ dieser Spec (`SAVE_VERSION` 14).
 - **P-3 Frist eines Fernauftrags im Save nur gegen Takt-Grenzen geprüft**, damit der Rückfall «Frist kürzen» ohne
   Migration bleibt (R15).
 
+**Nachtrag R633/R634** (Gate Spec, Playtest I-047): A2 Ersatzlage und Fremdinsel↔Fremdinsel (§1, §5, AK-H2-31);
+eigene Fernkarte statt zweiter Zeile (§4, Anhang 02 T.5, AK-H2-30); Ereignis-Log für Verfall und Lieferung
+(R14, Anhang 02 T.2, AK-H2-33); Vertrag schliesst Fernangebot aus (R3, AK-H2-32); K4-Auflage erfüllt (§7).
+Keine neuen Spielwerte, keine neue Sim-Regel, keine Save-Änderung.
+
 ## 1 Ziel und Nicht im Umfang
 
 **Ziel.** Hat der Spieler einen Fremdkontor, steht am Periodenbeginn neben dem Zufallsauftrag ein **Fernangebot**: das
@@ -23,6 +28,11 @@ Vorliebe-Gut einer Fremdinsel (I-092) in grosser Menge, lieferbar nur an deren K
 Zufallsauftrag durch den Fernauftrag mit langer Frist und lässt die nächste Periode aus. Spielerzweck: Bestehende
 Routen bekommen einen zweiten Zweck, und am Auftrag entsteht eine Wahl zwischen klein, schnell und zufällig und gross,
 geplant und mit Schiff.
+
+**Zulässig (A2, R633):** Das Fernangebot gilt für jede Fremdinsel mit Kontor, auch für eine Insel in **Ersatzlage**
+(Stufe 3 der Inselplatzierung, `d > dMax`, `FALLBACK_*` in `defs/sea.ts`), und die Ware darf auf jeder Route
+ankommen, auch **Fremdinsel↔Fremdinsel**: Ware hat keine Herkunft, R6 prüft nur den Lieferort. Die Regeln R1–R15
+ändern sich dafür nicht; die Frist-Garantie (§5) gilt nur für `d ≤ dMax` und eine Route Heimat↔Fern-Insel. AK-H2-31.
 
 **Ausdrücklich nicht im Umfang:**
 
@@ -33,7 +43,10 @@ geplant und mit Schiff.
   (I-047), an der Vorliebe (I-092), an Preisen, Sättigung, Booms, Edikten, Schiffen und Routen;
 - Marke auf der Seekarte (Vorschlag AN-7 «optional»: nicht in dieser Spec), Tastenkürzel, neues Panel, neuer Klang;
 - Treuebonus (I-091), Kaufseite (I-006), Zeitnachfrage (I-029);
-- Controller-Strategie für Fernaufträge (der Controller baut keinen Fremdkontor, §4).
+- Controller-Strategie für Fernaufträge (der Controller baut keinen Fremdkontor, §4);
+- eine Frist-Garantie für Ersatzlage und Routen zwischen Fremdinseln (§5, bekannte Grenze, keine Strafe);
+- ein sichtbares Ereignis-Log ohne Krisen und Log-Einträge für Zufallsaufträge oder Stammkunde (Beobachtungen
+  2026-10-14).
 
 ## 2 Regeln
 
@@ -71,6 +84,10 @@ liest den Wert **nicht** (R15), eine Änderung braucht keine Migration. Kein wei
   `world.farOffer = { island: i, good: g, amount: GOODS[g].order.far, reward: amount × orderUnitReward(g) }`.
   Folgerungen: Bei gelieferter Vertragsmenge, bei laufendem Fernauftrag und in der gesperrten Folgeperiode (R7) gibt es
   weder Zufallsauftrag noch Fernangebot; nach einem Vertragsbruch im selben Tick (I-047 R7) gibt es beides.
+  **Vertrag (ausdrücklich, R634 (2d)):** Solange `world.contract !== null` (alle Perioden des Vertrags, I-047 R6),
+  entsteht an keinem Periodenbeginn ein Zufallsauftrag (I-047) und damit **kein** Fernangebot; ein Fernangebot hängt
+  immer an einem Zufallsauftrag derselben Periode. Das ist keine neue Regel, sondern Folge von R3 und I-047; AK-H2-32
+  belegt es über mehrere Perioden.
 - **R4 Ende des Angebots.** `world.farOffer` wird `null` (a) beim Verfall des Zufallsauftrags in `tickOrders`
   (`t > order.due`, derselbe Schritt, der `order` löscht), (b) bei erfolgreichem `deliverOrder` des Zufallsauftrags,
   (c) bei erfolgreichem `acceptFarOrder`. Sonst bleibt es unverändert; insbesondere prüft kein Schritt den Kontor nach
@@ -103,7 +120,7 @@ liest den Wert **nicht** (R15), eine Änderung braucht keine Migration. Kein wei
   ein Vertrag im selben Tick bricht; danach `farSkip = null`. Ein Vertrag rechnet in dieser Periode wie in I-047
   ab (Lieferung oder Bruch mit Strafe). Ein Fernauftrag belegt damit stets die Perioden k und k + 1.
 - **R8 Verfall ohne Strafe.** Ein Fernauftrag verfällt wie jeder Auftrag im ersten Schritt mit `t > due`, also bei
-  `P + FAR_ORDER_DURATION + 1`. Kein Geldabzug, keine Meldung, kein Vertragsangebot. Weil
+  `P + FAR_ORDER_DURATION + 1`. Kein Geldabzug, kein Vertragsangebot; die UI meldet den Verfall aus dem Zustandsvergleich (T-17, R14). Weil
   `FAR_ORDER_DURATION < 2 × ORDER_PERIOD`, ist er am Beginn der Periode k + 2 stets verfallen, und dort kommt der
   Zufallsauftrag `orderForPeriod(seed, k + 2, maxHouseTier)`.
 - **R9 Stammkunde nach Lieferung.** Eine erfolgreiche Lieferung eines Fernauftrags setzt das Vertragsangebot genau wie
@@ -134,8 +151,10 @@ liest den Wert **nicht** (R15), eine Änderung braucht keine Migration. Kein wei
 - **R13 Determinismus.** Kein neuer Zufallszug, kein gespeicherter RNG-Zustand. `orderForPeriod` bleibt zustandslos:
   Der Zufallsauftrag der Periode k ist mit und ohne Fernangebot derselbe. Zwei Läufe mit gleichem Seed und gleicher
   Aktionsfolge sind bitgleich.
-- **R14 Bericht an die UI.** `StepReport` bleibt unverändert. Die UI liest `farOffer` und `order.island` aus dem
-  Zustand; Meldungen entstehen nur aus Spieleraktionen (Anhang 02 T.2).
+- **R14 Bericht an die UI.** `StepReport` bleibt unverändert, die Sim bekommt kein Verfallsereignis (R634 (2c)). Die UI
+  liest `farOffer` und `order.island` aus dem Zustand und vergleicht den Auftrag vor und nach jedem Schritt
+  (`orderMessageFor`-Muster): Meldungen aus Spieleraktionen und aus diesem Vergleich; Log-Einträge T-16 bis T-18
+  (Anhang 02 T.2). Der Verfall eines Zufallsauftrags bleibt ohne Meldung und Eintrag.
 
 ## 3 Zustand und Save
 
@@ -177,20 +196,27 @@ dahinter. Tests prüfen gegen `SAVE_VERSION`, nie gegen eine Zahl.
 
 ## 4 Bedienung und UI (desktop-first)
 
-Die Auftragskarte oben rechts (`src/ui/order.ts`) bekommt eine zweite Zeile und einen Fernauftrag-Zustand. Texte
-bilden reine, DOM-freie Helfer (testbar unter `tests/ui/`); Wortlaut in Anhang 02.
+Das Fernangebot bekommt eine **eigene Karte** (R634 (2b)) im Slot oben rechts, unter der Auftragskarte und über der
+Krisenkarte; die Auftragskarte (`src/ui/order.ts`) bekommt nur den Fernauftrag-Zustand. Texte bilden reine, DOM-freie
+Helfer (testbar unter `tests/ui/`); Wortlaut, Lage, Reihenfolge und Höhen in Anhang 02 (T.1, T.5).
 
-- **U1 Zweite Zeile.** Mit Zufallsauftrag und `farOffer ≠ null` zeigt die Karte unter der bestehenden Zeile T-02
-  «Fernangebot <Insel>: <Menge> <Gut> · <Wert> · Frist m:ss · Lager x/<Menge>» mit Knopf **Annehmen** (Tooltip T-03).
-  Die erste Zeile mit **Liefern** bleibt unverändert.
-- **U2 Fernauftrag.** Mit `order.island` zeigt die Karte T-04 mit Knopf **Liefern**; der Knopf ruft
+- **U1 Fernkarte.** Mit `farOffer ≠ null` zeigt eine eigene Karte T-02 «Fernangebot <Insel>: <Menge> <Gut> · <Wert> ·
+  Frist m:ss · Lager x/<Menge>» mit Knopf **Annehmen** (Tooltip T-03); Höhe ≤ 110 px bei 300 px Breite. Die
+  Auftragskarte mit **Liefern** bleibt unverändert. Nach dem Annehmen verschwindet die Fernkarte, der Fernauftrag
+  steht in der Auftragskarte (U2). Reihenfolge von oben: Auftragskarte (oder Stammkunde-Karte), Fernkarte,
+  Krisenkarte; nie mehr als drei Karten (Stammkunde und Fernangebot schliessen sich aus, R15); Höchststapel 315 px.
+- **U2 Fernauftrag.** Mit `order.island` zeigt die Auftragskarte T-04 mit Knopf **Liefern**; der Knopf ruft
   `deliverOrder(world, order.island)`, liefert also von der Fern-Insel unabhängig von der aktiven Insel. Warnfarbe ohne
   Kontor auf der Fern-Insel (T-05).
 - **U3 Lager** in T-02 und T-04 liest das Lager der Fern-Insel.
 - **U4 Meldungen** T-07, T-08; Fehlgründe aus `Result` mit Klang `error` (T-09). Klänge `orderDone` und `error`
   bestehen; kein neues Asset.
 - **U5 Ohne Fernangebot** ist die Karte bitgleich zu heute. «Nächster Auftrag in m:ss» nutzt `nextOrderTick` (R11).
-- Breite: Bei 1280 px passt die zweite Zeile in die Karte und überlappt die Krisenkarte nicht (AK-H2-30).
+- **U6 Ereignis-Log.** T-16 bis T-18 (Anhang 02 T.2): Lieferung und Verfall eines angenommenen Fernauftrags tragen eine
+  Meldung (`info`), der Verfall eines nur angebotenen Fernangebots nur den Log-Eintrag (`toast` `null`). Das Log ist
+  heute nur bei Krisen sichtbar; das bleibt in diesem Paket so (Grenze, Beobachtung).
+- Bei 1280×720 überdecken sich Auftrags-, Fern- und Krisenkarte (auch bei Sturmwarnung) nicht, und kein Karteninhalt
+  ist abgeschnitten (AK-H2-30).
 
 ## 5 Fristbeleg gegen die Seed-3-Karte (R629 Pflichtpunkt c)
 
@@ -207,6 +233,12 @@ Herleitung in Anhang 01 W.2; Kurzfassung:
     Ganz garantierbar wäre Fall B für Felsbucht d 40 erst mit 1800, und das sperrte die übernächste Periode.
 - **Entscheid der Spec: `FAR_ORDER_DURATION` = 1700** (P-1; Alternative 1500 in §8 O-1). Garantie: Fall A auf jeder
   Lage mit `d ≤ dMax`, Fall B für zwei von drei Inseln.
+- **Bekannte Grenze (A2):** Liegt eine Insel in Ersatzlage (Stufe 3), ist `d` bis `dMax + FALLBACK_FAR_STEPS ×
+FALLBACK_FAR_STEP` = `dMax + 40` (Weidenau bis 75, Felsbucht bis 80), also `L` bis 800; Fall A (`P + 600 + 2 L`)
+  kann dort die Frist überschreiten, ab `L > 550` schon bei Annehmen in `P + 600`. Das ist hinzunehmen: keine Strafe,
+  die Karte zeigt die Frist, frühes Annehmen genügt (wie O-4). Gleiches gilt für Routen Fremdinsel↔Fremdinsel
+  (Fahrzeit `10 × d` zwischen den Inseln, nicht garantiert). Die Frist ist ein Spielwert, kein Sim-Eingriff je Lage.
+  AK-H2-31 belegt nur, dass Angebot, Annehmen, Liefern und Verfall dort unverändert gelten.
 - Die echte Seed-3-Länge pinnt AK-H2-27 (Lauf im Paket H2-SIM, nicht durch diese Spec).
 
 ## 6 Balancing-Auswirkung
@@ -244,7 +276,11 @@ Herleitung in Anhang 01 W.2; Kurzfassung:
   Porzellan und Konfekt haben kein `order` und damit kein `order.far`; ein E1-`prefers` ohne `order.far` macht die
   Insel nicht wählbar (R1), bricht aber den Invarianten-Test, der dann per Ruling anzupassen ist. K3 (Flotte 4 → 6)
   ist Synergie ohne Regeländerung. Save-Nummer: §3.
-- **Auflage K4 Gefahren der See** (R629 (2)), Regel für den K4-Spec-Autor:
+- **Auflage K4 Gefahren der See** (R629 (2)): **erfüllt (R634 (2e))**. Im Spiel gibt es keine Piraten (`src/sim/ships.ts`
+  kennt nur Ladungsverlust bei Heimkehr über die Lagergrenze); der Sturm halbiert nur Betriebe und ändert Fahrzeiten
+  nicht (Playtest I-047, Lauf mit Krisen «normal»: Fahrzeiten gleich wie ohne Sturm). Beleg: Hin-und-Rück-Fahrzeiten
+  52 s (Möweninsel), 62 s (Weidenau), 78 s (Felsbucht); schlechtester Fall «Schiff gerade abgefahren» ≈ 117 s
+  (Felsbucht) < Frist 2:50 = 170 s. Die folgende Regel bleibt als **Hinweis für einen künftigen K4-Autor**:
   - Bringt K4 einen Halt H (Ticks; längster zusätzlicher Aufenthalt eines Schiffs auf Hin- und Rückweg zusammen, etwa
     durch die Sturm-Anweisung), muss gelten
     `ORDER_DURATION + 2 × SHIP_TICKS_PER_SEA_TILE × max(dMax) + H ≤ FAR_ORDER_DURATION ≤ 2 × ORDER_PERIOD − 1`.
@@ -252,7 +288,7 @@ Herleitung in Anhang 01 W.2; Kurzfassung:
     ihn in den Invarianten-Test dieser Spec auf.
   - Ist H > 399, entscheidet die K4-Spec ausdrücklich, ob ein Sturmhalt einen Fernauftrag verfehlen lassen darf (ohne
     Strafe), und nennt es in der Spielanleitung.
-  - Piraten (ab Seeweg 35) treffen Felsbucht immer und Weidenau bei d 35; ein Überfall mit 50 % Ladungsverlust
+  - Piraten (nur falls K4 sie einführt, ab Seeweg 35) treffen Felsbucht immer und Weidenau bei d 35; ein Überfall mit 50 % Ladungsverlust
     verfehlt den Fernauftrag. Empfehlung an K4: hinnehmen (keine Strafe, das Geleit ist die Antwort), keine Änderung
     an den Fernauftrag-Regeln.
 - **Doku-Folgen** (im Umsetzungspaket, nicht in dieser Spec geändert):
@@ -363,23 +399,37 @@ due: P + FAR_ORDER_DURATION, island: 2 }`, `farOffer` `null`, `farSkip = k + 1`;
 **UI**
 
 - **AK-H2-28** Kartentext-Helfer (`tests/ui/`): T-02 (mit Frist bei `world.tick = P` «Frist 2:50» und Lager der
-  Fern-Insel, auch wenn die aktive Insel die Heimat ist), T-03, T-04, Warnzustand T-05, Meldungen T-07, T-08 liefern
+  Fern-Insel, auch wenn die aktive Insel die Heimat ist), T-03, T-04, Warnzustand T-05, Meldungen T-07, T-08, Log-Texte T-16 bis T-18 liefern
   genau den Wortlaut aus Anhang 02; ohne Fernangebot ist der Kartentext gleich dem heutigen.
 - **AK-H2-29** UI-Helfer für den Liefern-Knopf: Fernauftrag → Zielinsel `order.island`; Zufallsauftrag → aktive Insel.
   «Nächster Auftrag in m:ss» nach früher Lieferung zeigt die Zeit bis P(k + 2).
-- **AK-H2-30** Browser-Check (qa-playtester). Aufbau: präparierter Spielstand (aktuelle `SAVE_VERSION`) per
-  Sim-Skript aus Seed 3 mit `buildColony` bis Höchststufe 3, dann Kontor auf Felsbucht, Rum 20 im Felsbucht-Lager,
-  Schritt auf einen Periodenbeginn; über «Laden» eingespielt, Ablage unter `.studio/qa/<paket>/`. Ablauf: Karte zeigt
-  zwei Zeilen (T-01, T-02) → **Annehmen** → T-07 und T-04 mit «Lager 20/15» bei aktiver Heimat → **Liefern** → T-08,
-  Klang-Aufruf `orderDone` (Spy auf die Klang-Schnittstelle) → Karte «Nächster Auftrag in m:ss» mit der Zeit bis
-  P(k + 2). Bei 1280 px keine Überlappung mit der Krisenkarte, Text der zweiten Zeile nicht abgeschnitten.
+- **AK-H2-30** Browser-Check (qa-playtester), Fenster 1280×720. Aufbau: präparierter Spielstand (aktuelle
+  `SAVE_VERSION`) per Sim-Skript aus Seed 3 mit `buildColony` bis Höchststufe 3, dann Kontor auf Felsbucht, Rum 20 im
+  Felsbucht-Lager, Schritt auf einen Periodenbeginn; über «Laden» eingespielt, Ablage unter `.studio/qa/<paket>/`.
+  Ablauf: zwei Karten, Auftragskarte (T-01) und darunter **eigene Fernkarte** (T-02) → **Annehmen** → Fernkarte
+  verschwindet, Auftragskarte zeigt T-04 mit «Lager 20/15» bei aktiver Heimat, T-07 → **Liefern** → T-08, Klang-Aufruf
+  `orderDone` (Spy auf die Klang-Schnittstelle) → Karte «Nächster Auftrag in m:ss» mit der Zeit bis P(k + 2).
+  Messung per `getBoundingClientRect` und `scrollWidth <= clientWidth` (A5, R633): (a) für Auftrags-, Fern- und
+  Krisenkarte gilt `scrollWidth <= clientWidth`; (b) Reihenfolge von oben Auftrags-, Fern-, Krisenkarte, Fernkarte
+  Breite 300 px ± 2 und Höhe ≤ 110 px; (c) **keine Überdeckung bei Sturm**: Krisen «normal», Sturmwarnung aktiv
+  (Krisenkarte 6 Zeilen) bei sichtbarer Fernkarte → Rechtecke der drei Karten paarweise schnittfrei, Unterkante des
+  Stapels ≤ 420 px (Fenster-y), Screenshot `fernkarte-sturm-1280x720.png`.
+
+**Nachtrag R633 A2, R634** (Wortlaut und Aufbau in
+[Anhang 03](2026-10-14-handel-2-fernangebot/anhang-03-nachtrag-ak.md), verbindlich wie §8)
+
+- **AK-H2-31** Ersatzlage und Fremd↔Fremd (A2): Seed 963 (Weidenau in Stufe 3): Angebot, Annehmen, Liefern und Verfall
+  ohne Strafe wie in der Regel; Seed 3 mit Route Möweninsel↔Felsbucht: Lieferung nur am Lieferort (R6).
+- **AK-H2-32** Vertrag schliesst Fernangebot aus: über mehrere Vertragsperioden `farOffer` und `order` `null`.
+- **AK-H2-33** Ereignis-Log (reine UI-Helfer): T-16 (Lieferung, Meldung), T-17 (Verfall angenommen, Meldung), T-18
+  (Verfall unangenommen, nur Log); kein Eintrag bei Zufallsauftrag, Lieferung im Tick `due`, Annehmen.
 
 ## 9 Paketschnitt und offene Punkte
 
-| Paket  | Inhalt                                                                                                                                                     | AK    | Schätzung       |
-| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | --------------- |
-| H2-SIM | `types.ts` (`farOffer`, `farSkip`, `Order.island`, `OrderDef.far`), `defs/goods.ts`, `defs/timing.ts`, `orders.ts` (R1–R14), `save.ts` (R15), Tests, arc42 | 01–27 | ≈ 120–150 Tools |
-| H2-UI  | `src/ui/order.ts` (zweite Zeile, Fernauftrag, Helfer), `app.ts` (Annehmen, Liefern, Meldungen), `tests/ui/`, README, `docs/spielwerte.md`, Browser-Check   | 28–30 | ≈ 100–130 Tools |
+| Paket  | Inhalt                                                                                                                                                              | AK            | Schätzung       |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | --------------- |
+| H2-SIM | `types.ts` (`farOffer`, `farSkip`, `Order.island`, `OrderDef.far`), `defs/goods.ts`, `defs/timing.ts`, `orders.ts` (R1–R14), `save.ts` (R15), Tests, arc42          | 01–27, 31, 32 | ≈ 120–150 Tools |
+| H2-UI  | `src/ui/order.ts` (Fernkarte, Fernauftrag, Helfer), `app.ts` (Annehmen, Liefern, Meldungen, Log-Einträge), `tests/ui/`, README, `docs/spielwerte.md`, Browser-Check | 28–30, 33     | ≈ 100–130 Tools |
 
 H2-UI setzt H2-SIM voraus. Die Umsetzung wartet auf PLAYTEST-I047 (R629 (5)).
 
@@ -392,11 +442,21 @@ H2-UI setzt H2-SIM voraus. Die Umsetzung wartet auf PLAYTEST-I047 (R629 (5)).
   Alternative ohne neues Feld wäre «Fernauftrag erst ab P(k + 1) lieferbar»; schlechter lesbar.
 - **O-3 Save-Nummer** mit Erweiterung 1 K2–K4: Merge-Reihenfolge (R583-Muster); im Plan als Merge-Schritt «Version
   festlegen».
+- **O-5 Ereignis-Log nur bei Krisen sichtbar** (R634 (2c)). Empfehlung: in diesem Paket nicht lösen; T-16 und T-17
+  tragen eine Meldung und sind auch ohne Log lesbar, T-18 ist ohne Krisen unsichtbar (hingenommen). I-100 «Neu»
+  zählt nur Einträge mit Meldung; ob I-100 oder ein späteres Paket das Log ohne Krisen zeigt, entscheidet L0
+  (Beobachtung 2026-10-14).
+- **O-6 Wortlaut T-17** `info` ohne Klang; Alternative `warn` mit Klang `error`: Empfehlung `info`, weil der Verfall
+  keine Strafe kostet.
 - **O-4 Fall B Felsbucht d 37–40** ist mit dem Angebotsfenster aus R629 nicht ganz garantierbar (bräuchte 1800).
   Empfehlung hinnehmen: keine Strafe, die Karte zeigt die Frist, frühes Annehmen genügt.
 
 ## 10 Selbstprüfung
 
+- **Nachtrag R633/R634:** A2 (AK-H2-31), A5 (AK-H2-30 messbar), eigene Karte (U1, Anhang 02 T.5), Log (U6, R14, AK-H2-33),
+  Vertrag (R3, AK-H2-32), K4 (§7) abgedeckt. AK-Zahl 33. Neue Zahlen sind nur UI-Masse (110 px, 315 px, 420 px), aus
+  den Screenshots in Anhang 02 T.5 hergeleitet; sie liegen nicht in `src/sim/defs/`, sondern als Prüfwerte im Test.
+  Keine Sim-Regel, keine Save-Änderung, Baseline (§6) unberührt.
 - **Platzhalter:** keine offenen Werte. Die Seed-3-Lanes sind als Spanne hergeleitet und werden in AK-H2-27 gemessen
   und gepinnt; die Save-Nummer folgt bewusst der Merge-Reihenfolge (O-3). `[Tech: bestätigen]` steht an Baseline und
   Rückfaltung als Prüfpunkt für Gate Spec.
