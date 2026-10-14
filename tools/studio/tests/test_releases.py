@@ -56,6 +56,11 @@ class ChainTest(unittest.TestCase):
         tree = [{"package": "P1", "children": [{"package": "P2", "children": []}, {}]}]
         self.assertEqual(releases.session_packages(tree), ["P1", "P2"])
 
+    def test_session_packages_unites_registered(self):
+        tree = [{"package": "P1", "children": []}]
+        registered = {"P1": {"owner": "x", "status": "active"}, "P0": {}}
+        self.assertEqual(releases.session_packages(tree, registered), ["P0", "P1"])
+
 
 class LoadTest(unittest.TestCase):
     def setUp(self):
@@ -235,3 +240,119 @@ class GoalTest(unittest.TestCase):
             releases.goal_progress(None, ["A"]),
             {"total": 0, "reached": 0, "pkgs": []},
         )
+
+
+def node(role, status, package="", children=None):
+    return {
+        "role": role,
+        "status": status,
+        "package": package,
+        "children": children or [],
+    }
+
+
+def pkg_event(pkg, status, owner="lead-tech", session="s1", key="package_id"):
+    return {
+        "kind": "package",
+        key: pkg,
+        "status": status,
+        "owner": owner,
+        "session_id": session,
+    }
+
+
+class WorkingNowTest(unittest.TestCase):
+    def test_one_entry_per_package_owner_is_topmost(self):
+        tree = [
+            node(
+                "main",
+                "idle",
+                "",
+                [
+                    node(
+                        "lead-tech",
+                        "active",
+                        "P1",
+                        [
+                            node("tech-sim-engineer", "delegated", "P1"),
+                            node("tech-sim-engineer", "delegated", "P1"),
+                            node("qa-code-reviewer", "idle", "P1"),
+                        ],
+                    ),
+                    node("lead-qa", "waiting", "P2"),
+                    node("lead-art", "idle", "P3"),
+                    node("lead-x", "active", ""),
+                ],
+            )
+        ]
+        self.assertEqual(
+            releases.working_now(tree),
+            [
+                {
+                    "package": "P1",
+                    "owner": "lead-tech",
+                    "agents": [{"role": "tech-sim-engineer", "status": "delegated"}],
+                    "status": "active",
+                },
+                {
+                    "package": "P2",
+                    "owner": "lead-qa",
+                    "agents": [],
+                    "status": "waiting",
+                },
+            ],
+        )
+
+    def test_empty_tree_is_empty_list(self):
+        self.assertEqual(releases.working_now([]), [])
+        self.assertEqual(releases.working_now(None), [])
+
+    def test_registered_package_without_node_is_listed(self):
+        tree = [node("lead-tech", "active", "P1")]
+        registered = {
+            "P1": {"owner": "andere", "status": "blocked"},
+            "P9": {"owner": "lead-art", "status": "review"},
+        }
+        result = releases.working_now(tree, registered)
+        self.assertEqual(
+            result,
+            [
+                {
+                    "package": "P1",
+                    "owner": "lead-tech",
+                    "agents": [],
+                    "status": "active",
+                },
+                {
+                    "package": "P9",
+                    "owner": "lead-art",
+                    "agents": [],
+                    "status": "review",
+                },
+            ],
+        )
+
+
+class RegisteredPackagesTest(unittest.TestCase):
+    def test_last_event_per_package_decides(self):
+        events = [
+            pkg_event("A", "active"),
+            pkg_event("A", "done"),
+            pkg_event("B", "planned"),
+            pkg_event("B", "review", owner="lead-qa"),
+            pkg_event("C", "blocked", key="package"),
+            {"kind": "status", "session_id": "s1"},
+        ]
+        self.assertEqual(
+            releases.registered_packages(events, "s1"),
+            {
+                "B": {"owner": "lead-qa", "status": "review"},
+                "C": {"owner": "lead-tech", "status": "blocked"},
+            },
+        )
+
+    def test_session_selection(self):
+        events = [pkg_event("A", "active"), pkg_event("B", "active", session="s2")]
+        self.assertEqual(list(releases.registered_packages(events, "s2")), ["B"])
+        self.assertEqual(list(releases.registered_packages(events, "all")), ["A", "B"])
+        self.assertEqual(releases.registered_packages(events, None), {})

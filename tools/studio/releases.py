@@ -10,6 +10,8 @@ import json
 import subprocess
 from pathlib import Path
 
+from model import LIVE
+
 RELEASES_FILE = "releases.json"
 GIT_TIMEOUT = 5
 
@@ -163,9 +165,34 @@ def goal_progress(data: dict | None, session_pkgs: list[str]) -> dict:
     return {"total": len(pkgs), "reached": reached, "pkgs": pkgs}
 
 
-def session_packages(tree: list[dict]) -> list[str]:
-    """Paket-IDs aller Knoten der gewählten Session (für das S-Kennzeichen)."""
-    found: set[str] = set()
+PACKAGE_LIVE = frozenset({"active", "review", "blocked"})
+
+
+def registered_packages(events: list[dict], session: str | None) -> dict[str, dict]:
+    """Per ``log.py package`` angemeldete Pakete der Session mit Live-Status.
+
+    Das letzte Paket-Ereignis je Paket entscheidet; ``session`` ist die Session-ID,
+    ``"all"`` nimmt alle, ``None`` keine.
+    """
+    last: dict[str, dict] = {}
+    for event in events or []:
+        if event.get("kind") != "package":
+            continue
+        if session != "all" and event.get("session_id") != session:
+            continue
+        pkg = str(event.get("package_id") or event.get("package") or "")
+        if pkg and session:
+            last[pkg] = event
+    return {
+        pkg: {"owner": str(e.get("owner") or ""), "status": e.get("status")}
+        for pkg, e in last.items()
+        if e.get("status") in PACKAGE_LIVE
+    }
+
+
+def session_packages(tree: list[dict], registered: dict | None = None) -> list[str]:
+    """Paket-IDs der gewählten Session: Baum-Knoten plus angemeldete Pakete (S-Kennzeichen)."""
+    found: set[str] = set(registered or {})
     stack = list(tree or [])
     while stack:
         node = stack.pop()
@@ -173,6 +200,52 @@ def session_packages(tree: list[dict]) -> list[str]:
             found.add(str(node["package"]))
         stack.extend(node.get("children") or [])
     return sorted(found)
+
+
+def _nodes_by_package(tree: list[dict]) -> dict[str, list[dict]]:
+    """Knoten je Paket, oberster zuerst (Tiefe, dann Baumreihenfolge)."""
+    groups: dict[str, list[dict]] = {}
+    level = [n for n in tree or [] if isinstance(n, dict)]
+    while level:
+        for node in level:
+            if node.get("package"):
+                groups.setdefault(str(node["package"]), []).append(node)
+        level = [c for n in level for c in n.get("children") or []]
+    return groups
+
+
+def working_now(tree: list[dict], registered: dict | None = None) -> list[dict]:
+    """«Jetzt in Arbeit»: Pakete mit lebendem Knoten oder aktiver Anmeldung."""
+    result: dict[str, dict] = {}
+    for pkg, nodes in _nodes_by_package(tree).items():
+        live = [n for n in nodes if n.get("status") in LIVE]
+        if not live:
+            continue
+        owner = nodes[0]
+        agents: list[dict] = []
+        for n in live:
+            if n is owner:
+                continue
+            entry = {"role": n.get("role", ""), "status": n["status"]}
+            if entry not in agents:
+                agents.append(entry)
+        result[pkg] = {
+            "package": pkg,
+            "owner": owner.get("role", ""),
+            "agents": agents,
+            "status": live[0]["status"],
+        }
+    for pkg, info in (registered or {}).items():
+        result.setdefault(
+            pkg,
+            {
+                "package": pkg,
+                "owner": info.get("owner", ""),
+                "agents": [],
+                "status": info.get("status", ""),
+            },
+        )
+    return [result[pkg] for pkg in sorted(result)]
 
 
 def _git(root: Path, *args: str) -> str | None:

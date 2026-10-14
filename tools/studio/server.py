@@ -185,8 +185,15 @@ class Handler(SimpleHTTPRequestHandler):
     def add_releases(self, state: dict) -> None:
         """Karte «Versionen und Releases»: Daten, Live-Stand, S-Kennzeichen."""
         data, error = releases.load(Path(self.docs) / releases.RELEASES_FILE)
+        tree = state.get("tree")
+        registered = releases.registered_packages(
+            self.store.events(), state.get("session")
+        )
+        state["working_now"] = releases.working_now(tree, registered)
         if data is not None:
-            data["session_packages"] = releases.session_packages(state.get("tree"))
+            pkgs = releases.session_packages(tree, registered)
+            data["session_packages"] = pkgs
+            data["goal_progress"] = releases.goal_progress(data, pkgs)
         state["releases"] = data
         state["releases_error"] = error
         state["live"] = releases.live_state(repo_root(), self.store.events())
@@ -212,6 +219,10 @@ class Handler(SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def end_headers(self):
+        if b"Cache-Control" not in b"".join(getattr(self, "_headers_buffer", [])):
+            self.send_header(
+                "Cache-Control", "no-store"
+            )  # Dashboard-Dateien nie cachen
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header(
             "Content-Security-Policy",

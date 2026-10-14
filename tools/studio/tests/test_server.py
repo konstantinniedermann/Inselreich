@@ -124,6 +124,56 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(state["live"], live)
         self.assertEqual(state["releases"]["session_packages"], [])
 
+    def test_state_has_working_now_and_goal_progress(self):
+        (self.docs / "releases.json").write_text(
+            '{"releases": [{"items": [{"pkg": "P1", "stage": 4, "goalStage": 3}]}]}',
+            "utf-8",
+        )
+        state = json.loads(self.get("/api/state?session=all")[2])
+        self.assertEqual(state["working_now"], [])
+        self.assertEqual(
+            state["releases"]["goal_progress"], {"total": 0, "reached": 0, "pkgs": []}
+        )
+        self.assertEqual(state["releases"]["goal_warnings"], [])
+
+    def test_working_now_counts_registered_packages_and_goal(self):
+        with self.events.open("a", encoding="utf-8") as handle:
+            handle.write(
+                '{"kind":"package","ts":"2026-09-30T12:01:00.000Z","session_id":"s1",'
+                '"package_id":"P1","owner":"lead-tech","status":"active"}\n'
+            )
+        (self.docs / "releases.json").write_text(
+            '{"releases": [{"items": [{"pkg": "P1", "stage": 4, "goalStage": 3}]}]}',
+            "utf-8",
+        )
+        state = json.loads(self.get("/api/state?session=all")[2])
+        self.assertEqual(
+            [(w["package"], w["owner"]) for w in state["working_now"]],
+            [("P1", "lead-tech")],
+        )
+        self.assertEqual(state["releases"]["session_packages"], ["P1"])
+        self.assertEqual(state["releases"]["goal_progress"]["reached"], 1)
+
+    def test_working_now_present_without_releases_file(self):
+        (self.docs / "releases.json").unlink(missing_ok=True)
+        state = json.loads(self.get("/api/state?session=all")[2])
+        self.assertIsNone(state["releases"])
+        self.assertEqual(state["working_now"], [])
+
+    def test_static_files_are_no_store(self):
+        for name in ("app.js", "releases.js", "style.css"):
+            (self.dash / name).write_text("x", "utf-8")
+        for path in ("/", "/app.js", "/releases.js", "/style.css"):
+            for method in ("GET", "HEAD"):
+                with self.subTest(path=path, method=method):
+                    conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+                    conn.request(method, path)
+                    response = conn.getresponse()
+                    response.read()
+                    conn.close()
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(response.getheader("Cache-Control"), "no-store")
+
     def test_state_releases_null_when_file_missing_or_broken(self):
         for text in (None, "{kaputt"):
             with self.subTest(text=text):
