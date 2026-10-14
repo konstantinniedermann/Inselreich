@@ -7559,3 +7559,16 @@ neu; L0 prüft per Screenshot. Folge der Semantik: Items nach dem Merge immer au
 Regelbezug: gates.md Gate Merge, R656 · Kosten bei Irrtum: falscher Zähler im Dashboard.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-DASH-ZIEL-FIX · ADR: —
+
+## R658 · 2026-10-14 · Gate Merge HANDEL-2 «Fernangebot»: OK; Push REL-23 in der Folgesession
+
+Ruling: `feat/handel-2` @ `d5778c60` (T01–T09, Final-Review opus BEDENKEN niedrig → Fix, zwei Restbefunde hingenommen → beobachtungen.md;
+`make check` EXIT=0 mit 4034 Tests, `zeittests`, `lint` Exit 0; Save v15 mit `migrateV14ToV15` und Ladetest; README/arc42 nachgeführt;
+Erweiterung-1-Diff leer → Save v15 gehört Handel 2, R638) → **Gate Merge OK**. lead-production merged `--no-ff` nach main (lokal),
+releases.json HANDEL-2 done, REL-23 Gate «Release-Check offen», Release-Notiz-Entwurf aus `.studio/handoffs/2026-10-14-lead-qa-HANDEL-2-gate.md`
+in state.md. Kein zweiter Push in dieser Studio-Session (R335): Release-Check + Push REL-23 in der Folgesession. Limit-Ampel gelb → keine
+neue Welle: UI-HAEPPCHEN-D-Plan (Tagesziel «Plan») verschoben, danach Session-Ende-Routine.
+
+Regelbezug: gates.md Gate Merge, R335, R638, R639 · Kosten bei Irrtum: ein lokaler Merge mit zwei niedrigen Restbefunden.
+
+Entscheider: L0 · Anlass: Bericht lead-qa HANDEL-2 · ADR: —
