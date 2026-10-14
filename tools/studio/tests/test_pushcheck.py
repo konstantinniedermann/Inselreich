@@ -367,6 +367,24 @@ class GateTest(unittest.TestCase):
                 measurement=h.measurement,
             )
 
+    def test_liste_wird_aus_aktueller_messung_neu_berechnet(self):
+        """Veraltete Liste (anderer Lauf) darf nicht gemessen werden: Befund REL-21."""
+        h = Harness(self)
+        h.marked.write_text('["alt.test.ts"]')
+        h.check_ts(0, marked='["neu1.test.ts", "neu2.test.ts"]')
+        self.assertEqual(self.go(h), 0)
+        (vitest,) = [k for k in h.names() if k.startswith(VITEST)]
+        self.assertIn("neu1.test.ts", vitest)
+        self.assertIn("neu2.test.ts", vitest)
+        self.assertNotIn("alt.test.ts", vitest)
+
+    def test_unbrauchbare_messung_loescht_liste_exit_2(self):
+        h = Harness(self)
+        h.marked.write_text('["alt.test.ts"]')
+        h.handlers[CHECK_TS] = lambda cmd: (h.marked.unlink(), (2, ""))[1]
+        self.assertEqual(self.go(h), 2)
+        self.assertEqual(h.count(VITEST), 0)
+
     def test_gruen_nach_nachmessung(self):
         h = Harness(self)
         h.marked.write_text('["tests/a.test.ts"]')
