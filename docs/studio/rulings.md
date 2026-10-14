@@ -6978,3 +6978,21 @@ Controller-Briefings von L0 (ohne Experiment-Messung).
 Regelbezug: R316, R429, R614 · Kosten bei Irrtum: ein ungenutzter Experimentplatz eine Session länger.
 
 Entscheider: L0 · Anlass: Bericht studio-coach RETRO-SESSION-6584aaa4 · ADR: —
+
+## R616 · 2026-10-14 · Session-Start: REL-21 = main mit Delta-Release-Check; Plätze füllen
+
+Ruling: (1) **REL-21 umfasst den ganzen lokalen main** (I-047, UI-HAEPPCHEN-A/B/C, I092, DOC-ARCHIV, TOOL-BUENDEL-11, IDEEN-09):
+fünf Spiel-Häppchen in einem Push als Ausnahme vom Häppchen-Deckel 4 (gates.md), weil C und I092 Final-Review und Playtest OK
+haben und ein zweiter Release-Zyklus mehr kostet als der Delta-Check. Weg: `lead-qa` (sonnet, Gate-Urteil) baut den Delta-Check:
+Integrator aktualisiert `.worktrees/integrate` auf main (Merge, kein Reset), `make check`; Playtest C + I092 am Kandidaten;
+Opus-Review `67661df1..main`; `make zeitreserve-gate`; Bericht an L0 zum Gate. Push erst nach L0-Gate-Ruling (R335, ein Push).
+(2) N-100 gilt als erledigt für REL-20 (Push lief); für REL-21 kein Dropbox-Vorbehalt, Integrator meldet Sync-Störungen.
+(3) Plätze nach R475 füllen, im Release-Fenster ≤ 2 weitere Test-Arbeiter (R588 V1): **UI-AUFRAEUM-3** Plan (Sammelpaket aus
+state.md Punkt 2, Stufe leicht, lead-tech sonnet), **I-100** Kurzdesign + Kurzplan (Stufe leicht, lead-design sonnet),
+**TOOL-BUENDEL-12** Cache-Write-Aufteilung (R615 V2, lead-tech sonnet, Werkzeug). Umsetzung von UI-AUFRAEUM-3 und I-100 erst
+nach dem Push REL-21 (Release-Fenster, Konfliktrisiko in `src/ui/`).
+
+Regelbezug: gates.md Release-Check, R335, R475, R588 V1, R615 · Kosten bei Irrtum: ein Hotfix-Release, falls das Delta-Review
+einen Fehler übersieht.
+
+Entscheider: L0 · Anlass: Session-Start, state.md «Fortsetzung» Punkte 1–4 · ADR: —
