@@ -14,6 +14,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 import clock
 import limits
+import releases
 from model import (
     INACTIVE_DEFAULT,
     EventStore,
@@ -22,7 +23,7 @@ from model import (
     read_agent_models,
     read_agent_names,
 )
-from paths import agents_dir, archive_dir, docs_dir, events_file, studio_home
+from paths import agents_dir, archive_dir, docs_dir, events_file, repo_root, studio_home
 from studio_docs import bundle
 
 DASHBOARD = Path(__file__).resolve().parent / "dashboard"
@@ -178,7 +179,17 @@ class Handler(SimpleHTTPRequestHandler):
         )
         state["docs"] = bundle(self.docs, self.agents)
         state["limits"] = limits_state(clock.timestamp())
+        self.add_releases(state)
         return json.dumps(state, ensure_ascii=False).encode("utf-8")
+
+    def add_releases(self, state: dict) -> None:
+        """Karte «Versionen und Releases»: Daten, Live-Stand, S-Kennzeichen."""
+        data, error = releases.load(Path(self.docs) / releases.RELEASES_FILE)
+        if data is not None:
+            data["session_packages"] = releases.session_packages(state.get("tree"))
+        state["releases"] = data
+        state["releases_error"] = error
+        state["live"] = releases.live_state(repo_root(), self.store.events())
 
     def send_ping(self) -> None:
         """Kennung des Studio-Servers; baut keinen Zustand (start.sh erkennt Fremdserver)."""
