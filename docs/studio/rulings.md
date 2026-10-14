@@ -7039,3 +7039,13 @@ Insel, kein Save). Budget 10 Starts / Parallelität 1 bei Umsetzungsstart nach P
 Regelbezug: gates.md Kombiniertes Gate, R392, R606, R617 · Kosten bei Irrtum: ein Fix-Task bei T02/T03.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-i-100 · ADR: —
+
+## R620 · 2026-10-14 · Freier Platz: BEOB-AUSWERTUNG-14
+
+Ruling: 5 Beobachtungen seit 2026-10-13 (Start-Hinweis). Freier Platz nach R475 an `lead-production` (Skill
+`beobachtungen-auswerten`), Budget 1 Start/P1, Worktree `.worktrees/beob-14`; Einträge, die UI-AUFRAEUM-3 (R617) oder I-100
+(R619) schon abdecken, werden dorthin verwiesen statt neu eingeplant. Nur Doku, kein Push (geht mit dem nächsten Release).
+
+Regelbezug: R475, R580, R287 · Kosten bei Irrtum: ein Eintrag wird später erneut geöffnet.
+
+Entscheider: L0 · Anlass: freie Kapazität im Release-Fenster (keine Test-Arbeiter) · ADR: —
