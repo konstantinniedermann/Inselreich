@@ -7320,3 +7320,15 @@ State.md führt `plan-handel-2` und `handel-2`. **Start der Umsetzung in der Fol
 Regelbezug: gates.md Gate Plan, R583, R633, R638 · Kosten bei Irrtum: ein Controller-Nachtrag.
 
 Entscheider: L0 · Anlass: Berichte lead-qa und lead-production gate-plan-handel-2 · ADR: —
+
+## R640 · 2026-10-14 · Freier Platz: Kurzdesign UI-HAEPPCHEN-D «Ereignis-Log vollständig»
+
+Ruling: Drei verwandte Befunde (R634 (3), R635 O-5): Ereignis-Log nur bei Krisen «an» sichtbar; verfallenes Stammkunden-Angebot ohne
+Meldung/Log; keine Auftragsereignisse im Log. Freier Platz nach R475 an `lead-design` (sonnet, Kurzdesign Stufe leicht), Budget
+2 Starts/P1, Worktree `.worktrees/design-ui-d`, Branch `design/ui-haeppchen-d`: Kurzdesign mit AK; Abgrenzung zu Handel 2 (dessen
+Fernauftrags-Log-Einträge, R635) und I-100 (Zähler). Umsetzung erst nach dem Merge von Handel 2 (gleiche Dateien `crisisLog.ts`,
+`eventLogView.ts`).
+
+Regelbezug: R475, R634, R635, E-061 · Kosten bei Irrtum: ein Kurzdesign, das nach Handel 2 nachgeschärft wird.
+
+Entscheider: L0 · Anlass: freie Kapazität nach R639 · ADR: —
