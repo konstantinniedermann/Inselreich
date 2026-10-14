@@ -222,6 +222,10 @@ class Gate:
 
     def gate(self) -> int:
         """Nur Nachmessung der Markierungsliste (kein check-push); Exit 0, 1, 2 oder 3."""
+        # Liste immer aus der aktuellen Messung neu berechnen: eine Datei aus einem
+        # früheren Lauf passt sonst nicht zu `.studio/zeitreserve.json` (Exit 2 in REL-21).
+        # check.ts schreibt die Liste vor jeder Bewertung und löscht sie bei unbrauchbarer Messung.
+        self.step("zeitreserve-mark", [*CHECK_TS, "--marked", str(self.marked)])
         files = _read_list(self.marked)
         if files is None:
             self.gate_note = "Markierungsliste fehlt oder ist ungültig"
