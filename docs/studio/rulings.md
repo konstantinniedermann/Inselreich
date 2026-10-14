@@ -7012,3 +7012,16 @@ Umsetzung erst nach Push REL-21 (Release-Fenster R588 V1).
 Regelbezug: gates.md Kombiniertes Gate, R392, R606, R616 · Kosten bei Irrtum: ein Fix-Task in der Umsetzung.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-ui-aufraeum-3 · ADR: —
+
+## R618 · 2026-10-14 · Gate Merge TOOL-BUENDEL-12: OK, Merge nach Push REL-21
+
+Ruling: `tool/b12` @ `eab93fc9` (Cache-Write-Aufteilung in `tools/studio/efficiency.py`, 5 neue Tests mit Rot-Beleg,
+`make studio-test` 852 grün, Task-Review sonnet OK, Echtlauf: Cache-Write 5 min 28,2 %, davon nach Pause 13,3 %, übriges
+Wachstum 15,0 %) → **OK**. Merge durch lead-production/Integrator erst nach dem Push REL-21, damit main während des
+Delta-Checks stabil bleibt. R615 V2 (Messauftrag) gilt mit der Info-Zeile als erfüllt; die Ende-Retro bewertet V1 (E-066) gegen
+den Pausenanteil von lead-tech. Prozessbefund an die Retro: lead-tech startete einen Warte-Agenten (haiku) und drei
+`sleep`-Hintergrundbefehle ohne Nutzen (Verstoss gegen «kein Polling», Handbuch 1.39).
+
+Regelbezug: gates.md Gate Merge (Werkzeug), R615 V2, R616 · Kosten bei Irrtum: eine Info-Zeile zurücknehmen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech tool-buendel-12 · ADR: —
