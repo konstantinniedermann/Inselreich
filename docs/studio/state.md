@@ -8,8 +8,9 @@ Stand: 2026-10-13 (Studio-Session 6584aaa4, R578–R615; Ende: REL-20 live `0d1d
 
 ## Release-Notizen
 
-**REL-21 „Stammkunde und Inselmarkt“ (Entwurf, lokal)** — Save **v14** (Migration v13→v14). Inhalt: UI-HAEPPCHEN-A, -B, I-047
-Stammkunde, UI-HAEPPCHEN-C, I092 Inselmarkt-Vorliebe; dazu DOC-ARCHIV, TOOL-BUENDEL-11 (nur Doku/Werkzeug).
+**REL-21 „Stammkunde und Inselmarkt“ (live, R625)** — Push `0d1db8f3..ca46eb73`, CI 38553292584, Pages 38553994549 grün. Save **v14**
+(Migration v13→v14). Inhalt: UI-HAEPPCHEN-A, -B, I-047 Stammkunde, UI-HAEPPCHEN-C, I092 Inselmarkt-Vorliebe, HOTFIX-REL21-PREIS
+(Karte nennt den Inselpreis); dazu DOC-ARCHIV, TOOL-BUENDEL-11, TOOL-HOTFIX-ZR (nur Doku/Werkzeug).
 
 - **Neu:** Stammkunde im Auftragsplatz (Liefervertrag, Kündigen, Abspringen mit Strafe; vom Studio vorgeschlagen, I-047) mit
   Marktvergleich und Knopf «Zum Erzeuger»; jede Fremdinsel zahlt für ein Konsumgut +30 % (Möweninsel Stoff, Weidenau Glas, Felsbucht
