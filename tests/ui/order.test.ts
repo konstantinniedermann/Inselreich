@@ -237,7 +237,7 @@ describe('I-088 Angebotskarte: Marktpreis und Erzeugung (AK-HC-01 bis 04)', () =
     expect(running).toContain('Erzeugung ');
     b.paused = true;
     expect(orderCardText(w)).toContain(' · keine Erzeugung · ');
-    b.paused = false;
+    delete b.paused;
     expect(orderCardText(w)).toBe(running);
   });
 
