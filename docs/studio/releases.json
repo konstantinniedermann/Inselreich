@@ -285,10 +285,34 @@
       "name": "Ideen-Runde",
       "kind": "Ideen",
       "startStage": 1,
-      "stage": 1,
+      "stage": 2,
       "goalStage": 2,
-      "state": "idea",
-      "note": "Ziel heute: Rangliste nach dem Push"
+      "state": "done",
+      "note": "IDEEN-10 entschieden (R653)"
+    },
+    {
+      "pkg": "I-109",
+      "name": "I-109 Reichweite am Gut-Chip",
+      "kind": "Ideen-Pool",
+      "startStage": 1,
+      "stage": 2,
+      "goalStage": 2,
+      "state": "active",
+      "note": "Ziel heute: Kurzdesign"
+    },
+    {
+      "pkg": "I-102",
+      "name": "I-102 Auftragsvorschau",
+      "kind": "Ideen-Pool",
+      "startStage": 1,
+      "stage": 1,
+      "state": "waiting",
+      "note": "nach Handel 2",
+      "waitsFor": {
+        "target": "HANDEL-2:merge",
+        "label": "Merge Handel 2 (Save v15)",
+        "hard": false
+      }
     }
   ],
   "pastSummary": "REL-01 … REL-20, M1 – M13"
