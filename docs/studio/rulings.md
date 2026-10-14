@@ -7448,3 +7448,42 @@ die Daten sofort sichtbar sind und die Zielmarke den Abstand Ist → Ziel grafis
 Regelbezug: Verfassung §5, STUDIO.md Autonomie, R464, R645, R647 · Kosten bei Irrtum: eine Darstellung, die der Nutzer anders wollte (eine Karte nachbessern).
 
 Entscheider: L0 · Anlass: Nutzerprompt Session-Start · ADR: —
+
+## R649 · 2026-10-14 · Gate Plan TOOL-DASH-SESSIONZIEL und TOOL-GUARD-WARTEAGENT: OK mit Auflagen; Start nach push-check REL-22
+
+Ruling: (1) **TOOL-DASH-SESSIONZIEL** Plan `tool/dash-sessionziel` @ `dd928fb4` (T01–T04, Logik in Python testbar, JS zeichnet) → OK,
+Budget 6 Starts, Parallelität 1. Auflage: S-Kennzeichen und «Jetzt in Arbeit» zählen zusätzlich Pakete, die in der laufenden Session per
+`log.py package` mit Status active/review/blocked angemeldet sind (Lücke aus dem Bericht lead-production, `session_packages` nur aus dem
+Agent-Baum). Rot-Beleg je Task im Bericht. (2) **TOOL-GUARD-WARTEAGENT** Plan `tool/guard-warteagent` @ `0ac5d308` (`waitguard.py`, Modus
+deny, Rückfall warn, nur `agent_type` lead-*) → OK, Budget 3 Starts. Auflage: zuerst die PreToolUse-Payload im Lead-Kontext belegen
+(`agent_type` vorhanden?); fehlt sie, Bericht an L0 vor der Umsetzung. Der neue Eintrag in `.claude/settings.json` ist freigegeben; blockt
+der Guard die Datei, setzt L0 ihn. (3) Umsetzung beider Pakete erst nach `make push-check` Exit 0 für REL-22 (R464).
+
+Regelbezug: gates.md Gate Plan, R464, R647, R648 · Kosten bei Irrtum: ein Guard mit Fehlblocks (Rückfall warn), eine Karte mit Zusatzzeile.
+
+Entscheider: L0 · Anlass: Berichte lead-tech Phase A · ADR: —
+
+## R650 · 2026-10-14 · Delta-Check REL-22 ZURÜCK (Lint); Push-Blocker-Fix TOOL-LINT-DASH
+
+Ruling: `make push-check` @ `c7da39d7` Exit 1: ESLint `no-undef` für `CSS` und `ResizeObserver` in `tools/studio/dashboard/releases.js`
+(aus TOOL-DASH-VERSIONEN, R647; das Gate prüfte `studio-lint`, nicht `make lint`). Kontrast `.btn--unread` 7,16:1 → OK. Nach R514 V1 läuft
+der benannte Push-Blocker-Fix vor dem Push: Paket **TOOL-LINT-DASH**, Fix in `eslint.config.js` (Browser-Globals `CSS`, `ResizeObserver` im
+Dashboard-Block), Test: `make lint` Exit 0 und `make studio-test` gezielt; danach neuer Delta-Lauf (`make push-check`, `make zeitreserve-gate`)
+durch eine neue lead-qa-Instanz. Befund an die Retro: Gate Merge für Dashboard-JS muss `make lint` enthalten.
+
+Regelbezug: R464, R514 V1, R647 · Kosten bei Irrtum: ein weiterer Delta-Lauf (≈ 10 min).
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL22-PUSH · ADR: —
+
+## R651 · 2026-10-14 · Push REL-22 «Aufgeräumt und nichts verpasst»; Freigabe Umsetzung Handel 2 und Werkzeug-Pakete
+
+Ruling: Delta-Check 2. Lauf OK (`make push-check` EXIT=0 und `make zeitreserve-gate` EXIT=0 @ `fb1e5e46`, Handoff
+`.studio/handoffs/2026-10-14-lead-qa-REL22-PUSH.md`) → Gate Push OK, gepusht `ca46eb73..fb1e5e46` per geprüftem Hash, Pages per
+`gh workflow run Pages --ref main`. Damit entfällt die Sperre aus R464: (1) TOOL-DASH-SESSIONZIEL Phase B (R649) startet, Zusatzauflage:
+`server.py` liefert die Dashboard-Dateien mit `Cache-Control: no-store` (Nutzer sah die Karte nicht, weil der Browser ein altes `app.js`
+aus dem Cache nutzte); (2) TOOL-GUARD-WARTEAGENT Phase B (R649); (3) HANDEL-2 Umsetzung nach Plan `f5d38fcf`, Auflagen R639, Budget 26
+Starts, E-066. Pflege `releases.json` (REL-22 live) durch lead-production.
+
+Regelbezug: STUDIO.md Push-Abschnitt, R335, R464, R639, R649 · Kosten bei Irrtum: ein Release mit Lastrauschen in zwei Render-Tests (Reserve in der Nachmessung grün).
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL22-PUSH, Nutzerfrage Dashboard · ADR: —
