@@ -7487,3 +7487,17 @@ Starts, E-066. Pflege `releases.json` (REL-22 live) durch lead-production.
 Regelbezug: STUDIO.md Push-Abschnitt, R335, R464, R639, R649 · Kosten bei Irrtum: ein Release mit Lastrauschen in zwei Render-Tests (Reserve in der Nachmessung grün).
 
 Entscheider: L0 · Anlass: Bericht lead-qa REL22-PUSH, Nutzerfrage Dashboard · ADR: —
+
+## R652 · 2026-10-14 · Gate Merge TOOL-GUARD-WARTEAGENT: OK, Modus deny
+
+Ruling: `tool/guard-warteagent` @ `cb7dd1ac`: `tools/studio/waitguard.py` (Regel A Warte-Agent, Regel B `sleep` im Hintergrund, nur `lead-*`),
+21 Tests mit Rot-Beleg, PreToolUse-Eintrag `Bash|Agent|Task` in `.claude/settings.json` (fail-safe `|| true`, Timeout 5 s), Doku arc42 und
+STUDIO.md; `make studio-test` (888), `studio-lint`, `lint`, `docs-check` Exit 0; Review BEDENKEN → Fix → Delta-Review OK. Payload-Beleg
+`agent_type` indirekt über Events (kein direkter Hook-Mitschnitt) — hingenommen; der erste echte Block oder Fehlblock wird als
+Ereignis `wait_guard` sichtbar. → **Gate Merge OK, Modus deny**; Rückfall `MODE = "warn"` bei erstem Fehlblock ohne neues Ruling.
+lead-production merged `--no-ff`, Paket done, Handbuch-Minor 1.55 (Zeile STUDIO.md) im selben Zug; Fehlnegative (`(sleep 60)`,
+`bash -c 'sleep …'`, `sleep infinity`, `FOO=1 sleep 5`) als Eintrag in `docs/beobachtungen.md`.
+
+Regelbezug: gates.md Gate Merge, R429, R647 (2), R649 · Kosten bei Irrtum: Fehlblock eines Leads (Rückfall warn, eine Zeile).
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-WARTEAGENT · ADR: —
