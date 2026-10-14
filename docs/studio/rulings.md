@@ -7137,3 +7137,13 @@ seinem Doku-Task. Browser-Läufe: höchstens 2 gleichzeitig (R424).
 Regelbezug: R424, R475, R617, R619, R621, R622 · Kosten bei Irrtum: ein Merge-Konflikt in `style.css`.
 
 Entscheider: L0 · Anlass: Push-Gate R625 · ADR: —
+
+## R627 · 2026-10-14 · REL-21 live; Merges TOOL-BUENDEL-12 und BEOB-14
+
+Ruling: REL-21 live: Push `0d1db8f3..ca46eb73`, CI 38553292584 grün, Pages 38553994549 grün. Merges nach R618/R621 jetzt durch
+`production-integrator` im Hauptcheckout, seriell `--no-ff`: `tool/b12` @ `eab93fc9`, dann `docs/beob-14` @ `402ac5db`; danach
+`make studio-test` und `make docs-check` je mit Exit-Code. Kein Push (der nächste Push gehört REL-22, R335).
+
+Regelbezug: R335, R618, R621, R625 · Kosten bei Irrtum: ein Merge-Konflikt in docs/beobachtungen.md.
+
+Entscheider: L0 · Anlass: Bericht production-integrator push-rel-21 · ADR: —
