@@ -248,3 +248,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - 2026-10-14 · Ereignis-Log erscheint erst ab Tick 2400, die Stufe «Krisen: aus» blendet es aus. Ursprung: Release-Check REL-22. Einschätzung: niedrig; teils durch UI-HAEPPCHEN-D (R641) abgedeckt, Rest nach dessen Merge neu prüfen.
 - 2026-10-14 · Beschriftungszeile mit Boom und Vorliebe bricht um (Release-Check REL-22). Ursprung: Release-Check REL-22. Einschätzung: niedrig (Optik); Zeile kürzen oder Umbruch zulassen.
 - 2026-10-14 · `src/ui/eventLogView.ts` hat keinen Unit-Test (kein DOM in Vitest; nur Browser-Check). Ursprung: Release-Check REL-22. Einschätzung: niedrig; DOM-freie Teile (Zähler, Beschriftung) liegen in `crisisLog.ts` und sind getestet.
+
+## 2026-10-14 · Session-Metrikdatei: Flake-Zeile ignoriert den Session-Zeitraum
+
+- Fundort: `docs/studio/metriken/S-2026-10-14-b54ed3bd.md` (Effizienz) gegen `python3 tools/studio/metrics.py --efficiency --since 2026-10-14T00:00:00`
+- Beobachtung: Die Session-Datei weist 8 Flake-Verdachtstests aus (dieselbe Historienliste wie in 6584aaa4); mit `--since` ab Session-Beginn sind es 0 (grün). `flake_suspects(..., since)` (R565 V3) wird für die Session-Datei offenbar ohne `since` aufgerufen.
+- Ursprung: Retro session-b54ed3bd-ende (Studio-Coach)
+- Erste Einschätzung: Werkzeug-Mangel klein; die Ampel der Session-Datei zeigt rot, obwohl die Session keinen Verdachtsfall enthält. Prüfung in `tools/studio/metrics.py`, kein Eingriff in dieser Retro.

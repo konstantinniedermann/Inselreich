@@ -622,7 +622,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R538 (Messauftrag angenommen; Experiment wartet auf Platz)
 - Ausgang M13 ([Retro M13](retros/2026-10-12-m13.md) B4, `lead_stats.rows`, Kostengewicht): `plan-m13-e2` 105 Turns 4,26 M, `plan-i048` 96 / 2,69 M, `plan-M14-E1` 90 / 2,46 M gegen `plan-tool-buendel-6` 55 / 1,28 M. Trennung Erstfassung/Nachtrag weiter nicht möglich (Retro session-f2a404fd). Startvorschlag: auf dem Platz von E-057 (Retro M13 V1).
 - Start: 2026-10-12 (R565 V1, Platz von E-057; Beginn mit dem nächsten Plan-Briefing)
-- Bewertung: –
+- Bewertung: Entwurf 2026-10-14 (Studio-Coach, Retro [session-b54ed3bd-ende](retros/2026-10-14-session-b54ed3bd-ende.md) B1): **zurückgenommen, nie angewendet** — kein Plan-Briefing seit dem Start nennt die Kappe (`.studio/archiv/briefings/*lead-tech*`), `lead-tech.md`, `STUDIO.md` und Briefing-Vorlage enthalten sie nicht; Messwerte `plan-handel-2` 61 Turns / 1,54 M, `plan-ui-aufraeum-3` 0,28 M, `plan-i-100` 0,08 M, `plan-I-047` 70 / 1,48 M sind ohne Anwendung nicht zuzuschreiben. Rückfall = heutiger Zustand. L0-Ruling ausstehend.
 
 ## E-063 · laufend (R565) · Integrator nur im Worktree `integrate`, Briefing nennt ihn
 
@@ -634,7 +634,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/production-integrator.md`, `docs/studio/STUDIO.md` (Push-Ablauf), `docs/studio/CHANGELOG.md` (nur nach Ruling); Probe, ob `pushcheck.py` im Worktree läuft (≈ 5 Tools).
 - Ruling: R565 (P1, V2)
 - Start: 2026-10-12 (Handbuch 1.52: Merge und Push nur in `.worktrees/integrate`; Briefing-Vorlagenzeile; Persona production-integrator 1.13)
-- Bewertung: –
+- Bewertung: Entwurf 2026-10-14 (Studio-Coach, Retro session-b54ed3bd-ende B2): **angepasst** — 18 Integrator-Briefings seit dem Start, 15 mit Worktree, 3 mit Hauptcheckout per Ruling (R627, R636, R644, Doku-/Werkzeug-Merges), in R616–R645 kein Vorfall genannt. Neue Messgrösse: Briefings mit Hauptcheckout ohne Ruling-Nummer = 0 über weitere 10 Läufe, höchstens bis 2026-11-19; Ruling-Ausnahmen werden gezählt. L0-Ruling ausstehend.
 
 ## E-064 · laufend (R579, nachgerückt für E-060) · Guard sperrt `git stash` ausser Lesezugriffen
 
@@ -657,4 +657,26 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Prüfung entfernen; Textregel (R66) bleibt.
 - Dateien: `tools/studio/` (Session-Start-Skript oder `check`), `tools/studio/tests/`; kein Eingriff in Handbuch.
 - Ruling: –
+- Bewertung: –
+
+## E-066 · vorgeschlagen (wartet auf Platz, R615) · Folgeinstanz statt Fortsetzung bei lead-tech
+
+- Hypothese: Ein `lead-tech`, der nach Turn-Ende länger als 5 min wartet (Gate, Ruling) und über 100k Kontext liegt, wird nicht per SendMessage fortgesetzt, sondern als Folgeinstanz mit Übergabe gestartet (Start-Kontext 32k statt Neuschreibung des vollen Kontexts); Anlass Retro [session-6584aaa4-ende](retros/2026-10-13-session-6584aaa4-ende.md) B2/V1.
+- Messgrösse: Neuschreibungen ≥ 20k von `lead-tech` ≤ 5 je Session (Ausgang 9 in 6584aaa4, 8 in b54ed3bd) und deren Kostengewicht ≤ 400k (Ausgang 562k) über 3 Sessions; Gegenprobe Rückfragen wegen fehlender Übergabe ≤ 1 je Session. Erwarteter Nutzen höchstens 2,6 Punkte Cache-Write (Pausenanteil lead-tech in b54ed3bd), Deutung.
+- Messbarkeit: Tabelle „5-min-Neuschreibungen > 20k“ und Aufteilung nach Pause (TOOL-BUENDEL-12) in den Metrik-Dateien bleiben unverändert.
+- Zeitraum: 3 Sessions, höchstens bis 2026-11-19.
+- Rückfall: Regel aus `lead-tech.md` streichen, Fortsetzung per SendMessage wie bisher.
+- Dateien: `.claude/agents/lead-tech.md` (Minor), `docs/studio/STUDIO.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
+- Ruling: R615 (als vorgeschlagen eingetragen, Reihenfolge E-066 vor E-065 vor E-067)
+- Bewertung: –
+
+## E-067 · vorgeschlagen (wartet auf Platz, R615) · Drei Pflichtzeilen im lead-tech-Bericht
+
+- Hypothese: Die Abfrage „Controller-Selbstarbeit ja/nein“, „Ownership erweitert ja/nein, wann gemeldet“ und „Auflage aus Gate Plan/Spec: Messwert Soll gegen Ist“ im Bericht senkt die erst im Gate gefundenen Abweichungen (Retro session-6584aaa4-ende B1/V3; R602, R611, R613).
+- Messgrösse: Gates Merge mit Abweichung, die L0 erst im Gate findet, ≤ 1 in 4 Gates (Ausgang 3 in 4 Gates); Gegenprobe: Berichtslänge nicht über Ausgang.
+- Messbarkeit: Gate-Rulings bleiben lesbar; Zählung über „Prozessbefund“/Auflagen in den Rulings.
+- Zeitraum: 2 Sessions, höchstens bis 2026-11-19. Bis zum Start gilt V3 als Briefing-Satz für Controller-Briefings von L0 ohne Messung (R615).
+- Rückfall: Zeilen streichen.
+- Dateien: `docs/studio/templates/bericht.md` oder `briefing.md` (nur nach Ruling)
+- Ruling: R615 (als vorgeschlagen eingetragen)
 - Bewertung: –
