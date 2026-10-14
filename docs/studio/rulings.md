@@ -7175,3 +7175,17 @@ lange Partie: verdrängen Fernaufträge den Stammkunden?) — als eigenes Paket 
 Regelbezug: gates.md Gate Brainstorming, R445, R475, R583 · Kosten bei Irrtum: eine Spec, die nach dem Playtest nachgeschärft wird.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-handel-2 · ADR: —
+
+## R630 · 2026-10-14 · Gate Merge I-100: OK, Merge nach UI-AUFRAEUM-3; PLAYTEST-I047 startet
+
+Ruling: (1) `feat/i100` @ `b4541b7f`: Final-Review opus OK, Task-Reviews OK, `make check` Exit 0, Playtest AK-5/AK-6 belegt, Zeiten
+2,10 → 2,07 s → **Gate Merge OK**. Merge durch den Integrator erst nach UI-AUFRAEUM-3 (R626), dann `make check` erneut auf main
+(Konfliktprüfung style.css/README/arc42). Auflage R619 (1) gilt mit Review-Beleg des Code-Pfads als erfüllt (kein DOM in Vitest);
+R619 (2) erfüllt über `restart()` ohne Reset-Code. Prozessbefund an die Retro: `make check` lief bei Last 10,8 trotz Briefing-Grenze 8.
+(2) Browser-Platz frei: **PLAYTEST-I047** (lead-qa, 2 Starts/P1) nach R629 (5): lange Partie auf `main` (live-Stand REL-21) bis
+Seefahrt und Stammkunde; Fragen: Wie oft kommt ein Stammkunden-Angebot, wie viel Aufmerksamkeit bindet es, bleibt Platz für einen
+zweiten Auftragsstrom (Fernangebot)? Ergebnis als Playtest-Report an L0 und den Design-Lead (Gate Spec Handel 2).
+
+Regelbezug: gates.md Gate Merge, R424, R619, R626, R629 · Kosten bei Irrtum: Konfliktnacharbeit beim Merge nach UI-AUFRAEUM-3.
+
+Entscheider: L0 · Anlass: Bericht lead-tech i-100 · ADR: —
