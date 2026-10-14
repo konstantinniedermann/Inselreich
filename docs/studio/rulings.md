@@ -7279,3 +7279,16 @@ pflegt die Ende-Routine.
 Regelbezug: gates.md Gate Merge, R617, R621, R626, R630, R631 · Kosten bei Irrtum: ein roter `make check` auf main → Fix vor REL-22.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ui-aufraeum-3 · ADR: —
+
+## R637 · 2026-10-14 · Release-Check REL-22 jetzt, Push in der Folgesession
+
+Ruling: main enthält nach R636 (`8e3e53c2`) UI-AUFRAEUM-3, I-100, TOOL-ZEITRESERVE-21, TOOL-BUENDEL-12, BEOB-14 (zwei Spiel-Häppchen).
+Der Push dieser Session war REL-21 (R335) — **REL-22 wird in der Folgesession gepusht**. Der Release-Check läuft jetzt, damit die
+Folgesession nur noch Gate und Push braucht: lead-qa (sonnet, Gate-Urteil), Budget 4 Starts/P2: Integrator `.worktrees/integrate`
+auf main (`git checkout --detach main`), `make check`, `make check-ci-perf`, `make zeitreserve-gate` (Testlock: bei Last abbrechen und
+später erneut, höchstens 3 Versuche); ein qa-playtester-Lauf am Kandidaten (Zusammenspiel UI-AUFRAEUM-3 + I-100: Kartenstapel mit
+«Neu»-Zähler, Rangliste, Rechtsklick im Linienzug); Opus-Review über `ca46eb73..<Kandidat>` (nur Spiel-Code und Tests). Kein Push.
+
+Regelbezug: gates.md Release-Check, R335, R636 · Kosten bei Irrtum: ein erneuter Delta-Check, falls main bis zum Push wächst.
+
+Entscheider: L0 · Anlass: Merge-Bericht merge-rel22-a · ADR: —
