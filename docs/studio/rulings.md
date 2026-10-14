@@ -7387,3 +7387,17 @@ Beobachtung: Spawn-Latenz unter Last (Messauftrag bei erneutem Auftreten).
 Regelbezug: gates.md Gate Merge, R585, R598, R642, E-043 · Kosten bei Irrtum: ein Timeout verdeckt einen echten Hänger bis 20 s.
 
 Entscheider: L0 · Anlass: Bericht lead-tech rel22-fix · ADR: —
+
+## R645 · 2026-10-14 · Nutzerfreigabe Muster v3: Einbau TOOL-DASH-VERSIONEN; Session-Ende vorbereiten
+
+Ruling: Nutzer 2026-10-14: «passt so. umsetzen.» Muster `.studio/mockups/versionen/v3.html` ist die Vorlage. Paket **TOOL-DASH-VERSIONEN**
+(lead-tech Controller, sonnet, Werkzeug-Paket, Budget 4 Starts/P1, Branch `tool/dash-versionen`): Karte «Versionen und Releases» als
+erste Karte im Studio-Dashboard; Zeitstrahl mit 5 Stufen, Gruppen je Release, Schranken/Pfeile/Chips für Abhängigkeiten, Kettenzeile
+«Kritischer Pfad», Hover-Kette, S-Kennzeichen für Pakete der laufenden Session, Filter «nur heute» (Standard: alles), «Früher»
+eingeklappt. Datenquelle `docs/studio/releases.json` (Zuordnung Paket → Release, Stufe, Status, Abhängigkeiten, Pool), gepflegt von
+lead-production mit state.md; Hash/CI/Pages aus git bzw. `ci.py`; Session-Kennzeichen aus den Events. Abnahme: `make studio-test` grün,
+Echtlauf gegen den laufenden Dashboard-Server mit Screenshot, Task-Review. Parallel: Session-Ende (Metriken, Kurz-Retro, state.md).
+
+Regelbezug: Nutzerauftrag, R643 · Kosten bei Irrtum: eine Dashboard-Karte, die nachgebessert wird.
+
+Entscheider: L0 · Anlass: Nutzerfreigabe · ADR: —
