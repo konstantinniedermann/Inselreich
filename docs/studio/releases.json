@@ -1,0 +1,260 @@
+{
+  "releases": [
+    {
+      "id": "REL-21",
+      "title": "Stammkunde und Inselmarkt",
+      "status": "live",
+      "hash": "ca46eb73",
+      "date": "2026-10-14",
+      "save": "v14",
+      "gate": "Release-Check OK",
+      "items": [
+        {
+          "pkg": "I-047",
+          "name": "Stammkunde",
+          "kind": "I-047",
+          "startStage": 1,
+          "stage": 5,
+          "state": "done",
+          "note": "live"
+        },
+        {
+          "pkg": "I-092",
+          "name": "Inselmarkt",
+          "kind": "I-092",
+          "startStage": 1,
+          "stage": 5,
+          "state": "done",
+          "note": "live"
+        },
+        {
+          "pkg": "UI-HAEPPCHEN-A",
+          "name": "UI-HAEPPCHEN-A",
+          "kind": "Häppchen",
+          "startStage": 1,
+          "stage": 5,
+          "state": "done",
+          "note": "live"
+        },
+        {
+          "pkg": "UI-HAEPPCHEN-B",
+          "name": "UI-HAEPPCHEN-B",
+          "kind": "Häppchen",
+          "startStage": 1,
+          "stage": 5,
+          "state": "done",
+          "note": "live"
+        },
+        {
+          "pkg": "UI-HAEPPCHEN-C",
+          "name": "UI-HAEPPCHEN-C",
+          "kind": "Häppchen",
+          "startStage": 1,
+          "stage": 5,
+          "state": "done",
+          "note": "live"
+        },
+        {
+          "pkg": "HOTFIX-PREIS",
+          "name": "Hotfix Preis",
+          "kind": "Hotfix",
+          "startStage": 4,
+          "stage": 5,
+          "state": "done",
+          "note": "live"
+        }
+      ]
+    },
+    {
+      "id": "REL-22",
+      "title": "Kandidat lokal auf main",
+      "status": "check",
+      "hash": "878b492b",
+      "date": "",
+      "save": "v14",
+      "gate": "Kandidat vollständig · Delta-Check + Push in der Folgesession",
+      "items": [
+        {
+          "pkg": "UI-AUFRAEUM-3",
+          "name": "UI-AUFRAEUM-3",
+          "kind": "Sammelpaket",
+          "startStage": 1,
+          "stage": 4,
+          "state": "done",
+          "note": "Final-Review OK, gemergt"
+        },
+        {
+          "pkg": "I-100",
+          "name": "I-100 «Neu»-Zähler",
+          "kind": "I-100",
+          "startStage": 1,
+          "stage": 4,
+          "state": "done",
+          "note": "Final-Review OK, gemergt"
+        },
+        {
+          "pkg": "TOOL-ZEITRESERVE-21",
+          "name": "TOOL-ZEITRESERVE-21",
+          "kind": "Werkzeug",
+          "startStage": 4,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt"
+        },
+        {
+          "pkg": "TOOL-BUENDEL-12",
+          "name": "TOOL-BUENDEL-12",
+          "kind": "Werkzeug",
+          "startStage": 4,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt"
+        },
+        {
+          "pkg": "BEOB-14",
+          "name": "BEOB-14",
+          "kind": "Befund",
+          "startStage": 4,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt"
+        },
+        {
+          "pkg": "REL22-FIX",
+          "name": "REL22-FIX",
+          "kind": "Zeitreserve-Tests, Kontrast",
+          "startStage": 4,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt (R644)"
+        },
+        {
+          "pkg": "REL-22:push",
+          "name": "REL-22 Release (Gruppe)",
+          "kind": "Delta-Check + Push",
+          "startStage": 5,
+          "stage": 5,
+          "state": "waiting",
+          "note": "Delta-Check + Push",
+          "frees": ["HANDEL-2"]
+        }
+      ]
+    },
+    {
+      "id": "REL-23",
+      "title": "Handel 2 «Fernangebot»",
+      "status": "planned",
+      "hash": "",
+      "date": "",
+      "save": "v15",
+      "gate": "geplant · 9 Tasks",
+      "items": [
+        {
+          "pkg": "HANDEL-2",
+          "name": "Handel 2 «Fernangebot»",
+          "kind": "HANDEL-2",
+          "startStage": 1,
+          "stage": 3,
+          "state": "waiting",
+          "note": "Gate Plan OK R639",
+          "waitsFor": {
+            "target": "REL-22:push",
+            "label": "REL-22: Delta-Check + Push (Folgesession)",
+            "hard": true
+          },
+          "frees": ["UI-HAEPPCHEN-D"],
+          "chainLabel": "Handel 2: Umsetzung",
+          "ghost": "Umsetzung · Merge"
+        }
+      ]
+    },
+    {
+      "id": "SPAETER",
+      "title": "Danach",
+      "status": "later",
+      "hash": "",
+      "date": "",
+      "save": "",
+      "gate": "",
+      "items": [
+        {
+          "pkg": "UI-HAEPPCHEN-D",
+          "name": "UI-HAEPPCHEN-D",
+          "kind": "Ereignis-Log vollständig",
+          "startStage": 2,
+          "stage": 2,
+          "state": "waiting",
+          "note": "Kurzdesign R641",
+          "waitsFor": {
+            "target": "HANDEL-2:merge",
+            "label": "Merge Handel 2 (Save v15)",
+            "hard": true
+          },
+          "chainLabel": "UI-HAEPPCHEN-D: Umsetzung"
+        }
+      ]
+    }
+  ],
+  "pool": [
+    {
+      "pkg": "EXTENSION-1",
+      "name": "Erweiterung 1 «Stände und Segel»",
+      "kind": "Nutzer-Session",
+      "startStage": 1,
+      "stage": 2,
+      "state": "user",
+      "note": "Design (Nutzer)",
+      "waitsFor": {
+        "target": "HANDEL-2:merge",
+        "label": "Erweiterung 1 (Nutzer-Session): wer zuerst merged, bekommt Save v15",
+        "hard": false
+      }
+    },
+    {
+      "pkg": "I-094",
+      "name": "I-094 Darlehen",
+      "kind": "Ideen-Pool",
+      "startStage": 1,
+      "stage": 1,
+      "state": "idea",
+      "note": "bewertet, geparkt"
+    },
+    {
+      "pkg": "I-091",
+      "name": "I-091 Treuebonus",
+      "kind": "Ideen-Pool",
+      "startStage": 1,
+      "stage": 1,
+      "state": "idea",
+      "note": "bewertet, geparkt"
+    },
+    {
+      "pkg": "I-097",
+      "name": "I-097 Pause sichtbar",
+      "kind": "Ideen-Pool",
+      "startStage": 1,
+      "stage": 1,
+      "state": "idea",
+      "note": "bewertet, geparkt"
+    },
+    {
+      "pkg": "ZEITRESERVE-PFLEGE",
+      "name": "Zeitreserve-Pflege",
+      "kind": "Befund",
+      "startStage": 1,
+      "stage": 1,
+      "state": "idea",
+      "note": "Befund"
+    },
+    {
+      "pkg": "TOOL-DASH-VERSIONEN",
+      "name": "TOOL-DASH-VERSIONEN",
+      "kind": "Werkzeug",
+      "startStage": 4,
+      "stage": 4,
+      "state": "running",
+      "note": "Karte «Versionen» im Dashboard"
+    }
+  ],
+  "pastSummary": "REL-01 … REL-20, M1 – M13"
+}

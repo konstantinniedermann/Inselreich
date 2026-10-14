@@ -21,6 +21,7 @@ import {
   syncSelect,
 } from './dom.js';
 import { renderGraph, setupGraph } from './graph.js';
+import { renderReleases } from './releases.js';
 import { applyFocus, dropMissing, openNodes, toggleNode } from './focus.js';
 import {
   NOT_MEASURED,
@@ -143,6 +144,7 @@ function renderLimits(state) {
 const VIEWS = [
   ['limits', renderLimits],
   ['sessions', renderSessions],
+  ['releases', renderReleases],
   ['org', renderOrg],
   ['graph', renderGraph],
   ['counts', renderCounts],
