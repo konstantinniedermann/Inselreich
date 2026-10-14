@@ -635,6 +635,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R565 (P1, V2)
 - Start: 2026-10-12 (Handbuch 1.52: Merge und Push nur in `.worktrees/integrate`; Briefing-Vorlagenzeile; Persona production-integrator 1.13)
 - Bewertung: Entwurf 2026-10-14 (Studio-Coach, Retro session-b54ed3bd-ende B2): **angepasst** — 18 Integrator-Briefings seit dem Start, 15 mit Worktree, 3 mit Hauptcheckout per Ruling (R627, R636, R644, Doku-/Werkzeug-Merges), in R616–R645 kein Vorfall genannt. Neue Messgrösse (R646): Integrator-Briefings mit Hauptcheckout ohne Ruling-Nummer, Soll 0 über weitere 10 Läufe, höchstens bis 2026-11-19; Ruling-Ausnahmen werden gezählt. L0-Ruling R646 bestätigt.
+- Datenpunkt (Retro [session-dbac5fc4-ende](retros/2026-10-14-session-dbac5fc4-ende.md)): Briefings ab 12:00 in dbac5fc4: 3 mit `.worktrees/integrate`, 2 mit Hauptcheckout-Bezug und Ruling-Nummer (R631/R630, R644), 0 ohne Ruling-Nummer. Weiter beobachten; Status bis zum Ruling unverändert.
 
 ## E-064 · laufend (R579, nachgerückt für E-060) · Guard sperrt `git stash` ausser Lesezugriffen
 
@@ -670,6 +671,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R615, R646
 - Start: 2026-10-14 (Persona lead-tech 1.15)
 - Bewertung: –
+- Datenpunkt 1 von 3, S-2026-10-14-dbac5fc4 (Retro [session-dbac5fc4-ende](retros/2026-10-14-session-dbac5fc4-ende.md) B1): `lead-tech` 3 Neuschreibungen ≥ 20k (Soll ≤ 5, Ausgang 8), Pausenanteil `lead-tech` 1,4 Punkte Cache-Write (Ausgang 2,6); Kostengewicht der drei nicht einzeln gelesen, keine Rückfrage wegen fehlender Übergabe in R648–R658. Wirkung nicht von der kleineren Session trennbar → weiter beobachten.
 
 ## E-067 · vorgeschlagen (wartet auf Platz, R615) · Drei Pflichtzeilen im lead-tech-Bericht
 
@@ -680,4 +682,26 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Zeilen streichen.
 - Dateien: `docs/studio/templates/bericht.md` oder `briefing.md` (nur nach Ruling)
 - Ruling: R615 (als vorgeschlagen eingetragen)
+- Bewertung: –
+
+## E-068 · vorgeschlagen (wartet auf Platz) · Ein Reviewer je Paket in Stufe leicht
+
+- Hypothese: Bei Paketen der Stufe leicht mit mindestens zwei Tasks und einem Diff ≤ 300 Zeilen reviewt ein einziger `qa-code-reviewer` den Paket-Diff statt eines je Task. Das spart Erstladung (13k Start-Kontext) und Wachstum je gesparter Instanz; Anlass Retro [session-dbac5fc4-ende](retros/2026-10-14-session-dbac5fc4-ende.md) B1: Wachstum 27,8 Punkte gegen Pause 3,9, `qa-code-reviewer` grösster Einzelposten (6,4). Die Annahme «Erstladung ≈ 40 % der Schreibmenge» ist Deutung; E-069 macht sie messbar.
+- Messgrösse: `qa-code-reviewer`-Instanzen je Paket ≤ 1,3 (Ausgang 13 Instanzen bei etwa 7 Paketen in dbac5fc4) und Cache-Write-Wachstum der Rolle ≤ 4 Punkte (Ausgang 6,4) über 3 Sessions; Gegenprobe: Befunde, die erst im Gate Merge auftauchen, ≤ 1 je Paket und Erstabnahme-Quote ≥ 80 %.
+- Messbarkeit: Tabelle «Rolle» und Aufteilung nach Rolle in den Metrik-Dateien bleiben unverändert; Gate-Rulings bleiben lesbar.
+- Zeitraum: 3 Sessions, höchstens bis 2026-11-19; Start bei freiem Platz.
+- Rückfall: Briefing-Zeile streichen, Review je Task wie bisher.
+- Dateien: `docs/studio/templates/briefing.md` (Reviewer-Zeile), `.claude/agents/qa-code-reviewer.md`, `docs/studio/STUDIO.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
+- Ruling: –
+- Bewertung: –
+
+## E-069 · vorgeschlagen (Werkzeug, ohne Platz wie E-043) · Session-Zeitraum durchreichen, Erstladung ausweisen
+
+- Hypothese: Wenn die Session-Datei `since` an die Zeilen Flake-Verdacht und bereinigter Steuerungsanteil weitergibt und den Cache-Write 5 min zusätzlich in Erstladung (erster Schreibvorgang je Instanz), Wachstum danach und Pause aufteilt, verschwinden zwei Fehlalarme (Retro [session-dbac5fc4-ende](retros/2026-10-14-session-dbac5fc4-ende.md) B2) und die Deutung von B1 wird prüfbar.
+- Messgrösse: Session-Datei und `metrics.py --efficiency --since <Session-Beginn>` stimmen bei Flake und Steuerungsanteil überein (Test mit fester Fixture); Erstladung + Wachstum + Pause = Cache-Write 5 min; über die nächste Session-Retro.
+- Messbarkeit: erweitert sie; bestehende Zeilen und die Historienzeile bleiben unverändert.
+- Zeitraum: eine Session, höchstens bis 2026-10-28.
+- Rückfall: Revert des Werkzeug-Commits.
+- Dateien: `tools/studio/metrics.py`, `tools/studio/tests/` (Werkzeug-Paket, ≈ 8 Tools); Beobachtung 2026-10-14 in `docs/beobachtungen.md`
+- Ruling: –
 - Bewertung: –
