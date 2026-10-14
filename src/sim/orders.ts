@@ -239,11 +239,12 @@ export function cancelContract(world: World): Result {
   return ok;
 }
 
-/** Tick, an dem der nächste Auftrag angeboten wird (strikt nach dem aktuellen Tick, ausser vor dem ersten). */
+/** Tick des nächsten Auftragsangebots; überspringt die nach einem Fernauftrag gesperrte Periode (R11). */
 export function nextOrderTick(world: World): number {
   const t = world.tick;
   if (t < ORDER_FIRST_TICK) return ORDER_FIRST_TICK;
-  return ORDER_FIRST_TICK + ORDER_PERIOD * (Math.floor((t - ORDER_FIRST_TICK) / ORDER_PERIOD) + 1);
+  const k = Math.floor((t - ORDER_FIRST_TICK) / ORDER_PERIOD) + 1;
+  return ORDER_FIRST_TICK + ORDER_PERIOD * (k === world.farSkip ? k + 1 : k);
 }
 
 /** Stückpreis eines Liefervertrags (I-047). */
