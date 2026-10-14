@@ -333,7 +333,11 @@ export function bindInput(
     };
   };
 
-  const onContextMenu = (e: MouseEvent): void => e.preventDefault();
+  const onContextMenu = (e: MouseEvent): void => {
+    e.preventDefault();
+    // Chrome meldet Rechtsklick bei gehaltener linker Taste nicht als pointerdown b2: im Linienzug hier abbrechen
+    if (drag?.line === true) cancelPointerAction();
+  };
 
   const lineUpdate = (from: IslandTile, to: IslandTile): void =>
     onAction({

@@ -418,6 +418,28 @@ describe('REL-17 Abriss-Zug (AK-R17-12…16)', () => {
       expect(run('right')).toEqual(run('esc'));
     });
 
+    it('I-098 Chrome: contextmenu im Linienzug beendet nur den Zug, danach baut pointerup nichts', () => {
+      const { actions, at, ptr } = setup();
+      ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+      ptr('pointermove', { ...at(2, 0), shiftKey: true });
+      actions.length = 0;
+      ptr('contextmenu', {});
+      expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
+      ptr('pointerup', { ...at(2, 0), shiftKey: true });
+      expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
+    });
+
+    it('I-098 contextmenu ohne Zug sendet nichts; nach pointerdown b2 im Zug kein Doppel-cancel', () => {
+      const { actions, at, ptr } = setup();
+      ptr('contextmenu', {});
+      expect(actions).toEqual([]);
+      ptr('pointerdown', { ...at(0, 0), shiftKey: true });
+      actions.length = 0;
+      ptr('pointerdown', { ...at(0, 0), button: 2 });
+      ptr('contextmenu', {});
+      expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
+    });
+
     it('Abriss-Strich (drag.demolish): Rechtsklick sendet weiter cancel (unverändert)', () => {
       const { actions, at, ptr } = setup({ kind: 'demolish' });
       ptr('pointerdown', { ...at(0, 0) });
