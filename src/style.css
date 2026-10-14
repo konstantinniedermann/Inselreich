@@ -1335,6 +1335,16 @@ button.hud-balance:focus-visible {
   min-height: 0;
   overflow-y: auto;
 }
+.upkeep-islands {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+}
+.upkeep-island {
+  padding: 4px 8px;
+  font-weight: 600;
+  border-bottom: 2px solid var(--gold);
+}
 .upkeep-rows {
   list-style: none;
   margin: 0;

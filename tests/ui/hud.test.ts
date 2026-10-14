@@ -479,4 +479,18 @@ describe('Bilanz-Knopf und Betriebsliste (I-062, AK-8, AK-9)', () => {
     expect(rowButtons(empty)).toHaveLength(0);
     expect(empty.descendants().some((e) => e.textContent === UPKEEP_EMPTY_TEXT)).toBe(true);
   });
+
+  it('AK-UA3-10 Inselzeilen über der Liste: Text, Aria, Welt unverändert', () => {
+    vi.stubGlobal('document', fakeDocument);
+    const { w } = world();
+    const before = structuredClone(w);
+    const root = renderUpkeepList(w, () => {}) as unknown as FakeElement;
+    const rows = root.descendants().filter((e) => e.className === 'upkeep-island');
+    expect(rows).toHaveLength(2);
+    expect(rows[0]!.textContent).toMatch(/^.+ · \d+ Gebäude · \d+ \/ min$/);
+    expect(rows[0]!.getAttribute('aria-label')).toMatch(/Unterhalt \d+ pro Minute/);
+    const scroll = root.descendants().find((e) => e.className === 'upkeep-scroll')!;
+    expect(scroll.children.map((c) => c.className)).toEqual(['upkeep-islands', 'upkeep-rows']);
+    expect(w).toEqual(before);
+  });
 });

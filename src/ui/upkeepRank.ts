@@ -1,8 +1,11 @@
 // upkeepRank.ts — rein: Betriebe nach Unterhalt (I-062). Liest die Sim, schreibt nie; kein zweiter Rechenweg:
-// Zeilenwerte sind `buildingUpkeep`, die Fusszeile ist `world.stats.upkeep`.
+// Zeilenwerte sind `buildingUpkeep`, die Fusszeile ist `totalUpkeep(world)` (nicht `stats.upkeep`: das
+// ist erst nach dem nächsten Tick aktuell, in der Pause also veraltet).
 import { SHIP } from '../sim/defs/sea';
 import { activeEdictDef } from '../sim/edicts';
+import { totalUpkeep } from '../sim/economy';
 import { buildingUpkeep, utilization } from '../sim/levels';
+import { functionLock } from '../sim/unlocks';
 import type { BuildingDefId, World } from '../sim/types';
 
 /** So viele Betriebe zeigt die Karte; der Rest steht als «und n weitere». */
@@ -47,9 +50,14 @@ export interface UpkeepSummary {
   moreUpkeep: number;
   /** Schiffe als eine Zeile; `null` ohne Schiffe. */
   ships: { count: number; upkeep: number } | null;
-  /** Wirkung des Edikts Sparen (≤ 0): `stats.upkeep` − Zeilensumme; 0 ohne sparendes Edikt. */
+  /** Wirkung des Edikts Sparen (≤ 0): Fusszeile − Zeilensumme; 0 ohne sparendes Edikt. */
   edict: number;
-  /** Fusszeile: `world.stats.upkeep`. */
+  /**
+   * Unterhalt je Insel (Betriebe mit Unterhalt, ohne Schiffe), absteigend, dann Insel-ID. Leer ohne Seefahrt
+   * oder bei weniger als zwei Inseln mit Betrieben.
+   */
+  islands: { island: number; count: number; upkeep: number }[];
+  /** Fusszeile: `totalUpkeep(world)`. */
   total: number;
 }
 
@@ -60,12 +68,25 @@ export function upkeepSummary(world: World): UpkeepSummary {
   const ships = count > 0 ? { count, upkeep: count * SHIP.upkeep } : null;
   const sum = rows.reduce((n, r) => n + r.upkeep, 0) + (ships?.upkeep ?? 0);
   const saving = (activeEdictDef(world)?.upkeepPct ?? 100) < 100;
+  const total = totalUpkeep(world);
+  const byIsland = new Map<number, { island: number; count: number; upkeep: number }>();
+  for (const r of rows) {
+    const e = byIsland.get(r.island) ?? { island: r.island, count: 0, upkeep: 0 };
+    e.count += 1;
+    e.upkeep += r.upkeep;
+    byIsland.set(r.island, e);
+  }
+  const islands =
+    functionLock(world, 'seafaring') === null && byIsland.size >= 2
+      ? [...byIsland.values()].sort((a, b) => b.upkeep - a.upkeep || a.island - b.island)
+      : [];
   return {
     shown: rows.slice(0, UPKEEP_LIST_MAX),
     more: rest.length,
     moreUpkeep: rest.reduce((n, r) => n + r.upkeep, 0),
     ships,
-    edict: saving ? world.stats.upkeep - sum : 0,
-    total: world.stats.upkeep,
+    edict: saving ? total - sum : 0,
+    islands,
+    total,
   };
 }
