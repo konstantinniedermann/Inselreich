@@ -21,6 +21,7 @@ import {
   runContractAction,
   updateOrder,
 } from '../../src/ui/order';
+import { seaWorld } from '../sim/seaHelpers';
 import { diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
 import { HOME, home, createWorld } from '../../src/sim/world';
 import { sellPrice } from '../../src/sim/trade';
@@ -203,6 +204,18 @@ describe('I-088 Angebotskarte: Marktpreis und Erzeugung (AK-HC-01 bis 04)', () =
     sat.sellPct.wood = 40;
     expect(marketN(orderCardText(sat))).toBe(sellPrice(sat, 'wood', 1));
     expect(marketN(orderCardText(sat))).toBeLessThan(base);
+  });
+
+  it('AK-HC-01 Fremdinsel: Marktpreis der Vertragsinsel inkl. Vorliebe (REL-21: Glas auf Weidenau → 26)', () => {
+    const w = seaWorld();
+    w.order = null;
+    w.tick = 750;
+    w.contractOffer = { good: 'glass', island: 3 }; // Weidenau (C) bevorzugt Glas
+    expect(sellPrice(w, 'glass', 1, 3)).toBe(26);
+    expect(sellPrice(w, 'glass', 1)).toBeLessThan(26);
+    expect(marketN(orderCardText(w))).toBe(26);
+    w.contractOffer = { good: 'glass', island: HOME };
+    expect(marketN(orderCardText(w))).toBe(sellPrice(w, 'glass', 1));
   });
 
   it('AK-HC-03 Erzeugung der Lieferinsel: keine / x pro Minute', () => {

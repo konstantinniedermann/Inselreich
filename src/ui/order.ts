@@ -78,7 +78,7 @@ export function orderCardText(world: World, island: number = HOME): string {
     return (
       `Stammkunde: ${def.order!.contract} ${def.name}${islandSuffix(world, offer.island)}` +
       ` alle ${takt} zu ${contractUnitPrice(offer.good)} je Stück` +
-      ` · Markt jetzt ≈ ${sellPrice(world, offer.good, 1)} · ${production} · Angebot noch ${rest()}`
+      ` · Markt jetzt ≈ ${sellPrice(world, offer.good, 1, offer.island)} · ${production} · Angebot noch ${rest()}`
     );
   }
   const o = world.order;
