@@ -7109,3 +7109,19 @@ Exit 0 als Push-Bedingung REL-21. Der Werkzeug-Fix (R623 (2)) gilt mit diesem Ec
 Regelbezug: R270, R585, R593, R598, E-043 · Kosten bei Irrtum: ein weiteres Werkzeug-Paket vor dem Push.
 
 Entscheider: L0 · Anlass: Bericht lead-tech tool-hotfix-zr (Echtlauf) · ADR: —
+
+## R625 · 2026-10-14 · Push-Gate REL-21: OK, Push `ca46eb73`
+
+Ruling: Delta-Check lead-qa OK: Kandidat `ca46eb73` (main mit HOTFIX-REL21-PREIS und TOOL-HOTFIX-ZR), `make check` Exit 0,
+`make check-ci-perf` Exit 0, `make zeitreserve-gate` **Exit 0** (Last 2,9, 3905 Tests), Browser: Stammkunde-Karte Weidenau Glas 26 =
+Handel 26 (`.studio/qa/REL-21/delta2-*`). Die Substanz aus dem Werkzeug-Echtlauf (R624) trat im Gate nicht auf: die drei Tests liegen
+an der Schwelle und schwanken; massgeblich ist das Gate (R598). Entscheide: (1) **Push REL-21** durch `production-integrator` aus
+`.worktrees/integrate`: `git push origin ca46eb73:main` (geprüfter Hash, R429; die Doku-Commits danach gehen mit dem nächsten Push),
+danach CI beobachten und `gh workflow run Pages --ref main`? — **nein**: Pages muss genau `ca46eb73` bauen; da `--ref main` den
+Remote-Kopf baut und dieser nach dem Push `ca46eb73` ist, ist `gh workflow run Pages --ref main` korrekt. (2) TOOL-ZEITRESERVE-21 läuft
+weiter (Reserve-Abstand), Merge mit REL-22. (3) Release-Notiz REL-21 in state.md ergänzt um den Hotfix.
+
+Regelbezug: gates.md Release-Check, R335, R429, R598, R622–R624 · Kosten bei Irrtum: CI rot durch einen Schwellen-Test → Rerun bzw.
+Hotfix mit TOOL-ZEITRESERVE-21.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-rel-21-delta · ADR: —
