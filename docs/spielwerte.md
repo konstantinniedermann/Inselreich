@@ -226,6 +226,21 @@ Kontor fehlt. Solange der Vertrag läuft, gibt es keine Zufallsaufträge. **Kün
 kostenlos. Fehlen bei der Lieferung Ware oder Kontor, springt der Kunde ab und es kostet eine Strafe in
 Höhe einer Lieferung (Wert je Lieferung), danach geht es mit Zufallsaufträgen weiter.
 
+#### Fernangebot
+
+Mit einem Kontor auf einer Fremdinsel und einem Haus mindestens der Stufe des Guts bietet der Händler zu
+Beginn eines Auftragstakts ein **Fernangebot** an (nicht bei laufendem Stammkunden). Es steht als eigene
+Karte unter der Auftragskarte. **Annehmen** ersetzt den Auftrag der Periode; geliefert wird nur aus dem
+Lager der Fern-Insel. Die Frist beträgt 2:50 ab Auftragsbeginn. Bei mehreren Inseln wechselt das Angebot
+reihum (nach Periode, ohne Zufall). Nach einem angenommenen Fernauftrag entfällt der nächste Auftrag.
+Wert = Menge × Prämie je Einheit der Tabelle oben.
+
+| Insel      | Gut   | ab Stufe | Menge | Wert |
+| ---------- | ----- | -------- | ----- | ---- |
+| Möweninsel | Stoff | 2        | 20    | 440  |
+| Felsbucht  | Rum   | 3        | 15    | 450  |
+| Weidenau   | Glas  | 4        | 12    | 444  |
+
 ### Seefahrt und Gewürz
 
 Die Seefahrt wird mit dem Bürger-Ziel frei (U6). Danach liegen drei weitere Inseln im Archipel: die **Möweninsel**

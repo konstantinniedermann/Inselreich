@@ -51,7 +51,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 14;
+export const SAVE_VERSION = 15;
 
 export type { LoadResult };
 
@@ -80,8 +80,9 @@ const isInt = (v: unknown): v is number => Number.isInteger(v);
  * `due` ergibt sich aus der Periode, der Auftrag ist schon angeboten (`tick ≥ due − ORDER_DURATION`)
  * und noch nicht verfallen (`tick ≤ due`, `tickOrders` löscht erst bei `tick > due`). Menge und Prämie
  * werden nur strukturell geprüft, nicht gegen aktuelle Spielwerte (Spielstände bleiben ladbar).
+ * Fernauftrag (`island` gesetzt): längere Frist, siehe unten.
  */
-function isValidOrder(o: unknown, tick: unknown): boolean {
+function isValidOrder(o: unknown, tick: unknown, islandCount: number): boolean {
   if (o === null) return true;
   if (
     !isObject(o) ||
@@ -99,7 +100,14 @@ function isValidOrder(o: unknown, tick: unknown): boolean {
     return false;
   if (GOODS[o.good as keyof typeof GOODS].order === undefined) return false;
   const offered = ORDER_FIRST_TICK + o.period * ORDER_PERIOD;
-  return o.due === offered + ORDER_DURATION && tick >= offered && tick <= o.due;
+  if (tick < offered || tick > o.due) return false;
+  if (o.island === undefined) return o.due === offered + ORDER_DURATION;
+  // Fernauftrag (Handel 2, R15.3/4): Zielinsel ausser Heimat, Frist im Fenster bis Ende der Folgeperiode
+  return (
+    isIntBetween(o.island, 1, islandCount - 1) &&
+    o.due > offered + ORDER_DURATION &&
+    o.due <= offered + 2 * ORDER_PERIOD - 1
+  );
 }
 
 /** Objekt mit genau den Schlüsseln der Bevölkerungsstufen, dessen Werte `ok` erfüllen. */
@@ -128,7 +136,7 @@ function isValidV2Fields(raw: Record<string, unknown>): boolean {
     !GOOD_IDS.every((g) => isInt(sellPct[g]) && sellPct[g] >= SELL_FLOOR && sellPct[g] <= 100)
   )
     return false;
-  return isValidOrder(raw.order, raw.tick);
+  return isValidOrder(raw.order, raw.tick, (raw.islands as unknown[]).length);
 }
 
 /** v1 → v2: neue Felder mit den Werten, die das bisherige Verhalten ergeben; Vorhandenes bleibt unberührt. */
@@ -857,6 +865,35 @@ function isValidContractFields(raw: Record<string, unknown>): boolean {
   return true;
 }
 
+/** Fernangebot und Sperre (Handel 2, R15.1/2/5): strukturell, nicht gegen Spielwerte; Kontor wird nicht verlangt. */
+function isValidFarFields(raw: Record<string, unknown>): boolean {
+  const { farOffer, farSkip, order, contract, contractOffer, tick } = raw;
+  const count = (raw.islands as unknown[]).length;
+  if (farOffer !== null) {
+    if (!isObject(farOffer) || !isOrderGoodOnIsland(farOffer, count) || farOffer.island === 0)
+      return false;
+    if (
+      !isInt(farOffer.amount) ||
+      farOffer.amount < 1 ||
+      !isInt(farOffer.reward) ||
+      farOffer.reward < 0
+    )
+      return false;
+    if (!isObject(order) || 'island' in order || contract !== null || contractOffer !== null)
+      return false;
+  }
+  if (farSkip === null) return true;
+  if (!isInt(farSkip) || !isInt(tick) || tick < ORDER_FIRST_TICK) return false;
+  return farSkip === Math.floor((tick - ORDER_FIRST_TICK) / ORDER_PERIOD) + 1;
+}
+
+/** v14 → v15 (Handel 2): Fernangebot. Neue Schlüssel am Ende, verlustfrei; wirft nie. */
+export function migrateV14ToV15(raw: Record<string, unknown>): void {
+  if (!('farOffer' in raw)) raw.farOffer = null;
+  if (!('farSkip' in raw)) raw.farSkip = null;
+  raw.version = 15;
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { stats } = raw;
@@ -871,6 +908,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidV11Fields(raw)) return false;
   if (!isValidV12Fields(raw)) return false;
   if (!isValidContractFields(raw)) return false;
+  if (!isValidFarFields(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -912,6 +950,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 11) migrateV11ToV12(raw);
   if (raw.version === 12) migrateV12ToV13(raw);
   if (raw.version === 13) migrateV13ToV14(raw);
+  if (raw.version === 14) migrateV14ToV15(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

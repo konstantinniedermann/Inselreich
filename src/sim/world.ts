@@ -119,7 +119,7 @@ export function createWorld(
     reserve: { wood: 0, stone: 0 },
   };
   const world: World = {
-    version: 14,
+    version: 15,
     seed: seedUsed,
     islands: [homeIsland, ...foreignIslands(seedUsed, homeIsland)],
     tick: 0,
@@ -153,6 +153,8 @@ export function createWorld(
     buyPct: Object.fromEntries(GOOD_IDS.map((g) => [g, 100])) as Record<GoodId, number>,
     contract: null,
     contractOffer: null,
+    farOffer: null,
+    farSkip: null,
   };
   world.buildings[1] = {
     id: 1,

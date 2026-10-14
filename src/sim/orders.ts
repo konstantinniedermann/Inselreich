@@ -6,7 +6,8 @@ import {
   GOOD_IDS,
   ORDER_PREMIUM,
 } from './defs/goods';
-import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from './defs/timing';
+import { ISLANDS } from './defs/sea';
+import { FAR_ORDER_DURATION, ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from './defs/timing';
 import { islandName } from './islands';
 import { islandAt } from './placement';
 import { createRng } from './rng';
@@ -72,6 +73,37 @@ function offerRandomOrder(world: World, k: number): void {
   };
 }
 
+/** Vorliebe-Gut der Fremdinsel mit `order.far` (erstes in `prefers`); Heimat oder ohne → `null` (R1). */
+export function farGood(world: World, island: number): GoodId | null {
+  const isl = world.islands[island];
+  if (island === HOME || isl === undefined) return null;
+  const def = ISLANDS.find((d) => d.kind === isl.kind);
+  return def?.prefers.find((g) => GOODS[g].order?.far !== undefined) ?? null;
+}
+
+/** Wählbare Fremdinseln in Indexfolge: Kontor, Gut mit `order.far`, Stufe erreicht (R1). */
+export function farEligible(world: World): number[] {
+  const max = maxHouseTier(world);
+  const out: number[] = [];
+  for (let i = 1; i < world.islands.length; i++) {
+    if (world.islands[i]!.kontorId === null) continue;
+    const g = farGood(world, i);
+    if (g !== null && GOODS[g].order!.tier <= max) out.push(i);
+  }
+  return out;
+}
+
+/** Fernangebot der Periode `k` nach R2/R3: Rotation ohne Zufall; nicht bei Vertrag oder Sperre. */
+function offerFarOrder(world: World, k: number): void {
+  if (world.contract !== null || functionLock(world, 'orders') !== null) return;
+  const e = farEligible(world);
+  if (e.length === 0) return;
+  const island = e[k % e.length]!;
+  const good = farGood(world, island)!;
+  const amount = GOODS[good].order!.far!;
+  world.farOffer = { island, good, amount, reward: amount * orderUnitReward(good) };
+}
+
 /** Erste zutreffende Bruchbedingung des laufenden Vertrags (R6), sonst `null`. */
 function breakReason(world: World, c: Contract): ContractBreakReason | null {
   if (functionLock(world, 'orders') !== null) return 'lock';
@@ -98,26 +130,66 @@ function settleContract(world: World, c: Contract): ContractEvent {
 }
 
 /**
- * Lässt einen abgelaufenen Auftrag verfallen; am Periodenbeginn verfällt das Angebot, ein Vertrag wird
- * abgerechnet (Lieferung: kein Zufallsauftrag) und sonst der Zufallsauftrag angeboten.
+ * Lässt einen abgelaufenen Auftrag samt Fernangebot verfallen; am Periodenbeginn verfällt das Angebot, ein
+ * Vertrag wird abgerechnet (Lieferung: weder Zufalls- noch Fernangebot); sonst werden Zufallsauftrag und
+ * Fernangebot angeboten, ausser eine Fernsperre (`farSkip`) gilt für diese Periode (sie wird verbraucht).
  */
 export function tickOrders(world: World): ContractEvent | null {
   const t = world.tick;
-  if (world.order !== null && t > world.order.due) world.order = null;
+  if (world.order !== null && t > world.order.due) {
+    world.order = null;
+    world.farOffer = null;
+  }
   if (t < ORDER_FIRST_TICK || (t - ORDER_FIRST_TICK) % ORDER_PERIOD !== 0) return null;
+  const k = (t - ORDER_FIRST_TICK) / ORDER_PERIOD;
   world.contractOffer = null;
+  const skip = world.farSkip === k;
+  if (world.farSkip !== null) world.farSkip = null;
   const ev = world.contract === null ? null : settleContract(world, world.contract);
   if (ev?.kind === 'delivered') return ev;
-  if (world.order === null) offerRandomOrder(world, (t - ORDER_FIRST_TICK) / ORDER_PERIOD);
+  if (world.order === null && !skip) {
+    offerRandomOrder(world, k);
+    offerFarOrder(world, k);
+  }
   return ev;
 }
 
-/** Liefert den aktiven Auftrag aus dem Lager der Insel ab (auch bei negativem Geld, es ist eine Einnahme); keine Teillieferung. */
+/**
+ * Nimmt das Fernangebot an (R5): ersetzt den Zufallsauftrag der Periode durch den Fernauftrag mit langer Frist und
+ * sperrt die Folgeperiode. Prüfreihenfolge Sperre, Angebot, Vertrag, Kontor, Auftrag (Guard, Plan T4); kostet nichts.
+ */
+export function acceptFarOrder(world: World): Result {
+  const lock = functionLock(world, 'orders');
+  if (lock !== null) return fail(lock);
+  const offer = world.farOffer;
+  if (offer === null) return fail('Kein Fernangebot');
+  if (world.contract !== null) return fail('Vertrag läuft');
+  const noKontor = noKontorTrade(world, offer.island);
+  if (noKontor !== null) return fail(noKontor);
+  const o = world.order;
+  if (o === null) return fail('Kein Auftrag');
+  world.order = {
+    period: o.period,
+    good: offer.good,
+    amount: offer.amount,
+    reward: offer.reward,
+    due: ORDER_FIRST_TICK + o.period * ORDER_PERIOD + FAR_ORDER_DURATION,
+    island: offer.island,
+  };
+  world.farOffer = null;
+  world.farSkip = o.period + 1;
+  return ok;
+}
+
+/** Liefert den aktiven Auftrag aus dem Lager der Insel ab (auch bei negativem Geld, es ist eine Einnahme); keine Teillieferung.
+ * Ein Fernauftrag (R6) wird nur auf seiner Insel geliefert; jede Lieferung räumt das Fernangebot. */
 export function deliverOrder(world: World, island: number = HOME): Result {
   const lock = functionLock(world, 'orders');
   if (lock !== null) return fail(lock);
   const o = world.order;
   if (o === null) return fail('Kein Auftrag');
+  if (o.island !== undefined && island !== o.island)
+    return fail(`Nur auf ${islandName(world, o.island)}`);
   const isl = islandAt(world, island);
   if (isl === null) return fail('Unbekannte Insel');
   const noKontor = noKontorTrade(world, island);
@@ -129,6 +201,7 @@ export function deliverOrder(world: World, island: number = HOME): Result {
   isl.stock[o.good] -= o.amount;
   world.money += o.reward;
   world.order = null;
+  world.farOffer = null;
   if (world.contract === null && maxHouseTier(world) >= CONTRACT_MIN_TIER)
     world.contractOffer = { good: o.good, island };
   return ok;
@@ -166,11 +239,12 @@ export function cancelContract(world: World): Result {
   return ok;
 }
 
-/** Tick, an dem der nächste Auftrag angeboten wird (strikt nach dem aktuellen Tick, ausser vor dem ersten). */
+/** Tick des nächsten Auftragsangebots; überspringt die nach einem Fernauftrag gesperrte Periode (R11). */
 export function nextOrderTick(world: World): number {
   const t = world.tick;
   if (t < ORDER_FIRST_TICK) return ORDER_FIRST_TICK;
-  return ORDER_FIRST_TICK + ORDER_PERIOD * (Math.floor((t - ORDER_FIRST_TICK) / ORDER_PERIOD) + 1);
+  const k = Math.floor((t - ORDER_FIRST_TICK) / ORDER_PERIOD) + 1;
+  return ORDER_FIRST_TICK + ORDER_PERIOD * (k === world.farSkip ? k + 1 : k);
 }
 
 /** Stückpreis eines Liefervertrags (I-047). */

@@ -28,11 +28,12 @@ import {
   stockPrefix,
   stockTooltip,
   tierPath,
+  renderNoticeStack,
   updateNoticeStack,
   tierTooltip,
 } from '../../src/ui/hud';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
-import { home, createWorld } from '../../src/sim/world';
+import { HOME, home, createWorld } from '../../src/sim/world';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import type { Tier } from '../../src/sim/types';
 import { houseNearKontor, placeTownhall, setAllTax } from '../sim/helpers';
@@ -42,7 +43,11 @@ import { GOODS_BALANCE_TICKS, perMinute, signedNum } from '../../src/ui/time';
 import { tickEconomy } from '../../src/sim/economy';
 import { putBuilding, twoIslandWorld } from '../sim/helpers';
 import { renderUpkeepList, UPKEEP_EMPTY_TEXT } from '../../src/ui/upkeepCard';
-import { fakeDocument, type FakeElement } from './fakeDom';
+import { FakeElement, fakeDocument } from './fakeDom';
+import { acceptFarOrder } from '../../src/sim/orders';
+import { dropKontor, farWorld, islandOf, periodStart, stepAt } from '../sim/farHelpers';
+import { deliverLabel, orderCardText, orderVisible } from '../../src/ui/order';
+import { farAcceptTooltip, farOfferText, farOrderText } from '../../src/ui/farOrder';
 
 describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
   it('AK-UX-07 tierTooltip und tierPath aus TIERS', () => {
@@ -512,5 +517,99 @@ describe('Kartenstapel (I-099, AK-UA3-11, AK-UA3-13)', () => {
     const block = /\.notice-stack \{[^}]*\}/.exec(css)![0];
     expect(block).toMatch(/gap:\s*var\(--stack-gap\)/);
     expect(css.match(/--stack-gap:/g)).toHaveLength(1);
+  });
+});
+
+describe('Meldungsstapel mit Fernkarte (Handel 2 T08)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const P = periodStart(0);
+  const build = (w: World) => {
+    vi.stubGlobal('document', fakeDocument);
+    const calls = { acceptFar: 0 };
+    const actions = {
+      deliver: () => {},
+      accept: () => {},
+      decline: () => {},
+      toProducer: () => {},
+      cancel: () => {},
+      acceptFar: () => {
+        calls.acceptFar++;
+      },
+    };
+    const game = new FakeElement('div');
+    const stack = renderNoticeStack(
+      game as unknown as HTMLElement,
+      w,
+      actions,
+    ) as unknown as FakeElement;
+    return { stack, calls };
+  };
+  const offerWorld = (): World => {
+    const w = farWorld(3, ['B']);
+    stepAt(w, P);
+    return w;
+  };
+
+  it('Reihenfolge Auftrag, Fernkarte, Krise; Fernkarte zeigt Text und Tooltip', () => {
+    const w = offerWorld();
+    const { stack } = build(w);
+    expect(stack.children.map((c) => c.dataset.field ?? c.className)).toEqual([
+      'order-card',
+      'far-card',
+      'crisis-card',
+    ]);
+    const far = stack.querySelector('[data-field="far-card"]')!;
+    expect(far.hidden).toBe(false);
+    expect(stack.querySelector('[data-field="far-text"]')!.textContent).toBe(farOfferText(w));
+    expect(stack.querySelector('[data-field="far-accept"]')!.title).toBe(farAcceptTooltip(w));
+  });
+
+  it('Klick auf Annehmen ruft acceptFar genau einmal', () => {
+    const { stack, calls } = build(offerWorld());
+    stack.querySelector('[data-field="far-accept"]')!.fire('click');
+    expect(calls.acceptFar).toBe(1);
+  });
+
+  it('nach dem Annehmen: Fernkarte weg, Auftragskarte T-04, Liefern mit Inselname', () => {
+    const w = offerWorld();
+    const { stack } = build(w);
+    const B = islandOf(w, 'B');
+    acceptFarOrder(w);
+    updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+    expect(stack.querySelector('[data-field="far-card"]')!.hidden).toBe(true);
+    expect(stack.querySelector('[data-field="order-text"]')!.textContent).toBe(
+      farOrderText(w, w.order!),
+    );
+    const btn = stack.querySelector('[data-field="order-deliver"]')!;
+    expect(btn.textContent).toBe(deliverLabel(w, B));
+    expect(btn.classList.contains('unaffordable')).toBe(true);
+    w.islands[B]!.stock.rum = 15;
+    updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+    expect(btn.classList.contains('unaffordable')).toBe(false);
+  });
+
+  it('ohne Angebot ist die Fernkarte verborgen, Auftragskarte unverändert', () => {
+    const w = farWorld(3, ['B']);
+    const { stack } = build(w);
+    expect(stack.querySelector('[data-field="far-card"]')!.hidden).toBe(true);
+    expect(stack.querySelector('[data-field="order-text"]')!.textContent).toBe(orderCardText(w));
+  });
+
+  it('gesperrte Funktion orders: Fernkarte verborgen', () => {
+    const w = createWorld(3);
+    w.farOffer = { island: 1, good: 'rum', amount: 15, reward: 450 };
+    expect(orderVisible(w)).toBe(false);
+    const { stack } = build(w);
+    expect(stack.querySelector('[data-field="far-card"]')!.hidden).toBe(true);
+  });
+
+  it('Fernauftrag ohne Kontor auf der Fern-Insel: order-card--warn', () => {
+    const w = offerWorld();
+    const { stack } = build(w);
+    acceptFarOrder(w);
+    dropKontor(w, islandOf(w, 'B'));
+    updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+    const order = stack.querySelector('.order-card')!;
+    expect(order.classList.contains('order-card--warn')).toBe(true);
   });
 });

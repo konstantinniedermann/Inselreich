@@ -235,6 +235,27 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 ## Offen (neue Einträge unten anhängen)
 
+### 2026-10-14 · Verfallenes Stammkunden-Angebot ohne Meldung und ohne Log-Eintrag
+
+- Fundort: `.studio/qa/playtest-i047/report.md` Schritt 3, `krise/angebot-verfallen-1280x720.png`; `src/ui/order.ts`, `src/ui/crisisLog.ts`.
+- Beobachtung: Ein unbeantwortetes Stammkunden-Angebot (Lebensdauer ≈ 80 s) verfällt still; die Karte wechselt ohne Hinweis auf den nächsten Auftrag, und der Verfall steht nicht im Ereignis-Log.
+- Ursprung: PLAYTEST-I047, R634 (3).
+- Erste Einschätzung: Priorität niedrig. Handel 2 deckt das **nicht** ab: T-18 gilt nur für das Fernangebot. Beim Paket an `order.ts` einen Eintrag nach demselben Muster (Anhang 02 T.2) prüfen.
+
+### 2026-10-14 · Enger Kartenslot oben rechts bei Sturm
+
+- Fundort: `.studio/qa/playtest-i047/` (`krise/auftragskarte-1280x720.png`, `gesamtansicht`), Slot x 676–976 bei 1280×720.
+- Beobachtung: Auftrags-, Angebots- und Vertragskarte teilen sich einen Slot (nie parallel); darunter stapelt sich die Krisenkarte, bei Sturmwarnung 100 px hoch. Eine zweite Karte (Fernangebot) hätte dort keinen Platz ohne Überdeckung der Häuser.
+- Ursprung: PLAYTEST-I047, R634 (3).
+- Erste Einschätzung: Priorität niedrig. Handel 2 deckt es **teilweise** ab: eigene Fernkarte, Reihenfolge und Höchststapel 315 px (Anhang 02 T.5), messbar in AK-H2-30. Die Krisenkarte selbst bleibt unverändert; keine allgemeine Slot-Verwaltung für künftige Karten.
+
+### 2026-10-14 · Keine Auftragsereignisse im Ereignis-Log, Log nur bei Krisen sichtbar
+
+- Fundort: `src/ui/crisisLog.ts` (`crisisLogVisible`: `crisisLevel !== 'off'` und Tick ≥ `CRISIS_FIRST_TICK`), `src/ui/app.ts` (`crisisLogEntries`, `monumentEvents`); Playtest `krise/krisenlog.txt`.
+- Beobachtung: Das Log enthält nur Krisen und das Monument, keine Auftrags- oder Stammkunden-Einträge; bei Krisen «aus» ist es gar nicht sichtbar. Auftragsmeldungen sind flüchtige Toasts ohne Verlauf; der Log wird nicht gespeichert.
+- Ursprung: PLAYTEST-I047, R634 (3).
+- Erste Einschätzung: Priorität niedrig. Handel 2 deckt es **nur für Fernaufträge** ab (T-16 bis T-18, AK-H2-33); Zufallsaufträge und Stammkunde bleiben ohne Eintrag, die Sichtbarkeit ohne Krisen bleibt offen (Spec O-5). Berührt I-100 «Neu»-Zähler: er zählt nur Einträge mit Meldung.
+
 - **2026-10-14 · Erzeugungs-Cache ignoriert `connected`-Änderungen im pausierten Spiel:** Strassenbau verbindet oder trennt einen Erzeuger ohne Tick, `producedPerMinute` zeigt bis zum nächsten Tick den alten Wert. Fundort `src/ui/order.ts` `producedPerMinute`. Ursprung: Review T06. Einschätzung: niedrig (nur Anzeige, korrigiert sich im nächsten Tick); Lösung bei Bedarf: `connected`-Zahl in den Schlüssel.
 - **2026-10-14 · Menü-Feld «Krisen» gilt für die nächste Insel, nicht für die laufende:** Eine Laufzeit-Umstellung auf «aus» zeigt im Menü weiter «normal». Fundort `src/ui/menu.ts` (Krisenstufe). Ursprung: Playtest UI-AUFRAEUM-3 (T04). Einschätzung: niedrig; Beschriftung prüfen («für neue Insel»).
 - **2026-10-14 · Rechtsklick bei gehaltener linker Taste in Chrome:** Abriss-, Aufforsten- und Roden-Strich reagieren auf den Rechtsklick nicht (Ereignisfolge `pointerdown:b0, pointermove:b2, contextmenu`); erst der zweite Rechtsklick legt das Werkzeug ab. Unverändert seit vor UI-AUFRAEUM-3; nur der Linienzug wird über `contextmenu` abgebrochen. Ursprung: Playtest UI-AUFRAEUM-3 (T01). Einschätzung: niedrig; bei Bedarf gleiche Behandlung im `contextmenu`-Handler.

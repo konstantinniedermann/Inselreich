@@ -35,7 +35,7 @@ export const GOODS: Record<GoodId, GoodDef> = {
     name: 'Stoff',
     buy: 30,
     sell: 12,
-    order: { tier: 2, min: 6, max: 12, contract: 7 },
+    order: { tier: 2, min: 6, max: 12, contract: 7, far: 20 },
   },
   cane: {
     id: 'cane',
@@ -49,14 +49,14 @@ export const GOODS: Record<GoodId, GoodDef> = {
     name: 'Rum',
     buy: 40,
     sell: 18,
-    order: { tier: 3, min: 6, max: 12, contract: 5 },
+    order: { tier: 3, min: 6, max: 12, contract: 5, far: 15 },
   },
   glass: {
     id: 'glass',
     name: 'Glas',
     buy: 50,
     sell: 20,
-    order: { tier: 4, min: 4, max: 8, contract: 4 },
+    order: { tier: 4, min: 4, max: 8, contract: 4, far: 12 },
   },
   spice: { id: 'spice', name: 'Gewürz', buy: 40, sell: 12 },
 };

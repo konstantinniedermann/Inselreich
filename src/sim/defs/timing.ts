@@ -29,6 +29,11 @@ export const ORDER_FIRST_TICK = 600;
 export const ORDER_PERIOD = 900;
 /** Laufzeit eines Auftrags ab Angebot (Ticks); kürzer als die Periode. */
 export const ORDER_DURATION = 600;
+/**
+ * Frist eines Fernauftrags ab Periodenbeginn (Ticks, Handel 2, 2:50 bei 1×); unter 2 × ORDER_PERIOD.
+ * Die Save-Prüfung liest diesen Wert nicht (Spec R15, P-3): eine Änderung braucht keine Migration.
+ */
+export const FAR_ORDER_DURATION = 1700;
 
 /*
  * Achtung: CRISIS_FIRST_TICK, STORM_WARNING, STORM_DURATION, FIRE_OUTAGE und BOOM_DURATION liest die

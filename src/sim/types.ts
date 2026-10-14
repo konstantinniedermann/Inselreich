@@ -90,6 +90,8 @@ export interface OrderDef {
   max: number;
   /** Menge je Vertragslieferung, I-047. */
   contract: number;
+  /** Menge eines Fernauftrags (Handel 2); nur Vorliebe-Güter der Fremdinseln. */
+  far?: number;
 }
 export type ContractBreakReason = 'lock' | 'island' | 'kontor' | 'stock';
 /** Vertragsereignis eines Schritts (R12), nur im StepReport, nie im Save. `island` = Lieferinsel. */
@@ -188,6 +190,13 @@ export interface TaxLevelDef {
   /** Abweichender Steuersatz in % für einzelne Stufen; fehlt eine Stufe, gilt `pct`. */
   pctByTier?: Partial<Record<Tier, number>>;
 }
+/** Offenes Fernangebot der Periode (Handel 2); nie zugleich mit Vertrag, Vertragsangebot oder Fernauftrag. */
+export interface FarOffer {
+  island: number;
+  good: GoodId;
+  amount: number;
+  reward: number;
+}
 export interface Order {
   period: number;
   good: GoodId;
@@ -195,6 +204,8 @@ export interface Order {
   reward: number;
   /** Letzter Tick, an dem geliefert werden kann. */
   due: number;
+  /** Nur bei Fernaufträgen (Handel 2): Zielinsel; sonst fehlt der Schlüssel. */
+  island?: number;
 }
 export type CrisisLevel = 'off' | 'mild' | 'normal';
 export interface CrisisLevelDef {
@@ -269,7 +280,7 @@ export interface Ship {
   homing: boolean;
 }
 export interface World {
-  version: 14;
+  version: 15;
   seed: number;
   islands: Island[];
   tick: number;
@@ -317,6 +328,10 @@ export interface World {
   contract: Contract | null;
   /** Angebot nach einer Auftragslieferung (I-047); nie zugleich mit `order`. */
   contractOffer: ContractOffer | null;
+  /** Offenes Fernangebot (Handel 2); `null` = keins. */
+  farOffer: FarOffer | null;
+  /** Periode, deren Zufallsauftrag und Fernangebot entfallen (Sperre nach angenommenem Fernauftrag, R7); `null` = keine. */
+  farSkip: number | null;
 }
 
 /** Eine Insel: Raster, Kontor, Lager und Lage im Archipel (M12 E0, E1). */
