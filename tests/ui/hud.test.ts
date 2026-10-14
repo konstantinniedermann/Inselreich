@@ -28,6 +28,7 @@ import {
   stockPrefix,
   stockTooltip,
   tierPath,
+  updateNoticeStack,
   tierTooltip,
 } from '../../src/ui/hud';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
@@ -492,5 +493,24 @@ describe('Bilanz-Knopf und Betriebsliste (I-062, AK-8, AK-9)', () => {
     const scroll = root.descendants().find((e) => e.className === 'upkeep-scroll')!;
     expect(scroll.children.map((c) => c.className)).toEqual(['upkeep-islands', 'upkeep-rows']);
     expect(w).toEqual(before);
+  });
+});
+
+describe('Kartenstapel (I-099, AK-UA3-11, AK-UA3-13)', () => {
+  it('AK-UA3-11 Stufe aus: Krisenkarte bleibt hidden', () => {
+    const el = { textContent: 'Krisen: aus', hidden: false, dataset: {} as Record<string, string> };
+    const stack = {
+      querySelector: (sel: string) => (sel.includes('crisis-card') ? el : null),
+    } as unknown as HTMLElement;
+    updateNoticeStack(stack, SCENARIOS['krise-aus']!());
+    expect(el.textContent).toBe('');
+    expect(el.hidden).toBe(true);
+  });
+
+  it('AK-UA3-13 .notice-stack nutzt gap: var(--stack-gap), Variable einmal definiert', () => {
+    const css = readFileSync('src/style.css', 'utf8');
+    const block = /\.notice-stack \{[^}]*\}/.exec(css)![0];
+    expect(block).toMatch(/gap:\s*var\(--stack-gap\)/);
+    expect(css.match(/--stack-gap:/g)).toHaveLength(1);
   });
 });

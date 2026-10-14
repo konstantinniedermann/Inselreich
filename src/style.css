@@ -916,12 +916,20 @@ button.chip {
   width: 300px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  --stack-gap: 8px;
+  gap: var(--stack-gap);
   z-index: 9;
   pointer-events: none;
 }
 .notice-stack > * {
   pointer-events: auto;
+  box-sizing: border-box;
+  width: 100%;
+}
+.notice-stack .card--crisis {
+  padding: 6px 8px;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 .notice-stack .order-card {
   display: flex;
