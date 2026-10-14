@@ -151,15 +151,17 @@ describe('zeitreserve Lastabhängigkeit', () => {
 });
 
 // Jeder Test hier startet einen eigenen Node-Prozess (spawnSync, ~75 ms). Unter Last oder bei kaltem
-// Start stockt ein einzelner Start gelegentlich ~2,1 s (nicht reproduzierbar, in R642 zwei Tests,
-// in zwei früheren Messungen je ein anderer). Das ist ein Umgebungsartefakt, kein Testinhalt:
-// begründetes Timeout nach E-043 (Faktor 4 und Runner-Faktor 3 bleiben auch bei 2,2 s eingehalten).
+// Start stockt ein einzelner Start gelegentlich ~2,1 s (nicht reproduzierbar: in R642 zwei Tests, in
+// zwei früheren Messungen je ein anderer). Das ist ein Umgebungsartefakt, kein Testinhalt: begründetes
+// Timeout nach E-043 (Faktor 4 und Runner-Faktor 3 bleiben auch bei 2,2 s eingehalten).
 const SPAWN_TIMEOUT_MS = 20_000;
+const describeSpawn = (name: string, fn: () => void) =>
+  describe(name, { timeout: SPAWN_TIMEOUT_MS }, fn);
 
 const nodeEnv = (globalThis as unknown as { process: { env: Record<string, string | undefined> } })
   .process.env;
 
-describe('zeitreserve CLI bei Last (Push-Gate, R338)', { timeout: SPAWN_TIMEOUT_MS }, () => {
+describeSpawn('zeitreserve CLI bei Last (Push-Gate, R338)', () => {
   const check = new URL('../../tools/zeitreserve/check.ts', import.meta.url).pathname;
   const fixture = new URL('./zeitreserve-fixture.json', import.meta.url).pathname;
   const run = (load: string, ...flags: string[]) =>
@@ -236,7 +238,7 @@ describe('zeitreserve Messung mit Metadaten (R353 P1)', () => {
   });
 });
 
-describe('zeitreserve CLI --push mit Metadaten (R353 P1)', { timeout: SPAWN_TIMEOUT_MS }, () => {
+describeSpawn('zeitreserve CLI --push mit Metadaten (R353 P1)', () => {
   const check = new URL('../../tools/zeitreserve/check.ts', import.meta.url).pathname;
   const dir = mkdtempSync(join(tmpdir(), 'zr-'));
   const ok = [{ file: 'a', name: 'x', durationMs: 10, timeoutMs: 5000 }];
@@ -353,223 +355,216 @@ describe('zeitreserve CLI --push mit Metadaten (R353 P1)', { timeout: SPAWN_TIME
   });
 });
 
-describe(
-  'zeitreserve markierte Dateien und Nachmessung (R488 V1, AK-TB6-02..04)',
-  { timeout: SPAWN_TIMEOUT_MS },
-  () => {
-    const dir = mkdtempSync(join(tmpdir(), 'zr-retry-'));
-    const check = new URL('../../tools/zeitreserve/check.ts', import.meta.url).pathname;
-    const f = (file: string, durationMs: number, name = 'x'): TestTiming => ({
-      file,
-      name,
-      durationMs,
-      timeoutMs: 5000,
+describeSpawn('zeitreserve markierte Dateien und Nachmessung (R488 V1, AK-TB6-02..04)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'zr-retry-'));
+  const check = new URL('../../tools/zeitreserve/check.ts', import.meta.url).pathname;
+  const f = (file: string, durationMs: number, name = 'x'): TestTiming => ({
+    file,
+    name,
+    durationMs,
+    timeoutMs: 5000,
+  });
+  const mainTimings = [
+    f('tests/b.test.ts', 1200), // Warnung
+    f('tests/a.test.ts', 2500), // Verstoss
+    f('tests/c.test.ts', 100), // Reserve
+  ];
+  const meas = (timings: TestTiming[], loadStart: number, commit = 'abc') => ({
+    commit,
+    loadStart,
+    loadEnd: loadStart,
+    loadMax: loadStart,
+    timings,
+  });
+  const write = (name: string, content: unknown) => {
+    const p = join(dir, name);
+    writeFileSync(p, typeof content === 'string' ? content : JSON.stringify(content));
+    return p;
+  };
+  const run = (args: string[], env: Record<string, string> = {}) =>
+    spawnSync('node', [check, ...args], {
+      encoding: 'utf8',
+      cwd: dir,
+      env: {
+        ...nodeEnv,
+        GITHUB_ACTIONS: undefined,
+        ZEITRESERVE_FAKE_LOAD: '1',
+        ZEITRESERVE_FAKE_HEAD: 'abc',
+        ...env,
+      },
     });
-    const mainTimings = [
-      f('tests/b.test.ts', 1200), // Warnung
-      f('tests/a.test.ts', 2500), // Verstoss
-      f('tests/c.test.ts', 100), // Reserve
-    ];
-    const meas = (timings: TestTiming[], loadStart: number, commit = 'abc') => ({
-      commit,
-      loadStart,
-      loadEnd: loadStart,
-      loadMax: loadStart,
-      timings,
-    });
-    const write = (name: string, content: unknown) => {
-      const p = join(dir, name);
-      writeFileSync(p, typeof content === 'string' ? content : JSON.stringify(content));
-      return p;
-    };
-    const run = (args: string[], env: Record<string, string> = {}) =>
-      spawnSync('node', [check, ...args], {
-        encoding: 'utf8',
-        cwd: dir,
-        env: {
-          ...nodeEnv,
-          GITHUB_ACTIONS: undefined,
-          ZEITRESERVE_FAKE_LOAD: '1',
-          ZEITRESERVE_FAKE_HEAD: 'abc',
-          ...env,
-        },
-      });
-    const retryTimings = [f('tests/a.test.ts', 100), f('tests/b.test.ts', 100)];
+  const retryTimings = [f('tests/a.test.ts', 100), f('tests/b.test.ts', 100)];
 
-    it('markedFiles: sortiert, ohne Doppelte, Altlasten ausgenommen, rein', () => {
-      const input = [...mainTimings, f('tests/a.test.ts', 2600, 'y')];
-      expect(markedFiles(input, new Set(), RUNNER_FACTOR)).toEqual([
-        'tests/a.test.ts',
-        'tests/b.test.ts',
+  it('markedFiles: sortiert, ohne Doppelte, Altlasten ausgenommen, rein', () => {
+    const input = [...mainTimings, f('tests/a.test.ts', 2600, 'y')];
+    expect(markedFiles(input, new Set(), RUNNER_FACTOR)).toEqual([
+      'tests/a.test.ts',
+      'tests/b.test.ts',
+    ]);
+    expect(markedFiles([...input].reverse(), new Set(), RUNNER_FACTOR)).toEqual(
+      markedFiles(input, new Set(), RUNNER_FACTOR),
+    );
+    const alt = new Set([testKey(mainTimings[1]!), testKey(f('tests/a.test.ts', 0, 'y'))]);
+    expect(markedFiles(input, alt, RUNNER_FACTOR)).toEqual(['tests/b.test.ts']);
+  });
+
+  it('markedFiles: auch ein reiner Runner-Verstoss markiert (700 ms lokal)', () => {
+    expect(markedFiles([f('tests/r.test.ts', 900)], new Set(), RUNNER_FACTOR)).toEqual([
+      'tests/r.test.ts',
+    ]);
+  });
+
+  it('--marked bei loadStart 6: Exit 2, Liste mit genau den zwei markierten Dateien', () => {
+    const m = write('m6.json', meas(mainTimings, 6));
+    const out = join(dir, 'marked6.json');
+    const p = run(['--push', m, '--marked', out]);
+    expect(p.status).toBe(2);
+    expect(JSON.parse(readFileSync(out, 'utf8'))).toEqual(['tests/a.test.ts', 'tests/b.test.ts']);
+  });
+
+  it('--marked bei loadStart 6 und nur Tests mit Reserve: Exit 2, leere Liste (D1)', () => {
+    const m = write('m6-leer.json', meas([f('tests/c.test.ts', 100)], 6));
+    const out = join(dir, 'marked6-leer.json');
+    expect(run(['--push', m, '--marked', out]).status).toBe(2);
+    expect(JSON.parse(readFileSync(out, 'utf8'))).toEqual([]);
+  });
+
+  it('--marked bei Exit 1 (ruhige Last, Verstoss) schreibt die Liste', () => {
+    const m = write('m1.json', meas(mainTimings, 1));
+    const out = join(dir, 'marked1.json');
+    expect(run(['--push', m, '--marked', out]).status).toBe(1);
+    expect(JSON.parse(readFileSync(out, 'utf8'))).toHaveLength(2);
+  });
+
+  it('--marked bei falschem Commit: Exit 2, vorhandene alte Datei wird gelöscht', () => {
+    const m = write('mold.json', meas(mainTimings, 1, 'zzz'));
+    const out = write('marked-alt.json', ['alt']);
+    expect(run(['--push', m, '--marked', out]).status).toBe(2);
+    expect(existsSync(out)).toBe(false);
+  });
+
+  it('--marked bei fehlender oder unlesbarer Messung löscht die Datei', () => {
+    const out = write('marked-x.json', ['alt']);
+    expect(run(['--push', join(dir, 'gibtsnicht.json'), '--marked', out]).status).toBe(2);
+    expect(existsSync(out)).toBe(false);
+    const out2 = write('marked-y.json', ['alt']);
+    const kaputt = write('kaputt.json', '{"commit":');
+    expect(run(['--push', kaputt, '--marked', out2]).status).toBe(2);
+    expect(existsSync(out2)).toBe(false);
+  });
+
+  it('--push --marked x.json liest weiter die Standard-Messung, nicht x.json', () => {
+    const out = join(dir, 'marked-std.json');
+    const p = run(['--push', '--marked', out]); // cwd dir: .studio/zeitreserve.json fehlt
+    expect(p.status).toBe(2);
+    expect(p.stderr).toContain('.studio/zeitreserve.json fehlt');
+  });
+
+  it('ohne Flags bleibt Ausgabe und Exit unverändert, keine Markierungsdatei', () => {
+    const m = write('plain.json', meas(mainTimings, 1));
+    const p = run(['--push', m]);
+    expect(p.status).toBe(1);
+    expect(p.stdout).not.toContain('Nachmessung');
+  });
+
+  it('--retry: Hauptmessung loadStart 6, Nachmessung loadStart 2 in Reserve: Exit 0', () => {
+    const m = write('r-main.json', meas(mainTimings, 6));
+    const r = write('r-ok.json', meas(retryTimings, 2));
+    const p = run(['--push', m, '--retry', r]);
+    expect(p.status).toBe(0);
+    expect(p.stdout).toContain(
+      'zeitreserve-push: Nachmessung 2 Dateien, loadStart 2.0, Hauptmessung loadStart 6.0',
+    );
+  });
+
+  it('--retry: Nachmessung loadStart 5: Exit 2', () => {
+    const m = write('r-main5.json', meas(mainTimings, 6));
+    expect(run(['--push', m, '--retry', write('r5.json', meas(retryTimings, 5))]).status).toBe(2);
+  });
+
+  it('--retry: Nachmessung ohne eine markierte Datei: Exit 2', () => {
+    const m = write('r-main-miss.json', meas(mainTimings, 6));
+    const r = write('r-miss.json', meas([f('tests/a.test.ts', 100)], 2));
+    const p = run(['--push', m, '--retry', r]);
+    expect(p.status).toBe(2);
+    expect(p.stderr).toContain('tests/b.test.ts');
+  });
+
+  it('--retry: Nachmessung oder Hauptmessung mit anderem Commit: Exit 2', () => {
+    const m = write('r-main-c.json', meas(mainTimings, 6));
+    expect(
+      run(['--push', m, '--retry', write('r-c.json', meas(retryTimings, 2, 'zzz'))]).status,
+    ).toBe(2);
+    const mOld = write('r-main-old.json', meas(mainTimings, 6, 'zzz'));
+    expect(run(['--push', mOld, '--retry', write('r-c2.json', meas(retryTimings, 2))]).status).toBe(
+      2,
+    );
+  });
+
+  it('--retry: Datei weiter ohne Reserve: Exit 1, Meldung nennt den Test', () => {
+    const m = write(
+      'r-main-bad.json',
+      meas(
+        [f('tests/a.test.ts', 2500, 'lahm'), ...mainTimings.slice(0, 1), ...mainTimings.slice(2)],
+        6,
+      ),
+    );
+    const r = write('r-bad.json', meas([f('tests/a.test.ts', 2500, 'lahm'), retryTimings[1]!], 2));
+    const p = run(['--push', m, '--retry', r]);
+    expect(p.status).toBe(1);
+    expect(p.stderr).toContain('lahm');
+  });
+
+  it('--retry ignoriert eine anderslautende --marked-Datei (B2)', () => {
+    const m = write('r-main-b2.json', meas(mainTimings, 6));
+    const r = write('r-b2.json', meas(retryTimings, 2));
+    const other = write('fremd-marked.json', ['tests/zzz.test.ts']);
+    expect(run(['--push', m, '--retry', r, '--marked', other]).status).toBe(0);
+    expect(JSON.parse(readFileSync(other, 'utf8'))).toEqual(['tests/zzz.test.ts']);
+  });
+
+  it('mergeRetry rein: Nachmessung ersetzt, Rest aus der Hauptmessung', () => {
+    const r = mergeRetry(
+      meas(mainTimings, 6),
+      meas(retryTimings, 2),
+      new Set(),
+      RUNNER_FACTOR,
+      'abc',
+    );
+    expect('measurement' in r).toBe(true);
+    if ('measurement' in r) {
+      expect(r.measurement.timings.map((x) => `${x.file}:${x.durationMs}`).sort()).toEqual([
+        'tests/a.test.ts:100',
+        'tests/b.test.ts:100',
+        'tests/c.test.ts:100',
       ]);
-      expect(markedFiles([...input].reverse(), new Set(), RUNNER_FACTOR)).toEqual(
-        markedFiles(input, new Set(), RUNNER_FACTOR),
-      );
-      const alt = new Set([testKey(mainTimings[1]!), testKey(f('tests/a.test.ts', 0, 'y'))]);
-      expect(markedFiles(input, alt, RUNNER_FACTOR)).toEqual(['tests/b.test.ts']);
-    });
+      expect(r.measurement.loadStart).toBe(2);
+    }
+  });
 
-    it('markedFiles: auch ein reiner Runner-Verstoss markiert (700 ms lokal)', () => {
-      expect(markedFiles([f('tests/r.test.ts', 900)], new Set(), RUNNER_FACTOR)).toEqual([
-        'tests/r.test.ts',
-      ]);
-    });
+  it('--retry: fehlt ein Test einer markierten Datei in der Nachmessung, Exit 2', () => {
+    const main2 = [...mainTimings, f('tests/a.test.ts', 100, 'zweiter')];
+    const m = write('r-main-test.json', meas(main2, 6));
+    const p = run(['--push', m, '--retry', write('r-test.json', meas(retryTimings, 2))]);
+    expect(p.status).toBe(2);
+    expect(p.stderr).toContain('zweiter');
+  });
 
-    it('--marked bei loadStart 6: Exit 2, Liste mit genau den zwei markierten Dateien', () => {
-      const m = write('m6.json', meas(mainTimings, 6));
-      const out = join(dir, 'marked6.json');
-      const p = run(['--push', m, '--marked', out]);
-      expect(p.status).toBe(2);
-      expect(JSON.parse(readFileSync(out, 'utf8'))).toEqual(['tests/a.test.ts', 'tests/b.test.ts']);
-    });
+  it('mergeRetry rein: fehlender Test einer markierten Datei ist ein problem', () => {
+    const main2 = [...mainTimings, f('tests/a.test.ts', 100, 'zweiter')];
+    const r = mergeRetry(meas(main2, 6), meas(retryTimings, 2), new Set(), RUNNER_FACTOR, 'abc');
+    expect('problem' in r && r.problem).toContain('zweiter');
+  });
 
-    it('--marked bei loadStart 6 und nur Tests mit Reserve: Exit 2, leere Liste (D1)', () => {
-      const m = write('m6-leer.json', meas([f('tests/c.test.ts', 100)], 6));
-      const out = join(dir, 'marked6-leer.json');
-      expect(run(['--push', m, '--marked', out]).status).toBe(2);
-      expect(JSON.parse(readFileSync(out, 'utf8'))).toEqual([]);
-    });
+  it('Flag-Wert, der mit -- beginnt oder fehlt: Exit 2', () => {
+    const m = write('fl.json', meas(mainTimings, 1));
+    expect(run(['--push', m, '--retry', '--push']).status).toBe(2);
+    expect(run(['--push', m, '--marked']).status).toBe(2);
+  });
 
-    it('--marked bei Exit 1 (ruhige Last, Verstoss) schreibt die Liste', () => {
-      const m = write('m1.json', meas(mainTimings, 1));
-      const out = join(dir, 'marked1.json');
-      expect(run(['--push', m, '--marked', out]).status).toBe(1);
-      expect(JSON.parse(readFileSync(out, 'utf8'))).toHaveLength(2);
-    });
-
-    it('--marked bei falschem Commit: Exit 2, vorhandene alte Datei wird gelöscht', () => {
-      const m = write('mold.json', meas(mainTimings, 1, 'zzz'));
-      const out = write('marked-alt.json', ['alt']);
-      expect(run(['--push', m, '--marked', out]).status).toBe(2);
-      expect(existsSync(out)).toBe(false);
-    });
-
-    it('--marked bei fehlender oder unlesbarer Messung löscht die Datei', () => {
-      const out = write('marked-x.json', ['alt']);
-      expect(run(['--push', join(dir, 'gibtsnicht.json'), '--marked', out]).status).toBe(2);
-      expect(existsSync(out)).toBe(false);
-      const out2 = write('marked-y.json', ['alt']);
-      const kaputt = write('kaputt.json', '{"commit":');
-      expect(run(['--push', kaputt, '--marked', out2]).status).toBe(2);
-      expect(existsSync(out2)).toBe(false);
-    });
-
-    it('--push --marked x.json liest weiter die Standard-Messung, nicht x.json', () => {
-      const out = join(dir, 'marked-std.json');
-      const p = run(['--push', '--marked', out]); // cwd dir: .studio/zeitreserve.json fehlt
-      expect(p.status).toBe(2);
-      expect(p.stderr).toContain('.studio/zeitreserve.json fehlt');
-    });
-
-    it('ohne Flags bleibt Ausgabe und Exit unverändert, keine Markierungsdatei', () => {
-      const m = write('plain.json', meas(mainTimings, 1));
-      const p = run(['--push', m]);
-      expect(p.status).toBe(1);
-      expect(p.stdout).not.toContain('Nachmessung');
-    });
-
-    it('--retry: Hauptmessung loadStart 6, Nachmessung loadStart 2 in Reserve: Exit 0', () => {
-      const m = write('r-main.json', meas(mainTimings, 6));
-      const r = write('r-ok.json', meas(retryTimings, 2));
-      const p = run(['--push', m, '--retry', r]);
-      expect(p.status).toBe(0);
-      expect(p.stdout).toContain(
-        'zeitreserve-push: Nachmessung 2 Dateien, loadStart 2.0, Hauptmessung loadStart 6.0',
-      );
-    });
-
-    it('--retry: Nachmessung loadStart 5: Exit 2', () => {
-      const m = write('r-main5.json', meas(mainTimings, 6));
-      expect(run(['--push', m, '--retry', write('r5.json', meas(retryTimings, 5))]).status).toBe(2);
-    });
-
-    it('--retry: Nachmessung ohne eine markierte Datei: Exit 2', () => {
-      const m = write('r-main-miss.json', meas(mainTimings, 6));
-      const r = write('r-miss.json', meas([f('tests/a.test.ts', 100)], 2));
-      const p = run(['--push', m, '--retry', r]);
-      expect(p.status).toBe(2);
-      expect(p.stderr).toContain('tests/b.test.ts');
-    });
-
-    it('--retry: Nachmessung oder Hauptmessung mit anderem Commit: Exit 2', () => {
-      const m = write('r-main-c.json', meas(mainTimings, 6));
-      expect(
-        run(['--push', m, '--retry', write('r-c.json', meas(retryTimings, 2, 'zzz'))]).status,
-      ).toBe(2);
-      const mOld = write('r-main-old.json', meas(mainTimings, 6, 'zzz'));
-      expect(
-        run(['--push', mOld, '--retry', write('r-c2.json', meas(retryTimings, 2))]).status,
-      ).toBe(2);
-    });
-
-    it('--retry: Datei weiter ohne Reserve: Exit 1, Meldung nennt den Test', () => {
-      const m = write(
-        'r-main-bad.json',
-        meas(
-          [f('tests/a.test.ts', 2500, 'lahm'), ...mainTimings.slice(0, 1), ...mainTimings.slice(2)],
-          6,
-        ),
-      );
-      const r = write(
-        'r-bad.json',
-        meas([f('tests/a.test.ts', 2500, 'lahm'), retryTimings[1]!], 2),
-      );
-      const p = run(['--push', m, '--retry', r]);
-      expect(p.status).toBe(1);
-      expect(p.stderr).toContain('lahm');
-    });
-
-    it('--retry ignoriert eine anderslautende --marked-Datei (B2)', () => {
-      const m = write('r-main-b2.json', meas(mainTimings, 6));
-      const r = write('r-b2.json', meas(retryTimings, 2));
-      const other = write('fremd-marked.json', ['tests/zzz.test.ts']);
-      expect(run(['--push', m, '--retry', r, '--marked', other]).status).toBe(0);
-      expect(JSON.parse(readFileSync(other, 'utf8'))).toEqual(['tests/zzz.test.ts']);
-    });
-
-    it('mergeRetry rein: Nachmessung ersetzt, Rest aus der Hauptmessung', () => {
-      const r = mergeRetry(
-        meas(mainTimings, 6),
-        meas(retryTimings, 2),
-        new Set(),
-        RUNNER_FACTOR,
-        'abc',
-      );
-      expect('measurement' in r).toBe(true);
-      if ('measurement' in r) {
-        expect(r.measurement.timings.map((x) => `${x.file}:${x.durationMs}`).sort()).toEqual([
-          'tests/a.test.ts:100',
-          'tests/b.test.ts:100',
-          'tests/c.test.ts:100',
-        ]);
-        expect(r.measurement.loadStart).toBe(2);
-      }
-    });
-
-    it('--retry: fehlt ein Test einer markierten Datei in der Nachmessung, Exit 2', () => {
-      const main2 = [...mainTimings, f('tests/a.test.ts', 100, 'zweiter')];
-      const m = write('r-main-test.json', meas(main2, 6));
-      const p = run(['--push', m, '--retry', write('r-test.json', meas(retryTimings, 2))]);
-      expect(p.status).toBe(2);
-      expect(p.stderr).toContain('zweiter');
-    });
-
-    it('mergeRetry rein: fehlender Test einer markierten Datei ist ein problem', () => {
-      const main2 = [...mainTimings, f('tests/a.test.ts', 100, 'zweiter')];
-      const r = mergeRetry(meas(main2, 6), meas(retryTimings, 2), new Set(), RUNNER_FACTOR, 'abc');
-      expect('problem' in r && r.problem).toContain('zweiter');
-    });
-
-    it('Flag-Wert, der mit -- beginnt oder fehlt: Exit 2', () => {
-      const m = write('fl.json', meas(mainTimings, 1));
-      expect(run(['--push', m, '--retry', '--push']).status).toBe(2);
-      expect(run(['--push', m, '--marked']).status).toBe(2);
-    });
-
-    it('Reporter: ZEITRESERVE_OUT bestimmt den Pfad, sonst REPORT_PATH', () => {
-      expect(reportPath({})).toBe('.studio/zeitreserve.json');
-      expect(reportPath({ ZEITRESERVE_OUT: '/x/y.json' })).toBe('/x/y.json');
-      expect(reportPath({ ZEITRESERVE_OUT: '' })).toBe('.studio/zeitreserve.json');
-    });
-  },
-);
+  it('Reporter: ZEITRESERVE_OUT bestimmt den Pfad, sonst REPORT_PATH', () => {
+    expect(reportPath({})).toBe('.studio/zeitreserve.json');
+    expect(reportPath({ ZEITRESERVE_OUT: '/x/y.json' })).toBe('/x/y.json');
+    expect(reportPath({ ZEITRESERVE_OUT: '' })).toBe('.studio/zeitreserve.json');
+  });
+});
