@@ -136,7 +136,8 @@ mehrfach blockiert — Testlock bricht ab, nicht warten.
    `gh workflow run Pages --ref main`; `releases.json` im selben Commit pflegen.
 2. **UI-HAEPPCHEN-D** «Ereignis-Log vollständig» (Kurzdesign `ce2f3689`): Plan + kombiniertes Gate; danach **I-109** (Kurzdesign
    `design/i109` @ `7e25d7cf`, R654) und **I-102** (R653); lead-tech prüft Bündelung.
-3. **Retro-Entscheide** aus der Kurz-Retro dieser Session: L0 trägt sie nach.
+3. **Retro-Entscheide R659:** zuerst Paket TOOL-METRIK-ZEITRAUM (E-069, Zeitraum an Flake/Steuerung, Cache-Write Erstladung/Wachstum);
+   E-068 (ein Reviewer je Paket Stufe leicht) startet, sobald E-063 oder E-064 endet; Messauftrag Briefing-Verbot (b) und `wait_guard`-Blocks.
 4. **Erweiterung 1** «Stände und Segel» bleibt in der Nutzer-Session (R519); Save v16 für E1, da v15 an Handel 2 ging (R638).
 5. **Dashboard-Karte «Versionen und Releases»**: Pflegeregel: lead-production pflegt `docs/studio/releases.json` bei jedem Release-Wechsel
    (Merge: `stage`/`state`; Release-Check: `gate`; Push: `status: live`, `hash`, `date`; Pool → Release beim Einplanen; fertige Releases →
@@ -199,4 +200,4 @@ Offen: keine Freigaben (Restbudgets verfallen mit Session-Ende).
 ## Offene Entscheide
 
 - Nutzer: N-99 (Kenntnis R434), ohne Antwort gilt R434. N-100 erledigt.
-- L0: Retro-Entscheide der Kurz-Retro dbac5fc4 (L0 trägt nach).
+- L0: keine offenen (Retro dbac5fc4 entschieden, R659).
