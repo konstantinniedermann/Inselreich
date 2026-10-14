@@ -129,7 +129,8 @@ mehrfach blockiert — Testlock bricht ab, nicht warten.
 3. **Dashboard-Karte «Versionen und Releases»** ist live im Dashboard (R647). **Pflegeregel**: lead-production pflegt
    `docs/studio/releases.json` bei jedem Release-Wechsel (Merge eines Pakets: `stage`/`state`; Release-Check: `gate`; Push: `status: live`,
    `hash`, `date`; Pool → Release beim Einplanen; fertige Releases → `pastSummary`) im selben Commit wie state.md; Handbuch-Vorschlag
-   an studio-coach.
+   an studio-coach. **Tagesziel** (R648): L0 trägt je Session in `releases.json` pro Item `goalStage` (ganze Zahl 1 bis 5) ein; die
+   Dashboard-Karte zeigt «Ziel heute» bis dorthin und «Jetzt in Arbeit». Ungültige Werte werden ignoriert und als Warnung angezeigt.
 4. **UI-HAEPPCHEN-D** «Ereignis-Log vollständig» (Kurzdesign `design/ui-haeppchen-d` @ `ce2f3689`, R641): Plan + kombiniertes Gate erst
    nach dem Merge von Handel 2.
 5. Retro-Aufträge R646: E-066 läuft; Messauftrag Cache-Write-Wachstum nach Rolle (V3) und Briefing-Verbote (a)(b)(c) in der nächsten
