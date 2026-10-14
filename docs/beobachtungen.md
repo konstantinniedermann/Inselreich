@@ -269,3 +269,5 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Der Browser fragt `/favicon.ico` an und erhält 404. Die Warnzeile wird auch im leeren Zustand angezeigt.
 - Ursprung: TOOL-DASH-SESSIONZIEL
 - Erste Einschätzung: niedrig; kosmetisch.
+
+- 2026-10-14 HANDEL-2 Gate Merge: tests/ui/farOrder.test.ts «Review Focus 2» tautologisch (vergleicht geladene Welt mit sich selbst); src/sim/save.ts:~882 tote Klausel. Beide niedrig, Ursprung Final-Review.
