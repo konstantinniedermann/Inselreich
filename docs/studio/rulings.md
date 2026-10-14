@@ -7501,3 +7501,15 @@ lead-production merged `--no-ff`, Paket done, Handbuch-Minor 1.55 (Zeile STUDIO.
 Regelbezug: gates.md Gate Merge, R429, R647 (2), R649 · Kosten bei Irrtum: Fehlblock eines Leads (Rückfall warn, eine Zeile).
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-WARTEAGENT · ADR: —
+
+## R653 · 2026-10-14 · Gate Ideen-Runde IDEEN-10: Priorisierung
+
+Ruling: `docs/ideen-10` @ `cc3072de` (I-101–I-109, Rangliste in docs/ideen.md) → angenommen, Merge durch lead-production. Priorisierung
+L0 nach Nutzen/Aufwand: (1) **I-109 «Reichweite am Gut-Chip»** (S–M, ohne Save, unabhängig von Handel 2) → Kurzdesign jetzt (freie
+Kapazität, R475), Stufe leicht, `design/i109`; (2) **I-102 Auftragsvorschau** → eingeplant als Häppchen nach dem Merge von Handel 2;
+(3) **I-101** → Beipack-Prüfung im Final-Review Handel 2 nur als Hinweis, kein Scope-Zuwachs; I-108, I-103 → Pool; I-104, I-105, I-107
+geparkt; I-106 vor Einplanung gegen UI-HAEPPCHEN-D prüfen. Keine Säulenfrage, nichts in die Warteschlange.
+
+Regelbezug: gates.md Gate Ideen-Runde, R445, R475 · Kosten bei Irrtum: ein Kurzdesign, das später zurückgestellt wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-10 · ADR: —
