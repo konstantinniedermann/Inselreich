@@ -6,6 +6,7 @@ import {
   GOOD_IDS,
   ORDER_PREMIUM,
 } from './defs/goods';
+import { ISLANDS } from './defs/sea';
 import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from './defs/timing';
 import { islandName } from './islands';
 import { islandAt } from './placement';
@@ -72,6 +73,37 @@ function offerRandomOrder(world: World, k: number): void {
   };
 }
 
+/** Vorliebe-Gut der Fremdinsel mit `order.far` (erstes in `prefers`); Heimat oder ohne → `null` (R1). */
+export function farGood(world: World, island: number): GoodId | null {
+  const isl = world.islands[island];
+  if (island === HOME || isl === undefined) return null;
+  const def = ISLANDS.find((d) => d.kind === isl.kind);
+  return def?.prefers.find((g) => GOODS[g].order?.far !== undefined) ?? null;
+}
+
+/** Wählbare Fremdinseln in Indexfolge: Kontor, Gut mit `order.far`, Stufe erreicht (R1). */
+export function farEligible(world: World): number[] {
+  const max = maxHouseTier(world);
+  const out: number[] = [];
+  for (let i = 1; i < world.islands.length; i++) {
+    if (world.islands[i]!.kontorId === null) continue;
+    const g = farGood(world, i);
+    if (g !== null && GOODS[g].order!.tier <= max) out.push(i);
+  }
+  return out;
+}
+
+/** Fernangebot der Periode `k` nach R2/R3: Rotation ohne Zufall; nicht bei Vertrag oder Sperre. */
+function offerFarOrder(world: World, k: number): void {
+  if (world.contract !== null || functionLock(world, 'orders') !== null) return;
+  const e = farEligible(world);
+  if (e.length === 0) return;
+  const island = e[k % e.length]!;
+  const good = farGood(world, island)!;
+  const amount = GOODS[good].order!.far!;
+  world.farOffer = { island, good, amount, reward: amount * orderUnitReward(good) };
+}
+
 /** Erste zutreffende Bruchbedingung des laufenden Vertrags (R6), sonst `null`. */
 function breakReason(world: World, c: Contract): ContractBreakReason | null {
   if (functionLock(world, 'orders') !== null) return 'lock';
@@ -98,17 +130,27 @@ function settleContract(world: World, c: Contract): ContractEvent {
 }
 
 /**
- * Lässt einen abgelaufenen Auftrag verfallen; am Periodenbeginn verfällt das Angebot, ein Vertrag wird
- * abgerechnet (Lieferung: kein Zufallsauftrag) und sonst der Zufallsauftrag angeboten.
+ * Lässt einen abgelaufenen Auftrag samt Fernangebot verfallen; am Periodenbeginn verfällt das Angebot, ein
+ * Vertrag wird abgerechnet (Lieferung: weder Zufalls- noch Fernangebot); sonst werden Zufallsauftrag und
+ * Fernangebot angeboten, ausser eine Fernsperre (`farSkip`) gilt für diese Periode (sie wird verbraucht).
  */
 export function tickOrders(world: World): ContractEvent | null {
   const t = world.tick;
-  if (world.order !== null && t > world.order.due) world.order = null;
+  if (world.order !== null && t > world.order.due) {
+    world.order = null;
+    world.farOffer = null;
+  }
   if (t < ORDER_FIRST_TICK || (t - ORDER_FIRST_TICK) % ORDER_PERIOD !== 0) return null;
+  const k = (t - ORDER_FIRST_TICK) / ORDER_PERIOD;
   world.contractOffer = null;
+  const skip = world.farSkip === k;
+  if (world.farSkip !== null) world.farSkip = null;
   const ev = world.contract === null ? null : settleContract(world, world.contract);
   if (ev?.kind === 'delivered') return ev;
-  if (world.order === null) offerRandomOrder(world, (t - ORDER_FIRST_TICK) / ORDER_PERIOD);
+  if (world.order === null && !skip) {
+    offerRandomOrder(world, k);
+    offerFarOrder(world, k);
+  }
   return ev;
 }
 
