@@ -7251,3 +7251,16 @@ Angebot ohne Meldung/Log, enger Slot oben rechts bei Sturm, keine Auftragsereign
 Regelbezug: R629, R632, R633, R424 · Kosten bei Irrtum: ein UI-Task mehr in Handel 2.
 
 Entscheider: L0 · Anlass: Bericht lead-qa playtest-i047 · ADR: —
+
+## R635 · 2026-10-14 · Spec-Nachtrag Handel 2 angenommen; Plan startet
+
+Ruling: Nachtrag `design/handel-2` @ `1ed91737` (AK-H2-31…33, eigene Fernkarte, Log-Einträge mit Meldung nur für angenommene
+Fernaufträge, kein Fernangebot während eines Vertrags, K4 erfüllt) → angenommen. **O-5** (Ereignis-Log nur bei Krisen «an» sichtbar):
+nicht in Handel 2, als Beobachtung für ein späteres UI-Paket. **O-6** Verfall ohne Klang: angenommen. Plan jetzt: lead-tech, opus
+(Tech-Lead beim Plan), Budget 2 Starts/P1, Format E-010, Auflagen T1–T5 und A1–A6 aus R633; Datei-Ownership und Merge-Reihenfolge
+gegen Erweiterung 1 (`tests/sim/helpers.ts`, Save-Version) ausdrücklich. Prozessbefund an die Retro: lead-design startete Arbeiter
+zweimal im Hintergrund (ADR-007-Regel Vordergrund).
+
+Regelbezug: gates.md Gate Spec, R633, R634 · Kosten bei Irrtum: ein Nachtrag im Plan.
+
+Entscheider: L0 · Anlass: Bericht lead-design (Spec-Nachtrag) · ADR: —
