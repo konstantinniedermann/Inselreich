@@ -7374,3 +7374,16 @@ Datenquelle für den späteren Einbau (bevorzugt aus vorhandenen Dateien abgelei
 Regelbezug: Nutzerauftrag, R475 · Kosten bei Irrtum: ein verworfenes Muster.
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R644 · 2026-10-14 · Gate Merge REL22-FIX: OK; Merge jetzt, Delta-Check und Push REL-22 in der Folgesession
+
+Ruling: `fix/rel22` @ `a8416ca9`: Zeitreserve-Tests mit 20-s-Timeout für die drei Spawn-Blöcke (`describeSpawn`, Kommentar nach E-043;
+Ursache: sporadische `spawnSync`-Startstocker ≈ 2 s, Testzeit sonst 74 ms), `.btn--unread` 7,16:1 (vorher 2,42:1), `upkeepRank` aus
+`buildingUpkeep` abgeleitet, 6 Beobachtungen; tsc/lint/zeittests/conflicts/docs-check Exit 0, `make test` 3935 grün, `make zeitreserve-gate`
+**Exit 0** (Last 1,9/2,4), Task-Review OK → **Gate Merge OK**. Merge durch den Integrator im Hauptcheckout `--no-ff`, danach `make docs-check`.
+Folgesession: Delta-Check REL-22 (`make check`, `check-ci-perf`, `zeitreserve-gate`, Browser-Punkt Kontrast im Spiel) und Push. Offen als
+Beobachtung: Spawn-Latenz unter Last (Messauftrag bei erneutem Auftreten).
+
+Regelbezug: gates.md Gate Merge, R585, R598, R642, E-043 · Kosten bei Irrtum: ein Timeout verdeckt einen echten Hänger bis 20 s.
+
+Entscheider: L0 · Anlass: Bericht lead-tech rel22-fix · ADR: —
