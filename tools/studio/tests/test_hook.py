@@ -774,6 +774,7 @@ class SettingsTest(unittest.TestCase):
             "tools/studio/hook.py",
             "tools/studio/guard.py",
             "tools/studio/modelguard.py",
+            "tools/studio/waitguard.py",
         )
         for event, groups in hooks.items():
             commands = [h["command"] for group in groups for h in group["hooks"]]
