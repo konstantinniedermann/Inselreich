@@ -135,6 +135,7 @@ const WORK_STATUS = {
   delegated: 'lässt arbeiten',
   waiting: 'wartet',
   blocked: 'steckt fest',
+  review: 'im Review',
 };
 
 function nowBar(state) {
@@ -278,7 +279,7 @@ function itemRow(item, ctx) {
       ),
     );
   }
-  const afterFrom = goalOpen ? item.goalStage + 1 : stage;
+  const afterFrom = goalOpen ? item.goalStage : stage;
   if (!two && afterFrom < 5) {
     row.append(
       el('div', { class: 'rv-after', style: `grid-column: ${afterFrom + 2} / 7` }, item.note || ''),
