@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { laneTicks } from '../../src/sim/islands';
 import { seaRoute } from '../../src/sim/seaRoute';
 import { WHALE_EPISODE_MS, whaleAt } from '../../src/render/wildlife';
@@ -275,13 +275,21 @@ describe('L5 Zeichner: Grenzen und Form', () => {
 });
 
 describe('L5-T1 Fernansicht und Stempelzahl', () => {
+  // Zeitreserve (R624): die 50 Welten samt Deko-Objekten ausserhalb der Testzeit bauen; der Test wertet nur aus.
+  const decorOf: DecorItem[][] = [];
+  beforeAll(() => {
+    for (let seed = 1; seed <= 50; seed++)
+      decorOf.push(
+        sortedObjects(createWorld(seed)).filter((i): i is DecorItem => i.kind === 'decor'),
+      );
+  }, 60_000);
+
   it('L5-T1 Zoom ≤ 0,25: ≤ 300 Stempel je Insel im Fern-Pfad (Seeds 1–50), dort nur Meeresfelsen (Wrack und Eiland ab 0,5, REL-07)', () => {
     let max = 0,
       maxAll = 0;
     const seen = new Set<string>();
     for (let seed = 1; seed <= 50; seed++) {
-      const w = createWorld(seed);
-      const all = sortedObjects(w).filter((i): i is DecorItem => i.kind === 'decor');
+      const all = decorOf[seed - 1]!;
       const far = all.filter((i) => DECOR_MIN_ZOOM[i.stamp] <= 0.25);
       max = Math.max(max, far.length);
       maxAll = Math.max(maxAll, all.length);
@@ -292,7 +300,7 @@ describe('L5-T1 Fernansicht und Stempelzahl', () => {
     expect([...seen].sort()).toEqual(['seaRock']);
     expect(max).toBeGreaterThan(0);
     expect(maxAll).toBeLessThanOrEqual(300);
-  }, 40_000); // lokal bis 4,1 s im Gesamtlauf (REL-10, SEE-F1-KORRIDOR), Timeout >= 8 x (R270)
+  }, 40_000); // Welten in beforeAll (R624); Auswertung lokal << 1 s; Timeout bleibt (R270)
 
   it('die Meer-Stempel stehen in sortedObjects auf Wasserkacheln der Heimat und folgen dem Plan', () => {
     const w = createWorld(7);

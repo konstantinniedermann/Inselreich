@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createWorld, home } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
@@ -34,14 +34,25 @@ import { fakeCtx } from './fakeCtx';
 // Tiefenband-Zellen statt Stempel je Kachel); jede Prüfung des L6-Stands hat hier ihr Gegenstück.
 
 /** Wald-Objekte einer Welt und ihr Stempel-Seed (`world.seed`, kann vom Kartenseed abweichen). */
-const trees = (seed: number): { items: TreeItem[]; ws: number; world: World } => {
-  const world = createWorld(seed);
-  return {
-    items: sortedObjects(world).filter((i): i is TreeItem => i.kind === 'tree'),
-    ws: world.seed,
-    world,
-  };
+type Trees = { items: TreeItem[]; ws: number; world: World };
+// Zeitreserve (R624): jede Welt einmal je Datei bauen (die Tests lesen sie nur), vorgewärmt in `beforeAll`.
+const treesCache = new Map<number, Trees>();
+const trees = (seed: number): Trees => {
+  let t = treesCache.get(seed);
+  if (t === undefined) {
+    const world = createWorld(seed);
+    t = {
+      items: sortedObjects(world).filter((i): i is TreeItem => i.kind === 'tree'),
+      ws: world.seed,
+      world,
+    };
+    treesCache.set(seed, t);
+  }
+  return t;
 };
+beforeAll(() => {
+  for (let seed = 1; seed <= 20; seed++) trees(seed);
+}, 60_000);
 const factory = (): HTMLCanvasElement => {
   const { ctx } = fakeCtx();
   return { width: 0, height: 0, getContext: () => ctx } as unknown as HTMLCanvasElement;
