@@ -13,7 +13,8 @@ import type { GoodId, TaxLevel, Tier, UnlockId, World } from '../sim/types';
 import type { GameState } from './app';
 import { blurAfterClick, setField } from './dom';
 import type { Settings } from './settings';
-import { renderOrder, updateOrder, type OrderActions } from './order';
+import { orderVisible, renderOrder, updateOrder, type OrderActions } from './order';
+import { farAcceptTooltip, farOfferText } from './farOrder';
 import { crisisCardText } from './crisis';
 import { taxEffect } from './guide';
 import { taxButtonTitle, taxSummaryText } from './taxView';
@@ -493,7 +494,7 @@ export function bindIslandMenu(header: HTMLElement, state: GameState, actions: H
   );
 }
 
-/** Legt den Meldungsstapel oben rechts in `#game` an: Auftrag und Krisenkarte (Spec L2). */
+/** Legt den Meldungsstapel oben rechts in `#game` an: Auftrag, Fernangebot und Krisenkarte (Spec L2). */
 export function renderNoticeStack(
   gameEl: HTMLElement,
   world: World,
@@ -508,7 +509,22 @@ export function renderNoticeStack(
   crisis.className = 'card card--crisis';
   crisis.dataset.field = 'crisis-card';
   crisis.hidden = true;
-  stack.append(order, crisis);
+  const far = document.createElement('span');
+  far.className = 'card far-card';
+  far.dataset.field = 'far-card';
+  far.hidden = true;
+  const farText = document.createElement('span');
+  farText.dataset.field = 'far-text';
+  const farBtn = document.createElement('button');
+  farBtn.className = 'btn';
+  farBtn.textContent = 'Annehmen';
+  farBtn.dataset.field = 'far-accept';
+  farBtn.addEventListener('click', () => {
+    farBtn.blur();
+    actions.acceptFar();
+  });
+  far.append(farText, farBtn);
+  stack.append(order, far, crisis);
   gameEl.appendChild(stack);
   updateNoticeStack(stack, world);
   return stack;
@@ -518,6 +534,16 @@ export function renderNoticeStack(
 export function updateNoticeStack(stack: HTMLElement, world: World, island: number = HOME): void {
   const orderEl = stack.querySelector<HTMLElement>('.order-card');
   if (orderEl) updateOrder(orderEl, world, island);
+  const farEl = stack.querySelector<HTMLElement>('[data-field="far-card"]');
+  if (farEl) {
+    const text = orderVisible(world) ? farOfferText(world) : null;
+    const hidden = text === null;
+    if (farEl.hidden !== hidden) farEl.hidden = hidden;
+    setField(stack, 'far-text', text ?? '');
+    const btn = stack.querySelector<HTMLElement>('[data-field="far-accept"]');
+    const tip = farAcceptTooltip(world);
+    if (btn && btn.title !== tip) btn.title = tip;
+  }
   const crisis = crisisCardText(crisisView(world), world);
   const crisisEl = setField(stack, 'crisis-card', crisis.text);
   if (crisisEl) {

@@ -53,12 +53,13 @@ describe('AK-H2-28 Texte', () => {
 
   it('Fernauftrag nach Annehmen', () => {
     const w = offerWorld();
-    const A = islandOf(w, 'B');
-    w.islands[A]!.stock.rum = 7;
+    const far = islandOf(w, 'B');
+    w.islands[far]!.stock.rum = 7;
     acceptFarOrder(w);
     const o = w.order!;
     const expected = `Fernauftrag Felsbucht: 15 Rum · 450 · noch ${formatGameTime(1700)} · Lager 7/15`;
     expect(orderCardText(w)).toBe(expected);
+    expect(orderCardText(w, islandOf(w, 'A'))).toBe(expected);
     expect(farOrderText(w, o)).toBe(expected);
     expect(farOrderWarn(w)).toBe(false);
     expect(farAcceptedMessage(w, o)).toBe('Fernauftrag angenommen: 15 Rum nach Felsbucht');
@@ -67,7 +68,7 @@ describe('AK-H2-28 Texte', () => {
       toast: 'info',
       tick: 42,
     });
-    dropKontor(w, A);
+    dropKontor(w, far);
     expect(farOrderWarn(w)).toBe(true);
   });
 

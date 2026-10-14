@@ -108,6 +108,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   kein zweiter Finger dazukam und nicht verschoben wurde.
 - **Bilanz danach:** Der Tooltip eines Betriebs oder Dienstes in der Bauleiste nennt «Bilanz danach: +120 → +95 / min» (Bilanz heute gegen Bilanz nach dem Bau, inselübergreifend wie die Kopfzeile); beim Wohnhaus «→ bis zu … (Steuer bei voller Belegung)». Die Ausbau-Karte im Info-Panel zeigt dieselbe Zeile für die nächste Stufe. Der Aufstieg eines Hauses ist darin noch nicht eingerechnet.
 - **Stammkunde (Vertragskarte):** Die Angebotskarte nennt neben Gut und Preis «Markt jetzt ≈ N» (Preis der ersten Einheit wie im Handelsdialog) und «Erzeugung x / min» der Lieferinsel, oder «keine Erzeugung». Auf der Vertragskarte springt «Zum Erzeuger» zu einem Erzeuger des Vertragsguts; jeder weitere Klick wechselt reihum zum nächsten.
+- **Fernangebot:** Hast du ein Kontor auf einer fernen Insel, steht neben dem Auftrag oft ein **Fernangebot**: eine grosse Menge des Guts, das diese Insel mag (Möweninsel Stoff, Felsbucht Rum, Weidenau Glas). **Annehmen** ersetzt den Auftrag. Du hast dann 2:50 ab Auftragsbeginn Zeit und lieferst nur am Kontor dieser Insel (**Liefern** nennt die Insel); der nächste Auftrag entfällt. Ein verpasster Fernauftrag kostet nichts ausser diesem Auftrag.
 - **Tooltips:** Ein Eintrag der Bauleiste zeigt beim Überfahren, bei Tastaturfokus oder bei langem
   Drücken auf Touch (0,5 s) Name und Taste, Kosten, Unterhalt, was er erzeugt und braucht, die
   Standortregel, den Radius und — falls gesperrt — den Grund.

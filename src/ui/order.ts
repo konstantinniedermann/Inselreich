@@ -8,7 +8,7 @@ import type { SoundEvent } from '../audio/sound';
 import { functionLock } from '../sim/unlocks';
 import type { ContractEvent, GoodId, Order, Result, World } from '../sim/types';
 import { setField } from './dom';
-import { farOrderText } from './farOrder';
+import { deliverTarget, farOrderText, farOrderWarn } from './farOrder';
 import { sellPrice } from '../sim/trade';
 import { goodProductionPer100 } from './production';
 import { GOODS_BALANCE_TICKS, formatGameTime, perMinute } from './time';
@@ -16,6 +16,8 @@ import { GOODS_BALANCE_TICKS, formatGameTime, perMinute } from './time';
 export interface OrderActions {
   /** Liefert aus dem Lager der aktiven Insel. */
   deliver(): void;
+  /** Nimmt das Fernangebot an. */
+  acceptFar(): void;
   /** Nimmt das Stammkunde-Angebot an. */
   accept(): void;
   /** Lehnt das Angebot ab. */
@@ -265,17 +267,18 @@ export function updateOrder(el: HTMLElement, world: World, island: number = HOME
   setHidden('order-decline', !offer);
   setHidden('order-producer', world.contract === null);
   setHidden('order-cancel', world.contract === null);
-  el.classList.toggle('order-card--warn', contractWarn(world));
+  el.classList.toggle('order-card--warn', contractWarn(world) || farOrderWarn(world));
   const btn = el.querySelector<HTMLElement>('[data-field="order-deliver"]');
   if (btn) btn.hidden = world.order === null;
+  const target = deliverTarget(world, island);
   if (btn) {
-    const label = deliverLabel(world, island);
+    const label = deliverLabel(world, target);
     if (btn.textContent !== label) btn.textContent = label;
   }
   if (btn && world.order !== null) {
     btn.classList.toggle(
       'unaffordable',
-      world.islands[island]!.stock[world.order.good] < world.order.amount,
+      world.islands[target]!.stock[world.order.good] < world.order.amount,
     );
   }
 }

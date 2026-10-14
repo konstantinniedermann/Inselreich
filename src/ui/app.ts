@@ -2,7 +2,20 @@ import { BUILDING_DEFS, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { TICK_MS } from '../sim/defs/timing';
 import { crisisView } from '../sim/queries';
 import { setReserve } from '../sim/reserve';
-import { acceptContract, cancelContract, declineContract, deliverOrder } from '../sim/orders';
+import {
+  acceptContract,
+  acceptFarOrder,
+  cancelContract,
+  declineContract,
+  deliverOrder,
+} from '../sim/orders';
+import {
+  deliverTarget,
+  farAcceptedMessage,
+  farDeliveredEntry,
+  farLogEntries,
+  farSnap,
+} from './farOrder';
 import { demolish, placeBuilding, placeRoad, removeRoad } from '../sim/build';
 import { connectBuilding } from '../sim/connect';
 import { step, type StepReport } from '../sim/tick';
@@ -367,7 +380,7 @@ function launch(
     sound.play('error');
   };
   const contractOut = { showError, show: (text: string): void => showMessage(text) };
-  /** Letzte Vertragsklänge (höchstens 20), nur für die Dev-Sonde. */
+  /** Letzte Auftrags- und Vertragsklänge (höchstens 20), nur für die Dev-Sonde. */
   const contractSoundLog: string[] = [];
   const recordContractSound = (e: string): void => {
     contractSoundLog.push(e);
@@ -384,6 +397,14 @@ function launch(
 
   const noticeStack = renderNoticeStack(gameEl, world, {
     deliver: () => actions.deliverOrder(),
+    acceptFar: () => {
+      const r = acceptFarOrder(world);
+      if (!r.ok) showError(r.reason);
+      else showMessage(farAcceptedMessage(world, world.order!));
+      farPrev = farSnap(world);
+      prevOrder = world.order ? { ...world.order } : null;
+      refresh();
+    },
     accept: () => {
       runContractAction(acceptContract(world), () => contractAgreedMessage(world), contractOut);
       refresh();
@@ -637,23 +658,30 @@ function launch(
     },
     deliverOrder: () => {
       const o = world.order ? { ...world.order } : null;
-      const r = deliverOrder(world, state.activeIsland);
+      const target = deliverTarget(world, state.activeIsland);
+      const r = deliverOrder(world, target);
       const ev = actionSound(r, 'orderDone');
       if (!r.ok)
         showError(
           friendlyReason(
             world,
             r.reason,
-            o
-              ? { good: o.good, amount: o.amount, island: state.activeIsland }
-              : { island: state.activeIsland },
+            o ? { good: o.good, amount: o.amount, island: target } : { island: target },
           ),
         );
       else {
         // Vergleichswert zurücksetzen, damit die Lieferung nicht als „verfallen" gilt
         prevOrder = null;
-        if (o) showMessage(deliveredMessage(o));
-        if (ev) sound.play(ev);
+        if (o && o.island !== undefined) {
+          const e = farDeliveredEntry(o, world.tick);
+          state.eventLog = pushLog(state.eventLog, [e]);
+          showMessage(e.text);
+        } else if (o) showMessage(deliveredMessage(o));
+        if (ev) {
+          sound.play(ev);
+          recordContractSound(ev);
+        }
+        farPrev = farSnap(world);
       }
       refresh();
     },
@@ -661,6 +689,8 @@ function launch(
 
   /** Auftrag im letzten Frame (zum Erkennen von „Neuer Auftrag" / „Auftrag verfallen"). */
   let prevOrder: Order | null = world.order ? { ...world.order } : null;
+  /** Fernangebot und -auftrag im letzten Frame (Log bei Verfall). */
+  let farPrev = farSnap(world);
 
   /** Pfad-Vorschau des Knopfs „Anbinden" (nur beim Überfahren), wird nach dem Zeichnen der Karte gemalt. */
   let connectPreview: readonly Pos[] | null = null;
@@ -1587,6 +1617,13 @@ function launch(
           if (e.tag === 'monument-done') showMessage(e.text, 'info', true, true);
           else if (e.toast !== null) showMessage(e.text, e.toast);
         }
+      }
+      const farLogged = farLogEntries(farPrev, world);
+      farPrev = farSnap(world);
+      if (farLogged.length > 0) {
+        state.eventLog = pushLog(state.eventLog, farLogged);
+        state.logUnread = nextUnread(state.logUnread, farLogged, isEventLogExpanded(logBox));
+        for (const e of farLogged) if (e.toast !== null) showMessage(e.text, e.toast);
       }
       const msg = orderMessageFor(prevOrder, prevOrderVisible, world);
       if (msg) showMessage(msg);

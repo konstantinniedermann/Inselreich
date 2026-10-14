@@ -392,6 +392,7 @@ describe('I-047 Stammkunde: Knöpfe und Warnfarbe (AK-SK-28)', () => {
       decline: vi.fn(),
       cancel: vi.fn(),
       toProducer: vi.fn(),
+      acceptFar: vi.fn(),
     };
     const w = createWorld(3, { unlockAll: true });
     w.order = null;
@@ -496,6 +497,7 @@ describe('I-090 Knopf «Zum Erzeuger» (AK-HC-10)', () => {
       decline: vi.fn(),
       cancel: vi.fn(),
       toProducer: vi.fn(),
+      acceptFar: vi.fn(),
     };
     const w = createWorld(3, { unlockAll: true });
     w.order = null;

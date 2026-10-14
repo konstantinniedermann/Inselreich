@@ -931,7 +931,8 @@ button.chip {
   font-size: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
-.notice-stack .order-card {
+.notice-stack .order-card,
+.notice-stack .far-card {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 8px;
@@ -944,6 +945,14 @@ button.chip {
   padding: 6px 8px;
   font-size: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.notice-stack .far-card {
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+.notice-stack .far-card [data-field='far-text'] {
+  flex: 1 1 100%;
+  min-width: 0;
 }
 .notice-stack .order-card.order-card--warn {
   border-left-color: var(--warn-amber);

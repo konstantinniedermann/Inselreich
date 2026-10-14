@@ -1,6 +1,6 @@
 /**
  * Fake-DOM für UI-Tests (kein jsdom/happy-dom, ADR-001): bildet nur die Felder nach, die
- * `monumentSection.ts` und `setField` nutzen. `querySelector` versteht `[data-attr="wert"]`.
+ * `monumentSection.ts` und `setField` nutzen. `querySelector` versteht `[data-attr="wert"]` und `.klasse`.
  */
 export class FakeElement {
   tagName: string;
@@ -63,6 +63,11 @@ export class FakeElement {
   }
 
   querySelector<T = FakeElement>(selector: string): T | null {
+    const cls = /^\.([a-z-]+)$/.exec(selector);
+    if (cls) {
+      const hit = this.descendants().find((n) => n.className.split(' ').includes(cls[1]!));
+      return (hit ?? null) as T | null;
+    }
     const m = /^\[data-([a-z-]+)="([^"]*)"\]$/.exec(selector);
     if (!m) throw new Error(`FakeDom: Selektor nicht unterstützt: ${selector}`);
     const key = m[1]!.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
