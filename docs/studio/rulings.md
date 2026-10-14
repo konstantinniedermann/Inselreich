@@ -7216,3 +7216,20 @@ Zuschnitt berührt; Umsetzung bleibt bis dahin gesperrt (R629 (5)).
 Regelbezug: gates.md Gate Spec, R583, R629 · Kosten bei Irrtum: ein Spec-Nachtrag nach dem Playtest.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-handel-2 (Spec) · ADR: —
+
+## R633 · 2026-10-14 · Gate Spec Handel 2: angenommen mit Auflagen; Plan nach PLAYTEST-I047
+
+Ruling: lead-tech OK, lead-qa BEDENKEN (keine Blocker) zur Spec `design/handel-2` @ `8d1b9af1` → **Spec angenommen**. Auflagen für den
+Plan (Tech-Lead beim Plan, opus): (T1) Rückfaltung als eigener Task: neuer Fold-Schritt entfernt `farOffer`/`farSkip` nur bei `null`,
+vorgeschaltet in `foldBackToV13`/`foldBackToV9` (`tests/sim/helpers.ts`, ≈ 15 Testdateien), Merge-Reihenfolge zu Erweiterung 1 im Plan
+benennen; (T2) Controller-Test: über alle Ticks `farOffer === null`, `farSkip === null`, keine `order.island` (Baseline-Beleg AK-H2-24);
+(T3) `orderForPeriod` vor/nach der Änderung identisch (RNG-Beleg R13); (T4) Guard `order === null → fail` in `acceptFarOrder` mit AK;
+(T5) Versionsnummer als letzter Schritt, Tests nur gegen `SAVE_VERSION`; ADR-010-Nachtrag und arc42 (`orders.ts`, Save). QA:
+(A1) `laneTicks` Seed 3 in H2-SIM Task 1 messen und in AK-27 pinnen; (A2) Ersatzlage und Route Fremdinsel↔Fremdinsel als AK-H2-31
+oder Ausschluss in §1 (Spec-Nachtrag durch lead-design vor dem Plan); (A3) AK-19 mit Roundtrip mitten in der gesperrten Periode inkl.
+Vertrag; (A4) Fold-Schritt mit eigenem Test; (A5) AK-30 messbar `scrollWidth <= clientWidth` bei 1280 px; (A6) Task-Dateien ≤ 10 KB.
+Ablauf: PLAYTEST-I047 abwarten (R629 (5)); dann Spec-Nachtrag A2 + Playtest-Folgen (lead-design, sonnet, Spec-Nachtrag), dann Plan.
+
+Regelbezug: gates.md Gate Spec, R583, R629, R632 · Kosten bei Irrtum: ein Plan-Task mehr für die Rückfaltung.
+
+Entscheider: L0 · Anlass: Berichte lead-tech und lead-qa gate-handel-2 · ADR: —
