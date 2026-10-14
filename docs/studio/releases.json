@@ -252,8 +252,8 @@
       "kind": "Werkzeug",
       "startStage": 4,
       "stage": 4,
-      "state": "running",
-      "note": "Karte «Versionen» im Dashboard"
+      "state": "done",
+      "note": "gemergt R647"
     }
   ],
   "pastSummary": "REL-01 … REL-20, M1 – M13"

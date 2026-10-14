@@ -126,14 +126,17 @@ mehrfach blockiert — Testlock bricht ab, nicht warten.
    kein neues Opus-Review (Fix-Delta Task-Review OK). Dann Gate L0 und Push per geprüftem Hash, CI, `gh workflow run Pages --ref main`.
 2. **Handel 2 «Fernangebot» (REL-23)** nach dem Push: Plan `plan/handel-2` @ `f5d38fcf` (Spec `design/handel-2` @ `1ed91737`), Budget
    26 Starts/P1, Controller C1 T01–T03, C2 T04–T06, C3 T07–T09 + Final-Review (E-066: Folgeinstanzen), Auflagen R639 (1)–(5).
-3. **Dashboard-Karte «Versionen und Releases»** (R645, TOOL-DASH-VERSIONEN): Stand siehe «Laufend»; `docs/studio/releases.json` pflegt
-   lead-production bei jedem Release-Wechsel (Merge, Release-Check, Push) zusammen mit dieser Datei.
+3. **Dashboard-Karte «Versionen und Releases»** ist live im Dashboard (R647). **Pflegeregel**: lead-production pflegt
+   `docs/studio/releases.json` bei jedem Release-Wechsel (Merge eines Pakets: `stage`/`state`; Release-Check: `gate`; Push: `status: live`,
+   `hash`, `date`; Pool → Release beim Einplanen; fertige Releases → `pastSummary`) im selben Commit wie state.md; Handbuch-Vorschlag
+   an studio-coach.
 4. **UI-HAEPPCHEN-D** «Ereignis-Log vollständig» (Kurzdesign `design/ui-haeppchen-d` @ `ce2f3689`, R641): Plan + kombiniertes Gate erst
    nach dem Merge von Handel 2.
 5. Retro-Aufträge R646: E-066 läuft; Messauftrag Cache-Write-Wachstum nach Rolle (V3) und Briefing-Verbote (a)(b)(c) in der nächsten
    Session-Retro; Ad-hoc-Retro, falls Cache-Write oder Flake wieder rot.
 6. Erweiterung 1 «Stände und Segel» bleibt in der Nutzer-Session; wer zuerst nach main merged (Handel 2 oder E1), bekommt Save v15 (R638);
    vor dem Merge von Handel 2 `git diff --stat main...design/erweiterung-1 -- src tests` prüfen (R639 (5)).
+7. **TOOL-GUARD-WARTEAGENT** (R647 (2)): Hook gegen Warte-Agenten und `sleep` im Hintergrund durch Leads, lead-tech, Rückfall `warn`.
 
 ## Aktuelles Projekt und Phase
 
@@ -158,7 +161,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- TOOL-DASH-VERSIONEN (R645): Stand beim Session-Ende siehe Nachtrag unten in diesem Abschnitt.
+Nichts (Session-Ende b54ed3bd).
 
 ## Parallele Sessions
 
