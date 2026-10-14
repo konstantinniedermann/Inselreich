@@ -204,7 +204,7 @@ export function renderTrade(
     boom.hidden = true;
     name.appendChild(boom);
     const prefer = document.createElement('span');
-    prefer.className = 'badge--boom';
+    prefer.className = 'badge--prefer';
     prefer.dataset.field = `prefer-${good}`;
     prefer.hidden = true;
     name.appendChild(prefer);

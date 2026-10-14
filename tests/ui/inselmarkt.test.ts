@@ -102,4 +102,13 @@ describe('AK-IM-13 Handelsdialog: Feld prefer-<Gut>', () => {
     renderTrade(h as unknown as HTMLElement, w, noop, HOME);
     expect(tag(h)!.hidden).toBe(true);
   });
+  it('AK-UA3-04 prefer-<Gut> hat badge--prefer, boom-<Gut> behält badge--boom', () => {
+    vi.stubGlobal('document', { createElement: fakeEl });
+    const w = createWorld(3, { unlockAll: true });
+    const p = fakeEl('div');
+    renderTrade(p as unknown as HTMLElement, w, noop, WEIDENAU);
+    expect(tag(p)!.className).toBe('badge--prefer');
+    const boom = flat(p).find((e) => e.dataset.field === 'boom-glass');
+    expect(boom!.className).toBe('badge--boom');
+  });
 });

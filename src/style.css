@@ -891,6 +891,23 @@ button.chip {
   display: none;
 }
 
+/* Vorliebe-Marke: Rand und Schrift wie Boom, Füllung Pergament */
+.badge--prefer {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--parchment);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge--prefer[hidden] {
+  display: none;
+}
+
 /* Ereignis-Log: schwebende Pergament-Box unten links über der Spielfläche (R112) */
 .notice-stack {
   position: absolute;
