@@ -1913,3 +1913,97 @@ time {
   color: var(--text);
   cursor: pointer;
 }
+
+/* --- Jetzt in Arbeit / Ziel heute (releases.js, TOOL-DASH-SESSIONZIEL) --- */
+.rv-now {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background: var(--subtle);
+  border-left: 5px solid var(--st-delegated);
+}
+
+.rv-now-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+}
+
+.rv-count {
+  padding: 1px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.rv-count.all {
+  border-color: var(--st-active);
+}
+
+.rv-count.all::before {
+  content: '✓ ';
+  color: var(--st-active);
+}
+
+.rv-now-empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.rv-now-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 0.85rem;
+}
+
+.rv-owner {
+  font-weight: 600;
+}
+
+.rv-agent {
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  font-size: 0.75rem;
+}
+
+.rv-now-st {
+  color: var(--muted);
+}
+
+.rv-goal-warn {
+  color: var(--text);
+  font-size: 0.75rem;
+}
+
+.rv-goal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  margin: 0 4px;
+  border: 2px dashed var(--accent);
+  border-radius: 11px;
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.rv-goal-ok {
+  padding-right: 28px;
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
