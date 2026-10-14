@@ -7416,3 +7416,19 @@ Verbote Warte-Agenten, Hintergrund-Arbeiter, Lastgrenze): Guard erst bei dreifac
 Regelbezug: R316, R429, R615 · Kosten bei Irrtum: eine Session mit falschem Experiment-Platz.
 
 Entscheider: L0 · Anlass: Bericht studio-coach retro-session-b54ed3bd, Hook-Hinweis Ad-hoc-Retro · ADR: —
+
+## R647 · 2026-10-14 · Gate Merge TOOL-DASH-VERSIONEN: OK; Guard gegen Warte-Agenten fällig
+
+Ruling: `tool/dash-versionen` @ `45046433`: Karte «Versionen und Releases» als erste Karte im Live-Tab (Muster v3), `docs/studio/releases.json`
+(Schema im Handoff), `/api/state` liefert `releases`, `releases_error`, `live`; `make studio-test` 869 grün, `studio-lint`/`docs-check` Exit 0,
+Task-Review OK, Echtlauf Port 8791 mit Screenshots (`.studio/qa/tool-dash-versionen/`); Schranken-Ursache geklärt (`.bar { overflow: hidden }`,
+Präfix `rv-`). Lücke: kein Rot-Beleg für `test_releases.py` (Implementierung vor Test) — hingenommen für ein Werkzeug-Paket, Befund an die Retro.
+→ **Gate Merge OK**. lead-production merged `--no-ff` im Hauptcheckout, setzt TOOL-DASH-VERSIONEN in `releases.json` auf `done`, ergänzt die
+Pflegeregel in state.md (Fortsetzung 3) und prüft `make studio-test`, `make docs-check`. Die Pflegeregel geht als Handbuch-Vorschlag an den
+Coach in der Folgesession. (2) Dritter unnötiger Warte-Agent dieser Session (tool-buendel-12, tool-hotfix-zr, tool-dash-versionen) → nach
+R646 (6) **TOOL-GUARD-WARTEAGENT** in der Folgesession: Hook verweigert Agent-Starts ohne Auftrag (z. B. reines Warten/`ok`) bzw. `sleep`
+im Hintergrund durch Leads; Entwurf und Test durch lead-tech.
+
+Regelbezug: gates.md Gate Merge, R645, R646 · Kosten bei Irrtum: eine Karte mit kleinen Hover-Mängeln; ein Guard mit Fehlblocks (Rückfall warn).
+
+Entscheider: L0 · Anlass: Bericht lead-tech tool-dash-versionen · ADR: —
