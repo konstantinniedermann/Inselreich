@@ -1537,3 +1537,16 @@ die Prozess-Aussensicht (R127) für REL-21 bis REL-25 → `studio-process-coach`
 Regelbezug: gates.md Gate Merge, R127, R694, R701, R707 · Kosten bei Irrtum: ein Doku-Satz, der eine Stunde länger veraltet ist.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-UI-AUFRAEUM-4 · ADR: —
+
+## R711 · 2026-10-16 · Plan I-112: R-3 anteiliger Stufentakt, R-4 Migration v16→v17, R-5 UI-Leser in T01; Testbarkeits-Check jetzt
+
+Ruling: Plan `plan/i112` @ `cb41264e` (10 Tasks T00–T09, Handoff `.studio/handoffs/2026-10-16-lead-tech-plan-I-112.md`). **R-3:** Der neue Takt gilt anteilig für
+Ausbaustufen: `floor(Stufentakt × neuer Grundtakt ÷ 50)` (Weberei Stufe 30 → 24); kein Gegenzeichnen durch lead-design nötig, weil es die naheliegende Lesart von
+R706 R-2 ist und die Baseline bitgleich bleibt (Controller beschliesst nie). **R-4:** Statt Abweisen eine Migration v16→v17 (offene Stufen aus vorhandenen Häusern
+abgeleitet), wie die bestehende Kette v1→v16; Verfassung §3 erlaubt Laden, verlangt es nicht; Test für die Migration statt für das Abweisen; `SAVE_VERSION` = main + 1
+beim Merge (R674) bleibt. Budget daher 25 Arbeiter-Starts + 4 Controller. **R-5:** T01 darf die Leser-Zeilen in den 7 Dateien unter `src/ui/` ändern (wie R674 (2)).
+Taste `Umschalt+R` angenommen. Gate Plan: Testbarkeits-Check der 17 AKs durch lead-qa (Auflage R706) jetzt; Budgetfreigabe mit dem Gate-Urteil.
+
+Regelbezug: VERFASSUNG §3, R674, R706 · Kosten bei Irrtum: ein Stufentakt, der nach dem Playtest per Werte-Ruling nachgestimmt wird.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-I-112 · ADR: —
