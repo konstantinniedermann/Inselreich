@@ -7905,7 +7905,7 @@ Regelbezug: gates.md Gate Merge, R129, R324, R380, R679, R682 · Kosten bei Irrt
 
 Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-F, R682 im Log · ADR: —
 
-## R683 · 2026-10-16 · Gate Merge CTX-ALTLAST: OK mit zwei Nachträgen; Handbuch 1.56 angenommen
+## R683b · 2026-10-16 · Gate Merge CTX-ALTLAST: OK mit zwei Nachträgen; Handbuch 1.56 angenommen
 
 Ruling: `chore/ctx-altlast` @ `76ceb732` (Handoff `.studio/handoffs/2026-10-16-lead-production-CTX-ALTLAST.md`): kein `src/`-Diff, `make check`,
 `studio-test`, `docs-check` grün, Rulings wörtlich verschoben (Überschriften vor/nach gleich), Probe belegt: Grep-Werkzeug 238 → 129 Treffer ohne
@@ -7934,7 +7934,7 @@ Regelbezug: gates.md Gate Merge, R129, R673, R674, R682 · Kosten bei Irrtum: ei
 
 Entscheider: L0 · Anlass: Bericht lead-tech I-091, Doppelnummer im Log · ADR: —
 
-## R684 · 2026-10-16 · Aufräumen wird Daueraufgabe von lead-production, ausgelöst durch Schwellen im Start-Kontext
+## R685 · 2026-10-16 · Aufräumen wird Daueraufgabe von lead-production, ausgelöst durch Schwellen im Start-Kontext
 
 Ruling: Nutzerauftrag «das Studio soll Altlasten künftig selbst erkennen, darauf hinweisen und aufräumen, nicht immer, aber wenn es sich lohnt».
 Auslegung: (1) **Erkennen** übernimmt ein Werkzeug, nicht ein Agent: `aufraeumen.py --check` misst Schwellen (Startwerte: `.studio/qa` > 2 GB;
@@ -7943,10 +7943,10 @@ Auslegung: (1) **Erkennen** übernimmt ein Werkzeug, nicht ein Agent: `aufraeume
 Retros»). Schwellen stehen in einer Konfigurationsdatei unter `tools/studio/`, nicht im Code. (2) **Hinweisen**: L0 nennt die fällige Zeile im
 Start-Bericht. (3) **Durchführen**: Eigentümerin ist **lead-production** (Persona-Abschnitt «Haushalt»); L0 startet sie bei fälliger Zeile als Paket
 `HAUSHALT-nn` ohne Nutzerfrage, sobald ein Agentenplatz frei ist (vor neuen Ideen-Runden, nach laufenden Gates). Sie führt Trockenlauf, `--apply`,
-Archiv-`git mv` und Rulings-Verschieben nach R682/R683 aus, misst vorher/nachher und meldet Ergebnis im Bericht; Gate Merge L0 wie üblich. Ohne
+Archiv-`git mv` und Rulings-Verschieben nach R682/R683b aus, misst vorher/nachher und meldet Ergebnis im Bericht; Gate Merge L0 wie üblich. Ohne
 fällige Zeile wird nicht aufgeräumt. Umsetzung im laufenden Paket CTX-ALTLAST als Nachtrag (3).
 
-Regelbezug: R682, R683, Verfassung §5 (keine Rückfrage), §6.4 · Kosten bei Irrtum: eine Aufräumrunde zu früh oder zu spät; Schwellen sind per
+Regelbezug: R682, R683b, Verfassung §5 (keine Rückfrage), §6.4 · Kosten bei Irrtum: eine Aufräumrunde zu früh oder zu spät; Schwellen sind per
 Konfiguration nachstellbar.
 
 Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-16 · ADR: —
