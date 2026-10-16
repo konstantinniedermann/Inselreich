@@ -1661,3 +1661,15 @@ und nimmt I-114 in REL-26 auf. Danach holt der I-112-Controller `main` per Merge
 Regelbezug: gates.md Gate Merge, R701, R703, R716 · Kosten bei Irrtum: eine Fernkarte, die nach dem Playtest nachgebessert wird.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-I-114 · ADR: —
+
+## R721 · 2026-10-16 · BEOB-17: Merge OK (L0-Gate, Trivial-Fix); PERF-BILANZ-COV jetzt; TOOL-GUARD-REDACT und ZEITRESERVE-PFLEGE in den Pool
+
+Ruling: `docs/beob-17` (`27304033`, `1d23b6e9`; Handoff `.studio/handoffs/2026-10-16-lead-production-BEOB-17.md`): 17 Einträge ausgewertet (2 erledigt, 4 eingeplant,
+10 abgehakt, 1 offen bis ORT-1). Diff ausserhalb der Doku nur Klasse `menu-field` (2 Zeilen `menu.ts`, 5 Zeilen CSS), Prüfungen Exit 0 → **Merge OK durch L0**
+(Trivial-Fix, kein lead-qa-Gate nötig); lead-production merged lokal und nimmt den Menü-Abstand in REL-26 auf. Paketvorschläge: (1) **PERF-BILANZ-COV** (S) jetzt —
+I-114 ist gemergt (R720), Last 5,7 < 8, dritte Umsetzung zulässig (R708 V2); lead-tech, Stufe leicht, Budget 4. (2) **TOOL-GUARD-REDACT** (S) und (3)
+**ZEITRESERVE-PFLEGE** mit H-1 in den Pool; Start beim nächsten freien Platz bzw. nächsten Werkzeug-Bündel.
+
+Regelbezug: R287, R445, R698, R708 V2, R719 · Kosten bei Irrtum: ein Menü-Abstand, der nachjustiert wird.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-17 · ADR: —
