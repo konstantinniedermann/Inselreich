@@ -160,10 +160,19 @@ export function contractNotice(
         sound: 'orderDone',
       };
     case 'excused': {
-      const why =
-        ev.reason === 'stock'
-          ? `zu wenig ${name}`
-          : `kein Kontor auf ${islandName(world, ev.island)}`;
+      let why: string;
+      switch (ev.reason) {
+        case 'stock':
+          why = `zu wenig ${name}`;
+          break;
+        case 'kontor':
+          why = `kein Kontor auf ${islandName(world, ev.island)}`;
+          break;
+        default: {
+          const unreachable: never = ev.reason;
+          return unreachable;
+        }
+      }
       return {
         text: `Stammkunde wartet: ${why}, diesmal ohne Strafe`,
         kind: 'warn',
