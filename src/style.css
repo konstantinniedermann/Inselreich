@@ -970,6 +970,24 @@ button.chip {
   border-left-color: var(--warn-amber);
   background: var(--warn-parchment);
 }
+@keyframes order-soon {
+  0% {
+    box-shadow:
+      0 0 0 3px var(--warn-amber),
+      0 0 14px var(--warn-amber);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.notice-stack .order-card.order-card--soon {
+  animation: order-soon 2.5s ease-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .notice-stack .order-card.order-card--soon {
+    animation: none;
+  }
+}
 .notice-stack [hidden] {
   display: none;
 }

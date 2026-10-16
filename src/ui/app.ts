@@ -6,6 +6,7 @@ import {
   acceptContract,
   acceptFarOrder,
   cancelContract,
+  contractWarning,
   declineContract,
   deliverOrder,
 } from '../sim/orders';
@@ -148,10 +149,13 @@ import {
   announceContract,
   contractAgreedMessage,
   deliveredMessage,
+  flashOrderCard,
   orderMessageFor,
   orderVisible,
   runContractAction,
+  warnPeriod,
 } from './order';
+import { warnStep } from './warnStep';
 import {
   friendlyReason,
   hintPosition,
@@ -1537,6 +1541,9 @@ function launch(
   let prevWork = workProgress(world);
   let prevEconTick = world.tick;
   let prevOrderVisible = orderVisible(world);
+  // Vorwarnung (I-122): Priming beim Laden, damit ein Stand im Fenster keinen Klang auslöst
+  let warnedPeriod: number | null = contractWarning(world) !== null ? warnPeriod(world) : null;
+  let cancelFlash: () => void = () => {};
   // Nach dem Laden ist der geladene Stand die Vergleichsbasis: eine laufende Krise erzeugt keinen Eintrag
   let prevCrisis = crisisView(world);
   let prevMonument = monumentSnapshot(world);
@@ -1622,6 +1629,17 @@ function launch(
           },
           world,
         );
+        if (ticks > 0) {
+          const w = warnStep(warnedPeriod, world);
+          warnedPeriod = w.warnedPeriod;
+          if (w.fire) {
+            recordContractSound('contractWarn');
+            sound.play('contractWarn');
+            const card = document.querySelector<HTMLElement>('.order-card');
+            cancelFlash();
+            if (card) cancelFlash = flashOrderCard(card);
+          }
+        }
         if (ticks === MAX_TICKS_PER_FRAME) acc = 0;
       }
       input?.applyKeys(dt);
@@ -1760,6 +1778,7 @@ function launch(
   const dispose = (): void => {
     if (disposed) return;
     disposed = true;
+    cancelFlash();
     cancelAnimationFrame(rafId);
     layers.dispose();
     councilCard.dispose();
