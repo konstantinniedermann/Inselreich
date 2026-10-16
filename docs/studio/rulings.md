@@ -7585,3 +7585,18 @@ zwei Sessions rot) ist durch diese Retro abgedeckt: Cache-Write mit Hebel V1 und
 Regelbezug: STUDIO.md Verbesserungsschleife, R316, R646 · Kosten bei Irrtum: ein Experiment mit zu wenig Review-Tiefe (Rückfall Review je Task).
 
 Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —
+
+## R660 · 2026-10-16 · Session-Plan: Release-Check und Push REL-23, Plan UI-HAEPPCHEN-D, TOOL-METRIK-ZEITRAUM
+
+Ruling: Nutzerprompt «mach weiter» = Plan aus state.md fortsetzen. (1) **REL-23 «Fernangebot»**: lead-qa Release-Check am aktuellen
+main (`244792f4`, Ein-Paket-Release HANDEL-2, Gate Merge R658 bereits OK) mit `make push-check` und `make zeitreserve-gate` per geprüftem
+Hash; Push durch L0 nach Exit 0 (R335: der einzige Push dieser Session). (2) **UI-HAEPPCHEN-D** «Ereignis-Log vollständig»: lead-tech Plan
+aus Kurzdesign `ce2f3689` (Branch `design/ui-d`), Stufe leicht, Plan-Instanz sonnet (E-054); lead-tech prüft dabei die Bündelung mit I-109
+(`design/i109` @ `7e25d7cf`) und I-102. Plan ohne Testläufe, Umsetzung erst nach `make push-check` Exit 0 für REL-23 (R464). (3)
+**TOOL-METRIK-ZEITRAUM** (E-069, R659 (1)): lead-tech Plan und Umsetzung als Werkzeug-Paket in `tools/studio/`, kein `src/`; startet sofort,
+da es weder Spiel noch Push-Stand berührt (Doku-/Werkzeug-Commit nach main erst nach Gate Merge). Belegung 3 Leads; restliche Plätze
+nach R475 erst nach dem Push (Last und Testlock schonen).
+
+Regelbezug: Verfassung §5, STUDIO.md Autonomie, R335, R464, R475, R654, R659 · Kosten bei Irrtum: ein Plan, der wegen Bündelung neu zugeschnitten wird.
+
+Entscheider: L0 · Anlass: Nutzerprompt Session-Start · ADR: —
