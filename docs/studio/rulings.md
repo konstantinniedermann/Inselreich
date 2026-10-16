@@ -7733,3 +7733,17 @@ Prozessstufe voll), Umsetzung seriell **nach UI-HAEPPCHEN-E**, weil beide `src/u
 Regelbezug: Verfassung §5, gates.md Gate Spec, R663, I-047 L6 · Kosten bei Irrtum: eine verworfene Idee, die der Nutzer doch will (Spec liegt vor, Wiederaufnahme ohne Neuarbeit).
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I-091-I-094 · ADR: —
+
+## R671 · 2026-10-16 · Gate Spec I-091 V-A «Kulanz»: OK mit Auflagen A1–A4; Plan Stufe voll danach
+
+Ruling: Urteil lead-qa (`.studio/handoffs/2026-10-16-lead-qa-gate-spec-I-091.md`) übernommen: **OK mit Auflagen** — A1 Widerspruch AK-TR-02/AK-TR-18
+auflösen (Feld `becameLoyal` oder `loyal` nur beim Übergang; L0-Vorgabe: `becameLoyal`, weil der Dauerzustand `loyal` für die Anzeige gebraucht wird);
+A2 AK-TR-05 präzisieren (`money` vor und nach Periodenbeginn identisch); A3 Randfälle Lager nach Kulanz aufgefüllt, Kulanz in Periode mit `farSkip`,
+Kündigen direkt nach Kulanz; A4 Spec an R670 angleichen (V-B, O-1/E-2, «Stufe leicht» als verworfen/gestrichen), Helfertexte aus
+`CONTRACT_LOYAL_AFTER`. lead-design setzt A1–A4 auf `design/i091-i094` um und verschiebt I-094 nach `docs/ideen-archiv.md` (R670). Danach Plan
+durch lead-tech (opus, Stufe voll) mit den Plan-Hinweisen des Gates (Zeitraffer/präparierter Spielstand für AK-19, Kulanz-Zweig in `tickOrders`
+wie `delivered`, vollständige Switches über `ContractEvent`, Fixture über `SAVE_VERSION - 1` plus v14-Kette, Mitzieh-Schritt, `deliveries: null`).
+
+Regelbezug: gates.md Gate Spec, R663, R670 · Kosten bei Irrtum: eine doppelte «jetzt treu»-Meldung (Fix-Runde).
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-spec-I-091 · ADR: —
