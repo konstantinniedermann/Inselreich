@@ -282,6 +282,19 @@ export const V13_WORLD_KEYS = V12_WORLD_KEYS;
 
 const FAR_STATE_ERROR = 'foldBackFarOrders: Fernzustand nicht rückfaltbar';
 
+/** Entfernt `council` ohne Umordnen und ohne die Version zu ändern (I-112). */
+function dropCouncil(x: Record<string, unknown>): Record<string, unknown> {
+  if (!('council' in x)) return x;
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(x)) if (k !== 'council') out[k] = x[k];
+  return out;
+}
+
+/** I-112: äusserster Faltschritt v17 → v16: entfernt `council`, `version − 1`. Nur für Stände der aktuellen Version. */
+export function foldBackCouncil(x: Record<string, unknown>): Record<string, unknown> {
+  return { ...dropCouncil(x), version: (x.version as number) - 1 };
+}
+
 /**
  * I-091: entfernt `contract.deliveries` (ohne Umordnen) und setzt `version − 1`. Nur für Stände der aktuellen Version;
  * äusserster Faltschritt. Die Ketten `foldBackToV13/V12/V11` brauchen ihn nicht: Sie verlangen `contract === null` und
@@ -322,7 +335,7 @@ export function foldBackFarOrders(x: Record<string, unknown>): Record<string, un
  * über `foldBackFarOrders`.
  */
 export function foldBackToV13(input: Record<string, unknown>): Record<string, unknown> {
-  const x = foldBackFarOrders(input);
+  const x = foldBackFarOrders(dropCouncil(input));
   const allowed: readonly string[] = [...V13_WORLD_KEYS, 'contract', 'contractOffer'];
   for (const k of Object.keys(x))
     if (!allowed.includes(k)) throw new Error(`foldBackToV13: unbekannter Schlüssel ${k}`);
@@ -382,7 +395,7 @@ function assertUntouchedC(x: Record<string, unknown>, c: Record<string, unknown>
  * `V12_ISLAND_KEYS` entfallen auf den Inseln 0 bis 2 ohne Umordnen.
  */
 export function foldBackToV12(input: Record<string, unknown>): Record<string, unknown> {
-  const f = foldBackFarOrders(input);
+  const f = foldBackFarOrders(dropCouncil(input));
   const x = (f.version as number) >= 14 ? dropContractFields(f) : f;
   const worldKeys: readonly string[] = V12_WORLD_KEYS;
   for (const k of Object.keys(x))
@@ -412,7 +425,7 @@ function dropIslandC(x: Record<string, unknown>): Record<string, unknown> {
  * Umordnen, `monument`/`monumentDone` müssen neutral sein; `version 11`. Denkmal → Fehler im Test.
  */
 export function foldBackToV11(input: Record<string, unknown>): Record<string, unknown> {
-  const f = foldBackFarOrders(input);
+  const f = foldBackFarOrders(dropCouncil(input));
   const v13 = (f.version as number) >= 14 ? dropContractFields(f) : f;
   const v12 = v13.version === 13 ? dropIslandC(v13) : v13;
   if (v12.monument !== null || v12.monumentDone !== false) throw new Error(MONUMENT_FOLD_ERROR);
