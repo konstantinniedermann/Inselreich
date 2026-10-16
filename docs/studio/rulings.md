@@ -7717,3 +7717,19 @@ unabhängigem Erwartungswert, tote Klausel in `src/sim/save.ts` ≈ 882 entferne
 Regelbezug: R475, R667, E-043, CLAUDE.md «Trivial-Fixes» · Kosten bei Irrtum: ein Timeout, der einen echten Leistungsrückgang verdeckt (Zeitmessung vorher/nachher im Bericht).
 
 Entscheider: L0 · Anlass: Bericht lead-production REL-23-NACH · ADR: —
+
+## R670 · 2026-10-16 · Design I-091/I-094: I-094 verworfen (Kenntnis an Nutzer), I-091 als V-A «Kulanz»; Gate Spec
+
+Ruling: `design/i091-i094` @ `9e72f923` (Rechnung `design-economy-designer`). (1) **I-094 Darlehen verworfen** in dieser Form: kein Fenster
+echter Wahl (vor U6 Pflichtzug, Schwelle r = 0,04 gegen 0,42 beim Bürger-Aufstieg; Aufschlag 20 % → +3277, 30 % → −27 761, nicht vorhersehbar;
+ab U6 wirkungslos; Geldüberschuss im Spätspiel unverändert). Da der Nutzer I-094 ausdrücklich anstossen liess (R663), geht der Entscheid als
+Kenntnis N-101 in die Warteschlange; ohne Antwort gilt das Verwerfen, Archiv nach `docs/ideen-archiv.md` mit dem nächsten I-091-Schritt.
+(2) **I-091 als V-A «Kulanz»**: nach 5 pünktlichen Lieferungen verzeiht der Kunde einen Fehlbestand einmal, ohne Geldfluss (19 AK); V-B
+(Wertbonus 108 %) verworfen, weil er die I-047-Grenze L6 (b) reisst (3,17 % > 3 %). Spielerwirkung nach E-3 berichtigt. Save-Feld
+`contract.deliveries`, Nummer im Gate Plan (R663). (3) Gate Spec durch lead-qa jetzt; Plan danach durch lead-tech (opus, Save-Änderung =
+Prozessstufe voll), Umsetzung seriell **nach UI-HAEPPCHEN-E**, weil beide `src/ui/order.ts` berühren. (4) Befunde Controller-Ensemble und
+`runColony`-Abbruch beim Sieg stehen in `docs/beobachtungen.md`.
+
+Regelbezug: Verfassung §5, gates.md Gate Spec, R663, I-047 L6 · Kosten bei Irrtum: eine verworfene Idee, die der Nutzer doch will (Spec liegt vor, Wiederaufnahme ohne Neuarbeit).
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-091-I-094 · ADR: —
