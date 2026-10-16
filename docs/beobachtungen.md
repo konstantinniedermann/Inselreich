@@ -387,3 +387,24 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Das Krisen-Select klebt direkt am Wort «Freischaltung:»; rein kosmetisch.
 - Ursprung: Playtest UI-AUFRAEUM-4
 - Erste Einschätzung: niedrig; Abstand per CSS bei nächster Menü-Arbeit.
+
+## 2026-10-16 · TOOL-BUENDEL-14: H-1 sieben Tests über 40 % ihres Timeouts
+
+- Fundort: `tests/` (decorSea, decorStamps, trees-wald, islands-c), `make zeitreserve`
+- Beobachtung: 7 Tests mit bereits vorhandenem Timeout bleiben über 40 %; `make zeitreserve` lief unter Last nicht.
+- Ursprung: Gate-Handoff lead-qa gate-TOOL-BUENDEL-14 (H-1), R718
+- Erste Einschätzung: niedrig; Nachmessung beim nächsten `push-check`.
+
+## 2026-10-16 · TOOL-BUENDEL-14: H-2 alte `load_abort`-Ereignisse in events.jsonl
+
+- Fundort: `.studio/events.jsonl`
+- Beobachtung: Durch den nicht isolierten `testlock`-Test vervielfachte `load_abort`-Ereignisse sind nicht bereinigt (nur Kennzahlen-Rauschen).
+- Ursprung: Gate-Handoff lead-qa gate-TOOL-BUENDEL-14 (H-2), R718
+- Erste Einschätzung: niedrig; Bereinigung bei der nächsten Aufräum-Runde (HAUSHALT).
+
+## 2026-10-16 · TOOL-BUENDEL-14: H-3 Wettlauf-Test mit schwacher Obergrenze
+
+- Fundort: `testlock`-Wettlauf-Test in `tools/studio/tests/`
+- Beobachtung: Der Wettlauf-Test prüft 1..2 Ereignisse je Runde (schwache Obergrenze), die Einzeltests prüfen genau 1.
+- Ursprung: Gate-Handoff lead-qa gate-TOOL-BUENDEL-14 (H-3), R718
+- Erste Einschätzung: niedrig; bei nächster Berührung der Datei verschärfen.
