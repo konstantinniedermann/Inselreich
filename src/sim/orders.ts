@@ -115,7 +115,7 @@ function breakReason(world: World, c: Contract): ContractBreakReason | null {
   return null;
 }
 
-/** Vertrag am Periodenbeginn abrechnen (R6/R7): liefern oder brechen, zählt Lieferungen (I-091 R-T1). Liest nur Lager und Geld. */
+/** Vertrag am Periodenbeginn abrechnen (R6/R7): liefern, verzeihen (Kulanz, R-T3) oder brechen, zählt Lieferungen (I-091 R-T1). Liest nur Lager und Geld. */
 function settleContract(world: World, c: Contract): ContractEvent {
   const reason = breakReason(world, c);
   if (reason === null) {
@@ -134,6 +134,10 @@ function settleContract(world: World, c: Contract): ContractEvent {
       becameLoyal: before < CONTRACT_LOYAL_AFTER && c.deliveries >= CONTRACT_LOYAL_AFTER,
     };
   }
+  if ((reason === 'stock' || reason === 'kontor') && c.deliveries >= CONTRACT_LOYAL_AFTER) {
+    c.deliveries = 0;
+    return { kind: 'excused', good: c.good, reason, island: c.island };
+  }
   const penalty = contractPenalty(c);
   world.money -= penalty;
   world.contract = null;
@@ -142,7 +146,7 @@ function settleContract(world: World, c: Contract): ContractEvent {
 
 /**
  * Lässt einen abgelaufenen Auftrag samt Fernangebot verfallen; am Periodenbeginn verfällt das Angebot, ein
- * Vertrag wird abgerechnet (Lieferung: weder Zufalls- noch Fernangebot); sonst werden Zufallsauftrag und
+ * Vertrag wird abgerechnet (Lieferung oder Kulanz: weder Zufalls- noch Fernangebot); sonst werden Zufallsauftrag und
  * Fernangebot angeboten, ausser eine Fernsperre (`farSkip`) gilt für diese Periode (sie wird verbraucht).
  */
 export function tickOrders(world: World): ContractEvent | null {
@@ -157,7 +161,7 @@ export function tickOrders(world: World): ContractEvent | null {
   const skip = world.farSkip === k;
   if (world.farSkip !== null) world.farSkip = null;
   const ev = world.contract === null ? null : settleContract(world, world.contract);
-  if (ev?.kind === 'delivered') return ev;
+  if (ev?.kind === 'delivered' || ev?.kind === 'excused') return ev;
   if (world.order === null && !skip) {
     offerRandomOrder(world, k);
     offerFarOrder(world, k);

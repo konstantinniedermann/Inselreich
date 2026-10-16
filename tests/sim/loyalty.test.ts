@@ -19,6 +19,8 @@ import { houseNearKontor, setHouse } from './helpers';
 import { foundKontor2Literal } from './seaHelpers';
 import type { Tier, World } from '../../src/sim/types';
 
+declare const process: { env: Record<string, string | undefined> };
+
 const N = CONTRACT_LOYAL_AFTER;
 const periodStart = (k: number): number => ORDER_FIRST_TICK + k * ORDER_PERIOD;
 
@@ -291,14 +293,13 @@ describe('Kulanz', () => {
     const json = serialize(w);
     expect(deserialize(json).ok).toBe(true);
     const copy = load(w);
-    let kinds: string[] = [];
+    const kinds: string[] = [];
     while (copy.tick < periodStart(3)) {
       const c = step(copy).contract;
       if (c) kinds.push(c.kind);
     }
     expect(kinds).toEqual(['excused']);
     expect(copy.money).toBe(5000);
-    kinds = [];
     const dir = process.env.SCENARIO_OUT!;
     mkdirSync(dir, { recursive: true });
     writeFileSync(`${dir}/i091-kulanz.json`, json);
