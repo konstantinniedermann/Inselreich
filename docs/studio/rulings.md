@@ -1291,3 +1291,17 @@ Ruling: `feat/ui-haeppchen-f` @ `f4da449e` (Handoff `.studio/handoffs/2026-10-16
 Regelbezug: gates.md Gate Merge, R673, R679, R688, R690, R69 · Kosten bei Irrtum: ein Release mit einer Kopfzeilen-Anzeige, die nachgebessert wird.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-UI-HAEPPCHEN-F · ADR: —
+
+## R692 · 2026-10-16 · Gate Ideen-Runde IDEEN-11: Priorisierung; Kurzdesigns erst in der Folgesession
+
+Ruling: `docs/ideen-11` @ `cd76401e` (I-110–I-121, Handoff `.studio/handoffs/2026-10-16-lead-design-IDEEN-11.md`) → angenommen, Merge durch lead-production
+nach dem F-/BEOB-16-Merge. Priorisierung L0 nach Nutzen/Aufwand: (1) **I-114 Fernangebot zur Wahl** (S, baut direkt auf Handel 2 auf) und (2) **I-120 +
+I-118** «Wohlstandsklang und Aufstiegs-Funkeln» (S, ohne Risiko, Audio/Render) → Kurzdesign Stufe leicht in der Folgesession; (3) **I-112 Ratsbeschluss je
+Stufe** (M, Save, neue Werte) → Kurzdesign Stufe voll danach. Pool: I-110 (Werte neu rechnen), I-119 + I-121 als ein Paket; I-111 als Baustein fürs nächste
+Meilenstein-Brainstorming. Geparkt: I-115 (Erweiterung 1), I-117 (bis K3 geklärt), I-116 (bis I-114 live). Verworfen: I-113 (Geldsenke ohne Wahl).
+Pool-Pflege (I-092 live, I-101/I-104/I-105/I-107 Status, Ranglisten IDEEN-09/-10 ins Archiv, I-094 «verworfen» angleichen) macht lead-production beim Merge
+(R599). Limit-Ampel gelb: keine Kurzdesigns jetzt (R691).
+
+Regelbezug: gates.md Gate Ideen-Runde, R445, R599, R691 · Kosten bei Irrtum: ein Kurzdesign in anderer Reihenfolge.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-11 · ADR: —
