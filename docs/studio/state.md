@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-16 (Studio-Session, R688–R701; REL-24+REL-25 live `8fe744df` (R697, CI 38887719217, Pages 38888562306); Sammelmerge TOOL-E070, IDEEN-11, ORT-A-Spec; Save v16)
+Stand: 2026-10-16 (Studio-Session 66d37b15, R688–R707; REL-24+REL-25 live `8fe744df` (R697, CI 38887719217, Pages 38888562306); Sammelmerge TOOL-E070, IDEEN-11, ORT-A-Spec; Save v16)
 
 ## Release-Notizen
 
@@ -138,22 +138,20 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen (Dashboard-Karte siehe Punkt 3). Daueraufträge: R445, R475. **Neues Claude-Gespräch** (Nutzer startet es).
-Ein Push je Session (R335); «push-bereit» = `make push-check`-Schwelle. Last durch macOS-Prozesse (Load bis 22) hat `make check`
-mehrfach blockiert — Testlock bricht ab, nicht warten.
+Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475; R698 (Nutzer: «spawnen, solange Kapazität da ist», Deckel 6, bei Last > 8 Plätze
+freihalten, R703). **Neues Claude-Gespräch** (Nutzer startet es). Ein Push je Session (R335); L0 committet während eines `make push-check`
+nicht auf main (R697).
 
-1. **Release-Check + Push REL-23** (Notiz oben): lead-qa Release-Check am aktuellen main, `make push-check` per geprüftem Hash, Push, CI,
-   `gh workflow run Pages --ref main`; `releases.json` im selben Commit pflegen.
-2. **UI-HAEPPCHEN-D** «Ereignis-Log vollständig» (Kurzdesign `ce2f3689`): Plan + kombiniertes Gate; danach **I-109** (Kurzdesign
-   `design/i109` @ `7e25d7cf`, R654) und **I-102** (R653); lead-tech prüft Bündelung.
-3. **Retro-Entscheide R659:** zuerst Paket TOOL-METRIK-ZEITRAUM (E-069, Zeitraum an Flake/Steuerung, Cache-Write Erstladung/Wachstum);
-   E-068 (ein Reviewer je Paket Stufe leicht) startet, sobald E-063 oder E-064 endet; Messauftrag Briefing-Verbot (b) und `wait_guard`-Blocks.
-4. **Erweiterung 1** «Stände und Segel» bleibt in der Nutzer-Session (R519); Save v16 für E1, da v15 an Handel 2 ging (R638).
-5. **Dashboard-Karte «Versionen und Releases»**: Pflegeregel: lead-production pflegt `docs/studio/releases.json` bei jedem Release-Wechsel
-   (Merge: `stage`/`state`; Release-Check: `gate`; Push: `status: live`, `hash`, `date`; Pool → Release beim Einplanen; fertige Releases →
-   `pastSummary`) im selben Commit wie state.md. **`goalStage` je Session setzen** (ganze Zahl 1 bis 5, R648); Ziel erreicht = Zielstufe
-   abgeschlossen (`stage > goalStage` oder `stage == goalStage` mit `state: done`, R656). Ungültige Werte werden als Warnung angezeigt.
-6. `docs/ideen.md`: Status I-093/I-095 («Gate Brainstorming offen») veraltet → lead-design.
+1. **UI-AUFRAEUM-4** (R694, Budget 8, `feat/ui-aufraeum-4` in `.worktrees/ui-aufraeum-4`): Stand aus dem Handoff
+   `.studio/handoffs/2026-10-16-lead-tech-UI-AUFRAEUM-4.md` lesen, fortsetzen bis Gate Merge (lead-qa), Merge.
+2. **I-114** «Fernangebot zur Wahl» (R699/R701/R703, `feat/i114` @ `5cef8359`, T01 fertig): nach Merge UI-AUFRAEUM-4 T02–T04, dann Gate Merge.
+3. **REL-26** (lokal: I-120 + I-118 gemergt R707; dazu UI-AUFRAEUM-4, I-114): Release-Check + Push, sobald 1 und 2 gemergt.
+4. **ORT-A «Wege und Kanten»** (Plan-Gate R705, Budget 57, Parallelität 2): Umsetzung starten (`plan/ort-a` @ `39d3cdd1`), Controller meldet
+   nach T09 (Patch-Zeit) an L0. Messungen nur bei Last ≤ 4; N-102 (Fremd-Chrome) offen → Vermerk «Messfenster belegt».
+5. **I-112 «Ratsbeschluss»** (Kurzdesign V3 R706, `design/i112` @ `37bfbe29`): Plan (lead-tech opus) mit Testbarkeits-Check lead-qa; Save main + 1.
+6. **Erweiterung 1** «Stände und Segel» bleibt in der Nutzer-Session (R519); Save-Nummer = main + 1 beim Merge (R674, main jetzt v16).
+7. Merge der Kurzdesign-/Plan-Branches `design/i114`, `design/i120-i118`, `design/i112`, `plan/*` mit dem jeweiligen Paket-Merge.
+8. Retro 66d37b15 (studio-coach) auswerten, falls ihr Bericht erst nach Session-Ende kam (`docs/studio/retros/2026-10-16-session-66d37b15-ende.md`).
 
 ## Aktuelles Projekt und Phase
 
@@ -178,7 +176,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-Nichts (Session-Ende dbac5fc4).
+- UI-AUFRAEUM-4 (lead-tech, R698): lief bei Session-Ende noch; Fortsetzung siehe oben Punkt 1.
 
 ## Parallele Sessions
 
@@ -187,9 +185,11 @@ Nichts (Session-Ende dbac5fc4).
 
 ## Seit letzter Session erledigt
 
-- **Live:** REL-22 «Aufgeräumt und nichts verpasst» (R651, Push `ca46eb73..fb1e5e46`, CI 38571578702, Pages 38571610399).
-- **Lokal gemergt (Gate OK):** HANDEL-2 (R658, `6faa189e`, Save v15), TOOL-LINT-DASH, TOOL-GUARD-WARTEAGENT, TOOL-DASH-SESSIONZIEL +
-  ZIEL-FIX, IDEEN-10; Kurzdesign I-109 (`design/i109` @ `7e25d7cf`, R654).
+- **Live:** REL-24 «Ereignis-Log vollständig» + REL-25 (I-091 Kulanz, UI-HAEPPCHEN-F), Push `2e7a269f..8fe744df` (R697), Save v16.
+- **Lokal gemergt:** I-120 Wohlstandsklang + I-118 Aufstiegs-Funkeln (R707), TOOL-E070, TOOL-BUENDEL-13 (Timeouts, `guard_block`), BEOB-16,
+  IDEEN-11, Ortsrand-Brainstorming + ORT-A-Spec.
+- **Gates:** Plan UI-AUFRAEUM-4 (R694), Kurzdesign + Plan I-114 (R699/R701), Kurzdesign + Plan I-120/I-118 (R700/R702), Spec + Plan ORT-A
+  (R696/R705), Kurzdesign I-112 (R706). E-064 behalten, E-068 laufend (R693).
 
 ## Pausierte Pakete
 
@@ -209,5 +209,5 @@ Offen: keine Freigaben (Restbudgets verfallen mit Session-Ende).
 
 ## Offene Entscheide
 
-- Nutzer: N-99 (Kenntnis R434), ohne Antwort gilt R434. N-100 erledigt.
-- L0: keine offenen (Retro dbac5fc4 entschieden, R659).
+- Nutzer: N-99 (Kenntnis R434), N-102 (Headless-Chrome des Projekts reflexionsinstrument beenden?).
+- L0: keine offenen.
