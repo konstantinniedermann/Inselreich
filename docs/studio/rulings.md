@@ -7849,3 +7849,15 @@ vor F (F T07 Doku wartet auf I-091; F holt main per Merge vor seinem Gate).
 Regelbezug: gates.md Gate Plan, R380, R424, R675, R678 · Kosten bei Irrtum: eine leere Bilanzzeile nach Routenwechsel in der Pause.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-UI-HAEPPCHEN-F · ADR: —
+
+## R680 · 2026-10-16 · Gate Merge UI-HAEPPCHEN-E (I-097 + I-102): OK; danach I-091 und UI-HAEPPCHEN-F
+
+Ruling: `feat/ui-haeppchen-e` @ `af4815b3` (Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-UI-HAEPPCHEN-E.md`): Final-Review opus als frischer Start
+belegt (R673), Auflagen R668 (1)–(3) belegt, `src/sim`-Diff nur `previewOrder` (lesend), `SAVE_VERSION` 15, `make check` und `make zeitreserve-gate`
+Exit 0, Merge konfliktfrei, Ideen-Konfliktauflösung ohne Verlust → **Gate Merge OK**. Zusatzaufruf `applyPauseOverlay` in `setSpeed` (Abweichung von
+O-2) angenommen. lead-production merged `--no-ff` (lokal), releases.json REL-24 (UI-HAEPPCHEN-E gemergt). Danach starten I-091 (R675, 18 Starts) und
+UI-HAEPPCHEN-F (R679, 21 Starts) als zwei Stränge.
+
+Regelbezug: gates.md Gate Merge, R668, R673, R675, R679 · Kosten bei Irrtum: ein Overlay, das bei Modal-Wechsel bis 170 ms später erscheint.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-UI-HAEPPCHEN-E · ADR: —
