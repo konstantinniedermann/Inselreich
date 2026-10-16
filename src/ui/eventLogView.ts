@@ -41,8 +41,8 @@ export function renderEventLog(box: HTMLElement, onExpand?: () => void): void {
 }
 
 /**
- * Schreibt die Log-Einträge in die Liste; nur bei Änderung. Ohne Einträge oder vor der ersten Krisenperiode
- * (`visible` false, Spec 11.10) ist die Box verborgen.
+ * Schreibt die Log-Einträge in die Liste; nur bei Änderung. Verborgen ohne Einträge oder wenn `visible` false ist
+ * (`eventLogVisible`: Krisen-Bedingung oder mindestens ein Eintrag).
  */
 export function updateEventLog(
   box: HTMLElement,

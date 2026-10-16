@@ -157,13 +157,7 @@ import { isEventLogExpanded, renderEventLog, updateEventLog } from './eventLogVi
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
 import { monumentEvents, monumentSnapshot } from './monumentView';
-import {
-  crisisLogEntries,
-  crisisLogVisible,
-  nextUnread,
-  pushLog,
-  type LogEntry,
-} from './crisisLog';
+import { crisisLogEntries, eventLogVisible, nextUnread, pushLog, type LogEntry } from './crisisLog';
 import { bindMessages, closeClosableToast, replaceMessage, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
@@ -928,7 +922,7 @@ function launch(
     updateEventLog(
       logBox,
       state.eventLog,
-      crisisLogVisible(world),
+      eventLogVisible(world, state.eventLog),
       (t) => {
         const r = resolveLogClick(t, world);
         centerOn(state.cam, r.tile.x + 0.5, r.tile.y + 0.5, clampView(), bounds);

@@ -9,6 +9,7 @@ import { MAP_SIGNS, mapSigns } from '../../src/ui/guide';
 import {
   crisisLogEntries,
   crisisLogVisible,
+  eventLogVisible,
   isNotable,
   LOG_MAX,
   logLine,
@@ -130,11 +131,11 @@ describe('pushLog (M6-AK-U2-01)', () => {
     expect(texts(pushLog([e(1)], [e(2), e(3)]))).toEqual(['e3', 'e2', 'e1']);
   });
 
-  it('der elfte Eintrag verdrängt den ältesten', () => {
+  it('der Eintrag über LOG_MAX verdrängt den ältesten', () => {
     let buf: LogEntry[] = [];
-    for (let i = 1; i <= 11; i++) buf = pushLog(buf, [e(i)]);
+    for (let i = 1; i <= LOG_MAX + 1; i++) buf = pushLog(buf, [e(i)]);
     expect(buf).toHaveLength(LOG_MAX);
-    expect(buf[0]!.text).toBe('e11');
+    expect(buf[0]!.text).toBe(`e${LOG_MAX + 1}`);
     expect(buf[buf.length - 1]!.text).toBe('e2');
   });
 
@@ -142,6 +143,44 @@ describe('pushLog (M6-AK-U2-01)', () => {
     const buf = [e(1)];
     pushLog(buf, [e(2)]);
     expect(buf).toHaveLength(1);
+  });
+});
+
+describe('LOG_MAX 20 (AK-UD-06)', () => {
+  const e = (n: number, toast: LogEntry['toast'] = null): LogEntry => ({
+    text: `e${n}`,
+    toast,
+    tick: n,
+  });
+
+  it('Puffer hält höchstens 20 Einträge', () => {
+    expect(LOG_MAX).toBe(20);
+    let buf: LogEntry[] = [];
+    for (let i = 1; i <= 25; i++) buf = pushLog(buf, [e(i)]);
+    expect(buf).toHaveLength(LOG_MAX);
+    expect(buf).toHaveLength(20);
+  });
+
+  it('12 stille Einträge verdrängen eine vorherige Krise nicht', () => {
+    let buf = pushLog([], [e(0, 'warn')]);
+    for (let i = 1; i <= 12; i++) buf = pushLog(buf, [e(i)]);
+    expect(buf.some((x) => x.toast === 'warn')).toBe(true);
+  });
+});
+
+describe('eventLogVisible (AK-UD-01)', () => {
+  const entry: LogEntry = { text: 'x', toast: null, tick: 1 };
+  it('Krisen an, ab erster Periode, leer: true', () => {
+    expect(eventLogVisible({ crisisLevel: 'normal', tick: CRISIS_FIRST_TICK }, [])).toBe(true);
+  });
+  it('Krisen aus, leer: false', () => {
+    expect(eventLogVisible({ crisisLevel: 'off', tick: 9000 }, [])).toBe(false);
+  });
+  it('Krisen aus, ein Eintrag: true', () => {
+    expect(eventLogVisible({ crisisLevel: 'off', tick: 9000 }, [entry])).toBe(true);
+  });
+  it('Krisen an, vor erster Periode, leer: false', () => {
+    expect(eventLogVisible({ crisisLevel: 'normal', tick: CRISIS_FIRST_TICK - 1 }, [])).toBe(false);
   });
 });
 
