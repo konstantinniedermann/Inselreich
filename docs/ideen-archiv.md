@@ -1022,3 +1022,127 @@ Keine Idee ändert Kernsäule, Genre oder Titel (§5.3). Erweiterung 1 berühren
 - Nutzen/Aufwand: Komfort für Handelsrouten, Wahl Lager gegen Kasse · M · ≈ 2 Pakete
 - Entscheid: geparkt (R692): bis K3 (Erweiterung 1) geklärt
 - Archiviert IDEEN-12: geparkt mit R692 bis K3 (Erweiterung 1) geklärt, Statuspflege nach R599
+
+### I-124 · geparkt (R737) · Fernmarke anklicken
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-12 Scout A; `docs/beobachtungen.md` «UI-HAEPPCHEN-F: Fernmarke über Wasser ohne Hover/Klick» (abgehakt, Trigger: Playtest vermisst den Klick); `.studio/qa/playtest-i047/report.md` Schritt 6d (Fernauftrag braucht Inselwechsel und zwei Panelwechsel) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler klickt auf die Münzmarke «15 Rum · 1:20» an der Felsbucht und landet am Kontor dieser Insel, statt die Insel über das Menü zu wechseln."
+- Mechanik: Die Marke bekommt einen Mausfang über das UI-Picking (`src/render/` schreibt weiter nicht in die Welt); Klick wechselt auf die Fern-Insel und zentriert das Kontor, Hover nennt Gut, Menge und Restzeit.
+- Grösse: M · Risiko: Perf gering (Treffertest je Mausbewegung); Dateikonflikt mit ORT-A in `src/render/`
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 2 · Risiko 2 = 8
+- Randfälle: Marke verdeckt Schiff oder Kontor-Marke; Klick in der Pause; Angebot (hohl) und Auftrag (gefüllt) springen gleich.
+- Doppelung: I-101 (live) ist die Marke «ohne Mausfang» per Spec; die Beobachtung ist abgehakt mit Playtest-Trigger, der nicht eingetreten ist (der I-047-Playtest bemängelt Panelwechsel, nicht die Marke).
+- Bewertung lead-design: Komfort ohne Entscheidung, M wegen Picking und ORT-A-Konflikt; der Beleg ist indirekt. Empfehlung parken bis Playtest-Trigger und ORT-A gemergt.
+- Nutzen/Aufwand: ein Klick weniger zum Fernkontor · M · ≈ 1–2 Pakete
+- Entscheid: geparkt (R737): bis Playtest-Trigger und ORT-A-Merge
+- Archiviert IDEEN-12: geparkt mit R737, Statuspflege nach R599
+
+### I-125 · verworfen (R737) · Ereignis-Log überlebt Speichern und Laden
+
+- Bereich: Technik · Säule: Bedienung · Quelle: IDEEN-12 Scout A; `docs/beobachtungen.md` «10-14 · Auftragsereignisse fehlen im Log» (Rest abgehakt: Log wird nicht gespeichert, Trigger: Spieler vermisst den Verlauf nach dem Laden) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler lädt seinen Stand und sieht im Log noch, welches Angebot verfiel und welcher Stammkunde absprang."
+- Mechanik: Die letzten 20 Log-Einträge (Text, Tick, Ziel) werden mitgespeichert; geladene Einträge zählen nicht als «neu» (I-100).
+- Grösse: S · Risiko: Save (Version heben, Test fürs Abweisen) und Architektur: das Log ist bewusst UI-Zustand, «kein Teil des Spielstands» (`crisisLog.ts`, Kurzdesign I-100 §5)
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 2 = 9
+- Randfälle: Ziel eines Eintrags inzwischen abgerissen (Sprung abfangen); Inselwechsel; alter Stand ohne Feld.
+- Doppelung: I-100 (live) Zähler, I-106 Neu-Karte; keine Idee speichert das Log.
+- Bewertung lead-design: Spass 2 → 1 und Passung 3 → 2: kein Spielermoment ausser nach dem Laden, und der Trigger ist nicht eingetreten; UI-Zustand im Weltzustand widerspricht der Trennung aus I-100. Empfehlung verwerfen; bei Spieler-Trigger als `localStorage`-Nebenablage neben dem Save neu einreichen.
+- Nutzen/Aufwand: Verlauf nach dem Laden · S · ≈ 60 Tools plus Save-Version
+- Entscheid: verworfen (R737)
+- Archiviert IDEEN-12: verworfen mit R737, Statuspflege nach R599
+
+### I-126 · verworfen (R737) · Nebenauftrag neben dem Stammkunden
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-12 Scout A; `.studio/qa/playtest-i047/report.md` Messwerte Punkt 6 («Stammkunde verdrängt Zufallsaufträge systembedingt: 5,5 min, 0 Aufträge, 0 Klicks») · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler hat mit laufendem Stammkunden ab und zu einen kleinen Zufallsauftrag in einem zweiten Platz."
+- Mechanik: Während eines Vertrags alle 270 s ein Zufallsauftrag mit halber Menge in einem kleineren zweiten Kartenplatz; Werte in `src/sim/defs/`.
+- Grösse: M · Risiko: Save (zweiter Auftrag), Baseline und Balancing (Geldzufluss)
+- Raster (Scout): Spass 3 · Passung 2 · Aufwand 2 · Risiko 1 = 11 · Raster (lead-design): Spass 1 · Passung 1 · Aufwand 2 · Risiko 1 = 6
+- Randfälle: Vertrag endet während des Nebenauftrags; Lager reicht nur für einen; Kartenstapel oben rechts bei 1280 px.
+- Doppelung: I-047 (live), Handel 2, I-114: der Vertrag belegt den Auftragsplatz absichtlich (`src/sim/orders.ts:107`, kein Fernangebot bei Vertrag).
+- Bewertung lead-design: Der Verzicht auf Zufallsaufträge ist der Preis des Stammkunden, also die Hälfte seiner Wahl (planbare Abnahme gegen gelegentliche Prämien). Ein Nebenauftrag nimmt diesen Preis weg, der Vertrag würde dominant. Die Ruhe in der Messung ist Absicht, kein Fehler. Empfehlung verwerfen.
+- Nutzen/Aufwand: mehr Ereignisse, aber Stammkunde ohne Preis · M · ≈ 2 Pakete
+- Entscheid: verworfen (R737)
+- Archiviert IDEEN-12: verworfen mit R737, Statuspflege nach R599
+
+### I-127 · verworfen (R737) · Marktplatz-Ausbau mit zwei Zweigen (Weite oder Marktgebühr)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-12 Scout B; Genre-Mechanik Marktplatz mit Ausbaustufe; `src/sim/defs/buildings.ts` (`market`: nur `supplyRadius: 8`, kein Ausbau) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler baut jeden Marktplatz einmalig entweder auf «Weite» (Radius 8 → 11, Unterhalt 25) oder auf «Marktgebühr» (Steuer der versorgten Häuser +10 %, Unterhalt 40) aus."
+- Mechanik: Ausbau 250 Geld und 6 Stein, Zweig nicht umkehrbar; Gebühr zählt je Haus nur einmal. Werte in `src/sim/defs/buildings.ts`.
+- Grösse: S–M · Risiko: Save (Zweig je Marktplatz); Baseline bitgleich (Controller baut nicht aus)
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 2 · Risiko 2 = 8
+- Randfälle: überlappende Märkte (Gebühr einmal); Abriss nimmt die Wahl mit; Haus ohne erfüllte Bedürfnisse.
+- Doppelung: I-061 (Reichweite über Wege) ändert die Ermittlung; I-112 (in Umsetzung) hat den Markt-Radius als Hebel geprüft und verworfen.
+- Bewertung lead-design: «Weite» ist eine tote Option: Die Rechnung zu I-112 (`docs/superpowers/specs/2026-10-16-i112-ratsbeschluss.md` auf `feat/i112`, «Marktplatz-Radius 8→10 verworfen») zeigt, dass ein zweiter Markt (420 Geld, Unterhalt 10) billiger ist als jede Radius-Erweiterung; Ersparnis 0. Bleibt nur «Gebühr» als reine Geldquelle in einem Spiel mit Geldüberschuss. Empfehlung verwerfen.
+- Nutzen/Aufwand: keine echte Wahl · S–M · ≈ 1 Paket
+- Entscheid: verworfen (R737)
+- Archiviert IDEEN-12: verworfen mit R737, Statuspflege nach R599
+
+### I-129 · verworfen (R737) · Mindestbestand (Zukauf am Kontor auf Dauer)
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-12 Scout B; Genre-Mechanik Zielbestand je Ware; `docs/spielwerte.md` Sperrbestand (begrenzt nur den Abfluss) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler stellt je Gut 0, 10, 20 oder 40 als Mindestbestand ein, und das Kontor kauft bei Unterschreitung selbst nach."
+- Mechanik: bis 1 Stück je Sekunde zum Kaufpreis (Edikt Handel −20 %), Puffer 500 Geld, sonst Pause mit Meldung.
+- Grösse: S–M · Risiko: Save (Wert je Insel und Gut); Baseline bitgleich bei 0
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12 · Raster (lead-design): Spass 1 · Passung 1 · Aufwand 3 · Risiko 2 = 8 (K.O. Passung)
+- Randfälle: Geldmangel; eigener Betrieb mit Überschuss; Deckel 40 unter Lagergrenze 100.
+- Doppelung: I-049 Sperrbestand (live) hält zurück; I-048 Zukauf-Aufschlag (geparkt); Denkmal-Schalter «zukaufen» (live) ist der einzige Dauer-Zukauf und bewusst auf das Wahlziel begrenzt.
+- Bewertung lead-design: **schwächt die Säule Produktionsketten**: Bei festen, unbegrenzten Kaufpreisen und einer Spätphasen-Bilanz von Tausenden je Minute (R722, Erweiterung 1 §1) ersetzt ein Dauer-Zukauf jede Kette, die der Spieler nicht bauen mag; was heute mühsame Handarbeit ist, wird eine Einstellung. Empfehlung verwerfen; wiederaufnehmbar erst mit `BUY_RISE` > 0 (I-048 Schritt A).
+- Nutzen/Aufwand: Komfort, aber Ketten werden optional · S–M · ≈ 1 Paket
+- Entscheid: verworfen (R737)
+- Archiviert IDEEN-12: verworfen mit R737, Statuspflege nach R599
+
+### I-130 · geparkt (R737) · Inselpreisgefälle beim Einkauf
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-12 Scout B; Genre-Mechanik Einkaufspreise je Insel; `docs/spielwerte.md` «Preise sind global» (nur Verkauf ×1,30 beim Vorliebe-Gut, I-092) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler holt Stoff mit dem Schiff von der Insel, die ihn 15 % billiger verkauft, statt ihn daheim herzustellen."
+- Mechanik: Je Fremdinsel ein «Überschuss-Gut» mit Kaufpreis −15 % (Wert je Insel in `src/sim/defs/`), anderes Gut als das Vorliebe-Gut; Stapel mit Edikt Handel höchstens −35 %.
+- Grösse: M · Risiko: Save vermutlich keins (aus Defs abgeleitet); Baseline bitgleich
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 2 · Risiko 2 = 8
+- Randfälle: Kontor abgerissen; Stapel mit Edikt; Regel «Zukauf lohnt für Aufträge nie».
+- Doppelung: I-092 (live, Verkaufsseite), I-006 (geparkt, Zufalls-Angebot), I-048 (geparkt), I-115 (geparkt, Sättigung je Kontor, Erweiterung 1).
+- Bewertung lead-design: Ein Rabatt auf den Zukauf trägt nur, wenn Geld knapp ist; das ist er laut R722 nach Minute 15 nicht mehr. Gleiche Bedingung wie I-110 und I-048: erst mit `BUY_RISE` > 0 wird der Einkaufsort eine Frage. Empfehlung parken bis `BUY_RISE` > 0.
+- Nutzen/Aufwand: Seefahrt mit Einkaufszweck, heute ohne Wirkung · M · ≈ 1–2 Pakete
+- Entscheid: geparkt (R737): bis `BUY_RISE` > 0
+- Archiviert IDEEN-12: geparkt mit R737, Statuspflege nach R599
+
+### I-131 · geparkt (R737) · Amtsstube-Ausbau (zweiter Edikt-Platz)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-12 Scout B; Genre-Mechanik Rathaus-Ausbau; `docs/spielwerte.md` «Edikte» (ein Edikt zur Zeit, im späten Spiel Feinsteuerung von wenigen Prozent) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler baut die Amtsstube für 1500 Geld und 20 Stein aus und kombiniert Sparen mit Wohlfahrt."
+- Mechanik: zweiter Platz, Erlass 1200 statt 600, Unterhalt +40, Sperrzeit je Platz; Stapelregel bleibt, Steuerabzüge addieren sich.
+- Grösse: S–M · Risiko: Save (zweiter Platz), Balancing-Test
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 2 · Risiko 2 = 8
+- Randfälle: Brand oder Abriss lässt beide ruhen; zwei gleiche Edikte verboten; Kombination Sparen + Handel dominiert vielleicht.
+- Doppelung: I-064 Edikt «Bauherr» (geparkt), I-031 (live), I-112 (in Umsetzung; Steuer hoch schwächt Zweig A, Anhang §5).
+- Bewertung lead-design: Bei drei Edikten heisst «zwei Plätze» nur noch «welches lasse ich weg»; der Ausbau ist im Spätspiel ein Pflichtkauf ohne Preis. Gehört zu einer Edikt-Überarbeitung (mit I-064 und der Wechselwirkung I-112). Empfehlung parken bis I-112 live und Edikt-Überarbeitung.
+- Nutzen/Aufwand: wenig neue Wahl · S–M · ≈ 1 Paket
+- Entscheid: geparkt (R737): bis I-112 live
+- Archiviert IDEEN-12: geparkt mit R737, Statuspflege nach R599
+
+### I-134 · geparkt (R737) · Vermächtnis für die nächste Insel
+
+- Bereich: Inhalt · Säule: Insel besiedeln · Quelle: IDEEN-12 Scout C; Genre-Mechanik Mitnahme-Vorteil zwischen Partien · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler wählt nach dem Denkmal ein Vermächtnis wie «Wohnhaus kostet 5 Holz weniger» für die nächste Partie."
+- Mechanik: drei von acht Vermächtnissen zur Wahl (seeded RNG), höchstens drei aktiv; Ablage neben dem Spielstand im Browser-Speicher.
+- Grösse: M · Risiko: Save (neue Ablage ausserhalb der Welt), Balancing
+- Raster (Scout): Spass 3 · Passung 2 · Aufwand 2 · Risiko 1 = 11 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 2 · Risiko 1 = 7
+- Randfälle: Partie ohne Vermächtnis voll spielbar; Denkmal-Abriss und Neubau gibt keine zweite Wahl.
+- Doppelung: I-110 Startpaket (geparkt R722), I-069 Widmung (verworfen, Lohn am Denkmal).
+- Bewertung lead-design: Ein Vermächtnis ist ein Startbonus; die Messung zu I-110 (R722) zeigt, dass Startboni bei festen, unbegrenzten Kaufpreisen nur Restgeld ändern, keine Strategie. Die Frage «Lohn für die nächste Partie = Denkmal mit Lohn?» stellt sich damit erst später. Empfehlung parken mit I-110 bis `BUY_RISE` > 0.
+- Nutzen/Aufwand: Wiederspielwert, heute ohne strategische Wirkung · M · ≈ 2 Pakete
+- Entscheid: geparkt (R737): bis `BUY_RISE` > 0
+- Archiviert IDEEN-12: geparkt mit R737, Statuspflege nach R599
+
+### I-135 · verworfen (R737) · Feuerschale und Nachtglanz des Denkmals
+
+- Bereich: Grafik · Säule: Bevölkerung (Erfolg sichtbar) · Quelle: IDEEN-12 Scout C; `src/render/daynight.ts`, `MONUMENT_STAGES` · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht nachts die Feuerschale des fertigen Denkmals flackern."
+- Mechanik: Flamme und Lichtkreis bei Nacht, nur Render.
+- Grösse: S · Risiko: Render-Baseline, Perf gering
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12 · Raster (lead-design): —
+- Doppelung: **schon live**: `monumentNightLight` (`src/render/monumentSprite.ts:240`, Leuchtfeuer der Stufe 4 bei Nacht) und `drawMonumentBeacon` (`src/render/renderer.ts:1083`), dazu das Aufflammen der Feuerschale beim Abschluss (M13-E2 T08).
+- Bewertung lead-design: Doppelung mit dem Bestand. Empfehlung verwerfen.
+- Entscheid: verworfen (R737)
+- Archiviert IDEEN-12: verworfen mit R737, Statuspflege nach R599
