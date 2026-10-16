@@ -7693,3 +7693,15 @@ angenommen; Gate Plan durch lead-qa; Budgetantrag 16 Starts mit dem Gate.
 Regelbezug: gates.md Gate Push und R598 V1, R335, R585, R662, R666 · Kosten bei Irrtum: ein roter CI-Lauf wegen Timeout eines Fremdtests (Rerun oder Timeout-Fix nach E-043).
 
 Entscheider: L0 · Anlass: Berichte lead-qa REL23-PUSH, lead-tech plan-UI-HAEPPCHEN-E · ADR: —
+
+## R668 · 2026-10-16 · Gate Plan UI-HAEPPCHEN-E: OK mit 3 Auflagen; Umsetzung nach Merge UI-HAEPPCHEN-D, Budget 16 Starts
+
+Ruling: Urteil lead-qa (`.studio/handoffs/2026-10-16-lead-qa-gate-plan-UI-HAEPPCHEN-E.md`) übernommen: **OK mit Auflagen** in T05 — (1) Messweg
+der Overlay-Verzögerung: Tastendruck bis `hidden`-Wechsel, 5 Wiederholungen, Schwelle 200 ms, Ein-/Ausblenden getrennt; (2) alle Pausewege im
+Browser: Knopf, P, Leertaste, Tempo-Taste, Neustart und Laden aus dem Menü, jeweils ohne weitere Eingabe; (3) Auftragskarte nach angenommenem
+Fernauftrag und nach Fernlieferung (Sperrperiode) im Browser. Die Plan-Instanz setzt die Auflagen auf `plan/ui-haeppchen-e` um. Umsetzung
+Budget 16 Starts, Parallelität 1, startet nach Gate Merge und Merge von UI-HAEPPCHEN-D.
+
+Regelbezug: gates.md Gate Plan, R664, R665, R667 · Kosten bei Irrtum: ein Pauseweg ohne Overlay (Fix-Runde).
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-UI-HAEPPCHEN-E · ADR: —
