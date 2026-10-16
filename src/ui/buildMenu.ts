@@ -1,4 +1,5 @@
 import { HOME } from '../sim/world';
+import { councilCycle, serviceRadiusOf } from '../sim/council';
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { unprotectedFlammables } from '../sim/queries';
 import { UNLOCKS } from '../sim/defs/unlocks';
@@ -78,18 +79,22 @@ export function siteText(rule: SiteRule): string {
   }
 }
 
+/** Dienst-Reichweite über den Helfer; ohne Welt der Def-Wert (reine Tooltip-Aufrufe ohne Spielstand). */
+const serviceRadius = (world: World | undefined, defId: BuildingDefId): number | undefined =>
+  world === undefined ? BUILDING_DEFS[defId].serviceRadius : serviceRadiusOf(world, defId);
+
 /** „Ungeschützt: N brennbare Gebäude" (Feuerwache-Tooltip, live). */
 export function unprotectedLine(n: number): string {
   return `Ungeschützt: ${n} brennbare Gebäude`;
 }
 
 /** Krisen-Zeilen eines Gebäudetyps (M6 13.2): Brandschutz, „Brennbar", „sturmanfällig". */
-export function crisisTooltipLines(defId: BuildingDefId): string[] {
+export function crisisTooltipLines(defId: BuildingDefId, world?: World): string[] {
   const def = BUILDING_DEFS[defId];
   const lines: string[] = [];
   if (def.fireProtection === true) {
     lines.push(
-      `Schützt brennbare Gebäude im Radius ${def.serviceRadius ?? 0} vor Brand (muss angebunden sein)`,
+      `Schützt brennbare Gebäude im Radius ${serviceRadius(world, defId) ?? 0} vor Brand (muss angebunden sein)`,
     );
   }
   if (def.flammable === true) lines.push('Brennbar');
@@ -100,6 +105,32 @@ export function crisisTooltipLines(defId: BuildingDefId): string[] {
 /** U-6: Tooltip-Zeile des Denkmals; Gutnamen aus den Defs. */
 function monumentToolLine(): string {
   return `Wahlziel in drei Abschnitten: ${MONUMENT_GOODS.map((g) => GOODS[g].name).join(', ')}`;
+}
+
+/** Takt-Zeilen eines Gebäudes je Präfix («Erzeugt», «Ausstoss je Stufe», «Braucht»); folgt dem Ratsbeschluss, rechnet keine Bilanz. */
+export function cycleLines(defId: BuildingDefId, world?: World): Record<string, string> {
+  const def = BUILDING_DEFS[defId];
+  const out: Record<string, string> = {};
+  const cyc = (c: number): number => (world === undefined ? c : councilCycle(world, def.id, c));
+  if (def.produces && def.cycle) {
+    out['Erzeugt'] = `Erzeugt: ${GOODS[def.produces].name} ${perInterval(cyc(def.cycle))}`;
+    const lv = LEVELS[def.id];
+    if (lv) {
+      const rates = [def.cycle, lv[0].cycle, lv[1].cycle].map((c) => num(perMinute(1, cyc(c))));
+      out['Ausstoss je Stufe'] = `Ausstoss je Stufe: ${rates.join(' · ')} / min`;
+    }
+  }
+  if (def.consumes && def.cycle) {
+    const rate = perInterval(cyc(def.cycle));
+    out['Braucht'] = `Braucht: ${def.consumes.map((g) => `${GOODS[g].name} ${rate}`).join(' · ')}`;
+  }
+  return out;
+}
+
+/** «Radius: n»-Zeile (Dienst- oder Versorgungsradius), sonst null. */
+function radiusLine(world: World | undefined, defId: BuildingDefId): string | null {
+  const radius = serviceRadius(world, defId) ?? BUILDING_DEFS[defId].supplyRadius;
+  return radius === undefined ? null : `Radius: ${radius}`;
 }
 
 /** Tooltip-Zeilen ohne Sperrgrund (der kommt live dazu); alle Zahlen aus `src/sim/defs/`. Mit `world` kommt die Inselvorteil-Zeile der aktiven Insel dazu. */
@@ -135,24 +166,18 @@ export function tooltipLines(tool: Tool, world?: World, island: number = HOME): 
   ];
   if (world !== undefined) lines.push(cachedBalanceLine(world, def.id, island));
   if (def.id === 'townhall') lines.push('Steuer und Ausgabesperre einstellen');
-  if (def.produces && def.cycle) {
-    lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(def.cycle)}`);
+  const cycle = cycleLines(def.id, world);
+  if (cycle['Erzeugt'] !== undefined) {
+    lines.push(cycle['Erzeugt']);
     const advantage = world === undefined ? null : traitBuildLine(world, island, def.id);
     if (advantage !== null) lines.push(advantage);
-    const lv = LEVELS[def.id];
-    if (lv) {
-      const rates = [def.cycle, lv[0].cycle, lv[1].cycle].map((c) => num(perMinute(1, c)));
-      lines.push(`Ausstoss je Stufe: ${rates.join(' · ')} / min`);
-    }
+    if (cycle['Ausstoss je Stufe'] !== undefined) lines.push(cycle['Ausstoss je Stufe']);
   }
-  if (def.consumes && def.cycle) {
-    const rate = perInterval(def.cycle);
-    lines.push(`Braucht: ${def.consumes.map((g) => `${GOODS[g].name} ${rate}`).join(' · ')}`);
-  }
+  if (cycle['Braucht'] !== undefined) lines.push(cycle['Braucht']);
   if (def.service) lines.push(`Dienst: ${SERVICE_NAMES[def.service]}`);
-  const radius = def.serviceRadius ?? def.supplyRadius;
-  if (radius !== undefined) lines.push(`Radius: ${radius}`);
-  lines.push(...crisisTooltipLines(def.id));
+  const radius = radiusLine(world, def.id);
+  if (radius !== null) lines.push(radius);
+  lines.push(...crisisTooltipLines(def.id, world));
   lines.push(`Standort: ${def.site.length ? def.site.map(siteText).join(', ') : 'frei'}`);
   if (def.maxCount?.n === 1) lines.push('Nur einmal je Insel');
   if (def.id === 'monument') lines.push(monumentToolLine());
@@ -226,6 +251,23 @@ export function refreshShownBalance(nav: ParentNode, world: World, island: numbe
   fillBalance(nav, world, island, '.tooltip.show .tt-balance');
 }
 
+/** Setzt die Takt-Zeilen unter `selector`; nur sichtbare Tooltips (kein Rechnen für verborgene). */
+function fillCycle(root: ParentNode, world: World, selector: string): void {
+  const cache = new Map<BuildingDefId, Record<string, string>>();
+  for (const el of root.querySelectorAll<HTMLElement>(selector)) {
+    const id = el.dataset.defId as BuildingDefId | undefined;
+    const prefix = el.dataset.prefix;
+    if (id === undefined || prefix === undefined) continue;
+    let lines = cache.get(id);
+    if (lines === undefined) {
+      lines = cycleLines(id, world);
+      cache.set(id, lines);
+    }
+    const text = lines[prefix];
+    if (text !== undefined && el.textContent !== text) el.textContent = text;
+  }
+}
+
 /** Hängt ein Tooltip-Element an den Button: Hover, Tastaturfokus, Touch-Langdruck. */
 function attachTooltip(
   btn: HTMLButtonElement,
@@ -243,6 +285,20 @@ function attachTooltip(
     line.className = i === 0 ? 'tt-title' : 'tt-line';
     line.textContent = text;
     tip.appendChild(line);
+    if (tool.kind === 'build' && (text.startsWith('Radius:') || text.startsWith('Schützt '))) {
+      // Reichweite folgt dem Ratsbeschluss: `updateBuildMenu` setzt den Text neu (braucht die Welt)
+      line.classList.add(text.startsWith('Radius:') ? 'tt-radius' : 'tt-fireradius');
+      line.dataset.defId = tool.defId;
+    }
+    const taktPrefix = ['Erzeugt', 'Ausstoss je Stufe', 'Braucht'].find((p) =>
+      text.startsWith(`${p}:`),
+    );
+    if (tool.kind === 'build' && taktPrefix !== undefined) {
+      // Takt folgt dem Ratsbeschluss (Spec 3.2.3): `updateBuildMenu` setzt den Text neu
+      line.classList.add('tt-cycle');
+      line.dataset.defId = tool.defId;
+      line.dataset.prefix = taktPrefix;
+    }
     if (text.startsWith('Unterhalt:') && tool.kind === 'build') {
       // Bilanz-Vorschau: `updateBuildMenu` füllt den Text (braucht die Welt)
       const balance = document.createElement('span');
@@ -272,7 +328,10 @@ function attachTooltip(
   btn.appendChild(tip);
 
   const open = (): void => {
-    if (liveView !== null) fillBalance(tip, liveView.world, liveView.island);
+    if (liveView !== null) {
+      fillBalance(tip, liveView.world, liveView.island);
+      fillCycle(tip, liveView.world, '.tt-cycle');
+    }
     showTooltip(btn, tip, anchorOf());
   };
   btn.addEventListener('mouseenter', open);
@@ -521,6 +580,15 @@ export function cachedBalanceLine(world: World, defId: BuildingDefId, island: nu
 export function updateBuildMenu(nav: HTMLElement, world: World, island: number = HOME): void {
   liveView = { world, island };
   refreshShownBalance(nav, world, island);
+  for (const el of nav.querySelectorAll<HTMLElement>('.tt-radius, .tt-fireradius')) {
+    const id = el.dataset.defId as BuildingDefId | undefined;
+    if (id === undefined) continue;
+    const text = el.classList.contains('tt-radius')
+      ? (radiusLine(world, id) ?? 'Radius: 0')
+      : (crisisTooltipLines(id, world)[0] ?? el.textContent ?? '');
+    if (el.textContent !== text) el.textContent = text;
+  }
+  fillCycle(nav, world, '.tooltip.show .tt-cycle');
   const live = nav.querySelector('.tt-unprotected');
   if (live) {
     const text = unprotectedLine(unprotectedFlammables(world).length);

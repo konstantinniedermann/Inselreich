@@ -150,6 +150,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 | `Cmd`/`Strg` + Klick    | Gebäudetyp unter dem Zeiger als Bauwerkzeug wählen (Pipette)                                                                                                                                                                              |
 | `1` / `2` / `3`         | Tempo 1× / 2× / 4× (hebt die Pause auf)                                                                                                                                                                                                   |
 | `Umschalt` + Weg ziehen | Gerade oder L-förmige Wegstrecke (Vorschau, Bau beim Loslassen)                                                                                                                                                                           |
+| `Umschalt` + `R`        | Rat öffnen oder schliessen (nur wenn die Marke «Rat» da ist)                                                                                                                                                                              |
 | `R` / `X`               | Weg / Abriss                                                                                                                                                                                                                              |
 | `H` / `M` / `K` / `U`   | Wohnhaus / Marktplatz / Kapelle / Schule                                                                                                                                                                                                  |
 | `F` / `L` / `B` / `G`   | Fischerhütte / Holzfäller / Steinbruch / Schäferei                                                                                                                                                                                        |
@@ -200,6 +201,14 @@ Tooltips von 2× und 4× sagen, wie viel schneller die Spielzeit läuft.
 - **Pause-Anzeige:** Bei Pause erscheinen ein getönter Kartenrand und das Banner «Pause»; `P` oder `1×` setzt fort.
 - **Wasser** bewegt sich; an der Küste läuft ein Schaumsaum.
 
+### Rat
+
+Sobald ein Haus zum ersten Mal die Stufe 2 (Siedler), 3 (Bürger) oder 4 (Kaufleute) erreicht, tagt der Rat: In der Kopfzeile erscheint die Marke **«Rat · n»** (n = offene Beschlüsse), dazu die Meldung «Der Rat tagt: ein Beschluss steht an». Das Spiel läuft weiter, nichts pausiert.
+
+- **Bedienung:** Klick auf die Marke oder `Umschalt` + `R` öffnet die Rats-Karte, `Esc` schliesst sie ohne Wahl. Je offene Stufe stehen zwei Karten nebeneinander. Eine Karte anklicken markiert sie; erst **«Beschluss fassen»** gilt (Schutz vor Fehlklick).
+- **Wirkung:** Der Beschluss gilt für die ganze Partie und alle Inseln, kostet nichts, lässt sich nicht ändern; der andere Beschluss der Stufe verfällt. Gefasste Beschlüsse stehen als Liste in derselben Karte («Stufe 2: Webordnung»), die Marke bleibt als neutrales «Rat» sichtbar. Ein offener Beschluss kann beliebig lange warten.
+- **Die sechs Beschlüsse:** Stufe 2 Webordnung (Webereien +25 % schneller) oder Glockenrecht (Kapellen reichen 3 Felder weiter); Stufe 3 Brennrecht (Brennereien +25 % schneller) oder Wohnordnung (Bürgerhäuser fassen 16 statt 15); Stufe 4 Glasrecht (Glashütten +67 % schneller) oder Hofrecht (Kaufmannshäuser fassen 22 statt 20). Alle Zahlen: [`docs/spielwerte.md`](docs/spielwerte.md#rat-ratsbeschluss).
+
 ### Einstellungen, Ton und Anzeige
 
 In der Kopfzeile stehen rechts **Steuer**, Tempo, **Stumm**, **Einstellungen** und **Menü**. «Einstellungen» öffnet eine Karte mit:
@@ -246,6 +255,7 @@ Die Regeln mit allen Zahlen stehen in [`docs/spielwerte.md`](docs/spielwerte.md)
 - Wirtschaft: Produktionsketten, Handel, Handelsaufträge, Seefahrt und Gewürz, Unterhalt, Stilllegen, Abriss
 - Bevölkerung: Stufen, Versorgung, Bedürfnisse, Aufstieg, Steuern
 - Krisen: Krisenstufe, Brand und Feuerwache, Sturm, Boom, Krisenkarte
+- Rat (Ratsbeschluss): die sechs Beschlüsse mit allen Werten
 
 Ereignisse zeigt ungelesene Meldungen als (n neu), ab 10 (9+ neu); Aufklappen setzt den Zähler zurück.
 

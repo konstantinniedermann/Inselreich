@@ -18,6 +18,7 @@ import { farAcceptTooltip, farMark, farOfferText } from './farOrder';
 import { crisisCardText } from './crisis';
 import { taxEffect } from './guide';
 import { taxButtonTitle, taxSummaryText } from './taxView';
+import { councilBadge, councilBadgeActive } from './council';
 import { goalTexts } from './goal';
 import type { IconId } from './icons';
 import { islandList } from './islandJump';
@@ -218,6 +219,8 @@ export interface HudActions {
   openHelp(opener: HTMLElement): void;
   /** Wählt die erste aktive Amtsstube und öffnet ihr Info-Panel (Spec 11.8). */
   openTownhall(): void;
+  /** Rats-Karte öffnen/schliessen (Marke «Rat», I-112). */
+  toggleCouncil(): void;
   /** Liefert den aktiven Auftrag ab; zeigt selbst Meldung bzw. Grund. */
   deliverOrder(): void;
   /** Springt mit der Kamera zur Insel `index` (Knopf „Inseln", M12 E2). */
@@ -304,6 +307,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     header.innerHTML =
       '<div class="hud-row">' +
       '<span class="pop-chips"></span><span class="chip" data-field="goal"></span>' +
+      '<button class="btn council-badge" data-field="council-badge" type="button" hidden></button>' +
       '<span class="hud-money" data-field="money"></span>' +
       '<span class="hud-tax" hidden><button class="btn" data-field="tax" type="button"></button></span>' +
       '<span class="hud-islands" hidden><button class="btn" data-field="islands" type="button" aria-haspopup="true" aria-expanded="false">Inseln</button>' +
@@ -354,6 +358,11 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       if (blurAfterClick(ev.detail)) taxBtn.blur();
       actions.openTownhall();
     });
+    const councilBtn = header.querySelector<HTMLButtonElement>('[data-field="council-badge"]');
+    councilBtn?.addEventListener('click', (ev) => {
+      if (blurAfterClick(ev.detail)) councilBtn.blur();
+      actions.toggleCouncil();
+    });
     const soundBox = header.querySelector('.hud-sound');
     if (soundBox) renderSoundControls(soundBox, actions);
     bindIslandMenu(header, state, actions);
@@ -377,6 +386,14 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
   const goal = goalTexts(goalView(world), monumentChip(world));
   const goalEl = setField(header, 'goal', goal.chip);
   if (goalEl && goalEl.title !== goal.title) goalEl.title = goal.title;
+  const badge = councilBadge(world);
+  const badgeEl = setField(header, 'council-badge', badge ?? '');
+  if (badgeEl) {
+    if (badgeEl.hidden !== (badge === null)) badgeEl.hidden = badge === null;
+    const act = councilBadgeActive(world);
+    if (badgeEl.classList.contains('council-badge--active') !== act)
+      badgeEl.classList.toggle('council-badge--active', act);
+  }
   updateMoney(header, world);
   const island = state.activeIsland;
   const prefix = stockPrefix(world, island);

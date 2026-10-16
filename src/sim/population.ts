@@ -1,3 +1,4 @@
+import { maxInhabitantsOf, serviceRadiusOf } from './council';
 import { BUILDING_DEFS } from './defs/buildings';
 import { TAX_CARRY_DIVISOR, TAX_LEVELS, TAX_UNIT, TIERS, TIER_IDS } from './defs/tiers';
 import { GOODS } from './defs/goods';
@@ -65,7 +66,7 @@ export function serviceAvailable(
 ): boolean {
   const sources =
     cov?.service[house.island]?.[service] ?? serviceBuildings(world, house.island, service);
-  return sources.some((b) => distance(house, b) <= (BUILDING_DEFS[b.defId].serviceRadius ?? 0));
+  return sources.some((b) => distance(house, b) <= (serviceRadiusOf(world, b.defId) ?? 0));
 }
 
 export function allNeedsMet(house: HouseState, tier: TierDef): boolean {
@@ -137,11 +138,13 @@ export function upgradeStatus(
   const lock = tierLock(world, next.tier);
   if (lock !== null) reasons.push(lock);
   if (upgradeStopActive(world, house.tier)) reasons.push('Aufstieg in der Amtsstube angehalten');
-  if (house.inhabitants < current.maxInhabitants) reasons.push('Haus nicht voll belegt');
+  if (house.inhabitants < maxInhabitantsOf(world, current.tier))
+    reasons.push('Haus nicht voll belegt');
   const base = TAX_LEVELS[effectiveTaxLevel(world, house.tier)].upgradeWait;
   const damped =
     base !== null &&
     deficitGood(
+      world,
       budget ?? budgetFrom(goodsBalance(world, b.island, cov)),
       house,
       (g) => !dampsOn(world, b.island, g),
@@ -178,7 +181,7 @@ export function upgradeStatus(
 export function tryUpgrade(world: World, b: Building, budget?: Budget, cov?: Coverage): boolean {
   const house = b.house;
   if (!house || !upgradeStatus(world, b, budget, cov).ok) return false;
-  const delta = upgradeDelta(house);
+  const delta = upgradeDelta(world, house);
   if (budget)
     for (const g of Object.keys(delta) as GoodId[]) budget[g] = (budget[g] ?? 0) - delta[g]!;
   const current = TIERS[house.tier];
@@ -196,13 +199,13 @@ export function tryUpgrade(world: World, b: Building, budget?: Budget, cov?: Cov
 }
 
 /** Höchstbelegung einer Bevölkerungsstufe × Belegungsanteil der Steuerstufe, abgerundet. */
-export function tierCap(tier: Tier, level: TaxLevel): number {
-  return Math.floor(TIERS[tier].maxInhabitants * TAX_LEVELS[level].occupancy);
+export function tierCap(world: World, tier: Tier, level: TaxLevel): number {
+  return Math.floor(maxInhabitantsOf(world, tier) * TAX_LEVELS[level].occupancy);
 }
 
 /** Zielbelegung eines Hauses: `tierCap` der Steuerstufe seiner Stufe, mindestens 1. */
 export function houseCap(world: World, house: HouseState): number {
-  return Math.max(1, tierCap(house.tier, effectiveTaxLevel(world, house.tier)));
+  return Math.max(1, tierCap(world, house.tier, effectiveTaxLevel(world, house.tier)));
 }
 
 /** Je Wachstumstakt einmal das Budget je Insel (`goodsBalance`, nur Inseln mit Häusern), danach je Haus in Id-Reihenfolge. */

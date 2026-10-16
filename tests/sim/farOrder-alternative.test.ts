@@ -183,8 +183,8 @@ describe('AK-8 deterministisch, ohne RNG', () => {
 });
 
 describe('AK-9 Save unverändert', () => {
-  it('Version 16 und Roundtrip mit offenem Fernangebot', () => {
-    expect(SAVE_VERSION).toBe(16);
+  it('Save unverändert (Version >= 16), Roundtrip mit offenem Fernangebot', () => {
+    expect(SAVE_VERSION).toBeGreaterThanOrEqual(16);
     const w = createWorld(3, { unlockAll: true });
     w.tick = P + 10;
     w.order = { period: 1, good: 'wood', amount: 20, reward: 20, due: P + ORDER_DURATION };

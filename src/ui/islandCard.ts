@@ -9,7 +9,7 @@ import {
   TRAIT_LABELS,
   type IslandDef,
 } from '../sim/defs/sea';
-import { islandCycle, traitOf } from '../sim/levels';
+import { effectiveCycle, traitOf } from '../sim/levels';
 import { HOME } from '../sim/world';
 import { islandName, seaLanes, travelTicks } from '../sim/islands';
 import { GOODS } from '../sim/defs/goods';
@@ -62,7 +62,7 @@ export function traitBuildLine(
   const t = traitOf(world, island, defId);
   const def = BUILDING_DEFS[defId];
   if (t === undefined || def.produces === undefined || def.cycle === undefined) return null;
-  const rate = perMinute(1, islandCycle(world, island, defId, def.cycle));
+  const rate = perMinute(1, effectiveCycle(world, island, defId, def.cycle));
   return `Auf ${islandName(world, island)}: ${TRAIT_LABELS[t]} ${factorText()} — ${rate} ${GOODS[def.produces].name} / min`;
 }
 

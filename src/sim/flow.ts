@@ -1,3 +1,4 @@
+import { maxInhabitantsOf } from './council';
 import { BUILDING_DEFS, BUILDING_IDS } from './defs/buildings';
 import { GOOD_IDS } from './defs/goods';
 import { ISLANDS } from './defs/sea';
@@ -57,13 +58,14 @@ export const budgetFrom = (bal: ReturnType<typeof goodsBalance>): Budget =>
   Object.fromEntries(GOOD_IDS.map((g) => [g, bal[g].net]));
 
 /** Δ je Gut der Zielstufe: maxEW(Ziel) × Rate Ziel − EW × Rate jetzt; {} ohne Zielstufe. */
-export function upgradeDelta(house: HouseState): Budget {
+export function upgradeDelta(world: World, house: HouseState): Budget {
   const cur = TIERS[house.tier];
   if (cur.upgradeCost === null) return {};
   const next = TIERS[(house.tier + 1) as Tier];
   const d: Budget = {};
   for (const g of Object.keys(next.needs) as GoodId[])
-    d[g] = next.maxInhabitants * next.needs[g]! - house.inhabitants * (cur.needs[g] ?? 0);
+    d[g] =
+      maxInhabitantsOf(world, next.tier) * next.needs[g]! - house.inhabitants * (cur.needs[g] ?? 0);
   return d;
 }
 
@@ -84,11 +86,12 @@ export function dampsOn(world: World, island: number, g: GoodId): boolean {
 
 /** Erstes Gut (GOOD_IDS-Reihenfolge) mit budget − Δ < −1e-9, ausser `skip(g)`; sonst null. */
 export function deficitGood(
+  world: World,
   budget: Budget,
   house: HouseState,
   skip: (g: GoodId) => boolean = () => false,
 ): GoodId | null {
-  const delta = upgradeDelta(house);
+  const delta = upgradeDelta(world, house);
   for (const g of GOOD_IDS) {
     if (skip(g)) continue;
     const d = delta[g];
@@ -102,7 +105,7 @@ export function upgradeDeficit(world: World, b: Building): { good: GoodId; net: 
   const house = b.house;
   if (!house) return null;
   const budget = budgetFrom(goodsBalance(world, b.island));
-  const good = deficitGood(budget, house, (g) => !dampsOn(world, b.island, g));
+  const good = deficitGood(world, budget, house, (g) => !dampsOn(world, b.island, g));
   if (good === null) return null;
-  return { good, net: (budget[good] ?? 0) - (upgradeDelta(house)[good] ?? 0) };
+  return { good, net: (budget[good] ?? 0) - (upgradeDelta(world, house)[good] ?? 0) };
 }

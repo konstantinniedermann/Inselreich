@@ -51,7 +51,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 16;
+export const SAVE_VERSION = 17;
 
 export type { LoadResult };
 
@@ -903,6 +903,38 @@ export function migrateV15ToV16(raw: Record<string, unknown>): void {
   raw.version = 16;
 }
 
+/** Höchste Hausstufe über alle Inseln; 1, wenn keine Häuser lesbar sind. Wirft nie. */
+function highestHouseTier(raw: Record<string, unknown>): number {
+  const b = raw.buildings;
+  if (!isObject(b)) return 1;
+  let top = 1;
+  for (const id of Object.keys(b)) {
+    const house = isObject(b[id]) ? (b[id] as Record<string, unknown>).house : null;
+    const tier = isObject(house) ? house.tier : null;
+    if (typeof tier === 'number' && tier > top) top = tier;
+  }
+  return top;
+}
+
+/** v16 → v17 (I-112, R711 R-4): `council[n] = 'open'`, wenn ein Haus mit Stufe ≥ n existiert, sonst `null`. Wirft nie. */
+export function migrateV16ToV17(raw: Record<string, unknown>): void {
+  const top = highestHouseTier(raw);
+  raw.council = {
+    2: top >= 2 ? 'open' : null,
+    3: top >= 3 ? 'open' : null,
+    4: top >= 4 ? 'open' : null,
+  };
+  raw.version = 17;
+}
+
+function isValidCouncil(raw: Record<string, unknown>): boolean {
+  const c = raw.council;
+  if (!isObject(c)) return false;
+  const keys = Object.keys(c);
+  if (keys.length !== 3 || keys.join() !== '2,3,4') return false;
+  return keys.every((k) => c[k] === null || c[k] === 'open' || c[k] === 'A' || c[k] === 'B');
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { stats } = raw;
@@ -918,6 +950,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidV12Fields(raw)) return false;
   if (!isValidContractFields(raw)) return false;
   if (!isValidFarFields(raw)) return false;
+  if (!isValidCouncil(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -961,6 +994,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 13) migrateV13ToV14(raw);
   if (raw.version === 14) migrateV14ToV15(raw);
   if (raw.version === 15) migrateV15ToV16(raw);
+  if (raw.version === 16) migrateV16ToV17(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

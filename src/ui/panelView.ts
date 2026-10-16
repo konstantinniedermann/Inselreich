@@ -1,9 +1,10 @@
+import { maxInhabitantsOf } from '../sim/council';
 import { BUILDING_DEFS, PAUSED_UPKEEP_PCT } from '../sim/defs/buildings';
 import { GOODS } from '../sim/defs/goods';
 import { LEVELS } from '../sim/defs/levels';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
-import { buildingUpkeep, cycleOf, islandCycle, upkeepOf, utilization } from '../sim/levels';
+import { buildingUpkeep, cycleOf, effectiveCycle, upkeepOf, utilization } from '../sim/levels';
 import { isSupplied } from '../sim/population';
 import { missingInputs, reservedInputs } from '../sim/queries';
 import { upgradeBuilding } from '../sim/upgrade';
@@ -193,13 +194,13 @@ export function statTiles(world: World, b: Building): StatTile[] {
   return tiles;
 }
 
-export function houseTiles(b: Building): StatTile[] {
+export function houseTiles(world: World, b: Building): StatTile[] {
   if (!b.house) return [];
   return [
     {
       key: 'inhabitants',
       label: TILE_LAYOUT.inhabitants.label,
-      value: `${b.house.inhabitants} / ${TIERS[b.house.tier].maxInhabitants}`,
+      value: `${b.house.inhabitants} / ${maxInhabitantsOf(world, b.house.tier)}`,
       sub: null,
     },
   ];
@@ -234,7 +235,7 @@ export function upgradeGain(world: World, b: Building, to: 2 | 3): GainRow[] {
         'output',
         'Ausstoss',
         perMinute(1, cycle),
-        perMinute(1, islandCycle(world, b.island, b.defId, next.cycle)),
+        perMinute(1, effectiveCycle(world, b.island, b.defId, next.cycle)),
         ' / min',
       ),
     );
@@ -275,7 +276,7 @@ export function upgradeCard(world: World, b: Building): UpgradeCard | null {
 
 /** Aufstiegs-Karte des Wohnhauses; `null` für Gebäude ohne Haus. */
 export function riseCard(
-  _world: World,
+  world: World,
   b: Building,
 ): { title: string; gain: GainRow | null } | null {
   if (!b.house) return null;
@@ -288,8 +289,8 @@ export function riseCard(
     gain: gainRow(
       'inhabitants',
       'Einwohner höchstens',
-      TIERS[t].maxInhabitants,
-      next.maxInhabitants,
+      maxInhabitantsOf(world, t),
+      maxInhabitantsOf(world, next.tier),
       '',
     ),
   };
@@ -328,7 +329,7 @@ export function upgradeView(world: World, b: Building): UpgradeView | null {
     buildings: { ...world.buildings, [b.id]: { ...b } },
   };
   const r = upgradeBuilding(probe, b.id);
-  const out = `${perMinute(1, cycleOf(world, b) ?? 1)} → ${perMinute(1, islandCycle(world, b.island, b.defId, next.cycle))}`;
+  const out = `${perMinute(1, cycleOf(world, b) ?? 1)} → ${perMinute(1, effectiveCycle(world, b.island, b.defId, next.cycle))}`;
   const upkeep = `${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} → ${perMinute(next.upkeep, UPKEEP_INTERVAL)}`;
   return {
     title: `Ausbau zu Stufe ${lvl + 1}`,

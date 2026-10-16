@@ -1,6 +1,7 @@
 import { tickCrises } from './crises';
 import { tickEconomy } from './economy';
 import { tickOrders } from './orders';
+import { tickCouncil } from './council';
 import { citizens, merchants, tickPopulation, tickTaxes } from './population';
 import { tickProduction } from './production';
 import { tickShips, type ShipLoss } from './ships';
@@ -33,12 +34,13 @@ export interface StepReport {
   contract: ContractEvent | null;
 }
 
-/** Ein Simulationsschritt: Zähler, Produktion, Schiffe, Bevölkerung, Steuern, Wirtschaft (Unterhalt), Markt, Aufträge, Krisen, Sieg, Freischaltung. */
+/** Ein Simulationsschritt: Zähler, Produktion, Schiffe, Bevölkerung, Ratsbeschluss (öffnet ab Hausstufe 2/3/4), Steuern, Wirtschaft (Unterhalt), Markt, Aufträge, Krisen, Sieg, Freischaltung. */
 export function step(world: World): StepReport {
   world.tick += 1;
   tickProduction(world);
   const lost = tickShips(world);
   tickPopulation(world);
+  tickCouncil(world);
   tickTaxes(world);
   tickEconomy(world);
   tickMonument(world);

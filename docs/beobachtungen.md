@@ -352,3 +352,24 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Die Kosten dieser Funktionen je Chip wurden nicht gemessen.
 - Ursprung: PERF-BILANZ-COV (R727)
 - Erste Einschätzung: niedrig; messen, falls die Kopfzeile auf grossen Inseln weiter ruckelt.
+
+## 2026-10-16 · I-112: Umschalt+R ohne Marke öffnet leere Rats-Karte
+
+- Fundort: `src/ui/app.ts` (Aktion `council`), `src/ui/councilCard.ts`; README-Bedienung
+- Beobachtung: `Umschalt+R` ohne offene Rats-Marke öffnet eine leere Karte «Kein Beschluss offen.»; das README sagt «nur wenn die Marke da ist».
+- Ursprung: I-112
+- Erste Einschätzung: gering; entweder Taste vor dem ersten Beschluss ignorieren oder README anpassen.
+
+## 2026-10-16 · I-112: council.ts sortiert in jedem Tick alle Gebäude-Ids
+
+- Fundort: `src/sim/council.ts:~51–53`
+- Beobachtung: Solange Stufe 4 nicht offen ist, werden in jedem Tick alle Gebäude-Ids sortiert; für ein Maximum unnötig (einfaches Durchlaufen genügt).
+- Ursprung: I-112
+- Erste Einschätzung: gering (Leistung); bei nächster Berührung von `council.ts` mitnehmen.
+
+## 2026-10-16 · I-112: Kein Reichweitenkreis bei ausgewählter stehender Kapelle
+
+- Fundort: `src/render/overlays.ts` (`overlayPlan` nur im Bau-Modus)
+- Beobachtung: Wählt man eine stehende Kapelle (Dienstgebäude) aus, erscheint kein Reichweitenkreis. Vorbestehend auf main, nicht durch I-112 verursacht.
+- Ursprung: I-112
+- Erste Einschätzung: gering; Komfort, bei Überarbeitung der Auswahl-Anzeige prüfen.
