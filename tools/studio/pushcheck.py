@@ -25,7 +25,6 @@ import paths
 LOAD_WAIT = 3.0
 WAIT_MAX_S = 600
 POLL_S = 15
-RETRY_LOAD = 3.0
 MARKED = Path(".studio/zeitreserve-marked.json")
 RETRY_OUT = Path(".studio/zeitreserve-retry.json")
 MEASUREMENT = Path(".studio/zeitreserve.json")
@@ -207,7 +206,7 @@ class Gate:
             return 0
         start = _load_start(self.measurement)
         self.main_load_start = start
-        if code == 2 or (code == 1 and start is not None and start > RETRY_LOAD):
+        if code in (1, 2):
             files = _read_list(self.marked)
             if files is None:
                 _say(
