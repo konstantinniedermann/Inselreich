@@ -279,6 +279,78 @@ export function drawMonumentFlare(
   ctx.restore();
 }
 
+// --- I-118: Aufstiegs-Funkeln (ein Haus steigt eine Stufe auf) ---
+/** Dauer des Funkelns in ms (gleich `RISE_MS` in `aufstieg.ts`; Darstellungswert). */
+const RISE_TOTAL_MS = 1500;
+const RISE_PEAK_MS = 200;
+/**
+ * Stärke 0…1 des Aufstiegs-Kranzes über die Zeit seit Start: Anstieg (smoothstep) bis 200 ms, danach sanftes
+ * Abklingen; 0 bei negativer Zeit, `NaN` und ab 1500 ms.
+ */
+export function riseStrength(elapsedMs: number): number {
+  if (!Number.isFinite(elapsedMs) || elapsedMs <= 0 || elapsedMs >= RISE_TOTAL_MS) return 0;
+  const k =
+    elapsedMs < RISE_PEAK_MS
+      ? elapsedMs / RISE_PEAK_MS
+      : 1 - (elapsedMs - RISE_PEAK_MS) / (RISE_TOTAL_MS - RISE_PEAK_MS);
+  return Math.max(0.01, k * k * (3 - 2 * k));
+}
+/** Zahl der Funken nach erreichter Stufe (2 → 6, 3 → 7, ab 4 → 8), gedeckelt auf `cap('riseSparks')`; reduziert 0. */
+export function riseSparkCount(tier: number, reduce: boolean): number {
+  const want = tier >= 4 ? 8 : tier === 3 ? 7 : 6;
+  return Math.min(want, cap('riseSparks', reduce));
+}
+/**
+ * Lichtkranz über dem Haus (`rect` = Bildbox) mit aufsteigenden Funken, Farben `window`/`lightEvening`. Der
+ * Aufrufer setzt im additiven Durchgang `'lighter'`; hier keine Compositing-Änderung. Funken streuen
+ * deterministisch aus `id`. Bei `reduce` ein statischer Schein ohne Puls und ohne Funken, der 1500 ms linear ausblendet.
+ */
+export function drawRiseGlow(
+  ctx: CanvasRenderingContext2D,
+  rect: Rect,
+  elapsedMs: number,
+  tier: number,
+  id: number,
+  reduce: boolean,
+): void {
+  if (!Number.isFinite(elapsedMs) || elapsedMs < 0 || elapsedMs >= RISE_TOTAL_MS) return;
+  const k = reduce
+    ? 1 - elapsedMs / RISE_TOTAL_MS
+    : riseStrength(elapsedMs) * (0.92 + 0.08 * Math.sin(elapsedMs / 70));
+  if (k <= 0) return;
+  const cx = rect.x + rect.w / 2;
+  const cy = rect.y + rect.h * 0.18;
+  const rx = Math.max(12, rect.w * 0.6);
+  const ry = rx * 0.45;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.scale(1, ry / rx);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+  g.addColorStop(0, rgbaOf(PALETTE.window, Number((0.7 * k).toFixed(3))));
+  g.addColorStop(0.55, rgbaOf(PALETTE.lightEvening, Number((0.35 * k).toFixed(3))));
+  g.addColorStop(1, rgbaOf(PALETTE.lightEvening, 0));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0, 0, rx, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  const n = riseSparkCount(tier, reduce);
+  if (n === 0) return;
+  const t = elapsedMs / RISE_TOTAL_MS;
+  const big = tier >= 3 ? 2.2 : 1.6;
+  ctx.save();
+  ctx.fillStyle = PALETTE.window;
+  ctx.globalAlpha = clamp01(k);
+  for (let i = 0; i < n; i++) {
+    const x = rect.x + rect.w * (0.15 + 0.7 * spread(i, id + 11));
+    const y = cy + 6 - t * (18 + 26 * spread(i, id + 17)) - spread(i, id + 23) * 6;
+    ctx.beginPath();
+    ctx.arc(x, y, big * (1 - t * 0.5), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 const BEACON_R = 46;
 /**
  * Leuchtfeuer der fertigen Feuerschale bei Nacht (Spec Anhang 06 A, AK-M13E2-46): ruhiger Schein bei `top`

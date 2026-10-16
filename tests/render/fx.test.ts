@@ -3,7 +3,10 @@ import {
   drawBoomCoin,
   drawFire,
   drawFireGlow,
+  drawRiseGlow,
   drawWarnRing,
+  riseSparkCount,
+  riseStrength,
   smokePuffs,
   warnRingAlpha,
 } from '../../src/render/fx';
@@ -135,5 +138,78 @@ describe('Krisen-Effekte (Spec 6.5)', () => {
     expect(ground.matrix[3]).toBeCloseTo(0.5, 9);
     expect(ground.matrix[5]).toBeGreaterThan(R.y + R.h * 0.5);
     expect(log.saves).toBe(log.restores);
+  });
+});
+
+describe('Aufstiegs-Funkeln (I-118)', () => {
+  const sparkFills = <T extends { op: string; style: string }>(evs: T[]) =>
+    evs.filter((e) => e.op === 'fill' && e.style === PALETTE.window);
+  const crownFills = (evs: { op: string; style: string }[]) =>
+    evs.filter((e) => e.op === 'fill' && e.style.startsWith('gradient('));
+
+  it('B2 Stärke: 0 bei 0, Maximum bei 200, fallend bei 700, 0 bei 1500/negativ/NaN', () => {
+    expect(riseStrength(0)).toBe(0);
+    expect(riseStrength(200)).toBeCloseTo(1, 2);
+    expect(riseStrength(100)).toBeGreaterThan(0);
+    expect(riseStrength(100)).toBeLessThan(riseStrength(200));
+    expect(riseStrength(700)).toBeLessThan(riseStrength(200));
+    expect(riseStrength(700)).toBeGreaterThan(riseStrength(1200));
+    expect(riseStrength(1500)).toBe(0);
+    expect(riseStrength(-1)).toBe(0);
+    expect(riseStrength(NaN)).toBe(0);
+  });
+
+  it('B2 bei 1500 ms, negativ und NaN werden keine Pfade gezeichnet', () => {
+    for (const e of [1500, -5, NaN]) {
+      const f = fakeCtx();
+      drawRiseGlow(f.ctx, R, e, 3, 1, false);
+      expect(f.log.events.filter((x) => x.op === 'fill' || x.op === 'fillRect')).toHaveLength(0);
+    }
+  });
+
+  it('B3 Funkenzahl nach Stufe 6/7/8, reduziert 0', () => {
+    expect([2, 3, 4].map((t) => riseSparkCount(t, false))).toEqual([6, 7, 8]);
+    expect(riseSparkCount(4, true)).toBe(0);
+    for (const [t, n] of [
+      [2, 6],
+      [3, 7],
+      [4, 8],
+    ] as const) {
+      const f = fakeCtx();
+      drawRiseGlow(f.ctx, R, 400, t, 1, false);
+      expect(sparkFills(f.log.events)).toHaveLength(n);
+      expect(crownFills(f.log.events)).toHaveLength(1);
+    }
+  });
+
+  it('B3 reduziert: Kranz bleibt, keine Funken, statisch ohne Puls', () => {
+    const a = fakeCtx();
+    const b = fakeCtx();
+    drawRiseGlow(a.ctx, R, 400, 4, 1, true);
+    drawRiseGlow(b.ctx, R, 400, 4, 99, true);
+    expect(sparkFills(a.log.events)).toHaveLength(0);
+    expect(crownFills(a.log.events)).toHaveLength(1);
+    expect(a.log.events.map((e) => e.points)).toEqual(b.log.events.map((e) => e.points));
+    const late = fakeCtx();
+    drawRiseGlow(late.ctx, R, 1499, 4, 1, true);
+    expect(crownFills(late.log.events)).toHaveLength(1);
+  });
+
+  it('B3 gleiche id gleiche Funkenpositionen, andere id andere', () => {
+    const pts = (id: number) => {
+      const f = fakeCtx();
+      drawRiseGlow(f.ctx, R, 500, 3, id, false);
+      return JSON.stringify(sparkFills(f.log.events).map((e) => e.points));
+    };
+    expect(pts(7)).toBe(pts(7));
+    expect(pts(7)).not.toBe(pts(8));
+  });
+
+  it('B5 ausgeglichen, nur Palettenfarben ohne Signalfarben, Compositing unverändert', () => {
+    const f = fakeCtx();
+    drawRiseGlow(f.ctx, R, 300, 4, 3, false);
+    expect(f.log.saves).toBe(f.log.restores);
+    expect(hasSignal(f.log.fillSet)).toBe(false);
+    expect(f.log.compositeSet).toHaveLength(0);
   });
 });
