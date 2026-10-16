@@ -1880,3 +1880,15 @@ Plan Stufe leicht jetzt (lead-tech, sonnet, Budget 1); Umsetzung erst nach dem M
 Regelbezug: gates.md Gate Spec, R737, E-061 · Kosten bei Irrtum: ein Warnfenster, das nach dem Playtest gekürzt wird.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I-122-I-123 · ADR: —
+
+## R739 · 2026-10-16 · ORT-A nach T05b: U1-Zuschnitt (Vorrechnung je Kachel) einmal, dann T06; keine weitere Perf-Runde vor T09
+
+Ruling: T05b `ee319849` (Ausgabe bytegleich, Ring malt nur geänderte Läufe) → Mikromessung unter Last 24–44 B/A ≈ 1,9 (Spanne 1,65–2,63; vorher 2,5), Restkosten in U1 je Pixel
+(`hofsaumAt`) und `buildGroundEdge`. **Option 1 einmal:** `hofsaumAt` rechnet Abstände je Kachel vor und steigt früh aus (Umsetzer); **ein gemeinsamer Review für T05b + U1**
+(statt zweier); danach T06 (Umsetzer + Review). Nach V1 (R735, zweite Runde derselben Befundklasse «Patch-Zeit zu hoch») gibt es **keine weitere Perf-Runde vor T09**: die
+gewertete Messung im freien Messfenster entscheidet; liegt sie dort > +20 %, entscheidet L0 zwischen Rand 1 und Zuschnitt (E6). Budget (V3): C3 5 von 8 verbraucht + 4
+geplant = **9 von 8, +1 aus dem Puffer**; ORT-A-Puffer **9 von 12**.
+
+Regelbezug: R313, R705, R735, R736 · Kosten bei Irrtum: ein Start für eine Optimierung, die die Messung im ruhigen Fenster nicht gebraucht hätte.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C3 nach T05b · ADR: —
