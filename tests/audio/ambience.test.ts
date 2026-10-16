@@ -7,6 +7,8 @@ import {
   IDLE_STOP_S,
   ambienceMix,
   createLoopPlayer,
+  smoothShare,
+  townFactor,
 } from '../../src/audio/ambience';
 import { assetUrl, LAYER_FILES, MANIFEST, SFX_FILES } from '../../src/audio/manifest';
 import type { AmbienceInput, Layer, ViewStats } from '../../src/audio/mix';
@@ -23,6 +25,65 @@ const view = (o: Partial<ViewStats>): ViewStats => ({
   ...o,
 });
 const CLEAR = { kind: 'clear', w: 0 } as const;
+
+describe('Wohlstandsklang Kurve (I-120)', () => {
+  const town = { view: view({ inhabitants: 60, zoom: 2 }), phase: 'day', weather: CLEAR } as const;
+  const withShare = (suppliedShare: number, houses = 10): AmbienceInput => ({
+    ...town,
+    view: { ...town.view, suppliedShare, houses },
+  });
+
+  it('A1 townFactor: Stützpunkte, monoton, kaputte Eingaben ohne Eingriff', () => {
+    expect(townFactor(0.8)).toBe(1);
+    expect(townFactor(0.9)).toBe(1);
+    expect(townFactor(1)).toBe(1);
+    expect(townFactor(0.4)).toBeCloseTo(0.5, 9);
+    expect(townFactor(0.2)).toBe(0);
+    expect(townFactor(0)).toBe(0);
+    let prev = -1;
+    for (let i = 0; i <= 100; i++) {
+      const f = townFactor(i / 100);
+      expect(f).toBeGreaterThanOrEqual(prev);
+      prev = f;
+    }
+    for (const bad of [undefined, NaN, -1, Infinity]) expect(townFactor(bad)).toBe(1);
+  });
+
+  it('A2 Stadtschicht folgt dem Anteil; ohne Feld unverändert', () => {
+    const hi = ambienceMix(withShare(1)).town;
+    const lo = ambienceMix(withShare(0.3)).town;
+    expect(hi).toBeGreaterThanOrEqual(2 * lo);
+    expect(ambienceMix(town).town).toBe(1);
+    expect(hi).toBe(1);
+  });
+
+  it('A3 Share 0,1 mit Häusern: Stadt still, Wind höher; ohne Häuser unverändert', () => {
+    const quiet = ambienceMix(withShare(0.1, 3));
+    const full = ambienceMix(withShare(1, 3));
+    expect(quiet.town).toBe(0);
+    expect(quiet.wind).toBeGreaterThan(full.wind);
+    expect(ambienceMix(withShare(0.1, 0)).wind).toBe(full.wind);
+    expect(ambienceMix(withShare(0.1, 0)).town).toBe(ambienceMix(town).town);
+  });
+
+  it('A4 smoothShare: Zeitkonstante 10 s, deterministisch, dt <= 0 ohne Wirkung', () => {
+    expect(smoothShare(undefined, 0.5, 1)).toBe(0.5);
+    expect(smoothShare(1, 0, 10)).toBeCloseTo(Math.exp(-1), 9);
+    let x: number | undefined = 1;
+    for (let i = 0; i < 120; i++) x = smoothShare(x, 0, 0.25);
+    expect(x).toBeLessThan(0.06);
+    const run = () => {
+      let y: number | undefined;
+      for (const n of [1, 0.2, 0.7, 0.1]) y = smoothShare(y, n, 0.25);
+      return y;
+    };
+    expect(run()).toBe(run());
+    expect(smoothShare(0.6, 0, 0)).toBe(0.6);
+    expect(smoothShare(0.6, 0, -1)).toBe(0.6);
+    expect(smoothShare(0.6, 0, NaN)).toBe(0.6);
+    expect(smoothShare(undefined, 0.4, 0)).toBe(0.4);
+  });
+});
 
 describe('ambienceMix', () => {
   it.each([

@@ -31,6 +31,10 @@ export interface ViewStats {
   coast: number;
   inhabitants: number;
   zoom: number;
+  /** Anteil voll versorgter Häuser 0…1 (Spiegel von `src/render/viewStats.ts`). */
+  suppliedShare?: number;
+  /** Anzahl Häuser in der Ansicht (Spiegel von `src/render/viewStats.ts`). */
+  houses?: number;
 }
 
 export interface WeatherIn {
