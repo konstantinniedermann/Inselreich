@@ -7612,3 +7612,29 @@ dass die Leiste nicht umbricht. (4) Gate Plan durch lead-qa; Budgetantrag 21 Sta
 Regelbezug: gates.md Gate Plan, R464, R654 · Kosten bei Irrtum: ein Suffix mit anderem Zeitformat (eine Zeile nachbessern).
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-UI-HAEPPCHEN-D · ADR: —
+
+## R662 · 2026-10-16 · Gate Plan UI-HAEPPCHEN-D + I-109: OK mit 4 Auflagen; Budget 21 Starts nach Push REL-23
+
+Ruling: Urteil lead-qa (`.studio/handoffs/2026-10-16-lead-qa-gate-plan-UI-HAEPPCHEN-D.md`) übernommen: **OK mit Auflagen** — (1) `npx tsc
+--noEmit` und `make lint` in jedem Task mit `.ts`-Änderung, `make zeittests` und `make conflicts` vor «bereit»; (2) Testfall «0 ↓ leer» in T07
+(AK-UR-04: Text, `label`, Klasse bei Bestand 0 und net < 0); (3) Test-Erwartungen zum Zeitformat über `formatGameTime(...)`, keine Literale;
+(4) T08 ergänzt um Angebot ablehnen, Fernauftrag annehmen, Laden mitten im Auftrag/Angebot ohne Fehl-Eintrag. Die Plan-Instanz setzt die
+Auflagen auf `plan/ui-haeppchen-d` um. Umsetzung mit Budget 21 Starts, Parallelität 1, startet nach `make push-check` Exit 0 für REL-23 (R464).
+
+Regelbezug: gates.md Gate Plan, R464, R661 · Kosten bei Irrtum: ein später entdeckter Verdrahtungsfehler (Fix-Runde).
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-UI-HAEPPCHEN-D · ADR: —
+
+## R663 · 2026-10-16 · Nutzerauftrag: I-091, I-094, I-097 anstossen (Parken aufgehoben)
+
+Ruling: Nutzer: «kannst du auch 94, 91, 97 anstossen? oder teile davon?» — ausgelegt als Ideen I-091 Treuebonus, I-094 Darlehen, I-097 Pause
+sichtbar; das Parken aus IDEEN-09 ist für diese drei aufgehoben. (1) **I-097** (S, kein Save): Kurzdesign Stufe leicht durch lead-design
+(sonnet); Umsetzung nach UI-HAEPPCHEN-D, weil beide `src/ui/app.ts` und `src/style.css` berühren. (2) **I-091 + I-094** (Save ja, Wirtschaft):
+ein gemeinsames kleines Wirtschafts-Brainstorming durch lead-design (opus) mit Rechnung durch `design-economy-designer`, je eine Kurz-Spec mit
+AK; Pflichtfragen: I-094 Entartung (Darlehen immer richtig ab Ausbau > 40/min) und Geldüberschuss; I-091 Bonus bleibt unter `buy`. Save-Nummer
+wird erst im Gate Plan vergeben (nächste freie beim Merge; Erweiterung 1 der Nutzer-Session ist ebenfalls auf eine neue Version angewiesen, R638
+— wer zuerst merged, nimmt die nächste). Ergibt die Rechnung, dass I-094 entartet und kein Hebel hilft, darf lead-design «verwerfen» empfehlen.
+
+Regelbezug: Verfassung §5, STUDIO.md Autonomie, R445, R475, R638 · Kosten bei Irrtum: zwei Specs für Funktionen, die nach dem Playtest anders aussehen.
+
+Entscheider: L0 · Anlass: Nutzerprompt · ADR: —
