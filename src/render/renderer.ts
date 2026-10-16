@@ -22,6 +22,7 @@ import {
   drawMonumentFlare,
   flareStrength,
   drawRain,
+  drawRiseGlow,
   drawStormEdge,
   drawWarnRing,
   smokePuffs,
@@ -58,6 +59,7 @@ import {
   type Poly,
   type WalkerPose,
 } from './life';
+import { pickRises, type Rise } from './aufstieg';
 import { cap, rainStreaks } from './limits';
 import {
   TEX,
@@ -181,6 +183,10 @@ export interface RenderFx {
    * Denkmals. Gezeichnet wird ≤ 3 s lang, nur bei sichtbarem Denkmal, nicht bei `reduceMotion`.
    */
   monumentFlareStart?: number;
+  /** Laufende Aufstiegs-Funkeln (I-118); Startzeiten auf der Uhr `riseClockMs`. */
+  rises?: readonly Rise[];
+  /** Funkel-Uhr in ms (Spielzeit: bei Pause steht sie, das Funkeln friert ein). */
+  riseClockMs?: number;
   mood?: boolean;
   boom?: boolean;
   /** Tag-Nacht-Tönung; nur bei explizit `true` (Standard: aus). */
@@ -514,6 +520,8 @@ interface IslandFrame {
   windowLights: WindowLights;
   /** Bildpunkte der Feuerschalen sichtbarer Denkmäler, solange das Aufflammen läuft (Schritt 10). */
   flares: Pt[];
+  /** Aufstiegs-Funkeln sichtbarer Häuser: Bildbox, Alter, Stufe, Id (Schritt 10). */
+  rises: { rect: Rect; elapsedMs: number; tier: number; id: number }[];
   /** Bildpunkte der Feuerschalen sichtbarer, fertiger Denkmäler für das nächtliche Leuchtfeuer (Schritt 10). */
   beacons: Pt[];
   /** Glühwürmchen dieser Insel für den einen additiven Durchgang (Schritt 10). */
@@ -543,6 +551,7 @@ function drawIsland(
   let fireflies: FaunaHit[] = [];
   const beacons: Pt[] = [];
   const flares: Pt[] = []; // Feuerschalen sichtbarer Denkmäler, solange das Aufflammen läuft
+  const rises: IslandFrame['rises'] = [];
 
   const range = visibleTileRange(cam, view, { w: home(world).width, h: home(world).height });
   const empty = range.x1 < range.x0 || range.y1 < range.y0;
@@ -720,6 +729,19 @@ function drawIsland(
       for (const b of buildings)
         if (b.defId === 'monument') flares.push(worldToScreen(cam, monumentBowlPoint(b)));
 
+    // Aufstiegs-Funkeln: nur Häuser aus der Culling-Menge `buildings`; Abgerissene und Entfernte entfallen
+    const clock = fx.riseClockMs ?? 0;
+    for (const r of pickRises(fx.rises ?? [], clock, cap('riseGlow', reduce))) {
+      const b = buildings.find((x) => x.id === r.id);
+      if (b)
+        rises.push({
+          rect: screenRect(world, cam, b),
+          elapsedMs: clock - r.startMs,
+          tier: r.tier,
+          id: r.id,
+        });
+    }
+
     for (const b of buildings)
       if (b.defId === 'monument' && monumentNightLight(imageStageOf(world, b)))
         beacons.push(worldToScreen(cam, monumentBowlPoint(b)));
@@ -876,6 +898,7 @@ function drawIsland(
     fireClips,
     windowLights,
     flares,
+    rises,
     beacons,
     fireflies,
   };
@@ -986,6 +1009,7 @@ export function render(
     fireClips: [],
     windowLights: { groups: [], k: 0 },
     flares: [],
+    rises: [],
     beacons: [],
     fireflies: [],
   };
@@ -1014,7 +1038,12 @@ export function render(
   // 10 Additiver Durchgang (höchstens einer): Fensterlicht, Laternen, Feuerglühen
   const flares = frames.flatMap((f) => f.flares);
   const beacons = windowLights.k > 0 ? frames.flatMap((f) => f.beacons) : [];
-  const glowing = lit.some(({ f }) => f.flames > 0) || flares.length > 0 || beacons.length > 0;
+  const riseDraws = frames.flatMap((f) => f.rises);
+  const glowing =
+    lit.some(({ f }) => f.flames > 0) ||
+    flares.length > 0 ||
+    riseDraws.length > 0 ||
+    beacons.length > 0;
   const lights = windowLights.groups;
   const glowFlies = frames.some((f) => f.fireflies.length > 0);
   if (glowing || lights.length > 0 || glowFlies) {
@@ -1053,6 +1082,7 @@ export function render(
     });
     for (const pt of beacons) drawMonumentBeacon(ctx, pt, windowLights.k, fx.timeMs, reduce);
     for (const pt of flares) drawMonumentFlare(ctx, pt, fx.timeMs - fx.monumentFlareStart!, reduce);
+    for (const r of riseDraws) drawRiseGlow(ctx, r.rect, r.elapsedMs, r.tier, r.id, reduce);
     for (const f of frames) drawFireflies(ctx, f.ci, f.fireflies);
     ctx.restore();
   }
