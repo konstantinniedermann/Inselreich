@@ -259,7 +259,7 @@ class GuardEventTest(unittest.TestCase):
             self.assertEqual(event["source"], "hook")
             self.assertEqual(event["rule"], "stash")
             self.assertEqual(event["tool"], "Bash")
-            self.assertEqual(event["command"], "git stash")
+            self.assertNotIn("command", event)
             self.assertEqual(event["persona"], "tech-sim-engineer")
             self.assertEqual(event["session_id"], "s1")
             self.assertTrue(event["summary"].startswith(guard.FORBIDDEN))
@@ -272,14 +272,13 @@ class GuardEventTest(unittest.TestCase):
             self.run_hook({**prompt, "prompt": "git stash"}, home)
             self.assertEqual(self.events(home), [])
 
-    def test_long_command_is_shortened_to_one_line(self):
+    def test_long_command_gives_one_short_line(self):
         with tempfile.TemporaryDirectory() as home:
             command = "git stash push -m " + "x" * 300 + "\necho zwei"
             self.run_hook(self.bash(command), home)
-            shown = self.events(home)[0]["command"]
-            self.assertEqual(shown, "git stash")
-            self.assertNotIn("\n", shown)
-            self.assertLessEqual(len(shown), guard.COMMAND_LIMIT)
+            path = Path(home) / "events.jsonl"
+            self.assertEqual(len(path.read_text("utf-8").splitlines()), 1)
+            self.assertLess(len(path.read_text("utf-8")), 500)
 
     def test_file_tool_and_agent_command_fields(self):
         with tempfile.TemporaryDirectory() as home:
@@ -292,7 +291,7 @@ class GuardEventTest(unittest.TestCase):
             self.run_hook(edit, home)
             event = self.events(home)[0]
             self.assertEqual(event["rule"], "constitution")
-            self.assertEqual(event["command"], "?")
+            self.assertNotIn("command", event)
             self.assertEqual(event["persona"], "")
 
     def test_write_failure_keeps_deny(self):
@@ -899,18 +898,21 @@ SECRET_COMMANDS = (
 
 
 class GuardAllowlistTest(unittest.TestCase):
-    """Das Ereignis speichert nur Programm und Unterbefehl, nie Argumente."""
+    """Das Ereignis speichert keinen Befehl: nur Regel, Werkzeug, Festtext, Hash."""
 
     run_hook = HookTest.run_hook
     bash = GuardEventTest.bash
     events = GuardEventTest.events
 
-    def blocked_line(self, command):
+    def blocked(self, payload):
         with tempfile.TemporaryDirectory() as home:
-            out = self.run_hook(self.bash(command), home)
+            out = self.run_hook(payload, home)
             self.assertEqual(out["hookSpecificOutput"]["permissionDecision"], "deny")
             line = (Path(home) / "events.jsonl").read_text("utf-8")
             return line, self.events(home)[0]
+
+    def blocked_line(self, command):
+        return self.blocked(self.bash(command))
 
     def test_no_secret_reaches_event_line(self):
         import shlex
@@ -925,9 +927,82 @@ class GuardAllowlistTest(unittest.TestCase):
                 f"rm -rf /etc/{shlex.quote(text)}",
             ):
                 with self.subTest(command=command):
-                    line, event = self.blocked_line(command)
+                    line, _event = self.blocked_line(command)
                     self.assertNotIn(secret, line)
-                    self.assertNotIn(secret, event["command"])
+
+    def test_event_has_only_fixed_fields(self):
+        _line, event = self.blocked_line("git stash push -m x")
+        self.assertEqual(
+            sorted(event),
+            sorted(
+                [
+                    "ts",
+                    "session_id",
+                    "agent_id",
+                    "source",
+                    "kind",
+                    "rule",
+                    "tool",
+                    "command_hash",
+                    "persona",
+                    "summary",
+                ]
+            ),
+        )
+
+    def test_free_tokens_nowhere_in_line(self):
+        cases = (
+            self.bash("echo correct-horse-staple; git stash"),
+            self.bash("git stash hunter2"),
+            {
+                "hook_event_name": "PreToolUse",
+                "session_id": "s1",
+                "tool_name": "Agent",
+                "tool_input": {
+                    "subagent_type": "general-purpose",
+                    "prompt": "Persona: x",
+                    "description": "hunter2 los",
+                },
+            },
+            {
+                "hook_event_name": "PreToolUse",
+                "session_id": "s1",
+                "tool_name": "Edit",
+                "tool_input": {"file_path": "/r/docs/studio/VERFASSUNG.md"},
+            },
+        )
+        for payload in cases:
+            with self.subTest(payload=payload):
+                line, _event = self.blocked(payload)
+                for word in ("correct-horse-staple", "hunter2", "VERFASSUNG.md"):
+                    self.assertNotIn(word, line)
+
+    def test_file_tool_path_not_logged(self):
+        payload = {
+            "hook_event_name": "PreToolUse",
+            "session_id": "s1",
+            "tool_name": "Edit",
+            "tool_input": {"file_path": "/r/docs/studio/VERFASSUNG.md"},
+        }
+        guard_payload = {**payload, "tool_input": {"file_path": "geheim123.txt"}}
+        with tempfile.TemporaryDirectory() as home:
+            self.run_hook(payload, home)
+            self.assertNotIn(
+                "geheim123", (Path(home) / "events.jsonl").read_text("utf-8")
+            )
+        self.assertNotIn("geheim123", json.dumps(self.logged_event(guard_payload)))
+
+    def logged_event(self, payload):
+        events = []
+        import paths
+
+        original = paths.append_event
+        paths.append_event = events.append
+        try:
+            guard._log_block(payload, guard.PROTECTED)
+        finally:
+            paths.append_event = original
+        return events[0]
 
     def test_summary_is_fixed_text_per_rule(self):
         for command, rule in (
@@ -938,26 +1013,7 @@ class GuardAllowlistTest(unittest.TestCase):
             with self.subTest(command=command):
                 _line, event = self.blocked_line(command)
                 self.assertEqual(event["rule"], rule)
-                self.assertNotIn("geheim", event["summary"])
-                self.assertNotIn("ghp_", event["summary"])
                 self.assertEqual(event["summary"], guard.RULE_SUMMARY[rule])
-
-    def test_unknown_program_and_separators(self):
-        def cmd(text):
-            return guard._event_command(
-                {"tool_name": "Bash", "tool_input": {"command": text}}
-            )
-
-        self.assertEqual(cmd("echo hunter2 && git stash"), "echo ?")
-        self.assertEqual(cmd("git\nhunter2 stash"), "git ?")
-        self.assertEqual(cmd("git stash; echo hunter2"), "git stash")
-        self.assertEqual(cmd("git stash | cat hunter2"), "git stash")
-        self.assertNotIn("geheim", cmd("TOKEN= geheim git stash"))
-        self.assertEqual(cmd("geheimprog stash"), "? ?")
-        self.assertEqual(cmd("git stash2"), "git ?")
-        self.assertEqual(cmd("git a.b"), "git ?")
-        self.assertEqual(cmd("git " + "a" * 21), "git ?")
-        self.assertEqual(cmd("python3 -m x"), "python3")
 
     def test_hash_covers_redacted_text(self):
         import hashlib
@@ -966,18 +1022,6 @@ class GuardAllowlistTest(unittest.TestCase):
         expected = hashlib.sha256(b"git stash push -m [REDACTED]").hexdigest()[:12]
         self.assertEqual(guard._command_hash(payload), expected)
 
-    def test_harmless_blocked_command_shows_program_and_subcommand(self):
-        _, event = self.blocked_line("git stash push -m harmlos")
-        self.assertEqual(event["command"], "git stash")
-        _, event = self.blocked_line("FOO=1 git rebase -i main")
-        self.assertEqual(event["command"], "git rebase")
-
-    def test_unsafe_tokens_become_question_mark(self):
-        _, event = self.blocked_line("git -C Dir stash")
-        self.assertEqual(event["command"], "git")
-        _, event = self.blocked_line("git push --force origin")
-        self.assertEqual(event["command"], "git push")
-
     def test_command_hash_is_stable_12_hex(self):
         _, first = self.blocked_line("git stash push -m x")
         _, again = self.blocked_line("git  stash  push -m x")
@@ -985,19 +1029,6 @@ class GuardAllowlistTest(unittest.TestCase):
         self.assertRegex(first["command_hash"], r"^[0-9a-f]{12}$")
         self.assertEqual(first["command_hash"], again["command_hash"])
         self.assertNotEqual(first["command_hash"], other["command_hash"])
-
-    def test_event_command_unit(self):
-        def cmd(text):
-            return guard._event_command(
-                {"tool_name": "Bash", "tool_input": {"command": text}}
-            )
-
-        self.assertEqual(cmd("A=1 B=2 /usr/bin/git stash -u"), "git stash")
-        self.assertEqual(cmd("sshpass -p-geheim123 ssh h"), "?")
-        self.assertEqual(cmd("git Stash x"), "git ?")
-        self.assertEqual(cmd("ls"), "ls")
-        self.assertEqual(cmd("git ghp_" + "x" * 36), "git ?")
-        self.assertEqual(cmd(""), "")
 
 
 class RedactNamesTest(unittest.TestCase):

@@ -554,30 +554,6 @@ RULE_SUMMARY = {
     "constitution": PROTECTED,
     "model": MODEL_MISSING,
 }
-KNOWN_PROGRAMS = frozenset(
-    {
-        "git",
-        "docker",
-        "npm",
-        "npx",
-        "gh",
-        "make",
-        "python3",
-        "python",
-        "pip",
-        "node",
-        "rm",
-        "ls",
-        "cat",
-        "cd",
-        "echo",
-        "mysql",
-        "curl",
-        "vitest",
-        "tsc",
-        "ruff",
-    }
-)
 REDACTED = "[REDACTED]"
 # Schwärzung für das Ereignisprotokoll: ersetzt nur den Secret-Teil; Unter-
 # Schwärzung ist inakzeptabel, Über-Schwärzung hinnehmbar. Ein Wert ist ein
@@ -591,9 +567,8 @@ REDACTED = "[REDACTED]"
 # `token`, `secret`, `password`, `passwd`, `credential`, `passphrase`, `apikey`
 # gelten auch mit Präfix (`PGPASSWORD`, `accessToken`); `key`, `auth`, `pass`,
 # `pwd` nur am Wortanfang oder als CamelCase-Segment (`privateKey`).
-# Das Ereignis `guard_block` speichert Argumente nie (`_event_command`: nur
-# bekanntes Programm und Unterbefehl, `summary` ist ein fester Text je Regel,
-# dazu `command_hash` über den geschwärzten Text); diese
+# Das Ereignis `guard_block` speichert keinen Befehl (R743): nur Regel, Werkzeug,
+# fester `summary` je Regel und `command_hash` über den geschwärzten Text; diese
 # Schwärzung ist die zweite Linie für andere Ausgaben.
 # Bewusste Restlücken der Schwärzung: Secrets in verschachtelten/verketteten/
 # escapten Quotes, Werte aus Dateien oder Variablen (`$(cat f)`), Passwort als
@@ -702,46 +677,6 @@ def _shown_command(payload: dict) -> str:
     return redact(_raw_text(payload))[:COMMAND_LIMIT]
 
 
-_SAFE_TOKEN = re.compile(r"[a-z0-9._-]{1,32}")
-_ENV_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=\S*")
-
-
-def _safe_token(token: str) -> str:
-    """Allowlist: nur unauffällige Namen; alles andere (auch Secrets) wird `?`."""
-    if _SAFE_TOKEN.fullmatch(token) and redact(token) == token:
-        return token
-    return "?"
-
-
-_SUBCOMMAND = re.compile(r"[a-z][a-z-]{0,19}")
-_COMMAND_SPLIT = re.compile(r"&&|[;|&]")
-
-
-def _bash_command(text: str) -> str:
-    tokens = _COMMAND_SPLIT.split(text)[0].split()
-    while tokens and _ENV_ASSIGNMENT.fullmatch(tokens[0]):
-        tokens.pop(0)
-    if not tokens:
-        return ""
-    program = tokens[0].rsplit("/", 1)[-1]
-    if program not in KNOWN_PROGRAMS:
-        return "? ?" if len(tokens) > 1 and not tokens[1].startswith("-") else "?"
-    shown = [program]
-    if len(tokens) > 1 and not tokens[1].startswith("-"):
-        ok = _SUBCOMMAND.fullmatch(tokens[1]) and redact(tokens[1]) == tokens[1]
-        shown.append(tokens[1] if ok else "?")
-    return " ".join(shown)
-
-
-def _event_command(payload: dict) -> str:
-    """Nur Programm und Unterbefehl, nie Argumente (Allowlist statt Muster-Jagd)."""
-    text = _raw_text(payload)
-    if payload.get("tool_name") == "Bash":
-        return _bash_command(text)[:COMMAND_LIMIT]
-    tokens = text.split()
-    return _safe_token(tokens[0].rsplit("/", 1)[-1]) if tokens else ""
-
-
 def _command_hash(payload: dict) -> str:
     return hashlib.sha256(redact(_raw_text(payload)).encode("utf-8")).hexdigest()[:12]
 
@@ -760,7 +695,6 @@ def _log_block(payload: dict, found: str) -> None:
                 "kind": "guard_block",
                 "rule": rule_of(found),
                 "tool": str(payload.get("tool_name") or ""),
-                "command": _event_command(payload),
                 "command_hash": _command_hash(payload),
                 "persona": str(payload.get("agent_type") or ""),
                 "summary": RULE_SUMMARY.get(rule_of(found), rule_of(found)),
