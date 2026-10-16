@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R646 2026-10-14): E-063, E-064, E-066; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R689 2026-10-16): E-063, E-066, E-068; E-064 Bewertung `behalten` als Entwurf, bis L0 bestätigt; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 ---
 
@@ -637,7 +637,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Bewertung: Entwurf 2026-10-14 (Studio-Coach, Retro session-b54ed3bd-ende B2): **angepasst** — 18 Integrator-Briefings seit dem Start, 15 mit Worktree, 3 mit Hauptcheckout per Ruling (R627, R636, R644, Doku-/Werkzeug-Merges), in R616–R645 kein Vorfall genannt. Neue Messgrösse (R646): Integrator-Briefings mit Hauptcheckout ohne Ruling-Nummer, Soll 0 über weitere 10 Läufe, höchstens bis 2026-11-19; Ruling-Ausnahmen werden gezählt. L0-Ruling R646 bestätigt.
 - Datenpunkt (Retro [session-dbac5fc4-ende](retros/2026-10-14-session-dbac5fc4-ende.md)): Briefings ab 12:00 in dbac5fc4: 3 mit `.worktrees/integrate`, 2 mit Hauptcheckout-Bezug und Ruling-Nummer (R631/R630, R644), 0 ohne Ruling-Nummer. Weiter beobachten; Status bis zum Ruling unverändert.
 
-## E-064 · laufend (R579, nachgerückt für E-060) · Guard sperrt `git stash` ausser Lesezugriffen
+## E-064 · behalten (Entwurf 2026-10-16, wartet auf Ruling; R579, nachgerückt für E-060) · Guard sperrt `git stash` ausser Lesezugriffen
 
 - Hypothese: Wenn der Guard `git stash` (`push`, `pop`, `apply`, `save`, ohne Unterbefehl) sperrt und das Umsetzer-Briefing „kein `git stash`, WIP-Commit“ nennt, wendet kein Arbeiter mehr einen fremden Stash an (Retro [session-1a73e6c1-ende](retros/2026-10-12-session-1a73e6c1-ende.md) B1; `docs/beobachtungen.md` 2026-10-12; Klasse seit R116).
 - Messgrösse: 0 Stash-Anwendungen in Arbeiter-Worktrees (Ereignis `guard_block` mit `git stash` zählt als Abweisung, nicht als Fehler) über die nächsten 10 Umsetzer-Pakete; Gegenprobe: 0 Rückmeldungen „Stash nötig, Guard im Weg“ von L0 oder Leads.
@@ -647,7 +647,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/studio/guard.py`, `tools/studio/tests/`, `docs/studio/templates/briefing.md` (Werkzeug-Bündel und Vorlage; Vorlage nur nach Ruling)
 - Ruling: R579
 - Start: 2026-10-13 (Guard in TOOL-BUENDEL-10 gemergt; Handbuch 1.54 nennt die Sperre)
-- Bewertung: –
+- Bewertung: Entwurf 2026-10-16 (Studio-Coach, Auftrag R689 (2)): **behalten**, mit Einschränkung bei der Messbarkeit. Beobachtung: (a) Zahl Umsetzer-Pakete seit 2026-10-13 12:00: 15 Pakete mit Status `active`/`review` (`.studio/events.jsonl`, Ereignis `package`) und 65 Spawns von Umsetzer-Rollen (tech-ui 34, tech-sim 23, general-purpose 8), Soll 10 erreicht; (b) Stash-Anwendungen: keine in `docs/studio/rulings.md` (R580 bis R689 ohne Stash-Vorfall) und `docs/beobachtungen.md` (nur Eintrag 2026-10-12 und der Hinweis „Sperre umgehbar“, abgehakt); (c) Rückmeldungen „Stash nötig, Guard im Weg“: keine; (d) `guard_block`-Ereignisse: 0, aber es gibt dieses Ereignis nicht (Ereignisarten in `.studio/events.jsonl` enthalten kein `guard_block`; `guard.py` schreibt die Abweisung nur als Hook-Ausgabe). Deutung: 0 Anwendungen und 0 Rückmeldungen erfüllen die Messgrösse, aber die Zahl der abgewiesenen Versuche ist nicht belegt; die Annahme „zusätzlich ein zählbares Ereignis“ aus der Messbarkeit traf nicht zu. Die Regel kostet nichts und steht schon im Handbuch 1.54 (Stash-Sperre) und im Guard: keine weitere Handbuch-Änderung nötig. Offen: Guard-Abweisung als Ereignis loggen (Werkzeug-Vorschlag an L0, kein Platz nötig).
 
 ## E-065 · vorgeschlagen (wartet auf Platz) · Warnung bei veraltetem `state.md`
 
@@ -684,7 +684,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R615 (als vorgeschlagen eingetragen)
 - Bewertung: –
 
-## E-068 · vorgeschlagen (wartet auf Platz) · Ein Reviewer je Paket in Stufe leicht
+## E-068 · laufend (R689) · Ein Reviewer je Paket in Stufe leicht
 
 - Hypothese: Bei Paketen der Stufe leicht mit mindestens zwei Tasks und einem Diff ≤ 300 Zeilen reviewt ein einziger `qa-code-reviewer` den Paket-Diff statt eines je Task. Das spart Erstladung (13k Start-Kontext) und Wachstum je gesparter Instanz; Anlass Retro [session-dbac5fc4-ende](retros/2026-10-14-session-dbac5fc4-ende.md) B1: Wachstum 27,8 Punkte gegen Pause 3,9, `qa-code-reviewer` grösster Einzelposten (6,4). Die Annahme «Erstladung ≈ 40 % der Schreibmenge» ist Deutung; E-069 macht sie messbar.
 - Messgrösse: `qa-code-reviewer`-Instanzen je Paket ≤ 1,3 (Ausgang 13 Instanzen bei etwa 7 Paketen in dbac5fc4) und Cache-Write-Wachstum der Rolle ≤ 4 Punkte (Ausgang 6,4) über 3 Sessions; Gegenprobe: Befunde, die erst im Gate Merge auftauchen, ≤ 1 je Paket und Erstabnahme-Quote ≥ 80 %.
@@ -692,7 +692,8 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Zeitraum: 3 Sessions, höchstens bis 2026-11-19; Start bei freiem Platz.
 - Rückfall: Briefing-Zeile streichen, Review je Task wie bisher.
 - Dateien: `docs/studio/templates/briefing.md` (Reviewer-Zeile), `.claude/agents/qa-code-reviewer.md`, `docs/studio/STUDIO.md`, `docs/studio/CHANGELOG.md` (nur nach Ruling)
-- Ruling: –
+- Ruling: R689
+- Start: 2026-10-16 (Platz von E-064; die Briefing-Zeile folgt nach Ruling von L0, Entwurf im Bericht des Studio-Coachs; Messung zählt ab dem Briefing mit der Zeile)
 - Bewertung: –
 
 ## E-069 · vorgeschlagen (Werkzeug, ohne Platz wie E-043) · Session-Zeitraum durchreichen, Erstladung ausweisen

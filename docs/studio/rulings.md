@@ -1305,3 +1305,15 @@ Pool-Pflege (I-092 live, I-101/I-104/I-105/I-107 Status, Ranglisten IDEEN-09/-10
 Regelbezug: gates.md Gate Ideen-Runde, R445, R599, R691 · Kosten bei Irrtum: ein Kurzdesign in anderer Reihenfolge.
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-11 · ADR: —
+
+## R693 · 2026-10-16 · E-064 bestätigt; E-068 laufend mit Briefing-Zeile; Guard-Abweisungen als Ereignis in den Pool
+
+Ruling: Bericht studio-coach (Nachtrag `.studio/handoffs/2026-10-16-studio-coach-retro-ampel.md`): (1) **E-064** «Guard sperrt `git stash`» → **behalten**
+(15 Umsetzer-Pakete seit 2026-10-13, 0 Stash-Anwendungen, keine Rückmeldung «Guard im Weg»; Regel steht schon in Handbuch und Guard). Messlücke: Guard-Abweisungen
+erzeugen kein Ereignis. (2) **E-068** laufend; Briefing-Zeile in `templates/briefing.md` übernommen (Pflichtzeilen, Stufe leicht ≥ 2 Tasks, Diff ≤ 300 Zeilen →
+ein Reviewer am Ende); Messung ab dem ersten Briefing mit der Zeile. (3) Paket **TOOL-GUARD-EVENT** (Guard-Abweisungen als Ereignis `guard_block`) in den Pool,
+Werkzeug ohne Experimentplatz, Einplanung in der Folgesession (Ampel gelb, R691).
+
+Regelbezug: R316, R579, R689, R691 · Kosten bei Irrtum: ein Paket-Review, das einen Task-Befund erst am Ende findet.
+
+Entscheider: L0 · Anlass: Bericht studio-coach EXP-E064-E068 · ADR: —
