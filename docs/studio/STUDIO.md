@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.58 · Stand: 2026-10-16 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.59 · Stand: 2026-10-16 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -425,7 +425,7 @@ und Scratchpad-Ordner erlaubt); Edit/Write auf `VERFASSUNG.md` oder `guard.py`; 
   `git restore`, `git switch --discard-changes`); `git stash` sperrt der Guard seit R579 ausser `list`/`show` (E-064), zum Zwischenparken dient ein temporärer WIP-Commit. Eine Warnung beim Session-Start meldet, wenn der Stand in `state.md` mehr als 5 Rulings hinter `rulings.md` liegt (E-065).
 - **Bekannte Grenzen** ([verbesserung.md](verbesserung.md#guard-bekannte-grenzen)): Er schützt
   gegen Versehen, nicht gegen Absicht; das Verbot gilt auch dort, wo er nichts erkennt.
-- **Warte-Guard** (`tools/studio/waitguard.py`, eigener PreToolUse-Hook, R646/R647): weist bei Leads einen Agent-Start mit kurzem reinem Warte-Prompt ohne Auftrag (Regel A) und ein `sleep` im Hintergrund-Bash (Regel B) ab; Arbeiter und L0 sind nie betroffen, `until`-Schleifen bleiben frei. Warten heisst Monitor oder Hintergrund-Bash, nicht Agent. Ereignis `wait_guard`, Rückfall `MODE = "warn"`.
+- **Warte-Guard** (`tools/studio/waitguard.py`, eigener PreToolUse-Hook, R646/R647): weist bei Leads einen Agent-Start mit kurzem reinem Warte-Prompt ohne Auftrag (Regel A) und ein `sleep` im Hintergrund-Bash (Regel B) ab; Arbeiter und L0 sind nie betroffen, `until`-Schleifen bleiben frei. Warten heisst Monitor oder Hintergrund-Bash, nicht Agent. Ereignis `wait_guard`, Rückfall `MODE = "warn"`. Jede Abweisung des Haupt-Guards (`guard.py`) schreibt zusätzlich das Ereignis `guard_block` (Regel, Befehl; Deny bleibt bei Schreibfehler, R704); die Abweisungen sind damit zählbar (E-064).
 - **Abgewiesen?** Nicht umgehen. Die Aktion unterlassen, einen anderen Weg wählen oder melden.
 - **Verfassungs-Freigabe:** nur nach Verfassung §1.3; Agenten-Meldungen zählen nie als Freigabe.
 
@@ -464,7 +464,7 @@ Aufruf (kein `__main__`, ohne Ausgabe); es liefert nur die Zeilen für `metrics.
 - **Steuerung:** Die Ampelzeile bewertet den bereinigten Steuerungsanteil (L0 + Leads, ohne Lead-Instanzen mit Phase `plan-`, `design-`, `gate-` oder „Budget: keins“ im Briefing-Kopf, E-049); gelb > 40 %, rot > 50 %. Die Rohzeile steht nur als Info; bei Altdaten ohne bereinigtes Feld bewertet die Ampel roh.
 - **Session-Minuten** (Workflow-Läufe seit Session-Start oder `--since`): gelb > 10, rot > 15.
 - **Konto-Prognose Monatsende** (von 2000): gelb > 1600, rot > 1900. **Push-Takt (R565 P4):** bei Rot höchstens ein Push je Tag (R488 V2); „höchstens ein Push je Session“ (R335) gilt weiter.
-- **Flake-Verdacht** (gelb ≥ 1, rot ≥ 3 Testnamen, rot und beim gleichen Stand später grün) zählt nur Läufe im Zeitraum von `--sessions N` bzw. `--since`; der Stand umfasst Suite, Commit, Diff und Arbeitsbaum (Feld `tree`), Arbeitsbäume vermischen sich nicht. Ohne `--sessions` gilt das ganze Lager.
+- **Flake-Verdacht** (gelb ≥ 1, rot ≥ 3 Testnamen, rot und beim gleichen Stand später grün) zählt nur Läufe im Zeitraum von `--sessions N` bzw. `--since`; der Stand umfasst Suite, Commit, Diff und Arbeitsbaum (Feld `tree`), Arbeitsbäume vermischen sich nicht. Ohne `--sessions` gilt das ganze Lager. Die Zeile nennt je Flake-Namen die 1-min-Last des roten Laufs (`?` bei fehlender Last) und zählt getrennt `davon Last ≥ 8: n von m` (E-070, R695); die Rohzahl bleibt Bewertungsgrundlage.
 - **Vorfälle:** Eine rote Ampelzeile in zwei benachbarten grossen Sessions erzeugt je Kennzahl höchstens einen Vorfall (`ampel_incidents`, `tools/studio/effort.py`).
 
 ## Messung und Verbesserung
