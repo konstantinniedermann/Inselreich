@@ -408,3 +408,24 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Der Gewürzkauf deckt nur die nächsten 100 Ticks.
 - Ursprung: Kurzdesign I-132, Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-132.md`
 - Erste Einschätzung: niedrig; Baseline-Thema, nur per Werte-Ruling ändern.
+
+## 2026-10-16 · I-122/I-123: Rot-vor-Beleg fehlt im Ledger
+
+- Fundort: Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-I-122-I-123.md`, BEDENKEN 1
+- Beobachtung: Das Ledger hat 4 Zeilen, der Plan verlangte Rot-vor-Beleg; Tests und Code liegen teils im selben Commit, der Rot-Stand ist nicht nachprüfbar.
+- Ursprung: Gate Merge I-122/I-123, R747
+- Erste Einschätzung: niedrig; Prozess-Thema für die Kurz-Retro.
+
+## 2026-10-16 · I-122/I-123: widersprüchliche Exit-Zeilen final.txt/check.log
+
+- Fundort: `.studio/qa/i122-i123/` (`final.txt` CHECK_EXIT=2 vor dem Fix, `check.log` ohne Exit-Zeile)
+- Beobachtung: Alle Stufen im neueren `check.log` grün, aber der Exit-Code ist nicht belegt.
+- Ursprung: Gate Merge I-122/I-123, R747
+- Erste Einschätzung: niedrig; der volle Lauf im `push-check` vor REL-26 deckt es ab.
+
+## 2026-10-16 · I-122/I-123: Beobachtungen aus lead-tech
+
+- Fundort: `src/ui/` (Vertragskarte, `app.ts`), Playtester-Lauf
+- Beobachtung: (a) Umbruch «Strafe / 135» bei 1280 px; (b) verzögerter Klang bei Pause-Annahme; (c) `querySelector` in `app.ts`; (d) hängender Playtester-Lauf (Skripthänger).
+- Ursprung: lead-tech, I-122/I-123, R747
+- Erste Einschätzung: niedrig; (a) und (b) vor der Auswertung im Browser prüfen.

@@ -193,7 +193,7 @@ IDEEN-11 ins Archiv). Pool danach: 23 von 40 offen, nach dem Runden-Ruling wie e
 - Nutzen/Aufwand: doppelt die Bedarfssymbole in Nahansicht · M · ≈ 2 Pakete
 - Entscheid: offen (IDEEN-11)
 
-### I-122 · eingeplant (R737) · Vorwarnung vor der Stammkunden-Lieferung
+### I-122 · gemergt (R747) · Vorwarnung vor der Stammkunden-Lieferung
 
 - Bereich: Ton · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-12 Scout A; Playtest `.studio/qa/REL-24-25/i091/report.md` Schritte 2 und 6 (Toast und Fehlerton erst zum Periodenbeginn, die Karte zeigt vorher still «nächste Lieferung 5 s · Lager 0/5») · Herkunft: vom Studio vorgeschlagen
 - Spielerwirkung: „Der Spieler hört 20 s vor der Lieferung einen leisen Hinweiston, sieht die Vertragskarte kurz aufleuchten und kauft noch 3 Rum nach, statt die Kulanz zu verbrauchen."
@@ -204,9 +204,9 @@ IDEEN-11 ins Archiv). Pool danach: 23 von 40 offen, nach dem Runden-Ruling wie e
 - Doppelung: I-091 (live) meldet den Fehlbestand erst beim Periodenwechsel; I-009 (live) ist Dauermangel der Häuser, kein Termin; I-109 (live) zeigt Reichweite ohne Vertrag (siehe I-123).
 - Bewertung lead-design: bestätigt (13). Einzige Idee der Runde mit echtem Playtest-Beleg; macht aus «Kulanz passiert mir» eine Entscheidung (nachkaufen oder Puffer verbrauchen), die I-091 laut Spec R663 gerade erzeugen wollte. Ideal als Häppchen mit I-123.
 - Nutzen/Aufwand: Stammkunde wird rechtzeitig entscheidbar · S · ≈ 50 Tools
-- Entscheid: eingeplant (R737): Kurzdesign Stufe leicht jetzt, mit I-123
+- Entscheid: gemergt (R747)
 
-### I-123 · eingeplant (R737) · Reichweite rechnet den Stammkunden mit
+### I-123 · gemergt (R747) · Reichweite rechnet den Stammkunden mit
 
 - Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-12 Scout A; `docs/beobachtungen.md` «10-16 · Reichweite ignoriert Handel und Aufträge» (abgehakt, Trigger: Spieler liest die Zeile als falsch); `src/ui/hud.ts:124–127` (`reachLine` «ohne Handel und Aufträge») · Herkunft: vom Studio vorgeschlagen
 - Spielerwirkung: „Der Spieler sieht am Rum-Chip «leer in 3:20» und die Zahl stimmt auch dann, wenn der Stammkunde alle 90 s 5 Rum abholt."
@@ -217,7 +217,7 @@ IDEEN-11 ins Archiv). Pool danach: 23 von 40 offen, nach dem Runden-Ruling wie e
 - Doppelung: I-109 (live) nennt die Grenze selbst; die Beobachtung ist abgehakt mit Spieler-Trigger, der noch nicht eingetreten ist.
 - Bewertung lead-design: Spass 2 → 1: Korrektur einer Anzeige ohne neue Entscheidung, und der Trigger (Spieler liest die Zeile falsch) ist nicht eingetreten. Als Beipack zu I-122 sinnvoll (gleiche Stelle, gleicher Moment), allein nicht.
 - Nutzen/Aufwand: Reichweite stimmt mit Vertrag · S · ≈ 30 Tools als Beipack
-- Entscheid: eingeplant (R737): Beipack zu I-122
+- Entscheid: gemergt (R747)
 
 ### I-128 · eingeplant (R737) · Lärm und Rauch (Gewerbe stört das Wohnviertel)
 
