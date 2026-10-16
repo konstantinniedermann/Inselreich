@@ -1801,3 +1801,17 @@ Hash des Befehls (Allowlist); die Schwärzung bleibt als zweite Linie. Restlück
 Regelbezug: R673, R721, R725, OWASP · Kosten bei Irrtum: ein Werkzeug-Paket mehr für eine lokale Datei.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-REDACT · ADR: —
+
+## R733 · 2026-10-16 · TOOL-GUARD-REDACT: Muster-Jagd beendet → TOOL-GUARD-ALLOWLIST jetzt; Ad-hoc-Retro Budgetüberschreitungen
+
+Ruling: Das frische Review auf `tool/guard-redact` @ `74c3d966` ergab ZURÜCK (neue Unter-Schwärzung bei angehängten Namen wie `PGPASSWORD=`, `accessToken=`; `passphrase`
+fehlt). Vier Runden Muster-Schwärzung haben je neue Lücken erzeugt → **kein Merge von `tool/guard-redact` als Endstand**. Stattdessen **TOOL-GUARD-ALLOWLIST** (lead-tech,
+sonnet, Budget 3) auf diesem Branch: `guard_block` speichert im Feld `command` nur Programmname + Unterbefehl (je Token nur `[a-z0-9._-]+`, sonst `?`), dazu Regel
+und SHA-256-Präfix (12 Zeichen) des vollen Befehls; nie Argumente. Die Schwärzung bleibt für andere Ausgaben als zweite Linie mit den Vorschlägen des Reviews
+(`token`/`secret`/`password`/`passwd`/`credential`/`passphrase` ohne Zeichensperre, CamelCase). Tests: kein Secret aus der bisherigen Testsammlung erscheint im Ereignis.
+**Ad-hoc-Retro** (studio-coach, sonnet, Hook-Pflicht): Budgetüberschreitung lead-tech 5 von 3 (TOOL-GUARD-REDACT, R725/R732) und ORT-A T08 +5 Starts (R717–R730) —
+Ursache, Hebel, Messgrösse.
+
+Regelbezug: R673, R725, R732, OWASP, Handbuch Verbesserungsschleife · Kosten bei Irrtum: ein Diagnosefeld mit weniger Inhalt (Hash statt Klartext).
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-REDACT, Hook «Ad-hoc-Retro fällig» · ADR: —
