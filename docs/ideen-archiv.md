@@ -751,3 +751,44 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Entscheid: IDEEN-09 Empfehlung parken bis Wirtschafts-Brainstorming nach Erweiterung 1 K2
 - Stand R663 (design-I-091-I-094, 2026-10-16): Empfehlung **verwerfen**, Vorlage `docs/superpowers/specs/2026-10-16-i094-darlehen-design.md`. Rechnung Teil A: vor U6 Pflichtzug (r 0,42 gegen Schwelle 0,04) mit unlesbarer Spirale (+3277 / −27 761 bei 20 / 30 %), ab U6 wirkungslos (≤ 0,2 min Bilanz); kein Hebel öffnet ein Wahlfenster. Nach Entscheid L0 ins Archiv.
 - Archiviert: R670 verworfen (Kenntnis an Nutzer). Vorlage `docs/superpowers/specs/2026-10-16-i094-darlehen-design.md` und Rechnung `docs/superpowers/specs/2026-10-16-i091-i094-rechnung.md` Teil A auf Branch `design/i091-i094`; wieder aufnehmbar nur als neue Idee (z. B. «Vorschuss des Stammkunden», Vorlage §4).
+
+## Rangliste IDEEN-10 (Vorschlag lead-design, Ruling L0 offen)
+
+Breite Runde nach REL-22 (R445), Scouts A (Spätspiel und Handel nach Handel 2) und B (Komfort und Übersicht): 9 Vorschläge,
+eingetragen als I-101–I-109. Keine Idee ändert Kernsäule, Genre oder Titel (§5.3); keine doppelt Erweiterung 1 oder
+Handel 2 (I-101 und I-102 setzen Handel 2 live voraus, I-104 und I-105 nach Handel 2 bzw. K3 prüfen). Pool danach: 19 von 40 offen.
+
+| Rang | ID    | Name                                | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                | Empfehlung                                           |
+| ---- | ----- | ----------------------------------- | ------ | ----- | --------------- | --------------------------------------------- | ---------------------------------------------------- |
+| 1    | I-102 | Auftragsvorschau                    | S      | 13    | nein / nein     | Auftrag planbar, ≈ 60 Tools                   | live mit UI-HAEPPCHEN-E (siehe Archiv)               |
+| 2    | I-104 | Ausschreibung                       | M      | 13    | ja / nein       | echte Spätspiel-Wahl «Vorrat statt Verkauf»   | parken: Baustein Handels-Brainstorming nach Handel 2 |
+| 3    | I-109 | Reichweite am Gut-Chip              | S–M    | 12    | nein / nein     | Mangel vorausplanen, ≈ 1 Paket                | live mit UI-HAEPPCHEN-D (siehe Archiv)               |
+| 4    | I-108 | Einnahmen und Unterhalt getrennt    | S      | 12    | nein / nein     | Wirtschaftslage auf einen Blick, ≈ 60 Tools   | einplanen Häppchen                                   |
+| 5    | I-103 | Routen-Bilanz                       | S–M    | 12    | nein / nein     | Schiffsentscheid statt Bauchgefühl, ≈ 1 Paket | einplanen nach Handel 2 (mit I-101)                  |
+| 6    | I-101 | Fernauftrag-Marke Seekarte          | S      | 12    | nein / nein     | Fernauftrag auf einen Blick, ≈ 50 Tools       | einplanen mit Handel 2 als Beipack                   |
+| 7    | I-105 | Abfahrtsregel der Route             | M      | 11    | ja / nein       | Takt gegen Auslastung, ≈ 2 Pakete             | parken: K3-Spec klären (I-015)                       |
+| 8    | I-106 | «Neu»-Karte schlank und schliessbar | S      | 10    | nein / nein     | Sicht frei, ≈ 50 Tools                        | prüfen gegen UI-AUFRAEUM-3/-D, sonst verwerfen       |
+| 9    | I-107 | Tempo-Tasten + und −                | S      | 10    | nein / nein     | Lückenfüller, ≈ 40 Tools                      | parken (I-083 deckt den Kern)                        |
+
+## Rangliste IDEEN-09 (Vorschlag lead-design, Ruling L0 offen)
+
+Breite Runde nach REL-21 (R604, R445), Scouts A (Playtests REL-20/21), B (Genre Aufbau und Handel), C (Bedienung Desktop)
+parallel: 14 Vorschläge, 13 eingetragen als I-088–I-100. Scout-Idee A2 «Inselvorteil im Betriebs-Panel» entfällt (schon live:
+`src/ui/inspect.ts` zeigt `traitLine`). Keine Idee ändert Kernsäule, Genre oder Titel (§5.3); keine gehört in Erweiterung 1, I-096
+grenzt an K2 «Stand halten». Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand.
+
+**Bereinigung nach R599 (Bestätigung im Runden-Ruling):** ins Archiv als `geparkt` I-029, I-051, I-058, I-059 (R474) und I-077,
+I-081, I-082, I-084, I-086 (R566), dazu I-048 (R571 Verzicht, Mechanik inaktiv); Rangliste IDEEN-08 ins Archiv. I-047 bleibt
+`eingeplant` bis REL-21 live ist. Pool danach: 15 von 40.
+
+Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu durchnummeriert (bisherige Ränge 2 und 7 = I-088/I-090, Zeilen im Archiv).
+
+| Rang | ID    | Name                         | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                    | Empfehlung                                        |
+| ---- | ----- | ---------------------------- | ------ | ----- | --------------- | ------------------------------------------------- | ------------------------------------------------- |
+| 1    | I-092 | Inselmarkt-Vorliebe          | S–M    | 12    | nein / nein     | jede Fremdinsel bekommt eine Handelsrolle, 1 Pkt. | einplanen: Design-Paket mit Rechnung, dann 1 Pkt. |
+| 2    | I-100 | «Neu»-Zähler am Ereignis-Log | S–M    | 11    | nein / nein     | verpasste Krisen bei 4× lesbar, ≈ 70 Tools        | einplanen Häppchen danach; ersetzt I-058          |
+| 4    | I-091 | Treuebonus beim Stammkunden  | M      | 11    | ja / nein       | Bindung belohnt (Kulanz statt Geld), ≈ 60 Tools   | Spec OK R671, Plan Stufe voll (lead-tech)         |
+| 7    | I-097 | Pause sichtbar auf der Karte | S      | 9     | nein / nein     | Orientierung, kein Playtest-Befund                | live mit UI-HAEPPCHEN-E (siehe Archiv)            |
+| —    | I-096 | Steuerstufe je Insel         | S–M    | 8     | ja / nein       | Stellschraube ohne neue Abwägung                  | verwerfen                                         |
+
+I-093 (verworfen) und I-095 (erledigt) sind nach Handel 2 (R658, R664) ins Archiv verschoben; die Ränge 3 und 6 entfallen.
