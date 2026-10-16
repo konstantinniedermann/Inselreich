@@ -1711,3 +1711,14 @@ aus dem Restbudget (8 von 25 verbraucht), Parallelität 2; T00-Ersatzmessung wei
 Regelbezug: R674, R711, R713, R716 · Kosten bei Irrtum: ein Szenariotest, der im Final-Review nachgeschärft wird.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I-112 C2 · ADR: —
+
+## R725 · 2026-10-16 · TOOL-GUARD-REDACT: Unter-Schwärzungen vor dem Gate schliessen; +1 Start
+
+Ruling: `tool/guard-redact` @ `de380351` (Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-GUARD-REDACT.md`): Vor Gate Merge schliesst lead-tech die gemeldeten
+Unter-Schwärzungen (`curl -u`, `Authorization`-Header, `token=`/`api_key=`/`secret=`/`password=`, `*_TOKEN=`/`*_KEY=`/`*_SECRET=`/`*_PASSWORD=`, Werte in
+Anführungszeichen) und setzt eine Wortgrenze vor `sk-`/`gh*_`. Über-Schwärzung (`-pattern`) ist hinnehmbar, Unter-Schwärzung nicht (OWASP). +1 Start für ein
+frisches Review. Verbleibende bewusste Lücken trägt L0 nach dem Bericht in `docs/beobachtungen.md` ein.
+
+Regelbezug: R721, OWASP (../CLAUDE.md Review-Besonderheit) · Kosten bei Irrtum: ein Start mehr für ein lokales Werkzeug.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-REDACT · ADR: —
