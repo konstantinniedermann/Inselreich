@@ -9,6 +9,8 @@ export interface CouncilCardHandle {
   setOpen(want: boolean): void;
   /** Zeichnet neu, nur wenn sich der Inhalt änderte (Fokus und Markierung bleiben). */
   update(world: World): void;
+  /** Schliesst die Karte und entfernt sie aus dem Seitenaufbau; danach wirkungslos. */
+  dispose(): void;
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -32,6 +34,7 @@ export function createCouncilCard(
   root.setAttribute('aria-label', 'Rat');
   host.append(root);
   let open = false;
+  let disposed = false;
   let signature = '';
   let lastView: CouncilView | null = null;
   const picked = new Map<CouncilTier, CouncilSide>();
@@ -42,6 +45,7 @@ export function createCouncilCard(
     const close = el('button', 'btn council-close', 'Schliessen');
     close.type = 'button';
     close.addEventListener('click', () => {
+      if (disposed) return;
       close.blur();
       onClose();
     });
@@ -74,7 +78,7 @@ export function createCouncilCard(
       }
       go.addEventListener('click', () => {
         const sel = picked.get(tier);
-        if (sel === undefined) return;
+        if (disposed || sel === undefined) return;
         picked.delete(tier);
         go.blur();
         onDecree(tier, sel);
@@ -95,6 +99,7 @@ export function createCouncilCard(
       return open;
     },
     setOpen(want) {
+      if (disposed) return;
       open = want;
       root.hidden = !want;
       if (want && lastView) {
@@ -104,12 +109,20 @@ export function createCouncilCard(
       }
     },
     update(world) {
+      if (disposed) return;
       lastView = councilCards(world);
       if (!open) return;
       const sig = JSON.stringify(lastView);
       if (sig === signature) return;
       signature = sig;
       build(lastView);
+    },
+    dispose() {
+      disposed = true;
+      open = false;
+      lastView = null;
+      picked.clear();
+      root.remove();
     },
   };
 }

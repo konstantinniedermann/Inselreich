@@ -1762,6 +1762,7 @@ function launch(
     disposed = true;
     cancelAnimationFrame(rafId);
     layers.dispose();
+    councilCard.dispose();
     resizeObserver.disconnect();
     dprQuery?.removeEventListener('change', onDprChange);
     input?.unbind();
