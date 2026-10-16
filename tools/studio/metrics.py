@@ -443,6 +443,7 @@ def _with_flakes(
     events = _from_since(events, since)
     has_tests = any(e.get("kind") in ("test_failed", "test_passed") for e in events)
     data["flakes"] = efficiency.flake_suspects(events, since) if has_tests else None
+    data["flake_loads"] = efficiency.flake_loads(events, since) if has_tests else None
     return data
 
 
