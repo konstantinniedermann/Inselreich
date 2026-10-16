@@ -7836,3 +7836,16 @@ koordiniert über R424 (≤ 2 Browser-Läufe). Gate Plan durch lead-qa; Budgetan
 Regelbezug: gates.md Gate Plan, R424, R677 · Kosten bei Irrtum: ein Doku-Merge-Konflikt zwischen zwei Strängen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-UI-HAEPPCHEN-F · ADR: —
+
+## R679 · 2026-10-16 · Gate Plan UI-HAEPPCHEN-F: OK mit 3 Auflagen; Budget 21 Starts, zwei Stränge mit I-091
+
+Ruling: Urteil lead-qa (`.studio/handoffs/2026-10-16-lead-qa-gate-plan-UI-HAEPPCHEN-F.md`) übernommen: **OK mit Auflagen** — (1) hoch, T04: `build()`
+setzt `balTick` zurück, Testfall «Routenwechsel bei gleichem Tick» (Pause); (2) T02: `farMark.test.ts`/`seaMapView.test.ts` bauen Fernaufträge
+über Sim-Funktionen/Helfer, keine `Contract`-Literale (I-091 macht neue Felder zur Pflicht); (3) T05: AK-5 zusätzlich mit unabhängig berechnetem
+Wert. Plan-Instanz setzt sie auf `plan/ui-haeppchen-f` um. Budget **21 Starts** für F (Parallelität 1 im Strang); studioweit laufen F und I-091
+(18 Starts) nach Merge UI-HAEPPCHEN-E als **zwei Stränge**, je ein Controller, Testlock R380, ≤ 2 Browser-Läufe (R424). Merge-Reihenfolge: I-091
+vor F (F T07 Doku wartet auf I-091; F holt main per Merge vor seinem Gate).
+
+Regelbezug: gates.md Gate Plan, R380, R424, R675, R678 · Kosten bei Irrtum: eine leere Bilanzzeile nach Routenwechsel in der Pause.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-UI-HAEPPCHEN-F · ADR: —
