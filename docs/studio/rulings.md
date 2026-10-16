@@ -1686,3 +1686,14 @@ Werkzeug-Paket, Budget 3.
 Regelbezug: R445, R692, R721 · Kosten bei Irrtum: ein Startpaket, das später als Stil-Wahl doch gebaut wird (≈ 60 Tools).
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I-110 · ADR: —
+
+## R723 · 2026-10-16 · ORT-A C2: +1 Start für frisches Delta-Review T08; AK-50 einseitiges Kernfenster prüft der Reviewer
+
+Ruling: Budgetantrag D-ORT-A-C2-2 (`feat/ort-a-mess` @ `aafbc36e`, dritte Fix-Runde T08 nur `tools/render-qa/`) → **+1 Start aus dem Puffer** (danach 8) für ein frisches
+Delta-Review opus (R673, R708). Die Abweichung AK-50 (Kernfenster einseitig statt ±0,1 Kachel) bewertet der Delta-Reviewer ausdrücklich; ohne Begründung im Review
+gilt der Plan. Erwartete Unterschreitung «< 20 Querschnitte je Art» auf der Fixture: C2 vermerkt sie im Handoff als Risiko für T09, keine Fixture-Erweiterung in T08.
+`ortsrand.mjs` als Parallelquelle → Eintrag in `docs/beobachtungen.md` auf dem Strang. Danach Stopp C2; T09 (Messung ORT-1) startet erst bei freiem Messfenster.
+
+Regelbezug: R673, R705, R708, R717 · Kosten bei Irrtum: ein Start aus dem Puffer.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
