@@ -77,6 +77,8 @@ export const CONTRACT_PREMIUM = 0.68;
 export const CONTRACT_PENALTY_PCT = 100;
 /** Niedrigste Stufe, ab der Liefergüter für Verträge infrage kommen (I-047). */
 export const CONTRACT_MIN_TIER = 3;
+/** Lieferungen, nach denen ein Vertrag treu ist und einen Fehlbestand einmal verzeiht (I-091 R-T2). */
+export const CONTRACT_LOYAL_AFTER = 5;
 export const STORAGE_CAP = 100;
 export const START_MONEY = 5000;
 export const START_STOCK: Record<GoodId, number> = {

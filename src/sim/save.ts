@@ -51,7 +51,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 15;
+export const SAVE_VERSION = 16;
 
 export type { LoadResult };
 
@@ -842,7 +842,7 @@ function isOrderGoodOnIsland(o: Record<string, unknown>, islandCount: number): b
   );
 }
 
-/** Vertrag und Angebot (v14): `null` oder strukturell gültig; Vertrag schliesst Auftrag und Angebot aus. */
+/** Vertrag und Angebot (v14, `deliveries` ab v16): `null` oder strukturell gültig; Vertrag schliesst Auftrag und Angebot aus. */
 function isValidContractFields(raw: Record<string, unknown>): boolean {
   const { contract, contractOffer, order } = raw;
   const count = (raw.islands as unknown[]).length;
@@ -853,7 +853,9 @@ function isValidContractFields(raw: Record<string, unknown>): boolean {
       !isInt(contract.amount) ||
       contract.amount < 1 ||
       !isInt(contract.price) ||
-      contract.price < 0
+      contract.price < 0 ||
+      !isInt(contract.deliveries) ||
+      contract.deliveries < 0
     )
       return false;
     if (order !== null || contractOffer !== null) return false;
@@ -891,6 +893,14 @@ export function migrateV14ToV15(raw: Record<string, unknown>): void {
   if (!('farOffer' in raw)) raw.farOffer = null;
   if (!('farSkip' in raw)) raw.farSkip = null;
   raw.version = 15;
+}
+
+/** v15 → v16 (I-091): Treue-Zähler `contract.deliveries = 0` bei laufendem Vertrag; `null` bleibt. Wirft nie. */
+export function migrateV15ToV16(raw: Record<string, unknown>): void {
+  const c = raw.contract;
+  if (typeof c === 'object' && c !== null && !Array.isArray(c) && !('deliveries' in c))
+    (c as Record<string, unknown>).deliveries = 0;
+  raw.version = 16;
 }
 
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
@@ -950,6 +960,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 12) migrateV12ToV13(raw);
   if (raw.version === 13) migrateV13ToV14(raw);
   if (raw.version === 14) migrateV14ToV15(raw);
+  if (raw.version === 15) migrateV15ToV16(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

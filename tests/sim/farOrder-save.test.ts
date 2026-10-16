@@ -7,6 +7,7 @@ import type { LoadResult } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
+import { foldBackDeliveries } from './helpers';
 
 const P = (k: number): number => ORDER_FIRST_TICK + k * ORDER_PERIOD;
 const isl = (w: World, kind: 'A' | 'B' | 'C'): number =>
@@ -51,10 +52,10 @@ describe('AK-H2-21 Version und Migration', () => {
 
   it('Vorversion ohne Felder lädt verlustfrei und läuft 10 Perioden bitgleich', () => {
     const w = createWorld(3, { unlockAll: true });
-    const raw = JSON.parse(serialize(w)) as Record<string, unknown>;
+    const raw = foldBackDeliveries(JSON.parse(serialize(w)));
     delete raw.farOffer;
     delete raw.farSkip;
-    raw.version = SAVE_VERSION - 1;
+    raw.version = (raw.version as number) - 1;
     const r = deserialize(JSON.stringify(raw));
     expect(r.ok).toBe(true);
     if (!r.ok) return;
@@ -109,7 +110,7 @@ describe('AK-H2-22 Fernangebot und Sperre', () => {
     mut((w) => (w.contractOffer = { good: 'rum', amount: 5, price: 27, island: 0 } as never));
     mut((w) => {
       w.order = null;
-      w.contract = { good: 'rum', amount: 5, price: 27, island: 0 } as never;
+      w.contract = { good: 'rum', amount: 5, price: 27, island: 0, deliveries: 0 } as never;
     });
   });
   it('Angebot bei Fernauftrag ist beschädigt', () => {

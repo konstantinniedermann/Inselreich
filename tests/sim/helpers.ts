@@ -283,6 +283,23 @@ export const V13_WORLD_KEYS = V12_WORLD_KEYS;
 const FAR_STATE_ERROR = 'foldBackFarOrders: Fernzustand nicht rückfaltbar';
 
 /**
+ * I-091: entfernt `contract.deliveries` (ohne Umordnen) und setzt `version − 1`. Nur für Stände der aktuellen Version;
+ * äusserster Faltschritt. Die Ketten `foldBackToV13/V12/V11` brauchen ihn nicht: Sie verlangen `contract === null` und
+ * setzen die Version selbst.
+ */
+export function foldBackDeliveries(x: Record<string, unknown>): Record<string, unknown> {
+  const c = x.contract;
+  const out: Record<string, unknown> = { ...x, version: (x.version as number) - 1 };
+  if (typeof c === 'object' && c !== null) {
+    const rest: Record<string, unknown> = {};
+    for (const k of Object.keys(c))
+      if (k !== 'deliveries') rest[k] = (c as Record<string, unknown>)[k];
+    out.contract = rest;
+  }
+  return out;
+}
+
+/**
  * Handel 2: entfernt `farOffer` und `farSkip` (nur wenn beide `null`) ohne Umordnen, `version − 1`. Schlüsselbasiert:
  * ohne beide Schlüssel unverändert zurück. Offenes Angebot, gesperrte Periode oder Fernauftrag (`order.island`) → Fehler.
  * Steht vor allen Faltketten; eine neuere Version setzt ihren Schritt davor (Plan Handel 2, Dateimatrix).

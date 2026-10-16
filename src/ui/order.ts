@@ -1,12 +1,12 @@
 import { HOME } from '../sim/world';
 import { islandName } from '../sim/islands';
-import { GOODS } from '../sim/defs/goods';
+import { CONTRACT_LOYAL_AFTER, GOODS } from '../sim/defs/goods';
 import { contractUnitPrice, nextOrderTick, previewOrder } from '../sim/orders';
 import { ORDER_PERIOD } from '../sim/defs/timing';
 import type { StepReport } from '../sim/tick';
 import type { SoundEvent } from '../audio/sound';
 import { functionLock } from '../sim/unlocks';
-import type { ContractEvent, GoodId, Order, Result, World } from '../sim/types';
+import type { Contract, ContractEvent, GoodId, Order, Result, World } from '../sim/types';
 import { setField } from './dom';
 import { deliverTarget, farOrderText, farOrderWarn } from './farOrder';
 import { sellPrice } from '../sim/trade';
@@ -73,6 +73,13 @@ function producedPerMinute(world: World, island: number, good: GoodId): number {
   return value;
 }
 
+/** Baustein der Vertragszeile (I-091): «Treue n/N» bzw. «treu: verzeiht einmal»; N aus CONTRACT_LOYAL_AFTER. */
+export function loyaltyText(c: Contract): string {
+  return c.deliveries >= CONTRACT_LOYAL_AFTER
+    ? 'treu: verzeiht einmal'
+    : `Treue ${c.deliveries}/${CONTRACT_LOYAL_AFTER}`;
+}
+
 /** Text der Auftragskarte: aktiver Auftrag mit Lagerstand, sonst die Wartezeit bis zum nächsten. */
 export function orderCardText(world: World, island: number = HOME): string {
   const rest = (): string => formatGameTime(nextOrderTick(world) - world.tick);
@@ -82,7 +89,8 @@ export function orderCardText(world: World, island: number = HOME): string {
     const stock = world.islands[c.island]!.stock[c.good];
     return (
       `Stammkunde: ${c.amount} ${GOODS[c.good].name}${islandSuffix(world, c.island)}` +
-      ` · nächste Lieferung ${rest()} · Lager ${stock}/${c.amount}`
+      ` · nächste Lieferung ${rest()} · Lager ${stock}/${c.amount}` +
+      ` · ${loyaltyText(c)}`
     );
   }
   const offer = world.contractOffer;
@@ -142,24 +150,54 @@ export function contractNotice(
   world: World,
 ): { text: string; kind: 'info' | 'warn'; sound: SoundEvent } {
   const name = GOODS[ev.good].name;
-  if (ev.kind === 'delivered') {
-    return {
-      text: `Stammkunde: ${ev.amount} ${name} geliefert, +${ev.pay}`,
-      kind: 'info',
-      sound: 'orderDone',
-    };
+  switch (ev.kind) {
+    case 'delivered':
+      return {
+        text:
+          `Stammkunde: ${ev.amount} ${name} geliefert, +${ev.pay}` +
+          (ev.becameLoyal ? ' · treu: verzeiht einen Fehlbestand' : ''),
+        kind: 'info',
+        sound: 'orderDone',
+      };
+    case 'excused': {
+      let why: string;
+      const reason = ev.reason;
+      switch (reason) {
+        case 'stock':
+          why = `zu wenig ${name}`;
+          break;
+        case 'kontor':
+          why = `kein Kontor auf ${islandName(world, ev.island)}`;
+          break;
+        default: {
+          const unreachable: never = reason;
+          return unreachable;
+        }
+      }
+      return {
+        text: `Stammkunde wartet: ${why}, diesmal ohne Strafe`,
+        kind: 'warn',
+        sound: 'error',
+      };
+    }
+    case 'broken': {
+      const why =
+        ev.reason === 'stock'
+          ? `: zu wenig ${name}`
+          : ev.reason === 'kontor'
+            ? `: kein Kontor auf ${islandName(world, ev.island)}`
+            : '';
+      return {
+        text: `Stammkunde abgesprungen${why}. Strafe ${ev.penalty}`,
+        kind: 'warn',
+        sound: 'error',
+      };
+    }
+    default: {
+      const unreachable: never = ev;
+      return unreachable;
+    }
   }
-  const why =
-    ev.reason === 'stock'
-      ? `: zu wenig ${name}`
-      : ev.reason === 'kontor'
-        ? `: kein Kontor auf ${islandName(world, ev.island)}`
-        : '';
-  return {
-    text: `Stammkunde abgesprungen${why}. Strafe ${ev.penalty}`,
-    kind: 'warn',
-    sound: 'error',
-  };
 }
 
 /** Meldet und vertont die Vertragsereignisse der Schritte eines Frames. */
