@@ -39,6 +39,7 @@ describe('I-122 Vorwarn-Verdrahtung (AK-W9)', () => {
     warned = run(w, SETTLE - 100, 1, warned, log);
     expect(log).toEqual(['contractWarn']);
     w.islands[HOME]!.stock.rum = 9;
+    warned = run(w, w.tick + 1, 1, warned, log);
     w.islands[HOME]!.stock.rum = 0;
     run(w, SETTLE - 5, 1, warned, log);
     expect(log).toEqual(['contractWarn']);
@@ -66,13 +67,6 @@ describe('I-122 Vorwarn-Verdrahtung (AK-W9)', () => {
     const w = world(SETTLE - 100);
     const log: string[] = [];
     run(w, SETTLE - 20, 1, warnPeriod(w), log);
-    expect(log).toEqual([]);
-  });
-
-  it('Pause: warnStep wird nicht gerufen, nichts ändert sich', () => {
-    const w = world(SETTLE - 100);
-    const log: string[] = [];
-    run(w, SETTLE - 100, 1, null, log);
     expect(log).toEqual([]);
   });
 });

@@ -362,6 +362,7 @@ export function updateOrder(el: HTMLElement, world: World, island: number = HOME
   setHidden('order-producer', world.contract === null);
   setHidden('order-cancel', world.contract === null);
   el.classList.toggle('order-card--warn', contractWarn(world) || farOrderWarn(world));
+  if (contractWarning(world) === null) el.classList.toggle('order-card--soon', false);
   const btn = el.querySelector<HTMLElement>('[data-field="order-deliver"]');
   if (btn) btn.hidden = world.order === null;
   const target = deliverTarget(world, island);

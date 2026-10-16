@@ -5,7 +5,15 @@ import { contractWarning, nextSettleTick } from '../../src/sim/orders';
 import type { Contract, World } from '../../src/sim/types';
 import { HOME, createWorld } from '../../src/sim/world';
 import { formatGameTime } from '../../src/ui/time';
-import { flashOrderCard, orderCardText, shouldWarnNow, warnPeriod } from '../../src/ui/order';
+import { FakeElement, fakeDocument } from './fakeDom';
+import {
+  flashOrderCard,
+  renderOrder,
+  updateOrder,
+  orderCardText,
+  shouldWarnNow,
+  warnPeriod,
+} from '../../src/ui/order';
 
 const contract = (deliveries: number): Contract => ({
   good: 'rum',
@@ -106,5 +114,29 @@ describe('I-122 flashOrderCard', () => {
     const cancel = flashOrderCard(el);
     cancel();
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe('I-122 updateOrder entfernt Flash bei Ende der Warnung (Regel 6)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  it('order-card--soon sofort weg, wenn contractWarning null ist', () => {
+    vi.stubGlobal('document', fakeDocument);
+    const w = warnWorld(0);
+    const el = new FakeElement('span');
+    const actions = {
+      deliver: vi.fn(),
+      accept: vi.fn(),
+      decline: vi.fn(),
+      cancel: vi.fn(),
+      toProducer: vi.fn(),
+      acceptFar: vi.fn(),
+    };
+    renderOrder(el as unknown as HTMLElement, w, actions);
+    el.classList.toggle('order-card--soon', true);
+    updateOrder(el as unknown as HTMLElement, w);
+    expect(el.classList.contains('order-card--soon')).toBe(true);
+    w.islands[HOME]!.stock.rum = 99;
+    updateOrder(el as unknown as HTMLElement, w);
+    expect(el.classList.contains('order-card--soon')).toBe(false);
   });
 });
