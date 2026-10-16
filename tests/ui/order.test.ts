@@ -368,6 +368,19 @@ describe('UI-AUFRAEUM-4 T01 Erzeugungs-Cache (AK-1 bis AK-4)', () => {
     expect(running(orderCardText(w))).toBe(false);
   });
 
+  it('AK-3 Ausbau in der Pause (b.level ändert den Zyklus, Zahl, Ids und Listen bleiben)', () => {
+    const w = offerWorld();
+    addProducer(w, 'lumberjack', HOME);
+    w.tick += 1;
+    const perMin = (): number =>
+      perMinute(goodsBalance(w, HOME).wood.produced, GOODS_BALANCE_TICKS);
+    const base = perMin();
+    expect(orderCardText(w)).toContain(`Erzeugung ${base} / min`);
+    last(w).level = 2;
+    expect(perMin()).toBeGreaterThan(base);
+    expect(orderCardText(w)).toContain(`Erzeugung ${perMin()} / min`);
+  });
+
   it('AK-4 Cache liefert frischen Wert, ändert die Welt nicht, rechnet nicht doppelt', () => {
     const w = offerWorld();
     addProducer(w, 'lumberjack', HOME);
