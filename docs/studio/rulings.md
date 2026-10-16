@@ -1828,3 +1828,17 @@ opus frisch), Verbrauch dann 22 von 25. Danach voller `make check` bei Last ≤ 
 Regelbezug: R673, R708, R713, R728 · Kosten bei Irrtum: zwei Starts für Befunde, die auch nach dem Merge behebbar wären.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I-112 C4 · ADR: —
+
+## R735 · 2026-10-16 · Ad-hoc-Retro Budget: V1, V2 angenommen (Handbuch 1.61), V3 sofort für L0
+
+Ruling: Bericht `docs/studio/retros/2026-10-16-adhoc-budget.md` (`1e053c13`) → angenommen. Ursache: L0 bewilligte Zusatzstarts einzeln, ohne die Befundklasse der Vorrunde
+zu vergleichen; Umschnitt kam je eine Runde zu spät (R725 statt R733; R728 statt R729). **V1:** Ein Budgetantrag nach dem zweiten ZURÜCK/BEDENKEN derselben Befundklasse
+nennt die Klasse je Runde und eine Ansatz-Alternative; L0 bewilligt dann keinen weiteren Fix-Start ohne Ansatzprüfung (Messgrösse ≤ 1 Start über Budget je Paket über
+5 Pakete, Frist 2026-11-30). **V2:** Messwerkzeug-Tasks bei belegtem Messfenster höchstens 2 Review-Runden, Rest ins Paket mit freiem Fenster (≤ 2 Starts über Plan über
+3 Tasks, Frist 2026-12-15). Umsetzung V1/V2 als Handbuch 1.61 und Vorlage `templates/budgetantrag.md` durch studio-coach. **V3** gilt ab sofort für L0: jedes
+Budget-Ruling nennt den kumulierten Stand («n von m»); Messgrösse 10/10 bis 2026-11-15. Stand heute: TOOL-GUARD-REDACT/ALLOWLIST 5 von 3 + 3; ORT-A Puffer 6 von 12;
+I-112 22 von 25.
+
+Regelbezug: R316, R673, R708, Handbuch Verbesserungsschleife · Kosten bei Irrtum: ein Umschnitt, der eine Runde zu früh kommt.
+
+Entscheider: L0 · Anlass: Ad-hoc-Retro Budget · ADR: —
