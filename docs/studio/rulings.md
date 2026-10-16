@@ -7759,3 +7759,18 @@ lead-production merged `--no-ff` (lokal) und trägt den Restbefund RF-4 und «E5
 Regelbezug: gates.md Gate Merge, R669, E-043 · Kosten bei Irrtum: ein Timeout, der einen Leistungsrückgang verdeckt (Messwerte zeigen keinen).
 
 Entscheider: L0 · Anlass: Bericht lead-tech BEOB-15 · ADR: —
+
+## R673 · 2026-10-16 · Gate Merge UI-HAEPPCHEN-D + I-109: OK; Final-Review nie als Fortsetzung
+
+Ruling: `feat/ui-haeppchen-d` @ `dd8bc84e` (Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-UI-HAEPPCHEN-D.md`): frischer Final-Review opus OK,
+`make zeitreserve-gate` Exit 0 (2. Lauf nach Testsperre), Prüfliste vollständig (53 Screenshots), `src/sim`-Diff leer, `SAVE_VERSION` 15, README/arc42
+nachgeführt → **Gate Merge OK**. lead-production merged `--no-ff` (lokal), releases.json REL-24 Stufe Merge. Vier niedrige Reviewer-Hinweise (Log-
+Reihenfolge bei gleichem Tick, Tooltip «Leer in 0 s» bei Bestand 0, doppelte `goodsBalance`-Rechnung `hud.ts:368`, DOM-Test `updateHud`) →
+`docs/beobachtungen.md` (letzter schon eingetragen). Danach startet UI-HAEPPCHEN-E (R668, Budget 16).
+**Prozessbefund (belegt in `.studio/events.jsonl`):** Der Controller liess den Final-Review als `SendMessage`-Fortsetzung des sonnet-Reviewers laufen;
+eine Fortsetzung behält das Modell der Ursprungsinstanz. Ab sofort steht in jedem Umsetzungs-Briefing: «Final-Review immer als frischer
+`qa-code-reviewer`-Start mit `model: opus`, nie als Fortsetzung». Handbuch-/lernen.md-Eintrag durch studio-coach in der Session-Retro.
+
+Regelbezug: gates.md Gate Merge, STUDIO.md Modellwahl (Final-Review opus), R662 · Kosten bei Irrtum: ein Merge mit vier niedrigen Hinweisen.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-UI-HAEPPCHEN-D · ADR: —
