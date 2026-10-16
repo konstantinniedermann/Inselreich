@@ -1618,3 +1618,15 @@ Last ≤ 4 (T01 verhaltensneutral). Merge-Reihenfolge I-114 vor I-112, danach `g
 Regelbezug: R392, R708 V2, R711, R713 · Kosten bei Irrtum: eine Umsetzung, die eine halbe Stunde später weiterläuft.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I-112 C1 · ADR: —
+
+## R717 · 2026-10-16 · ORT-A C2: T07 abgenommen; +3 Starts aus dem Planpuffer für T08; `buildMsNachLaden` angenommen
+
+Ruling: `feat/ort-a-mess` @ `e8a3bdfd` (Basis A `72ee9610`, Messbasis `mess/ort-a-basis` @ `660f3160`; Handoff `.studio/handoffs/2026-10-16-lead-tech-ORT-A-C2.md`):
+T07 nach drei Review-Runden abgenommen; DEV-Haken nicht im Produktionsbuild. Budgetantrag D-ORT-A-C2-1 **+3 Starts für T08 aus dem Puffer (12) des Gesamtbudgets 57**
+(R705) freigegeben, Puffer danach 9; C2 setzt per Fortsetzung fort. Planabweichung: `hitch.mjs` `buildMs` → `buildMsNachLaden` (meist `null`), vollen Aufbau liefert
+`perf.mjs` (`buildMsA/B`), `patchMs` je Bau bleibt — angenommen. T08 pausiert die Sim beim Einfrieren (⏸ wie `perf.mjs`). Browser-Probeläufe und A/A-Kontrolle mit
+Vermerk «Messfenster belegt», solange N-102 offen ist; gewertete A/B-Messungen (T09) erst bei freiem Messfenster.
+
+Regelbezug: R553, R705, N-102 · Kosten bei Irrtum: drei Starts aus dem Puffer.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
