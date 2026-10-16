@@ -36,6 +36,34 @@ class FakeRunner:
         return [c for c in self.calls if c[0] != "git"]
 
 
+class FixRunner(FakeRunner):
+    """Prettier meldet `bad` beim ersten --list-different, nach --write sauber."""
+
+    def __init__(self, staged: str, bad: str, unstaged: str = ""):
+        super().__init__(staged)
+        self.bad, self.unstaged, self.written = bad, unstaged, set()
+
+    def __call__(self, args):
+        self.calls.append(list(args))
+        done = subprocess.CompletedProcess
+        if args[:3] == ["git", "diff", "--name-only"]:
+            return done(args, 0, self.unstaged, "")
+        if args[:2] == ["git", "diff"]:
+            return done(args, 0, self.staged, "")
+        if args[:2] == ["git", "rev-parse"]:
+            return done(args, 0, "/wt\n", "")
+        if args[:2] == ["git", "add"]:
+            return done(args, 0, "", "")
+        if "--write" in args:
+            self.written |= set(args[args.index("--") + 1 :])
+            return done(args, 0, "", "")
+        left = [n for n in self.bad.split() if n not in self.written]
+        return done(args, 1 if left else 0, "".join(f"{n}\n" for n in left), "")
+
+    def named(self, *prefix):
+        return [c for c in self.calls if c[: len(prefix)] == list(prefix)]
+
+
 class StagedTest(unittest.TestCase):
     def test_staged_files_nul_separated(self):
         run = FakeRunner("a b.md\0ü.ts\0dir/c.json\0")
@@ -87,6 +115,27 @@ class MainTest(unittest.TestCase):
         self.assertEqual(event["session_id"], "s-42")
         self.assertEqual(event["files"], ["a.ts"])
         self.assertEqual(event["source"], "log")
+
+    def test_fully_staged_file_is_formatted_and_restaged(self):
+        run = FixRunner("a.ts\0b.md\0", bad="a.ts\n")
+        self.assertEqual(precommit.main(run, {}), 0)
+        [write] = [c for c in run.prettier_calls() if "--write" in c]
+        self.assertEqual(write[-1], "a.ts")
+        self.assertNotIn("b.md", write)
+        [add] = run.named("git", "add")
+        self.assertEqual(add[-1], "a.ts")
+        self.assertNotIn("b.md", add)
+        self.assertEqual(self.events(), [])
+
+    def test_partially_staged_file_is_rejected_untouched(self):
+        run = FixRunner("a.ts\0b.ts\0", bad="a.ts\nb.ts\n", unstaged="b.ts\0")
+        self.assertEqual(precommit.main(run, {}), 1)
+        writes = [c for c in run.prettier_calls() if "--write" in c]
+        self.assertEqual(writes[0][-1], "a.ts")
+        self.assertNotIn("b.ts", writes[0])
+        [add] = run.named("git", "add")
+        self.assertEqual(add[-1], "a.ts")
+        self.assertEqual(self.events()[0]["files"], ["b.ts"])
 
     def test_prettier_error_rejects_with_all_files(self):
         run = FakeRunner("a.ts\0", prettier_code=2, prettier_out="")
@@ -195,6 +244,7 @@ class RealRunTest(unittest.TestCase):
             subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
             Path(repo, "bad.ts").write_text("const  a=1\n", "utf-8")
             subprocess.run(["git", "add", "bad.ts"], cwd=repo, check=True)
+            Path(repo, "bad.ts").write_text("const  a=2\n", "utf-8")
             done = self.run_hook(repo, env)
             self.assertEqual(done.returncode, 1, done.stderr)
             self.assertIn("bad.ts", done.stderr)
@@ -202,3 +252,30 @@ class RealRunTest(unittest.TestCase):
             subprocess.run(["git", "add", "bad.ts"], cwd=repo, check=True)
             done = self.run_hook(repo, env)
             self.assertEqual(done.returncode, 0, done.stderr)
+
+    def git(self, repo, *args):
+        done = subprocess.run(
+            ["git", *args], cwd=repo, capture_output=True, text=True, check=True
+        )
+        return done.stdout
+
+    def test_real_repo_formats_full_staged_but_rejects_partial(self):
+        with (
+            tempfile.TemporaryDirectory() as repo,
+            tempfile.TemporaryDirectory() as home,
+        ):
+            env = {**os.environ, "STUDIO_HOME": home}
+            self.git(repo, "init", "-q")
+            Path(repo, "full.ts").write_text("const  a=1\n", "utf-8")
+            Path(repo, "part.ts").write_text("const  b=1\n", "utf-8")
+            Path(repo, "other.ts").write_text("const  c=1\n", "utf-8")
+            self.git(repo, "add", "full.ts", "part.ts")
+            Path(repo, "part.ts").write_text("const  b=2\n", "utf-8")
+            done = self.run_hook(repo, env)
+            self.assertEqual(done.returncode, 1, done.stderr)
+            self.assertIn("part.ts", done.stderr)
+            self.assertEqual(self.git(repo, "show", ":full.ts"), "const a = 1;\n")
+            self.assertEqual(Path(repo, "part.ts").read_text("utf-8"), "const  b=2\n")
+            self.assertEqual(self.git(repo, "show", ":part.ts"), "const  b=1\n")
+            staged = self.git(repo, "diff", "--cached", "--name-only")
+            self.assertNotIn("other.ts", staged)

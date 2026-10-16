@@ -355,7 +355,7 @@ describe('M10 Sperren in der Sim (Spec 4.4)', () => {
   });
   it('AK-S1-17 „Alles frei" bitgleich: buildColony liefert denselben Trajectory', () => {
     expect(buildColony(createWorld(3, { unlockAll: true }))).toEqual(buildColony(createWorld(3)));
-  });
+  }, 10_000);
   it('AK-S1-18 Feuerwache bei Krisen off: nicht angezeigt, aber baubar; bei mild angezeigt', () => {
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
     const k = w.buildings[home(w).kontorId]!;

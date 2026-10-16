@@ -237,7 +237,7 @@ Mit einem Kontor auf einer Fremdinsel und einem Haus mindestens der Stufe des Gu
 Beginn eines Auftragstakts ein **Fernangebot** an (nicht bei laufendem Stammkunden). Es steht als eigene
 Karte unter der Auftragskarte. **Annehmen** ersetzt den Auftrag der Periode; geliefert wird nur aus dem
 Lager der Fern-Insel. Die Frist beträgt 2:50 ab Auftragsbeginn. Bei mehreren Inseln wechselt das Angebot
-reihum (nach Periode, ohne Zufall). Nach einem angenommenen Fernauftrag entfällt der nächste Auftrag.
+reihum (nach Periode, ohne Zufall). Mit Kontoren auf zwei Fremdinseln kommt ein zweites Angebot hinzu: die nächste wählbare Insel in der Rotation, mit gleicher Menge und Prämie je Gut wie in der Tabelle. Nur eines ist annehmbar; ein Mehrverdienst pro Periode entsteht nicht. Nach einem angenommenen Fernauftrag entfällt der nächste Auftrag.
 Wert = Menge × Prämie je Einheit der Tabelle oben.
 
 | Insel      | Gut   | ab Stufe | Menge | Wert |

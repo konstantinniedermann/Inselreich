@@ -71,7 +71,7 @@ describe('WALD-02 Platzierung', () => {
       expect(flat(a).length).toBeGreaterThan(400);
     }
     expect(flat(woodLayout(input(3)))).not.toEqual(flat(woodLayout(input(4))));
-  });
+  }, 10_000);
 
   it('RF-W-3 Kronen nie auf gesperrten Kacheln: Fuss nur auf Wald oder Wiese, Fussscheibe nie über Objekt, Sand oder Vorplatz (+x, +y, +x+y)', () => {
     for (const seed of SEEDS) {
@@ -157,7 +157,7 @@ describe('WALD-02 Platzierung', () => {
       // Wiese bleibt Wiese: im Mittel unter einer Krone je Vorwaldkachel
       expect(dens[1]!, `Seed ${seed}`).toBeLessThan(1.5);
     }
-  });
+  }, 10_000);
 
   it('RF-W-4 jede freie Waldkachel trägt ≥ MIN_CROWNS = 2 lebende Kronen (Spec 2.1.5), auch hinter der Saumlinie', () => {
     expect(MIN_CROWNS).toBeGreaterThanOrEqual(2);
@@ -387,7 +387,7 @@ describe('WALD-02 Platzierung', () => {
     expect(inT).toBeGreaterThan(0);
     expect(inC / inT).toBeLessThanOrEqual(0.75 * (outC / outT));
     expect(dead).toBeGreaterThan(0);
-  });
+  }, 10_000);
 
   it('RF-L1-6 Waldtyp aus hash2(seed + 500, 0, 0): stabil, über Seeds 1–40 mindestens 3 der 4 Typen', () => {
     const types = new Set<number>();

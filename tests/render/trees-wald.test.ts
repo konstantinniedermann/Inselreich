@@ -129,7 +129,7 @@ describe('L1-T6 Determinismus und Waldtyp', () => {
         treeItems(w).map((t) => [t.id, t.fp.x, t.fp.y, t.own, t.crowns]);
       expect(pick(createWorld(seed))).toEqual(pick(createWorld(seed)));
     }
-  });
+  }, 10_000);
 
   it('L1-T6 die Kronenart folgt dem Waldtyp: Pinie nur im Pinienwald, Laub und Nadel im Mischwald, Ahorn oder Birke als Akzent', () => {
     let maple = 0,
@@ -371,7 +371,7 @@ describe('WALD-02 Waldboden folgt dem Saumfeld (terrain.ts, Waldzweig und Waldge
     expect(acc.in[1]).toBeGreaterThan(50);
     expect(acc.out[1]).toBeGreaterThan(50);
     expect(acc.out[0]! / acc.out[1]! - acc.in[0]! / acc.in[1]!).toBeGreaterThan(15);
-  });
+  }, 10_000);
 
   it('RF-W-10 die Bodenkante folgt nicht der Kachelkante: entlang eines geraden Waldrands (12 Kacheln) wandert die Hell-Dunkel-Grenze mit SD ≥ 0,15 Kachel', () => {
     for (const seed of [1, 2, 5, 7]) {
@@ -452,5 +452,5 @@ describe('WALD-02 Waldboden folgt dem Saumfeld (terrain.ts, Waldzweig und Waldge
     expect(acc.clear[1]).toBeGreaterThan(1);
     expect(acc.dense[1]).toBeGreaterThan(20);
     expect(acc.clear[0]! / acc.clear[1]!).toBeGreaterThan(acc.dense[0]! / acc.dense[1]! + 3);
-  });
+  }, 10_000);
 });

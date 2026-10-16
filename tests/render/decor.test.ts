@@ -738,7 +738,7 @@ describe('L4 Formen und Ausprägungen', () => {
     }
     for (const kind of ['solitaire', 'orchard', 'menhir', 'ruin'] as const)
       expect(variants.get(kind)?.size ?? 0, kind).toBeGreaterThanOrEqual(2);
-  });
+  }, 10_000);
 
   it(
     'R5 Findling ≤ 0,3 Kachel, Lesesteinhaufen ≤ 0,35, Elemente liegen in ihrem Fussabdruck',

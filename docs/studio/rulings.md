@@ -1580,3 +1580,84 @@ Last 6 < 8: dritte Umsetzung mit Testlauf zulässig (R708 V2).
 Regelbezug: gates.md Gate Plan, R706, R708 V2, R711 · Kosten bei Irrtum: eine Plan-Korrektur.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-I-112 · ADR: —
+
+## R714 · 2026-10-16 · Freier Platz → Kurzdesign I-119 + I-121 «Bewohner reagieren» (Stufe leicht)
+
+Ruling: Ein Agentenplatz ist frei (Deckel 6, R698); aus dem Pool R692 startet **I-119 + I-121** als ein Paket «Bewohner reagieren» (Eimerkette bei Brand,
+Heimgehen bei Sturmwarnung, Wartende vor Häusern mit Mangel). Kurzdesign Stufe leicht durch lead-design (sonnet, E-061), Branch `design/i119-i121`; kein Save,
+nur `src/render/` (Leben/Figuren). Auflage: Abgleich mit ORT-A (Wege- und Kantenänderungen in `src/render/`), Figurenobergrenze und «Bewegung reduzieren»;
+Plan erst nach Gate Spec und nicht vor ORT-A T20 (Zusammenführung), um Merge-Fläche in `src/render/` klein zu halten. Handbuch 1.60 (`612fe2bb`) mit
+CHANGELOG-Eintrag angenommen.
+
+Regelbezug: R445, R692, R698, E-061 · Kosten bei Irrtum: ein Kurzdesign, das bis nach ORT-A liegen bleibt.
+
+Entscheider: L0 · Anlass: freier Platz · ADR: —
+
+## R715 · 2026-10-16 · Gate Spec I-119 + I-121: Variante 3 (gestaffelt); Kurzdesign I-110 «Startpaket zur Wahl» jetzt
+
+Ruling: (1) `design/i119-i121` @ `da85c492` (Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-119-I-121.md`) → **Gate Spec OK, Variante 3**: Paket A
+(Wartende vor der Tür mit Zeitstaffel, Sturm-Heimgehen, Boom-Winken, ohne Pfadlogik) vor Paket B (Brand-Eimerkette mit Breitensuche, streichbar). Konstanten
+(30/150/600 Ticks, Läufertempo 1,8 Kacheln/s, `waiters` [12, 4], `firefighters` [8, 0], `wavers` [12, 0]) sind Darstellungswerte in `src/render/reaktion.ts` bzw.
+`CAPS` in `limits.ts`, nicht in `src/sim/defs/` — Balancing unberührt. Reagierende zählen gegen `CAPS.walkers` und ersetzen Spaziergänger. Kürzung «voll versorgte
+Häuser schicken öfter Spaziergänger» angenommen. Plan erst nach ORT-A T20, ab dem dann aktuellen `main` (R714). (2) Freier Platz → **Kurzdesign I-110
+«Startpaket zur Wahl»** (Pool R692), Stufe voll (neue Spielwerte): lead-design (opus) mit design-economy-designer für die Rechnung (Vorteile je Paket in einem
+Engpass der ersten 15 min, keine Dominanz); «Standard» bleibt Vorgabe, Balancing-Baseline startet mit Standard.
+
+Regelbezug: gates.md Gate Spec, R445, R692, R698, R714 · Kosten bei Irrtum: ein Paket B, das nach dem Playtest von A gestrichen wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-119-I-121 · ADR: —
+
+## R716 · 2026-10-16 · I-112 C1 abgenommen (T01 `07de72c4`); `imports.test.ts`-Lockerung angenommen; C2 erst nach I-114 oder bei Last < 8
+
+Ruling: `feat/i112` @ `07de72c4` in `.worktrees/i112` (Plan-Nachtrag `3e7b3a1a` mit B-1–B-9; Handoff `.studio/handoffs/2026-10-16-lead-tech-I-112.md`): T01 Leser-Umbau
+abgenommen (Wächter-Rot-Beleg 26 Treffer, Baseline bitgleich, Diff `defs`/`save.ts`/`types.ts` leer). Die Lockerung in `tests/sim/imports.test.ts` (`levels.ts` darf
+aus `./council` importieren, `council` bleibt Blatt) angenommen, nachträglich in die Dateimatrix. T00-Messung (R392) ersatzweise auf `07de72c4` nachholen, sobald
+Last ≤ 4 (T01 verhaltensneutral). Merge-Reihenfolge I-114 vor I-112, danach `git merge main` in `feat/i112`. **Instanz C2 (T02–T05) startet erst, wenn I-114
+übergeben ist oder die 1-min-Last < 8 liegt** — derzeit laufen drei Umsetzungen mit Testlauf (ORT-A, I-114, TOOL-BUENDEL-14), Last 7–13 (R708 V2).
+
+Regelbezug: R392, R708 V2, R711, R713 · Kosten bei Irrtum: eine Umsetzung, die eine halbe Stunde später weiterläuft.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-112 C1 · ADR: —
+
+## R717 · 2026-10-16 · ORT-A C2: T07 abgenommen; +3 Starts aus dem Planpuffer für T08; `buildMsNachLaden` angenommen
+
+Ruling: `feat/ort-a-mess` @ `e8a3bdfd` (Basis A `72ee9610`, Messbasis `mess/ort-a-basis` @ `660f3160`; Handoff `.studio/handoffs/2026-10-16-lead-tech-ORT-A-C2.md`):
+T07 nach drei Review-Runden abgenommen; DEV-Haken nicht im Produktionsbuild. Budgetantrag D-ORT-A-C2-1 **+3 Starts für T08 aus dem Puffer (12) des Gesamtbudgets 57**
+(R705) freigegeben, Puffer danach 9; C2 setzt per Fortsetzung fort. Planabweichung: `hitch.mjs` `buildMs` → `buildMsNachLaden` (meist `null`), vollen Aufbau liefert
+`perf.mjs` (`buildMsA/B`), `patchMs` je Bau bleibt — angenommen. T08 pausiert die Sim beim Einfrieren (⏸ wie `perf.mjs`). Browser-Probeläufe und A/A-Kontrolle mit
+Vermerk «Messfenster belegt», solange N-102 offen ist; gewertete A/B-Messungen (T09) erst bei freiem Messfenster.
+
+Regelbezug: R553, R705, N-102 · Kosten bei Irrtum: drei Starts aus dem Puffer.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
+
+## R718 · 2026-10-16 · Gate Merge TOOL-BUENDEL-14: OK ohne Auflagen; Merge jetzt
+
+Ruling: `tool/buendel-14` @ `69230eb9` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-TOOL-BUENDEL-14.md`) → **Gate Merge OK**. V1, V3, V4 (R712) und die
+Isolation des `testlock`-Tests (Ursache der vervielfachten `load_abort`-Ereignisse) belegt; merge-tree konfliktfrei gegen Handbuch 1.60. lead-production merged lokal
+(`--no-ff`) und trägt H-1 (Nachmessung beim nächsten `push-check`), H-2 (alte `load_abort`-Test-Ereignisse, Bereinigung bei der nächsten Aufräum-Runde) und H-3
+in `docs/beobachtungen.md` ein. 7 Tests mit bestehendem Timeout bleiben unverändert.
+
+Regelbezug: gates.md Gate Merge, R712 · Kosten bei Irrtum: ein Pre-Commit-Hook, der eine Datei formatiert, die der Autor anders wollte.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-TOOL-BUENDEL-14 · ADR: —
+
+## R719 · 2026-10-16 · Freier Platz → Beobachtungen-Auswertung BEOB-17
+
+Ruling: Ein Platz frei (Deckel 6, R698); Kurzdesigns/Pläne aus dem Pool sind belegt oder warten auf ORT-A T20 (R714). Daher **BEOB-17**: lead-production wertet die
+Einträge unter der Marke «Letzte Auswertung: 2026-10-16» aus (Skill `beobachtungen-auswerten`), Datei nur ab der Marke lesen (57 KB, R712). Jeder Eintrag endet als
+erledigt, abgehakt, eingeplant oder Idee; Trivial-Fixes ≤ 15 min im selben Branch `docs/beob-17`; kein `src/sim/defs`-Diff.
+
+Regelbezug: R287, R445, R698, R712 · Kosten bei Irrtum: eine Auswertung, die eine Woche früher als nötig läuft.
+
+Entscheider: L0 · Anlass: freier Platz · ADR: —
+
+## R720 · 2026-10-16 · Gate Merge I-114: OK; Merge jetzt, dann I-112 holt main
+
+Ruling: `feat/i114` @ `f26e64af` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-I-114.md`) → **Gate Merge OK**. R703 bestätigt; Lagerzahl der Fernkarte
+ohne Rotfärbung wie vorher (Beobachtung eingetragen). lead-production merged lokal (`--no-ff`), pflegt Rangliste und Entscheid-Status von I-114 in `docs/ideen.md`
+und nimmt I-114 in REL-26 auf. Danach holt der I-112-Controller `main` per Merge in `feat/i112` (Reihenfolge I-114 vor I-112, R716).
+
+Regelbezug: gates.md Gate Merge, R701, R703, R716 · Kosten bei Irrtum: eine Fernkarte, die nach dem Playtest nachgebessert wird.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-114 · ADR: —
