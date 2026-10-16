@@ -65,9 +65,7 @@ def unstaged_files(files: list[str], runner: Runner = run) -> set[str] | None:
     return {name for name in done.stdout.split("\0") if name}
 
 
-def autofix(
-    failing: list[str], prettier: Path, runner: Runner = run
-) -> list[str]:
+def autofix(failing: list[str], prettier: Path, runner: Runner = run) -> list[str]:
     """Formatiert voll gestagte Dateien (Index == Arbeitsbaum) und staget genau diese neu."""
     partial = unstaged_files(failing, runner)
     if partial is None:
