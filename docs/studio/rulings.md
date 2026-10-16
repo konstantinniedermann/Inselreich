@@ -7774,3 +7774,15 @@ eine Fortsetzung behält das Modell der Ursprungsinstanz. Ab sofort steht in jed
 Regelbezug: gates.md Gate Merge, STUDIO.md Modellwahl (Final-Review opus), R662 · Kosten bei Irrtum: ein Merge mit vier niedrigen Hinweisen.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-UI-HAEPPCHEN-D · ADR: —
+
+## R674 · 2026-10-16 · Plan I-091: Save-Nummer = main + 1 beim Merge; Ownership-Ausnahme `types.ts`; Gate Plan
+
+Ruling: Plan `plan/i091` @ `f743b17e` (T00–T06, 22 AK, Plan-Review BEDENKEN → 6 Befunde eingearbeitet). (1) **Save-Version** von I-091 =
+`SAVE_VERSION` auf main + 1 zum Zeitpunkt des Merges (Arbeitsannahme v16); T06 setzt sie, das Gate Merge prüft sie gegen main und gegen
+Erweiterung 1 (Nutzer-Session). Landet Erweiterung 1 vorher, renummeriert T06 (Fix-Runde vor dem Gate). (2) **Ownership-Ausnahme**: die
+Typänderung `excused` in `src/sim/types.ts` liegt in T03 beim `tech-ui-engineer`, damit `tsc` zwischen den Tasks grün bleibt. (3) Gate Plan durch
+lead-qa jetzt; Umsetzung Budget-Antrag 16 Starts wird mit dem Gate entschieden, Start erst nach Merge UI-HAEPPCHEN-E (`order.ts`).
+
+Regelbezug: gates.md Gate Plan, R638, R663, R670, R671 · Kosten bei Irrtum: eine Renummerierung an 7 Stellen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-I-091 · ADR: —
