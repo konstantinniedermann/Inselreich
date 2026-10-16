@@ -1,6 +1,8 @@
 import { GOODS } from '../sim/defs/goods';
 import type { ContractOffer, Order, World } from '../sim/types';
+import type { StepReport } from '../sim/tick';
 import type { LogEntry } from './crisisLog';
+import { contractNotice } from './order';
 
 /** Log-Einträge zum Verfall von Zufallsauftrag und Stammkunden-Angebot; DOM-frei, liest nur die Welt. */
 
@@ -49,5 +51,20 @@ export function expiryLogEntries(prev: AutoSnap, world: World): LogEntry[] {
       toast: null,
       tick: world.tick,
     });
+  return out;
+}
+
+/** Ein Eintrag je Vertragsereignis der Schritte eines Frames; Text und Art wie die Meldung (`contractNotice`). */
+export function contractLogEntries(
+  reports: readonly StepReport[],
+  world: World,
+  tick: number,
+): LogEntry[] {
+  const out: LogEntry[] = [];
+  for (const r of reports) {
+    if (r.contract === null) continue;
+    const n = contractNotice(r.contract, world);
+    out.push({ text: n.text, toast: n.kind, tick });
+  }
   return out;
 }

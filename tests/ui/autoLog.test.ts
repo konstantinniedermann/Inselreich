@@ -2,9 +2,11 @@
 import { describe, expect, it } from 'vitest';
 import { deliverOrder } from '../../src/sim/orders';
 import { serialize } from '../../src/sim/save';
-import type { Contract, World } from '../../src/sim/types';
-import { autoSnap, expiryLogEntries } from '../../src/ui/autoLog';
+import type { StepReport } from '../../src/sim/tick';
+import type { Contract, ContractEvent, World } from '../../src/sim/types';
+import { autoSnap, contractLogEntries, expiryLogEntries } from '../../src/ui/autoLog';
 import { isNotable, nextUnread } from '../../src/ui/crisisLog';
+import { contractNotice } from '../../src/ui/order';
 import { farLogEntries, farSnap } from '../../src/ui/farOrder';
 import { farWorld, periodStart, stepAt } from '../sim/farHelpers';
 
@@ -127,12 +129,51 @@ describe('AK-UD-05a Zähler und Zusammenspiel', () => {
     const w = farWorld(3, []);
     stepAt(w, P);
     w.contractOffer = { good: 'rum', island: 0 };
-    const before = serialize(w);
     const prev = autoSnap(w);
     stepAt(w, P + 601);
     const mid = serialize(w);
     expiryLogEntries(prev, w);
     expect(serialize(w)).toBe(mid);
-    expect(before).not.toBe('');
+  });
+});
+
+describe('AK-UD-05b Vertragsereignisse', () => {
+  const delivered: ContractEvent = {
+    kind: 'delivered',
+    good: 'rum',
+    amount: 10,
+    pay: 270,
+    island: 0,
+  };
+  const broken = (reason?: 'stock' | 'kontor'): ContractEvent =>
+    ({ kind: 'broken', good: 'rum', reason, penalty: 135, island: 0 }) as ContractEvent;
+  const rep = (contract: ContractEvent | null): StepReport => ({ lost: [], contract });
+
+  it('delivered: info, Text wie contractNotice, zählt als neu', () => {
+    const w = farWorld(3, []);
+    const out = contractLogEntries([rep(delivered)], w, 77);
+    expect(out).toEqual([{ text: 'Stammkunde: 10 Rum geliefert, +270', toast: 'info', tick: 77 }]);
+    expect(out[0]!.text).toBe(contractNotice(delivered, w).text);
+    expect(isNotable(out[0]!)).toBe(true);
+    expect(nextUnread(0, out, false)).toBe(1);
+  });
+
+  it('broken mit Grund stock, kontor und ohne: warn, Text wie contractNotice', () => {
+    const w = farWorld(3, []);
+    for (const reason of ['stock', 'kontor', undefined] as const) {
+      const ev = broken(reason);
+      const out = contractLogEntries([rep(ev)], w, 5);
+      expect(out).toHaveLength(1);
+      expect(out[0]!.toast).toBe('warn');
+      expect(out[0]!.text).toBe(contractNotice(ev, w).text);
+      expect(out[0]!.text).toMatch(/^Stammkunde abgesprungen/);
+    }
+  });
+
+  it('ohne Vertrag: leer; zwei Ereignisse: zwei Einträge in Berichtsreihenfolge', () => {
+    const w = farWorld(3, []);
+    expect(contractLogEntries([rep(null), rep(null)], w, 1)).toEqual([]);
+    const out = contractLogEntries([rep(delivered), rep(null), rep(broken('stock'))], w, 9);
+    expect(out.map((e) => e.toast)).toEqual(['info', 'warn']);
   });
 });
