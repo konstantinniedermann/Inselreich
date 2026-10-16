@@ -70,6 +70,7 @@ function siteZone(defId: BuildingDefId): { terrain: 'forest' | 'grass'; radius: 
 }
 
 export { goodsBalance } from './flow';
+export { buildCoverage, type Coverage } from './coverage';
 
 /** Güter aus `consumes` mit Bestand < 1, Reihenfolge wie `consumes`; leer ohne `consumes` (M8 12). */
 export function missingInputs(world: World, b: Building): GoodId[] {

@@ -1,5 +1,6 @@
 // ships.ts — Schiffe und Routen im Kontor-Panel (M12 E4, T15): reine Sicht plus DOM-Abschnitt.
 // Keine Spielregel: Gründe kommen aus der Sim (Probelauf auf einer Kopie), Zahlen aus `SHIP`/Defs.
+import { buildCoverage, type Coverage } from '../sim/coverage';
 import { GOODS, GOOD_IDS } from '../sim/defs/goods';
 import { ROUTE_RESERVE, SHIP } from '../sim/defs/sea';
 import { TICK_MS, UPKEEP_INTERVAL } from '../sim/defs/timing';
@@ -95,8 +96,9 @@ export function routeBalanceText(
   world: World,
   route: Route,
   balances?: Map<number, ReturnType<typeof goodsBalance>>,
+  cov?: Coverage,
 ): RouteBalanceText | null {
-  const b = routeBalance(world, route, balances);
+  const b = routeBalance(world, route, balances, cov);
   if (b === null) return null;
   const goods = Math.floor(perMinute(b.goodsPer100, GOODS_BALANCE_TICKS)) || 0;
   const upkeep = perMinute(b.upkeepPer100, UPKEEP_INTERVAL);
@@ -113,11 +115,13 @@ export function shipBalanceLines(
   world: World,
   island: number,
   balances: Map<number, ReturnType<typeof goodsBalance>> = new Map(),
+  cov?: Coverage,
 ): Map<number, RouteBalanceText> {
   const out = new Map<number, RouteBalanceText>();
   for (const s of world.ships) {
     if (!related(world, s, island) || s.route === null || s.homing) continue;
-    const line = routeBalanceText(world, s.route, balances);
+    cov ??= buildCoverage(world); // einmal je Aufruf, erst beim ersten Schiff mit Route
+    const line = routeBalanceText(world, s.route, balances, cov);
     if (line !== null) out.set(s.id, line);
   }
   return out;
@@ -319,7 +323,7 @@ interface SectionState {
   actions: ShipActions;
   island: number;
   /** Tick der letzten Bilanzrechnung (`-1`: verworfen); gerechnet wird nur bei neuem Tick. */
-  balTick: number;
+  balKey: string;
   bal: Map<number, RouteBalanceText> | null;
 }
 
@@ -470,7 +474,7 @@ function build(box: HTMLElement, world: World, st: SectionState): void {
   const rebuild = (): void => {
     build(box, world, st);
   };
-  st.balTick = -1;
+  st.balKey = '';
   st.bal = null;
   box.replaceChildren();
   box.appendChild(el('h3', 'ships-title', 'Schiffe'));
@@ -533,7 +537,7 @@ export function renderShipSection(
     key: '',
     actions,
     island,
-    balTick: -1,
+    balKey: '',
     bal: null,
   };
   states.set(box, st);
@@ -548,9 +552,11 @@ export function updateShipSection(panel: HTMLElement, world: World): void {
   const st = box ? states.get(box) : undefined;
   if (!box || !st) return;
   if (st.key !== `${shipsKey(world, st.island)}@${st.picker ?? '-'}`) build(box, world, st);
-  if (st.bal === null || st.balTick !== world.tick) {
+  // Schlüssel: Tick, Bau/Abriss (Id-Zähler, Anzahl) und Insel; Bau bei Pause rechnet so ebenfalls neu
+  const balKey = `${world.tick}|${world.nextBuildingId}|${Object.keys(world.buildings).length}|${st.island}`;
+  if (st.bal === null || st.balKey !== balKey) {
     st.bal = shipBalanceLines(world, st.island);
-    st.balTick = world.tick;
+    st.balKey = balKey;
   }
   for (const row of shipRows(world, st.island)) {
     const bal = st.bal.get(row.id);
