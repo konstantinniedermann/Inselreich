@@ -193,7 +193,7 @@ describe('I-108 Bilanz-Chip in der Kopfzeile', () => {
     expect(balanceView(w).text).toBe('+780 / −540');
     w.stats.taxes = 90;
     w.stats.upkeep = 130;
-    expect(balanceView(w).text).toMatch(/^\+\d+ \/ −\d+$/);
+    expect(balanceView(w).text).toBe('+540 / \u2212780');
   });
 });
 

@@ -17,12 +17,16 @@ describe('I-108 flowText', () => {
     expect(flowText({ taxes: stat(540), upkeep: 0 })).toBe('+540 / −0');
     expect(flowText({ taxes: 0, upkeep: stat(780) })).toBe('+0 / −780');
     expect(flowText({ taxes: 0, upkeep: 0 })).toBe('+0 / −0');
+    // echte -0 und NaN: ASCII-Minus, «−-» und NaN dürfen nie vorkommen
     for (const s of [
       { taxes: 0, upkeep: 0 },
       { taxes: -0, upkeep: -0 },
+      { taxes: -0.3, upkeep: -0.3 },
       { taxes: NaN, upkeep: NaN },
-    ])
-      expect(flowText(s)).not.toMatch(/NaN|-0/);
+    ]) {
+      expect(flowText(s)).toBe('+0 / \u22120');
+      expect(flowText(s)).not.toMatch(/NaN|-|\u2212-/);
+    }
   });
   it('AK-3 Kurzform ab SHORT_FROM, abgeschnitten', () => {
     expect(SHORT_FROM).toBe(10000);

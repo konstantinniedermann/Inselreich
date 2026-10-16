@@ -248,7 +248,7 @@ export function drawSeaMap(
   }
 
   // Marke für Fernangebot/Fernauftrag: Münze mit Text, eine Markenhöhe über der Kontor-Marke
-  const mark = ui.mark ? ui.mark : null;
+  const mark = ui.mark ?? null;
   const mi = mark ? world.islands[mark.island] : undefined;
   if (mark && mi) {
     const a = tileToMap(l, mi.ox + mi.anchor.x + 0.5, mi.oy + mi.anchor.y + 0.5);

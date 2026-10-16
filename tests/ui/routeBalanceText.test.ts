@@ -94,7 +94,8 @@ describe('I-103 T04 routeBalanceText', () => {
     expect(r.text).toBe(
       `Warenwert ${signedNum(goods)} / min · Unterhalt ${upkeep} → ${signedNum(net)} · nominal`,
     );
-    expect(r.text).toMatch(/^Warenwert \+\d+ \/ min · Unterhalt 90 → \+\d+ · nominal$/);
+    // unabhängig notiert: 22,24 je 100 Ticks = 133,4 / min; Netto 133,4 − 90 = 43,4 (abgerundet)
+    expect(r.text).toBe('Warenwert +133 / min · Unterhalt 90 → +43 · nominal');
     expect(r.warn).toBe(false);
     expect(r.tip).toContain('Weitere Schiffe auf dieser Route teilen den Überschuss.');
   });

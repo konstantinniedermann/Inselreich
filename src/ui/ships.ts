@@ -557,7 +557,8 @@ export function updateShipSection(panel: HTMLElement, world: World): void {
     const balEl = box.querySelector<HTMLElement>(`[data-field="ship-balance-${row.id}"]`);
     if (balEl) {
       setText(box, `ship-balance-${row.id}`, bal?.text ?? '');
-      balEl.title = bal?.tip ?? '';
+      const tip = bal?.tip ?? '';
+      if (balEl.title !== tip) balEl.title = tip;
       balEl.classList.toggle('negative', bal?.warn === true);
     }
     setText(box, `ship-target-${row.id}`, row.target);
