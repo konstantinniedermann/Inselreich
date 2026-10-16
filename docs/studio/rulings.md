@@ -1892,3 +1892,16 @@ geplant = **9 von 8, +1 aus dem Puffer**; ORT-A-Puffer **9 von 12**.
 Regelbezug: R313, R705, R735, R736 · Kosten bei Irrtum: ein Start für eine Optimierung, die die Messung im ruhigen Fenster nicht gebraucht hätte.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C3 nach T05b · ADR: —
+
+## R740 · 2026-10-16 · I-112 Delta-Review BEDENKEN (Perf-Regression aus Befund-2-Fix): +2 Starts, Ansatz «nur sichtbarer Tooltip»
+
+Ruling: `feat/i112` @ `fbc4cf78` (`make check` Exit 0; Befunde 1–4 aus R734 behoben, Naht-Ausnahme bestätigt) → Delta-Review opus BEDENKEN mit neuer hoher Regression:
+das Live-Update der Takt-Zeilen (`src/ui/buildMenu.ts:558`) rechnet je Tick für jedes produzierende Gebäude eine Bilanz-Probe und bricht I-078 AK-14 (verzögertes Rechnen).
+Befundklasse neu (Leistung statt Anzeige), daher kein V1-Umschnitt. **Ansatz vorgegeben (KISS):** `.tt-cycle` nur im sichtbaren Tooltip füllen wie `fillBalance`; Lazy-Test
+«I-078» um `.tt-cycle` erweitern (Rot-Beleg); dazu `.messages` z-index 11 und doppelter Radius-Text `buildMenu.ts:548`. Regel: Live-Updates von Tooltip-Zeilen lösen nie eine
+Bilanz-Probe ausserhalb des sichtbaren Tooltips aus. **+2 Starts** (UI-Umsetzer sonnet, frisches Delta-Review opus); Budget (V3) I-112 **24 von 25**. Danach `make check`
+bei Last ≤ 8, dann Gate Merge. Bei erneutem BEDENKEN derselben Klasse: V1 (Ansatzprüfung vor jedem weiteren Start).
+
+Regelbezug: R673, R708, R734, R735 · Kosten bei Irrtum: zwei Starts für eine Regression, die sonst erst im Playtest auffiele.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-112 C4 · ADR: —
