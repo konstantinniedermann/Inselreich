@@ -185,7 +185,7 @@ I-093 (verworfen) und I-095 (erledigt) sind nach Handel 2 (R658, R664) ins Archi
 - Randfälle: nur bei laufendem Fernauftrag; Marke ohne Mausfang; bei Verfall oder Lieferung weg.
 - Nutzen/Aufwand: Fernauftrag auf einen Blick planbar · S · ≈ 50 Tools
 - Entscheid: offen (IDEEN-10); Stand: Kurzdesign `docs/superpowers/specs/2026-10-16-i101-i103-fernmarke-routenbilanz.md` (R676)
-- Status 2026-10-16: umgesetzt in UI-HAEPPCHEN-F, Branch `feat/ui-haeppchen-f` (Marke an der Fern-Insel, hohl beim Angebot, gefüllt beim Auftrag)
+- Status 2026-10-16: gemergt (R691), umgesetzt in UI-HAEPPCHEN-F (Marke an der Fern-Insel, hohl beim Angebot, gefüllt beim Auftrag)
 
 ### I-103 · bewertet · Routen-Bilanz (lohnt dieses Schiff?)
 
@@ -197,7 +197,7 @@ I-093 (verworfen) und I-095 (erledigt) sind nach Handel 2 (R658, R664) ins Archi
 - Doppelung: I-067 (Verlaufskurve, geparkt), I-078/I-089 (live) berühren keine Routen.
 - Nutzen/Aufwand: Schiffsentscheidung statt Bauchgefühl · S–M · ≈ 1 Paket
 - Entscheid: offen (IDEEN-10); Stand: Kurzdesign `docs/superpowers/specs/2026-10-16-i101-i103-fernmarke-routenbilanz.md` (R676), Variante B ohne Save
-- Status 2026-10-16: umgesetzt in UI-HAEPPCHEN-F, Branch `feat/ui-haeppchen-f` (Variante B, Zeile mit «nominal»); Variante C (gemessene Bilanz, Save) erst nach I-091 und nur bei Bedarf
+- Status 2026-10-16: gemergt (R691), umgesetzt in UI-HAEPPCHEN-F (Variante B, Zeile mit «nominal»); Variante C (gemessene Bilanz, Save) erst nach I-091 und nur bei Bedarf
 
 ### I-104 · bewertet · Ausschreibung (grosse Sammelbestellung)
 
@@ -249,5 +249,5 @@ I-093 (verworfen) und I-095 (erledigt) sind nach Handel 2 (R658, R664) ins Archi
 - Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
 - Doppelung: I-089 (live) und I-067 (geparkt) liegen daneben; ändert nur die Zahl in der Kopfzeile.
 - Nutzen/Aufwand: Wirtschaftslage auf einen Blick · S · ≈ 60 Tools
-- Entscheid: Kurzdesign `docs/superpowers/specs/2026-10-16-i108-einnahmen-unterhalt-design.md` (R676), Gate offen
-- Status 2026-10-16: umgesetzt in UI-HAEPPCHEN-F, Branch `feat/ui-haeppchen-f` (Chip «+Einnahmen / −Unterhalt», `src/ui/balanceFlow.ts`)
+- Entscheid: Kurzdesign `docs/superpowers/specs/2026-10-16-i108-einnahmen-unterhalt-design.md` (R676), Gate OK
+- Status 2026-10-16: gemergt (R691), umgesetzt in UI-HAEPPCHEN-F (Chip «+Einnahmen / −Unterhalt», `src/ui/balanceFlow.ts`)

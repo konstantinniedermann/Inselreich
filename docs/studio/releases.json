@@ -159,9 +159,9 @@
           "name": "UI-HAEPPCHEN-F",
           "kind": "I-101, I-103, I-108",
           "startStage": 2,
-          "stage": 3,
-          "state": "open",
-          "note": "Plan OK (R679), in Umsetzung",
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt (R691), Save v16",
           "goalStage": 4
         }
       ]
@@ -255,7 +255,7 @@
       "startStage": 1,
       "stage": 1,
       "state": "idea",
-      "note": "Bündel S, nur bei freier Kapazität (BEOB-16): Erzeugungs-Cache order.ts (connected, Ausbau, Id-Summe), Reichweite-Tooltip bei Bestand 0, Menü-Beschriftung «Krisen» (neue Insel), aria-label Ereignis-Knopf, Rechtsklick bei gehaltener linker Taste (Roden/Abriss)"
+      "note": "Plan läuft (R690). Bündel S, nur bei freier Kapazität (BEOB-16): Erzeugungs-Cache order.ts (connected, Ausbau, Id-Summe), Reichweite-Tooltip bei Bestand 0, Menü-Beschriftung «Krisen» (neue Insel), aria-label Ereignis-Knopf, Rechtsklick bei gehaltener linker Taste (Roden/Abriss)"
     },
     {
       "pkg": "TOOL-DASH-VERSIONEN",
