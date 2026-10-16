@@ -1250,3 +1250,17 @@ F-Merge bis zur Zeitreserve geht REL-24 + I-091 allein. (3) **Ortsrand**: Vorent
 Regelbezug: R335, R475, R519, R683, R686, R316 · Kosten bei Irrtum: ein Release-Zuschnitt, der vor der Einplanung von Teil 2 neu sortiert wird.
 
 Entscheider: L0 · Anlass: Session-Start 66d37b15 · ADR: ADR-015 (angenommen)
+
+## R689 · 2026-10-16 · Ad-hoc-Retro Ampeln: V1–V3 angenommen; E-064 bewerten, E-068 rückt nach; E-070 als Werkzeug-Paket
+
+Ruling: Bericht `.studio/handoffs/2026-10-16-studio-coach-retro-ampel.md`. (1) Flake-Ampel ist Historienartefakt (0 Flakes seit 2026-10-14) → kein
+Hebel nötig; Lastbezug wird mit **E-070** messbar: angenommen, Werkzeug-Paket TOOL-E070 (lead-tech sonnet, `tools/studio/efficiency.py` + Test),
+ohne Experimentplatz wie E-043. (2) Cache-Write 5 min (dritte rote Retro, R316): Hebel ist **E-068** (ein Reviewer je Paket Stufe leicht). Platz
+schaffen: studio-coach bewertet **E-064** jetzt (Zeitraum 10 Umsetzer-Pakete; seit R579 sind deutlich mehr gelaufen); ist sie bewertbar, schliesst sie
+und E-068 startet sofort. Ist sie es nicht, startet E-068 trotzdem an E-064s Stelle nicht, sondern bleibt wartend und E-064 erhält eine Frist im Bericht.
+(3) Messauftrag V3 (Wachstum nach Tool-Ergebnisgrösse für lead-tech, qa-code-reviewer, lead-design) an studio-coach, Frist 2026-10-23. Offene
+Messaufträge R659 (4) bleiben bei der Session-Ende-Retro.
+
+Regelbezug: R316, R659, E-043 · Kosten bei Irrtum: ein Experiment, das eine Session früher startet als sein Vorgänger sauber bewertet ist.
+
+Entscheider: L0 · Anlass: Bericht studio-coach adhoc-2026-10-16-ampel · ADR: —
