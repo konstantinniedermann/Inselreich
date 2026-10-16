@@ -1651,3 +1651,13 @@ erledigt, abgehakt, eingeplant oder Idee; Trivial-Fixes ≤ 15 min im selben Bra
 Regelbezug: R287, R445, R698, R712 · Kosten bei Irrtum: eine Auswertung, die eine Woche früher als nötig läuft.
 
 Entscheider: L0 · Anlass: freier Platz · ADR: —
+
+## R720 · 2026-10-16 · Gate Merge I-114: OK; Merge jetzt, dann I-112 holt main
+
+Ruling: `feat/i114` @ `f26e64af` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-I-114.md`) → **Gate Merge OK**. R703 bestätigt; Lagerzahl der Fernkarte
+ohne Rotfärbung wie vorher (Beobachtung eingetragen). lead-production merged lokal (`--no-ff`), pflegt Rangliste und Entscheid-Status von I-114 in `docs/ideen.md`
+und nimmt I-114 in REL-26 auf. Danach holt der I-112-Controller `main` per Merge in `feat/i112` (Reihenfolge I-114 vor I-112, R716).
+
+Regelbezug: gates.md Gate Merge, R701, R703, R716 · Kosten bei Irrtum: eine Fernkarte, die nach dem Playtest nachgebessert wird.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-114 · ADR: —
