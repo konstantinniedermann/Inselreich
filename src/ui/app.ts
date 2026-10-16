@@ -1030,6 +1030,7 @@ function launch(
     const r = withSpeed(speed, lastSpeed);
     state.speed = r.speed;
     lastSpeed = r.last;
+    applyPauseOverlay(pauseEl, state.speed, isModalOpen());
   };
   const onHotkey = (h: HotkeyAction): void => {
     if (h.kind === 'tool') {
