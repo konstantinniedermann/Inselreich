@@ -26,7 +26,7 @@ Reine Helfer in `src/ui/hud.ts` (oder neuem `src/ui/balanceFlow.ts`), Vitest in 
 
 1. `flowText({taxes, upkeep})` liefert `+{E} / −{U}` je Minute (typografisches Minus U+2212), z. B. taxes/upkeep so, dass `+540 / −780`.
 2. Unterhalt 0: `+540 / −0`; Einnahmen 0 (keine Amtsstube): `+0 / −780`; beide 0: `+0 / −0`. Nie `NaN`, nie `-0`.
-3. Teile ≥ 10 000 werden zu `12,3k` gekürzt (ab 10 000, eine Nachkommastelle, abgeschnitten nicht gerundet über die Grenze); < 10 000 bleibt die ganze Zahl. Jeder Teil höchstens 6 Zeichen, der Chip-Text höchstens 15 Zeichen bis 999 999.
+3. Teile ≥ 10 000 werden zu `12,3k` gekürzt (ab 10 000, eine Nachkommastelle, abgeschnitten nicht gerundet über die Grenze); < 10 000 bleibt die ganze Zahl. Jeder Teil höchstens 6 Zeichen, der Chip-Text höchstens 17 Zeichen (R683, Maximum `+999,9k / −999,9k`) bis 999 999.
 4. `balanceTooltip` beginnt mit der Netto-Bilanz (`Bilanz −240 / min`), nennt danach Steuern und Unterhalt mit vollen Zahlen und behält die Zeile «Steuer: … (keine Amtsstube)», wenn keine Amtsstube aktiv ist.
 5. `balanceView(world).label` (aria-label) enthält Netto, Einnahmen und Unterhalt in Klartext.
 6. Negative Bilanz (Unterhalt > Einnahmen): `negative`-Klasse gesetzt; bei Netto ≥ 0 entfernt. Chip-Text ändert sich dadurch nicht.

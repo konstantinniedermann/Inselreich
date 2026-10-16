@@ -293,6 +293,13 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 - 2026-10-14 HANDEL-2 Gate Merge: tests/ui/farOrder.test.ts «Review Focus 2» tautologisch (vergleicht geladene Welt mit sich selbst); src/sim/save.ts:~882 tote Klausel. Beide niedrig, Ursprung Final-Review.
 
+## 2026-10-16 · Controller als Messgerät für Geld-Hebel nur im Ensemble
+
+- Fundort: `tests/sim/controller.ts` (`runColony`, `buildColony`)
+- Beobachtung: `runColony` bricht beim Sieg ab; Messungen danach brauchen eine eigene Schleife. Eine Minute Verschiebung eines Kaufs ändert die Kasse bei Minute 25 um ±3500; Einzelläufe taugen für Geld-Hebel nicht, nur Ensembles über mehrere Phasen.
+- Ursprung: design-I-091-I-094 (Rechnung design-economy-designer)
+- Erste Einschätzung: niedrig; bei künftigen Balancing-Rechnungen einen Mess-Helfer mit Ensemble erwägen.
+
 - ~~2026-10-16 · `tests/render/wildlife.test.ts` RF-10 und `tests/sim/unlock-timeline.test.ts` AK-BAS-03: lastabhängige Zeitreserve-Tests; fielen im `make push-check` (Last) rot, `make zeitreserve-gate` danach Exit 0 (Reserve 0). Ursprung: R667 (Release-Check REL-23). Einschätzung: niedrig bis mittel (blockiert Pushes bei Last); Option Timeout 10000 ms nach E-043, Teil von ZEITRESERVE-PFLEGE.~~ **Erledigt (BEOB-15, 2026-10-16):** eigenes Timeout 10000 ms nach E-043 (92691abf).
 - ~~2026-10-16 · `tests/ui/farOrder.test.ts:198`: tautologischer Test (vergleicht geladene Welt mit sich selbst). Ursprung: R667 (Restbefund HANDEL-2). Einschätzung: niedrig; Erwartungswert unabhängig bilden.~~ **Erledigt (BEOB-15, 2026-10-16):** Snapshot vor dem Speichern gegen geladene Welt, mit Kontrolle (27a529c6).
 - ~~2026-10-16 · `src/sim/save.ts` ≈ Zeile 882: tote Klausel. Ursprung: R667 (Restbefund HANDEL-2). Einschätzung: niedrig; bei nächster Save-Änderung entfernen.~~ **Erledigt (BEOB-15, 2026-10-16):** Klauseln `contract`/`contractOffer` entfernt, durch isValidContractFields bereits ausgeschlossen (065c4940).
@@ -416,3 +423,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Bei 4× und offenem Kontor-Panel rechnet die Bilanzzeile bis etwa einmal je Tick und Quellinsel (`goodsBalance` ohne `cov`, spät ca. 2 ms, dicht 6,6 ms). Playtest 4×: Frame-Zeit unauffällig (Median 16,7 ms). Mögliche Drosselung über `BALANCE_REFRESH_MS`.
 - Ursprung: Final-Review UI-HAEPPCHEN-F (niedrig)
 - Einschätzung: nur bei Frame-Zeit-Befunden angehen; Alternative `cov` aus dem Frame-Cache durchreichen.
+
+## 2026-10-16 · I-091: Vertragskarte könnte bei Fremdinsel dreizeilig werden
+
+- Fundort: Karte «Stammkunde» (`orderCardText`, `.notice-stack`, 300 px breit)
+- Beobachtung: Bei Fremdinsel, Lieferzeit «1:15» und «treu: verzeiht einmal» ist eine dritte Zeile möglich; im Browser nicht geprüft (T05 prüfte Heimat, zwei Zeilen schon vor I-091).
+- Ursprung: Final-Review I-091
+- Erste Einschätzung: niedrig; bei nächstem Karten-Eingriff mitprüfen.

@@ -7889,3 +7889,77 @@ Regelbezug: Verfassung §6.4, R597 (DOC-ARCHIV), E-010 · Kosten bei Irrtum: ein
 gelöschte Screenshots alter Playtests (Berichte bleiben).
 
 Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-16 · ADR: —
+
+## R683 · 2026-10-16 · UI-HAEPPCHEN-F bereit bis auf Prüfläufe; AK-3 auf 17 Zeichen; parallele L0-Session vermerkt
+
+Ruling: (1) `feat/ui-haeppchen-f` @ `fd3379e4` (T00–T07, Final-Review opus frisch BEDENKEN → Fix → Delta OK, Auflagen R679 erfüllt, `src/sim`-Diff nur
+`routeBalance.ts`; `goodsBalance` 6,62 ms in `denseScene` ohne `cov`, 0,056 ms mit, Neuberechnung nur bei neuem Tick) ist bereit bis auf `make check`,
+`make zeitreserve-gate` (Abbruch durch Last > 8, Testlock R380) und den main-Merge nach I-091. **AK-3** wird auf höchstens 17 Zeichen korrigiert
+(`+999,9k / −999,9k`, einzeilig bei 1280 px belegt). Nach Merge I-091: Controller F holt main, fährt `make check` und `make zeitreserve-gate` bei
+ruhiger Last, dann Gate Merge durch lead-qa. Die Abweichung «Zeiten main/Branch nicht unmittelbar nacheinander» wird mit diesem Lauf nachgeholt.
+(2) Bugfix Verlustfarbe Bilanz-Chip (`color: inherit` überschrieb `negative`, seit I-062) ist Teil von F. (3) **Parallele L0-Session**
+(`session_01MawUE3FwF6Hg8n5WwNxwyB`, R682 CTX-ALTLAST, Nutzerauftrag) arbeitet im selben Repo: abweichend von R129/R324 vom Nutzer gestartet,
+geduldet; Rulings-Nummern werden vor jedem Eintrag neu gelesen, R682 berührt REL-24/REL-25 und laufende Stränge nicht.
+
+Regelbezug: gates.md Gate Merge, R129, R324, R380, R679, R682 · Kosten bei Irrtum: eine doppelt vergebene Ruling-Nummer (Umbenennung).
+
+Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-F, R682 im Log · ADR: —
+
+## R683b · 2026-10-16 · Gate Merge CTX-ALTLAST: OK mit zwei Nachträgen; Handbuch 1.56 angenommen
+
+Ruling: `chore/ctx-altlast` @ `76ceb732` (Handoff `.studio/handoffs/2026-10-16-lead-production-CTX-ALTLAST.md`): kein `src/`-Diff, `make check`,
+`studio-test`, `docs-check` grün, Rulings wörtlich verschoben (Überschriften vor/nach gleich), Probe belegt: Grep-Werkzeug 238 → 129 Treffer ohne
+Archivpfade, `rulings.md` 617 → 97 KB, `.studio/qa` 7,27 → 4,84 GB → **Gate Merge OK**. Handbuch 1.56 (Ende-Schritt 2b, Archivregel) angenommen.
+Vor dem Merge auf demselben Branch: (1) Suchhinweis in alle Personas `.claude/agents/*.md` und Briefing-Vorlage: Volltextsuche mit dem
+Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r` (Beleg: 24361 `grep` gegen 5 `rg` in den Transkripten; `.ignore` wirkt nur auf rg/Grep);
+`grep <muster> <datei>` auf eine genannte Datei bleibt erlaubt. (2) Alias-Feld in `releases.json` für Paketordner ohne Zuordnung (z. B.
+`ui-haeppchen-a/b/c`, `m14-e1`, `h-r*`), soweit ihr Paket belegbar in einem live Release steckt; danach Trockenlauf und `ARGS=--apply`.
+Danach Merge `--no-ff` nach main (lokal, kein Push).
+
+Regelbezug: R682, R680 (Merge durch lead-production), R233 (1) Persona-Änderung · Kosten bei Irrtum: ein Persona-Hinweis, der eine Suche um einen
+Archivtreffer verkürzt.
+
+Entscheider: L0 · Anlass: Bericht lead-production CTX-ALTLAST · ADR: —
+
+## R684 · 2026-10-16 · Doppelte Nummer R683; I-091 bereit → Gate Merge mit Delta-Review
+
+Ruling: (1) R683 ist doppelt vergeben (parallele L0-Session, R682): der Eintrag «Gate Merge CTX-ALTLAST» gilt als **R683b**; Absprache an die andere
+Session per Nachricht, beide lesen die letzte Nummer direkt vor dem Eintrag. (2) `feat/i091` @ `7268f800` (T00–T06, Save **v16** mit `migrateV15ToV16`,
+`contract.deliveries = 0`; `make check` und `make zeitreserve-gate` Exit 0; Final-Review opus frisch BEDENKEN → zwei Fixes ohne Delta-Review) → Gate
+Merge durch lead-qa mit **Delta-Review** der Fixes (frischer `qa-code-reviewer` opus) und Prüfung, dass main weiterhin `SAVE_VERSION` 15 hat
+(Erweiterung 1 nicht vorher gelandet). Mitzieh `tests/sim/orders.test.ts` (ein Literal) angenommen. Konfliktauflösung `docs/ideen.md`/`ideen-archiv.md`
+(I-094 im Archiv, I-091 Status) prüft lead-qa stichprobenartig; I-091-Status beim Merge auf «gemergt» nachziehen.
+
+Regelbezug: gates.md Gate Merge, R129, R673, R674, R682 · Kosten bei Irrtum: ein Fix ohne unabhängige Prüfung im Release.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-091, Doppelnummer im Log · ADR: —
+
+## R685 · 2026-10-16 · Aufräumen wird Daueraufgabe von lead-production, ausgelöst durch Schwellen im Start-Kontext
+
+Ruling: Nutzerauftrag «das Studio soll Altlasten künftig selbst erkennen, darauf hinweisen und aufräumen, nicht immer, aber wenn es sich lohnt».
+Auslegung: (1) **Erkennen** übernimmt ein Werkzeug, nicht ein Agent: `aufraeumen.py --check` misst Schwellen (Startwerte: `.studio/qa` > 2 GB;
+`rulings.md` > 150 Rulings oder > 200 KB; > 20 Specs/Pläne von live Releases ausserhalb des Archivs; `.studio/events.jsonl` > 50 MB;
+`.studio/archiv` > 500 MB) und schreibt bei Überschreitung eine Zeile «Aufräumen fällig: <Grund, Grösse>» in den SessionStart-Kontext (wie «Fällige
+Retros»). Schwellen stehen in einer Konfigurationsdatei unter `tools/studio/`, nicht im Code. (2) **Hinweisen**: L0 nennt die fällige Zeile im
+Start-Bericht. (3) **Durchführen**: Eigentümerin ist **lead-production** (Persona-Abschnitt «Haushalt»); L0 startet sie bei fälliger Zeile als Paket
+`HAUSHALT-nn` ohne Nutzerfrage, sobald ein Agentenplatz frei ist (vor neuen Ideen-Runden, nach laufenden Gates). Sie führt Trockenlauf, `--apply`,
+Archiv-`git mv` und Rulings-Verschieben nach R682/R683b aus, misst vorher/nachher und meldet Ergebnis im Bericht; Gate Merge L0 wie üblich. Ohne
+fällige Zeile wird nicht aufgeräumt. Umsetzung im laufenden Paket CTX-ALTLAST als Nachtrag (3).
+
+Regelbezug: R682, R683b, Verfassung §5 (keine Rückfrage), §6.4 · Kosten bei Irrtum: eine Aufräumrunde zu früh oder zu spät; Schwellen sind per
+Konfiguration nachstellbar.
+
+Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-16 · ADR: —
+
+## R686 · 2026-10-16 · Gate Merge I-091 «Kulanz»: OK, Save v16; danach UI-HAEPPCHEN-F holt main
+
+Ruling: `feat/i091` @ `7268f800` (Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-I-091.md`): Delta-Review opus frisch OK, main `SAVE_VERSION` 15 →
+Branch 16 mit `migrateV15ToV16`, v14-Kette und Abweisen (`deliveries` fehlt/`null`/negativ/2.5/String), Balancing und Controller ohne Diff, `make check`
+und `make zeitreserve-gate` Exit 0, Merge konfliktfrei, Ideen vollständig → **Gate Merge OK**. **Save v16 gehört I-091**; Erweiterung 1 (Nutzer-Session)
+nimmt die nächste freie Nummer. lead-production merged `--no-ff` (lokal), setzt I-091 in `docs/ideen.md` auf «gemergt (R686)», releases.json REL-25.
+Danach holt UI-HAEPPCHEN-F main per Merge und fährt `make check` und `make zeitreserve-gate` (R683). Hinweis Vertragskarte zweizeilig bei 1280 px
+bleibt Beobachtung (schon eingetragen).
+
+Regelbezug: gates.md Gate Merge, R673, R674, R684 · Kosten bei Irrtum: eine Spielstand-Migration, die ein Sonderfall übersieht (Abweisen statt Absturz).
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-091 · ADR: —

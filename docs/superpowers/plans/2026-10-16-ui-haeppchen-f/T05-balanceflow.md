@@ -21,7 +21,7 @@ Umsetzer `tech-ui-engineer` · ≈ 40 Tools · I108 AK 1 bis 10 · blocked-by: T
 
 - **AK-1** `flowText({taxes, upkeep})` mit Werten, die `+540 / −780` ergeben (`taxes = 540 / 6` je 100 Ticks usw.; Rechnung im Test über `perMinute`, nicht per Literal-Faktor), Minus ist U+2212.
 - **AK-2** Unterhalt 0 → `+540 / −0`; Einnahmen 0 → `+0 / −780`; beide 0 → `+0 / −0`; `-0`/`NaN` kommen nie vor (`not.toMatch(/NaN|-0/)`).
-- **AK-3** `9999` bleibt ganz; `10000` → `10,0k`; `12345` → `12,3k`; `12399` → `12,3k` (abgeschnitten); jeder Teil ≤ 6 Zeichen, Chip-Text ≤ 15 Zeichen bis 999 999.
+- **AK-3** `9999` bleibt ganz; `10000` → `10,0k`; `12345` → `12,3k`; `12399` → `12,3k` (abgeschnitten); jeder Teil ≤ 6 Zeichen, Chip-Text ≤ 17 Zeichen (R683, Maximum `+999,9k / −999,9k`) bis 999 999.
 - **AK-4** `balanceTooltip` beginnt mit `Bilanz −240 / min`-Muster (aus Stats berechnet), nennt volle Steuern/Unterhalt, enthält ohne Amtsstube «Steuer: normal (keine Amtsstube)» (Bestandstest bleibt grün).
 - **AK-5** `balanceView(w).label` enthält Netto, Einnahmen, Unterhalt. `hud.test.ts` Z. ≈ 187–188: `toBe(balanceText(...).text)` wird mit genau dem neuen Wert ersetzt (`toBe(flowLabel(w.stats))` plus `toContain` je Teil), nicht gestrichen. Zusätzlich (R679-3) eine **unabhängig berechnete** Erwartung: Wert als Klartext aus festen `stats` (z. B. `taxes`/`upkeep` so gewählt, dass die Minutenwerte ganze Zahlen sind) von Hand im Test notiert und mit `toBe` gegen `label` geprüft, nicht nur gegen `flowLabel(w.stats)`.
 - **AK-6** Netto < 0: nach `refresh` `negative` am Chip (bestehende DOM-Tests, ein Fall je Vorzeichen); Chip-Text unabhängig vom Vorzeichen gleich aufgebaut.

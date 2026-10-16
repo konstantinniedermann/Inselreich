@@ -62,7 +62,7 @@ describe('AK-SK-26 Werte und Invarianten', () => {
       expect(m).toBeLessThanOrEqual(STORAGE_CAP);
       expect(m * p).toBeGreaterThanOrEqual(135);
       expect(m * p).toBeLessThanOrEqual(140);
-      expect(contractPenalty({ good: g, amount: m, price: p, island: HOME })).toBe(
+      expect(contractPenalty({ good: g, amount: m, price: p, island: HOME, deliveries: 0 })).toBe(
         Math.ceil((m * p * CONTRACT_PENALTY_PCT) / 100),
       );
     });
@@ -87,7 +87,9 @@ describe('AK-SK-26 Werte und Invarianten', () => {
     const p = contractUnitPrice('rum');
     expect(p).toBe(27);
     expect(5 * p).toBe(135);
-    expect(contractPenalty({ good: 'rum', amount: 5, price: p, island: HOME })).toBe(135);
+    expect(contractPenalty({ good: 'rum', amount: 5, price: p, island: HOME, deliveries: 0 })).toBe(
+      135,
+    );
   });
 
   it('Werkzeug und Gewürz sind keine Vertragsgüter', () => {
@@ -132,7 +134,7 @@ function stepAt(w: World, t: number): StepReport {
 }
 
 const RUM = { good: 'rum', amount: 5, price: 27 } as const;
-const rumContract = (island = HOME): Contract => ({ ...RUM, island });
+const rumContract = (island = HOME): Contract => ({ ...RUM, island, deliveries: 0 });
 const homeRum = (w: World): number => home(w).stock.rum;
 const lockOrders = (w: World): void => {
   w.unlocked = w.unlocked.filter((u) => u !== FUNCTION_ENTRY.orders);
@@ -229,6 +231,7 @@ describe('R3/R4 Annehmen und Ablehnen (AK-SK-06..08)', () => {
         amount: GOODS[g].order!.contract,
         price: contractUnitPrice(g),
         island: HOME,
+        deliveries: 0,
       });
     }
   });
@@ -272,13 +275,15 @@ describe('R6/R7 Periodenbeginn mit Vertrag (AK-SK-09..17)', () => {
     expect(homeRum(w)).toBe(homeRum(ref) - 5);
     expect(w.money).toBe(ref.money + 135);
     expect(w.order).toBeNull();
-    expect(w.contract).toEqual(rumContract());
+    expect(w.contract).toEqual({ ...rumContract(), deliveries: 1 });
     expect(report.contract).toEqual({
       kind: 'delivered',
       good: 'rum',
       amount: 5,
       pay: 135,
       island: HOME,
+      loyal: false,
+      becameLoyal: false,
     });
     const mid = withRum(12);
     const mref = twin(mid);
@@ -415,7 +420,7 @@ describe('R6/R7 Periodenbeginn mit Vertrag (AK-SK-09..17)', () => {
       const w = base();
       const m = GOODS[g].order!.contract;
       const p = contractUnitPrice(g);
-      w.contract = { good: g, amount: m, price: p, island: HOME };
+      w.contract = { good: g, amount: m, price: p, island: HOME, deliveries: 0 };
       home(w).stock[g] = 0;
       const r = stepAt(w, T);
       expect(r.contract).toMatchObject({
@@ -564,7 +569,7 @@ describe('AK-SK-27 Kaufen und Liefern nie Gewinn', () => {
       const before = w.money;
       expect(buy(w, g, m).ok).toBe(true);
       const afterBuy = w.money;
-      w.contract = { good: g, amount: m, price: contractUnitPrice(g), island: HOME };
+      w.contract = { good: g, amount: m, price: contractUnitPrice(g), island: HOME, deliveries: 0 };
       const ref = twin(w);
       stepAt(w, periodStart(0));
       stepAt(ref, periodStart(0));

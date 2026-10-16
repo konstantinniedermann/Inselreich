@@ -94,16 +94,32 @@ export interface OrderDef {
   far?: number;
 }
 export type ContractBreakReason = 'lock' | 'island' | 'kontor' | 'stock';
-/** Vertragsereignis eines Schritts (R12), nur im StepReport, nie im Save. `island` = Lieferinsel. */
+/** Grund einer Kulanz (I-091): Fehlbestand oder fehlendes Kontor. */
+export type ContractExcuseReason = 'stock' | 'kontor';
+/**
+ * Vertragsereignis eines Schritts (R12), nur im StepReport, nie im Save. `island` = Lieferinsel.
+ * `excused` = Kulanz (I-091).
+ */
 export type ContractEvent =
-  | { kind: 'delivered'; good: GoodId; amount: number; pay: number; island: number }
-  | { kind: 'broken'; good: GoodId; reason: ContractBreakReason; penalty: number; island: number };
+  | {
+      kind: 'delivered';
+      good: GoodId;
+      amount: number;
+      pay: number;
+      island: number;
+      loyal: boolean;
+      becameLoyal: boolean;
+    }
+  | { kind: 'broken'; good: GoodId; reason: ContractBreakReason; penalty: number; island: number }
+  | { kind: 'excused'; good: GoodId; reason: ContractExcuseReason; island: number };
 /** Liefervertrag (I-047): Menge und Stückpreis beim Annehmen festgeschrieben. */
 export interface Contract {
   good: GoodId;
   amount: number;
   price: number;
   island: number;
+  /** Lieferungen seit Annahme bzw. letzter Kulanz, sättigt bei CONTRACT_LOYAL_AFTER (I-091 R-T1). */
+  deliveries: number;
 }
 /** Angebot nach einer Auftragslieferung, gilt bis zum nächsten Periodenbeginn. */
 export interface ContractOffer {
@@ -280,7 +296,7 @@ export interface Ship {
   homing: boolean;
 }
 export interface World {
-  version: 15;
+  version: 16;
   seed: number;
   islands: Island[];
   tick: number;
