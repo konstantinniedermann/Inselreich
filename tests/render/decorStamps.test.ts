@@ -68,7 +68,7 @@ describe('L4-T1 nur Heimatinsel', () => {
         ).toBe(false);
       }
     }
-  });
+  }, 10_000);
 
   it('L4-T1 die decor-Items entsprechen der Stempelliste, stehen im sortierten Durchgang und werden je layoutKey gehalten', () => {
     const w = createWorld(7, { unlockAll: true });

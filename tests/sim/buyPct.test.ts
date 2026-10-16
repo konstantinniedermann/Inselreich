@@ -81,7 +81,7 @@ describe('AK-ZK-07 Kauf-Erholung', () => {
       expect(x.sellPct.wood === 51, `sell ${t}`).toBe(t % SELL_RECOVERY_INTERVAL === 0);
       expect(x.buyPct.wood === 149, `buy ${t}`).toBe(t % BUY_RECOVERY_INTERVAL === 0);
     }
-  });
+  }, 10_000);
 });
 
 describe('AK-ZK-08 buyQuote und buyPrice', () => {

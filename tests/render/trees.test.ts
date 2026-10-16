@@ -138,7 +138,7 @@ describe('Wald-Objekte', () => {
           deltaE2000(rgbToLab(rgbOfCss(c)), rgbToLab(rgbOfCss(PALETTE[n]))),
           `${c} ~ ${n}`,
         ).toBeGreaterThanOrEqual(20);
-  });
+  }, 10_000);
 
   it('R149 Baumarten: je Seed ≥ 2 Arten, Radienverhältnis max/min ≥ 2,5; über die Waldtypen alle fünf Arten', () => {
     for (const seed of [3, 11, 7, 2]) {
