@@ -7920,3 +7920,33 @@ Regelbezug: R682, R680 (Merge durch lead-production), R233 (1) Persona-Änderung
 Archivtreffer verkürzt.
 
 Entscheider: L0 · Anlass: Bericht lead-production CTX-ALTLAST · ADR: —
+
+## R684 · 2026-10-16 · Doppelte Nummer R683; I-091 bereit → Gate Merge mit Delta-Review
+
+Ruling: (1) R683 ist doppelt vergeben (parallele L0-Session, R682): der Eintrag «Gate Merge CTX-ALTLAST» gilt als **R683b**; Absprache an die andere
+Session per Nachricht, beide lesen die letzte Nummer direkt vor dem Eintrag. (2) `feat/i091` @ `7268f800` (T00–T06, Save **v16** mit `migrateV15ToV16`,
+`contract.deliveries = 0`; `make check` und `make zeitreserve-gate` Exit 0; Final-Review opus frisch BEDENKEN → zwei Fixes ohne Delta-Review) → Gate
+Merge durch lead-qa mit **Delta-Review** der Fixes (frischer `qa-code-reviewer` opus) und Prüfung, dass main weiterhin `SAVE_VERSION` 15 hat
+(Erweiterung 1 nicht vorher gelandet). Mitzieh `tests/sim/orders.test.ts` (ein Literal) angenommen. Konfliktauflösung `docs/ideen.md`/`ideen-archiv.md`
+(I-094 im Archiv, I-091 Status) prüft lead-qa stichprobenartig; I-091-Status beim Merge auf «gemergt» nachziehen.
+
+Regelbezug: gates.md Gate Merge, R129, R673, R674, R682 · Kosten bei Irrtum: ein Fix ohne unabhängige Prüfung im Release.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-091, Doppelnummer im Log · ADR: —
+
+## R684 · 2026-10-16 · Aufräumen wird Daueraufgabe von lead-production, ausgelöst durch Schwellen im Start-Kontext
+
+Ruling: Nutzerauftrag «das Studio soll Altlasten künftig selbst erkennen, darauf hinweisen und aufräumen, nicht immer, aber wenn es sich lohnt».
+Auslegung: (1) **Erkennen** übernimmt ein Werkzeug, nicht ein Agent: `aufraeumen.py --check` misst Schwellen (Startwerte: `.studio/qa` > 2 GB;
+`rulings.md` > 150 Rulings oder > 200 KB; > 20 Specs/Pläne von live Releases ausserhalb des Archivs; `.studio/events.jsonl` > 50 MB;
+`.studio/archiv` > 500 MB) und schreibt bei Überschreitung eine Zeile «Aufräumen fällig: <Grund, Grösse>» in den SessionStart-Kontext (wie «Fällige
+Retros»). Schwellen stehen in einer Konfigurationsdatei unter `tools/studio/`, nicht im Code. (2) **Hinweisen**: L0 nennt die fällige Zeile im
+Start-Bericht. (3) **Durchführen**: Eigentümerin ist **lead-production** (Persona-Abschnitt «Haushalt»); L0 startet sie bei fälliger Zeile als Paket
+`HAUSHALT-nn` ohne Nutzerfrage, sobald ein Agentenplatz frei ist (vor neuen Ideen-Runden, nach laufenden Gates). Sie führt Trockenlauf, `--apply`,
+Archiv-`git mv` und Rulings-Verschieben nach R682/R683 aus, misst vorher/nachher und meldet Ergebnis im Bericht; Gate Merge L0 wie üblich. Ohne
+fällige Zeile wird nicht aufgeräumt. Umsetzung im laufenden Paket CTX-ALTLAST als Nachtrag (3).
+
+Regelbezug: R682, R683, Verfassung §5 (keine Rückfrage), §6.4 · Kosten bei Irrtum: eine Aufräumrunde zu früh oder zu spät; Schwellen sind per
+Konfiguration nachstellbar.
+
+Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-16 · ADR: —
