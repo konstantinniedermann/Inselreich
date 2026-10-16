@@ -229,6 +229,96 @@ class HookTest(unittest.TestCase):
             self.assertEqual((result.returncode, result.stdout), (0, ""))
 
 
+class GuardEventTest(unittest.TestCase):
+    run_hook = HookTest.run_hook
+
+    def bash(self, command, **extra):
+        return {
+            "hook_event_name": "PreToolUse",
+            "session_id": "s1",
+            "agent_type": "tech-sim-engineer",
+            "tool_name": "Bash",
+            "tool_input": {"command": command},
+            **extra,
+        }
+
+    def events(self, home):
+        path = Path(home) / "events.jsonl"
+        if not path.exists():
+            return []
+        return [json.loads(line) for line in path.read_text("utf-8").splitlines()]
+
+    def test_deny_writes_one_event(self):
+        with tempfile.TemporaryDirectory() as home:
+            out = self.run_hook(self.bash("git stash push -m x"), home)
+            self.assertEqual(out["hookSpecificOutput"]["permissionDecision"], "deny")
+            events = self.events(home)
+            self.assertEqual(len(events), 1)
+            event = events[0]
+            self.assertEqual(event["kind"], "guard_block")
+            self.assertEqual(event["source"], "hook")
+            self.assertEqual(event["rule"], "stash")
+            self.assertEqual(event["tool"], "Bash")
+            self.assertEqual(event["command"], "git stash push -m x")
+            self.assertEqual(event["persona"], "tech-sim-engineer")
+            self.assertEqual(event["session_id"], "s1")
+            self.assertTrue(event["summary"].startswith(guard.FORBIDDEN))
+
+    def test_allowed_writes_nothing(self):
+        with tempfile.TemporaryDirectory() as home:
+            self.assertIsNone(self.run_hook(self.bash("git status"), home))
+            self.assertEqual(self.events(home), [])
+            prompt = {"hook_event_name": "UserPromptSubmit", "session_id": "s1"}
+            self.run_hook({**prompt, "prompt": "git stash"}, home)
+            self.assertEqual(self.events(home), [])
+
+    def test_long_command_is_shortened_to_one_line(self):
+        with tempfile.TemporaryDirectory() as home:
+            command = "git stash push -m " + "x" * 300 + "\necho zwei"
+            self.run_hook(self.bash(command), home)
+            shown = self.events(home)[0]["command"]
+            self.assertEqual(len(shown), 160)
+            self.assertNotIn("\n", shown)
+
+    def test_file_tool_and_agent_command_fields(self):
+        with tempfile.TemporaryDirectory() as home:
+            edit = {
+                "hook_event_name": "PreToolUse",
+                "session_id": "s1",
+                "tool_name": "Edit",
+                "tool_input": {"file_path": "/r/docs/studio/VERFASSUNG.md"},
+            }
+            self.run_hook(edit, home)
+            event = self.events(home)[0]
+            self.assertEqual(event["rule"], "constitution")
+            self.assertEqual(event["command"], "/r/docs/studio/VERFASSUNG.md")
+            self.assertEqual(event["persona"], "")
+
+    def test_write_failure_keeps_deny(self):
+        with tempfile.TemporaryDirectory() as home:
+            (Path(home) / "events.jsonl").mkdir()
+            out = self.run_hook(self.bash("git stash"), home)
+            self.assertEqual(out["hookSpecificOutput"]["permissionDecision"], "deny")
+
+    def test_rule_of(self):
+        cases = {
+            f"{guard.FORBIDDEN}: git stash push" + guard.STASH_HINT: "stash",
+            f"{guard.FORBIDDEN}: git push --force": "force-push",
+            f"{guard.FORBIDDEN}: git push mit Refspec +x": "force-push",
+            f"{guard.FORBIDDEN}: git rebase": "rebase",
+            f"{guard.FORBIDDEN}: git pull --rebase": "rebase",
+            f"{guard.FORBIDDEN}: git reset --hard": "reset-hard",
+            f"{guard.FORBIDDEN}: Löschen ausserhalb des Repos (/x)": "delete",
+            guard.PROTECTED: "constitution",
+            guard.MODEL_MISSING: "model",
+            guard.KILL_BY_NAME_REASON: "kill-by-name",
+            "etwas ganz anderes": "other",
+        }
+        for found, rule in cases.items():
+            with self.subTest(found=found):
+                self.assertEqual(guard.rule_of(found), rule)
+
+
 class FixRoundTest(unittest.TestCase):
     def test_allowed(self):
         for cmd in [

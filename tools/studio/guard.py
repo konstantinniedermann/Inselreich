@@ -5,6 +5,7 @@ Regeln: docs/studio/VERFASSUNG.md §6 und §1. Best effort; Fehler lassen zu.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import re
@@ -529,6 +530,68 @@ def deny_text(found: str) -> str:
     return found + SUFFIX
 
 
+RULE_KEYWORDS = (
+    ("stash", "stash"),
+    ("push", "force-push"),
+    ("rebase", "rebase"),
+    ("reset --hard", "reset-hard"),
+    ("Löschen", "delete"),
+    ("branch", "delete"),
+    ("clean", "delete"),
+    ("worktree remove", "delete"),
+    ("Freigabe-Formel", "constitution"),
+)
+COMMAND_LIMIT = 160
+
+
+def rule_of(found: str) -> str:
+    """Kurzer Regelname zur Abweisung, per Stichwort aus dem Grund."""
+    if found == PROTECTED:
+        return "constitution"
+    if found == MODEL_MISSING:
+        return "model"
+    if found == KILL_BY_NAME_REASON:
+        return "kill-by-name"
+    for keyword, rule in RULE_KEYWORDS:
+        if keyword in found:
+            return rule
+    return "other"
+
+
+def _shown_command(payload: dict) -> str:
+    data = payload.get("tool_input")
+    data = data if isinstance(data, dict) else {}
+    tool = payload.get("tool_name")
+    if tool == "Bash":
+        text = str(data.get("command", ""))
+    elif tool in FILE_TOOLS:
+        text = str(data.get("file_path") or data.get("notebook_path") or "")
+    else:
+        text = str(data.get("description", ""))
+    return " ".join(text.split())[:COMMAND_LIMIT]
+
+
+def _log_block(payload: dict, found: str) -> None:
+    """Genau ein Ereignis je Abweisung; Schreibfehler ändern das Deny nie."""
+    with contextlib.suppress(Exception):
+        from paths import append_event, now_iso
+
+        append_event(
+            {
+                "ts": now_iso(),
+                "session_id": str(payload.get("session_id") or ""),
+                "agent_id": str(payload.get("agent_id") or "main"),
+                "source": "hook",
+                "kind": "guard_block",
+                "rule": rule_of(found),
+                "tool": str(payload.get("tool_name") or ""),
+                "command": _shown_command(payload),
+                "persona": str(payload.get("agent_type") or ""),
+                "summary": found[:COMMAND_LIMIT],
+            }
+        )
+
+
 def _record_approval(payload: dict, marker_dir: Path) -> None:
     prompt = str(payload.get("prompt", ""))
     session = str(payload.get("session_id", ""))
@@ -551,6 +614,7 @@ def main() -> int:
         elif event == "PreToolUse":
             found = decide(payload, repo_root(), marker_dir, os.environ)
             if found:
+                _log_block(payload, found)
                 print(
                     json.dumps(
                         {
