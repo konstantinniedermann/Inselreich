@@ -1743,3 +1743,16 @@ Pause-/Ausfall-Wechsel im selben Tick bis zum nächsten Tick alt; `|island` im M
 Regelbezug: gates.md Gate Merge, R712 V2, R721 · Kosten bei Irrtum: eine Bilanz, die einen Tick zu spät aktualisiert.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-PERF-BILANZ-COV · ADR: —
+
+## R728 · 2026-10-16 · ORT-A C2 +1 Delta-Review; Hof-Fixture für T09; I-112 C3 abgenommen, `Umschalt+R` = Rat, C4 mit 6 Starts
+
+Ruling: (1) ORT-A C2 (`feat/ort-a-mess` @ `1d1324d4`, Fix-Runde 3 T08): **+1 Start** aus dem Puffer (danach 7) für ein frisches Delta-Review opus (R673, R708). Hof
+liefert auf `ort-a-siedlung.json` 0 Querschnitte (nur Rückseiten frei) → eine Fixture mit freien Vorderseiten ist Teil der T09-Vorbereitung durch C4 (aus dem Puffer),
+nicht von T08. (2) I-112 C3 (`feat/i112` @ `1d201bf1`; T05 `bb60938e`, T06 `b48b181e`, T07 `a841388b`) → abgenommen. **`Umschalt+R` öffnet den Rat** (statt Weg)
+bestätigt; `r` bleibt Weg, `tests/ui/hotkeys.test.ts` AK-TK-16 nimmt `r` aus; README/Tastenkürzel-Menü nennen es (T09). BEDENKEN T05 (`importsDecree` ohne
+`require`/`import()`, Import-Reihenfolge `council.test.ts:26`) behebt C4 vor dem Final-Review; das Final-Review (opus, frisch, ganzer Branch) deckt R673 für T05 ab.
+**C4: T08 Browser, T09 Doku, T05-Kleinfix, Final-Review; 6 Starts** (14 von 25 verbraucht). C4 holt zuerst `main` (PERF-BILANZ-COV berührt `hud.ts`, R727).
+
+Regelbezug: R673, R705, R708, R713, R724, R727 · Kosten bei Irrtum: eine Tastenbelegung, die nach dem Playtest getauscht wird.
+
+Entscheider: L0 · Anlass: Berichte lead-tech ORT-A C2 und I-112 C3 · ADR: —
