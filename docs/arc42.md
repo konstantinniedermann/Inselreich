@@ -665,7 +665,7 @@ merge-driver` setzt die Treiberkonfiguration einmal je Klon in `.git/config`; oh
 - **CI:** `.github/workflows/ci.yml` führt `make check` bei Push auf `main` und bei Pull Requests aus.
 - **Deploy:** `.github/workflows/pages.yml` baut nach grüner CI auf `main` (`workflow_run`, R747; manuell nur für Reruns) und veröffentlicht
   `dist/` auf GitHub Pages. Er greift erst, wenn Pages im Repo aktiviert ist (Quelle: GitHub Actions);
-  auf dem Free-Plan braucht das ein öffentliches Repo (offene Entscheidung, Spec Abschnitt 6).
+  das Repo ist öffentlich, damit genügt der Free-Plan.
 
 ### Plattformgrenzen GitHub Pages (R130)
 

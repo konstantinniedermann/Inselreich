@@ -1,6 +1,6 @@
 # Baut das Spiel und veröffentlicht `dist/` auf GitHub Pages.
 # Voraussetzung: Pages ist im Repo aktiviert (Settings → Pages → Source: GitHub Actions);
-# auf dem Free-Plan braucht das ein öffentliches Repo.
+# das Repo ist öffentlich (Free-Plan genügt, R747).
 # Nach dem Build prüft `tools/pages/check.ts` die Plattformgrenzen (R130, Schwelle 50 %).
 # `vite.config.ts` setzt `base: './'` (relative Pfade), deshalb braucht der Build kein `--base`.
 # Auslösung (R747): automatisch nach grüner CI auf main (`workflow_run`); manuell (`workflow_dispatch`)
@@ -21,7 +21,8 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    # Nur Läufe nach einem Push auf main (nicht Fork-PRs von einem Branch namens main) oder manuell.
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
