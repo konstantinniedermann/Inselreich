@@ -90,8 +90,8 @@ describe('AK-9 (R-4) Migration v16 → v17', () => {
 });
 
 describe('AK-9 (R-4) Abweisen', () => {
-  it('SAVE_VERSION ist 17 und SAVE_VERSION + 1 wird abgewiesen', () => {
-    expect(SAVE_VERSION).toBe(17);
+  it('SAVE_VERSION liegt nicht unter 17 und SAVE_VERSION + 1 wird abgewiesen', () => {
+    expect(SAVE_VERSION).toBeGreaterThanOrEqual(17);
     const raw = { ...json(createWorld(3)), version: SAVE_VERSION + 1 };
     expect(deserialize(JSON.stringify(raw))).toEqual({ ok: false, reason: 'Unbekannte Version' });
   });

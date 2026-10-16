@@ -24,6 +24,7 @@ import { feastActive, holdFeast } from '../../src/sim/feast';
 import { serviceAvailable, tickPopulation, tierCap, upgradeStatus } from '../../src/sim/population';
 import { coverageMask, placementZone } from '../../src/sim/queries';
 import { step } from '../../src/sim/tick';
+import { serialize } from '../../src/sim/save';
 import type { BuildingDefId, CouncilTier, World } from '../../src/sim/types';
 import {
   houseNearKontor,
@@ -420,5 +421,45 @@ describe('Bitgleich ohne Beschluss', () => {
       return JSON.stringify({ ...w, council: null });
     };
     expect(run('open')).toBe(run(null));
+  });
+});
+
+describe('AK-8 Determinismus', () => {
+  const run = (side: 'A' | 'B'): World => {
+    const { w, houses } = village(3);
+    setHouse(houses[0]!, 2, 1);
+    putBuilding(w, 0, 'weaver', 4, 4);
+    home(w).stock.wool = 100;
+    for (let i = 0; i < 50 && w.council[2] !== 'open'; i++) step(w);
+    expect(decree(w, 2, side)).toEqual({ ok: true });
+    for (let i = 0; i < 300; i++) step(w);
+    return w;
+  };
+  const withoutCouncil = (w: World): string =>
+    serialize({ ...w, council: { 2: null, 3: null, 4: null } });
+
+  it('gleicher Seed, gleiche Aktionen: serialize gleich', () => {
+    expect(serialize(run('B'))).toBe(serialize(run('B')));
+    expect(serialize(run('A'))).toBe(serialize(run('A')));
+  });
+
+  it('A und B unterscheiden sich in der Welt ausserhalb des Ratsfeldes (Wirkung belegt)', () => {
+    expect(withoutCouncil(run('A'))).not.toBe(withoutCouncil(run('B')));
+  });
+});
+
+describe('Konsistenz Rat-Tabelle', () => {
+  it('jeder cycle-Hebel aus COUNCIL zeigt auf ein Gebäude in BUILDING_DEFS mit Takt', () => {
+    let n = 0;
+    for (const t of COUNCIL_TIERS)
+      for (const s of ['A', 'B'] as const) {
+        const lever = COUNCIL[t][s].lever;
+        if (lever.kind !== 'cycle') continue;
+        n++;
+        const def = BUILDING_DEFS[lever.defId];
+        expect(def, `${t}${s}: ${lever.defId}`).toBeDefined();
+        expect(def.cycle, `${t}${s}: ${lever.defId} ohne cycle`).toBeDefined();
+      }
+    expect(n).toBeGreaterThan(0);
   });
 });
