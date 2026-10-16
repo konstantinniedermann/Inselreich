@@ -1630,3 +1630,14 @@ Vermerk «Messfenster belegt», solange N-102 offen ist; gewertete A/B-Messungen
 Regelbezug: R553, R705, N-102 · Kosten bei Irrtum: drei Starts aus dem Puffer.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
+
+## R718 · 2026-10-16 · Gate Merge TOOL-BUENDEL-14: OK ohne Auflagen; Merge jetzt
+
+Ruling: `tool/buendel-14` @ `69230eb9` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-TOOL-BUENDEL-14.md`) → **Gate Merge OK**. V1, V3, V4 (R712) und die
+Isolation des `testlock`-Tests (Ursache der vervielfachten `load_abort`-Ereignisse) belegt; merge-tree konfliktfrei gegen Handbuch 1.60. lead-production merged lokal
+(`--no-ff`) und trägt H-1 (Nachmessung beim nächsten `push-check`), H-2 (alte `load_abort`-Test-Ereignisse, Bereinigung bei der nächsten Aufräum-Runde) und H-3
+in `docs/beobachtungen.md` ein. 7 Tests mit bestehendem Timeout bleiben unverändert.
+
+Regelbezug: gates.md Gate Merge, R712 · Kosten bei Irrtum: ein Pre-Commit-Hook, der eine Datei formatiert, die der Autor anders wollte.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-TOOL-BUENDEL-14 · ADR: —
