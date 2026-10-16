@@ -194,11 +194,15 @@ describe('drawSeaMap Marke Fernangebot/Fernauftrag (I-101 T01, AK-M6/M7)', () =>
   function rec(): Rec {
     const inner = fakeCtx().ctx as unknown as Record<string, unknown>;
     const r: Rec = { calls: [], texts: [], ctx: null as never };
-    const state: Record<string, unknown> = { textAlign: 'start' };
+    const state: Record<string, unknown> = { textAlign: 'start', font: '20px sans-serif' };
     r.ctx = new Proxy(inner, {
       get(t, k) {
         if (typeof k !== 'string') return Reflect.get(t, k);
-        if (k === 'measureText') return (text: string) => ({ width: text.length * 6 });
+        if (k === 'measureText')
+          return (text: string) => ({
+            width: text.length * parseFloat(String(state.font)) * 0.5,
+          });
+        if (k === 'font') return state.font;
         if (k === 'fillText')
           return (text: string, x: number, y: number) => {
             r.calls.push(['fillText', text, x, y]);
@@ -220,7 +224,7 @@ describe('drawSeaMap Marke Fernangebot/Fernauftrag (I-101 T01, AK-M6/M7)', () =>
         return v;
       },
       set(t, k, v) {
-        if (k === 'textAlign') state.textAlign = v;
+        if (k === 'textAlign' || k === 'font') state[k] = v;
         r.calls.push(['set', k, v]);
         return Reflect.set(t, k, v);
       },
@@ -298,6 +302,15 @@ describe('drawSeaMap Marke Fernangebot/Fernauftrag (I-101 T01, AK-M6/M7)', () =>
     const left = run(mk()).r.texts[0]!;
     expect(left.align).not.toBe('right');
     expect(left.x).toBeGreaterThan(a.x);
+  });
+  it('M6c Breite wird mit der Markenschrift gemessen (font vor measureText)', () => {
+    const w = seaWorld();
+    const base = mapLayout(w, 360, 240, 12);
+    const isl = w.islands[1]!;
+    const a = tileToMap(base, isl.ox + isl.anchor.x + 0.5, isl.oy + isl.anchor.y + 0.5);
+    // 11px: 6 Zeichen x 5,5 = 33 passt in 40; alte Schrift 20px: 60 passt nicht
+    const { r } = run(mk(), (l) => ({ ...l, w: a.x + MARK * 0.9 + 3 + 40 }));
+    expect(r.texts[0]!.align).not.toBe('right');
   });
   it('M6c y bleibt innerhalb [Münzradius, h - Münzradius]', () => {
     const r0 = MARK * 0.9;

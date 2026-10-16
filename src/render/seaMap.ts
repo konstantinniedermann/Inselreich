@@ -264,9 +264,9 @@ export function drawSeaMap(
     if (mark.kind === 'order') ctx.fill();
     else ctx.stroke();
     const gap = 3 * px;
+    ctx.font = `${11 * px}px sans-serif`;
     const tw = ctx.measureText(mark.text).width;
     const right = a.x + rad + gap + tw > l.w;
-    ctx.font = `${11 * px}px sans-serif`;
     ctx.textBaseline = 'middle';
     ctx.textAlign = right ? 'right' : 'left';
     const tx = right ? a.x - rad - gap : a.x + rad + gap;
