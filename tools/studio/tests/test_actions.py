@@ -8,11 +8,15 @@ import actions
 NOW = datetime(2026, 10, 8, tzinfo=UTC)
 
 
-def fake(items, login="koschi", name="anno-clone"):
+def fake(items, login="koschi", name="anno-clone", visibility=None):
     calls = []
 
     def run(args):
         calls.append(args)
+        if "visibility" in args:
+            if visibility is None:
+                raise subprocess.CalledProcessError(1, "gh")
+            return visibility + "\n"
         if args[:2] == ["api", "user"]:
             return login + "\n"
         if args[0] == "repo":
@@ -41,8 +45,9 @@ class ActionsTest(unittest.TestCase):
     def test_sums_repo_and_account(self):
         run = fake([item(100), item(30, repo="x"), item(9, product="copilot")])
         self.assertEqual(actions.usage(NOW, run), (100.0, 130.0))
-        self.assertIn(
-            "/users/koschi/settings/billing/usage?year=2026&month=10", run.calls[2][1]
+        urls = [c[1] for c in run.calls if c[0] == "api" and c[1] != "user"]
+        self.assertEqual(
+            urls, ["/users/koschi/settings/billing/usage?year=2026&month=10"]
         )
 
     def test_lights_green_yellow_red(self):
@@ -85,6 +90,50 @@ class ActionsTest(unittest.TestCase):
 
     def test_empty_login_is_not_recorded(self):
         self.assertIsNone(actions.usage(NOW, fake([], login="")))
+
+
+class PublicRepoTest(unittest.TestCase):
+    TEN = datetime(2026, 10, 10, 12, tzinfo=UTC)
+
+    def test_public_repo_minutes_not_counted_to_account(self):
+        items = [item(1074, day=1), item(30, repo="x", day=1)]
+        text = actions.render(self.TEN, fake(items, visibility="PUBLIC"))
+        self.assertIn(
+            "- Info: Inselreich-Minuten: 1074 (öffentlich, nicht abgerechnet)", text
+        )
+        self.assertIn("GRÜN: Konto-Minuten: 30 von 2000", text)
+        self.assertIn("GRÜN: Konto-Prognose Monatsende", text)
+
+    def test_public_repo_rate_excludes_repo_days(self):
+        items = [item(500, day=d) for d in (7, 8, 9)]
+        text = actions.render(self.TEN, fake(items, visibility="PUBLIC"))
+        self.assertIn("Konto-Prognose Monatsende: 0 von 2000", text)
+
+    def test_private_repo_counts_as_before(self):
+        text = actions.render(self.TEN, fake([item(1700, day=1)], visibility="PRIVATE"))
+        self.assertIn("ROT: Konto-Minuten: 1700", text)
+        self.assertNotIn("nicht abgerechnet", text)
+
+    def test_visibility_failure_counts_conservatively(self):
+        text = actions.render(self.TEN, fake([item(1700, day=1)], visibility=None))
+        self.assertIn("ROT: Konto-Minuten: 1700", text)
+
+    def test_session_minutes_only_info_when_public(self):
+        runs = [{"databaseId": 1, "createdAt": "2026-10-08T11:00:00Z"}]
+        jobs = [
+            {"startedAt": "2026-10-08T11:00:00Z", "completedAt": "2026-10-08T11:20:00Z"}
+        ]
+        base = SessionMinutesTest.runner(runs, jobs)
+
+        def run(args):
+            return "PUBLIC\n" if "visibility" in args else base(args)
+
+        since = datetime(2026, 10, 8, 10, tzinfo=UTC)
+        text = actions.render(self.TEN, run, since=since)
+        self.assertIn(
+            "- Info: Session-Minuten: 20 (öffentlich, nicht abgerechnet)", text
+        )
+        self.assertNotIn("ROT: Session", text)
 
 
 class ForecastTest(unittest.TestCase):
