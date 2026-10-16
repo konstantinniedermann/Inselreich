@@ -2,6 +2,7 @@ import { GOODS } from '../sim/defs/goods';
 import { FAR_ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from '../sim/defs/timing';
 import { islandName } from '../sim/islands';
 import type { FarOffer, Order, World } from '../sim/types';
+import type { MapMark } from '../render/seaMap';
 import type { LogEntry } from './crisisLog';
 import { formatGameTime } from './time';
 
@@ -16,12 +17,18 @@ function stockOn(world: World, island: number, good: Order['good']): number {
   return world.islands[island]!.stock[good];
 }
 
+/** P-7: Tick, an dem das offene Fernangebot verfällt; `null` ohne Angebot. */
+export function farOfferDue(world: World): number | null {
+  if (world.farOffer === null) return null;
+  const period = world.order?.period ?? 0;
+  return ORDER_FIRST_TICK + period * ORDER_PERIOD + FAR_ORDER_DURATION;
+}
+
 /** T-02: Text des offenen Fernangebots; `null` ohne Angebot. Das Lager ist das der Fern-Insel. */
 export function farOfferText(world: World): string | null {
   const f = world.farOffer;
-  if (f === null) return null;
-  const period = world.order?.period ?? 0;
-  const due = ORDER_FIRST_TICK + period * ORDER_PERIOD + FAR_ORDER_DURATION;
+  const due = farOfferDue(world);
+  if (f === null || due === null) return null;
   return (
     `Fernangebot ${islandName(world, f.island)}: ${f.amount} ${GOODS[f.good].name} · ${f.reward}` +
     ` · Frist ${formatGameTime(due - world.tick)} · Lager ${stockOn(world, f.island, f.good)}/${f.amount}`
@@ -104,4 +111,28 @@ export function farLogEntries(prev: FarSnap, world: World): LogEntry[] {
   )
     out.push({ text: `Fernangebot verfallen: ${line(world, f)}`, toast: null, tick: world.tick });
   return out;
+}
+
+/** I-101: Marke der Seekarte für Fernauftrag (Vorrang) bzw. Fernangebot; `null` sonst. Liest nur die Welt. */
+export function farMark(world: World): MapMark | null {
+  const o = world.order;
+  const f = world.farOffer;
+  let kind: MapMark['kind'];
+  let x: { island: number; amount: number; good: Order['good'] };
+  let ticks: number;
+  if (o !== null && o.island !== undefined) {
+    kind = 'order';
+    x = { island: o.island, amount: o.amount, good: o.good };
+    ticks = o.due - world.tick;
+  } else if (f !== null) {
+    kind = 'offer';
+    x = f;
+    ticks = farOfferDue(world)! - world.tick;
+  } else return null;
+  return {
+    island: x.island,
+    kind,
+    text: `${x.amount} ${GOODS[x.good].name} · ${formatGameTime(ticks)}`,
+    warn: world.islands[x.island]!.kontorId === null,
+  };
 }

@@ -4,6 +4,7 @@ import { functionLock } from '../sim/unlocks';
 import type { World } from '../sim/types';
 import { islandList } from './islandJump';
 import { islandEffectTexts } from './islandCard';
+import { farMark } from './farOrder';
 
 /** Kartengrösse in CSS-Pixeln und Rand; `style.css` zeichnet dieselbe Grösse. */
 export const SEA_MAP_W = 360;
@@ -22,7 +23,9 @@ export function seaMapKey(world: World, l: MapLayout): string {
     const m = tileToMap(l, d.x, d.y);
     return `${d.id}:${Math.round(m.x)},${Math.round(m.y)}`;
   });
-  return `${world.islands.length}|${flags}|${dots.join(';')}`;
+  const m = farMark(world);
+  const mark = m === null ? '-' : `${m.island}:${m.kind}:${m.text}:${m.warn ? 1 : 0}`;
+  return `${world.islands.length}|${flags}|${dots.join(';')}|m:${mark}`;
 }
 
 /** Insel unter dem Kartenpunkt (nur Land) oder `null`. */
@@ -35,5 +38,10 @@ export function seaMapTip(world: World, l: MapLayout, px: number, py: number): s
   const i = hitIsland(world, l, px, py);
   if (i === null) return null;
   const label = islandList(world).find((e) => e.index === i)?.label;
-  return label === undefined ? null : [label, ...islandEffectTexts(world, i)].join(' · ');
+  if (label === undefined) return null;
+  const parts = [label, ...islandEffectTexts(world, i)];
+  const m = farMark(world);
+  if (m !== null && m.island === i)
+    parts.push(`${m.kind === 'order' ? 'Fernauftrag' : 'Fernangebot'}: ${m.text}`);
+  return parts.join(' · ');
 }

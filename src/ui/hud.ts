@@ -14,7 +14,7 @@ import type { GameState } from './app';
 import { blurAfterClick, setField } from './dom';
 import type { Settings } from './settings';
 import { orderVisible, renderOrder, updateOrder, type OrderActions } from './order';
-import { farAcceptTooltip, farOfferText } from './farOrder';
+import { farAcceptTooltip, farMark, farOfferText } from './farOrder';
 import { crisisCardText } from './crisis';
 import { taxEffect } from './guide';
 import { taxButtonTitle, taxSummaryText } from './taxView';
@@ -449,7 +449,7 @@ export function bindIslandMenu(header: HTMLElement, state: GameState, actions: H
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     shownKey = key;
-    drawSeaMap(ctx, state.world, layout, cache, { hover, dpr: mapDpr });
+    drawSeaMap(ctx, state.world, layout, cache, { hover, dpr: mapDpr, mark: farMark(state.world) });
   };
   seaMapRedraw.set(box, () => redraw(false));
   const point = (ev: MouseEvent): { x: number; y: number } => {
