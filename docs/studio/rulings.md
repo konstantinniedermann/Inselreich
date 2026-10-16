@@ -1905,3 +1905,15 @@ bei Last ≤ 8, dann Gate Merge. Bei erneutem BEDENKEN derselben Klasse: V1 (Ans
 Regelbezug: R673, R708, R734, R735 · Kosten bei Irrtum: zwei Starts für eine Regression, die sonst erst im Playtest auffiele.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I-112 C4 · ADR: —
+
+## R741 · 2026-10-16 · Gate Plan I-122 + I-123: OK; Budget 12 + 1, Parallelität 2; Start nach I-112-Merge
+
+Ruling: `plan/i122-i123` @ `70486f0b` (T00–T07, Handoff `.studio/handoffs/2026-10-16-lead-tech-plan-I-122-I-123.md`) → **Gate Plan OK** (Stufe leicht, L0). Probe R738 per
+Codelesung bestätigt (`settleContract` trotz `farSkip`, `nextOrderTick` eine Periode zu weit) → T01 belegt per Test, T02 Beipack (`orderCardText` nutzt `nextSettleTick`).
+Reichweite in neuer Datei `src/ui/contractDrain.ts` angenommen; Ablagen `contractWarning` (`orders.ts`), `shouldWarnNow`/`flashOrderCard` (`order.ts`), `warnedPeriod` (`app.ts`)
+angenommen. Review-Form: ein frisches Final-Review opus bei Diff ≤ 300 Zeilen Code (E-068), sonst zusätzlich Task-Review T01. Vertragskarten-Umbruch bei 1280 px prüft T06,
+Fallback kleinere Schrift. Budget (V3) **12 Arbeiter-Starts + 1 Controller, Parallelität 2** (statt 3: Deckel 6 und Last). **Start nach dem Merge von I-112**, T00 holt main.
+
+Regelbezug: gates.md Gate Plan, R738, E-068 · Kosten bei Irrtum: ein Strang, der eine halbe Stunde später läuft.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-I-122-I-123 · ADR: —
