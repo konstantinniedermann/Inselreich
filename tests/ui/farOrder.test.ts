@@ -197,11 +197,16 @@ describe('AK-H2-33 Log', () => {
 
   it('Review Focus 2: geladene Welt erzeugt nichts', () => {
     const w = offerWorld();
-    const x = load(w);
-    expect(farLogEntries(farSnap(x), x)).toEqual([]);
+    // Snapshot aus der Welt vor dem Speichern, geprüft gegen die geladene Welt.
+    expect(farLogEntries(farSnap(w), load(w))).toEqual([]);
     acceptFarOrder(w);
-    const y = load(w);
-    expect(farLogEntries(farSnap(y), y)).toEqual([]);
+    const prev = farSnap(w);
+    const loaded = load(w);
+    expect(farLogEntries(prev, loaded)).toEqual([]);
+    // Kontrolle: die Prüfung misst etwas, wenn der Auftrag in der geladenen Welt fehlt und die Frist um ist.
+    loaded.order = null;
+    loaded.tick = w.order!.due + 1;
+    expect(farLogEntries(prev, loaded)).not.toEqual([]);
   });
 });
 
