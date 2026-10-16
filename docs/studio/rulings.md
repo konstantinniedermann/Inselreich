@@ -1436,3 +1436,14 @@ jedem Merge-Gate main einmergen.
 Regelbezug: gates.md Gate Plan, R698, R700 · Kosten bei Irrtum: ein Funkeln, das im Browser-Check nachjustiert wird.
 
 Entscheider: L0 · Anlass: Berichte production-integrator REL-24-25-PUSH, lead-tech plan-I-120-I-118 · ADR: —
+
+## R703 · 2026-10-16 · I-114 T01 abgenommen; `farAlternative` null bei Vertrag/Sperre; Platz bleibt frei wegen Last
+
+Ruling: (1) `feat/i114` @ `5cef8359` (T01, 17 neue Tests mit Rot-Beleg, `tests/sim` 1535 grün, Balancing ohne Diff, kein Save/`defs`-Diff): Ergänzung
+«`farAlternative` liefert auch bei laufendem Vertrag oder aktiver Sperre `null`» bestätigt (deckt AK-2); AK-6 «Kein zweites Angebot» statt Kontor-Fehler
+angenommen (Zweitkarte wählt nur Inseln mit Kontor). T02 ff. nach Merge UI-AUFRAEUM-4 (R701). (2) Last 6–22 während der Messung: der sechste Platz bleibt
+vorerst leer (R698-Deckel nicht ausgeschöpft), damit Testlauf und Testlock der laufenden Umsetzungen nicht abbrechen; neue Starts erst bei Last < 8.
+
+Regelbezug: R375, R380, R698, R701 · Kosten bei Irrtum: ein Agentenplatz, der eine halbe Stunde leer bleibt.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech I-114 · ADR: —
