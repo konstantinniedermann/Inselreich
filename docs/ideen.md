@@ -309,4 +309,4 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
 - Doppelung: I-089 (live) und I-067 (geparkt) liegen daneben; ändert nur die Zahl in der Kopfzeile.
 - Nutzen/Aufwand: Wirtschaftslage auf einen Blick · S · ≈ 60 Tools
-- Entscheid: offen (IDEEN-10)
+- Entscheid: Kurzdesign `docs/superpowers/specs/2026-10-16-i108-einnahmen-unterhalt-design.md` (R676), Gate offen
