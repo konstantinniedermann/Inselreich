@@ -1,5 +1,7 @@
 # Plan I-112 «Ratsbeschluss» (Stufe voll, V3)
 
+Status: umgesetzt (Branch `feat/i112` @ `3ba35318`, Doku T09 im folgenden Commit).
+
 Stand: Gate Plan OK mit Auflagen B-1 bis B-5 eingearbeitet (R713, R711); R-3, R-4, R-5 sind entschieden, keine offene Variante mehr.
 Owner `lead-tech` · Quelle: Spec `docs/superpowers/specs/2026-10-16-i112-ratsbeschluss.md` (17 AK), Anhang 01 §2/§9, Ruling R706 (V3, R-1, R-2).
 Plan gegen main `21f37b82`, ohne Testläufe (Plan-Paket). Task-Dateien in [`2026-10-16-i112-ratsbeschluss/`](2026-10-16-i112-ratsbeschluss/).

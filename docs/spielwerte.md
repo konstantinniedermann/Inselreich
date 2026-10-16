@@ -394,6 +394,25 @@ Kaufleute steigen nicht auf; für sie gibt es kein ‹niedrig›. ‹hoch› loh
 - «Hoch» bringt kurzfristig Geld, verfehlt auf Dauer aber das Ziel (weniger Einwohner, kein
   Aufstieg). «Niedrig» kostet Geld, lässt Häuser aber schneller aufsteigen.
 
+## Rat (Ratsbeschluss)
+
+Ab dem ersten Haus der Stufe 2, 3 und 4 (auf irgendeiner Insel) wird je ein Beschluss «offen» und bleibt es dauerhaft, auch nach Abriss oder Abstieg. Der Spieler wählt
+einmal pro Stufe eine von zwei Seiten (A: schnellere Kette, B: Form der Stadt); der Beschluss gilt reichsweit bis Partie-Ende, kostet nichts und lässt sich nicht
+rückgängig machen. Ein offener Beschluss wirkt nicht und läuft nicht ab. Die Zahlen stehen nur in `src/sim/defs/council.ts` (Änderung nur per Ruling, der Balancing-Test
+bleibt Regressionsschutz); die Lese-Helfer in `src/sim/council.ts` liefern ohne Beschluss genau den Wert aus den Defs.
+
+| Stufe (Auslöser) | Seite | Name         | Wirkung                                                | alt → neu |
+| ---------------- | ----- | ------------ | ------------------------------------------------------ | --------- |
+| 2                | A     | Webordnung   | Webereien +25 % schneller (Takt `weaver`)              | 50 → 40   |
+| 2                | B     | Glockenrecht | Kapellen reichen 3 Felder weiter (`chapel`-Reichweite) | 10 → 13   |
+| 3                | A     | Brennrecht   | Brennereien +25 % schneller (Takt `distillery`)        | 50 → 40   |
+| 3                | B     | Wohnordnung  | Bürgerhäuser fassen 16 statt 15 Bürger                 | 15 → 16   |
+| 4                | A     | Glasrecht    | Glashütten +67 % schneller (Takt `glassworks`)         | 50 → 30   |
+| 4                | B     | Hofrecht     | Kaufmannshäuser fassen 22 statt 20 Kaufleute           | 20 → 22   |
+
+**Anteiliger Stufentakt (R711 R-3):** Ausgebaute Betriebe nehmen den neuen Takt anteilig: `floor(Stufentakt × neuer Grundtakt ÷ 50)`, mindestens 1 (Weberei Stufe 30 → 24).
+Die Reihenfolge ist Beschluss, dann Inselvorteil, beide abgerundet. Das Glockenrecht gilt auch für die Festreichweite der Kapelle.
+
 ## Krisen
 
 ### Krisenstufe
