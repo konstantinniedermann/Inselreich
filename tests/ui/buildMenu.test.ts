@@ -172,6 +172,34 @@ describe('I-078 lazy: Bilanz nur für sichtbare Tooltips (AK-14)', () => {
     expect(spy.n).toBe(1); // Cache
   });
 
+  it('Takt-Zeilen: unsichtbare werden nicht gefüllt und lösen keine Bilanz aus, sichtbare zeigen den Ratstakt', () => {
+    const w = createWorld(1);
+    const mk = () => ({
+      dataset: { defId: 'weaver', prefix: 'Erzeugt' },
+      textContent: 'alt',
+      classList: { contains: (c: string) => c === 'tt-cycle' },
+    });
+    const hidden = mk();
+    const shown = mk();
+    const nav = {
+      querySelector: () => null,
+      querySelectorAll: (sel: string) => {
+        if (sel === '.tooltip.show .tt-cycle') return [shown];
+        if (sel.includes('.tt-cycle')) return [hidden, shown];
+        return [];
+      },
+    } as unknown as HTMLElement;
+    spy.n = 0;
+    updateBuildMenu(nav, w, 0);
+    w.tick += 1;
+    updateBuildMenu(nav, w, 0);
+    expect(spy.n).toBe(0);
+    expect(hidden.textContent).toBe('alt');
+    expect(shown.textContent).toBe(
+      tooltipLines({ kind: 'build', defId: 'weaver' }, w, 0).find((l) => l.startsWith('Erzeugt:')),
+    );
+  });
+
   it('tooltipLines(…, world) nutzt den Cache (zweiter Aufruf rechnet nicht)', () => {
     const w = createWorld(3, { unlockAll: true });
     tooltipLines({ kind: 'build', defId: 'quarry' }, w);

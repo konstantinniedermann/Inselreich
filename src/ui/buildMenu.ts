@@ -107,6 +107,32 @@ function monumentToolLine(): string {
   return `Wahlziel in drei Abschnitten: ${MONUMENT_GOODS.map((g) => GOODS[g].name).join(', ')}`;
 }
 
+/** Takt-Zeilen eines Gebäudes je Präfix («Erzeugt», «Ausstoss je Stufe», «Braucht»); folgt dem Ratsbeschluss, rechnet keine Bilanz. */
+export function cycleLines(defId: BuildingDefId, world?: World): Record<string, string> {
+  const def = BUILDING_DEFS[defId];
+  const out: Record<string, string> = {};
+  const cyc = (c: number): number => (world === undefined ? c : councilCycle(world, def.id, c));
+  if (def.produces && def.cycle) {
+    out['Erzeugt'] = `Erzeugt: ${GOODS[def.produces].name} ${perInterval(cyc(def.cycle))}`;
+    const lv = LEVELS[def.id];
+    if (lv) {
+      const rates = [def.cycle, lv[0].cycle, lv[1].cycle].map((c) => num(perMinute(1, cyc(c))));
+      out['Ausstoss je Stufe'] = `Ausstoss je Stufe: ${rates.join(' · ')} / min`;
+    }
+  }
+  if (def.consumes && def.cycle) {
+    const rate = perInterval(cyc(def.cycle));
+    out['Braucht'] = `Braucht: ${def.consumes.map((g) => `${GOODS[g].name} ${rate}`).join(' · ')}`;
+  }
+  return out;
+}
+
+/** «Radius: n»-Zeile (Dienst- oder Versorgungsradius), sonst null. */
+function radiusLine(world: World | undefined, defId: BuildingDefId): string | null {
+  const radius = serviceRadius(world, defId) ?? BUILDING_DEFS[defId].supplyRadius;
+  return radius === undefined ? null : `Radius: ${radius}`;
+}
+
 /** Tooltip-Zeilen ohne Sperrgrund (der kommt live dazu); alle Zahlen aus `src/sim/defs/`. Mit `world` kommt die Inselvorteil-Zeile der aktiven Insel dazu. */
 export function tooltipLines(tool: Tool, world?: World, island: number = HOME): string[] {
   const key = hotkeyLabel(tool);
@@ -138,26 +164,19 @@ export function tooltipLines(tool: Tool, world?: World, island: number = HOME): 
     `Kosten: ${costLine(def.cost)}${paidFromHome(tool) ? ' (aus der Heimat)' : ''}`,
     `Unterhalt: ${num(perMinute(def.upkeep, UPKEEP_INTERVAL))} / min`,
   ];
-  const cyc = (c: number): number => (world === undefined ? c : councilCycle(world, def.id, c));
   if (world !== undefined) lines.push(cachedBalanceLine(world, def.id, island));
   if (def.id === 'townhall') lines.push('Steuer und Ausgabesperre einstellen');
-  if (def.produces && def.cycle) {
-    lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(cyc(def.cycle))}`);
+  const cycle = cycleLines(def.id, world);
+  if (cycle['Erzeugt'] !== undefined) {
+    lines.push(cycle['Erzeugt']);
     const advantage = world === undefined ? null : traitBuildLine(world, island, def.id);
     if (advantage !== null) lines.push(advantage);
-    const lv = LEVELS[def.id];
-    if (lv) {
-      const rates = [def.cycle, lv[0].cycle, lv[1].cycle].map((c) => num(perMinute(1, cyc(c))));
-      lines.push(`Ausstoss je Stufe: ${rates.join(' · ')} / min`);
-    }
+    if (cycle['Ausstoss je Stufe'] !== undefined) lines.push(cycle['Ausstoss je Stufe']);
   }
-  if (def.consumes && def.cycle) {
-    const rate = perInterval(cyc(def.cycle));
-    lines.push(`Braucht: ${def.consumes.map((g) => `${GOODS[g].name} ${rate}`).join(' · ')}`);
-  }
+  if (cycle['Braucht'] !== undefined) lines.push(cycle['Braucht']);
   if (def.service) lines.push(`Dienst: ${SERVICE_NAMES[def.service]}`);
-  const radius = serviceRadius(world, def.id) ?? def.supplyRadius;
-  if (radius !== undefined) lines.push(`Radius: ${radius}`);
+  const radius = radiusLine(world, def.id);
+  if (radius !== null) lines.push(radius);
   lines.push(...crisisTooltipLines(def.id, world));
   lines.push(`Standort: ${def.site.length ? def.site.map(siteText).join(', ') : 'frei'}`);
   if (def.maxCount?.n === 1) lines.push('Nur einmal je Insel');
@@ -232,6 +251,23 @@ export function refreshShownBalance(nav: ParentNode, world: World, island: numbe
   fillBalance(nav, world, island, '.tooltip.show .tt-balance');
 }
 
+/** Setzt die Takt-Zeilen unter `selector`; nur sichtbare Tooltips (kein Rechnen für verborgene). */
+function fillCycle(root: ParentNode, world: World, selector: string): void {
+  const cache = new Map<BuildingDefId, Record<string, string>>();
+  for (const el of root.querySelectorAll<HTMLElement>(selector)) {
+    const id = el.dataset.defId as BuildingDefId | undefined;
+    const prefix = el.dataset.prefix;
+    if (id === undefined || prefix === undefined) continue;
+    let lines = cache.get(id);
+    if (lines === undefined) {
+      lines = cycleLines(id, world);
+      cache.set(id, lines);
+    }
+    const text = lines[prefix];
+    if (text !== undefined && el.textContent !== text) el.textContent = text;
+  }
+}
+
 /** Hängt ein Tooltip-Element an den Button: Hover, Tastaturfokus, Touch-Langdruck. */
 function attachTooltip(
   btn: HTMLButtonElement,
@@ -292,7 +328,10 @@ function attachTooltip(
   btn.appendChild(tip);
 
   const open = (): void => {
-    if (liveView !== null) fillBalance(tip, liveView.world, liveView.island);
+    if (liveView !== null) {
+      fillBalance(tip, liveView.world, liveView.island);
+      fillCycle(tip, liveView.world, '.tt-cycle');
+    }
     showTooltip(btn, tip, anchorOf());
   };
   btn.addEventListener('mouseenter', open);
@@ -545,23 +584,11 @@ export function updateBuildMenu(nav: HTMLElement, world: World, island: number =
     const id = el.dataset.defId as BuildingDefId | undefined;
     if (id === undefined) continue;
     const text = el.classList.contains('tt-radius')
-      ? `Radius: ${serviceRadius(world, id) ?? BUILDING_DEFS[id].supplyRadius ?? 0}`
+      ? (radiusLine(world, id) ?? 'Radius: 0')
       : (crisisTooltipLines(id, world)[0] ?? el.textContent ?? '');
     if (el.textContent !== text) el.textContent = text;
   }
-  const linesOf = new Map<BuildingDefId, string[]>();
-  for (const el of nav.querySelectorAll<HTMLElement>('.tt-cycle')) {
-    const id = el.dataset.defId as BuildingDefId | undefined;
-    const prefix = el.dataset.prefix;
-    if (id === undefined || prefix === undefined) continue;
-    let lines = linesOf.get(id);
-    if (lines === undefined) {
-      lines = tooltipLines({ kind: 'build', defId: id }, world, island);
-      linesOf.set(id, lines);
-    }
-    const text = lines.find((l) => l.startsWith(`${prefix}:`));
-    if (text !== undefined && el.textContent !== text) el.textContent = text;
-  }
+  fillCycle(nav, world, '.tooltip.show .tt-cycle');
   const live = nav.querySelector('.tt-unprotected');
   if (live) {
     const text = unprotectedLine(unprotectedFlammables(world).length);

@@ -144,7 +144,7 @@ body {
   gap: 6px;
   align-items: center;
   pointer-events: none;
-  z-index: 10;
+  z-index: 11;
 }
 .toast {
   max-width: 340px;
