@@ -345,3 +345,17 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Ungetestet sind (1) der Fall `load=0`, (2) die Kürzung auf 10 Namen, (3) «Last ?» bei fehlendem Schlüssel.
 - Ursprung: Gate Merge TOOL-E070 (R695)
 - Erste Einschätzung: niedrig; bei nächster Berührung der Anzeige ergänzen. Handbuch-Zeile (STUDIO.md ≈ Z. 467) setzt studio-coach.
+
+## 2026-10-16 · TOOL-BUENDEL-13: `rule_of` ordnet Guard-Regeln per Stichwort zu
+
+- Fundort: `tools/studio/guard.py` (Ereignis `guard_block`)
+- Beobachtung: `rule_of` erkennt die Regel am Stichwort im Abweisungstext; neue Guard-Texte landen als «other», bis das Stichwort nachgeführt ist.
+- Ursprung: Gate Merge TOOL-BUENDEL-13 (R704)
+- Erste Einschätzung: niedrig; beim Hinzufügen einer Guard-Regel die Zuordnung mitführen.
+
+## 2026-10-16 · TOOL-BUENDEL-13: `command` im Ereignis `guard_block` kann Tokens enthalten
+
+- Fundort: `tools/studio/guard.py`, Ereignis `guard_block` (Feld `command`)
+- Beobachtung: Der abgewiesene Befehl wird im Ereignis abgelegt und kann Tokens oder Secrets enthalten. Die Datei ist lokal und ignoriert; ob eine Schwärzung greift, ist ungeprüft.
+- Ursprung: Gate Merge TOOL-BUENDEL-13 (R704)
+- Erste Einschätzung: mittel; Schwärzung prüfen, bevor die Datei geteilt oder ausgewertet wird.

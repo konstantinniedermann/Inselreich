@@ -402,9 +402,9 @@
       "name": "TOOL-BUENDEL-13 (TOOL-TIMEOUT-7 + TOOL-GUARD-EVENT)",
       "kind": "Werkzeug",
       "startStage": 2,
-      "stage": 3,
-      "state": "active",
-      "note": "läuft (R698)",
+      "stage": 4,
+      "state": "done",
+      "note": "gemergt (R704)",
       "goalStage": 4
     }
   ],
