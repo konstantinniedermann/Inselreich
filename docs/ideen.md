@@ -127,7 +127,7 @@ I-093 (verworfen) und I-095 (erledigt) sind nach Handel 2 (R658, R664) ins Archi
 - Nutzen/Aufwand: hoher Nutzen · M · ≈ 3 Pakete
 - Entscheid: R529: Baustein fürs nächste Meilenstein-Brainstorming (Stadtplanung, mit I-045 und I-051).
 
-### I-091 · eingeplant (Spec R671, Plan offen) · Treue beim Stammkunden (Kulanz)
+### I-091 · gemergt (R686, REL-25) · Treue beim Stammkunden (Kulanz)
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout A; Genre-Mechanik Treue bei Dauerabnahme (nur Mechanik, ADR-006); I-047 (heute nur Strafe 100 Geld nach unten) · Herkunft: vom Studio vorgeschlagen
 - Spielerwirkung: „Der Spieler bekommt nach 5 pünktlichen Lieferungen +10 % und überlegt, ob er den Vertrag im Boom trotzdem kündigt."

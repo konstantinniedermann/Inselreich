@@ -149,9 +149,9 @@
           "name": "I-091 Treuebonus",
           "kind": "Ideen-Pool",
           "startStage": 2,
-          "stage": 3,
-          "state": "open",
-          "note": "Plan OK (R675), in Umsetzung",
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt (R686), Save v16",
           "goalStage": 4
         },
         {
@@ -207,9 +207,9 @@
       "name": "I-091 Treuebonus",
       "kind": "Ideen-Pool",
       "startStage": 1,
-      "stage": 3,
-      "state": "open",
-      "note": "Plan OK (R675), in Umsetzung (REL-25)"
+      "stage": 4,
+      "state": "done",
+      "note": "gemergt (R686), REL-25, Save v16"
     },
     {
       "pkg": "I-097",
