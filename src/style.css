@@ -1326,6 +1326,8 @@ button.chip {
 
 /* Bilanz-Chip als Knopf und Betriebsliste (I-062) */
 button.hud-balance {
+  white-space: nowrap;
+  min-width: 0;
   font: inherit;
   color: inherit;
   background: transparent;

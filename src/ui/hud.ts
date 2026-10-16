@@ -34,6 +34,7 @@ import {
 } from './seaMapView';
 import { iconChip } from './messages';
 import { formatGameTime, GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
+import { flowLabel, flowText, flowTitle } from './balanceFlow';
 import { reachView, TREND_EPS } from './reach';
 
 const SPEEDS: { value: GameState['speed']; label: string }[] = [
@@ -129,12 +130,9 @@ export function moneyView(world: World): ChipView {
   return { icon: 'money', text: String(world.money), label: `Geld ${world.money}` };
 }
 
-const BALANCE_PREFIX = 'Bilanz ';
-
 /** Bilanz: Waage und Wert; `label` ist der bisherige Text. */
 export function balanceView(world: World): ChipView {
-  const { text } = balanceText(world.stats);
-  return { icon: 'balance', text: text.slice(BALANCE_PREFIX.length), label: text };
+  return { icon: 'balance', text: flowText(world.stats), label: flowLabel(world.stats) };
 }
 
 /** Bilanz-Chip als Knopf (Enter, Leertaste, Klick öffnen die Betriebsliste; I-062). */
@@ -647,7 +645,7 @@ export function taxButtonText(world: World): string | null {
 
 /** Tooltip der Bilanz: Steuern und Unterhalt; ohne aktive Amtsstube die Zeile zur Steuer (Spec 11.8). */
 export function balanceTooltip(world: World): string {
-  const base = balanceText(world.stats).title;
+  const base = flowTitle(world.stats);
   return townhallActive(world)
     ? base
     : `${base}\nSteuer: ${TAX_LEVELS.normal.name} (keine Amtsstube)`;
