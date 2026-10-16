@@ -205,3 +205,35 @@ describe('I-112 Radius-Zeile folgt dem Ratsbeschluss', () => {
     expect(tooltipLines({ kind: 'build', defId: 'chapel' }, w, 0)).toContain('Radius: 13');
   });
 });
+
+describe('I-112 Takt-Zeilen folgen dem Ratsbeschluss', () => {
+  const cycleEl = (defId: string, prefix: string, textContent: string) => ({
+    dataset: { defId, prefix },
+    textContent,
+    classList: { contains: (c: string) => c === 'tt-cycle' },
+  });
+  const navWith = (els: ReturnType<typeof cycleEl>[]) =>
+    ({
+      querySelector: () => null,
+      querySelectorAll: (sel: string) => (sel.includes('.tt-cycle') ? els : []),
+    }) as unknown as HTMLElement;
+
+  it('«Erzeugt» und «Ausstoss je Stufe» der Weberei zeigen nach Webordnung den neuen Takt', () => {
+    const w = createWorld(1);
+    const tool = { kind: 'build', defId: 'weaver' } as const;
+    const before = tooltipLines(tool, w, 0);
+    const erzeugt = before.find((l) => l.startsWith('Erzeugt:'))!;
+    const stufe = before.find((l) => l.startsWith('Ausstoss je Stufe:'))!;
+    const els = [
+      cycleEl('weaver', 'Erzeugt', erzeugt),
+      cycleEl('weaver', 'Ausstoss je Stufe', stufe),
+    ];
+    w.council[2] = 'open';
+    expect(decree(w, 2, 'A').ok).toBe(true);
+    updateBuildMenu(navWith(els), w, 0);
+    const after = tooltipLines(tool, w, 0);
+    expect(els[0]!.textContent).toBe(after.find((l) => l.startsWith('Erzeugt:')));
+    expect(els[1]!.textContent).toBe(after.find((l) => l.startsWith('Ausstoss je Stufe:')));
+    expect(els[0]!.textContent).not.toBe(erzeugt);
+  });
+});

@@ -254,6 +254,15 @@ function attachTooltip(
       line.classList.add(text.startsWith('Radius:') ? 'tt-radius' : 'tt-fireradius');
       line.dataset.defId = tool.defId;
     }
+    const taktPrefix = ['Erzeugt', 'Ausstoss je Stufe', 'Braucht'].find((p) =>
+      text.startsWith(`${p}:`),
+    );
+    if (tool.kind === 'build' && taktPrefix !== undefined) {
+      // Takt folgt dem Ratsbeschluss (Spec 3.2.3): `updateBuildMenu` setzt den Text neu
+      line.classList.add('tt-cycle');
+      line.dataset.defId = tool.defId;
+      line.dataset.prefix = taktPrefix;
+    }
     if (text.startsWith('Unterhalt:') && tool.kind === 'build') {
       // Bilanz-Vorschau: `updateBuildMenu` füllt den Text (braucht die Welt)
       const balance = document.createElement('span');
@@ -539,6 +548,19 @@ export function updateBuildMenu(nav: HTMLElement, world: World, island: number =
       ? `Radius: ${serviceRadius(world, id) ?? BUILDING_DEFS[id].supplyRadius ?? 0}`
       : (crisisTooltipLines(id, world)[0] ?? el.textContent ?? '');
     if (el.textContent !== text) el.textContent = text;
+  }
+  const linesOf = new Map<BuildingDefId, string[]>();
+  for (const el of nav.querySelectorAll<HTMLElement>('.tt-cycle')) {
+    const id = el.dataset.defId as BuildingDefId | undefined;
+    const prefix = el.dataset.prefix;
+    if (id === undefined || prefix === undefined) continue;
+    let lines = linesOf.get(id);
+    if (lines === undefined) {
+      lines = tooltipLines({ kind: 'build', defId: id }, world, island);
+      linesOf.set(id, lines);
+    }
+    const text = lines.find((l) => l.startsWith(`${prefix}:`));
+    if (text !== undefined && el.textContent !== text) el.textContent = text;
   }
   const live = nav.querySelector('.tt-unprotected');
   if (live) {

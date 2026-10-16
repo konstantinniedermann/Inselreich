@@ -9,6 +9,7 @@ import {
   SYMBOL_MIN_ZOOM,
 } from '../../src/render/overlays';
 import { fakeCtx } from './fakeCtx';
+import { decree } from '../../src/sim/council';
 import { placeRoad } from '../../src/sim/build';
 import { coverageMask, layoutKey } from '../../src/sim/queries';
 import { home, createWorld } from '../../src/sim/world';
@@ -54,6 +55,21 @@ describe('overlays', () => {
     const mb = cache.get(b, 'supply');
     expect(calls).toBe(2);
     expect(mb).toEqual(coverageMask(b, 'supply'));
+  });
+
+  it('I-112 Cache rechnet nach einem Ratsbeschluss neu (Glockenrecht: Kapellen-Reichweite)', () => {
+    let calls = 0;
+    const cache = createCoverageCache((world, kind) => {
+      calls += 1;
+      return coverageMask(world, kind);
+    });
+    cache.get(w, 'faith');
+    cache.get(w, 'faith');
+    expect(calls).toBe(1);
+    w.council[2] = 'open';
+    expect(decree(w, 2, 'B').ok).toBe(true);
+    expect(cache.get(w, 'faith')).toEqual(coverageMask(w, 'faith'));
+    expect(calls).toBe(2);
   });
 
   it('AK-A3-05 Umriss-Segmente werden mit der Maske gecacht', () => {

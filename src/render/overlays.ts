@@ -83,7 +83,8 @@ export function createCoverageCache(
 } {
   const entries = new Map<CoverageKind, Entry>();
   const entryFor = (world: World, kind: CoverageKind): Entry => {
-    const key = layoutKey(world);
+    // Ratsbeschlüsse ändern Reichweiten (Glockenrecht), das Layout nicht: eigener Teil des Schlüssels
+    const key = `${layoutKey(world)}|${world.council[2]}${world.council[3]}${world.council[4]}`;
     const hit = entries.get(kind);
     if (hit && hit.world === world && hit.key === key) return hit;
     const fresh: Entry = { world, key, mask: compute(world, kind) };
