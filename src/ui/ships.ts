@@ -322,7 +322,7 @@ interface SectionState {
   key: string;
   actions: ShipActions;
   island: number;
-  /** Tick der letzten Bilanzrechnung (`-1`: verworfen); gerechnet wird nur bei neuem Tick. */
+  /** Schlüssel der letzten Bilanzrechnung (`''`: verworfen); gerechnet wird nur, wenn er sich ändert (siehe `updateShipSection`). */
   balKey: string;
   bal: Map<number, RouteBalanceText> | null;
 }
@@ -552,7 +552,8 @@ export function updateShipSection(panel: HTMLElement, world: World): void {
   const st = box ? states.get(box) : undefined;
   if (!box || !st) return;
   if (st.key !== `${shipsKey(world, st.island)}@${st.picker ?? '-'}`) build(box, world, st);
-  // Schlüssel: Tick, Bau/Abriss (Id-Zähler, Anzahl) und Insel; Bau bei Pause rechnet so ebenfalls neu
+  // Schlüssel: invalidiert bei neuem Tick, Bau/Abriss (Id-Zähler, Anzahl) und Inselwechsel. Pause-, connected-
+  // oder Ausfall-Wechsel im selben Tick werden erst mit dem nächsten Tick sichtbar (war schon vorher so).
   const balKey = `${world.tick}|${world.nextBuildingId}|${Object.keys(world.buildings).length}|${st.island}`;
   if (st.bal === null || st.balKey !== balKey) {
     st.bal = shipBalanceLines(world, st.island);
