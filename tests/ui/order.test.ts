@@ -12,6 +12,7 @@ import {
   contractAgreedMessage,
   contractNotice,
   contractWarn,
+  loyaltyText,
   deliverLabel,
   deliveredMessage,
   orderCardText,
@@ -140,7 +141,9 @@ describe('I-047 Stammkunde: Kartentexte (AK-SK-28)', () => {
   it('Vertrag Heimat zeigt Lager der Lieferinsel', () => {
     const w = withContract(HOME);
     home(w).stock.rum = 12;
-    expect(orderCardText(w)).toBe('Stammkunde: 5 Rum · nächste Lieferung 1:15 · Lager 12/5');
+    expect(orderCardText(w)).toBe(
+      `Stammkunde: 5 Rum · nächste Lieferung 1:15 · Lager 12/5 · ${loyaltyText(w.contract!)}`,
+    );
   });
 
   it('Vertrag Fremdinsel: Lager der Lieferinsel, nicht der aktiven', () => {
