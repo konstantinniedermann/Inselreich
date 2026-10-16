@@ -7,7 +7,7 @@
   `max_gap_s`, `log.py result`; Paket über die Elternkette zugeordnet, Skript im Scratchpad, nicht im Repo),
   `python3 tools/studio/metrics.py --efficiency --sessions 3`, `docs/studio/metriken/M11.md`,
   `git log --merges --first-parent main --since=2026-10-03`, `docs/studio/rulings.md` (R172–R207 per grep),
-  `docs/superpowers/specs/2026-10-02-programm-nutzerfeedback.md` §2/§4, `.claude/agents/lead-design.md`,
+  `docs/superpowers/archiv/specs/2026-10-02-programm-nutzerfeedback.md` §2/§4, `.claude/agents/lead-design.md`,
   `docs/studio/STUDIO.md` (Umsetzungszyklus), Retros `2026-10-03-session-347a6598`, `2026-10-03-session-9b13950a`,
   `2026-10-03-meilenstein-m11`, `2026-10-03-prozess-retro-m11`.
 

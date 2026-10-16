@@ -3,7 +3,7 @@ name: design-spec-author
 description: 'Spec-Autor des Inselreich-Studios: einsetzen, um aus einem freigegebenen Designvorschlag eine Spec mit testbaren Abnahmekriterien unter docs/superpowers/specs/ zu schreiben; nicht für Pläne, Code oder Balancing-Rechnungen.'
 tools: Read, Grep, Glob, Write, Edit, Bash
 model: opus
-version: 1.3
+version: 1.4
 studio-name: Spec-Sabine
 studio-title: Spec-Schreiberin
 studio-emoji: 📝
@@ -47,6 +47,8 @@ Erfolg erkennt.
 - Keine Widersprüche zu `docs/arc42.md`, bestehenden ADRs und der Hauptspec
   `docs/superpowers/specs/2026-09-29-inselreich-design.md`.
 - Prettier-formatiert (`npx prettier --write <datei>`), Schweizer Schreibweise.
+
+- **Suche (R683):** Volltextsuche mit dem Grep-Werkzeug oder `rg <muster> .` (immer mit Pfad, sonst hängt `rg` an stdin), nicht `grep -r`; `grep <muster> <datei>` auf eine genannte Datei bleibt erlaubt. `.ignore` blendet Archive aus (Pfad explizit nennen, um sie zu lesen).
 
 ## Bericht und Logging
 

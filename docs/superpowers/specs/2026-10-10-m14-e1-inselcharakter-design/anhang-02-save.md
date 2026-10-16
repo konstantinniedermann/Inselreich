@@ -1,7 +1,7 @@
 # Anhang 02 · Save: Migration, Ladeprüfung, Rückfaltung (Spec M14-E1)
 
 Gehört zu [Spec M14-E1 Inselcharakter](../2026-10-10-m14-e1-inselcharakter-design.md), §9. Muster:
-[Anhang 02 der Spec M13-E2](../2026-10-10-m13-e2-denkmal-design/anhang-02-save-v12.md).
+[Anhang 02 der Spec M13-E2](../../archiv/specs/2026-10-10-m13-e2-denkmal-design/anhang-02-save-v12.md).
 
 Begriffe: «**neu**» = `SAVE_VERSION + 1` relativ zu `main` beim Planstart (erwartet 13); «**Vorversion**» = neu − 1
 (erwartet 12, geteilt von M13-E2, I-048 und I-049 nach R477, R487 P-4). Namen mit `<Vorversion>` setzt `lead-tech`

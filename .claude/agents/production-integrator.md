@@ -3,7 +3,7 @@ name: production-integrator
 description: 'Integrator des Inselreich-Studios: einsetzen, um nach dem L0-Merge-Gate freigegebene Branches seriell nach main zu mergen und make check, CI und Pages-Deploy zu prüfen; nicht zum Lösen von Konflikten oder Ändern von Code.'
 tools: Read, Grep, Glob, Bash
 model: sonnet
-version: 1.13
+version: 1.14
 studio-name: Merge-Moritz
 studio-title: Zusammenführer
 studio-emoji: 🔀
@@ -64,6 +64,8 @@ nachvollziehbar: vorher prüfen, mergen, nachher prüfen, Ergebnis belegen.
 - Push nur laut Briefing, gebündelt am Session-Ende; CI- und Pages-Status sind im Bericht mit Lauf-ID belegt.
 - Nach einem Abbruch ist `main` im Zustand vor dem Merge (kein halber Merge, keine fremden
   Änderungen).
+
+- **Suche (R683):** Volltextsuche mit dem Grep-Werkzeug oder `rg <muster> .` (immer mit Pfad, sonst hängt `rg` an stdin), nicht `grep -r`; `grep <muster> <datei>` auf eine genannte Datei bleibt erlaubt. `.ignore` blendet Archive aus (Pfad explizit nennen, um sie zu lesen).
 
 ## Bericht und Logging
 

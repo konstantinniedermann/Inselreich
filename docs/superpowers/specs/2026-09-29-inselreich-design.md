@@ -31,7 +31,7 @@ gezeichnete Grafik, eigene Zahlen.
 
 ### 2.2 Karte
 
-**Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §6
+**Änderung M10:** siehe [M10-Spec](../archiv/specs/2026-10-03-m10-schritt-fuer-schritt-spec.md) §6
 
 - 64×64 Kacheln, eine Insel, umgeben von Wasser. Seed-basiert, deterministisch.
 - Terrain: `water`, `sand` (Küste), `grass`, `forest`, `mountain`.
@@ -59,11 +59,11 @@ gezeichnete Grafik, eigene Zahlen.
 Mit M5 sind die Verkaufspreise gesättigt (Kaufpreise bleiben fest), es gibt Handelsaufträge, und der
 Werkzeugmacher stellt Werkzeug aus Holz her, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitte 4.2, 5.2 und 5.3.
 
-**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §5.1
+**Änderung M8:** siehe [M8-Spec](../archiv/specs/2026-09-30-m8-kaufleute-design.md) §5.1
 
 ### 2.4 Gebäude
 
-**Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §4, §5.1, §5.5
+**Änderung M10:** siehe [M10-Spec](../archiv/specs/2026-10-03-m10-schritt-fuer-schritt-spec.md) §4, §5.1, §5.5
 
 Kosten = Geld / Holz / Werkzeug / Stein. Unterhalt in Geld pro 100 Ticks.
 
@@ -88,7 +88,7 @@ Kosten = Geld / Holz / Werkzeug / Stein. Unterhalt in Geld pro 100 Ticks.
   vom Footprint-Mittelpunkt.
 - **Abriss:** 50 % der Geld-/Materialkosten zurück (abgerundet). Kontor nicht abreissbar.
 
-**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §5.2 und §6
+**Änderung M8:** siehe [M8-Spec](../archiv/specs/2026-09-30-m8-kaufleute-design.md) §5.2 und §6
 
 ### 2.5 Wegenetz und Anbindung
 
@@ -108,11 +108,11 @@ Kosten = Geld / Holz / Werkzeug / Stein. Unterhalt in Geld pro 100 Ticks.
 - Fehlt Input, wartet das Gebäude (Zustand `waitingInput`). Ist das Lager voll, geht die
   Einheit verloren (Zustand `storageFull`).
 
-**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §5.3
+**Änderung M8:** siehe [M8-Spec](../archiv/specs/2026-09-30-m8-kaufleute-design.md) §5.3
 
 ### 2.7 Bevölkerung
 
-**Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §4.6
+**Änderung M10:** siehe [M10-Spec](../archiv/specs/2026-10-03-m10-schritt-fuer-schritt-spec.md) §4.6
 
 Stufen (tier): 1 Pioniere, 2 Siedler, 3 Bürger.
 
@@ -139,13 +139,13 @@ Werte revidiert am 2026-09-30, siehe [balancing-design.md](2026-09-30-balancing-
 Mit M5 hängen Zielbelegung und Aufstiegs-Wartezeit von der globalen Steuerstufe ab, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md)
 Abschnitt 4.1.
 
-**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §4
+**Änderung M8:** siehe [M8-Spec](../archiv/specs/2026-09-30-m8-kaufleute-design.md) §4
 
 ### 2.8 Wirtschaft
 
-**Änderung M11:** Steuern und Unterhalt werden je Tick mit ganzzahligem Übertrag gebucht, die Raten bleiben «pro 100 Ticks»; siehe [M11-Spec](2026-10-03-m11-wirtschaft-im-fluss-spec.md) §3.1 und §12.
+**Änderung M11:** Steuern und Unterhalt werden je Tick mit ganzzahligem Übertrag gebucht, die Raten bleiben «pro 100 Ticks»; siehe [M11-Spec](../archiv/specs/2026-10-03-m11-wirtschaft-im-fluss-spec.md) §3.1 und §12.
 
-**Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §5.2
+**Änderung M10:** siehe [M10-Spec](../archiv/specs/2026-10-03-m10-schritt-fuer-schritt-spec.md) §5.2
 
 - Start: 5000 Geld, 40 Holz, 20 Werkzeug, 10 Stein, 20 Nahrung.
 - Steuern: je Haus Einwohner × Steuersatz, voll bei erfüllten Bedürfnissen, sonst 50 %.
@@ -160,7 +160,7 @@ abgerundet („normal" = 100 %, unverändert), siehe [M5-Spec](2026-09-30-m5-spi
 
 - Sobald die Summe der Einwohner in Bürger-Häusern ≥ 50: Banner „Ziel erreicht", Spiel läuft weiter.
 
-**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §7
+**Änderung M8:** siehe [M8-Spec](../archiv/specs/2026-09-30-m8-kaufleute-design.md) §7
 
 ## 3. Architektur
 
@@ -229,7 +229,7 @@ Aktuelle Bausteinsicht: [arc42, Abschnitt 5](../../arc42.md#5-bausteinsicht).
 
 ### 3.3 Datenmodell (Kern)
 
-**Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §8.1
+**Änderung M10:** siehe [M10-Spec](../archiv/specs/2026-10-03-m10-schritt-fuer-schritt-spec.md) §8.1
 
 ```ts
 type Terrain = 'water' | 'sand' | 'grass' | 'forest' | 'mountain';
@@ -277,7 +277,7 @@ Wege sind ein Tile-Flag, kein Building (billiger, kein Id-Verbrauch).
 Mit M5 ist `World.version` 2 mit den Feldern `taxLevel`, `taxLockedUntil`, `sellPct` und `order`; v1-Stände
 werden beim Laden migriert, siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitt 6.
 
-**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §10.1
+**Änderung M8:** siehe [M8-Spec](../archiv/specs/2026-09-30-m8-kaufleute-design.md) §10.1
 
 ### 3.4 Game-Loop
 
@@ -303,7 +303,7 @@ Mit M5 zeichnet der Renderer Silhouetten statt Kurzsymbolen, Animationen, ein H�
 
 ### 3.7 Persistenz
 
-**Änderung M10:** siehe [M10-Spec](2026-10-03-m10-schritt-fuer-schritt-spec.md) §8.2
+**Änderung M10:** siehe [M10-Spec](../archiv/specs/2026-10-03-m10-schritt-fuer-schritt-spec.md) §8.2
 
 - `localStorage` Schlüssel `inselreich.save.v1`; Buttons Speichern / Laden / Neu.
 - Serialisierung = World-Objekt als JSON, Deserialisierung validiert Version und Kachelanzahl.
@@ -311,7 +311,7 @@ Mit M5 zeichnet der Renderer Silhouetten statt Kurzsymbolen, Animationen, ein H�
 Mit M5 gibt es zusätzlich einen Autosave-Platz (`inselreich.save.auto`) und Einstellungen in einem eigenen
 Schlüssel (`inselreich.settings`), siehe [M5-Spec](2026-09-30-m5-spielerlebnis-design.md) Abschnitte 9.7 und 10.8.
 
-**Änderung M8:** siehe [M8-Spec](2026-09-30-m8-kaufleute-design.md) §10.2
+**Änderung M8:** siehe [M8-Spec](../archiv/specs/2026-09-30-m8-kaufleute-design.md) §10.2
 
 ## 4. Tests (Vitest, nur `sim/`)
 

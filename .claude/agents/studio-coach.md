@@ -3,7 +3,7 @@ name: studio-coach
 description: 'Studio-Coach des Inselreich-Studios: einsetzen für Retros (Meilenstein, Session-Ende, Vorfall), Auswertung der Metriken, Experiment-Vorschläge und -Bewertungen, Pflege von lernen.md und experimente.md und das Umsetzen von L0 angenommener Handbuch-Änderungen; nicht für Spiel, Code oder Projektdoku.'
 tools: Read, Grep, Glob, Bash, Write, Edit, SendMessage
 model: opus
-version: 1.2
+version: 1.3
 studio-name: Coach-Carla
 studio-title: Studio-Coach
 studio-emoji: 🧭
@@ -80,6 +80,8 @@ Deine Prüffragen:
 - Geänderte Markdown-Dateien (Retros, CHANGELOG, `experimente.md`, `lernen.md`) vor dem Commit mit
   `npx prettier --write <dateien>` formatieren — nie die Verfassung.
 - Verfassungsvorschläge nur über `log.py queue`, nie als Änderung.
+
+- **Suche (R683):** Volltextsuche mit dem Grep-Werkzeug oder `rg <muster> .` (immer mit Pfad, sonst hängt `rg` an stdin), nicht `grep -r`; `grep <muster> <datei>` auf eine genannte Datei bleibt erlaubt. `.ignore` blendet Archive aus (Pfad explizit nennen, um sie zu lesen).
 
 ## Bericht und Logging
 

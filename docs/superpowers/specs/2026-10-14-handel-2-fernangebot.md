@@ -1,7 +1,7 @@
 # Handel 2 · Fernangebot — Spec
 
 Stand: 2026-10-14 (Nachtrag R633/R634) · Paket `design-handel-2` · Autor: design-spec-author · Grundlage: Designvorschlag
-[`2026-10-14-handel-2-brainstorming.md`](2026-10-14-handel-2-brainstorming.md) §3 V1, §5, §7; R629 (Gate
+[`2026-10-14-handel-2-brainstorming.md`](../archiv/specs/2026-10-14-handel-2-brainstorming.md) §3 V1, §5, §7; R629 (Gate
 Brainstorming OK V1) · Prozessstufe voll · Anhänge: [01 Werte und Fristrechnung](2026-10-14-handel-2-fernangebot/anhang-01-werte.md),
 [02 UI-Texte](2026-10-14-handel-2-fernangebot/anhang-02-ui-texte.md), [03 Nachtrag-AK](2026-10-14-handel-2-fernangebot/anhang-03-nachtrag-ak.md). Code-Stellen beziehen sich auf `main` zum Datum
 dieser Spec (`SAVE_VERSION` 14).

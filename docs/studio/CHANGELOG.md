@@ -22,6 +22,153 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-16 · Handbuch 1.57
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 4 (Aufräumen als Daueraufgabe)
+- Datenbasis: Auftrag CTX-ALTLAST
+- Ruling: R685
+- Änderungen: Session-Start Schritt 7 («Aufräumen fällig» → `HAUSHALT-nn` an lead-production), Werkzeug `aufraeumen.py --check` mit Schwellen in `aufraeumen.json`
+
+## 2026-10-16 · Persona lead-production 1.12
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 4
+- Datenbasis: Auftrag CTX-ALTLAST
+- Ruling: R685
+- Änderungen: Abschnitt «Haushalt» (Aufräumrunde `HAUSHALT-nn`: messen, Trockenlauf, `ARGS=--apply`, Archiv-`git mv`, Rulings verschieben, Gate Merge L0)
+
+## 2026-10-16 · Persona art-audio-engineer 1.1
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona art-license-checker 1.2
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona art-rendering-engineer 1.2
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona design-economy-designer 1.2
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona design-idea-scout 1.2
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona design-spec-author 1.4
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona lead-art 1.9
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona lead-design 1.13
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona lead-production 1.11
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona lead-qa 1.11
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona lead-tech 1.16
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona production-integrator 1.14
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona qa-code-reviewer 1.6
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona qa-playtester 1.8
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona studio-coach 1.3
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona studio-process-coach 1.2
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona tech-sim-engineer 1.5
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Persona tech-ui-engineer 1.7
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1
+- Datenbasis: Messung CTX-ALTLAST (24361 `grep`- gegen 5 `rg`-Aufrufe)
+- Ruling: R683
+- Änderungen: Zeile «Suche»: Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r`
+
+## 2026-10-16 · Handbuch 1.56
+
+- Anlass: Nutzerauftrag Altlasten aus dem Kontext (CTX-ALTLAST)
+- Datenbasis: Messung vorher/nachher im Bericht des Pakets CTX-ALTLAST
+- Ruling: R682
+- Änderungen: Ende-Routine Schritt 2b (`make studio-aufraeumen`, Archivregel für Specs, Pläne und Rulings), Verweise «rulings.md per grep» auf `rulings*.md`
+
 ## 2026-10-14 · Persona lead-tech 1.15
 
 - Anlass: Kurz-Retro b54ed3bd, V1 (E-066 Folgeinstanz statt Fortsetzung)

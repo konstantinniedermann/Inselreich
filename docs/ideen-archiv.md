@@ -569,8 +569,8 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Bewertung lead-design (IDEEN-06): bestätigt (12). Stärkster Wirtschaftsbeitrag der Runde: schliesst die Lücke „Geld löst jeden Mangel" (Befund Scout A) und gibt dem Edikt Handel Gewicht, das laut README im späten Spiel nur Feinsteuerung ist. Gehört in die Richtung von M13 „Spätspiel mit Richtung". Risiko: die Baseline-Neumessung braucht ein eigenes Ruling.
 - Nutzen/Aufwand: hoher Nutzen (Bauen statt Kaufen wird eine Entscheidung) · S–M · ≈ 1–2 Pakete (Rechnung ≈ 40 Tools, Sim+Handelsdialog ≈ 120 Tools)
 - Entscheid: Empfehlung einplanen als Wirtschafts-Baustein (M13-Rest oder nächstes Meilenstein-Brainstorming); R474 bestätigt
-- Stand: Schritt A (Mechanik, `BUY_RISE` 0) auf main, inaktiv (R549); Schritt B ohne Werte zurück ins Design (R551). Designfrage `docs/superpowers/specs/2026-10-11-i048-b-designfrage.md`: Empfehlung Kontingent-Staffel (Controller bitgleich, Biss per Szenario-Test), sonst Verzicht; wartet auf Design-Gate L0 und Ensemble-Messung (plan-TOOL-GATE-ENSEMBLE)
-- Stand 2026-10-12: R555 nahm Option 2 an. Die Last-Probe erfüllt das Abbruchkriterium R555 (c): Holz 71–90/min im Basis-Controller, 292/min im reichen Lauf `balance-edicts`; `balance-merchants` Gewürz ≤ 28/min ([Anhang 02](superpowers/specs/2026-10-10-i048-zukauf-aufschlag-design/anhang-02-last-probe.md)). Damit gilt Option 1 (Verzicht), sobald L0 ein Ruling fasst: Mechanik bleibt inaktiv, I-047 wird frei (R486 O3).
+- Stand: Schritt A (Mechanik, `BUY_RISE` 0) auf main, inaktiv (R549); Schritt B ohne Werte zurück ins Design (R551). Designfrage `docs/superpowers/archiv/specs/2026-10-11-i048-b-designfrage.md`: Empfehlung Kontingent-Staffel (Controller bitgleich, Biss per Szenario-Test), sonst Verzicht; wartet auf Design-Gate L0 und Ensemble-Messung (plan-TOOL-GATE-ENSEMBLE)
+- Stand 2026-10-12: R555 nahm Option 2 an. Die Last-Probe erfüllt das Abbruchkriterium R555 (c): Holz 71–90/min im Basis-Controller, 292/min im reichen Lauf `balance-edicts`; `balance-merchants` Gewürz ≤ 28/min ([Anhang 02](superpowers/archiv/specs/2026-10-10-i048-zukauf-aufschlag-design/anhang-02-last-probe.md)). Damit gilt Option 1 (Verzicht), sobald L0 ein Ruling fasst: Mechanik bleibt inaktiv, I-047 wird frei (R486 O3).
 - Hinweis für später, nicht gepitcht: eine Staffel nur für Konsumgüter (Stoff, Rum, Glas, Gewürz) bliebe gegen den Controller bitgleich, weil er sie kaum kauft. Sie wäre eine neue Regel und bräuchte ein eigenes Gate Brainstorming.
 - Archiviert IDEEN-09: R571 Option 1 Verzicht, Mechanik inaktiv (`BUY_RISE` 0); Zielsatz «wer jeden Engpass mit Geld löst, zahlt drauf» offen bis zu einem neuen Wirtschafts-Brainstorming
 
@@ -694,7 +694,7 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Bewertung lead-design: Spass 2 → 1: Bei 60 Geld gegen Prämien ab ≈ 130 tauscht man immer, wenn das Lager leer ist; die Wahl schrumpft auf eine Gebühr. Ein verfallener Auftrag kostet heute nichts, der Schmerz ist klein.
 - Nutzen/Aufwand: kleiner Nutzen · S · ≈ 70 Tools
 - Entscheid: IDEEN-09 Empfehlung parken bis Handels-Brainstorming
-- Stand Handel 2 (design-handel-2, 2026-10-14): Vorschlag «geht in Handel 2 auf» (Wahl unter Bestellungen ohne Gebühr, V1 Fernangebot); Fassung mit 60 Geld verwerfen (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
+- Stand Handel 2 (design-handel-2, 2026-10-14): Vorschlag «geht in Handel 2 auf» (Wahl unter Bestellungen ohne Gebühr, V1 Fernangebot); Fassung mit 60 Geld verwerfen (`docs/superpowers/archiv/specs/2026-10-14-handel-2-brainstorming.md`)
 - Stand 2026-10-16: Handel 2 gemergt (Gate Merge R658); das Fernangebot ist die gebührenfreie Wahl unter Bestellungen. Die Gebührenfassung (60 Geld, Reroll) bleibt verworfen; Status verworfen, Verschieben ins Archiv durch L0 (Vorschlag).
 
 ### I-095 · erledigt (Handel 2, R658) · Fernauftrag an einem Fremdkontor
@@ -709,7 +709,7 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Bewertung lead-design: Spass 3 → 2 (Seefahrt, Mittelspiel). Gleiche Stossrichtung wie I-092, aber teurer und mit Save; im Handels-Brainstorming gegen I-092 abwägen, nicht beide.
 - Nutzen/Aufwand: Routen mit zweitem Zweck · M · ≈ 2 Pakete
 - Entscheid: IDEEN-09 Empfehlung parken bis Handels-Brainstorming (mit I-092, I-029, I-006)
-- Stand Handel 2 (design-handel-2, 2026-10-14): Empfehlung V1 Fernangebot neben dem Auftrag (Vorliebe-Gut der Insel, Stück 0,75 wegen Edikt-Grenze 0,8, Frist 2:30, kostet die nächste Periode) (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
+- Stand Handel 2 (design-handel-2, 2026-10-14): Empfehlung V1 Fernangebot neben dem Auftrag (Vorliebe-Gut der Insel, Stück 0,75 wegen Edikt-Grenze 0,8, Frist 2:30, kostet die nächste Periode) (`docs/superpowers/archiv/specs/2026-10-14-handel-2-brainstorming.md`)
 - Stand 2026-10-16: umgesetzt als Fernangebot in Handel 2 (`farOffer`, `acceptFarOrder`, `FAR_ORDER_DURATION`; Gate Merge R658, gemergt, Push mit REL-23). Offen bleibt nur I-092 (Inselmarkt-Vorliebe) als eigene Idee; Verschieben ins Archiv durch L0 (Vorschlag).
 
 ### I-097 · live · Pause sichtbar auf der Karte

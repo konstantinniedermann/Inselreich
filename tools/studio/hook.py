@@ -16,6 +16,7 @@ import sys
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
+import aufraeumen
 import clock
 import context
 import limits
@@ -380,6 +381,12 @@ def start_context(port: str, sid: str = "") -> str:
         warning = stampcheck.stale_warning(docs_dir())
         if warning:
             text = f"{text}\n{warning}"
+    with contextlib.suppress(
+        Exception
+    ):  # Schwellen für «Aufräumen fällig» (R685), nie fatal
+        due = aufraeumen.check(docs_dir().parents[1])
+        if due:
+            text = f"{text}\n\n## Aufräumen fällig\n" + "\n".join(due)
     if sid:
         with contextlib.suppress(Exception):  # im Kontext gelistete Vorfälle
             mark_incidents(sid, incidents[: context.LIST_MAX])

@@ -26,7 +26,7 @@ Deutung steht jeweils getrennt unter „Deutung". Der Umfang ist ein Start ohne 
 ### B3 · Plan-Instanz über dem Deckel, Spec knapp darunter
 
 - Beobachtung: Plan-Instanz lief für die Fix-Runde auf 225k Kontext (Deckel E-010: 200k, R192). Spec M11: 39 985 Byte (39,0 KB, Schwelle 40 KB). Task-Dateien über 10 KB: T10 (10 556 B), R2 (10 336 B), T11b (10 284 B).
-- Beleg: R192; `ls -l docs/superpowers/specs/2026-10-03-m11-wirtschaft-im-fluss-spec.md` und `.../plans/2026-10-03-m11-wirtschaft-im-fluss/`.
+- Beleg: R192; `ls -l docs/superpowers/archiv/specs/2026-10-03-m11-wirtschaft-im-fluss-spec.md` und `.../plans/2026-10-03-m11-wirtschaft-im-fluss/`.
 - Wirkung: Grösste gelesene Datei 46,1 KB (gelb), Cache-Write 5 min rot.
 - Deutung: Die Schwelle wird eingehalten, aber knapp; wer die Spec auf Grenze schreibt, lässt der Fix-Runde keinen Platz. Der Deckel gilt für Starts, nicht für Fix-Runden: Fix-Runde = neue Instanz wäre die Lücke.
 

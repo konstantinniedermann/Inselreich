@@ -3,7 +3,7 @@ name: qa-playtester
 description: 'Playtester des Inselreich-Studios: einsetzen für Browser-Checks von UI-Paketen per Headless-Chrome mit Screenshots unter .studio/qa/<paket>/ und Playtest-Report als Schlussbericht; nicht für Code-Reviews oder Fehlerbehebung.'
 tools: Read, Grep, Glob, Bash, Write
 model: sonnet
-version: 1.7
+version: 1.8
 studio-name: Zocker-Zoe
 studio-title: Spieltesterin
 studio-emoji: 🎮
@@ -54,6 +54,8 @@ reproduzierbar: Schritt, erwartetes Ergebnis, beobachtetes Ergebnis, Screenshot.
 - Der Schlussbericht enthält Datum, Commit, Worktree, Server-URL und Fenstergrössen.
 - Nach dem Check läuft kein von dir gestarteter Prozess mehr.
 - Empfehlung eindeutig: **OK** · **BEDENKEN [Liste]** · **ZURÜCK [Grund]**.
+
+- **Suche (R683):** Volltextsuche mit dem Grep-Werkzeug oder `rg <muster> .` (immer mit Pfad, sonst hängt `rg` an stdin), nicht `grep -r`; `grep <muster> <datei>` auf eine genannte Datei bleibt erlaubt. `.ignore` blendet Archive aus (Pfad explizit nennen, um sie zu lesen).
 
 ## Bericht und Logging
 

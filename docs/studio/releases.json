@@ -311,5 +311,17 @@
       "note": "gemergt (R672)"
     }
   ],
-  "pastSummary": "REL-01 … REL-21, M1 – M13"
+  "pastSummary": "REL-01 … REL-21, M1 – M13",
+  "qaAliases": {
+    "ui-haeppchen-a": "REL-21",
+    "ui-haeppchen-b": "REL-21",
+    "ui-haeppchen-c": "REL-21",
+    "playtest-i047": "REL-21",
+    "m14-e1": "REL-20",
+    "ui-aufraeum-2": "REL-20",
+    "ui-texte-1": "M13",
+    "ui-gut-chip": "REL-18",
+    "tasten-komfort": "REL-08",
+    "wald-02": "REL-07"
+  }
 }
