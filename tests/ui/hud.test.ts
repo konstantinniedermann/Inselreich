@@ -698,6 +698,14 @@ describe('I-109 Reichweite am Lager-Chip (AK-UR-04 bis 06)', () => {
     );
   });
 
+  it('AK-7 reachLine: leerer Bestand sagt «Jetzt leer», nicht «Leer in 0 s»', () => {
+    const rate = signedNum(perMinute(-1, GOODS_BALANCE_TICKS));
+    const line = reachLine(0, -1);
+    expect(line).toBe(`Jetzt leer bei ${rate} / min (ohne Handel und Aufträge)\n`);
+    expect(line).not.toContain('Leer in');
+    expect(reachLine(1, -1)).toMatch(/^Leer in /);
+  });
+
   it('AK-UR-05 reachLine: Gleichstand und Sättigung ohne Zeile', () => {
     expect(reachLine(10, 0)).toBe('');
     expect(reachLine(STORAGE_CAP, 100)).toBe('');

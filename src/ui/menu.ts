@@ -106,7 +106,7 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
   };
   showNew();
   const crisisLabel = document.createElement('label');
-  crisisLabel.append('Krisen: ', select);
+  crisisLabel.append('Krisen (neue Insel): ', select);
   const unlockLabel = document.createElement('label');
   unlockLabel.append('Freischaltung: ', unlockSelect);
   newBox.append(crisisLabel, unlockLabel, newRow);

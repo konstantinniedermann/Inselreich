@@ -116,6 +116,9 @@ export function reachLine(stock: number, net: number): string {
   const r = reachView(stock, net, STORAGE_CAP);
   if (r.kind === null) return '';
   const rate = signedNum(perMinute(net, GOODS_BALANCE_TICKS));
+  if (r.kind === 'empty' && stock <= 0) {
+    return `Jetzt leer bei ${rate} / min (ohne Handel und Aufträge)\n`;
+  }
   const word = r.kind === 'empty' ? 'Leer' : 'Voll';
   return `${word} in ${formatGameTime(r.ticks)} bei ${rate} / min (ohne Handel und Aufträge)\n`;
 }
