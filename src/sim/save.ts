@@ -867,7 +867,7 @@ function isValidContractFields(raw: Record<string, unknown>): boolean {
 
 /** Fernangebot und Sperre (Handel 2, R15.1/2/5): strukturell, nicht gegen Spielwerte; Kontor wird nicht verlangt. */
 function isValidFarFields(raw: Record<string, unknown>): boolean {
-  const { farOffer, farSkip, order, contract, contractOffer, tick } = raw;
+  const { farOffer, farSkip, order, tick } = raw;
   const count = (raw.islands as unknown[]).length;
   if (farOffer !== null) {
     if (!isObject(farOffer) || !isOrderGoodOnIsland(farOffer, count) || farOffer.island === 0)
@@ -879,8 +879,7 @@ function isValidFarFields(raw: Record<string, unknown>): boolean {
       farOffer.reward < 0
     )
       return false;
-    if (!isObject(order) || 'island' in order || contract !== null || contractOffer !== null)
-      return false;
+    if (!isObject(order) || 'island' in order) return false;
   }
   if (farSkip === null) return true;
   if (!isInt(farSkip) || !isInt(tick) || tick < ORDER_FIRST_TICK) return false;
