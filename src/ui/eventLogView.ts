@@ -24,7 +24,7 @@ export function renderEventLog(box: HTMLElement, onExpand?: () => void): void {
     // Aufgeklappt zeigt der Knopf nie einen Zähler (Spec Regel 3)
     const n = collapsed ? unread : 0;
     toggle.textContent = (collapsed ? 'Ereignisse ▸' : 'Ereignisse ▾') + unreadLabel(n);
-    if (n > 0) toggle.setAttribute('aria-label', `${n} neue Ereignisse`);
+    if (n > 0) toggle.setAttribute('aria-label', `Ereignisse${unreadLabel(n)}`);
     else toggle.removeAttribute('aria-label');
     toggle.classList.toggle('btn--unread', n > 0);
     toggle.setAttribute('aria-expanded', String(!collapsed));

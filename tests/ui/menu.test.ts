@@ -118,3 +118,45 @@ describe('Menü-Texte (Spec L2, P-3)', () => {
     );
   });
 });
+
+describe('UI-AUFRAEUM-4 AK-5 Menü: Krisen-Beschriftung', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  it('«Krisen (neue Insel): » vor dem Auswahlfeld', () => {
+    const texts: string[] = [];
+    vi.stubGlobal('document', {
+      createElement: (tag: string) => {
+        const e = fakeEl(tag);
+        if (tag === 'label') {
+          const orig = e.append as (...c: unknown[]) => void;
+          e.append = (...c: unknown[]) => {
+            texts.push(...c.filter((x): x is string => typeof x === 'string'));
+            orig(...c);
+          };
+        }
+        return e;
+      },
+    });
+    vi.stubGlobal('Option', function Option() {});
+    const a = {
+      save: () => {},
+      listSaves: () => [],
+      storageNote: () => null,
+      hasProgress: () => false,
+      load: () => {},
+      crisisLevel: () => 'normal',
+      unlockMode: () => 'stepwise',
+      newIsland: () => {},
+      hotkeys: () => [],
+      seed: () => 1,
+      openGuide: () => {},
+    } as unknown as MenuActions;
+    openMenu(
+      fakeEl('div') as unknown as HTMLElement,
+      a,
+      fakeEl('button') as unknown as HTMLElement,
+    );
+    expect(texts).toContain('Krisen (neue Insel): ');
+    expect(texts).toContain('Freischaltung: ');
+    expect(texts).not.toContain('Krisen: ');
+  });
+});

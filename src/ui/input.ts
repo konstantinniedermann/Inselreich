@@ -335,8 +335,10 @@ export function bindInput(
 
   const onContextMenu = (e: MouseEvent): void => {
     e.preventDefault();
-    // Chrome meldet Rechtsklick bei gehaltener linker Taste nicht als pointerdown b2: im Linienzug hier abbrechen
-    if (drag?.line === true) cancelPointerAction();
+    // Chrome meldet Rechtsklick bei gehaltener linker Taste nicht als pointerdown b2: in jedem Zug (Linie, Weg-
+    // und Abriss-Strich) hier abbrechen. Staffelung wie Esc: nur der Zug endet, das Werkzeug bleibt; erst der
+    // nächste Rechtsklick ohne Zug legt es ab. Schwenk (panning) bleibt unberührt.
+    if (drag !== null && !drag.panning) cancelPointerAction();
   };
 
   const lineUpdate = (from: IslandTile, to: IslandTile): void =>

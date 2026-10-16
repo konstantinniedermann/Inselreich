@@ -440,6 +440,39 @@ describe('REL-17 Abriss-Zug (AK-R17-12…16)', () => {
       expect(actions).toEqual([{ type: 'roadLine', phase: 'cancel' }]);
     });
 
+    it.each([
+      ['Weg-Strich', undefined],
+      ['Abriss-Strich', { kind: 'demolish' }],
+    ] as const)(
+      'UI-AUFRAEUM-4 %s: contextmenu beendet nur den Zug (dragEnd, kein cancel); zweiter Rechtsklick legt ab',
+      (_name, tool) => {
+        const { actions, at, ptr } = tool ? setup(tool) : setup();
+        ptr('pointerdown', { ...at(0, 0) });
+        ptr('pointermove', { ...at(2, 0) });
+        actions.length = 0;
+        ptr('contextmenu', {});
+        expect(actions).toContainEqual({ type: 'dragEnd' });
+        expect(actions.some((x) => x.type === 'cancel')).toBe(false);
+        actions.length = 0;
+        ptr('pointermove', { ...at(3, 0) });
+        ptr('pointerup', { ...at(3, 0) });
+        expect(actions.some((x) => x.type === 'tile')).toBe(false);
+        ptr('contextmenu', {});
+        expect(actions).toEqual([]);
+        ptr('pointerdown', { ...at(3, 0), button: 2 });
+        expect(actions).toEqual([{ type: 'cancel' }]);
+      },
+    );
+
+    it('UI-AUFRAEUM-4 Schwenk (button 1): contextmenu ändert nichts', () => {
+      const { actions, at, ptr } = setup();
+      ptr('pointerdown', { ...at(0, 0), button: 1 });
+      ptr('pointermove', { ...at(2, 0) });
+      actions.length = 0;
+      ptr('contextmenu', {});
+      expect(actions).toEqual([]);
+    });
+
     it('Abriss-Strich (drag.demolish): Rechtsklick sendet weiter cancel (unverändert)', () => {
       const { actions, at, ptr } = setup({ kind: 'demolish' });
       ptr('pointerdown', { ...at(0, 0) });
