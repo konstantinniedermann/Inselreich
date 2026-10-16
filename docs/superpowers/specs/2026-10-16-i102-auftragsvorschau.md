@@ -13,12 +13,12 @@ Der Spieler liest «Nächster Auftrag in 0:20 · voraussichtlich Rum» und läss
 3. **Wann `null` (keine Vorschau).** Laufender Stammkunden-Vertrag (`world.contract !== null`, bei Lieferung wird in der Periode kein Zufallsauftrag angeboten) · offenes Vertragsangebot (`contractOffer !== null`) · Funktion «Aufträge» gesperrt (`functionLock(world,'orders')`, die Karte ist dann ohnehin unsichtbar).
 4. **Anzeige (`orderCardText`, `src/ui/order.ts`).**
    - Zweig «kein Auftrag» (heute «Nächster Auftrag in m:ss»): «Nächster Auftrag in m:ss · voraussichtlich {Gut}».
-   - Zweig «normaler Auftrag aktiv» (V2, Empfehlung): am Ende «· danach voraussichtlich {Gut}». Begründung: die Lücke zwischen Verfall und Folgeperiode ist nur 300 Ticks (`ORDER_PERIOD − ORDER_DURATION`); nur in der Lücke zu zeigen, lässt kaum Zeit zum Planen.
+   - Zweig «normaler Auftrag aktiv» (V2, entschieden R664): am Ende «· danach voraussichtlich {Gut}». Begründung: die Lücke zwischen Verfall und Folgeperiode ist nur 300 Ticks (`ORDER_PERIOD − ORDER_DURATION`); nur in der Lücke zu zeigen, lässt kaum Zeit zum Planen.
    - Fernauftrag aktiv, Vertrags- und Angebotszweig: keine Vorschau (V1 und V2).
    - Zeit wie bisher über `formatGameTime`.
 5. **«voraussichtlich» ist ehrlich.** Das Gut hängt an `maxHouseTier` zum Angebotszeitpunkt; ein Stufenaufstieg (oder Abriss des höchsten Hauses) vor dem Angebot kann den Pool und damit das Gut ändern. Die Vorschau wird bei jedem `refresh()` neu berechnet und ändert sich dann sichtbar; kein Versprechen, keine Meldung bei Wechsel.
 6. **Sperrperiode nach Fernangebot (Handel 2, R2/R11).** Nach `acceptFarOrder` ist `farSkip = period + 1`; `nextOrderTick` überspringt diese Periode, die Vorschau zeigt Zeit und Gut der übernächsten Periode. Wird die Fernlieferung früher geliefert (Karte «kein Auftrag»), gilt dasselbe.
-7. **Fernangebot nicht in der Vorschau.** Die Insel des Fernangebots (Rotation `k % farEligible.length`) wird nicht angekündigt (Variante F: möglich, aber hängt an Kontoren und erhöht Textlänge; später).
+7. **Fernangebot nicht in der Vorschau.** Die Insel des Fernangebots (Rotation `k % farEligible.length`) wird nicht angekündigt (Variante F: möglich, aber hängt an Kontoren und erhöht Textlänge; R664: ohne Ankündigung).
 8. **Speicherstand:** keiner; `src/sim/types.ts` und `defs/` ohne Diff. Baseline und Balancing-Test unberührt (nur Lesen). Keine Wertkonstante, Text ist UI.
 
 ## Abgrenzung
@@ -53,10 +53,10 @@ Wer das angekündigte Gut nie verkauft, hält Lagerplatz (Bestand bis `STORAGE_C
 - Pause: Anzeige friert ein; Tempo ohne Wirkung (Spielzeit wie `formatGameTime`).
 - Archipel: Auftrag gilt der Heimat (`HOME`); Vorschau nennt das Gut, nicht die Insel; Fernauftrag-Zweig bleibt unberührt.
 
-## Varianten und Empfehlung
+## Varianten (entschieden: V2, R664)
 
 - **V1** nur Zweig «kein Auftrag» (kleinster Diff, Fenster 300 Ticks).
-- **V2** zusätzlich Hinweis bei aktivem Normalauftrag (Empfehlung; gleiche Funktion, ein Zusatzstück Text).
+- **V2** zusätzlich Hinweis bei aktivem Normalauftrag (gewählt, R664; gleiche Funktion, ein Zusatzstück Text).
 - Save-Variante nicht nötig: Ableitung aus Seed, Periode und Stufe geht ohne RNG-Vorziehen.
 
 ## Selbstprüfung (Gate Brainstorming)
