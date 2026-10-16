@@ -173,7 +173,7 @@
       "hash": "",
       "date": "",
       "save": "",
-      "gate": "Plan-Gates R694, R701; Umsetzung läuft (R698)",
+      "gate": "Plan-Gates R694, R701; Merge-Gate R707 (I-120, I-118)",
       "items": [
         {
           "pkg": "UI-AUFRAEUM-4",
@@ -193,6 +193,26 @@
           "stage": 3,
           "state": "active",
           "note": "Umsetzung läuft (R701), T02 ff. nach Merge UI-AUFRAEUM-4, kein Save",
+          "goalStage": 4
+        },
+        {
+          "pkg": "I-120",
+          "name": "I-120 Wohlstandsklang der Stadt",
+          "kind": "Ideen-Pool",
+          "startStage": 1,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt (R707), kein Save",
+          "goalStage": 4
+        },
+        {
+          "pkg": "I-118",
+          "name": "I-118 Aufstiegs-Funkeln am Haus",
+          "kind": "Ideen-Pool",
+          "startStage": 1,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt (R707), kein Save",
           "goalStage": 4
         }
       ]
@@ -394,8 +414,8 @@
       "kind": "Ideen-Pool",
       "startStage": 1,
       "stage": 2,
-      "state": "idea",
-      "note": "Kurzdesign OK (R700), Plan läuft (plan/i120-i118)"
+      "state": "done",
+      "note": "gemergt (R707), REL-26"
     },
     {
       "pkg": "TOOL-BUENDEL-13",

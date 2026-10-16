@@ -366,3 +366,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Jede neue Obergrenze in `src/render/limits.ts` bricht diesen Test; Pläne nennen nur `limits.test.ts`. Im Paket I-120-I-118 fiel das erst im Final-Review auf.
 - Ursprung: Final-Review I-118 (lead-tech I-120-I-118)
 - Erste Einschätzung: niedrig; Plan-Vorlage für CAPS-Änderungen um den Pin ergänzen.
+
+## 2026-10-16 · I-120/I-118: vier niedrige Hinweise aus dem Gate Merge (R707)
+
+- Fundort: `src/render/fx.ts` (`RISE_TOTAL_MS`), `tests/render/renderer.test.ts:1851`, `src/ui/app.ts:1691`, `tests/render/viewStats.test.ts`
+- Beobachtung: (1) `RISE_TOTAL_MS` in `fx.ts` dupliziert `RISE_MS` aus `aufstieg.ts`. (2) `renderer.test.ts:1851` prüft `<= 6` statt `toBe(6)`. (3) `app.ts:1691` ruft `cap('riseGlow')` ohne `reduce` auf (folgenlos, beide Werte 6). (4) viewStats-Test 526 ms, knapp über 500 (R392 nicht verletzt, +11 %).
+- Ursprung: Gate-Handoff lead-qa gate-I-120-I-118 (`.studio/handoffs/2026-10-16-lead-qa-gate-I-120-I-118.md`)
+- Erste Einschätzung: niedrig; bei nächster Berührung der Dateien mitnehmen.
