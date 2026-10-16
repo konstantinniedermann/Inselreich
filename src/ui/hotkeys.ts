@@ -3,6 +3,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { buildingShown, functionLock } from '../sim/unlocks';
 import type { Category, World } from '../sim/types';
 import type { PanelState } from './app';
+import { COUNCIL_KEY, councilBadge } from './council';
 import { isSaveChord, type Mods } from './saveChord';
 
 // Wiederausfuhr: bestehende Importe (Tests) bleiben gültig.
@@ -209,6 +210,7 @@ export function hotkeyList(world: World): { key: string; label: string }[] {
     functionLock(world, 'upgrade2') === null
       ? [{ key: 'Umschalt + U', label: 'Markiertes Gebäude ausbauen' }]
       : [];
+  const council = councilBadge(world) !== null ? [{ key: COUNCIL_KEY, label: 'Rat öffnen' }] : [];
   return [
     ...tools,
     ...speeds,
@@ -217,6 +219,7 @@ export function hotkeyList(world: World): { key: string; label: string }[] {
     { key: PROBLEM_NEXT_KEY, label: 'Nächstes Problem anspringen' },
     { key: PROBLEM_PREV_KEY, label: 'Voriges Problem anspringen' },
     ...upgrade,
+    ...council,
     ...islands,
     ...NAV_KEYS,
   ];
