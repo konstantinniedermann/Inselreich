@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-16 · Handbuch 1.56
+
+- Anlass: Nutzerauftrag Altlasten aus dem Kontext (CTX-ALTLAST)
+- Datenbasis: Messung vorher/nachher im Bericht des Pakets CTX-ALTLAST
+- Ruling: R682
+- Änderungen: Ende-Routine Schritt 2b (`make studio-aufraeumen`, Archivregel für Specs, Pläne und Rulings), Verweise «rulings.md per grep» auf `rulings*.md`
+
 ## 2026-10-14 · Persona lead-tech 1.15
 
 - Anlass: Kurz-Retro b54ed3bd, V1 (E-066 Folgeinstanz statt Fortsetzung)

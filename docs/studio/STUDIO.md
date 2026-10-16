@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.55 · Stand: 2026-10-14 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.56 · Stand: 2026-10-16 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -10,7 +10,7 @@ Begleitdokumente: [VERFASSUNG.md](VERFASSUNG.md) · [verbesserung.md](verbesseru
 Verbesserung, Teil des Handbuchs) · [CHANGELOG.md](CHANGELOG.md) · [warteschlange.md](warteschlange.md)
 · [experimente.md](experimente.md) · [lernen.md](lernen.md) · [retros/](retros/) ·
 [metriken/](metriken/) · [gates.md](gates.md) · [roster.md](roster.md) · [rulings.md](rulings.md)
-(R1–R99: [rulings-archiv.md](rulings-archiv.md)) · [state.md](state.md) · [herkunft.md](herkunft.md)
+(R1–R600: [rulings-archiv.md](rulings-archiv.md)) · [state.md](state.md) · [herkunft.md](herkunft.md)
 · [Vorlagen](templates/) · Hierarchie [ADR-007](../adr/ADR-007-studio-hierarchie.md), Telemetrie
 [ADR-008](../adr/ADR-008-studio-telemetrie.md).
 
@@ -103,7 +103,7 @@ Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <S
 Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davor (die Telemetrie
   liest die erste Angabe mit „Tools“ bzw. „min“).
 - **Kontext nennt nur die Task-Datei und die betroffenen AK-IDs**, nie einen ganzen Plan oder eine
-  ganze Spec; `rulings.md` nur per `grep` (E-010, R167).
+  ganze Spec; `rulings*.md` (beide Dateien) nur per `grep` (E-010, R167, R682).
 - **Umsetzer-Briefing (E-017):** nennt die D1-Dateien (README, arc42, ADR, Spec-Verweise) als erlaubt.
 - **Persona-Änderung (R233 (1)):** DoD nennt CHANGELOG-Eintrag (Version = neuester Eintrag) und
   `make check` grün als Pflicht.
@@ -173,7 +173,7 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
 - **Sessiongrösse (R68, E-010):** Eine Session umfasst etwa einen Abschnitt (Welle bzw. Phase). L0
   übergibt über `state.md` nach jedem abgeschlossenen Gate-Block, spätestens bei 25 % Kontext
   (vorher 50 %), und liest keine Bilder; Screenshots prüft `qa-playtester` und berichtet in Text.
-  `rulings.md` liest L0 nie ganz, nur per `grep`.
+  `rulings*.md` liest L0 nie ganz, nur per `grep` über beide Dateien.
 
 ## Budget
 
@@ -529,6 +529,7 @@ Abnahme pushen (R107).
    `status --status done --summary "Pausiert: <Stand>"`; Pakete bleiben auf ihrem Status.
 2. `python3 tools/studio/ci.py` (CI-Läufe erfassen), dann `make studio-metrics` (Session); bei
    Meilenstein-Ende zusätzlich `python3 tools/studio/metrics.py --milestone <id>`.
+   2b. **Aufräumen nach Releases (R682):** Ging ein Release live, einmal `make studio-aufraeumen` (Trockenlauf, Liste und Summe prüfen), dann `make studio-aufraeumen ARGS=--apply`. Das Werkzeug löscht nur Bilder (png, jpg, jpeg, webp, gif) in `.studio/qa/` und `.studio/archiv/worktrees/` von Paketen in live Releases (nicht zuordenbare erst nach 14 Tagen); Berichte (`*.md`, `*.json`, `*.txt`) bleiben. **Archivregel:** Specs und Pläne eines Pakets in einem live Release wandern per `git mv` nach `docs/superpowers/archiv/specs/` und `.../plans/` (Ausnahme: Grundlagen-Specs, auf die CLAUDE.md, arc42, README oder ADRs dauerhaft verweisen), Links nachführen; Rulings älter als die jüngsten rund 80 wandern wörtlich nach `rulings-archiv.md`. `.ignore` im Repo-Root blendet Archive für `rg`/Grep/Glob aus; explizite Pfade bleiben lesbar, `grep -r` ignoriert `.ignore` (`rg` nutzen).
    2a. Wurde seit dem letzten Push Code gemergt: einmal `make push-check` (ohne Push) im Ruhefenster vor Session-Ende (R514 V3, R518). Ein Blocker steht als Punkt in `state.md` „Fortsetzung“.
 3. Kurz-Retro durch den Coach (Befunde, ggf. ≤ 3 Experiment-Vorschläge; L0 entscheidet per
    Ruling).
