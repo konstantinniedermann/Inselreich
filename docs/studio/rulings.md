@@ -7904,3 +7904,19 @@ geduldet; Rulings-Nummern werden vor jedem Eintrag neu gelesen, R682 berührt RE
 Regelbezug: gates.md Gate Merge, R129, R324, R380, R679, R682 · Kosten bei Irrtum: eine doppelt vergebene Ruling-Nummer (Umbenennung).
 
 Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-F, R682 im Log · ADR: —
+
+## R683 · 2026-10-16 · Gate Merge CTX-ALTLAST: OK mit zwei Nachträgen; Handbuch 1.56 angenommen
+
+Ruling: `chore/ctx-altlast` @ `76ceb732` (Handoff `.studio/handoffs/2026-10-16-lead-production-CTX-ALTLAST.md`): kein `src/`-Diff, `make check`,
+`studio-test`, `docs-check` grün, Rulings wörtlich verschoben (Überschriften vor/nach gleich), Probe belegt: Grep-Werkzeug 238 → 129 Treffer ohne
+Archivpfade, `rulings.md` 617 → 97 KB, `.studio/qa` 7,27 → 4,84 GB → **Gate Merge OK**. Handbuch 1.56 (Ende-Schritt 2b, Archivregel) angenommen.
+Vor dem Merge auf demselben Branch: (1) Suchhinweis in alle Personas `.claude/agents/*.md` und Briefing-Vorlage: Volltextsuche mit dem
+Grep-Werkzeug oder `rg <muster> .`, nicht `grep -r` (Beleg: 24361 `grep` gegen 5 `rg` in den Transkripten; `.ignore` wirkt nur auf rg/Grep);
+`grep <muster> <datei>` auf eine genannte Datei bleibt erlaubt. (2) Alias-Feld in `releases.json` für Paketordner ohne Zuordnung (z. B.
+`ui-haeppchen-a/b/c`, `m14-e1`, `h-r*`), soweit ihr Paket belegbar in einem live Release steckt; danach Trockenlauf und `ARGS=--apply`.
+Danach Merge `--no-ff` nach main (lokal, kein Push).
+
+Regelbezug: R682, R680 (Merge durch lead-production), R233 (1) Persona-Änderung · Kosten bei Irrtum: ein Persona-Hinweis, der eine Suche um einen
+Archivtreffer verkürzt.
+
+Entscheider: L0 · Anlass: Bericht lead-production CTX-ALTLAST · ADR: —
