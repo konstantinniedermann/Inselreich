@@ -2055,3 +2055,15 @@ anno-clone #2 reserviert (offline); diese Session nutzt R751 ff. und prüft vor 
 Regelbezug: R335, R434, R712 V2, R747/R748 (anno-clone #2), VERFASSUNG §5 · Kosten bei Irrtum: ein Release, das einen Paket-Merge der Parallel-Session vorwegnimmt.
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R752 · 2026-10-16 · Release-Check REL-26: OK; push-check und Push jetzt
+
+Ruling: `main` (Release-Handoff `.studio/handoffs/2026-10-16-lead-qa-release-REL-26.md`, geprüft auf `9d02e700` gegen `origin/main` `8fe744df`) → **Release REL-26 OK**. Inhalt:
+I-120, I-118, UI-AUFRAEUM-4, TOOL-BUENDEL-14, I-114, BEOB-17, PERF-BILANZ-COV, I-112 (Save v16 → v17 mit Migration), TOOL-GUARD-ALLOWLIST, IDEEN-12, I-122 + I-123,
+TOOL-ACTIONS-FREI. Auflagen an den `production-integrator`: (1) `make push-check` mit vollem Lauf, Exit-Code im Bericht (deckt R727 und die Exit-Lücke aus I-122 BEDENKEN 2);
+(2) Push nur des geprüften Hashes (`git push origin <Hash>:main`); (3) danach CI-Lauf und — da TOOL-ACTIONS-FREI die Workflows ändert — Pages-Lauf prüfen, Rückfall
+`gh workflow run Pages --ref main` (R748). L0 committet bis zum Ende des push-checks nicht auf main (R697).
+
+Regelbezug: gates.md Release, R335, R697, R712 V2, R748, R751 · Kosten bei Irrtum: ein roter CI-Lauf auf main, der per Hotfix behoben wird.
+
+Entscheider: L0 · Anlass: Release-Check lead-qa REL-26 · ADR: —
