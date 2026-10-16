@@ -1234,3 +1234,19 @@ nicht, ob sich Aufräumen lohnt. Stattdessen gilt `.studio/qa` als fällig, wenn
 Regelbezug: R682, R683b, R685 · Kosten bei Irrtum: eine Aufräumrunde, die bei 400 MB löschbar noch nicht anläuft.
 
 Entscheider: L0 · Anlass: Bericht lead-production CTX-ALTLAST (Nachtrag 4) · ADR: —
+
+## R688 · 2026-10-16 · Session-Plan: F prüfen und mergen, Push REL-24+REL-25 gemeinsam; Ortsrand in zwei Releases, Spec Teil 1 jetzt
+
+Ruling: (1) **UI-HAEPPCHEN-F** (`feat/ui-haeppchen-f` @ `f4da449e`, main mit I-091 schon eingemergt): Last jetzt ≈ 3 → lead-tech fährt `make check`,
+`make zeitreserve-gate` und den Zeitvergleich main/Branch (R683 (1)); danach Gate Merge lead-qa, Merge lead-production. (2) **Push**: main enthält
+I-091 schon; REL-24 und REL-25 gehen daher **in einem Push** nach dem F-Merge (R335, ein Push je Session), Release-Check lead-qa über beide; ohne
+F-Merge bis zur Zeitreserve geht REL-24 + I-091 allein. (3) **Ortsrand**: Vorentscheide der Nebensession (O1–O10, Handoff
+`.studio/handoffs/2026-10-16-lead-art-ortsrand.md`) übernommen, ADR-015 «Kern und Anbauten» angenommen (Nummer beim Merge prüfen). Zuschnitt in
+**zwei Releases**: «Wege und Kanten» (ORT-1, ORT-K1, ORT-K2, ORT-3) zuerst, «Hof und Anbauten» (ORT-2, ORT-4) danach; ORT-5 bleibt Kann im Pool.
+`design/ortsrand` @ `21fe2599` per Merge nach main (nur Doku), Pool-Einträge in `releases.json`. Spec für Teil 1 jetzt (freie Plätze, R475), nur
+`src/render/`, kein Save. (4) Beobachtungen (20 Einträge, unter der Pflichtschwelle 30): Auswertung BEOB-AUSW durch lead-production, da Plätze frei.
+(5) Fällige Retros (Cache-Write 5 min, Flake-Verdacht zwei Sessions rot): eine Ad-hoc-Retro studio-coach mit Hebel-Pflicht (R316).
+
+Regelbezug: R335, R475, R519, R683, R686, R316 · Kosten bei Irrtum: ein Release-Zuschnitt, der vor der Einplanung von Teil 2 neu sortiert wird.
+
+Entscheider: L0 · Anlass: Session-Start 66d37b15 · ADR: ADR-015 (angenommen)
