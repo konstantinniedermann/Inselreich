@@ -1317,3 +1317,16 @@ Werkzeug ohne Experimentplatz, Einplanung in der Folgesession (Ampel gelb, R691)
 Regelbezug: R316, R579, R689, R691 · Kosten bei Irrtum: ein Paket-Review, das einen Task-Befund erst am Ende findet.
 
 Entscheider: L0 · Anlass: Bericht studio-coach EXP-E064-E068 · ADR: —
+
+## R694 · 2026-10-16 · Gate Plan UI-AUFRAEUM-4: OK mit D-2; Umsetzung in der Folgesession, Reviewer nach E-068
+
+Ruling: `plan/ui-aufraeum-4` @ `0880b39a` (Handoff `.studio/handoffs/2026-10-16-lead-tech-plan-UI-AUFRAEUM-4.md`, T00–T04, 12 AKs mit Rot-Beleg oder
+Browser-Beleg, kein Save, kein `src/sim`) → **Gate Plan OK**. **D-2** angenommen: bei gehaltener linker Taste beendet der erste Rechtsklick nur den Zug, der
+zweite legt das Werkzeug ab (wie Esc und Linienzug). Cache in `order.ts` entfällt, wenn T00 einen Faktor < 2 misst (Controller entscheidet nach Messung,
+meldet im Bericht, kein Warten auf L0). Reviewer nach **E-068** (R693): bleibt der Paket-Diff ≤ 300 Zeilen, ein einziger Task-Reviewer am Ende statt zwei;
+Final-Review opus und Playtest bleiben. Budget **8 Starts**, Parallelität 1; Umsetzung in der Folgesession (Ampel gelb, R691), Branch ab main nach F-Merge
+(`5d8d4242`). Release-Zuordnung REL-26.
+
+Regelbezug: gates.md Gate Plan, R690, R691, R693 · Kosten bei Irrtum: ein Rechtsklick, der einmal mehr gedrückt werden muss.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-UI-AUFRAEUM-4 · ADR: —
