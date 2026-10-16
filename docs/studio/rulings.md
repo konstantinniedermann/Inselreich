@@ -2015,3 +2015,16 @@ zählen weiter (≈ 480 min) → Beobachtung.
 Regelbezug: R747, R712 V2 · Kosten bei Irrtum: ein Pages-Lauf zu viel oder zu wenig; Rückfall per `workflow_dispatch`.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-ACTIONS-FREI · ADR: —
+
+## R747 · 2026-10-16 · Gate Merge I-122 + I-123: OK; Merge jetzt; Cache-Write-Ad-hoc in die Kurz-Retro
+
+Ruling: (1) `feat/i122-i123` @ `2af563fc` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-I-122-I-123.md`; `check.log` 4361 Tests grün nach dem Fix) → **Gate Merge OK**.
+BEDENKEN 1–3 als Beobachtungen (Rot-Beleg im Ledger nicht nachvollziehbar; widersprüchliche Exit-Zeilen `final.txt`/`check.log`; lead-tech-Beobachtungen Umbruch «Strafe / 135»
+bei 1280 px, verzögerter Klang bei Pause-Annahme, `querySelector` in `app.ts`, hängender Playtester-Lauf) — der volle Lauf im `push-check` vor REL-26 deckt Punkt 2 ab.
+lead-production merged lokal (`--no-ff`), trägt die Beobachtungen ein, setzt I-122/I-123 in `docs/ideen.md` auf «gemergt (R747)» und nimmt das Paket in REL-26 auf. Budget (V3)
+I-122-I-123 10 von 12. (2) Hook «Ad-hoc-Retro fällig: Cache-Write 5 min zwei Sessions rot» → in die laufende Kurz-Retro ca9d40c8 aufgenommen (Ursache nach Rolle, Hebel Pflicht nach
+R316), kein eigener Start.
+
+Regelbezug: gates.md Gate Merge, R316, R712 V2, R741, R744 · Kosten bei Irrtum: ein Rot-Beleg, der im Push-Check nicht auffällt.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-122-I-123, Hook Ad-hoc-Retro · ADR: —
