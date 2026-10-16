@@ -1854,3 +1854,17 @@ C3 4 von 6 verbraucht + 2 aus dem Puffer für T05b → **C3 8 von 8**; ORT-A-Puf
 Regelbezug: R313, R705, R726, R735 · Kosten bei Irrtum: zwei Starts für einen Patch, der in T09 doch nicht reicht.
 
 Entscheider: L0 · Anlass: Frühwarnung lead-tech ORT-A C3 (E6) · ADR: —
+
+## R737 · 2026-10-16 · Gate Ideen-Runde IDEEN-12: Rangliste angenommen; Kurzdesign I-122 + I-123 jetzt, I-132 + I-133 danach
+
+Ruling: `docs/ideen-12` @ `8dae3333` (I-122–I-135, Pool-Pflege; Handoff `.studio/handoffs/2026-10-16-lead-design-IDEEN-12.md`) → angenommen, Merge durch lead-production.
+Leitbefund «Geld ist nur in den ersten 15 min knapp» (R722) als Bewertungsmassstab bestätigt. Priorität: (1) **I-122 Vorwarnung vor der Stammkunden-Lieferung + I-123
+Reichweite mit Vertrag** → Kurzdesign Stufe leicht jetzt (lead-design sonnet; `CONTRACT_WARN_S` in `src/sim/defs/`, Audio nur Signal, kein Save); (2) **I-132 Meisterprüfung
+
+- I-133 «Sturmjahr»** → Kurzdesign Stufe voll mit Rechnung beim nächsten freien Platz; (3) I-128 Lärm und Rauch → Baustein Stadtplanungs-Brainstorming. Geparkt: I-124
+  (bis Playtest-Trigger und ORT-A-Merge), I-130, I-134 (bis `BUY_RISE` > 0), I-131 (bis I-112 live). Verworfen: I-125, I-126, I-127, I-129, I-135. Budget (V3): IDEEN-12
+  3 von 3.
+
+Regelbezug: R445, R692, R722, R731 · Kosten bei Irrtum: ein Häppchen, das nach dem Playtest leiser gestellt wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-12 · ADR: —
