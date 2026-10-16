@@ -1356,3 +1356,19 @@ dem Push (R695). Plan durch lead-tech (opus, Tech-Lead beim Plan) in der Folgese
 Regelbezug: gates.md Gate Spec, R688, R691, H-R7 · Kosten bei Irrtum: eine Patch-Zeit, die erst im Plan eine Ausweichregel braucht.
 
 Entscheider: L0 · Anlass: Bericht lead-art design-ORT-A · ADR: ADR-015
+
+## R697 · 2026-10-16 · Gate Push REL-24 + REL-25 mit Zeitreserve-Ausnahme; Push per geprüftem Hash `8fe744df`
+
+Ruling: Release-Check REL-24+REL-25 @ `8fe744df` (Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-REL-24-25.md`): alle Pakete mit Final-Review opus,
+Screenshots (I-091 nach `.studio/qa/REL-24-25/i091/` gesichert), Save-Kette v14→v15→v16 mit Abweisen belegt, README/arc42 nachgeführt; `make push-check` Exit 1
+allein durch 7 Zeitreserve-Rügen ausserhalb des Diffs, alles andere grün (4175 Tests inkl. Balancing, studio 925, Lint, Build, pages-limit);
+Nachmessung `make zeitreserve-gate` Exit 0 → **Lastartefakt** (R598 V1, wie R667) → **Gate Push OK mit bewusster Ausnahme**. production-integrator pusht
+**genau `8fe744df`** (`git push origin 8fe744df:main`, im Worktree `.worktrees/integrate`, vorher dorthin auschecken), CI entscheidet; danach
+`gh workflow run Pages --ref main` — Pages baut den Stand von origin/main, also `8fe744df`. Spätere L0-Doku-Commits auf main gehen mit dem nächsten Push.
+Danach: lead-production setzt REL-24/REL-25 live in `releases.json`, Release-Notiz in state.md, Sammelmerge `tool/e070` (R695), `docs/ideen-11` (R692),
+`design/ortsrand` @ `ad315b3d` (R696). Paket **TOOL-TIMEOUT-7** (7 Timeouts nach E-043 auf 10000 ms) in den Pool, zweiter Fall in Folge → Folgesession.
+Lehre zu push-check: L0 committet während eines push-check nicht auf main (Lauf 1 Exit 2 durch HEAD-Wechsel) → Kandidat in lernen.md.
+
+Regelbezug: gates.md Gate Push, R335, R598 V1, R667, R688 (2) · Kosten bei Irrtum: ein roter CI-Lauf wegen Timeout eines Fremdtests (Rerun oder Fix nach E-043).
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-REL-24-25 · ADR: —
