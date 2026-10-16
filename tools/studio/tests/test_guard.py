@@ -652,3 +652,67 @@ class RedactTest(unittest.TestCase):
         self.assertNotIn("ghp_", out)
         self.assertNotIn("xxxx", out)
         self.assertLessEqual(len(out), guard.COMMAND_LIMIT)
+
+
+class RedactHardeningTest(unittest.TestCase):
+    """Unter-Schwärzung ist inakzeptabel, Über-Schwärzung hinnehmbar."""
+
+    shown = RedactTest.shown
+    assertRedacted = RedactTest.assertRedacted
+
+    def test_curl_user(self):
+        for cmd in (
+            "curl -u alice:geheim123 host",
+            "curl --user alice:geheim123 host",
+            "curl --user=alice:geheim123 host",
+            "curl -u 'alice:geheim123' host",
+        ):
+            self.assertRedacted(cmd, "geheim123")
+            self.assertTrue(self.shown(cmd).endswith("host"))
+        self.assertEqual(
+            self.shown("git push -u origin main"), "git push -u origin main"
+        )
+
+    def test_authorization_header(self):
+        for cmd in (
+            "curl -H 'Authorization: Basic Zm9vOmJhcg==' h",
+            'curl -H "authorization: Token geheim123" h',
+            "curl -H 'AUTHORIZATION: Bearer geheim123' h",
+            "curl -H 'Authorization: Basic geheim123' h",
+        ):
+            out = self.assertRedacted(cmd, "geheim123" if "geheim" in cmd else "Zm9v")
+            self.assertTrue(out.endswith(" h"))
+
+    def test_key_value_case_insensitive(self):
+        for name in ("token", "TOKEN", "Api_Key", "SECRET", "Password"):
+            self.assertRedacted(f"run {name}=geheim123 x", "geheim123")
+
+    def test_env_assignments(self):
+        for name in ("GITHUB_TOKEN", "AWS_SECRET", "MY_KEY", "DB_PASSWORD"):
+            out = self.assertRedacted(f"{name}=geheim123 npm run build", "geheim123")
+            self.assertTrue(out.endswith("npm run build"))
+
+    def test_quoted_values(self):
+        cases = (
+            ("mysql -p 'geheim 123' db", "geheim"),
+            ('mysql -p "geheim 123" db', "geheim"),
+            ("mysql -p'geheim 123' db", "geheim"),
+            ('tool --password "geheim 123" go', "geheim"),
+            ("tool password='geheim 123' go", "geheim"),
+            ("tool --token 'geheim 123' go", "geheim"),
+            ('tool --token="geheim 123" go', "geheim"),
+        )
+        for cmd, secret in cases:
+            out = self.assertRedacted(cmd, secret)
+            self.assertNotIn("123", out)
+            self.assertTrue(out.split()[-1] in ("db", "go"), out)
+
+    def test_p_flag_unchanged(self):
+        self.assertEqual(self.shown("mysql -p db"), "mysql -p db")
+        self.assertEqual(self.shown("git log -p"), "git log -p")
+
+    def test_word_boundary_for_prefixes(self):
+        harmless = "run task-" + "x" * 30 + " and mygh_" + "y" * 30
+        self.assertEqual(self.shown(harmless), harmless)
+        self.assertRedacted("run sk-" + "x" * 30, "sk-xxx")
+        self.assertRedacted("run (ghp_" + "x" * 36 + ")", "ghp_")

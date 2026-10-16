@@ -543,24 +543,43 @@ RULE_KEYWORDS = (
 )
 COMMAND_LIMIT = 160
 REDACTED = "[REDACTED]"
-# Schwärzung für das Ereignisprotokoll: ersetzt nur den Secret-Teil. Grenzen:
-# Werte gelten bis zum nächsten Leerzeichen bzw. Anführungszeichen (Secrets mit
-# Leerzeichen in Quotes werden nur bis dort erfasst); "-p<pw>" greift auf jedes
-# alleinstehende Argument "-p" + Nicht-Bindestrich-Zeichen (mysql -pgeheim), ein
-# blosses "-p" oder "--p..." bleibt, Fehltreffer wie "-pattern" sind in Kauf genommen.
+# Schwärzung für das Ereignisprotokoll: ersetzt nur den Secret-Teil; Unter-
+# Schwärzung ist inakzeptabel, Über-Schwärzung hinnehmbar. Ein Wert ist ein
+# Quoted-String (mit Leerzeichen) oder ein Token bis zum nächsten Leerzeichen.
+# Bewusste Restlücken: Secrets in verschachtelten/escapten Quotes, Werte aus
+# Dateien oder Variablen (`$(cat f)`), `-pattern` wird zu `-p[REDACTED]`, ein
+# Passwort als nacktes Positionsargument ohne Schlüsselwort bleibt unerkannt.
+_VALUE = r"""(?:"[^"]*"|'[^']*'|[^\s'"]+)"""
+_USERPASS = r"""(?:"[^"]*:[^"]*"|'[^']*:[^']*'|[^\s'"]*:[^\s'"]*)"""
+_KEYWORDS = r"(?:token|api_key|secret|password|passwd|_key)"
 REDACT_PATTERNS = (
-    (re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}"), REDACTED),
+    (re.compile(r"(?<![A-Za-z0-9])gh[pousr]_[A-Za-z0-9]{20,}"), REDACTED),
     (re.compile(r"github_pat_[A-Za-z0-9_]{20,}"), REDACTED),
-    (re.compile(r"sk-[A-Za-z0-9_-]{20,}"), REDACTED),
+    (re.compile(r"(?<![A-Za-z0-9])sk-[A-Za-z0-9_-]{20,}"), REDACTED),
     (re.compile(r"xox[bp]-[A-Za-z0-9-]{10,}"), REDACTED),
     (re.compile(r"AKIA[0-9A-Z]{16}"), REDACTED),
-    (re.compile(r"(?i)(\bBearer\s+)[^\s'\"]+"), r"\1" + REDACTED),
-    (re.compile(r"(--token(?:=|\s+))[^\s'\"]+"), r"\1" + REDACTED),
     (
-        re.compile(r"(?i)(\b(?:password|passwd|secret|api_key)=)[^\s'\"]+"),
+        re.compile(
+            r"(?i)(\bauthorization\s*:\s*['\"]?(?:basic|bearer|token)\s+)[^\s'\"]+"
+        ),
         r"\1" + REDACTED,
     ),
-    (re.compile(r"(?<!\S)(-p)[^\s\-'\"]\S*"), r"\1" + REDACTED),
+    (re.compile(r"(?i)(\bBearer\s+)" + _VALUE), r"\1" + REDACTED),
+    (re.compile(r"(?<!\S)(-u|--user)(=|\s+)" + _USERPASS), r"\1\2" + REDACTED),
+    (
+        re.compile(r"(?i)(--(?:token|password|passwd|secret|api[-_]key)\s+)" + _VALUE),
+        r"\1" + REDACTED,
+    ),
+    (
+        re.compile(r"(?i)(\b[\w-]*" + _KEYWORDS + r"\s*=\s*)" + _VALUE),
+        r"\1" + REDACTED,
+    ),
+    (
+        re.compile(
+            r"""(?<!\S)(-p)(?:\s+(?:"[^"]*"|'[^']*')|"[^"]*"|'[^']*'|[^\s\-'"]\S*)"""
+        ),
+        r"\1" + REDACTED,
+    ),
     (re.compile(r"(://)[^\s/:@]+:[^\s/@]+@"), r"\1" + REDACTED + "@"),
 )
 
