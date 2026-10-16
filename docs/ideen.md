@@ -58,6 +58,28 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 | Aufwand (`richtwerte.md`) | S: ≤ 1 Häppchen                                                            | M: 2–4 Pakete                | L: Meilenstein                                                             |
 | Risiko                    | berührt weder Save, Baseline, Perf noch Lizenz                             | berührt eines davon          | berührt mehrere                                                            |
 
+## Rangliste IDEEN-11 (Vorschlag lead-design, Ruling L0 offen)
+
+Breite Runde (R445, R653-Folge), Scouts A (erste Stunde und Mittelspiel), B (Handel und Seefahrt nach Handel 2, Stammkunde,
+Kulanz) und C (Lebendigkeit: Klang, Licht, Bewohner, ohne Ortsrand ORT-A/ORT-B): 12 Vorschläge, eingetragen als I-110–I-121.
+Keine Idee ändert Kernsäule, Genre oder Titel (§5.3). Erweiterung 1 berühren I-115 (Rivalen teilen die Sättigung) und I-117
+(Routenregeln K3); beide parken. Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Pool danach: 25 von 40 offen.
+
+| Rang | ID    | Name                            | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                             | Empfehlung                                      |
+| ---- | ----- | ------------------------------- | ------ | ----- | --------------- | ------------------------------------------ | ----------------------------------------------- |
+| 1    | I-112 | Ratsbeschluss je Stufe          | M      | 13    | ja / nein       | Weichenstellung im Mittelspiel, ≈ 2 Pakete | Top 3: Kurzdesign Stufe voll mit Werte-Rechnung |
+| 2    | I-114 | Fernangebot zur Wahl            | S      | 12    | nein / nein     | Wahl über Fahrzeit und Lager, ≈ 60 Tools   | Top 3: Kurzdesign Stufe leicht, Häppchen        |
+| 3    | I-120 | Wohlstandsklang der Stadt       | S      | 12    | nein / nein     | Versorgung hörbar, ≈ 40 Tools              | Top 3: Kurzdesign Stufe leicht, Häppchen        |
+| 4    | I-118 | Aufstiegs-Funkeln am Haus       | S      | 12    | nein / nein     | Fortschritt sichtbar, ≈ 50 Tools           | einplanen Häppchen (mit I-120 bündelbar)        |
+| 5    | I-110 | Startpaket zur Wahl             | S      | 12    | nein / nein     | Wahl in Minute 0, verblasst, ≈ 80 Tools    | Pool; Werte neu rechnen vor Einplanung          |
+| 6    | I-111 | Etappenwunsch mit Wahlbelohnung | M      | 12    | ja / ja         | Ziel in U1–U3, Dominanzgefahr, ≈ 2 Pakete  | Baustein nächstes Meilenstein-Brainstorming     |
+| 7    | I-115 | Eigene Sättigung je Kontor      | M      | 11    | ja / nein       | Verkaufszweck für Schiffe, ≈ 2 Pakete      | parken: Baustein Erweiterung 1 (Rivalen)        |
+| 8    | I-117 | Route verkauft statt lagert     | M      | 11    | ja / nein       | Komfort Route, ≈ 2 Pakete                  | parken bis K3 (Erweiterung 1) geklärt           |
+| 9    | I-116 | Inselgunst                      | M      | 11    | ja / nein       | zweite Treue-Mechanik, ≈ 1–2 Pakete        | parken bis I-114 live                           |
+| 10   | I-119 | Bewohner reagieren auf Krisen   | M      | 10    | nein / nein     | Krisen fühlbarer, ≈ 2 Pakete               | Pool; mit I-121 als ein Paket                   |
+| 11   | I-121 | Wartende vor der Tür            | M      | 10    | nein / nein     | doppelt Bedarfssymbole, ≈ 2 Pakete         | Pool; mit I-119 als ein Paket                   |
+| 12   | I-113 | Gemeindeprojekt                 | M      | 9     | ja / ja         | Geldsenke ohne Wahl                        | verwerfen (Denkmal, I-079; I-112 deckt ab)      |
+
 ## Rangliste IDEEN-10 (Vorschlag lead-design, Ruling L0 offen)
 
 Breite Runde nach REL-22 (R445), Scouts A (Spätspiel und Handel nach Handel 2) und B (Komfort und Übersicht): 9 Vorschläge,
@@ -248,3 +270,147 @@ I-093 (verworfen) und I-095 (erledigt) sind nach Handel 2 (R658, R664) ins Archi
 - Doppelung: I-089 (live) und I-067 (geparkt) liegen daneben; ändert nur die Zahl in der Kopfzeile.
 - Nutzen/Aufwand: Wirtschaftslage auf einen Blick · S · ≈ 60 Tools
 - Entscheid: offen (IDEEN-10)
+
+### I-110 · bewertet · Startpaket zur Wahl
+
+- Bereich: Inhalt · Säule: Insel besiedeln · Quelle: IDEEN-11 Scout A; Genre-Mechanik Startbonus mit Preis; `docs/spielwerte.md` Start (5000 Geld, 40 Holz, 20 Werkzeug, 10 Stein, 20 Nahrung) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler wählt bei «Neue Insel» zwischen «Standard», «Zimmerleute» (mehr Holz, weniger Geld), «Fischer» (zweite Fischerhütte steht, weniger Werkzeug) und «Kassenwart» (mehr Geld, weniger Holz) und spielt die ersten 15 Minuten anders."
+- Mechanik: Das Paket setzt nur Start-Lager und Start-Gebäude der Heimat; danach gelten die normalen Regeln. Werte als Tabelle in `src/sim/defs/`. Die Scout-Werte (±150 Geld) sind bei 5000 Startgeld wirkungslos und werden im Kurzdesign neu gerechnet (Grössenordnung ±1000 Geld bzw. ±20 Holz).
+- Grösse: S · Risiko: keins, solange «Standard» der Vorgabewert ist (Balancing-Test startet mit Standard; das Paket muss nicht im Save stehen)
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Randfälle: «Alles frei» kombinierbar; Geld nach dem Start nie negativ; Paket wird in der Kopfzeile oder im Menü nicht mehr gebraucht, nur beim Start. Entartung: ein Paket, das immer gewinnt (Geld ist ab Minute 10 kein Engpass), deshalb muss jeder Vorteil in einem Engpass der ersten 15 Minuten liegen (Holz, Werkzeug, Nahrung).
+- Doppelung: keine Start-Idee in Pool und Archiv; I-070 (verworfen) war ein selbst gesetztes Ziel, kein Startzustand.
+- Nutzen/Aufwand: Wiederspielwert und eine Wahl in Minute 0, Wirkung verblasst aber nach etwa 15 min · S · ≈ 60 Tools (plus Rechnung ≈ 20)
+- Entscheid: offen (IDEEN-11)
+
+### I-111 · bewertet · Etappenwunsch mit Wahlbelohnung
+
+- Bereich: Inhalt · Säule: Bevölkerung · Quelle: IDEEN-11 Scout A; Nutzerfeedback 2026-10-02 S1 (mehr Spielziele); Freischaltung U0–U6 in `docs/spielwerte.md` (bis U3 kein Auftrag, kein Ziel ausser der nächsten Freischaltung) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler bekommt zwischen U1 und dem Bürger-Ziel etwa vier Etappen wie «12 Siedler 60 s versorgt» und wählt beim Erfüllen zwischen Geld und Baustoff, je nachdem, was sein Lager gerade braucht."
+- Mechanik: Etappe = «n Einwohner einer Stufe t s versorgt» oder «n Betriebe einer Art»; Karte im Kartenstapel; bei Erfüllung Wahl aus zwei Belohnungen (z. B. Geld oder Stein), dann die nächste Etappe. Werte in `src/sim/defs/`.
+- Grösse: M · Risiko: Save (Etappenstand), Baseline (Belohnung ist Zufluss, sobald der Controller eine Etappe erfüllt)
+- Raster: Spass 3 · Passung 3 · Aufwand 2 · Risiko 1 = 12
+- Randfälle: Abriss setzt nur den Zeitzähler zurück; Belohnung bei vollem Lager wird nicht verschenkt (Wahl fällt auf das andere Gut); kein Überspringen. Entartung wie bei I-011: Geld dominiert, wenn Geld nie knapp ist; Belohnungen müssen Baustoff-Engpässe treffen (Stein vor dem Bürger-Aufstieg: 5 je Haus).
+- Doppelung: I-011 Hauswunsch (verworfen: Geld dominiert), I-017 Auftragsreihe Seefahrt (geparkt, Seefahrt-Lernpfad), Handelsaufträge ab U3. Neu ist die Lücke U1–U3 und die Wahl zwischen zwei Gütern.
+- Nutzen/Aufwand: Rhythmus und Ziel in der ersten Stunde, aber Dominanzgefahr wie I-011 · M · ≈ 2 Pakete (Rechnung ≈ 30 Tools)
+- Entscheid: offen (IDEEN-11)
+
+### I-112 · bewertet · Ratsbeschluss je Stufe (einmalige Wahl)
+
+- Bereich: Inhalt · Säule: Bevölkerung · Quelle: IDEEN-11 Scout A; Genre-Mechanik Weichenstellung mit Ausschluss; Edikte I-031 (live, wechselbar) als Abgrenzung · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler wählt beim ersten Bürgerhaus einmalig «Zunftrecht» (Aufstieg kostet 2 Stein weniger) oder «Marktrecht» (Marktplatz-Reichweite +2) und baut danach dichter oder weiter."
+- Mechanik: Beim ersten Haus der Stufe 2, 3 und 4 erscheint eine Karte mit zwei dauerhaften Beschlüssen ohne Unterhalt; der andere verfällt für diese Partie. 3 × 2 Beschlüsse in `src/sim/defs/`, je ein Hebel auf Bauweise, Kette oder Kasse. Unentschieden bleibt die Karte offen und nichts wirkt.
+- Grösse: M · Risiko: Save (drei Wahlfelder, Migration «keine Wahl»); Baseline bitgleich, solange der Controller nicht wählt
+- Raster: Spass 3 · Passung 3 · Aufwand 2 · Risiko 2 = 13
+- Randfälle: Abriss des ersten Hauses nimmt nichts zurück; «Neue Insel» setzt zurück; Beschluss ohne Wirkungsfeld (kein Marktplatz) ist schwächer, nicht kaputt; Abstieg einer Stufe behält den Beschluss. Entartung: ein Beschluss, der immer gewinnt; je Paar muss jede Seite einen anderen Siedlungsstil belohnen (Rechnung `design-economy-designer`).
+- Doppelung: I-077 Spezialisierung (geparkt) wählt je Betrieb, I-064 «Bauherr» (geparkt) ist ein Edikt; I-031 Edikte sind wechselbar und einzeln aktiv. Neu: einmalig, dauerhaft, je Stufe.
+- Nutzen/Aufwand: echte Weichenstellung im Mittelspiel, prägt den Stadtplan · M · ≈ 2 Pakete (Werte-Rechnung ≈ 40 Tools)
+- Entscheid: offen (IDEEN-11)
+
+### I-113 · bewertet · Gemeindeprojekt (Überschuss in die Stadt stecken)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-11 Scout A; Genre-Mechanik Sammelprojekt · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler steckt in der Amtsstube 700 Geld in «Pflasterung» (Marktplatz-Reichweite +1) oder 500 in «Zisterne» (Brandschaden −30 %)."
+- Mechanik: Ein Projekt zur Zeit, vier Projekte je einmal, Kosten beim Start, dauerhaft nach Bauzeit.
+- Grösse: M · Risiko: Save, Baseline, Krisen-Balancing (Brand)
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9
+- Randfälle: Amtsstube abgerissen: Projekt ruht. Entartung: alle vier werden ohnehin gekauft (reine Geldsenke ohne Wahl).
+- Doppelung: Denkmal (live, Spätspiel-Geldsenke), I-079 Bauhof und I-080 Brunnen (beide verworfen); I-112 deckt die Wahl «Reichweite gegen Kosten» mit Ausschluss besser ab.
+- Nutzen/Aufwand: Geldsenke ohne echte Wahl · M · ≈ 2 Pakete
+- Entscheid: offen (IDEEN-11), Vorschlag lead-design: verwerfen
+
+### I-114 · bewertet · Fernangebot zur Wahl (zwei Inseln)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-11 Scout B; `docs/spielwerte.md` «Fernangebot» (bei mehreren Inseln reihum nach Periode, ohne Zufall, also ohne Wahl) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht zwei Fernkarten, etwa «Möweninsel: 20 Stoff · 440» und «Felsbucht: 15 Rum · 450», und nimmt die mit der kürzeren Fahrt oder dem volleren Lager."
+- Mechanik: Ab Kontoren auf zwei Fremdinseln zeigt der Auftragstakt die zwei nächsten Angebote der heutigen Reihe; höchstens eines annehmbar, Frist 2:50, Menge und Prämie wie heute, der nächste Auftrag entfällt weiter.
+- Grösse: S · Risiko: vermutlich keins: beide Angebote sind aus der Periode ableitbar, gespeichert wird wie heute nur das angenommene (im Kurzdesign prüfen); Baseline bitgleich ohne Fremdkontor
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12
+- Randfälle: ein Fremdkontor: wie heute; Gut über der Stufe fällt aus, dann eine Karte; laufender Stammkunde: kein Fernangebot (wie heute); zwei Karten plus Auftragskarte: Platz im Kartenstapel bei 1280 px prüfen.
+- Doppelung: I-095 (erledigt, Handel 2) liefert das Angebot ohne Wahl; I-093 (verworfen) tauschte nach dem Annehmen; I-101 (Fernauftrag-Marke Seekarte) zeigt die Lage.
+- Nutzen/Aufwand: aus «nimm, was kommt» wird eine Wahl über Fahrzeit und Lager · S · ≈ 60 Tools
+- Entscheid: offen (IDEEN-11)
+
+### I-115 · bewertet · Eigene Sättigung je Kontor
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-11 Scout B; `docs/spielwerte.md` «Preise sind global» und «Sättigung bleibt global» (Inselmarkt) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler merkt, dass 40 Rum daheim den Preis drücken, und fährt die Hälfte nach Felsbucht, wo der Preis noch frisch ist."
+- Mechanik: `sellPct` je Kontor statt global, Erholung wie heute; der Handelsdialog zeigt die Sättigung des eigenen Kontors.
+- Grösse: M · Risiko: Save (Sättigung je Insel); Baseline vermutlich bitgleich (Controller verkauft nur daheim); Arbitrage-Rechnung nötig
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Randfälle: ohne Schiff nichts Neues; Entartung: Kleinmengen auf vier Märkte streuen vervierfacht den Vollpreis-Absatz; Frachtraum 50 und Unterhalt 90 / min müssen das deckeln (Rechnung `design-economy-designer`).
+- Doppelung: Handel 2 hat «global» bewusst gesetzt; Erweiterung 1 plant Rivalen, die die Verkaufssättigung teilen (Brainstorming auf `design/erweiterung-1`, Rivalen). Gehört damit in die Nutzer-Session, nicht ins Studio.
+- Nutzen/Aufwand: Schiffe bekommen einen Verkaufszweck · M · ≈ 2 Pakete
+- Entscheid: offen (IDEEN-11), Vorschlag lead-design: parken als Baustein für Erweiterung 1 (Rivalen und Sättigung)
+
+### I-116 · bewertet · Inselgunst (Pünktlichkeit hebt die Vorliebe)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-11 Scout B; `PREFER_PCT` 130 % (`src/sim/defs/sea.ts`), Treue I-091 als Vorbild · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler hat Weidenau dreimal pünktlich beliefert, dort zahlt das Vorliebe-Gut jetzt 140 statt 130 %, und er bleibt bei dieser Insel."
+- Mechanik: Jeder erfüllte Fernauftrag gibt der Insel einen Gunstpunkt (Deckel 5); ab 3 Punkten `PREFER_PCT` 140 %; ein verpasster Fernauftrag setzt die Insel auf 0; Anzeige in der Seekarte.
+- Grösse: M · Risiko: Save (Zähler je Insel); Baseline bitgleich
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Randfälle: Kontor abgerissen: Gunst weg; ohne Wahl der Insel (I-114) reine Belohnung ohne Entscheidung.
+- Doppelung: I-091 Treue (Stammkunde, gemergt R686, REL-25) belohnt Bindung schon; I-073 ging in I-047 auf. Sinnvoll nur nach I-114.
+- Nutzen/Aufwand: zweite Treue-Mechanik, Wirkung +10 Punkte auf einem Gut · M · ≈ 1–2 Pakete
+- Entscheid: offen (IDEEN-11), Vorschlag lead-design: parken bis I-114 live
+
+### I-117 · bewertet · Route verkauft statt zu lagern
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-11 Scout B; `docs/spielwerte.md` Route («Bringen» lädt ins Lager der Zielinsel) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler stellt bei «Bringen» auf «Verkaufen», und das Schiff setzt Rum in Felsbucht zum Vorliebe-Preis ab, ohne dass er jedes Mal dorthin klickt."
+- Mechanik: Schalter «Lagern | Verkaufen» je Bringen-Gut; beim Anlegen wird der Bestand über der Reserve zum Preis des Zielkontors mit Sättigung verkauft.
+- Grösse: M · Risiko: Save (Feld je Route, Migration «Lagern»); Baseline bitgleich
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Randfälle: Zielkontor abgerissen: Ware bleibt an Bord; Verkauf unter Kaufpreis erlaubt (keine Arbitrage, Kauf ist teurer); leere Ladung: nichts.
+- Doppelung: Routenregeln gehören zu Erweiterung 1 K3 (Seefahrt-Leitsätze I-015, Nutzer-Session); wie I-105 vor Einplanung gegen K3 prüfen. I-103 zeigt die Bilanz, ändert die Route nicht.
+- Nutzen/Aufwand: Komfort für Handelsrouten, Wahl Lager gegen Kasse · M · ≈ 2 Pakete
+- Entscheid: offen (IDEEN-11), Vorschlag lead-design: parken bis K3 (Erweiterung 1) geklärt
+
+### I-118 · bewertet · Aufstiegs-Funkeln am Haus
+
+- Bereich: Grafik · Säule: Bevölkerung · Quelle: IDEEN-11 Scout C; README «Effekte» (Aufstieg nur als Ton), `src/render/fx.ts` (nur Krisen-Effekte) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht beim Aufstieg das Haus kurz aufglänzen und weiss, welches Haus gewachsen ist, ohne den Ton zuzuordnen."
+- Mechanik: Der Renderer vergleicht die Stufe je Haus mit dem Vorframe und zeichnet 1,5 s einen warmen Lichtkranz mit 6–8 Funken (grösser ab Stufe 3); nur im Bildausschnitt, höchstens 6 gleichzeitig, bei «Bewegung reduzieren» nur der Kranz. Prozedural, keine Assets.
+- Grösse: S · Risiko: keins (kein Save, keine Sim-Änderung)
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Randfälle: hohe Geschwindigkeit: Deckel, älteste zuerst; Pause friert ein; nach dem Laden kein Effekt (erster Frame merkt nur den Stand); Abstieg zeigt nichts.
+- Doppelung: I-007 Fest und I-009 Hörbarer Mangel (live) sind andere Anlässe; ORT-A/ORT-B betreffen statische Gestalt.
+- Nutzen/Aufwand: Fortschritt in der ersten Stunde sichtbar · S · ≈ 50 Tools
+- Entscheid: offen (IDEEN-11)
+
+### I-119 · bewertet · Bewohner reagieren auf Krisen
+
+- Bereich: Grafik · Säule: Bevölkerung · Quelle: IDEEN-11 Scout C; `src/render/life.ts` und `src/render/errands.ts` (keine Krisenreaktion) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht beim Brand Bewohner als Eimerkette zum Feuer laufen und bei Sturmwarnung heimgehen."
+- Mechanik: Brand: bis 6 Spaziergänger im Umkreis 6 laufen hin, Feuerwache in Reichweite schickt 2 Löscher; Sturmwarnung: Figuren gehen ins nächste Haus; Boom: Figuren winken. Nutzt den Weggraph aus `errands.ts`, gedeckelt über die Figurenobergrenze.
+- Grösse: M · Risiko: Perf (zusätzliche Pfade, gedeckelt); kein Save
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 2 = 10
+- Randfälle: Brand unter 5 s: keine Läufer; Pause: Stillstand; «Bewegung reduzieren»: keine Läufer.
+- Doppelung: I-034 Seuche, I-058 Pause bei Krise (geparkt) sind andere Fragen; mit I-120 ein gemeinsames Paket «Bewohner reagieren» möglich.
+- Nutzen/Aufwand: Krisen fühlbarer, ohne Entscheidung · M · ≈ 2 Pakete
+- Entscheid: offen (IDEEN-11)
+
+### I-120 · bewertet · Wohlstandsklang der Stadt
+
+- Bereich: Ton · Säule: Bevölkerung · Quelle: IDEEN-11 Scout C; `src/audio/ambience.ts`, `src/audio/mix.ts` (Schicht `town` hängt nur an der Einwohnerzahl im Bild) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler hört eine gut versorgte Stadt lebhaft und eine darbende still, ohne auf Zahlen zu schauen."
+- Mechanik: Die Umgebungs-Mischung bekommt als Eingang den Anteil voll versorgter Häuser im Bild (gemittelt über ≈ 10 s): ab 80 % voller Pegel der Schicht `town`, unter 40 % halber Pegel, unter 20 % Wind statt Stadt; Gleiten mit `GLIDE_S`. Der Anteil kommt als Zahl über die UI-Verdrahtung; `src/audio/` importiert nichts aus `src/sim/`.
+- Grösse: S · Risiko: keins (reine Mix-Funktion, keine Assets)
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Randfälle: hohe Geschwindigkeit: Mittelung; Pause: Klang bleibt; Ton aus: ohne Wirkung; keine Häuser im Bild: Schicht aus wie heute.
+- Doppelung: I-009 (live) meldet einen einzelnen Mangel als Signal; dies ist die Dauerstimmung.
+- Nutzen/Aufwand: Versorgung hörbar, sehr günstig · S · ≈ 40 Tools
+- Entscheid: offen (IDEEN-11)
+
+### I-121 · bewertet · Wartende vor der Tür
+
+- Bereich: Grafik · Säule: Bevölkerung · Quelle: IDEEN-11 Scout C; Nutzerfeedback 2026-10-02 G9 (weniger Text, mehr Bilder) und S4 · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht nah gezoomt 1–2 Bewohner mit hängendem Kopf vor einem Haus mit Mangel stehen."
+- Mechanik: Ab Zoom 1,0 stehen bei Mangel 1–2 Figuren vor der Tür (Farbe nach wichtigstem Mangel), nach 60 s eine dritte; gesamt höchstens 12, zählen zur Figurenobergrenze; voll versorgte Häuser schicken öfter Spaziergänger los.
+- Grösse: M · Risiko: Perf (gedeckelt); kein Save
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 2 = 10
+- Randfälle: 3 s Verzögerung gegen Flackern bei hoher Geschwindigkeit; «Bewegung reduzieren»: höchstens 4.
+- Doppelung: Bedarfssymbole am Haus (live, ab Zoom 0,75) zeigen denselben Mangel; mit I-119 ein gemeinsames Paket möglich.
+- Nutzen/Aufwand: doppelt die Bedarfssymbole in Nahansicht · M · ≈ 2 Pakete
+- Entscheid: offen (IDEEN-11)
