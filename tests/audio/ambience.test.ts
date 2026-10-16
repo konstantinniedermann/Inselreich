@@ -452,6 +452,29 @@ describe('Umgebung im Ton', () => {
     for (const k of Object.keys(want) as Layer[]) expect(got[k]).toBeCloseTo(want[k], 9);
   });
 
+  it('I-120 setAmbience glättet den Anteil auf der Audio-Uhr (Verdrahtung)', () => {
+    const { f, s } = mk();
+    s.unlock();
+    vi.advanceTimersByTime(300);
+    const at = (share: number): AmbienceInput => ({
+      phase: 'day',
+      weather: CLEAR,
+      view: view({ inhabitants: 60, zoom: 2, suppliedShare: share, houses: 10 }),
+    });
+    s.setAmbience(at(1));
+    expect(s.debugState().layers.town).toBe(1);
+    step(f, 1);
+    s.setAmbience(at(0.2)); // roh 0, geglättet erst leicht darunter
+    const town = s.debugState().layers.town ?? 0;
+    expect(town).toBeGreaterThan(0.9);
+    expect(town).toBeLessThanOrEqual(1);
+    for (let t = 2; t <= 40; t++) {
+      step(f, t);
+      s.setAmbience(at(0.2));
+    }
+    expect(s.debugState().layers.town ?? 1).toBeLessThan(0.2);
+  });
+
   it('AK-A2-03 fetchBuffer lehnt ab: Rückfall der Schicht, nichts wirft, kein zweiter Versuch', async () => {
     const { f, io, s } = mk('reject');
     s.unlock();
