@@ -1500,3 +1500,15 @@ Haltepunkt und setzt in der Folgesession fort; Session-Ende-Routine jetzt (Metri
 Regelbezug: gates.md Gate Merge, R69, R673, R698, R702 · Kosten bei Irrtum: ein Stadtklang, der nach dem Hörtest nachgestimmt wird.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-I-120-I-118, Ampel rot · ADR: —
+
+## R708 · 2026-10-16 · Kurz-Retro 66d37b15: V1 und V2 angenommen; Handbuch 1.59 angenommen
+
+Ruling: Bericht `docs/studio/retros/2026-10-16-session-66d37b15-ende.md` (Commit `89b10f2d`, Handbuch 1.59 mit Flake-Zeile und `guard_block`) → angenommen.
+**V1**: Pflichtzeile in `templates/briefing.md` (Controller-Briefing): Delta-Review nach ZURÜCK/BEDENKEN immer frischer Start (opus), nie Fortsetzung (R673);
+Messgrösse 0 Fortsetzungs-Delta-Reviews in den nächsten 5 Controller-Paketen. **V2**: bei 1-min-Last ≥ 8 startet L0 keine dritte gleichzeitige Umsetzung
+mit Testlauf (ergänzt R703); Messgrösse `davon Last ≥ 8` ≤ 50 % über 3 Sessions. E-064 bleibt «behalten» (R693). Messaufträge: V3 (Frist 2026-10-23),
+«grösste gelesene Datei 66,7 KB» identifizieren (studio-coach, Frist 2026-10-23), L0-Zwischenstand in state.md ab 250k Kontext (nächste Session).
+
+Regelbezug: R316, R673, R693, R703 · Kosten bei Irrtum: eine Umsetzung, die eine halbe Stunde später startet.
+
+Entscheider: L0 · Anlass: Kurz-Retro 66d37b15 · ADR: —
