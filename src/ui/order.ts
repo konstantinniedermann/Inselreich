@@ -161,7 +161,8 @@ export function contractNotice(
       };
     case 'excused': {
       let why: string;
-      switch (ev.reason) {
+      const reason = ev.reason;
+      switch (reason) {
         case 'stock':
           why = `zu wenig ${name}`;
           break;
@@ -169,7 +170,7 @@ export function contractNotice(
           why = `kein Kontor auf ${islandName(world, ev.island)}`;
           break;
         default: {
-          const unreachable: never = ev.reason;
+          const unreachable: never = reason;
           return unreachable;
         }
       }
