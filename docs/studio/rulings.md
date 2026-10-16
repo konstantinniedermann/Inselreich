@@ -1641,3 +1641,13 @@ in `docs/beobachtungen.md` ein. 7 Tests mit bestehendem Timeout bleiben unverän
 Regelbezug: gates.md Gate Merge, R712 · Kosten bei Irrtum: ein Pre-Commit-Hook, der eine Datei formatiert, die der Autor anders wollte.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-TOOL-BUENDEL-14 · ADR: —
+
+## R719 · 2026-10-16 · Freier Platz → Beobachtungen-Auswertung BEOB-17
+
+Ruling: Ein Platz frei (Deckel 6, R698); Kurzdesigns/Pläne aus dem Pool sind belegt oder warten auf ORT-A T20 (R714). Daher **BEOB-17**: lead-production wertet die
+Einträge unter der Marke «Letzte Auswertung: 2026-10-16» aus (Skill `beobachtungen-auswerten`), Datei nur ab der Marke lesen (57 KB, R712). Jeder Eintrag endet als
+erledigt, abgehakt, eingeplant oder Idee; Trivial-Fixes ≤ 15 min im selben Branch `docs/beob-17`; kein `src/sim/defs`-Diff.
+
+Regelbezug: R287, R445, R698, R712 · Kosten bei Irrtum: eine Auswertung, die eine Woche früher als nötig läuft.
+
+Entscheider: L0 · Anlass: freier Platz · ADR: —
