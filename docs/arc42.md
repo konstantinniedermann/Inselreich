@@ -646,7 +646,7 @@ merge-driver` setzt die Treiberkonfiguration einmal je Klon in `.git/config`; oh
   Testsperre frei wird. `log.py package` setzt den Titel nur bei neuem Paket oder mit `--retitle`. Das Dashboard
   beantwortet `/api/ping` mit `{"studio": true}`; `start.sh` erkennt damit ein laufendes Studio-Dashboard und
   meldet einen fremden Server am Port als belegt. `make studio-metrics` und
-  `metrics.py --efficiency` zeigen daraus die Ampelzeile „Flake-Verdacht“ (R450 V1). `tools/studio/clock.py` ist
+  `metrics.py --efficiency` zeigen daraus die Ampelzeile „Flake-Verdacht“ (R450 V1). Die Session-Datei ohne `--since` misst Flake-Verdacht ab Session-Beginn; die Info-Zeile zum Cache-Write 5 min trennt zusätzlich die Erstladung. `tools/studio/clock.py` ist
   die gemeinsame Uhr der Studio-Werkzeuge (`frozen()` nur für Tests); `make studio-lint` nutzt eine gepinnte
   Ruff-Version (Makefile-Variable `RUFF`) und warnt zusätzlich bei direktem `datetime.now(`/`time.time(`
   (R450 V2). `make zeittests` prüft beide Richtungen: Wandzeit-Test fehlt in `ZEITTESTS`, oder Eintrag ohne

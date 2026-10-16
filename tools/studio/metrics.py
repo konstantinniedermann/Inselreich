@@ -475,6 +475,7 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
     # R441 B1: Freigaben liegen oft vor ``since`` - Phasen aus ungefilterten Events
     phases = model.build_state(all_events, now, models, "all")["lead_phases"]
     started = since.timestamp() if since else found["started"]
+    window = since or datetime.fromtimestamp(found["started"], UTC)
     day = datetime.fromtimestamp(started).astimezone().strftime("%Y-%m-%d")
     kennung = f"S-{day}-{sid[:8]}"
     if since:
@@ -483,9 +484,10 @@ def build(args: argparse.Namespace) -> tuple[str, dict] | None:
         cost = _session_cost(state, sid, paths.repo_root())
     data = _with_flakes(
         efficiency.compute(
-            _session_files(paths.repo_root(), [sid]), _persona_models(), phases, since
+            _session_files(paths.repo_root(), [sid]), _persona_models(), phases, window
         ),
-        events,
+        all_events,
+        window,
     )
     raw = summarize(state, "session", kennung, handbook, cost, created, data, since)
     return kennung, raw

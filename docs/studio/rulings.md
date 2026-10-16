@@ -7638,3 +7638,112 @@ wird erst im Gate Plan vergeben (nächste freie beim Merge; Erweiterung 1 der Nu
 Regelbezug: Verfassung §5, STUDIO.md Autonomie, R445, R475, R638 · Kosten bei Irrtum: zwei Specs für Funktionen, die nach dem Playtest anders aussehen.
 
 Entscheider: L0 · Anlass: Nutzerprompt · ADR: —
+
+## R664 · 2026-10-16 · Kurzdesign I-102 «Auftragsvorschau»: angenommen mit V2; Plan nach UI-HAEPPCHEN-D
+
+Ruling: `design/i102` @ `9afebb5b` (9 AK, kein Save, kein neuer Spielwert; `previewOrder(world)` als reine Lesefunktion in `src/sim/orders.ts`
+über `orderForPeriod`, ohne RNG-Vorziehen) → **angenommen**. (1) **V2**: Vorschau auch bei aktivem Normalauftrag als «danach voraussichtlich X»
+(Lücke Verfall → Folgeperiode nur 300 Ticks). (2) Fernangebot-Insel wird nicht angekündigt (später nachrüstbar). (3) I-093 (verworfen) und
+I-095 (erledigt, R658) wandern auf demselben Branch nach `docs/ideen-archiv.md` (lead-design). (4) Plan durch lead-tech nach dem Merge von
+UI-HAEPPCHEN-D; I-102 berührt `order.ts`, nicht die Dateien von UI-D, aber `src/ui/app.ts` ist beim Plan gegen UI-D abzugleichen.
+
+Regelbezug: gates.md Gate Spec (Stufe leicht), R653, R658 · Kosten bei Irrtum: eine Vorschau, die der Spieler als Zusage missversteht (Text «voraussichtlich»).
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-102 · ADR: —
+
+## R665 · 2026-10-16 · Kurzdesign I-097 angenommen; Plan I-097 + I-102 als UI-HAEPPCHEN-E jetzt
+
+Ruling: `design/i097` @ `70efccc5` (11 AK, `pauseOverlayView(speed, modalOpen)` in `src/ui/pauseOverlay.ts`, kein Save, kein `src/sim/`) →
+**angenommen**; O-1 (Farbe/Breite des Rands) und O-2 (Ort von `syncPauseOverlay()`) entscheidet der Plan. Freie Plätze (R475): lead-tech plant
+**UI-HAEPPCHEN-E** = I-097 + I-102 (R664) jetzt, als Plan auf main-Stand mit Abgleich gegen den Plan UI-HAEPPCHEN-D (`3eb97a31`, Einhängepunkte in
+`src/ui/app.ts`, Block in `src/style.css`). Umsetzung erst nach Merge von UI-HAEPPCHEN-D. Plan ohne Testläufe (R464).
+
+Regelbezug: gates.md Gate Spec (Stufe leicht), R464, R475, R663, R664 · Kosten bei Irrtum: ein Plan mit Nacharbeit bei den Einhängepunkten nach dem UI-D-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-097 · ADR: —
+
+## R666 · 2026-10-16 · Gate Merge TOOL-METRIK-ZEITRAUM: OK, Merge nach dem Push REL-23; Inaktiv-Signal lead-qa ohne Retro
+
+Ruling: (1) `tool/metrik-zeitraum` @ `fa6d7c48` (T1 Session-Beginn als Zeitraum für Flake und Steuerungsanteil, T2 Cache-Write 5 min in
+Erstladung/Wachstum/Pause, T3 arc42; `make studio-test` 913 grün, `studio-lint`, `docs-check` Exit 0; Rot-Beleg vorhanden; Echtlauf dbac5fc4:
+Datei = `--since`, Summe 6,2 + 15,0 + 5,8 = 27,0 % = bestehende Zeile) → **Gate Merge OK**. Review-BEDENKEN angenommen: der Session-Beginn gilt
+auch für die Transkript-Auswertung (gewollt, Datei und `--since` stimmen überein). Restabweichung Steuerungsanteil Datei 52,2 % gegen
+`--efficiency` 47,2 % (verschiedene Transkriptmengen) → Messauftrag an die nächste Retro. Merge durch lead-production erst nach dem Push
+REL-23, damit der geprüfte Push-Hash nicht wandert. E-069 gilt mit dem Merge als umgesetzt; Bewertung in der nächsten Session-Retro.
+(2) Signal «lead-qa inaktiv» (Hook) beim Release-Check: der Lead wartet in einem langen `make zeitreserve-gate` (Prozess läuft, Heartbeat
+06:50Z) — kein Vorfall, keine Ad-hoc-Retro; Befund an die Retro, ob lange Make-Läufe als Heartbeat zählen sollen.
+
+Regelbezug: gates.md Gate Merge, R335, R659, STUDIO.md Verbesserungsschleife · Kosten bei Irrtum: eine Ampelzahl, die sich gegenüber Altsessions leicht verschiebt.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-METRIK-ZEITRAUM, Hook-Signal · ADR: —
+
+## R667 · 2026-10-16 · Push REL-23 «Fernangebot» mit Zeitreserve-Ausnahme; Gate Plan UI-HAEPPCHEN-E mit O-1/O-2
+
+Ruling: (1) Release-Check REL-23 @ `2e7a269f` (Handoff `.studio/handoffs/2026-10-16-lead-qa-REL23-PUSH.md`): `make push-check` Exit 1 allein
+durch die strenge Zeitreserve zweier Tests ausserhalb des Handel-2-Diffs (`tests/render/wildlife.test.ts` RF-10, `tests/sim/unlock-timeline.test.ts`
+AK-BAS-03); alles andere grün (4034 Tests inkl. Balancing, `studio-test` 907, Lint, Build, `pages-limit`). Die vorgeschriebene Nachmessung
+`make zeitreserve-gate` Exit 0 (Reserve 0) → **Lastartefakt** nach gates.md R598 V1/R585; Release-Notiz stimmt mit dem Code. → **Gate Push OK mit
+bewusster Ausnahme**, Push `fb1e5e46..2e7a269f` per geprüftem Hash; CI entscheidet; danach `gh workflow run Pages --ref main`. Die beiden Tests
+und die zwei Restbefunde aus HANDEL-2 (`tests/ui/farOrder.test.ts:198` tautologisch, tote Klausel `src/sim/save.ts` ≈ 882) → `docs/beobachtungen.md`
+durch lead-production mit releases.json (REL-23 live). (2) Danach Freigaben aus R662 (UI-HAEPPCHEN-D Umsetzung, 21 Starts) und R666 (Merge
+TOOL-METRIK-ZEITRAUM). (3) Plan UI-HAEPPCHEN-E `plan/ui-haeppchen-e` @ `ac14dcb5`: O-1 Rand `box-shadow: inset 0 0 0 4px var(--gold)` + Innenschatten
+aus `--bg`, Banner `--wood/--parchment/--gold`, kein neuer Farbwert; O-2 `applyPauseOverlay(...)` als erste Zeile in `refresh()` — beide
+angenommen; Gate Plan durch lead-qa; Budgetantrag 16 Starts mit dem Gate.
+
+Regelbezug: gates.md Gate Push und R598 V1, R335, R585, R662, R666 · Kosten bei Irrtum: ein roter CI-Lauf wegen Timeout eines Fremdtests (Rerun oder Timeout-Fix nach E-043).
+
+Entscheider: L0 · Anlass: Berichte lead-qa REL23-PUSH, lead-tech plan-UI-HAEPPCHEN-E · ADR: —
+
+## R668 · 2026-10-16 · Gate Plan UI-HAEPPCHEN-E: OK mit 3 Auflagen; Umsetzung nach Merge UI-HAEPPCHEN-D, Budget 16 Starts
+
+Ruling: Urteil lead-qa (`.studio/handoffs/2026-10-16-lead-qa-gate-plan-UI-HAEPPCHEN-E.md`) übernommen: **OK mit Auflagen** in T05 — (1) Messweg
+der Overlay-Verzögerung: Tastendruck bis `hidden`-Wechsel, 5 Wiederholungen, Schwelle 200 ms, Ein-/Ausblenden getrennt; (2) alle Pausewege im
+Browser: Knopf, P, Leertaste, Tempo-Taste, Neustart und Laden aus dem Menü, jeweils ohne weitere Eingabe; (3) Auftragskarte nach angenommenem
+Fernauftrag und nach Fernlieferung (Sperrperiode) im Browser. Die Plan-Instanz setzt die Auflagen auf `plan/ui-haeppchen-e` um. Umsetzung
+Budget 16 Starts, Parallelität 1, startet nach Gate Merge und Merge von UI-HAEPPCHEN-D.
+
+Regelbezug: gates.md Gate Plan, R664, R665, R667 · Kosten bei Irrtum: ein Pauseweg ohne Overlay (Fix-Runde).
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-UI-HAEPPCHEN-E · ADR: —
+
+## R669 · 2026-10-16 · REL-23 live; freier Platz → Paket BEOB-15 (Zeitreserve und HANDEL-2-Restbefunde)
+
+Ruling: (1) REL-23 «Fernangebot» **live**: CI 38864279487 grün, Pages 38864281718 grün; releases.json, state.md und drei Beobachtungen nachgeführt;
+TOOL-METRIK-ZEITRAUM gemergt `3e5bc5bd` (lokal). Zuordnung UI-HAEPPCHEN-D → REL-24 (Vorschlag lead-production) angenommen. (2) Freier Platz (R475):
+Paket **BEOB-15** (Stufe leicht, lead-tech sonnet, Budget 4): die drei Einträge vom 2026-10-16 in `docs/beobachtungen.md` (Zeilen ≈ 296–298) —
+Timeouts der zwei lastabhängigen Tests nach E-043 anheben bzw. Ursache beheben, tautologischen Test in `tests/ui/farOrder.test.ts:198` mit
+unabhängigem Erwartungswert, tote Klausel in `src/sim/save.ts` ≈ 882 entfernen (kein Save-Wechsel). Dateien disjunkt zu UI-HAEPPCHEN-D.
+
+Regelbezug: R475, R667, E-043, CLAUDE.md «Trivial-Fixes» · Kosten bei Irrtum: ein Timeout, der einen echten Leistungsrückgang verdeckt (Zeitmessung vorher/nachher im Bericht).
+
+Entscheider: L0 · Anlass: Bericht lead-production REL-23-NACH · ADR: —
+
+## R670 · 2026-10-16 · Design I-091/I-094: I-094 verworfen (Kenntnis an Nutzer), I-091 als V-A «Kulanz»; Gate Spec
+
+Ruling: `design/i091-i094` @ `9e72f923` (Rechnung `design-economy-designer`). (1) **I-094 Darlehen verworfen** in dieser Form: kein Fenster
+echter Wahl (vor U6 Pflichtzug, Schwelle r = 0,04 gegen 0,42 beim Bürger-Aufstieg; Aufschlag 20 % → +3277, 30 % → −27 761, nicht vorhersehbar;
+ab U6 wirkungslos; Geldüberschuss im Spätspiel unverändert). Da der Nutzer I-094 ausdrücklich anstossen liess (R663), geht der Entscheid als
+Kenntnis N-101 in die Warteschlange; ohne Antwort gilt das Verwerfen, Archiv nach `docs/ideen-archiv.md` mit dem nächsten I-091-Schritt.
+(2) **I-091 als V-A «Kulanz»**: nach 5 pünktlichen Lieferungen verzeiht der Kunde einen Fehlbestand einmal, ohne Geldfluss (19 AK); V-B
+(Wertbonus 108 %) verworfen, weil er die I-047-Grenze L6 (b) reisst (3,17 % > 3 %). Spielerwirkung nach E-3 berichtigt. Save-Feld
+`contract.deliveries`, Nummer im Gate Plan (R663). (3) Gate Spec durch lead-qa jetzt; Plan danach durch lead-tech (opus, Save-Änderung =
+Prozessstufe voll), Umsetzung seriell **nach UI-HAEPPCHEN-E**, weil beide `src/ui/order.ts` berühren. (4) Befunde Controller-Ensemble und
+`runColony`-Abbruch beim Sieg stehen in `docs/beobachtungen.md`.
+
+Regelbezug: Verfassung §5, gates.md Gate Spec, R663, I-047 L6 · Kosten bei Irrtum: eine verworfene Idee, die der Nutzer doch will (Spec liegt vor, Wiederaufnahme ohne Neuarbeit).
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-091-I-094 · ADR: —
+
+## R671 · 2026-10-16 · Gate Spec I-091 V-A «Kulanz»: OK mit Auflagen A1–A4; Plan Stufe voll danach
+
+Ruling: Urteil lead-qa (`.studio/handoffs/2026-10-16-lead-qa-gate-spec-I-091.md`) übernommen: **OK mit Auflagen** — A1 Widerspruch AK-TR-02/AK-TR-18
+auflösen (Feld `becameLoyal` oder `loyal` nur beim Übergang; L0-Vorgabe: `becameLoyal`, weil der Dauerzustand `loyal` für die Anzeige gebraucht wird);
+A2 AK-TR-05 präzisieren (`money` vor und nach Periodenbeginn identisch); A3 Randfälle Lager nach Kulanz aufgefüllt, Kulanz in Periode mit `farSkip`,
+Kündigen direkt nach Kulanz; A4 Spec an R670 angleichen (V-B, O-1/E-2, «Stufe leicht» als verworfen/gestrichen), Helfertexte aus
+`CONTRACT_LOYAL_AFTER`. lead-design setzt A1–A4 auf `design/i091-i094` um und verschiebt I-094 nach `docs/ideen-archiv.md` (R670). Danach Plan
+durch lead-tech (opus, Stufe voll) mit den Plan-Hinweisen des Gates (Zeitraffer/präparierter Spielstand für AK-19, Kulanz-Zweig in `tickOrders`
+wie `delivered`, vollständige Switches über `ContractEvent`, Fixture über `SAVE_VERSION - 1` plus v14-Kette, Mitzieh-Schritt, `deliveries: null`).
+
+Regelbezug: gates.md Gate Spec, R663, R670 · Kosten bei Irrtum: eine doppelte «jetzt treu»-Meldung (Fix-Runde).
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-spec-I-091 · ADR: —

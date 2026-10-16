@@ -299,3 +299,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: `runColony` bricht beim Sieg ab; Messungen danach brauchen eine eigene Schleife. Eine Minute Verschiebung eines Kaufs ändert die Kasse bei Minute 25 um ±3500; Einzelläufe taugen für Geld-Hebel nicht, nur Ensembles über mehrere Phasen.
 - Ursprung: design-I-091-I-094 (Rechnung design-economy-designer)
 - Erste Einschätzung: niedrig; bei künftigen Balancing-Rechnungen einen Mess-Helfer mit Ensemble erwägen.
+
+- 2026-10-16 · `tests/render/wildlife.test.ts` RF-10 und `tests/sim/unlock-timeline.test.ts` AK-BAS-03: lastabhängige Zeitreserve-Tests; fielen im `make push-check` (Last) rot, `make zeitreserve-gate` danach Exit 0 (Reserve 0). Ursprung: R667 (Release-Check REL-23). Einschätzung: niedrig bis mittel (blockiert Pushes bei Last); Option Timeout 10000 ms nach E-043, Teil von ZEITRESERVE-PFLEGE.
+- 2026-10-16 · `tests/ui/farOrder.test.ts:198`: tautologischer Test (vergleicht geladene Welt mit sich selbst). Ursprung: R667 (Restbefund HANDEL-2). Einschätzung: niedrig; Erwartungswert unabhängig bilden.
+- 2026-10-16 · `src/sim/save.ts` ≈ Zeile 882: tote Klausel. Ursprung: R667 (Restbefund HANDEL-2). Einschätzung: niedrig; bei nächster Save-Änderung entfernen.

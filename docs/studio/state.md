@@ -8,8 +8,8 @@ Stand: 2026-10-14 (Studio-Session dbac5fc4, R648–R658; REL-22 live `fb1e5e46` 
 
 ## Release-Notizen
 
-**REL-23 „Fernangebot“ (Entwurf, lokal)** — Save **v15** (Migration v14→v15). Inhalt: Handel 2 (R658, gemergt `6faa189e`). Release-Check und Push
-offen. Quelle: `.studio/handoffs/2026-10-14-lead-qa-HANDEL-2-gate.md`.
+**REL-23 „Fernangebot“ (live, R667)** — Save **v15** (Migration v14→v15). Inhalt: Handel 2 (R658, gemergt `6faa189e`). Push `fb1e5e46..2e7a269f`
+(R667, Zeitreserve-Ausnahme), CI-Lauf 38864279487, Pages-Lauf 38864281718. Quelle: `.studio/handoffs/2026-10-14-lead-qa-HANDEL-2-gate.md`.
 
 - **Neu:** Mit Kontor auf einer fernen Insel erscheint neben dem Auftrag ein grosses Angebot für das Lieblingsgut der Insel (Möweninsel
   Stoff, Felsbucht Rum, Weidenau Glas); Annehmen ersetzt den Auftrag, Frist 2:50 ab Auftragsbeginn, geliefert wird am Kontor der Insel

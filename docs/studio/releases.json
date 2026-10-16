@@ -1,71 +1,6 @@
 {
   "releases": [
     {
-      "id": "REL-21",
-      "title": "Stammkunde und Inselmarkt",
-      "status": "live",
-      "hash": "ca46eb73",
-      "date": "2026-10-14",
-      "save": "v14",
-      "gate": "Release-Check OK",
-      "items": [
-        {
-          "pkg": "I-047",
-          "name": "Stammkunde",
-          "kind": "I-047",
-          "startStage": 1,
-          "stage": 5,
-          "state": "done",
-          "note": "live"
-        },
-        {
-          "pkg": "I-092",
-          "name": "Inselmarkt",
-          "kind": "I-092",
-          "startStage": 1,
-          "stage": 5,
-          "state": "done",
-          "note": "live"
-        },
-        {
-          "pkg": "UI-HAEPPCHEN-A",
-          "name": "UI-HAEPPCHEN-A",
-          "kind": "Häppchen",
-          "startStage": 1,
-          "stage": 5,
-          "state": "done",
-          "note": "live"
-        },
-        {
-          "pkg": "UI-HAEPPCHEN-B",
-          "name": "UI-HAEPPCHEN-B",
-          "kind": "Häppchen",
-          "startStage": 1,
-          "stage": 5,
-          "state": "done",
-          "note": "live"
-        },
-        {
-          "pkg": "UI-HAEPPCHEN-C",
-          "name": "UI-HAEPPCHEN-C",
-          "kind": "Häppchen",
-          "startStage": 1,
-          "stage": 5,
-          "state": "done",
-          "note": "live"
-        },
-        {
-          "pkg": "HOTFIX-PREIS",
-          "name": "Hotfix Preis",
-          "kind": "Hotfix",
-          "startStage": 4,
-          "stage": 5,
-          "state": "done",
-          "note": "live"
-        }
-      ]
-    },
-    {
       "id": "REL-22",
       "title": "Aufgeräumt und nichts verpasst",
       "status": "live",
@@ -149,23 +84,44 @@
     {
       "id": "REL-23",
       "title": "Fernangebot",
-      "status": "planned",
-      "hash": "",
-      "date": "",
+      "status": "live",
+      "hash": "2e7a269f",
+      "date": "2026-10-16",
       "save": "v15",
-      "gate": "Release-Check offen",
+      "gate": "Push OK (R667)",
       "items": [
         {
           "pkg": "HANDEL-2",
           "name": "Handel 2 «Fernangebot»",
           "kind": "HANDEL-2",
           "startStage": 1,
-          "stage": 4,
+          "stage": 5,
           "state": "done",
-          "note": "gemergt lokal (R658)",
-          "frees": ["UI-HAEPPCHEN-D"],
+          "note": "live (Push R667)",
           "chainLabel": "Handel 2: Umsetzung",
           "ghost": "Umsetzung · Merge",
+          "goalStage": 5
+        }
+      ]
+    },
+    {
+      "id": "REL-24",
+      "title": "Ereignis-Log vollständig",
+      "status": "planned",
+      "hash": "",
+      "date": "",
+      "save": "v15",
+      "gate": "Plan-Gate R662, Umsetzung freigegeben (R667)",
+      "items": [
+        {
+          "pkg": "UI-HAEPPCHEN-D",
+          "name": "UI-HAEPPCHEN-D",
+          "kind": "Ereignis-Log vollständig",
+          "startStage": 2,
+          "stage": 3,
+          "state": "active",
+          "note": "Umsetzung im Worktree (lead-tech)",
+          "chainLabel": "UI-HAEPPCHEN-D: Umsetzung",
           "goalStage": 4
         }
       ]
@@ -178,19 +134,7 @@
       "date": "",
       "save": "",
       "gate": "",
-      "items": [
-        {
-          "pkg": "UI-HAEPPCHEN-D",
-          "name": "UI-HAEPPCHEN-D",
-          "kind": "Ereignis-Log vollständig",
-          "startStage": 2,
-          "stage": 2,
-          "state": "open",
-          "note": "Plan in Folgesession (Ampel gelb, R658)",
-          "chainLabel": "UI-HAEPPCHEN-D: Umsetzung",
-          "goalStage": 3
-        }
-      ]
+      "items": []
     }
   ],
   "pool": [
@@ -303,7 +247,17 @@
       "stage": 1,
       "state": "open",
       "note": "Handel 2 gemergt (R658)"
+    },
+    {
+      "pkg": "TOOL-METRIK-ZEITRAUM",
+      "name": "TOOL-METRIK-ZEITRAUM",
+      "kind": "Werkzeug",
+      "startStage": 2,
+      "stage": 4,
+      "goalStage": 4,
+      "state": "done",
+      "note": "gemergt (R666)"
     }
   ],
-  "pastSummary": "REL-01 … REL-20, M1 – M13"
+  "pastSummary": "REL-01 … REL-21, M1 – M13"
 }
