@@ -1868,3 +1868,15 @@ Reichweite mit Vertrag** → Kurzdesign Stufe leicht jetzt (lead-design sonnet; 
 Regelbezug: R445, R692, R722, R731 · Kosten bei Irrtum: ein Häppchen, das nach dem Playtest leiser gestellt wird.
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-12 · ADR: —
+
+## R738 · 2026-10-16 · Gate Spec I-122 + I-123: OK; Warnfenster 300 Ticks; Plan jetzt, Umsetzung nach I-112-Merge
+
+Ruling: `design/i122-i123` @ `50698d85` (Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-122-I-123.md`) → **Gate Spec OK**. Warnung als UI-Ableitung auf der
+Sim-Lesefunktion `contractWarning` (kein Save, Baseline unberührt), Audio-Signal `'contractWarn'` ohne Import aus `src/sim/`/`src/ui/`. **`CONTRACT_WARN_TICKS = 300`**
+(30 s Spielzeit) statt 20 s; nach dem Laden still bis zur nächsten Periode. Einmaliges Aufleuchten im Fenster statt der heutigen Dauerfärbung. Der Verdacht
+«`nextOrderTick` mit `farSkip` zeigt nach Fernauftrag + Vertrag eine Periode zu spät» prüft lead-tech im Plan per Test (bestätigt → Beipack-Task, sonst Beobachtung).
+Plan Stufe leicht jetzt (lead-tech, sonnet, Budget 1); Umsetzung erst nach dem Merge von I-112 (Konfliktfläche `app.ts`, `hud.ts`).
+
+Regelbezug: gates.md Gate Spec, R737, E-061 · Kosten bei Irrtum: ein Warnfenster, das nach dem Playtest gekürzt wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-122-I-123 · ADR: —
