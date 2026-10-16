@@ -409,3 +409,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Real sind es 17 Zeichen (`+999,9k / −999,9k`), 137 px bei 1280 px, einzeilig; Playtest OK. Die Spec-Grenze von 15 Zeichen galt bis 999 999 (ohne «k»-Kürzung).
 - Ursprung: UI-HAEPPCHEN-F
 - Erste Einschätzung: niedrig; kein Handlungsbedarf. Variante C der Routen-Bilanz (gemessen, Save) erst nach I-091 und nur, wenn «nominal» im Playtest zu ungenau ist.
+
+## 2026-10-16 · UI-HAEPPCHEN-F: Routen-Bilanz rechnet bei jedem neuen Tick (nicht gedrosselt)
+
+- Fundort: `src/ui/ships.ts` (`updateShipSection`, Memo je Quellinsel, Neuberechnung bei geändertem `world.tick`)
+- Beobachtung: Bei 4× und offenem Kontor-Panel rechnet die Bilanzzeile bis etwa einmal je Tick und Quellinsel (`goodsBalance` ohne `cov`, spät ca. 2 ms, dicht 6,6 ms). Playtest 4×: Frame-Zeit unauffällig (Median 16,7 ms). Mögliche Drosselung über `BALANCE_REFRESH_MS`.
+- Ursprung: Final-Review UI-HAEPPCHEN-F (niedrig)
+- Einschätzung: nur bei Frame-Zeit-Befunden angehen; Alternative `cov` aus dem Frame-Cache durchreichen.
