@@ -4,9 +4,19 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-14 (Studio-Session dbac5fc4, R648–R658; REL-22 live `fb1e5e46` (R651, CI 38571578702, Pages 38571610399); Handel 2 lokal gemergt `6faa189e` (R658), REL-23-Kandidat, Save v15; Handbuch 1.55)
+Stand: 2026-10-16 (Studio-Session, R688–R701; REL-24+REL-25 live `8fe744df` (R697, CI 38887719217, Pages 38888562306); Sammelmerge TOOL-E070, IDEEN-11, ORT-A-Spec; Save v16)
 
 ## Release-Notizen
+
+**REL-24 + REL-25 „Ereignis-Log, Pause, Treue“ (live, R697)** — Save **v16** (Migration v15→v16). Push `2e7a269f..8fe744df`, CI-Lauf 38887719217,
+Pages-Lauf 38888562306. Inhalt: UI-HAEPPCHEN-D/E/F, I-091, BEOB-15, TOOL-METRIK-ZEITRAUM. Quelle: `.studio/handoffs/2026-10-16-lead-qa-gate-REL-24-25.md`.
+
+- **Neu:** Das Ereignis-Log zeigt alle Ereignisse (Verfall, Vertragslieferung und -bruch); Lagerchips nennen die Reichweite («↓ 2:00»); bei Pause
+  erscheinen getönter Rand und Banner; die Auftragskarte zeigt das voraussichtlich nächste Gut (vom Studio vorgeschlagen); Stammkunden-Kulanz: nach
+  5 Lieferungen verzeiht ein Vertrag einen Fehlbestand einmal (vom Studio vorgeschlagen); Fern-Inseln tragen eine Marke auf der Seekarte, das
+  Schiff-Panel zeigt die Routen-Bilanz, der Bilanz-Chip Einnahmen und Unterhalt.
+- **Bitte testen:** (1) Pause per Knopf, `P`, Leertaste: Banner sofort? (2) Stammkunde ohne Ware nach 5 Lieferungen: Toast «diesmal ohne Strafe», Kasse
+  unverändert; (3) Spielstand v15 laden: Treue 0/5; (4) Log bei 20 Einträgen aufklappen; (5) Bilanz-Chip bei Verlust rot.
 
 **REL-23 „Fernangebot“ (live, R667)** — Save **v15** (Migration v14→v15). Inhalt: Handel 2 (R658, gemergt `6faa189e`). Push `fb1e5e46..2e7a269f`
 (R667, Zeitreserve-Ausnahme), CI-Lauf 38864279487, Pages-Lauf 38864281718. Quelle: `.studio/handoffs/2026-10-14-lead-qa-HANDEL-2-gate.md`.
