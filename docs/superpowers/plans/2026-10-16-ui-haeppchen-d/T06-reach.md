@@ -22,7 +22,7 @@ export function reachView(stock: number, net: number, cap: number): ReachView;
 
 ## Testfälle (rot zuerst)
 
-- **AK-UR-01** Bestand 20, net −0,5 → `empty`, `ticks` 4000, Anzeige `formatGameTime(4000)`; Bestand 0, net < 0 → `empty`, `alarm`.
+- **AK-UR-01** Bestand 20, net −0,5 → `empty`, `ticks` 4000, Anzeige über `formatGameTime(4000)` erwartet (kein Literal); Bestand 0, net < 0 → `empty`, `alarm`.
 - **AK-UR-02** Grenzen über `secToTicks`: genau 180 s → warn, 60 s → alarm, 180 s + 1 Tick → ok; voll genau 60 s → warn, +1 Tick → ok; voll nie alarm. Ganzzahl-Eingaben wählen, die exakt auf der Grenze liegen (kein Gleitkomma-Raten).
 - **AK-UR-03** `|net| < EPS` → `null`; Bestand = `cap` bei net > 0 → `null`; net > 0 → nie `empty`; net < 0 → nie `full`; Bestand 0, `net >= 0` → `null`.
 

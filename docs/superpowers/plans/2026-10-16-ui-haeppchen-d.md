@@ -58,4 +58,6 @@ Nicht ausgeführt (R464, Push REL-23 läuft). **T00** (Controller, vor T01, Load
 
 ## Pflichtläufe
 
+**Je Task mit `.ts`-Änderung (T01–T04, T06, T07):** `npx tsc --noEmit; echo EXIT=$?` und `make lint; echo EXIT=$?` mit Exit 0 im Task-Bericht. **Vor «bereit»:** zusätzlich `make zeittests; echo EXIT=$?` und `make conflicts; echo EXIT=$?`.
+
 **Rot-Beleg:** je neuem Testfall die rote Ausgabe vor der Umsetzung im Task-Bericht (R395, R410); Commit-Reihenfolge allein genügt nicht. Neue Tests lokal × 3 grün. Am Ende `make check; echo EXIT=$?`, `make zeitreserve-gate; echo EXIT=$?`, `make docs-check; echo EXIT=$?`; `git diff main -- src/sim tests/sim` leer (AK-UD-09, AK-UR-09); Spielstand ohne Log-/Reach-Feld.
