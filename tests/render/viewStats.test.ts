@@ -112,4 +112,69 @@ describe('viewStats', () => {
       expect(viewStats(w, inside, VIEW).green).toBeGreaterThan(0);
     }
   });
+
+  describe('A6 suppliedShare und houses', () => {
+    const cityWorld = (): { w: World; cam: Camera; view: { w: number; h: number } } => {
+      const w = SCENARIOS.galerie!();
+      const houses = Object.values(w.buildings).filter((b) => b.house);
+      for (const b of Object.values(w.buildings)) if (!b.house) delete w.buildings[b.id];
+      // die Galerie hat drei Häuser: ein viertes als tiefe Kopie daneben
+      const src = houses[0]!;
+      const extra = structuredClone(src);
+      extra.id = 9000;
+      extra.x = src.x + 3;
+      w.buildings[extra.id] = extra;
+      const four = [...houses, extra];
+      four.forEach((b, i) => {
+        const h = b.house!;
+        const ok = i < 3;
+        h.supplied = ok;
+        h.satisfied = { food: ok };
+        h.services = {};
+      });
+      const map = { w: home(w).width, h: home(w).height };
+      const cam: Camera = { x: 0, y: 0, zoom: 0.5 };
+      const view = { w: 4000, h: 3000 };
+      centerOn(cam, four[0]!.x, four[0]!.y, view, map);
+      return { w, cam, view };
+    };
+
+    it('A6 drei von vier Häusern versorgt: 0,75 und houses 4', () => {
+      const { w, cam, view } = cityWorld();
+      // Stufe 1: Bedarf nur food, keine Dienste
+      for (const b of Object.values(w.buildings)) b.house!.tier = 1;
+      const s = viewStats(w, cam, view);
+      expect(s.houses).toBe(4);
+      expect(s.suppliedShare).toBe(0.75);
+    });
+
+    it('A6 Haus ausserhalb des Bildes zählt nicht', () => {
+      const { w, cam } = cityWorld();
+      const s = viewStats(w, cam, { w: 1, h: 1 });
+      expect(s.houses ?? 0).toBeLessThan(4);
+    });
+
+    it('A6 keine Häuser: Felder fehlen', () => {
+      const w = SCENARIOS.galerie!();
+      for (const b of Object.values(w.buildings)) if (b.house) delete w.buildings[b.id];
+      const cam: Camera = { x: 0, y: 0, zoom: 0.5 };
+      const view = { w: 4000, h: 3000 };
+      centerOn(cam, 50, 50, view, { w: home(w).width, h: home(w).height });
+      const out = viewStats(w, cam, view);
+      expect('suppliedShare' in out).toBe(false);
+      expect('houses' in out).toBe(false);
+    });
+
+    it('A6 liest nur: eingefrorene Welt wirft nicht', () => {
+      const { w, cam, view } = cityWorld();
+      const deep = (o: unknown): void => {
+        if (o && typeof o === 'object' && !Object.isFrozen(o)) {
+          Object.freeze(o);
+          Object.values(o).forEach(deep);
+        }
+      };
+      deep(w);
+      expect(() => viewStats(w, cam, view)).not.toThrow();
+    });
+  });
 });
