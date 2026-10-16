@@ -23,7 +23,7 @@ Umsetzer `tech-ui-engineer` · ≈ 40 Tools · AK M1, M2, M3, M4, M5 · blocked-
 
 ## Testfälle (rot zuerst; Beleg im Bericht)
 
-Zeit-Erwartungen nie als Literal, immer `formatGameTime(…)` (R662 Auflage 3). Aufbau Fernangebot/Fernauftrag wie in `tests/ui/farOrder.test.ts` bzw. den Fern-Sim-Tests (Hilfen dort suchen, nicht neu erfinden).
+Zeit-Erwartungen nie als Literal, immer `formatGameTime(…)` (R662 Auflage 3). **Keine `Contract`-Literale** (R679-2; I-091 macht neue `Contract`-Felder zur Pflicht): Fernangebot und Fernauftrag entstehen über Sim-Funktionen (`acceptFarOrder`, Weltschritte) oder die vorhandenen Test-Helfer, nie als handgeschriebenes Objekt mit `Contract`-Form. Aufbau wie in `tests/ui/farOrder.test.ts` bzw. den Fern-Sim-Tests (Hilfen dort suchen, nicht neu erfinden).
 
 - **AK-M1** kein Angebot, kein Auftrag → `null`; Normalauftrag (`island` fehlt) → `null`.
 - **AK-M2** Angebot → `offer`, Text mit Frist aus `farOfferDue`; angenommener Fernauftrag → `order`, Text mit `due − tick`; beide Texte stimmen mit `farOfferText`/`farOrderText` in Menge, Gut und Frist überein (Teilstring-Vergleich).

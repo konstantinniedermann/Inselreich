@@ -108,7 +108,7 @@ I-108 (14 AK, Kurzdesign `design/i108`): 1 bis 9 → T05 (`balanceFlow.test.ts`,
 
 ## Budgetantrag (Umsetzung)
 
-Pakete: T01, T02, T03, T04, T05, T07 = 6 × 2 (Umsetzer + Review) = 12, + 1 Playtest (T06) + 1 Final-Review = 14; + 30 % Puffer = 18,2 → **19 Arbeiter-Starts**; dazu **2 Controller-Instanzen** (Ablösung R167/R190) = **21 Starts**, Parallelität 1 (Parallelität 2 nur, wenn L0 F parallel zu I-091 fahren will, dann je Strang ein eigener Controller). T00 macht der Controller selbst. Schätzung Umsetzer ≈ 258 Tools.
+Pakete: T01, T02, T03, T04, T05, T07 = 6 × 2 (Umsetzer + Review) = 12, + 1 Playtest (T06) + 1 Final-Review = 14; + 30 % Puffer = 18,2 → **19 Arbeiter-Starts**; dazu **2 Controller-Instanzen** (Ablösung R167/R190) = **21 Starts**, Parallelität 1 im Strang (Gate R679: festgelegt 21 Starts). F läuft **parallel zu I-091 als zweiter Strang** (Testlock R380, höchstens 2 Browser-Läufe R424); Merge-Reihenfolge I-091 vor F, F holt main per Merge vor seinem Gate. (Frühere Fassung: Parallelität 2 nur, wenn L0 F parallel zu I-091 fahren will, dann je Strang ein eigener Controller). T00 macht der Controller selbst. Schätzung Umsetzer ≈ 258 Tools.
 
 ## Risiken
 
