@@ -15,6 +15,7 @@ import { step } from '../../src/sim/tick';
 import type { World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 import { dropKontor, farWorld, islandOf, periodStart, stepAt } from './farHelpers';
+import { foundKontor2Literal } from './seaHelpers';
 
 const P = periodStart(1);
 
@@ -131,27 +132,32 @@ describe('AK-6 Fehlfälle bei pick 1', () => {
   });
 });
 
-describe('AK-7 Kontor nach dem Angebot gegründet', () => {
-  it('Erstangebot gleich, Zweitkarte folgt e, nie die Erstinsel', () => {
-    const w = offerWorld(['B']);
-    const first = structuredClone(w.farOffer);
+describe('AK-7 Kontor nach dem Angebot gegründet (Drift)', () => {
+  it('Gleich-Insel-Guard: Rotation fällt wieder auf die Erstinsel, keine Zweitkarte', () => {
+    const w = offerWorld(['A', 'C']);
+    expect(w.farOffer!.island).toBe(islandOf(w, 'C'));
+    expect(farAlternative(w)!.island).toBe(islandOf(w, 'A'));
+    foundKontor2Literal(w, islandOf(w, 'B'));
+    const e = farEligible(w);
+    expect(e).toHaveLength(3);
+    expect(e[(w.order!.period + 1) % e.length]).toBe(w.farOffer!.island);
     expect(farAlternative(w)).toBeNull();
-    const more = farWorld(4, ['A', 'B']);
-    // gleiche Welt-Basis, Angebot der Periode 1 aus der Ein-Kontor-Welt übernehmen
-    stepAt(more, P - 1);
-    more.farOffer = structuredClone(first);
-    more.order = structuredClone(w.order);
-    more.tick = w.tick;
-    const e = farEligible(more);
-    expect(more.farOffer).toEqual(first);
-    const alt = farAlternative(more);
-    if (more.farOffer!.island === e[(more.order!.period + 1) % e.length]) {
-      expect(alt).toBeNull();
-    } else {
-      expect(alt!.island).toBe(e[(more.order!.period + 1) % e.length]);
-      expect(alt!.island).not.toBe(first!.island);
-    }
-    expect(more.farOffer!.island).toBe(islandOf(more, 'B'));
+    const snap = serialize(w);
+    expect(acceptFarOrder(w, 1)).toEqual({ ok: false, reason: 'Kein zweites Angebot' });
+    expect(serialize(w)).toBe(snap);
+  });
+  it('Zweitkarte folgt der neuen Rotation, Erstangebot bleibt', () => {
+    const w = offerWorld(['A', 'B']);
+    const first = structuredClone(w.farOffer);
+    expect(first!.island).toBe(islandOf(w, 'B'));
+    expect(farAlternative(w)!.island).toBe(islandOf(w, 'A'));
+    foundKontor2Literal(w, islandOf(w, 'C'));
+    const alt = farAlternative(w)!;
+    expect(alt.island).toBe(islandOf(w, 'C'));
+    expect(w.farOffer).toEqual(first);
+    expect(acceptFarOrder(w, 1)).toEqual({ ok: true });
+    expect(w.order!.island).toBe(islandOf(w, 'C'));
+    expect(w.order!.good).toBe(alt.good);
   });
 });
 
@@ -166,9 +172,6 @@ describe('AK-8 deterministisch, ohne RNG', () => {
   });
   it('rng-Zustand durch farAlternative unverändert', () => {
     const w = offerWorld();
-    const rng = JSON.stringify((w as unknown as { rng?: unknown }).rng ?? null);
-    farAlternative(w);
-    expect(JSON.stringify((w as unknown as { rng?: unknown }).rng ?? null)).toBe(rng);
     const a = structuredClone(w);
     farAlternative(w);
     for (let n = 0; n < 50; n++) {
