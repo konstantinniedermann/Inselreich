@@ -173,6 +173,53 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("Flake-Verdacht: K.test_a", out)
 
+    def session_flake_fixture(self, inside: bool):
+        """Flake-Läufe einer fremden Session: vor dem Beginn von s1 oder mittendrin."""
+        eff.write(
+            self.transcripts / "s1.jsonl",
+            [
+                eff.assistant("m1", "claude-opus-4", out=10, ts="2026-09-30T12:00:05Z"),
+            ],
+        )
+        base = {"suite": "studio", "commit": "abc1234", "diff": ""}
+        start = 20 if inside else -200
+        extra = [
+            ev(
+                "test_failed",
+                start,
+                session="s2",
+                source="make",
+                names=["K.test_a"],
+                **base,
+            ),
+            ev("test_passed", start + 1, session="s2", source="make", **base),
+        ]
+        write_events(self.home, [*scenario(), *extra])
+
+    def flake_line(self, **kwargs):
+        raw = metrics.build(metrics_args("s1", **kwargs))[1]
+        return raw["efficiency"]["flakes"]
+
+    def test_session_file_ignores_flakes_before_session_start(self):
+        self.session_flake_fixture(inside=False)
+        # keine Testläufe im Zeitraum: nicht gemessen, kein Verdacht
+        self.assertIsNone(self.flake_line())
+
+    def test_session_file_counts_flakes_inside_session(self):
+        self.session_flake_fixture(inside=True)
+        self.assertEqual(self.flake_line(), ["K.test_a"])
+
+    def test_session_file_equals_since_session_start(self):
+        for inside in (False, True):
+            self.session_flake_fixture(inside)
+            start = datetime(2026, 9, 30, 12, 0, tzinfo=UTC)
+            plain = metrics.build(metrics_args("s1"))[1]["efficiency"]
+            explicit = metrics.build(metrics_args("s1", since=start))[1]["efficiency"]
+            self.assertEqual(plain["flakes"], explicit["flakes"])
+            self.assertEqual(
+                plain["steuerung_bereinigt"], explicit["steuerung_bereinigt"]
+            )
+
     def test_efficiency_flake_not_measured_without_test_events(self):
         eff.write(
             self.transcripts / "s1.jsonl",
