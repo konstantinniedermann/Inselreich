@@ -1733,3 +1733,13 @@ und gewertete Messung in T09. C3 trägt die `inPoly`-Beobachtung (abweichende Ar
 Regelbezug: R705, R717, N-102 · Kosten bei Irrtum: eine Patch-Zeit-Warnung, die erst in T09 auffällt.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C1 · ADR: —
+
+## R727 · 2026-10-16 · Gate Merge PERF-BILANZ-COV: OK; Merge jetzt
+
+Ruling: `perf/bilanz-cov` @ `ad57e259` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-PERF-BILANZ-COV.md`) → **Gate Merge OK**, Auflage: voller Lauf im
+`push-check` vor REL-26 (R712 V2). lead-production merged lokal (`--no-ff`), nimmt das Paket in REL-26 auf und trägt drei niedrige Beobachtungen ein (Routen-Bilanz bei
+Pause-/Ausfall-Wechsel im selben Tick bis zum nächsten Tick alt; `|island` im Memo-Schlüssel überflüssig; `focusLine`/`focusList`/`houseConsumers` je Chip ungemessen).
+
+Regelbezug: gates.md Gate Merge, R712 V2, R721 · Kosten bei Irrtum: eine Bilanz, die einen Tick zu spät aktualisiert.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-PERF-BILANZ-COV · ADR: —
