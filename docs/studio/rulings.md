@@ -1606,3 +1606,15 @@ Engpass der ersten 15 min, keine Dominanz); «Standard» bleibt Vorgabe, Balanci
 Regelbezug: gates.md Gate Spec, R445, R692, R698, R714 · Kosten bei Irrtum: ein Paket B, das nach dem Playtest von A gestrichen wird.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I-119-I-121 · ADR: —
+
+## R716 · 2026-10-16 · I-112 C1 abgenommen (T01 `07de72c4`); `imports.test.ts`-Lockerung angenommen; C2 erst nach I-114 oder bei Last < 8
+
+Ruling: `feat/i112` @ `07de72c4` in `.worktrees/i112` (Plan-Nachtrag `3e7b3a1a` mit B-1–B-9; Handoff `.studio/handoffs/2026-10-16-lead-tech-I-112.md`): T01 Leser-Umbau
+abgenommen (Wächter-Rot-Beleg 26 Treffer, Baseline bitgleich, Diff `defs`/`save.ts`/`types.ts` leer). Die Lockerung in `tests/sim/imports.test.ts` (`levels.ts` darf
+aus `./council` importieren, `council` bleibt Blatt) angenommen, nachträglich in die Dateimatrix. T00-Messung (R392) ersatzweise auf `07de72c4` nachholen, sobald
+Last ≤ 4 (T01 verhaltensneutral). Merge-Reihenfolge I-114 vor I-112, danach `git merge main` in `feat/i112`. **Instanz C2 (T02–T05) startet erst, wenn I-114
+übergeben ist oder die 1-min-Last < 8 liegt** — derzeit laufen drei Umsetzungen mit Testlauf (ORT-A, I-114, TOOL-BUENDEL-14), Last 7–13 (R708 V2).
+
+Regelbezug: R392, R708 V2, R711, R713 · Kosten bei Irrtum: eine Umsetzung, die eine halbe Stunde später weiterläuft.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-112 C1 · ADR: —
