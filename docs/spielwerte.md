@@ -231,6 +231,8 @@ Höhe einer Lieferung (Wert je Lieferung), danach geht es mit Zufallsaufträgen 
 er das einmal: keine Strafe, der Vertrag läuft weiter, der Zähler beginnt bei 0. Der Deckel liegt bei einer Kulanz je
 5 Lieferungen; einen Geldbonus für Treue gibt es nicht (R670). Kündigen und ein neuer Vertrag beginnen bei 0.
 
+**Vorwarnung (I-122):** `CONTRACT_WARN_TICKS = 300` (30 s Spielzeit, Wert in `src/sim/defs/goods.ts`) ist das Fenster vor der Vertragsabrechnung, in dem die Karte einen behebbaren Fehlbestand (`stock`, `kontor`) ankündigt. Der Wert wirkt nur auf Anzeige und Klang, nie auf den Spielverlauf (kein Spieleffekt, Balancing unberührt). **Reichweite (I-123):** Die Lager-Reichweite des Vertragsguts auf der Lieferinsel zieht `Menge × 100 / ORDER_PERIOD` je Bilanzfenster ab; reine Anzeige.
+
 #### Fernangebot
 
 Mit einem Kontor auf einer Fremdinsel und einem Haus mindestens der Stufe des Guts bietet der Händler zu
