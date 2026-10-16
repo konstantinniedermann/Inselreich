@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createWorld } from '../../src/sim/world';
+import { decree } from '../../src/sim/council';
 import type { BuildingDefId } from '../../src/sim/types';
 import { lockedToolText } from '../../src/ui/goal';
 import { TOOL_HOTKEYS } from '../../src/ui/hotkeys';
@@ -177,5 +178,30 @@ describe('I-078 lazy: Bilanz nur für sichtbare Tooltips (AK-14)', () => {
     spy.n = 0;
     tooltipLines({ kind: 'build', defId: 'quarry' }, w);
     expect(spy.n).toBe(0);
+  });
+});
+
+describe('I-112 Radius-Zeile folgt dem Ratsbeschluss', () => {
+  const radiusEl = () => ({
+    dataset: { defId: 'chapel' },
+    textContent: 'Radius: 10',
+    classList: { contains: (c: string) => c === 'tt-radius' },
+  });
+  const navWith = (els: ReturnType<typeof radiusEl>[]) =>
+    ({
+      querySelector: () => null,
+      querySelectorAll: (sel: string) => (sel.includes('.tt-radius') ? els : []),
+    }) as unknown as HTMLElement;
+
+  it('ohne Beschluss «Radius: 10», mit Glockenrecht «Radius: 13»', () => {
+    const w = createWorld(1);
+    const el = radiusEl();
+    updateBuildMenu(navWith([el]), w, 0);
+    expect(el.textContent).toBe('Radius: 10');
+    w.council[2] = 'open';
+    expect(decree(w, 2, 'B').ok).toBe(true);
+    updateBuildMenu(navWith([el]), w, 0);
+    expect(el.textContent).toBe('Radius: 13');
+    expect(tooltipLines({ kind: 'build', defId: 'chapel' }, w, 0)).toContain('Radius: 13');
   });
 });

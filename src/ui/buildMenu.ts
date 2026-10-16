@@ -249,6 +249,11 @@ function attachTooltip(
     line.className = i === 0 ? 'tt-title' : 'tt-line';
     line.textContent = text;
     tip.appendChild(line);
+    if (tool.kind === 'build' && (text.startsWith('Radius:') || text.startsWith('Schützt '))) {
+      // Reichweite folgt dem Ratsbeschluss: `updateBuildMenu` setzt den Text neu (braucht die Welt)
+      line.classList.add(text.startsWith('Radius:') ? 'tt-radius' : 'tt-fireradius');
+      line.dataset.defId = tool.defId;
+    }
     if (text.startsWith('Unterhalt:') && tool.kind === 'build') {
       // Bilanz-Vorschau: `updateBuildMenu` füllt den Text (braucht die Welt)
       const balance = document.createElement('span');
@@ -527,6 +532,14 @@ export function cachedBalanceLine(world: World, defId: BuildingDefId, island: nu
 export function updateBuildMenu(nav: HTMLElement, world: World, island: number = HOME): void {
   liveView = { world, island };
   refreshShownBalance(nav, world, island);
+  for (const el of nav.querySelectorAll<HTMLElement>('.tt-radius, .tt-fireradius')) {
+    const id = el.dataset.defId as BuildingDefId | undefined;
+    if (id === undefined) continue;
+    const text = el.classList.contains('tt-radius')
+      ? `Radius: ${serviceRadius(world, id) ?? BUILDING_DEFS[id].supplyRadius ?? 0}`
+      : (crisisTooltipLines(id, world)[0] ?? el.textContent ?? '');
+    if (el.textContent !== text) el.textContent = text;
+  }
   const live = nav.querySelector('.tt-unprotected');
   if (live) {
     const text = unprotectedLine(unprotectedFlammables(world).length);
