@@ -338,3 +338,5 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Einschätzung: nur bei Frame-Zeit-Befunden angehen; Alternative `cov` aus dem Frame-Cache durchreichen.
 
 - 2026-10-16 · Salzregister im Kopf von `src/render/groundDecor.ts` unvollständig: `sprites.ts:2486–2516` (`roadCenter`, Wegsteinchen) nutzt `hash2(seed + 61…65)`, `wildlife.ts:437–448` (Wal) `hash2(seed + 61…64)`; das Register nennt nur «61/62 in terrain.ts» (dort `rotNoise`). Keine sichtbare Kollision (andere Funktionen/Argumente), aber das Register taugt so nicht zur Salzwahl. Ursprung: design-ortsrand (lead-art). Einschätzung: niedrig; beim Reservieren des Ortsrand-Blocks 600–619 (ORT-1) mit nachführen.
+
+- 2026-10-16 · `farWorld` (`tests/sim/farHelpers.ts`) liefert Welten, die `deserialize` mit «Beschädigter Spielstand» abweist (schon ohne Schritte). Fundort: I-114 T01, AK-9-Test musste mit `createWorld` und von Hand gesetztem Angebot bauen. Ursache nicht untersucht. Ursprung: tech-sim-engineer I-114. Einschätzung: niedrig, nur Testhelfer; prüfen, ob `farWorld` ungültige Felder setzt.
