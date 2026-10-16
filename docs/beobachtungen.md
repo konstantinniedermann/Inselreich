@@ -395,3 +395,4 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Bei Fremdinsel, Lieferzeit «1:15» und «treu: verzeiht einmal» ist eine dritte Zeile möglich; im Browser nicht geprüft (T05 prüfte Heimat, zwei Zeilen schon vor I-091).
 - Ursprung: Final-Review I-091
 - Erste Einschätzung: niedrig; bei nächstem Karten-Eingriff mitprüfen.
+- 2026-10-16 · Salzregister im Kopf von `src/render/groundDecor.ts` unvollständig: `sprites.ts:2486–2516` (`roadCenter`, Wegsteinchen) nutzt `hash2(seed + 61…65)`, `wildlife.ts:437–448` (Wal) `hash2(seed + 61…64)`; das Register nennt nur «61/62 in terrain.ts» (dort `rotNoise`). Keine sichtbare Kollision (andere Funktionen/Argumente), aber das Register taugt so nicht zur Salzwahl. Ursprung: design-ortsrand (lead-art). Einschätzung: niedrig; beim Reservieren des Ortsrand-Blocks 600–619 (ORT-1) mit nachführen.

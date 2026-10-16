@@ -194,6 +194,24 @@
       "goalStage": 2
     },
     {
+      "pkg": "ORT-A",
+      "name": "Wege und Kanten",
+      "kind": "Nutzerfeedback",
+      "startStage": 1,
+      "stage": 2,
+      "state": "idea",
+      "note": "ORT-1, ORT-K1, ORT-K2, ORT-3 (Pflicht); Brainstorming auf design/ortsrand @ 21fe2599, ADR-015 angenommen (R688); Spec läuft (R688); nur render, kein Save"
+    },
+    {
+      "pkg": "ORT-B",
+      "name": "Hof und Anbauten",
+      "kind": "Nutzerfeedback",
+      "startStage": 1,
+      "stage": 2,
+      "state": "idea",
+      "note": "ORT-2, ORT-4 (Pflicht); ORT-5 (Wald, Felder, Weide, Trampelpfade, Pflaster) Kann; Brainstorming auf design/ortsrand @ 21fe2599; nur render, kein Save"
+    },
+    {
       "pkg": "I-094",
       "name": "I-094 Darlehen",
       "kind": "Ideen-Pool",
