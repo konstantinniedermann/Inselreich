@@ -7705,3 +7705,15 @@ Budget 16 Starts, Parallelität 1, startet nach Gate Merge und Merge von UI-HAEP
 Regelbezug: gates.md Gate Plan, R664, R665, R667 · Kosten bei Irrtum: ein Pauseweg ohne Overlay (Fix-Runde).
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-UI-HAEPPCHEN-E · ADR: —
+
+## R669 · 2026-10-16 · REL-23 live; freier Platz → Paket BEOB-15 (Zeitreserve und HANDEL-2-Restbefunde)
+
+Ruling: (1) REL-23 «Fernangebot» **live**: CI 38864279487 grün, Pages 38864281718 grün; releases.json, state.md und drei Beobachtungen nachgeführt;
+TOOL-METRIK-ZEITRAUM gemergt `3e5bc5bd` (lokal). Zuordnung UI-HAEPPCHEN-D → REL-24 (Vorschlag lead-production) angenommen. (2) Freier Platz (R475):
+Paket **BEOB-15** (Stufe leicht, lead-tech sonnet, Budget 4): die drei Einträge vom 2026-10-16 in `docs/beobachtungen.md` (Zeilen ≈ 296–298) —
+Timeouts der zwei lastabhängigen Tests nach E-043 anheben bzw. Ursache beheben, tautologischen Test in `tests/ui/farOrder.test.ts:198` mit
+unabhängigem Erwartungswert, tote Klausel in `src/sim/save.ts` ≈ 882 entfernen (kein Save-Wechsel). Dateien disjunkt zu UI-HAEPPCHEN-D.
+
+Regelbezug: R475, R667, E-043, CLAUDE.md «Trivial-Fixes» · Kosten bei Irrtum: ein Timeout, der einen echten Leistungsrückgang verdeckt (Zeitmessung vorher/nachher im Bericht).
+
+Entscheider: L0 · Anlass: Bericht lead-production REL-23-NACH · ADR: —
