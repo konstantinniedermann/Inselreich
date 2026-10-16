@@ -38,15 +38,15 @@ Nicht angefasst: `src/sim/types.ts`, `src/sim/defs/`, `src/render/`, `src/audio/
 
 ## Tasks
 
-| Task | Titel                                           | Datei                | AK-IDs                      | Strang | blocked-by   | Modell | Tools |
-| ---- | ----------------------------------------------- | -------------------- | --------------------------- | ------ | ------------ | ------ | ----- |
-| T00  | Zeitmessung vorher (Controller, R392)           | `T00-zeitmessung.md` | –                           | 1      | UI-D gemergt | sonnet | 8     |
-| T01  | `previewOrder` (Sim-Lesefunktion)               | `T01-preview.md`     | I102 AK-1 bis 5, 7a, 9      | 1      | T00          | sonnet | 40    |
-| T02  | Auftragskarte zeigt Vorschau                    | `T02-karte.md`       | I102 AK-6, 7b               | 1      | T01          | sonnet | 30    |
-| T03  | `pauseOverlay.ts` (Helfer, Anzeige)             | `T03-pausehelfer.md` | I097 AK-1 bis 4, 5a         | 1      | T02          | sonnet | 30    |
-| T04  | Einhängen: HTML, CSS, `refresh()`               | `T04-einhaengen.md`  | I097 AK-5b, 11a             | 1      | T03          | sonnet | 35    |
-| T05  | Browser-Check beider Häppchen (`qa-playtester`) | `T05-playtest.md`    | I097 AK-6 bis 10; I102 AK-8 | 1      | T04          | sonnet | 30    |
-| T06  | Doku (D1, E-017), Zeitmessung nachher           | `T06-doku.md`        | I097 AK-11b; I102 AK-9b     | 1      | T05          | sonnet | 30    |
+| Task | Titel                                           | Datei                | AK-IDs                                    | Strang | blocked-by   | Modell | Tools |
+| ---- | ----------------------------------------------- | -------------------- | ----------------------------------------- | ------ | ------------ | ------ | ----- |
+| T00  | Zeitmessung vorher (Controller, R392)           | `T00-zeitmessung.md` | –                                         | 1      | UI-D gemergt | sonnet | 8     |
+| T01  | `previewOrder` (Sim-Lesefunktion)               | `T01-preview.md`     | I102 AK-1 bis 5, 7a, 9                    | 1      | T00          | sonnet | 40    |
+| T02  | Auftragskarte zeigt Vorschau                    | `T02-karte.md`       | I102 AK-6, 7b                             | 1      | T01          | sonnet | 30    |
+| T03  | `pauseOverlay.ts` (Helfer, Anzeige)             | `T03-pausehelfer.md` | I097 AK-1 bis 4, 5a                       | 1      | T02          | sonnet | 30    |
+| T04  | Einhängen: HTML, CSS, `refresh()`               | `T04-einhaengen.md`  | I097 AK-5b, 11a                           | 1      | T03          | sonnet | 35    |
+| T05  | Browser-Check beider Häppchen (`qa-playtester`) | `T05-playtest.md`    | I097 AK-6 bis 10; I102 AK-8; R668-1 bis 3 | 1      | T04          | sonnet | 30    |
+| T06  | Doku (D1, E-017), Zeitmessung nachher           | `T06-doku.md`        | I097 AK-11b; I102 AK-9b                   | 1      | T05          | sonnet | 30    |
 
 Umsetzer: T01 `tech-sim-engineer`, T02–T04, T06 `tech-ui-engineer`; je Task `qa-code-reviewer` (sonnet); T05 `qa-playtester` (1280×720, Screenshots `.studio/qa/ui-haeppchen-e/`); letzter Review über die Branch `model: opus` (Final-Review). Fix-Runden per SendMessage. Summe ≈ 200 Tools Umsetzer.
 
