@@ -6,6 +6,7 @@ Regeln: docs/studio/VERFASSUNG.md §6 und §1. Best effort; Fehler lassen zu.
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import json
 import os
 import re
@@ -552,21 +553,37 @@ REDACTED = "[REDACTED]"
 # als Teilstrings: `keyboard=`, `monkey=`, `author=` bleiben unverändert.
 # `-p PW` mit Leerzeichen wird nur in Befehlen mit docker login/sshpass/mysql*/
 # mongo* geschwärzt (dort ist es das Passwort; `mysql -p db` wird überschwärzt).
-# Bewusste Restlücken: Secrets in verschachtelten/verketteten/escapten Quotes,
-# Werte aus Dateien oder Variablen (`$(cat f)`), Passwort als nacktes Positions-
-# argument ohne Schlüsselwort, `-u` ohne `:` im Wert, `https://TOKEN@host` ohne
-# Präfix, Passwort mit `/` oder `@` in URL-Credentials, `Authorization:` ohne
-# Schema, `?key=` in URLs, Flag-Präfix länger als 40 Zeichen, Namens-Suffix mit
-# mehr als 5 Segmenten; `-pattern` wird zu `-p[REDACTED]`.
+# `token`, `secret`, `password`, `passwd`, `credential`, `passphrase`, `apikey`
+# gelten auch mit Präfix (`PGPASSWORD`, `accessToken`); `key`, `auth`, `pass`,
+# `pwd` nur am Wortanfang oder als CamelCase-Segment (`privateKey`).
+# Das Ereignis `guard_block` speichert Argumente nie (`_event_command`: nur
+# Programm und Unterbefehl aus einer Allowlist, dazu `command_hash`); diese
+# Schwärzung ist die zweite Linie für andere Ausgaben.
+# Bewusste Restlücken der Schwärzung: Secrets in verschachtelten/verketteten/
+# escapten Quotes, Werte aus Dateien oder Variablen (`$(cat f)`), Passwort als
+# nacktes Positionsargument ohne Schlüsselwort, `-u` ohne `:` im Wert,
+# `https://TOKEN@host` ohne Präfix, Passwort mit `/` oder `@` in URL-Credentials,
+# `Authorization:` ohne Schema, `?key=` in URLs, Flag-Präfix länger als 40
+# Zeichen, Namens-Suffix mit mehr als 5 Segmenten, Namen mit Präfix vor
+# `key`/`auth`/`pass`/`pwd` in Kleinschreibung (`dbkey=`); `-pattern` wird zu
+# `-p[REDACTED]`.
 _VALUE = r"""(?:"[^"]*"|'[^']*'|[^\s'"]+)"""
 _USERPASS = r"""(?:"[^"]*:[^"]*"|'[^']*:[^']*'|[^\s'"]*:[^\s'"]*)"""
-_KEYWORDS = r"(?:token|apikey|secret|password|passwd|pass|pwd|key|credential|auth)s?"
-_NAME_SUFFIX = r"(?:[_-][A-Za-z0-9]{1,20}){0,5}"
-_FLAG_KEYWORDS = (
-    r"(?:token|apikey|secret|password|passwd|pass|pwd|credential|auth|cookie|[-_]?key)"
+_BOUND_NAMES = r"(?:key|auth|pass|pwd)s?"
+_FREE_NAMES = r"(?:token|apikey|secret|password|passwd|credential|passphrase)s?"
+# key/auth/pass/pwd nur am Wortanfang oder als CamelCase-Segment (`privateKey`).
+_KEYWORDS = (
+    r"(?:(?<![A-Za-z0-9])"
+    + _BOUND_NAMES
+    + r"|(?<=[a-z0-9])(?-i:Key|Auth|Pass|Pwd)s?|"
+    + _FREE_NAMES
+    + ")"
 )
+_NAME_SUFFIX = r"(?:[_-][A-Za-z0-9]{1,20}){0,5}"
+_FLAG_KEYWORDS = r"(?:token|apikey|secret|password|passwd|passphrase|pass|pwd|credential|auth|cookie|[-_]?key)"
 _PW_CONTEXT = re.compile(r"(?i)\b(?:docker\s+login|sshpass|mysql\w*|mongo\w*)\b")
 _SPACED_P = re.compile(r"(?<!\S)(-p\s+)[^\s'\"-]\S*")
+_DASH_P = re.compile(r"(?<!\S)(-p)-\S+")
 _B = r"(?<![A-Za-z0-9])"
 REDACT_PATTERNS = (
     (re.compile(_B + r"gh[pousr]_[A-Za-z0-9]{20,}"), REDACTED),
@@ -595,11 +612,7 @@ REDACT_PATTERNS = (
     ),
     (
         re.compile(
-            r"(?i)(?<![A-Za-z0-9])("
-            + _KEYWORDS
-            + _NAME_SUFFIX
-            + r"""["']?\s*[=:]\s*)"""
-            + _VALUE
+            r"(?i)(" + _KEYWORDS + _NAME_SUFFIX + r"""["']?\s*[=:]\s*)""" + _VALUE
         ),
         r"\1" + REDACTED,
     ),
@@ -618,6 +631,7 @@ def redact(text: str) -> str:
         text = pattern.sub(replacement, text)
     if _PW_CONTEXT.search(text):
         text = _SPACED_P.sub(r"\1" + REDACTED, text)
+        text = _DASH_P.sub(r"\1" + REDACTED, text)
     return text
 
 
@@ -635,7 +649,7 @@ def rule_of(found: str) -> str:
     return "other"
 
 
-def _shown_command(payload: dict) -> str:
+def _raw_text(payload: dict) -> str:
     data = payload.get("tool_input")
     data = data if isinstance(data, dict) else {}
     tool = payload.get("tool_name")
@@ -645,7 +659,41 @@ def _shown_command(payload: dict) -> str:
         text = str(data.get("file_path") or data.get("notebook_path") or "")
     else:
         text = str(data.get("description", ""))
-    return redact(" ".join(text.split()))[:COMMAND_LIMIT]
+    return " ".join(text.split())
+
+
+def _shown_command(payload: dict) -> str:
+    return redact(_raw_text(payload))[:COMMAND_LIMIT]
+
+
+_SAFE_TOKEN = re.compile(r"[a-z0-9._-]{1,32}")
+_ENV_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=\S*")
+
+
+def _safe_token(token: str) -> str:
+    """Allowlist: nur unauffällige Namen; alles andere (auch Secrets) wird `?`."""
+    if _SAFE_TOKEN.fullmatch(token) and redact(token) == token:
+        return token
+    return "?"
+
+
+def _event_command(payload: dict) -> str:
+    """Nur Programm und Unterbefehl, nie Argumente (Allowlist statt Muster-Jagd)."""
+    tokens = _raw_text(payload).split()
+    if payload.get("tool_name") == "Bash":
+        while tokens and _ENV_ASSIGNMENT.fullmatch(tokens[0]):
+            tokens.pop(0)
+    if not tokens:
+        return ""
+    shown = [_safe_token(tokens[0].rsplit("/", 1)[-1])]
+    is_bash = payload.get("tool_name") == "Bash"
+    if is_bash and len(tokens) > 1 and not tokens[1].startswith("-"):
+        shown.append(_safe_token(tokens[1]))
+    return " ".join(shown)[:COMMAND_LIMIT]
+
+
+def _command_hash(payload: dict) -> str:
+    return hashlib.sha256(_raw_text(payload).encode("utf-8")).hexdigest()[:12]
 
 
 def _log_block(payload: dict, found: str) -> None:
@@ -662,7 +710,8 @@ def _log_block(payload: dict, found: str) -> None:
                 "kind": "guard_block",
                 "rule": rule_of(found),
                 "tool": str(payload.get("tool_name") or ""),
-                "command": _shown_command(payload),
+                "command": _event_command(payload),
+                "command_hash": _command_hash(payload),
                 "persona": str(payload.get("agent_type") or ""),
                 "summary": found[:COMMAND_LIMIT],
             }
