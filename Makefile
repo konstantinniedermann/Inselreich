@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 TESTLOCK := tools/testlock/testlock.ts
-.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint stampcheck studio studio-stop studio-archive studio-metrics pages-limit zeittests zeitreserve zeitreserve-push zeitreserve-gate gate-ensemble conflicts check-ci-perf messfenster check-run check-push push-check
+.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint stampcheck studio studio-stop studio-archive studio-aufraeumen studio-metrics pages-limit zeittests zeitreserve zeitreserve-push zeitreserve-gate gate-ensemble conflicts check-ci-perf messfenster check-run check-push push-check
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -69,6 +69,9 @@ studio-stop: ## Studio-Dashboard stoppen
 
 studio-archive: ## Studio-Events archivieren (Dashboard startet leer)
 	@python3 tools/studio/log.py archive
+
+studio-aufraeumen: ## Bilder erledigter Pakete in .studio/ löschen (Trockenlauf; mit ARGS=--apply wirklich, R682)
+	@python3 tools/studio/aufraeumen.py $(ARGS)
 
 studio-metrics: ## Studio-Metriken der letzten Session verdichten
 	@python3 tools/studio/metrics.py --session latest
