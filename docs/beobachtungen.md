@@ -338,3 +338,17 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Einschätzung: nur bei Frame-Zeit-Befunden angehen; Alternative `cov` aus dem Frame-Cache durchreichen.
 
 - 2026-10-16 · Salzregister im Kopf von `src/render/groundDecor.ts` unvollständig: `sprites.ts:2486–2516` (`roadCenter`, Wegsteinchen) nutzt `hash2(seed + 61…65)`, `wildlife.ts:437–448` (Wal) `hash2(seed + 61…64)`; das Register nennt nur «61/62 in terrain.ts» (dort `rotNoise`). Keine sichtbare Kollision (andere Funktionen/Argumente), aber das Register taugt so nicht zur Salzwahl. Ursprung: design-ortsrand (lead-art). Einschätzung: niedrig; beim Reservieren des Ortsrand-Blocks 600–619 (ORT-1) mit nachführen.
+
+## 2026-10-16 · UI-AUFRAEUM-4: Rechtsklick über `pointerdown` b2 im Strich legt Zug und Werkzeug zugleich ab
+
+- Fundort: `src/ui/input.ts` (`onPointerDown`, `button === 2`), README Z. 142
+- Beobachtung: Chrome meldet den Rechtsklick bei gehaltener linker Taste nur als `contextmenu` (Staffelung greift, Playtest belegt für Weg, Roden, Abriss). Ein Browser mit `pointerdown` b2 beendet Zug und Werkzeug in einem Klick (synthetisch nachgestellt, Weg/Abriss); README verspricht die Staffelung allgemein. Test fehlt für b2 im Weg-/Abriss-Strich; der Schwenk-Test (`input.test.ts`, «Schwenk (button 1)») würde ohne `!drag.panning` grün bleiben.
+- Ursprung: Final-Review und Playtest UI-AUFRAEUM-4 (niedrig)
+- Erste Einschätzung: nur bei echtem Browser-Befund angehen (Firefox prüfen); sonst README-Satz auf «in Chrome» präzisieren.
+
+## 2026-10-16 · UI-AUFRAEUM-4: Menü «Neue Insel» setzt «Krisen (neue Insel):» und «Freischaltung:» in eine Zeile
+
+- Fundort: `src/ui/menu.ts` (Zeile ≈ 109), Screenshot `.studio/qa/ui-aufraeum-4/ak9-2-menue-neue-insel.png`
+- Beobachtung: Das Krisen-Select klebt direkt am Wort «Freischaltung:»; rein kosmetisch.
+- Ursprung: Playtest UI-AUFRAEUM-4
+- Erste Einschätzung: niedrig; Abstand per CSS bei nächster Menü-Arbeit.
