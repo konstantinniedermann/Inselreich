@@ -4,7 +4,7 @@ Aufbau je Eintrag: Datum · Fundort · Beobachtung · Ursprung · erste Einschä
 Auswertung mit dem Skill `beobachtungen-auswerten`. Ein Folgeissue entsteht nur auf
 ausdrückliche Zustimmung des Nutzers; im Studio gehen Paket-Kandidaten an L0.
 
-Letzte Auswertung: 2026-10-14
+Letzte Auswertung: 2026-10-16
 
 **Marke (R287, R288):** Die Zeile „Letzte Auswertung: JJJJ-MM-TT“ ist die Zählmarke des SessionStart-Hooks. Als
 Eintrag zählt jede Überschrift der Ebene 2 oder 3 unter der Marke, ausser „Offen …“ und „Ausgewertet …“. Neue
@@ -35,6 +35,8 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 **Stand 2026-10-13** (`lead-production`, Paket BEOB-AUSWERTUNG-13, gegen `ee83d2e6`): 12 Einträge und 2 Stichpunkt-Zeilen gesichtet. Bilanz und Board-Vorschläge stehen in „Ausgewertet 2026-10-13“.
 
 **Stand 2026-10-14** (`lead-production`, Paket BEOB-AUSWERTUNG-14, gegen `ea1e14fc`): 17 Einträge gesichtet. Bilanz in „Ausgewertet 2026-10-14“; fünf Einträge sind UI-AUFRAEUM-3 (R617) bzw. TOOL-BUENDEL zugeordnet, der Rest abgehakt mit Trigger.
+
+**Stand 2026-10-16** (`lead-production`, Paket BEOB-16, gegen `e9626a27`): 35 Einträge gesichtet (20 Überschriften, 15 Stichpunkte). Bilanz in „Ausgewertet 2026-10-16“; ein Eintrag (Salzregister, Ortsrand) bleibt offen.
 
 ## Ausgewertet 2026-10-11 (2)
 
@@ -233,166 +235,57 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 **Hinweis an L0:** UI-AUFRAEUM-3 deckt T03 (Heimat-Kontor) nur dem Titel nach; ob das Heimat-Kontor in die Rangliste kommt, entscheidet der Task (Beobachtung bleibt sonst abgehakt).
 
+## Ausgewertet 2026-10-16
+
+35 Einträge am Stand `e9626a27` gegen den Code auf main geprüft (BEOB-16). Bilanz: 7 erledigt (dazu 3 schon in BEOB-15 erledigte, durchgestrichene Zeilen), 8 eingeplant (UI-AUFRAEUM-4 bzw. ZEITRESERVE-PFLEGE im Pool), 19 abgehakt mit Trigger, 1 offen (Ortsrand, nicht angefasst), 0 Ideen, 0 verworfen. Browser- und Bildbefunde sind nicht neu gemessen.
+
+| Eintrag (Datum · Titel)                                                | Ergebnis                                                                                | Beleg · Trigger                                                                                                                                                                                                        |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 10-14 · Verfallenes Stammkunden-Angebot ohne Log-Eintrag               | erledigt                                                                                | `src/ui/autoLog.ts` `Stammkunden-Angebot verfallen: …` (Log-Eintrag, kein Toast)                                                                                                                                       |
+| 10-14 · Auftragsereignisse fehlen im Log, Log nur bei Krisen           | erledigt (Rest abgehakt)                                                                | `autoLog.ts` (Zufall, Stammkunde), `farLogEntries` (Fern); `crisisLog.ts` `eventLogVisible` zeigt die Box auch bei Einträgen. Log wird weiter nicht gespeichert · Trigger: Spieler vermisst den Verlauf nach dem Laden |
+| 10-14 · Log erscheint erst ab Tick 2400, «Krisen: aus» blendet aus     | erledigt                                                                                | `crisisLog.ts` `eventLogVisible` (Krisen-Bedingung oder mindestens ein Eintrag)                                                                                                                                        |
+| 10-14 · Flake-Zeile ignoriert Session-Zeitraum                         | erledigt                                                                                | `65e87dda` (Session-Datei misst Flake-Verdacht ab Session-Beginn), `metrics.py` `_with_flakes`                                                                                                                         |
+| 10-14 · HANDEL-2: tautologischer Test, tote Klausel `save.ts`          | erledigt                                                                                | BEOB-15 (`27a529c6`, `065c4940`), siehe durchgestrichene Zeilen vom 10-16                                                                                                                                              |
+| 10-16 · wildlife/unlock-timeline Zeitreserve-Tests (3 Zeilen)          | erledigt                                                                                | BEOB-15 (`92691abf`, R672)                                                                                                                                                                                             |
+| 10-16 · CTX-ALTLAST: Agenten suchen mit `grep`, nicht `rg`             | erledigt                                                                                | R683: Suche-Regel «`rg <muster> .`» in den Personen (`rg -n 'rg <muster>' .claude/agents`: 18 Dateien)                                                                                                                 |
+| 10-16 · CTX-ALTLAST: `make studio-aufraeumen --apply`                  | erledigt                                                                                | `STUDIO.md` Schritt 2b nennt `ARGS=--apply`; Makefile-Hilfe ebenso                                                                                                                                                     |
+| 10-16 · `wildlife.test.ts` RF-4 / «E5 nie im R4-Sperrbereich» > 500 ms | eingeplant: ZEITRESERVE-PFLEGE (Pool `releases.json`)                                   | Entscheid dort nach E-043 (eigenes Timeout), nicht neu gemessen                                                                                                                                                        |
+| 10-14 · Erzeugungs-Cache ignoriert `connected` im pausierten Spiel     | eingeplant: UI-AUFRAEUM-4                                                               | `src/ui/order.ts` `producedPerMinute`: Schlüssel enthält nur Gebäudezahl, Stilllegung, Id-Summe; Kommentar nennt `connected` «ausser Scope»                                                                            |
+| 10-14 · Erzeugungs-Cache: Ausbau in der Pause, Id-Summe                | eingeplant: UI-AUFRAEUM-4                                                               | wie oben (`pausedIds += b.id`); Kollision {1,4} gegen {2,3} belegt durch die Summenbildung                                                                                                                             |
+| 10-14 · `order.ts` Cache-Schlüssel summiert Ids (Release-Check)        | eingeplant: UI-AUFRAEUM-4 (Duplikat des Vorigen)                                        | wie oben                                                                                                                                                                                                               |
+| 10-14 · Menü-Feld «Krisen» gilt für die nächste Insel                  | eingeplant: UI-AUFRAEUM-4                                                               | `src/ui/menu.ts`: Beschriftung «Krisen: », nur das `aria-label` sagt «für die neue Insel»; Vorschlag Trivial-Fix an L0 (s. u.)                                                                                         |
+| 10-14 · Rechtsklick bei gehaltener linker Taste (Roden, Abriss)        | eingeplant: UI-AUFRAEUM-4                                                               | `src/ui/input.ts` `onContextMenu` bricht nur den Linienzug ab (`drag?.line`); Browser-Verhalten nicht neu gemessen                                                                                                     |
+| 10-14 · `aria-label` «3 neue Ereignisse» ersetzt Knopfnamen            | eingeplant: UI-AUFRAEUM-4                                                               | `src/ui/eventLogView.ts` `toggle.setAttribute('aria-label', …)`                                                                                                                                                        |
+| 10-16 · Tooltip «Leer in 0 s» bei Bestand 0                            | eingeplant: UI-AUFRAEUM-4                                                               | `src/ui/hud.ts` `reachLine`: `Leer in ${formatGameTime(r.ticks)}` ohne Sonderfall für Bestand 0                                                                                                                        |
+| 10-14 · Enger Kartenslot oben rechts                                   | abgehakt, Trigger: eine weitere Karte soll in den Slot                                  | Fernkarte mit Höchststapel ist in Handel 2 geliefert; Krisenkarte unverändert                                                                                                                                          |
+| 10-14 · `pushLog` Denkmal-Zähler bei `crisisLogVisible` false          | abgehakt, Trigger: Spieler sieht einen alten Zähler                                     | nur theoretisch; `eventLogVisible` blendet die Box ohnehin erst bei Einträgen ein                                                                                                                                      |
+| 10-14 · Commit-Präfix `merge:` fehlt in `../CLAUDE.md`                 | abgehakt, Trigger: Commit-Lint oder Konventionsprüfung wird eingeführt                  | Merge-Commits sind Git-Merge-Texte; STUDIO.md kennt `merge:` (kein Treffer als Verbot)                                                                                                                                 |
+| 10-14 · Ereignis-Log sitzt unten links statt im Kartenstapel           | abgehakt, Trigger: Playtest meldet Überdeckung durch die Box                            | `src/style.css` `.log-box`; UI-HAEPPCHEN-D hat die Box angefasst, Bild nicht neu gemessen                                                                                                                              |
+| 10-14 · Beschriftungszeile mit Boom und Vorliebe bricht um             | abgehakt, Trigger: Playtest meldet unleserliche Zeile                                   | nur Screenshot-Befund, nicht neu gemessen                                                                                                                                                                              |
+| 10-14 · `eventLogView.ts` ohne Unit-Test                               | abgehakt, Trigger: Logik im View wächst über Zähler und Beschriftung                    | `ls tests/ui`: kein `eventLogView`-Test; getestete Teile liegen in `crisisLog.ts`                                                                                                                                      |
+| 10-14 · `waitguard.py` Fehlnegative                                    | abgehakt, Trigger: ein Wartebefehl umgeht den Guard im Echtlauf                         | Muster nicht neu gemessen                                                                                                                                                                                              |
+| 10-14 · Dashboard: favicon 404, Warnzeile leer                         | abgehakt, Trigger: nächste Dashboard-Änderung                                           | `rg favicon tools/studio`: 0 Treffer in Server und Dashboard                                                                                                                                                           |
+| 10-16 · Controller als Messgerät nur im Ensemble                       | abgehakt, Trigger: nächste Balancing-Rechnung mit Geld-Hebel                            | `tests/sim/controller.ts` `runColony`; Ensemble ist seit R558 vorhanden                                                                                                                                                |
+| 10-16 · Log-Box aufgeklappt verdeckt Karte                             | abgehakt, Trigger: Playtest meldet Überdeckung                                          | `.log-box` begrenzt nur die Breite; Bild nicht neu gemessen                                                                                                                                                            |
+| 10-16 · Reichweite mit Hex-Werten `#ffd27a`/`#b9c49a`                  | abgehakt, Trigger: nächste Farbpflege in `style.css`                                    | `src/style.css` `.chip.reach-warn`, `.chip.reach-full` (belegt)                                                                                                                                                        |
+| 10-16 · `updateHud`-Klassen ohne DOM-Test                              | abgehakt, Trigger: Zuordnung `reach` wächst                                             | nur `stockChipView` getestet                                                                                                                                                                                           |
+| 10-16 · Reichweite ignoriert Handel und Aufträge                       | abgehakt, Trigger: Spieler liest die Zeile als falsch                                   | `reachLine` nennt «(ohne Handel und Aufträge)»; bekannte Grenze I-109                                                                                                                                                  |
+| 10-16 · Log-Reihenfolge Fern vor Stammkunde/Zufall                     | abgehakt, Trigger: Spieler verwechselt die Reihenfolge                                  | nur Anzeige bei gleichem Tick                                                                                                                                                                                          |
+| 10-16 · doppelte `goodsBalance`-Rechnung in `hud.ts`                   | abgehakt, Trigger: nächster Eingriff in `hud.ts` (nach Merge UI-HAEPPCHEN-F neu prüfen) | `updateHud` rechnet `goodsBalance`, `chipView` rechnet es je Gut erneut; `hud.ts` wird von F angefasst, daher nicht jetzt                                                                                              |
+| 10-16 · Toast «Pausiert» deckt Banner «Pause» nach dem Laden           | abgehakt, Trigger: Playtest meldet den Effekt                                           | `src/ui/app.ts` `showMessage('Pausiert — …')` besteht; ca. 3 s, niedrig                                                                                                                                                |
+| 10-16 · Vorschau erst nach «Ablehnen» des Angebots                     | abgehakt, kein Handlungsbedarf                                                          | beabsichtigt (`previewOrder` liefert bei offenem Angebot `null`), laut Eintrag kein Fehler                                                                                                                             |
+| 10-16 · Auftragskarte zu Spielbeginn verborgen                         | abgehakt, kein Handlungsbedarf                                                          | beabsichtigt durch U3 (stufenweise Freischaltung)                                                                                                                                                                      |
+| 10-16 · I-091 Vertragskarte könnte dreizeilig werden                   | abgehakt, Trigger: nächster Karten-Eingriff in `orderCardText`                          | im Browser nicht geprüft; R686 vermerkt zweizeilig bei 1280 px                                                                                                                                                         |
+| 10-16 · Salzregister `groundDecor.ts` unvollständig                    | offen (Ortsrand ORT-A/ORT-1), nicht angefasst                                           | Beleg im Eintrag; `sprites.ts` und `wildlife.ts` nutzen `hash2(seed + 61…65)` (nachgesehen, Treffer stimmen)                                                                                                           |
+
+**Vorschläge an L0 (Entscheid L0, R471):**
+
+1. Pool-Paket UI-AUFRAEUM-4 (S, Owner `lead-tech`, nur bei freier Kapazität, kein Issue): Cache `order.ts`, Tooltip bei Bestand 0, Menü-Beschriftung «Krisen», `aria-label`, Rechtsklick bei gehaltener linker Taste. Eintrag steht im Pool von `releases.json`.
+2. Trivial-Fix (Minuten, aber `tests/` betroffen, daher nicht selbst umgesetzt): `menu.ts` Beschriftung «Krisen (neue Insel): » statt «Krisen: ».
+3. Reihenfolge: UI-HAEPPCHEN-F und Ortsrand zuerst; der Salzregister-Eintrag gehört in ORT-1.
+
+**Ideen:** keine.
+
 ## Offen (neue Einträge unten anhängen)
 
-### 2026-10-14 · Verfallenes Stammkunden-Angebot ohne Meldung und ohne Log-Eintrag
-
-- Fundort: `.studio/qa/playtest-i047/report.md` Schritt 3, `krise/angebot-verfallen-1280x720.png`; `src/ui/order.ts`, `src/ui/crisisLog.ts`.
-- Beobachtung: Ein unbeantwortetes Stammkunden-Angebot (Lebensdauer ≈ 80 s) verfällt still; die Karte wechselt ohne Hinweis auf den nächsten Auftrag, und der Verfall steht nicht im Ereignis-Log.
-- Ursprung: PLAYTEST-I047, R634 (3).
-- Erste Einschätzung: Priorität niedrig. Handel 2 deckt das **nicht** ab: T-18 gilt nur für das Fernangebot. Beim Paket an `order.ts` einen Eintrag nach demselben Muster (Anhang 02 T.2) prüfen.
-
-### 2026-10-14 · Enger Kartenslot oben rechts bei Sturm
-
-- Fundort: `.studio/qa/playtest-i047/` (`krise/auftragskarte-1280x720.png`, `gesamtansicht`), Slot x 676–976 bei 1280×720.
-- Beobachtung: Auftrags-, Angebots- und Vertragskarte teilen sich einen Slot (nie parallel); darunter stapelt sich die Krisenkarte, bei Sturmwarnung 100 px hoch. Eine zweite Karte (Fernangebot) hätte dort keinen Platz ohne Überdeckung der Häuser.
-- Ursprung: PLAYTEST-I047, R634 (3).
-- Erste Einschätzung: Priorität niedrig. Handel 2 deckt es **teilweise** ab: eigene Fernkarte, Reihenfolge und Höchststapel 315 px (Anhang 02 T.5), messbar in AK-H2-30. Die Krisenkarte selbst bleibt unverändert; keine allgemeine Slot-Verwaltung für künftige Karten.
-
-### 2026-10-14 · Keine Auftragsereignisse im Ereignis-Log, Log nur bei Krisen sichtbar
-
-- Fundort: `src/ui/crisisLog.ts` (`crisisLogVisible`: `crisisLevel !== 'off'` und Tick ≥ `CRISIS_FIRST_TICK`), `src/ui/app.ts` (`crisisLogEntries`, `monumentEvents`); Playtest `krise/krisenlog.txt`.
-- Beobachtung: Das Log enthält nur Krisen und das Monument, keine Auftrags- oder Stammkunden-Einträge; bei Krisen «aus» ist es gar nicht sichtbar. Auftragsmeldungen sind flüchtige Toasts ohne Verlauf; der Log wird nicht gespeichert.
-- Ursprung: PLAYTEST-I047, R634 (3).
-- Erste Einschätzung: Priorität niedrig. Handel 2 deckt es **nur für Fernaufträge** ab (T-16 bis T-18, AK-H2-33); Zufallsaufträge und Stammkunde bleiben ohne Eintrag, die Sichtbarkeit ohne Krisen bleibt offen (Spec O-5). Berührt I-100 «Neu»-Zähler: er zählt nur Einträge mit Meldung.
-
-- **2026-10-14 · Erzeugungs-Cache ignoriert `connected`-Änderungen im pausierten Spiel:** Strassenbau verbindet oder trennt einen Erzeuger ohne Tick, `producedPerMinute` zeigt bis zum nächsten Tick den alten Wert. Fundort `src/ui/order.ts` `producedPerMinute`. Ursprung: Review T06. Einschätzung: niedrig (nur Anzeige, korrigiert sich im nächsten Tick); Lösung bei Bedarf: `connected`-Zahl in den Schlüssel.
-- **2026-10-14 · Menü-Feld «Krisen» gilt für die nächste Insel, nicht für die laufende:** Eine Laufzeit-Umstellung auf «aus» zeigt im Menü weiter «normal». Fundort `src/ui/menu.ts` (Krisenstufe). Ursprung: Playtest UI-AUFRAEUM-3 (T04). Einschätzung: niedrig; Beschriftung prüfen («für neue Insel»).
-- **2026-10-14 · Rechtsklick bei gehaltener linker Taste in Chrome:** Abriss-, Aufforsten- und Roden-Strich reagieren auf den Rechtsklick nicht (Ereignisfolge `pointerdown:b0, pointermove:b2, contextmenu`); erst der zweite Rechtsklick legt das Werkzeug ab. Unverändert seit vor UI-AUFRAEUM-3; nur der Linienzug wird über `contextmenu` abgebrochen. Ursprung: Playtest UI-AUFRAEUM-3 (T01). Einschätzung: niedrig; bei Bedarf gleiche Behandlung im `contextmenu`-Handler.
-- **2026-10-14 · Erzeugungs-Cache (`producedPerMinute`): Ausbau in der Pause und Id-Summe als Schlüssel:** Der Schlüssel erfasst keinen Ausbau (Ausbaustufe ändert den Zyklus, Anzeige bis zum nächsten Tick veraltet), und zwei verschiedene Mengen stillgelegter Betriebe können dieselbe Id-Summe haben (z. B. {1, 4} und {2, 3}). Dazu läuft die Zählschleife nun je Aufruf über alle Gebäude. Fundort `src/ui/order.ts`. Ursprung: Final-Review UI-AUFRAEUM-3. Einschätzung: niedrig (nur Anzeige); bei Bedarf einen Welt-Änderungszähler statt Signatur einführen. Kleinigkeit: `goodsBalance` prüft `connected`/`paused` doppelt zu `producedRate` (`src/sim/flow.ts:44`).
-
-- 2026-10-14 · `src/ui/eventLogView.ts`, Spec I-100 Regel 4: `aria-label` «3 neue Ereignisse» ersetzt den sichtbaren Knopfnamen «Ereignisse ▸ (3 neu)» (WCAG 2.5.3 Label in Name) und lässt ▸/▾ weg. Ursprung: Final-Review I-100. Einschätzung: niedrig; bei Spec-Pflege «Ereignisse, 3 neu» erwägen.
-- 2026-10-14 · `src/ui/app.ts` pushLog-Stellen (I-100): Denkmal-Einträge zählen auch bei `crisisLogVisible` false; erscheint die Box später, kann ein alter Zähler stehen. Ursprung: Final-Review I-100. Einschätzung: niedrig, nur theoretisch sichtbar.
-- 2026-10-14 · `src/ui/order.ts:57-65` (Release-Check REL-22): Der Cache-Schlüssel summiert Gebäude-Ids; bei Pause können zwei verschiedene Mengen dieselbe Summe ergeben (Kollision, Anzeige bleibt alt). Ursprung: Release-Check REL-22. Einschätzung: niedrig; bereits oben („Id-Summe als Schlüssel“) erfasst, hier nur der Beleg aus dem Release-Check; bei Bedarf Ids als Zeichenkette oder Zähler statt Summe.
-- 2026-10-14 · Commit-Konvention: der Integrator-Merge trägt das Präfix `merge:`, das in `../CLAUDE.md` (`feat:`, `fix:`, `docs:`, `refactor:`, `test:`) nicht vorkommt. Ursprung: Release-Check REL-22. Einschätzung: niedrig; Konvention um `merge:` ergänzen oder Merge-Commits als `chore`/Git-Standardtext führen (L0/Studio entscheidet).
-- 2026-10-14 · Ereignis-Log sitzt unten links statt im Kartenstapel (Release-Check REL-22, Screenshots `.studio/qa/REL-22/`). Ursprung: Release-Check REL-22. Einschätzung: niedrig bis mittel (Layout); Position im Kartenstapel prüfen, UI-HAEPPCHEN-D (R641) deckt Teile ab.
-- 2026-10-14 · Ereignis-Log erscheint erst ab Tick 2400, die Stufe «Krisen: aus» blendet es aus. Ursprung: Release-Check REL-22. Einschätzung: niedrig; teils durch UI-HAEPPCHEN-D (R641) abgedeckt, Rest nach dessen Merge neu prüfen.
-- 2026-10-14 · Beschriftungszeile mit Boom und Vorliebe bricht um (Release-Check REL-22). Ursprung: Release-Check REL-22. Einschätzung: niedrig (Optik); Zeile kürzen oder Umbruch zulassen.
-- 2026-10-14 · `src/ui/eventLogView.ts` hat keinen Unit-Test (kein DOM in Vitest; nur Browser-Check). Ursprung: Release-Check REL-22. Einschätzung: niedrig; DOM-freie Teile (Zähler, Beschriftung) liegen in `crisisLog.ts` und sind getestet.
-
-## 2026-10-14 · Session-Metrikdatei: Flake-Zeile ignoriert den Session-Zeitraum
-
-- Fundort: `docs/studio/metriken/S-2026-10-14-b54ed3bd.md` (Effizienz) gegen `python3 tools/studio/metrics.py --efficiency --since 2026-10-14T00:00:00`
-- Beobachtung: Die Session-Datei weist 8 Flake-Verdachtstests aus (dieselbe Historienliste wie in 6584aaa4); mit `--since` ab Session-Beginn sind es 0 (grün). `flake_suspects(..., since)` (R565 V3) wird für die Session-Datei offenbar ohne `since` aufgerufen.
-- Ursprung: Retro session-b54ed3bd-ende (Studio-Coach)
-- Erste Einschätzung: Werkzeug-Mangel klein; die Ampel der Session-Datei zeigt rot, obwohl die Session keinen Verdachtsfall enthält. Prüfung in `tools/studio/metrics.py`, kein Eingriff in dieser Retro.
-
-## 2026-10-14 · Warte-Guard `waitguard.py`: Fehlnegative und eine strenge Stelle
-
-- Fundort: `tools/studio/waitguard.py`
-- Beobachtung: Nicht erkannt (Fehlnegative) werden `(sleep 60)`, `bash -c 'sleep …'`, `sleep infinity` und `FOO=1 sleep 5`. Streng: `sleep 2 && echo hi` im Hintergrund wird blockiert.
-- Ursprung: TOOL-GUARD-WARTEAGENT
-- Erste Einschätzung: niedrig; Muster bei Bedarf erweitern, kein Eingriff jetzt.
-
-## 2026-10-14 · Dashboard: favicon 404 und Warnzeile im leeren Zustand
-
-- Fundort: `tools/studio/dashboard/` (Server liefert kein `/favicon.ico`; Warnzeile der Zielmarke erscheint auch ohne Daten)
-- Beobachtung: Der Browser fragt `/favicon.ico` an und erhält 404. Die Warnzeile wird auch im leeren Zustand angezeigt.
-- Ursprung: TOOL-DASH-SESSIONZIEL
-- Erste Einschätzung: niedrig; kosmetisch.
-
-- 2026-10-14 HANDEL-2 Gate Merge: tests/ui/farOrder.test.ts «Review Focus 2» tautologisch (vergleicht geladene Welt mit sich selbst); src/sim/save.ts:~882 tote Klausel. Beide niedrig, Ursprung Final-Review.
-
-## 2026-10-16 · Controller als Messgerät für Geld-Hebel nur im Ensemble
-
-- Fundort: `tests/sim/controller.ts` (`runColony`, `buildColony`)
-- Beobachtung: `runColony` bricht beim Sieg ab; Messungen danach brauchen eine eigene Schleife. Eine Minute Verschiebung eines Kaufs ändert die Kasse bei Minute 25 um ±3500; Einzelläufe taugen für Geld-Hebel nicht, nur Ensembles über mehrere Phasen.
-- Ursprung: design-I-091-I-094 (Rechnung design-economy-designer)
-- Erste Einschätzung: niedrig; bei künftigen Balancing-Rechnungen einen Mess-Helfer mit Ensemble erwägen.
-
-- ~~2026-10-16 · `tests/render/wildlife.test.ts` RF-10 und `tests/sim/unlock-timeline.test.ts` AK-BAS-03: lastabhängige Zeitreserve-Tests; fielen im `make push-check` (Last) rot, `make zeitreserve-gate` danach Exit 0 (Reserve 0). Ursprung: R667 (Release-Check REL-23). Einschätzung: niedrig bis mittel (blockiert Pushes bei Last); Option Timeout 10000 ms nach E-043, Teil von ZEITRESERVE-PFLEGE.~~ **Erledigt (BEOB-15, 2026-10-16):** eigenes Timeout 10000 ms nach E-043 (92691abf).
-- ~~2026-10-16 · `tests/ui/farOrder.test.ts:198`: tautologischer Test (vergleicht geladene Welt mit sich selbst). Ursprung: R667 (Restbefund HANDEL-2). Einschätzung: niedrig; Erwartungswert unabhängig bilden.~~ **Erledigt (BEOB-15, 2026-10-16):** Snapshot vor dem Speichern gegen geladene Welt, mit Kontrolle (27a529c6).
-- ~~2026-10-16 · `src/sim/save.ts` ≈ Zeile 882: tote Klausel. Ursprung: R667 (Restbefund HANDEL-2). Einschätzung: niedrig; bei nächster Save-Änderung entfernen.~~ **Erledigt (BEOB-15, 2026-10-16):** Klauseln `contract`/`contractOffer` entfernt, durch isValidContractFields bereits ausgeschlossen (065c4940).
-- 2026-10-16 · `tests/render/wildlife.test.ts` RF-4 und «E5 nie im R4-Sperrbereich»: laufen auf main und Branch > 500 ms und könnten unter Last die strenge Zeitreserve reissen. Ursprung: R672 (Gate Merge BEOB-15). Einschätzung: niedrig.
-
-## 2026-10-16 · UI-HAEPPCHEN-D: Log-Box aufgeklappt verdeckt Karte
-
-- Fundort: `src/ui/eventLogView.ts`, `src/style.css` (Log-Box unten links); Playtest T08
-- Beobachtung: Aufgeklappt zeigt die Box 8 von 20 Einträgen und verdeckt unten links einen Teil der Karte.
-- Ursprung: UI-HAEPPCHEN-D (`LOG_MAX` 10 auf 20)
-- Erste Einschätzung: niedrig; Höhe begrenzen oder Liste scrollen, bei Bedarf.
-
-## 2026-10-16 · UI-HAEPPCHEN-D: Reichweite mit neuen Hex-Werten
-
-- Fundort: `src/style.css` (`.chip.reach-warn`, `.chip.reach-full`)
-- Beobachtung: Die Klassen nutzen die neuen Werte `#ffd27a` und `#b9c49a` statt Variablen aus `:root`.
-- Ursprung: UI-HAEPPCHEN-D T07
-- Erste Einschätzung: niedrig; bei der nächsten Farbpflege als Variablen führen.
-
-## 2026-10-16 · UI-HAEPPCHEN-D: `updateHud`-Klassen ohne DOM-Test
-
-- Fundort: `src/ui/hud.ts` (`updateHud`, Zuordnung `reach` auf `reach-warn`/`reach-alarm`/`reach-full`)
-- Beobachtung: Nur die reine Ansicht (`stockChipView`) ist getestet; das Setzen der Klassen am Element prüft nur der Browser.
-- Ursprung: UI-HAEPPCHEN-D T07
-- Erste Einschätzung: niedrig; mit `fakeDom` testbar, falls die Zuordnung wächst.
-
-## 2026-10-16 · UI-HAEPPCHEN-D: Reichweite ignoriert Handel und Aufträge
-
-- Fundort: `src/ui/reach.ts`, `goodsBalance` (`src/sim/queries.ts`)
-- Beobachtung: Die Reichweite rechnet nur mit Inselerzeugung und -verbrauch; Handel und Aufträge fehlen. Der Tooltip sagt es («ohne Handel und Aufträge»).
-- Ursprung: UI-HAEPPCHEN-D (bekannte Grenze, I-109)
-- Erste Einschätzung: niedrig; nur relevant, falls Spieler es als falsch lesen.
-
-## 2026-10-16 · UI-HAEPPCHEN-D: Log-Reihenfolge Fern vor Stammkunde/Zufall
-
-- Fundort: `src/ui/autoLog.ts`, Ereignis-Log
-- Beobachtung: Bei gleichem Tick steht der Fern-Eintrag vor Stammkunde- und Zufallseinträgen.
-- Ursprung: R673 (Gate Merge UI-HAEPPCHEN-D)
-- Erste Einschätzung: niedrig; nur Anzeige-Reihenfolge, bei Bedarf sortieren.
-
-## 2026-10-16 · UI-HAEPPCHEN-D: Tooltip «Leer in 0 s» bei Bestand 0
-
-- Fundort: `src/ui/reach.ts`, Tooltip am Gut-Chip
-- Beobachtung: Bei Bestand 0 sagt der Tooltip «Leer in 0 s»; der Chip zeigt korrekt «0 ↓ leer».
-- Ursprung: R673 (Gate Merge UI-HAEPPCHEN-D)
-- Erste Einschätzung: niedrig; Tooltip-Text bei Bestand 0 angleichen.
-
-## 2026-10-16 · UI-HAEPPCHEN-D: doppelte `goodsBalance`-Rechnung
-
-- Fundort: `src/ui/hud.ts:368`
-- Beobachtung: `goodsBalance` wird dort ein zweites Mal gerechnet, obwohl das Ergebnis schon vorliegt.
-- Ursprung: R673 (Gate Merge UI-HAEPPCHEN-D)
-- Erste Einschätzung: niedrig; Ergebnis wiederverwenden.
-
-## 2026-10-16 · UI-HAEPPCHEN-E: Toast «Pausiert» deckt Banner «Pause» nach dem Laden
-
-- Fundort: Playtest T05, nach Laden eines Spielstands (`src/ui/app.ts`, Toast und `.pause-overlay`)
-- Beobachtung: Der Toast «Pausiert — …» (ca. 3 s) liegt deckungsgleich über dem Banner «Pause». Das Overlay bleibt, das Banner ist kurz verdeckt.
-- Ursprung: UI-HAEPPCHEN-E
-- Erste Einschätzung: niedrig.
-
-## 2026-10-16 · UI-HAEPPCHEN-E: Vorschau erst nach «Ablehnen» des Stammkunde-Angebots
-
-- Fundort: Auftragskarte nach Fernlieferung (`previewOrder`, `src/sim/orders.ts`)
-- Beobachtung: Nach einer Fernlieferung zeigt die Karte zuerst das Stammkunde-Angebot, die Vorschau erst nach «Ablehnen». `previewOrder` liefert bei offenem Angebot `null`, beabsichtigt.
-- Ursprung: UI-HAEPPCHEN-E
-- Erste Einschätzung: niedrig; kein Fehler, nur zur Kenntnis.
-
-## 2026-10-16 · UI-HAEPPCHEN-E: Auftragskarte zu Spielbeginn verborgen
-
-- Fundort: Auftragskarte bei stufenweiser Freischaltung (U3)
-- Beobachtung: Zu Spielbeginn ist die Auftragskarte verborgen, die Vorschau wird also erst nach der Freischaltung sichtbar.
-- Ursprung: UI-HAEPPCHEN-E
-- Erste Einschätzung: niedrig; beabsichtigt durch U3.
-
-## 2026-10-16 · CTX-ALTLAST: Agenten suchen mit `grep`, nicht mit `rg`
-
-- Fundort: Transkripte unter `~/.claude/projects/-Users-KN-CAS-projekte-anno-clone/` (2103 Dateien)
-- Beobachtung: Bash-Aufrufe mit `grep` 24361, mit `rg` 5; Grep-Werkzeug 2; davon `grep … rulings.md` 1359. `.ignore` wirkt nur auf `rg` und das Grep-Werkzeug, nicht auf `grep -r`. Ausserdem liest `rg` ohne Pfadangabe im Bash-Werkzeug stdin und hängt (Pfad `.` angeben).
-- Ursprung: CTX-ALTLAST, Messung A (c)
-- Erste Einschätzung: mittel; Persona-Hinweis «mit `rg <muster> .` suchen» wäre der Hebel, braucht Handbuch-Ruling.
-
-## 2026-10-16 · CTX-ALTLAST: `make studio-aufraeumen --apply` geht nicht
-
-- Fundort: `Makefile`, Ziel `studio-aufraeumen`
-- Beobachtung: `make` verwirft `--apply` als eigene Option; das Argument heisst `ARGS=--apply`. Im Auftrag stand die andere Schreibweise; STUDIO.md Schritt 2b nennt die richtige. Der Python-Test liegt unter `tools/studio/tests/` (dort läuft `make studio-test`), nicht unter `tests/tools/` (Vitest).
-- Ursprung: CTX-ALTLAST
-- Erste Einschätzung: niedrig; zur Kenntnis.
-
-## 2026-10-16 · I-091: Vertragskarte könnte bei Fremdinsel dreizeilig werden
-
-- Fundort: Karte «Stammkunde» (`orderCardText`, `.notice-stack`, 300 px breit)
-- Beobachtung: Bei Fremdinsel, Lieferzeit «1:15» und «treu: verzeiht einmal» ist eine dritte Zeile möglich; im Browser nicht geprüft (T05 prüfte Heimat, zwei Zeilen schon vor I-091).
-- Ursprung: Final-Review I-091
-- Erste Einschätzung: niedrig; bei nächstem Karten-Eingriff mitprüfen.
 - 2026-10-16 · Salzregister im Kopf von `src/render/groundDecor.ts` unvollständig: `sprites.ts:2486–2516` (`roadCenter`, Wegsteinchen) nutzt `hash2(seed + 61…65)`, `wildlife.ts:437–448` (Wal) `hash2(seed + 61…64)`; das Register nennt nur «61/62 in terrain.ts» (dort `rotNoise`). Keine sichtbare Kollision (andere Funktionen/Argumente), aber das Register taugt so nicht zur Salzwahl. Ursprung: design-ortsrand (lead-art). Einschätzung: niedrig; beim Reservieren des Ortsrand-Blocks 600–619 (ORT-1) mit nachführen.
