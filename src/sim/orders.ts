@@ -3,6 +3,7 @@ import {
   CONTRACT_MIN_TIER,
   CONTRACT_PENALTY_PCT,
   CONTRACT_PREMIUM,
+  CONTRACT_WARN_TICKS,
   GOODS,
   GOOD_IDS,
   ORDER_PREMIUM,
@@ -301,4 +302,46 @@ export function previewOrder(world: World): { tick: number; good: GoodId } | nul
   const tick = nextOrderTick(world);
   const k = (tick - ORDER_FIRST_TICK) / ORDER_PERIOD;
   return { tick, good: orderForPeriod(world.seed, k, maxHouseTier(world)).good };
+}
+
+/** Nächster Periodenbeginn strikt nach `tick` (ohne `farSkip`: der Vertrag wird jede Periode abgerechnet). */
+export function nextSettleTick(world: World): number {
+  const t = world.tick;
+  if (t < ORDER_FIRST_TICK) return ORDER_FIRST_TICK;
+  return ORDER_FIRST_TICK + ORDER_PERIOD * (Math.floor((t - ORDER_FIRST_TICK) / ORDER_PERIOD) + 1);
+}
+
+export interface ContractWarning {
+  good: GoodId;
+  island: number;
+  amount: number;
+  stock: number;
+  missing: number;
+  reason: 'stock' | 'kontor';
+  restTicks: number;
+  outcome: 'excuse' | 'break';
+  penalty: number; // penalty 0 bei 'excuse'
+}
+
+/** Vorwarnung (I-122): reine Lesefunktion, kein RNG, schreibt nie. `null` ausserhalb des Fensters oder wenn der Spieler nichts tun kann. */
+export function contractWarning(world: World): ContractWarning | null {
+  const c = world.contract;
+  if (c === null) return null;
+  const restTicks = nextSettleTick(world) - world.tick;
+  if (restTicks > CONTRACT_WARN_TICKS) return null;
+  const reason = breakReason(world, c);
+  if (reason !== 'stock' && reason !== 'kontor') return null; // null = liefert, 'lock'/'island' = nicht behebbar
+  const stock = world.islands[c.island]!.stock[c.good];
+  const excuse = c.deliveries >= CONTRACT_LOYAL_AFTER;
+  return {
+    good: c.good,
+    island: c.island,
+    amount: c.amount,
+    stock,
+    missing: Math.max(0, c.amount - stock),
+    reason,
+    restTicks,
+    outcome: excuse ? 'excuse' : 'break',
+    penalty: excuse ? 0 : contractPenalty(c),
+  };
 }

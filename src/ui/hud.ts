@@ -37,6 +37,7 @@ import { iconChip } from './messages';
 import { formatGameTime, GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
 import { flowLabel, flowText, flowTitle } from './balanceFlow';
 import { reachView, TREND_EPS } from './reach';
+import { contractDrain } from './contractDrain';
 
 const SPEEDS: { value: GameState['speed']; label: string }[] = [
   { value: 0, label: '⏸' },
@@ -83,9 +84,9 @@ export interface ChipView {
  * Lager-Chip aus Bestand und Bilanz (je 100 Ticks): „{Bestand} {Pfeil}"; nahe an leer oder voll mit Zeit
  * („12 ↓ 2:10", „40 ↑ 0:40"), bei Bestand 0 und Verbrauch „0 ↓ leer". `label` enthält denselben Text.
  */
-export function stockChipView(good: GoodId, stock: number, net: number): ChipView {
+export function stockChipView(good: GoodId, stock: number, net: number, drain = 0): ChipView {
   const arrow = trendArrow(net);
-  const r = reachView(stock, net, STORAGE_CAP);
+  const r = reachView(stock, net - drain, STORAGE_CAP);
   let text = `${stock} ${arrow}`;
   let reach: ChipView['reach'];
   if (r.kind === 'empty' && stock <= 0) {
@@ -113,19 +114,27 @@ export function chipView(
   island: number = HOME,
   balance: Balance = goodsBalance(world, island),
 ): ChipView {
-  return stockChipView(good, world.islands[island]!.stock[good], balance[good].net);
+  return stockChipView(
+    good,
+    world.islands[island]!.stock[good],
+    balance[good].net,
+    contractDrain(world, good, island),
+  );
 }
 
 /** Tooltip-Zeile zur Reichweite („Leer in 2:10 bei −6 / min …"); leer bei Gleichstand oder Sättigung. */
-export function reachLine(stock: number, net: number): string {
-  const r = reachView(stock, net, STORAGE_CAP);
+export function reachLine(stock: number, net: number, drain = 0): string {
+  const eff = net - drain;
+  const r = reachView(stock, eff, STORAGE_CAP);
   if (r.kind === null) return '';
-  const rate = signedNum(perMinute(net, GOODS_BALANCE_TICKS));
+  const rate = signedNum(perMinute(eff, GOODS_BALANCE_TICKS));
+  const note =
+    drain > 0 ? '(mit Stammkunde, ohne Handel und Aufträge)' : '(ohne Handel und Aufträge)';
   if (r.kind === 'empty' && stock <= 0) {
-    return `Jetzt leer bei ${rate} / min (ohne Handel und Aufträge)\n`;
+    return `Jetzt leer bei ${rate} / min ${note}\n`;
   }
   const word = r.kind === 'empty' ? 'Leer' : 'Voll';
-  return `${word} in ${formatGameTime(r.ticks)} bei ${rate} / min (ohne Handel und Aufträge)\n`;
+  return `${word} in ${formatGameTime(r.ticks)} bei ${rate} / min ${note}\n`;
 }
 
 /** Einwohner-Chip einer Stufe: Stufen-Symbol und Zahl. */
@@ -749,7 +758,7 @@ export function stockTooltip(
   return (
     `${GOODS[good].name} ${world.islands[island]!.stock[good]} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +
     `(Erzeugung ${pm(b.produced)} / min, Verbrauch ${pm(b.consumed)} / min)\n` +
-    reachLine(world.islands[island]!.stock[good], b.net) +
+    reachLine(world.islands[island]!.stock[good], b.net, contractDrain(world, good, island)) +
     focusLine(world, good, island)
   );
 }
