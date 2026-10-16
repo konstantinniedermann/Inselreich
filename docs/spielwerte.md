@@ -226,6 +226,11 @@ Kontor fehlt. Solange der Vertrag läuft, gibt es keine Zufallsaufträge. **Kün
 kostenlos. Fehlen bei der Lieferung Ware oder Kontor, springt der Kunde ab und es kostet eine Strafe in
 Höhe einer Lieferung (Wert je Lieferung), danach geht es mit Zufallsaufträgen weiter.
 
+**Treue (I-091):** Jede pünktliche Lieferung zählt einen Treuepunkt (`CONTRACT_LOYAL_AFTER = 5`); die Karte zeigt
+«Treue n/5». Ist der Stammkunde treu und fehlen bei der Lieferung Ware (`stock`) oder Kontor (`kontor`), verzeiht
+er das einmal: keine Strafe, der Vertrag läuft weiter, der Zähler beginnt bei 0. Der Deckel liegt bei einer Kulanz je
+5 Lieferungen; einen Geldbonus für Treue gibt es nicht (R670). Kündigen und ein neuer Vertrag beginnen bei 0.
+
 #### Fernangebot
 
 Mit einem Kontor auf einer Fremdinsel und einem Haus mindestens der Stufe des Guts bietet der Händler zu
