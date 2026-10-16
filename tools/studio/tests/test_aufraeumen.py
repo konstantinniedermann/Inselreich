@@ -51,6 +51,7 @@ class AufraeumenTest(unittest.TestCase):
         self.assertEqual(c("m13-e1"), "live")
         self.assertEqual(c("UI-HAEPPCHEN-D"), "open")
         self.assertEqual(c("rel-24"), "open")
+        self.assertEqual(c("I-1000"), "unknown")
         self.assertEqual(c("m14-e1"), "unknown")
         self.assertEqual(c("rel-hf1"), "unknown")
 

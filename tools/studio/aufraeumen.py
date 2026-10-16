@@ -67,17 +67,25 @@ def load_rules(releases_json: Path) -> Rules:
     return rules
 
 
+def _has_prefix(flat: str, pkg: str) -> bool:
+    """Paket-ID am Anfang; endet sie auf eine Ziffer, darf keine weitere Ziffer folgen (I-10 nicht I-100)."""
+    if not flat.startswith(pkg):
+        return False
+    rest = flat[len(pkg) :]
+    return not rest or not (pkg[-1].isdigit() and rest[0].isdigit())
+
+
 def classify(name: str, rules: Rules) -> str:
     """'live' (Bilder weg), 'open' (bleibt) oder 'unknown' (Alter entscheidet)."""
     flat = _norm(name)
     for pkg in rules.open_pkgs:
-        if flat.startswith(pkg):
+        if _has_prefix(flat, pkg):
             return "open"
     rel = re.match(r"rel-?0*(\d+)(?!\d)", name, re.IGNORECASE)
     if rel and int(rel.group(1)) in rules.open_rel:
         return "open"
     for pkg in rules.live_pkgs:
-        if flat.startswith(pkg):
+        if _has_prefix(flat, pkg):
             return "live"
     if rel and int(rel.group(1)) in rules.live_rel:
         return "live"
