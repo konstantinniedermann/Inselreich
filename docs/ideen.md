@@ -93,10 +93,10 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 | ---- | ----- | -------------------------------- | ------ | ----- | --------------- | ------------------------------------------------- | ------------------------------------------------- |
 | 1    | I-092 | Inselmarkt-Vorliebe              | S–M    | 12    | nein / nein     | jede Fremdinsel bekommt eine Handelsrolle, 1 Pkt. | einplanen: Design-Paket mit Rechnung, dann 1 Pkt. |
 | 2    | I-100 | «Neu»-Zähler am Ereignis-Log     | S–M    | 11    | nein / nein     | verpasste Krisen bei 4× lesbar, ≈ 70 Tools        | einplanen Häppchen danach; ersetzt I-058          |
-| 3    | I-095 | Fernauftrag an einem Fremdkontor | M      | 11    | ja / nein       | Routen bekommen einen zweiten Zweck, ≈ 2 Pakete   | parken: Handels-Brainstorming (mit I-092)         |
+| 3    | I-095 | Fernauftrag an einem Fremdkontor | M      | 11    | ja / nein       | Routen bekommen einen zweiten Zweck, ≈ 2 Pakete   | erledigt: Handel 2 Fernangebot (R658)             |
 | 4    | I-094 | Darlehen beim Händler            | S–M    | 11    | ja / nein       | Vorziehen gegen Dauerlast, Entartung offen        | parken: Wirtschafts-Brainstorming                 |
 | 5    | I-091 | Treuebonus beim Stammkunden      | M      | 11    | ja / nein       | Bindung belohnt, vor Playtest I-047 verfrüht      | parken: Playtest I-047                            |
-| 6    | I-093 | Auftrag umtauschen               | S      | 10    | ja / nein       | Reroll gegen Geld, Wahl dünn                      | parken: Handels-Brainstorming                     |
+| 6    | I-093 | Auftrag umtauschen               | S      | 10    | ja / nein       | Reroll gegen Geld, Wahl dünn                      | verworfen: aufgegangen in Handel 2 (R658)         |
 | 7    | I-097 | Pause sichtbar auf der Karte     | S      | 9     | nein / nein     | Orientierung, kein Playtest-Befund                | parken (Lückenfüller)                             |
 | —    | I-096 | Steuerstufe je Insel             | S–M    | 8     | ja / nein       | Stellschraube ohne neue Abwägung                  | verwerfen                                         |
 
@@ -153,7 +153,7 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Nutzen/Aufwand: Handel wird eine Ortsfrage · S–M · Rechnung ≈ 40 Tools, Sim+UI ≈ 1 Paket
 - Entscheid: IDEEN-09 Empfehlung einplanen als Handels-Baustein: Design-Paket (Spec klein mit Rechnung), danach 1 Paket; I-095 im selben Brainstorming prüfen
 
-### I-093 · bewertet · Auftrag umtauschen (Händler rufen)
+### I-093 · verworfen (aufgegangen in Handel 2, R658) · Auftrag umtauschen (Händler rufen)
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout B; Genre-Mechanik Wahl unter Bestellungen; `src/sim/orders.ts` (ein Auftrag, Verfall ohne Strafe) · Herkunft: vom Studio vorgeschlagen
 - Spielerwirkung: „Der Spieler sieht «Auftrag: 12 Rum» bei leerem Lager und ruft für 60 Geld einen anderen Händler."
@@ -165,7 +165,8 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Bewertung lead-design: Spass 2 → 1: Bei 60 Geld gegen Prämien ab ≈ 130 tauscht man immer, wenn das Lager leer ist; die Wahl schrumpft auf eine Gebühr. Ein verfallener Auftrag kostet heute nichts, der Schmerz ist klein.
 - Nutzen/Aufwand: kleiner Nutzen · S · ≈ 70 Tools
 - Entscheid: IDEEN-09 Empfehlung parken bis Handels-Brainstorming
-- Stand Handel 2 (design-handel-2, 2026-10-14): Vorschlag «geht in Handel 2 auf» (Wahl unter Bestellungen ohne Gebühr, V1 Fernangebot); Fassung mit 60 Geld verwerfen; Gate Brainstorming offen (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
+- Stand Handel 2 (design-handel-2, 2026-10-14): Vorschlag «geht in Handel 2 auf» (Wahl unter Bestellungen ohne Gebühr, V1 Fernangebot); Fassung mit 60 Geld verwerfen (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
+- Stand 2026-10-16: Handel 2 gemergt (Gate Merge R658); das Fernangebot ist die gebührenfreie Wahl unter Bestellungen. Die Gebührenfassung (60 Geld, Reroll) bleibt verworfen; Status verworfen, Verschieben ins Archiv durch L0 (Vorschlag).
 
 ### I-094 · bewertet · Darlehen beim Händler
 
@@ -180,7 +181,7 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Nutzen/Aufwand: mittlerer Nutzen, Entartungsrisiko · S–M · ≈ 1–2 Pakete
 - Entscheid: IDEEN-09 Empfehlung parken bis Wirtschafts-Brainstorming nach Erweiterung 1 K2
 
-### I-095 · bewertet · Fernauftrag an einem Fremdkontor
+### I-095 · erledigt (Handel 2, R658) · Fernauftrag an einem Fremdkontor
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout B; Genre-Mechanik ortsgebundener Lieferauftrag; `docs/spielwerte.md` Handelsaufträge (`ORDER_PREMIUM` 0,75), Kontor II · Herkunft: vom Studio vorgeschlagen
 - Spielerwirkung: „Der Spieler sieht «Fernauftrag Felsbucht: 12 Rum zu 38 · noch 3:00» und richtet eine Route ein, um die Ware dorthin zu fahren."
@@ -192,7 +193,8 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Bewertung lead-design: Spass 3 → 2 (Seefahrt, Mittelspiel). Gleiche Stossrichtung wie I-092, aber teurer und mit Save; im Handels-Brainstorming gegen I-092 abwägen, nicht beide.
 - Nutzen/Aufwand: Routen mit zweitem Zweck · M · ≈ 2 Pakete
 - Entscheid: IDEEN-09 Empfehlung parken bis Handels-Brainstorming (mit I-092, I-029, I-006)
-- Stand Handel 2 (design-handel-2, 2026-10-14): Empfehlung V1 Fernangebot neben dem Auftrag (Vorliebe-Gut der Insel, Stück 0,75 wegen Edikt-Grenze 0,8, Frist 2:30, kostet die nächste Periode); Gate Brainstorming offen (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
+- Stand Handel 2 (design-handel-2, 2026-10-14): Empfehlung V1 Fernangebot neben dem Auftrag (Vorliebe-Gut der Insel, Stück 0,75 wegen Edikt-Grenze 0,8, Frist 2:30, kostet die nächste Periode) (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
+- Stand 2026-10-16: umgesetzt als Fernangebot in Handel 2 (`farOffer`, `acceptFarOrder`, `FAR_ORDER_DURATION`; Gate Merge R658, gemergt, Push mit REL-23). Offen bleibt nur I-092 (Inselmarkt-Vorliebe) als eigene Idee; Verschieben ins Archiv durch L0 (Vorschlag).
 
 ### I-096 · bewertet · Steuerstufe je Insel
 
@@ -246,7 +248,7 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Randfälle: nur das Gut, nie die Menge; «voraussichtlich» (Stufenaufstieg kann das Gut ändern); bei Vertrag oder gesperrter Folgeperiode keine Vorschau. Entartung: Vorschau-Nutzer verkauft nie das nächste Auftragsgut; Preis ist Lagerplatz, kein Gewinn.
 - Doppelung: I-029 (Gefragte Ware, geparkt) ändert Preise; I-102 zeigt nur Vorhandenes. Handel 2: Fernangebot-Insel der Periode darf mitgenannt werden.
 - Nutzen/Aufwand: Auftrag planbar statt Zufall · S · ≈ 60 Tools
-- Entscheid: offen (IDEEN-10)
+- Entscheid: offen (IDEEN-10); Kurzdesign 2026-10-16 (`docs/superpowers/specs/2026-10-16-i102-auftragsvorschau.md`), Gate Kurzdesign offen
 
 ### I-103 · bewertet · Routen-Bilanz (lohnt dieses Schiff?)
 
