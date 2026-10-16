@@ -331,3 +331,24 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Die Lagerzahl der Fernkarte färbt sich bei Mangel nicht rot; das war schon vor I-114 so. Plan T03 Punkt 3 nannte «rot/normal».
 - Ursprung: I-114
 - Erste Einschätzung: gering; bei nächster Berührung der Fernkarte mitnehmen.
+
+## 2026-10-16 · PERF-BILANZ-COV: Routen-Bilanz bei Pause-/Ausfall-Wechsel im selben Tick
+
+- Fundort: `src/sim/routeBalance.ts` (Memo der Routen-Bilanz), `src/ui/hud.ts`
+- Beobachtung: Wechselt eine Route im selben Tick zwischen Pause und Ausfall, bleibt die Bilanz bis zum nächsten Tick alt.
+- Ursprung: PERF-BILANZ-COV (R727)
+- Erste Einschätzung: niedrig; höchstens ein Tick Verzögerung.
+
+## 2026-10-16 · PERF-BILANZ-COV: `|island` im Memo-Schlüssel überflüssig
+
+- Fundort: `src/sim/routeBalance.ts` (Memo-Schlüssel)
+- Beobachtung: Der Zusatz `|island` im Memo-Schlüssel ist überflüssig.
+- Ursprung: PERF-BILANZ-COV (R727)
+- Erste Einschätzung: niedrig; bei nächster Berührung von `routeBalance.ts` streichen.
+
+## 2026-10-16 · PERF-BILANZ-COV: `focusLine`/`focusList`/`houseConsumers` je Chip ungemessen
+
+- Fundort: `src/ui/hud.ts` (`focusLine`, `focusList`, `houseConsumers`)
+- Beobachtung: Die Kosten dieser Funktionen je Chip wurden nicht gemessen.
+- Ursprung: PERF-BILANZ-COV (R727)
+- Erste Einschätzung: niedrig; messen, falls die Kopfzeile auf grossen Inseln weiter ruckelt.
