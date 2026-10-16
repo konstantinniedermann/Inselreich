@@ -1968,3 +1968,15 @@ der Folgesession ab main (I-112 ist gemergt). Drei Controller-Befunde (keine Nah
 Regelbezug: gates.md Gate Spec, R674, R711, R722, R737 · Kosten bei Irrtum: eine Obergrenze, die nach dem Playtest verschoben wird.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I-132-I-133 · ADR: —
+
+## R746 · 2026-10-16 · ORT-A C3 bis T06 abgenommen; T06-BEDENKEN zuerst in C4; ORT-A pausiert bis zur Folgesession
+
+Ruling: `feat/ort-a` @ `310c6e00` (T04–T06, T05b, U1-Zuschnitt `548b8440`/`339f535b`, Fix `cf5a239b`; Handoff `.studio/handoffs/2026-10-16-lead-tech-ORT-A-C3.md`) → abgenommen mit
+offenem T06-BEDENKEN (mittel). Richtwert nach T06 B/A ≈ 1,41 (Last 5–9, «Messfenster belegt»; vorher 2,5) — weiter über +20 %, Entscheid in T09 (R739). **C4 beginnt in der
+Folgesession mit:** (a) Unit-Test des Ringpfads von `twoZonePieces` mit zwei `GroundEdge` (Ring schmutzig erzwingen) — schlägt er fehl oder zeigt er keinen Nutzen, wird auf
+Rand 1 vereinfacht (Entscheid L0 nach Bericht); (b) Merge `feat/ort-a-mess` (P-1); (c) Fixture und Schwellen Z. 200/205 (R730); (d) T09 nur bei freiem Messfenster. AK-07
+(≤ 2 s je Fall, unter Last 2,8–3,8 s) wird bei T21 verkleinert. Budget (V3): C3 **9 von 9**; ORT-A-Puffer **9 von 12**; Gesamt ORT-A ≈ 30 von 57 Starts.
+
+Regelbezug: R705, R730, R735, R736, R739, R744 · Kosten bei Irrtum: ein Ringpfad, der als toter Code in den Merge geht.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C3 · ADR: —
