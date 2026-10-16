@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.59 · Stand: 2026-10-16 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.60 · Stand: 2026-10-16 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -368,6 +368,10 @@ Regeln dazu:
   Browser-Check auf demselben Stand, prüft das Release-Review nur das Delta seit dem Final-Review
   (`git diff <final-review-commit> <kandidat> -- src/ tests/`, `make check`, `make check-ci-perf`;
   Browser nur für Neues); ein Delta in `src/` führt zum vollen Release-Review.
+  **Release-Check nur in der Push-Session (R712 V2):** Der Release-Check läuft ausschliesslich in der Session, die pusht, am zu pushenden
+  Hash und stützt sich auf die Final-Reviews und Browser-Belege der Paket-Gates; Vorab-Check und Delta-Check entfallen, «Release-Check jetzt,
+  Push in der Folgesession» gibt es nicht. Eine Session ohne Push meldet «release-bereit (lokal)». Messgrösse je Release: ≤ 2 `lead-qa`-Starts
+  (`gate-REL-*`/`*-PUSH`) und ≤ 1 Integrator-Start, über 3 Releases; Rückfall: Vorab-Check wieder zulässig.
 - **Häppchen auf Etappen-Dateien (R249 (2)):** Berührt ein Häppchen Dateien, die eine laufende Etappe
   exklusiv hält, nennt das Reihenfolge-Ruling den erwarteten Etappen-Merge. Fällt er in dieselbe
   Session, setzt das Häppchen auf der Etappen-Branch auf und geht mit ihr nach main (kein eigenes
