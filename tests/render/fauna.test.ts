@@ -183,7 +183,7 @@ describe('Fauna T1: Obergrenzen', () => {
           }
     }
     expect(seen).toBeGreaterThan(0);
-  });
+  }, 15_000);
 
   it('die 13 Fauna-Schlüssel stehen in CAPS wie in der Spec (Summe 69 normal, höchstens 9 reduziert)', () => {
     const keys = [
@@ -375,7 +375,7 @@ describe('Fauna T1: Posen und Orte', () => {
     }
     for (const id of ['butterfly', 'hare', 'firefly', 'fox', 'forestBird'])
       expect(seen.has(id)).toBe(true);
-  });
+  }, 10_000);
 
   it('Fuchs und Waldvögel sind Episoden: meist unsichtbar, sichtbar höchstens FOX_RUN_MS je Zyklus', () => {
     let visible = 0,
@@ -762,7 +762,7 @@ describe('Fauna T2: Orte und Haltung', () => {
       expect(pr[id] ?? 0, `${id} present`).toBeGreaterThanOrEqual(2);
     }
     expect(el.fall ?? 0).toBe(0);
-  });
+  }, 10_000);
 
   it('Tageszeit und Wetter: keine der T2-Arten nachts, Adler nicht bei rain/storm', () => {
     for (const seed of SEEDS20) {

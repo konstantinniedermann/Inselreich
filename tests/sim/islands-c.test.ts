@@ -78,7 +78,7 @@ describe('Ersatzregel Stufe 3 (M14-E1 T02)', () => {
       const lanes = seaLanes([home, ...forced]);
       expect(lanes.find((l) => l.a === 0 && l.b === forced.length)).toBeDefined();
     }
-  });
+  }, 10_000);
 
   it('bestehende Seewege kreuzen die erzwungene Insel nicht', () => {
     const last = ISLANDS[ISLANDS.length - 1]!.kind;

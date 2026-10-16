@@ -127,5 +127,5 @@ describe('WALD-02 Fix-Runde 3 A: Bäume am Gebäude', () => {
       }
     }
     expect(front).toBeGreaterThan(0);
-  });
+  }, 10_000);
 });

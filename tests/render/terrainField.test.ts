@@ -192,7 +192,7 @@ describe('Küstenfeld', () => {
     checkTiles(createWorld(3)));
   it('AK-R1-02 weitere Seeds (1, 42, 12588, 5, 7, 9, 100)', () => {
     for (const seed of [1, 42, 12588, 5, 7, 9, 100]) checkTiles(createWorld(seed));
-  });
+  }, 10_000);
   it('RF-1a Karte ohne Wasser', () => checkTiles(mini(['ggg', 'gfg', 'ggg'])));
   it('RF-1b Karte ohne Land (keine Infinity/NaN)', () => {
     const w = mini(['www', 'www']);

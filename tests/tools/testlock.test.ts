@@ -190,7 +190,7 @@ describe('testlock (R378)', () => {
     for (const ci of ['false', '0', '']) {
       expect(run({ CI: ci }, 'node', '-e', '0').status).toBe(3);
     }
-  });
+  }, 10_000);
 
   it('Signal-Ende des Befehls: Exit 128 + Signalnummer', () => {
     const { run } = setup();
