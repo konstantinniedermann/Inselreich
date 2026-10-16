@@ -281,8 +281,8 @@ body {
   font-weight: 700;
 }
 .chip.reach-full {
-  color: #cfd8b0;
-  opacity: 0.85;
+  color: #b9c49a;
+  font-style: italic;
 }
 .hud-row,
 .stock-row {
