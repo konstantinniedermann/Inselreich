@@ -133,6 +133,10 @@ import { clearForest, plantForest } from '../sim/forest';
 import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../sim/tax';
 import { lockedTierFor } from './taxView';
 import { setEdict } from '../sim/edicts';
+import { decree } from '../sim/council';
+import { COUNCIL, COUNCIL_OPEN_MESSAGE } from '../sim/defs/council';
+import { councilEscapeHandled, councilOpenNext, councilOpened } from './council';
+import { createCouncilCard } from './councilCard';
 import { setMonumentBuy, setMonumentPaused, startMonumentStage } from '../sim/monument';
 import { monumentStageCost, monumentStartedText } from './monumentView';
 import { setPaused } from '../sim/pause';
@@ -610,7 +614,27 @@ function launch(
     refresh();
   };
 
+  /** Rats-Karte (I-112): kein Modal, keine Pause; `prevCouncil` ab Start = geladener Stand (kein Hinweis für Altes). */
+  let prevCouncil: World['council'] | null = { ...world.council };
+  const councilCard = createCouncilCard(
+    gameEl,
+    (tier, side) => {
+      const r = decree(world, tier, side);
+      if (r.ok) {
+        showMessage(`Beschluss gefasst: ${COUNCIL[tier][side].name}`);
+        sound.play('build');
+      } else showError(friendlyReason(world, r.reason));
+      refresh();
+    },
+    () => {
+      councilCard.setOpen(councilOpenNext(true, 'escape'));
+    },
+  );
+
   const actions: HudActions = {
+    toggleCouncil: () => {
+      councilCard.setOpen(councilOpenNext(councilCard.isOpen, 'toggle'));
+    },
     jumpToIsland,
     openUpkeep: (opener) => openUpkeepCard(gameEl, world, jumpToBuilding, opener),
     toggleGoodFocus: (good) => runFocusToggle(focusDeps, good),
@@ -932,6 +956,9 @@ function launch(
     trackFullSince(fullSince, world);
     syncContractCursor();
     updateHud(hudEl, state, actions);
+    if (councilOpened(prevCouncil, world.council).length > 0) showMessage(COUNCIL_OPEN_MESSAGE);
+    prevCouncil = { ...world.council };
+    councilCard.update(world);
     updateNoticeStack(noticeStack, world, state.activeIsland);
     updateEventLog(
       logBox,
@@ -1045,6 +1072,8 @@ function launch(
       const t = upgradeTarget(state.panel, world);
       if (t.ok) upgradeSelected(t.id);
       else showError(t.reason);
+    } else if (h.kind === 'council') {
+      councilCard.setOpen(councilOpenNext(councilCard.isOpen, 'toggle'));
     } else if (h.kind === 'help') {
       openHelp();
     } else if (h.kind === 'islandHome') {
@@ -1155,6 +1184,10 @@ function launch(
       return;
     }
     if (a.type === 'cancel') {
+      if (councilEscapeHandled(councilCard.isOpen)) {
+        councilCard.setOpen(councilOpenNext(true, 'escape')); // offene Rats-Karte zuerst
+        return;
+      }
       clearRoadLine();
       clearGoodFocus();
       demolishConfirm = confirmStep(world, demolishConfirm, { kind: 'reset' }).state; // auch wenn nur ein Toast schliesst

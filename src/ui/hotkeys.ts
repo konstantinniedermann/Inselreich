@@ -3,6 +3,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { buildingShown, functionLock } from '../sim/unlocks';
 import type { Category, World } from '../sim/types';
 import type { PanelState } from './app';
+import { COUNCIL_KEY, councilBadge } from './council';
 import { isSaveChord, type Mods } from './saveChord';
 
 // Wiederausfuhr: bestehende Importe (Tests) bleiben gültig.
@@ -49,6 +50,7 @@ export type HotkeyAction =
   | { kind: 'speed'; speed: 1 | 2 | 4 }
   | { kind: 'pause' }
   | { kind: 'upgrade' }
+  | { kind: 'council' }
   | { kind: 'help' }
   | { kind: 'islandHome' }
   | { kind: 'islandCycle' }
@@ -95,6 +97,8 @@ export function hotkeyAction(
   if (k === PROBLEM_PREV_KEY) return { kind: 'problemPrev' };
   // Umschalt+U = Ausbau; Gross-U ohne Umschalt (Feststelltaste) bleibt Schule (Spec C-2)
   if (k === 'u' && mods.shift === true) return { kind: 'upgrade' };
+  // Umschalt+R = Rats-Karte (I-112); R ohne Umschalt bleibt Weg
+  if (k === 'r' && mods.shift === true) return { kind: 'council' };
   // Inselsprung nur mit der Seefahrt, sonst stumm (M12 E2)
   if (k === ISLAND_HOME_KEY) return seafaring ? { kind: 'islandHome' } : null;
   if (k === ISLAND_CYCLE_KEY) return seafaring ? { kind: 'islandCycle' } : null;
@@ -209,6 +213,7 @@ export function hotkeyList(world: World): { key: string; label: string }[] {
     functionLock(world, 'upgrade2') === null
       ? [{ key: 'Umschalt + U', label: 'Markiertes Gebäude ausbauen' }]
       : [];
+  const council = councilBadge(world) !== null ? [{ key: COUNCIL_KEY, label: 'Rat öffnen' }] : [];
   return [
     ...tools,
     ...speeds,
@@ -217,6 +222,7 @@ export function hotkeyList(world: World): { key: string; label: string }[] {
     { key: PROBLEM_NEXT_KEY, label: 'Nächstes Problem anspringen' },
     { key: PROBLEM_PREV_KEY, label: 'Voriges Problem anspringen' },
     ...upgrade,
+    ...council,
     ...islands,
     ...NAV_KEYS,
   ];
