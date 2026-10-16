@@ -89,16 +89,16 @@ I-081, I-082, I-084, I-086 (R566), dazu I-048 (R571 Verzicht, Mechanik inaktiv);
 
 Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu durchnummeriert (bisherige Ränge 2 und 7 = I-088/I-090, Zeilen im Archiv).
 
-| Rang | ID    | Name                             | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                    | Empfehlung                                        |
-| ---- | ----- | -------------------------------- | ------ | ----- | --------------- | ------------------------------------------------- | ------------------------------------------------- |
-| 1    | I-092 | Inselmarkt-Vorliebe              | S–M    | 12    | nein / nein     | jede Fremdinsel bekommt eine Handelsrolle, 1 Pkt. | einplanen: Design-Paket mit Rechnung, dann 1 Pkt. |
-| 2    | I-100 | «Neu»-Zähler am Ereignis-Log     | S–M    | 11    | nein / nein     | verpasste Krisen bei 4× lesbar, ≈ 70 Tools        | einplanen Häppchen danach; ersetzt I-058          |
-| 3    | I-095 | Fernauftrag an einem Fremdkontor | M      | 11    | ja / nein       | Routen bekommen einen zweiten Zweck, ≈ 2 Pakete   | parken: Handels-Brainstorming (mit I-092)         |
-| 4    | I-094 | Darlehen beim Händler            | S–M    | 11    | ja / nein       | Vorziehen gegen Dauerlast, Entartung offen        | parken: Wirtschafts-Brainstorming                 |
-| 5    | I-091 | Treuebonus beim Stammkunden      | M      | 11    | ja / nein       | Bindung belohnt, vor Playtest I-047 verfrüht      | parken: Playtest I-047                            |
-| 6    | I-093 | Auftrag umtauschen               | S      | 10    | ja / nein       | Reroll gegen Geld, Wahl dünn                      | parken: Handels-Brainstorming                     |
-| 7    | I-097 | Pause sichtbar auf der Karte     | S      | 9     | nein / nein     | Orientierung, kein Playtest-Befund                | parken (Lückenfüller)                             |
-| —    | I-096 | Steuerstufe je Insel             | S–M    | 8     | ja / nein       | Stellschraube ohne neue Abwägung                  | verwerfen                                         |
+| Rang | ID    | Name                         | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                    | Empfehlung                                        |
+| ---- | ----- | ---------------------------- | ------ | ----- | --------------- | ------------------------------------------------- | ------------------------------------------------- |
+| 1    | I-092 | Inselmarkt-Vorliebe          | S–M    | 12    | nein / nein     | jede Fremdinsel bekommt eine Handelsrolle, 1 Pkt. | einplanen: Design-Paket mit Rechnung, dann 1 Pkt. |
+| 2    | I-100 | «Neu»-Zähler am Ereignis-Log | S–M    | 11    | nein / nein     | verpasste Krisen bei 4× lesbar, ≈ 70 Tools        | einplanen Häppchen danach; ersetzt I-058          |
+| 4    | I-094 | Darlehen beim Händler        | S–M    | 11    | ja / nein       | Vorziehen gegen Dauerlast, Entartung offen        | parken: Wirtschafts-Brainstorming                 |
+| 5    | I-091 | Treuebonus beim Stammkunden  | M      | 11    | ja / nein       | Bindung belohnt, vor Playtest I-047 verfrüht      | parken: Playtest I-047                            |
+| 7    | I-097 | Pause sichtbar auf der Karte | S      | 9     | nein / nein     | Orientierung, kein Playtest-Befund                | parken (Lückenfüller)                             |
+| —    | I-096 | Steuerstufe je Insel         | S–M    | 8     | ja / nein       | Stellschraube ohne neue Abwägung                  | verwerfen                                         |
+
+I-093 (verworfen) und I-095 (erledigt) sind nach Handel 2 (R658, R664) ins Archiv verschoben; die Ränge 3 und 6 entfallen.
 
 ## Ideen
 
@@ -153,20 +153,6 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Nutzen/Aufwand: Handel wird eine Ortsfrage · S–M · Rechnung ≈ 40 Tools, Sim+UI ≈ 1 Paket
 - Entscheid: IDEEN-09 Empfehlung einplanen als Handels-Baustein: Design-Paket (Spec klein mit Rechnung), danach 1 Paket; I-095 im selben Brainstorming prüfen
 
-### I-093 · bewertet · Auftrag umtauschen (Händler rufen)
-
-- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout B; Genre-Mechanik Wahl unter Bestellungen; `src/sim/orders.ts` (ein Auftrag, Verfall ohne Strafe) · Herkunft: vom Studio vorgeschlagen
-- Spielerwirkung: „Der Spieler sieht «Auftrag: 12 Rum» bei leerem Lager und ruft für 60 Geld einen anderen Händler."
-- Grösse: S · Save ja (Sperrzeit) · Baseline nein, solange der Controller nicht tauscht; eigener Zufallsstrom (ADR-010) · Abhängigkeiten: keine
-- Startwerte (Scout): 60 Geld, Sperre 3:00, ein Tausch je Auftrag, anderes Gut.
-- Randfälle: kein Auftrag oder Stammkunde aktiv → kein Knopf; zu wenig Geld → blass mit Grund.
-- Doppelung: keine.
-- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12 · Raster (lead-design): Spass 1 · Passung 3 · Aufwand 3 · Risiko 2 = 10
-- Bewertung lead-design: Spass 2 → 1: Bei 60 Geld gegen Prämien ab ≈ 130 tauscht man immer, wenn das Lager leer ist; die Wahl schrumpft auf eine Gebühr. Ein verfallener Auftrag kostet heute nichts, der Schmerz ist klein.
-- Nutzen/Aufwand: kleiner Nutzen · S · ≈ 70 Tools
-- Entscheid: IDEEN-09 Empfehlung parken bis Handels-Brainstorming
-- Stand Handel 2 (design-handel-2, 2026-10-14): Vorschlag «geht in Handel 2 auf» (Wahl unter Bestellungen ohne Gebühr, V1 Fernangebot); Fassung mit 60 Geld verwerfen; Gate Brainstorming offen (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
-
 ### I-094 · bewertet · Darlehen beim Händler
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout B; Genre-Mechanik Kredit mit Tilgung; `docs/spielwerte.md` (Geld darf negativ werden, dann Bauen und Kaufen gesperrt) · Herkunft: vom Studio vorgeschlagen
@@ -179,20 +165,6 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Bewertung lead-design: Spass 3 → 2: Die Wahl trägt nur im schmalen Fenster Bürger-Ziel bis Mittelspiel, und ihre Härte hängt an einer Rechnung, die heute fehlt. Das Spiel leidet eher an zu viel als an zu wenig Geld (Erweiterung 1 §1); eine Geldquelle verschärft das.
 - Nutzen/Aufwand: mittlerer Nutzen, Entartungsrisiko · S–M · ≈ 1–2 Pakete
 - Entscheid: IDEEN-09 Empfehlung parken bis Wirtschafts-Brainstorming nach Erweiterung 1 K2
-
-### I-095 · bewertet · Fernauftrag an einem Fremdkontor
-
-- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout B; Genre-Mechanik ortsgebundener Lieferauftrag; `docs/spielwerte.md` Handelsaufträge (`ORDER_PREMIUM` 0,75), Kontor II · Herkunft: vom Studio vorgeschlagen
-- Spielerwirkung: „Der Spieler sieht «Fernauftrag Felsbucht: 12 Rum zu 38 · noch 3:00» und richtet eine Route ein, um die Ware dorthin zu fahren."
-- Grösse: M · Save ja (Ort im Auftrag) · Baseline nein (Controller ohne Fremdkontor) · Abhängigkeiten: Fremdkontor und Route; I-092 (nicht multiplizieren)
-- Startwerte (Scout): jeder dritte Auftrag ab Seefahrt, Prämie `floor(buy × 0,95)`, Frist 3:00, kein Strafgeld.
-- Randfälle: Ware muss im Lager der Fremdinsel liegen; liegt sie schon dort, keine Dominanz; mit Stammkunde im Auftragsplatz abstimmen.
-- Doppelung: I-017 (geführte Seefahrt-Aufträge, geparkt) ist Lernpfad, kein Zufallsauftrag.
-- Raster (Scout): Spass 3 · Passung 3 · Aufwand 2 · Risiko 2 = 13 · Raster (lead-design): Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
-- Bewertung lead-design: Spass 3 → 2 (Seefahrt, Mittelspiel). Gleiche Stossrichtung wie I-092, aber teurer und mit Save; im Handels-Brainstorming gegen I-092 abwägen, nicht beide.
-- Nutzen/Aufwand: Routen mit zweitem Zweck · M · ≈ 2 Pakete
-- Entscheid: IDEEN-09 Empfehlung parken bis Handels-Brainstorming (mit I-092, I-029, I-006)
-- Stand Handel 2 (design-handel-2, 2026-10-14): Empfehlung V1 Fernangebot neben dem Auftrag (Vorliebe-Gut der Insel, Stück 0,75 wegen Edikt-Grenze 0,8, Frist 2:30, kostet die nächste Periode); Gate Brainstorming offen (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
 
 ### I-096 · bewertet · Steuerstufe je Insel
 
@@ -213,6 +185,7 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Bewertung lead-design: Genre-Standard, aber kein Playtest-Befund; Lückenfüller.
 - Nutzen/Aufwand: Orientierung · S · ≈ 40 Tools
 - Entscheid: IDEEN-09 Empfehlung parken (Lückenfüller)
+- Status 2026-10-16: Parken aufgehoben (R663); Kurzdesign `docs/superpowers/specs/2026-10-16-i097-pause-sichtbar.md` (11 AK, kein Save); Umsetzung nach UI-HAEPPCHEN-D
 
 ### I-100 · bewertet · «Neu»-Zähler am Ereignis-Log
 
@@ -246,7 +219,7 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Randfälle: nur das Gut, nie die Menge; «voraussichtlich» (Stufenaufstieg kann das Gut ändern); bei Vertrag oder gesperrter Folgeperiode keine Vorschau. Entartung: Vorschau-Nutzer verkauft nie das nächste Auftragsgut; Preis ist Lagerplatz, kein Gewinn.
 - Doppelung: I-029 (Gefragte Ware, geparkt) ändert Preise; I-102 zeigt nur Vorhandenes. Handel 2: Fernangebot-Insel der Periode darf mitgenannt werden.
 - Nutzen/Aufwand: Auftrag planbar statt Zufall · S · ≈ 60 Tools
-- Entscheid: offen (IDEEN-10); Stand UI-HAEPPCHEN-D: bleibt offen, Kurzdesign fehlt
+- Entscheid: offen (IDEEN-10); Kurzdesign 2026-10-16 (`docs/superpowers/specs/2026-10-16-i102-auftragsvorschau.md`), Gate Kurzdesign offen
 
 ### I-103 · bewertet · Routen-Bilanz (lohnt dieses Schiff?)
 

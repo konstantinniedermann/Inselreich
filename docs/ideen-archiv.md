@@ -681,3 +681,33 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Doppelung: I-043 und I-085 (live) zeigen die Gegenwart; diese Idee ergänzt die Zeitachse.
 - Nutzen/Aufwand: Mangel vorausplanen statt hinterherlaufen · S–M · ≈ 1 Paket
 - Entscheid: IDEEN-10 einplanen Häppchen; live mit UI-HAEPPCHEN-D (2026-10-16)
+
+### I-093 · verworfen (aufgegangen in Handel 2, R658) · Auftrag umtauschen (Händler rufen)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout B; Genre-Mechanik Wahl unter Bestellungen; `src/sim/orders.ts` (ein Auftrag, Verfall ohne Strafe) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht «Auftrag: 12 Rum» bei leerem Lager und ruft für 60 Geld einen anderen Händler."
+- Grösse: S · Save ja (Sperrzeit) · Baseline nein, solange der Controller nicht tauscht; eigener Zufallsstrom (ADR-010) · Abhängigkeiten: keine
+- Startwerte (Scout): 60 Geld, Sperre 3:00, ein Tausch je Auftrag, anderes Gut.
+- Randfälle: kein Auftrag oder Stammkunde aktiv → kein Knopf; zu wenig Geld → blass mit Grund.
+- Doppelung: keine.
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12 · Raster (lead-design): Spass 1 · Passung 3 · Aufwand 3 · Risiko 2 = 10
+- Bewertung lead-design: Spass 2 → 1: Bei 60 Geld gegen Prämien ab ≈ 130 tauscht man immer, wenn das Lager leer ist; die Wahl schrumpft auf eine Gebühr. Ein verfallener Auftrag kostet heute nichts, der Schmerz ist klein.
+- Nutzen/Aufwand: kleiner Nutzen · S · ≈ 70 Tools
+- Entscheid: IDEEN-09 Empfehlung parken bis Handels-Brainstorming
+- Stand Handel 2 (design-handel-2, 2026-10-14): Vorschlag «geht in Handel 2 auf» (Wahl unter Bestellungen ohne Gebühr, V1 Fernangebot); Fassung mit 60 Geld verwerfen (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
+- Stand 2026-10-16: Handel 2 gemergt (Gate Merge R658); das Fernangebot ist die gebührenfreie Wahl unter Bestellungen. Die Gebührenfassung (60 Geld, Reroll) bleibt verworfen; Status verworfen, Verschieben ins Archiv durch L0 (Vorschlag).
+
+### I-095 · erledigt (Handel 2, R658) · Fernauftrag an einem Fremdkontor
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout B; Genre-Mechanik ortsgebundener Lieferauftrag; `docs/spielwerte.md` Handelsaufträge (`ORDER_PREMIUM` 0,75), Kontor II · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht «Fernauftrag Felsbucht: 12 Rum zu 38 · noch 3:00» und richtet eine Route ein, um die Ware dorthin zu fahren."
+- Grösse: M · Save ja (Ort im Auftrag) · Baseline nein (Controller ohne Fremdkontor) · Abhängigkeiten: Fremdkontor und Route; I-092 (nicht multiplizieren)
+- Startwerte (Scout): jeder dritte Auftrag ab Seefahrt, Prämie `floor(buy × 0,95)`, Frist 3:00, kein Strafgeld.
+- Randfälle: Ware muss im Lager der Fremdinsel liegen; liegt sie schon dort, keine Dominanz; mit Stammkunde im Auftragsplatz abstimmen.
+- Doppelung: I-017 (geführte Seefahrt-Aufträge, geparkt) ist Lernpfad, kein Zufallsauftrag.
+- Raster (Scout): Spass 3 · Passung 3 · Aufwand 2 · Risiko 2 = 13 · Raster (lead-design): Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Bewertung lead-design: Spass 3 → 2 (Seefahrt, Mittelspiel). Gleiche Stossrichtung wie I-092, aber teurer und mit Save; im Handels-Brainstorming gegen I-092 abwägen, nicht beide.
+- Nutzen/Aufwand: Routen mit zweitem Zweck · M · ≈ 2 Pakete
+- Entscheid: IDEEN-09 Empfehlung parken bis Handels-Brainstorming (mit I-092, I-029, I-006)
+- Stand Handel 2 (design-handel-2, 2026-10-14): Empfehlung V1 Fernangebot neben dem Auftrag (Vorliebe-Gut der Insel, Stück 0,75 wegen Edikt-Grenze 0,8, Frist 2:30, kostet die nächste Periode) (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
+- Stand 2026-10-16: umgesetzt als Fernangebot in Handel 2 (`farOffer`, `acceptFarOrder`, `FAR_ORDER_DURATION`; Gate Merge R658, gemergt, Push mit REL-23). Offen bleibt nur I-092 (Inselmarkt-Vorliebe) als eigene Idee; Verschieben ins Archiv durch L0 (Vorschlag).
