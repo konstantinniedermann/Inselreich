@@ -1673,3 +1673,16 @@ I-114 ist gemergt (R720), Last 5,7 < 8, dritte Umsetzung zulässig (R708 V2); le
 Regelbezug: R287, R445, R698, R708 V2, R719 · Kosten bei Irrtum: ein Menü-Abstand, der nachjustiert wird.
 
 Entscheider: L0 · Anlass: Bericht lead-production BEOB-17 · ADR: —
+
+## R722 · 2026-10-16 · Kurzdesign I-110: geparkt bis `BUY_RISE` > 0; TOOL-GUARD-REDACT jetzt
+
+Ruling: `design/i110` @ `2473b2da` (Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-110.md`): Die Messung zeigt, dass bei festen, unbegrenzten Kaufpreisen
+Geld der einzige Engpass der ersten 15 min ist; alle Pakete erreichen U1–U3 gleich schnell, sie unterscheiden sich nur im Restgeld. Eine Wahl ohne strategische
+Wirkung erfüllt das Ziel von I-110 nicht → **E1: geparkt**, bis der Zukauf mit der Menge teurer wird (`BUY_RISE` > 0, Mechanik aus I-048 Schritt A, derzeit
+inaktiv). Spec und Rechnung bleiben auf dem Branch als Ausgangspunkt (Kassenwart 5800, Kalibrierregel E3 als Vorlage). lead-production setzt I-110 in `docs/ideen.md`
+beim nächsten Merge auf «geparkt (R722)». Freier Platz → **TOOL-GUARD-REDACT** (Pool R721): `command` im Ereignis `guard_block` schwärzen (Token-Muster), lead-tech,
+Werkzeug-Paket, Budget 3.
+
+Regelbezug: R445, R692, R721 · Kosten bei Irrtum: ein Startpaket, das später als Stil-Wahl doch gebaut wird (≈ 60 Tools).
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-110 · ADR: —
