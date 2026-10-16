@@ -242,6 +242,9 @@ Die Regeln mit allen Zahlen stehen in [`docs/spielwerte.md`](docs/spielwerte.md)
 
 Ereignisse zeigt ungelesene Meldungen als (n neu), ab 10 (9+ neu); Aufklappen setzt den Zähler zurück.
 
+- **Ereignis-Log:** Die Box unten links erscheint, sobald ein Eintrag da ist, auch bei «Krisen: aus». Sie hält die letzten 20 Einträge. Neben Krisen und Monument stehen darin ein verfallener Zufallsauftrag («Auftrag verfallen: …»), ein verfallenes Stammkunden-Angebot («Stammkunden-Angebot verfallen: …») sowie jede Vertragslieferung und jeder Vertragsbruch. Diese Einträge zählen nur bei Lieferung und Bruch als «neu»; die Meldung oben rechts erscheint wie bisher nur einmal.
+- **Reichweite am Lager-Chip:** Fällt oder steigt ein Gut so, dass das Lager bald leer oder voll ist, trägt der Chip eine Zeit, z. B. «↓ 2:00» oder «↓ 40 s» (Zeit in Spielzeit bei 1×). Leer wird bei höchstens 3 Minuten gelb, bei höchstens 1 Minute rot, ein leeres Lager mit Verbrauch zeigt «0 ↓ leer». Voll wird bei höchstens 1 Minute gedämpft markiert, nie rot. Der Tooltip nennt die Zeit und die Rate je Minute immer, auch ausserhalb der Schwelle. Die Reichweite rechnet nur mit der Erzeugung und dem Verbrauch der Insel, nicht mit Handel und Aufträgen.
+
 ## Speichern, Laden, Neue Insel
 
 - **Speichern:** Menü → «Speichern» legt den Spielstand im Browser ab (ein Speicherplatz, nur in diesem

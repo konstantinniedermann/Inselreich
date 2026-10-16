@@ -670,3 +670,14 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Nutzen/Aufwand: Bauen im Mittelspiel schneller · M · ≈ 2 Pakete (UI, Vorschau)
 - Entscheid: IDEEN-08 Empfehlung parken bis Playtest-Anlass «Häuser setzen nervt» (mit I-059 Sammelausbau als Bündel «Sammelaktionen»)
 - Archiviert IDEEN-09: geparkt laut R566, Statuspflege nach R599
+
+### I-109 · live · Reichweite am Gut-Chip («Nahrung noch 2:10»)
+
+- Bereich: Bedienung · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: IDEEN-10 Scout B; Playtest rel-18 (Ärgernis 3: Nahrung früh auf 0); `src/ui/hud.ts` (`goodsBalance`), `src/ui/goodFocus.ts` · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht beim fallenden Nahrungs-Chip «leer in 2:10» (beim vollen Holz «voll in 0:40») und baut den Fischer, bevor der Mangel eintritt."
+- Grösse: S–M · Risiko: Perf gering (eine Division je Gut und `refresh()`); Save nein, Baseline nein
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 3 = 12
+- Randfälle: nur bei Bilanz < 0 bzw. Lager fast voll; in der Pause eingefroren; im Tooltip oder in der Zeile unter dem Chip, damit die Leiste bei 1280 px nicht wächst.
+- Doppelung: I-043 und I-085 (live) zeigen die Gegenwart; diese Idee ergänzt die Zeitachse.
+- Nutzen/Aufwand: Mangel vorausplanen statt hinterherlaufen · S–M · ≈ 1 Paket
+- Entscheid: IDEEN-10 einplanen Häppchen; live mit UI-HAEPPCHEN-D (2026-10-16)
