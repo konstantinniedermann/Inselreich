@@ -7823,3 +7823,16 @@ nach Merge UI-HAEPPCHEN-E; parallel zu I-091 nur bei disjunkten Dateien (Dateima
 Regelbezug: gates.md Gate Spec (Stufe leicht), R445, R475, R676 · Kosten bei Irrtum: eine Routen-Bilanz, die als Untergrenze zu vorsichtig wirkt (Beschriftung «nominal»).
 
 Entscheider: L0 · Anlass: Berichte lead-design design-I-108, design-I-101-I-103 · ADR: —
+
+## R678 · 2026-10-16 · Plan UI-HAEPPCHEN-F: Abweichungen 1–4 angenommen; parallel zu I-091; Gate Plan
+
+Ruling: Plan `plan/ui-haeppchen-f` @ `5b842134` (T00–T07, 32 AK, Reihenfolge I-101 → I-103 → I-108). Abweichungen vom Kurzdesign **angenommen**:
+(1) `routeBalance` je 100 Ticks, UI rechnet mit `perMinute` um (Sim ohne `TICK_MS`); (2) `shipsKey` strukturell, Bilanzzeile per `setText` nur bei
+neuem Tick (AK-B8 sinngemäss); (3) `drawSeaMap`-Aufruf in `hud.ts`, `app.ts` ohne Diff; (4) `balanceText` unverändert, zwei Erwartungen in
+`hud.test.ts` mit exaktem neuem Wert mitgezogen. **F läuft nach Merge UI-HAEPPCHEN-E parallel zu I-091** (Code und Tests disjunkt; Doku-Konflikte
+README/arc42/beobachtungen löst der spätere Branch per Merge von main) — studioweit damit 2 Umsetzungsstränge, je höchstens 1 Browser-Lauf gleichzeitig
+koordiniert über R424 (≤ 2 Browser-Läufe). Gate Plan durch lead-qa; Budgetantrag 21 Starts mit dem Gate.
+
+Regelbezug: gates.md Gate Plan, R424, R677 · Kosten bei Irrtum: ein Doku-Merge-Konflikt zwischen zwei Strängen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-UI-HAEPPCHEN-F · ADR: —
