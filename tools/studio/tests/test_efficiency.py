@@ -912,10 +912,14 @@ if __name__ == "__main__":
     unittest.main()
 
 
-def test_event(kind, ts, names=(), suite="studio", commit="abc1234", diff=""):
+def test_event(
+    kind, ts, names=(), suite="studio", commit="abc1234", diff="", load=None
+):
     event = {"kind": kind, "ts": ts, "suite": suite, "commit": commit, "diff": diff}
     if kind == "test_failed":
         event["names"] = list(names)
+        if load is not None:
+            event["load"] = load
     return event
 
 
@@ -973,7 +977,80 @@ class FlakeTest(Fixture):
         index = next(i for i, x in enumerate(lines) if "Flake-Verdacht)" in x)
         self.assertTrue(lines[index].startswith("- GELB:"))
         self.assertIn("gelb ≥ 1, rot ≥ 3", lines[index])
-        self.assertEqual(lines[index + 1], "  - Flake-Verdacht: A.test_a")
+        self.assertEqual(lines[index + 1], "  - Flake-Verdacht: A.test_a (Last ?)")
+
+    def lights_loads(self, flakes, loads):
+        data = {**self.data, "flakes": flakes, "flake_loads": loads}
+        return efficiency.render_section(data).splitlines()
+
+    def test_flake_loads_takes_load_of_red_run(self):
+        events = [
+            test_event("test_failed", self.T1, ["A.test_a"], load=8.46),
+            test_event("test_passed", self.T2),
+        ]
+        self.assertEqual(efficiency.flake_loads(events), {"A.test_a": 8.46})
+
+    def test_flake_loads_takes_highest_of_several_red_runs(self):
+        events = [
+            test_event("test_failed", self.T1, ["A.test_a"], load=3.0),
+            test_event("test_failed", self.T2, ["A.test_a"], load=9.5),
+            test_event("test_passed", self.T3),
+        ]
+        self.assertEqual(efficiency.flake_loads(events), {"A.test_a": 9.5})
+
+    def test_flake_loads_missing_load_is_none(self):
+        events = [
+            test_event("test_failed", self.T1, ["A.test_a", "B.test_b"]),
+            test_event("test_failed", self.T2, ["B.test_b"], load=2.0),
+            test_event("test_passed", self.T3),
+        ]
+        self.assertEqual(
+            efficiency.flake_loads(events), {"A.test_a": None, "B.test_b": 2.0}
+        )
+
+    def test_flake_loads_ignores_reds_without_green(self):
+        events = [test_event("test_failed", self.T1, ["A.test_a"], load=9.0)]
+        self.assertEqual(efficiency.flake_loads(events), {})
+
+    def test_flake_loads_respects_since(self):
+        events = [
+            test_event("test_failed", self.T1, ["A.test_a"], load=9.0),
+            test_event("test_failed", self.T2, ["B.test_b"], load=1.0),
+            test_event("test_passed", self.T3),
+        ]
+        since = datetime.fromisoformat(self.T2)
+        self.assertEqual(efficiency.flake_loads(events, since=since), {"B.test_b": 1.0})
+
+    def test_flake_suspects_equals_sorted_flake_loads(self):
+        events = [
+            test_event("test_failed", self.T1, ["B.test_b", "A.test_a"], load=1.0),
+            test_event("test_passed", self.T2),
+        ]
+        self.assertEqual(
+            efficiency.flake_suspects(events), sorted(efficiency.flake_loads(events))
+        )
+
+    def test_lights_flake_shows_load_and_unknown(self):
+        lines = self.lights_loads(
+            ["A.test_a", "B.test_b"], {"A.test_a": 8.46, "B.test_b": None}
+        )
+        index = next(i for i, x in enumerate(lines) if "Flake-Verdacht)" in x)
+        self.assertEqual(
+            lines[index + 1],
+            "  - Flake-Verdacht: A.test_a (Last 8,5), B.test_b (Last ?)",
+        )
+
+    def test_lights_flake_count_line_with_high_load(self):
+        lines = self.lights_loads(
+            ["A.a", "B.b", "C.c"], {"A.a": 8.0, "B.b": 12.3, "C.c": 7.9}
+        )
+        index = next(i for i, x in enumerate(lines) if "Flake-Verdacht)" in x)
+        self.assertEqual(lines[index + 2], "  - davon Last ≥ 8: 2 von 3")
+
+    def test_lights_flake_without_flake_loads_key_shows_unknown(self):
+        lines = self.lights(["A.test_a"])
+        index = next(i for i, x in enumerate(lines) if "Flake-Verdacht)" in x)
+        self.assertEqual(lines[index + 2], "  - davon Last ≥ 8: 0 von 1")
 
     def test_lights_flake_green_with_zero(self):
         lines = self.lights([])
