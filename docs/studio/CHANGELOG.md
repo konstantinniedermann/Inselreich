@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-16 · Handbuch 1.58
+
+- Anlass: Gate CTX-ALTLAST, Nachtrag R687
+- Datenbasis: Echtlauf `aufraeumen.py --check` (qa 4,3 GB, davon nichts löschbar bis zur Altersregel)
+- Ruling: R687
+- Änderungen: Schwelle `.studio/qa` nach löschbarer Menge (`qaMinFreeMB: 500`, Trockenlauf-Summe) statt Gesamtgrösse
+
 ## 2026-10-16 · Handbuch 1.57
 
 - Anlass: Gate Merge CTX-ALTLAST, Nachtrag 4 (Aufräumen als Daueraufgabe)

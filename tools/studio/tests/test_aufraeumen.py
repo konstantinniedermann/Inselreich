@@ -3,8 +3,8 @@ import os
 import tempfile
 import time
 import unittest
-from unittest import mock
 from pathlib import Path
+from unittest import mock
 
 import aufraeumen
 import hook
@@ -160,7 +160,7 @@ class AufraeumenTest(unittest.TestCase):
 
     def test_check_thresholds(self):
         cfg = {
-            "qaMaxGB": 0.000001,
+            "qaMinFreeMB": 0.0001,
             "rulingsMax": 1,
             "rulingsMaxKB": 1000,
             "specsPlansMax": 0,
@@ -169,7 +169,7 @@ class AufraeumenTest(unittest.TestCase):
             "specsPlansKeep": ["keep"],
         }
         self.assertEqual(aufraeumen.check(self.root, cfg), [])
-        put(self.studio / "qa" / "x" / "a.png", 5000)
+        put(self.studio / "qa" / "i-100" / "a.png", 5000)
         (self.root / "docs" / "studio" / "rulings.md").write_text(
             "## R1 a\n## R2 b\n", encoding="utf-8"
         )
@@ -192,7 +192,7 @@ class AufraeumenTest(unittest.TestCase):
     def test_check_cli_exit_codes(self):
         cfg = self.root / "cfg.json"
         base = {
-            "qaMaxGB": 1,
+            "qaMinFreeMB": 500,
             "rulingsMax": 150,
             "rulingsMaxKB": 200,
             "specsPlansMax": 20,
@@ -202,14 +202,14 @@ class AufraeumenTest(unittest.TestCase):
         cfg.write_text(json.dumps(base), encoding="utf-8")
         args = ["--check", "--root", str(self.root), "--config", str(cfg)]
         self.assertEqual(aufraeumen.main(args), 0)
-        cfg.write_text(json.dumps({**base, "qaMaxGB": 0}), encoding="utf-8")
-        put(self.studio / "qa" / "x" / "a.png", 10)
+        cfg.write_text(json.dumps({**base, "qaMinFreeMB": 0}), encoding="utf-8")
+        put(self.studio / "qa" / "i-100" / "a.png", 10)
         self.assertEqual(aufraeumen.main(args), 1)
 
     def test_default_config_complete(self):
         cfg = json.loads(aufraeumen.CONFIG.read_text(encoding="utf-8"))
         for key in (
-            "qaMaxGB",
+            "qaMinFreeMB",
             "rulingsMax",
             "rulingsMaxKB",
             "specsPlansMax",
@@ -221,14 +221,14 @@ class AufraeumenTest(unittest.TestCase):
     def test_hook_section_only_when_due(self):
         cfg = self.root / "cfg.json"
         base = {
-            "qaMaxGB": 1,
+            "qaMinFreeMB": 500,
             "rulingsMax": 150,
             "rulingsMaxKB": 200,
             "specsPlansMax": 20,
             "eventsMaxMB": 50,
             "archivMaxMB": 500,
         }
-        put(self.studio / "qa" / "x" / "a.png", 10)
+        put(self.studio / "qa" / "i-100" / "a.png", 10)
 
         def start() -> str:
             with (
@@ -242,9 +242,9 @@ class AufraeumenTest(unittest.TestCase):
 
         cfg.write_text(json.dumps(base), encoding="utf-8")
         self.assertNotIn("Aufräumen fällig", start())
-        cfg.write_text(json.dumps({**base, "qaMaxGB": 0}), encoding="utf-8")
+        cfg.write_text(json.dumps({**base, "qaMinFreeMB": 0}), encoding="utf-8")
         self.assertIn(
-            "## Aufräumen fällig\nAufräumen fällig: .studio/qa über 0 GB", start()
+            "## Aufräumen fällig\nAufräumen fällig: .studio/qa: 0 MB löschbar", start()
         )
 
 

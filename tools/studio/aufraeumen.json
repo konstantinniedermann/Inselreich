@@ -1,5 +1,5 @@
 {
-  "qaMaxGB": 2,
+  "qaMinFreeMB": 500,
   "rulingsMax": 150,
   "rulingsMaxKB": 200,
   "specsPlansMax": 20,

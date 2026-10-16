@@ -289,9 +289,18 @@ def check(root: Path, config: dict | None = None) -> list[str]:
     def due(reason: str, value: str) -> None:
         lines.append(f"Aufräumen fällig: {reason}, {value}")
 
-    qa = _tree_size(studio / "qa") / 1024**3
-    if qa > cfg["qaMaxGB"]:
-        due(f".studio/qa über {cfg['qaMaxGB']} GB", f"{qa:.1f} GB")
+    releases = root / "docs" / "studio" / "releases.json"
+    rules = load_rules(releases) if releases.is_file() else Rules()
+    free = (
+        plan_cleanup(studio, rules).size / MB
+    )  # löschbare Bilder laut Trockenlauf (R687)
+    if free >= cfg["qaMinFreeMB"]:
+        size = (
+            f"{free / 1024:.1f} GB".replace(".", ",")
+            if free >= 1024
+            else f"{free:.0f} MB"
+        )
+        due(f".studio/qa: {size} löschbar", f"Schwelle {cfg['qaMinFreeMB']} MB")
     rulings = root / "docs" / "studio" / "rulings.md"
     if rulings.is_file():
         text = rulings.read_text(encoding="utf-8")
@@ -311,9 +320,8 @@ def check(root: Path, config: dict | None = None) -> list[str]:
     archiv = _tree_size(studio / "archiv") / MB
     if archiv > cfg["archivMaxMB"]:
         due(f".studio/archiv über {cfg['archivMaxMB']} MB", f"{archiv:.0f} MB")
-    releases = root / "docs" / "studio" / "releases.json"
     if releases.is_file():
-        n = movable_stems(root, load_rules(releases), cfg.get("specsPlansKeep", []))
+        n = movable_stems(root, rules, cfg.get("specsPlansKeep", []))
         if n > cfg["specsPlansMax"]:
             due(
                 f"über {cfg['specsPlansMax']} Specs/Pläne live Releases ausserhalb des Archivs",
