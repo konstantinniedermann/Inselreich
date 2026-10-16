@@ -7798,3 +7798,14 @@ Instanzen eingerechnet), Parallelität 1; Start nach Merge UI-HAEPPCHEN-E.
 Regelbezug: gates.md Gate Plan, R673, R674 · Kosten bei Irrtum: ein rot werdender UI-Test im Mitzieh-Schritt (Fix-Runde).
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-I-091 · ADR: —
+
+## R676 · 2026-10-16 · Freie Plätze: Kurzdesigns I-108, I-101 + I-103 (Pool IDEEN-10)
+
+Ruling: Plan I-091 mit Auflagen `plan/i091` @ `d2b4f6c8` (R675 erfüllt). Freie Plätze (R475, R445) während UI-HAEPPCHEN-E läuft: Kurzdesigns
+Stufe leicht (lead-design, sonnet) für die nächsten Ränge aus IDEEN-10, die Handel 2 voraussetzen bzw. kein Save brauchen: (1) **I-108**
+«Einnahmen und Unterhalt getrennt» (S); (2) **I-101** «Fernauftrag-Marke Seekarte» + **I-103** «Routen-Bilanz» gemeinsam (beide Seekarte/
+Routen, Empfehlung «mit I-101»). Umsetzung erst nach I-091 bzw. nach Bündelungsprüfung durch lead-tech. I-104 und I-105 bleiben geparkt.
+
+Regelbezug: R445, R475, R653 · Kosten bei Irrtum: zwei Kurzdesigns, die vor der Umsetzung nachgeschärft werden.
+
+Entscheider: L0 · Anlass: freie Kapazität · ADR: —
