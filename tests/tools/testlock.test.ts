@@ -40,7 +40,7 @@ function setup() {
           .map((l) => JSON.parse(l) as Record<string, unknown>)
       : [];
   };
-  return { lock, run, events };
+  return { lock, studio, run, events };
 }
 
 const holder = (pid: number, cmd: string) =>
@@ -69,6 +69,7 @@ describe('testlock', () => {
     expect(p.status).toBe(3);
     expect(p.stderr).toContain('Lastprotokoll: Load 9.00');
     expect(p.stderr).toContain('Vitest-Worker: 1');
+    expect(events()).toHaveLength(1);
     const [e] = events();
     expect(e).toMatchObject({ kind: 'load_abort', source: 'testlock', reason: 'load', load: 9 });
   });
@@ -77,6 +78,7 @@ describe('testlock', () => {
     const { lock, run, events } = setup();
     writeFileSync(lock, holder(1, 'make test'));
     const p = run({}, 'node', '-e', '0');
+    expect(events()).toHaveLength(1);
     expect(p.status).toBe(3);
     expect(p.stderr).toContain('Lastprotokoll:');
     expect(events()[0]).toMatchObject({ kind: 'load_abort', source: 'testlock', reason: 'lock' });
@@ -139,8 +141,8 @@ describe('testlock (R378)', () => {
     // R389: die 4 Runden laufen gleichzeitig (je eigene Sperre); die 1500-ms-Haltezeit (Startversatz der 12 Prozesse unter Last) je Runde
     // bleibt, sie sichert die Überlappung der 3 Läufe (R387). Wandzeit ≈ 1 Runde statt 4.
     const round = () =>
-      new Promise<{ ran: number; lockLeft: boolean }>((resolve, reject) => {
-        const { lock } = setup();
+      new Promise<{ ran: number; lockLeft: boolean; aborts: number }>((resolve, reject) => {
+        const { lock, studio, events } = setup();
         writeFileSync(lock, holder(2147483646, 'alt'));
         const sh = spawn(
           'sh',
@@ -156,20 +158,29 @@ describe('testlock (R378)', () => {
               STUDIO_TESTLOCK_HELD: undefined,
               TESTLOCK_PATH: lock,
               TESTLOCK_FAKE_LOAD: '1',
+              STUDIO_HOME: studio, // Abbruch-Events nie ins echte .studio
+              LOADSNAP_PS_FIXTURE: loadPs,
             },
           },
         );
         let out = '';
         sh.stdout.on('data', (d) => (out += d.toString()));
         sh.on('error', reject);
-        sh.on('close', () =>
-          resolve({ ran: out.split('RAN').length - 1, lockLeft: existsSync(lock) }),
-        );
+        sh.on('close', () => {
+          resolve({
+            ran: out.split('RAN').length - 1,
+            lockLeft: existsSync(lock),
+            aborts: events().length,
+          });
+        });
       });
     const results = await Promise.all([round(), round(), round(), round()]);
     for (const r of results) {
       expect(r.ran).toBe(1);
       expect(r.lockLeft).toBe(false);
+      // je abgewiesenem Lauf genau ein Ereignis (2 Verlierer, nie mehr), und im eigenen Studio-Home
+      expect(r.aborts).toBeGreaterThan(0);
+      expect(r.aborts).toBeLessThanOrEqual(2);
     }
   }, 30_000);
 
