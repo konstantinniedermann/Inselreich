@@ -585,6 +585,7 @@ describe('Meldungsstapel mit Fernkarte (Handel 2 T08)', () => {
     expect(stack.children.map((c) => c.dataset.field ?? c.className)).toEqual([
       'order-card',
       'far-card',
+      'far-card-2',
       'crisis-card',
     ]);
     const far = stack.querySelector('[data-field="far-card"]')!;

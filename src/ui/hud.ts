@@ -550,41 +550,56 @@ export function renderNoticeStack(
   crisis.className = 'card card--crisis';
   crisis.dataset.field = 'crisis-card';
   crisis.hidden = true;
-  const far = document.createElement('span');
-  far.className = 'card far-card';
-  far.dataset.field = 'far-card';
-  far.hidden = true;
-  const farText = document.createElement('span');
-  farText.dataset.field = 'far-text';
-  const farBtn = document.createElement('button');
-  farBtn.className = 'btn';
-  farBtn.textContent = 'Annehmen';
-  farBtn.dataset.field = 'far-accept';
-  farBtn.addEventListener('click', () => {
-    farBtn.blur();
-    actions.acceptFar();
-  });
-  far.append(farText, farBtn);
-  stack.append(order, far, crisis);
+  const far = farCard(actions, 0);
+  const far2 = farCard(actions, 1);
+  stack.append(order, far, far2, crisis);
   gameEl.appendChild(stack);
   updateNoticeStack(stack, world);
   return stack;
+}
+
+/** I-114: Fernkarte `which` (0 Erstangebot, 1 Zweitkarte); Felder tragen bei Karte 2 das Suffix `-2`. */
+function farCard(actions: OrderActions, which: 0 | 1): HTMLElement {
+  const sfx = which === 1 ? '-2' : '';
+  const card = document.createElement('span');
+  card.className = 'card far-card';
+  card.dataset.field = `far-card${sfx}`;
+  card.hidden = true;
+  const text = document.createElement('span');
+  text.dataset.field = `far-text${sfx}`;
+  const btn = document.createElement('button');
+  btn.className = 'btn';
+  btn.textContent = 'Annehmen';
+  btn.dataset.field = `far-accept${sfx}`;
+  btn.addEventListener('click', () => {
+    btn.blur();
+    actions.acceptFar(which);
+  });
+  card.append(text, btn);
+  return card;
+}
+
+/** I-114: Sichtbarkeit, Text und Tooltip der Fernkarte `which`; Karte 2 nur bei Wahl-Angebot. */
+function updateFarCard(stack: HTMLElement, world: World, which: 0 | 1, visible: boolean): void {
+  const sfx = which === 1 ? '-2' : '';
+  const card = stack.querySelector<HTMLElement>(`[data-field="far-card${sfx}"]`);
+  if (!card) return;
+  const text = visible ? farOfferText(world, which) : null;
+  const hidden = text === null;
+  if (card.hidden !== hidden) card.hidden = hidden;
+  setField(stack, `far-text${sfx}`, text ?? '');
+  const btn = stack.querySelector<HTMLElement>(`[data-field="far-accept${sfx}"]`);
+  const tip = farAcceptTooltip(world, which);
+  if (btn && btn.title !== tip) btn.title = tip;
 }
 
 /** Aktualisiert Auftrag und Krisenkarte; eine leere Krisenkarte ist verborgen. */
 export function updateNoticeStack(stack: HTMLElement, world: World, island: number = HOME): void {
   const orderEl = stack.querySelector<HTMLElement>('.order-card');
   if (orderEl) updateOrder(orderEl, world, island);
-  const farEl = stack.querySelector<HTMLElement>('[data-field="far-card"]');
-  if (farEl) {
-    const text = orderVisible(world) ? farOfferText(world) : null;
-    const hidden = text === null;
-    if (farEl.hidden !== hidden) farEl.hidden = hidden;
-    setField(stack, 'far-text', text ?? '');
-    const btn = stack.querySelector<HTMLElement>('[data-field="far-accept"]');
-    const tip = farAcceptTooltip(world);
-    if (btn && btn.title !== tip) btn.title = tip;
-  }
+  const visible = orderVisible(world);
+  updateFarCard(stack, world, 0, visible);
+  updateFarCard(stack, world, 1, visible);
   const crisis = crisisCardText(crisisView(world), world);
   const crisisEl = setField(stack, 'crisis-card', crisis.text);
   if (crisisEl) {

@@ -397,8 +397,8 @@ function launch(
 
   const noticeStack = renderNoticeStack(gameEl, world, {
     deliver: () => actions.deliverOrder(),
-    acceptFar: () => {
-      const r = acceptFarOrder(world);
+    acceptFar: (pick = 0) => {
+      const r = acceptFarOrder(world, pick);
       if (!r.ok) showError(r.reason);
       else showMessage(farAcceptedMessage(world, world.order!));
       farPrev = farSnap(world);

@@ -1,6 +1,7 @@
 import { GOODS } from '../sim/defs/goods';
 import { FAR_ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from '../sim/defs/timing';
 import { islandName } from '../sim/islands';
+import { farAlternative } from '../sim/orders';
 import type { FarOffer, Order, World } from '../sim/types';
 import type { MapMark } from '../render/seaMap';
 import type { LogEntry } from './crisisLog';
@@ -24,9 +25,14 @@ export function farOfferDue(world: World): number | null {
   return ORDER_FIRST_TICK + period * ORDER_PERIOD + FAR_ORDER_DURATION;
 }
 
-/** T-02: Text des offenen Fernangebots; `null` ohne Angebot. Das Lager ist das der Fern-Insel. */
-export function farOfferText(world: World): string | null {
-  const f = world.farOffer;
+/** I-114: Angebot der Karte `which` (0 Erstangebot, 1 Zweitkarte); `null`, wenn es die Karte nicht gibt. */
+export function farOfferOf(world: World, which: 0 | 1): FarOffer | null {
+  return which === 1 ? farAlternative(world) : world.farOffer;
+}
+
+/** T-02: Text des Fernangebots der Karte `which`; `null` ohne Angebot. Das Lager ist das der Fern-Insel. */
+export function farOfferText(world: World, which: 0 | 1 = 0): string | null {
+  const f = farOfferOf(world, which);
   const due = farOfferDue(world);
   if (f === null || due === null) return null;
   return (
@@ -35,9 +41,9 @@ export function farOfferText(world: World): string | null {
   );
 }
 
-/** T-03: Tooltip des Annehmen-Knopfs; leer ohne Angebot. */
-export function farAcceptTooltip(world: World): string {
-  const f = world.farOffer;
+/** T-03: Tooltip des Annehmen-Knopfs der Karte `which`; leer ohne Angebot. */
+export function farAcceptTooltip(world: World, which: 0 | 1 = 0): string {
+  const f = farOfferOf(world, which);
   if (f === null) return '';
   return `Ersetzt den Auftrag. Liefern nur am Kontor ${islandName(world, f.island)}. Der nächste Auftrag entfällt.`;
 }
