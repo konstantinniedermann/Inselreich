@@ -23,6 +23,7 @@ import {
   runContractAction,
   updateOrder,
 } from '../../src/ui/order';
+import * as production from '../../src/ui/production';
 import { seaWorld } from '../sim/seaHelpers';
 import { diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
 import { HOME, home, createWorld } from '../../src/sim/world';
@@ -311,6 +312,79 @@ describe('I-088 Angebotskarte: Marktpreis und Erzeugung (AK-HC-01 bis 04)', () =
     const before = structuredClone(w);
     orderCardText(w);
     expect(w).toEqual(before);
+  });
+});
+
+describe('UI-AUFRAEUM-4 T01 Erzeugungs-Cache (AK-1 bis AK-4)', () => {
+  const offerWorld = (): World => {
+    const w = createWorld(3, { unlockAll: true });
+    w.order = null;
+    w.tick = 750;
+    w.contractOffer = { good: 'wood', island: HOME };
+    return w;
+  };
+  const last = (w: World) => w.buildings[w.nextBuildingId - 1]!;
+  const running = (t: string): boolean =>
+    t.includes('Erzeugung ') && !t.includes('keine Erzeugung');
+
+  it('AK-1 Id-Kollision {1,4} gegen {2,3} gleicher Tick, gleiche Anzahl', () => {
+    const w = offerWorld();
+    addProducer(w, 'lumberjack', HOME); // a: zählt
+    const a = last(w);
+    addProducer(w, 'lumberjack', 1); // b: andere Insel
+    const b = last(w);
+    addProducer(w, 'lumberjack', 1); // c: andere Insel
+    const c = last(w);
+    addProducer(w, 'lumberjack', HOME); // d: zählt
+    const d = last(w);
+    expect(a.id + d.id).toBe(b.id + c.id);
+    a.paused = true;
+    d.paused = true;
+    expect(running(orderCardText(w))).toBe(false);
+    delete a.paused;
+    delete d.paused;
+    b.paused = true;
+    c.paused = true;
+    expect(running(orderCardText(w))).toBe(true);
+  });
+
+  it('AK-2 connected=false im selben Tick', () => {
+    const w = offerWorld();
+    addProducer(w, 'lumberjack', HOME);
+    expect(running(orderCardText(w))).toBe(true);
+    last(w).connected = false;
+    expect(running(orderCardText(w))).toBe(false);
+    last(w).connected = true;
+    expect(running(orderCardText(w))).toBe(true);
+  });
+
+  it('AK-3 Abriss plus Neubau mit gleicher Gebäudezahl', () => {
+    const w = offerWorld();
+    addProducer(w, 'lumberjack', HOME);
+    const id = w.nextBuildingId - 1;
+    expect(running(orderCardText(w))).toBe(true);
+    delete w.buildings[id];
+    addProducer(w, 'lumberjack', 1);
+    expect(running(orderCardText(w))).toBe(false);
+  });
+
+  it('AK-4 Cache liefert frischen Wert, ändert die Welt nicht, rechnet nicht doppelt', () => {
+    const w = offerWorld();
+    addProducer(w, 'lumberjack', HOME);
+    w.tick += 1;
+    const before = JSON.stringify(w);
+    const pm = perMinute(goodsBalance(w, HOME).wood.produced, GOODS_BALANCE_TICKS);
+    const spy = vi.spyOn(production, 'goodProductionPer100');
+    try {
+      const t1 = orderCardText(w);
+      expect(t1).toContain(`Erzeugung ${pm} / min`);
+      const calls = spy.mock.calls.length;
+      expect(orderCardText(w)).toBe(t1);
+      expect(spy.mock.calls.length).toBe(calls);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(JSON.stringify(w)).toBe(before);
   });
 });
 
