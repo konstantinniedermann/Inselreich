@@ -23,6 +23,7 @@ Prozessstufe: <leicht|voll>
 5. Definition of Done: <prüfbare Punkte, z. B. Test grün, make check grün>
    Pflichtzeilen je Paketart (R375): jedes Paket „Rulings schreibt nur L0: `docs/studio/rulings.md` nicht ändern, Entscheidungsbedarf als Entwurf an L0 im Bericht (R471)“;
    jedes Paket mit Kontextdatei > 30 KB (README, `docs/ideen.md`, Specs, Plan-Index) „nur den genannten Abschnitt bzw. Zeilenbereich lesen (`offset`/`limit` oder `grep`), nie die ganze Datei (E-057)“ — die Kontextzeile nennt dafür Abschnitt oder Zeilen;
+   jedes Paket „Volltextsuche mit dem Grep-Werkzeug oder `rg <muster> .` (immer mit Pfad), nicht `grep -r`; `grep <muster> <datei>` auf eine genannte Datei bleibt erlaubt (R683)“;
    jedes Paket mit Budget „Mehrbedarf vor dem Überschreiten melden (templates/budgetantrag.md), nie nachträglich“;
    Werkzeug-Paket „make studio-test grün; Echtlauf gegen jede externe API (gh, CI, Pages), Ausgabe im Bericht“;
    Änderung an Experimenten, Handbuch oder Personas „make studio-test grün (u. a. höchstens 3 Experimente laufend)“;
