@@ -359,3 +359,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Der abgewiesene Befehl wird im Ereignis abgelegt und kann Tokens oder Secrets enthalten. Die Datei ist lokal und ignoriert; ob eine Schwärzung greift, ist ungeprüft.
 - Ursprung: Gate Merge TOOL-BUENDEL-13 (R704)
 - Erste Einschätzung: mittel; Schwärzung prüfen, bevor die Datei geteilt oder ausgewertet wird.
+
+## 2026-10-16 · I-118: CAPS-Pin steht in `weather.test.ts`, nicht in `limits.test.ts`
+
+- Fundort: `tests/render/weather.test.ts` (Test «Setzungen normal/reduziert», `CAPS` per `toEqual`)
+- Beobachtung: Jede neue Obergrenze in `src/render/limits.ts` bricht diesen Test; Pläne nennen nur `limits.test.ts`. Im Paket I-120-I-118 fiel das erst im Final-Review auf.
+- Ursprung: Final-Review I-118 (lead-tech I-120-I-118)
+- Erste Einschätzung: niedrig; Plan-Vorlage für CAPS-Änderungen um den Pin ergänzen.

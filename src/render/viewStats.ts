@@ -1,6 +1,8 @@
 import { homeBuildings } from './homeBuildings';
 // viewStats.ts — Sichtbezug für den Umgebungsklang (Spec 7.2, ISO §4). Reine Funktion, liest die Welt nur.
 import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { TIERS } from '../sim/defs/tiers';
+import { allNeedsMet } from '../sim/population';
 import type { World } from '../sim/types';
 import { home, center } from '../sim/world';
 import { visibleTileRange, worldToScreen, type Camera } from './camera';
@@ -14,6 +16,10 @@ export interface ViewStats {
   coast: number;
   inhabitants: number;
   zoom: number;
+  /** Anteil der Häuser im Bild mit allen Bedürfnissen erfüllt (I-120); fehlt ohne Häuser im Bild. */
+  suppliedShare?: number;
+  /** Zahl der Häuser im Bild (I-120); fehlt ohne Häuser. */
+  houses?: number;
 }
 
 const KEY = {
@@ -57,10 +63,19 @@ export function viewStats(world: World, cam: Camera, view: { w: number; h: numbe
     }
   if (n === 0) return { ...out, water: 1 };
   for (const k of SHARES) out[k] /= n;
+  let houses = 0;
+  let full = 0;
   for (const b of homeBuildings(world)) {
     if (!b.house) continue;
     const c = center(BUILDING_DEFS[b.defId], b.x, b.y);
-    if (inView(c.cx, c.cy)) out.inhabitants += b.house.inhabitants;
+    if (!inView(c.cx, c.cy)) continue;
+    out.inhabitants += b.house.inhabitants;
+    houses++;
+    if (allNeedsMet(b.house, TIERS[b.house.tier])) full++;
+  }
+  if (houses > 0) {
+    out.houses = houses;
+    out.suppliedShare = full / houses;
   }
   return out;
 }
