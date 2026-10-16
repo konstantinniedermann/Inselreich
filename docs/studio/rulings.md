@@ -7650,3 +7650,14 @@ UI-HAEPPCHEN-D; I-102 berührt `order.ts`, nicht die Dateien von UI-D, aber `src
 Regelbezug: gates.md Gate Spec (Stufe leicht), R653, R658 · Kosten bei Irrtum: eine Vorschau, die der Spieler als Zusage missversteht (Text «voraussichtlich»).
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I-102 · ADR: —
+
+## R665 · 2026-10-16 · Kurzdesign I-097 angenommen; Plan I-097 + I-102 als UI-HAEPPCHEN-E jetzt
+
+Ruling: `design/i097` @ `70efccc5` (11 AK, `pauseOverlayView(speed, modalOpen)` in `src/ui/pauseOverlay.ts`, kein Save, kein `src/sim/`) →
+**angenommen**; O-1 (Farbe/Breite des Rands) und O-2 (Ort von `syncPauseOverlay()`) entscheidet der Plan. Freie Plätze (R475): lead-tech plant
+**UI-HAEPPCHEN-E** = I-097 + I-102 (R664) jetzt, als Plan auf main-Stand mit Abgleich gegen den Plan UI-HAEPPCHEN-D (`3eb97a31`, Einhängepunkte in
+`src/ui/app.ts`, Block in `src/style.css`). Umsetzung erst nach Merge von UI-HAEPPCHEN-D. Plan ohne Testläufe (R464).
+
+Regelbezug: gates.md Gate Spec (Stufe leicht), R464, R475, R663, R664 · Kosten bei Irrtum: ein Plan mit Nacharbeit bei den Einhängepunkten nach dem UI-D-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-097 · ADR: —
