@@ -314,7 +314,7 @@ describe('previewOrder (I-102)', () => {
   });
 
   it('AK-4 Vertrag, offenes Angebot und Sperre liefern null; nach Kündigung wieder ein Wert', () => {
-    w.contract = { good: 'wood', amount: 10, price: 5, island: 0 };
+    w.contract = { good: 'wood', amount: 10, price: 5, island: 0, deliveries: 0 };
     expect(previewOrder(w)).toBeNull();
     cancelContract(w);
     expect(previewOrder(w)).not.toBeNull();

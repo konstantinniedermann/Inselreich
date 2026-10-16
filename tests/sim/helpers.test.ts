@@ -4,6 +4,7 @@ import { serialize } from '../../src/sim/save';
 import { createWorld } from '../../src/sim/world';
 import {
   fnv1a32,
+  foldBackDeliveries,
   foldBackFarOrders,
   foldBackToV9,
   foldBackToV10,
@@ -85,5 +86,26 @@ describe('foldBackFarOrders (Handel 2, A4)', () => {
   it('Ketten: offenes Fernangebot wird nicht still weggefiltert', () => {
     const x = withFar({ farOffer: { island: 2, good: 'rum', amount: 15, reward: 450 } });
     for (const fold of chains) expect(() => fold(x)).toThrow('foldBackFarOrders');
+  });
+});
+
+describe('foldBackDeliveries (I-091)', () => {
+  it('entfernt contract.deliveries ohne Umordnen, senkt version, mutiert nicht', () => {
+    const x = jsonOf(3);
+    x.contract = { good: 'rum', amount: 5, price: 27, island: 0, deliveries: 3 };
+    const before = JSON.stringify(x);
+    const out = foldBackDeliveries(x);
+    expect(out.contract).toEqual({ good: 'rum', amount: 5, price: 27, island: 0 });
+    expect(Object.keys(out.contract as object)).toEqual(['good', 'amount', 'price', 'island']);
+    expect(Object.keys(out)).toEqual(Object.keys(x));
+    expect(out.version).toBe((x.version as number) - 1);
+    expect(JSON.stringify(x)).toBe(before);
+  });
+
+  it('contract null: nur version - 1', () => {
+    const x = jsonOf(3);
+    const out = foldBackDeliveries(x);
+    expect(out.version).toBe((x.version as number) - 1);
+    expect(JSON.stringify({ ...out, version: x.version })).toBe(JSON.stringify(x));
   });
 });

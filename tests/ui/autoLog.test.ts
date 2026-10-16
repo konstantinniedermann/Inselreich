@@ -18,7 +18,13 @@ function offerWorld(): World {
   return w;
 }
 
-const contract = (good: Contract['good']): Contract => ({ good, amount: 1, price: 1, island: 0 });
+const contract = (good: Contract['good']): Contract => ({
+  good,
+  amount: 1,
+  price: 1,
+  island: 0,
+  deliveries: 0,
+});
 
 describe('AK-UD-03 Stammkunden-Angebot', () => {
   it('verfallen: ein Eintrag ohne Meldung', () => {
@@ -144,6 +150,8 @@ describe('AK-UD-05b Vertragsereignisse', () => {
     amount: 10,
     pay: 270,
     island: 0,
+    loyal: false,
+    becameLoyal: false,
   };
   const broken = (reason?: 'stock' | 'kontor'): ContractEvent =>
     ({ kind: 'broken', good: 'rum', reason, penalty: 135, island: 0 }) as ContractEvent;

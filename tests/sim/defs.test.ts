@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST } from '../../src/sim/defs/buildings';
-import { GOODS, GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
+import { CONTRACT_LOYAL_AFTER, GOODS, GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
 import {
   TAX_CARRY_DIVISOR,
   TAX_UNIT,
@@ -478,5 +478,12 @@ describe('M13-E2 Denkmal (AK-M13E2-02)', () => {
     expect(d.maxCount).toEqual({ n: 1, reason: 'Es gibt schon ein Denkmal' });
     expect(d.site).toEqual([{ kind: 'home' }, { kind: 'supply' }]);
     expect(Object.keys(BUILDING_DEFS).at(-1)).toBe('monument');
+  });
+});
+
+describe('AK-TR-11 Treue-Schwelle', () => {
+  it('CONTRACT_LOYAL_AFTER ist eine ganze Zahl >= 1', () => {
+    expect(Number.isInteger(CONTRACT_LOYAL_AFTER)).toBe(true);
+    expect(CONTRACT_LOYAL_AFTER).toBeGreaterThanOrEqual(1);
   });
 });

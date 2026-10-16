@@ -1209,3 +1209,16 @@ Regelbezug: R682, R683b, Verfassung §5 (keine Rückfrage), §6.4 · Kosten bei 
 Konfiguration nachstellbar.
 
 Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-16 · ADR: —
+
+## R686 · 2026-10-16 · Gate Merge I-091 «Kulanz»: OK, Save v16; danach UI-HAEPPCHEN-F holt main
+
+Ruling: `feat/i091` @ `7268f800` (Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-I-091.md`): Delta-Review opus frisch OK, main `SAVE_VERSION` 15 →
+Branch 16 mit `migrateV15ToV16`, v14-Kette und Abweisen (`deliveries` fehlt/`null`/negativ/2.5/String), Balancing und Controller ohne Diff, `make check`
+und `make zeitreserve-gate` Exit 0, Merge konfliktfrei, Ideen vollständig → **Gate Merge OK**. **Save v16 gehört I-091**; Erweiterung 1 (Nutzer-Session)
+nimmt die nächste freie Nummer. lead-production merged `--no-ff` (lokal), setzt I-091 in `docs/ideen.md` auf «gemergt (R686)», releases.json REL-25.
+Danach holt UI-HAEPPCHEN-F main per Merge und fährt `make check` und `make zeitreserve-gate` (R683). Hinweis Vertragskarte zweizeilig bei 1280 px
+bleibt Beobachtung (schon eingetragen).
+
+Regelbezug: gates.md Gate Merge, R673, R674, R684 · Kosten bei Irrtum: eine Spielstand-Migration, die ein Sonderfall übersieht (Abweisen statt Absturz).
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-091 · ADR: —

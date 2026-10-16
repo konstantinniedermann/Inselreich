@@ -8,7 +8,7 @@ import type { Tier, World } from '../../src/sim/types';
 import { dropKontor, farWorld, islandOf, periodStart, stepAt } from './farHelpers';
 
 const woodContract = (w: World): void => {
-  w.contract = { good: 'wood', amount: 1, price: 1, island: 0 };
+  w.contract = { good: 'wood', amount: 1, price: 1, island: 0, deliveries: 0 };
 };
 
 /** Läuft per `step` bis Tick `t` (Uhr steht danach auf `t`). */

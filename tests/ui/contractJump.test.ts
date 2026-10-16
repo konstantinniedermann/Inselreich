@@ -43,7 +43,7 @@ function woodWorld(): { w: World; lj1: Building; lj2: Building; lj3: Building } 
   lj3.paused = true; // stillgelegt, aber Erzeuger
   synth(w, 1004, 'toolmaker', k.x + 8, k.y, 'waitingInput'); // Verbraucher von Holz
   synth(w, 1006, 'lumberjack', 3, 3, 'ok', 2); // andere Insel
-  w.contract = { good: 'wood', amount: 5, price: 9, island: 0 };
+  w.contract = { good: 'wood', amount: 5, price: 9, island: 0, deliveries: 0 };
   return { w, lj1, lj2, lj3 };
 }
 
@@ -95,7 +95,7 @@ describe('I-090 contractProducers (AK-HC-06)', () => {
   });
   it('Vertrag auf anderer Insel nimmt deren Erzeuger', () => {
     const { w } = woodWorld();
-    w.contract = { good: 'wood', amount: 5, price: 9, island: 2 };
+    w.contract = { good: 'wood', amount: 5, price: 9, island: 2, deliveries: 0 };
     expect(contractProducers(w).map((e) => e.id)).toEqual([1006]);
   });
 });
@@ -214,11 +214,11 @@ describe('I-090 contractKey (Cursor-Reset, R607 Punkt 3)', () => {
     const { w } = woodWorld();
     const a = contractKey(w);
     expect(a).not.toBeNull();
-    w.contract = { good: 'wood', amount: 9, price: 3, island: 0 };
+    w.contract = { good: 'wood', amount: 9, price: 3, island: 0, deliveries: 0 };
     expect(contractKey(w)).toBe(a); // Menge/Preis egal
-    w.contract = { good: 'wood', amount: 5, price: 9, island: 2 };
+    w.contract = { good: 'wood', amount: 5, price: 9, island: 2, deliveries: 0 };
     expect(contractKey(w)).not.toBe(a);
-    w.contract = { good: 'tools', amount: 5, price: 9, island: 0 };
+    w.contract = { good: 'tools', amount: 5, price: 9, island: 0, deliveries: 0 };
     expect(contractKey(w)).not.toBe(a);
     w.contract = null;
     expect(contractKey(w)).toBeNull();
@@ -252,12 +252,12 @@ describe('I-090 nextContractCursor (R607-3)', () => {
   it('gleicher Vertrag: Cursor und Schlüssel bleiben', () => {
     const { w } = woodWorld();
     const st = landed(w);
-    w.contract = { good: 'wood', amount: 1, price: 1, island: 0 };
+    w.contract = { good: 'wood', amount: 1, price: 1, island: 0, deliveries: 0 };
     expect(nextContractCursor(w, st)).toBe(st);
   });
   it.each([
-    ['anderes Gut', { good: 'tools' as const, amount: 5, price: 9, island: 0 }],
-    ['andere Insel', { good: 'wood' as const, amount: 5, price: 9, island: 2 }],
+    ['anderes Gut', { good: 'tools' as const, amount: 5, price: 9, island: 0, deliveries: 0 }],
+    ['andere Insel', { good: 'wood' as const, amount: 5, price: 9, island: 2, deliveries: 0 }],
     ['Vertragsende', null],
   ])('%s: Cursor null, neuer Schlüssel', (_n, next) => {
     const { w } = woodWorld();
@@ -271,7 +271,7 @@ describe('I-090 nextContractCursor (R607-3)', () => {
     let st = landed(w);
     w.contract = null;
     st = nextContractCursor(w, st);
-    w.contract = { good: 'wood', amount: 5, price: 9, island: 0 };
+    w.contract = { good: 'wood', amount: 5, price: 9, island: 0, deliveries: 0 };
     st = nextContractCursor(w, st);
     const f = fake(w);
     f.cursor = st.cursor;

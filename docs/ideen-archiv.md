@@ -736,3 +736,18 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Nutzen/Aufwand: Auftrag planbar statt Zufall · S · ≈ 60 Tools
 - Entscheid: offen (IDEEN-10); Kurzdesign 2026-10-16 (`docs/superpowers/specs/2026-10-16-i102-auftragsvorschau.md`), Gate Kurzdesign offen
 - Stand 2026-10-16: live mit UI-HAEPPCHEN-E.
+
+### I-094 · verworfen · Darlehen beim Händler
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout B; Genre-Mechanik Kredit mit Tilgung; `docs/spielwerte.md` (Geld darf negativ werden, dann Bauen und Kaufen gesperrt) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler nimmt 2000 Geld auf, zahlt 2400 in zehn Raten und zieht einen Ausbau vor, mit einer Dauerlast in der Bilanz."
+- Grösse: S–M · Save ja (Restschuld, Rate) · Baseline nein (Controller nimmt nichts auf) · Abhängigkeiten: Freischaltung mit dem Bürger-Ziel; Rechnung `design-economy-designer`
+- Startwerte (Scout): eine Stufe 2000, Aufschlag 20 %, 240 / min über 10 min, höchstens ein Darlehen, vorzeitige Tilgung frei.
+- Randfälle und Entartung: Rate läuft wie Unterhalt, ins Minus gerutscht sperrt Bauen. **Entartung:** Bringt ein Ausbau mehr als 40 / min, ist das Darlehen immer richtig; dann ist es Pflicht statt Wahl. Ab Spätspiel (Überschuss Tausende / min) wirkungslos.
+- Doppelung: keine; Gegenstück zu den fehlenden Senken (Erweiterung 1 K5 ist Senke, nicht Quelle).
+- Raster (Scout): Spass 3 · Passung 3 · Aufwand 2 · Risiko 2 = 13 · Raster (lead-design): Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Bewertung lead-design: Spass 3 → 2: Die Wahl trägt nur im schmalen Fenster Bürger-Ziel bis Mittelspiel, und ihre Härte hängt an einer Rechnung, die heute fehlt. Das Spiel leidet eher an zu viel als an zu wenig Geld (Erweiterung 1 §1); eine Geldquelle verschärft das.
+- Nutzen/Aufwand: mittlerer Nutzen, Entartungsrisiko · S–M · ≈ 1–2 Pakete
+- Entscheid: IDEEN-09 Empfehlung parken bis Wirtschafts-Brainstorming nach Erweiterung 1 K2
+- Stand R663 (design-I-091-I-094, 2026-10-16): Empfehlung **verwerfen**, Vorlage `docs/superpowers/specs/2026-10-16-i094-darlehen-design.md`. Rechnung Teil A: vor U6 Pflichtzug (r 0,42 gegen Schwelle 0,04) mit unlesbarer Spirale (+3277 / −27 761 bei 20 / 30 %), ab U6 wirkungslos (≤ 0,2 min Bilanz); kein Hebel öffnet ein Wahlfenster. Nach Entscheid L0 ins Archiv.
+- Archiviert: R670 verworfen (Kenntnis an Nutzer). Vorlage `docs/superpowers/specs/2026-10-16-i094-darlehen-design.md` und Rechnung `docs/superpowers/specs/2026-10-16-i091-i094-rechnung.md` Teil A auf Branch `design/i091-i094`; wieder aufnehmbar nur als neue Idee (z. B. «Vorschuss des Stammkunden», Vorlage §4).
