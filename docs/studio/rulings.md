@@ -1815,3 +1815,16 @@ Ursache, Hebel, Messgrösse.
 Regelbezug: R673, R725, R732, OWASP, Handbuch Verbesserungsschleife · Kosten bei Irrtum: ein Diagnosefeld mit weniger Inhalt (Hash statt Klartext).
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-REDACT, Hook «Ad-hoc-Retro fällig» · ADR: —
+
+## R734 · 2026-10-16 · I-112 Final-Review BEDENKEN: Befunde 1–4 vor dem Merge; +2 Starts (im Gesamtbudget 25)
+
+Ruling: `feat/i112` @ `b7e65e55` (Handoff `.studio/handoffs/2026-10-16-lead-tech-I-112.md`; T05-Kleinfix `3ba35318`, Tooltip-Fix `867d1f0d`, T09 `5eb22120`): Final-Review opus
+BEDENKEN → vor dem Merge beheben: **(1, hoch)** Rats-Karte wird bei Laden/«Neue Insel» entfernt (`dispose` in `src/ui/app.ts`), Test belegt, dass kein `decree` auf der
+verworfenen Welt möglich ist; (2) Tooltip-Zeilen «Erzeugt»/«Ausstoss je Stufe»/«Braucht» mit beschlossenem Takt; (3) `council` im Cache-Schlüssel des Glauben-Umrisses;
+(4) Rats-Karte über den Auftragskarten (`z-index`). `Umschalt+R` ohne Marke und das Sortieren je Tick: Beobachtung. Fehlender Reichweitenkreis bei stehender Kapelle
+(schon auf main): Beobachtung. Naht-Wächter nimmt `council` wie `levels` als erlaubten `cycle`-Leser aus — angenommen. **+2 Starts** (UI-Umsetzer sonnet, Delta-Review
+opus frisch), Verbrauch dann 22 von 25. Danach voller `make check` bei Last ≤ 8 und Zeitmessung bei Last ≤ 4 (sonst Vermerk), dann Gate Merge.
+
+Regelbezug: R673, R708, R713, R728 · Kosten bei Irrtum: zwei Starts für Befunde, die auch nach dem Merge behebbar wären.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-112 C4 · ADR: —
