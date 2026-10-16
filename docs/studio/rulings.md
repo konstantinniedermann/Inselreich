@@ -1447,3 +1447,15 @@ vorerst leer (R698-Deckel nicht ausgeschöpft), damit Testlauf und Testlock der 
 Regelbezug: R375, R380, R698, R701 · Kosten bei Irrtum: ein Agentenplatz, der eine halbe Stunde leer bleibt.
 
 Entscheider: L0 · Anlass: Zwischenbericht lead-tech I-114 · ADR: —
+
+## R704 · 2026-10-16 · Gate Merge TOOL-BUENDEL-13: OK
+
+Ruling: `tool/buendel-13` (Commits `cb2f6521` Timeouts, `12890a82` Guard-Ereignis; Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-BUENDEL-13.md`): 7 Timeouts nur
+als Argument auf 10000 ms (E-043), `guard_block` je Abweisung mit Echtlauf belegt, Deny bleibt bei Schreibfehler, `make check` 4175, `studio-test` 931,
+`zeitreserve-gate` Exit 0, Review OK (E-068, ein Reviewer bei 166 Zeilen) → **Gate Merge OK**; Merge `--no-ff` durch lead-production. Nachträge: Handbuch-Zeile
+`guard_block` (STUDIO.md ≈ Z. 428) und Flake-Zeile (R695) setzt studio-coach in der Session-Ende-Retro; Beobachtungen: `rule_of` ordnet per Stichwort zu
+(neue Guard-Texte → «other»), `command` im Ereignis kann Tokens enthalten (Datei lokal und ignoriert; Schwärzung prüfen). E-064-Messlücke damit geschlossen.
+
+Regelbezug: gates.md Gate Merge, R693, R697, R698 · Kosten bei Irrtum: ein Guard-Ereignis mit unklarer Regel-Zuordnung.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-13 · ADR: —
