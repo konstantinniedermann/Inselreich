@@ -414,6 +414,7 @@ def _instance(
         "start_ts": calls[0]["ts"],
         "rewrite_events": _rewrite_events(calls, package_family(pkg)),
         "cw5": sum(c["cache_write_5m"] for c in calls),
+        "cw5_first": calls[0]["cache_write_5m"],
         "cw5_factor": model_factor(model),
         "package": pkg,
         "budget_none": budget_none,
@@ -652,7 +653,10 @@ def _cache_write_split(instances: list[dict], total: float) -> dict:
     (dieselben Ereignisse wie `_rewrite_events`; gezählt wird nur der 5-min-Anteil).
     Übriges Wachstum: jeder andere 5-min-Cache-Write (Kontext wächst, kleine
     Nachschreibungen, erster Aufruf). Anteile gewichtet wie die Ampel (Kostengewicht,
-    Faktor 1,25 und Modellfaktor), also in Punkten des Gesamt-Kostengewichts."""
+    Faktor 1,25 und Modellfaktor), also in Punkten des Gesamt-Kostengewichts.
+
+    Zusätzlich Dreiteilung: Erstladung (5-min-Write des ersten Aufrufs je Instanz,
+    nie ein Pause-Ereignis), Wachstum danach (Rest) und Pause."""
     unit = KIND_WEIGHT["cache_write_5m"]
     roles: dict[str, dict] = {}
     for item in instances:
@@ -665,6 +669,9 @@ def _cache_write_split(instances: list[dict], total: float) -> dict:
         row["pause_w"] = row.get("pause_w", 0.0) + pause * unit * item["cw5_factor"]
         total_w = item["cw5"] * unit * item["cw5_factor"]
         row["total_w"] = row.get("total_w", 0.0) + total_w
+        row["first_tokens"] = row.get("first_tokens", 0) + item["cw5_first"]
+        first_w = item["cw5_first"] * unit * item["cw5_factor"]
+        row["first_w"] = row.get("first_w", 0.0) + first_w
     rows = []
     for row in roles.values():
         rows.append(
@@ -674,6 +681,13 @@ def _cache_write_split(instances: list[dict], total: float) -> dict:
                 "pause_part": _ratio(row["pause_w"], row["total_w"]),
                 "pause_share": _ratio(row["pause_w"], total),
                 "other_share": _ratio(row["total_w"] - row["pause_w"], total),
+                "growth_tokens": row["total_tokens"]
+                - row["pause_tokens"]
+                - row["first_tokens"],
+                "first_share": _ratio(row["first_w"], total),
+                "growth_share": _ratio(
+                    row["total_w"] - row["pause_w"] - row["first_w"], total
+                ),
             }
         )
     pause_w = sum(r["pause_w"] for r in rows)
@@ -684,6 +698,10 @@ def _cache_write_split(instances: list[dict], total: float) -> dict:
         "pause_part": _ratio(pause_w, total_w),
         "pause_share": _ratio(pause_w, total),
         "other_share": _ratio(total_w - pause_w, total),
+        "first_tokens": sum(r["first_tokens"] for r in rows),
+        "growth_tokens": sum(r["growth_tokens"] for r in rows),
+        "first_share": sum(r["first_share"] for r in rows),
+        "growth_share": sum(r["growth_share"] for r in rows),
         "by_role": sorted(rows, key=lambda r: (-r["total_w"], r["role"])),
     }
 
@@ -709,7 +727,19 @@ def _split_info(split: dict | None) -> list[str]:
         for r in split["by_role"][:SPLIT_ROLES]
         if r["total_tokens"]
     ]
-    return [line, *rows]
+    return [line, *rows, _first_load_line(split)]
+
+
+def _first_load_line(split: dict) -> str:
+    return (
+        "- Cache-Write 5 min dreigeteilt (nur Info, Anteil am Gesamt-Kostengewicht): "
+        f"Erstladung {_pct(split['first_share'])} "
+        f"({_m(split['first_tokens'])} Tokens), "
+        f"Wachstum danach {_pct(split['growth_share'])} "
+        f"({_m(split['growth_tokens'])} Tokens), "
+        f"Pause {_pct(split['pause_share'])} "
+        f"({_m(split['pause_tokens'])} Tokens)"
+    )
 
 
 def _lead_stats(instances: list[dict]) -> dict:
