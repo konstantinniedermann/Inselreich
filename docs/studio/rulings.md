@@ -2028,3 +2028,18 @@ R316), kein eigener Start.
 Regelbezug: gates.md Gate Merge, R316, R712 V2, R741, R744 · Kosten bei Irrtum: ein Rot-Beleg, der im Push-Check nicht auffällt.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-I-122-I-123, Hook Ad-hoc-Retro · ADR: —
+
+## R750 · 2026-10-16 · Kurz-Retro ca9d40c8: V1–V3 angenommen (Umsetzung Folgesession); Session-Ende ca9d40c8
+
+Ruling: Bericht `docs/studio/retros/2026-10-16-session-ca9d40c8-ende.md` (`8d11ea5e`) → angenommen; deckt auch die Hook-Ad-hoc «Cache-Write 5 min zwei Sessions rot» (R747 dieser
+Session, umnummeriert auf R749). **V1:** `test_passed`/`test_failed` tragen 1-min-Last und Vitest-Worker-Zahl; bei Last ≥ 8 begrenzt `make` die Worker (Wert prüft lead-tech) —
+im nächsten Werkzeug-Bündel zusammen mit dem Aufräumen von `_shown_command`/`COMMAND_LIMIT` (R744); Messgrösse Last ≥ 8 an ≤ 25 % der Läufe, max. Last ≤ 20, Bewertung 2026-10-30.
+**V2:** Briefings schätzen nur in Tools, Minuten = Tools ÷ 6 durch das Werkzeug (Handbuch-Minor); Messgrösse |Minuten-Abweichung| ≤ 30 % in 2 Session-Retros. **V3:** je
+Controller-Instanz höchstens eine Wartepause > 5 min, danach Handoff und Folgeinstanz (Handbuch-Minor); Messgrösse Pause-Anteil lead-tech ≤ 20 % (heute 40 %), Cache-Write ≤ 25 %,
+Frist 2026-10-30. Messauftrag «L0-Zwischenstand in state.md ab 250k»: erfüllt (`1c41da14` bei R726). Ruling-Kollision mit der parallelen L0-Session anno-clone #2: dort R747/R748,
+meine R747 wird R749 (Absprache per Nachricht); diese Session schreibt danach keine Rulings mehr. Session-Ende ca9d40c8: alle gestarteten Pakete abgeschlossen oder pausiert
+(ORT-A nach T06, R746); REL-26-Push und Push-Gate gehören der nächsten Session bzw. anno-clone #2 (R335).
+
+Regelbezug: R129, R316, R335, R708, R735 · Kosten bei Irrtum: zwei Handbuch-Minors, die nach der Bewertung zurückgenommen werden.
+
+Entscheider: L0 · Anlass: Kurz-Retro ca9d40c8, Session-Ende · ADR: —
