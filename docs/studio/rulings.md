@@ -1954,3 +1954,17 @@ Session-Ende-Routine. REL-26-Push frühestens 2026-10-17 (R712).
 Regelbezug: gates.md Gate Merge, R69, R712, R743 · Kosten bei Irrtum: ORT-A C4 startet eine Session später.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-TOOL-GUARD-ALLOWLIST, Ampel gelb · ADR: —
+
+## R745 · 2026-10-16 · Gate Spec I-132 «Meisterprüfung»: Variante S (nur «Eigenversorgung»); I-133 verworfen; Plan in der Folgesession
+
+Ruling: `design/i132` (Spec `e1d1cf1c`, Anhang `42d32eb7`; Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-132.md`) → **Gate Spec OK, Variante S**. **E1:** nur die Auflage
+«Eigenversorgung» (Zukauf gesperrt; im Messlauf ohne Vorbereitung Scheitern bei Tick 150, Engpass Schiffstransport von Gewürz/Stein — erfüllt den Massstab R722);
+«Genügsam» (Kasse nie < 2454) und «Sturmjahr» (3 Feuerwachen halten ≥ 93 %) sind gerechnet trivial → gestrichen, **I-133 verworfen**. **E2:** keine Abriss- oder Steuersperre; die
+Abbruchschwelle deckelt das Verkleinern. **E3:** Startfenster 60–150 Kaufleute (Obergrenze geschätzt, Playtest-Trigger Spec §10). **E4:** Abbruch unter 70 % der Starteinwohner
+(90 % reisst im Normalspiel in 11 von 16 Seeds). Save: Feld `trial`, `SAVE_VERSION` = main + 1 beim Merge (main jetzt v17), Migration wie R711 R-4; Baseline bitgleich. Plan in
+der Folgesession ab main (I-112 ist gemergt). Drei Controller-Befunde (keine Nahrungsreserve, keine Feuerwache, Gewürzkauf nur 100 Ticks voraus) trägt lead-production in
+`docs/beobachtungen.md` ein. Budget (V3) design-I-132 1 von 2.
+
+Regelbezug: gates.md Gate Spec, R674, R711, R722, R737 · Kosten bei Irrtum: eine Obergrenze, die nach dem Playtest verschoben wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-132-I-133 · ADR: —
