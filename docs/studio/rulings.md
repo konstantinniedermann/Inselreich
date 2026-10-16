@@ -1722,3 +1722,14 @@ frisches Review. Verbleibende bewusste Lücken trägt L0 nach dem Bericht in `do
 Regelbezug: R721, OWASP (../CLAUDE.md Review-Besonderheit) · Kosten bei Irrtum: ein Start mehr für ein lokales Werkzeug.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-REDACT · ADR: —
+
+## R726 · 2026-10-16 · ORT-A C1: T00–T03 abgenommen; C3 (T04–T06) startet; P-9 mit Vermerk
+
+Ruling: `feat/ort-a` (T01 `8ee15e72`, T02 `052d2a04`, T03 `050a4b60`; Basis A `72ee9610`; Handoff `.studio/handoffs/2026-10-16-lead-tech-ORT-A-C1.md`) → abgenommen.
+Neutralitätsbeweis T02 auf nachgebautem A (17/17) angenommen. **C3: T04, T05, (T05b), T06, 6 (+2) Starts** aus R705. P-9-Frühmessung der Patch-Zeit nach T05:
+solange N-102 offen ist, als Richtwert mit Vermerk «Messfenster belegt»; liegt schon der Richtwert ≥ +20 % über A, Frühwarnung an L0 vor T06 (E6), sonst T06 weiter
+und gewertete Messung in T09. C3 trägt die `inPoly`-Beobachtung (abweichende Argumentreihenfolge in sechs Testdateien) in `docs/beobachtungen.md` auf `feat/ort-a` ein.
+
+Regelbezug: R705, R717, N-102 · Kosten bei Irrtum: eine Patch-Zeit-Warnung, die erst in T09 auffällt.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C1 · ADR: —
