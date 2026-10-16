@@ -1550,3 +1550,20 @@ Taste `Umschalt+R` angenommen. Gate Plan: Testbarkeits-Check der 17 AKs durch le
 Regelbezug: VERFASSUNG §3, R674, R706 · Kosten bei Irrtum: ein Stufentakt, der nach dem Playtest per Werte-Ruling nachgestimmt wird.
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-I-112 · ADR: —
+
+## R712 · 2026-10-16 · Prozess-Retro REL-21–REL-25: V1–V4 angenommen; Actions rot → REL-26 frühestens 2026-10-17
+
+Ruling: Bericht `docs/studio/retros/2026-10-16-prozess-rel21-25.md` (`e64df507`) → angenommen. **V1** `push-check` misst bei Exit 1 immer nach (Bedingung
+`start > RETRY_LOAD` in `pushcheck.py` entfällt; R598 V3 zurückgenommen); Messgrösse 0 Ausnahme-Rulings über 3 Pushes. **V2** Release-Check nur in der Session, die
+pusht; Vorab- und Delta-Check entfallen; Messgrösse ≤ 2 lead-qa- und ≤ 1 Integrator-Start je Release. **V3** TOOL-TIMEOUT-7 auf alle Tests mit lokaler Zeit × 4
+
+> 40 % des Timeouts ausweiten, CI-Laufzeit festhalten; Messgrösse ≤ 1 Zeitreserve-Paket über 3 Releases. **V4** Pre-Commit-Hook formatiert vollständig gestagte
+> Dateien selbst mit Prettier und stagt sie neu (teilweise gestagte Dateien weiter abweisen, nie fremde Änderungen mitstagen); Messgrösse ≤ 1 Abweisung je Session.
+> Umsetzung: V1, V3, V4 und die Ein-Ereignis-je-Lauf-Zählung von `load_abort` als **TOOL-BUENDEL-14** (lead-tech, Werkzeug-Paket, Plan-Instanz sonnet, Budget 6);
+> V2 als Handbuch-Minor durch studio-coach. Messauftrag R708 «grösste Datei» erledigt (`docs/beobachtungen.md` 57,5 KB, zweiter Fall in Folge → Auswertungen lesen
+> die Datei abschnittsweise; studio-coach nimmt das in lernen.md auf). **Actions-Prognose rot (2575/2000):** R488 V2 gilt — höchstens ein Push je Tag; heute
+> gepusht (`8fe744df`), daher **REL-26 frühestens 2026-10-17**; bis dahin sammeln sich gemergte Pakete lokal.
+
+Regelbezug: R127, R316, R335, R488 V2, R598 V3, R708 · Kosten bei Irrtum: ein Werkzeug-Paket, das eine Regel lockert, die wieder verschärft werden muss.
+
+Entscheider: L0 · Anlass: Prozess-Retro REL-21–REL-25 · ADR: —
