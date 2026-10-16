@@ -325,3 +325,24 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Die Reichweite rechnet nur mit Inselerzeugung und -verbrauch; Handel und Aufträge fehlen. Der Tooltip sagt es («ohne Handel und Aufträge»).
 - Ursprung: UI-HAEPPCHEN-D (bekannte Grenze, I-109)
 - Erste Einschätzung: niedrig; nur relevant, falls Spieler es als falsch lesen.
+
+## 2026-10-16 · UI-HAEPPCHEN-D: Log-Reihenfolge Fern vor Stammkunde/Zufall
+
+- Fundort: `src/ui/autoLog.ts`, Ereignis-Log
+- Beobachtung: Bei gleichem Tick steht der Fern-Eintrag vor Stammkunde- und Zufallseinträgen.
+- Ursprung: R673 (Gate Merge UI-HAEPPCHEN-D)
+- Erste Einschätzung: niedrig; nur Anzeige-Reihenfolge, bei Bedarf sortieren.
+
+## 2026-10-16 · UI-HAEPPCHEN-D: Tooltip «Leer in 0 s» bei Bestand 0
+
+- Fundort: `src/ui/reach.ts`, Tooltip am Gut-Chip
+- Beobachtung: Bei Bestand 0 sagt der Tooltip «Leer in 0 s»; der Chip zeigt korrekt «0 ↓ leer».
+- Ursprung: R673 (Gate Merge UI-HAEPPCHEN-D)
+- Erste Einschätzung: niedrig; Tooltip-Text bei Bestand 0 angleichen.
+
+## 2026-10-16 · UI-HAEPPCHEN-D: doppelte `goodsBalance`-Rechnung
+
+- Fundort: `src/ui/hud.ts:368`
+- Beobachtung: `goodsBalance` wird dort ein zweites Mal gerechnet, obwohl das Ergebnis schon vorliegt.
+- Ursprung: R673 (Gate Merge UI-HAEPPCHEN-D)
+- Erste Einschätzung: niedrig; Ergebnis wiederverwenden.

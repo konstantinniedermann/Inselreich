@@ -118,10 +118,19 @@
           "name": "UI-HAEPPCHEN-D",
           "kind": "Ereignis-Log vollständig",
           "startStage": 2,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt (R673)",
+          "goalStage": 4
+        },
+        {
+          "pkg": "UI-HAEPPCHEN-E",
+          "name": "UI-HAEPPCHEN-E",
+          "kind": "I-097 Pause sichtbar + I-102 Auftragsvorschau",
+          "startStage": 2,
           "stage": 3,
-          "state": "active",
-          "note": "Umsetzung im Worktree (lead-tech)",
-          "chainLabel": "UI-HAEPPCHEN-D: Umsetzung",
+          "state": "open",
+          "note": "Plan OK (R668), Umsetzung folgt",
           "goalStage": 4
         }
       ]
@@ -167,18 +176,18 @@
       "name": "I-091 Treuebonus",
       "kind": "Ideen-Pool",
       "startStage": 1,
-      "stage": 1,
+      "stage": 2,
       "state": "idea",
-      "note": "bewertet, geparkt"
+      "note": "Spec OK (R671), Plan läuft"
     },
     {
       "pkg": "I-097",
       "name": "I-097 Pause sichtbar",
       "kind": "Ideen-Pool",
       "startStage": 1,
-      "stage": 1,
-      "state": "idea",
-      "note": "bewertet, geparkt"
+      "stage": 3,
+      "state": "open",
+      "note": "in UI-HAEPPCHEN-E (REL-24), Plan OK R668"
     },
     {
       "pkg": "ZEITRESERVE-PFLEGE",
@@ -234,19 +243,19 @@
       "name": "I-109 Reichweite am Gut-Chip",
       "kind": "Ideen-Pool",
       "startStage": 1,
-      "stage": 2,
-      "goalStage": 2,
+      "stage": 4,
+      "goalStage": 4,
       "state": "done",
-      "note": "Kurzdesign angenommen (R654)"
+      "note": "gemergt in UI-HAEPPCHEN-D (R673)"
     },
     {
       "pkg": "I-102",
       "name": "I-102 Auftragsvorschau",
       "kind": "Ideen-Pool",
       "startStage": 1,
-      "stage": 1,
+      "stage": 3,
       "state": "open",
-      "note": "Handel 2 gemergt (R658)"
+      "note": "in UI-HAEPPCHEN-E (REL-24), Plan OK R668"
     },
     {
       "pkg": "TOOL-METRIK-ZEITRAUM",
