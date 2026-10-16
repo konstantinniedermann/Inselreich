@@ -7786,3 +7786,15 @@ lead-qa jetzt; Umsetzung Budget-Antrag 16 Starts wird mit dem Gate entschieden, 
 Regelbezug: gates.md Gate Plan, R638, R663, R670, R671 · Kosten bei Irrtum: eine Renummerierung an 7 Stellen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-I-091 · ADR: —
+
+## R675 · 2026-10-16 · Gate Plan I-091: OK mit Auflagen P1–P3; Budget 18 Starts nach Merge UI-HAEPPCHEN-E
+
+Ruling: Urteil lead-qa (`.studio/handoffs/2026-10-16-lead-qa-gate-plan-I-091.md`) übernommen: **OK mit Auflagen** — P1 `tests/ui/autoLog.test.ts`
+(Contract-Literal Z. 21, `contractNotice`) in T01-Mitzieh-Liste, Dateimatrix und Laufschritte T01/T03; P2 «Final-Review immer als frischer
+opus-Start, nie als Fortsetzung» (R673) in Index und Umsetzer-Briefing; P3 T06 Schritt 7 ganze Dateien statt `-t`-Filter (oder Trefferzahl
+verlangen), Nummerierung Schritt 3 bereinigen. Die Plan-Instanz setzt P1–P3 auf `plan/i091` um. Budget der Umsetzung **18 Starts** (Controller-
+Instanzen eingerechnet), Parallelität 1; Start nach Merge UI-HAEPPCHEN-E.
+
+Regelbezug: gates.md Gate Plan, R673, R674 · Kosten bei Irrtum: ein rot werdender UI-Test im Mitzieh-Schritt (Fix-Runde).
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-I-091 · ADR: —
