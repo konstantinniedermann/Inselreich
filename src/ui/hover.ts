@@ -3,6 +3,7 @@ import { islandView, pickArchipel } from '../render/archipel';
 import { pickTarget } from './islandTools';
 import type { Camera } from '../render/camera';
 import type { Tool } from '../render/renderer';
+import { maxInhabitantsOf, serviceRadiusOf } from '../sim/council';
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
 import { CLEAR_FOREST_COST, PLANT_FOREST_COST } from '../sim/defs/forest';
 import { GOODS } from '../sim/defs/goods';
@@ -92,7 +93,7 @@ function diagnosisLine(d: Diagnosis): string {
 function houseInfo(world: World, b: Building): HoverInfo {
   const house = b.house!;
   const tier = TIERS[house.tier];
-  const lines = [`Einwohner ${house.inhabitants} / ${tier.maxInhabitants}`];
+  const lines = [`Einwohner ${house.inhabitants} / ${maxInhabitantsOf(world, house.tier)}`];
   const diag = houseDiagnosis(world, b)[0];
   lines.push(diag ? diagnosisLine(diag) : 'zufrieden');
   if (tier.upgradeCost !== null) {
@@ -157,7 +158,7 @@ function serviceInfo(world: World, b: Building): HoverInfo {
     : homeBuildings(world).filter((h) => {
         if (!h.house) return false;
         const hc = center(BUILDING_DEFS[h.defId], h.x, h.y);
-        return Math.hypot(hc.cx - c.cx, hc.cy - c.cy) <= (def.serviceRadius ?? 0);
+        return Math.hypot(hc.cx - c.cx, hc.cy - c.cy) <= (serviceRadiusOf(world, b.defId) ?? 0);
       }).length;
   const lines = [n === 1 ? 'versorgt 1 Haus' : `versorgt ${n} Häuser`];
   if (trouble) lines.push(trouble);

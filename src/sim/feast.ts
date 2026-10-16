@@ -1,3 +1,4 @@
+import { serviceRadiusOf } from './council';
 import { BUILDING_DEFS } from './defs/buildings';
 import { GOODS } from './defs/goods';
 import { TAX_LEVELS } from './defs/tiers';
@@ -42,7 +43,7 @@ function spendRum(world: World, chapel: Building): Result {
 /** Spec R7.3: Ein Fest wirkt auf Häuser mit Steuerstufe «normal»; ohne ein solches Haus der Kapellen-Insel im Radius lehnt die Steuer ab. */
 function taxBlock(world: World, chapel: Building): string | null {
   const levels = Object.values(world.buildings)
-    .filter((b) => b.house !== undefined && inChapelRadius(chapel, b))
+    .filter((b) => b.house !== undefined && inChapelRadius(world, chapel, b))
     .map((b) => effectiveTaxLevel(world, b.house!.tier));
   if (levels.length === 0 || levels.includes('normal')) return null;
   if (levels.every((l) => l === 'high')) return `Steuer «${TAX_LEVELS.high.name}»: kein Aufstieg`;
@@ -79,12 +80,12 @@ export function holdFeast(world: World, id: number): Result {
 }
 
 /** Haus auf der Insel der Kapelle (Koordinaten sind inselbezogen) mit Mittelpunktabstand im Dienstradius. */
-function inChapelRadius(chapel: Building, house: Building): boolean {
+function inChapelRadius(world: World, chapel: Building, house: Building): boolean {
   if (chapel.island !== house.island) return false;
   const hc = center(BUILDING_DEFS[house.defId], house.x, house.y);
   const def = BUILDING_DEFS[chapel.defId];
   const c = center(def, chapel.x, chapel.y);
-  return Math.hypot(hc.cx - c.cx, hc.cy - c.cy) <= (def.serviceRadius ?? 0);
+  return Math.hypot(hc.cx - c.cx, hc.cy - c.cy) <= (serviceRadiusOf(world, chapel.defId) ?? 0);
 }
 
 /** Wirkt ein Fest auf das Haus: eine laufende, arbeitende Kapelle mit dem Haus im Dienstradius (Id-Reihenfolge, einmal). */
@@ -92,6 +93,6 @@ export function feastActive(world: World, house: Building): boolean {
   return Object.values(world.buildings).some((b) => {
     if (b.feastAt === undefined || !chapelWorks(b)) return false;
     if (feastState(world, b).phase !== 'active') return false;
-    return inChapelRadius(b, house);
+    return inChapelRadius(world, b, house);
   });
 }

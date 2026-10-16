@@ -1,4 +1,5 @@
 import { HOME } from '../sim/world';
+import { councilCycle, serviceRadiusOf } from '../sim/council';
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST, ROAD_COST_OBJ } from '../sim/defs/buildings';
 import { unprotectedFlammables } from '../sim/queries';
 import { UNLOCKS } from '../sim/defs/unlocks';
@@ -78,18 +79,22 @@ export function siteText(rule: SiteRule): string {
   }
 }
 
+/** Dienst-Reichweite über den Helfer; ohne Welt der Def-Wert (reine Tooltip-Aufrufe ohne Spielstand). */
+const serviceRadius = (world: World | undefined, defId: BuildingDefId): number | undefined =>
+  world === undefined ? BUILDING_DEFS[defId].serviceRadius : serviceRadiusOf(world, defId);
+
 /** „Ungeschützt: N brennbare Gebäude" (Feuerwache-Tooltip, live). */
 export function unprotectedLine(n: number): string {
   return `Ungeschützt: ${n} brennbare Gebäude`;
 }
 
 /** Krisen-Zeilen eines Gebäudetyps (M6 13.2): Brandschutz, „Brennbar", „sturmanfällig". */
-export function crisisTooltipLines(defId: BuildingDefId): string[] {
+export function crisisTooltipLines(defId: BuildingDefId, world?: World): string[] {
   const def = BUILDING_DEFS[defId];
   const lines: string[] = [];
   if (def.fireProtection === true) {
     lines.push(
-      `Schützt brennbare Gebäude im Radius ${def.serviceRadius ?? 0} vor Brand (muss angebunden sein)`,
+      `Schützt brennbare Gebäude im Radius ${serviceRadius(world, defId) ?? 0} vor Brand (muss angebunden sein)`,
     );
   }
   if (def.flammable === true) lines.push('Brennbar');
@@ -133,26 +138,27 @@ export function tooltipLines(tool: Tool, world?: World, island: number = HOME): 
     `Kosten: ${costLine(def.cost)}${paidFromHome(tool) ? ' (aus der Heimat)' : ''}`,
     `Unterhalt: ${num(perMinute(def.upkeep, UPKEEP_INTERVAL))} / min`,
   ];
+  const cyc = (c: number): number => (world === undefined ? c : councilCycle(world, def.id, c));
   if (world !== undefined) lines.push(cachedBalanceLine(world, def.id, island));
   if (def.id === 'townhall') lines.push('Steuer und Ausgabesperre einstellen');
   if (def.produces && def.cycle) {
-    lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(def.cycle)}`);
+    lines.push(`Erzeugt: ${GOODS[def.produces].name} ${perInterval(cyc(def.cycle))}`);
     const advantage = world === undefined ? null : traitBuildLine(world, island, def.id);
     if (advantage !== null) lines.push(advantage);
     const lv = LEVELS[def.id];
     if (lv) {
-      const rates = [def.cycle, lv[0].cycle, lv[1].cycle].map((c) => num(perMinute(1, c)));
+      const rates = [def.cycle, lv[0].cycle, lv[1].cycle].map((c) => num(perMinute(1, cyc(c))));
       lines.push(`Ausstoss je Stufe: ${rates.join(' · ')} / min`);
     }
   }
   if (def.consumes && def.cycle) {
-    const rate = perInterval(def.cycle);
+    const rate = perInterval(cyc(def.cycle));
     lines.push(`Braucht: ${def.consumes.map((g) => `${GOODS[g].name} ${rate}`).join(' · ')}`);
   }
   if (def.service) lines.push(`Dienst: ${SERVICE_NAMES[def.service]}`);
-  const radius = def.serviceRadius ?? def.supplyRadius;
+  const radius = serviceRadius(world, def.id) ?? def.supplyRadius;
   if (radius !== undefined) lines.push(`Radius: ${radius}`);
-  lines.push(...crisisTooltipLines(def.id));
+  lines.push(...crisisTooltipLines(def.id, world));
   lines.push(`Standort: ${def.site.length ? def.site.map(siteText).join(', ') : 'frei'}`);
   if (def.maxCount?.n === 1) lines.push('Nur einmal je Insel');
   if (def.id === 'monument') lines.push(monumentToolLine());

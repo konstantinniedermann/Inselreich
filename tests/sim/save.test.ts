@@ -1893,9 +1893,9 @@ describe('I-028 Save v10', () => {
   });
 
   it('AK-T06 tierCap je Stufe', () => {
-    expect(TIER_IDS.map((t) => tierCap(t, 'high'))).toEqual([3, 6, 11, 15]);
-    expect(TIER_IDS.map((t) => tierCap(t, 'normal'))).toEqual([4, 8, 15, 20]);
-    expect(TIER_IDS.map((t) => tierCap(t, 'low'))).toEqual([4, 8, 15, 20]);
+    expect(TIER_IDS.map((t) => tierCap(createWorld(3), t, 'high'))).toEqual([3, 6, 11, 15]);
+    expect(TIER_IDS.map((t) => tierCap(createWorld(3), t, 'normal'))).toEqual([4, 8, 15, 20]);
+    expect(TIER_IDS.map((t) => tierCap(createWorld(3), t, 'low'))).toEqual([4, 8, 15, 20]);
   });
 
   it('AK-T17 Grundfall: Rundreise mit ungleichen Reglern und Sperren', () => {

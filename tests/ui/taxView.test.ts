@@ -106,7 +106,7 @@ describe('AK-T28 tierTaxTooltip (Anhang 01 C)', () => {
     [4, 'high', '115 % · 15 Einwohner'],
   ];
   it.each(rows)('Stufe %i %s', (tier, level, want) => {
-    expect(tierTaxTooltip(tier, level)).toBe(want);
+    expect(tierTaxTooltip(createWorld(3), tier, level)).toBe(want);
   });
 });
 

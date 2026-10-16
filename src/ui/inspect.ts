@@ -1,6 +1,7 @@
 import { home, isKontor } from '../sim/world';
 import { monumentChronicleLine } from './monumentView';
 import { phaseAt, type Phase } from '../render/daynight';
+import { maxInhabitantsOf } from '../sim/council';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, TIER_IDS } from '../sim/defs/tiers';
@@ -496,7 +497,8 @@ export function deficitLine(world: World, b: Building): string | null {
   const house = b.house;
   if (!house) return null;
   const tier = TIERS[house.tier];
-  if (tier.upgradeCost === null || house.inhabitants !== tier.maxInhabitants) return null;
+  if (tier.upgradeCost === null || house.inhabitants !== maxInhabitantsOf(world, house.tier))
+    return null;
   const d = upgradeDeficit(world, b);
   return d
     ? deficitText(d.good, (world.islands[b.island] ?? home(world)).stock[d.good], d.net)
@@ -517,7 +519,7 @@ function updateHouse(panel: HTMLElement, world: World, b: Building): void {
   const tier = TIERS[house.tier];
   setField(panel, 'tier', tier.name);
   setPips(panel, 'tier-chip', 'tier', tierPips(b));
-  setTiles(panel, houseTiles(b));
+  setTiles(panel, houseTiles(world, b));
   const supply = supplyChip(world, b);
   if (supply) setToneChip(panel, 'supplied-chip', 'supplied', supply);
 
@@ -678,7 +680,7 @@ function updateTownhall(panel: HTMLElement, world: World): void {
     if (btn.getAttribute('aria-pressed') !== pressed) btn.setAttribute('aria-pressed', pressed);
     const disabled = tier !== null && taxTarget(level, tier) !== level;
     if (btn.disabled !== disabled) btn.disabled = disabled;
-    const tip = tier === null ? taxEffect(level) : tierTaxTooltip(tier, level);
+    const tip = tier === null ? taxEffect(level) : tierTaxTooltip(world, tier, level);
     if (btn.title !== tip) btn.title = tip;
   }
   for (const t of TIER_IDS) {

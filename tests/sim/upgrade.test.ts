@@ -142,14 +142,14 @@ describe('M11 Ausbau (Spec 3.6)', () => {
     w.unlocked = ['U0', 'U2'];
     expect(upgradeBuilding(w, f.id)).toEqual({
       ok: false,
-      reason: unlockText(UNLOCKS[3]!, 'lockText'),
+      reason: unlockText(w, UNLOCKS[3]!, 'lockText'),
     });
     w.unlocked = ['U0', 'U2', 'U3'];
     f.level = 2;
     home(w).stock.rum = 5;
     expect(upgradeBuilding(w, f.id)).toEqual({
       ok: false,
-      reason: unlockText(UNLOCKS[5]!, 'lockText'),
+      reason: unlockText(w, UNLOCKS[5]!, 'lockText'),
     });
   });
 });
