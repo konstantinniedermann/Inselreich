@@ -1524,3 +1524,16 @@ UI-AUFRAEUM-4 (R701). (4) Beobachtungen 12 < 30: keine Pflicht-Auswertung.
 Regelbezug: R464, R694, R701, R703, R705, R706, R708 · Kosten bei Irrtum: ein Controller, der doppelt läuft, oder ein Plan, der eine halbe Stunde später startet.
 
 Entscheider: L0 · Anlass: Session-Start ca9d40c8 · ADR: —
+
+## R710 · 2026-10-16 · Gate Merge UI-AUFRAEUM-4: OK nach arc42-Satz (B-1); D-1 und D-2 bestätigt; Prozess-Retro REL-21–REL-25
+
+Ruling: (1) `feat/ui-aufraeum-4` @ `150f98f8` (Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-UI-AUFRAEUM-4.md`): **Gate Merge OK unter Auflage B-1** — lead-tech
+korrigiert in `docs/arc42.md` (Zeile zu `input.ts`) den Rechtsklick auf die Staffelung D-2 (erster Rechtsklick beendet den Zug, zweiter legt das Werkzeug ab),
+Trivial-Fix mit `make docs-check` Exit 0, kein erneutes Gate; danach merged lead-production lokal (`--no-ff`) und nimmt das Paket in REL-26 auf. **D-1**
+(Cache-Schlüssel mit `nextBuildingId` und Stufensumme, reiner UI-Zustand) und **D-2** bestätigt. Beobachtungen: Rechtsklick über `pointerdown` Button 2 erst
+bei Bericht aus einem Nicht-Chrome-Browser; Schwenk-Test und Menü-Abstand bei der nächsten Menü-Arbeit. Danach I-114 T02 ff. (R701). (2) Seit REL-20 fehlt
+die Prozess-Aussensicht (R127) für REL-21 bis REL-25 → `studio-process-coach` (opus) jetzt, ein Bericht über alle fünf Releases.
+
+Regelbezug: gates.md Gate Merge, R127, R694, R701, R707 · Kosten bei Irrtum: ein Doku-Satz, der eine Stunde länger veraltet ist.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-UI-AUFRAEUM-4 · ADR: —
