@@ -1418,3 +1418,32 @@ button.hud-balance:focus-visible {
   border-color: var(--warn-parchment);
   font-weight: 600;
 }
+
+/* Pause-Overlay (I-097) */
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow:
+    inset 0 0 0 4px var(--gold),
+    inset 0 0 56px 8px color-mix(in srgb, var(--bg) 55%, transparent);
+}
+.pause-overlay[hidden] {
+  display: none;
+}
+.pause-overlay__banner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+  background: var(--wood);
+  color: var(--parchment);
+  border: 1px solid var(--gold);
+  padding: 4px 14px;
+}
+.pause-overlay__hint {
+  margin-left: 10px;
+}

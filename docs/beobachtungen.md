@@ -346,3 +346,24 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: `goodsBalance` wird dort ein zweites Mal gerechnet, obwohl das Ergebnis schon vorliegt.
 - Ursprung: R673 (Gate Merge UI-HAEPPCHEN-D)
 - Erste Einschätzung: niedrig; Ergebnis wiederverwenden.
+
+## 2026-10-16 · UI-HAEPPCHEN-E: Toast «Pausiert» deckt Banner «Pause» nach dem Laden
+
+- Fundort: Playtest T05, nach Laden eines Spielstands (`src/ui/app.ts`, Toast und `.pause-overlay`)
+- Beobachtung: Der Toast «Pausiert — …» (ca. 3 s) liegt deckungsgleich über dem Banner «Pause». Das Overlay bleibt, das Banner ist kurz verdeckt.
+- Ursprung: UI-HAEPPCHEN-E
+- Erste Einschätzung: niedrig.
+
+## 2026-10-16 · UI-HAEPPCHEN-E: Vorschau erst nach «Ablehnen» des Stammkunde-Angebots
+
+- Fundort: Auftragskarte nach Fernlieferung (`previewOrder`, `src/sim/orders.ts`)
+- Beobachtung: Nach einer Fernlieferung zeigt die Karte zuerst das Stammkunde-Angebot, die Vorschau erst nach «Ablehnen». `previewOrder` liefert bei offenem Angebot `null`, beabsichtigt.
+- Ursprung: UI-HAEPPCHEN-E
+- Erste Einschätzung: niedrig; kein Fehler, nur zur Kenntnis.
+
+## 2026-10-16 · UI-HAEPPCHEN-E: Auftragskarte zu Spielbeginn verborgen
+
+- Fundort: Auftragskarte bei stufenweiser Freischaltung (U3)
+- Beobachtung: Zu Spielbeginn ist die Auftragskarte verborgen, die Vorschau wird also erst nach der Freischaltung sichtbar.
+- Ursprung: UI-HAEPPCHEN-E
+- Erste Einschätzung: niedrig; beabsichtigt durch U3.

@@ -256,3 +256,12 @@ export function contractUnitPrice(good: GoodId): number {
 export function contractPenalty(c: Contract): number {
   return Math.ceil((c.amount * c.price * CONTRACT_PENALTY_PCT) / 100);
 }
+
+/** Vorschau des nächsten Zufallsauftrags (nur Gut); reine Lesefunktion, kein RNG-Vorziehen (ADR-010). */
+export function previewOrder(world: World): { tick: number; good: GoodId } | null {
+  if (world.contract !== null || world.contractOffer !== null) return null;
+  if (functionLock(world, 'orders') !== null) return null;
+  const tick = nextOrderTick(world);
+  const k = (tick - ORDER_FIRST_TICK) / ORDER_PERIOD;
+  return { tick, good: orderForPeriod(world.seed, k, maxHouseTier(world)).good };
+}

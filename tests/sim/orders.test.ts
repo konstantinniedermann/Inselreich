@@ -3,15 +3,20 @@ import v1Json from './fixtures/save-v1.json?raw';
 import { GOODS, GOOD_IDS, ORDER_PREMIUM } from '../../src/sim/defs/goods';
 import { ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from '../../src/sim/defs/timing';
 import {
+  acceptFarOrder,
+  cancelContract,
   deliverOrder,
+  maxHouseTier,
   nextOrderTick,
   orderForPeriod,
   orderPool,
+  previewOrder,
   tickOrders,
 } from '../../src/sim/orders';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
-import type { Tier, World } from '../../src/sim/types';
+import type { Building, Tier, World } from '../../src/sim/types';
+import { newHouseState } from '../../src/sim/population';
 import { createWorld, home } from '../../src/sim/world';
 import { foundKontor2Literal, seaWorld } from './seaHelpers';
 import { ORDER_PINS, SEE_SEEDS } from './seePins';
@@ -242,5 +247,106 @@ describe('AK-E3-04 Gewürz ist kein Auftrags- und Boomgut', () => {
           return [o.good, o.amount];
         }),
       ).toEqual(ORDER_PINS[seed]);
+  });
+});
+
+describe('previewOrder (I-102)', () => {
+  const addHouse = (world: World, tier: Tier): Building => {
+    const id = world.nextBuildingId++;
+    const b: Building = {
+      id,
+      defId: 'house',
+      x: 0,
+      y: 0,
+      connected: true,
+      progress: 0,
+      state: 'ok',
+      island: 0,
+      house: { ...newHouseState(world), tier },
+    };
+    world.buildings[id] = b;
+    return b;
+  };
+  const expected = (world: World): { tick: number; good: string } => {
+    const tick = nextOrderTick(world);
+    const k = (tick - ORDER_FIRST_TICK) / ORDER_PERIOD;
+    return { tick, good: orderForPeriod(world.seed, k, maxHouseTier(world)).good };
+  };
+  /** Seed, dessen Auftrag der Periode 0 in Stufe 1 und 2 verschieden ist. */
+  const tierSensitiveSeed = (): number => {
+    for (let seed = 1; seed < 500; seed++)
+      if (orderForPeriod(seed, 0, 1).good !== orderForPeriod(seed, 0, 2).good) return seed;
+    throw new Error('kein Seed gefunden');
+  };
+
+  it('AK-1 Tick und Gut stimmen vor dem ersten Auftrag, in der Lücke und mitten im Auftrag', () => {
+    for (const t of [0, 5, ORDER_FIRST_TICK + ORDER_DURATION + 1, ORDER_FIRST_TICK + 10]) {
+      const world = createWorld(3, { unlockAll: true });
+      world.tick = t;
+      expect(previewOrder(world)).toEqual(expected(world));
+    }
+    const early = createWorld(3, { unlockAll: true });
+    expect(previewOrder(early)!.tick).toBe(ORDER_FIRST_TICK);
+  });
+
+  it('AK-2 ändert die Welt nicht, ist wiederholbar und sagt das Gut des echten Angebots voraus', () => {
+    const before = JSON.stringify(w);
+    const a = previewOrder(w);
+    const b = previewOrder(w);
+    expect(JSON.stringify(w)).toBe(before);
+    expect(a).toEqual(b);
+    runTo(w, a!.tick);
+    expect(w.order!.good).toBe(a!.good);
+  });
+
+  it('AK-3 Stufenaufstieg und Abriss ändern die Vorschau; das Angebot nutzt die Stufe zum Angebotszeitpunkt', () => {
+    const seed = tierSensitiveSeed();
+    const world = createWorld(seed, { unlockAll: true });
+    const g1 = previewOrder(world)!.good;
+    expect(g1).toBe(orderForPeriod(seed, 0, 1).good);
+    const h = addHouse(world, 2);
+    expect(previewOrder(world)!.good).toBe(orderForPeriod(seed, 0, 2).good);
+    delete world.buildings[h.id];
+    expect(previewOrder(world)!.good).toBe(g1);
+    addHouse(world, 2);
+    runTo(world, ORDER_FIRST_TICK);
+    expect(world.order!.good).toBe(orderForPeriod(seed, 0, 2).good);
+  });
+
+  it('AK-4 Vertrag, offenes Angebot und Sperre liefern null; nach Kündigung wieder ein Wert', () => {
+    w.contract = { good: 'wood', amount: 10, price: 5, island: 0 };
+    expect(previewOrder(w)).toBeNull();
+    cancelContract(w);
+    expect(previewOrder(w)).not.toBeNull();
+    w.contractOffer = { good: 'wood', island: 0 };
+    expect(previewOrder(w)).toBeNull();
+    w.contractOffer = null;
+    const locked = createWorld(3);
+    expect(previewOrder(locked)).toBeNull();
+  });
+
+  it('AK-5 nach Fernauftrag zeigt die Vorschau die übernächste Periode, nicht die gesperrte', () => {
+    const s = seaWorld();
+    foundKontor2Literal(s, 2);
+    s.tick = ORDER_FIRST_TICK;
+    s.order = { period: 0, good: 'wood', amount: 5, reward: 50, due: s.tick + ORDER_DURATION };
+    s.farOffer = { island: 2, good: 'tools', amount: 5, reward: 100 };
+    expect(acceptFarOrder(s)).toEqual({ ok: true });
+    const p = previewOrder(s)!;
+    expect(p.tick).toBe(ORDER_FIRST_TICK + 2 * ORDER_PERIOD);
+    expect(p.good).toBe(orderForPeriod(s.seed, 2, maxHouseTier(s)).good);
+    s.order = null;
+    expect(previewOrder(s)!.tick).toBe(ORDER_FIRST_TICK + 2 * ORDER_PERIOD);
+  });
+
+  it('AK-7a Aufrufe in jedem Schritt ändern den Verlauf nicht (bitgleich)', () => {
+    const a = createWorld(3, { unlockAll: true });
+    const b = createWorld(3, { unlockAll: true });
+    for (let i = 0; i < ORDER_FIRST_TICK + 2 * ORDER_PERIOD; i++) {
+      previewOrder(a);
+      step(a);
+      step(b);
+    }
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
   });
 });

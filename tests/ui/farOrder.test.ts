@@ -1,7 +1,8 @@
 // Handel 2 T07: Texte, Lieferziel und Log-Einträge zum Fernangebot (AK-H2-28, 29, 33).
 import { describe, expect, it } from 'vitest';
 import { FAR_ORDER_DURATION } from '../../src/sim/defs/timing';
-import { acceptFarOrder, deliverOrder } from '../../src/sim/orders';
+import { acceptFarOrder, deliverOrder, previewOrder } from '../../src/sim/orders';
+import { GOODS } from '../../src/sim/defs/goods';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { World } from '../../src/sim/types';
@@ -111,7 +112,9 @@ describe('AK-H2-29 Lieferziel', () => {
     acceptFarOrder(w);
     expect(deliverOrder(w, B)).toEqual({ ok: true });
     w.contractOffer = null; // das Stammkunde-Angebot nach der Lieferung ginge vor
-    expect(orderCardText(w)).toBe(`Nächster Auftrag in ${formatGameTime(periodStart(3) - w.tick)}`);
+    expect(orderCardText(w)).toBe(
+      `Nächster Auftrag in ${formatGameTime(periodStart(3) - w.tick)} · voraussichtlich ${GOODS[previewOrder(w)!.good].name}`,
+    );
   });
 });
 
