@@ -213,6 +213,7 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Bewertung lead-design: Genre-Standard, aber kein Playtest-Befund; Lückenfüller.
 - Nutzen/Aufwand: Orientierung · S · ≈ 40 Tools
 - Entscheid: IDEEN-09 Empfehlung parken (Lückenfüller)
+- Status 2026-10-16: Parken aufgehoben (R663); Kurzdesign `docs/superpowers/specs/2026-10-16-i097-pause-sichtbar.md` (11 AK, kein Save); Umsetzung nach UI-HAEPPCHEN-D
 
 ### I-100 · bewertet · «Neu»-Zähler am Ereignis-Log
 
