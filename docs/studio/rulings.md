@@ -1411,3 +1411,15 @@ nach Kapazität.
 Regelbezug: gates.md Gate Spec (Kurzdesign Stufe leicht), R692, R698, ADR-011 · Kosten bei Irrtum: ein Stadtklang, der nachgestimmt wird.
 
 Entscheider: L0 · Anlass: Bericht lead-art design-I-120-I-118 · ADR: —
+
+## R701 · 2026-10-16 · Gate Plan I-114: OK; T01 (Sim) startet jetzt, T02 ff. nach Merge UI-AUFRAEUM-4
+
+Ruling: `plan/i114` @ `bb0dee6b` (Handoff `.studio/handoffs/2026-10-16-lead-tech-plan-I-114.md`, T00–T04, Stufe leicht, kein Save) → **Gate Plan OK**. Ruling-
+Entwürfe angenommen: `acceptFarOrder(world, 1)` rechnet die Zweitkarte im Klickmoment neu (Drift-Hinnahme R699); `farAlternative` liefert `null` ohne laufenden
+Auftrag. Budget **7 Starts**, Parallelität 1, ein Reviewer am Ende (E-068) plus Final-Review opus. Weil T01 nur `src/sim/farOrder.ts` und Tests berührt
+(disjunkt zu UI-AUFRAEUM-4), startet die Umsetzung **jetzt mit T00/T01**; T02–T04 erst nach dem Merge von UI-AUFRAEUM-4 (Controller holt main per Merge).
+Bis dahin meldet der Controller «wartet» und endet, Fortsetzung per Nachricht.
+
+Regelbezug: gates.md Gate Plan, R698, R699 · Kosten bei Irrtum: ein Sim-Task, der nach dem UI-Merge einen kleinen Merge braucht.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-I-114 · ADR: —
