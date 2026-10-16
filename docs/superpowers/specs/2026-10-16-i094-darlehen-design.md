@@ -1,4 +1,4 @@
-# I-094 Darlehen beim Händler — Kurz-Spec (Vorlage: verwerfen)
+# I-094 Darlehen beim Händler — Kurz-Spec (verworfen, R670)
 
 Stand 2026-10-16 · Paket `design-I-091-I-094` · Prozessstufe leicht · Auftrag R663 · Rechnung:
 [2026-10-16-i091-i094-rechnung.md](2026-10-16-i091-i094-rechnung.md) (Teil A).
