@@ -1592,3 +1592,17 @@ CHANGELOG-Eintrag angenommen.
 Regelbezug: R445, R692, R698, E-061 · Kosten bei Irrtum: ein Kurzdesign, das bis nach ORT-A liegen bleibt.
 
 Entscheider: L0 · Anlass: freier Platz · ADR: —
+
+## R715 · 2026-10-16 · Gate Spec I-119 + I-121: Variante 3 (gestaffelt); Kurzdesign I-110 «Startpaket zur Wahl» jetzt
+
+Ruling: (1) `design/i119-i121` @ `da85c492` (Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-119-I-121.md`) → **Gate Spec OK, Variante 3**: Paket A
+(Wartende vor der Tür mit Zeitstaffel, Sturm-Heimgehen, Boom-Winken, ohne Pfadlogik) vor Paket B (Brand-Eimerkette mit Breitensuche, streichbar). Konstanten
+(30/150/600 Ticks, Läufertempo 1,8 Kacheln/s, `waiters` [12, 4], `firefighters` [8, 0], `wavers` [12, 0]) sind Darstellungswerte in `src/render/reaktion.ts` bzw.
+`CAPS` in `limits.ts`, nicht in `src/sim/defs/` — Balancing unberührt. Reagierende zählen gegen `CAPS.walkers` und ersetzen Spaziergänger. Kürzung «voll versorgte
+Häuser schicken öfter Spaziergänger» angenommen. Plan erst nach ORT-A T20, ab dem dann aktuellen `main` (R714). (2) Freier Platz → **Kurzdesign I-110
+«Startpaket zur Wahl»** (Pool R692), Stufe voll (neue Spielwerte): lead-design (opus) mit design-economy-designer für die Rechnung (Vorteile je Paket in einem
+Engpass der ersten 15 min, keine Dominanz); «Standard» bleibt Vorgabe, Balancing-Baseline startet mit Standard.
+
+Regelbezug: gates.md Gate Spec, R445, R692, R698, R714 · Kosten bei Irrtum: ein Paket B, das nach dem Playtest von A gestrichen wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-119-I-121 · ADR: —
