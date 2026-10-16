@@ -1929,3 +1929,16 @@ main + 1 = 18 (R674). **M-2:** Playtest-Bilder bleiben lokal unter `.studio/qa/i
 Regelbezug: gates.md Gate Merge, R674, R682, R706, R711, R740, R741 · Kosten bei Irrtum: eine Save-Nummer, die vor dem Push neu vergeben werden muss.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-I-112 · ADR: —
+
+## R743 · 2026-10-16 · TOOL-GUARD-ALLOWLIST: V1-Umschnitt — Feld `command` entfällt; +1 Start (Delta-Review)
+
+Ruling: `tool/guard-redact` @ `bad87718` (Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-GUARD-ALLOWLIST.md`) → Delta-Review opus ZURÜCK: freie Tokens gelangen weiter ins
+Feld `command` (erstes Argument bei Programmen ohne Unterbefehl; erstes Wort bei Nicht-Bash-Werkzeugen). Dritte Runde derselben Befundklasse «freier Text im Ereignis» →
+**V1 (R735): Ansatz statt Fix.** `guard_block` speichert **kein** Feld `command` mehr, nur `rule`, `tool`, `summary` (fester Text je Regel) und `command_hash`
+(SHA-256-Präfix, 12 Zeichen). Leser geprüft: kein Werkzeug in `tools/studio/` liest `command` aus `guard_block` (nur `hook.py`/`efficiency.py` aus `tool_input`).
+Die Schwärzung `redact` bleibt für andere Ausgaben. Umsetzung per Fortsetzung des Umsetzers, **+1 Start** frisches Delta-Review opus; bei OK Gate Merge (lead-qa). Budget (V3):
+TOOL-GUARD-REDACT 5 von 3 (abgeschlossen), TOOL-GUARD-ALLOWLIST **4 von 3**.
+
+Regelbezug: R673, R725, R732, R733, R735, OWASP · Kosten bei Irrtum: ein Diagnosefeld weniger (Regel und Hash bleiben).
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-ALLOWLIST · ADR: —
