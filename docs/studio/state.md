@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-16 (Studio-Session 66d37b15, R688–R707; REL-24+REL-25 live `8fe744df` (R697, CI 38887719217, Pages 38888562306); Sammelmerge TOOL-E070, IDEEN-11, ORT-A-Spec; Save v16)
+Stand: 2026-10-16 (Studio-Session 66d37b15, R688–R708; REL-24+REL-25 live `8fe744df` (R697, CI 38887719217, Pages 38888562306); Sammelmerge TOOL-E070, IDEEN-11, ORT-A-Spec; Save v16)
 
 ## Release-Notizen
 
