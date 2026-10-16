@@ -257,6 +257,16 @@
       "goalStage": 4,
       "state": "done",
       "note": "gemergt (R666)"
+    },
+    {
+      "pkg": "BEOB-15",
+      "name": "BEOB-15",
+      "kind": "Befund",
+      "startStage": 2,
+      "stage": 4,
+      "goalStage": 4,
+      "state": "done",
+      "note": "gemergt (R672)"
     }
   ],
   "pastSummary": "REL-01 … REL-21, M1 – M13"
