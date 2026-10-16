@@ -168,12 +168,17 @@ Den Stilrahmen selbst führt der Umsetzungsplan nach (AK-44), nicht diese Spec.
 
 ### 4.3 ORT-K2 Flächenkante
 
+**Regel Bildmodus:** KS4 und KS5 wirken **nur im Bildmodus-Zweig** (`p.hand && !p.recording`). Der Plain-Zweig
+(`drawBodyPlain`: Picking über `bodyFaces`, Bau-Geist `drawGhost`, Referenztests in `variants.test.ts`) zeichnet
+weiterhin die gerade Platte und beim Markt die durchgehenden Gitterfugen (`p.line`).
+
 - **KS4:** Der Erdrand in `raggedYard` wird von Sägezahn zu einer weichen Rauschlinie (2 Oktaven, Kurven) mit einer
   inneren Tonstufe, Salz 611. Nur im Bildmodus-Zweig (`p.hand && !p.recording`). Eingaben bleiben die des
   Sprite-Schlüssels (keine Nachbarn).
 - **KS5:** Pflaster von `marketBody` und `kontorBody` (`kontor`, `kontor2`): Fugen im Läuferverband versetzt und mit
   `sag` gebrochen, äussere Steinreihe als einzelne unregelmässige Steine, Kern des Platzes geschlossen. Nur im
-  Bildmodus-Zweig. Die Kaimauer (Krone 0,14) bleibt gerade (Mauerwerk, S7).
+  Bildmodus-Zweig; die heutigen Fugen in `marketBody` sind nicht hand-gesteuert, der Plain-Zweig behält sie
+  unverändert. Die Kaimauer (Krone 0,14) bleibt gerade (Mauerwerk, S7).
 - **KS8:** Halbschatten als zweite Füllung in Durchgang 5: Hülle um 0,06 Kachel erweitert, halbe Deckkraft, für
   Gebäude und Bäume gleich, alle Halbschatten in **einem** Pfad. Die Kernschatten-Polygone (`buildingShadow`,
   `treeShadow`) bleiben unverändert. Der Kernschatten wird im Bild nicht dunkler als auf `main` (Technik wählt der
@@ -214,20 +219,15 @@ Uint8Array` (d), `items: OrtsrandItem[]`.
 
 ## 7 Liste der bewusst geänderten Variante-0-Hashes (O8)
 
-Befund (Spec-Prüfung): `variants.test.ts` H-R7 AK1 hasht `drawBody` (`hand = true`, Zoom 1). `raggedYard` läuft dort,
-weil die Hauptaufzeichnung nicht im Aufzeichnungsmodus ist. Jede Silhouette ausser `monument` ruft `yard()` auf.
+**In ORT-A ändert sich kein H-R7-AK1-Hash; die Liste ist leer.** Beleg: `variants.test.ts` importiert
+`drawBodyPlain as drawBody` und hasht damit den Plain-Zweig (`hand = false`). `yard()` geht nur bei
+`p.hand && !p.recording` in `raggedYard`; KS4 und KS5 wirken nach 4.3 nur dort.
 
-- **KS4 (ORT-K2):** alle 22 Typen ausser `monument`: kontor, kontor2, market, house1–house4, fisher, lumberjack,
-  quarry, sheepfarm, weaver, canefarm, spicefarm, distillery, toolmaker, chapel, school, firestation, bathhouse,
-  glassworks, townhall.
-- **KS5 (ORT-K2):** kontor, kontor2, market (zusätzlich zu KS4).
-- **KS8:** keine; Schatten zeichnet Durchgang 5 im Renderer, nicht `drawBody`.
-- **KS6/KS7:** nicht in ORT-A (ORT-5).
+- **KS4, KS5 (ORT-K2):** kein AK1-Hash, nur Bildmodus (Schutz über AK-01 (g) und AK-35).
+- **KS8:** keiner; Schatten zeichnet Durchgang 5 im Renderer, nicht der Körperzeichner.
+- **KS6/KS7 (Feld, Zaun):** nicht in ORT-A (ORT-5).
 
-Der Brainstorming-Vorbehalt «ob KS4 die Hashes berührt» ist damit entschieden: **ja, für alle 22**. Das braucht ein
-Ruling (Entwurf E1). Fehlerrichtung, falls der Plan anders misst: Ändert sich ein Hash eines Typs, der nicht in
-dieser Tabelle steht, ist das ein Fehler, nicht eine neue Ausnahme. `monument`, `hunter` und `cattlefarm` (letztere
-nur Zweimal-Test) bleiben bytegleich.
+Fehlerrichtung: Jede Änderung eines AK1-Hashes in ORT-A ist ein Fehler, keine neue Ausnahme.
 
 ## 8 Abnahmekriterien
 
@@ -241,11 +241,14 @@ Referenzhash, **P** = Leistungsmessung (`tools/render-qa/`), **B** = Browser-/Ga
   für (a) `drawHover`, `drawGhost` (alle Typen), `drawPathPreview` und die Auswahl-Hervorhebung, (b) `drawBodyPlain`
   aller Typen und Stufen, (c) `groundElements` und `stampPlacements` für Seeds 1–50, (d) `spriteKey` für eine feste
   Eingabeliste, (e) `paintPixels` eines festen Rechtecks fern jeder Belegung (Seed 1), (f) den Kontrastwert Kern ↔
-  Wiese nach der Messvorschrift von AK-24. Der Test ist auf `main` grün.
+  Wiese nach der Messvorschrift von AK-24, (g) `drawBody` im Bildmodus (`hand = true`) aller Typen und Stufen, Zoom 1
+  (heute ohne Hash-Schutz; `sprites-kanten.test.ts` prüft nur Eigenschaften). Der Test ist auf `main` grün.
   Fehlende Exporte (z. B. `drawHover` ist privat) legt der Plan als reine Test-Exporte an.
 - **AK-02 Salzregister (V).** Der Kopf von `groundDecor.ts` nennt den Block 600–619 mit der Zuteilung aus 3.4 und die
   Salze 61–65 in `sprites.ts` und `wildlife.ts`. Ein Test liest alle Literale `seed + N` in `ortsrand.ts`,
-  `roadShape.ts`, `roadside.ts` und `raggedYard`/Pflaster und prüft: N liegt in 600–619 und steht im Register.
+  `roadShape.ts`, `roadside.ts` und `raggedYard`/Pflaster und prüft nur die **neuen** Literale (gegenüber dem Stand von
+  AK-01): N liegt in 600–619 und steht im Register. Bestehende Salze in `raggedYard`/`sprites.ts` (z. B. L3 570–575)
+  bleiben, sofern KS4 sie nicht ersetzt.
 - **AK-03 D7 dokumentiert (V).** Der Kopf von `decor.ts` enthält D7 im Wortlaut von 3.3 (Text-Test).
 - **AK-04 Analyse (V).** Tabellenfälle mit festen Layouts: Besitzer-Vorrang (production vor public/infrastructure vor
   housing, dann kleinere Id), Ortsnähe-Klassen an den Grenzen n = 0, 1, 5, 6, Nahdichte-Klassen an d = 2, 3, 4, 5.
@@ -326,10 +329,11 @@ Referenzhash, **P** = Leistungsmessung (`tools/render-qa/`), **B** = Browser-/Ga
   zwischen aufeinanderfolgenden Kanten um höchstens 30° (der heutige Sägezahn liegt bei rund 80°); keine kollineare
   Strecke > 0,5 Kachel (Toleranz 0,01); zwei Füllungen (Rand, innere Stufe), kein `stroke` im Hofteil.
 - **AK-34 Plain unverändert (H).** `drawBodyPlain` aller Typen und Stufen bytegleich zu AK-01 (b). Damit bleiben
-  Picking-Geometrie (`bodyFaces`) und `drawGhost` unverändert.
-- **AK-35 Hash-Änderung begrenzt (H).** H-R7 AK1 bekommt neue Referenzwerte nur für die Typen aus Abschnitt 7.
-  Für alle Typen ausser kontor, kontor2, market ist die Aufzeichnung **nach** dem Hof-Abschnitt bytegleich zu `main`
-  (Plan-Pflicht: Trennstelle über die Ereigniszahl einer Aufzeichnung von `yard` allein bestimmen).
+  Picking-Geometrie (`bodyFaces`), `drawGhost` und alle H-R7-AK1-Hashes unverändert (Abschnitt 7).
+- **AK-35 Bildmodus-Änderung begrenzt (H).** Im Bildmodus (`drawBody`, `hand = true`) ändern sich nur die Hof- und
+  Pflaster-Abschnitte. Die Aufzeichnung ausserhalb davon (Körper, Dach, Kaimauer) ist bytegleich zu AK-01 (g)
+  (Plan-Pflicht: Trennstelle bestimmen, z. B. über die Ereigniszahl einer Aufzeichnung von `yard` allein). Neue
+  Bildmodus-Referenzen setzt ORT-K2 in einem eigenen Commit, nur für die Typen mit Hof bzw. Pflaster.
 - **AK-36 KS5 Pflaster (V, F).** Keine Fugenlinie und kein Pflasterrand mit kollinearer Strecke > 0,5 Kachel
   (Toleranz 0,01); Fugen benachbarter Reihen versetzt; Kaimauer-Quad von `kontorBody` unverändert (Ereignisse
   bytegleich, Plan bestimmt den Abschnitt).
@@ -417,16 +421,16 @@ Laufzeit-Abhängigkeit, kein neuer Schlüssel im Gebäude-Sprite-Cache.
 - **Patch-Zeit (hoch):** Der Rand 2 statt 1 vergrössert das Patch-Rechteck eines 2×2-Baus von 16 auf 36 Kacheln.
   Bestimmt die Pixelarbeit `lastPatchMs`, reicht +30 % (AK-48) womöglich nicht. Gegenmittel im Plan: Grundpixel nur im
   Rand-1-Bereich neu rechnen und im äusseren Ring nur den Saum neu mischen; sonst Ruling-Entwurf E6.
-- **Hash-Breite KS4:** 22 Referenzhashes ändern sich; ein echter Fehler im selben Commit fiele nicht auf. Gegenmittel
-  AK-34 und AK-35.
+- **Bildmodus ohne Hash-Schutz:** Heute hasht kein Test den Bildmodus; KS4/KS5 setzen dort neue Referenzen für fast
+  alle Typen, ein Fehler im selben Commit fiele nicht auf. Gegenmittel AK-01 (g), AK-34 und AK-35.
 - **Weg-Lesbarkeit:** Zu viel Gras im Weg wirkt wie «unterbrochen». Gegenmittel AK-21, AK-27, AK-52.
 - **Merge-Punkt `sprites.ts`:** ORT-K1 und ORT-K2 in getrennten Funktionen; ORT-K1 merged zuerst.
 - **Kernschatten-Doppeldeckung (KS8):** Technik offen, AK-37 prüft.
 
 ## 12 Offene Punkte (Ruling-Entwürfe an L0)
 
-- **E1 O8 erweitern:** KS4 ändert die AK1-Hashes aller 22 Typen mit Hof, nicht nur der Pflaster-Typen. Empfehlung:
-  annehmen, mit AK-34 und AK-35 als Schutz; neue Hashes setzt ORT-K2 in einem eigenen Commit.
+- **E1 O8 in ORT-A leer:** KS4/KS5 nur im Bildmodus, AK1 und Plain bytegleich; neuer Bildmodus-Referenzhash als
+  Schutz (AK-01 (g), AK-35). Empfehlung: annehmen.
 - **E2 Boden-Gradient über Nahdichte (r = 1) statt Ortsnähe (r = 3):** hält den Patch-Rand bei 2. Empfehlung:
   annehmen; Ortsnähe bleibt für Items und Weg-Pfad.
 - **E3 Toleranz 5 % für AK-30:** «nicht teurer als main» ist ohne Rauschgrenze nicht entscheidbar. Empfehlung: 5 %.
