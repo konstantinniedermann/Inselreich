@@ -1778,3 +1778,15 @@ Start für C2. Puffer jetzt 6. Browser-Läufe und A/A-Kontrolle weiter offen (N-
 Regelbezug: R705, R729, N-102 · Kosten bei Irrtum: eine Messlinie, die in T09 noch einmal angepasst wird.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
+
+## R731 · 2026-10-16 · Freie Plätze → Ideen-Runde IDEEN-12 (3 Scouts, Parallelität 2)
+
+Ruling: Drei Plätze frei, Pool bis auf I-111 abgearbeitet (I-110 geparkt R722, I-119/I-121 warten auf ORT-A T20) → **IDEEN-12** nach R445: lead-design (opus) mit 3
+`design-idea-scout` (sonnet), Parallelität 2 (Deckel 6 inkl. laufender ORT-A C3, I-112 C4, TOOL-GUARD-REDACT). Schwerpunkte: Scout A Spieler-Rückmeldungen und
+Playtest-Befunde seit REL-20; Scout B Genre-Mechaniken, die im Spiel noch fehlen; Scout C Spätspiel und Langzeitmotivation nach dem Denkmal. Ausgeschlossen:
+Themen der Erweiterung 1 «Stände und Segel» (Nutzer-Session, R519) und Doppelungen mit Pool/Archiv. Je Scout höchstens 5 Ideen; lead-design bewertet nach Raster und
+schlägt eine Rangliste vor; Gate Ideen-Runde durch L0. Pool-Pflege aus dem IDEEN-11-Handoff (Fragen 3, 4) nimmt lead-design mit, sofern noch offen.
+
+Regelbezug: R445, R475, R519, R692, R698 · Kosten bei Irrtum: eine Ideen-Runde, deren Ergebnis eine Woche im Pool liegt.
+
+Entscheider: L0 · Anlass: freie Kapazität · ADR: —
