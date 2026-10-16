@@ -22,10 +22,13 @@ Plan: [Index](../2026-10-16-i091-treue.md) · R663 (Nummer beim Merge), Spec §6
   - Das v14-Fixture bleibt in beiden Fällen gültig (historisch). Sein Generator (T02) gilt nur für `S = M + 1` direkt
     über v15; nach einer Renummerierung nicht erneut laufen lassen (die Prüfung `x.version === 14` schlüge fehl).
   - Fall **besetzt** (main hat `M ≥ S`, z. B. Erweiterung 1 zuerst): `S' = M + 1`, sieben Stellen:
-    1. `save.ts` `SAVE_VERSION = S'`; 2. Migration umbenennen `migrateV<M>ToV<S'>`, darin `raw.version = S'`;
-    2. Kettenglied `if (raw.version === M) migrateV<M>ToV<S'>(raw);` **hinter** das letzte Glied von main;
-    3. `types.ts` `version: S'`; 5. `world.ts` `version: S'`; 6. Import in `save-loyalty.test.ts`;
-    4. `tests/sim/helpers.ts`: Hat die andere Version einen eigenen Faltschritt, läuft `foldBackDeliveries` **vor** ihm
+    1. `save.ts` `SAVE_VERSION = S'`;
+    2. Migration umbenennen `migrateV<M>ToV<S'>`, darin `raw.version = S'`;
+    3. Kettenglied `if (raw.version === M) migrateV<M>ToV<S'>(raw);` **hinter** das letzte Glied von main;
+    4. `types.ts` `version: S'`;
+    5. `world.ts` `version: S'`;
+    6. Import in `save-loyalty.test.ts`;
+    7. `tests/sim/helpers.ts`: Hat die andere Version einen eigenen Faltschritt, läuft `foldBackDeliveries` **vor** ihm
        (neueste zuerst); die Mitzieh-Stelle in `farOrder-save.test.ts` (T02 Schritt 6) bekommt den fremden Faltschritt
        zwischen `foldBackDeliveries` und das Löschen der Fernfelder.
   - Merge-Konflikt in der Kette von `deserialize`: beide Glieder behalten, aufsteigend.
@@ -46,7 +49,8 @@ tests/sim/helpers.test.ts; echo EXIT=$?` → 0, ohne Teständerung ausser Schrit
 - [ ] **6 Zeitmessung nachher (Controller, R392):** derselbe Befehl wie T00 mit `zeit-nach.json`; Tabelle Datei/Dauer
       vor/nach/Differenz in `.studio/qa/i091/zeit-vergleich.md`. Abnahme nach Index «Zeitmessung».
 - [ ] **7 AK-TR-16:** `git diff main -- tests/sim/balance.test.ts tests/sim/controller.ts; echo EXIT=$?` → leer;
-      `npx vitest run tests/sim/balance.test.ts tests/sim/contract.test.ts -t "AK-SK-25|Balanc"; echo EXIT=$?` → 0.
+      `npx vitest run tests/sim/balance.test.ts tests/sim/contract.test.ts; echo EXIT=$?` → 0 (ganze Dateien, kein `-t`-Filter,
+      R675 P3; AK-SK-25 grep-Test liegt in `contract.test.ts`).
 - [ ] **8 Pflichtläufe:** bei Renummerierung `npx tsc --noEmit`, `make lint` (je `; echo EXIT=$?`). Controller danach:
       `make zeittests`, `make conflicts`, `make check`, `make zeitreserve-gate` (je `; echo EXIT=$?`).
 - [ ] **9 Commits:** `docs: Treue in README, spielwerte, arc42 (I-091 T06)`; bei Renummerierung zusätzlich

@@ -10,7 +10,7 @@ Plan: [Index](../2026-10-16-i091-treue.md) · Spec R-T1, R-T2, R-T6, R-T7, R-T8 
 - Create: `tests/sim/loyalty.test.ts` · Modify: `tests/sim/defs.test.ts`
 - Mitzieh (nur Literale/Erwartungen, siehe Schritt 5): `tests/sim/contract.test.ts`, `tests/sim/save-contract.test.ts`,
   `tests/sim/farOrder-offer.test.ts`, `tests/sim/farOrder-accept.test.ts`, `tests/ui/order.test.ts`,
-  `tests/ui/contractJump.test.ts`
+  `tests/ui/contractJump.test.ts`, `tests/ui/autoLog.test.ts` (Helfer `contract(good)` Z. ≈ 21, R675 P1)
 - **Nicht:** `save.ts`, `SAVE_VERSION`, `tickOrders`, `src/ui/`, `balance.test.ts`, `controller.ts`
 
 **Interfaces (Produces):**
@@ -82,7 +82,7 @@ becameLoyal: before < CONTRACT_LOYAL_AFTER && c.deliveries >= CONTRACT_LOYAL_AFT
   - Jede geänderte Datei mit Anzahl Stellen im Bericht nennen.
 - [ ] **6 Grün:** `npx vitest run tests/sim/loyalty.test.ts tests/sim/defs.test.ts tests/sim/contract.test.ts
 tests/sim/save-contract.test.ts tests/sim/farOrder-offer.test.ts tests/sim/farOrder-accept.test.ts tests/ui/order.test.ts
-tests/ui/contractJump.test.ts tests/sim/balance.test.ts; echo EXIT=$?` → 0; neue Tests × 3 grün.
+tests/ui/contractJump.test.ts tests/ui/autoLog.test.ts tests/sim/balance.test.ts; echo EXIT=$?` → 0; neue Tests × 3 grün.
 - [ ] **7 Pflichtläufe:** `npx tsc --noEmit; echo EXIT=$?`, `make lint; echo EXIT=$?` → 0.
 - [ ] **8 Commits:** `test: Treue-Zähler rot (I-091 T01)`, `feat: Treue-Zähler und Bericht delivered (I-091 T01)`,
       `test: Vertrags-Literale mit deliveries (I-091 T01)`.

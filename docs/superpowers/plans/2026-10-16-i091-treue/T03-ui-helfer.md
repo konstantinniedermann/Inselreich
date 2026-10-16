@@ -34,7 +34,8 @@ I-102-Zweige.
 ## Schritte
 
 - [ ] **1 Konsumenten prüfen:** `grep -rn "ContractEvent\|r\.contract\|ev\.kind" src/ui src/audio` (Liste aus T00); jeder
-      Treffer mit Fallunterscheidung über `kind` kommt in Schritt 4 auf `switch` mit `never`.
+      Treffer mit Fallunterscheidung über `kind` kommt in Schritt 4 auf `switch` mit `never`. `src/ui/autoLog.ts` (`contractLogEntries`) reicht nur
+      `contractNotice` durch: kein Umbau, `excused` erscheint damit auch im Log; `tests/ui/autoLog.test.ts` läuft in Schritt 6 mit.
 - [ ] **2 Test zuerst (`tests/ui/loyalty.test.ts`):** `N = CONTRACT_LOYAL_AFTER` importiert; Vertrag `c = { good: 'rum',
 amount: 5, price: 27, island: HOME, deliveries: n }`.
   - **AK-TR-17a:** `loyaltyText({ …c, deliveries: 0 })` `toBe(\`Treue 0/${N}\`)`; `deliveries: N − 1` → `` `Treue ${N - 1}/${N}` ``; `deliveries: N`→`'treu: verzeiht einmal'`; `deliveries: 99`→`'treu: verzeiht einmal'`.
@@ -72,7 +73,7 @@ ${name} geliefert, +135 · treu: verzeiht einen Fehlbestand` ``, `kind: 'info'`,
 - [ ] **5 Mitzieh `tests/ui/order.test.ts`:** Erwartungen des **Vertragszweigs** von `orderCardText`, die die ganze Zeile
       mit `toBe` prüfen, um `` ` · ${loyaltyText(w.contract!)}` `` ergänzen (Helferaufruf, kein Literal). Jede Stelle im Bericht. Bewusster Verzicht auf das Literal «Treue 0/5» in der Ganzzeilen-
       Prüfung (Spec §6: ein Baustein, ein Wortlaut-Test); den Wortlaut sichert AK-TR-17a, die Stellung AK-TR-17b.
-- [ ] **6 Grün:** `npx vitest run tests/ui/loyalty.test.ts tests/ui/order.test.ts tests/ui/contractJump.test.ts
+- [ ] **6 Grün:** `npx vitest run tests/ui/loyalty.test.ts tests/ui/order.test.ts tests/ui/contractJump.test.ts tests/ui/autoLog.test.ts
 tests/ui/farOrder.test.ts; echo EXIT=$?` → 0; neue Tests × 3 grün.
 - [ ] **7 Pflichtläufe:** `npx tsc --noEmit; echo EXIT=$?`, `make lint; echo EXIT=$?` → 0.
 - [ ] **8 Commits:** `test: Treue-Texte rot (I-091 T03)`, `feat: Treue auf Karte und in Meldungen (I-091 T03)`.
