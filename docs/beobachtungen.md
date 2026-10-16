@@ -339,6 +339,8 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 - 2026-10-16 · Salzregister im Kopf von `src/render/groundDecor.ts` unvollständig: `sprites.ts:2486–2516` (`roadCenter`, Wegsteinchen) nutzt `hash2(seed + 61…65)`, `wildlife.ts:437–448` (Wal) `hash2(seed + 61…64)`; das Register nennt nur «61/62 in terrain.ts» (dort `rotNoise`). Keine sichtbare Kollision (andere Funktionen/Argumente), aber das Register taugt so nicht zur Salzwahl. Ursprung: design-ortsrand (lead-art). Einschätzung: niedrig; beim Reservieren des Ortsrand-Blocks 600–619 (ORT-1) mit nachführen.
 
+- 2026-10-16 · `farWorld` (`tests/sim/farHelpers.ts`) liefert Welten, die `deserialize` mit «Beschädigter Spielstand» abweist (schon ohne Schritte). Fundort: I-114 T01, AK-9-Test musste mit `createWorld` und von Hand gesetztem Angebot bauen. Ursache nicht untersucht. Ursprung: tech-sim-engineer I-114. Einschätzung: niedrig, nur Testhelfer; prüfen, ob `farWorld` ungültige Felder setzt.
+
 ## 2026-10-16 · TOOL-E070: drei Testlücken bei der Flake-Last-Anzeige
 
 - Fundort: Flake-Ampelzeile (`tools/studio/`, Branch `tool/e070` @ `66a7fed6`)
@@ -408,3 +410,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Der Wettlauf-Test prüft 1..2 Ereignisse je Runde (schwache Obergrenze), die Einzeltests prüfen genau 1.
 - Ursprung: Gate-Handoff lead-qa gate-TOOL-BUENDEL-14 (H-3), R718
 - Erste Einschätzung: niedrig; bei nächster Berührung der Datei verschärfen.
+
+## 2026-10-16 · I-114: Lagerzahl der Fernkarte ohne Rotfärbung bei Mangel
+
+- Fundort: Browser-Check I-114 T03, `src/ui/farOrder.ts` (Fernkarte)
+- Beobachtung: Die Lagerzahl der Fernkarte färbt sich bei Mangel nicht rot; das war schon vor I-114 so. Plan T03 Punkt 3 nannte «rot/normal».
+- Ursprung: I-114
+- Erste Einschätzung: gering; bei nächster Berührung der Fernkarte mitnehmen.

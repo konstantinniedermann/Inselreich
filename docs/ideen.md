@@ -292,6 +292,7 @@ Keine Idee ändert Kernsäule, Genre oder Titel (§5.3). Erweiterung 1 berühren
 - Randfälle: ein Fremdkontor: wie heute; Gut über der Stufe fällt aus, dann eine Karte; laufender Stammkunde: kein Fernangebot (wie heute); zwei Karten plus Auftragskarte: Platz im Kartenstapel bei 1280 px prüfen.
 - Doppelung: I-095 (erledigt, Handel 2) liefert das Angebot ohne Wahl; I-093 (verworfen) tauschte nach dem Annehmen; I-101 (Fernauftrag-Marke Seekarte) zeigt die Lage.
 - Nutzen/Aufwand: aus «nimm, was kommt» wird eine Wahl über Fahrzeit und Lager · S · ≈ 60 Tools
+- Umsetzung: umgesetzt (REL-26-Kandidat); Spec `docs/superpowers/specs/2026-10-16-i114-fernangebot-wahl.md`, Plan `docs/superpowers/plans/2026-10-16-i114-fernangebot-wahl.md`
 - Entscheid: offen (IDEEN-11)
 
 ### I-115 · geparkt · Eigene Sättigung je Kontor

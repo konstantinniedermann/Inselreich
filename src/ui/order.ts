@@ -16,8 +16,8 @@ import { GOODS_BALANCE_TICKS, formatGameTime, perMinute } from './time';
 export interface OrderActions {
   /** Liefert aus dem Lager der aktiven Insel. */
   deliver(): void;
-  /** Nimmt das Fernangebot an. */
-  acceptFar(): void;
+  /** Nimmt das Fernangebot an; `pick` 1 wählt die Zweitkarte. */
+  acceptFar(pick?: 0 | 1): void;
   /** Nimmt das Stammkunde-Angebot an. */
   accept(): void;
   /** Lehnt das Angebot ab. */
