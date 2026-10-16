@@ -1756,3 +1756,14 @@ bestätigt; `r` bleibt Weg, `tests/ui/hotkeys.test.ts` AK-TK-16 nimmt `r` aus; R
 Regelbezug: R673, R705, R708, R713, R724, R727 · Kosten bei Irrtum: eine Tastenbelegung, die nach dem Playtest getauscht wird.
 
 Entscheider: L0 · Anlass: Berichte lead-tech ORT-A C2 und I-112 C3 · ADR: —
+
+## R729 · 2026-10-16 · ORT-A C2: Fix-Runde 4 T08 (Schatten-Versatz ½ Kachel) und +1 Delta-Review; Retro-Vormerkung
+
+Ruling: Delta-Review 3 (opus) ZURÜCK mit einem blockierenden Befund (Schatten-Querschnitt in `kantenprofil.mjs` um ½ Kachel versetzt: `buildingShadow` Rohkoordinaten
+vs. `tileCenter`), sonst alles bestätigt → **Fix-Runde 4 per Fortsetzung** (−0,5 in `liesSchattenMasse` plus Selbsttest ab Rohmassen) und **+1 Start** Delta-Review opus
+(Puffer danach 6). Bei erneutem ZURÜCK: Stopp, L0 entscheidet über Zuschnitt (T08 ohne Schatten-Teil, Schatten nach T16). Retro-Vormerkung: T08 hat 5 Starts über Plan
+verbraucht, weil Messwerkzeug-Code ohne Browser-Läufe (N-102) nur per Review geprüft werden konnte — für die ORT-A-Retro.
+
+Regelbezug: R673, R705, R708, R723, R728, N-102 · Kosten bei Irrtum: ein weiterer Start aus dem Puffer.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
