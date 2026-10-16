@@ -1942,3 +1942,15 @@ TOOL-GUARD-REDACT 5 von 3 (abgeschlossen), TOOL-GUARD-ALLOWLIST **4 von 3**.
 Regelbezug: R673, R725, R732, R733, R735, OWASP · Kosten bei Irrtum: ein Diagnosefeld weniger (Regel und Hash bleiben).
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-ALLOWLIST · ADR: —
+
+## R744 · 2026-10-16 · Gate Merge TOOL-GUARD-ALLOWLIST: OK; Ampel gelb → herunterfahren
+
+Ruling: (1) `tool/guard-redact` @ `bea0179c` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-TOOL-GUARD-ALLOWLIST.md`) → **Gate Merge OK**; `guard_block` speichert nach
+R743 weder Befehl noch Befehlsteile. lead-production merged lokal (`--no-ff`), nimmt es in REL-26 auf und trägt «`_shown_command`/`COMMAND_LIMIT` nur noch von Tests genutzt»
+als Beobachtung ein. (2) **Limit-Ampel gelb (5h 60 %)**: keine neuen Pakete oder Wellen. Abschliessen: I-122 + I-123 bis Gate Merge und Merge; Kurzdesign I-132 bis Gate Spec
+(Plan in der Folgesession); ORT-A C3 bis T06, danach Pause — C4 (Fixture, T09) in der Folgesession, T09 braucht ohnehin das freie Messfenster (N-102). Danach
+Session-Ende-Routine. REL-26-Push frühestens 2026-10-17 (R712).
+
+Regelbezug: gates.md Gate Merge, R69, R712, R743 · Kosten bei Irrtum: ORT-A C4 startet eine Session später.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-TOOL-GUARD-ALLOWLIST, Ampel gelb · ADR: —
