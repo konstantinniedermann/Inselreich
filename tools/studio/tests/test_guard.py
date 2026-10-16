@@ -919,11 +919,52 @@ class GuardAllowlistTest(unittest.TestCase):
             for command in (
                 f"git stash push -m {shlex.quote(text)}",
                 f"git push --force {shlex.quote(text)}",
+                f"git stash {shlex.quote(text)}",
+                f"git push +{shlex.quote(text)}",
+                f"git pull --rebase={shlex.quote(text)}",
+                f"rm -rf /etc/{shlex.quote(text)}",
             ):
                 with self.subTest(command=command):
                     line, event = self.blocked_line(command)
                     self.assertNotIn(secret, line)
                     self.assertNotIn(secret, event["command"])
+
+    def test_summary_is_fixed_text_per_rule(self):
+        for command, rule in (
+            ("git push +https://u:geheim@h/x", "force-push"),
+            ("git pull --rebase=geheim123", "rebase"),
+            ("git stash ghp_" + "x" * 36, "stash"),
+        ):
+            with self.subTest(command=command):
+                _line, event = self.blocked_line(command)
+                self.assertEqual(event["rule"], rule)
+                self.assertNotIn("geheim", event["summary"])
+                self.assertNotIn("ghp_", event["summary"])
+                self.assertEqual(event["summary"], guard.RULE_SUMMARY[rule])
+
+    def test_unknown_program_and_separators(self):
+        def cmd(text):
+            return guard._event_command(
+                {"tool_name": "Bash", "tool_input": {"command": text}}
+            )
+
+        self.assertEqual(cmd("echo hunter2 && git stash"), "echo ?")
+        self.assertEqual(cmd("git\nhunter2 stash"), "git ?")
+        self.assertEqual(cmd("git stash; echo hunter2"), "git stash")
+        self.assertEqual(cmd("git stash | cat hunter2"), "git stash")
+        self.assertNotIn("geheim", cmd("TOKEN= geheim git stash"))
+        self.assertEqual(cmd("geheimprog stash"), "? ?")
+        self.assertEqual(cmd("git stash2"), "git ?")
+        self.assertEqual(cmd("git a.b"), "git ?")
+        self.assertEqual(cmd("git " + "a" * 21), "git ?")
+        self.assertEqual(cmd("python3 -m x"), "python3")
+
+    def test_hash_covers_redacted_text(self):
+        import hashlib
+
+        payload = self.bash("git stash push -m ghp_" + "x" * 36)
+        expected = hashlib.sha256(b"git stash push -m [REDACTED]").hexdigest()[:12]
+        self.assertEqual(guard._command_hash(payload), expected)
 
     def test_harmless_blocked_command_shows_program_and_subcommand(self):
         _, event = self.blocked_line("git stash push -m harmlos")
@@ -952,7 +993,7 @@ class GuardAllowlistTest(unittest.TestCase):
             )
 
         self.assertEqual(cmd("A=1 B=2 /usr/bin/git stash -u"), "git stash")
-        self.assertEqual(cmd("sshpass -p-geheim123 ssh h"), "sshpass")
+        self.assertEqual(cmd("sshpass -p-geheim123 ssh h"), "?")
         self.assertEqual(cmd("git Stash x"), "git ?")
         self.assertEqual(cmd("ls"), "ls")
         self.assertEqual(cmd("git ghp_" + "x" * 36), "git ?")
