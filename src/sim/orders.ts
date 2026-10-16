@@ -1,4 +1,5 @@
 import {
+  CONTRACT_LOYAL_AFTER,
   CONTRACT_MIN_TIER,
   CONTRACT_PENALTY_PCT,
   CONTRACT_PREMIUM,
@@ -114,14 +115,24 @@ function breakReason(world: World, c: Contract): ContractBreakReason | null {
   return null;
 }
 
-/** Vertrag am Periodenbeginn abrechnen (R6/R7): liefern oder brechen. Liest nur Lager und Geld. */
+/** Vertrag am Periodenbeginn abrechnen (R6/R7): liefern oder brechen, zählt Lieferungen (I-091 R-T1). Liest nur Lager und Geld. */
 function settleContract(world: World, c: Contract): ContractEvent {
   const reason = breakReason(world, c);
   if (reason === null) {
     const pay = c.amount * c.price;
     islandAt(world, c.island)!.stock[c.good] -= c.amount;
     world.money += pay;
-    return { kind: 'delivered', good: c.good, amount: c.amount, pay, island: c.island };
+    const before = c.deliveries;
+    c.deliveries = Math.min(before + 1, CONTRACT_LOYAL_AFTER);
+    return {
+      kind: 'delivered',
+      good: c.good,
+      amount: c.amount,
+      pay,
+      island: c.island,
+      loyal: c.deliveries >= CONTRACT_LOYAL_AFTER,
+      becameLoyal: before < CONTRACT_LOYAL_AFTER && c.deliveries >= CONTRACT_LOYAL_AFTER,
+    };
   }
   const penalty = contractPenalty(c);
   world.money -= penalty;
@@ -220,6 +231,7 @@ export function acceptContract(world: World): Result {
     amount: GOODS[offer.good].order!.contract,
     price: contractUnitPrice(offer.good),
     island: offer.island,
+    deliveries: 0,
   };
   world.contractOffer = null;
   return ok;

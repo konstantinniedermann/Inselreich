@@ -96,7 +96,15 @@ export interface OrderDef {
 export type ContractBreakReason = 'lock' | 'island' | 'kontor' | 'stock';
 /** Vertragsereignis eines Schritts (R12), nur im StepReport, nie im Save. `island` = Lieferinsel. */
 export type ContractEvent =
-  | { kind: 'delivered'; good: GoodId; amount: number; pay: number; island: number }
+  | {
+      kind: 'delivered';
+      good: GoodId;
+      amount: number;
+      pay: number;
+      island: number;
+      loyal: boolean;
+      becameLoyal: boolean;
+    }
   | { kind: 'broken'; good: GoodId; reason: ContractBreakReason; penalty: number; island: number };
 /** Liefervertrag (I-047): Menge und Stückpreis beim Annehmen festgeschrieben. */
 export interface Contract {
@@ -104,6 +112,8 @@ export interface Contract {
   amount: number;
   price: number;
   island: number;
+  /** Lieferungen seit Annahme bzw. letzter Kulanz, sättigt bei CONTRACT_LOYAL_AFTER (I-091 R-T1). */
+  deliveries: number;
 }
 /** Angebot nach einer Auftragslieferung, gilt bis zum nächsten Periodenbeginn. */
 export interface ContractOffer {

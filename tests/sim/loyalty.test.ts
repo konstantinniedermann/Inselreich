@@ -30,18 +30,14 @@ function withRumContract(tier: Tier = 3): World {
   return w;
 }
 
-/** Liefert `count` Mal; gibt die Berichte der Ereignisse zurück. */
-function deliver(w: World, count: number): StepReport[] {
-  const reports: StepReport[] = [];
-  for (let i = 1; i <= count; i++) reports.push(stepAt(w, periodStart(i + 1)));
-  return reports;
+/** Liefert `count` Mal in aufeinanderfolgenden Perioden. */
+function deliver(w: World, count: number): void {
+  for (let i = 1; i <= count; i++) stepAt(w, periodStart(i + 1));
 }
 
 function expectLoyalSequence(w: World): void {
-  const reports = deliver(w, N + 1);
-  expect(reports).toHaveLength(N + 1);
-  reports.forEach((r, idx) => {
-    const i = idx + 1;
+  for (let i = 1; i <= N + 1; i++) {
+    const r = stepAt(w, periodStart(i + 1));
     expect(r.contract).toEqual({
       kind: 'delivered',
       good: 'rum',
@@ -52,7 +48,7 @@ function expectLoyalSequence(w: World): void {
       becameLoyal: i === N,
     });
     expect(w.contract!.deliveries).toBe(Math.min(i, N));
-  });
+  }
 }
 
 describe('AK-TR-01 Annahme startet bei 0', () => {
