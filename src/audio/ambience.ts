@@ -270,6 +270,11 @@ export interface AmbienceEngine {
   update(levels: Record<Layer, number>, now: number): void;
   /** Aktuelle Zielpegel (nur Schichten, die schon einmal gesetzt wurden). */
   levels(): Partial<Record<Layer, number>>;
+  /**
+   * Eingabe der UI: glättet `suppliedShare` auf der Audio-Uhr (`now`), mischt und ruft `update`.
+   * Ohne endlichen Anteil wird der Zustand gelöscht (Ansicht ohne Häuser = Verhalten wie vor I-120). Wirft nie.
+   */
+  apply(input: AmbienceInput, now: number): void;
   dispose(): void;
 }
 
@@ -564,7 +569,28 @@ export function createAmbienceEngine(deps: {
   // Meer läuft von Anfang an mit dem M5-Rauschen, bis die Datei geladen ist.
   startLayer('sea');
 
-  return {
+  let smoothedShare: number | undefined;
+  let lastAmbienceT: number | undefined;
+
+  const self: AmbienceEngine = {
+    apply(input, now) {
+      if (disposed) return;
+      try {
+        const share = input.view.suppliedShare;
+        const dtS = lastAmbienceT === undefined ? 0 : now - lastAmbienceT;
+        lastAmbienceT = now;
+        let view = input.view;
+        if (typeof share === 'number' && Number.isFinite(share)) {
+          smoothedShare = smoothShare(smoothedShare, share, dtS);
+          view = { ...view, suppliedShare: smoothedShare };
+        } else {
+          smoothedShare = undefined;
+        }
+        self.update(ambienceMix({ ...input, view }), now);
+      } catch {
+        /* Klang darf nie werfen */
+      }
+    },
     update(levels, now) {
       if (disposed) return;
       for (const l of LAYERS) {
@@ -586,4 +612,5 @@ export function createAmbienceEngine(deps: {
       for (const l of LAYERS) stopLayer(l);
     },
   };
+  return self;
 }

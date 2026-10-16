@@ -708,4 +708,35 @@ describe('Fix-Runde A2 (Drossel, Vorlauf, Warteliste)', () => {
     await flush();
     expect(requests.filter((r) => r.endsWith('sea.mp3'))).toHaveLength(1);
   });
+
+  it('A5 apply: Anteil wird auf der Audio-Uhr geglättet, Gleiten ohne harte Stufe, kaputte Eingabe wirft nicht', () => {
+    const f = fake();
+    const loader = { get: () => null, request: () => {}, dispose() {} };
+    const eng = createAmbienceEngine({
+      ctx: f.ctx,
+      dest: {} as AudioNode,
+      noise: {} as AudioBuffer,
+      loader,
+    });
+    const base = { phase: 'day', weather: CLEAR } as const;
+    const inp = (suppliedShare: number): AmbienceInput => ({
+      ...base,
+      view: view({ inhabitants: 60, zoom: 2, suppliedShare, houses: 10 }),
+    });
+    eng.apply(inp(1), 0);
+    expect(eng.levels().town).toBe(1);
+    for (let k = 1; k <= 40; k++) eng.apply(inp(0.2), k * 0.25); // 10 s: Anteil ~0,5
+    const t1 = eng.levels().town ?? 0;
+    expect(t1).toBeGreaterThan(0.4);
+    expect(t1).toBeLessThan(0.9);
+    for (let k = 41; k <= 120; k++) eng.apply(inp(0.2), k * 0.25); // 30 s
+    expect(eng.levels().town ?? 1).toBeLessThan(0.1);
+    for (const t of f.targets) expect(t.tc).toBeCloseTo(GLIDE_S / 3, 9);
+    expect(f.targets.length).toBeGreaterThan(0);
+    expect(() =>
+      eng.apply({ ...base, view: view({ suppliedShare: NaN, houses: undefined }) }, 31),
+    ).not.toThrow();
+    eng.apply(inp(1), 32); // nach gelöschtem Zustand: Neustart bei 1
+    expect(eng.levels().town).toBe(1);
+  });
 });
