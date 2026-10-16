@@ -705,3 +705,14 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/studio/metrics.py`, `tools/studio/tests/` (Werkzeug-Paket, ≈ 8 Tools); Beobachtung 2026-10-14 in `docs/beobachtungen.md`
 - Ruling: –
 - Bewertung: –
+
+## E-070 · vorgeschlagen (Werkzeug, ohne Platz wie E-043) · Flake-Zeile mit Last der roten Läufe
+
+- Hypothese: Wenn die Flake-Zeile der Ampel je Namen die 1-min-Last des roten Laufs ausweist und Fälle mit Last ≥ 8 getrennt zählt, lassen sich Lastartefakte von echten Flakes trennen (Retro [ampel-adhoc 2026-10-16](../../.studio/handoffs/2026-10-16-studio-coach-retro-ampel.md) B2: 5 von 6 Vitest-Flakes bei Last ≥ 8, die 2 Studio-Flakes bei 4–5).
+- Messgrösse: Nach einer Session trägt jeder Flake-Name die Last des roten Laufs; über 3 Sessions Anteil der Flakes mit Last ≥ 8 (Ausgang 5 von 8 Flake-Fällen der Historie).
+- Messbarkeit: Rohzahl der Flake-Zeile und ihre Schwellen bleiben unverändert; die Lastspalte kommt hinzu.
+- Zeitraum: eine Session, höchstens bis 2026-10-28.
+- Rückfall: Revert des Werkzeug-Commits.
+- Dateien: `tools/studio/efficiency.py`, `tools/studio/tests/test_efficiency.py` (Werkzeug-Paket, ≈ 6 Tools)
+- Ruling: –
+- Bewertung: –
