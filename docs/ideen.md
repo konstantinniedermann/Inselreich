@@ -235,7 +235,7 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
 - Randfälle: nur bei laufendem Fernauftrag; Marke ohne Mausfang; bei Verfall oder Lieferung weg.
 - Nutzen/Aufwand: Fernauftrag auf einen Blick planbar · S · ≈ 50 Tools
-- Entscheid: offen (IDEEN-10)
+- Entscheid: offen (IDEEN-10); Stand: Kurzdesign `docs/superpowers/specs/2026-10-16-i101-i103-fernmarke-routenbilanz.md` (R676); Umsetzung nach UI-HAEPPCHEN-E
 
 ### I-102 · bewertet · Auftragsvorschau «Als Nächstes: Rum»
 
@@ -257,7 +257,7 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Randfälle: nominal wie die Lagerleiste (Handel, Aufträge, Vorliebe nicht eingerechnet, das Panel sagt es); Gewürz mit gespartem Kaufpreis; Schiff ohne Route zeigt nichts.
 - Doppelung: I-067 (Verlaufskurve, geparkt), I-078/I-089 (live) berühren keine Routen.
 - Nutzen/Aufwand: Schiffsentscheidung statt Bauchgefühl · S–M · ≈ 1 Paket
-- Entscheid: offen (IDEEN-10)
+- Entscheid: offen (IDEEN-10); Stand: Kurzdesign `docs/superpowers/specs/2026-10-16-i101-i103-fernmarke-routenbilanz.md` (R676), Variante B ohne Save; Umsetzung nach UI-HAEPPCHEN-E
 
 ### I-104 · bewertet · Ausschreibung (grosse Sammelbestellung)
 
