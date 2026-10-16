@@ -6,7 +6,7 @@ Worktree `.worktrees/i112-impl` (Branch `feat/i112` nach dem Strang-Merge). Scre
 
 ## Ablauf
 
-1. Spiel bei 1280 × 800 starten; Szenario mit erstem Siedler-Haus (Dev-Parameter oder kurzer Aufbau mit Tempo 4×).
+1. Spiel bei 1280 × 800 starten; Szenario mit erstem Siedler-Haus: `devParams.ts` kennt keines; konkreter Weg im Report festhalten (Spielstand-Fixture aus `tests/sim/scenarios.ts` per `localStorage` laden, oder fester Bauplan mit Koordinaten). Messbar machen: Kopfzeile `offsetHeight` vor/nach dem Fassen gleich (AK 16), Zeitanzeige als Zahl (AK 14, Pause-Probe). Zusatz: Laden eines Standes mit `'open'` zeigt keinen Hinweis (T07 Punkt 4).
 2. **AK 14:** Hinweis «Der Rat tagt: ein Beschluss steht an» erscheint einmal; Marke «Rat · 1» sichtbar und hervorgehoben; Tick läuft weiter
    (Zeitanzeige vor/nach 5 s). Bild `ak14-marke.png`.
 3. **AK 15:** Marke anklicken: zwei Karten «Webordnung» und «Glockenrecht», Zahl im Text lesbar, Satz «Gilt für die ganze Partie …» sichtbar.

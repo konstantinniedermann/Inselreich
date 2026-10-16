@@ -1,7 +1,7 @@
 # T01 · Lese-Helfer und Umstellung aller Leser (reiner Umbau, bitgleich)
 
 `tech-sim-engineer` · ≈ 55 Tools · Auflage R706 (a), AK 10 (Wächter-Teil) · blocked-by: T00 · Test zuerst (rot vor Umsetzung)
-Ownership-Ausnahme (Ruling-Entwurf R-5): die genannten Leser-Zeilen in `src/ui/` gehören in diesem Task dem Sim-Umsetzer, damit `tsc` grün bleibt.
+Ownership-Ausnahme (R711 R-5; genau die 7 Dateien der Dateimatrix, `balancePreview.ts` und `texts.ts` gehören nicht dazu; findet T00 weitere UI-Leser, nicht selbst erweitern, sondern zurück an den Controller): die genannten Leser-Zeilen in `src/ui/` gehören in diesem Task dem Sim-Umsetzer, damit `tsc` grün bleibt.
 
 ## Ziel
 
@@ -64,6 +64,7 @@ Scannt rekursiv `src/**/*.ts` (Vorbild `tests/sim/imports.test.ts`, `readFileSyn
 `islandCycle\(` und `\bdef\.cycle\b` bzw. `\.cycle\b` auf Defs. Erlaubt: `src/sim/council.ts`, `src/sim/levels.ts` (nur `effectiveCycle`,
 `cycleOf`, `islandCycle`-Definition), `src/sim/defs/**`, `src/sim/types.ts` und die Existenz-Prüfungen oben als explizite Liste
 `{ datei, muster }`. Meldung nennt Datei:Zeile. Rot vor dem Umbau (Ausgabe mit der Zahl der Treffer in den Bericht).
+Allowlist als explizite `{ datei, muster, grund }`-Liste, je Eintrag mit Begründung (B-8). Negativtest: eine Probe-Zeichenkette mit `def.cycle` bzw. `.maxInhabitants` wird vom Scanner tatsächlich gemeldet (Schutz gegen ein totes Muster); Scanner auf `src/` begrenzt.
 
 ## Prüfschritte
 

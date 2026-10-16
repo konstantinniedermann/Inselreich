@@ -1,6 +1,6 @@
 # T04 · Wirkung der sechs Beschlüsse
 
-`tech-sim-engineer` · ≈ 45 Tools · AK 5, 6, 7, 17 (Sim-Teil) · blocked-by: T03, Ruling R-3 · Test zuerst (rot vor Umsetzung)
+`tech-sim-engineer` · ≈ 45 Tools · AK 5, 6, 7, 17 (Sim-Teil) · blocked-by: T03 (R711 R-3: proportional) · Test zuerst (rot vor Umsetzung)
 
 Dateien: `src/sim/council.ts` (nur Helfer-Rümpfe), `tests/sim/council.test.ts`. Keine Änderung an Lesern (seit T01 über die Helfer).
 
@@ -11,10 +11,9 @@ Gemeinsame interne Funktion `activeLever(world, kind, key)`: läuft über die dr
 
 - `serviceRadiusOf`: `activeLever(world, 'serviceRadius', defId) ?? BUILDING_DEFS[defId].serviceRadius`.
 - `maxInhabitantsOf`: `activeLever(world, 'maxInhabitants', tier) ?? TIERS[tier].maxInhabitants`.
-- `councilCycle(world, defId, cycle)`: ohne Hebel `cycle`; mit Hebel `v` nach **R-3**:
-  - **Variante P (Empfehlung, proportional):** `Math.max(1, Math.floor((cycle * v) / BUILDING_DEFS[defId].cycle!))`.
-    Grundstufe 50 → 40 bzw. 30; Ausbau 30 → 24 / 18, 20 → 16 / 12 (Weberei, Brennerei / Glashütte).
-  - **Variante G (nur Grundstufe):** `cycle === BUILDING_DEFS[defId].cycle ? v : cycle` (Ausbau unberührt).
+- `councilCycle(world, defId, cycle)`: ohne Hebel `cycle`; mit Hebel `v` nach **R711 R-3** (proportional):
+  `Math.max(1, Math.floor((cycle * v) / BUILDING_DEFS[defId].cycle!))`; die 50 steht nie hart im Code (`defs/`-Regel), sondern kommt aus `def.cycle`.
+  Grundstufe 50 → 40 bzw. 30; Ausbau 30 → 24 / 18, 20 → 16 / 12 (Weberei, Brennerei / Glashütte).
 - Takt-Wechsel mitten im Zyklus: keine Sonderregel; `production.ts` vergleicht `progress` mit dem neuen Takt (Spec §7).
 
 ## Tests (`council.test.ts`, Testnamen mit AK-Nummer)
@@ -22,7 +21,9 @@ Gemeinsame interne Funktion `activeLever(world, kind, key)`: läuft über die dr
 - «AK-5» je Beschluss ein Szenario; jeweils auch Gegenseite und unentschieden = Def-Wert:
   Webordnung `cycleOf(weaver)` 40 · Glockenrecht Haus in Mittenabstand 12 hat `faith`, 14 nicht (`serviceAvailable` nach `step`);
   Fest: `feastActive(w, haus)` in Abstand 12 wahr, 14 falsch (laufendes Fest per `holdFeast`) · Brennrecht 40 · Wohnordnung `maxInhabitantsOf(w, 3)` 16 ·
-  Glasrecht 30 · Hofrecht `maxInhabitantsOf(w, 4)` 22. Ausbaustufe nach R-3 (Variante P: Weberei Stufe 2 → 24).
+  Glasrecht 30 · Hofrecht `maxInhabitantsOf(w, 4)` 22. Ausbaustufe nach R-3: **Tabellen-Test «AK-5 Stufentakt»** mit allen sechs Werten aus `defs/levels.ts`
+  (Weberei 30/20 → 24/16, Brennerei 30/20 → 24/16, Glashütte 30/20 → 18/12), je Kette Gegenseite und unentschieden = Def-Takt;
+  Reihenfolge Beschluss → Inselvorteil (Weberei Stufe 30, Beschluss A, Inselvorteil: `floor(24 × 50 / 100)` = 12); Untergrenze 1 (Probe mit kleinem Takt).
 - «AK-6»: Weberei auf zweiter Insel (`islands`-Hilfe aus `tests/sim/helpers.ts`) und eine nach dem Beschluss gebaute → `cycleOf` 40; mit
   Inselvorteil gilt `floor(40 × TRAIT_CYCLE_PCT / 100)`.
 - «AK-7»: volles Bürgerhaus (15), Bedürfnisse erfüllt, Wohnordnung → nach einem Wachstumstakt 16; dasselbe Haus mit unerfülltem Bedarf

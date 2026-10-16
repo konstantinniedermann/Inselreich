@@ -4,7 +4,7 @@ Controller selbst, kein Umsetzer · ≈ 10 Tools · blocked-by: Gate Plan
 
 ## Schritte
 
-1. Worktree anlegen: `git worktree add .worktrees/i112-impl -b feat/i112 plan/i112`, darin `git merge main` (kein Rebase), `node_modules` prüfen.
+1. Worktree `.worktrees/i112` (Branch `feat/i112` ab main, `plan/i112` hineingemergt, `node_modules` verlinkt) steht; `git merge main` bei Bedarf (kein Rebase).
 2. `SAVE_VERSION` auf main lesen (`grep -n "SAVE_VERSION =" src/sim/save.ts`); ist sie nicht 16, Arbeitsannahme in T02 = Wert + 1, ins Ledger.
 3. Einhängepunkte neu suchen (Zeilen verschieben sich durch Merges), Ergebnis ins Ledger und an T01 weitergeben:
    `rg -n "maxInhabitants|serviceRadius|islandCycle\(|def\.cycle|\.cycle\b" src`
@@ -17,7 +17,7 @@ Controller selbst, kein Umsetzer · ≈ 10 Tools · blocked-by: Gate Plan
 
 ## Abnahmeregel (gilt in T08)
 
-Kein bestehender Test > 500 ms und keiner > +50 % gegenüber `zeit-vor.json`; `balance.test.ts` und Perf-Budget-Tests zählen mit ihrer
+Kein bestehender Test > 500 ms und keiner > +50 % gegenüber `zeit-vor.json`; die +50 %-Regel gilt erst ab einem Vorwert ≥ 100 ms (kurze Tests rauschen); `balance.test.ts` und Perf-Budget-Tests zählen mit ihrer
 eigenen Schwelle (Wandzeit-Tests laut `make zeittests`). Verletzung → Befund an L0 vor dem Final-Review, keine stille Annahme.
 
 ## Prüfschritte

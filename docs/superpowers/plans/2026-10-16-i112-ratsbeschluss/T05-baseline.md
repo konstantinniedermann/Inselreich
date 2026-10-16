@@ -13,7 +13,8 @@ Kein `src/`-Diff.
    noch einen Import aus `src/sim/council` (Textscan über eine Prüffunktion `importsDecree(text)`). Rot-Beleg: Testfall mit der
    Zeichenkette `import { decree } from '../../src/sim/council'` gegen die Prüffunktion, vor deren Umsetzung.
 3. «AK-11 Endzustand»: in `balance.test.ts` am Ende des **bestehenden** Laufs eine Zusicherung: kein Eintrag von `world.council` ist `'A'`
-   oder `'B'`; `council[2]` und `council[3]` sind `'open'`; `council[4]` ist `'open'`, wenn der Lauf Kaufleute erreicht, sonst `null`.
+   oder `'B'`; Sollwert aus dem Endzustand abgeleitet (R713 B-5): höchste Hausstufe `m` am Ende ⇒ `council[n] === 'open'` für `n ≤ m`, sonst `null`.
+   Der Bericht nennt, welche Stufe `m` der Lauf erreicht. Rot-Beleg: vor T02 ist `council` `undefined`.
    Kein zweiter Controller-Lauf (Zeitbudget R392), keine Zahl der Baseline ändert sich (Diff zeigt nur die neue Zeile).
 
 ## Prüfschritte
