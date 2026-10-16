@@ -1697,3 +1697,17 @@ gilt der Plan. Erwartete Unterschreitung «< 20 Querschnitte je Art» auf der Fi
 Regelbezug: R673, R705, R708, R717 · Kosten bei Irrtum: ein Start aus dem Puffer.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
+
+## R724 · 2026-10-16 · I-112 C2: T02–T04 abgenommen; drei Planabweichungen bestätigt; C3 (T05–T07) mit 6 Starts
+
+Ruling: `feat/i112` (T02 `90f209d2`, T03 `3361223d`, T04 `93c95f94`, main-Merge `4e244cc8`, Lockerung `967d8f9a`; Handoff `.studio/handoffs/2026-10-16-lead-tech-I-112-C2.md`)
+→ abgenommen; Baseline unverändert. Ownership-Erweiterung auf `tests/sim/helpers.ts`, `helpers.test.ts`, `farOrder-save`, `save-loyalty` und die Lockerung des
+I-114-Tests auf `SAVE_VERSION >= 16` angenommen. Planabweichungen bestätigt: (a) Reihenfolge-Test «Beschluss vor Inselvorteil» mit der Glashütte auf Insel B
+(18 → 9), weil die Weberei keinen Inselvorteil hat; (b) Stufe 4 ohne `tierWish`, Wohnordnung wirkt nur über `maxInhabitantsOf`, Test «`unlocks.ts` Stufe 4 verlangt
+16» entfällt; (c) Abstände 12,5/13,5 im Glockenrecht-Test. Merge-Auflage: Literal 17 in `tests/sim/council-save.test.ts:84` beim Merge auf main + 1 ziehen (R674),
+besser jetzt auf `SAVE_VERSION`-Bezug umstellen. Konsistenztest «jeder `cycle`-Hebel zeigt auf ein Gebäude mit Takt» in T05 aufnehmen. **Instanz C3: T05–T07, 6 Starts**
+aus dem Restbudget (8 von 25 verbraucht), Parallelität 2; T00-Ersatzmessung weiter bei Last ≤ 4.
+
+Regelbezug: R674, R711, R713, R716 · Kosten bei Irrtum: ein Szenariotest, der im Final-Review nachgeschärft wird.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-112 C2 · ADR: —
