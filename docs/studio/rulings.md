@@ -2002,3 +2002,16 @@ Regelbezug: N-98, R334, R335, R450, R488 V2, R712 · Kosten bei Irrtum: zusätzl
 privat wird, greift das Kontingent wieder (actions.py prüft die Sichtbarkeit).
 
 Entscheider: L0 · Anlass: Nutzeranweisung 2026-10-16 · ADR: —
+
+## R748 · 2026-10-16 · Gate Merge TOOL-ACTIONS-FREI: OK; Merge lokal, Push mit REL-26
+
+Ruling: `feat/tool-actions-frei` @ `42e04202` (Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-ACTIONS-FREI.md`) → OK. Review-BEDENKEN
+(Fork-PR von Branch `main` löst `workflow_run` aus) ist in `42e04202` behoben (`workflow_run.event == 'push'`); L0 hat den Workflow-Diff
+selbst geprüft, Delta-Review entfällt (Budget 2/2, Änderung eine Bedingung). `make check` lief nach `dd5bb89a` grün, der letzte Lauf brach an
+der Testsperre ab (kein Testfehler) → der Integrator fährt `make check` beim Merge ohnehin. Merge lokal; die neuen Workflows wirken erst mit
+dem nächsten Push (REL-26, Release-Check in der pushenden Session, R712 V2). Rest-Befund: Minuten anderer öffentlicher Repos des Kontos
+zählen weiter (≈ 480 min) → Beobachtung.
+
+Regelbezug: R747, R712 V2 · Kosten bei Irrtum: ein Pages-Lauf zu viel oder zu wenig; Rückfall per `workflow_dispatch`.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-ACTIONS-FREI · ADR: —
