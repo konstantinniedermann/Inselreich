@@ -7889,3 +7889,18 @@ Regelbezug: Verfassung §6.4, R597 (DOC-ARCHIV), E-010 · Kosten bei Irrtum: ein
 gelöschte Screenshots alter Playtests (Berichte bleiben).
 
 Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-16 · ADR: —
+
+## R683 · 2026-10-16 · UI-HAEPPCHEN-F bereit bis auf Prüfläufe; AK-3 auf 17 Zeichen; parallele L0-Session vermerkt
+
+Ruling: (1) `feat/ui-haeppchen-f` @ `fd3379e4` (T00–T07, Final-Review opus frisch BEDENKEN → Fix → Delta OK, Auflagen R679 erfüllt, `src/sim`-Diff nur
+`routeBalance.ts`; `goodsBalance` 6,62 ms in `denseScene` ohne `cov`, 0,056 ms mit, Neuberechnung nur bei neuem Tick) ist bereit bis auf `make check`,
+`make zeitreserve-gate` (Abbruch durch Last > 8, Testlock R380) und den main-Merge nach I-091. **AK-3** wird auf höchstens 17 Zeichen korrigiert
+(`+999,9k / −999,9k`, einzeilig bei 1280 px belegt). Nach Merge I-091: Controller F holt main, fährt `make check` und `make zeitreserve-gate` bei
+ruhiger Last, dann Gate Merge durch lead-qa. Die Abweichung «Zeiten main/Branch nicht unmittelbar nacheinander» wird mit diesem Lauf nachgeholt.
+(2) Bugfix Verlustfarbe Bilanz-Chip (`color: inherit` überschrieb `negative`, seit I-062) ist Teil von F. (3) **Parallele L0-Session**
+(`session_01MawUE3FwF6Hg8n5WwNxwyB`, R682 CTX-ALTLAST, Nutzerauftrag) arbeitet im selben Repo: abweichend von R129/R324 vom Nutzer gestartet,
+geduldet; Rulings-Nummern werden vor jedem Eintrag neu gelesen, R682 berührt REL-24/REL-25 und laufende Stränge nicht.
+
+Regelbezug: gates.md Gate Merge, R129, R324, R380, R679, R682 · Kosten bei Irrtum: eine doppelt vergebene Ruling-Nummer (Umbenennung).
+
+Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-F, R682 im Log · ADR: —
