@@ -6,16 +6,15 @@ zwei Releases, Vorentscheide O1–O10 angenommen) · Save: nein · `src/sim/`: n
 
 ## 1 Ziel
 
-Siedlungen gehen weich in die Natur über, statt hart am Raster zu enden. Weg und Wiese gehören zum selben Bild. Der
-Spieler sieht um jedes Gebäude einen festgetretenen Hofsaum, der über die Rasterkante ausfranst. Wege haben keine
-dunkle Konturlinie mehr, sondern einen abgetretenen Rand, Gras am Wegrain, Fahrspuren, Kiesel und auslaufende
-Sackgassen. Hofplatte, Pflaster und Schlagschatten verlieren die Linealkante. Im offenen Land stehen hie und da ein
-Pfosten oder ein Randstein am Weg.
+Siedlungen gehen weich in die Natur über, statt hart am Raster zu enden; Weg und Wiese gehören zum selben Bild. Um
+jedes Gebäude franst ein Hofsaum über die Rasterkante aus. Wege haben statt einer Konturlinie einen abgetretenen Rand,
+Wegrain, Fahrspuren, Kiesel und auslaufende Sackgassen. Hofplatte, Pflaster und Schatten verlieren die Linealkante.
+Im offenen Land stehen hie und da Pfosten oder Randsteine.
 
 **Nutzerentscheid N1 (verbindlich):** Nur Optik. Alles Neue liegt auf freien Nachbarfeldern oder auf der Wegkachel und
 **weicht sofort** beim Bebauen, im ersten Frame nach der Aktion. Kein Save-Wechsel, kein Balancing, kein Platzverlust.
-Der Welt-Zustand ändert sich nicht, deshalb gibt es **keine neue Save-Version** (`SAVE_VERSION` bleibt 16) und keine
-Migration.
+Der Welt-Zustand ändert sich nicht, deshalb gibt es **keine neue Save-Version** (`SAVE_VERSION` bleibt auf dem Stand
+des Abzweigs von ORT-1) und keine Migration.
 
 **Bezug R688:** Release-Teil 1 «Wege und Kanten» = ORT-1, ORT-K1, ORT-K2, ORT-3. Teil 2 «Hof und Anbauten» (ORT-B) =
 ORT-2, ORT-4. ORT-5 bleibt Kann im Pool.
@@ -149,7 +148,7 @@ Den Stilrahmen selbst führt der Umsetzungsplan nach (AK-44), nicht diese Spec.
 - **KS1 Umriss:** `roadShape.ts` erzeugt je Insel und `layoutKey` die Weggeometrie als reine Punktlisten im Kachelraum
   (testbar ohne `Path2D`), gruppiert je Wegkachel. `drawRoads` baut daraus gecachte `Path2D` und füllt nur: erst Kern
   (`earth`), dann Randstufe (eine helle, abgetretene Tonstufe). **Kein Strich.** Abtastung alle 0,1 Kachel entlang
-  der Segmente zwischen `roadCenter`-Punkten, Versatz halbe Breite plus Rauschen (Amplitude ≤ 0,04, Salz 605),
+  der Segmente zwischen `roadCenter`-Punkten, Versatz halbe Breite plus Rauschen (Amplitude 0,02–0,04, Wellenlänge 0,6–1,0 Kachel, Salz 605),
   Innenecken an Kreuzungen verrundet. Mittlere Gesamtbreite (Kern + Randstufe) 0,5 Kachel.
 - **KS2 Wegsaum mit W1:** Saumfeld über die Wegmaske (`woodBlur` + Rauschen 606–607 + Höhenlinie) in `paintPixels`,
   0,1–0,2 Kachel über die Bandkante, Breite nach Nahdichte (Land 0,2, Rand 0,15, Kern 0,1). Der Saum liegt farblich
@@ -179,10 +178,14 @@ weiterhin die gerade Platte und beim Markt die durchgehenden Gitterfugen (`p.lin
   `sag` gebrochen, äussere Steinreihe als einzelne unregelmässige Steine, Kern des Platzes geschlossen. Nur im
   Bildmodus-Zweig; die heutigen Fugen in `marketBody` sind nicht hand-gesteuert, der Plain-Zweig behält sie
   unverändert. Die Kaimauer (Krone 0,14) bleibt gerade (Mauerwerk, S7).
-- **KS8:** Halbschatten als zweite Füllung in Durchgang 5: Hülle um 0,06 Kachel erweitert, halbe Deckkraft, für
-  Gebäude und Bäume gleich, alle Halbschatten in **einem** Pfad. Die Kernschatten-Polygone (`buildingShadow`,
-  `treeShadow`) bleiben unverändert. Der Kernschatten wird im Bild nicht dunkler als auf `main` (Technik wählt der
-  Plan, z. B. Clip auf das Komplement des Kerns). Schatten dürfen gerade Kanten behalten (S7).
+- **KS8 (Technik festgelegt):** Durchgang 5 füllt zwei Pfade mit derselben Schattenfarbe. (1) **Halbschatten-Pfad**:
+  Hüllen von Gebäuden und Bäumen um 0,06 Kachel erweitert, alle übrigen Schattenpolygone (Deko, Läufer, Schiffe,
+  Möwen) unerweitert, eine Füllung mit Deckkraft `a/2` (nonzero, also Vereinigung). (2) **Kernschatten-Pfad**: alle
+  Polygone wie auf A, eine Füllung mit `a' = (a/2) / (1 − a/2)`. Weil jede erweiterte Hülle ihren Kern enthält, liegt
+  jeder Kernpixel genau einmal unter (1) und einmal unter (2): zusammen `1 − (1 − a/2)(1 − a') = a`, wie auf A.
+  Halbschatten allein ergibt `a/2`. Überlappungen dunkeln nicht doppelt, weil beide Pfade Vereinigungen sind.
+  Begründung: zwei Füllungen ohne Clip, ohne Offscreen-Fläche und ohne Polygon-Differenz; exakt bei gleicher Farbe.
+  `buildingShadow` und `treeShadow` bleiben unverändert. Schatten dürfen gerade Kanten behalten (S7).
 
 ### 4.4 ORT-3 W2 Weg-Objekte
 
@@ -200,242 +203,265 @@ Kein neues Welt- oder Save-Feld. Neue Render-Daten (nicht persistent, je `layout
 - `OrtsrandAnalysis` (`ortsrand.ts`): `owner: Int32Array`, `freeSides`, `naehe: Uint8Array` (n), `nahdichte:
 Uint8Array` (d), `items: OrtsrandItem[]`.
 - `OrtsrandItem`: `{ kind: 'decor', sub: string, x, y, variant, h }`; `h` in `ISO_H`.
-- `RoadShape` (`roadShape.ts`): je Wegkachel `{ core: Pt[][], rim: Pt[][], wear: Pt[][], ruts: Pt[][], pebbles: Pt[][] }`
-  im Kachelraum, dazu die Kantenlage für ORT-3.
+- `RoadShape` (`roadShape.ts`): je Wegkachel `{ core, rim, wear, ruts, pebbles }` als `Pt[][]` im Kachelraum, dazu
+  `edges: Pt[][]` = zusammengesetzte Kantenzüge (linker und rechter Rand) je zusammenhängendem Wegzug, auch für die
+  Kantenlage von ORT-3.
 - `limits.ts`: `PROPS_CACHE_MAX_BYTES = 4 * 1024 * 1024`, `CAPS.ortsrand = [800, 400]` (Startwert, Plan misst),
   `ORTSRAND_PATCH_BORDER = 2`.
+- Farbrezepte (U1-Stufen, Randstufe, Saum, Abnutzung, W2) als exportierte Konstanten der jeweiligen Datei.
 
 ## 6 Randfälle
 
-- **Bau auf Saum- oder Item-Kachel:** Saum und Item verschwinden im ersten Frame mit dem neuen `layoutKey`.
-- **Abriss:** Ausgabe ist wieder gleich wie vor dem Bau (reine Funktion des Layouts); keine Narben (X2).
-- **Wegkachel neben Gebäude im Kern:** keine Deko, kein Gras im Weg, runde Kappe.
-- **Kreuzung mit vier Ästen, Einzelkachel, Weg am Strand oder an der Küste:** Saum nie auf Wasser; Umriss verrundet.
-- **Stufenaufstieg eines Hauses:** kein Patch, keine Änderung in ORT-A.
-- **Stempel oder S/E-Element auf Saumkachel:** Ortsrand tritt zurück (D7).
-- **Fremdinsel ohne Heimat-Stempel:** wie Heimat, nur S/E sperren.
-- **Reduzierter Modus:** `cap('ortsrand', true)` halbiert; KS3 erst ab Zoom 0,75.
-- **Alter Spielstand:** lädt unverändert (kein Save-Feld); Ortsrand entsteht beim Laden aus dem Layout.
+- **Bau auf Saum- oder Item-Kachel:** Saum und Item verschwinden im ersten Frame mit dem neuen `layoutKey` (AK-06,
+  AK-41). **Abriss:** Ausgabe wieder wie vor dem Bau; keine Narben (X2).
+- **Wegkachel im Kern:** keine Deko, keine Gras-Einwüchse, runde Kappe.
+- **Strand und Küste:** kein Saum auf Wasser; auf Sand kein U1, KS2 nur als Erdton ohne Grasanteil (AK-56).
+- **Einzelkachel ohne Wegnachbarn:** rund mit Rauschrand, keine Gerade > 0,5 (AK-57).
+- **Leeres Layout, Insel ohne Wege:** kein Absturz, Ausgabe wie A (AK-55).
+- **Stufenaufstieg eines Hauses:** kein Patch, keine Änderung.
+- **Stempel oder S/E-Element:** Ortsrand tritt zurück (D7). **Fremdinsel:** wie Heimat, nur S/E sperren.
+- **Zoom und reduzierter Modus (eine Regel):** KS3 zeichnet nur ab Zoom 0,75, in beiden Modi gleich. Der reduzierte
+  Modus halbiert nur `CAPS.ortsrand` (W2-Items).
+- **Speichern und Laden, alter Spielstand:** kein Save-Feld; nach dem Laden entsteht alles gleich aus dem Layout
+  (AK-54).
 
 ## 7 Liste der bewusst geänderten Variante-0-Hashes (O8)
 
 **In ORT-A ändert sich kein H-R7-AK1-Hash; die Liste ist leer.** Beleg: `variants.test.ts` importiert
-`drawBodyPlain as drawBody` und hasht damit den Plain-Zweig (`hand = false`). `yard()` geht nur bei
-`p.hand && !p.recording` in `raggedYard`; KS4 und KS5 wirken nach 4.3 nur dort.
-
-- **KS4, KS5 (ORT-K2):** kein AK1-Hash, nur Bildmodus (Schutz über AK-01 (g) und AK-35).
-- **KS8:** keiner; Schatten zeichnet Durchgang 5 im Renderer, nicht der Körperzeichner.
-- **KS6/KS7 (Feld, Zaun):** nicht in ORT-A (ORT-5).
-
-Fehlerrichtung: Jede Änderung eines AK1-Hashes in ORT-A ist ein Fehler, keine neue Ausnahme.
+`drawBodyPlain as drawBody` und hasht den Plain-Zweig (`hand = false`). `yard()` geht nur bei `p.hand && !p.recording`
+in `raggedYard`; KS4 und KS5 wirken nach 4.3 nur dort. KS8 ändert keinen (Durchgang 5 im Renderer). KS6/KS7 (Feld,
+Zaun) gehören zu ORT-5. **Fehlerrichtung:** Jede Änderung eines AK1-Hashes in ORT-A ist ein Fehler, keine Ausnahme.
+Schutz des Bildmodus: AK-01 (g), AK-35.
 
 ## 8 Abnahmekriterien
 
 Messarten: **V** = Vitest (`tests/render/`), **F** = Fake-Kontext-Aufzeichnung (`tests/render/fakeCtx.ts`), **H** =
-Referenzhash, **P** = Leistungsmessung (`tools/render-qa/`), **B** = Browser-/Galerie-Prüfung mit Rater-Anweisung.
-`main` heisst: Stand beim Abzweigen von ORT-1, festgehalten über AK-01.
+Referenzhash, **P** = automatische Messung (`tools/render-qa/`), **B** = Bildprüfung mit Rater-Anweisung.
+
+**Basisstand A** = der Abzweig-Commit von ORT-1 (Hash steht im Kopf des AK-01-Tests und im Plan). Jedes «wie A» meint
+diesen Commit, auch für spätere Pakete.
+
+**Messprotokoll P (gilt für AK-17, -31, -32, -39, -43, -48):** `perf.mjs --a A --b B --runs 3`, abwechselnd A/B wie
+AK-E1-14; Kennzahl ist, wie `perf.mjs` rechnet, Median(B) − Median(A) der `renderMedian`-Werte. Seeds 7 und 14 plus
+Siedlungs-Fixture (`--save`), 1920×1080, DPR 2, Zoom 1, `--focus home`. Hitch: `hitch.mjs --a A --b B` mit denselben
+Seeds und der Fixture; bestanden, wenn Σ`over25`(B) ≤ Σ`over25`(A) + Σ`over25` eines Kontrolllaufs `--ohne-bau` auf A.
+
+### 8.0 Vorarbeiten (Plan-Pflichten, eigene Test-Tasks in ORT-1, sofern nicht anders genannt)
+
+- **V1 FakeCtx mit `Path2D`:** `fakeCtx.ts` stellt ein aufzeichnendes `Path2D` bereit und zeichnet `fill(path)` und
+  `stroke(path)` mit Punktlisten und Farbe je Füllung auf. AK-18, -27, -37, -38 stützen sich darauf.
+- **V2 Messpunkt `drawRoads`:** Umhüllung von `drawRoads` im Seitenkontext (`roadStats`, Summe der Zeichenzeit) als
+  eigener Commit, der auf A **und** B angewendet wird (A per Cherry-Pick in einen Messzweig, kein Rebase).
+- **V3 `hitch.mjs`:** `--save` (Fixture), Wegmodus `--wege` (12 Wegkacheln schrittweise) und Ausgabe von
+  `terrainStats.lastPatchMs` je Bau.
+- **V4 Galerie:** Szenen von `ortsrand.mjs` nach `tools/render-qa/` versionieren; Tageszeit, Läufer, Wolken und Wetter
+  für A/B-Bilder und AK-50 einfrieren; Kamera und Seed je Bild in einer Begleitdatei.
+- **V5 `kantenprofil.mjs`:** misst in der Seite über `getImageData` (keine Dependency) die Profile von AK-50.
+- **V6 Testhelfer:** `maxCollinearRun(poly, tol)`, Punkt-in-Polygon (aus `variants.test.ts` herausgelöst),
+  Spy/Marker auf `raggedYard` und Pflaster für die Trennstelle von AK-33/35 (im AK-01-Commit).
+- **V7 Registrierungs-Haken** in `ortsrand.ts` (`registerProp`), über den Tests eine Test-Art eintragen.
+- **V8 Fixture Fremdinsel** über `__inselDev` (Aussenkontor, 6 Wegkacheln, ein Gebäude), Bildschirm→Kachel-Abbildung
+  für AK-52.
 
 ### 8.1 ORT-1 Fundament und U1
 
-- **AK-01 Referenzen vorab (H).** Erster Commit von ORT-1, vor jeder Änderung: Referenzhashes auf `main` festhalten
-  für (a) `drawHover`, `drawGhost` (alle Typen), `drawPathPreview` und die Auswahl-Hervorhebung, (b) `drawBodyPlain`
-  aller Typen und Stufen, (c) `groundElements` und `stampPlacements` für Seeds 1–50, (d) `spriteKey` für eine feste
-  Eingabeliste, (e) `paintPixels` eines festen Rechtecks fern jeder Belegung (Seed 1), (f) den Kontrastwert Kern ↔
-  Wiese nach der Messvorschrift von AK-24, (g) `drawBody` im Bildmodus (`hand = true`) aller Typen und Stufen, Zoom 1
-  (heute ohne Hash-Schutz; `sprites-kanten.test.ts` prüft nur Eigenschaften). Der Test ist auf `main` grün.
-  Fehlende Exporte (z. B. `drawHover` ist privat) legt der Plan als reine Test-Exporte an.
-- **AK-02 Salzregister (V).** Der Kopf von `groundDecor.ts` nennt den Block 600–619 mit der Zuteilung aus 3.4 und die
-  Salze 61–65 in `sprites.ts` und `wildlife.ts`. Ein Test liest alle Literale `seed + N` in `ortsrand.ts`,
-  `roadShape.ts`, `roadside.ts` und `raggedYard`/Pflaster und prüft nur die **neuen** Literale (gegenüber dem Stand von
-  AK-01): N liegt in 600–619 und steht im Register. Bestehende Salze in `raggedYard`/`sprites.ts` (z. B. L3 570–575)
-  bleiben, sofern KS4 sie nicht ersetzt.
+- **AK-01 Referenzen vorab (H).** Erster Commit von ORT-1, vor jeder Änderung, auf A festgehalten: (a) `drawHover`,
+  `drawGhost` (alle Typen), `drawPathPreview`, Auswahl-Hervorhebung; (b) `drawBodyPlain` aller Typen und Stufen;
+  (c) `groundElements` und `stampPlacements`, Seeds 1–50; (d) `spriteKey` für eine feste Eingabeliste;
+  (e) `paintPixels` eines festen Rechtecks fern jeder Belegung (Seed 1); (f) Kontrastwert nach AK-24;
+  (g) `drawBody` im Bildmodus (`hand = true`) aller Typen und Stufen, Zoom 1; (h) `roadCenter`, Seeds 1–50;
+  (i) `buildingShadow`- und `treeShadow`-Polygone einer festen Szene; (j) Kaimauer-Ereignisse von `kontorBody` in
+  Plain und Bildmodus; (k) Basisliste aller Salz-Literale `seed + N` in `src/render/` als Datei unter
+  `tests/render/fixtures/`. Der Test ist auf A grün. Fehlende Exporte (z. B. `drawHover`) legt der Plan als reine
+  Test-Exporte an.
+- **AK-02 Salzregister (V).** Der Kopf von `groundDecor.ts` nennt Block 600–619 nach 3.4 und die Salze 61–65 in
+  `sprites.ts` und `wildlife.ts`. Ein Test vergleicht alle Literale `seed + N` in `src/render/` mit AK-01 (k): Jedes
+  **neue** Literal liegt in 600–619 und steht im Register. Bestehende Salze bleiben, sofern KS4 sie nicht ersetzt.
 - **AK-03 D7 dokumentiert (V).** Der Kopf von `decor.ts` enthält D7 im Wortlaut von 3.3 (Text-Test).
-- **AK-04 Analyse (V).** Tabellenfälle mit festen Layouts: Besitzer-Vorrang (production vor public/infrastructure vor
-  housing, dann kleinere Id), Ortsnähe-Klassen an den Grenzen n = 0, 1, 5, 6, Nahdichte-Klassen an d = 2, 3, 4, 5.
-- **AK-05 Determinismus (V).** Gleiche Welt zweimal aufgebaut: gleiche Analyse, Itemliste und `paintPixels`-Puffer.
-  Unabhängig von Kamera, Zoom, Frame und `timeMs`. Kein `Math.random` in `ortsrand.ts` (Text-Test wie L1-T7).
-- **AK-06 Sofortiges Weichen und Rückkehr (V).** Welt mit Gebäude und U1-Saum auf Kachel K: nach `placeRoad` bzw.
-  `placeBuilding` auf K enthält der Puffer des Patch-Rechtecks auf K keinen Saumanteil, und der erste `render`-Aufruf
-  mit neuem `layoutKey` liefert die neue Itemliste (keine mehrstufige Berechnung). Nach `demolish` sind Itemliste und
-  Puffer bytegleich zum Zustand vor dem Bau.
-- **AK-07 Lokalität (V).** Zufällige Layouts (Seeds 1–10, je 20 Änderungen): Analyse und Items ändern sich nur im
-  Chebyshev-Radius ≤ 3 um die geänderten Kacheln; Bodenpixel nur im Radius ≤ `ORTSRAND_PATCH_BORDER` (2); `dirtyRect`
-  wird mit diesem Rand aufgerufen.
-- **AK-08 Bestand unberührt (H, V).** AK-01 (c) und (e) bleiben grün. Büschel- und Blumen-Lose auf freien
-  Graskacheln sind gleich wie ohne Ortsrand (Vergleich mit leerer Analyse). Bestehende Terrain-Tests (u. a.
-  `terrain.test.ts` AK-R1-06 mit angepasstem Rand-Argument) grün.
-- **AK-09 D7-Zurücktreten (V).** Auf Kacheln mit sichtbarem Stempel oder S/E-Element: kein Saumanteil, kein Item.
-- **AK-10 U1-Geometrie (V).** Gemessen im Puffer: Saumausdehnung ab Footprint-Kante je Klasse ≤ Reichweite + 0,06
-  (Land 0,56, Rand 0,41, Kern 0,21 Kachel), Rückseite ≤ 0,7 × Reichweite + 0,06; Land > Rand > Kern im Mittel. Kein
-  Saum auf Wasser, Wald, belegten Kacheln.
-- **AK-11 Item-Pipeline (V).** Eine Test-Art (nur in `tests/` registriert) erscheint als `decor`-Item im sortierten
-  Durchgang mit `RANK decor`; Ortsrand-Items sind nie in `buildingHulls`; ein Item mit `h` > 0,15 auf einer
-  `quiet`-Kachel wird verworfen (B3).
-- **AK-12 Requisiten-Cache (V).** `PROPS_CACHE_MAX_BYTES` = 4 MiB in `limits.ts`; LRU verdrängt bei Überschreitung
-  (synthetischer Test); `DECOR_CACHE_MAX_BYTES`, `SPRITE_CACHE_MAX_BYTES`, `VARIANT_COUNT` unverändert.
-- **AK-13 Caps (V).** `CAPS.ortsrand` existiert, ist je Insel eingehalten und im reduzierten Modus halbiert
-  (`cap('ortsrand', true) = cap('ortsrand') / 2`).
-- **AK-14 Fremdinsel (V).** Ein Layout auf einer Insel ≠ Heimat mit `kontor2` liefert Analyse und U1-Saum wie dasselbe
-  Layout auf der Heimat (ohne Stempel).
-- **AK-15 Farben (V).** Alle neuen Töne von U1: ΔE2000 ≥ 20 zu jeder Signalfarbe (`SIGNAL_NAMES`, `deltaE.ts`); keine
-  Mischung mit `#000000`/`#ffffff` (S1).
-- **AK-16 Galerie (B).** `galerie.mjs --motive ortsrand` erzeugt die Motive 01–10 der Bestandsaufnahme (Szenen aus
-  `ortsrand.mjs`) bei Zoom 1 und 2, DPR 2. Prüfung: alle Dateien vorhanden, auf `main` und Branch mit derselben
-  Kamera.
-- **AK-17 Leistung ORT-1 (P).** `perf.mjs` A/B, Seed 7 und Siedlungs-Spielstand Seed 1 (Plan legt ihn als Fixture
-  ab), 1920×1080, DPR 2, Zoom 1, 3 Läufe: `renderMedian` B − A ≤ +0,2 ms. `lastPatchMs` und `buildMs` werden
-  berichtet (Grenzen in AK-48). `hitch.mjs` Hausbau: keine zusätzlichen Frames > 25 ms gegenüber A.
+- **AK-04 Analyse (V).** Feste Layouts: Besitzer-Vorrang (production vor public/infrastructure vor housing, dann
+  kleinere Id), Ortsnähe an n = 0, 1, 5, 6, Nahdichte an d = 2, 3, 4, 5.
+- **AK-05 Determinismus (V).** Gleiche Welt zweimal: gleiche Analyse, Itemliste und `paintPixels`-Puffer, unabhängig
+  von Kamera, Zoom, Frame und `timeMs`. Kein `Math.random` in den neuen Dateien (Text-Test wie L1-T7).
+- **AK-06 Sofortiges Weichen und Rückkehr (V).** «Saumpixel» = Pixel, dessen Kanalwert vom Puffer bei leerer Analyse
+  um mehr als 2 (von 255) abweicht. Welt mit Gebäude und Saum auf Kachel K: nach `placeRoad` bzw. `placeBuilding` auf
+  K keine Saumpixel aus U1 auf K; der erste `render`-Aufruf mit neuem `layoutKey` liefert die neue Itemliste. Nach
+  `demolish` sind Itemliste und Puffer bytegleich zum Zustand vor dem Bau.
+- **AK-07 Lokalität (V).** Seeds 1–10, je 20 Änderungen, **jede einzeln gegen den Ausgangsstand**: Analyse und Items
+  ändern sich nur im Chebyshev-Radius ≤ 3, Bodenpixel nur im Radius ≤ `ORTSRAND_PATCH_BORDER` (2); `dirtyRect` wird
+  mit diesem Rand aufgerufen.
+- **AK-08 Bestand unberührt (H, V).** AK-01 (c), (e), (h) grün. Büschel- und Blumen-Lose auf freien Graskacheln
+  gleich wie bei leerer Analyse. Bestehende Terrain-Tests (u. a. AK-R1-06 mit angepasstem Rand-Argument) grün.
+- **AK-09 D7-Zurücktreten (V).** Auf Kacheln mit sichtbarem Stempel oder S/E-Element: keine Saumpixel, kein Item.
+- **AK-10 U1-Geometrie (V).** Saumpixel (Definition AK-06) je Klasse höchstens Reichweite + 0,06 ab Footprint-Kante
+  (Land 0,56, Rand 0,41, Kern 0,21 Kachel), Rückseite ≤ 0,7 × Reichweite + 0,06; mittlere Ausdehnung Land > Rand >
+  Kern. Keine Saumpixel auf Wasser, Wald, belegten Kacheln.
+- **AK-11 Item-Pipeline (V).** Eine über V7 registrierte Test-Art erscheint als `decor`-Item mit `RANK decor` im
+  sortierten Durchgang; Ortsrand-Items nie in `buildingHulls`; `h` > 0,15 auf einer `quiet`-Kachel wird verworfen.
+- **AK-12 Requisiten-Cache (V).** `PROPS_CACHE_MAX_BYTES` = 4 MiB; LRU verdrängt bei Überschreitung (synthetisch);
+  `DECOR_CACHE_MAX_BYTES`, `SPRITE_CACHE_MAX_BYTES`, `VARIANT_COUNT` wie A.
+- **AK-13 Caps (V).** `CAPS.ortsrand` je Insel eingehalten, `cap('ortsrand', true) = cap('ortsrand') / 2`.
+- **AK-14 Fremdinsel (V).** Dasselbe Layout auf Insel ≠ Heimat (mit `kontor2`) und auf der Heimat: gleiche Analyse
+  und gleiche Saumpixel relativ zum Layout (ohne Stempel).
+- **AK-15 Farben (V).** Test auf die exportierten Farbrezepte von U1: ΔE2000 ≥ 20 zu jeder Farbe in `SIGNAL_NAMES`
+  (`deltaE.ts`); Quelltext-Test: keine Mischung mit `#000000`/`#ffffff` (S1).
+- **AK-16 Galerie (P).** `galerie.mjs --motive ortsrand` erzeugt mit den versionierten Szenen (V4) die Motive 01–10
+  bei Zoom 1 und 2, DPR 2, auf A und B mit gleicher Kamera und eingefrorener Zeit; alle Dateien vorhanden.
+- **AK-17 Leistung ORT-1 (P).** Protokoll P: `renderMedian` B − A ≤ +0,2 ms; Hitch bestanden. `lastPatchMs` und
+  `buildMs` werden berichtet; **Frühwarnung** bei `lastPatchMs` > +20 % (Abbruch erst nach AK-48 bzw. E6).
+- **AK-54 Speichern und Laden (V).** Welt speichern, laden: Analyse, Items, `RoadShape` und `paintPixels`-Puffer
+  bytegleich zur Welt vor dem Speichern.
+- **AK-55 Leer (V).** Layout ohne Gebäude und Wege sowie eine Insel ohne Wege: kein Wurf, leere Analyse und Items,
+  `paintPixels` bytegleich zu A.
 
 ### 8.2 ORT-K1 Wegkante
 
-- **AK-18 Kein Konturstrich (F).** `drawRoads` ruft kein `stroke` auf und setzt nie `strokeStyle` = `earthEdge`
-  (A10). Kein `fillRect` (Kiesel sind Polygone, K15).
-- **AK-19 Keine langen Geraden (V).** In allen Umriss-Polygonen von `RoadShape` (Kern, Randstufe) gibt es keine
-  kollineare Strecke > 0,5 Kachel bei Toleranz 0,01 Kachel (A11). Testhelfer fehlt heute; Plan-Pflicht:
-  `maxCollinearRun(poly, tol)` in einem Testhelfer unter `tests/render/`.
-- **AK-20 Breite (V).** Auf geraden Abschnitten (Seeds 1–5, alle Wege der Siedlungs-Fixture) liegt die mittlere
-  Gesamtbreite quer zur Achse bei 0,5 ± 0,03 Kachel; die Abweichung der Kante von der Sollkante ist ≤ 0,04 + 0,01.
-- **AK-21 Kern-Deckung (V).** Im Streifen ±0,2 Kachel um die Achse liegen ≥ 85 % der Abtastpunkte (Raster 0,02) in
-  Kern oder Randstufe und nicht in Gras-Einwuchs oder Mittelstreifen (A12). Plan-Pflicht: Punkt-in-Polygon-Helfer
-  (wie `inPolyT` in `variants.test.ts`) gemeinsam nutzbar machen.
-- **AK-22 Innenecken (V).** Im Umkreis 0,3 Kachel um jede Kreuzungsmitte ändert sich die Richtung zwischen zwei
-  aufeinanderfolgenden Umrisskanten um höchstens 45° (keine V-Kerbe).
-- **AK-23 Weggeometrie deterministisch und lokal (V).** Gleiche Welt: `RoadShape` bytegleich (A14). Eine neu gesetzte
-  Wegkachel ändert die Teilstücke nur von Wegkacheln im Chebyshev-Radius ≤ 1; ein Gebäude ändert KS3/W3-Teile nur im
-  Radius ≤ 3. `roadCenter` liefert für Seeds 1–50 dieselben Punkte wie `main`.
-- **AK-24 Kontrast (V).** ΔE2000 zwischen Kernfarbe und dem Median der `paintPixels`-Pixel im Abstand 0,5–0,7 Kachel
-  von der Achse (gerade Abschnitte, Seed 1) ist ≥ 90 % des Werts auf `main` (Wert in AK-01 mit festhalten). Der Saum
-  (0,25–0,45 Kachel) liegt näher am Gras: ΔE(Saum, Kern) > ΔE(Saum, Wiese).
-- **AK-25 W1 Wegrain (V).** Auf Wegkacheln mit Nahdichte Land/Rand malt `paintDecor` Büschel und Blumen, alle mit
-  Abstand ≥ 0,36 Kachel zur Achse, und jedes Element entspricht einem Los von `tuftsFor` usw. derselben Kachel
-  (gefiltert, nicht neu gewürfelt). Bei Nahdichte Kern: keine.
-- **AK-26 KS2 weicht (V).** Saum hängt nur an der Wegmaske: Weg entfernen → Puffer im Patch-Rechteck bytegleich zum
+- **AK-18 Kein Konturstrich (F).** Mit V1: `drawRoads` zeichnet keinen Strich (weder `stroke()` noch `stroke(path)`)
+  und setzt nie `strokeStyle` = `earthEdge`; kein `fillRect` (Kiesel sind Polygone).
+- **AK-19 Keine langen Geraden (V).** Seeds 1–50: In allen Kantenzügen `edges` (je zusammenhängendem Wegzug) gibt es
+  keine kollineare Strecke > 0,5 Kachel bei Toleranz 0,01. Konstruktionsregel: Randrauschen mit Amplitude 0,02–0,04
+  und Wellenlänge 0,6–1,0 Kachel, damit keine Gerade entstehen kann.
+- **AK-20 Breite (V).** Gerader Abschnitt = Wegkachel mit genau 2 gegenüberliegenden Wegnachbarn. Dort (Seeds 1–5 und
+  Fixture) mittlere Gesamtbreite 0,5 ± 0,03 Kachel; Kantenabweichung von der Sollkante ≤ 0,05.
+- **AK-21 Kern-Deckung (V).** Im Streifen ±0,2 Kachel um die Achse liegen ≥ 85 % der Abtastpunkte (Raster 0,02) im
+  Weg. Fahrspuren und Kiesel zählen zum Weg, Gras-Einwüchse und Mittelstreifen nicht.
+- **AK-22 Innenecken (V).** Seeds 1–50, Kantenzüge `edges`: Im Umkreis 0,3 Kachel um jede Kreuzungsmitte ändert sich
+  die Richtung zwischen zwei aufeinanderfolgenden Kanten um höchstens 45°.
+- **AK-23 Weggeometrie deterministisch und lokal (V).** `RoadShape` für dieselbe Welt bytegleich. Eine neue Wegkachel
+  ändert nur Teilstücke von Wegkacheln im Chebyshev-Radius ≤ 1; ein Gebäude ändert KS3/W3-Teile nur im Radius ≤ 3.
+  AK-01 (h) grün.
+- **AK-24 Kontrast (V).** Gerade Abschnitte ohne Gebäude im Radius 2, Seed 1: ΔE2000 zwischen Kernfarbe und Median
+  der `paintPixels`-Pixel 0,5–0,7 Kachel von der Achse ≥ 90 % von AK-01 (f). Saumfenster 0,30–0,45 Kachel:
+  ΔE(Saum, Kern) > ΔE(Saum, Wiese).
+- **AK-25 W1 Wegrain (V).** Auf Wegkacheln mit Nahdichte Land/Rand liegen alle Büschel und Blumen ≥ 0,36 Kachel von
+  der Achse, und jedes entspricht einem Los von `tuftsFor` usw. derselben Kachel. Nahdichte Kern: keine.
+- **AK-26 KS2 weicht (V).** Isolierter Weg (kein Gebäude im Radius 3): Weg entfernen → Patch-Puffer bytegleich zum
   Zustand ohne Weg.
-- **AK-27 KS3 (F, V).** Unter Zoom 0,75 keine Abnutzungs-Füllungen; bei Ortsnähe Kern keine Gras-Einwüchse; Ausgabe
-  von `drawRoads` unabhängig von `timeMs` und Wetter (zwei Aufrufe mit verschiedenen Werten gleich aufgezeichnet).
-  Mittelstreifen ≤ 0,04 Kachel breit.
-- **AK-28 W3 (V).** Sackgasse im Land: Breite am Kachelrand ≤ 0,15, Kern reicht bis mindestens zur Kachelmitte, kein
-  Teil ausserhalb der eigenen Kachel. Im Kern: runde Kappe wie heute (Breite 0,5 bis zum Ende ± 0,04).
-- **AK-29 Farben (V).** Randstufe, Saum, Abnutzung: ΔE2000 ≥ 20 zu Signalfarben, keine Schwarz-/Weissmischung.
-- **AK-30 Zeichenzeit `drawRoads` (P).** Messpunkt `roadStats.lastMs` (Plan-Pflicht, Dev-Statistik wie
-  `terrainStats`): Median über 600 Frames, Seed 1 Siedlung, Zoom 1: B ≤ 1,05 × A (5 % Messrauschen, Ruling-Entwurf E3).
-- **AK-31 Wegziehen (P).** `hitch.mjs` erhält einen Wegmodus (Plan-Pflicht, z. B. `--wege`: 12 Wegkacheln in
-  Schritten ziehen). B zeigt keine zusätzlichen Frames > 25 ms gegenüber A (Seeds 7, 14).
-- **AK-32 Leistung ORT-K1 (P).** wie AK-17, `renderMedian` B − A ≤ +0,2 ms.
+- **AK-27 KS3 (F, V).** Mit V1: unter Zoom 0,75 keine Abnutzungs-Füllungen; bei Ortsnähe Kern keine Gras-Einwüchse;
+  Aufzeichnung unabhängig von `timeMs` und Wetter (zwei Aufrufe gleich); Mittelstreifen ≤ 0,04 Kachel breit.
+- **AK-28 W3 (V).** Sackgasse im Land: Breite am Kachelrand ≤ 0,15, Weg reicht bis mindestens zur Kachelmitte, nichts
+  ausserhalb der eigenen Kachel. Im Kern runde Kappe (Breite 0,5 ± 0,04 bis zum Ende).
+- **AK-29 Farben (V).** Rezepttest wie AK-15 für Randstufe, Saum und Abnutzung.
+- **AK-30 Zeichenzeit `drawRoads` (P).** Mit V2: Summe der `drawRoads`-Zeit über 600 Frames, Fixture, Zoom 1, je
+  Seite 3 Läufe abwechselnd; bestanden, wenn das Frame-Mittel B ≤ A + 0,15 ms.
+- **AK-31 Wegziehen (P).** Mit V3 `--wege`, Hitch-Regel aus Protokoll P.
+- **AK-32 Leistung ORT-K1 (P).** Protokoll P: `renderMedian` B − A ≤ +0,2 ms.
+- **AK-56 Strand und Küste (V).** Weg an Sand und Wasser: keine Saumpixel auf Wasser; auf Sand kein U1 und KS2 ohne
+  Grasanteil.
+- **AK-57 Einzelkachel (V).** Weg ohne Nachbarn: Umriss geschlossen, Abstand zur Mitte 0,25 ± 0,05, keine kollineare
+  Strecke > 0,5 (Toleranz 0,01).
 
 ### 8.3 ORT-K2 Flächenkante und KS0
 
-- **AK-33 KS4 Kurven statt Zacken (V).** Im Hofrand-Polygon aus `raggedYard` (Bildmodus) ändert sich die Richtung
-  zwischen aufeinanderfolgenden Kanten um höchstens 30° (der heutige Sägezahn liegt bei rund 80°); keine kollineare
-  Strecke > 0,5 Kachel (Toleranz 0,01); zwei Füllungen (Rand, innere Stufe), kein `stroke` im Hofteil.
-- **AK-34 Plain unverändert (H).** `drawBodyPlain` aller Typen und Stufen bytegleich zu AK-01 (b). Damit bleiben
-  Picking-Geometrie (`bodyFaces`), `drawGhost` und alle H-R7-AK1-Hashes unverändert (Abschnitt 7).
-- **AK-35 Bildmodus-Änderung begrenzt (H).** Im Bildmodus (`drawBody`, `hand = true`) ändern sich nur die Hof- und
-  Pflaster-Abschnitte. Die Aufzeichnung ausserhalb davon (Körper, Dach, Kaimauer) ist bytegleich zu AK-01 (g)
-  (Plan-Pflicht: Trennstelle bestimmen, z. B. über die Ereigniszahl einer Aufzeichnung von `yard` allein). Neue
-  Bildmodus-Referenzen setzt ORT-K2 in einem eigenen Commit, nur für die Typen mit Hof bzw. Pflaster.
-- **AK-36 KS5 Pflaster (V, F).** Keine Fugenlinie und kein Pflasterrand mit kollinearer Strecke > 0,5 Kachel
-  (Toleranz 0,01); Fugen benachbarter Reihen versetzt; Kaimauer-Quad von `kontorBody` unverändert (Ereignisse
-  bytegleich, Plan bestimmt den Abschnitt).
-- **AK-37 KS8 Schatten (V, F).** `buildingShadow` und `treeShadow` liefern dieselben Polygone wie `main` (RF-6b,
-  AK-ISO-10 grün). Durchgang 5 zeichnet den Kernschatten wie `main` und genau eine zusätzliche Füllung für alle
-  Halbschatten (ein Pfad, Deckkraft halb, Hülle +0,06 Kachel). Kernschatten wird nicht doppelt gedeckt (Plan wählt
-  Technik, Test prüft sie in der Aufzeichnung).
-- **AK-38 Regel KS0 als Test (V, F).** Ein Sammeltest über die flachen Bodenzeichner (`drawRoads`, `raggedYard`,
-  Pflaster in `marketBody`/`kontorBody`): kein Strich in `earthEdge`, keine kollineare Strecke > 0,5 Kachel.
-  Ausgenommen: Kaimauer, Gebäudekörper, Schatten (S7).
-- **AK-39 Leistung ORT-K2 (P).** wie AK-17, `renderMedian` B − A ≤ +0,2 ms; AK7 (Sprite-Speicher) unverändert grün.
+- **AK-33 KS4 Kurven statt Zacken (V).** Hofrand-Polygon aus `raggedYard` im Bildmodus (Trennstelle wie AK-35):
+  Richtungswechsel zwischen aufeinanderfolgenden Kanten ≤ 30° (Sägezahn heute rund 80°); keine kollineare Strecke >
+  0,5 (Toleranz 0,01); zwei Füllungen (Rand, innere Stufe), kein Strich im Hofteil.
+- **AK-34 Plain unverändert (H).** `drawBodyPlain` aller Typen und Stufen bytegleich zu AK-01 (b); damit Picking
+  (`bodyFaces`), `drawGhost` und alle H-R7-AK1-Hashes unverändert.
+- **AK-35 Bildmodus-Änderung begrenzt (H).** Im Bildmodus ändern sich nur Hof- und Pflaster-Abschnitte (Trennstelle
+  über den V6-Marker, vorab im AK-01-Commit gesetzt). Alles andere (Körper, Dach, Kaimauer) ist bytegleich zu AK-01
+  (g); Kaimauer zusätzlich zu (j). Neue Bildmodus-Referenzen setzt ORT-K2 in einem eigenen Commit, nur für Typen mit
+  Hof bzw. Pflaster.
+- **AK-36 KS5 Pflaster (V, F).** Im Bildmodus keine Fugenlinie und kein Pflasterrand mit kollinearer Strecke > 0,5
+  (Toleranz 0,01); Fugen benachbarter Reihen um ≥ 0,25 Steinlänge versetzt; Kaimauer bytegleich zu AK-01 (j).
+- **AK-37 KS8 Schatten (V, F, P).** AK-01 (i) grün (RF-6b, AK-ISO-10). Mit V1: Durchgang 5 füllt genau zwei Pfade in
+  der Reihenfolge Halbschatten (`a/2`, Hüllen +0,06 für Gebäude und Bäume, übrige Polygone unerweitert), Kernschatten
+  (`a'` nach 4.3, Polygone wie A); `renderStats.shadowFills` zählt 2. Rechnerisch `1 − (1 − a/2)(1 − a') = a` ± 1/255.
+  Pixel über V5: L* in der Schattenmitte = A ± 1.
+- **AK-38 Regel KS0 als Test (V, F).** Sammeltest mit V1 über die flachen Bodenzeichner **im Bildmodus-Zweig**
+  (`drawRoads`, `raggedYard`, Pflaster in `marketBody`/`kontorBody`): kein Strich in `earthEdge`, keine kollineare
+  Strecke > 0,5. Ausgenommen: Plain-Zweig (AK-34), Kaimauer, Gebäudekörper, Schatten.
+- **AK-39 Leistung ORT-K2 (P).** Protokoll P: `renderMedian` B − A ≤ +0,2 ms; H-R7 AK7 grün.
 
 ### 8.4 ORT-3 Weg-Objekte
 
-- **AK-40 Platz und Dichte (V).** Seeds 1–20 plus Siedlungs-Fixture: Items nur auf Wegkacheln mit Ortsnähe Land/Rand
-  und freier Seite, Abstand zur Achse ≥ 0,3, paarweiser Abstand ≥ 3 Kacheln, je Insel ≤ ⌊Wegkacheln / 4⌋. Wegkreuz
-  und Bildstock nur an Kacheln mit ≥ 3 Wegnachbarn oder an Kurven.
+- **AK-40 Platz und Dichte (V).** Seeds 1–20 und Fixture: Items nur auf Wegkacheln mit Ortsnähe Land/Rand und freier
+  Seite, Abstand zur Achse ≥ 0,3, paarweiser Chebyshev-Abstand ≥ 3, je Insel ≤ ⌊Wegkacheln / 4⌋. Wegkreuz und
+  Bildstock nur an Kacheln mit ≥ 3 Wegnachbarn oder an Kurven (genau 2 nicht gegenüberliegende Nachbarn).
 - **AK-41 Weichen und Rückkehr (V).** Seitenkachel bebauen → Item weg im ersten Frame mit neuem `layoutKey`; nach
-  `demolish` Itemliste gleich wie vorher. Lokalität r ≤ 3 (wie AK-07).
-- **AK-42 Lesbarkeit (V).** Höhe ≤ 0,15 `ISO_H` auf `quiet`-Kacheln (B3); Bildgrösse jeder Art < 0,3 Kachel;
-  Farben ΔE2000 ≥ 20 zu Signalfarben und ≥ 10 zu jeder Dachfarbe (`roof*`); Items nie in `buildingHulls`.
+  `demolish` Itemliste wie vorher. Lokalität r ≤ 3 wie AK-07.
+- **AK-42 Lesbarkeit (V).** Höhe ≤ 0,15 `ISO_H` auf `quiet`-Kacheln; Bildgrösse < 0,3 Kachel; Rezepttest: ΔE2000 ≥ 20
+  zu Signalfarben und ≥ 10 zu jeder `roof*`-Farbe; nie in `buildingHulls`.
 - **AK-43 Cache und Leistung (V, P).** Alle W2-Arten × Varianten × Zoomstufen bei Zoom 2 / DPR 2 ≤
-  `PROPS_CACHE_MAX_BYTES` (Test wie AK7). `renderMedian` B − A ≤ +0,2 ms (wie AK-17).
+  `PROPS_CACHE_MAX_BYTES`; Protokoll P: `renderMedian` B − A ≤ +0,2 ms.
 
 ### 8.5 Release (nach ORT-3)
 
-- **AK-44 Stilrahmen (V).** `2026-10-04-stilrahmen.md` enthält S7 im Wortlaut von 3.6 (Text-Test oder Review-Check im
-  Plan).
-- **AK-45 Signale scharf, O10 (H, F).** `drawHover`, `drawGhost` (alle Typen), `drawPathPreview` und Auswahl sind
-  bytegleich zu AK-01 (a) (A13).
+- **AK-44 Stilrahmen (V).** Text-Test: `2026-10-04-stilrahmen.md` enthält S7 im Wortlaut von 3.6.
+- **AK-45 Signale scharf, O10 (H, F).** `drawHover`, `drawGhost` (alle Typen), `drawPathPreview`, Auswahl bytegleich zu
+  AK-01 (a).
 - **AK-46 Picking (V).** `picking.test.ts`, `verdeckung.test.ts` AK-ISO-15, H-R7 AK3/AK4 grün; Wegpicking
-  kachelbasiert unverändert.
-- **AK-47 Cache-Schlüssel (V).** `spriteKey` bytegleich zu AK-01 (d); `VARIANT_COUNT`, `SPRITE_CACHE_MAX_BYTES`
-  unverändert; H-R7 AK7 (Zoom 1 und Zoom 2 / DPR 2, Schranke 1,4) grün.
-- **AK-48 Leistung Release (P).** `perf.mjs` main gegen Release-Stand wie AK-17: `renderMedian` ≤ +0,4 ms;
-  `lastPatchMs` ≤ +30 %; `buildMs` ≤ +15 %.
-- **AK-49 Kein Sim, kein Save (V).** Diff gegen `main` ohne Änderung in `src/sim/`; `SAVE_VERSION` = 16;
-  `tests/sim/balance.test.ts` grün; `make check` grün.
-- **AK-50 Helligkeitsprofil (B, A10).** Plan-Pflicht: Messskript `tools/render-qa/kantenprofil.mjs` (Name Vorschlag),
-  Zoom 1, DPR 2, je 20 Querschnitte senkrecht zu Wegkante, Hofrand und Schattenrand in der Siedlungs-Fixture;
-  Medianprofil in L*. Bestanden, wenn das Minimum ≥ min(L* Kern, L* Gras) − 2 ist (kein dunkles Konturminimum) und die
-  Übergangsbreite 10 % → 90 % ≥ 3 Gerätepixel beträgt.
-- **AK-51 Kanten-Galerie und Blindfrage (B, A15/A8a).** Ausschnitte vorher/nachher von Kreuzung (`04-weg-z2`), Hof
-  (`03-holzfaeller-z2`), Markt (`10-markt-z1.5`), Siedlung (`07-siedlung-z1`) und Wohnhaus (`01-wohnhaus1-z2`).
-  Rater-Anweisung: Zwei unabhängige Rater ohne Vorkenntnis bekommen je Motiv beide Bilder in zufälliger Reihenfolge
-  ohne Beschriftung und beantworten (1) «Gehören Weg und Wiese zum selben Bild? ja/nein» je Bild, (2) «Welches Bild
-  wirkt gewachsen statt platziert?» je Paar. Bestanden: Jeder Rater wählt in ≥ 4 von 5 Paaren das Nachher-Bild und
-  sagt bei ≥ 4 von 5 Nachher-Bildern «ja».
-- **AK-52 Anbindung lesbar (B, A12).** Dieselben Rater markieren im Nachher-Bild `07-siedlung-z1` und `04-weg-z1`
-  jede Wegverbindung zum Kontor bzw. jedes Wegende. Bestanden: 100 % richtig bei beiden.
-- **AK-53 Fremdinsel (B, A9).** Ein Aussenkontor mit 6 Wegkacheln und einem Gebäude auf einer Fremdinsel zeigt bei
-  Zoom 1 Hofsaum, weichen Weg und Wegrain wie auf der Heimat (Bildpaar Heimat/Fremdinsel, ein Rater bestätigt).
+  kachelbasiert.
+- **AK-47 Cache-Schlüssel (V).** `spriteKey` bytegleich zu AK-01 (d); `VARIANT_COUNT`, `SPRITE_CACHE_MAX_BYTES` wie A;
+  H-R7 AK7 grün.
+- **AK-48 Leistung Release (P).** Protokoll P mit A gegen Release-Stand: `renderMedian` ≤ +0,4 ms; `lastPatchMs`
+  (über V3, Median je Bau) ≤ +30 %; `buildMs` ≤ +15 %.
+- **AK-49 Kein Sim, kein Save (V).** Diff gegen A ohne Änderung in `src/sim/`; `SAVE_VERSION` gleich A;
+  `tests/sim/balance.test.ts` und `make check` grün.
+- **AK-50 Helligkeitsprofil (P, A10).** V5, Fixture, Zoom 1, DPR 2, eingefrorene Zeit: je 20 Querschnitte senkrecht zu
+  Wegkante, Hofrand und Schattenrand, Medianprofil in L*. Kern-L* = Median im Band ±0,1 Kachel um die Achse ohne
+  Fahrspuren. Bestanden: Minimum ≥ min(L* Kern, L* Gras) − 2 und Übergangsbreite 10 % → 90 % ≥ 3 Gerätepixel.
+- **AK-51 Kanten-Galerie, Blindfrage (B, A15/A8a).** Bildpaare A/B (V4) von Kreuzung (`04-weg-z2`), Hof
+  (`03-holzfaeller-z2`), Markt (`10-markt-z1.5`), Siedlung (`07-siedlung-z1`), Wohnhaus (`01-wohnhaus1-z2`). Zwei
+  unabhängige Rater ohne Vorkenntnis sehen je Paar beide Bilder unbeschriftet in zufälliger Reihenfolge und beantworten:
+  «Welches Bild wirkt natürlicher im Übergang zwischen Siedlung und Landschaft?» Reihenfolge und Seed werden
+  protokolliert. Bestanden: Jeder Rater wählt in ≥ 4 von 5 Paaren B.
+- **AK-52 Anbindung lesbar (B, A12).** Wahrheitsliste aus dem Layout: jede Wegkomponente mit Kontakt zu einem Kontor
+  und jedes Wegende (Wegkachel mit genau einem Nachbarn). Die Rater setzen in den B-Bildern `07-siedlung-z1` und
+  `04-weg-z1` je Verbindung und je Wegende einen Punkt (Pixelkoordinate); V8 bildet sie auf Kacheln ab. Treffer bei
+  ±1 Kachel; W3-Enden gelten als erkannt, wenn innerhalb ±1 Kachel markiert. Bestanden: ≥ 90 % Treffer je Rater und
+  höchstens 10 % Fehlmarkierungen.
+- **AK-53 Fremdinsel (V, A9).** V8-Fixture: Saumpixel, `RoadShape` und W1-Deko auf der Fremdinsel gleich wie bei
+  demselben Layout auf der Heimat (Puffer- und Geometrievergleich). Ein Bildpaar Heimat/Fremdinsel ergänzt nur.
 
 ## 9 Herkunft
 
-| AK                         | Abnahme-Idee (Brainstorming 6) |
-| -------------------------- | ------------------------------ |
-| AK-05, AK-23               | A1, A14                        |
-| AK-06, AK-26, AK-41        | A2                             |
-| AK-07, AK-23               | A3, A14                        |
-| AK-01, AK-08, AK-34, AK-35 | A4                             |
-| AK-13, AK-17, AK-32 ff.    | A5                             |
-| AK-12, AK-43, AK-47        | A6                             |
-| AK-11, AK-15, AK-42, AK-46 | A7                             |
-| AK-16, AK-51               | A8 (nur a; b und c in ORT-B)   |
-| AK-14, AK-53               | A9                             |
-| AK-18, AK-50               | A10                            |
-| AK-19, AK-33, AK-36, AK-38 | A11                            |
-| AK-20, AK-21, AK-24, AK-52 | A12                            |
-| AK-45                      | A13 (O10)                      |
-| AK-30, AK-31               | A14                            |
-| AK-51                      | A15                            |
-| AK-02, AK-03, AK-09        | D7, O4                         |
-| AK-44                      | O7 (S7)                        |
+| AK                                | Abnahme-Idee (Brainstorming 6) |
+| --------------------------------- | ------------------------------ |
+| AK-05, AK-23, AK-54               | A1, A14                        |
+| AK-06, AK-26, AK-41               | A2                             |
+| AK-07, AK-23                      | A3, A14                        |
+| AK-01, AK-08, AK-34, AK-35, AK-55 | A4                             |
+| AK-13, AK-17, AK-32 ff.           | A5                             |
+| AK-12, AK-43, AK-47               | A6                             |
+| AK-11, AK-15, AK-42, AK-46        | A7                             |
+| AK-16, AK-51                      | A8 (nur a; b und c in ORT-B)   |
+| AK-14, AK-53                      | A9                             |
+| AK-18, AK-37, AK-50               | A10                            |
+| AK-19, AK-33, AK-36, AK-38, AK-57 | A11                            |
+| AK-20, AK-21, AK-24, AK-52        | A12                            |
+| AK-45                             | A13 (O10)                      |
+| AK-22, AK-30, AK-31               | A14                            |
+| AK-51                             | A15                            |
+| AK-02, AK-03, AK-09, AK-56        | D7, O4, Randfälle              |
+| AK-44                             | O7 (S7)                        |
 
 ## 10 Nicht-Ziele
 
-Kein Save-Feld, keine Änderung in `src/sim/`, kein Balancing, kein neuer Spielwert. Keine wassergefüllten Pfützen
-(wetterabhängig), keine Abrissnarben (bräuchten ein Save-Feld). Kein Hofkram, keine Anbauten, keine Änderung an
-`variants.ts` (ORT-B). Keine Feld-, Zaun- oder Waldkanten (ORT-5). Keine fremden Assets (ADR-006), keine
-Laufzeit-Abhängigkeit, kein neuer Schlüssel im Gebäude-Sprite-Cache.
+Kein Save-Feld, nichts in `src/sim/`, kein Balancing, kein Spielwert. Keine wassergefüllten Pfützen, keine
+Abrissnarben. Kein Hofkram, keine Anbauten, nichts an `variants.ts` (ORT-B). Keine Feld-, Zaun- oder Waldkanten
+(ORT-5). Keine fremden Assets (ADR-006), keine Laufzeit-Abhängigkeit, kein neuer Sprite-Cache-Schlüssel.
 
 ## 11 Risiken
 
-- **Patch-Zeit (hoch):** Der Rand 2 statt 1 vergrössert das Patch-Rechteck eines 2×2-Baus von 16 auf 36 Kacheln.
-  Bestimmt die Pixelarbeit `lastPatchMs`, reicht +30 % (AK-48) womöglich nicht. Gegenmittel im Plan: Grundpixel nur im
-  Rand-1-Bereich neu rechnen und im äusseren Ring nur den Saum neu mischen; sonst Ruling-Entwurf E6.
-- **Bildmodus ohne Hash-Schutz:** Heute hasht kein Test den Bildmodus; KS4/KS5 setzen dort neue Referenzen für fast
-  alle Typen, ein Fehler im selben Commit fiele nicht auf. Gegenmittel AK-01 (g), AK-34 und AK-35.
-- **Weg-Lesbarkeit:** Zu viel Gras im Weg wirkt wie «unterbrochen». Gegenmittel AK-21, AK-27, AK-52.
-- **Merge-Punkt `sprites.ts`:** ORT-K1 und ORT-K2 in getrennten Funktionen; ORT-K1 merged zuerst.
-- **Kernschatten-Doppeldeckung (KS8):** Technik offen, AK-37 prüft.
+- **Patch-Zeit (hoch):** Rand 2 statt 1 vergrössert das Patch-Rechteck eines 2×2-Baus von 16 auf 36 Kacheln; +30 %
+  `lastPatchMs` ist gefährdet. Gegenmittel: Grundpixel nur im Rand-1-Bereich neu rechnen, im äusseren Ring nur den
+  Saum mischen; Frühwarnung AK-17; sonst E6.
+- **Bildmodus ohne Hash-Schutz:** heute ungeschützt; KS4/KS5 setzen dort neue Referenzen. Gegenmittel AK-01 (g),
+  AK-34, AK-35.
+- **Weg-Lesbarkeit:** zu viel Gras wirkt «unterbrochen». Gegenmittel AK-21, AK-27, AK-52.
+- **Messaufwand:** V1–V8 sind zusätzliche Test-Tasks (Schätzung +25 Tools in ORT-1, +10 in ORT-K1).
+- **Merge-Punkt `sprites.ts`:** getrennte Funktionen; ORT-K1 merged zuerst.
 
 ## 12 Offene Punkte (Ruling-Entwürfe an L0)
 
-- **E1 O8 in ORT-A leer:** KS4/KS5 nur im Bildmodus, AK1 und Plain bytegleich; neuer Bildmodus-Referenzhash als
-  Schutz (AK-01 (g), AK-35). Empfehlung: annehmen.
+- **E1 O8 in ORT-A leer:** KS4/KS5 nur im Bildmodus, AK1 und Plain bytegleich; Bildmodus-Referenzhash als Schutz
+  (AK-01 (g), AK-35). Empfehlung: annehmen.
 - **E2 Boden-Gradient über Nahdichte (r = 1) statt Ortsnähe (r = 3):** hält den Patch-Rand bei 2. Empfehlung:
   annehmen; Ortsnähe bleibt für Items und Weg-Pfad.
-- **E3 Toleranz 5 % für AK-30:** «nicht teurer als main» ist ohne Rauschgrenze nicht entscheidbar. Empfehlung: 5 %.
-- **E4 Salzzuteilung 600–619** nach 3.4 mit Reserve 615–619 für ORT-B. ORT-5 bekommt bei Einplanung einen eigenen
-  Block (Vorschlag 620–629). Empfehlung: annehmen.
+- **E3 Zeitgrenze `drawRoads` (AK-30):** «nicht teurer als A» als Frame-Mittel B ≤ A + 0,15 ms mit gemeinsamem
+  Messpunkt-Commit V2 auf beiden Seiten. Empfehlung: annehmen.
+- **E4 Salzzuteilung 600–619** nach 3.4, Reserve 615–619 für ORT-B, ORT-5 später 620–629. Empfehlung: annehmen.
 - **E5 Rater:** zwei getrennte `qa-playtester`-Läufe ohne gemeinsamen Kontext. Empfehlung: annehmen.
-- **E6 Fallback Patch-Budget:** Verfehlt ORT-1 trotz Gegenmittel `lastPatchMs` ≤ +30 %, entscheidet L0 zwischen
-  Rand 1 mit Saumreichweite ≤ 0,35 Kachel und einer höheren Grenze. Empfehlung: erst messen (AK-17).
+- **E6 Fallback Patch-Budget:** Verfehlt das Release `lastPatchMs` ≤ +30 %, entscheidet L0 zwischen Rand 1 mit
+  Saumreichweite ≤ 0,35 Kachel und einer höheren Grenze. Empfehlung: erst messen (AK-17, AK-48).
+- **E7 KS8-Technik:** zwei Vereinigungs-Füllungen mit `a/2` und `a'` statt Clip (4.3). Empfehlung: annehmen.
