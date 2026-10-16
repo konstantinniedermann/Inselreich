@@ -17,6 +17,12 @@ RELEASES = {
         {"id": "REL-24", "status": "planned", "items": [{"pkg": "UI-HAEPPCHEN-D"}]},
     ],
     "pastSummary": "REL-01 … REL-21, M1 – M13",
+    "qaAliases": {
+        "ui-haeppchen-a": "REL-21",
+        "texte": "M13",
+        "neu": "REL-24",
+        "bogus": "REL-99",
+    },
 }
 
 
@@ -52,6 +58,10 @@ class AufraeumenTest(unittest.TestCase):
         self.assertEqual(c("UI-HAEPPCHEN-D"), "open")
         self.assertEqual(c("rel-24"), "open")
         self.assertEqual(c("I-1000"), "unknown")
+        self.assertEqual(c("ui-haeppchen-a"), "live")
+        self.assertEqual(c("texte-1"), "live")
+        self.assertEqual(c("neu"), "unknown")  # Alias auf nicht live Release gilt nicht
+        self.assertEqual(c("bogus"), "unknown")
         self.assertEqual(c("m14-e1"), "unknown")
         self.assertEqual(c("rel-hf1"), "unknown")
 

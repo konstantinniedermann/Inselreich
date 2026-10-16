@@ -25,13 +25,16 @@ MB = 1024 * 1024
 
 @dataclass
 class Rules:
-    """Aus releases.json abgeleitet: was gilt als erledigt (live), was ist noch offen."""
+    """Aus releases.json abgeleitet: was gilt als erledigt (live), was ist noch offen.
+
+    ``qaAliases`` ordnet Ordnernamen ohne Paket-ID einem live Release (``REL-21``) oder Meilenstein (``M13``) zu."""
 
     live_pkgs: set[str] = field(default_factory=set)
     open_pkgs: set[str] = field(default_factory=set)
     live_rel: set[int] = field(default_factory=set)
     open_rel: set[int] = field(default_factory=set)
     live_ms: set[int] = field(default_factory=set)
+    live_alias: set[str] = field(default_factory=set)  # qaAliases auf ein live Release
 
 
 @dataclass
@@ -63,6 +66,12 @@ def load_rules(releases_json: Path) -> Rules:
         rules.live_rel.update(range(int(lo), int(hi) + 1))
     for lo, hi in re.findall(r"\bM0*(\d+)\s*(?:…|\.\.\.|[–-])\s*M0*(\d+)", past):
         rules.live_ms.update(range(int(lo), int(hi) + 1))
+    for folder, target in (data.get("qaAliases") or {}).items():
+        num = re.fullmatch(r"(REL|M)-?0*(\d+)", str(target), re.IGNORECASE)
+        if num and int(num.group(2)) in (
+            rules.live_rel if num.group(1).upper() == "REL" else rules.live_ms
+        ):
+            rules.live_alias.add(_norm(folder))
     rules.live_pkgs -= rules.open_pkgs  # ein Paket in beiden: offen gewinnt
     return rules
 
@@ -84,7 +93,7 @@ def classify(name: str, rules: Rules) -> str:
     rel = re.match(r"rel-?0*(\d+)(?!\d)", name, re.IGNORECASE)
     if rel and int(rel.group(1)) in rules.open_rel:
         return "open"
-    for pkg in rules.live_pkgs:
+    for pkg in rules.live_pkgs | rules.live_alias:
         if _has_prefix(flat, pkg):
             return "live"
     if rel and int(rel.group(1)) in rules.live_rel:
