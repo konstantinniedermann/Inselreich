@@ -7809,3 +7809,17 @@ Routen, Empfehlung «mit I-101»). Umsetzung erst nach I-091 bzw. nach Bündelun
 Regelbezug: R445, R475, R653 · Kosten bei Irrtum: zwei Kurzdesigns, die vor der Umsetzung nachgeschärft werden.
 
 Entscheider: L0 · Anlass: freie Kapazität · ADR: —
+
+## R677 · 2026-10-16 · Kurzdesigns I-108 und I-101/I-103 angenommen; Plan UI-HAEPPCHEN-F
+
+Ruling: (1) **I-108** `design/i108` @ `059b87f9` (14 AK, Chip «+Einnahmen / −Unterhalt» je Minute, Netto im Tooltip/aria-label, Kurzform ab 10 000,
+Helfer `src/ui/balanceFlow.ts`) → **angenommen**. (2) **I-101 + I-103** `design/i101-i103` @ `09cbe002` (18 AK) → **angenommen** mit: ein Strang,
+I-101 zuerst; I-103 **Variante B** (Potenzial mit Deckel durch den nominalen Überschuss der Quellinsel, kein Save, als «nominal» beschriftet;
+Variante C erst nach Playtest); Marke hohl für offenes Fernangebot, gefüllt für angenommenen Fernauftrag. (3) Plan **UI-HAEPPCHEN-F** =
+I-108 + I-101 + I-103 durch lead-tech (sonnet, Stufe leicht: kein Save, neue Sim-Datei `src/sim/routeBalance.ts` nur lesend), abgeglichen
+gegen Plan UI-HAEPPCHEN-E (`ca6d8ee6`) und Plan I-091 (`d2b4f6c8`); lead-tech bestätigt die Kosten von `goodsBalance` je Quellinsel. Umsetzung
+nach Merge UI-HAEPPCHEN-E; parallel zu I-091 nur bei disjunkten Dateien (Dateimatrix im Plan).
+
+Regelbezug: gates.md Gate Spec (Stufe leicht), R445, R475, R676 · Kosten bei Irrtum: eine Routen-Bilanz, die als Untergrenze zu vorsichtig wirkt (Beschriftung «nominal»).
+
+Entscheider: L0 · Anlass: Berichte lead-design design-I-108, design-I-101-I-103 · ADR: —
