@@ -6,6 +6,7 @@ import { goodsBalance } from '../../src/sim/flow';
 import { laneTicks } from '../../src/sim/islands';
 import { routeBalance } from '../../src/sim/routeBalance';
 import type { GoodId, Route, World } from '../../src/sim/types';
+import { putBuilding } from './helpers';
 import { foundKontor2Literal, seaWorld } from './seaHelpers';
 
 type Balances = Map<number, ReturnType<typeof goodsBalance>>;
@@ -117,5 +118,19 @@ describe('I-103 routeBalance', () => {
     const rt: Route = { ...route(['wood'], []), b: 99 };
     expect(() => routeBalance(w, rt)).not.toThrow();
     expect(routeBalance(w, rt)).toBeNull();
+  });
+
+  it('Integration ohne Memo: echter Betrieb mit Überschuss auf Insel b', () => {
+    const w = twoIslands();
+    const k2 = w.buildings[w.islands[1]!.kontorId!]!;
+    putBuilding(w, 1, 'fisher', k2.x + 4, k2.y);
+    const net = goodsBalance(w, 1).food.net;
+    expect(net).toBeGreaterThan(0);
+    const T = cycle(w);
+    const q = Math.min(SHIP.capacity, Math.floor((net * T) / 100));
+    expect(q).toBeGreaterThan(0);
+    const r = routeBalance(w, route([], ['food']))!;
+    expect(r.goodsPer100).toBeGreaterThan(0);
+    expect(r.goodsPer100).toBe((q * GOODS.food.sell * 100) / T);
   });
 });
