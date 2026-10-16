@@ -1580,3 +1580,15 @@ Last 6 < 8: dritte Umsetzung mit Testlauf zulässig (R708 V2).
 Regelbezug: gates.md Gate Plan, R706, R708 V2, R711 · Kosten bei Irrtum: eine Plan-Korrektur.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-I-112 · ADR: —
+
+## R714 · 2026-10-16 · Freier Platz → Kurzdesign I-119 + I-121 «Bewohner reagieren» (Stufe leicht)
+
+Ruling: Ein Agentenplatz ist frei (Deckel 6, R698); aus dem Pool R692 startet **I-119 + I-121** als ein Paket «Bewohner reagieren» (Eimerkette bei Brand,
+Heimgehen bei Sturmwarnung, Wartende vor Häusern mit Mangel). Kurzdesign Stufe leicht durch lead-design (sonnet, E-061), Branch `design/i119-i121`; kein Save,
+nur `src/render/` (Leben/Figuren). Auflage: Abgleich mit ORT-A (Wege- und Kantenänderungen in `src/render/`), Figurenobergrenze und «Bewegung reduzieren»;
+Plan erst nach Gate Spec und nicht vor ORT-A T20 (Zusammenführung), um Merge-Fläche in `src/render/` klein zu halten. Handbuch 1.60 (`612fe2bb`) mit
+CHANGELOG-Eintrag angenommen.
+
+Regelbezug: R445, R692, R698, E-061 · Kosten bei Irrtum: ein Kurzdesign, das bis nach ORT-A liegen bleibt.
+
+Entscheider: L0 · Anlass: freier Platz · ADR: —
