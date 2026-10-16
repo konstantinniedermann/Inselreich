@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.60 · Stand: 2026-10-16 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.61 · Stand: 2026-10-16 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -202,6 +202,16 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
 - **Studio-Coach:** Der Coach bekommt je Retro 1 Start (Stabsstelle, ohne Arbeiter).
 - **Mehrbedarf:** vor dem Überschreiten per [templates/budgetantrag.md](templates/budgetantrag.md)
   an L0. Ohne Freigabe kein weiterer Start.
+- **Umschnitt-Regel (R735 V1):** Ein Antrag nach dem zweiten ZURÜCK oder BEDENKEN (hoch) derselben
+  Befundklasse nennt die Klasse je Runde und eine Ansatz-Alternative (Feld im Antrag). L0
+  bewilligt dann keinen weiteren Fix-Start ohne Ansatzprüfung. Messung: höchstens 1 Start über
+  Budget je Paket über 5 Pakete, bis 2026-11-30 (Beleg `log.py budget`, Rulings).
+- **Messwerkzeug-Tasks (R735 V2):** Ist das Messfenster belegt (Browser-Läufe nicht möglich),
+  bekommt ein Task, dessen Ergebnis ein Browser-Lauf ist, höchstens 2 Review-Runden; der Rest
+  geht in ein Paket mit freiem Fenster. Messung: höchstens 2 Starts über Plan je Task über
+  3 Tasks, bis 2026-12-15.
+- **Kumulierter Stand (R735 V3):** Jedes Budget-Ruling nennt „n von m“ (verbraucht von
+  freigegeben); Messung 10 von 10 Rulings bis 2026-11-15.
 - **Zwischenstand bei halbem Deckel (R224 (3)):** Hat ein Auftrag oder eine Fix-Runde einen Deckel
   (Tools oder Starts), meldet der Lead bei der Hälfte einen Zwischenstand an L0, loggt ihn als
   `log.py status --status waiting --task "Zwischenstand <Paket>: <Stand>"` und hält an, bis L0

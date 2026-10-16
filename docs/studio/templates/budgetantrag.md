@@ -13,12 +13,14 @@ Formel: <Pakete> × 2 + <QA-Checks> + 1 Final-Review = <summe> → × 1,3 = <wer
 Parallelität: <k> (Begründung: <Stränge/Worktrees>)
 Bisher frei/verbraucht: <frei>/<verbraucht> (bei Mehrbedarf)
 Begründung Mehrbedarf: <warum, z. B. zwei Reviews ZURÜCK, zusätzliche Fix-Runden> (sonst „—")
+Befundklasse je Runde + Ansatz-Alternative: <Runde 1: klasse; Runde 2: klasse; Alternative oder „keine, weil …“> (Pflicht ab dem zweiten ZURÜCK/BEDENKEN derselben Klasse, sonst „—“)
+Kumuliert: <n> von <m> Starts
 Beantragt: <n> Starts, Parallelität <k>
 ```
 
 L0 gibt frei mit
 `python3 tools/studio/log.py budget --lead <lead> --grant <n> --parallel <k> --phase <phase>`
-und schreibt bei Mehrbedarf ein Ruling.
+und schreibt bei Mehrbedarf ein Ruling mit dem kumulierten Stand „n von m“. Ohne Ansatzprüfung bewilligt L0 nach dem zweiten ZURÜCK derselben Klasse keinen weiteren Fix-Start (R735).
 
 ## Beispiel
 

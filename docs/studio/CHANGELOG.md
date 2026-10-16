@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-16 · Handbuch 1.61
+
+- Anlass: Ad-hoc-Retro Budgetüberschreitungen (TOOL-GUARD-REDACT 5 von 3, ORT-A T08 +5 Starts)
+- Datenbasis: `docs/studio/retros/2026-10-16-adhoc-budget.md`
+- Ruling: R735
+- Änderungen: Abschnitt Budget: Umschnitt-Regel (V1), Messwerkzeug-Tasks höchstens 2 Review-Runden (V2), kumulierter Stand im Budget-Ruling (V3); Vorlage `budgetantrag.md` mit Pflichtfeld Befundklasse/Ansatz-Alternative; Messgrössen und Fristen im Text, kein Experiment
+
 ## 2026-10-16 · Handbuch 1.60
 
 - Anlass: Prozess-Retro REL-21 bis REL-25, V2
