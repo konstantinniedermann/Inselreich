@@ -13,7 +13,15 @@
   <body>
     <div id="app">
       <header id="hud" class="bar"></header>
-      <main id="game"><canvas id="canvas"></canvas></main>
+      <main id="game">
+        <canvas id="canvas"></canvas>
+        <div class="pause-overlay" hidden role="status">
+          <div class="pause-overlay__banner">
+            <span class="pause-overlay__label" data-field="pause-label"></span
+            ><span class="pause-overlay__hint" data-field="pause-hint"></span>
+          </div>
+        </div>
+      </main>
       <aside id="panel" class="card"></aside>
       <nav id="buildbar" class="bar"></nav>
     </div>

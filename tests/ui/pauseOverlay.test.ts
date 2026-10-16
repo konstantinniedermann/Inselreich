@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { afterPause, withSpeed } from '../../src/ui/hotkeys';
 import {
@@ -99,5 +100,37 @@ describe('pauseOverlay (I-097)', () => {
     apply(el, 0, false);
     expect(el.hidden).toBe(false);
     expect(writes.n).toBe(n + 2);
+  });
+});
+
+describe('pauseOverlay Einhängen (I-097 AK-5b)', () => {
+  const html = readFileSync('index.html', 'utf8');
+  const css = readFileSync('src/style.css', 'utf8');
+  const el = /<div class="pause-overlay"[^>]*>/.exec(html)?.[0] ?? '';
+  const inner = html.slice(html.indexOf(el), html.indexOf('</main>'));
+
+  it('Markup: hidden, role=status, kein tabindex', () => {
+    expect(el).toContain('role="status"');
+    expect(el).toMatch(/\bhidden\b/);
+    expect(el).not.toContain('tabindex');
+    expect(inner).not.toContain('tabindex');
+  });
+
+  it('Markup: Kinder tragen data-field pause-label und pause-hint', () => {
+    expect(inner).toMatch(/data-field="pause-label"/);
+    expect(inner).toMatch(/data-field="pause-hint"/);
+  });
+
+  it('Stil: .pause-overlay hat pointer-events none und keine Animation', () => {
+    const blocks = [...css.matchAll(/\.pause-overlay[^{]*\{[^}]*\}/g)].map((m) => m[0]);
+    expect(blocks.length).toBeGreaterThan(0);
+    expect(blocks.join('\n')).toMatch(/pointer-events:\s*none/);
+    expect(blocks.join('\n')).not.toContain('animation');
+  });
+
+  it('Stil: Block steht am Dateiende', () => {
+    const i = css.indexOf('/* Pause-Overlay (I-097) */');
+    expect(i).toBeGreaterThan(0);
+    expect(css.slice(i).match(/\/\* [^*]*\*\//g)?.length).toBe(1);
   });
 });

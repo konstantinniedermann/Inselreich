@@ -106,6 +106,7 @@ import {
   demolishTarget,
   upgradeTarget,
 } from './hotkeys';
+import { applyPauseOverlay } from './pauseOverlay';
 import { buildingDefAt, pipetteResult } from './pipette';
 import {
   foreignBuildingHover,
@@ -297,6 +298,7 @@ function launch(
   opts?: StartOptions,
 ): RunningGame {
   const canvas = need<HTMLCanvasElement>(root, '#canvas');
+  const pauseEl = need<HTMLElement>(root, '.pause-overlay');
   const hudEl = need<HTMLElement>(root, '#hud');
   const navEl = need<HTMLElement>(root, '#buildbar');
   const panelEl = need<HTMLElement>(root, '#panel');
@@ -905,6 +907,7 @@ function launch(
 
   /** Aktualisiert HUD, Bauleiste und Panel-Zahlen (ohne DOM-Neuaufbau). */
   const refresh = (): void => {
+    applyPauseOverlay(pauseEl, state.speed, isModalOpen());
     // Aktive Insel aus der Bildmitte (D-143: vor der Seefahrt immer die Heimat); bei Wechsel Bauleiste neu aufbauen
     const mid = screenToTileF(state.cam, view.w / 2, view.h / 2);
     const active = activeIsland(islandRects(world), mid, functionLock(world, 'seafaring') === null);
