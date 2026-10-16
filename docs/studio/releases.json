@@ -246,7 +246,16 @@
       "startStage": 1,
       "stage": 1,
       "state": "idea",
-      "note": "Befund"
+      "note": "Befund; dazu wildlife.test.ts RF-4 und «E5 nie im R4-Sperrbereich» (> 500 ms, BEOB-16)"
+    },
+    {
+      "pkg": "UI-AUFRAEUM-4",
+      "name": "UI-Kleinkram aus Beobachtungen",
+      "kind": "Befund",
+      "startStage": 1,
+      "stage": 1,
+      "state": "idea",
+      "note": "Bündel S, nur bei freier Kapazität (BEOB-16): Erzeugungs-Cache order.ts (connected, Ausbau, Id-Summe), Reichweite-Tooltip bei Bestand 0, Menü-Beschriftung «Krisen» (neue Insel), aria-label Ereignis-Knopf, Rechtsklick bei gehaltener linker Taste (Roden/Abriss)"
     },
     {
       "pkg": "TOOL-DASH-VERSIONEN",
