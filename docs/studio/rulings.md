@@ -1398,3 +1398,16 @@ sonnet Stufe leicht; Umsetzung nach Merge UI-AUFRAEUM-4 (gemeinsame Datei `hud.t
 Regelbezug: gates.md Gate Spec (Kurzdesign Stufe leicht), R692, R698 · Kosten bei Irrtum: eine Zweitkarte, die bei Kontorwechsel springt.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I-114 · ADR: —
+
+## R700 · 2026-10-16 · Kurzdesign I-120 + I-118 «Wohlstandsklang und Aufstiegs-Funkeln»: angenommen, Kurve B; Plan jetzt
+
+Ruling: `design/i120-i118` @ `e90a8887` (Handoff `.studio/handoffs/2026-10-16-lead-art-design-I-120-I-118.md`) → angenommen: Teil A Klang über die bestehende
+Brücke `viewStats` → `setAmbience` (`src/audio/` importiert weiter nichts aus `sim/`/`ui/`), Mix-Kurve **B** stetig, 10-s-Glättung; Teil B Funkeln (`aufstieg.ts`,
+`drawRiseGlow`, Deckel 6, reduzierte Bewegung nur Kranz), Funkel-Uhr nur bei `speed > 0`. Die Zahlen (10 s, 1500 ms, Deckel 6, Wind +0,15) sind
+Darstellungskonstanten in `src/render/`/`src/audio/`, keine Spielwerte. Kein Save, keine Sim-Regel; «voll versorgt» kommt aus vorhandenem Sim-Code (lesend).
+Keine Assets. Plan jetzt (lead-tech sonnet, Stufe leicht, zwei Pakete Audio/Render); Merge-Reihenfolge `renderer.ts` gegen ORT-A im Plan festlegen. REL-26/27
+nach Kapazität.
+
+Regelbezug: gates.md Gate Spec (Kurzdesign Stufe leicht), R692, R698, ADR-011 · Kosten bei Irrtum: ein Stadtklang, der nachgestimmt wird.
+
+Entscheider: L0 · Anlass: Bericht lead-art design-I-120-I-118 · ADR: —
