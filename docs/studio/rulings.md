@@ -1264,3 +1264,16 @@ Messaufträge R659 (4) bleiben bei der Session-Ende-Retro.
 Regelbezug: R316, R659, E-043 · Kosten bei Irrtum: ein Experiment, das eine Session früher startet als sein Vorgänger sauber bewertet ist.
 
 Entscheider: L0 · Anlass: Bericht studio-coach adhoc-2026-10-16-ampel · ADR: —
+
+## R690 · 2026-10-16 · F Prüfläufe grün → Gate Merge lead-qa; BEOB-16 Gate Merge OK; UI-AUFRAEUM-4 Plan jetzt
+
+Ruling: (1) `feat/ui-haeppchen-f` @ `f4da449e`: `make check` Exit 0, `make zeitreserve-gate` Exit 0 (loadStart 2,9), Zeitvergleich ohne Verstoss →
+**Gate Merge durch lead-qa** (sonnet). (2) `docs/beob-16` @ `1a668f85` (nur Doku, 35 Einträge, Marke 2026-10-16) → **Gate Merge OK**; Merge durch
+lead-production **nach** dem F-Merge in einem Start (beide berühren `releases.json`). (3) Pool-Paket **UI-AUFRAEUM-4** (Erzeugungs-Cache `order.ts`,
+Menü «Krisen (neue Insel)», Rechtsklick bei gehaltener linker Taste, `aria-label` Ereignis-Knopf, Tooltip «Leer in 0 s») → Plan jetzt, Stufe leicht
+(freier Platz, R475); der vorgeschlagene Einzel-Trivialfix «Krisen» geht darin auf. Einplanung in REL-26 nach Gate Plan. (4) Befund
+`.worktrees/integrate` auf altem Hash: der Integrator holt vor dem Push main (Briefing).
+
+Regelbezug: gates.md Gate Merge, R475, R683, R688 · Kosten bei Irrtum: ein Aufräum-Paket, das eine Session früher geplant wird als nötig.
+
+Entscheider: L0 · Anlass: Berichte lead-tech UI-HAEPPCHEN-F, lead-production BEOB-16 · ADR: —
