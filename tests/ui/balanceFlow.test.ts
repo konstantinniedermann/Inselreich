@@ -37,7 +37,7 @@ describe('I-108 flowText', () => {
     expect(t(12399)).toBe('+12,3k');
     const big = flowText({ taxes: stat(999999), upkeep: stat(999999) });
     expect(big).toBe('+999,9k / −999,9k');
-    // Plan nennt 15 Zeichen; bei 2 x 6 Zeichen plus «+», « / », «\u2212» sind es 17 (Bericht)
+    // AK-3: höchstens 17 Zeichen (R683)
     for (const p of big.split(' / '))
       expect(p.replace(/^[+\u2212]/, '').length).toBeLessThanOrEqual(6);
     expect(big.length).toBeLessThanOrEqual(17);
