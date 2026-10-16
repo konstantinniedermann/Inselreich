@@ -4,10 +4,10 @@ Datum: 2026-10-10 · Paket design-m14-e1 · Meilenstein M14 «Archipel mit Wert�
 Vorarbeit nach R475) · Status: **Entwurf** → Gate Spec (`lead-tech`, `lead-qa`), danach Plan (`lead-tech`) ·
 Prozessstufe voll
 
-Grundlage: [Brainstorming M14](2026-10-10-m14-brainstorming.md) §2, §3 Ansatz B, §6, §7, §9; Ruling **R486** (O1–O9),
+Grundlage: [Brainstorming M14](../archiv/specs/2026-10-10-m14-brainstorming.md) §2, §3 Ansatz B, §6, §7, §9; Ruling **R486** (O1–O9),
 **R487** P-4 (Save-Reihenfolge); [Anhang 01 Werte und Messung](2026-10-10-m14-e1-inselcharakter-design/anhang-01-werte.md)
 (verbindlich für alle Zahlen); [Hauptspec](2026-09-29-inselreich-design.md). Muster:
-[Spec M13-E2](2026-10-10-m13-e2-denkmal-design.md). Code-Stand: `main` adb7e28e.
+[Spec M13-E2](../archiv/specs/2026-10-10-m13-e2-denkmal-design.md). Code-Stand: `main` adb7e28e.
 
 Nachtrag Gate Spec (R500): [Anhang 04](2026-10-10-m14-e1-inselcharakter-design/anhang-04-nachtrag-gate.md) ändert
 AK-M14E1-09, -11, -14, -15, -31, neu -42 und R3.4 (Befund → Änderung dort).

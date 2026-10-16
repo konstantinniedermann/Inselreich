@@ -186,7 +186,7 @@ I-093 (verworfen) und I-095 (erledigt) sind nach Handel 2 (R658, R664) ins Archi
 - Bewertung lead-design: bestätigt (11). Billigste Antwort auf «verpasste Krisen bei 4×», ohne den Spielfluss anzuhalten.
 - Nutzen/Aufwand: verpasste Krisen lesbar · S–M · ≈ 70 Tools
 - Entscheid: IDEEN-09 Empfehlung einplanen als Häppchen nach I-088/I-090
-- Status 2026-10-14: Kurzdesign `docs/superpowers/specs/2026-10-14-i100-neu-zaehler.md` (Zähler nur für Meldungs-Einträge, UI-Zustand, kein Save)
+- Status 2026-10-14: Kurzdesign `docs/superpowers/archiv/specs/2026-10-14-i100-neu-zaehler.md` (Zähler nur für Meldungs-Einträge, UI-Zustand, kein Save)
 
 ### I-101 · bewertet · Fernauftrag-Marke auf der Seekarte
 
