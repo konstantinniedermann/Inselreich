@@ -235,6 +235,41 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 **Hinweis an L0:** UI-AUFRAEUM-3 deckt T03 (Heimat-Kontor) nur dem Titel nach; ob das Heimat-Kontor in die Rangliste kommt, entscheidet der Task (Beobachtung bleibt sonst abgehakt).
 
+**Stand 2026-10-16 (2)** (`lead-production`, Paket BEOB-17, gegen `f2f8fb12`): 17 Einträge gesichtet (16 Überschriften, 1 Stichpunkt). Bilanz in „Ausgewertet 2026-10-16 (2)“; ein Eintrag (Salzregister) bleibt offen.
+
+## Ausgewertet 2026-10-16 (2)
+
+17 Einträge am Stand `f2f8fb12` geprüft (BEOB-17). Bilanz: 2 erledigt, 4 eingeplant (3 Paketvorschläge an L0), 10 abgehakt mit Trigger, 1 offen (Salzregister), 0 Ideen, 0 verworfen. Browser- und Bildbefunde nicht neu gemessen.
+
+| Eintrag (Titel)                                                                                    | Ergebnis                                                                                      | Beleg · Trigger                                                                                                                                                |
+| -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UI-HAEPPCHEN-F: Bilanz-Chip ohne Verlustfarbe seit I-062                                           | erledigt                                                                                      | `src/style.css` `button.hud-balance.negative` setzt `color: var(--negative)`                                                                                   |
+| Menü «Neue Insel»: Krisen und Freischaltung in einer Zeile                                         | erledigt (`27304033`)                                                                         | `src/ui/menu.ts` Klasse `menu-field`, `src/style.css` `.menu-field`; `make lint`, `make conflicts`, `make zeittests` Exit 0; reine CSS-Änderung, kein Rot-Test |
+| TOOL-BUENDEL-14 H-2: alte `load_abort`-Ereignisse                                                  | abgehakt, Trigger: nächste HAUSHALT-Runde                                                     | nur Kennzahlen-Rauschen in der lokalen `.studio/events.jsonl`                                                                                                  |
+| UI-HAEPPCHEN-F: `goodsBalance` ohne `cov` kostet viel                                              | eingeplant: PERF-BILANZ-COV                                                                   | `src/sim/flow.ts` `goodsBalance`; `hud.ts` gehört I-114 (unmerged), daher nicht jetzt                                                                          |
+| UI-HAEPPCHEN-F: Routen-Bilanz nicht gedrosselt                                                     | eingeplant: PERF-BILANZ-COV (gleiches Paket)                                                  | `src/ui/ships.ts` `updateShipSection`, Memo je Tick; Playtest 4× unauffällig                                                                                   |
+| TOOL-BUENDEL-13: `command` in `guard_block` ohne Schwärzung                                        | eingeplant: TOOL-GUARD-REDACT                                                                 | `tools/studio/guard.py` `_shown_command` kürzt nur auf `COMMAND_LIMIT`, schwärzt nichts; Datei lokal und ignoriert                                             |
+| TOOL-BUENDEL-14 H-1: sieben Tests über 40 % Timeout                                                | eingeplant: ZEITRESERVE-PFLEGE (Pool)                                                         | Entscheid dort nach E-043; Nachmessung beim nächsten `push-check`                                                                                              |
+| UI-HAEPPCHEN-F: Test-Doubles ohne `querySelectorAll`, `Option`, `fillText`                         | abgehakt, Trigger: ein dritter Test braucht sie                                               | lokale Hilfen in `routeBalanceText.test.ts`, `seaMapDraw.test.ts`                                                                                              |
+| UI-HAEPPCHEN-F: Kopfzeile per `innerHTML`, Chip-Klasse `negative` ohne Unit-Test                   | abgehakt, Trigger: Kopfzeile wird auf DOM-Knoten umgebaut                                     | Browser-Prüfung deckt es ab                                                                                                                                    |
+| UI-HAEPPCHEN-F: Fernmarke über Wasser ohne Hover/Klick                                             | abgehakt, Trigger: Playtest vermisst den Klick                                                | Marke laut Spec ohne Mausfang; `src/render/` gehört ORT-A                                                                                                      |
+| UI-HAEPPCHEN-F: Bilanz-Chip länger als Plan-AK-3                                                   | abgehakt, kein Handlungsbedarf                                                                | 17 statt 15 Zeichen, einzeilig bei 1280 px; Variante C erst nach I-091 und nur bei zu ungenauem «nominal»                                                      |
+| TOOL-E070: drei Testlücken Flake-Last-Anzeige                                                      | abgehakt, Trigger: nächste Berührung der Anzeige (`tools/studio/efficiency.py` `flake_loads`) | niedrig                                                                                                                                                        |
+| TOOL-BUENDEL-13: `rule_of` ordnet per Stichwort                                                    | abgehakt, Trigger: neue Guard-Regel (`RULE_KEYWORDS` mitführen)                               | `tools/studio/guard.py` `rule_of` fällt auf «other»                                                                                                            |
+| I-118: CAPS-Pin in `weather.test.ts`                                                               | abgehakt, Trigger: nächste Änderung an `src/render/limits.ts`                                 | `src/render/` gehört ORT-A                                                                                                                                     |
+| I-120/I-118: vier niedrige Hinweise (`RISE_TOTAL_MS`, `<= 6`, `cap('riseGlow')`, viewStats 526 ms) | abgehakt, Trigger: nächste Berührung von `fx.ts`/`renderer.test.ts`                           | `fx.ts` `RISE_TOTAL_MS = 1500` dupliziert `aufstieg.ts` `RISE_MS = 1500` (belegt); Dateien gehören ORT-A                                                       |
+| UI-AUFRAEUM-4: Rechtsklick `pointerdown` b2 im Strich                                              | abgehakt, Trigger: Browser-Befund (Firefox) oder README-Präzisierung «in Chrome»              | `src/ui/input.ts` `onPointerDown` b2: Staffelung nur für `drag?.line`                                                                                          |
+| TOOL-BUENDEL-14 H-3: Wettlauf-Test mit schwacher Obergrenze                                        | abgehakt, Trigger: nächste Berührung des `testlock`-Tests                                     | 1..2 Ereignisse je Runde laut Gate-Handoff                                                                                                                     |
+| Salzregister `groundDecor.ts` unvollständig                                                        | offen (ORT-1), nicht angefasst                                                                | `sprites.ts` `hash2(seed + 61…65)` belegt                                                                                                                      |
+
+**Vorschläge an L0 (Entscheid L0, R471), kein Issue:**
+
+1. PERF-BILANZ-COV (S, `lead-tech`, Pool, erst nach I-114-Merge wegen `hud.ts`): `cov` aus dem Frame-Cache an `goodsBalance` in Kopfzeile und `routeBalance` durchreichen, optional Drosselung (`BALANCE_REFRESH_MS`); Messwerte im Eintrag (dicht 6,6 ms gegen 0,056 ms).
+2. TOOL-GUARD-REDACT (S, über `lead-production`): `command` im Ereignis `guard_block` schwärzen (Token-Muster) und testen; Priorität mittel, vor dem Teilen der Ereignisdatei.
+3. ZEITRESERVE-PFLEGE nimmt H-1 (sieben Tests über 40 %) in den Umfang.
+
+**Ideen:** keine. **Gekippte Empfehlung:** Der Vorschlag «`menu.ts` Beschriftung ändern» aus BEOB-16 war schon umgesetzt (`Krisen (neue Insel): `); es blieb nur der Abstand.
+
 ## Ausgewertet 2026-10-16
 
 35 Einträge am Stand `e9626a27` gegen den Code auf main geprüft (BEOB-16). Bilanz: 7 erledigt (dazu 3 schon in BEOB-15 erledigte, durchgestrichene Zeilen), 8 eingeplant (UI-AUFRAEUM-4 bzw. ZEITRESERVE-PFLEGE im Pool), 19 abgehakt mit Trigger, 1 offen (Ortsrand, nicht angefasst), 0 Ideen, 0 verworfen. Browser- und Bildbefunde sind nicht neu gemessen.
@@ -288,123 +323,4 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 ## Offen (neue Einträge unten anhängen)
 
-## 2026-10-16 · UI-HAEPPCHEN-F: `goodsBalance` ohne `cov` kostet viel
-
-- Fundort: `src/sim/flow.ts` `goodsBalance`; Aufrufer Kopfzeile (`src/ui/hud.ts`) und `routeBalance`
-- Beobachtung: Ohne `cov` (Abdeckungs-Cache): denseScene H=484 / B=549 6,62 ms (mit `cov` 0,056 ms), Balancing-Welt H=4 / B=35 0,015 ms; Hochrechnung H≈150 / B≈400 ≈ 2 ms. Die Kopfzeile ruft sie ohne `cov` etwa 10× je Refresh.
-- Ursprung: UI-HAEPPCHEN-F (Zeitmessung)
-- Erste Einschätzung: niedrig bis mittel; Idee: `cov` aus dem Frame-Cache durchreichen.
-
-## 2026-10-16 · UI-HAEPPCHEN-F: Test-Doubles ohne `querySelectorAll`, `Option`, `fillText`
-
-- Fundort: `tests/ui/fakeDom.ts`, `tests/render/fakeCtx.ts`
-- Beobachtung: `fakeDom` kennt weder `querySelectorAll` noch `Option` (Test in `routeBalanceText.test.ts` ergänzt lokal); `fakeCtx` loggt weder `fillText` noch `measureText` (Proxy in `seaMapDraw.test.ts`).
-- Ursprung: UI-HAEPPCHEN-F
-- Erste Einschätzung: niedrig; die Doubles zentral erweitern, sobald ein dritter Test sie braucht.
-
-## 2026-10-16 · UI-HAEPPCHEN-F: Kopfzeile per `innerHTML`, kein Unit-Test der Chip-Klasse `negative`
-
-- Fundort: `updateHud` (`src/ui/hud.ts`)
-- Beobachtung: `updateHud` baut die Kopfzeile per `innerHTML`, `fakeDom` parst kein HTML. Die Chip-Klasse `negative` ist daher nicht per Unit-Test prüfbar (nur im Browser).
-- Ursprung: UI-HAEPPCHEN-F
-- Erste Einschätzung: niedrig; Browser-Prüfung deckt es ab.
-
-## 2026-10-16 · UI-HAEPPCHEN-F: Bilanz-Chip ohne wirksame Verlustfarbe seit I-062
-
-- Fundort: `src/style.css` (`.hud-balance`, `.negative`)
-- Beobachtung: Der Bilanz-Chip hatte seit I-062 keine wirksame Verlustfarbe: `color: inherit` schlug `.negative`. Mit UI-HAEPPCHEN-F behoben (Commit `ada345b7`).
-- Ursprung: I-062, entdeckt bei I-108
-- Erste Einschätzung: erledigt; nur zur Kenntnis.
-
-## 2026-10-16 · UI-HAEPPCHEN-F: Fernmarke über Wasser ohne Hover und Klick
-
-- Fundort: Seekarte, `hitIsland` (`src/render/seaMap.ts`)
-- Beobachtung: Eine Marke, die über Wasser (nicht auf Land) liegt, hat keinen Hover-Text und keinen Klick, weil der Treffer am Insel-Landtreffer hängt. Playtest 2026-10-16, Screens `.studio/qa/UI-HAEPPCHEN-F/m8-5-*`.
-- Ursprung: UI-HAEPPCHEN-F
-- Erste Einschätzung: niedrig; Marke ist laut Spec ohnehin ohne Mausfang.
-
-## 2026-10-16 · UI-HAEPPCHEN-F: Bilanz-Chip länger als Plan-AK-3
-
-- Fundort: Kopfzeile, Plan AK-3 «Chip ≤ 15 Zeichen»
-- Beobachtung: Real sind es 17 Zeichen (`+999,9k / −999,9k`), 137 px bei 1280 px, einzeilig; Playtest OK. Die Spec-Grenze von 15 Zeichen galt bis 999 999 (ohne «k»-Kürzung).
-- Ursprung: UI-HAEPPCHEN-F
-- Erste Einschätzung: niedrig; kein Handlungsbedarf. Variante C der Routen-Bilanz (gemessen, Save) erst nach I-091 und nur, wenn «nominal» im Playtest zu ungenau ist.
-
-## 2026-10-16 · UI-HAEPPCHEN-F: Routen-Bilanz rechnet bei jedem neuen Tick (nicht gedrosselt)
-
-- Fundort: `src/ui/ships.ts` (`updateShipSection`, Memo je Quellinsel, Neuberechnung bei geändertem `world.tick`)
-- Beobachtung: Bei 4× und offenem Kontor-Panel rechnet die Bilanzzeile bis etwa einmal je Tick und Quellinsel (`goodsBalance` ohne `cov`, spät ca. 2 ms, dicht 6,6 ms). Playtest 4×: Frame-Zeit unauffällig (Median 16,7 ms). Mögliche Drosselung über `BALANCE_REFRESH_MS`.
-- Ursprung: Final-Review UI-HAEPPCHEN-F (niedrig)
-- Einschätzung: nur bei Frame-Zeit-Befunden angehen; Alternative `cov` aus dem Frame-Cache durchreichen.
-
-- 2026-10-16 · Salzregister im Kopf von `src/render/groundDecor.ts` unvollständig: `sprites.ts:2486–2516` (`roadCenter`, Wegsteinchen) nutzt `hash2(seed + 61…65)`, `wildlife.ts:437–448` (Wal) `hash2(seed + 61…64)`; das Register nennt nur «61/62 in terrain.ts» (dort `rotNoise`). Keine sichtbare Kollision (andere Funktionen/Argumente), aber das Register taugt so nicht zur Salzwahl. Ursprung: design-ortsrand (lead-art). Einschätzung: niedrig; beim Reservieren des Ortsrand-Blocks 600–619 (ORT-1) mit nachführen.
-
-## 2026-10-16 · TOOL-E070: drei Testlücken bei der Flake-Last-Anzeige
-
-- Fundort: Flake-Ampelzeile (`tools/studio/`, Branch `tool/e070` @ `66a7fed6`)
-- Beobachtung: Ungetestet sind (1) der Fall `load=0`, (2) die Kürzung auf 10 Namen, (3) «Last ?» bei fehlendem Schlüssel.
-- Ursprung: Gate Merge TOOL-E070 (R695)
-- Erste Einschätzung: niedrig; bei nächster Berührung der Anzeige ergänzen. Handbuch-Zeile (STUDIO.md ≈ Z. 467) setzt studio-coach.
-
-## 2026-10-16 · TOOL-BUENDEL-13: `rule_of` ordnet Guard-Regeln per Stichwort zu
-
-- Fundort: `tools/studio/guard.py` (Ereignis `guard_block`)
-- Beobachtung: `rule_of` erkennt die Regel am Stichwort im Abweisungstext; neue Guard-Texte landen als «other», bis das Stichwort nachgeführt ist.
-- Ursprung: Gate Merge TOOL-BUENDEL-13 (R704)
-- Erste Einschätzung: niedrig; beim Hinzufügen einer Guard-Regel die Zuordnung mitführen.
-
-## 2026-10-16 · TOOL-BUENDEL-13: `command` im Ereignis `guard_block` kann Tokens enthalten
-
-- Fundort: `tools/studio/guard.py`, Ereignis `guard_block` (Feld `command`)
-- Beobachtung: Der abgewiesene Befehl wird im Ereignis abgelegt und kann Tokens oder Secrets enthalten. Die Datei ist lokal und ignoriert; ob eine Schwärzung greift, ist ungeprüft.
-- Ursprung: Gate Merge TOOL-BUENDEL-13 (R704)
-- Erste Einschätzung: mittel; Schwärzung prüfen, bevor die Datei geteilt oder ausgewertet wird.
-
-## 2026-10-16 · I-118: CAPS-Pin steht in `weather.test.ts`, nicht in `limits.test.ts`
-
-- Fundort: `tests/render/weather.test.ts` (Test «Setzungen normal/reduziert», `CAPS` per `toEqual`)
-- Beobachtung: Jede neue Obergrenze in `src/render/limits.ts` bricht diesen Test; Pläne nennen nur `limits.test.ts`. Im Paket I-120-I-118 fiel das erst im Final-Review auf.
-- Ursprung: Final-Review I-118 (lead-tech I-120-I-118)
-- Erste Einschätzung: niedrig; Plan-Vorlage für CAPS-Änderungen um den Pin ergänzen.
-
-## 2026-10-16 · I-120/I-118: vier niedrige Hinweise aus dem Gate Merge (R707)
-
-- Fundort: `src/render/fx.ts` (`RISE_TOTAL_MS`), `tests/render/renderer.test.ts:1851`, `src/ui/app.ts:1691`, `tests/render/viewStats.test.ts`
-- Beobachtung: (1) `RISE_TOTAL_MS` in `fx.ts` dupliziert `RISE_MS` aus `aufstieg.ts`. (2) `renderer.test.ts:1851` prüft `<= 6` statt `toBe(6)`. (3) `app.ts:1691` ruft `cap('riseGlow')` ohne `reduce` auf (folgenlos, beide Werte 6). (4) viewStats-Test 526 ms, knapp über 500 (R392 nicht verletzt, +11 %).
-- Ursprung: Gate-Handoff lead-qa gate-I-120-I-118 (`.studio/handoffs/2026-10-16-lead-qa-gate-I-120-I-118.md`)
-- Erste Einschätzung: niedrig; bei nächster Berührung der Dateien mitnehmen.
-
-## 2026-10-16 · UI-AUFRAEUM-4: Rechtsklick über `pointerdown` b2 im Strich legt Zug und Werkzeug zugleich ab
-
-- Fundort: `src/ui/input.ts` (`onPointerDown`, `button === 2`), README Z. 142
-- Beobachtung: Chrome meldet den Rechtsklick bei gehaltener linker Taste nur als `contextmenu` (Staffelung greift, Playtest belegt für Weg, Roden, Abriss). Ein Browser mit `pointerdown` b2 beendet Zug und Werkzeug in einem Klick (synthetisch nachgestellt, Weg/Abriss); README verspricht die Staffelung allgemein. Test fehlt für b2 im Weg-/Abriss-Strich; der Schwenk-Test (`input.test.ts`, «Schwenk (button 1)») würde ohne `!drag.panning` grün bleiben.
-- Ursprung: Final-Review und Playtest UI-AUFRAEUM-4 (niedrig)
-- Erste Einschätzung: nur bei echtem Browser-Befund angehen (Firefox prüfen); sonst README-Satz auf «in Chrome» präzisieren.
-
-## 2026-10-16 · UI-AUFRAEUM-4: Menü «Neue Insel» setzt «Krisen (neue Insel):» und «Freischaltung:» in eine Zeile
-
-- Fundort: `src/ui/menu.ts` (Zeile ≈ 109), Screenshot `.studio/qa/ui-aufraeum-4/ak9-2-menue-neue-insel.png`
-- Beobachtung: Das Krisen-Select klebt direkt am Wort «Freischaltung:»; rein kosmetisch.
-- Ursprung: Playtest UI-AUFRAEUM-4
-- Erste Einschätzung: niedrig; Abstand per CSS bei nächster Menü-Arbeit.
-
-## 2026-10-16 · TOOL-BUENDEL-14: H-1 sieben Tests über 40 % ihres Timeouts
-
-- Fundort: `tests/` (decorSea, decorStamps, trees-wald, islands-c), `make zeitreserve`
-- Beobachtung: 7 Tests mit bereits vorhandenem Timeout bleiben über 40 %; `make zeitreserve` lief unter Last nicht.
-- Ursprung: Gate-Handoff lead-qa gate-TOOL-BUENDEL-14 (H-1), R718
-- Erste Einschätzung: niedrig; Nachmessung beim nächsten `push-check`.
-
-## 2026-10-16 · TOOL-BUENDEL-14: H-2 alte `load_abort`-Ereignisse in events.jsonl
-
-- Fundort: `.studio/events.jsonl`
-- Beobachtung: Durch den nicht isolierten `testlock`-Test vervielfachte `load_abort`-Ereignisse sind nicht bereinigt (nur Kennzahlen-Rauschen).
-- Ursprung: Gate-Handoff lead-qa gate-TOOL-BUENDEL-14 (H-2), R718
-- Erste Einschätzung: niedrig; Bereinigung bei der nächsten Aufräum-Runde (HAUSHALT).
-
-## 2026-10-16 · TOOL-BUENDEL-14: H-3 Wettlauf-Test mit schwacher Obergrenze
-
-- Fundort: `testlock`-Wettlauf-Test in `tools/studio/tests/`
-- Beobachtung: Der Wettlauf-Test prüft 1..2 Ereignisse je Runde (schwache Obergrenze), die Einzeltests prüfen genau 1.
-- Ursprung: Gate-Handoff lead-qa gate-TOOL-BUENDEL-14 (H-3), R718
-- Erste Einschätzung: niedrig; bei nächster Berührung der Datei verschärfen.
+- 2026-10-16 · Salzregister im Kopf von `src/render/groundDecor.ts` unvollständig: `sprites.ts:2486–2516` (`roadCenter`, Wegsteinchen) nutzt `hash2(seed + 61…65)`, `wildlife.ts:437–448` (Wal) `hash2(seed + 61…64)`; das Register nennt nur «61/62 in terrain.ts» (dort `rotNoise`). Keine sichtbare Kollision (andere Funktionen/Argumente), aber das Register taugt so nicht zur Salzwahl. Ursprung: design-ortsrand (lead-art). Einschätzung: niedrig; beim Reservieren des Ortsrand-Blocks 600–619 (ORT-1) mit nachführen. **Verifiziert:** 16.10.2026 gegen `f2f8fb12` — belegt (`src/render/sprites.ts` Zeilen mit `hash2(seed + 61…65)`; `src/render/groundDecor.ts` Registerkopf). Offen bis ORT-1 (`src/render/` gehört ORT-A).
