@@ -1980,3 +1980,25 @@ Rand 1 vereinfacht (Entscheid L0 nach Bericht); (b) Merge `feat/ort-a-mess` (P-1
 Regelbezug: R705, R730, R735, R736, R739, R744 · Kosten bei Irrtum: ein Ringpfad, der als toter Code in den Merge geht.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C3 · ADR: —
+
+## R747 · 2026-10-16 · Actions-Sparregeln (N-98) gelockert: Inselreich ist öffentlich, Minuten zählen nicht
+
+Ruling: Nutzeranweisung „public repo, Actions-Minuten zählen nicht zum Limit, Limitation aufweichen“. Beleg: `gh repo view` → `PUBLIC`;
+Billing-Usage Oktober: Inselreich 1074 min, `discountAmount` = `grossAmount`, netto 0. Die Ampel „Actions-Minuten (Monat)“ zählt diese
+Minuten bisher gegen das Kontingent von 2000 min (Konto-Prognose ROT) — Fehlbewertung. Auslegung (Paket **TOOL-ACTIONS-FREI**):
+**V1** `ci.yml`: `paths-ignore` entfällt (Push auf main und PR), damit auch Doku-/Studio-Pushes `make check` durchlaufen (prüft u. a.
+`docs/studio/`); `cancel-in-progress` bleibt (überholte Läufe, kein Sparzweck). **V2** `pages.yml`: Deploy wieder automatisch, aber erst
+nach grüner CI auf main (`workflow_run` von CI, `conclusion == success`, Checkout `head_sha`); `workflow_dispatch` bleibt für Reruns und
+die R450-Ausnahme. Der manuelle Schritt `gh workflow run Pages` beim Release entfällt; der Integrator prüft den Deploy-Lauf weiterhin.
+**V3** `tools/studio/actions.py`: Minuten öffentlicher Repos (Inselreich) zählen nicht zu Konto-Minuten und Konto-Prognose, sondern stehen
+nur als Info; Session-Minuten nur Info, solange das Repo öffentlich ist. Damit entfällt die Grundlage für R488 V2 (Rot → ein Push je
+Tag) für Inselreich und für „REL-26 frühestens 2026-10-17“ (R712). **Bleibt:** „höchstens ein Push je Session“ (R335), Merges lokal,
+`make push-check` vor jedem Push — das sind keine reinen Minuten-Regeln. **V4** Doku nachführen: STUDIO.md (Push-Ablauf, Session-Ende),
+`production-integrator.md` (Schritte 4/5), Workflow-Kommentare, arc42 (Deploy-Diagramm), lernen.md (Actions-Zeile). E-012 „Pages nur bei
+Spieländerungen“ wird gegenstandslos (Status setzt der Coach in der nächsten Retro). Kein Nutzer-Vorbehalt nötig: N-98 ist durch die
+Nutzeranweisung selbst gelockert.
+
+Regelbezug: N-98, R334, R335, R450, R488 V2, R712 · Kosten bei Irrtum: zusätzliche CI-/Pages-Läufe ohne Kosten; falls das Repo wieder
+privat wird, greift das Kontingent wieder (actions.py prüft die Sichtbarkeit).
+
+Entscheider: L0 · Anlass: Nutzeranweisung 2026-10-16 · ADR: —
