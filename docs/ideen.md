@@ -89,16 +89,16 @@ I-081, I-082, I-084, I-086 (R566), dazu I-048 (R571 Verzicht, Mechanik inaktiv);
 
 Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu durchnummeriert (bisherige Ränge 2 und 7 = I-088/I-090, Zeilen im Archiv).
 
-| Rang | ID    | Name                             | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                    | Empfehlung                                        |
-| ---- | ----- | -------------------------------- | ------ | ----- | --------------- | ------------------------------------------------- | ------------------------------------------------- |
-| 1    | I-092 | Inselmarkt-Vorliebe              | S–M    | 12    | nein / nein     | jede Fremdinsel bekommt eine Handelsrolle, 1 Pkt. | einplanen: Design-Paket mit Rechnung, dann 1 Pkt. |
-| 2    | I-100 | «Neu»-Zähler am Ereignis-Log     | S–M    | 11    | nein / nein     | verpasste Krisen bei 4× lesbar, ≈ 70 Tools        | einplanen Häppchen danach; ersetzt I-058          |
-| 3    | I-095 | Fernauftrag an einem Fremdkontor | M      | 11    | ja / nein       | Routen bekommen einen zweiten Zweck, ≈ 2 Pakete   | parken: Handels-Brainstorming (mit I-092)         |
-| 4    | I-094 | Darlehen beim Händler            | S–M    | 11    | ja / nein       | Vorziehen gegen Dauerlast, Entartung offen        | parken: Wirtschafts-Brainstorming                 |
-| 5    | I-091 | Treuebonus beim Stammkunden      | M      | 11    | ja / nein       | Bindung belohnt, vor Playtest I-047 verfrüht      | parken: Playtest I-047                            |
-| 6    | I-093 | Auftrag umtauschen               | S      | 10    | ja / nein       | Reroll gegen Geld, Wahl dünn                      | parken: Handels-Brainstorming                     |
-| 7    | I-097 | Pause sichtbar auf der Karte     | S      | 9     | nein / nein     | Orientierung, kein Playtest-Befund                | parken (Lückenfüller)                             |
-| —    | I-096 | Steuerstufe je Insel             | S–M    | 8     | ja / nein       | Stellschraube ohne neue Abwägung                  | verwerfen                                         |
+| Rang | ID    | Name                             | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                       | Empfehlung                                        |
+| ---- | ----- | -------------------------------- | ------ | ----- | --------------- | ---------------------------------------------------- | ------------------------------------------------- |
+| 1    | I-092 | Inselmarkt-Vorliebe              | S–M    | 12    | nein / nein     | jede Fremdinsel bekommt eine Handelsrolle, 1 Pkt.    | einplanen: Design-Paket mit Rechnung, dann 1 Pkt. |
+| 2    | I-100 | «Neu»-Zähler am Ereignis-Log     | S–M    | 11    | nein / nein     | verpasste Krisen bei 4× lesbar, ≈ 70 Tools           | einplanen Häppchen danach; ersetzt I-058          |
+| 3    | I-095 | Fernauftrag an einem Fremdkontor | M      | 11    | ja / nein       | Routen bekommen einen zweiten Zweck, ≈ 2 Pakete      | parken: Handels-Brainstorming (mit I-092)         |
+| 4    | I-094 | Darlehen beim Händler            | S–M    | 11    | ja / nein       | Rechnung: 0 min echte Wahl, Pflicht oder wirkungslos | verwerfen (Vorlage R663, Entscheid L0)            |
+| 5    | I-091 | Treuebonus beim Stammkunden      | M      | 11    | ja / nein       | Bindung belohnt (Kulanz statt Geld), ≈ 60 Tools      | Kurz-Spec R663, Gate Spec offen                   |
+| 6    | I-093 | Auftrag umtauschen               | S      | 10    | ja / nein       | Reroll gegen Geld, Wahl dünn                         | parken: Handels-Brainstorming                     |
+| 7    | I-097 | Pause sichtbar auf der Karte     | S      | 9     | nein / nein     | Orientierung, kein Playtest-Befund                   | parken (Lückenfüller)                             |
+| —    | I-096 | Steuerstufe je Insel             | S–M    | 8     | ja / nein       | Stellschraube ohne neue Abwägung                     | verwerfen                                         |
 
 ## Ideen
 
@@ -139,6 +139,7 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Bewertung lead-design: Vertieft eine Funktion, die noch kein Spieler gespielt hat. Erst der Playtest zeigt, ob Verträge gehalten oder gemieden werden; vorher ist ein Bonus geraten.
 - Nutzen/Aufwand: Bindung belohnt statt nur bestraft · M · ≈ 2 Pakete
 - Entscheid: IDEEN-09 Empfehlung parken bis Playtest I-047 nach REL-21
+- Stand R663 (design-I-091-I-094, 2026-10-16): Parken aufgehoben; Kurz-Spec `docs/superpowers/specs/2026-10-16-i091-treue-design.md` mit Rechnung `2026-10-16-i091-i094-rechnung.md`. Empfehlung V-A Kulanz (nach 5 Lieferungen verzeiht der Kunde einen Fehlbestand einmal); V-B Wertbonus 108 % als Alternative (Geldbonus höchstens 7,3 / min, L6 (b) 3,17 %). Spielerwirkung berichtigt: «im Boom kündigen» entfällt (Boom-Preis nie über Vertragspreis); neu «sieht das Lager knapp und entscheidet: nachkaufen oder den Puffer des Stammkunden verbrauchen». Gate Spec offen.
 
 ### I-092 · bewertet · Inselmarkt-Vorliebe (Verkaufsbonus je Fremdinsel)
 
@@ -179,6 +180,7 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Bewertung lead-design: Spass 3 → 2: Die Wahl trägt nur im schmalen Fenster Bürger-Ziel bis Mittelspiel, und ihre Härte hängt an einer Rechnung, die heute fehlt. Das Spiel leidet eher an zu viel als an zu wenig Geld (Erweiterung 1 §1); eine Geldquelle verschärft das.
 - Nutzen/Aufwand: mittlerer Nutzen, Entartungsrisiko · S–M · ≈ 1–2 Pakete
 - Entscheid: IDEEN-09 Empfehlung parken bis Wirtschafts-Brainstorming nach Erweiterung 1 K2
+- Stand R663 (design-I-091-I-094, 2026-10-16): Empfehlung **verwerfen**, Vorlage `docs/superpowers/specs/2026-10-16-i094-darlehen-design.md`. Rechnung Teil A: vor U6 Pflichtzug (r 0,42 gegen Schwelle 0,04) mit unlesbarer Spirale (+3277 / −27 761 bei 20 / 30 %), ab U6 wirkungslos (≤ 0,2 min Bilanz); kein Hebel öffnet ein Wahlfenster. Nach Entscheid L0 ins Archiv.
 
 ### I-095 · bewertet · Fernauftrag an einem Fremdkontor
 

@@ -292,3 +292,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Erste Einschätzung: niedrig; kosmetisch.
 
 - 2026-10-14 HANDEL-2 Gate Merge: tests/ui/farOrder.test.ts «Review Focus 2» tautologisch (vergleicht geladene Welt mit sich selbst); src/sim/save.ts:~882 tote Klausel. Beide niedrig, Ursprung Final-Review.
+
+## 2026-10-16 · Controller als Messgerät für Geld-Hebel nur im Ensemble
+
+- Fundort: `tests/sim/controller.ts` (`runColony`, `buildColony`)
+- Beobachtung: `runColony` bricht beim Sieg ab; Messungen danach brauchen eine eigene Schleife. Eine Minute Verschiebung eines Kaufs ändert die Kasse bei Minute 25 um ±3500; Einzelläufe taugen für Geld-Hebel nicht, nur Ensembles über mehrere Phasen.
+- Ursprung: design-I-091-I-094 (Rechnung design-economy-designer)
+- Erste Einschätzung: niedrig; bei künftigen Balancing-Rechnungen einen Mess-Helfer mit Ensemble erwägen.
