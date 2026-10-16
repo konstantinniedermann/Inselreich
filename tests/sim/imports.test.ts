@@ -25,9 +25,10 @@ describe('M10 Importrichtung src/sim (Entscheid B9)', () => {
 });
 
 describe('M11 Naht Zyklus und Unterhalt (Prüfhilfe AK-P1-14)', () => {
-  it('PLAN-NAHT src/sim (ausser levels.ts, defs/) und render/errands.ts lesen cycle/upkeep nie direkt', () => {
+  it('PLAN-NAHT src/sim (ausser den Lese-Helfern levels.ts und council.ts, defs/) und render/errands.ts lesen cycle/upkeep nie direkt', () => {
     const read = /\b(def|BUILDING_DEFS\[[^\]]+\])\.(cycle|upkeep)\b/;
-    const paths = files.filter((m) => m !== 'levels').map((m) => `${SIM}/${m}.ts`);
+    const readers = ['levels', 'council'];
+    const paths = files.filter((m) => !readers.includes(m)).map((m) => `${SIM}/${m}.ts`);
     for (const f of [...paths, 'src/render/errands.ts'])
       expect(read.test(readFileSync(f, 'utf8')), f).toBe(false);
     expect(
