@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-16 (Studio-Session 66d37b15, R688–R708; REL-24+REL-25 live `8fe744df` (R697, CI 38887719217, Pages 38888562306); Sammelmerge TOOL-E070, IDEEN-11, ORT-A-Spec; Save v16)
+Stand: 2026-10-16 (Studio-Session ca9d40c8 läuft, R709–R726; lokal auf main seit Push `8fe744df`: I-120, I-118, UI-AUFRAEUM-4, TOOL-BUENDEL-14, I-114, BEOB-17, Handbuch 1.60; Save v16; REL-26-Push frühestens 2026-10-17, R712)
 
 ## Release-Notizen
 
@@ -138,20 +138,18 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475; R698 (Nutzer: «spawnen, solange Kapazität da ist», Deckel 6, bei Last > 8 Plätze
-freihalten, R703). **Neues Claude-Gespräch** (Nutzer startet es). Ein Push je Session (R335); L0 committet während eines `make push-check`
-nicht auf main (R697).
+Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475, R698 (Deckel 6, bei Last > 8 keine dritte Umsetzung mit Testlauf, R708 V2).
+Actions-Prognose rot: höchstens ein Push je Tag (R488 V2, R712). Ein Push je Session (R335).
 
-1. **UI-AUFRAEUM-4** (R694, Budget 8, `feat/ui-aufraeum-4` in `.worktrees/ui-aufraeum-4`): Stand aus dem Handoff
-   `.studio/handoffs/2026-10-16-lead-tech-UI-AUFRAEUM-4.md` lesen, fortsetzen bis Gate Merge (lead-qa), Merge.
-2. **I-114** «Fernangebot zur Wahl» (R699/R701/R703, `feat/i114` @ `5cef8359`, T01 fertig): nach Merge UI-AUFRAEUM-4 T02–T04, dann Gate Merge.
-3. **REL-26** (lokal: I-120 + I-118 gemergt R707; dazu UI-AUFRAEUM-4, I-114): Release-Check + Push, sobald 1 und 2 gemergt.
-4. **ORT-A «Wege und Kanten»** (Plan-Gate R705, Budget 57, Parallelität 2): Umsetzung starten (`plan/ort-a` @ `39d3cdd1`), Controller meldet
-   nach T09 (Patch-Zeit) an L0. Messungen nur bei Last ≤ 4; N-102 (Fremd-Chrome) offen → Vermerk «Messfenster belegt».
-5. **I-112 «Ratsbeschluss»** (Kurzdesign V3 R706, `design/i112` @ `37bfbe29`): Plan (lead-tech opus) mit Testbarkeits-Check lead-qa; Save main + 1.
-6. **Erweiterung 1** «Stände und Segel» bleibt in der Nutzer-Session (R519); Save-Nummer = main + 1 beim Merge (R674, main jetzt v16).
-7. Merge der Kurzdesign-/Plan-Branches `design/i114`, `design/i120-i118`, `design/i112`, `plan/*` mit dem jeweiligen Paket-Merge.
-8. Retro 66d37b15 (studio-coach) auswerten, falls ihr Bericht erst nach Session-Ende kam (`docs/studio/retros/2026-10-16-session-66d37b15-ende.md`).
+1. **REL-26** (ab 2026-10-17): Inhalt I-120, I-118, UI-AUFRAEUM-4, TOOL-BUENDEL-14, I-114, BEOB-17-Menüabstand, dazu PERF-BILANZ-COV und
+   TOOL-GUARD-REDACT nach Gate. Release-Check nur in der Push-Session (Handbuch 1.60, R712 V2), dann `make push-check`, Push per geprüftem Hash.
+2. **I-112 «Ratsbeschluss»** (`feat/i112`, `.worktrees/i112`): C3 T05–T07 laufend (R724), danach C4 T08 Browser, T09 Doku, Final-Review, Gate Merge;
+   `SAVE_VERSION` = main + 1 beim Merge (R674). T00-Ersatzmessung auf `07de72c4` bei Last ≤ 4 offen.
+3. **ORT-A** (R705): C3 T04–T06 laufend (R726), C2 T08 im Delta-Review (R723); T09 (gewertete Messung) erst bei freiem Messfenster (N-102). Puffer 8 Starts.
+4. **PERF-BILANZ-COV** (`perf/bilanz-cov` @ `ad57e259`): Gate Merge läuft. **TOOL-GUARD-REDACT** (`tool/guard-redact`): Nacharbeit Unter-Schwärzung (R725), dann Gate.
+5. **I-119 + I-121 «Bewohner reagieren»** (Gate Spec R715, Variante 3): Plan erst nach ORT-A T20.
+6. Pool: ZEITRESERVE-PFLEGE (mit H-1, Messung bei Last ≤ 4). Geparkt: I-110 bis `BUY_RISE` > 0 (R722).
+7. Erweiterung 1 bleibt in der Nutzer-Session (R519).
 
 ## Aktuelles Projekt und Phase
 
@@ -176,7 +174,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- UI-AUFRAEUM-4 (lead-tech, R698): lief bei Session-Ende noch; Fortsetzung siehe oben Punkt 1.
+- I-112 C3 (lead-tech), ORT-A C2 und C3 (lead-tech), TOOL-GUARD-REDACT (lead-tech), Gate Merge PERF-BILANZ-COV (lead-qa).
 
 ## Parallele Sessions
 
@@ -185,11 +183,8 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Seit letzter Session erledigt
 
-- **Live:** REL-24 «Ereignis-Log vollständig» + REL-25 (I-091 Kulanz, UI-HAEPPCHEN-F), Push `2e7a269f..8fe744df` (R697), Save v16.
-- **Lokal gemergt:** I-120 Wohlstandsklang + I-118 Aufstiegs-Funkeln (R707), TOOL-E070, TOOL-BUENDEL-13 (Timeouts, `guard_block`), BEOB-16,
-  IDEEN-11, Ortsrand-Brainstorming + ORT-A-Spec.
-- **Gates:** Plan UI-AUFRAEUM-4 (R694), Kurzdesign + Plan I-114 (R699/R701), Kurzdesign + Plan I-120/I-118 (R700/R702), Spec + Plan ORT-A
-  (R696/R705), Kurzdesign I-112 (R706). E-064 behalten, E-068 laufend (R693).
+- **Lokal gemergt (ca9d40c8):** UI-AUFRAEUM-4 (`00787f29`, R710), TOOL-BUENDEL-14 (`7545fa67`, R718), I-114 (`e14ef6be`, R720), BEOB-17 (`b455d2b1`, R721).
+- **Gates:** Plan I-112 (R711/R713), Spec I-119+I-121 (R715), I-110 geparkt (R722). Prozess-Retro REL-21–25 (R712), Handbuch 1.60 (`612fe2bb`).
 
 ## Pausierte Pakete
 
