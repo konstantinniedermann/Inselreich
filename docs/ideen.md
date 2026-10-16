@@ -68,7 +68,7 @@ Handel 2 (I-101 und I-102 setzen Handel 2 live voraus, I-104 und I-105 nach Hand
 | ---- | ----- | ----------------------------------- | ------ | ----- | --------------- | --------------------------------------------- | ---------------------------------------------------- |
 | 1    | I-102 | Auftragsvorschau                    | S      | 13    | nein / nein     | Auftrag planbar, ≈ 60 Tools                   | einplanen Häppchen nach Handel 2                     |
 | 2    | I-104 | Ausschreibung                       | M      | 13    | ja / nein       | echte Spätspiel-Wahl «Vorrat statt Verkauf»   | parken: Baustein Handels-Brainstorming nach Handel 2 |
-| 3    | I-109 | Reichweite am Gut-Chip              | S–M    | 12    | nein / nein     | Mangel vorausplanen, ≈ 1 Paket                | einplanen Häppchen                                   |
+| 3    | I-109 | Reichweite am Gut-Chip              | S–M    | 12    | nein / nein     | Mangel vorausplanen, ≈ 1 Paket                | live mit UI-HAEPPCHEN-D (siehe Archiv)               |
 | 4    | I-108 | Einnahmen und Unterhalt getrennt    | S      | 12    | nein / nein     | Wirtschaftslage auf einen Blick, ≈ 60 Tools   | einplanen Häppchen                                   |
 | 5    | I-103 | Routen-Bilanz                       | S–M    | 12    | nein / nein     | Schiffsentscheid statt Bauchgefühl, ≈ 1 Paket | einplanen nach Handel 2 (mit I-101)                  |
 | 6    | I-101 | Fernauftrag-Marke Seekarte          | S      | 12    | nein / nein     | Fernauftrag auf einen Blick, ≈ 50 Tools       | einplanen mit Handel 2 als Beipack                   |
@@ -246,7 +246,7 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Randfälle: nur das Gut, nie die Menge; «voraussichtlich» (Stufenaufstieg kann das Gut ändern); bei Vertrag oder gesperrter Folgeperiode keine Vorschau. Entartung: Vorschau-Nutzer verkauft nie das nächste Auftragsgut; Preis ist Lagerplatz, kein Gewinn.
 - Doppelung: I-029 (Gefragte Ware, geparkt) ändert Preise; I-102 zeigt nur Vorhandenes. Handel 2: Fernangebot-Insel der Periode darf mitgenannt werden.
 - Nutzen/Aufwand: Auftrag planbar statt Zufall · S · ≈ 60 Tools
-- Entscheid: offen (IDEEN-10)
+- Entscheid: offen (IDEEN-10); Stand UI-HAEPPCHEN-D: bleibt offen, Kurzdesign fehlt
 
 ### I-103 · bewertet · Routen-Bilanz (lohnt dieses Schiff?)
 
@@ -309,15 +309,4 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 - Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
 - Doppelung: I-089 (live) und I-067 (geparkt) liegen daneben; ändert nur die Zahl in der Kopfzeile.
 - Nutzen/Aufwand: Wirtschaftslage auf einen Blick · S · ≈ 60 Tools
-- Entscheid: offen (IDEEN-10)
-
-### I-109 · bewertet · Reichweite am Gut-Chip («Nahrung noch 2:10»)
-
-- Bereich: Bedienung · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: IDEEN-10 Scout B; Playtest rel-18 (Ärgernis 3: Nahrung früh auf 0); `src/ui/hud.ts` (`goodsBalance`), `src/ui/goodFocus.ts` · Herkunft: vom Studio vorgeschlagen
-- Spielerwirkung: „Der Spieler sieht beim fallenden Nahrungs-Chip «leer in 2:10» (beim vollen Holz «voll in 0:40») und baut den Fischer, bevor der Mangel eintritt."
-- Grösse: S–M · Risiko: Perf gering (eine Division je Gut und `refresh()`); Save nein, Baseline nein
-- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 3 = 12
-- Randfälle: nur bei Bilanz < 0 bzw. Lager fast voll; in der Pause eingefroren; im Tooltip oder in der Zeile unter dem Chip, damit die Leiste bei 1280 px nicht wächst.
-- Doppelung: I-043 und I-085 (live) zeigen die Gegenwart; diese Idee ergänzt die Zeitachse.
-- Nutzen/Aufwand: Mangel vorausplanen statt hinterherlaufen · S–M · ≈ 1 Paket
 - Entscheid: offen (IDEEN-10)

@@ -297,3 +297,31 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - ~~2026-10-16 · `tests/ui/farOrder.test.ts:198`: tautologischer Test (vergleicht geladene Welt mit sich selbst). Ursprung: R667 (Restbefund HANDEL-2). Einschätzung: niedrig; Erwartungswert unabhängig bilden.~~ **Erledigt (BEOB-15, 2026-10-16):** Snapshot vor dem Speichern gegen geladene Welt, mit Kontrolle (27a529c6).
 - ~~2026-10-16 · `src/sim/save.ts` ≈ Zeile 882: tote Klausel. Ursprung: R667 (Restbefund HANDEL-2). Einschätzung: niedrig; bei nächster Save-Änderung entfernen.~~ **Erledigt (BEOB-15, 2026-10-16):** Klauseln `contract`/`contractOffer` entfernt, durch isValidContractFields bereits ausgeschlossen (065c4940).
 - 2026-10-16 · `tests/render/wildlife.test.ts` RF-4 und «E5 nie im R4-Sperrbereich»: laufen auf main und Branch > 500 ms und könnten unter Last die strenge Zeitreserve reissen. Ursprung: R672 (Gate Merge BEOB-15). Einschätzung: niedrig.
+
+## 2026-10-16 · UI-HAEPPCHEN-D: Log-Box aufgeklappt verdeckt Karte
+
+- Fundort: `src/ui/eventLogView.ts`, `src/style.css` (Log-Box unten links); Playtest T08
+- Beobachtung: Aufgeklappt zeigt die Box 8 von 20 Einträgen und verdeckt unten links einen Teil der Karte.
+- Ursprung: UI-HAEPPCHEN-D (`LOG_MAX` 10 auf 20)
+- Erste Einschätzung: niedrig; Höhe begrenzen oder Liste scrollen, bei Bedarf.
+
+## 2026-10-16 · UI-HAEPPCHEN-D: Reichweite mit neuen Hex-Werten
+
+- Fundort: `src/style.css` (`.chip.reach-warn`, `.chip.reach-full`)
+- Beobachtung: Die Klassen nutzen die neuen Werte `#ffd27a` und `#b9c49a` statt Variablen aus `:root`.
+- Ursprung: UI-HAEPPCHEN-D T07
+- Erste Einschätzung: niedrig; bei der nächsten Farbpflege als Variablen führen.
+
+## 2026-10-16 · UI-HAEPPCHEN-D: `updateHud`-Klassen ohne DOM-Test
+
+- Fundort: `src/ui/hud.ts` (`updateHud`, Zuordnung `reach` auf `reach-warn`/`reach-alarm`/`reach-full`)
+- Beobachtung: Nur die reine Ansicht (`stockChipView`) ist getestet; das Setzen der Klassen am Element prüft nur der Browser.
+- Ursprung: UI-HAEPPCHEN-D T07
+- Erste Einschätzung: niedrig; mit `fakeDom` testbar, falls die Zuordnung wächst.
+
+## 2026-10-16 · UI-HAEPPCHEN-D: Reichweite ignoriert Handel und Aufträge
+
+- Fundort: `src/ui/reach.ts`, `goodsBalance` (`src/sim/queries.ts`)
+- Beobachtung: Die Reichweite rechnet nur mit Inselerzeugung und -verbrauch; Handel und Aufträge fehlen. Der Tooltip sagt es («ohne Handel und Aufträge»).
+- Ursprung: UI-HAEPPCHEN-D (bekannte Grenze, I-109)
+- Erste Einschätzung: niedrig; nur relevant, falls Spieler es als falsch lesen.

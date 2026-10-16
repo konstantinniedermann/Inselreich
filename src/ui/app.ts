@@ -9,6 +9,7 @@ import {
   declineContract,
   deliverOrder,
 } from '../sim/orders';
+import { autoSnap, contractLogEntries, expiryLogEntries } from './autoLog';
 import {
   deliverTarget,
   farAcceptedMessage,
@@ -157,13 +158,7 @@ import { isEventLogExpanded, renderEventLog, updateEventLog } from './eventLogVi
 import { crisisFx, frameInputs, nextFireMemo, type FireMemo } from './crisisFx';
 import { CLEAR } from '../render/weather';
 import { monumentEvents, monumentSnapshot } from './monumentView';
-import {
-  crisisLogEntries,
-  crisisLogVisible,
-  nextUnread,
-  pushLog,
-  type LogEntry,
-} from './crisisLog';
+import { crisisLogEntries, eventLogVisible, nextUnread, pushLog, type LogEntry } from './crisisLog';
 import { bindMessages, closeClosableToast, replaceMessage, showMessage } from './messages';
 import { MANIFEST } from '../audio/manifest';
 import { creditEntries, FONT_CREDITS, type CreditEntry } from './credits';
@@ -402,20 +397,24 @@ function launch(
       if (!r.ok) showError(r.reason);
       else showMessage(farAcceptedMessage(world, world.order!));
       farPrev = farSnap(world);
+      autoPrev = autoSnap(world);
       prevOrder = world.order ? { ...world.order } : null;
       refresh();
     },
     accept: () => {
       runContractAction(acceptContract(world), () => contractAgreedMessage(world), contractOut);
+      autoPrev = autoSnap(world);
       refresh();
     },
     decline: () => {
       runContractAction(declineContract(world), () => null, contractOut);
+      autoPrev = autoSnap(world);
       refresh();
     },
     toProducer: () => jumpToContractProducer(),
     cancel: () => {
       runContractAction(cancelContract(world), () => CONTRACT_CANCELLED, contractOut);
+      autoPrev = autoSnap(world);
       refresh();
     },
   });
@@ -683,6 +682,7 @@ function launch(
           recordContractSound(ev);
         }
         farPrev = farSnap(world);
+        autoPrev = autoSnap(world);
       }
       refresh();
     },
@@ -692,6 +692,8 @@ function launch(
   let prevOrder: Order | null = world.order ? { ...world.order } : null;
   /** Fernangebot und -auftrag im letzten Frame (Log bei Verfall). */
   let farPrev = farSnap(world);
+  /** Zufallsauftrag, Stammkunden-Angebot im letzten Frame (Log bei Verfall). */
+  let autoPrev = autoSnap(world);
 
   /** Pfad-Vorschau des Knopfs „Anbinden" (nur beim Überfahren), wird nach dem Zeichnen der Karte gemalt. */
   let connectPreview: readonly Pos[] | null = null;
@@ -928,7 +930,7 @@ function launch(
     updateEventLog(
       logBox,
       state.eventLog,
-      crisisLogVisible(world),
+      eventLogVisible(world, state.eventLog),
       (t) => {
         const r = resolveLogClick(t, world);
         centerOn(state.cam, r.tile.x + 0.5, r.tile.y + 0.5, clampView(), bounds);
@@ -1554,10 +1556,10 @@ function launch(
     try {
       const dt = Math.min(now - last, 1000);
       last = now;
+      const reports: StepReport[] = [];
       if (state.speed > 0) {
         acc += dt * state.speed;
         let ticks = 0;
-        const reports: StepReport[] = [];
         while (acc >= TICK_MS && ticks < MAX_TICKS_PER_FRAME) {
           reports.push(step(world));
           acc -= TICK_MS;
@@ -1625,6 +1627,16 @@ function launch(
         state.eventLog = pushLog(state.eventLog, farLogged);
         state.logUnread = nextUnread(state.logUnread, farLogged, isEventLogExpanded(logBox));
         for (const e of farLogged) if (e.toast !== null) showMessage(e.text, e.toast);
+      }
+      // Verfall und Vertrag: Meldung kommt schon aus orderMessage bzw. announceContract, hier kein showMessage
+      const autoLogged = [
+        ...expiryLogEntries(autoPrev, world),
+        ...contractLogEntries(reports, world, world.tick),
+      ];
+      autoPrev = autoSnap(world);
+      if (autoLogged.length > 0) {
+        state.eventLog = pushLog(state.eventLog, autoLogged);
+        state.logUnread = nextUnread(state.logUnread, autoLogged, isEventLogExpanded(logBox));
       }
       const msg = orderMessageFor(prevOrder, prevOrderVisible, world);
       if (msg) showMessage(msg);

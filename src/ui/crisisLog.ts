@@ -28,8 +28,16 @@ export function crisisLogVisible(world: Pick<World, 'crisisLevel' | 'tick'>): bo
   return world.crisisLevel !== 'off' && world.tick >= CRISIS_FIRST_TICK;
 }
 
+/** Log-Box sichtbar: Krisen-Log-Bedingung erfüllt oder mindestens ein Eintrag vorhanden. */
+export function eventLogVisible(
+  world: Pick<World, 'crisisLevel' | 'tick'>,
+  entries: readonly LogEntry[],
+): boolean {
+  return crisisLogVisible(world) || entries.length > 0;
+}
+
 /** Höchstzahl der Einträge im Log. */
-export const LOG_MAX = 10;
+export const LOG_MAX = 20;
 
 /** Anzeigezeile eines Eintrags. */
 export function logLine(e: LogEntry): string {

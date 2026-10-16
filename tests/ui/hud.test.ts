@@ -13,6 +13,8 @@ import {
   unbindIslandMenu,
   chipRole,
   chipView,
+  reachLine,
+  stockChipView,
   createBalanceButton,
   houseConsumers,
   shouldBlurAfterClick,
@@ -39,7 +41,7 @@ import type { Tier } from '../../src/sim/types';
 import { houseNearKontor, placeTownhall, setAllTax } from '../sim/helpers';
 import { uxWorld } from './worlds';
 import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
-import { GOODS_BALANCE_TICKS, perMinute, signedNum } from '../../src/ui/time';
+import { formatGameTime, GOODS_BALANCE_TICKS, perMinute, signedNum } from '../../src/ui/time';
 import { tickEconomy } from '../../src/sim/economy';
 import { putBuilding, twoIslandWorld } from '../sim/helpers';
 import { renderUpkeepList, UPKEEP_EMPTY_TEXT } from '../../src/ui/upkeepCard';
@@ -361,7 +363,7 @@ function clone(w: World, from: Building, defId: BuildingDefId, n: number): void 
     w.buildings[id] = { ...from, id, defId, house: undefined };
   }
 }
-const line2 = (w: World, good: GoodId): string => stockTooltip(w, good).split('\n')[1]!;
+const line2 = (w: World, good: GoodId): string => stockTooltip(w, good).split('\n').at(-1)!;
 
 describe('I-043 Chip-Tooltip, Zeile 2 (AK-GC-10)', () => {
   it('AK-GC-10 Erzeuger und Verbraucher', () => {
@@ -611,5 +613,84 @@ describe('Meldungsstapel mit Fernkarte (Handel 2 T08)', () => {
     updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
     const order = stack.querySelector('.order-card')!;
     expect(order.classList.contains('order-card--warn')).toBe(true);
+  });
+});
+
+describe('I-109 Reichweite am Lager-Chip (AK-UR-04 bis 06)', () => {
+  // net -100 bzw. +100 je 100 Ticks: Zeit in Ticks == Bestand bzw. Restplatz
+  const t = (ticks: number): string => formatGameTime(ticks);
+
+  it('AK-UR-04 ohne Schwelle: Text und label unverändert', () => {
+    const v = stockChipView('wood', 12, -0.05 * 2);
+    expect(v.text).toBe('12 ↓');
+    expect(v.label).toBe('Holz 12 ↓');
+    expect(v.reach).toBeUndefined();
+  });
+
+  it('AK-UR-04 mit Schwelle: Suffix im Text und im label, warn', () => {
+    // net -1 je 100 Ticks: Zeit in Ticks = Bestand * 100
+    const v = stockChipView('wood', 12, -1);
+    expect(v.text).toBe(`12 ↓ ${t(1200)}`);
+    expect(v.label).toBe(`Holz 12 ↓ ${t(1200)}`);
+    expect(v.reach).toBe('warn');
+  });
+
+  it('AK-UR-04 alarm bei höchstens 60 s', () => {
+    const v = stockChipView('wood', 4, -1);
+    expect(v.text).toBe(`4 ↓ ${t(400)}`);
+    expect(v.reach).toBe('alarm');
+  });
+
+  it('AK-UR-04 «0 ↓ leer»: Text, label, Klasse alarm', () => {
+    const v = stockChipView('wood', 0, -1);
+    expect(v.text).toBe('0 ↓ leer');
+    expect(v.label).toContain('leer');
+    expect(v.reach).toBe('alarm');
+  });
+
+  it('AK-UR-04 voll nahe: Suffix «↑ Zeit», full-warn, nie alarm', () => {
+    // Restplatz 3, net +1 je 100 Ticks: 300 Ticks
+    const v = stockChipView('wood', STORAGE_CAP - 3, 1);
+    expect(v.text).toBe(`${STORAGE_CAP - 3} ↑ ${t(300)}`);
+    expect(v.reach).toBe('full-warn');
+    expect(stockChipView('wood', STORAGE_CAP - 1, 100).reach).not.toBe('alarm');
+  });
+
+  it('AK-UR-04 voll weit entfernt: ohne Suffix', () => {
+    const v = stockChipView('wood', 0, 0.5);
+    expect(v.text).toBe('0 ↑');
+    expect(v.reach).toBeUndefined();
+  });
+
+  it('AK-UR-05 reachLine: Leer/Voll mit Zeit, Rate und Zusatz', () => {
+    expect(reachLine(12, -1)).toBe(
+      `Leer in ${t(1200)} bei ${signedNum(perMinute(-1, GOODS_BALANCE_TICKS))} / min (ohne Handel und Aufträge)\n`,
+    );
+    expect(reachLine(STORAGE_CAP - 3, 1)).toBe(
+      `Voll in ${t(300)} bei ${signedNum(perMinute(1, GOODS_BALANCE_TICKS))} / min (ohne Handel und Aufträge)\n`,
+    );
+  });
+
+  it('AK-UR-05 reachLine: Gleichstand und Sättigung ohne Zeile', () => {
+    expect(reachLine(10, 0)).toBe('');
+    expect(reachLine(STORAGE_CAP, 100)).toBe('');
+  });
+
+  it('AK-UR-05 stockTooltip: Reichweite steht vor der Fokuszeile', () => {
+    const w = SCENARIOS['bilanz-nahrung']!();
+    const g = GOOD_IDS.find((x) => Math.abs(goodsBalance(w)[x].net) >= 0.05)!;
+    expect(g).toBeDefined();
+    const lines = stockTooltip(w, g).split('\n');
+    expect(lines.length).toBe(3);
+    expect(lines[1]).toMatch(/^(Leer|Voll) in .* \(ohne Handel und Aufträge\)$/);
+  });
+
+  it('AK-UR-06 gleiche Eingabe liefert gleiche Ansicht, kein Tempo-Einfluss', () => {
+    const a = stockChipView('wood', 30, -100);
+    const b = stockChipView('wood', 30, -100);
+    expect(b).toEqual(a);
+    const w = SCENARIOS['bilanz-nahrung']!();
+    expect(chipView(w, 'wood')).toEqual(chipView(w, 'wood'));
+    expect(stockTooltip(w, 'wood')).toBe(stockTooltip(w, 'wood'));
   });
 });
