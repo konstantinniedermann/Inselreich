@@ -7,9 +7,11 @@ import {
   councilBadge,
   councilBadgeActive,
   councilCards,
+  councilEscapeHandled,
+  councilOpenNext,
   councilOpened,
 } from '../../src/ui/council';
-import { hotkeyList } from '../../src/ui/hotkeys';
+import { hotkeyAction, hotkeyList } from '../../src/ui/hotkeys';
 
 describe('AK-12 Kopfzeilen-Marke', () => {
   it('AK-12: neue Welt ohne Marke', () => {
@@ -87,5 +89,27 @@ describe('Hilfe-Taste', () => {
       { key: 'Umschalt + R', label: 'Rat öffnen' },
     ]);
     expect(new Set(list.map((h) => h.key)).size).toBe(list.length);
+  });
+});
+
+describe('AK-14/15 Rats-Karte: Taste und Esc-Reihenfolge', () => {
+  const noMods = { ctrl: false, meta: false, alt: false, shift: false };
+  it('AK-15: Umschalt+R liefert die Rats-Aktion, R allein bleibt Weg', () => {
+    expect(hotkeyAction('R', { ...noMods, shift: true }, false)).toEqual({ kind: 'council' });
+    expect(hotkeyAction('r', noMods, false)).toEqual({ kind: 'tool', tool: { kind: 'road' } });
+  });
+  it('AK-15: in Eingabefeld und mit Strg keine Rats-Aktion', () => {
+    expect(hotkeyAction('R', { ...noMods, shift: true }, true)).toBeNull();
+    expect(hotkeyAction('R', { ...noMods, shift: true, ctrl: true }, false)).toBeNull();
+  });
+  it('AK-15: councilOpenNext schaltet um, Esc schliesst nur eine offene Karte', () => {
+    expect(councilOpenNext(false, 'toggle')).toBe(true);
+    expect(councilOpenNext(true, 'toggle')).toBe(false);
+    expect(councilOpenNext(true, 'escape')).toBe(false);
+    expect(councilOpenNext(false, 'escape')).toBe(false);
+  });
+  it('AK-15: Esc wird von der offenen Karte verbraucht, sonst weitergereicht', () => {
+    expect(councilEscapeHandled(true)).toBe(true);
+    expect(councilEscapeHandled(false)).toBe(false);
   });
 });

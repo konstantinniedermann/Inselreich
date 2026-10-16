@@ -50,6 +50,7 @@ export type HotkeyAction =
   | { kind: 'speed'; speed: 1 | 2 | 4 }
   | { kind: 'pause' }
   | { kind: 'upgrade' }
+  | { kind: 'council' }
   | { kind: 'help' }
   | { kind: 'islandHome' }
   | { kind: 'islandCycle' }
@@ -96,6 +97,8 @@ export function hotkeyAction(
   if (k === PROBLEM_PREV_KEY) return { kind: 'problemPrev' };
   // Umschalt+U = Ausbau; Gross-U ohne Umschalt (Feststelltaste) bleibt Schule (Spec C-2)
   if (k === 'u' && mods.shift === true) return { kind: 'upgrade' };
+  // Umschalt+R = Rats-Karte (I-112); R ohne Umschalt bleibt Weg
+  if (k === 'r' && mods.shift === true) return { kind: 'council' };
   // Inselsprung nur mit der Seefahrt, sonst stumm (M12 E2)
   if (k === ISLAND_HOME_KEY) return seafaring ? { kind: 'islandHome' } : null;
   if (k === ISLAND_CYCLE_KEY) return seafaring ? { kind: 'islandCycle' } : null;

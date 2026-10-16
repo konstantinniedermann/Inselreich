@@ -1424,6 +1424,57 @@ button.hud-balance:focus-visible {
   font-weight: 600;
 }
 
+/* Rats-Karte und Marke (I-112): schwebt rechts oben in der Spielfläche, kein Modal */
+.council-badge[hidden] {
+  display: none;
+}
+.council-badge--active {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold);
+}
+.council-card {
+  position: absolute;
+  top: 48px;
+  right: 8px;
+  z-index: 6;
+  width: min(420px, 60%);
+  max-height: calc(100% - 64px);
+  overflow-y: auto;
+}
+.council-card[hidden] {
+  display: none;
+}
+.council-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.council-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.council-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 6px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--parchment-edge);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.council-option[aria-pressed='true'] {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold);
+}
+.council-note {
+  font-size: 13px;
+}
+
 /* Pause-Overlay (I-097) */
 .pause-overlay {
   position: absolute;

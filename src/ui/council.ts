@@ -56,3 +56,11 @@ export function councilOpened(
   if (prev === null) return [];
   return COUNCIL_TIERS.filter((t) => prev[t] === null && next[t] === 'open');
 }
+
+/** Offen-Zustand der Rats-Karte: Umschalt+R und Marke schalten um, Esc schliesst. */
+export function councilOpenNext(open: boolean, ev: 'toggle' | 'escape'): boolean {
+  return ev === 'toggle' ? !open : false;
+}
+
+/** Esc zuerst an die offene Rats-Karte; `true` = verbraucht, der übrige Esc-Weg läuft nicht. */
+export const councilEscapeHandled = (open: boolean): boolean => open;
