@@ -3,9 +3,11 @@ import os
 import tempfile
 import time
 import unittest
+from unittest import mock
 from pathlib import Path
 
 import aufraeumen
+import hook
 
 RELEASES = {
     "releases": [
@@ -155,6 +157,95 @@ class AufraeumenTest(unittest.TestCase):
         self.assertTrue((self.studio / "qa" / "i-100" / "a.png").exists())
         aufraeumen.main(["--root", str(self.root), "--apply"])
         self.assertFalse((self.studio / "qa" / "i-100" / "a.png").exists())
+
+    def test_check_thresholds(self):
+        cfg = {
+            "qaMaxGB": 0.000001,
+            "rulingsMax": 1,
+            "rulingsMaxKB": 1000,
+            "specsPlansMax": 0,
+            "eventsMaxMB": 1,
+            "archivMaxMB": 1,
+            "specsPlansKeep": ["keep"],
+        }
+        self.assertEqual(aufraeumen.check(self.root, cfg), [])
+        put(self.studio / "qa" / "x" / "a.png", 5000)
+        (self.root / "docs" / "studio" / "rulings.md").write_text(
+            "## R1 a\n## R2 b\n", encoding="utf-8"
+        )
+        put(self.studio / "events.jsonl", 2 * 1024 * 1024)
+        put(self.studio / "archiv" / "berichte" / "b.md", 2 * 1024 * 1024)
+        for kind, name in (
+            ("specs", "2026-10-01-i-100-design.md"),
+            ("plans", "2026-10-01-i-100.md"),
+            ("plans", "keep-i100.md"),
+        ):
+            put(self.root / "docs" / "superpowers" / kind / name)
+        lines = aufraeumen.check(self.root, cfg)
+        self.assertEqual(len(lines), 5)
+        self.assertTrue(all(line.startswith("Aufräumen fällig: ") for line in lines))
+        self.assertIn("2 Rulings", "\n".join(lines))
+        self.assertTrue(
+            any(line.endswith(", 2") for line in lines)
+        )  # keep-Stem zählt nicht
+
+    def test_check_cli_exit_codes(self):
+        cfg = self.root / "cfg.json"
+        base = {
+            "qaMaxGB": 1,
+            "rulingsMax": 150,
+            "rulingsMaxKB": 200,
+            "specsPlansMax": 20,
+            "eventsMaxMB": 50,
+            "archivMaxMB": 500,
+        }
+        cfg.write_text(json.dumps(base), encoding="utf-8")
+        args = ["--check", "--root", str(self.root), "--config", str(cfg)]
+        self.assertEqual(aufraeumen.main(args), 0)
+        cfg.write_text(json.dumps({**base, "qaMaxGB": 0}), encoding="utf-8")
+        put(self.studio / "qa" / "x" / "a.png", 10)
+        self.assertEqual(aufraeumen.main(args), 1)
+
+    def test_default_config_complete(self):
+        cfg = json.loads(aufraeumen.CONFIG.read_text(encoding="utf-8"))
+        for key in (
+            "qaMaxGB",
+            "rulingsMax",
+            "rulingsMaxKB",
+            "specsPlansMax",
+            "eventsMaxMB",
+            "archivMaxMB",
+        ):
+            self.assertIn(key, cfg)
+
+    def test_hook_section_only_when_due(self):
+        cfg = self.root / "cfg.json"
+        base = {
+            "qaMaxGB": 1,
+            "rulingsMax": 150,
+            "rulingsMaxKB": 200,
+            "specsPlansMax": 20,
+            "eventsMaxMB": 50,
+            "archivMaxMB": 500,
+        }
+        put(self.studio / "qa" / "x" / "a.png", 10)
+
+        def start() -> str:
+            with (
+                mock.patch.object(
+                    hook, "docs_dir", return_value=self.root / "docs" / "studio"
+                ),
+                mock.patch.object(hook, "open_incidents", return_value=[]),
+                mock.patch.object(aufraeumen, "CONFIG", cfg),
+            ):
+                return hook.start_context("1")
+
+        cfg.write_text(json.dumps(base), encoding="utf-8")
+        self.assertNotIn("Aufräumen fällig", start())
+        cfg.write_text(json.dumps({**base, "qaMaxGB": 0}), encoding="utf-8")
+        self.assertIn(
+            "## Aufräumen fällig\nAufräumen fällig: .studio/qa über 0 GB", start()
+        )
 
 
 if __name__ == "__main__":

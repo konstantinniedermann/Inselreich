@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.56 · Stand: 2026-10-16 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.57 · Stand: 2026-10-16 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -512,6 +512,7 @@ nachfragen oder warten verlangt; Verfassung §1.4):
    eingeplant (Board) oder Idee (`docs/ideen.md`). Die Marke setzt die Auswertung als eigene Zeile
    „Letzte Auswertung: JJJJ-MM-TT“; sie ist Pflicht und erscheint im Start-Bericht von L0. Die
    Zählung macht der Hook (`tools/studio/context.py`), nicht das Gedächtnis von L0.
+7. **Aufräumen fällig (R685):** Steht im Start-Kontext der Abschnitt «## Aufräumen fällig» (Schwellen aus `tools/studio/aufraeumen.json`, gemessen von `aufraeumen.py --check`), nennt L0 ihn im Start-Bericht und startet das Paket `HAUSHALT-nn` an `lead-production` ohne Nutzerfrage, sobald ein Agentenplatz frei ist (nach laufenden Gates, vor Ideen-Runden). Ohne fällige Zeile wird nicht aufgeräumt.
 
 **Eine aktive L0-Session je Repo** (R129, E-007): Läuft beim Start bereits eine andere (Dashboard,
 [state.md](state.md)), arbeitet die neue nur lesend oder beendet sich; Parallelität nur per

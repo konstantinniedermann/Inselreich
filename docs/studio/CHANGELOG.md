@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-16 · Handbuch 1.57
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 4 (Aufräumen als Daueraufgabe)
+- Datenbasis: Auftrag CTX-ALTLAST
+- Ruling: R685
+- Änderungen: Session-Start Schritt 7 («Aufräumen fällig» → `HAUSHALT-nn` an lead-production), Werkzeug `aufraeumen.py --check` mit Schwellen in `aufraeumen.json`
+
+## 2026-10-16 · Persona lead-production 1.12
+
+- Anlass: Gate Merge CTX-ALTLAST, Nachtrag 4
+- Datenbasis: Auftrag CTX-ALTLAST
+- Ruling: R685
+- Änderungen: Abschnitt «Haushalt» (Aufräumrunde `HAUSHALT-nn`: messen, Trockenlauf, `ARGS=--apply`, Archiv-`git mv`, Rulings verschieben, Gate Merge L0)
+
 ## 2026-10-16 · Persona art-audio-engineer 1.1
 
 - Anlass: Gate Merge CTX-ALTLAST, Nachtrag 1

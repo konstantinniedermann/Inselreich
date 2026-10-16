@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -244,6 +245,83 @@ def report(plan: Plan, studio: Path, applied: bool) -> str:
     return "\n".join(lines)
 
 
+CONFIG = Path(__file__).with_name("aufraeumen.json")
+
+
+def _tree_size(folder: Path) -> int:
+    """Summe der Dateigrössen unterhalb von ``folder`` (ohne Inhalte zu lesen)."""
+    total = 0
+    for base, _dirs, files in os.walk(folder):
+        for name in files:
+            try:
+                total += os.stat(os.path.join(base, name)).st_size
+            except OSError:
+                continue
+    return total
+
+
+def movable_stems(root: Path, rules: Rules, keep: list[str]) -> int:
+    """Specs/Pläne außerhalb des Archivs, die zu einem Paket in einem live Release gehören."""
+    stems: set[str] = set()
+    for kind in ("specs", "plans"):
+        folder = root / "docs" / "superpowers" / kind
+        if folder.is_dir():
+            stems.update(re.sub(r"\.md$", "", e.name) for e in folder.iterdir())
+    live = rules.live_pkgs | rules.live_alias
+    count = 0
+    for stem in stems:
+        if any(k in stem for k in keep):
+            continue
+        flat = _norm(stem)
+        if any(pkg in flat for pkg in live):
+            count += 1
+    return count
+
+
+def check(root: Path, config: dict | None = None) -> list[str]:
+    """Eine Zeile je überschrittener Schwelle (R685); leer, wenn nichts fällig ist."""
+    cfg = (
+        config if config is not None else json.loads(CONFIG.read_text(encoding="utf-8"))
+    )
+    studio = root / ".studio"
+    lines: list[str] = []
+
+    def due(reason: str, value: str) -> None:
+        lines.append(f"Aufräumen fällig: {reason}, {value}")
+
+    qa = _tree_size(studio / "qa") / 1024**3
+    if qa > cfg["qaMaxGB"]:
+        due(f".studio/qa über {cfg['qaMaxGB']} GB", f"{qa:.1f} GB")
+    rulings = root / "docs" / "studio" / "rulings.md"
+    if rulings.is_file():
+        text = rulings.read_text(encoding="utf-8")
+        n = len(re.findall(r"^## R\d", text, re.MULTILINE))
+        kb = rulings.stat().st_size / 1024
+        if n > cfg["rulingsMax"] or kb > cfg["rulingsMaxKB"]:
+            due(
+                f"rulings.md über {cfg['rulingsMax']} Rulings oder {cfg['rulingsMaxKB']} KB",
+                f"{n} Rulings, {kb:.0f} KB",
+            )
+    events = studio / "events.jsonl"
+    if events.is_file() and events.stat().st_size / MB > cfg["eventsMaxMB"]:
+        due(
+            f"events.jsonl über {cfg['eventsMaxMB']} MB",
+            f"{events.stat().st_size / MB:.0f} MB",
+        )
+    archiv = _tree_size(studio / "archiv") / MB
+    if archiv > cfg["archivMaxMB"]:
+        due(f".studio/archiv über {cfg['archivMaxMB']} MB", f"{archiv:.0f} MB")
+    releases = root / "docs" / "studio" / "releases.json"
+    if releases.is_file():
+        n = movable_stems(root, load_rules(releases), cfg.get("specsPlansKeep", []))
+        if n > cfg["specsPlansMax"]:
+            due(
+                f"über {cfg['specsPlansMax']} Specs/Pläne live Releases ausserhalb des Archivs",
+                f"{n}",
+            )
+    return lines
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -252,12 +330,30 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--root", type=Path, default=None, help="Repo-Wurzel (Standard: Hauptrepo)"
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Schwellen messen (R685); Exit 1, wenn fällig",
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=None,
+        help="Schwellen-Datei (Standard: aufraeumen.json)",
+    )
     args = parser.parse_args(argv)
     if args.root is None:
         import paths
 
         args.root = paths.repo_root()
     root: Path = args.root
+    if args.check:
+        config = (
+            json.loads(args.config.read_text(encoding="utf-8")) if args.config else None
+        )
+        lines = check(root, config)
+        print("\n".join(lines))
+        return 1 if lines else 0
     studio = root / ".studio"
     rules = load_rules(root / "docs" / "studio" / "releases.json")
     plan = plan_cleanup(studio, rules, reachable=lambda wt: git_reachable(wt, root))
