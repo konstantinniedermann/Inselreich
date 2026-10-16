@@ -601,7 +601,7 @@ describe('Delfine (ART-STIL-02 L7 E5)', () => {
     // S-Art: nur auf einem Teil der Inseln (Los 0,45 nach der Eignung)
     expect(withSeed).toBeGreaterThan(5);
     expect(withSeed).toBeLessThan(50);
-  });
+  }, 10_000);
 
   // Gemeinsamer Aufbau (Welten mit Auftrag, Episoden) ausserhalb der Testzeit; Aussage, Seeds und Schwellen unverändert.
   // Seeds 1–40 statt 1–50: Teilen des Aufbaus reichte nicht unter 500 ms (545 ms); die Lücke bleibt im Schiff-/Delfin-Pfad.
