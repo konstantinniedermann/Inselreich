@@ -112,6 +112,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 - **Fernangebot:** Hast du ein Kontor auf einer fernen Insel, steht neben dem Auftrag oft ein **Fernangebot**: eine grosse Menge des Guts, das diese Insel mag (Möweninsel Stoff, Felsbucht Rum, Weidenau Glas). **Annehmen** ersetzt den Auftrag. Du hast dann 2:50 ab Auftragsbeginn Zeit und lieferst nur am Kontor dieser Insel (**Liefern** nennt die Insel); der nächste Auftrag entfällt. Ein verpasster Fernauftrag kostet nichts ausser diesem Auftrag.
 - **Marke an der Fern-Insel:** Läuft ein Fernangebot oder ein Fernauftrag, trägt die Insel auf der Seekarte eine Marke «15 Rum · 1:20» (Menge, Gut, Restzeit): hohl beim noch nicht angenommenen Angebot, gefüllt beim angenommenen Auftrag, in Warnfarbe, wenn dort kein Kontor mehr steht. Der Hover-Text der Insel nennt «Fernauftrag: …» bzw. «Fernangebot: …». Lieferung oder Verfall nehmen die Marke weg.
 - **Routen-Bilanz:** Im Schiff-Panel zeigt die Zeile unter einer Route «Warenwert +310 / min · Unterhalt 90 → +220 · nominal». «Nominal» heisst: Überschuss der Quellinsel, ohne Lager, Reserve und Handel, also eine Untergrenze; weitere Schiffe auf derselben Route teilen den Überschuss (Tooltip). Ein Verlust steht mit Minus in Warnfarbe.
+- **Aufstieg:** Steigt ein Haus eine Stufe auf, leuchtet es kurz mit einem Lichtkranz und Funken auf; bei «Bewegung reduzieren» nur als ruhiger Schein ohne Funken. In der Pause steht das Funkeln still.
 - **Auftragsvorschau:** Die Auftragskarte zeigt das voraussichtliche Gut des nächsten Auftrags; ein Stufenaufstieg kann es ändern.
 - **Tooltips:** Ein Eintrag der Bauleiste zeigt beim Überfahren, bei Tastaturfokus oder bei langem
   Drücken auf Touch (0,5 s) Name und Taste, Kosten, Unterhalt, was er erzeugt und braucht, die
@@ -226,6 +227,7 @@ Tab verborgen ist.
 - **Umgebung:** folgt dem Bildausschnitt — Meer, Wind, Vögel am Tag, Grillen in der Nacht, Möwen an der
   Küste, Stadtgeräusch bei vielen Einwohnern im Blick; Regen, Sturm und Feuer bei Krisen. Nah gezoomt
   wird die Stadt lauter, weit gezoomt der Wind.
+  Die Stadt klingt voller, wenn die Häuser im Bild versorgt sind.
 - **Musik:** einige Sekunden nach dem ersten Klick ein Stück passend zur Tageszeit, danach Pausen von
   30–90 s.
 
