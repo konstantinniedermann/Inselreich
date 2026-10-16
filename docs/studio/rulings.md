@@ -7747,3 +7747,15 @@ wie `delivered`, vollständige Switches über `ContractEvent`, Fixture über `SA
 Regelbezug: gates.md Gate Spec, R663, R670 · Kosten bei Irrtum: eine doppelte «jetzt treu»-Meldung (Fix-Runde).
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-spec-I-091 · ADR: —
+
+## R672 · 2026-10-16 · Gate Merge BEOB-15: OK
+
+Ruling: `fix/beob-15` @ `c10b6d09` (Timeout 10000 ms für RF-10 und AK-BAS-03 nach E-043, Aussage unverändert; `farOrder.test.ts` mit unabhängigem
+Snapshot und Mutations-Rot-Beleg; tote Klausel in `isValidFarFields` entfernt, `SAVE_VERSION` 15; Zeiten vorher/nachher ohne Rückgang; `tsc`,
+`lint`, `zeittests`, `conflicts`, `docs-check`, `make check` inkl. Balancing, `make zeitreserve-gate` Exit 0; Review OK) → **Gate Merge OK**.
+lead-production merged `--no-ff` (lokal) und trägt den Restbefund RF-4 und «E5 nie im R4-Sperrbereich» (`wildlife.test.ts`, > 500 ms) in
+`docs/beobachtungen.md` ein. Die `make check`-Warnung «state.md nur bis R658» erledigt die Session-Ende-Routine.
+
+Regelbezug: gates.md Gate Merge, R669, E-043 · Kosten bei Irrtum: ein Timeout, der einen Leistungsrückgang verdeckt (Messwerte zeigen keinen).
+
+Entscheider: L0 · Anlass: Bericht lead-tech BEOB-15 · ADR: —
