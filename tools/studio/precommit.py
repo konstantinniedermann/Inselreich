@@ -1,8 +1,10 @@
 """Git-pre-commit: Prettier-Check der gestagten Dateien (R417 V2, TOOL-PRETTIER-HOOK).
 
 Aufruf über tools/githooks/pre-commit (aktiv nach `make hooks`). Ein Prettier-Lauf über
-alle gestagten Pfade; Ablehnung mit Exit 1 und Event `commit_rejected`. Grenze: Prettier
-liest den Arbeitsbaum, nicht den Index-Stand (`git add -p`). Fehlt Prettier, scheitert
+alle gestagten Pfade. Voll gestagte Dateien mit Formatfehler (Index == Arbeitsbaum) formatiert
+der Hook selbst und staget genau diese neu; teilweise gestagte (`git add -p`) und alle übrigen
+Fehler führen zur Ablehnung mit Exit 1 und Event `commit_rejected`. Grenze: Prettier
+liest den Arbeitsbaum, nicht den Index-Stand. Fehlt Prettier, scheitert
 git oder tritt ein unerwarteter Fehler auf, lässt der Hook den Commit zu (Hinweis auf stderr).
 """
 
@@ -53,6 +55,35 @@ def check(
     done = runner(args)
     failing = [line.strip() for line in done.stdout.splitlines() if line.strip()]
     return done.returncode, failing, done.stderr
+
+
+def unstaged_files(files: list[str], runner: Runner = run) -> set[str] | None:
+    """Dateien, deren Arbeitsbaum vom Index abweicht; None, wenn git scheitert."""
+    done = runner(["git", "diff", "--name-only", "-z", "--", *files])
+    if done.returncode != 0:
+        return None
+    return {name for name in done.stdout.split("\0") if name}
+
+
+def autofix(failing: list[str], prettier: Path, runner: Runner = run) -> list[str]:
+    """Formatiert voll gestagte Dateien (Index == Arbeitsbaum) und staget genau diese neu."""
+    partial = unstaged_files(failing, runner)
+    if partial is None:
+        return []
+    fixable = [name for name in failing if name not in partial]
+    if not fixable:
+        return []
+    done = runner([str(prettier), "--write", "--ignore-unknown", "--", *fixable])
+    if done.returncode != 0:
+        return []
+    if runner(["git", "add", "--", *fixable]).returncode != 0:
+        return []
+    print(
+        "pre-commit: Prettier-Format automatisch behoben und neu gestagt: "
+        + ", ".join(fixable),
+        file=sys.stderr,
+    )
+    return fixable
 
 
 def message(files: list[str], detail: str) -> str:
@@ -115,6 +146,8 @@ def main(
             )
             return 0
         code, failing, detail = check(files, prettier, runner)
+        if code == 1 and failing and autofix(failing, prettier, runner):
+            code, failing, detail = check(files, prettier, runner)
     except Exception as exc:  # noqa: BLE001 - jeder Fehler lässt den Commit zu
         print(f"pre-commit: Check übersprungen ({exc}).", file=sys.stderr)
         return 0

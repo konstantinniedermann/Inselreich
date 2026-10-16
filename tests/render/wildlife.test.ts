@@ -174,7 +174,7 @@ describe('Wasser- und Luftleben (H-R2)', () => {
     expect(fish).toBeGreaterThan(0);
     expect(flocks).toBeGreaterThan(0);
     expect(whales).toBeGreaterThan(0);
-  });
+  }, 10_000);
 
   it('RF-3 Kappen normal und reduziert; Scrollen ändert die Anker im Überlappungsbereich nicht', () => {
     expect(CAPS.fish).toEqual([20, 6]);

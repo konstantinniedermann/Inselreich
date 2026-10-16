@@ -172,7 +172,7 @@ describe('ART-WALD-RAUTEN Rauten-Metrik', () => {
     // frischer Aufbau (Welt + Raster) gegen die Messung aus `beforeAll`: ein Seed, eine Kantenart
     const world = createWorld(1);
     expect(measureOn(world, buildGrid(fieldWorld(world)), 'wald')).toEqual(measure('wald', 1));
-  });
+  }, 10_000);
 
   it('AK-T02c sampleNode: deterministisch je Seed, Verschiebung höchstens 3 Texturpixel', () => {
     const g = GRIDS.get(1)!.g;

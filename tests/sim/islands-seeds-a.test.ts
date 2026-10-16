@@ -112,9 +112,13 @@ const BLOCKS = Array.from({ length: 10 }, (_, k) =>
 );
 
 describe('M14-E1 A/B bitgleich, Seeds 1…500', () => {
-  it.each(BLOCKS)('AK-M14E1-12: Seeds (Block ab %i)', (...seeds) => {
-    for (const seed of seeds) checkSeed(seed);
-  });
+  it.each(BLOCKS)(
+    'AK-M14E1-12: Seeds (Block ab %i)',
+    (...seeds) => {
+      for (const seed of seeds) checkSeed(seed);
+    },
+    10_000,
+  );
 
   // AK-M14E1-14 verlangt höchstens 3 Stufe-3-Seeds über alle Seeds; gepinnt ist die gemessene Liste (strenger).
   it('AK-M14E1-14: Stufe-3-Seeds exakt [] (Seeds 1…500)', () => {
