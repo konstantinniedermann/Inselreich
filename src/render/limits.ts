@@ -31,6 +31,9 @@ export const CAPS = {
   dolphins: [3, 0],
   // M13-E2 T08: Funken des Aufflammens der Feuerschale (aus bei reduzierter Bewegung)
   flareSparks: [14, 0],
+  // Funkeln I-118: gleichzeitige Aufstiegs-Kränze und Funken je Aufstieg-Summe (aus bei reduzierter Bewegung)
+  riseGlow: [6, 6],
+  riseSparks: [8, 0],
 } as const;
 export type CapName = keyof typeof CAPS;
 export const cap = (name: CapName, reduce = false): number => CAPS[name][reduce ? 1 : 0];
