@@ -1139,3 +1139,63 @@ class CacheWriteSplitTest(unittest.TestCase):
         data = efficiency.compute([p])
         self.assertEqual(data["cache_write_split"]["pause_part"], 0.0)
         self.assertIn("Neuschreibung nach Pause", efficiency.render_section(data))
+
+
+class CacheWriteFirstLoadTest(unittest.TestCase):
+    """Cache-Write 5 min = Erstladung + Wachstum + Pause (disjunkt)."""
+
+    def build(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        m = "claude-opus-4"
+        write(
+            root / "s1.jsonl",
+            [
+                assistant("a", m, cc5=1000, ts="2026-10-01T10:00:00Z"),
+                assistant("b", m, cc5=5000, ts="2026-10-01T10:01:00Z"),
+                assistant("c", m, cc5=40000, ts="2026-10-01T10:10:00Z"),
+            ],
+        )
+        agent(
+            root,
+            "s1",
+            "x1",
+            {"agentType": "tech-sim-engineer"},
+            [
+                assistant("d", m, cc5=30000, ts="2026-10-01T10:02:00Z"),
+                assistant("e", m, cc5=500, ts="2026-10-01T10:03:00Z"),
+            ],
+        )
+        return efficiency.compute([root / "s1.jsonl"])
+
+    def test_first_load_growth_pause_sum_to_cache_write(self):
+        data = self.build()
+        split = data["cache_write_split"]
+        self.assertEqual(split["first_tokens"], 31000)
+        self.assertEqual(split["pause_tokens"], 40000)
+        self.assertEqual(split["growth_tokens"], 5500)
+        self.assertAlmostEqual(
+            split["first_share"] + split["growth_share"] + split["pause_share"],
+            data["kind_share"]["cache_write_5m"],
+        )
+
+    def test_by_role(self):
+        rows = {r["role"]: r for r in self.build()["cache_write_split"]["by_role"]}
+        self.assertEqual(rows["L0"]["first_tokens"], 1000)
+        self.assertEqual(rows["L0"]["growth_tokens"], 5000)
+        self.assertEqual(rows["tech-sim-engineer"]["first_tokens"], 30000)
+        self.assertEqual(rows["tech-sim-engineer"]["growth_tokens"], 500)
+        for row in rows.values():
+            self.assertAlmostEqual(
+                row["first_share"] + row["growth_share"] + row["pause_share"],
+                row["pause_share"] + row["other_share"],
+            )
+
+    def test_existing_line_unchanged_new_line_after(self):
+        lines = efficiency.render_section(self.build()).splitlines()
+        old = next(i for i, x in enumerate(lines) if "übriges Wachstum" in x)
+        new = next(i for i, x in enumerate(lines) if "Erstladung" in x)
+        self.assertGreater(new, old)
+        self.assertTrue(lines[new].startswith("- Cache-Write 5 min"))
+        self.assertIn("nur Info", lines[new])
