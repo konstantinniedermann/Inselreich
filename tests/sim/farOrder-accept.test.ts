@@ -63,7 +63,7 @@ describe('AK-H2-09 Fehlfälle in fester Reihenfolge (auch AK-H2-07)', () => {
   });
   it('Vertrag läuft', () => {
     const w = offerWorld();
-    w.contract = { good: 'wood', amount: 1, price: 1, island: 0 };
+    w.contract = { good: 'wood', amount: 1, price: 1, island: 0, deliveries: 0 };
     rejects(w, 'Vertrag läuft');
   });
   it('Angebot ohne Kontor', () => {
@@ -232,7 +232,7 @@ describe('AK-H2-32 Annehmen bei Vertrag', () => {
   it('ohne Angebot Kein Fernangebot', () => {
     const w = offerWorld();
     w.farOffer = null;
-    w.contract = { good: 'wood', amount: 1, price: 1, island: 0 };
+    w.contract = { good: 'wood', amount: 1, price: 1, island: 0, deliveries: 0 };
     expect(acceptFarOrder(w)).toEqual({ ok: false, reason: 'Kein Fernangebot' });
   });
 });

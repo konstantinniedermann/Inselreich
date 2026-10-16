@@ -111,7 +111,7 @@ describe('I-047 Stammkunde: Kartentexte (AK-SK-28)', () => {
   };
   const withContract = (island: number) => {
     const w = base();
-    w.contract = { good: 'rum', amount: 5, price: 27, island };
+    w.contract = { good: 'rum', amount: 5, price: 27, island, deliveries: 0 };
     return w;
   };
 
@@ -330,6 +330,8 @@ describe('I-047 Stammkunde: Meldungen (AK-SK-28)', () => {
     amount: 5,
     pay: 135,
     island: HOME,
+    loyal: false,
+    becameLoyal: false,
   };
 
   it('geliefert', () => {
@@ -362,7 +364,7 @@ describe('I-047 Stammkunde: Meldungen (AK-SK-28)', () => {
 
   it('vereinbart und gekündigt', () => {
     const c = createWorld(3, { unlockAll: true });
-    c.contract = { good: 'rum', amount: 5, price: 27, island: HOME };
+    c.contract = { good: 'rum', amount: 5, price: 27, island: HOME, deliveries: 0 };
     expect(contractAgreedMessage(c)).toBe('Stammkunde: 5 Rum alle 1:30 vereinbart');
     expect(CONTRACT_CANCELLED).toBe('Stammkunde gekündigt');
   });
@@ -429,7 +431,7 @@ describe('I-047 Stammkunde: Knöpfe und Warnfarbe (AK-SK-28)', () => {
 
   it('Vertrag: nur Kündigen', () => {
     const { actions, w, btn, shown, upd } = setup();
-    w.contract = { good: 'rum', amount: 5, price: 27, island: HOME };
+    w.contract = { good: 'rum', amount: 5, price: 27, island: HOME, deliveries: 0 };
     upd();
     expect(shown()).toEqual(['order-cancel']);
     expect(btn('order-cancel').textContent).toBe('Kündigen');
@@ -450,7 +452,7 @@ describe('I-047 Stammkunde: Knöpfe und Warnfarbe (AK-SK-28)', () => {
 
   it('Warnklasse folgt contractWarn', () => {
     const { w, el, upd } = setup();
-    w.contract = { good: 'rum', amount: 5, price: 27, island: HOME };
+    w.contract = { good: 'rum', amount: 5, price: 27, island: HOME, deliveries: 0 };
     home(w).stock.rum = 4;
     upd();
     expect(el.classList.contains('order-card--warn')).toBe(true);
@@ -527,7 +529,7 @@ describe('I-090 Knopf «Zum Erzeuger» (AK-HC-10)', () => {
     upd();
     expect(btn('order-producer').hidden).toBe(true);
     w.order = null;
-    w.contract = { good: 'rum', amount: 5, price: 27, island: HOME };
+    w.contract = { good: 'rum', amount: 5, price: 27, island: HOME, deliveries: 0 };
     upd();
     expect(btn('order-producer').hidden).toBe(false);
     expect(btn('order-cancel').hidden).toBe(false);
@@ -573,7 +575,7 @@ describe('I-102 Auftragskarte zeigt die Vorschau (AK-6, AK-7b)', () => {
     far.order = { period: 1, good: 'wood', amount: 5, reward: 90, due: 2400, island: 1 };
     expect(orderCardText(far)).not.toContain('voraussichtlich');
     const con = unlocked(750);
-    con.contract = { good: 'rum', amount: 5, price: 27, island: HOME };
+    con.contract = { good: 'rum', amount: 5, price: 27, island: HOME, deliveries: 0 };
     expect(orderCardText(con)).not.toContain('voraussichtlich');
     const off = unlocked(750);
     off.contractOffer = { good: 'rum', island: HOME };

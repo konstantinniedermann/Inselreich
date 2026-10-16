@@ -38,7 +38,7 @@ function withContract(): World {
   const w = createWorld(3, { unlockAll: true });
   foundKontor2Literal(w, 1);
   w.order = null;
-  w.contract = { good: 'rum', amount: 5, price: 27, island: 1 };
+  w.contract = { good: 'rum', amount: 5, price: 27, island: 1, deliveries: 0 };
   return w;
 }
 
