@@ -7861,3 +7861,14 @@ UI-HAEPPCHEN-F (R679, 21 Starts) als zwei Stränge.
 Regelbezug: gates.md Gate Merge, R668, R673, R675, R679 · Kosten bei Irrtum: ein Overlay, das bei Modal-Wechsel bis 170 ms später erscheint.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-UI-HAEPPCHEN-E · ADR: —
+
+## R681 · 2026-10-16 · REL-24 release-bereit (lokal); REL-25 mit I-091 und UI-HAEPPCHEN-F; zwei Umsetzungsstränge gestartet
+
+Ruling: UI-HAEPPCHEN-E gemergt `e854e59a`, releases.json `600cd4b8`. **REL-24** (UI-HAEPPCHEN-D + I-109, UI-HAEPPCHEN-E mit I-097 + I-102, BEOB-15,
+TOOL-METRIK-ZEITRAUM; kein Save-Wechsel) ist release-bereit; Release-Check und Push in der Folgesession (R335, Push REL-23 war der Push dieser
+Session). **REL-25** «Treue und Übersicht» (Vorschlag lead-production angenommen): I-091 (Save v16 nach R674) und UI-HAEPPCHEN-F. Beide Stränge laufen
+jetzt parallel (R679), Merge-Reihenfolge I-091 vor F.
+
+Regelbezug: R335, R674, R679, R680 · Kosten bei Irrtum: ein Release-Zuschnitt, der vor dem Push neu sortiert wird.
+
+Entscheider: L0 · Anlass: Bericht lead-production merge-UI-HAEPPCHEN-E · ADR: —
