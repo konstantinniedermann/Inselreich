@@ -61,3 +61,7 @@ Nicht ausgeführt (R464, Push REL-23 läuft). **T00** (Controller, vor T01, Load
 **Je Task mit `.ts`-Änderung (T01–T04, T06, T07):** `npx tsc --noEmit; echo EXIT=$?` und `make lint; echo EXIT=$?` mit Exit 0 im Task-Bericht. **Vor «bereit»:** zusätzlich `make zeittests; echo EXIT=$?` und `make conflicts; echo EXIT=$?`.
 
 **Rot-Beleg:** je neuem Testfall die rote Ausgabe vor der Umsetzung im Task-Bericht (R395, R410); Commit-Reihenfolge allein genügt nicht. Neue Tests lokal × 3 grün. Am Ende `make check; echo EXIT=$?`, `make zeitreserve-gate; echo EXIT=$?`, `make docs-check; echo EXIT=$?`; `git diff main -- src/sim tests/sim` leer (AK-UD-09, AK-UR-09); Spielstand ohne Log-/Reach-Feld.
+
+## Zeitmessung vorher (T00, gemessen auf main `ac85023c`, Load 4–7)
+
+`npx vitest related --run <6 src-Dateien>`: 55 Testdateien, 1056 Tests, Exit 0, 5,8 s gesamt. Einzeltests > 200 ms (ms): `tests/ui/time.test.ts` AK-UX-13 «kein Text enthält Tick» 369 und 312; `tests/sim/monument.test.ts` «Eingaben ergeben { ok, reason }» 465; `tests/render/geisterbauten.test.ts` T1 Dev-Abzeichen 357, Kontrolle Stadt ohne Fremdinsel 242; `tests/ui/cursorHint.test.ts` RF-4 316; `tests/ui/balancePreview.test.ts` AK-10 267; `tests/ui/islandTools.test.ts` foreignBuildingHover 260; `tests/ui/input.test.ts` AK-R17-12 235. Rohdaten `.studio/qa/UI-HAEPPCHEN-D/zeit-vor-main.json`. Abnahme (T09): dieselben Dateien auf main und Branch unmittelbar nacheinander; kein Test > 500 ms oder > +50 %.
