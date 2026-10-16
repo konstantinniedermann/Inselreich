@@ -542,6 +542,33 @@ RULE_KEYWORDS = (
     ("Freigabe-Formel", "constitution"),
 )
 COMMAND_LIMIT = 160
+REDACTED = "[REDACTED]"
+# Schwärzung für das Ereignisprotokoll: ersetzt nur den Secret-Teil. Grenzen:
+# Werte gelten bis zum nächsten Leerzeichen bzw. Anführungszeichen (Secrets mit
+# Leerzeichen in Quotes werden nur bis dort erfasst); "-p<pw>" greift auf jedes
+# alleinstehende Argument "-p" + Nicht-Bindestrich-Zeichen (mysql -pgeheim), ein
+# blosses "-p" oder "--p..." bleibt, Fehltreffer wie "-pattern" sind in Kauf genommen.
+REDACT_PATTERNS = (
+    (re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}"), REDACTED),
+    (re.compile(r"github_pat_[A-Za-z0-9_]{20,}"), REDACTED),
+    (re.compile(r"sk-[A-Za-z0-9_-]{20,}"), REDACTED),
+    (re.compile(r"xox[bp]-[A-Za-z0-9-]{10,}"), REDACTED),
+    (re.compile(r"AKIA[0-9A-Z]{16}"), REDACTED),
+    (re.compile(r"(?i)(\bBearer\s+)[^\s'\"]+"), r"\1" + REDACTED),
+    (re.compile(r"(--token(?:=|\s+))[^\s'\"]+"), r"\1" + REDACTED),
+    (
+        re.compile(r"(?i)(\b(?:password|passwd|secret|api_key)=)[^\s'\"]+"),
+        r"\1" + REDACTED,
+    ),
+    (re.compile(r"(?<!\S)(-p)[^\s\-'\"]\S*"), r"\1" + REDACTED),
+    (re.compile(r"(://)[^\s/:@]+:[^\s/@]+@"), r"\1" + REDACTED + "@"),
+)
+
+
+def redact(text: str) -> str:
+    for pattern, replacement in REDACT_PATTERNS:
+        text = pattern.sub(replacement, text)
+    return text
 
 
 def rule_of(found: str) -> str:
@@ -568,7 +595,7 @@ def _shown_command(payload: dict) -> str:
         text = str(data.get("file_path") or data.get("notebook_path") or "")
     else:
         text = str(data.get("description", ""))
-    return " ".join(text.split())[:COMMAND_LIMIT]
+    return redact(" ".join(text.split()))[:COMMAND_LIMIT]
 
 
 def _log_block(payload: dict, found: str) -> None:

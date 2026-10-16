@@ -572,3 +572,83 @@ class PersonaModelTest(unittest.TestCase):
         text = guard.deny_text(found)
         self.assertIn("R167", text)
         self.assertNotIn("Verfassung §6", text)
+
+
+class RedactTest(unittest.TestCase):
+    """Secrets werden vor dem Kürzen aus dem protokollierten Befehl geschwärzt."""
+
+    def shown(self, command):
+        return guard._shown_command(
+            {"tool_name": "Bash", "tool_input": {"command": command}}
+        )
+
+    def assertRedacted(self, command, secret):
+        out = self.shown(command)
+        self.assertNotIn(secret, out)
+        self.assertIn("[REDACTED]", out)
+        return out
+
+    def test_github_tokens(self):
+        for prefix in ("ghp_", "gho_", "ghu_", "ghs_", "ghr_"):
+            secret = prefix + "x" * 36
+            out = self.assertRedacted(f"git push https://x/{secret} now", secret)
+            self.assertTrue(out.startswith("git push"))
+            self.assertTrue(out.endswith(" now"))
+
+    def test_github_pat(self):
+        secret = "github_pat_" + "A1b2" * 10
+        self.assertRedacted(f"export T={secret}", secret)
+
+    def test_sk_tokens(self):
+        for secret in ("sk-" + "x" * 30, "sk-ant-" + "x" * 30):
+            self.assertRedacted(f"curl -H key:{secret} host", secret)
+
+    def test_slack_tokens(self):
+        for secret in ("xoxb-" + "1" * 12 + "-abc", "xoxp-" + "1" * 12 + "-abc"):
+            self.assertRedacted(f"echo {secret}", secret)
+
+    def test_aws_key(self):
+        secret = "AKIA" + "ABCD1234" * 2
+        self.assertRedacted(f"aws --key {secret}", secret)
+
+    def test_bearer(self):
+        out = self.assertRedacted(
+            "curl -H 'Authorization: Bearer abc123.def-456' host", "abc123"
+        )
+        self.assertIn("Bearer", out)
+
+    def test_token_flag(self):
+        self.assertRedacted("tool --token=geheim123 run", "geheim123")
+        self.assertRedacted("tool --token geheim123 run", "geheim123")
+        self.assertIn("run", self.shown("tool --token geheim123 run"))
+
+    def test_key_value_assignments(self):
+        for name in ("password", "PASSWORD", "passwd", "secret", "api_key", "Api_Key"):
+            self.assertRedacted(f"run {name}=geheim123 --x", "geheim123")
+
+    def test_attached_p_password(self):
+        self.assertRedacted("mysql -u root -pgeheim db", "geheim")
+        self.assertEqual(self.shown("mysql -p db"), "mysql -p db")
+        self.assertEqual(self.shown("git log -p"), "git log -p")
+
+    def test_url_credentials(self):
+        out = self.assertRedacted(
+            "git clone https://alice:geheim@host.example/r.git", "geheim"
+        )
+        self.assertIn("host.example/r.git", out)
+        self.assertEqual(
+            self.shown("git clone https://host.example/r.git"),
+            "git clone https://host.example/r.git",
+        )
+
+    def test_harmless_unchanged(self):
+        for command in ("git status", "ls -la src", "npm run build", "ls -a  -l"):
+            self.assertEqual(self.shown(command), " ".join(command.split()))
+
+    def test_redact_before_truncate(self):
+        secret = "ghp_" + "x" * 36
+        command = "a" * 145 + " " + secret
+        out = self.assertRedacted(command, secret)
+        self.assertNotIn("ghp_", out)
+        self.assertNotIn("xxxx", out)
+        self.assertLessEqual(len(out), guard.COMMAND_LIMIT)
