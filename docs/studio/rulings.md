@@ -1342,3 +1342,17 @@ die drei Testlücken (`load=0`, Kürzung auf 10 Namen, «Last ?» ohne Schlüsse
 Regelbezug: gates.md Gate Merge, R689, R692 · Kosten bei Irrtum: eine Ampelzeile, die bei Last 0 falsch formatiert.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-E070 · ADR: —
+
+## R696 · 2026-10-16 · Gate Spec ORT-A «Wege und Kanten»: OK mit E1–E5, E7; E6 erst messen; Plan in der Folgesession
+
+Ruling: `design/ortsrand` @ `ad315b3d`, Spec `docs/superpowers/specs/2026-10-16-ort-a-wege-und-kanten.md` (AK-01–AK-57, V1–V8; Handoff
+`.studio/handoffs/2026-10-16-lead-art-ORT-A-spec.md`; Testbarkeit lead-qa «testbar mit Auflagen», alle Blocker eingearbeitet) → **Gate Spec OK**. Angenommen:
+**E1** keine Variante-0-Hash-Änderung in ORT-A, eigener Bildmodus-Referenzhash als Schutz (ersetzt die Hash-Liste aus O8 für ORT-A); **E2** Bodenverlauf mit
+Dichte im Radius 1; **E3** Wegzeichnung ≤ +0,15 ms je Frame im Mittel gegen den Abzweigstand; **E4** Salze 600–619, 615–619 Reserve ORT-B; **E5** zwei
+getrennte Playtester-Läufe als Rater; **E7** weicher Schatten mit zwei Füllungen statt Clip. **E6** (Ausweichregel Patch-Zeit): erst messen — ORT-1 meldet ab
++20 % Patch-Zeit eine Frühwarnung an L0, die Ausweichregel wird erst mit Messwert entschieden. Merge der Spec nach main durch lead-production im Sammelmerge nach
+dem Push (R695). Plan durch lead-tech (opus, Tech-Lead beim Plan) in der Folgesession (Ampel gelb, R691).
+
+Regelbezug: gates.md Gate Spec, R688, R691, H-R7 · Kosten bei Irrtum: eine Patch-Zeit, die erst im Plan eine Ausweichregel braucht.
+
+Entscheider: L0 · Anlass: Bericht lead-art design-ORT-A · ADR: ADR-015
