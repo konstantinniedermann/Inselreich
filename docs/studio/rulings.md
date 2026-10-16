@@ -1423,3 +1423,16 @@ Bis dahin meldet der Controller «wartet» und endet, Fortsetzung per Nachricht.
 Regelbezug: gates.md Gate Plan, R698, R699 · Kosten bei Irrtum: ein Sim-Task, der nach dem UI-Merge einen kleinen Merge braucht.
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-I-114 · ADR: —
+
+## R702 · 2026-10-16 · REL-24 + REL-25 live; Gate Plan I-120 + I-118: OK, Umsetzung jetzt
+
+Ruling: (1) **REL-24 + REL-25 live**: Push `2e7a269f..8fe744df` (Fast-forward), CI 38887719217 grün, Pages 38888562306 grün; lead-production setzt
+`releases.json`/state.md nach (Paket REL-24-25-NACH). (2) `plan/i120-i118` @ `a234b215` (Handoff `.studio/handoffs/2026-10-16-lead-tech-plan-I-120-I-118.md`,
+T00–T08; «voll versorgt» = `allNeedsMet` lesend; keine neue Audio-Importkante) → **Gate Plan OK**. Budget **7 Starts**, Parallelität 2 (Stränge `feat/i120`
+Audio und `feat/i118` Render ohne gemeinsame Datei); je Strang ein Reviewer am Ende (E-068: Render opus wegen Diff > 300, Audio sonnet) plus Browser-Check.
+Merge-Reihenfolge: I-120 frei; I-118 nach ORT-A, wenn ORT-A vorher landet, sonst ORT-A holt I-118 (kleine Textkonflikte `limits.ts`/`renderer.ts`); vor
+jedem Merge-Gate main einmergen.
+
+Regelbezug: gates.md Gate Plan, R698, R700 · Kosten bei Irrtum: ein Funkeln, das im Browser-Check nachjustiert wird.
+
+Entscheider: L0 · Anlass: Berichte production-integrator REL-24-25-PUSH, lead-tech plan-I-120-I-118 · ADR: —
