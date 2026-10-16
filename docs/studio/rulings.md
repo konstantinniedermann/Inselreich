@@ -7872,3 +7872,20 @@ jetzt parallel (R679), Merge-Reihenfolge I-091 vor F.
 Regelbezug: R335, R674, R679, R680 · Kosten bei Irrtum: ein Release-Zuschnitt, der vor dem Push neu sortiert wird.
 
 Entscheider: L0 · Anlass: Bericht lead-production merge-UI-HAEPPCHEN-E · ADR: —
+
+## R682 · 2026-10-16 · Nutzerauftrag Altlasten: Paket CTX-ALTLAST (Kontext schlank halten)
+
+Ruling: Nutzerauftrag «Altlasten wie Screenshots füllen den Kontext neuer Sessions, löse das Problem». Auslegung: Messung zuerst (was lädt eine neue
+Session, was lesen Leads und Arbeiter tatsächlich), dann drei Hebel: (1) **Screenshots** `.studio/qa/` (7,3 GB, 7643 Dateien, git-ignoriert, liegt
+in Dropbox): Bilder von Paketen, die in einem **live** Release stecken (`releases.json`), werden gelöscht, Text-Berichte bleiben; Löschen innerhalb
+des Repos ist nach Verfassung §6.4 erlaubt, aber nur nach Trockenlauf-Liste. Dazu ein wiederholbares Werkzeug `make studio-aufraeumen`
+(Trockenlauf als Standard, `--apply` zum Löschen) und ein Schritt in der Ende-Routine. (2) **Erledigte Specs und Pläne** (502 Dateien,
+6,9 MB) von live Releases per `git mv` nach `docs/superpowers/archiv/`; eine `.ignore`-Datei im Repo-Root blendet Archive für Grep/Glob
+(ripgrep) standardmässig aus, explizite Pfade bleiben lesbar. (3) **rulings.md** (7874 Zeilen) auf die jüngsten Rulings kürzen, Älteres nach
+`rulings-archiv.md`; Verweise «rulings per grep» im Handbuch auf beide Dateien. Nichts aus REL-24/REL-25 und laufenden Strängen wird archiviert.
+Wirkung wird per Probe belegt (Grep-Treffer und Session-Start-Kontext vorher/nachher). Paket an lead-production, Branch im Worktree, Gate Merge L0.
+
+Regelbezug: Verfassung §6.4, R597 (DOC-ARCHIV), E-010 · Kosten bei Irrtum: ein archivierter Plan, der per expliziten Pfad nachgelesen werden muss;
+gelöschte Screenshots alter Playtests (Berichte bleiben).
+
+Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-16 · ADR: —
