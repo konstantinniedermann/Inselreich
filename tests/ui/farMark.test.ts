@@ -110,16 +110,14 @@ describe('AK-M4 seaMapKey', () => {
   it('gleich innerhalb derselben Sekunde', () => {
     const w = offerWorld();
     const l = layoutOf(w);
-    // auf Sekundenanfang ausrichten: formatGameTime rundet auf, also Rest bis Grenze nutzen
-    while (
-      formatGameTime(farOfferDue(w)! - w.tick) === formatGameTime(farOfferDue(w)! - w.tick - 1)
-    )
-      w.tick += 1;
+    const text = (): string => formatGameTime(farOfferDue(w)! - w.tick);
+    // so ausrichten, dass der nächste Tick noch in derselben Sekunde liegt
+    while (text() !== formatGameTime(farOfferDue(w)! - (w.tick + 1))) w.tick += 1;
     const k = seaMapKey(w, l);
-    const t = formatGameTime(farOfferDue(w)! - w.tick);
+    const t = text();
     w.tick += 1;
-    if (formatGameTime(farOfferDue(w)! - w.tick) === t) expect(seaMapKey(w, l)).toBe(k);
-    else expect(seaMapKey(w, l)).not.toBe(k);
+    expect(text()).toBe(t);
+    expect(seaMapKey(w, l)).toBe(k);
   });
 });
 
