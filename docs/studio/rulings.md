@@ -1474,3 +1474,17 @@ Studio-Befugnis → Warteschlange **N-102**; bis zur Antwort tragen ORT-A-Leistu
 Regelbezug: gates.md Gate Plan, R565 P3, R696, R698 · Kosten bei Irrtum: ein grosses Paket, das nach T09 neu zugeschnitten wird.
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-ORT-A · ADR: ADR-015
+
+## R706 · 2026-10-16 · Kurzdesign I-112 «Ratsbeschluss»: V3 angenommen mit R-1/R-2; Testbarkeit im Plan-Gate; Plan in der Folgesession
+
+Ruling: `design/i112` @ `37bfbe29` (Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-112.md`, Rechnung im Anhang) → **V3** angenommen: Seite A
+schnellerer Takt des Kettenendes (Weberei 50→40, Brennerei 50→40, Glashütte 50→30), Seite B Form der Stadt (Kapellen-Reichweite 10→13, Bürgerhaus 16 statt 15,
+Kaufmannshaus 22 statt 20); einmalig, kostenlos, partieweit, Wahl über Kopfzeilen-Marke «Rat» ohne Modal. **R-1**: der Balancing-Controller beschliesst nie,
+Baseline bitgleich, je Beschluss ein Szenariotest. **R-2**: die sechs Werte als Vorgabe für `src/sim/defs/`; Glockenrecht +4 erst per Werte-Ruling nach dem
+Playtest, wenn Stufe 2 fast immer A ergibt. Save: neues Feld `council`, `SAVE_VERSION` = main + 1 beim Merge (R674), ältere Stände abgewiesen mit Test. Auflage:
+lead-qa prüft die Testbarkeit der 17 AKs im Gate Plan; lead-tech prüft, dass alle Leser von `maxInhabitants` und `serviceRadius` über Lese-Helfer laufen.
+Rückfall V4 (nur Stufe 3) bleibt Option, falls der Plan zu gross wird. Plan in der Folgesession.
+
+Regelbezug: gates.md Gate Spec, R674, R692, R698 · Kosten bei Irrtum: ein Beschluss, der nach dem Playtest per Werte-Ruling nachgestimmt wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-112 · ADR: —
