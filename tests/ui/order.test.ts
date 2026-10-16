@@ -4,7 +4,7 @@ import type { ContractEvent, Order } from '../../src/sim/types';
 import type { StepReport } from '../../src/sim/tick';
 import { islandName } from '../../src/sim/islands';
 import { nextOrderTick, orderForPeriod, previewOrder } from '../../src/sim/orders';
-import { GOODS } from '../../src/sim/defs/goods';
+import { CONTRACT_LOYAL_AFTER, GOODS } from '../../src/sim/defs/goods';
 import { ORDER_FIRST_TICK } from '../../src/sim/defs/timing';
 import {
   CONTRACT_CANCELLED,
@@ -12,7 +12,6 @@ import {
   contractAgreedMessage,
   contractNotice,
   contractWarn,
-  loyaltyText,
   deliverLabel,
   deliveredMessage,
   orderCardText,
@@ -142,7 +141,7 @@ describe('I-047 Stammkunde: Kartentexte (AK-SK-28)', () => {
     const w = withContract(HOME);
     home(w).stock.rum = 12;
     expect(orderCardText(w)).toBe(
-      `Stammkunde: 5 Rum · nächste Lieferung 1:15 · Lager 12/5 · ${loyaltyText(w.contract!)}`,
+      `Stammkunde: 5 Rum · nächste Lieferung 1:15 · Lager 12/5 · Treue 0/${CONTRACT_LOYAL_AFTER}`,
     );
   });
 
