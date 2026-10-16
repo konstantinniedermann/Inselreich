@@ -7676,3 +7676,20 @@ REL-23, damit der geprüfte Push-Hash nicht wandert. E-069 gilt mit dem Merge al
 Regelbezug: gates.md Gate Merge, R335, R659, STUDIO.md Verbesserungsschleife · Kosten bei Irrtum: eine Ampelzahl, die sich gegenüber Altsessions leicht verschiebt.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-METRIK-ZEITRAUM, Hook-Signal · ADR: —
+
+## R667 · 2026-10-16 · Push REL-23 «Fernangebot» mit Zeitreserve-Ausnahme; Gate Plan UI-HAEPPCHEN-E mit O-1/O-2
+
+Ruling: (1) Release-Check REL-23 @ `2e7a269f` (Handoff `.studio/handoffs/2026-10-16-lead-qa-REL23-PUSH.md`): `make push-check` Exit 1 allein
+durch die strenge Zeitreserve zweier Tests ausserhalb des Handel-2-Diffs (`tests/render/wildlife.test.ts` RF-10, `tests/sim/unlock-timeline.test.ts`
+AK-BAS-03); alles andere grün (4034 Tests inkl. Balancing, `studio-test` 907, Lint, Build, `pages-limit`). Die vorgeschriebene Nachmessung
+`make zeitreserve-gate` Exit 0 (Reserve 0) → **Lastartefakt** nach gates.md R598 V1/R585; Release-Notiz stimmt mit dem Code. → **Gate Push OK mit
+bewusster Ausnahme**, Push `fb1e5e46..2e7a269f` per geprüftem Hash; CI entscheidet; danach `gh workflow run Pages --ref main`. Die beiden Tests
+und die zwei Restbefunde aus HANDEL-2 (`tests/ui/farOrder.test.ts:198` tautologisch, tote Klausel `src/sim/save.ts` ≈ 882) → `docs/beobachtungen.md`
+durch lead-production mit releases.json (REL-23 live). (2) Danach Freigaben aus R662 (UI-HAEPPCHEN-D Umsetzung, 21 Starts) und R666 (Merge
+TOOL-METRIK-ZEITRAUM). (3) Plan UI-HAEPPCHEN-E `plan/ui-haeppchen-e` @ `ac14dcb5`: O-1 Rand `box-shadow: inset 0 0 0 4px var(--gold)` + Innenschatten
+aus `--bg`, Banner `--wood/--parchment/--gold`, kein neuer Farbwert; O-2 `applyPauseOverlay(...)` als erste Zeile in `refresh()` — beide
+angenommen; Gate Plan durch lead-qa; Budgetantrag 16 Starts mit dem Gate.
+
+Regelbezug: gates.md Gate Push und R598 V1, R335, R585, R662, R666 · Kosten bei Irrtum: ein roter CI-Lauf wegen Timeout eines Fremdtests (Rerun oder Timeout-Fix nach E-043).
+
+Entscheider: L0 · Anlass: Berichte lead-qa REL23-PUSH, lead-tech plan-UI-HAEPPCHEN-E · ADR: —
