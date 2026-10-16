@@ -290,7 +290,7 @@ export interface Ship {
   homing: boolean;
 }
 export interface World {
-  version: 15;
+  version: 16;
   seed: number;
   islands: Island[];
   tick: number;
