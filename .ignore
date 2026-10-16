@@ -1,0 +1,8 @@
+# Von ripgrep (rg, Claude-Codes Grep/Glob) gelesen, nicht von git: blendet Archive in Suchen aus (R682).
+# Explizite Datei-Pfade (Read, rg <muster> <datei>) bleiben lesbar; ganze Archiv-Ordner durchsuchen: rg --no-ignore-dot.
+docs/superpowers/archiv/
+docs/studio/rulings-archiv.md
+docs/studio/retros/
+docs/studio/metriken/
+docs/ideen-archiv.md
+docs/beobachtungen-archiv.md
