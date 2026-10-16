@@ -361,13 +361,6 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Ursprung: UI-HAEPPCHEN-E
 - Erste Einschätzung: niedrig; kein Fehler, nur zur Kenntnis.
 
-## 2026-10-16 · UI-HAEPPCHEN-E: Ereignis-Log und Banner ungeprüft
-
-- Fundort: Playtest T05, Ereignis-Log unten links (`src/ui/eventLogView.ts`) und Pause-Banner
-- Beobachtung: Das Ereignis-Log war im Playtest nicht sichtbar. Ob das Banner dort etwas überdeckt, ist ungeprüft.
-- Ursprung: UI-HAEPPCHEN-E
-- Erste Einschätzung: niedrig; bei Gelegenheit mit sichtbarem Log prüfen.
-
 ## 2026-10-16 · UI-HAEPPCHEN-E: Auftragskarte zu Spielbeginn verborgen
 
 - Fundort: Auftragskarte bei stufenweiser Freischaltung (U3)
