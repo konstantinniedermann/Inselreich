@@ -1512,3 +1512,15 @@ mit Testlauf (ergänzt R703); Messgrösse `davon Last ≥ 8` ≤ 50 % über 3 Se
 Regelbezug: R316, R673, R693, R703 · Kosten bei Irrtum: eine Umsetzung, die eine halbe Stunde später startet.
 
 Entscheider: L0 · Anlass: Kurz-Retro 66d37b15 · ADR: —
+
+## R709 · 2026-10-16 · Session-Start ca9d40c8: UI-AUFRAEUM-4 per Fortsetzung; Plan I-112 jetzt; ORT-A ab Last < 8
+
+Ruling: (1) Der Controller `lead-tech` UI-AUFRAEUM-4 (Agent `a7b1c43c`, Session 66d37b15) lebt nach `/clear` weiter und wartet auf seinen eigenen `make check`
+(`feat/ui-aufraeum-4` @ `150f98f8`); kein Neustart, L0 setzt ihn nach Ende des Laufs per `SendMessage` fort (Stand, Restbudget aus R694, Ziel Gate Merge).
+(2) **Plan I-112** (`lead-tech`, opus, Paket `plan-I-112`) startet jetzt: ohne Testlauf, daher auch bei Last > 8 zulässig (R464, R703, R708 V2);
+Budget 1 Start. (3) **ORT-A** startet erst bei 1-min-Last < 8 als zweite Umsetzung mit Testlauf (R703, R708 V2); I-114 T02 ff. weiter nach Merge
+UI-AUFRAEUM-4 (R701). (4) Beobachtungen 12 < 30: keine Pflicht-Auswertung.
+
+Regelbezug: R464, R694, R701, R703, R705, R706, R708 · Kosten bei Irrtum: ein Controller, der doppelt läuft, oder ein Plan, der eine halbe Stunde später startet.
+
+Entscheider: L0 · Anlass: Session-Start ca9d40c8 · ADR: —
