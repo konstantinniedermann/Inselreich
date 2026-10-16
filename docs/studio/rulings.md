@@ -1277,3 +1277,17 @@ Menü «Krisen (neue Insel)», Rechtsklick bei gehaltener linker Taste, `aria-la
 Regelbezug: gates.md Gate Merge, R475, R683, R688 · Kosten bei Irrtum: ein Aufräum-Paket, das eine Session früher geplant wird als nötig.
 
 Entscheider: L0 · Anlass: Berichte lead-tech UI-HAEPPCHEN-F, lead-production BEOB-16 · ADR: —
+
+## R691 · 2026-10-16 · Gate Merge UI-HAEPPCHEN-F: OK; Merge F, dann BEOB-16; Ampel gelb → keine neue Welle
+
+Ruling: `feat/ui-haeppchen-f` @ `f4da449e` (Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-UI-HAEPPCHEN-F.md`): Auflagen R679 belegt, Final-Review opus
+
+- Delta OK (R673, Beleg im Handoff lead-tech), `src/sim` nur `routeBalance.ts` lesend, `SAVE_VERSION` 16, Balancing ohne Diff, Prüfläufe Exit 0, Merge-Probe
+  konfliktfrei → **Gate Merge OK**. lead-production merged `--no-ff` F, danach `docs/beob-16` (R690 (2)), setzt I-101/I-103/I-108 auf «gemergt (R691)»,
+  releases.json REL-25 (F gemergt), fährt `make check` auf main (Makefile geändert). Danach Release-Check REL-24+REL-25 durch lead-qa und Push nach
+  Gate Push L0 (R688 (2)). Limit-Ampel gelb: keine neue Welle; laufende Pakete (ORT-A-Spec, IDEEN-11, Plan UI-AUFRAEUM-4, TOOL-E070, E-064) werden
+  abgeschlossen, ihre Gates können in die Folgesession gehen.
+
+Regelbezug: gates.md Gate Merge, R673, R679, R688, R690, R69 · Kosten bei Irrtum: ein Release mit einer Kopfzeilen-Anzeige, die nachgebessert wird.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-UI-HAEPPCHEN-F · ADR: —
