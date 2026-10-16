@@ -23,8 +23,8 @@ import { cycleOf } from '../../src/sim/levels';
 import { feastActive, holdFeast } from '../../src/sim/feast';
 import { serviceAvailable, tickPopulation, tierCap, upgradeStatus } from '../../src/sim/population';
 import { coverageMask, placementZone } from '../../src/sim/queries';
-import { step } from '../../src/sim/tick';
 import { serialize } from '../../src/sim/save';
+import { step } from '../../src/sim/tick';
 import type { BuildingDefId, CouncilTier, World } from '../../src/sim/types';
 import {
   houseNearKontor,

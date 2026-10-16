@@ -112,9 +112,10 @@ describe('I-112 Wächter: Hebel-Werte nur über Helfer (R706 a)', () => {
   });
 });
 
-/** Wächter AK-11: Text enthält `decree` oder einen Import aus `src/sim/council`. */
+/** Wächter AK-11: Text enthält `decree` oder einen Import (statisch, `require(`, `import(`) aus `src/sim/council`. */
 const importsDecree = (text: string): boolean =>
-  /\bdecree\b/.test(text) || /from\s+['"][^'"]*sim\/council['"]/.test(text);
+  /\bdecree\b/.test(text) ||
+  /(?:from\s+|require\s*\(\s*|import\s*\(\s*)['"][^'"]*sim\/council['"]/.test(text);
 
 describe('I-112 Wächter: Controller beschliessen nie (AK-11)', () => {
   it('importsDecree erkennt Import und Aufruf, lässt harmlosen Text durch', () => {
@@ -122,6 +123,14 @@ describe('I-112 Wächter: Controller beschliessen nie (AK-11)', () => {
     expect(importsDecree("import { x } from '../../src/sim/council';")).toBe(true);
     expect(importsDecree('decree(w, 2, "A");')).toBe(true);
     expect(importsDecree("import { step } from '../../src/sim/tick';")).toBe(false);
+  });
+  it('importsDecree erkennt require und dynamisches import() auf council', () => {
+    expect(importsDecree("const c = require('../../src/sim/council');")).toBe(true);
+    expect(importsDecree('const c = require("../../src/sim/council")')).toBe(true);
+    expect(importsDecree("const c = await import('../../src/sim/council');")).toBe(true);
+    expect(importsDecree('import("../../src/sim/council").then(run);')).toBe(true);
+    expect(importsDecree("const t = require('../../src/sim/tick');")).toBe(false);
+    expect(importsDecree("const t = await import('../../src/sim/tick');")).toBe(false);
   });
   it.each(['tests/sim/controller.ts', 'tests/sim/merchantsController.ts'])(
     '%s enthält weder decree noch Import aus src/sim/council',
