@@ -367,3 +367,17 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Zu Spielbeginn ist die Auftragskarte verborgen, die Vorschau wird also erst nach der Freischaltung sichtbar.
 - Ursprung: UI-HAEPPCHEN-E
 - Erste Einschätzung: niedrig; beabsichtigt durch U3.
+
+## 2026-10-16 · CTX-ALTLAST: Agenten suchen mit `grep`, nicht mit `rg`
+
+- Fundort: Transkripte unter `~/.claude/projects/-Users-KN-CAS-projekte-anno-clone/` (2103 Dateien)
+- Beobachtung: Bash-Aufrufe mit `grep` 24361, mit `rg` 5; Grep-Werkzeug 2; davon `grep … rulings.md` 1359. `.ignore` wirkt nur auf `rg` und das Grep-Werkzeug, nicht auf `grep -r`. Ausserdem liest `rg` ohne Pfadangabe im Bash-Werkzeug stdin und hängt (Pfad `.` angeben).
+- Ursprung: CTX-ALTLAST, Messung A (c)
+- Erste Einschätzung: mittel; Persona-Hinweis «mit `rg <muster> .` suchen» wäre der Hebel, braucht Handbuch-Ruling.
+
+## 2026-10-16 · CTX-ALTLAST: `make studio-aufraeumen --apply` geht nicht
+
+- Fundort: `Makefile`, Ziel `studio-aufraeumen`
+- Beobachtung: `make` verwirft `--apply` als eigene Option; das Argument heisst `ARGS=--apply`. Im Auftrag stand die andere Schreibweise; STUDIO.md Schritt 2b nennt die richtige. Der Python-Test liegt unter `tools/studio/tests/` (dort läuft `make studio-test`), nicht unter `tests/tools/` (Vitest).
+- Ursprung: CTX-ALTLAST
+- Erste Einschätzung: niedrig; zur Kenntnis.
