@@ -1917,3 +1917,15 @@ Fallback kleinere Schrift. Budget (V3) **12 Arbeiter-Starts + 1 Controller, Para
 Regelbezug: gates.md Gate Plan, R738, E-068 · Kosten bei Irrtum: ein Strang, der eine halbe Stunde später läuft.
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-I-122-I-123 · ADR: —
+
+## R742 · 2026-10-16 · Gate Merge I-112: OK mit M-1/M-2; Merge jetzt (Save v17); danach I-122 + I-123
+
+Ruling: `feat/i112` @ `3fbd13b4` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-I-112.md`; `make check` Exit 0, 4320 Tests; 17 AKs belegt; Baseline bitgleich) →
+**Gate Merge OK**. **M-1:** `SAVE_VERSION` = main + 1 beim Merge = **17** (main ist 16; Erweiterung 1 hat nicht gemergt); die Nutzer-Session nimmt für Erweiterung 1 dann
+main + 1 = 18 (R674). **M-2:** Playtest-Bilder bleiben lokal unter `.studio/qa/i112/` im Worktree (Arbeitsablage, nicht versioniert; Aufräumen nach R682). Regel aus R740
+(Tooltip-Zeilen nur sichtbar) gilt dauerhaft. lead-production merged lokal (`--no-ff`), nimmt I-112 in REL-26 auf (Save v16 → v17 mit Migration) und setzt in
+`docs/ideen.md` I-112 auf «gemergt (R742)». Danach startet I-122 + I-123 (R741). Budget (V3) I-112 abgeschlossen mit 24 von 25.
+
+Regelbezug: gates.md Gate Merge, R674, R682, R706, R711, R740, R741 · Kosten bei Irrtum: eine Save-Nummer, die vor dem Push neu vergeben werden muss.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-112 · ADR: —
