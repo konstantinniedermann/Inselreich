@@ -1842,3 +1842,15 @@ I-112 22 von 25.
 Regelbezug: R316, R673, R708, Handbuch Verbesserungsschleife · Kosten bei Irrtum: ein Umschnitt, der eine Runde zu früh kommt.
 
 Entscheider: L0 · Anlass: Ad-hoc-Retro Budget · ADR: —
+
+## R736 · 2026-10-16 · ORT-A E6: T05b Zwei-Zonen-Patch vor T06; Budget C3 «8 von 8», ORT-A-Puffer «8 von 12» verbraucht
+
+Ruling: ORT-A C3 (`feat/ort-a`; T04 `d83f40a7`, T05 `c12563f0`, Beobachtungen `ebcc15ad`; Handoff `.studio/handoffs/2026-10-16-lead-tech-ORT-A-C3.md`) → T04, T05 abgenommen;
+T04-BEDENKEN durch T05-Review gedeckt. P-9-Frühwarnung (Richtwert unter Last, CPU-Mikromessung `paintPixels`): B/A = 2,50–2,54 (≈ +150 %), überwiegend Fläche von
+Rand 2; ≈ 37 ms liegt an der Ruckelgrenze 25 ms (R313). **E6 → Option 1: T05b Zwei-Zonen-Patch** (Ring rechnet nur den Saum, mischt auf gespeicherten Grundpuffer),
+danach T06; Abbruchkriterium: liegt der Richtwert nach T05b noch > +50 % über A, Stopp und L0 entscheidet zwischen Rand 1 und Zuschnitt (V1 R735). Budget (V3):
+C3 4 von 6 verbraucht + 2 aus dem Puffer für T05b → **C3 8 von 8**; ORT-A-Puffer **8 von 12** verbraucht (T08 +5, T05b +2, R723 +1). Gewertete Messung bleibt T09.
+
+Regelbezug: R313, R705, R726, R735 · Kosten bei Irrtum: zwei Starts für einen Patch, der in T09 doch nicht reicht.
+
+Entscheider: L0 · Anlass: Frühwarnung lead-tech ORT-A C3 (E6) · ADR: —
