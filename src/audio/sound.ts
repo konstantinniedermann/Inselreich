@@ -12,7 +12,6 @@ import {
 } from './mix';
 import {
   AMBIENCE_ACCEPT_MS,
-  ambienceMix,
   createAmbienceEngine,
   createSampleLoader,
   type AmbienceEngine,
@@ -588,7 +587,7 @@ export function createSound(
       lastAmbienceMs = t;
       const e = engine;
       const now = ctx.currentTime;
-      safe(() => e.update(ambienceMix(input), now));
+      safe(() => e.apply(input, now));
     },
     setPhase(p) {
       if (disposed) return;

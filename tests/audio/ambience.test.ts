@@ -7,6 +7,8 @@ import {
   IDLE_STOP_S,
   ambienceMix,
   createLoopPlayer,
+  smoothShare,
+  townFactor,
 } from '../../src/audio/ambience';
 import { assetUrl, LAYER_FILES, MANIFEST, SFX_FILES } from '../../src/audio/manifest';
 import type { AmbienceInput, Layer, ViewStats } from '../../src/audio/mix';
@@ -23,6 +25,65 @@ const view = (o: Partial<ViewStats>): ViewStats => ({
   ...o,
 });
 const CLEAR = { kind: 'clear', w: 0 } as const;
+
+describe('Wohlstandsklang Kurve (I-120)', () => {
+  const town = { view: view({ inhabitants: 60, zoom: 2 }), phase: 'day', weather: CLEAR } as const;
+  const withShare = (suppliedShare: number, houses = 10): AmbienceInput => ({
+    ...town,
+    view: { ...town.view, suppliedShare, houses },
+  });
+
+  it('A1 townFactor: Stützpunkte, monoton, kaputte Eingaben ohne Eingriff', () => {
+    expect(townFactor(0.8)).toBe(1);
+    expect(townFactor(0.9)).toBe(1);
+    expect(townFactor(1)).toBe(1);
+    expect(townFactor(0.4)).toBeCloseTo(0.5, 9);
+    expect(townFactor(0.2)).toBe(0);
+    expect(townFactor(0)).toBe(0);
+    let prev = -1;
+    for (let i = 0; i <= 100; i++) {
+      const f = townFactor(i / 100);
+      expect(f).toBeGreaterThanOrEqual(prev);
+      prev = f;
+    }
+    for (const bad of [undefined, NaN, -1, Infinity]) expect(townFactor(bad)).toBe(1);
+  });
+
+  it('A2 Stadtschicht folgt dem Anteil; ohne Feld unverändert', () => {
+    const hi = ambienceMix(withShare(1)).town;
+    const lo = ambienceMix(withShare(0.3)).town;
+    expect(hi).toBeGreaterThanOrEqual(2 * lo);
+    expect(ambienceMix(town).town).toBe(1);
+    expect(hi).toBe(1);
+  });
+
+  it('A3 Share 0,1 mit Häusern: Stadt still, Wind höher; ohne Häuser unverändert', () => {
+    const quiet = ambienceMix(withShare(0.1, 3));
+    const full = ambienceMix(withShare(1, 3));
+    expect(quiet.town).toBe(0);
+    expect(quiet.wind).toBeGreaterThan(full.wind);
+    expect(ambienceMix(withShare(0.1, 0)).wind).toBe(full.wind);
+    expect(ambienceMix(withShare(0.1, 0)).town).toBe(ambienceMix(town).town);
+  });
+
+  it('A4 smoothShare: Zeitkonstante 10 s, deterministisch, dt <= 0 ohne Wirkung', () => {
+    expect(smoothShare(undefined, 0.5, 1)).toBe(0.5);
+    expect(smoothShare(1, 0, 10)).toBeCloseTo(Math.exp(-1), 9);
+    let x: number | undefined = 1;
+    for (let i = 0; i < 120; i++) x = smoothShare(x, 0, 0.25);
+    expect(x).toBeLessThan(0.06);
+    const run = () => {
+      let y: number | undefined;
+      for (const n of [1, 0.2, 0.7, 0.1]) y = smoothShare(y, n, 0.25);
+      return y;
+    };
+    expect(run()).toBe(run());
+    expect(smoothShare(0.6, 0, 0)).toBe(0.6);
+    expect(smoothShare(0.6, 0, -1)).toBe(0.6);
+    expect(smoothShare(0.6, 0, NaN)).toBe(0.6);
+    expect(smoothShare(undefined, 0.4, 0)).toBe(0.4);
+  });
+});
 
 describe('ambienceMix', () => {
   it.each([
@@ -391,6 +452,29 @@ describe('Umgebung im Ton', () => {
     for (const k of Object.keys(want) as Layer[]) expect(got[k]).toBeCloseTo(want[k], 9);
   });
 
+  it('I-120 setAmbience glättet den Anteil auf der Audio-Uhr (Verdrahtung)', () => {
+    const { f, s } = mk();
+    s.unlock();
+    vi.advanceTimersByTime(300);
+    const at = (share: number): AmbienceInput => ({
+      phase: 'day',
+      weather: CLEAR,
+      view: view({ inhabitants: 60, zoom: 2, suppliedShare: share, houses: 10 }),
+    });
+    s.setAmbience(at(1));
+    expect(s.debugState().layers.town).toBe(1);
+    step(f, 1);
+    s.setAmbience(at(0.2)); // roh 0, geglättet erst leicht darunter
+    const town = s.debugState().layers.town ?? 0;
+    expect(town).toBeGreaterThan(0.9);
+    expect(town).toBeLessThanOrEqual(1);
+    for (let t = 2; t <= 40; t++) {
+      step(f, t);
+      s.setAmbience(at(0.2));
+    }
+    expect(s.debugState().layers.town ?? 1).toBeLessThan(0.2);
+  });
+
   it('AK-A2-03 fetchBuffer lehnt ab: Rückfall der Schicht, nichts wirft, kein zweiter Versuch', async () => {
     const { f, io, s } = mk('reject');
     s.unlock();
@@ -646,5 +730,36 @@ describe('Fix-Runde A2 (Drossel, Vorlauf, Warteliste)', () => {
     for (let k = 0; k < 30; k++) eng.update(ambienceMix(calm), k * 0.25);
     await flush();
     expect(requests.filter((r) => r.endsWith('sea.mp3'))).toHaveLength(1);
+  });
+
+  it('A5 apply: Anteil wird auf der Audio-Uhr geglättet, Gleiten ohne harte Stufe, kaputte Eingabe wirft nicht', () => {
+    const f = fake();
+    const loader = { get: () => null, request: () => {}, dispose() {} };
+    const eng = createAmbienceEngine({
+      ctx: f.ctx,
+      dest: {} as AudioNode,
+      noise: {} as AudioBuffer,
+      loader,
+    });
+    const base = { phase: 'day', weather: CLEAR } as const;
+    const inp = (suppliedShare: number): AmbienceInput => ({
+      ...base,
+      view: view({ inhabitants: 60, zoom: 2, suppliedShare, houses: 10 }),
+    });
+    eng.apply(inp(1), 0);
+    expect(eng.levels().town).toBe(1);
+    for (let k = 1; k <= 40; k++) eng.apply(inp(0.2), k * 0.25); // 10 s: Anteil ~0,5
+    const t1 = eng.levels().town ?? 0;
+    expect(t1).toBeGreaterThan(0.4);
+    expect(t1).toBeLessThan(0.9);
+    for (let k = 41; k <= 120; k++) eng.apply(inp(0.2), k * 0.25); // 30 s
+    expect(eng.levels().town ?? 1).toBeLessThan(0.1);
+    for (const t of f.targets) expect(t.tc).toBeCloseTo(GLIDE_S / 3, 9);
+    expect(f.targets.length).toBeGreaterThan(0);
+    expect(() =>
+      eng.apply({ ...base, view: view({ suppliedShare: NaN, houses: undefined }) }, 31),
+    ).not.toThrow();
+    eng.apply(inp(1), 32); // nach gelöschtem Zustand: Neustart bei 1
+    expect(eng.levels().town).toBe(1);
   });
 });

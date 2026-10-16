@@ -48,6 +48,27 @@ const LOOKAHEAD_S = 1; // deckt zwei 500-ms-Takte ab (Drossel plus Jitter)
 const clamp01 = (v: number): number => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0);
 const num = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
 
+/** Kurve B (I-120): Stadtschicht nach Anteil voll versorgter Häuser; ungültig → 1 (kein Eingriff). */
+export function townFactor(share: number | undefined): number {
+  if (typeof share !== 'number' || !Number.isFinite(share) || share < 0) return 1;
+  if (share <= 0.2) return 0;
+  if (share <= 0.4) return ((share - 0.2) / 0.2) * 0.5;
+  if (share <= 0.8) return 0.5 + ((share - 0.4) / 0.4) * 0.5;
+  return 1;
+}
+
+/** Exponentielle Glättung des Anteils auf der Audio-Uhr (Zeitkonstante `tauS`). Ohne Zufall. */
+export function smoothShare(
+  prev: number | undefined,
+  next: number,
+  dtS: number,
+  tauS = 10,
+): number {
+  if (prev === undefined) return next;
+  if (!Number.isFinite(dtS) || dtS <= 0) return prev;
+  return prev + (next - prev) * (1 - Math.exp(-dtS / tauS));
+}
+
 /** Zielpegel 0…1 je Schicht (Formeln Spec 7.3). `reduced` hat in M7 keine Wirkung. */
 export function ambienceMix(input: AmbienceInput): Record<Layer, number> {
   const v = input.view;
@@ -64,10 +85,15 @@ export function ambienceMix(input: AmbienceInput): Record<Layer, number> {
   const night = phase === 'night';
 
   const windRain = kind === 'cloudy' || kind === 'storm' ? 0.5 * w : 0;
-  const townBase = Math.min(1, inhabitants / 60) * (0.3 + 0.7 * zn);
+  const share = v.suppliedShare;
+  const tf =
+    typeof share === 'number' && Number.isFinite(share) && num(v.houses) > 0
+      ? townFactor(share)
+      : 1;
+  const townBase = Math.min(1, inhabitants / 60) * (0.3 + 0.7 * zn) * tf;
   return {
     sea: clamp01(0.35 + 0.65 * water),
-    wind: clamp01(0.15 + 0.35 * (1 - zn) + windRain),
+    wind: clamp01(0.15 + 0.35 * (1 - zn) + windRain + 0.15 * (1 - tf)),
     birds: day ? clamp01(0.6 * (green + forest)) : 0,
     gulls: day || phase === 'evening' ? clamp01(0.5 * coast) : 0,
     night: night
@@ -244,6 +270,11 @@ export interface AmbienceEngine {
   update(levels: Record<Layer, number>, now: number): void;
   /** Aktuelle Zielpegel (nur Schichten, die schon einmal gesetzt wurden). */
   levels(): Partial<Record<Layer, number>>;
+  /**
+   * Eingabe der UI: glättet `suppliedShare` auf der Audio-Uhr (`now`), mischt und ruft `update`.
+   * Ohne endlichen Anteil wird der Zustand gelöscht (Ansicht ohne Häuser = Verhalten wie vor I-120). Wirft nie.
+   */
+  apply(input: AmbienceInput, now: number): void;
   dispose(): void;
 }
 
@@ -538,7 +569,28 @@ export function createAmbienceEngine(deps: {
   // Meer läuft von Anfang an mit dem M5-Rauschen, bis die Datei geladen ist.
   startLayer('sea');
 
-  return {
+  let smoothedShare: number | undefined;
+  let lastAmbienceT: number | undefined;
+
+  const self: AmbienceEngine = {
+    apply(input, now) {
+      if (disposed) return;
+      try {
+        const share = input.view.suppliedShare;
+        const dtS = lastAmbienceT === undefined ? 0 : now - lastAmbienceT;
+        lastAmbienceT = now;
+        let view = input.view;
+        if (typeof share === 'number' && Number.isFinite(share)) {
+          smoothedShare = smoothShare(smoothedShare, share, dtS);
+          view = { ...view, suppliedShare: smoothedShare };
+        } else {
+          smoothedShare = undefined;
+        }
+        self.update(ambienceMix({ ...input, view }), now);
+      } catch {
+        /* Klang darf nie werfen */
+      }
+    },
     update(levels, now) {
       if (disposed) return;
       for (const l of LAYERS) {
@@ -560,4 +612,5 @@ export function createAmbienceEngine(deps: {
       for (const l of LAYERS) stopLayer(l);
     },
   };
+  return self;
 }
