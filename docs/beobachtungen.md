@@ -373,3 +373,38 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Wählt man eine stehende Kapelle (Dienstgebäude) aus, erscheint kein Reichweitenkreis. Vorbestehend auf main, nicht durch I-112 verursacht.
 - Ursprung: I-112
 - Erste Einschätzung: gering; Komfort, bei Überarbeitung der Auswahl-Anzeige prüfen.
+
+## 2026-10-16 · TOOL-GUARD: `_shown_command`/`COMMAND_LIMIT` nur noch von Tests genutzt
+
+- Fundort: `tools/studio/guard.py` (`COMMAND_LIMIT`, `_shown_command`)
+- Beobachtung: Beide werden nach dem Umbau nur noch von `tools/studio/tests/test_guard.py` verwendet, nicht mehr im Produktivpfad.
+- Ursprung: TOOL-GUARD-ALLOWLIST (R744)
+- Erste Einschätzung: gering; bei nächster Berührung von `guard.py` entfernen oder bewusst als Testhilfe kennzeichnen.
+
+## 2026-10-16 · TOOL-GUARD: Restlücken der Schwärzung `redact` für andere Ausgaben
+
+- Fundort: `tools/studio/guard.py` (`redact`), Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-GUARD-REDACT.md`
+- Beobachtung: Bewusste Lücken: `https://TOKEN@host` ohne Präfix, URL-Passwort mit `/` oder `@`, `Authorization:` ohne Schema, `?key=`, verkettete/escapte Quotes, Flag-Präfix >40, Namenssuffix >5 Segmente, Werte aus Dateien/Variablen, nacktes Positionsargument, `-u` ohne `:`. Über-Schwärzung: `-pattern`, `-pthread`, `mysql -p db`. `guard_block` selbst ist dicht.
+- Ursprung: TOOL-GUARD-REDACT
+- Erste Einschätzung: gering, solange `redact` nur für `guard_block` genutzt wird; relevant bei Wiederverwendung für andere Ausgaben.
+
+## 2026-10-16 · I-132: Controller-Endstand ohne Nahrungsreserve
+
+- Fundort: Balancing-Controller `tests/sim/controller.ts`
+- Beobachtung: Der Controller-Endstand hält keine Nahrungsreserve vor.
+- Ursprung: Kurzdesign I-132, Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-132.md`
+- Erste Einschätzung: niedrig; Baseline-Thema, nur per Werte-Ruling ändern.
+
+## 2026-10-16 · I-132: Controller baut keine Feuerwache
+
+- Fundort: Balancing-Controller `tests/sim/controller.ts`
+- Beobachtung: Ohne Feuerwache kostet ein Brand auf Kapelle/Schule/Bad 21 % der Einwohner.
+- Ursprung: Kurzdesign I-132, Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-132.md`
+- Erste Einschätzung: niedrig; Baseline-Thema, nur per Werte-Ruling ändern.
+
+## 2026-10-16 · I-132: Controller kauft Gewürze nur für die nächsten 100 Ticks
+
+- Fundort: Balancing-Controller `tests/sim/controller.ts`
+- Beobachtung: Der Gewürzkauf deckt nur die nächsten 100 Ticks.
+- Ursprung: Kurzdesign I-132, Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-132.md`
+- Erste Einschätzung: niedrig; Baseline-Thema, nur per Werte-Ruling ändern.
