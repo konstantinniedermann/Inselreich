@@ -1222,3 +1222,15 @@ bleibt Beobachtung (schon eingetragen).
 Regelbezug: gates.md Gate Merge, R673, R674, R684 · Kosten bei Irrtum: eine Spielstand-Migration, die ein Sonderfall übersieht (Abweisen statt Absturz).
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-I-091 · ADR: —
+
+## R687 · 2026-10-16 · Gate CTX-ALTLAST abgeschlossen; Fälligkeit `.studio/qa` nach löschbarer Menge statt Gesamtgrösse
+
+Ruling: CTX-ALTLAST lokal gemergt `a567ba45` (`.studio/qa` 7,27 → 4,51 GB, Aliase `qaAliases`, `--check` 0,1 s, Hook-Abschnitt «Aufräumen fällig»
+per Echtlauf belegt, Personas mit Suchhinweis, Handbuch 1.57) → angenommen. Entwurf lead-production «`qaMaxGB` auf 5» abgelehnt: die Gesamtgrösse misst
+nicht, ob sich Aufräumen lohnt. Stattdessen gilt `.studio/qa` als fällig, wenn der **Trockenlauf mindestens 500 MB löschbare Bilder** findet
+(`qaMinFreeMB: 500` ersetzt `qaMaxGB`; der Trockenlauf läuft in 0,1 s). So erscheint keine wirkungslose `HAUSHALT`-Runde; ab dem Ablauf der
+14-Tage-Regel (≈ 2026-10-30) meldet der Check sich von selbst. Umsetzung als Fortsetzung lead-production (kein neuer Start).
+
+Regelbezug: R682, R683b, R685 · Kosten bei Irrtum: eine Aufräumrunde, die bei 400 MB löschbar noch nicht anläuft.
+
+Entscheider: L0 · Anlass: Bericht lead-production CTX-ALTLAST (Nachtrag 4) · ADR: —
