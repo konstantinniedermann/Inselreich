@@ -389,3 +389,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Das Krisen-Select klebt direkt am Wort «Freischaltung:»; rein kosmetisch.
 - Ursprung: Playtest UI-AUFRAEUM-4
 - Erste Einschätzung: niedrig; Abstand per CSS bei nächster Menü-Arbeit.
+
+## 2026-10-16 · I-114: Lagerzahl der Fernkarte ohne Rotfärbung bei Mangel
+
+- Fundort: Browser-Check I-114 T03, `src/ui/farOrder.ts` (Fernkarte)
+- Beobachtung: Die Lagerzahl der Fernkarte färbt sich bei Mangel nicht rot; das war schon vor I-114 so. Plan T03 Punkt 3 nannte «rot/normal».
+- Ursprung: I-114
+- Erste Einschätzung: gering; bei nächster Berührung der Fernkarte mitnehmen.
