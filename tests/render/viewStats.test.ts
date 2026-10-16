@@ -149,9 +149,16 @@ describe('viewStats', () => {
     });
 
     it('A6 Haus ausserhalb des Bildes zählt nicht', () => {
-      const { w, cam } = cityWorld();
-      const s = viewStats(w, cam, { w: 1, h: 1 });
-      expect(s.houses ?? 0).toBeLessThan(4);
+      const { w } = cityWorld();
+      // viertes Haus weit weg; enge Ansicht um die drei übrigen
+      const far = w.buildings[9000]!;
+      far.x = 2;
+      far.y = 60;
+      const near = Object.values(w.buildings).find((b) => b.id !== 9000)!;
+      const view = { w: 400, h: 300 };
+      const cam: Camera = { x: 0, y: 0, zoom: 1 };
+      centerOn(cam, near.x, near.y, view, { w: home(w).width, h: home(w).height });
+      expect(viewStats(w, cam, view).houses).toBe(3);
     });
 
     it('A6 keine Häuser: Felder fehlen', () => {
