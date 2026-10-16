@@ -1436,3 +1436,41 @@ jedem Merge-Gate main einmergen.
 Regelbezug: gates.md Gate Plan, R698, R700 · Kosten bei Irrtum: ein Funkeln, das im Browser-Check nachjustiert wird.
 
 Entscheider: L0 · Anlass: Berichte production-integrator REL-24-25-PUSH, lead-tech plan-I-120-I-118 · ADR: —
+
+## R703 · 2026-10-16 · I-114 T01 abgenommen; `farAlternative` null bei Vertrag/Sperre; Platz bleibt frei wegen Last
+
+Ruling: (1) `feat/i114` @ `5cef8359` (T01, 17 neue Tests mit Rot-Beleg, `tests/sim` 1535 grün, Balancing ohne Diff, kein Save/`defs`-Diff): Ergänzung
+«`farAlternative` liefert auch bei laufendem Vertrag oder aktiver Sperre `null`» bestätigt (deckt AK-2); AK-6 «Kein zweites Angebot» statt Kontor-Fehler
+angenommen (Zweitkarte wählt nur Inseln mit Kontor). T02 ff. nach Merge UI-AUFRAEUM-4 (R701). (2) Last 6–22 während der Messung: der sechste Platz bleibt
+vorerst leer (R698-Deckel nicht ausgeschöpft), damit Testlauf und Testlock der laufenden Umsetzungen nicht abbrechen; neue Starts erst bei Last < 8.
+
+Regelbezug: R375, R380, R698, R701 · Kosten bei Irrtum: ein Agentenplatz, der eine halbe Stunde leer bleibt.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech I-114 · ADR: —
+
+## R704 · 2026-10-16 · Gate Merge TOOL-BUENDEL-13: OK
+
+Ruling: `tool/buendel-13` (Commits `cb2f6521` Timeouts, `12890a82` Guard-Ereignis; Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-BUENDEL-13.md`): 7 Timeouts nur
+als Argument auf 10000 ms (E-043), `guard_block` je Abweisung mit Echtlauf belegt, Deny bleibt bei Schreibfehler, `make check` 4175, `studio-test` 931,
+`zeitreserve-gate` Exit 0, Review OK (E-068, ein Reviewer bei 166 Zeilen) → **Gate Merge OK**; Merge `--no-ff` durch lead-production. Nachträge: Handbuch-Zeile
+`guard_block` (STUDIO.md ≈ Z. 428) und Flake-Zeile (R695) setzt studio-coach in der Session-Ende-Retro; Beobachtungen: `rule_of` ordnet per Stichwort zu
+(neue Guard-Texte → «other»), `command` im Ereignis kann Tokens enthalten (Datei lokal und ignoriert; Schwärzung prüfen). E-064-Messlücke damit geschlossen.
+
+Regelbezug: gates.md Gate Merge, R693, R697, R698 · Kosten bei Irrtum: ein Guard-Ereignis mit unklarer Regel-Zuordnung.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-13 · ADR: —
+
+## R705 · 2026-10-16 · Gate Plan ORT-A: OK mit RE-1–RE-3; Budget 57 Starts; Umsetzung in der Folgesession; N-102 Fremdprozesse
+
+Ruling: `plan/ort-a` @ `39d3cdd1` (Index + T00–T26, T05b, T20b; Handoff `.studio/handoffs/2026-10-16-lead-tech-plan-ORT-A.md`; Testbarkeit lead-qa «testbar mit
+Auflagen», 16 Befunde eingearbeitet; Rechenprüfung R565 P3 belegt) → **Gate Plan OK**. Angenommen: **RE-1** Patch-Zeit je Bau über
+`renderStats.terrainPatchMs`; **RE-2** Fremdinsel-Vergleich mit dem Seed der Fremdinsel-Ansicht; **RE-3** additive Messhaken in `src/ui/devProbes.ts`
+und Übergabe in `src/ui/app.ts`, nur Entwicklungsbuild (Ownership-Ausnahme). Wegkante als feste Sinuswelle (Amplitude 0,03, Wellenlänge 0,7) statt
+Spec-Amplitude 0,02 angenommen (AK-19 sonst nicht sicher). Budget **57 Starts** (49 Arbeiter + 8 Controller), Parallelität 2. ORT-1 liegt mit ≈ 480 Tools
+weit über der Spec-Schätzung: der Controller meldet nach T09 (Patch-Zeit-Frühmessung, E6) Stand und Restschätzung an L0, bevor K1/K2 starten.
+Umsetzung in der Folgesession (Limit 79 %, Ampel gelb; Last bis 56). Die Headless-Chrome-Prozesse eines fremden Projekts (0,1 % CPU) liegen ausserhalb der
+Studio-Befugnis → Warteschlange **N-102**; bis zur Antwort tragen ORT-A-Leistungsmessungen den Vermerk «Messfenster belegt».
+
+Regelbezug: gates.md Gate Plan, R565 P3, R696, R698 · Kosten bei Irrtum: ein grosses Paket, das nach T09 neu zugeschnitten wird.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-ORT-A · ADR: ADR-015
