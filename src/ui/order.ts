@@ -1,7 +1,7 @@
 import { HOME } from '../sim/world';
 import { islandName } from '../sim/islands';
 import { GOODS } from '../sim/defs/goods';
-import { contractUnitPrice, nextOrderTick } from '../sim/orders';
+import { contractUnitPrice, nextOrderTick, previewOrder } from '../sim/orders';
 import { ORDER_PERIOD } from '../sim/defs/timing';
 import type { StepReport } from '../sim/tick';
 import type { SoundEvent } from '../audio/sound';
@@ -97,12 +97,19 @@ export function orderCardText(world: World, island: number = HOME): string {
     );
   }
   const o = world.order;
-  if (o === null) return `Nächster Auftrag in ${formatGameTime(nextOrderTick(world) - world.tick)}`;
+  const next = previewOrder(world);
+  if (o === null) {
+    return (
+      `Nächster Auftrag in ${rest()}` +
+      (next === null ? '' : ` · voraussichtlich ${GOODS[next.good].name}`)
+    );
+  }
   if (o.island !== undefined) return farOrderText(world, o);
   const name = GOODS[o.good].name;
   return (
     `Auftrag: ${o.amount} ${name} · Prämie ${o.reward} · noch ${formatGameTime(o.due - world.tick)}` +
-    ` · Lager ${world.islands[island]!.stock[o.good]}/${o.amount}`
+    ` · Lager ${world.islands[island]!.stock[o.good]}/${o.amount}` +
+    (next === null ? '' : ` · danach voraussichtlich ${GOODS[next.good].name}`)
   );
 }
 

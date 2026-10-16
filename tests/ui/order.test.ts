@@ -3,7 +3,9 @@ import { FakeElement, fakeDocument } from './fakeDom';
 import type { ContractEvent, Order } from '../../src/sim/types';
 import type { StepReport } from '../../src/sim/tick';
 import { islandName } from '../../src/sim/islands';
-import { orderForPeriod } from '../../src/sim/orders';
+import { nextOrderTick, orderForPeriod, previewOrder } from '../../src/sim/orders';
+import { GOODS } from '../../src/sim/defs/goods';
+import { ORDER_FIRST_TICK } from '../../src/sim/defs/timing';
 import {
   CONTRACT_CANCELLED,
   announceContract,
@@ -26,7 +28,7 @@ import { diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
 import { HOME, home, createWorld } from '../../src/sim/world';
 import { sellPrice } from '../../src/sim/trade';
 import { goodsBalance } from '../../src/sim/flow';
-import { GOODS_BALANCE_TICKS, perMinute } from '../../src/ui/time';
+import { GOODS_BALANCE_TICKS, formatGameTime, perMinute } from '../../src/ui/time';
 import type { BuildingDefId, GoodId, World } from '../../src/sim/types';
 
 describe('orderCardText (Spec 10.7)', () => {
@@ -151,7 +153,11 @@ describe('I-047 Stammkunde: Kartentexte (AK-SK-28)', () => {
   });
 
   it('ohne Vertrag und Angebot bleibt der Auftragstext', () => {
-    expect(orderCardText(base())).toBe('Nächster Auftrag in 1:15');
+    const w = base();
+    const g = previewOrder(w)!.good;
+    expect(orderCardText(w)).toBe(
+      `Nächster Auftrag in ${formatGameTime(nextOrderTick(w) - w.tick)} · voraussichtlich ${GOODS[g].name}`,
+    );
   });
 
   it('contractWarn', () => {
@@ -535,5 +541,57 @@ describe('I-090 Knopf «Zum Erzeuger» (AK-HC-10)', () => {
     w.contract = null;
     upd();
     expect(btn('order-producer').hidden).toBe(true);
+  });
+});
+
+describe('I-102 Auftragskarte zeigt die Vorschau (AK-6, AK-7b)', () => {
+  const unlocked = (tick: number) => {
+    const w = createWorld(3, { unlockAll: true });
+    w.order = null;
+    w.tick = tick;
+    return w;
+  };
+
+  it('AK-6a ohne Auftrag: Wartezeit und voraussichtliches Gut', () => {
+    const w = unlocked(750);
+    const g = previewOrder(w)!.good;
+    expect(orderCardText(w)).toBe(
+      `Nächster Auftrag in ${formatGameTime(nextOrderTick(w) - w.tick)} · voraussichtlich ${GOODS[g].name}`,
+    );
+  });
+
+  it('AK-6b aktiver Normalauftrag endet mit «danach voraussichtlich Gut»', () => {
+    const w = unlocked(1300);
+    w.order = { period: 1, good: 'wood', amount: 20, reward: 150, due: 2400 };
+    const g = previewOrder(w)!.good;
+    expect(orderCardText(w)).toMatch(/ · Lager \d+\/20 · danach voraussichtlich /);
+    expect(orderCardText(w).endsWith(` · danach voraussichtlich ${GOODS[g].name}`)).toBe(true);
+  });
+
+  it('AK-6c Fernauftrag, Vertrag und Angebot ohne Vorschau', () => {
+    const far = unlocked(1300);
+    far.order = { period: 1, good: 'wood', amount: 5, reward: 90, due: 2400, island: 1 };
+    expect(orderCardText(far)).not.toContain('voraussichtlich');
+    const con = unlocked(750);
+    con.contract = { good: 'rum', amount: 5, price: 27, island: HOME };
+    expect(orderCardText(con)).not.toContain('voraussichtlich');
+    const off = unlocked(750);
+    off.contractOffer = { good: 'rum', island: HOME };
+    expect(orderCardText(off)).not.toContain('voraussichtlich');
+  });
+
+  it('AK-6d vor ORDER_FIRST_TICK ebenfalls mit Vorschau', () => {
+    const w = unlocked(ORDER_FIRST_TICK - 100);
+    const g = previewOrder(w)!.good;
+    expect(orderCardText(w)).toBe(
+      `Nächster Auftrag in ${formatGameTime(nextOrderTick(w) - w.tick)} · voraussichtlich ${GOODS[g].name}`,
+    );
+  });
+
+  it('AK-7b gleiche Welt, gleicher Text; Welt unverändert', () => {
+    const w = unlocked(750);
+    const before = JSON.stringify(w);
+    expect(orderCardText(w)).toBe(orderCardText(w));
+    expect(JSON.stringify(w)).toBe(before);
   });
 });
