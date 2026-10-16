@@ -546,17 +546,24 @@ REDACTED = "[REDACTED]"
 # Schwärzung für das Ereignisprotokoll: ersetzt nur den Secret-Teil; Unter-
 # Schwärzung ist inakzeptabel, Über-Schwärzung hinnehmbar. Ein Wert ist ein
 # Quoted-String (mit Leerzeichen) oder ein Token bis zum nächsten Leerzeichen.
+# Schlüsselwörter werden ohne führendes `[\w-]*` gesucht (sonst quadratische
+# Laufzeit, ReDoS); Präfixe vor dem Wort bleiben dadurch einfach stehen.
 # Bewusste Restlücken: Secrets in verschachtelten/escapten Quotes, Werte aus
-# Dateien oder Variablen (`$(cat f)`), `-pattern` wird zu `-p[REDACTED]`, ein
-# Passwort als nacktes Positionsargument ohne Schlüsselwort bleibt unerkannt.
+# Dateien oder Variablen (`$(cat f)`), Passwort als nacktes Positionsargument
+# ohne Schlüsselwort, `-u` ohne `:` im Wert; `-pattern` wird zu `-p[REDACTED]`.
 _VALUE = r"""(?:"[^"]*"|'[^']*'|[^\s'"]+)"""
 _USERPASS = r"""(?:"[^"]*:[^"]*"|'[^']*:[^']*'|[^\s'"]*:[^\s'"]*)"""
-_KEYWORDS = r"(?:token|api_key|secret|password|passwd|_key)"
+_KEYWORDS = r"(?:token|apikey|secret|password|passwd|[-_]key)"
+_FLAG_KEYWORDS = r"(?:token|apikey|secret|password|passwd|pass|[-_]?key)"
+_B = r"(?<![A-Za-z0-9])"
 REDACT_PATTERNS = (
-    (re.compile(r"(?<![A-Za-z0-9])gh[pousr]_[A-Za-z0-9]{20,}"), REDACTED),
+    (re.compile(_B + r"gh[pousr]_[A-Za-z0-9]{20,}"), REDACTED),
     (re.compile(r"github_pat_[A-Za-z0-9_]{20,}"), REDACTED),
-    (re.compile(r"(?<![A-Za-z0-9])sk-[A-Za-z0-9_-]{20,}"), REDACTED),
-    (re.compile(r"xox[bp]-[A-Za-z0-9-]{10,}"), REDACTED),
+    (re.compile(_B + r"glpat-[A-Za-z0-9_-]{20,}"), REDACTED),
+    (re.compile(_B + r"sk-[A-Za-z0-9_-]{20,}"), REDACTED),
+    (re.compile(_B + r"sk_(?:live|test)_[A-Za-z0-9]{10,}"), REDACTED),
+    (re.compile(_B + r"xox[a-z]-[A-Za-z0-9-]{10,}"), REDACTED),
+    (re.compile(_B + r"xapp-[A-Za-z0-9-]{10,}"), REDACTED),
     (re.compile(r"AKIA[0-9A-Z]{16}"), REDACTED),
     (
         re.compile(
@@ -565,13 +572,13 @@ REDACT_PATTERNS = (
         r"\1" + REDACTED,
     ),
     (re.compile(r"(?i)(\bBearer\s+)" + _VALUE), r"\1" + REDACTED),
-    (re.compile(r"(?<!\S)(-u|--user)(=|\s+)" + _USERPASS), r"\1\2" + REDACTED),
+    (re.compile(r"(?<!\S)(-u|--user)(=|\s*)" + _USERPASS), r"\1\2" + REDACTED),
     (
-        re.compile(r"(?i)(--(?:token|password|passwd|secret|api[-_]key)\s+)" + _VALUE),
+        re.compile(r"(?i)(?<!\S)(--[\w-]{0,40}?" + _FLAG_KEYWORDS + r"\s+)" + _VALUE),
         r"\1" + REDACTED,
     ),
     (
-        re.compile(r"(?i)(\b[\w-]*" + _KEYWORDS + r"\s*=\s*)" + _VALUE),
+        re.compile(r"(?i)(" + _KEYWORDS + r"""["']?\s*[=:]\s*)""" + _VALUE),
         r"\1" + REDACTED,
     ),
     (

@@ -674,13 +674,14 @@ class RedactHardeningTest(unittest.TestCase):
         )
 
     def test_authorization_header(self):
-        for cmd in (
-            "curl -H 'Authorization: Basic Zm9vOmJhcg==' h",
-            'curl -H "authorization: Token geheim123" h',
-            "curl -H 'AUTHORIZATION: Bearer geheim123' h",
-            "curl -H 'Authorization: Basic geheim123' h",
-        ):
-            out = self.assertRedacted(cmd, "geheim123" if "geheim" in cmd else "Zm9v")
+        cases = (
+            ("curl -H 'Authorization: Basic Zm9vOmJhcg==' h", "Zm9vOmJhcg=="),
+            ('curl -H "authorization: Token geheim123" h', "geheim123"),
+            ("curl -H 'AUTHORIZATION: Bearer geheim123' h", "geheim123"),
+            ("curl -H 'Authorization: Basic geheim123' h", "geheim123"),
+        )
+        for cmd, secret in cases:
+            out = self.assertRedacted(cmd, secret)
             self.assertTrue(out.endswith(" h"))
 
     def test_key_value_case_insensitive(self):
@@ -716,3 +717,86 @@ class RedactHardeningTest(unittest.TestCase):
         self.assertEqual(self.shown(harmless), harmless)
         self.assertRedacted("run sk-" + "x" * 30, "sk-xxx")
         self.assertRedacted("run (ghp_" + "x" * 36 + ")", "ghp_")
+
+
+class RedactReviewTest(unittest.TestCase):
+    """Review-Nachträge: Doppelpunkt-Form, -uuser:pw, apikey, weitere Präfixe."""
+
+    shown = RedactTest.shown
+    assertRedacted = RedactTest.assertRedacted
+
+    def test_colon_form(self):
+        cases = (
+            ("echo password: hunter2 x", "hunter2"),
+            ("echo SECRET: hunter2 x", "hunter2"),
+            ("echo token: hunter2 x", "hunter2"),
+            ("echo api_key: hunter2 x", "hunter2"),
+            ("echo passwd: hunter2 x", "hunter2"),
+            ('echo {"password": "hunter2 x"} y', "hunter2"),
+            ('echo \'{"secret": "hunter2"}\' y', "hunter2"),
+            ("curl -H 'X-API-Key: hunter2' h", "hunter2"),
+        )
+        for cmd, secret in cases:
+            out = self.assertRedacted(cmd, secret)
+            self.assertNotIn("hunter2 x", out)
+
+    def test_u_attached(self):
+        self.assertRedacted("curl -uuser:geheim123 h", "geheim123")
+        self.assertRedacted("curl -u'user:geheim123' h", "geheim123")
+
+    def test_apikey_variants(self):
+        for cmd in (
+            "run apikey=geheim123 x",
+            "run api-key=geheim123 x",
+            "run --apikey geheim123 x",
+            "run --api-key geheim123 x",
+            "run --secret-key geheim123 x",
+            "run --pass geheim123 x",
+            "run --passwd geheim123 x",
+            "run --api-key 'geheim 123' x",
+        ):
+            out = self.assertRedacted(cmd, "geheim")
+            self.assertTrue(out.endswith(" x"), out)
+
+    def test_more_prefixes(self):
+        for secret in (
+            "xoxa-" + "1" * 12,
+            "xoxs-" + "1" * 12,
+            "xapp-" + "1" * 12 + "-abc",
+            "glpat-" + "x" * 20,
+            "sk_live_" + "x" * 20,
+            "sk_test_" + "x" * 20,
+        ):
+            self.assertRedacted(f"echo {secret} end", secret)
+
+    def test_harmless_unchanged(self):
+        for cmd in (
+            "git push -u origin main",
+            "echo keyboard=3",
+            "python tokenizer.py",
+            "ls -la",
+            "git commit -m 'fix: token handling'",
+            "npm run build --silent",
+            "git log --pretty=format:%h",
+            "git push origin main:main",
+        ):
+            self.assertEqual(self.shown(cmd), cmd)
+
+    def test_no_redos(self):
+        import time
+
+        size = 500_000
+        inputs = (
+            "a-" * (size // 2),
+            "-u " * (size // 3),
+            "token " * (size // 6),
+            'password=" ' * (size // 11),
+            "--a-" * (size // 4),
+            "sk-" * (size // 3),
+            "password" * (size // 8),
+            "x: " * (size // 3),
+        )
+        for text in inputs:
+            start = time.perf_counter()
+            guard.redact(text)
+            self.assertLess(time.perf_counter() - start, 1.0, text[:20])
