@@ -1330,3 +1330,15 @@ Final-Review opus und Playtest bleiben. Budget **8 Starts**, Parallelität 1; Um
 Regelbezug: gates.md Gate Plan, R690, R691, R693 · Kosten bei Irrtum: ein Rechtsklick, der einmal mehr gedrückt werden muss.
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-UI-AUFRAEUM-4 · ADR: —
+
+## R695 · 2026-10-16 · Gate Merge TOOL-E070: OK; Merge nach dem Push zusammen mit IDEEN-11
+
+Ruling: `tool/e070` @ `66a7fed6` (Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-E070.md`): `make studio-test` 934 grün, `make studio-lint` Exit 0,
+Rot-Beleg vorhanden, Echtlauf zeigt je Flake die Last und «davon Last ≥ 8: 5 von 8», Review BEDENKEN nur niedrig → **Gate Merge OK**. Ownership-Abweichung
+(eine Zeile `metrics.py`) angenommen. Merge durch lead-production **nach dem Push REL-24+REL-25** (geprüfter Hash bleibt stabil), im selben Start wie
+`docs/ideen-11` @ `cd76401e` (R692). Nachträge: Handbuch-Zeile zur Flake-Anzeige (STUDIO.md ≈ Z. 467) setzt studio-coach in der Session-Ende-Retro;
+die drei Testlücken (`load=0`, Kürzung auf 10 Namen, «Last ?» ohne Schlüssel) gehen als Beobachtung ein.
+
+Regelbezug: gates.md Gate Merge, R689, R692 · Kosten bei Irrtum: eine Ampelzeile, die bei Last 0 falsch formatiert.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-E070 · ADR: —
