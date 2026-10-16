@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-16 · Handbuch 1.59
+
+- Anlass: Session-Ende-Retro 66d37b15, Nachträge aus Gate Merge TOOL-E070 und TOOL-BUENDEL-13
+- Datenbasis: `docs/studio/retros/2026-10-16-session-66d37b15-ende.md`
+- Ruling: R695, R704
+- Änderungen: Flake-Zeile mit Last der roten Läufe und Zählzeile `davon Last ≥ 8` (E-070); Ereignis `guard_block` neben `wait_guard`
+
 ## 2026-10-16 · Handbuch 1.58
 
 - Anlass: Gate CTX-ALTLAST, Nachtrag R687

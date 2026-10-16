@@ -66,9 +66,13 @@ const range = (from: number, to: number): number[] =>
 const BLOCKS = Array.from({ length: 5 }, (_, k) => range(501 + k * 100, 501 + k * 100 + 99));
 
 describe('M14-E1 A/B bitgleich, Seeds 501…1000', () => {
-  it.each(BLOCKS)('AK-M14E1-12: Seeds (Block ab %i)', (...seeds) => {
-    for (const seed of seeds) checkSeed(seed);
-  });
+  it.each(BLOCKS)(
+    'AK-M14E1-12: Seeds (Block ab %i)',
+    (...seeds) => {
+      for (const seed of seeds) checkSeed(seed);
+    },
+    10_000,
+  );
 
   it('AK-M14E1-12: Seed 963 und Pins 1, 3, 7, 13, 42', () => {
     for (const seed of [963, 1, 3, 7, 13, 42]) checkSeed(seed);

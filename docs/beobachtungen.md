@@ -250,13 +250,13 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 | 10-16 · CTX-ALTLAST: Agenten suchen mit `grep`, nicht `rg`             | erledigt                                                                                | R683: Suche-Regel «`rg <muster> .`» in den Personen (`rg -n 'rg <muster>' .claude/agents`: 18 Dateien)                                                                                                                 |
 | 10-16 · CTX-ALTLAST: `make studio-aufraeumen --apply`                  | erledigt                                                                                | `STUDIO.md` Schritt 2b nennt `ARGS=--apply`; Makefile-Hilfe ebenso                                                                                                                                                     |
 | 10-16 · `wildlife.test.ts` RF-4 / «E5 nie im R4-Sperrbereich» > 500 ms | eingeplant: ZEITRESERVE-PFLEGE (Pool `releases.json`)                                   | Entscheid dort nach E-043 (eigenes Timeout), nicht neu gemessen                                                                                                                                                        |
-| 10-14 · Erzeugungs-Cache ignoriert `connected` im pausierten Spiel     | eingeplant: UI-AUFRAEUM-4                                                               | `src/ui/order.ts` `producedPerMinute`: Schlüssel enthält nur Gebäudezahl, Stilllegung, Id-Summe; Kommentar nennt `connected` «ausser Scope»                                                                            |
-| 10-14 · Erzeugungs-Cache: Ausbau in der Pause, Id-Summe                | eingeplant: UI-AUFRAEUM-4                                                               | wie oben (`pausedIds += b.id`); Kollision {1,4} gegen {2,3} belegt durch die Summenbildung                                                                                                                             |
-| 10-14 · `order.ts` Cache-Schlüssel summiert Ids (Release-Check)        | eingeplant: UI-AUFRAEUM-4 (Duplikat des Vorigen)                                        | wie oben                                                                                                                                                                                                               |
-| 10-14 · Menü-Feld «Krisen» gilt für die nächste Insel                  | eingeplant: UI-AUFRAEUM-4                                                               | `src/ui/menu.ts`: Beschriftung «Krisen: », nur das `aria-label` sagt «für die neue Insel»; Vorschlag Trivial-Fix an L0 (s. u.)                                                                                         |
-| 10-14 · Rechtsklick bei gehaltener linker Taste (Roden, Abriss)        | eingeplant: UI-AUFRAEUM-4                                                               | `src/ui/input.ts` `onContextMenu` bricht nur den Linienzug ab (`drag?.line`); Browser-Verhalten nicht neu gemessen                                                                                                     |
-| 10-14 · `aria-label` «3 neue Ereignisse» ersetzt Knopfnamen            | eingeplant: UI-AUFRAEUM-4                                                               | `src/ui/eventLogView.ts` `toggle.setAttribute('aria-label', …)`                                                                                                                                                        |
-| 10-16 · Tooltip «Leer in 0 s» bei Bestand 0                            | eingeplant: UI-AUFRAEUM-4                                                               | `src/ui/hud.ts` `reachLine`: `Leer in ${formatGameTime(r.ticks)}` ohne Sonderfall für Bestand 0                                                                                                                        |
+| 10-14 · Erzeugungs-Cache ignoriert `connected` im pausierten Spiel     | erledigt: UI-AUFRAEUM-4                                                                 | `src/ui/order.ts` `producedPerMinute`: Schlüssel enthält nur Gebäudezahl, Stilllegung, Id-Summe; Kommentar nennt `connected` «ausser Scope»                                                                            |
+| 10-14 · Erzeugungs-Cache: Ausbau in der Pause, Id-Summe                | erledigt: UI-AUFRAEUM-4                                                                 | wie oben (`pausedIds += b.id`); Kollision {1,4} gegen {2,3} belegt durch die Summenbildung                                                                                                                             |
+| 10-14 · `order.ts` Cache-Schlüssel summiert Ids (Release-Check)        | erledigt: UI-AUFRAEUM-4 (Duplikat des Vorigen)                                          | wie oben                                                                                                                                                                                                               |
+| 10-14 · Menü-Feld «Krisen» gilt für die nächste Insel                  | erledigt: UI-AUFRAEUM-4                                                                 | `src/ui/menu.ts`: Beschriftung «Krisen: », nur das `aria-label` sagt «für die neue Insel»; Vorschlag Trivial-Fix an L0 (s. u.)                                                                                         |
+| 10-14 · Rechtsklick bei gehaltener linker Taste (Roden, Abriss)        | erledigt: UI-AUFRAEUM-4                                                                 | `src/ui/input.ts` `onContextMenu` bricht nur den Linienzug ab (`drag?.line`); Browser-Verhalten nicht neu gemessen                                                                                                     |
+| 10-14 · `aria-label` «3 neue Ereignisse» ersetzt Knopfnamen            | erledigt: UI-AUFRAEUM-4                                                                 | `src/ui/eventLogView.ts` `toggle.setAttribute('aria-label', …)`                                                                                                                                                        |
+| 10-16 · Tooltip «Leer in 0 s» bei Bestand 0                            | erledigt: UI-AUFRAEUM-4                                                                 | `src/ui/hud.ts` `reachLine`: `Leer in ${formatGameTime(r.ticks)}` ohne Sonderfall für Bestand 0                                                                                                                        |
 | 10-14 · Enger Kartenslot oben rechts                                   | abgehakt, Trigger: eine weitere Karte soll in den Slot                                  | Fernkarte mit Höchststapel ist in Handel 2 geliefert; Krisenkarte unverändert                                                                                                                                          |
 | 10-14 · `pushLog` Denkmal-Zähler bei `crisisLogVisible` false          | abgehakt, Trigger: Spieler sieht einen alten Zähler                                     | nur theoretisch; `eventLogVisible` blendet die Box ohnehin erst bei Einträgen ein                                                                                                                                      |
 | 10-14 · Commit-Präfix `merge:` fehlt in `../CLAUDE.md`                 | abgehakt, Trigger: Commit-Lint oder Konventionsprüfung wird eingeführt                  | Merge-Commits sind Git-Merge-Texte; STUDIO.md kennt `merge:` (kein Treffer als Verbot)                                                                                                                                 |
@@ -340,3 +340,52 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - 2026-10-16 · Salzregister im Kopf von `src/render/groundDecor.ts` unvollständig: `sprites.ts:2486–2516` (`roadCenter`, Wegsteinchen) nutzt `hash2(seed + 61…65)`, `wildlife.ts:437–448` (Wal) `hash2(seed + 61…64)`; das Register nennt nur «61/62 in terrain.ts» (dort `rotNoise`). Keine sichtbare Kollision (andere Funktionen/Argumente), aber das Register taugt so nicht zur Salzwahl. Ursprung: design-ortsrand (lead-art). Einschätzung: niedrig; beim Reservieren des Ortsrand-Blocks 600–619 (ORT-1) mit nachführen.
 
 - 2026-10-16 · `farWorld` (`tests/sim/farHelpers.ts`) liefert Welten, die `deserialize` mit «Beschädigter Spielstand» abweist (schon ohne Schritte). Fundort: I-114 T01, AK-9-Test musste mit `createWorld` und von Hand gesetztem Angebot bauen. Ursache nicht untersucht. Ursprung: tech-sim-engineer I-114. Einschätzung: niedrig, nur Testhelfer; prüfen, ob `farWorld` ungültige Felder setzt.
+
+## 2026-10-16 · TOOL-E070: drei Testlücken bei der Flake-Last-Anzeige
+
+- Fundort: Flake-Ampelzeile (`tools/studio/`, Branch `tool/e070` @ `66a7fed6`)
+- Beobachtung: Ungetestet sind (1) der Fall `load=0`, (2) die Kürzung auf 10 Namen, (3) «Last ?» bei fehlendem Schlüssel.
+- Ursprung: Gate Merge TOOL-E070 (R695)
+- Erste Einschätzung: niedrig; bei nächster Berührung der Anzeige ergänzen. Handbuch-Zeile (STUDIO.md ≈ Z. 467) setzt studio-coach.
+
+## 2026-10-16 · TOOL-BUENDEL-13: `rule_of` ordnet Guard-Regeln per Stichwort zu
+
+- Fundort: `tools/studio/guard.py` (Ereignis `guard_block`)
+- Beobachtung: `rule_of` erkennt die Regel am Stichwort im Abweisungstext; neue Guard-Texte landen als «other», bis das Stichwort nachgeführt ist.
+- Ursprung: Gate Merge TOOL-BUENDEL-13 (R704)
+- Erste Einschätzung: niedrig; beim Hinzufügen einer Guard-Regel die Zuordnung mitführen.
+
+## 2026-10-16 · TOOL-BUENDEL-13: `command` im Ereignis `guard_block` kann Tokens enthalten
+
+- Fundort: `tools/studio/guard.py`, Ereignis `guard_block` (Feld `command`)
+- Beobachtung: Der abgewiesene Befehl wird im Ereignis abgelegt und kann Tokens oder Secrets enthalten. Die Datei ist lokal und ignoriert; ob eine Schwärzung greift, ist ungeprüft.
+- Ursprung: Gate Merge TOOL-BUENDEL-13 (R704)
+- Erste Einschätzung: mittel; Schwärzung prüfen, bevor die Datei geteilt oder ausgewertet wird.
+
+## 2026-10-16 · I-118: CAPS-Pin steht in `weather.test.ts`, nicht in `limits.test.ts`
+
+- Fundort: `tests/render/weather.test.ts` (Test «Setzungen normal/reduziert», `CAPS` per `toEqual`)
+- Beobachtung: Jede neue Obergrenze in `src/render/limits.ts` bricht diesen Test; Pläne nennen nur `limits.test.ts`. Im Paket I-120-I-118 fiel das erst im Final-Review auf.
+- Ursprung: Final-Review I-118 (lead-tech I-120-I-118)
+- Erste Einschätzung: niedrig; Plan-Vorlage für CAPS-Änderungen um den Pin ergänzen.
+
+## 2026-10-16 · I-120/I-118: vier niedrige Hinweise aus dem Gate Merge (R707)
+
+- Fundort: `src/render/fx.ts` (`RISE_TOTAL_MS`), `tests/render/renderer.test.ts:1851`, `src/ui/app.ts:1691`, `tests/render/viewStats.test.ts`
+- Beobachtung: (1) `RISE_TOTAL_MS` in `fx.ts` dupliziert `RISE_MS` aus `aufstieg.ts`. (2) `renderer.test.ts:1851` prüft `<= 6` statt `toBe(6)`. (3) `app.ts:1691` ruft `cap('riseGlow')` ohne `reduce` auf (folgenlos, beide Werte 6). (4) viewStats-Test 526 ms, knapp über 500 (R392 nicht verletzt, +11 %).
+- Ursprung: Gate-Handoff lead-qa gate-I-120-I-118 (`.studio/handoffs/2026-10-16-lead-qa-gate-I-120-I-118.md`)
+- Erste Einschätzung: niedrig; bei nächster Berührung der Dateien mitnehmen.
+
+## 2026-10-16 · UI-AUFRAEUM-4: Rechtsklick über `pointerdown` b2 im Strich legt Zug und Werkzeug zugleich ab
+
+- Fundort: `src/ui/input.ts` (`onPointerDown`, `button === 2`), README Z. 142
+- Beobachtung: Chrome meldet den Rechtsklick bei gehaltener linker Taste nur als `contextmenu` (Staffelung greift, Playtest belegt für Weg, Roden, Abriss). Ein Browser mit `pointerdown` b2 beendet Zug und Werkzeug in einem Klick (synthetisch nachgestellt, Weg/Abriss); README verspricht die Staffelung allgemein. Test fehlt für b2 im Weg-/Abriss-Strich; der Schwenk-Test (`input.test.ts`, «Schwenk (button 1)») würde ohne `!drag.panning` grün bleiben.
+- Ursprung: Final-Review und Playtest UI-AUFRAEUM-4 (niedrig)
+- Erste Einschätzung: nur bei echtem Browser-Befund angehen (Firefox prüfen); sonst README-Satz auf «in Chrome» präzisieren.
+
+## 2026-10-16 · UI-AUFRAEUM-4: Menü «Neue Insel» setzt «Krisen (neue Insel):» und «Freischaltung:» in eine Zeile
+
+- Fundort: `src/ui/menu.ts` (Zeile ≈ 109), Screenshot `.studio/qa/ui-aufraeum-4/ak9-2-menue-neue-insel.png`
+- Beobachtung: Das Krisen-Select klebt direkt am Wort «Freischaltung:»; rein kosmetisch.
+- Ursprung: Playtest UI-AUFRAEUM-4
+- Erste Einschätzung: niedrig; Abstand per CSS bei nächster Menü-Arbeit.

@@ -111,7 +111,7 @@ describe('L5-T5 Strand-Boden (D2–D6, D9)', () => {
           ).toBeGreaterThanOrEqual(4);
     }
     expect(pools).toBeGreaterThan(0);
-  });
+  }, 10_000);
 
   it('D5 Dünenküste hat deutlich mehr Strandhafer als die Palmenküste (Mittel über Seeds 1–200)', () => {
     const sum: Record<string, [number, number]> = { palm: [0, 0], pine: [0, 0], dune: [0, 0] };

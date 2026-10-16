@@ -107,61 +107,112 @@
     {
       "id": "REL-24",
       "title": "Ereignis-Log vollständig",
-      "status": "planned",
-      "hash": "",
-      "date": "",
+      "status": "live",
+      "hash": "8fe744df",
+      "date": "2026-10-16",
       "save": "v15",
-      "gate": "Plan-Gate R662, Umsetzung freigegeben (R667)",
+      "gate": "Push OK (R697)",
       "items": [
         {
           "pkg": "UI-HAEPPCHEN-D",
           "name": "UI-HAEPPCHEN-D",
           "kind": "Ereignis-Log vollständig",
           "startStage": 2,
-          "stage": 4,
+          "stage": 5,
           "state": "done",
-          "note": "gemergt (R673)",
-          "goalStage": 4
+          "note": "live (Push R697)",
+          "goalStage": 5
         },
         {
           "pkg": "UI-HAEPPCHEN-E",
           "name": "UI-HAEPPCHEN-E",
           "kind": "I-097 Pause sichtbar + I-102 Auftragsvorschau",
           "startStage": 2,
-          "stage": 4,
+          "stage": 5,
           "state": "done",
-          "note": "gemergt (R680), live-bereit",
-          "goalStage": 4
+          "note": "live (Push R697)",
+          "goalStage": 5
         }
       ]
     },
     {
       "id": "REL-25",
       "title": "Treuebonus und Häppchen F",
-      "status": "planned",
-      "hash": "",
-      "date": "",
-      "save": "",
-      "gate": "Plan-Gates R675, R679",
+      "status": "live",
+      "hash": "8fe744df",
+      "date": "2026-10-16",
+      "save": "v16",
+      "gate": "Push OK (R697)",
       "items": [
         {
           "pkg": "I-091",
           "name": "I-091 Treuebonus",
           "kind": "Ideen-Pool",
           "startStage": 2,
-          "stage": 4,
+          "stage": 5,
           "state": "done",
-          "note": "gemergt (R686), Save v16",
-          "goalStage": 4
+          "note": "live (Push R697)",
+          "goalStage": 5
         },
         {
           "pkg": "UI-HAEPPCHEN-F",
           "name": "UI-HAEPPCHEN-F",
           "kind": "I-101, I-103, I-108",
           "startStage": 2,
+          "stage": 5,
+          "state": "done",
+          "note": "live (Push R697)",
+          "goalStage": 5
+        }
+      ]
+    },
+    {
+      "id": "REL-26",
+      "title": "Fernangebot zur Wahl und Aufräumen",
+      "status": "planned",
+      "hash": "",
+      "date": "",
+      "save": "",
+      "gate": "Plan-Gates R694, R701; Merge-Gate R707 (I-120, I-118)",
+      "items": [
+        {
+          "pkg": "UI-AUFRAEUM-4",
+          "name": "UI-AUFRAEUM-4",
+          "kind": "Sammelpaket",
+          "startStage": 2,
+          "stage": 3,
+          "state": "active",
+          "note": "Umsetzung läuft (R698)",
+          "goalStage": 4
+        },
+        {
+          "pkg": "I-114",
+          "name": "I-114 Fernangebot zur Wahl",
+          "kind": "Ideen-Pool",
+          "startStage": 2,
+          "stage": 3,
+          "state": "active",
+          "note": "Umsetzung läuft (R701), T02 ff. nach Merge UI-AUFRAEUM-4, kein Save",
+          "goalStage": 4
+        },
+        {
+          "pkg": "I-120",
+          "name": "I-120 Wohlstandsklang der Stadt",
+          "kind": "Ideen-Pool",
+          "startStage": 1,
           "stage": 4,
           "state": "done",
-          "note": "gemergt (R691), Save v16",
+          "note": "gemergt (R707), kein Save",
+          "goalStage": 4
+        },
+        {
+          "pkg": "I-118",
+          "name": "I-118 Aufstiegs-Funkeln am Haus",
+          "kind": "Ideen-Pool",
+          "startStage": 1,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt (R707), kein Save",
           "goalStage": 4
         }
       ]
@@ -198,9 +249,9 @@
       "name": "Wege und Kanten",
       "kind": "Nutzerfeedback",
       "startStage": 1,
-      "stage": 2,
+      "stage": 3,
       "state": "idea",
-      "note": "ORT-1, ORT-K1, ORT-K2, ORT-3 (Pflicht); Brainstorming auf design/ortsrand @ 21fe2599, ADR-015 angenommen (R688); Spec läuft (R688); nur render, kein Save"
+      "note": "Spec OK (R696, E1–E5, E7; E6 erst messen), Spec gemergt; Plan läuft (R698, plan/ort-a); nur render, kein Save"
     },
     {
       "pkg": "ORT-B",
@@ -218,7 +269,7 @@
       "startStage": 1,
       "stage": 1,
       "state": "idea",
-      "note": "bewertet, geparkt"
+      "note": "verworfen (R670), im Archiv"
     },
     {
       "pkg": "I-091",
@@ -253,9 +304,9 @@
       "name": "UI-Kleinkram aus Beobachtungen",
       "kind": "Befund",
       "startStage": 1,
-      "stage": 1,
-      "state": "idea",
-      "note": "Plan läuft (R690). Bündel S, nur bei freier Kapazität (BEOB-16): Erzeugungs-Cache order.ts (connected, Ausbau, Id-Summe), Reichweite-Tooltip bei Bestand 0, Menü-Beschriftung «Krisen» (neue Insel), aria-label Ereignis-Knopf, Rechtsklick bei gehaltener linker Taste (Roden/Abriss)"
+      "stage": 3,
+      "state": "active",
+      "note": "Umsetzung läuft (R698), REL-26"
     },
     {
       "pkg": "TOOL-DASH-VERSIONEN",
@@ -336,6 +387,45 @@
       "goalStage": 4,
       "state": "done",
       "note": "gemergt (R672)"
+    },
+    {
+      "pkg": "TOOL-E070",
+      "name": "TOOL-E070 Flake-Last-Anzeige",
+      "kind": "Werkzeug",
+      "startStage": 2,
+      "stage": 4,
+      "state": "done",
+      "note": "gemergt (R695)",
+      "goalStage": 4
+    },
+    {
+      "pkg": "IDEEN-11",
+      "name": "Ideen-Runde IDEEN-11",
+      "kind": "Ideen",
+      "startStage": 1,
+      "stage": 2,
+      "state": "done",
+      "note": "entschieden (R692), gemergt",
+      "goalStage": 2
+    },
+    {
+      "pkg": "I-120+I-118",
+      "name": "I-120 + I-118 Wohlstandsklang und Aufstiegs-Funkeln",
+      "kind": "Ideen-Pool",
+      "startStage": 1,
+      "stage": 2,
+      "state": "done",
+      "note": "gemergt (R707), REL-26"
+    },
+    {
+      "pkg": "TOOL-BUENDEL-13",
+      "name": "TOOL-BUENDEL-13 (TOOL-TIMEOUT-7 + TOOL-GUARD-EVENT)",
+      "kind": "Werkzeug",
+      "startStage": 2,
+      "stage": 4,
+      "state": "done",
+      "note": "gemergt (R704)",
+      "goalStage": 4
     }
   ],
   "pastSummary": "REL-01 … REL-21, M1 – M13",

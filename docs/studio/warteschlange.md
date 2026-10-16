@@ -163,3 +163,13 @@ schliesst den Eintrag.
 - Blockiert: nichts
 - Von: L0
 - Antwort: –
+
+## N-102 · offen · 2026-10-16 · Headless-Chrome aus Projekt reflexionsinstrument beenden?
+
+- Frage: Seit ≈ 17 h laufen 6 Headless-Chrome-Prozesse (Port 9333) aus einer Session des Projekts reflexionsinstrument. Sie verbrauchen kaum CPU (0,1 %), lassen aber die Leistungsmessung von ORT-A das Messfenster als belegt werten. Beendest du sie?
+- Empfehlung: Du beendest sie selbst (fremdes Projekt, ausserhalb des Studios); sonst laufen die ORT-A-Messungen mit Vermerk.
+- Begründung: Prozesse eines anderen Projekts liegen ausserhalb der Studio-Befugnis; der Guard sperrt pkill -f.
+- Kosten des Wartens: Gering: ORT-A-Leistungsmessungen tragen den Vermerk «Messfenster belegt» bis zur Antwort.
+- Blockiert: nichts hart; Messgüte ORT-A
+- Von: lead-tech
+- Antwort: –

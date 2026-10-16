@@ -1807,6 +1807,50 @@ describe('M13-E2 T09 Denkmal im Renderer', () => {
     expect(lighter(draw(w, away, { monumentFlareStart: 9800 }))).toHaveLength(0);
   });
 
+  it('B5 Aufstiegs-Funkeln: nur bei sichtbarem Haus, ausgeglichen, Welt unverändert', () => {
+    const { w, b } = mono();
+    const cam = camAtMono(w);
+    const away = { ...cam, x: cam.x + 5000 };
+    const before = serialize(w);
+    const rises = [{ id: b.id, startMs: 9800, tier: 3 }];
+    const fx = { rises, riseClockMs: 10000 };
+    const log = draw(w, cam, fx);
+    expect(lighter(log).length).toBeGreaterThan(0);
+    expect(log.saves).toBe(log.restores);
+    expect(log.underflow).toBe(0);
+    expect(lighter(draw(w, away, fx))).toHaveLength(0);
+    expect(lighter(draw(w, cam, { rises, riseClockMs: 9800 + 1500 }))).toHaveLength(0);
+    expect(
+      lighter(draw(w, cam, { rises: [{ id: 99999, startMs: 9800, tier: 3 }], riseClockMs: 10000 })),
+    ).toHaveLength(0);
+    expect(serialize(w)).toBe(before);
+  });
+
+  it('B6 Funkeln hängt an riseClockMs, nicht an timeMs (Pause friert ein)', () => {
+    const { w, b } = mono();
+    const cam = camAtMono(w);
+    const rises = [{ id: b.id, startMs: 9800, tier: 4 }];
+    const shape = (timeMs: number) =>
+      JSON.stringify(
+        lighter(draw(w, cam, { rises, riseClockMs: 10000, timeMs })).map((e) => [
+          e.style,
+          e.points,
+        ]),
+      );
+    expect(shape(10000)).toBe(shape(55555));
+  });
+
+  it('B4 im Renderer höchstens cap(riseGlow) Kränze', () => {
+    const { w, b } = mono();
+    const cam = camAtMono(w);
+    const rises = Array.from({ length: 9 }, (_, i) => ({ id: b.id, startMs: 9500 + i, tier: 2 }));
+    const crowns = lighter(draw(w, cam, { rises, riseClockMs: 10000 })).filter(
+      (e) => e.op === 'fill' && e.style.startsWith('gradient('),
+    );
+    expect(crowns.length).toBeLessThanOrEqual(6);
+    expect(crowns.length).toBeGreaterThan(0);
+  });
+
   it('AK-M13E2-39 render reicht die Bildstufe an drawBody durch', () => {
     for (const [stage, running, want] of [
       [0, false, 0],

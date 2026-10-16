@@ -87,6 +87,9 @@ import { connectView } from './connect';
 import { buildLine, linePath, linePlan, lineHintText, type LinePlan } from './roadLine';
 import { phaseAt } from '../render/daynight';
 import { viewStats } from '../render/viewStats';
+import { advanceRiseClock, detectRises, pickRises, type Rise } from '../render/aufstieg';
+import { cap } from '../render/limits';
+import { homeBuildings } from '../render/homeBuildings';
 import { newBuildEntries, renderBuildMenu, updateBuildMenu } from './buildMenu';
 import {
   renderNoticeStack,
@@ -1506,6 +1509,11 @@ function launch(
   let prevMonument = monumentSnapshot(world);
   /** Start des Aufflammens (U-12): nur beim Übergang monumentDone false → true, nie nach dem Laden. */
   let monumentFlareStart: number | undefined;
+  // Aufstiegs-Funkeln (I-118): Stand der Stufen, laufende Effekte, Spielzeit-Uhr (steht bei Pause). Laden und
+  // «Neue Insel» rufen `launch()` neu auf: der leere Stand merkt nur, es startet kein Funkeln, kein Reset-Code nötig.
+  let riseTiers = new Map<number, number>();
+  let rises: Rise[] = [];
+  let riseClockMs = 0;
   let last = performance.now();
   let lastAmbienceMs = -Infinity;
   let fireMemo: FireMemo = null;
@@ -1677,6 +1685,10 @@ function launch(
         });
         sound.setPhase(phase);
       }
+      riseClockMs = advanceRiseClock(riseClockMs, dt, state.speed);
+      const rd = detectRises(riseTiers, homeBuildings(world), riseClockMs);
+      riseTiers = rd.next;
+      rises = pickRises([...rises, ...rd.started], riseClockMs, cap('riseGlow'));
       const t0 = performance.now();
       const fx: RenderFx = {
         timeMs: t0,
@@ -1687,6 +1699,8 @@ function launch(
         boom: preview.boom ?? inputs.render.boom,
         raster: preview.raster === true,
         focus: goodFocus,
+        rises,
+        riseClockMs,
         ...(monumentFlareStart === undefined ? {} : { monumentFlareStart }),
       };
       render(ctx, world, state.cam, layers, state.hover, state.selectedId, view, fx);

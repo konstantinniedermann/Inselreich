@@ -65,6 +65,7 @@ LIGHT_LABELS = {
 # Zusatz der Umsetzer-Zeile bei grünem Produktivanteil; effort._RED erkennt ihn
 NO_FINDING = " — kein Befund: Produktivanteil grün (R488 V4)"
 MAX_FLAKE_NAMES = 10
+FLAKE_LOAD_LIMIT = 8.0  # E-070: ab dieser 1-min-Last zählt ein Flake als Lastfall
 LABEL_KEYS = {label: key for key, label in LIGHT_LABELS.items()}
 
 CLASSES = (
@@ -810,9 +811,12 @@ def _test_state(event: dict) -> tuple:
     )
 
 
-def flake_suspects(events: list[dict], since: datetime | None = None) -> list[str]:
-    """Testnamen, die rot waren und beim gleichen Stand (Suite, Commit, Diff, Arbeitsbaum)
-    später grün; mit ``since`` zählen nur Läufe ab diesem Zeitpunkt (R565 V3)."""
+def flake_loads(
+    events: list[dict], since: datetime | None = None
+) -> dict[str, float | None]:
+    """Flake-Verdacht je Testname mit der höchsten bekannten 1-min-Last der roten Läufe,
+    die vor dem grünen Lauf desselben Stands lagen; ``None`` wenn keine Last bekannt (E-070).
+    Zeitraum und Stand wie bei ``flake_suspects`` (R565 V3)."""
     ordered = sorted(
         (
             e
@@ -822,14 +826,30 @@ def flake_suspects(events: list[dict], since: datetime | None = None) -> list[st
         ),
         key=_event_time,
     )
-    red: dict[tuple, set[str]] = {}
-    suspects: set[str] = set()
+    red: dict[tuple, dict[str, float | None]] = {}
+    suspects: dict[str, float | None] = {}
     for event in ordered:
+        state = _test_state(event)
         if event["kind"] == "test_failed":
-            red.setdefault(_test_state(event), set()).update(event.get("names") or [])
+            load = event.get("load")
+            known = load if isinstance(load, (int, float)) else None
+            runs = red.setdefault(state, {})
+            for name in event.get("names") or []:
+                runs[name] = _max_load(runs.get(name), known)
         else:
-            suspects |= red.pop(_test_state(event), set())
-    return sorted(suspects)
+            for name, load in red.pop(state, {}).items():
+                suspects[name] = _max_load(suspects.get(name), load)
+    return suspects
+
+
+def _max_load(a: float | None, b: float | None) -> float | None:
+    return b if a is None else a if b is None else max(a, b)
+
+
+def flake_suspects(events: list[dict], since: datetime | None = None) -> list[str]:
+    """Testnamen, die rot waren und beim gleichen Stand (Suite, Commit, Diff, Arbeitsbaum)
+    später grün; mit ``since`` zählen nur Läufe ab diesem Zeitpunkt (R565 V3)."""
+    return sorted(flake_loads(events, since))
 
 
 def ampel(key: str, value: float | None) -> str:
@@ -882,6 +902,20 @@ def _steuerung_value(data: dict) -> float | None:
 def _steuerung_shown(data: dict) -> str:
     shown = _pct(_steuerung_value(data))
     return shown if data.get("steuerung_bereinigt") is None else f"{shown} bereinigt"
+
+
+def _flake_lines(flakes: list[str], loads: dict) -> list[str]:
+    def shown(name: str) -> str:
+        load = loads.get(name)
+        return (
+            f"{name} (Last {'?' if load is None else f'{load:.1f}'.replace('.', ',')})"
+        )
+
+    high = sum(1 for n in flakes if (loads.get(n) or 0.0) >= FLAKE_LOAD_LIMIT)
+    return [
+        f"  - Flake-Verdacht: {', '.join(shown(n) for n in flakes[:MAX_FLAKE_NAMES])}",
+        f"  - davon Last ≥ {FLAKE_LOAD_LIMIT:.0f}: {high} von {len(flakes)}",
+    ]
 
 
 def _lights(data: dict) -> list[str]:
@@ -963,7 +997,7 @@ def _lights(data: dict) -> list[str]:
         if key == "cache_write_5m":
             out += _split_info(data.get("cache_write_split"))
         if key == "flake" and flakes:
-            out.append(f"  - Flake-Verdacht: {', '.join(flakes[:MAX_FLAKE_NAMES])}")
+            out += _flake_lines(flakes, data.get("flake_loads") or {})
     return out
 
 
