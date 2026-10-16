@@ -24,6 +24,15 @@ export interface MapDot {
 export interface MapUi {
   hover: number | null;
   dpr: number;
+  mark?: MapMark | null;
+}
+
+/** Marke an einer Insel (Fernangebot hohl, Fernauftrag gefüllt); die UI baut sie, der Zeichner kennt nur diese Form. */
+export interface MapMark {
+  island: number;
+  kind: 'offer' | 'order';
+  text: string;
+  warn: boolean;
 }
 
 /** Gerasterte Land-Maske einer Insel in Draufsicht, `r` Pixel je Kachel. */
@@ -50,6 +59,8 @@ export const COLORS = {
   dotEdge: '#3a2a00',
   kontor: '#ffffff',
   hover: '#ffe08a',
+  markFill: '#f2c14e',
+  markWarn: '#ff6b5a',
 } as const;
 
 /** Grössen in CSS-Pixeln, gezeichnet × dpr: Radius Schiffspunkt, Kantenlänge Kontor-Marke. */
@@ -234,6 +245,38 @@ export function drawSeaMap(
     if (isl.kontorId === null) continue;
     const m = tileToMap(l, isl.ox + isl.anchor.x + 0.5, isl.oy + isl.anchor.y + 0.5);
     ctx.fillRect(m.x - s / 2, m.y - lift - s / 2, s, s);
+  }
+
+  // Marke für Fernangebot/Fernauftrag: Münze mit Text, eine Markenhöhe über der Kontor-Marke
+  const mark = ui.mark ? ui.mark : null;
+  const mi = mark ? world.islands[mark.island] : undefined;
+  if (mark && mi) {
+    const a = tileToMap(l, mi.ox + mi.anchor.x + 0.5, mi.oy + mi.anchor.y + 0.5);
+    const rad = MARK * px * 0.9;
+    const cy = Math.max(rad, Math.min(l.h - rad, a.y - lift - (MARK + MARK_GAP) * px));
+    const col = mark.warn ? COLORS.markWarn : COLORS.markFill;
+    ctx.save();
+    ctx.fillStyle = col;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = px;
+    ctx.beginPath();
+    ctx.arc(a.x, cy, rad, 0, Math.PI * 2);
+    if (mark.kind === 'order') ctx.fill();
+    else ctx.stroke();
+    const gap = 3 * px;
+    const tw = ctx.measureText(mark.text).width;
+    const right = a.x + rad + gap + tw > l.w;
+    ctx.font = `${11 * px}px sans-serif`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = right ? 'right' : 'left';
+    const tx = right ? a.x - rad - gap : a.x + rad + gap;
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 3 * px;
+    ctx.strokeStyle = COLORS.dotEdge;
+    ctx.strokeText(mark.text, tx, cy);
+    ctx.fillStyle = col;
+    ctx.fillText(mark.text, tx, cy);
+    ctx.restore();
   }
 
   // Hover: Rahmen um das Inselrechteck

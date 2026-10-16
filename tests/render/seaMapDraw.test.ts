@@ -9,6 +9,7 @@ import {
   mapDots,
   mapLayout,
   tileToMap,
+  type MapMark,
   type RasterFactory,
 } from '../../src/render/seaMap';
 import { lanePoints } from '../../src/render/shipLane';
@@ -179,5 +180,142 @@ describe('drawSeaMap mit vier Inseln (AK-M14E1-33)', () => {
     const k = c.tiles.findIndex((t) => t.terrain !== 'water');
     const p = tileToMap(l, c.ox + (k % c.width) + 0.5, c.oy + Math.floor(k / c.width) + 0.5);
     expect(hitIsland(w, l, p.x, p.y)).toBe(3);
+  });
+});
+
+describe('drawSeaMap Marke Fernangebot/Fernauftrag (I-101 T01, AK-M6/M7)', () => {
+  type Call = unknown[];
+  interface Rec {
+    calls: Call[];
+    texts: { text: string; align: string; x: number; y: number; fill: string }[];
+    ctx: CanvasRenderingContext2D;
+  }
+  /** Fake-Kontext mit Aufrufliste, `measureText` (6 px je Zeichen) und `fillText`-Protokoll. */
+  function rec(): Rec {
+    const inner = fakeCtx().ctx as unknown as Record<string, unknown>;
+    const r: Rec = { calls: [], texts: [], ctx: null as never };
+    const state: Record<string, unknown> = { textAlign: 'start' };
+    r.ctx = new Proxy(inner, {
+      get(t, k) {
+        if (typeof k !== 'string') return Reflect.get(t, k);
+        if (k === 'measureText') return (text: string) => ({ width: text.length * 6 });
+        if (k === 'fillText')
+          return (text: string, x: number, y: number) => {
+            r.calls.push(['fillText', text, x, y]);
+            r.texts.push({
+              text,
+              x,
+              y,
+              align: String(state.textAlign),
+              fill: String(t.fillStyle),
+            });
+          };
+        if (k === 'textAlign') return state.textAlign;
+        const v = t[k];
+        if (typeof v === 'function')
+          return (...a: unknown[]) => {
+            r.calls.push([k, ...a]);
+            return (v as (...x: unknown[]) => unknown).apply(t, a);
+          };
+        return v;
+      },
+      set(t, k, v) {
+        if (k === 'textAlign') state.textAlign = v;
+        r.calls.push(['set', k, v]);
+        return Reflect.set(t, k, v);
+      },
+    }) as unknown as CanvasRenderingContext2D;
+    return r;
+  }
+  const mk = (over: Partial<MapMark> = {}): MapMark => ({
+    island: 1,
+    kind: 'offer',
+    text: 'Holz 5',
+    warn: false,
+    ...over,
+  });
+  function run(
+    mark: MapMark | null | undefined,
+    lay?: (l: ReturnType<typeof mapLayout>) => ReturnType<typeof mapLayout>,
+  ) {
+    const w = seaWorld();
+    const base = mapLayout(w, 360, 240, 12);
+    const l = lay ? lay(base) : base;
+    const r = rec();
+    const ui = mark === undefined ? { hover: null, dpr: 1 } : { hover: null, dpr: 1, mark };
+    drawSeaMap(r.ctx, w, l, createSilhouetteCache(factory), ui);
+    return { w, l, r };
+  }
+  const n = (r: Rec, op: string) => r.calls.filter((c) => c[0] === op).length;
+
+  it('M6a offer: ein arc mehr, ein stroke mehr, ein fillText mit dem Text', () => {
+    const a = run(undefined).r;
+    const b = run(mk()).r;
+    expect(n(b, 'arc')).toBe(n(a, 'arc') + 1);
+    expect(n(b, 'stroke')).toBe(n(a, 'stroke') + 1);
+    expect(n(b, 'fill')).toBe(n(a, 'fill'));
+    expect(b.texts).toHaveLength(1);
+    expect(b.texts[0]!.text).toBe('Holz 5');
+  });
+  it('M6a order: gefüllte Münze (fill statt stroke)', () => {
+    const a = run(undefined).r;
+    const b = run(mk({ kind: 'order' })).r;
+    expect(n(b, 'arc')).toBe(n(a, 'arc') + 1);
+    expect(n(b, 'fill')).toBe(n(a, 'fill') + 1);
+    expect(n(b, 'stroke')).toBe(n(a, 'stroke'));
+  });
+  it('M6a warn: Farbe markWarn statt markFill, gleiche Form', () => {
+    const ok = run(mk({ kind: 'order' })).r;
+    const warn = run(mk({ kind: 'order', warn: true })).r;
+    expect(COLORS.markWarn).not.toBe(COLORS.markFill);
+    expect(warn.texts[0]!.fill).toBe(COLORS.markWarn);
+    expect(ok.texts[0]!.fill).toBe(COLORS.markFill);
+    expect(warn.calls.filter((c) => c[0] !== 'set')).toEqual(
+      ok.calls.filter((c) => c[0] !== 'set'),
+    );
+    expect(warn.calls.some((c) => c[0] === 'set' && c[2] === COLORS.markWarn)).toBe(true);
+    const off = run(mk({ warn: true })).r;
+    expect(
+      off.calls.some((c) => c[0] === 'set' && c[1] === 'strokeStyle' && c[2] === COLORS.markWarn),
+    ).toBe(true);
+  });
+  it('M6b ohne Marke und mit mark null: Aufrufliste bitgleich', () => {
+    const a = run(undefined).r.calls;
+    expect(run(null).r.calls).toEqual(a);
+    expect(a.some((c) => c[0] === 'fillText')).toBe(false);
+  });
+  it('M6b unbekannte Insel: keine Marke', () => {
+    expect(run(mk({ island: 99 })).r.calls).toEqual(run(undefined).r.calls);
+  });
+  it('M6c Marke nahe rechtem Rand: Text links der Münze (textAlign right)', () => {
+    const w = seaWorld();
+    const base = mapLayout(w, 360, 240, 12);
+    const isl = w.islands[1]!;
+    const a = tileToMap(base, isl.ox + isl.anchor.x + 0.5, isl.oy + isl.anchor.y + 0.5);
+    const { r } = run(mk(), (l) => ({ ...l, w: a.x + 10 }));
+    expect(r.texts[0]!.align).toBe('right');
+    expect(r.texts[0]!.x).toBeLessThan(a.x);
+    const left = run(mk()).r.texts[0]!;
+    expect(left.align).not.toBe('right');
+    expect(left.x).toBeGreaterThan(a.x);
+  });
+  it('M6c y bleibt innerhalb [Münzradius, h - Münzradius]', () => {
+    const r0 = MARK * 0.9;
+    const w = seaWorld();
+    const base = mapLayout(w, 360, 240, 12);
+    const isl = w.islands[1]!;
+    const a = tileToMap(base, isl.ox + isl.anchor.x + 0.5, isl.oy + isl.anchor.y + 0.5);
+    const top = run(mk(), (l) => ({ ...l, oy: l.oy - a.y + 1 })).r.texts[0]!;
+    expect(top.y).toBeGreaterThanOrEqual(r0 - 1e-9);
+    const bot = run(mk(), (l) => ({ ...l, oy: l.oy + 400 })).r.texts[0]!;
+    expect(bot.y).toBeLessThanOrEqual(240 - r0 + 1e-9);
+    expect(bot.y).toBeGreaterThanOrEqual(r0);
+  });
+  it('M7 hitIsland ist von der Marke unabhängig', () => {
+    const { w, l, r } = run(mk());
+    const p = { x: r.texts[0]!.x, y: r.texts[0]!.y };
+    const plain = run(undefined);
+    expect(hitIsland(w, l, p.x, p.y)).toBe(hitIsland(plain.w, plain.l, p.x, p.y));
+    expect(hitIsland.length).toBe(4);
   });
 });
