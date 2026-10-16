@@ -596,8 +596,8 @@ flowchart LR
   Browser["Browser des Spielers"]
   Dev --> Vite
   Dev --> Build --> Dist
-  Dev -->|"Push, Pull Request (ohne reine Doku)"| CI
-  Dev -->|"manuell beim Release"| Pages
+  Dev -->|"Push, Pull Request"| CI
+  CI -->|"nach grüner CI auf main"| Pages
   Pages -->|"Build, upload-pages-artifact, deploy-pages"| GHP
   GHP -->|"statische Dateien"| Browser
   Vite --> Browser
@@ -663,9 +663,9 @@ merge-driver` setzt die Treiberkonfiguration einmal je Klon in `.git/config`; oh
   verlangen Python ≥ 3.11 (`datetime.UTC`, `fromisoformat("…Z")`); `precommit.py` und der Git-Hook lassen bei
   älterem Python still zu (R441 B2).
 - **CI:** `.github/workflows/ci.yml` führt `make check` bei Push auf `main` und bei Pull Requests aus.
-- **Deploy:** `.github/workflows/pages.yml` baut bei Push auf `main` (oder manuell) und veröffentlicht
+- **Deploy:** `.github/workflows/pages.yml` baut nach grüner CI auf `main` (`workflow_run`, R747; manuell nur für Reruns) und veröffentlicht
   `dist/` auf GitHub Pages. Er greift erst, wenn Pages im Repo aktiviert ist (Quelle: GitHub Actions);
-  auf dem Free-Plan braucht das ein öffentliches Repo (offene Entscheidung, Spec Abschnitt 6).
+  das Repo ist öffentlich, damit genügt der Free-Plan.
 
 ### Plattformgrenzen GitHub Pages (R130)
 

@@ -1,11 +1,9 @@
 name: CI
-# Sparregeln (N-98): kein Lauf bei reinen Doku-/Studio-Änderungen, ältere Läufe desselben Refs werden abgebrochen.
+# R747: Repo ist öffentlich, Minuten zählen nicht; CI läuft bei jedem Push/PR, überholte Läufe desselben Refs werden abgebrochen.
 on:
   push:
     branches: [main]
-    paths-ignore: ['docs/**', '**/*.md', '.studio/**', '.claude/**']
   pull_request:
-    paths-ignore: ['docs/**', '**/*.md', '.studio/**', '.claude/**']
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true

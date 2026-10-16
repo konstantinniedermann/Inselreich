@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-16 · Persona production-integrator 1.15
+
+- Anlass: Nutzeranweisung, Repo öffentlich, Actions-Minuten zählen nicht
+- Datenbasis: Auftrag TOOL-ACTIONS-FREI
+- Ruling: R747
+- Änderungen: Schritte 4/5: CI läuft bei jedem Push, Pages startet automatisch nach grüner CI, Handstart nur für Reruns und R450-Ausnahme
+
+## 2026-10-16 · Handbuch 1.62
+
+- Anlass: Nutzeranweisung, Repo öffentlich, Actions-Minuten zählen nicht
+- Datenbasis: Auftrag TOOL-ACTIONS-FREI (Billing-Usage Oktober: netto 0)
+- Ruling: R747
+- Änderungen: Push-Ablauf und Session-Ende (kein Pages-Handstart, CI bei jedem Push, R488 V2 nur bei abgerechneten Minuten, R335 bleibt); Live-Ampel (öffentliche Repo-Minuten nur Info)
+
 ## 2026-10-16 · Handbuch 1.61
 
 - Anlass: Ad-hoc-Retro Budgetüberschreitungen (TOOL-GUARD-REDACT 5 von 3, ORT-A T08 +5 Starts)

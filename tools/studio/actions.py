@@ -2,6 +2,9 @@
 
 Liest den Monatsverbrauch über `gh api /users/<login>/settings/billing/usage`.
 Fehlt `gh`, das Token oder schlägt der Aufruf fehl, steht „nicht erfasst“ – nie 0.
+Minuten öffentlicher Repos sind nicht abgerechnet (R747): sie stehen nur als Info
+und zählen nicht zu Konto-Minuten, Tagesrate und Prognose; scheitert die
+Sichtbarkeitsabfrage, zählen sie konservativ weiter.
 `run_gh` ist die einzige Stelle mit Netz und in Tests ersetzbar.
 """
 
@@ -33,13 +36,28 @@ def run_gh(args: list[str]) -> str:
     return result.stdout
 
 
+PUBLIC_NOTE = "öffentlich, nicht abgerechnet"
+
+
+def is_public(runner=None) -> bool:
+    """True, wenn das Repo öffentlich ist; bei Fehlern False (konservativ: zählen)."""
+    run = runner or run_gh
+    try:
+        out = run(["repo", "view", "--json", "visibility", "-q", ".visibility"])
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return out.strip().upper() == "PUBLIC"
+
+
 def _light(value: float, limits: tuple[int, int]) -> str:
     if value > limits[1]:
         return "ROT"
     return "GELB" if value > limits[0] else "GRÜN"
 
 
-def _daily(items: list[dict], now: datetime) -> dict[int, float] | None:
+def _daily(
+    items: list[dict], now: datetime, skip_repo: str | None = None
+) -> dict[int, float] | None:
     """Konto-Minuten je Tag des laufenden Monats; None, wenn ein Eintrag kein `date` trägt.
 
     Variante „mit date“ (Echtlauf T04): die Monatsantwort trägt je Eintrag ein
@@ -48,6 +66,8 @@ def _daily(items: list[dict], now: datetime) -> dict[int, float] | None:
     days: dict[int, float] = {}
     for item in items:
         if item.get("product") != "actions" or item.get("unitType") != "Minutes":
+            continue
+        if skip_repo is not None and item.get("repositoryName") == skip_repo:
             continue
         try:
             day = _ts(str(item["date"]).replace("Z", "+00:00")).day
@@ -73,8 +93,11 @@ def forecast(spent: float, daily: dict[int, float] | None, now: datetime) -> int
     return round(spent + rate * rest)
 
 
-def _load(now: datetime, runner=None):
-    """(Repo, Konto, Tagesdaten oder None) im laufenden Monat; None, wenn nicht erfassbar."""
+def _load(now: datetime, runner=None, public: bool = False):
+    """(Repo, Konto, Tagesdaten oder None) im laufenden Monat; None, wenn nicht erfassbar.
+
+    Ist das Repo öffentlich (`public`), zählt dessen Anteil nicht zum Konto.
+    """
     run = runner or run_gh
     try:
         login = run(["api", "user", "--jq", ".login"]).strip()
@@ -96,17 +119,19 @@ def _load(now: datetime, runner=None):
             if item.get("product") != "actions" or item.get("unitType") != "Minutes":
                 continue
             minutes = float(item.get("quantity", 0))
-            account += minutes
             if item.get("repositoryName") == name:
                 repo += minutes
-        return repo, account, _daily(items, now)
+                if public:
+                    continue
+            account += minutes
+        return repo, account, _daily(items, now, name if public else None)
     except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError):
         return None
 
 
 def usage(now: datetime | None = None, runner=None) -> tuple[float, float] | None:
     """(Repo-Minuten, Konto-Minuten) im laufenden Monat oder None, wenn nicht erfassbar."""
-    data = _load(now or clock.now(), runner)
+    data = _load(now or clock.now(), runner, is_public(runner))
     return None if data is None else data[:2]
 
 
@@ -145,11 +170,13 @@ def session_minutes(since: datetime, runner=None) -> int | None:
         return None
 
 
-def render_session(since: datetime | None, runner=None) -> str:
+def render_session(since: datetime | None, runner=None, public: bool = False) -> str:
     rule = f"(gelb > {SESSION_LIMITS[0]}, rot > {SESSION_LIMITS[1]})"
     minutes = session_minutes(since, runner) if since else None
     if minutes is None:
         return f"- {NOT_RECORDED}: Session-Minuten"
+    if public:
+        return f"- Info: Session-Minuten: {minutes} ({PUBLIC_NOTE})"
     return f"- {_light(minutes, SESSION_LIMITS)}: Session-Minuten: {minutes} {rule}"
 
 
@@ -157,8 +184,9 @@ def render(
     now: datetime | None = None, runner=None, since: datetime | None = None
 ) -> str:
     now = now or clock.now()
-    session = render_session(since, runner)
-    data = _load(now, runner)
+    public = is_public(runner)
+    session = render_session(since, runner, public)
+    data = _load(now, runner, public)
     head = ["## Actions-Minuten (Monat)", ""]
     if data is None:
         return "\n".join(
@@ -174,6 +202,8 @@ def render(
     repo, account, daily = data
     account_rule = f"(gelb > {ACCOUNT_LIMITS[0]}, rot > {ACCOUNT_LIMITS[1]})"
     repo_line = f"- Info: Inselreich-Minuten: {repo:.0f}"
+    if public:
+        repo_line += f" ({PUBLIC_NOTE})"
     account_line = (
         f"- {_light(account, ACCOUNT_LIMITS)}: Konto-Minuten: "
         f"{account:.0f} von {ACCOUNT_QUOTA} {account_rule}"
