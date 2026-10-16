@@ -7600,3 +7600,15 @@ nach R475 erst nach dem Push (Last und Testlock schonen).
 Regelbezug: Verfassung §5, STUDIO.md Autonomie, R335, R464, R475, R654, R659 · Kosten bei Irrtum: ein Plan, der wegen Bündelung neu zugeschnitten wird.
 
 Entscheider: L0 · Anlass: Nutzerprompt Session-Start · ADR: —
+
+## R661 · 2026-10-16 · Plan UI-HAEPPCHEN-D: Bündelung mit I-109 ja, I-102 nein; Zeitformat aus formatGameTime
+
+Ruling: Plan `plan/ui-haeppchen-d` @ `b1a17826` (T00–T04, T06–T09; Teil A Ereignis-Log, Teil B I-109). (1) **I-109 wird gebündelt**
+(getrennte Dateien, je 9 AK, kein Save, kein `src/sim/`; ein Gate, ein Browser-Check, ein Final-Review; Reihenfolge A vor B nach R654;
+Teil B ist bei Durchfallen abspaltbar). (2) **I-102 nicht gebündelt**: nur Ideen-Eintrag ohne AK; Kurzdesign bei freiem Platz, danach eigenes
+Häppchen. (3) **Zeitformat**: einzige Quelle ist `formatGameTime` («40 s» statt «0:40» aus dem Kurzdesign I-109); T07/T08 prüfen bei 1280 px,
+dass die Leiste nicht umbricht. (4) Gate Plan durch lead-qa; Budgetantrag 21 Starts wird mit dem Gate entschieden.
+
+Regelbezug: gates.md Gate Plan, R464, R654 · Kosten bei Irrtum: ein Suffix mit anderem Zeitformat (eine Zeile nachbessern).
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-UI-HAEPPCHEN-D · ADR: —
