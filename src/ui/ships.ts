@@ -2,8 +2,10 @@
 // Keine Spielregel: Gründe kommen aus der Sim (Probelauf auf einer Kopie), Zahlen aus `SHIP`/Defs.
 import { GOODS, GOOD_IDS } from '../sim/defs/goods';
 import { ROUTE_RESERVE, SHIP } from '../sim/defs/sea';
-import { TICK_MS } from '../sim/defs/timing';
+import { TICK_MS, UPKEEP_INTERVAL } from '../sim/defs/timing';
+import type { goodsBalance } from '../sim/flow';
 import { islandName } from '../sim/islands';
+import { routeBalance } from '../sim/routeBalance';
 import { buyShip, freeShipAtHome, retireShip } from '../sim/ships';
 import type { StepReport } from '../sim/tick';
 import type { GoodId, Route, RouteGood, Ship, World } from '../sim/types';
@@ -11,6 +13,7 @@ import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { HOME } from '../sim/world';
 import { costLine } from './dom';
 import { friendlyReason } from './hints';
+import { GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
 
 export interface ShipRow {
   id: number;
@@ -76,6 +79,48 @@ export function routeLine(world: World, route: Route, here: number): string {
     ...back.map((g) => `← ${GOODS[g.good].name}`),
   ];
   return `${islandName(world, first)} ⇄ ${islandName(world, second)}: ${goods.join(', ')}`;
+}
+
+export interface RouteBalanceText {
+  text: string;
+  warn: boolean;
+  tip: string;
+}
+
+const BALANCE_TIP =
+  'Nominal: Überschuss der Quellinsel, ohne Lager, Reserve und Handel. Weitere Schiffe auf dieser Route teilen den Überschuss.';
+
+/** Bilanzzeile einer Route („Warenwert +310 / min · Unterhalt 90 → +220 · nominal“); `null` ohne Seeweg. Rein, liest nur. */
+export function routeBalanceText(
+  world: World,
+  route: Route,
+  balances?: Map<number, ReturnType<typeof goodsBalance>>,
+): RouteBalanceText | null {
+  const b = routeBalance(world, route, balances);
+  if (b === null) return null;
+  const goods = Math.floor(perMinute(b.goodsPer100, GOODS_BALANCE_TICKS)) || 0;
+  const upkeep = perMinute(b.upkeepPer100, UPKEEP_INTERVAL);
+  const net = Math.floor(perMinute(b.net100, GOODS_BALANCE_TICKS)) || 0;
+  return {
+    text: `Warenwert ${signedNum(goods)} / min · Unterhalt ${upkeep} → ${signedNum(net)} · nominal`,
+    warn: net < 0,
+    tip: BALANCE_TIP,
+  };
+}
+
+/** Bilanzzeilen je Schiff mit Bezug zur Insel, Route und ohne Heimfahrt; Schiffe ohne Zeile fehlen. */
+export function shipBalanceLines(
+  world: World,
+  island: number,
+  balances: Map<number, ReturnType<typeof goodsBalance>> = new Map(),
+): Map<number, RouteBalanceText> {
+  const out = new Map<number, RouteBalanceText>();
+  for (const s of world.ships) {
+    if (!related(world, s, island) || s.route === null || s.homing) continue;
+    const line = routeBalanceText(world, s.route, balances);
+    if (line !== null) out.set(s.id, line);
+  }
+  return out;
 }
 
 function related(world: World, ship: Ship, island: number): boolean {
@@ -273,6 +318,9 @@ interface SectionState {
   key: string;
   actions: ShipActions;
   island: number;
+  /** Tick der letzten Bilanzrechnung (`-1`: verworfen); gerechnet wird nur bei neuem Tick. */
+  balTick: number;
+  bal: Map<number, RouteBalanceText> | null;
 }
 
 const states = new WeakMap<HTMLElement, SectionState>();
@@ -387,6 +435,7 @@ function buildRow(world: World, ship: Ship, st: SectionState): HTMLElement {
   if (ship.route !== null || ship.homing)
     row.appendChild(field('p', `ship-route-${ship.id}`, 'panel-line'));
   if (ship.route !== null) {
+    row.appendChild(field('p', `ship-balance-${ship.id}`, 'panel-line'));
     const lists = dirLists(ship.route, st.island);
     const other = islandName(world, st.island === ship.route.a ? ship.route.b : ship.route.a);
     for (const dir of ['fetch', 'bring'] as const) {
@@ -421,6 +470,8 @@ function build(box: HTMLElement, world: World, st: SectionState): void {
   const rebuild = (): void => {
     build(box, world, st);
   };
+  st.balTick = -1;
+  st.bal = null;
   box.replaceChildren();
   box.appendChild(el('h3', 'ships-title', 'Schiffe'));
   const rows = world.ships.filter((s) => related(world, s, st.island)).sort((a, b) => a.id - b.id);
@@ -476,7 +527,15 @@ export function renderShipSection(
 ): void {
   const box = el('div', 'ships');
   box.dataset.field = 'ships';
-  const st: SectionState = { picker: null, highlight: null, key: '', actions, island };
+  const st: SectionState = {
+    picker: null,
+    highlight: null,
+    key: '',
+    actions,
+    island,
+    balTick: -1,
+    bal: null,
+  };
   states.set(box, st);
   panel.appendChild(box);
   build(box, world, st);
@@ -489,7 +548,19 @@ export function updateShipSection(panel: HTMLElement, world: World): void {
   const st = box ? states.get(box) : undefined;
   if (!box || !st) return;
   if (st.key !== `${shipsKey(world, st.island)}@${st.picker ?? '-'}`) build(box, world, st);
+  if (st.bal === null || st.balTick !== world.tick) {
+    st.bal = shipBalanceLines(world, st.island);
+    st.balTick = world.tick;
+  }
   for (const row of shipRows(world, st.island)) {
+    const bal = st.bal.get(row.id);
+    const balEl = box.querySelector<HTMLElement>(`[data-field="ship-balance-${row.id}"]`);
+    if (balEl) {
+      setText(box, `ship-balance-${row.id}`, bal?.text ?? '');
+      const tip = bal?.tip ?? '';
+      if (balEl.title !== tip) balEl.title = tip;
+      balEl.classList.toggle('negative', bal?.warn === true);
+    }
     setText(box, `ship-target-${row.id}`, row.target);
     setText(box, `ship-rest-${row.id}`, row.rest ?? '');
     setText(box, `ship-cargo-${row.id}`, `Ladung: ${row.cargo}`);

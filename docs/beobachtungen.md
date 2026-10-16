@@ -389,6 +389,55 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Ursprung: CTX-ALTLAST
 - Erste Einschätzung: niedrig; zur Kenntnis.
 
+## 2026-10-16 · UI-HAEPPCHEN-F: `goodsBalance` ohne `cov` kostet viel
+
+- Fundort: `src/sim/flow.ts` `goodsBalance`; Aufrufer Kopfzeile (`src/ui/hud.ts`) und `routeBalance`
+- Beobachtung: Ohne `cov` (Abdeckungs-Cache): denseScene H=484 / B=549 6,62 ms (mit `cov` 0,056 ms), Balancing-Welt H=4 / B=35 0,015 ms; Hochrechnung H≈150 / B≈400 ≈ 2 ms. Die Kopfzeile ruft sie ohne `cov` etwa 10× je Refresh.
+- Ursprung: UI-HAEPPCHEN-F (Zeitmessung)
+- Erste Einschätzung: niedrig bis mittel; Idee: `cov` aus dem Frame-Cache durchreichen.
+
+## 2026-10-16 · UI-HAEPPCHEN-F: Test-Doubles ohne `querySelectorAll`, `Option`, `fillText`
+
+- Fundort: `tests/ui/fakeDom.ts`, `tests/render/fakeCtx.ts`
+- Beobachtung: `fakeDom` kennt weder `querySelectorAll` noch `Option` (Test in `routeBalanceText.test.ts` ergänzt lokal); `fakeCtx` loggt weder `fillText` noch `measureText` (Proxy in `seaMapDraw.test.ts`).
+- Ursprung: UI-HAEPPCHEN-F
+- Erste Einschätzung: niedrig; die Doubles zentral erweitern, sobald ein dritter Test sie braucht.
+
+## 2026-10-16 · UI-HAEPPCHEN-F: Kopfzeile per `innerHTML`, kein Unit-Test der Chip-Klasse `negative`
+
+- Fundort: `updateHud` (`src/ui/hud.ts`)
+- Beobachtung: `updateHud` baut die Kopfzeile per `innerHTML`, `fakeDom` parst kein HTML. Die Chip-Klasse `negative` ist daher nicht per Unit-Test prüfbar (nur im Browser).
+- Ursprung: UI-HAEPPCHEN-F
+- Erste Einschätzung: niedrig; Browser-Prüfung deckt es ab.
+
+## 2026-10-16 · UI-HAEPPCHEN-F: Bilanz-Chip ohne wirksame Verlustfarbe seit I-062
+
+- Fundort: `src/style.css` (`.hud-balance`, `.negative`)
+- Beobachtung: Der Bilanz-Chip hatte seit I-062 keine wirksame Verlustfarbe: `color: inherit` schlug `.negative`. Mit UI-HAEPPCHEN-F behoben (Commit `ada345b7`).
+- Ursprung: I-062, entdeckt bei I-108
+- Erste Einschätzung: erledigt; nur zur Kenntnis.
+
+## 2026-10-16 · UI-HAEPPCHEN-F: Fernmarke über Wasser ohne Hover und Klick
+
+- Fundort: Seekarte, `hitIsland` (`src/render/seaMap.ts`)
+- Beobachtung: Eine Marke, die über Wasser (nicht auf Land) liegt, hat keinen Hover-Text und keinen Klick, weil der Treffer am Insel-Landtreffer hängt. Playtest 2026-10-16, Screens `.studio/qa/UI-HAEPPCHEN-F/m8-5-*`.
+- Ursprung: UI-HAEPPCHEN-F
+- Erste Einschätzung: niedrig; Marke ist laut Spec ohnehin ohne Mausfang.
+
+## 2026-10-16 · UI-HAEPPCHEN-F: Bilanz-Chip länger als Plan-AK-3
+
+- Fundort: Kopfzeile, Plan AK-3 «Chip ≤ 15 Zeichen»
+- Beobachtung: Real sind es 17 Zeichen (`+999,9k / −999,9k`), 137 px bei 1280 px, einzeilig; Playtest OK. Die Spec-Grenze von 15 Zeichen galt bis 999 999 (ohne «k»-Kürzung).
+- Ursprung: UI-HAEPPCHEN-F
+- Erste Einschätzung: niedrig; kein Handlungsbedarf. Variante C der Routen-Bilanz (gemessen, Save) erst nach I-091 und nur, wenn «nominal» im Playtest zu ungenau ist.
+
+## 2026-10-16 · UI-HAEPPCHEN-F: Routen-Bilanz rechnet bei jedem neuen Tick (nicht gedrosselt)
+
+- Fundort: `src/ui/ships.ts` (`updateShipSection`, Memo je Quellinsel, Neuberechnung bei geändertem `world.tick`)
+- Beobachtung: Bei 4× und offenem Kontor-Panel rechnet die Bilanzzeile bis etwa einmal je Tick und Quellinsel (`goodsBalance` ohne `cov`, spät ca. 2 ms, dicht 6,6 ms). Playtest 4×: Frame-Zeit unauffällig (Median 16,7 ms). Mögliche Drosselung über `BALANCE_REFRESH_MS`.
+- Ursprung: Final-Review UI-HAEPPCHEN-F (niedrig)
+- Einschätzung: nur bei Frame-Zeit-Befunden angehen; Alternative `cov` aus dem Frame-Cache durchreichen.
+
 ## 2026-10-16 · I-091: Vertragskarte könnte bei Fremdinsel dreizeilig werden
 
 - Fundort: Karte «Stammkunde» (`orderCardText`, `.notice-stack`, 300 px breit)

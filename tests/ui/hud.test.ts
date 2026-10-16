@@ -43,6 +43,7 @@ import { uxWorld } from './worlds';
 import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
 import { formatGameTime, GOODS_BALANCE_TICKS, perMinute, signedNum } from '../../src/ui/time';
 import { tickEconomy } from '../../src/sim/economy';
+import { flowLabel } from '../../src/ui/balanceFlow';
 import { putBuilding, twoIslandWorld } from '../sim/helpers';
 import { renderUpkeepList, UPKEEP_EMPTY_TEXT } from '../../src/ui/upkeepCard';
 import { FakeElement, fakeDocument } from './fakeDom';
@@ -173,6 +174,29 @@ describe('M10 Kopfzeile nach Freischaltung', () => {
   });
 });
 
+describe('I-108 Bilanz-Chip in der Kopfzeile', () => {
+  it('AK-5 label und Tooltip als Klartext von Hand (taxes 90, upkeep 130)', () => {
+    const w = createWorld(3);
+    w.stats.taxes = 90;
+    w.stats.upkeep = 130;
+    expect(balanceView(w).text).toBe('+540 / −780');
+    expect(balanceView(w).label).toBe(
+      'Bilanz −240 / min · Steuern +540 / min · Unterhalt −780 / min',
+    );
+    expect(balanceTooltip(w).startsWith('Bilanz −240 / min\n')).toBe(true);
+    expect(balanceTooltip(w)).toContain('Steuern +540 / min · Unterhalt −780 / min');
+  });
+  it('AK-6 Chip-Text ist bei positivem und negativem Netto gleich aufgebaut', () => {
+    const w = createWorld(3);
+    w.stats.taxes = 130;
+    w.stats.upkeep = 90;
+    expect(balanceView(w).text).toBe('+780 / −540');
+    w.stats.taxes = 90;
+    w.stats.upkeep = 130;
+    expect(balanceView(w).text).toBe('+540 / \u2212780');
+  });
+});
+
 describe('M10 Symbole im Einbau (Spec 14)', () => {
   it('AK-U4-01 Chips tragen Symbol; aria-label = bisheriger Text wörtlich', () => {
     const w = createWorld(3);
@@ -185,7 +209,10 @@ describe('M10 Symbole im Einbau (Spec 14)', () => {
     expect(popChipView(w, 3)).toEqual({ icon: 'tier-3', text: '0', label: 'Bürger 0' });
     expect(moneyView(w)).toMatchObject({ icon: 'money', label: `Geld ${w.money}` });
     expect(balanceView(w)).toMatchObject({ icon: 'balance' });
-    expect(balanceView(w).label).toBe(balanceText(w.stats).text);
+    expect(balanceView(w).label).toBe(flowLabel(w.stats));
+    expect(balanceView(w).label).toContain('Bilanz ±0 / min');
+    expect(balanceView(w).label).toContain('Steuern +0 / min');
+    expect(balanceView(w).label).toContain('Unterhalt \u22120 / min');
   });
   it('AK-U4-01 jedes Gut hat ein Symbol gleicher Kennung', () => {
     const w = createWorld(3);

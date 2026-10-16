@@ -1326,6 +1326,8 @@ button.chip {
 
 /* Bilanz-Chip als Knopf und Betriebsliste (I-062) */
 button.hud-balance {
+  white-space: nowrap;
+  min-width: 0;
   font: inherit;
   color: inherit;
   background: transparent;
@@ -1333,6 +1335,9 @@ button.hud-balance {
   border-radius: 6px;
   padding: 2px 6px;
   cursor: pointer;
+}
+button.hud-balance.negative {
+  color: var(--negative);
 }
 button.hud-balance:hover {
   border-color: var(--gold);
