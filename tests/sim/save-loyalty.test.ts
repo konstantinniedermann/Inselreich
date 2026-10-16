@@ -71,7 +71,7 @@ describe('AK-TR-14 Migration', () => {
   });
 
   it('14c: echtes v14-Fixture lädt mit deliveries 0', () => {
-    const text = readFileSync(join(__dirname, 'fixtures', 'save-v14-contract.json'), 'utf8');
+    const text = readFileSync('tests/sim/fixtures/save-v14-contract.json', 'utf8');
     expect((JSON.parse(text) as { version: number }).version).toBe(14); // historisch, einzige erlaubte Zahl
     const r = deserialize(text);
     expect(r.ok).toBe(true);
