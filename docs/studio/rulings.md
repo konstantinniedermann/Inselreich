@@ -7638,3 +7638,15 @@ wird erst im Gate Plan vergeben (nächste freie beim Merge; Erweiterung 1 der Nu
 Regelbezug: Verfassung §5, STUDIO.md Autonomie, R445, R475, R638 · Kosten bei Irrtum: zwei Specs für Funktionen, die nach dem Playtest anders aussehen.
 
 Entscheider: L0 · Anlass: Nutzerprompt · ADR: —
+
+## R664 · 2026-10-16 · Kurzdesign I-102 «Auftragsvorschau»: angenommen mit V2; Plan nach UI-HAEPPCHEN-D
+
+Ruling: `design/i102` @ `9afebb5b` (9 AK, kein Save, kein neuer Spielwert; `previewOrder(world)` als reine Lesefunktion in `src/sim/orders.ts`
+über `orderForPeriod`, ohne RNG-Vorziehen) → **angenommen**. (1) **V2**: Vorschau auch bei aktivem Normalauftrag als «danach voraussichtlich X»
+(Lücke Verfall → Folgeperiode nur 300 Ticks). (2) Fernangebot-Insel wird nicht angekündigt (später nachrüstbar). (3) I-093 (verworfen) und
+I-095 (erledigt, R658) wandern auf demselben Branch nach `docs/ideen-archiv.md` (lead-design). (4) Plan durch lead-tech nach dem Merge von
+UI-HAEPPCHEN-D; I-102 berührt `order.ts`, nicht die Dateien von UI-D, aber `src/ui/app.ts` ist beim Plan gegen UI-D abzugleichen.
+
+Regelbezug: gates.md Gate Spec (Stufe leicht), R653, R658 · Kosten bei Irrtum: eine Vorschau, die der Spieler als Zusage missversteht (Text «voraussichtlich»).
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-102 · ADR: —
