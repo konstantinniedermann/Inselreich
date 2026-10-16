@@ -1372,3 +1372,17 @@ Lehre zu push-check: L0 committet während eines push-check nicht auf main (Lauf
 Regelbezug: gates.md Gate Push, R335, R598 V1, R667, R688 (2) · Kosten bei Irrtum: ein roter CI-Lauf wegen Timeout eines Fremdtests (Rerun oder Fix nach E-043).
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-REL-24-25 · ADR: —
+
+## R698 · 2026-10-16 · Nutzerauftrag «weiter spawnen, solange Kapazität da ist»: neue Welle trotz Ampel gelb, Deckel 6
+
+Ruling: Nutzerauftrag 12:31 «mach weiter. spawne andere agenten solange wir die kapazität haben dafür». Auslegung: der Auftrag geht der Ampel-Regel «gelb → keine
+neue Welle» (R691) vor; Kapazität = 5-h-Limit (66 %, Reset 13:40) und Wochenlimit (23 %). Deckel **6 gleichzeitige Agenten** statt 8, damit Reserve für
+Gates und Session-Ende bleibt; bei Ampel **rot** startet nichts Neues mehr, Laufendes wird abgeschlossen. Welle: (1) **UI-AUFRAEUM-4** Umsetzung (R694,
+8 Starts); (2) **Plan ORT-A** (R696, lead-tech opus, 3 Starts, Worktree ab `design/ortsrand` @ `ad315b3d`); (3) **TOOL-BUENDEL-13** = TOOL-TIMEOUT-7 (R697,
+7 Timeouts nach E-043) + TOOL-GUARD-EVENT (R693), lead-tech sonnet, 4 Starts; (4) Kurzdesign **I-114** Stufe leicht (lead-design sonnet, R692); (5) Kurzdesign
+**I-120 + I-118** Stufe leicht (lead-art, R692). Dateien: (1) `src/ui/`, `src/sim/order.ts`; (3) nur `tests/` ausserhalb der von (1) berührten Dateien und
+`tools/studio/`; (2), (4), (5) nur Doku → disjunkt.
+
+Regelbezug: Verfassung §5, R69, R475, R691 · Kosten bei Irrtum: ein Limit, das vor dem Reset rot wird und laufende Pakete in die Folgesession schiebt.
+
+Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-16 · ADR: —
