@@ -2067,3 +2067,14 @@ TOOL-ACTIONS-FREI. Auflagen an den `production-integrator`: (1) `make push-check
 Regelbezug: gates.md Release, R335, R697, R712 V2, R748, R751 · Kosten bei Irrtum: ein roter CI-Lauf auf main, der per Hotfix behoben wird.
 
 Entscheider: L0 · Anlass: Release-Check lead-qa REL-26 · ADR: —
+
+## R753 · 2026-10-16 · REL-26 live; Push-Session beendet
+
+Ruling: `make push-check` EXIT=0 auf `6f14a354` (4361 Tests, `check-ci-perf` grün), Push `8fe744df..6f14a354`, CI 38914539819 grün, Pages 38915602338 grün — automatisch per `workflow_run`,
+der erste Lauf mit den Workflows aus TOOL-ACTIONS-FREI. **REL-26 «Rat, Vorwarnung, Klang» live**, Save v17. Release-Notiz in `state.md`. Die push-check-Hinweise «Ereignis nicht
+geschrieben» und «Lastprotokoll fehlgeschlagen» gehen ins Werkzeug-Bündel 15 (R750). Die Push-Session (R751–R753) bestand nur aus Merge, Release-Check und Push; ihre Kurz-Retro
+deckt die Retro ca9d40c8 ab (keine eigene, Abweichung von der Ende-Routine wegen Umfang). Nächste Session: neues Claude-Gespräch, Plan aus `state.md`.
+
+Regelbezug: R335, R434, R751, R752 · Kosten bei Irrtum: eine fehlende Mini-Retro für eine Push-Session.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-26 · ADR: —

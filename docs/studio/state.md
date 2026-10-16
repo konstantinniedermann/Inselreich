@@ -4,9 +4,14 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-16 (Studio-Session ca9d40c8 beendet, R709–R750 ohne R747/R748 der Parallel-Session; lokal auf main seit Push `8fe744df`: I-120, I-118, UI-AUFRAEUM-4, TOOL-BUENDEL-14, I-114, BEOB-17, PERF-BILANZ-COV, I-112 (Save v17), TOOL-GUARD-ALLOWLIST, IDEEN-12, I-122 + I-123, Handbuch 1.61; nicht gepusht)
+Stand: 2026-10-16 (REL-26 live `6f14a354`, R753; Save v17; Studio-Sessions ca9d40c8 R709–R750 und Push-Session R751–R753; R747/R748 und R749 (Umnummerierung) bei anno-clone #2)
 
 ## Release-Notizen
+
+**REL-26 „Rat, Vorwarnung, Klang“ (live, R753)** — Save **v17** (Migration v16→v17). Inhalt: I-112, I-122 + I-123, I-114, I-118, I-120, UI-AUFRAEUM-4, BEOB-17, PERF-BILANZ-COV, TOOL-BUENDEL-14, TOOL-GUARD-ALLOWLIST, TOOL-ACTIONS-FREI, IDEEN-12. Push `8fe744df..6f14a354`, CI-Lauf 38914539819, Pages-Lauf 38915602338 (automatisch per `workflow_run`). Quelle: `.studio/handoffs/2026-10-16-lead-qa-release-REL-26.md`.
+
+- **Neu:** Der Rat tagt, sobald ein Haus Stufe 2, 3 oder 4 erreicht: Marke «Rat · n» in der Kopfzeile, `Umschalt+R` öffnet ihn, je Stufe ein Beschluss für die ganze Partie (kostenlos, nicht änderbar; vom Studio vorgeschlagen, I-112). Die Stammkunden-Karte warnt 30 s vor der Abrechnung bei behebbarem Fehlbestand, mit Klang (vom Studio vorgeschlagen, I-122); die Lager-Reichweite rechnet den Stammkunden mit (I-123). Fernangebot ist jetzt eine Wahl (I-114). Aufstiegs-Funkeln (I-118) und Wohlstandsklang (I-120). Menüabstand und Aufräumarbeiten; Werkzeug-/CI-Anpassungen ohne Spieleinfluss.
+- **Bitte testen:** (1) Haus auf Stufe 2 bringen: Marke «Rat · 1», `Umschalt+R`, Beschluss fassen, Marke weg und Wirkung sichtbar; (2) Stammkunde: Lager knapp halten, 30 s vor Abrechnung erscheint Warnzusatz plus Klang, Fehlbestand beheben löscht ihn; (3) Spielstand v16 laden: Rat-Beschlüsse passend zu den Häusern, speichern und neu laden; (4) Fernangebot mit Kontor auf Fern-Insel: Wahl annehmen/ablehnen; (5) Haus steigt auf: Funkeln und Klang, bei Pause kein Klang.
 
 **REL-24 + REL-25 „Ereignis-Log, Pause, Treue“ (live, R697)** — Save **v16** (Migration v15→v16). Push `2e7a269f..8fe744df`, CI-Lauf 38887719217,
 Pages-Lauf 38888562306. Inhalt: UI-HAEPPCHEN-D/E/F, I-091, BEOB-15, TOOL-METRIK-ZEITRAUM. Quelle: `.studio/handoffs/2026-10-16-lead-qa-gate-REL-24-25.md`.
@@ -141,9 +146,8 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475, R698 (Deckel 6), R708 V2. Ein Push je Session (R335). Actions-Sparregeln laut R747 der
 Parallel-Session gelockert (öffentliches Repo) — ob R488 V2 «ein Push je Tag» damit entfällt, steht dort.
 
-1. **REL-26** (Push-Gate in der nächsten bzw. der Parallel-Session anno-clone #2): Inhalt I-120, I-118, UI-AUFRAEUM-4, TOOL-BUENDEL-14, I-114, BEOB-17-Menüabstand,
-   PERF-BILANZ-COV, **I-112 Ratsbeschluss (Save v16 → v17, Migration)**, TOOL-GUARD-ALLOWLIST, I-122 + I-123, dazu TOOL-ACTIONS-FREI (R748 Parallel-Session).
-   Release-Check nur in der Push-Session (Handbuch 1.60), `make push-check` mit vollem Lauf (Auflagen R727, R747/R749). Release-Notizen schreiben.
+1. **REL-26 live** (R753, Push `8fe744df..6f14a354`): Spieler-Rückmeldungen zu «Bitte testen» abwarten; Push-check-Hinweise «Ereignis nicht geschrieben» und
+   «Lastprotokoll fehlgeschlagen» prüft das nächste Werkzeug-Bündel.
 2. **Werkzeug-Bündel 15** (R750 V1 + R744): Last/Worker in `test_passed`/`test_failed`, Worker-Deckel bei Last ≥ 8, `_shown_command`/`COMMAND_LIMIT` aus `guard.py` entfernen.
    **Handbuch-Minor** (R750 V2 Tools-Schätzung, V3 eine Wartepause je Controller-Instanz) durch studio-coach.
 3. **ORT-A** (pausiert nach T06, R746; Puffer 9 von 12): C4 startet mit Ringpfad-Test `twoZonePieces` (sonst Rand 1), Merge `feat/ort-a-mess`, Fixture + Schwellen
