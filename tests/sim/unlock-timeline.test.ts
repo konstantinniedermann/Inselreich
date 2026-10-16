@@ -60,5 +60,6 @@ describe('M11 Freischalt-Ticks (M-11)', () => {
     expect(timeline('off', false).unlock).toMatchObject({ ...early, U5: 4150, U6: 6750 });
     expect(timeline('normal', true).unlock).toMatchObject({ ...early, U5: 5150, U6: 7850 });
     expect(timeline('mild', false).unlock).toMatchObject({ ...early, U5: 4250, U6: 7850 });
-  });
+    // E-043: eigenes Timeout als Lastreserve, Aussage unverändert.
+  }, 10_000);
 });

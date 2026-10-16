@@ -524,7 +524,8 @@ describe('Wasser- und Luftleben (H-R2)', () => {
       }
     }
     expect(bad).toEqual([]);
-  });
+    // E-043: eigenes Timeout als Lastreserve, Aussage unverändert.
+  }, 10_000);
 
   it('RF-7 Einbindung: Wasserleben vor Schiff und Objekten, Vögel danach und vor dem Multiply-Durchgang, keine Signalfarbe, reduceMotion weniger', () => {
     let done = false;
