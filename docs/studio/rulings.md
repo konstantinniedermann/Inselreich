@@ -1567,3 +1567,16 @@ pusht; Vorab- und Delta-Check entfallen; Messgrösse ≤ 2 lead-qa- und ≤ 1 In
 Regelbezug: R127, R316, R335, R488 V2, R598 V3, R708 · Kosten bei Irrtum: ein Werkzeug-Paket, das eine Regel lockert, die wieder verschärft werden muss.
 
 Entscheider: L0 · Anlass: Prozess-Retro REL-21–REL-25 · ADR: —
+
+## R713 · 2026-10-16 · Gate Plan I-112: OK mit Auflagen B-1–B-5; Budget 25 + 4; Umsetzung jetzt
+
+Ruling: `plan/i112` @ `cb41264e` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-plan-I-112.md`) → **Gate Plan OK mit Auflagen**: B-1 R711 in Index, T02, T04
+nachziehen (Varianten und Blocker R-3/R-4 streichen, Satz «Spec §4/AK 9 durch R711 R-4 ersetzt»); B-2 Stufentakt-Test je Kette (Weberei, Brennerei, Glashütte),
+Reihenfolge Beschluss vor Inselvorteil, Untergrenze 1; B-3 Migrationstest v16→v17 mit Fällen ohne Haus, Stufe 4 und älteren Fixtures durch die Kette, Save-Tests
+`buyPct`, `farOrder`, `reserve`, `inselmarkt`, `toolmaker` mitlaufen; B-5 Sollwert `council` in T05 aus der höchsten Hausstufe am Laufende. B-6–B-9 als Hinweise.
+Budget **25 Arbeiter-Starts + 4 Controller, Parallelität 2**. Erste Controller-Instanz arbeitet B-1–B-5 in den Plan ein (auf `feat/i112`), dann T00, T01.
+Last 6 < 8: dritte Umsetzung mit Testlauf zulässig (R708 V2).
+
+Regelbezug: gates.md Gate Plan, R706, R708 V2, R711 · Kosten bei Irrtum: eine Plan-Korrektur.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-I-112 · ADR: —
