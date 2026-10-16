@@ -711,3 +711,28 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Entscheid: IDEEN-09 Empfehlung parken bis Handels-Brainstorming (mit I-092, I-029, I-006)
 - Stand Handel 2 (design-handel-2, 2026-10-14): Empfehlung V1 Fernangebot neben dem Auftrag (Vorliebe-Gut der Insel, Stück 0,75 wegen Edikt-Grenze 0,8, Frist 2:30, kostet die nächste Periode) (`docs/superpowers/specs/2026-10-14-handel-2-brainstorming.md`)
 - Stand 2026-10-16: umgesetzt als Fernangebot in Handel 2 (`farOffer`, `acceptFarOrder`, `FAR_ORDER_DURATION`; Gate Merge R658, gemergt, Push mit REL-23). Offen bleibt nur I-092 (Inselmarkt-Vorliebe) als eigene Idee; Verschieben ins Archiv durch L0 (Vorschlag).
+
+### I-097 · live · Pause sichtbar auf der Karte
+
+- Bereich: Grafik · Säule: Bedienung · Quelle: IDEEN-09 Scout C; `src/ui/hud.ts` (Pause nur am gedrückten Knopf) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht bei Pause einen getönten Rand mit «Pause» und hält das stehende Bild nicht für einen Hänger."
+- Grösse: S · Save nein · Baseline nein · Abhängigkeiten: `src/ui/app.ts`, `src/style.css`
+- Randfälle: kein Doppelhinweis bei offenem Menü; Banner fängt keine Mausereignisse.
+- Raster (Scout und lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 9
+- Bewertung lead-design: Genre-Standard, aber kein Playtest-Befund; Lückenfüller.
+- Nutzen/Aufwand: Orientierung · S · ≈ 40 Tools
+- Entscheid: IDEEN-09 Empfehlung parken (Lückenfüller)
+- Status 2026-10-16: Parken aufgehoben (R663); Kurzdesign `docs/superpowers/specs/2026-10-16-i097-pause-sichtbar.md` (11 AK, kein Save); Umsetzung nach UI-HAEPPCHEN-D
+- Stand 2026-10-16: live mit UI-HAEPPCHEN-E.
+
+### I-102 · live · Auftragsvorschau «Als Nächstes: Rum»
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout A; Genre-Mechanik Vorschau auf kommende Bestellung; `src/sim/orders.ts` (`orderForPeriod(seed, k, maxHouseTier)` zustandslos, ADR-010) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler liest «Nächster Auftrag in 0:40 · voraussichtlich Rum» und lässt das Lager für Rum liegen, statt es vorher zu verkaufen."
+- Grösse: S · Risiko: keins (Save nein, Baseline nein; reine Ableitung, kein neuer Zufallsstrom)
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13
+- Randfälle: nur das Gut, nie die Menge; «voraussichtlich» (Stufenaufstieg kann das Gut ändern); bei Vertrag oder gesperrter Folgeperiode keine Vorschau. Entartung: Vorschau-Nutzer verkauft nie das nächste Auftragsgut; Preis ist Lagerplatz, kein Gewinn.
+- Doppelung: I-029 (Gefragte Ware, geparkt) ändert Preise; I-102 zeigt nur Vorhandenes. Handel 2: Fernangebot-Insel der Periode darf mitgenannt werden.
+- Nutzen/Aufwand: Auftrag planbar statt Zufall · S · ≈ 60 Tools
+- Entscheid: offen (IDEEN-10); Kurzdesign 2026-10-16 (`docs/superpowers/specs/2026-10-16-i102-auftragsvorschau.md`), Gate Kurzdesign offen
+- Stand 2026-10-16: live mit UI-HAEPPCHEN-E.

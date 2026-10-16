@@ -66,7 +66,7 @@ Handel 2 (I-101 und I-102 setzen Handel 2 live voraus, I-104 und I-105 nach Hand
 
 | Rang | ID    | Name                                | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                | Empfehlung                                           |
 | ---- | ----- | ----------------------------------- | ------ | ----- | --------------- | --------------------------------------------- | ---------------------------------------------------- |
-| 1    | I-102 | Auftragsvorschau                    | S      | 13    | nein / nein     | Auftrag planbar, ≈ 60 Tools                   | einplanen Häppchen nach Handel 2                     |
+| 1    | I-102 | Auftragsvorschau                    | S      | 13    | nein / nein     | Auftrag planbar, ≈ 60 Tools                   | live mit UI-HAEPPCHEN-E (siehe Archiv)               |
 | 2    | I-104 | Ausschreibung                       | M      | 13    | ja / nein       | echte Spätspiel-Wahl «Vorrat statt Verkauf»   | parken: Baustein Handels-Brainstorming nach Handel 2 |
 | 3    | I-109 | Reichweite am Gut-Chip              | S–M    | 12    | nein / nein     | Mangel vorausplanen, ≈ 1 Paket                | live mit UI-HAEPPCHEN-D (siehe Archiv)               |
 | 4    | I-108 | Einnahmen und Unterhalt getrennt    | S      | 12    | nein / nein     | Wirtschaftslage auf einen Blick, ≈ 60 Tools   | einplanen Häppchen                                   |
@@ -95,7 +95,7 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 | 2    | I-100 | «Neu»-Zähler am Ereignis-Log | S–M    | 11    | nein / nein     | verpasste Krisen bei 4× lesbar, ≈ 70 Tools        | einplanen Häppchen danach; ersetzt I-058          |
 | 4    | I-094 | Darlehen beim Händler        | S–M    | 11    | ja / nein       | Vorziehen gegen Dauerlast, Entartung offen        | parken: Wirtschafts-Brainstorming                 |
 | 5    | I-091 | Treuebonus beim Stammkunden  | M      | 11    | ja / nein       | Bindung belohnt, vor Playtest I-047 verfrüht      | parken: Playtest I-047                            |
-| 7    | I-097 | Pause sichtbar auf der Karte | S      | 9     | nein / nein     | Orientierung, kein Playtest-Befund                | parken (Lückenfüller)                             |
+| 7    | I-097 | Pause sichtbar auf der Karte | S      | 9     | nein / nein     | Orientierung, kein Playtest-Befund                | live mit UI-HAEPPCHEN-E (siehe Archiv)            |
 | —    | I-096 | Steuerstufe je Insel         | S–M    | 8     | ja / nein       | Stellschraube ohne neue Abwägung                  | verwerfen                                         |
 
 I-093 (verworfen) und I-095 (erledigt) sind nach Handel 2 (R658, R664) ins Archiv verschoben; die Ränge 3 und 6 entfallen.
@@ -175,18 +175,6 @@ I-093 (verworfen) und I-095 (erledigt) sind nach Handel 2 (R658, R664) ins Archi
 - Bewertung lead-design: vermehrt eine Stellschraube ohne neue Abwägung (Scout nennt das selbst); «jede Insel nach Aufgabe» deckt K2 mit «Stand halten» besser.
 - Entscheid: IDEEN-09 Empfehlung verwerfen
 
-### I-097 · bewertet · Pause sichtbar auf der Karte
-
-- Bereich: Grafik · Säule: Bedienung · Quelle: IDEEN-09 Scout C; `src/ui/hud.ts` (Pause nur am gedrückten Knopf) · Herkunft: vom Studio vorgeschlagen
-- Spielerwirkung: „Der Spieler sieht bei Pause einen getönten Rand mit «Pause» und hält das stehende Bild nicht für einen Hänger."
-- Grösse: S · Save nein · Baseline nein · Abhängigkeiten: `src/ui/app.ts`, `src/style.css`
-- Randfälle: kein Doppelhinweis bei offenem Menü; Banner fängt keine Mausereignisse.
-- Raster (Scout und lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 9
-- Bewertung lead-design: Genre-Standard, aber kein Playtest-Befund; Lückenfüller.
-- Nutzen/Aufwand: Orientierung · S · ≈ 40 Tools
-- Entscheid: IDEEN-09 Empfehlung parken (Lückenfüller)
-- Status 2026-10-16: Parken aufgehoben (R663); Kurzdesign `docs/superpowers/specs/2026-10-16-i097-pause-sichtbar.md` (11 AK, kein Save); Umsetzung nach UI-HAEPPCHEN-D
-
 ### I-100 · bewertet · «Neu»-Zähler am Ereignis-Log
 
 - Bereich: Bedienung · Säule: Bedienung (Krisen) · Quelle: IDEEN-09 Scout C; `src/ui/eventLogView.ts` (eingeklappt nur der neueste Eintrag); Playtest `.studio/qa/rel-18/report.md` (Krisen bei 4× verpasst); Genre-Mechanik Ungelesen-Zähler · Herkunft: vom Studio vorgeschlagen
@@ -209,17 +197,6 @@ I-093 (verworfen) und I-095 (erledigt) sind nach Handel 2 (R658, R664) ins Archi
 - Randfälle: nur bei laufendem Fernauftrag; Marke ohne Mausfang; bei Verfall oder Lieferung weg.
 - Nutzen/Aufwand: Fernauftrag auf einen Blick planbar · S · ≈ 50 Tools
 - Entscheid: offen (IDEEN-10)
-
-### I-102 · bewertet · Auftragsvorschau «Als Nächstes: Rum»
-
-- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout A; Genre-Mechanik Vorschau auf kommende Bestellung; `src/sim/orders.ts` (`orderForPeriod(seed, k, maxHouseTier)` zustandslos, ADR-010) · Herkunft: vom Studio vorgeschlagen
-- Spielerwirkung: „Der Spieler liest «Nächster Auftrag in 0:40 · voraussichtlich Rum» und lässt das Lager für Rum liegen, statt es vorher zu verkaufen."
-- Grösse: S · Risiko: keins (Save nein, Baseline nein; reine Ableitung, kein neuer Zufallsstrom)
-- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13
-- Randfälle: nur das Gut, nie die Menge; «voraussichtlich» (Stufenaufstieg kann das Gut ändern); bei Vertrag oder gesperrter Folgeperiode keine Vorschau. Entartung: Vorschau-Nutzer verkauft nie das nächste Auftragsgut; Preis ist Lagerplatz, kein Gewinn.
-- Doppelung: I-029 (Gefragte Ware, geparkt) ändert Preise; I-102 zeigt nur Vorhandenes. Handel 2: Fernangebot-Insel der Periode darf mitgenannt werden.
-- Nutzen/Aufwand: Auftrag planbar statt Zufall · S · ≈ 60 Tools
-- Entscheid: offen (IDEEN-10); Kurzdesign 2026-10-16 (`docs/superpowers/specs/2026-10-16-i102-auftragsvorschau.md`), Gate Kurzdesign offen
 
 ### I-103 · bewertet · Routen-Bilanz (lohnt dieses Schiff?)
 
