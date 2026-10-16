@@ -548,13 +548,25 @@ REDACTED = "[REDACTED]"
 # Quoted-String (mit Leerzeichen) oder ein Token bis zum nächsten Leerzeichen.
 # Schlüsselwörter werden ohne führendes `[\w-]*` gesucht (sonst quadratische
 # Laufzeit, ReDoS); Präfixe vor dem Wort bleiben dadurch einfach stehen.
-# Bewusste Restlücken: Secrets in verschachtelten/escapten Quotes, Werte aus
-# Dateien oder Variablen (`$(cat f)`), Passwort als nacktes Positionsargument
-# ohne Schlüsselwort, `-u` ohne `:` im Wert; `-pattern` wird zu `-p[REDACTED]`.
+# Namen gelten als Wortsegmente (`DB_PASS`, `ACCESS_TOKEN_V2`, `SECRETS`), nicht
+# als Teilstrings: `keyboard=`, `monkey=`, `author=` bleiben unverändert.
+# `-p PW` mit Leerzeichen wird nur in Befehlen mit docker login/sshpass/mysql*/
+# mongo* geschwärzt (dort ist es das Passwort; `mysql -p db` wird überschwärzt).
+# Bewusste Restlücken: Secrets in verschachtelten/verketteten/escapten Quotes,
+# Werte aus Dateien oder Variablen (`$(cat f)`), Passwort als nacktes Positions-
+# argument ohne Schlüsselwort, `-u` ohne `:` im Wert, `https://TOKEN@host` ohne
+# Präfix, Passwort mit `/` oder `@` in URL-Credentials, `Authorization:` ohne
+# Schema, `?key=` in URLs, Flag-Präfix länger als 40 Zeichen, Namens-Suffix mit
+# mehr als 5 Segmenten; `-pattern` wird zu `-p[REDACTED]`.
 _VALUE = r"""(?:"[^"]*"|'[^']*'|[^\s'"]+)"""
 _USERPASS = r"""(?:"[^"]*:[^"]*"|'[^']*:[^']*'|[^\s'"]*:[^\s'"]*)"""
-_KEYWORDS = r"(?:token|apikey|secret|password|passwd|[-_]key)"
-_FLAG_KEYWORDS = r"(?:token|apikey|secret|password|passwd|pass|[-_]?key)"
+_KEYWORDS = r"(?:token|apikey|secret|password|passwd|pass|pwd|key|credential|auth)s?"
+_NAME_SUFFIX = r"(?:[_-][A-Za-z0-9]{1,20}){0,5}"
+_FLAG_KEYWORDS = (
+    r"(?:token|apikey|secret|password|passwd|pass|pwd|credential|auth|cookie|[-_]?key)"
+)
+_PW_CONTEXT = re.compile(r"(?i)\b(?:docker\s+login|sshpass|mysql\w*|mongo\w*)\b")
+_SPACED_P = re.compile(r"(?<!\S)(-p\s+)[^\s'\"-]\S*")
 _B = r"(?<![A-Za-z0-9])"
 REDACT_PATTERNS = (
     (re.compile(_B + r"gh[pousr]_[A-Za-z0-9]{20,}"), REDACTED),
@@ -571,14 +583,24 @@ REDACT_PATTERNS = (
         ),
         r"\1" + REDACTED,
     ),
+    (re.compile(r"(?i)(\b(?:set-)?cookie\s*:\s*)[^'\"]+"), r"\1" + REDACTED),
     (re.compile(r"(?i)(\bBearer\s+)" + _VALUE), r"\1" + REDACTED),
-    (re.compile(r"(?<!\S)(-u|--user)(=|\s*)" + _USERPASS), r"\1\2" + REDACTED),
+    (
+        re.compile(r"(?<!\S)(-u|-U|--user|--proxy-user)(=|\s*)" + _USERPASS),
+        r"\1\2" + REDACTED,
+    ),
     (
         re.compile(r"(?i)(?<!\S)(--[\w-]{0,40}?" + _FLAG_KEYWORDS + r"\s+)" + _VALUE),
         r"\1" + REDACTED,
     ),
     (
-        re.compile(r"(?i)(" + _KEYWORDS + r"""["']?\s*[=:]\s*)""" + _VALUE),
+        re.compile(
+            r"(?i)(?<![A-Za-z0-9])("
+            + _KEYWORDS
+            + _NAME_SUFFIX
+            + r"""["']?\s*[=:]\s*)"""
+            + _VALUE
+        ),
         r"\1" + REDACTED,
     ),
     (
@@ -594,6 +616,8 @@ REDACT_PATTERNS = (
 def redact(text: str) -> str:
     for pattern, replacement in REDACT_PATTERNS:
         text = pattern.sub(replacement, text)
+    if _PW_CONTEXT.search(text):
+        text = _SPACED_P.sub(r"\1" + REDACTED, text)
     return text
 
 

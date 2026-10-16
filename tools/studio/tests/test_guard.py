@@ -628,7 +628,7 @@ class RedactTest(unittest.TestCase):
 
     def test_attached_p_password(self):
         self.assertRedacted("mysql -u root -pgeheim db", "geheim")
-        self.assertEqual(self.shown("mysql -p db"), "mysql -p db")
+        self.assertEqual(self.shown("ls -p db"), "ls -p db")
         self.assertEqual(self.shown("git log -p"), "git log -p")
 
     def test_url_credentials(self):
@@ -709,7 +709,7 @@ class RedactHardeningTest(unittest.TestCase):
             self.assertTrue(out.split()[-1] in ("db", "go"), out)
 
     def test_p_flag_unchanged(self):
-        self.assertEqual(self.shown("mysql -p db"), "mysql -p db")
+        self.assertEqual(self.shown("ls -p db"), "ls -p db")
         self.assertEqual(self.shown("git log -p"), "git log -p")
 
     def test_word_boundary_for_prefixes(self):
@@ -800,3 +800,70 @@ class RedactReviewTest(unittest.TestCase):
             start = time.perf_counter()
             guard.redact(text)
             self.assertLess(time.perf_counter() - start, 1.0, text[:20])
+
+
+class RedactDeltaTest(unittest.TestCase):
+    """Delta-Review: -p PW mit Leerzeichen, Namens-Segmente, Proxy-User, Cookie."""
+
+    shown = RedactTest.shown
+    assertRedacted = RedactTest.assertRedacted
+
+    def test_spaced_p_in_password_tools(self):
+        for cmd in (
+            "docker login -u bob -p geheim123 reg.example",
+            "sshpass -p geheim123 ssh host",
+            "mysql -u root -p geheim123 db",
+            "mysqldump -p geheim123 db",
+            "mongo -p geheim123 db",
+        ):
+            out = self.assertRedacted(cmd, "geheim123")
+            self.assertIn("-p", out)
+
+    def test_spaced_p_elsewhere_unchanged(self):
+        for cmd in (
+            "git log -p",
+            "grep -p foo file",
+            "ls -p src",
+            "docker run -p 80:80 img",
+        ):
+            self.assertEqual(self.shown(cmd), cmd)
+
+    def test_name_segments(self):
+        for name in (
+            "DB_PASS",
+            "MYSQL_PWD",
+            "ACCESS_TOKEN_V2",
+            "SECRETS",
+            "TOKENS",
+            "KEY",
+            "CREDENTIALS",
+            "AUTH",
+            "my-auth-token",
+            "pwd",
+        ):
+            self.assertRedacted(f"run {name}=geheim123 x", "geheim123")
+            self.assertRedacted(f"run {name}: geheim123 x", "geheim123")
+
+    def test_flag_keywords(self):
+        for flag in ("--pwd", "--credential", "--auth", "--cookie"):
+            self.assertRedacted(f"run {flag} geheim123 x", "geheim123")
+
+    def test_names_unchanged(self):
+        for cmd in (
+            "echo keyboard=3",
+            "echo monkey=1",
+            "git log --author=bob",
+            "PATH=/usr/bin ls",
+            "python tokenizer.py",
+            "echo passenger=2 bypass=1",
+            "ls -la",
+            "git push origin main:main",
+        ):
+            self.assertEqual(self.shown(cmd), cmd)
+
+    def test_proxy_user_and_cookie(self):
+        self.assertRedacted("curl --proxy-user bob:geheim123 h", "geheim123")
+        self.assertRedacted("curl -U bob:geheim123 h", "geheim123")
+        out = self.assertRedacted("curl -H 'Cookie: sid=geheim123; a=b' h", "geheim")
+        self.assertNotIn("a=b", out)
+        self.assertTrue(out.endswith("' h"))
