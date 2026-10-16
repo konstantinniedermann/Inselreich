@@ -374,7 +374,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Zu Spielbeginn ist die Auftragskarte verborgen, die Vorschau wird also erst nach der Freischaltung sichtbar.
 - Ursprung: UI-HAEPPCHEN-E
 - Erste Einschätzung: niedrig; beabsichtigt durch U3.
-  ||||||| base
-- 2026-10-16 · `tests/render/wildlife.test.ts` RF-10 und `tests/sim/unlock-timeline.test.ts` AK-BAS-03: lastabhängige Zeitreserve-Tests; fielen im `make push-check` (Last) rot, `make zeitreserve-gate` danach Exit 0 (Reserve 0). Ursprung: R667 (Release-Check REL-23). Einschätzung: niedrig bis mittel (blockiert Pushes bei Last); Option Timeout 10000 ms nach E-043, Teil von ZEITRESERVE-PFLEGE.
-- 2026-10-16 · `tests/ui/farOrder.test.ts:198`: tautologischer Test (vergleicht geladene Welt mit sich selbst). Ursprung: R667 (Restbefund HANDEL-2). Einschätzung: niedrig; Erwartungswert unabhängig bilden.
-- 2026-10-16 · `src/sim/save.ts` ≈ Zeile 882: tote Klausel. Ursprung: R667 (Restbefund HANDEL-2). Einschätzung: niedrig; bei nächster Save-Änderung entfernen.
+
+## 2026-10-16 · I-091: Vertragskarte könnte bei Fremdinsel dreizeilig werden
+
+- Fundort: Karte «Stammkunde» (`orderCardText`, `.notice-stack`, 300 px breit)
+- Beobachtung: Bei Fremdinsel, Lieferzeit «1:15» und «treu: verzeiht einmal» ist eine dritte Zeile möglich; im Browser nicht geprüft (T05 prüfte Heimat, zwei Zeilen schon vor I-091).
+- Ursprung: Final-Review I-091
+- Erste Einschätzung: niedrig; bei nächstem Karten-Eingriff mitprüfen.
