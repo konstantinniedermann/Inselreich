@@ -1488,3 +1488,15 @@ Rückfall V4 (nur Stufe 3) bleibt Option, falls der Plan zu gross wird. Plan in 
 Regelbezug: gates.md Gate Spec, R674, R692, R698 · Kosten bei Irrtum: ein Beschluss, der nach dem Playtest per Werte-Ruling nachgestimmt wird.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I-112 · ADR: —
+
+## R707 · 2026-10-16 · Gate Merge I-120 + I-118: OK; Ampel rot → Session-Ende
+
+Ruling: `feat/i120` @ `13dc9bfd` und `feat/i118` @ `f69d8b49` (Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-I-120-I-118.md`): frisches Delta-Review opus
+OK (R673 nachgeholt), Importgrenzen eingehalten, kein `src/sim`-Diff, `SAVE_VERSION` 16, Prüfläufe Exit 0, Merge-Proben sauber, README/arc42 nachgeführt →
+**Gate Merge OK**; Abweichung `sound.ts` statt `ambience.ts` genehmigt. lead-production merged I-120, dann I-118 (`--no-ff`, lokal), trägt die vier niedrigen
+Hinweise in `docs/beobachtungen.md` ein und nimmt beide in REL-26 auf. Limit-Ampel rot (86 %): keine neuen Pakete; UI-AUFRAEUM-4 läuft bis zum nächsten
+Haltepunkt und setzt in der Folgesession fort; Session-Ende-Routine jetzt (Metriken, Kurz-Retro mit den Handbuch-Nachträgen R695/R704, state.md).
+
+Regelbezug: gates.md Gate Merge, R69, R673, R698, R702 · Kosten bei Irrtum: ein Stadtklang, der nach dem Hörtest nachgestimmt wird.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-120-I-118, Ampel rot · ADR: —
