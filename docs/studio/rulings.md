@@ -2043,3 +2043,15 @@ meine R747 wird R749 (Absprache per Nachricht); diese Session schreibt danach ke
 Regelbezug: R129, R316, R335, R708, R735 · Kosten bei Irrtum: zwei Handbuch-Minors, die nach der Bewertung zurückgenommen werden.
 
 Entscheider: L0 · Anlass: Kurz-Retro ca9d40c8, Session-Ende · ADR: —
+
+## R751 · 2026-10-16 · Nutzerauftrag «push»: neue Studio-Session, REL-26 jetzt inkl. TOOL-ACTIONS-FREI
+
+Ruling: Nutzer: «push.» nach dem Session-Ende ca9d40c8 → neue Studio-Session (R434), ihr einziger Push ist REL-26 (R335). Ablauf: (1) lead-production merged
+`feat/tool-actions-frei` @ `42e04202` lokal (Gate OK R748 der Parallel-Session, «Push mit REL-26»); (2) lead-qa Release-Check REL-26 mit Release-Notizen (Handbuch 1.60:
+nur in der Push-Session); (3) `production-integrator` in `.worktrees/integrate`: `make push-check`, Push per geprüftem Hash, CI- und Pages-Lauf prüfen. R488 V2 «ein Push
+je Tag» entfällt durch R747 der Parallel-Session (öffentliches Repo); der Nutzerauftrag geht ohnehin vor. Ruling-Nummern: R749 bleibt für die Umnummerierung durch
+anno-clone #2 reserviert (offline); diese Session nutzt R751 ff. und prüft vor jedem Ruling `main`.
+
+Regelbezug: R335, R434, R712 V2, R747/R748 (anno-clone #2), VERFASSUNG §5 · Kosten bei Irrtum: ein Release, das einen Paket-Merge der Parallel-Session vorwegnimmt.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
