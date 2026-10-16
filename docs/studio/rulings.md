@@ -1767,3 +1767,14 @@ verbraucht, weil Messwerkzeug-Code ohne Browser-Läufe (N-102) nur per Review ge
 Regelbezug: R673, R705, R708, R723, R728, N-102 · Kosten bei Irrtum: ein weiterer Start aus dem Puffer.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
+
+## R730 · 2026-10-16 · ORT-A T08 mit BEDENKEN angenommen; Fixture und zwei Schwellen an C4 vor T09; C2 beendet
+
+Ruling: `feat/ort-a-mess` @ `96fbd674` (Delta-Review 4 opus BEDENKEN, Koordinaten bestätigt) → **T08 angenommen**. Vor T09 erledigt C4 im Strang `mess`: (a) Fixture
+mit freien Vorderseiten (Hof) und freiem Gras östlich der Häuser (Schatten, AK-37), (b) die zwei niedrigen Punkte in `kantenprofil.mjs` (Z. 200 Schwelle `x1 > xe + 0,05`
+zu klein für das 0,2-Kernfenster; Z. 205 Prüfstart erst ab `x1 + 0,5`), weil die neue Fixture diese Gebäudetypen enthalten kann; je ein Selbsttest. Kein weiterer
+Start für C2. Puffer jetzt 6. Browser-Läufe und A/A-Kontrolle weiter offen (N-102).
+
+Regelbezug: R705, R729, N-102 · Kosten bei Irrtum: eine Messlinie, die in T09 noch einmal angepasst wird.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
