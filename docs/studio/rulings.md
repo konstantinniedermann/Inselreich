@@ -1386,3 +1386,15 @@ Gates und Session-Ende bleibt; bei Ampel **rot** startet nichts Neues mehr, Lauf
 Regelbezug: Verfassung §5, R69, R475, R691 · Kosten bei Irrtum: ein Limit, das vor dem Reset rot wird und laufende Pakete in die Folgesession schiebt.
 
 Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-16 · ADR: —
+
+## R699 · 2026-10-16 · Kurzdesign I-114 «Fernangebot zur Wahl»: Variante A angenommen, kein Save; Plan jetzt
+
+Ruling: `design/i114` @ `0d6474ec` (Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-114.md`) → **Variante A** angenommen: zweites Fernangebot
+abgeleitet (`farAlternative(world)`, Insel `e[(k+1) mod n]`, reine Lesefunktion ohne Zufall), `acceptFarOrder(world, pick = 0)` rückwärtsgleich, **kein
+Save-Wechsel**, `types.ts`/`defs/` ohne Diff, Stufe leicht, 11 AKs. Drift bei Kontor-Gründung/-Verlust im Angebotsfenster wird hingenommen (Erstkarte bleibt,
+keine Strafe). Mehrverdienst ≈ 10 % einer Fernprämie ist Abschätzung → AK-9 belegt Baseline und Balancing-Test. Plan jetzt (freier Platz, R698), lead-tech
+sonnet Stufe leicht; Umsetzung nach Merge UI-AUFRAEUM-4 (gemeinsame Datei `hud.ts`). Release-Zuordnung REL-26.
+
+Regelbezug: gates.md Gate Spec (Kurzdesign Stufe leicht), R692, R698 · Kosten bei Irrtum: eine Zweitkarte, die bei Kontorwechsel springt.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-114 · ADR: —
