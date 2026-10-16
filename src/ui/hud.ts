@@ -33,7 +33,8 @@ import {
   seaMapUnavailable,
 } from './seaMapView';
 import { iconChip } from './messages';
-import { GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
+import { formatGameTime, GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
+import { reachView, TREND_EPS } from './reach';
 
 const SPEEDS: { value: GameState['speed']; label: string }[] = [
   { value: 0, label: '⏸' },
@@ -43,9 +44,6 @@ const SPEEDS: { value: GameState['speed']; label: string }[] = [
 ];
 
 export const PAUSE_TOOLTIP = 'Pause / weiter (P oder Leertaste antippen)';
-
-/** Schwelle, unter der eine Bilanz als „ausgeglichen" gilt (gegen Gleitkomma-Rauschen). */
-const TREND_EPS = 0.05;
 
 /** Trendpfeil zur Bilanz je 100 Ticks. */
 export function trendArrow(net: number): '↑' | '↓' | '→' {
@@ -75,12 +73,50 @@ export interface ChipView {
   icon: IconId;
   text: string;
   label: string;
+  /** Reichweiten-Stufe für die Klasse am Lager-Chip; fehlt ohne Schwelle. */
+  reach?: 'warn' | 'alarm' | 'full-warn';
 }
 
-/** Lager-Chip: Symbol des Guts, „{Bestand} {Pfeil}"; `label` ist der bisherige Text „{Gut} {Bestand} {Pfeil}". */
+/**
+ * Lager-Chip aus Bestand und Bilanz (je 100 Ticks): „{Bestand} {Pfeil}"; nahe an leer oder voll mit Zeit
+ * („12 ↓ 2:10", „40 ↑ 0:40"), bei Bestand 0 und Verbrauch „0 ↓ leer". `label` enthält denselben Text.
+ */
+export function stockChipView(good: GoodId, stock: number, net: number): ChipView {
+  const arrow = trendArrow(net);
+  const r = reachView(stock, net, STORAGE_CAP);
+  let text = `${stock} ${arrow}`;
+  let reach: ChipView['reach'];
+  if (r.kind === 'empty' && stock <= 0) {
+    text = `${stock} ${arrow} leer`;
+    reach = 'alarm';
+  } else if (r.kind === 'empty' && r.level !== 'ok') {
+    text = `${stock} ${arrow} ${formatGameTime(r.ticks)}`;
+    reach = r.level;
+  } else if (r.kind === 'full' && r.level === 'warn') {
+    text = `${stock} ${arrow} ${formatGameTime(r.ticks)}`;
+    reach = 'full-warn';
+  }
+  const view: ChipView = { icon: good, text, label: `${GOODS[good].name} ${text}` };
+  if (reach !== undefined) view.reach = reach;
+  return view;
+}
+
+/** Lager-Chip einer Insel; `label` ist der bisherige Text „{Gut} {Bestand} {Pfeil}" plus Reichweite. */
 export function chipView(world: World, good: GoodId, island: number = HOME): ChipView {
-  const text = `${world.islands[island]!.stock[good]} ${trendArrow(goodsBalance(world, island)[good].net)}`;
-  return { icon: good, text, label: `${GOODS[good].name} ${text}` };
+  return stockChipView(
+    good,
+    world.islands[island]!.stock[good],
+    goodsBalance(world, island)[good].net,
+  );
+}
+
+/** Tooltip-Zeile zur Reichweite („Leer in 2:10 bei −6 / min …"); leer bei Gleichstand oder Sättigung. */
+export function reachLine(stock: number, net: number): string {
+  const r = reachView(stock, net, STORAGE_CAP);
+  if (r.kind === null) return '';
+  const rate = signedNum(perMinute(net, GOODS_BALANCE_TICKS));
+  const word = r.kind === 'empty' ? 'Leer' : 'Voll';
+  return `${word} in ${formatGameTime(r.ticks)} bei ${rate} / min (ohne Handel und Aufträge)\n`;
 }
 
 /** Einwohner-Chip einer Stufe: Stufen-Symbol und Zahl. */
@@ -329,11 +365,15 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
   const balance = goodsBalance(world, island);
   for (const good of GOOD_IDS) {
     const b = balance[good];
-    const chip = setChip(header, `stock-${good}`, chipView(world, good, island));
+    const cv = chipView(world, good, island);
+    const chip = setChip(header, `stock-${good}`, cv);
     if (chip) {
       const hide = stockChipHidden(world, good, island);
       if (chip.hidden !== hide) chip.hidden = hide;
       chip.classList.toggle('negative', b.net <= -TREND_EPS);
+      chip.classList.toggle('reach-warn', cv.reach === 'warn');
+      chip.classList.toggle('reach-alarm', cv.reach === 'alarm');
+      chip.classList.toggle('reach-full', cv.reach === 'full-warn');
       if (!hide) {
         const tip = stockTooltip(world, good, island);
         if (chip.title !== tip) chip.title = tip;
@@ -657,6 +697,7 @@ export function stockTooltip(world: World, good: GoodId, island: number = HOME):
   return (
     `${GOODS[good].name} ${world.islands[island]!.stock[good]} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +
     `(Erzeugung ${pm(b.produced)} / min, Verbrauch ${pm(b.consumed)} / min)\n` +
+    reachLine(world.islands[island]!.stock[good], b.net) +
     focusLine(world, good, island)
   );
 }

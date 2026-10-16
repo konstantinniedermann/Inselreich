@@ -1,7 +1,6 @@
 // UI-HAEPPCHEN-D T06: Reichweite von Gütern (AK-UR-01 bis 03).
 import { describe, expect, it } from 'vitest';
 import { reachView, secToTicks, TREND_EPS } from '../../src/ui/reach';
-import { formatGameTime } from '../../src/ui/time';
 
 // net = -100 bzw. +100 je 100 Ticks: ticks == Bestand bzw. Restplatz, exakt ganzzahlig.
 const WARN_EMPTY = secToTicks(180);
@@ -13,7 +12,6 @@ describe('AK-UR-01 leer', () => {
     const r = reachView(20, -0.5, 100);
     expect(r.kind).toBe('empty');
     expect(r.ticks).toBe(4000);
-    expect(formatGameTime(r.ticks)).toBe(formatGameTime(4000));
     expect(r.level).toBe('ok');
   });
   it('Bestand 0, net < 0: leer, alarm', () => {
@@ -58,7 +56,7 @@ describe('AK-UR-03 kein Trend', () => {
     expect(reachView(0, 1, 100).kind).toBe('full');
     expect(reachView(100, -1, 100).kind).toBe('empty');
   });
-  it('Bestand 0, net >= 0 und net im Rauschen: null bzw. full', () => {
+  it('Bestand 0, net 0 oder im Rauschen: null', () => {
     expect(reachView(0, 0, 100)).toEqual(none);
     expect(reachView(0, TREND_EPS / 2, 100)).toEqual(none);
   });
