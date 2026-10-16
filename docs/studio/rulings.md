@@ -1790,3 +1790,14 @@ schlägt eine Rangliste vor; Gate Ideen-Runde durch L0. Pool-Pflege aus dem IDEE
 Regelbezug: R445, R475, R519, R692, R698 · Kosten bei Irrtum: eine Ideen-Runde, deren Ergebnis eine Woche im Pool liegt.
 
 Entscheider: L0 · Anlass: freie Kapazität · ADR: —
+
+## R732 · 2026-10-16 · TOOL-GUARD-REDACT: +1 frisches Review auf `74c3d966`; Allowlist statt Muster-Jagd ins nächste Werkzeug-Bündel
+
+Ruling: `tool/guard-redact` @ `74c3d966` (vier Commits, Rot-Belege, `studio-test` 974 grün; Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-GUARD-REDACT.md`) → **+1 Start**
+für ein frisches Review opus auf diesem Stand (R673), dann Gate Merge durch lead-qa. Die gemeldeten Restlücken zeigen, dass Muster-Schwärzung nie vollständig wird:
+Folgepaket im nächsten Werkzeug-Bündel (KISS): `guard_block` speichert statt des Befehls nur Programmname + Unterbefehl (nur `[a-z0-9-]+`), Regel und einen
+Hash des Befehls (Allowlist); die Schwärzung bleibt als zweite Linie. Restlücken und Über-Schwärzungen trägt lead-production beim Merge in `docs/beobachtungen.md` ein.
+
+Regelbezug: R673, R721, R725, OWASP · Kosten bei Irrtum: ein Werkzeug-Paket mehr für eine lokale Datei.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-REDACT · ADR: —
