@@ -1503,3 +1503,8 @@ button.hud-balance:focus-visible {
 .pause-overlay__hint {
   margin-left: 10px;
 }
+
+.menu-field {
+  display: block;
+  margin: 6px 0;
+}

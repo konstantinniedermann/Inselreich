@@ -6,7 +6,7 @@ import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, TIER_IDS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
 import { SERVICE_BUILDING, populationByTier } from '../sim/population';
-import { crisisView, goalView, goodsBalance } from '../sim/queries';
+import { buildCoverage, crisisView, goalView, goodsBalance } from '../sim/queries';
 import { townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked, isUnlocked } from '../sim/unlocks';
 import type { GoodId, TaxLevel, Tier, UnlockId, World } from '../sim/types';
@@ -103,13 +103,17 @@ export function stockChipView(good: GoodId, stock: number, net: number): ChipVie
   return view;
 }
 
+/** Bilanz je Gut (`goodsBalance`); Aufrufer mit mehreren Chips rechnen sie einmal und reichen sie durch. */
+type Balance = ReturnType<typeof goodsBalance>;
+
 /** Lager-Chip einer Insel; `label` ist der bisherige Text „{Gut} {Bestand} {Pfeil}" plus Reichweite. */
-export function chipView(world: World, good: GoodId, island: number = HOME): ChipView {
-  return stockChipView(
-    good,
-    world.islands[island]!.stock[good],
-    goodsBalance(world, island)[good].net,
-  );
+export function chipView(
+  world: World,
+  good: GoodId,
+  island: number = HOME,
+  balance: Balance = goodsBalance(world, island),
+): ChipView {
+  return stockChipView(good, world.islands[island]!.stock[good], balance[good].net);
 }
 
 /** Tooltip-Zeile zur Reichweite („Leer in 2:10 bei −6 / min …"); leer bei Gleichstand oder Sättigung. */
@@ -268,6 +272,35 @@ function renderSoundControls(box: Element, actions: HudActions): void {
   box.append(mute, helpBtn, settingsBtn, menuBtn);
 }
 
+/** Lager-Chips der Kopfzeile; die Bilanz (mit einmal gebauter Coverage) wird je Refresh nur einmal gerechnet. */
+export function updateStockChips(
+  header: HTMLElement,
+  world: World,
+  island: number,
+  focused: GoodId | null,
+): void {
+  const balance = goodsBalance(world, island, buildCoverage(world));
+  for (const good of GOOD_IDS) {
+    const b = balance[good];
+    const cv = chipView(world, good, island, balance);
+    const chip = setChip(header, `stock-${good}`, cv);
+    if (chip) {
+      const hide = stockChipHidden(world, good, island);
+      if (chip.hidden !== hide) chip.hidden = hide;
+      chip.classList.toggle('negative', b.net <= -TREND_EPS);
+      chip.classList.toggle('reach-warn', cv.reach === 'warn');
+      chip.classList.toggle('reach-alarm', cv.reach === 'alarm');
+      chip.classList.toggle('reach-full', cv.reach === 'full-warn');
+      if (!hide) {
+        const tip = stockTooltip(world, good, island, balance);
+        if (chip.title !== tip) chip.title = tip;
+      }
+      const pressed = String(focused === good);
+      if (chip.getAttribute('aria-pressed') !== pressed) chip.setAttribute('aria-pressed', pressed);
+    }
+  }
+}
+
 /** Baut die Kopfzeile beim ersten Aufruf auf und aktualisiert danach nur die Werte (Spec L2). */
 export function updateHud(header: HTMLElement, state: GameState, actions: HudActions): void {
   if (!header.querySelector('.hud-row')) {
@@ -380,26 +413,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     if (!seafaring) closeIslandMenu(islandsBox);
     else seaMapRedraw.get(islandsBox)?.();
   }
-  const balance = goodsBalance(world, island);
-  for (const good of GOOD_IDS) {
-    const b = balance[good];
-    const cv = chipView(world, good, island);
-    const chip = setChip(header, `stock-${good}`, cv);
-    if (chip) {
-      const hide = stockChipHidden(world, good, island);
-      if (chip.hidden !== hide) chip.hidden = hide;
-      chip.classList.toggle('negative', b.net <= -TREND_EPS);
-      chip.classList.toggle('reach-warn', cv.reach === 'warn');
-      chip.classList.toggle('reach-alarm', cv.reach === 'alarm');
-      chip.classList.toggle('reach-full', cv.reach === 'full-warn');
-      if (!hide) {
-        const tip = stockTooltip(world, good, island);
-        if (chip.title !== tip) chip.title = tip;
-      }
-      const pressed = String(actions.focusedGood() === good);
-      if (chip.getAttribute('aria-pressed') !== pressed) chip.setAttribute('aria-pressed', pressed);
-    }
-  }
+  updateStockChips(header, world, island, actions.focusedGood());
   const tax = taxView(world);
   const taxBox = header.querySelector<HTMLElement>('.hud-tax');
   if (taxBox) {
@@ -724,8 +738,13 @@ function focusLine(world: World, good: GoodId, island: number): string {
   return line;
 }
 
-export function stockTooltip(world: World, good: GoodId, island: number = HOME): string {
-  const b = goodsBalance(world, island)[good];
+export function stockTooltip(
+  world: World,
+  good: GoodId,
+  island: number = HOME,
+  balance: Balance = goodsBalance(world, island),
+): string {
+  const b = balance[good];
   const pm = (x: number): number => perMinute(x, GOODS_BALANCE_TICKS);
   return (
     `${GOODS[good].name} ${world.islands[island]!.stock[good]} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +

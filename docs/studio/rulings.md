@@ -1661,3 +1661,98 @@ und nimmt I-114 in REL-26 auf. Danach holt der I-112-Controller `main` per Merge
 Regelbezug: gates.md Gate Merge, R701, R703, R716 · Kosten bei Irrtum: eine Fernkarte, die nach dem Playtest nachgebessert wird.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-I-114 · ADR: —
+
+## R721 · 2026-10-16 · BEOB-17: Merge OK (L0-Gate, Trivial-Fix); PERF-BILANZ-COV jetzt; TOOL-GUARD-REDACT und ZEITRESERVE-PFLEGE in den Pool
+
+Ruling: `docs/beob-17` (`27304033`, `1d23b6e9`; Handoff `.studio/handoffs/2026-10-16-lead-production-BEOB-17.md`): 17 Einträge ausgewertet (2 erledigt, 4 eingeplant,
+10 abgehakt, 1 offen bis ORT-1). Diff ausserhalb der Doku nur Klasse `menu-field` (2 Zeilen `menu.ts`, 5 Zeilen CSS), Prüfungen Exit 0 → **Merge OK durch L0**
+(Trivial-Fix, kein lead-qa-Gate nötig); lead-production merged lokal und nimmt den Menü-Abstand in REL-26 auf. Paketvorschläge: (1) **PERF-BILANZ-COV** (S) jetzt —
+I-114 ist gemergt (R720), Last 5,7 < 8, dritte Umsetzung zulässig (R708 V2); lead-tech, Stufe leicht, Budget 4. (2) **TOOL-GUARD-REDACT** (S) und (3)
+**ZEITRESERVE-PFLEGE** mit H-1 in den Pool; Start beim nächsten freien Platz bzw. nächsten Werkzeug-Bündel.
+
+Regelbezug: R287, R445, R698, R708 V2, R719 · Kosten bei Irrtum: ein Menü-Abstand, der nachjustiert wird.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-17 · ADR: —
+
+## R722 · 2026-10-16 · Kurzdesign I-110: geparkt bis `BUY_RISE` > 0; TOOL-GUARD-REDACT jetzt
+
+Ruling: `design/i110` @ `2473b2da` (Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-110.md`): Die Messung zeigt, dass bei festen, unbegrenzten Kaufpreisen
+Geld der einzige Engpass der ersten 15 min ist; alle Pakete erreichen U1–U3 gleich schnell, sie unterscheiden sich nur im Restgeld. Eine Wahl ohne strategische
+Wirkung erfüllt das Ziel von I-110 nicht → **E1: geparkt**, bis der Zukauf mit der Menge teurer wird (`BUY_RISE` > 0, Mechanik aus I-048 Schritt A, derzeit
+inaktiv). Spec und Rechnung bleiben auf dem Branch als Ausgangspunkt (Kassenwart 5800, Kalibrierregel E3 als Vorlage). lead-production setzt I-110 in `docs/ideen.md`
+beim nächsten Merge auf «geparkt (R722)». Freier Platz → **TOOL-GUARD-REDACT** (Pool R721): `command` im Ereignis `guard_block` schwärzen (Token-Muster), lead-tech,
+Werkzeug-Paket, Budget 3.
+
+Regelbezug: R445, R692, R721 · Kosten bei Irrtum: ein Startpaket, das später als Stil-Wahl doch gebaut wird (≈ 60 Tools).
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-110 · ADR: —
+
+## R723 · 2026-10-16 · ORT-A C2: +1 Start für frisches Delta-Review T08; AK-50 einseitiges Kernfenster prüft der Reviewer
+
+Ruling: Budgetantrag D-ORT-A-C2-2 (`feat/ort-a-mess` @ `aafbc36e`, dritte Fix-Runde T08 nur `tools/render-qa/`) → **+1 Start aus dem Puffer** (danach 8) für ein frisches
+Delta-Review opus (R673, R708). Die Abweichung AK-50 (Kernfenster einseitig statt ±0,1 Kachel) bewertet der Delta-Reviewer ausdrücklich; ohne Begründung im Review
+gilt der Plan. Erwartete Unterschreitung «< 20 Querschnitte je Art» auf der Fixture: C2 vermerkt sie im Handoff als Risiko für T09, keine Fixture-Erweiterung in T08.
+`ortsrand.mjs` als Parallelquelle → Eintrag in `docs/beobachtungen.md` auf dem Strang. Danach Stopp C2; T09 (Messung ORT-1) startet erst bei freiem Messfenster.
+
+Regelbezug: R673, R705, R708, R717 · Kosten bei Irrtum: ein Start aus dem Puffer.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
+
+## R724 · 2026-10-16 · I-112 C2: T02–T04 abgenommen; drei Planabweichungen bestätigt; C3 (T05–T07) mit 6 Starts
+
+Ruling: `feat/i112` (T02 `90f209d2`, T03 `3361223d`, T04 `93c95f94`, main-Merge `4e244cc8`, Lockerung `967d8f9a`; Handoff `.studio/handoffs/2026-10-16-lead-tech-I-112-C2.md`)
+→ abgenommen; Baseline unverändert. Ownership-Erweiterung auf `tests/sim/helpers.ts`, `helpers.test.ts`, `farOrder-save`, `save-loyalty` und die Lockerung des
+I-114-Tests auf `SAVE_VERSION >= 16` angenommen. Planabweichungen bestätigt: (a) Reihenfolge-Test «Beschluss vor Inselvorteil» mit der Glashütte auf Insel B
+(18 → 9), weil die Weberei keinen Inselvorteil hat; (b) Stufe 4 ohne `tierWish`, Wohnordnung wirkt nur über `maxInhabitantsOf`, Test «`unlocks.ts` Stufe 4 verlangt
+16» entfällt; (c) Abstände 12,5/13,5 im Glockenrecht-Test. Merge-Auflage: Literal 17 in `tests/sim/council-save.test.ts:84` beim Merge auf main + 1 ziehen (R674),
+besser jetzt auf `SAVE_VERSION`-Bezug umstellen. Konsistenztest «jeder `cycle`-Hebel zeigt auf ein Gebäude mit Takt» in T05 aufnehmen. **Instanz C3: T05–T07, 6 Starts**
+aus dem Restbudget (8 von 25 verbraucht), Parallelität 2; T00-Ersatzmessung weiter bei Last ≤ 4.
+
+Regelbezug: R674, R711, R713, R716 · Kosten bei Irrtum: ein Szenariotest, der im Final-Review nachgeschärft wird.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-112 C2 · ADR: —
+
+## R725 · 2026-10-16 · TOOL-GUARD-REDACT: Unter-Schwärzungen vor dem Gate schliessen; +1 Start
+
+Ruling: `tool/guard-redact` @ `de380351` (Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-GUARD-REDACT.md`): Vor Gate Merge schliesst lead-tech die gemeldeten
+Unter-Schwärzungen (`curl -u`, `Authorization`-Header, `token=`/`api_key=`/`secret=`/`password=`, `*_TOKEN=`/`*_KEY=`/`*_SECRET=`/`*_PASSWORD=`, Werte in
+Anführungszeichen) und setzt eine Wortgrenze vor `sk-`/`gh*_`. Über-Schwärzung (`-pattern`) ist hinnehmbar, Unter-Schwärzung nicht (OWASP). +1 Start für ein
+frisches Review. Verbleibende bewusste Lücken trägt L0 nach dem Bericht in `docs/beobachtungen.md` ein.
+
+Regelbezug: R721, OWASP (../CLAUDE.md Review-Besonderheit) · Kosten bei Irrtum: ein Start mehr für ein lokales Werkzeug.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-REDACT · ADR: —
+
+## R726 · 2026-10-16 · ORT-A C1: T00–T03 abgenommen; C3 (T04–T06) startet; P-9 mit Vermerk
+
+Ruling: `feat/ort-a` (T01 `8ee15e72`, T02 `052d2a04`, T03 `050a4b60`; Basis A `72ee9610`; Handoff `.studio/handoffs/2026-10-16-lead-tech-ORT-A-C1.md`) → abgenommen.
+Neutralitätsbeweis T02 auf nachgebautem A (17/17) angenommen. **C3: T04, T05, (T05b), T06, 6 (+2) Starts** aus R705. P-9-Frühmessung der Patch-Zeit nach T05:
+solange N-102 offen ist, als Richtwert mit Vermerk «Messfenster belegt»; liegt schon der Richtwert ≥ +20 % über A, Frühwarnung an L0 vor T06 (E6), sonst T06 weiter
+und gewertete Messung in T09. C3 trägt die `inPoly`-Beobachtung (abweichende Argumentreihenfolge in sechs Testdateien) in `docs/beobachtungen.md` auf `feat/ort-a` ein.
+
+Regelbezug: R705, R717, N-102 · Kosten bei Irrtum: eine Patch-Zeit-Warnung, die erst in T09 auffällt.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C1 · ADR: —
+
+## R727 · 2026-10-16 · Gate Merge PERF-BILANZ-COV: OK; Merge jetzt
+
+Ruling: `perf/bilanz-cov` @ `ad57e259` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-PERF-BILANZ-COV.md`) → **Gate Merge OK**, Auflage: voller Lauf im
+`push-check` vor REL-26 (R712 V2). lead-production merged lokal (`--no-ff`), nimmt das Paket in REL-26 auf und trägt drei niedrige Beobachtungen ein (Routen-Bilanz bei
+Pause-/Ausfall-Wechsel im selben Tick bis zum nächsten Tick alt; `|island` im Memo-Schlüssel überflüssig; `focusLine`/`focusList`/`houseConsumers` je Chip ungemessen).
+
+Regelbezug: gates.md Gate Merge, R712 V2, R721 · Kosten bei Irrtum: eine Bilanz, die einen Tick zu spät aktualisiert.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-PERF-BILANZ-COV · ADR: —
+
+## R728 · 2026-10-16 · ORT-A C2 +1 Delta-Review; Hof-Fixture für T09; I-112 C3 abgenommen, `Umschalt+R` = Rat, C4 mit 6 Starts
+
+Ruling: (1) ORT-A C2 (`feat/ort-a-mess` @ `1d1324d4`, Fix-Runde 3 T08): **+1 Start** aus dem Puffer (danach 7) für ein frisches Delta-Review opus (R673, R708). Hof
+liefert auf `ort-a-siedlung.json` 0 Querschnitte (nur Rückseiten frei) → eine Fixture mit freien Vorderseiten ist Teil der T09-Vorbereitung durch C4 (aus dem Puffer),
+nicht von T08. (2) I-112 C3 (`feat/i112` @ `1d201bf1`; T05 `bb60938e`, T06 `b48b181e`, T07 `a841388b`) → abgenommen. **`Umschalt+R` öffnet den Rat** (statt Weg)
+bestätigt; `r` bleibt Weg, `tests/ui/hotkeys.test.ts` AK-TK-16 nimmt `r` aus; README/Tastenkürzel-Menü nennen es (T09). BEDENKEN T05 (`importsDecree` ohne
+`require`/`import()`, Import-Reihenfolge `council.test.ts:26`) behebt C4 vor dem Final-Review; das Final-Review (opus, frisch, ganzer Branch) deckt R673 für T05 ab.
+**C4: T08 Browser, T09 Doku, T05-Kleinfix, Final-Review; 6 Starts** (14 von 25 verbraucht). C4 holt zuerst `main` (PERF-BILANZ-COV berührt `hud.ts`, R727).
+
+Regelbezug: R673, R705, R708, R713, R724, R727 · Kosten bei Irrtum: eine Tastenbelegung, die nach dem Playtest getauscht wird.
+
+Entscheider: L0 · Anlass: Berichte lead-tech ORT-A C2 und I-112 C3 · ADR: —

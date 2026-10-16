@@ -106,8 +106,10 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
   };
   showNew();
   const crisisLabel = document.createElement('label');
+  crisisLabel.className = 'menu-field';
   crisisLabel.append('Krisen (neue Insel): ', select);
   const unlockLabel = document.createElement('label');
+  unlockLabel.className = 'menu-field';
   unlockLabel.append('Freischaltung: ', unlockSelect);
   newBox.append(crisisLabel, unlockLabel, newRow);
   // Karte, Hilfe, Tastenkürzel, Schliessen
