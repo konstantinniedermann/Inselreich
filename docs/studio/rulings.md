@@ -7661,3 +7661,18 @@ Ruling: `design/i097` @ `70efccc5` (11 AK, `pauseOverlayView(speed, modalOpen)` 
 Regelbezug: gates.md Gate Spec (Stufe leicht), R464, R475, R663, R664 · Kosten bei Irrtum: ein Plan mit Nacharbeit bei den Einhängepunkten nach dem UI-D-Merge.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I-097 · ADR: —
+
+## R666 · 2026-10-16 · Gate Merge TOOL-METRIK-ZEITRAUM: OK, Merge nach dem Push REL-23; Inaktiv-Signal lead-qa ohne Retro
+
+Ruling: (1) `tool/metrik-zeitraum` @ `fa6d7c48` (T1 Session-Beginn als Zeitraum für Flake und Steuerungsanteil, T2 Cache-Write 5 min in
+Erstladung/Wachstum/Pause, T3 arc42; `make studio-test` 913 grün, `studio-lint`, `docs-check` Exit 0; Rot-Beleg vorhanden; Echtlauf dbac5fc4:
+Datei = `--since`, Summe 6,2 + 15,0 + 5,8 = 27,0 % = bestehende Zeile) → **Gate Merge OK**. Review-BEDENKEN angenommen: der Session-Beginn gilt
+auch für die Transkript-Auswertung (gewollt, Datei und `--since` stimmen überein). Restabweichung Steuerungsanteil Datei 52,2 % gegen
+`--efficiency` 47,2 % (verschiedene Transkriptmengen) → Messauftrag an die nächste Retro. Merge durch lead-production erst nach dem Push
+REL-23, damit der geprüfte Push-Hash nicht wandert. E-069 gilt mit dem Merge als umgesetzt; Bewertung in der nächsten Session-Retro.
+(2) Signal «lead-qa inaktiv» (Hook) beim Release-Check: der Lead wartet in einem langen `make zeitreserve-gate` (Prozess läuft, Heartbeat
+06:50Z) — kein Vorfall, keine Ad-hoc-Retro; Befund an die Retro, ob lange Make-Läufe als Heartbeat zählen sollen.
+
+Regelbezug: gates.md Gate Merge, R335, R659, STUDIO.md Verbesserungsschleife · Kosten bei Irrtum: eine Ampelzahl, die sich gegenüber Altsessions leicht verschiebt.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-METRIK-ZEITRAUM, Hook-Signal · ADR: —
