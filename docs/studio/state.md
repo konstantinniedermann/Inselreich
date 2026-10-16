@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-16 (Studio-Session ca9d40c8 läuft, R709–R726; lokal auf main seit Push `8fe744df`: I-120, I-118, UI-AUFRAEUM-4, TOOL-BUENDEL-14, I-114, BEOB-17, Handbuch 1.60; Save v16; REL-26-Push frühestens 2026-10-17, R712)
+Stand: 2026-10-16 (Studio-Session ca9d40c8 beendet, R709–R750 ohne R747/R748 der Parallel-Session; lokal auf main seit Push `8fe744df`: I-120, I-118, UI-AUFRAEUM-4, TOOL-BUENDEL-14, I-114, BEOB-17, PERF-BILANZ-COV, I-112 (Save v17), TOOL-GUARD-ALLOWLIST, IDEEN-12, I-122 + I-123, Handbuch 1.61; nicht gepusht)
 
 ## Release-Notizen
 
@@ -138,18 +138,20 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475, R698 (Deckel 6, bei Last > 8 keine dritte Umsetzung mit Testlauf, R708 V2).
-Actions-Prognose rot: höchstens ein Push je Tag (R488 V2, R712). Ein Push je Session (R335).
+Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475, R698 (Deckel 6), R708 V2. Ein Push je Session (R335). Actions-Sparregeln laut R747 der
+Parallel-Session gelockert (öffentliches Repo) — ob R488 V2 «ein Push je Tag» damit entfällt, steht dort.
 
-1. **REL-26** (ab 2026-10-17): Inhalt I-120, I-118, UI-AUFRAEUM-4, TOOL-BUENDEL-14, I-114, BEOB-17-Menüabstand, dazu PERF-BILANZ-COV und
-   TOOL-GUARD-REDACT nach Gate. Release-Check nur in der Push-Session (Handbuch 1.60, R712 V2), dann `make push-check`, Push per geprüftem Hash.
-2. **I-112 «Ratsbeschluss»** (`feat/i112`, `.worktrees/i112`): C3 T05–T07 laufend (R724), danach C4 T08 Browser, T09 Doku, Final-Review, Gate Merge;
-   `SAVE_VERSION` = main + 1 beim Merge (R674). T00-Ersatzmessung auf `07de72c4` bei Last ≤ 4 offen.
-3. **ORT-A** (R705): C3 T04–T06 laufend (R726), C2 T08 im Delta-Review (R723); T09 (gewertete Messung) erst bei freiem Messfenster (N-102). Puffer 8 Starts.
-4. **PERF-BILANZ-COV** (`perf/bilanz-cov` @ `ad57e259`): Gate Merge läuft. **TOOL-GUARD-REDACT** (`tool/guard-redact`): Nacharbeit Unter-Schwärzung (R725), dann Gate.
-5. **I-119 + I-121 «Bewohner reagieren»** (Gate Spec R715, Variante 3): Plan erst nach ORT-A T20.
-6. Pool: ZEITRESERVE-PFLEGE (mit H-1, Messung bei Last ≤ 4). Geparkt: I-110 bis `BUY_RISE` > 0 (R722).
-7. Erweiterung 1 bleibt in der Nutzer-Session (R519).
+1. **REL-26** (Push-Gate in der nächsten bzw. der Parallel-Session anno-clone #2): Inhalt I-120, I-118, UI-AUFRAEUM-4, TOOL-BUENDEL-14, I-114, BEOB-17-Menüabstand,
+   PERF-BILANZ-COV, **I-112 Ratsbeschluss (Save v16 → v17, Migration)**, TOOL-GUARD-ALLOWLIST, I-122 + I-123, dazu TOOL-ACTIONS-FREI (R748 Parallel-Session).
+   Release-Check nur in der Push-Session (Handbuch 1.60), `make push-check` mit vollem Lauf (Auflagen R727, R747/R749). Release-Notizen schreiben.
+2. **Werkzeug-Bündel 15** (R750 V1 + R744): Last/Worker in `test_passed`/`test_failed`, Worker-Deckel bei Last ≥ 8, `_shown_command`/`COMMAND_LIMIT` aus `guard.py` entfernen.
+   **Handbuch-Minor** (R750 V2 Tools-Schätzung, V3 eine Wartepause je Controller-Instanz) durch studio-coach.
+3. **ORT-A** (pausiert nach T06, R746; Puffer 9 von 12): C4 startet mit Ringpfad-Test `twoZonePieces` (sonst Rand 1), Merge `feat/ort-a-mess`, Fixture + Schwellen
+   (R730), T09 nur bei freiem Messfenster (N-102). Richtwert B/A ≈ 1,41.
+4. **I-132 «Meisterprüfung»** (Gate Spec R745, Variante S «Eigenversorgung»): Plan (lead-tech opus), Save main + 1 = 18 (falls Erweiterung 1 nicht vorher merged).
+5. **I-119 + I-121 «Bewohner reagieren»** (R715): Plan erst nach ORT-A T20.
+6. Pool: ZEITRESERVE-PFLEGE (H-1, Last ≤ 4); I-128 Baustein Stadtplanung. Geparkt: I-110 (R722), I-124, I-130, I-131, I-134.
+7. Erweiterung 1 bleibt in der Nutzer-Session (R519); deren Save = main + 1 beim Merge (main jetzt v17).
 
 ## Aktuelles Projekt und Phase
 
@@ -174,17 +176,21 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- I-112 C3 (lead-tech), ORT-A C2 und C3 (lead-tech), TOOL-GUARD-REDACT (lead-tech), Gate Merge PERF-BILANZ-COV (lead-qa).
+- Nichts aus Session ca9d40c8. Parallel: L0-Session anno-clone #2 (TOOL-ACTIONS-FREI, Merge wartete auf diesen Ende-Commit).
 
 ## Parallele Sessions
 
 - Nutzer-Session `c6709a04` (seit 2026-10-11 ≈ 08:30Z): Konzept „Erweiterung“ (`lead-design`), Worktree
   `.worktrees/erweiterung-1`, Branch `design/erweiterung-1` — geduldet, Deckel geteilt (R519). Nicht anfassen.
+- L0-Session anno-clone #2 (seit 2026-10-16 nachmittags): R747/R748 (Actions-Sparregeln, TOOL-ACTIONS-FREI); Ruling-Nummern vor jedem Ruling
+  gegen main prüfen (R129-Ausnahme, Kollision R747 → R749).
 
 ## Seit letzter Session erledigt
 
-- **Lokal gemergt (ca9d40c8):** UI-AUFRAEUM-4 (`00787f29`, R710), TOOL-BUENDEL-14 (`7545fa67`, R718), I-114 (`e14ef6be`, R720), BEOB-17 (`b455d2b1`, R721).
-- **Gates:** Plan I-112 (R711/R713), Spec I-119+I-121 (R715), I-110 geparkt (R722). Prozess-Retro REL-21–25 (R712), Handbuch 1.60 (`612fe2bb`).
+- **Lokal gemergt (ca9d40c8):** UI-AUFRAEUM-4 (R710), TOOL-BUENDEL-14 (R718), I-114 (R720), BEOB-17 (R721), PERF-BILANZ-COV (R727), I-112 Ratsbeschluss
+  (`881f2976`, Save v17, R742), TOOL-GUARD-ALLOWLIST (`dcd0aa4f`, R744), IDEEN-12 (R737), I-122 + I-123 (`598a0215`, R747→R749).
+- **Gates/Entscheide:** Spec I-119+I-121 (R715), I-110 geparkt (R722), Spec I-122+I-123 (R738), Spec I-132 Variante S (R745); ORT-A T00–T08 und T04–T06 abgenommen.
+- **Prozess:** Prozess-Retro REL-21–25 (R712), Handbuch 1.60 und 1.61 (R712 V2, R735), Ad-hoc-Retro Budget (R735), Kurz-Retro ca9d40c8 (R750).
 
 ## Pausierte Pakete
 
