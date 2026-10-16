@@ -752,7 +752,7 @@ sowie I-075, I-076, I-079, I-080 neu; zusammengefasst I-087 → I-045. I-017 gep
 - Stand R663 (design-I-091-I-094, 2026-10-16): Empfehlung **verwerfen**, Vorlage `docs/superpowers/specs/2026-10-16-i094-darlehen-design.md`. Rechnung Teil A: vor U6 Pflichtzug (r 0,42 gegen Schwelle 0,04) mit unlesbarer Spirale (+3277 / −27 761 bei 20 / 30 %), ab U6 wirkungslos (≤ 0,2 min Bilanz); kein Hebel öffnet ein Wahlfenster. Nach Entscheid L0 ins Archiv.
 - Archiviert: R670 verworfen (Kenntnis an Nutzer). Vorlage `docs/superpowers/specs/2026-10-16-i094-darlehen-design.md` und Rechnung `docs/superpowers/specs/2026-10-16-i091-i094-rechnung.md` Teil A auf Branch `design/i091-i094`; wieder aufnehmbar nur als neue Idee (z. B. «Vorschuss des Stammkunden», Vorlage §4).
 
-## Rangliste IDEEN-10 (Vorschlag lead-design, Ruling L0 offen)
+## Rangliste IDEEN-10 (Ruling L0: R653)
 
 Breite Runde nach REL-22 (R445), Scouts A (Spätspiel und Handel nach Handel 2) und B (Komfort und Übersicht): 9 Vorschläge,
 eingetragen als I-101–I-109. Keine Idee ändert Kernsäule, Genre oder Titel (§5.3); keine doppelt Erweiterung 1 oder
@@ -770,7 +770,7 @@ Handel 2 (I-101 und I-102 setzen Handel 2 live voraus, I-104 und I-105 nach Hand
 | 8    | I-106 | «Neu»-Karte schlank und schliessbar | S      | 10    | nein / nein     | Sicht frei, ≈ 50 Tools                        | prüfen gegen UI-AUFRAEUM-3/-D, sonst verwerfen       |
 | 9    | I-107 | Tempo-Tasten + und −                | S      | 10    | nein / nein     | Lückenfüller, ≈ 40 Tools                      | parken (I-083 deckt den Kern)                        |
 
-## Rangliste IDEEN-09 (Vorschlag lead-design, Ruling L0 offen)
+## Rangliste IDEEN-09 (Ruling L0: R606)
 
 Breite Runde nach REL-21 (R604, R445), Scouts A (Playtests REL-20/21), B (Genre Aufbau und Handel), C (Bedienung Desktop)
 parallel: 14 Vorschläge, 13 eingetragen als I-088–I-100. Scout-Idee A2 «Inselvorteil im Betriebs-Panel» entfällt (schon live:
@@ -792,3 +792,233 @@ Nach UI-AUFRAEUM-3: I-089, I-098, I-099 live und im Archiv; die Ränge sind neu 
 | —    | I-096 | Steuerstufe je Insel         | S–M    | 8     | ja / nein       | Stellschraube ohne neue Abwägung                  | verwerfen                                         |
 
 I-093 (verworfen) und I-095 (erledigt) sind nach Handel 2 (R658, R664) ins Archiv verschoben; die Ränge 3 und 6 entfallen.
+
+## Rangliste IDEEN-11 (Ruling L0: R692; archiviert IDEEN-12)
+
+Breite Runde (R445, R653-Folge), Scouts A (erste Stunde und Mittelspiel), B (Handel und Seefahrt nach Handel 2, Stammkunde,
+Kulanz) und C (Lebendigkeit: Klang, Licht, Bewohner, ohne Ortsrand ORT-A/ORT-B): 12 Vorschläge, eingetragen als I-110–I-121.
+Keine Idee ändert Kernsäule, Genre oder Titel (§5.3). Erweiterung 1 berühren I-115 (Rivalen teilen die Sättigung) und I-117
+(Routenregeln K3); beide parken. Sortiert nach Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Pool danach: 25 von 40 offen.
+
+| Rang | ID    | Name                            | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                             | Empfehlung                                      |
+| ---- | ----- | ------------------------------- | ------ | ----- | --------------- | ------------------------------------------ | ----------------------------------------------- |
+| 1    | I-112 | Ratsbeschluss je Stufe          | M      | 13    | ja / nein       | Weichenstellung im Mittelspiel, ≈ 2 Pakete | Top 3: Kurzdesign Stufe voll mit Werte-Rechnung |
+| 2    | I-114 | Fernangebot zur Wahl            | S      | 12    | nein / nein     | Wahl über Fahrzeit und Lager, ≈ 60 Tools   | gemergt (R720)                                  |
+| 3    | I-120 | Wohlstandsklang der Stadt       | S      | 12    | nein / nein     | Versorgung hörbar, ≈ 40 Tools              | gemergt (R707)                                  |
+| 4    | I-118 | Aufstiegs-Funkeln am Haus       | S      | 12    | nein / nein     | Fortschritt sichtbar, ≈ 50 Tools           | gemergt (R707)                                  |
+| 5    | I-110 | Startpaket zur Wahl             | S      | 12    | nein / nein     | Wahl in Minute 0, verblasst, ≈ 80 Tools    | Pool; Werte neu rechnen vor Einplanung          |
+| 6    | I-111 | Etappenwunsch mit Wahlbelohnung | M      | 12    | ja / ja         | Ziel in U1–U3, Dominanzgefahr, ≈ 2 Pakete  | Baustein nächstes Meilenstein-Brainstorming     |
+| 7    | I-115 | Eigene Sättigung je Kontor      | M      | 11    | ja / nein       | Verkaufszweck für Schiffe, ≈ 2 Pakete      | parken: Baustein Erweiterung 1 (Rivalen)        |
+| 8    | I-117 | Route verkauft statt lagert     | M      | 11    | ja / nein       | Komfort Route, ≈ 2 Pakete                  | parken bis K3 (Erweiterung 1) geklärt           |
+| 9    | I-116 | Inselgunst                      | M      | 11    | ja / nein       | zweite Treue-Mechanik, ≈ 1–2 Pakete        | parken bis I-114 live                           |
+| 10   | I-119 | Bewohner reagieren auf Krisen   | M      | 10    | nein / nein     | Krisen fühlbarer, ≈ 2 Pakete               | Pool; mit I-121 als ein Paket                   |
+| 11   | I-121 | Wartende vor der Tür            | M      | 10    | nein / nein     | doppelt Bedarfssymbole, ≈ 2 Pakete         | Pool; mit I-119 als ein Paket                   |
+| 12   | I-113 | Gemeindeprojekt                 | M      | 9     | ja / ja         | Geldsenke ohne Wahl                        | verwerfen (Denkmal, I-079; I-112 deckt ab)      |
+
+## Archiviert IDEEN-12 (Pool-Pflege R599)
+
+### I-047 · live (REL-21) · Stammkunde (Liefervertrag)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik (Dauerabnahme gegen Festpreis, nur Mechanik, ADR-006); IDEEN-06 Scout A; Pfade `src/sim/orders.ts` (Aufträge einmalig), `src/sim/defs/goods.ts` (`ORDER_PREMIUM`, Sättigung)
+- Spielerwirkung: „Der Spieler nimmt nach einem erfüllten Auftrag das Angebot «Stammkunde: 12 Rum alle 3 min zu 130 %» an und wägt feste Abnahme gegen Verkauf am freien Markt ab."
+- Grösse: M · Risiko: Save (Vertragszustand im Weltzustand, Migration „keiner"); Baseline bitgleich, solange der Controller keinen Vertrag annimmt
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Randfälle: höchstens ein Vertrag; nur für Güter mit Erzeuger; verpasste Lieferung beendet ihn mit 100 Geld Strafe, Kündigen kostenlos; Preis bleibt unter `buy` (Rum 23,4 < 40, kein Kauf-und-Verkauf-Gewinn); Menge < 40 % der gemessenen Erzeugung, damit kein Pflichtbau entsteht.
+- Doppelung: keine im Mechanismus; I-029 (Spotnachfrage) und I-006 (Kaufseite) teilen dieselbe Stelle (Handel am Kontor).
+- Bewertung lead-design (IDEEN-06): Spass 3 → 2: Die Bindung trägt erst für Fortgeschrittene, die Rum im Überschuss haben; im ersten Spiel bleibt sie unsichtbar. Mit I-006 und I-029 als ein Handels-Baustein denken, nicht einzeln einplanen.
+- Nutzen/Aufwand: mittlerer Nutzen (Planbarkeit im Mittelspiel) · M · ≈ 2 Pakete (Rechnung `design-economy-designer` ≈ 40 Tools, Sim+Panel ≈ 150 Tools)
+- Entscheid: Empfehlung parken bis Handels-Brainstorming (mit I-006, I-029); R474 bestätigt
+- Entscheid: R486 (O3) → eingeplant als Paket nach I-048, nur in der Fassung mit Gewicht (≈ 25 % der Erzeugung zu 120 %, M14-Anhang 01 C.1); I-029 und I-006 bleiben geparkt; Stand: wartet auf den Entscheid I-048 Schritt B (bei Verzicht sofort frei)
+- Verweis IDEEN-08: bleibt hinter I-048 Schritt B (R551) eingereiht; Erweiterung 1 ändert daran nichts
+- Archiviert IDEEN-12: live mit REL-21 (R596), Statuspflege nach R599
+
+### I-091 · live (REL-25) · Treue beim Stammkunden (Kulanz)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout A; Genre-Mechanik Treue bei Dauerabnahme (nur Mechanik, ADR-006); I-047 (heute nur Strafe 100 Geld nach unten) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler bekommt nach 5 pünktlichen Lieferungen +10 % und überlegt, ob er den Vertrag im Boom trotzdem kündigt."
+- Grösse: M · Save ja (Zähler je Vertrag) · Baseline nein (Controller nimmt keinen Vertrag) · Abhängigkeiten: I-047; Rechnung `design-economy-designer` (Preis bleibt unter `buy`)
+- Randfälle: verpasste Lieferung setzt den Zähler zurück; Deckel; Kündigen und neu Annehmen setzt nicht fort.
+- Doppelung: kleine Fassung von I-073 (in I-047 zusammengefasst, ohne Hafenfigur).
+- Raster (Scout und lead-design): Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Bewertung lead-design: Vertieft eine Funktion, die noch kein Spieler gespielt hat. Erst der Playtest zeigt, ob Verträge gehalten oder gemieden werden; vorher ist ein Bonus geraten.
+- Nutzen/Aufwand: Bindung belohnt statt nur bestraft · M · ≈ 2 Pakete
+- Entscheid: IDEEN-09 Empfehlung parken bis Playtest I-047 nach REL-21
+- Stand R663 (design-I-091-I-094, 2026-10-16): Parken aufgehoben; Kurz-Spec `docs/superpowers/specs/2026-10-16-i091-treue-design.md` mit Rechnung `2026-10-16-i091-i094-rechnung.md`. Empfehlung V-A Kulanz (nach 5 Lieferungen verzeiht der Kunde einen Fehlbestand einmal); V-B Wertbonus 108 % als Alternative (Geldbonus höchstens 7,3 / min, L6 (b) 3,17 %). Spielerwirkung berichtigt: «im Boom kündigen» entfällt (Boom-Preis nie über Vertragspreis); neu «sieht das Lager knapp und entscheidet: nachkaufen oder den Puffer des Stammkunden verbrauchen». Gate Spec offen.
+- Stand R670/R671 (2026-10-16): V-A Kulanz gewählt, V-B Wertbonus verworfen (R670); Gate Spec OK mit Auflagen A1–A4, umgesetzt auf `design/i091-i094` (R671). Plan durch lead-tech (Stufe voll), Save-Nummer im Gate Plan, Umsetzung nach UI-HAEPPCHEN-E.
+- Archiviert IDEEN-12: gemergt R686, live mit REL-24 + REL-25 (R697), Statuspflege nach R599
+
+### I-092 · live · Inselmarkt-Vorliebe (Verkaufsbonus je Fremdinsel)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-09 Scout B; Genre-Mechanik regionale Nachfrage (nur Mechanik); `docs/spielwerte.md` Kontor II (Handel läuft über das Kontor der jeweiligen Insel, Preise global), `src/sim/defs/sea.ts` (`ISLANDS`) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler liest auf der Seekarte «Weidenau zahlt Holz und Werkzeug +30 %» und schickt ein Schiff mit Überschuss dorthin, statt alles daheim zu verkaufen."
+- Grösse: S–M · Save nein (feste Tabelle in `defs`) · Baseline nein (Controller verkauft nur in der Heimat, Faktor 1,0); Balancing-Test bleibt grün · Abhängigkeiten: Seefahrt und Fremdkontor; Anzeige in Seekarte und Handelsdialog
+- Startwerte (Scout, mit `design-economy-designer` nachrechnen): je Fremdinsel zwei Güter ×1,30 (Möweninsel Rum, Stoff; Felsbucht Nahrung, Holz; Weidenau Holz, Werkzeug); Sättigung global und multiplikativ; Verkauf bleibt unter `buy` (Rum 23,4 < 40), kein Kauf-und-Verkauf-Gewinn.
+- Randfälle und Entartung: Fremdkontor ohne Lager → kein Effekt; «immer zur besten Insel» bremsen Frachtraum 50, zwei Güter je Richtung und Schiffsunterhalt 15; bei billigen Gütern (Holz +1,2 je Stück) trägt der Bonus kaum, also Güter nach Wert wählen.
+- Doppelung: keine (I-029 Zeitnachfrage, I-006 Kaufseite, I-072 verworfen); Erweiterung 1 schliesst Preisänderungen aus, berührt also nicht.
+- Raster (Scout): Spass 3 · Passung 3 · Aufwand 2 · Risiko 3 = 14 · Raster (lead-design): Spass 2 · Passung 3 · Aufwand 2 · Risiko 3 = 12
+- Bewertung lead-design: Spass 3 → 2, weil Seefahrt erst nach dem Bürger-Ziel kommt. Stärkste Wirtschaftsidee der Runde: gibt den drei Inseln neben dem Inselcharakter (Erzeugung) eine Rolle im Absatz und den Routen einen Grund ausser Gewürz. Neue Spielwerte → Design-Paket mit Rechnung (opus), Werte so, dass nur Konsumgüter (Rum, Stoff, Glas) spürbar lohnen.
+- Nutzen/Aufwand: Handel wird eine Ortsfrage · S–M · Rechnung ≈ 40 Tools, Sim+UI ≈ 1 Paket
+- Status 2026-10-16: live (R692, Pool-Pflege)
+- Entscheid: IDEEN-09 Empfehlung einplanen als Handels-Baustein: Design-Paket (Spec klein mit Rechnung), danach 1 Paket; I-095 im selben Brainstorming prüfen
+- Archiviert IDEEN-12: live (Inselmarkt, `docs/spielwerte.md`), Statuspflege nach R599
+
+### I-096 · verworfen (R606) · Steuerstufe je Insel
+
+- Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: IDEEN-09 Scout B; Genre-Mechanik regionale Steuer; I-028 (Steuer je Stufe, live) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler stellt die Felsbucht auf «hoch» und die Heimat auf «niedrig»."
+- Grösse: S–M · Save ja · Baseline nein · Abhängigkeiten: Verweis Erweiterung 1 K2 («Stand halten» je Haus)
+- Raster (Scout): Spass 2 · Passung 2 · Aufwand 2 · Risiko 2 = 10 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 2 · Risiko 2 = 8
+- Bewertung lead-design: vermehrt eine Stellschraube ohne neue Abwägung (Scout nennt das selbst); «jede Insel nach Aufgabe» deckt K2 mit «Stand halten» besser.
+- Entscheid: IDEEN-09 Empfehlung verwerfen
+- Archiviert IDEEN-12: verworfen mit R606 (4), Statuspflege nach R599
+
+### I-100 · live · «Neu»-Zähler am Ereignis-Log
+
+- Bereich: Bedienung · Säule: Bedienung (Krisen) · Quelle: IDEEN-09 Scout C; `src/ui/eventLogView.ts` (eingeklappt nur der neueste Eintrag); Playtest `.studio/qa/rel-18/report.md` (Krisen bei 4× verpasst); Genre-Mechanik Ungelesen-Zähler · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler liest «Ereignisse ▸ (3 neu)», weiss, dass er einen Brand und einen Sturm verpasst hat, und klappt das Log auf."
+- Grösse: S–M · Save nein · Baseline nein · Abhängigkeiten: `src/ui/eventLogView.ts`, `src/ui/crisisLog.ts`
+- Randfälle: Zähler nur im Lauf, nach Laden und Neue Insel 0; Aufklappen setzt 0; Deckel «9+».
+- Doppelung: I-058 (Pause bei Krise, geparkt) ist der teurere Gegenpol; I-100 ersetzt ihn für den Playtest-Befund.
+- Raster (Scout und lead-design): Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 11
+- Bewertung lead-design: bestätigt (11). Billigste Antwort auf «verpasste Krisen bei 4×», ohne den Spielfluss anzuhalten.
+- Nutzen/Aufwand: verpasste Krisen lesbar · S–M · ≈ 70 Tools
+- Entscheid: IDEEN-09 Empfehlung einplanen als Häppchen nach I-088/I-090
+- Status 2026-10-14: Kurzdesign `docs/superpowers/archiv/specs/2026-10-14-i100-neu-zaehler.md` (Zähler nur für Meldungs-Einträge, UI-Zustand, kein Save)
+- Archiviert IDEEN-12: gemergt R636, live; Statuspflege nach R599
+
+### I-101 · live (REL-25) · Fernauftrag-Marke auf der Seekarte
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout A; Handel-2-Spec §1 «nicht im Umfang» (Marke auf der Seekarte, AN-7 «optional»); `world.order.island` (nach Handel 2) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht auf der Seekarte an der Felsbucht eine Münzmarke «15 Rum · 1:20» und lenkt das Schiff dorthin, statt in der Auftragskarte nach dem Ziel zu suchen."
+- Grösse: S · Risiko: keins (reine Anzeige; setzt Handel 2 live voraus)
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Randfälle: nur bei laufendem Fernauftrag; Marke ohne Mausfang; bei Verfall oder Lieferung weg.
+- Nutzen/Aufwand: Fernauftrag auf einen Blick planbar · S · ≈ 50 Tools
+- Entscheid: eingeplant (IDEEN-10); Stand: Kurzdesign `docs/superpowers/specs/2026-10-16-i101-i103-fernmarke-routenbilanz.md` (R676)
+- Status 2026-10-16: gemergt (R691), umgesetzt in UI-HAEPPCHEN-F (Marke an der Fern-Insel, hohl beim Angebot, gefüllt beim Auftrag)
+- Archiviert IDEEN-12: live mit UI-HAEPPCHEN-F in REL-24 + REL-25 (R697), Statuspflege nach R599
+
+### I-103 · live (REL-25) · Routen-Bilanz (lohnt dieses Schiff?)
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout A; `docs/spielwerte.md` Handelsschiff (Unterhalt 90 / min), Warenbilanz nominal · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler liest im Schiff-Panel «Route Felsbucht: +310 / min Warenwert, Unterhalt 90 → +220» und streicht die Route, die nur 40 trägt."
+- Grösse: S–M · Risiko: Perf gering (nur bei offenem Panel); Save nein, Baseline nein
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 3 = 12
+- Randfälle: nominal wie die Lagerleiste (Handel, Aufträge, Vorliebe nicht eingerechnet, das Panel sagt es); Gewürz mit gespartem Kaufpreis; Schiff ohne Route zeigt nichts.
+- Doppelung: I-067 (Verlaufskurve, geparkt), I-078/I-089 (live) berühren keine Routen.
+- Nutzen/Aufwand: Schiffsentscheidung statt Bauchgefühl · S–M · ≈ 1 Paket
+- Entscheid: offen (IDEEN-10); Stand: Kurzdesign `docs/superpowers/specs/2026-10-16-i101-i103-fernmarke-routenbilanz.md` (R676), Variante B ohne Save
+- Status 2026-10-16: gemergt (R691), umgesetzt in UI-HAEPPCHEN-F (Variante B, Zeile mit «nominal»); Variante C (gemessene Bilanz, Save) erst nach I-091 und nur bei Bedarf
+- Archiviert IDEEN-12: Variante B live mit UI-HAEPPCHEN-F in REL-24 + REL-25 (R697); Variante C (gemessene Bilanz, Save) wäre eine neue Idee
+
+### I-104 · geparkt (R653) · Ausschreibung (grosse Sammelbestellung)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout A; Genre-Mechanik Sammelbestellung mit Frist; `docs/spielwerte.md` Handelsaufträge (`ORDER_PREMIUM` 0,75, Lager 100, Reserve I-049 live); Handel-2-Spec R3/R7 · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht ab Stufe 4 alle 12 min «Ausschreibung: 60 Holz, 30 Stein, 20 Stoff · 4000 · noch 6:00», baut Vorrat auf, stellt die Reserve hoch und entscheidet, ob er dafür den Verkauf auslässt."
+- Grösse: M · Risiko: Save (Ausschreibungszustand neben dem Auftrag); Baseline nein, solange der Controller nicht annimmt
+- Raster: Spass 3 · Passung 3 · Aufwand 2 · Risiko 2 = 13
+- Randfälle: Stückprämie unter 0,8 × `buy` (Edikt Handel); Mengen je Gut ≤ 80; Teillieferung mit Abschlag erwägen; Verfall ohne Strafe. Entartung: reiner Überschuss ohne Wahl; Menge muss über dem Lager-Normalstand liegen (Rechnung `design-economy-designer`).
+- Doppelung: I-017 (Lernpfad, geparkt), I-047 (Dauerabnahme). Nach Handel 2 prüfen, nicht davor.
+- Nutzen/Aufwand: Spätspiel-Ziel «Vorrat statt Verkauf» · M · ≈ 2 Pakete (Rechnung ≈ 40 Tools)
+- Entscheid: geparkt: Baustein Handels-Brainstorming (IDEEN-10, Pool-Pflege R692)
+- Archiviert IDEEN-12: geparkt laut R653, Statuspflege nach R599
+
+### I-105 · geparkt (R653) · Abfahrtsregel der Route (Warten bis halbvoll)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout A; Genre-Mechanik Abfahrtsbedingung; `docs/spielwerte.md` Route (Schiff fährt sofort, Frachtraum 50) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler stellt die Gewürzroute auf «wartet bis halbvoll» und nimmt längere Wartezeit im Hafen in Kauf, statt fast leer zu fahren."
+- Grösse: M · Risiko: Save (Regel je Route, Standard «sofort», Migration keine); Baseline nein
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Randfälle: Wartedeckel 0:30; zwei Güter je Richtung zählen gemeinsam; «wartet» im Panel sichtbar; Fernauftrag-Fracht darf nicht verklemmen.
+- Doppelung: I-015 (Leitsätze) ging in Erweiterung 1 K3 auf; vorher prüfen, ob K3 eine Abfahrtsregel enthält, sonst zusammenfassen.
+- Nutzen/Aufwand: Takt gegen Auslastung als echte Wahl · M · ≈ 2 Pakete
+- Entscheid: geparkt: K3-Spec klären (I-015) (IDEEN-10, Pool-Pflege R692)
+- Archiviert IDEEN-12: geparkt laut R653, Statuspflege nach R599
+
+### I-107 · geparkt (R653) · Tempo-Tasten + und − (statt Ziffern)
+
+- Bereich: Bedienung · Säule: Bedienung · Quelle: IDEEN-10 Scout B; Playtest rel-18; `src/ui/hotkeys.ts`; Hinweis bei `4`–`8` ist schon live (I-083) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler drückt `+` bzw. `-` für schneller bzw. langsamer."
+- Grösse: S · Risiko: keins
+- Raster: Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 10
+- Randfälle: Pause bleibt auf `P`/Leertaste; `+` in der Pause: Entscheid im Kurzdesign. Mit I-083 teilweise gelöst, Lückenfüller.
+- Nutzen/Aufwand: Tastatur-Konsistenz · S · ≈ 40 Tools
+- Entscheid: geparkt (I-083 deckt den Kern) (IDEEN-10, Pool-Pflege R692)
+- Archiviert IDEEN-12: geparkt laut R653, Statuspflege nach R599
+
+### I-108 · live (REL-25) · Kopfzeile zeigt Einnahmen und Unterhalt getrennt
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-10 Scout B; Playtest rel-18; Screenshot `.studio/qa/REL-22/05-unterhalt.png`; `src/ui/hud.ts`, `src/ui/upkeepCard.ts` · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler liest «+540 / −780» statt «−240», sieht, ob Einnahmen schwach oder Unterhalt zu hoch ist, und öffnet per Klick die Unterhaltskarte."
+- Grösse: S · Risiko: keins (abgeleitete Anzeige; Kopfzeilenbreite bei 1280 px prüfen)
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Doppelung: I-089 (live) und I-067 (geparkt) liegen daneben; ändert nur die Zahl in der Kopfzeile.
+- Nutzen/Aufwand: Wirtschaftslage auf einen Blick · S · ≈ 60 Tools
+- Entscheid: Kurzdesign `docs/superpowers/specs/2026-10-16-i108-einnahmen-unterhalt-design.md` (R676), Gate OK
+- Status 2026-10-16: gemergt (R691), umgesetzt in UI-HAEPPCHEN-F (Chip «+Einnahmen / −Unterhalt», `src/ui/balanceFlow.ts`)
+- Archiviert IDEEN-12: live mit UI-HAEPPCHEN-F in REL-24 + REL-25 (R697), Statuspflege nach R599
+
+### I-110 · geparkt (R722) · Startpaket zur Wahl
+
+- Bereich: Inhalt · Säule: Insel besiedeln · Quelle: IDEEN-11 Scout A; Genre-Mechanik Startbonus mit Preis; `docs/spielwerte.md` Start (5000 Geld, 40 Holz, 20 Werkzeug, 10 Stein, 20 Nahrung) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler wählt bei «Neue Insel» zwischen «Standard», «Zimmerleute» (mehr Holz, weniger Geld), «Fischer» (zweite Fischerhütte steht, weniger Werkzeug) und «Kassenwart» (mehr Geld, weniger Holz) und spielt die ersten 15 Minuten anders."
+- Mechanik: Das Paket setzt nur Start-Lager und Start-Gebäude der Heimat; danach gelten die normalen Regeln. Werte als Tabelle in `src/sim/defs/`. Die Scout-Werte (±150 Geld) sind bei 5000 Startgeld wirkungslos und werden im Kurzdesign neu gerechnet (Grössenordnung ±1000 Geld bzw. ±20 Holz).
+- Grösse: S · Risiko: keins, solange «Standard» der Vorgabewert ist (Balancing-Test startet mit Standard; das Paket muss nicht im Save stehen)
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Randfälle: «Alles frei» kombinierbar; Geld nach dem Start nie negativ; Paket wird in der Kopfzeile oder im Menü nicht mehr gebraucht, nur beim Start. Entartung: ein Paket, das immer gewinnt (Geld ist ab Minute 10 kein Engpass), deshalb muss jeder Vorteil in einem Engpass der ersten 15 Minuten liegen (Holz, Werkzeug, Nahrung).
+- Doppelung: keine Start-Idee in Pool und Archiv; I-070 (verworfen) war ein selbst gesetztes Ziel, kein Startzustand.
+- Nutzen/Aufwand: Wiederspielwert und eine Wahl in Minute 0, Wirkung verblasst aber nach etwa 15 min · S · ≈ 60 Tools (plus Rechnung ≈ 20)
+- Entscheid: offen (IDEEN-11)
+- Archiviert IDEEN-12: geparkt (R722) bis der Zukauf mit der Menge teurer wird (`BUY_RISE` > 0, I-048 Schritt A inaktiv); Spec und Rechnung auf `design/i110` @ `2473b2da` (Kassenwart 5800, Kalibrierregel E3) als Ausgangspunkt
+
+### I-113 · verworfen (R692) · Gemeindeprojekt (Überschuss in die Stadt stecken)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-11 Scout A; Genre-Mechanik Sammelprojekt · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler steckt in der Amtsstube 700 Geld in «Pflasterung» (Marktplatz-Reichweite +1) oder 500 in «Zisterne» (Brandschaden −30 %)."
+- Mechanik: Ein Projekt zur Zeit, vier Projekte je einmal, Kosten beim Start, dauerhaft nach Bauzeit.
+- Grösse: M · Risiko: Save, Baseline, Krisen-Balancing (Brand)
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9
+- Randfälle: Amtsstube abgerissen: Projekt ruht. Entartung: alle vier werden ohnehin gekauft (reine Geldsenke ohne Wahl).
+- Doppelung: Denkmal (live, Spätspiel-Geldsenke), I-079 Bauhof und I-080 Brunnen (beide verworfen); I-112 deckt die Wahl «Reichweite gegen Kosten» mit Ausschluss besser ab.
+- Nutzen/Aufwand: Geldsenke ohne echte Wahl · M · ≈ 2 Pakete
+- Entscheid: verworfen (R692): Geldsenke ohne Wahl
+- Archiviert IDEEN-12: verworfen mit R692, Statuspflege nach R599
+
+### I-115 · geparkt (R692) · Eigene Sättigung je Kontor
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-11 Scout B; `docs/spielwerte.md` «Preise sind global» und «Sättigung bleibt global» (Inselmarkt) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler merkt, dass 40 Rum daheim den Preis drücken, und fährt die Hälfte nach Felsbucht, wo der Preis noch frisch ist."
+- Mechanik: `sellPct` je Kontor statt global, Erholung wie heute; der Handelsdialog zeigt die Sättigung des eigenen Kontors.
+- Grösse: M · Risiko: Save (Sättigung je Insel); Baseline vermutlich bitgleich (Controller verkauft nur daheim); Arbitrage-Rechnung nötig
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Randfälle: ohne Schiff nichts Neues; Entartung: Kleinmengen auf vier Märkte streuen vervierfacht den Vollpreis-Absatz; Frachtraum 50 und Unterhalt 90 / min müssen das deckeln (Rechnung `design-economy-designer`).
+- Doppelung: Handel 2 hat «global» bewusst gesetzt; Erweiterung 1 plant Rivalen, die die Verkaufssättigung teilen (Brainstorming auf `design/erweiterung-1`, Rivalen). Gehört damit in die Nutzer-Session, nicht ins Studio.
+- Nutzen/Aufwand: Schiffe bekommen einen Verkaufszweck · M · ≈ 2 Pakete
+- Entscheid: geparkt (R692): als Baustein für Erweiterung 1 (Rivalen und Sättigung)
+- Archiviert IDEEN-12: geparkt mit R692 (Baustein Erweiterung 1), Statuspflege nach R599
+
+### I-116 · geparkt (R692) · Inselgunst (Pünktlichkeit hebt die Vorliebe)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-11 Scout B; `PREFER_PCT` 130 % (`src/sim/defs/sea.ts`), Treue I-091 als Vorbild · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler hat Weidenau dreimal pünktlich beliefert, dort zahlt das Vorliebe-Gut jetzt 140 statt 130 %, und er bleibt bei dieser Insel."
+- Mechanik: Jeder erfüllte Fernauftrag gibt der Insel einen Gunstpunkt (Deckel 5); ab 3 Punkten `PREFER_PCT` 140 %; ein verpasster Fernauftrag setzt die Insel auf 0; Anzeige in der Seekarte.
+- Grösse: M · Risiko: Save (Zähler je Insel); Baseline bitgleich
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Randfälle: Kontor abgerissen: Gunst weg; ohne Wahl der Insel (I-114) reine Belohnung ohne Entscheidung.
+- Doppelung: I-091 Treue (Stammkunde, gemergt R686, REL-25) belohnt Bindung schon; I-073 ging in I-047 auf. Sinnvoll nur nach I-114.
+- Nutzen/Aufwand: zweite Treue-Mechanik, Wirkung +10 Punkte auf einem Gut · M · ≈ 1–2 Pakete
+- Entscheid: geparkt (R692): bis I-114 live
+- Archiviert IDEEN-12: geparkt mit R692 bis I-114 live; I-114 ist gemergt (R720) und geht mit REL-26 live, danach Wiedervorlage
+
+### I-117 · geparkt (R692) · Route verkauft statt zu lagern
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-11 Scout B; `docs/spielwerte.md` Route («Bringen» lädt ins Lager der Zielinsel) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler stellt bei «Bringen» auf «Verkaufen», und das Schiff setzt Rum in Felsbucht zum Vorliebe-Preis ab, ohne dass er jedes Mal dorthin klickt."
+- Mechanik: Schalter «Lagern | Verkaufen» je Bringen-Gut; beim Anlegen wird der Bestand über der Reserve zum Preis des Zielkontors mit Sättigung verkauft.
+- Grösse: M · Risiko: Save (Feld je Route, Migration «Lagern»); Baseline bitgleich
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Randfälle: Zielkontor abgerissen: Ware bleibt an Bord; Verkauf unter Kaufpreis erlaubt (keine Arbitrage, Kauf ist teurer); leere Ladung: nichts.
+- Doppelung: Routenregeln gehören zu Erweiterung 1 K3 (Seefahrt-Leitsätze I-015, Nutzer-Session); wie I-105 vor Einplanung gegen K3 prüfen. I-103 zeigt die Bilanz, ändert die Route nicht.
+- Nutzen/Aufwand: Komfort für Handelsrouten, Wahl Lager gegen Kasse · M · ≈ 2 Pakete
+- Entscheid: geparkt (R692): bis K3 (Erweiterung 1) geklärt
+- Archiviert IDEEN-12: geparkt mit R692 bis K3 (Erweiterung 1) geklärt, Statuspflege nach R599
