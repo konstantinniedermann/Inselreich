@@ -1,5 +1,6 @@
 import { HOME } from '../sim/world';
 import { monumentChip } from './monumentView';
+import { trialChip } from './trial';
 import { islandName } from '../sim/islands';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
@@ -230,6 +231,7 @@ export interface HudActions {
   openTownhall(): void;
   /** Rats-Karte öffnen/schliessen (Marke «Rat», I-112). */
   toggleCouncil(): void;
+  toggleTrial(): void;
   /** Liefert den aktiven Auftrag ab; zeigt selbst Meldung bzw. Grund. */
   deliverOrder(): void;
   /** Springt mit der Kamera zur Insel `index` (Knopf „Inseln", M12 E2). */
@@ -310,12 +312,28 @@ export function updateStockChips(
   }
 }
 
+/** Ziel-Chip (I-132): Text und Tooltip; klickbar (Auflagen-Karte) genau, wenn die Meisterprüfung ansteht. */
+export function syncGoalChip(goalEl: HTMLElement, world: World): void {
+  const tc = trialChip(world);
+  const goal = goalTexts(goalView(world), tc ?? monumentChip(world));
+  if (goalEl.textContent !== goal.chip) goalEl.textContent = goal.chip;
+  if (goalEl.title !== goal.title) goalEl.title = goal.title;
+  goalEl.classList.toggle('goal-chip--action', tc !== null);
+}
+
+export function bindGoalChip(goalEl: HTMLElement, actions: Pick<HudActions, 'toggleTrial'>): void {
+  goalEl.addEventListener('click', (ev) => {
+    if (blurAfterClick(ev.detail)) goalEl.blur();
+    actions.toggleTrial();
+  });
+}
+
 /** Baut die Kopfzeile beim ersten Aufruf auf und aktualisiert danach nur die Werte (Spec L2). */
 export function updateHud(header: HTMLElement, state: GameState, actions: HudActions): void {
   if (!header.querySelector('.hud-row')) {
     header.innerHTML =
       '<div class="hud-row">' +
-      '<span class="pop-chips"></span><span class="chip" data-field="goal"></span>' +
+      '<span class="pop-chips"></span><button type="button" class="chip goal-chip" data-field="goal"></button>' +
       '<button class="btn council-badge" data-field="council-badge" type="button" hidden></button>' +
       '<span class="hud-money" data-field="money"></span>' +
       '<span class="hud-tax" hidden><button class="btn" data-field="tax" type="button"></button></span>' +
@@ -367,6 +385,8 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       if (blurAfterClick(ev.detail)) taxBtn.blur();
       actions.openTownhall();
     });
+    const goalBtn = header.querySelector<HTMLElement>('[data-field="goal"]');
+    if (goalBtn) bindGoalChip(goalBtn, actions);
     const councilBtn = header.querySelector<HTMLButtonElement>('[data-field="council-badge"]');
     councilBtn?.addEventListener('click', (ev) => {
       if (blurAfterClick(ev.detail)) councilBtn.blur();
@@ -392,9 +412,8 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     const hide = popChipHidden(world, tier);
     if (chip && chip.hidden !== hide) chip.hidden = hide;
   }
-  const goal = goalTexts(goalView(world), monumentChip(world));
-  const goalEl = setField(header, 'goal', goal.chip);
-  if (goalEl && goalEl.title !== goal.title) goalEl.title = goal.title;
+  const goalEl = header.querySelector<HTMLElement>('[data-field="goal"]');
+  if (goalEl) syncGoalChip(goalEl, world);
   const badge = councilBadge(world);
   const badgeEl = setField(header, 'council-badge', badge ?? '');
   if (badgeEl) {

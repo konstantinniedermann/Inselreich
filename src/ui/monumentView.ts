@@ -2,6 +2,7 @@ import { GOODS } from '../sim/defs/goods';
 import { MONUMENT_GOODS, MONUMENT_PULL_TICKS, MONUMENT_STAGES } from '../sim/defs/monument';
 import { monumentProgress, monumentReserve, monumentStartReason } from '../sim/monument';
 import { buyPrice, monumentBuyBlock } from '../sim/trade';
+import { trialBuyBlock } from '../sim/trial';
 import type { Monument, MonumentGood, World } from '../sim/types';
 import { home } from '../sim/world';
 import { friendlyReason } from './hints';
@@ -36,6 +37,7 @@ function shownGoal(m: Monument | null): Readonly<Record<MonumentGood, number>> |
 
 export function monumentRows(w: World): MonumentRow[] {
   const m = w.monument;
+  const block = trialBuyBlock(w);
   const goal = shownGoal(m);
   if (m === null || goal === null) return [];
   return MONUMENT_GOODS.map((good) => {
@@ -46,7 +48,8 @@ export function monumentRows(w: World): MonumentRow[] {
       label: `${GOODS[good].name} ${got} / ${need}`,
       pct: need === 0 ? 0 : Math.floor((100 * got) / need),
       reserveText: `Reserve ${monumentReserve(w, good)}`,
-      buyText: `zukaufen (${buyPrice(w, good, 1)} / Stück)`,
+      buyText:
+        block !== null ? `zukaufen — ${block}` : `zukaufen (${buyPrice(w, good, 1)} / Stück)`,
       buyOn: m.buy[good],
     };
   });
@@ -98,6 +101,8 @@ export function monumentStallReason(w: World): string | null {
   const open = openGoods(m).map((e) => e.good);
   // Güter, die nur über Zukauf weitergehen könnten (Lager auf oder unter Reserve, Zukauf an).
   const buying = open.filter((g) => stock[g] <= monumentReserve(w, g) && m.buy[g]);
+  const trialBlock = trialBuyBlock(w);
+  if (trialBlock !== null && buying.length > 0) return trialBlock;
   if (buying.some((g) => monumentBuyBlock(w, g) !== null)) return 'Kein Kontor';
   const deliverable = open.some((g) =>
     stock[g] > monumentReserve(w, g)

@@ -1493,6 +1493,41 @@ button.hud-balance:focus-visible {
   font-size: 13px;
 }
 
+/* Auflagen-Karte der Meisterprüfung (I-132): wie die Rats-Karte, kein Modal */
+.trial-card {
+  position: absolute;
+  top: 48px;
+  right: 8px;
+  z-index: 10; /* über .notice-stack (9), unter Hover und Modal */
+  width: min(420px, 60%);
+  max-height: calc(100% - 64px);
+  overflow-y: auto;
+}
+.trial-card[hidden] {
+  display: none;
+}
+.trial-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.trial-rule,
+.trial-condition,
+.trial-preview,
+.trial-fire,
+.trial-status {
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+/* Ziel-Chip als Knopf (I-132): sieht aus wie ein Chip; klickbar nur mit anstehender Meisterprüfung */
+.goal-chip {
+  cursor: default;
+}
+.goal-chip--action {
+  cursor: pointer;
+}
+
 /* Pause-Overlay (I-097) */
 .pause-overlay {
   position: absolute;

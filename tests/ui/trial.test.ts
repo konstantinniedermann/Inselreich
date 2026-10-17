@@ -1,6 +1,7 @@
 // I-132 T03: reine UI-Helfer der Meisterprüfung (AK 15, 16, 17).
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { startTrial } from '../../src/sim/trial';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
 import { goodsBalance } from '../../src/sim/flow';
 import { serialize } from '../../src/sim/save';
@@ -20,6 +21,20 @@ import {
   trialTransition,
 } from '../../src/ui/trial';
 import { putBuilding, twoIslandWorld } from '../sim/helpers';
+
+// Test-Schalter: überschreibt die Bilanz eines Guts, sonst echte Bilanz.
+const balanceOverride = vi.hoisted(() => ({ spice: null as number | null }));
+vi.mock('../../src/sim/flow', async (orig) => {
+  const actual = await orig<typeof import('../../src/sim/flow')>();
+  return {
+    ...actual,
+    goodsBalance: (...args: Parameters<typeof actual.goodsBalance>) => {
+      const b = actual.goodsBalance(...args);
+      if (balanceOverride.spice !== null) b.spice = { ...b.spice, net: balanceOverride.spice };
+      return b;
+    },
+  };
+});
 
 function worldWith(trial: Partial<TrialState> = {}, done = true): World {
   const w = createWorld(3);
@@ -145,6 +160,39 @@ describe('AK-17 trialStartReason', () => {
     expect(reason(merchantWorld(59))).toBe('Erst ab 60 Kaufleuten (jetzt 59)');
     expect(reason(merchantWorld(151))).toBe('Höchstens 150 Kaufleute (jetzt 151)');
     expect(reason(merchantWorld(60))).toBeNull();
+  });
+});
+
+describe('AK-17 Abgleich mit startTrial', () => {
+  it('Grund gleich startTrial-Grund, null bei ok', () => {
+    const m = merchantWorld(60);
+    m.money = -1;
+    const cases = [
+      worldWith({}, false),
+      worldWith({ active: 'selfSupply' }),
+      worldWith({ passed: [{ id: 'selfSupply', tick: 1 }] }),
+      m,
+      merchantWorld(59),
+      merchantWorld(151),
+      merchantWorld(60),
+    ];
+    for (const w of cases) {
+      const r = startTrial(structuredClone(w), 'selfSupply');
+      expect(trialStartReason(w)).toBe(r.ok ? null : r.reason);
+    }
+  });
+});
+
+describe('Vorschau-Rundung', () => {
+  it('Fehlmenge, die auf -0 / min rundet, erscheint nie', () => {
+    balanceOverride.spice = -1e-6;
+    try {
+      const w = worldWith();
+      expect(selfSupplyPreview(w).map((l) => l.good)).not.toContain('spice');
+      expect(selfSupplyText(selfSupplyPreview(w))).not.toMatch(/[−-]0 \/ min/);
+    } finally {
+      balanceOverride.spice = null;
+    }
   });
 });
 
