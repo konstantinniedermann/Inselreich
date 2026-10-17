@@ -1086,3 +1086,16 @@ Befund an die Retro: T11-Tests entstanden nach der Implementierung, Rot-Beleg na
 Regelbezug: R395, R410, R708 V2, R760, R767, R768 · Kosten bei Irrtum: ein Re-Export, der einen weiteren Zyklus in `isoBase.ts` erzeugt (`make check` fängt ihn).
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C9 · ADR: —
+
+## R783 · 2026-10-17 · Nutzer «mach weiter»: ORT-A C10 (roadCenter, T12, T13) und Stadtplanung C1 starten; REL-28 im Ruhefenster
+
+Ruling: Auslegung «mach weiter» als Fortsetzung des Plans aus R781/R782/R775 ohne neuen Auftrag. Zweck der Anweisung: Arbeit ohne Rückfrage voranbringen; Auslegung widerspricht ihm
+nicht, weil nur bereits gegatete Pakete starten. (1) **ORT-A C10** an `lead-tech` (Controller sonnet): `refactor:`-Commit `roadCenter` → `src/render/isoBase.ts` (R782), dann T12 und T13
+seriell auf `feat/ort-a-k1` @ `c2756d1e`, je Umsetzer + Task-Review; Budget **5 Starts** (4 + 1 Delta-Review frisch opus), Parallelität 1; Messungen nur bei 1-min-Last ≤ 4. (2) **Stadtplanung
+C1** an `lead-tech` (Controller sonnet) ab T00 auf Basis `plan/stadtplanung` @ `b27e7e8f` (R775), Budget **38 Starts**, Parallelität 2; T09/T10 erst nach ORT-A-Merge. Die Push-Sperre
+R464 gilt nicht mehr (REL-27 live, R779). (3) **REL-28** (I-136 Gate Merge mit vollem `make check` auf `feat/i136` @ `6f7bbc21`, Merge, `make push-check`, Push) startet L0, sobald die
+1-min-Last ≤ 8 ist (jetzt 20, Fremdlast); bis dahin keine `make check`-Läufe. Deckel 6 gleichzeitige Agenten (R698).
+
+Regelbezug: R464, R698, R775, R779, R781, R782 · Kosten bei Irrtum: zwei Controller teilen sich bei hoher Last die Testzeit; schlimmstenfalls warten Tasks auf ein Ruhefenster.
+
+Entscheider: L0 · Anlass: Nutzer «mach weiter» · ADR: —
