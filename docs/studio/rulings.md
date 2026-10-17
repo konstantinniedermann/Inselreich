@@ -1099,3 +1099,16 @@ R464 gilt nicht mehr (REL-27 live, R779). (3) **REL-28** (I-136 Gate Merge mit v
 Regelbezug: R464, R698, R775, R779, R781, R782 · Kosten bei Irrtum: zwei Controller teilen sich bei hoher Last die Testzeit; schlimmstenfalls warten Tasks auf ein Ruhefenster.
 
 Entscheider: L0 · Anlass: Nutzer «mach weiter» · ADR: —
+
+## R784 · 2026-10-17 · REL-28 Gate Merge I-136 ZURÜCK: Fernlager-Zahl in `--tone-bad` statt Signalrot (Variante b)
+
+Ruling: Bericht lead-qa REL-28 (Handoff `.studio/handoffs/2026-10-17-lead-qa-gate-REL-28.md`) → ZURÜCK angenommen: `make check` auf `feat/i136` @ `6f7bbc21` rot an
+`tests/ui/contrast.test.ts` «Spec 9.1 Signalrot ist nie Textfarbe» (`.far-stock--low { color: var(--signal-red) }`, I-136 T03). Entscheid **Variante (b)**, nicht die empfohlene
+Ausnahme (a): Die Regel M7 §9.1 bleibt ohne Ausnahme; die Zahl wird mit dem vorhandenen Ton `--tone-bad` (#b3261e) gefärbt, der als Textton auf Pergament schon kontrastgeprüft ist
+(AK-PU-19). Damit bleibt die Zahl rot, die Spec-Regel gilt ohne Sonderfall und es braucht keinen neuen Test. AK-F9 in der I-136-Spec wird auf «computed color = `--tone-bad`» nachgeführt.
+Fix an `lead-tech` (sonnet, 1 Start Umsetzer): CSS-Zeile + Spec-AK + ggf. Browser-Erwartung `rgb(179, 38, 30)`; Diff ≤ 20 Zeilen prüft der Lead am Diff (kein Delta-Review), dann
+voller `make check`; danach setzt `lead-qa` das Gate nur für den Rest fort (Integrator, `make push-check`).
+
+Regelbezug: R781, M7-Spec §9.1, Handbuch «Kleine Fixes ≤ ~20 Zeilen» · Kosten bei Irrtum: ein dunkleres Rot fällt weniger auf als Signalrot; Sichtprüfung im nächsten Playtest.
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL-28 · ADR: —
