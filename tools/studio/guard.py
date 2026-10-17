@@ -542,7 +542,6 @@ RULE_KEYWORDS = (
     ("worktree remove", "delete"),
     ("Freigabe-Formel", "constitution"),
 )
-COMMAND_LIMIT = 160
 # Fester Kurztext je Regel für das Ereignis: enthält nie Befehlsteile.
 RULE_SUMMARY = {
     "stash": FORBIDDEN + ": git stash",
@@ -671,10 +670,6 @@ def _raw_text(payload: dict) -> str:
     else:
         text = str(data.get("description", ""))
     return " ".join(text.split())
-
-
-def _shown_command(payload: dict) -> str:
-    return redact(_raw_text(payload))[:COMMAND_LIMIT]
 
 
 def _command_hash(payload: dict) -> str:
