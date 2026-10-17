@@ -1072,3 +1072,17 @@ Befunde in `docs/beobachtungen.md`. Budget I-136: 4 von 4 Starts verbraucht (Ums
 Regelbezug: R69, R335, R673, R693, R774, R778 · Kosten bei Irrtum: I-136 kommt eine Session später live.
 
 Entscheider: L0 · Anlass: Berichte qa-code-reviewer (Final- und Delta-Review), qa-playtester, tech-ui-engineer I-136 · ADR: —
+
+## R782 · 2026-10-17 · ORT-A C9: T10 und T11 abgenommen; `roadCenter` nach `isoBase.ts`; T12/T13 in der Folgesession
+
+Ruling: Bericht lead-tech ORT-A C9 (Handoff `.studio/handoffs/2026-10-17-lead-tech-ORT-A-C9.md`) → **T10** (Browser-Check BEDENKEN niedrig: Saum dezent, Fixture ohne Bauland in Versorgung,
+Beobachtung eingetragen) und **T11** (`feat/ort-a-k1` @ `c2756d1e`, Review OK inkl. `23ce0ecc`, Zeiten ohne Rückgang) abgenommen. Entscheide: (1) **`roadCenter` zieht nach
+`src/render/isoBase.ts`**, `sprites.ts` re-exportiert es — vermeidet den Importzyklus `roadShape` ↔ `sprites` wie bei FIX-TEX (R760); die Sperre in der T12-Task-Datei ist damit
+aufgehoben, Änderung als eigener `refactor:`-Commit vor T12. (2) T11-Abweichungen bestätigt: Welle Amplitude 0,04 / Periode 0,6 (AK-19 sonst 0,505 > 0,5), `edges` als geschlossene Ringe
+(T12/T13 richten sich danach), AK-28-Sackgasse als Halbellipse ab Kachelmitte (Task-Text «0,5 ± 0,04 bis zum Ende» gilt bis zur Kachelmitte). lead-art erhält die Welle zur Kenntnis mit
+dem nächsten Art-Start. (3) **T12/T13 in der Folgesession**: 1-min-Last 7,5–9,6 (Fremdlast), L0-Kontext an der Übergabegrenze (≈ 25 %, R768); Restbudget 4 verfällt, neu erteilen.
+Befund an die Retro: T11-Tests entstanden nach der Implementierung, Rot-Beleg nachträglich per Stub (zwei Tests waren vakuös grün und wurden nachgeschärft) — Test-first-Regel verletzt.
+
+Regelbezug: R395, R410, R708 V2, R760, R767, R768 · Kosten bei Irrtum: ein Re-Export, der einen weiteren Zyklus in `isoBase.ts` erzeugt (`make check` fängt ihn).
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C9 · ADR: —
