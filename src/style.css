@@ -1521,7 +1521,7 @@ button.hud-balance:focus-visible {
 }
 
 /* Ziel-Chip als Knopf (I-132): sieht aus wie ein Chip; klickbar nur mit anstehender Meisterprüfung */
-.goal-chip {
+button.goal-chip {
   cursor: default;
 }
 .goal-chip--action {

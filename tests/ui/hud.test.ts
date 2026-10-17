@@ -743,7 +743,7 @@ describe('I-132 Ziel-Chip als Knopf', () => {
     expect(el.classList.contains('goal-chip--action')).toBe(false);
     el.fire('click');
     expect(toggleTrial).toHaveBeenCalledTimes(1);
-    w.wonSpice = true; // Phase «done»: nur dort zeigt der Ziel-Chip den Auflagen-Chip
+    w.wonSpice = true; // Phase «done»; in «spice» zeigt der Chip die Meisterprüfung seit cb8e3958 ebenfalls (nächster Test)
     w.monumentDone = true;
     syncGoalChip(el as unknown as HTMLElement, w);
     expect(el.classList.contains('goal-chip--action')).toBe(true);
