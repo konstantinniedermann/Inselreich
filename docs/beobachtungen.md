@@ -429,3 +429,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: (a) Umbruch «Strafe / 135» bei 1280 px; (b) verzögerter Klang bei Pause-Annahme; (c) `querySelector` in `app.ts`; (d) hängender Playtester-Lauf (Skripthänger).
 - Ursprung: lead-tech, I-122/I-123, R747
 - Erste Einschätzung: niedrig; (a) und (b) vor der Auswertung im Browser prüfen.
+
+### 2026-10-17 · Testhelfer `putBuilding` und Referenzaufbau Seed 5
+
+- Fundort: `tests/sim/helpers.ts` (`putBuilding`), `tests/sim/trial-run.test.ts` (Referenzaufbau K'-arm)
+- Beobachtung: (a) `putBuilding` setzt `connected: true` ohne Weg; nach `deserialize` wird neu berechnet, ein Lauf mit und ohne Speichern kann daher ohne `recomputeConnectivity` auseinanderlaufen. (b) Der Referenzaufbau aus `balance-monument.test.ts` scheitert auf den Seeds 5, 6, 9, 12 mit «kein freier Erweiterungsplatz für fisher»; Seeds 1, 2, 4, 7, 8, 11, 13 tragen ihn.
+- Ursprung: lead-tech, I-132 T02
+- Erste Einschätzung: niedrig; (a) Testhelfer, bei Bedarf `recomputeConnectivity` im Helfer; (b) nur relevant, falls der Referenzaufbau auf weitere Seeds ausgedehnt wird.
