@@ -1019,3 +1019,30 @@ Erweiterung 1 bekommt beim Merge v19 (R519).
 Regelbezug: R335, R464, R517, R519, R565 V2, R769 V2, R772 · Kosten bei Irrtum: ein Live-Release mit Ladefehler im manuellen Slot (Hotfix ≈ 1 Paket).
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-rel-27 · ADR: —
+
+## R778 · 2026-10-17 · I-136 «Fernkarte»: Gate Spec und Gate Plan OK mit Auflagen; Handbuch 1.65 gemergt
+
+Ruling: (1) **Gate Spec I-136** (`design/i136` @ `6c2491dd`, lead-qa): OK mit zehn nicht blockierenden Auflagen (seaLanes-Zählung injizierbar und Frame-Pfad-Test, Randfälle kein
+Kontor / ein Angebot / kein Schiff, Tooltip und Entfernen von `far-stock--low`, Golden-String AK-F4, AK-F10 präzisiert, Spans-Zusammensetzung, Screenshots beider Werte, Konflikt
+benannt, `farOrderText`-Rotfärbung als Beobachtung statt Umfang). Grösse S, kein Save, keine Baseline. (2) **Gate Plan I-136** (`plan/i136` @ `65ee7301`; lead-qa OK mit Hinweisen
+A–C, lead-production OK mit Auflage 1): angenommen, P-1 (zwei Kind-Spans, FakeDom) bestätigt. Auflagen an den Umsetzer: Rot-Belege mit echtem Assertion-Fehler (leerer Stub statt
+fehlender Datei), Golden-Werte per Handrechnung plausibilisiert, Spec AK-F6 und Plan-Abschnitt «Konflikte» im ersten Commit nachgezogen (kein Dateiüberlapp mit Stadtplanung nach
+T08-Dateiliste, Prüfung beim Gate Merge per `git diff --name-only`). Merge-Reihenfolge frei gegenüber ORT-A und Stadtplanung (wer fertig ist, zuerst). Budget 4 Starts
+(Umsetzer, ein Paket-Review nach E-068, Playtester, Puffer), Parallelität 1; L0 briefet den Umsetzer direkt (Stufe leicht). (3) **Handbuch 1.65** (`docs/handbuch-1.65` @
+`b8c4a586`, studio-test 1009 OK) lokal gemergt (`abe7ee0d`); Wortlaut des Einsatzes `Delta-Review frisch` statt der Klammerform aus R774, weil der Guard als Präfix vergleicht.
+
+Regelbezug: R392, R395, R464, R693, R774, gates.md Gate Spec und Gate Plan · Kosten bei Irrtum: ein UI-Häppchen, dessen Frame-Cache-Test im echten DOM nicht greift (Playtest T04 fängt es).
+
+Entscheider: L0 · Anlass: Berichte lead-design design-I-136, lead-qa gate-I-136-spec und gate-I-136-plan, lead-production gate-I-136-plan, studio-coach HANDBUCH-1.65 · ADR: —
+
+## R779 · 2026-10-17 · REL-27 live; ORT-A C9 und Stadtplanung C1 gestartet
+
+Ruling: **REL-27 «Meisterprüfung» live**: Merge `add28350` (I-132), `make push-check` Exit 0 (check 4460 Tests, check-ci-perf Exit 0), Push `6f14a354..add28350`, CI 39033715341 und
+Pages 39034234219 grün (automatisch). Damit ist die Push-Sperre R464 aufgehoben; der einzige Push dieser Session ist verbraucht (R335), alles Weitere bleibt lokal. Gestartet: **ORT-A
+C9** (lead-tech sonnet, 7 Starts, T10 → k1 T11–T13) und **Stadtplanung Instanz I** (lead-tech sonnet, 38 Starts gesamt, Parallelität 2, T00–T02). I-136-Umsetzung startet, sobald
+ein Platz im Deckel frei ist und die 1-min-Last < 8 liegt (R708 V2). Befund an die Retro: Der Hook meldete «production-integrator inaktiv», während `make push-check` als ein
+langer Bash-Aufruf ohne Heartbeat lief (7:47).
+
+Regelbezug: R335, R464, R708 V2, R771, R777 · Kosten bei Irrtum: drei Teststränge gleichzeitig, die Messfenster von ORT-A T10 und Stadtplanung T02 belegen.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-27 · ADR: —
