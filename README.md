@@ -209,6 +209,15 @@ Sobald ein Haus zum ersten Mal die Stufe 2 (Siedler), 3 (Bürger) oder 4 (Kaufle
 - **Wirkung:** Der Beschluss gilt für die ganze Partie und alle Inseln, kostet nichts, lässt sich nicht ändern; der andere Beschluss der Stufe verfällt. Gefasste Beschlüsse stehen als Liste in derselben Karte («Stufe 2: Webordnung»), die Marke bleibt als neutrales «Rat» sichtbar. Ein offener Beschluss kann beliebig lange warten.
 - **Die sechs Beschlüsse:** Stufe 2 Webordnung (Webereien +25 % schneller) oder Glockenrecht (Kapellen reichen 3 Felder weiter); Stufe 3 Brennrecht (Brennereien +25 % schneller) oder Wohnordnung (Bürgerhäuser fassen 16 statt 15); Stufe 4 Glasrecht (Glashütten +67 % schneller) oder Hofrecht (Kaufmannshäuser fassen 22 statt 20). Alle Zahlen: [`docs/spielwerte.md`](docs/spielwerte.md#rat-ratsbeschluss).
 
+### Meisterprüfung
+
+Ist das Denkmal fertig, wird der Ziel-Chip in der Kopfzeile zum Knopf «Meisterprüfung» (auch in der Gewürz-Phase). Ein Klick öffnet die Auflagen-Karte; `Esc` oder «Schliessen» schliesst sie. Das Spiel läuft weiter.
+
+- **Auflage «Eigenversorgung»:** Sie sperrt den Zukauf an allen Kontoren und für das Denkmal. Verkauf, Aufträge, Schiffe und Bauen bleiben frei. Du hältst 15 Minuten durch, die Einwohner dürfen nicht unter 70 % des Starts fallen.
+- **Start:** mit 60 bis 150 Kaufleuten und ohne Schulden. Die Karte zeigt, welche Güter ohne Zukauf fehlen; ist der Start gesperrt, steht der Grund im Knopf.
+- **Abbruch:** jederzeit über «Abbrechen» (zweiter Klick bestätigt), ohne Folgen.
+- **Lohn:** Bei Erfolg trägt die Inselchronik «Meisterprüfung: Eigenversorgung bestanden». Wer scheitert, kann es später neu versuchen.
+
 ### Einstellungen, Ton und Anzeige
 
 In der Kopfzeile stehen rechts **Steuer**, Tempo, **Stumm**, **Einstellungen** und **Menü**. «Einstellungen» öffnet eine Karte mit:

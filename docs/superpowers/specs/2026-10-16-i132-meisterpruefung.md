@@ -3,6 +3,7 @@
 Stand 2026-10-16 · Paket `design-I-132-I-133` · Prozessstufe voll · Auftrag R737 (Priorität 2, mit I-133 als Auflage
 «Sturmjahr») · Rechnung: [anhang-01-rechnung.md](2026-10-16-i132-meisterpruefung/anhang-01-rechnung.md). Messwerte stammen
 aus Läufen am Stand K'-arm (Seed 3, 60 Kaufleute, 75 Einwohner); alles andere ist als Schätzung gekennzeichnet.
+Plan: `docs/superpowers/plans/2026-10-17-i132-meisterpruefung.md`
 
 ## 1 Spielerzweck (ein Satz)
 
