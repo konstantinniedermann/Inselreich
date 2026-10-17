@@ -23,6 +23,10 @@ import studio_docs
 from graph import GRAPH_ROWS, MESSAGE_TEXT_MAX, PAUSE_GAP  # noqa: F401
 
 INACTIVE_DEFAULT = 300.0
+LONG_RUN_SECONDS = (
+    1800.0  # so lange gilt ein Bash-Aufruf von L0/lead-qa als laufender Make-Lauf
+)
+INACTIVE_EXEMPT = frozenset({"studio-director", "lead-qa"})  # R755 V1
 PHANTOM_AFTER = 600.0  # unbestätigte Knoten danach ausgeblendet (REL-12 B2)
 BIND_WINDOW = 30.0
 FEED_SIZE = 80
@@ -328,6 +332,8 @@ class _Builder:
                 "task_short": "",
                 "_base_name": "",
                 "_pulse": ts,
+                "_tool": "",
+                "_tool_ts": ts,
                 "_signal": is_main,
                 "_first": (ts, self.current_ts, self.index),
                 "_confirmed": False,
@@ -735,7 +741,10 @@ class _Builder:
         )
 
     def on_heartbeat(self, event, ts, sid):
-        self.count_tool(self.agent(event, ts, sid))
+        node = self.agent(event, ts, sid)
+        self.count_tool(node)
+        node["_tool"] = str(event.get("tool") or "")
+        node["_tool_ts"] = ts
 
     def on_bind(self, event, ts, sid):
         agent_id = str(event.get("agent_id") or "main")
@@ -1333,6 +1342,32 @@ class _Builder:
         )
         return found + effort.ampel_incidents(self.ampel_sessions, acknowledged)
 
+    def live_descendant(self, node: dict) -> bool:
+        stack, seen = list(node["children"]), set()
+        while stack:
+            key = stack.pop()
+            if key in seen or key not in self.nodes:
+                continue
+            seen.add(key)
+            if self.nodes[key]["status"] in LIVE:
+                return True
+            stack.extend(self.nodes[key]["children"])
+        return False
+
+    def exempt(self, node: dict, inactive_after: float) -> bool:
+        """R755 V1: L0/lead-qa arbeiten, während unter ihnen etwas läuft oder ein langer Make-Lauf.
+
+        Es gibt kein Start-Ereignis für Make-Läufe; der letzte Bash-Heartbeat der Rolle
+        (jünger als LONG_RUN_SECONDS, kein späterer Heartbeat) ist das belastbare Zeichen.
+        """
+        if node["role"] not in INACTIVE_EXEMPT:
+            return False
+        if self.live_descendant(node) or self.now - node["_pulse"] <= inactive_after:
+            return True
+        return (
+            node["_tool"] == "Bash" and self.now - node["_tool_ts"] <= LONG_RUN_SECONDS
+        )
+
     def view(self, node: dict, inactive_after: float) -> dict:
         live_children = [c for c in node["children"] if self.nodes[c]["status"] in LIVE]
         status = node["status"]
@@ -1344,6 +1379,7 @@ class _Builder:
             and not live_children
             and quiet > inactive_after
             and not self.unconfirmed(node)
+            and not self.exempt(node, inactive_after)
         )
         view = {field: node[field] for field in PUBLIC}
         view.update(status=status, inactive=inactive, idle_seconds=round(max(quiet, 0)))

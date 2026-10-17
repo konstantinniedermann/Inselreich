@@ -1370,6 +1370,74 @@ class PhantomBindTest(unittest.TestCase):
         self.assertNotIn("s1:log:lead-design", nodes)
 
 
+class InactiveExemptionTest(unittest.TestCase):
+    """R755 V1: Studio-Direktor und lead-qa gelten bei Arbeit darunter oder langem Lauf nicht als inaktiv."""
+
+    def incident_ids(self, state):
+        return [i["id"] for i in state["incidents"]]
+
+    def lead_events(self, role, tool=None, tool_at=10):
+        events = [
+            ev("turn_end", 0, status="idle"),
+            spawn(1, "main", role),
+            start(2, "a1", role),
+        ]
+        if tool:
+            events.append(ev("heartbeat", tool_at, agent_id="a1", tool=tool))
+        return events
+
+    def director_with_grandchild(self, grandchild_alive=True):
+        events = [
+            ev("prompt", 0, status="active", task="Arbeit"),
+            spawn(1, "main", "lead-tech"),
+            start(2, "a1", "lead-tech"),
+            spawn(3, "a1", "tech-sim-engineer"),
+            start(4, "b1", "tech-sim-engineer"),
+            stop(5, "a1", "lead-tech", summary="fertig"),
+            ev("heartbeat", 1000, agent_id="b1", tool="Edit"),
+        ]
+        if not grandchild_alive:
+            events.append(stop(1001, "b1", "tech-sim-engineer", summary="fertig"))
+        return events
+
+    def test_director_with_live_grandchild_is_not_inactive(self):
+        state = build(self.director_with_grandchild(), now=1000 + 400)
+        self.assertEqual(flat(state)["s1:b1"]["status"], "active")
+        self.assertFalse(flat(state)["s1:main"]["inactive"])
+        self.assertNotIn("inaktiv:s1:main", self.incident_ids(state))
+
+    def test_director_with_recent_descendant_heartbeat_is_not_inactive(self):
+        state = build(self.director_with_grandchild(False), now=1001 + 100)
+        self.assertFalse(flat(state)["s1:main"]["inactive"])
+
+    def test_director_without_any_descendant_activity_is_inactive(self):
+        state = build(self.director_with_grandchild(False), now=1001 + 400)
+        self.assertTrue(flat(state)["s1:main"]["inactive"])
+
+    def test_lead_qa_with_recent_bash_run_is_not_inactive(self):
+        state = build(self.lead_events("lead-qa", "Bash"), now=10 + 900)
+        self.assertFalse(flat(state)["s1:a1"]["inactive"])
+        self.assertNotIn("inaktiv:s1:a1", self.incident_ids(state))
+
+    def test_lead_qa_bash_run_ends_after_long_run_limit(self):
+        now = 10 + model.LONG_RUN_SECONDS + 1
+        state = build(self.lead_events("lead-qa", "Bash"), now=now)
+        self.assertTrue(flat(state)["s1:a1"]["inactive"])
+
+    def test_lead_qa_with_other_tool_is_inactive(self):
+        state = build(self.lead_events("lead-qa", "Read"), now=10 + 900)
+        self.assertTrue(flat(state)["s1:a1"]["inactive"])
+
+    def test_lead_qa_silent_is_still_inactive(self):
+        state = build(self.lead_events("lead-qa"), now=2 + 400)
+        self.assertTrue(flat(state)["s1:a1"]["inactive"])
+        self.assertIn("inaktiv:s1:a1", self.incident_ids(state))
+
+    def test_lead_tech_is_never_exempt(self):
+        state = build(self.lead_events("lead-tech", "Bash"), now=10 + 900)
+        self.assertTrue(flat(state)["s1:a1"]["inactive"])
+
+
 class PhantomSpawnerTest(unittest.TestCase):
     """Spawn eines Agenten ohne agent_start (Harness-Nebenagent, Retro REL-12 B2)."""
 
