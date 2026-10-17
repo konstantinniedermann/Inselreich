@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-17 · Handbuch 1.64
+
+- Anlass: Kurz-Retro 21273458, Umsetzung der angenommenen Vorschläge V1 und V2
+- Datenbasis: `docs/studio/retros/2026-10-17-session-21273458-ende.md` (B1 Ladefehler erst in T09, B2 Merge neu gebaut)
+- Ruling: R769 (V1, V2)
+- Änderungen: Gate Plan Prüffrage 4 (Browser-Ladeprobe nach höchstens 3 Render-Tasks und vor jeder Messung) und Absatz Render-Pläne in STUDIO.md; kein L0-Commit auf main vom Gate-Merge-Ruling bis zum Merge-Bericht; Integrator-Pflichtzeile mit `.worktrees/integrate` bestand (R565 V2)
+
 ## 2026-10-17 · Handbuch 1.63
 
 - Anlass: Kurz-Retro ca9d40c8, Umsetzung der angenommenen Vorschläge V2 und V3

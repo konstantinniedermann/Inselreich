@@ -156,6 +156,8 @@ Datei-Ownership, Budgetantrag) liegen vor; bei Folgepaketen das eine Dokument Sp
 2. Stimmt der Budgetantrag mit der Formel, und sind die Abhängigkeiten zwischen Paketen vollständig?
 3. Bleibt der Auftrag leicht (≤ 1 Session, ≤ 3 Pakete, keine Architekturänderung; Folgepaket: ein
    Strang, kein Save-Format, keine Architekturänderung)? Sonst hochstufen.
+4. Render-Plan (R769 V1): Gibt es eine Browser-Ladeprobe (Spiel lädt, keine Konsolenfehler) als
+   eigenen Task nach höchstens 3 Render-Tasks und vor jeder Messung? Sonst BEDENKEN.
 
 **Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Entscheidung L0 + Ruling, danach
 Budgetfreigabe und Pakete anlegen.
