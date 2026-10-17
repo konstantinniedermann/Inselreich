@@ -1046,3 +1046,17 @@ langer Bash-Aufruf ohne Heartbeat lief (7:47).
 Regelbezug: R335, R464, R708 V2, R771, R777 · Kosten bei Irrtum: drei Teststränge gleichzeitig, die Messfenster von ORT-A T10 und Stadtplanung T02 belegen.
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-27 · ADR: —
+
+## R780 · 2026-10-17 · Gate Brainstorming I-144 «Zukauf-Ordnung»: verworfen; I-110, I-111, I-130, I-134 geparkt mit neuem Auslöser
+
+Ruling: `design/i144` @ `43264557` (Handoff `.studio/handoffs/2026-10-17-lead-design-design-I-144.md`, Rechnung `docs/superpowers/specs/2026-10-17-i144-rechnung.md`) → **verworfen**
+(A, B, C), auf main gemergt als Beleg. Befund: Vollzukauf ist heute schon 1,6- bis 2,7-mal so teuer wie Bauen; die Wahl fehlt, weil nach dem Kaufleute-Ziel (ab min 19,2) kein Geld
+mehr knapp ist. (A) Einkaufsplätze laufen mit Startbelegung fest oder entarten zu «Gewürz + X», (B) Konsumgüter-Staffel öffnet kein Wahlfenster, (C) `BUY_RISE` 2 reisst das Sieg-Gate
+(Tick 8450 > 7500, bestätigt R571). Fassung B als Bremse wird nicht gebaut (kleiner Nutzen). **Folge:** I-110, I-130, I-134 (warteten auf `BUY_RISE` > 0) und I-111 werden
+**geparkt bis «Geld bindet nach dem Kaufleute-Ziel»** statt verworfen — das Spätspiel-Geldproblem ist jetzt zweimal (I-094, I-144) als Kernursache belegt und gehört in ein eigenes
+Wirtschafts-Brainstorming, sobald Stadtplanung live ist (Lärm/Parks schaffen ggf. neue Bindung). Status in `docs/ideen.md` zieht die nächste Ideen-Runde nach (Pool-Pflege R599).
+Studio-Idee, daher keine Kenntnis an den Nutzer nötig.
+
+Regelbezug: R571, R599, R670, R722, R776, gates.md Gate Brainstorming · Kosten bei Irrtum: vier geparkte Ideen, die mit dem neuen Auslöser nie wieder geprüft werden.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-144 · ADR: —
