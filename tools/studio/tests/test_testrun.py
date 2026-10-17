@@ -3,6 +3,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -505,6 +506,25 @@ class LoadWorkersTest(RunBase):
         self.assertEqual(seen, str(testrun.WORKER_CAP))
         self.assertEqual(event["workers"], testrun.WORKER_CAP)
         self.assertEqual(event["load"], 9.0)
+
+    def test_load_band_below_testlock_limit_caps_workers(self):
+        for load in (6.0, 7.5):
+            with self.subTest(load=load):
+                seen, event = self.run_with_load(load)
+                self.assertEqual(seen, str(testrun.WORKER_CAP))
+                self.assertEqual(event["workers"], testrun.WORKER_CAP)
+
+    def test_load_just_below_cap_leaves_variable_alone(self):
+        seen, _ = self.run_with_load(5.9)
+        self.assertEqual(seen, "unset")
+
+    def test_cap_is_below_testlock_limit(self):
+        source = (
+            Path(__file__).resolve().parents[2] / "testlock" / "testlock.ts"
+        ).read_text(encoding="utf-8")
+        match = re.search(r"export const LOAD_MAX\s*=\s*([\d.]+)", source)
+        self.assertIsNotNone(match)
+        self.assertLess(testrun.LOAD_CAP, float(match.group(1)))
 
     def test_low_load_leaves_variable_alone(self):
         seen, event = self.run_with_load(3.0)

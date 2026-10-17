@@ -1,3 +1,5 @@
+import contextlib
+import io
 import json
 import os
 import tempfile
@@ -26,6 +28,14 @@ RELEASES = {
         "bogus": "REL-99",
     },
 }
+
+
+def run_main(args: list[str]) -> tuple[int, str]:
+    """aufraeumen.main mit abgefangener stdout: (Exit-Code, Ausgabe)."""
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        code = aufraeumen.main(args)
+    return code, buf.getvalue()
 
 
 def put(path: Path, size: int = 10, age_days: float = 0.0) -> None:
@@ -153,9 +163,11 @@ class AufraeumenTest(unittest.TestCase):
 
     def test_main_dry_run_default(self):
         put(self.studio / "qa" / "i-100" / "a.png", 10)
-        self.assertEqual(aufraeumen.main(["--root", str(self.root)]), 0)
+        code, out = run_main(["--root", str(self.root)])
+        self.assertEqual(code, 0)
+        self.assertIn("Trockenlauf", out)
         self.assertTrue((self.studio / "qa" / "i-100" / "a.png").exists())
-        aufraeumen.main(["--root", str(self.root), "--apply"])
+        run_main(["--root", str(self.root), "--apply"])
         self.assertFalse((self.studio / "qa" / "i-100" / "a.png").exists())
 
     def test_check_thresholds(self):
@@ -201,10 +213,12 @@ class AufraeumenTest(unittest.TestCase):
         }
         cfg.write_text(json.dumps(base), encoding="utf-8")
         args = ["--check", "--root", str(self.root), "--config", str(cfg)]
-        self.assertEqual(aufraeumen.main(args), 0)
+        self.assertEqual(run_main(args)[0], 0)
         cfg.write_text(json.dumps({**base, "qaMinFreeMB": 0}), encoding="utf-8")
         put(self.studio / "qa" / "i-100" / "a.png", 10)
-        self.assertEqual(aufraeumen.main(args), 1)
+        code, out = run_main(args)
+        self.assertEqual(code, 1)
+        self.assertIn("Aufräumen fällig", out)
 
     def test_default_config_complete(self):
         cfg = json.loads(aufraeumen.CONFIG.read_text(encoding="utf-8"))
