@@ -250,7 +250,7 @@ Wann wer loggt:
 
 `idle` (L0 wartet auf den Nutzer) und `ended` (Session-Ende) setzen die Hooks. Als inaktiv markiert
 das Dashboard Knoten ohne Lebenszeichen seit 5 Minuten (`STUDIO_INACTIVE_SECONDS`), ausser `idle`
-und Knoten mit aktiven Kindern (R9). Dashboard: `make studio` (URL `http://127.0.0.1:8765/`),
+und Knoten mit aktiven Kindern (R9). Ausserdem gelten `studio-director` und `lead-qa` nicht als inaktiv, solange Kind-Agenten Heartbeats senden oder der letzte Bash-Heartbeat höchstens 1800 s zurückliegt (R755 V1, R761); andere Rollen, auch `lead-tech` in einer Controller-Wartepause, bleiben davon unberührt. Dashboard: `make studio` (URL `http://127.0.0.1:8765/`),
 beenden mit `make studio-stop`, Ereignisse archivieren mit `make studio-archive`, Metriken
 verdichten mit `make studio-metrics`. Vor Commits an `tools/studio/`: `make studio-lint` (Ruff über
 `uvx`; bewusst nicht Teil von `make check`).
