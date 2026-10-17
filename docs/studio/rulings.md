@@ -2262,3 +2262,15 @@ T11–T13 seriell; Budget **7 Starts** neu (ORT-A gesamt ≈ 39 von 57 laut Plan
 Regelbezug: R705, R735 V1, R739, R746, R764 · Kosten bei Irrtum: ein Release, das in T23 an der absoluten Grenze scheitert und dann die verschobene Perf-Runde braucht.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C7 (D-ORT1-E6) · ADR: —
+
+## R768 · 2026-10-17 · ORT-A C8 durch Fremdlast blockiert; C9 in der Folgesession; Session-Ende eingeleitet (Kontext L0 25 %)
+
+Ruling: Bericht C8 (Handoff `.studio/handoffs/2026-10-17-lead-tech-ORT-A-C8.md`): `lastgate.mjs` Exit 1 über ≈ 25 min (Last 11,4 → 6,6, Fremdprozesse apfsd, Dropbox, WebKit), eine Wartepause
+verbraucht, nichts umgesetzt, 0 von 7 Starts. `D-ORT1-E6` gelöst (R767). → **C9 startet in der Folgesession**, sobald `node tools/render-qa/lastgate.mjs` Exit 0 meldet; Budget-Rest
+7 Starts verfällt mit der Session und wird neu erteilt. Frage an die Retro: Braucht T10 (Browser-Sichtprüfung) dieselbe Lastgrenze wie eine Messung? Kontext L0 erreicht 25 %
+(STUDIO.md «Sessiongrösse») → **Session-Ende eingeleitet**: keine neuen Pakete; laufende I-132 C2 und plan-stadtplanung schliessen ab oder pausieren mit Handoff; danach push-check
+ohne Push (R514 V3, Werkzeug-Merges `43afeb6f`, `7c7e3188`), Kurz-Retro, state.md.
+
+Regelbezug: R68, R329, R514 V3, R750 V3, R767 · Kosten bei Irrtum: ORT-A verliert eine Session Wanduhr.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C8, Kontextgrenze · ADR: —
