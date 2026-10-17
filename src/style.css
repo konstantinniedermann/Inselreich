@@ -966,6 +966,9 @@ button.chip {
   flex: 1 1 100%;
   min-width: 0;
 }
+.notice-stack .far-card .far-stock--low {
+  color: var(--signal-red);
+}
 .notice-stack .order-card.order-card--warn {
   border-left-color: var(--warn-amber);
   background: var(--warn-parchment);
