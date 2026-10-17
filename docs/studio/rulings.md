@@ -2142,3 +2142,19 @@ Lernpunkt an die Session-Retro: Render-Stränge laufen mehrere Tasks ohne Browse
 Regelbezug: R746, R750 V3, R756 · Kosten bei Irrtum: zwei Starts über Puffer.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C5 · ADR: —
+
+## R759 · 2026-10-17 · Gate Plan I-132: OK mit lead-qa-Auflagen; Umsetzung startet jetzt (17 + 1 Starts)
+
+Ruling: `plan/i132` @ `7b7c3312` (Handoff `.studio/handoffs/2026-10-17-lead-tech-plan-I-132.md`) → **Gate Plan OK mit Auflagen**. lead-production: OK, Ownership eindeutig, ORT-A berührt
+nur getrennte Hunks in `src/ui/app.ts`, Erweiterung 1 ohne Code (wer später merged, zieht die Save-Version nach; I-132 voraussichtlich v18). lead-qa: BEDENKEN ohne Blocker → Auflagen
+verbindlich, eingearbeitet durch Controller C1 **vor T00** als Plan-Commit: (1) Index-Risiken: Obergrenze 150 und Schwelle 70 % mit Rückfall (Obergrenze senken oder «A1 sperrt nur
+Gewürz und Stein») und Playtest-Trigger aus Spec §10; AK 6 emuliert den Sollfluss und belegt den Ausbaupfad nicht (so im Bericht). (2) T02: `trial-run` auf mindestens einem zweiten
+Seed (mindestens «ohne Zufuhr scheitert», Ende-Tick und Abstand zur Schwelle), notfalls als einmalige Messung im Ledger; Minimum Einwohner/`e0` mitloggen. (3) T02: Test «speichern
+mitten in der Auflage, laden, N Schritte» gegen ununterbrochenen Lauf. (4) T02: Laufzeit `trial-run.test.ts` messen, Timeouts aus dem Messwert. (5) T02: AK-11 (a) Zusicherung
+behalten, `startTrial` nach Abbruch wieder `ok`. (6) T01: `isValidTrial` fordert bei `active !== null` `e0 > 0`. (7) T05: v17-Spielstand im Browser laden. Plan-Entscheide P-1 bis P-8
+bestätigt. Budget: **18 Arbeiter-Starts** (17 laut Antrag + 1 für Auflage 2), 3 Controller-Instanzen, Parallelität 2 nur bei freiem Deckel 6 und Last < 8 (R708 V2).
+Worktree `.worktrees/i132`, Branch `feat/i132` ab main mit Merge von `plan/i132`.
+
+Regelbezug: gates.md Gate Plan, R553, R674, R698, R708, R745 · Kosten bei Irrtum: eine Obergrenze, die nach dem Playtest verschoben wird.
+
+Entscheider: L0 · Anlass: Gate-Urteile lead-qa und lead-production gate-i132 · ADR: —
