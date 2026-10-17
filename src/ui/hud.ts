@@ -644,7 +644,7 @@ function farCard(actions: OrderActions, which: 0 | 1): HTMLElement {
 }
 
 /** I-136: Tooltip der Fahrzeit auf der Fernkarte. */
-const FAR_TRAVEL_TIP =
+export const FAR_TRAVEL_TIP =
   'Fahrzeit einer Einzelfahrt von der Heimat; ein Schiff muss erst bereitstehen.';
 
 /** I-114: Sichtbarkeit, Text und Tooltip der Fernkarte `which`; Karte 2 nur bei Wahl-Angebot. */

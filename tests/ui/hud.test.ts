@@ -35,6 +35,7 @@ import {
   tierTooltip,
   syncGoalChip,
   bindGoalChip,
+  FAR_TRAVEL_TIP,
 } from '../../src/ui/hud';
 import { GOOD_IDS, GOODS } from '../../src/sim/defs/goods';
 import { HOME, home, createWorld } from '../../src/sim/world';
@@ -49,9 +50,6 @@ import { flowLabel } from '../../src/ui/balanceFlow';
 import { putBuilding, twoIslandWorld } from '../sim/helpers';
 import { renderUpkeepList, UPKEEP_EMPTY_TEXT } from '../../src/ui/upkeepCard';
 import { FakeElement, fakeDocument } from './fakeDom';
-
-const FAR_TRAVEL_TIP =
-  'Fahrzeit einer Einzelfahrt von der Heimat; ein Schiff muss erst bereitstehen.';
 import { acceptFarOrder, farAlternative } from '../../src/sim/orders';
 import { dropKontor, farWorld, islandOf, periodStart, stepAt } from '../sim/farHelpers';
 import { deliverLabel, orderCardText, orderVisible } from '../../src/ui/order';
