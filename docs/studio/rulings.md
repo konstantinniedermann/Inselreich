@@ -2287,3 +2287,14 @@ Bericht; Zeitwerte bleiben an `lastgate.mjs`; Frist 2026-10-24, Rückfall Warten
 Regelbezug: R697, R750, R755, R768 · Kosten bei Irrtum: eine Item-Zählung, die unter Last ungenau ist und wiederholt wird.
 
 Entscheider: L0 · Anlass: Kurz-Retro studio-coach RETRO-S-21273458 · ADR: —
+
+## R770 · 2026-10-17 · Nutzer «weiter»: lastfreie Pakete statt Leerlauf bis I-132 C2 fertig ist
+
+Ruling: Nutzer: «weiter» während des eingeleiteten Session-Endes (R768) → Auslegung: weiterarbeiten, ohne die Übergabegrenze (Kontext L0 ≈ 26 %) zu sprengen. Solange I-132 C2 (Final-Review)
+läuft und die Last bei ≈ 14 liegt, starten nur **lastfreie** Pakete (keine Test-, Mess- oder Browserläufe): (a) **gate-stadtplanung-plan** — Gate Plan `plan/stadtplanung` @ `3824007c` durch
+lead-qa und lead-production (sonnet, nur lesen); (b) **HANDBUCH-1.64** — studio-coach setzt R769 V1 und V2 als Handbuch-Minor um. Danach Session-Ende wie R768 (push-check ohne Push im
+Ruhefenster, state.md). ORT-A C9 bleibt in der Folgesession.
+
+Regelbezug: R68, R434, R768, R769, VERFASSUNG §5.2 · Kosten bei Irrtum: zwei Berichte mehr im L0-Kontext vor der Übergabe.
+
+Entscheider: L0 · Anlass: Nutzerauftrag «weiter» · ADR: —
