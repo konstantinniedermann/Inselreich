@@ -2103,3 +2103,16 @@ oder ein langer Make-Lauf läuft; Umsetzung im **Werkzeug-Bündel 16** (nicht na
 Regelbezug: R735, R750, R754, E-068 · Kosten bei Irrtum: ein Fehlalarm, der zwei Wochen weiter erscheint.
 
 Entscheider: L0 · Anlass: Bericht studio-coach RETRO-ADHOC-17 · ADR: —
+
+## R756 · 2026-10-17 · ORT-A C4 abgenommen (Ringpfad bleibt); C5 startet T09, bei OK T10
+
+Ruling: `feat/ort-a` (Handoff `.studio/handoffs/2026-10-17-lead-tech-ORT-A-C4.md`) → abgenommen. (a) Ringtest `twoZonePieces` grün, Mutation `dirty = false` färbt 3 von 4 Fällen rot,
+Nutzen belegt (> 20 % weniger Ringkacheln, pixelgleich) → **kein Rückbau auf Rand 1**, T06-BEDENKEN aus R746 erledigt. (b) `feat/ort-a-mess` gemergt (`560dbdde`, P-1). (c) Fixture
+`tools/render-qa/fixtures/ort-a-siedlung.json` (Ablage unter `tools/render-qa/` statt `fixtures/` akzeptiert) und Schwellen `kantenprofil.mjs` mit Rot-Beleg. Offener niedriger
+Review-Punkt (`a.w !== b.w` in `hofsaumTileChanged` ungetestet) geht in T21. **C5:** T09 (`make messfenster`, gewertete Messung, Frühwarnung E6); Messfenster belegt → höchstens
+eine Wartepause ≤ 5 min (R750 V3), sonst Handoff ohne T09. Ergibt T09 keinen E6-Entscheidungsbedarf, darf C5 im selben Start T10 (Browser-Check, `qa-playtester`, 1 Browser-Lauf)
+anschliessen. Budget: verbleibend 2 von 3 Starts (R754).
+
+Regelbezug: R730, R739, R746, R750 V3, R754 · Kosten bei Irrtum: ein selten durchlaufener Ringpfad bleibt im Code.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C4 · ADR: —
