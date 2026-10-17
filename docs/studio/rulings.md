@@ -2092,3 +2092,14 @@ Budget 3 Starts aus dem ORT-A-Puffer (dann 12 von 12), Parallelität 1. Last bei
 Regelbezug: R129, R380, R434, R698, R735, R744, R745, R746, R750, R753 · Kosten bei Irrtum: ein Werkzeug-Bündel, das bei hoher Last länger braucht als geschätzt.
 
 Entscheider: L0 · Anlass: Session-Start 21273458 · ADR: —
+
+## R755 · 2026-10-17 · Ad-hoc-Retro RETRO-ADHOC-17: abgedeckt bis auf «inaktiv»-Fehlalarm; V1 angenommen für Werkzeug-Bündel 16; Handbuch 1.63
+
+Ruling: Bericht `docs/studio/retros/2026-10-17-adhoc-hook.md` (`5a3c27e9`) → angenommen. Budget «lead-tech 5 von 3» ist durch R735, Cache-Write durch R750 V3 und E-068 abgedeckt
+(Messauftrag Tool-Ergebnisgrösse bis 2026-10-23 abwarten). **V1 angenommen:** `studio-director` und `lead-qa` gelten nicht als inaktiv, solange Kind-Agenten Heartbeats senden
+oder ein langer Make-Lauf läuft; Umsetzung im **Werkzeug-Bündel 16** (nicht nachträglich in das laufende TOOL-BUENDEL-15, um dessen Zuschnitt nicht zu ändern), Messgrösse 0 Signale
+über 3 Sessions, Frist 2026-10-30, Rückfall: Regel entfernen. Handbuch 1.63 (R750 V2 und V3) umgesetzt; die Reibung von V3 mit R438 V2 bewertet die Retro am 2026-10-30.
+
+Regelbezug: R735, R750, R754, E-068 · Kosten bei Irrtum: ein Fehlalarm, der zwei Wochen weiter erscheint.
+
+Entscheider: L0 · Anlass: Bericht studio-coach RETRO-ADHOC-17 · ADR: —
