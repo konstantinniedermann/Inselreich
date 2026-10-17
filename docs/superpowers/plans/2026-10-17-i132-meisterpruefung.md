@@ -128,7 +128,10 @@ Controller-Instanzen: **3** (I: T00–T02 · II: T03, T04 · III: T05, T06, Fina
   sonst brechen Kettentests und `balance-crises`. Bestehende Aufrufer `foldBackCouncil(json(w))` brauchen `foldBackTrial` davor.
 - **Lauftest K'-arm (T02):** baut den Referenzstand wie `balance-monument.test.ts` (dort `beforeAll` 15 s) und läuft 9000 Ticks; Laufzeit im Bericht,
   `make zeitreserve` muss grün sein, sonst Timeout nach V3 (R712) anheben und melden.
-- **Obergrenze 150** ist geschätzt (Spec §10, Playtest-Trigger) — Wert in den Defs, kein Plan-Risiko.
+- **Obergrenze 150 und Schwelle 70 %** sind geschätzt (Spec §10, R759 Auflage 1). Playtest-Trigger aus Spec §10: zeigt der Playtest eine Auflage, die
+  nicht zu schaffen oder trivial ist, geht der Befund an L0. Rückfall ohne Umbau: Obergrenze senken (Wert in den Defs) oder «A1 sperrt nur Gewürz und
+  Stein» (Änderung an `trialBuyBlock`, per Ruling). Kein Plan-Risiko für die Umsetzung.
+- **AK 6 belegt den Ausbaupfad nicht:** `trial-run.test.ts` emuliert den Sollfluss (Zufuhr ins Lager), baut keine Ketten; der Bericht sagt das ausdrücklich.
 
 ## AK-Zuordnung (Task · Test)
 

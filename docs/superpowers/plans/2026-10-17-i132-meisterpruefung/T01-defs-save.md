@@ -90,7 +90,7 @@ export const TRIAL_REASONS = {
 - [ ] 5. `save.ts`: `SAVE_VERSION = 18` (Arbeitsannahme, endgültig main + 1, R745/R674; im Bericht nennen). `migrateV17ToV18(raw)` setzt
       `raw.trial = { active: null, ticks: 0, e0: 0, passed: [] }`, `raw.version = 18`, wirft nie; eine Zeile in der Kette von `deserialize`.
       `isValidTrial(raw)` in `isWellFormed` (Spec §4): Objekt (kein Array) · `active` ∈ `TRIAL_IDS` oder `null` (`Object.hasOwn`) · `ticks` ganz,
-      `0 ≤ ticks < TRIAL_DURATION_TICKS`, bei `active === null` gleich 0 · `e0` ganz ≥ 0 · `passed` Array aus Objekten mit `id` ∈ `TRIAL_IDS`, `tick`
+      `0 ≤ ticks < TRIAL_DURATION_TICKS`, bei `active === null` gleich 0 · `e0` ganz ≥ 0, bei `active !== null` zusätzlich `e0 > 0` (R759 Auflage 6) · `passed` Array aus Objekten mit `id` ∈ `TRIAL_IDS`, `tick`
       ganz ≥ 0, keine doppelte Id · `active` nicht in `passed`. Sonst «Beschädigter Spielstand» (bestehender Weg).
 - [ ] 6. `tests/sim/helpers.ts`: `dropTrial(x)` entfernt `trial` ohne Umordnen und ohne Versionsänderung; wirft
       `'dropTrial: Auflage nicht rückfaltbar'`, wenn `trial` nicht den Startwerten entspricht. `foldBackTrial(x)` = `dropTrial` + `version − 1`
@@ -122,7 +122,7 @@ export const TRIAL_REASONS = {
   nicht; `fixtures/save-v11.json` läuft die Kette bis `SAVE_VERSION` mit Startwerten; `migrate → serialize → deserialize → serialize` gleich.
 - Abweisen: `version: SAVE_VERSION + 1` → `{ ok: false, reason: 'Unbekannte Version' }`. Je `it.each` → `{ ok: false, reason: 'Beschädigter Spielstand' }`
   und `not.toThrow()`: `trial` fehlt · `null` · `[]` · `active: 'genuegsam'` · `active: 'toString'` · `ticks: 9000` · `ticks: -1` · `ticks: 1.5` ·
-  `active: null, ticks: 5` · `e0: -1` · `e0: 2.5` · `passed: {}` · `passed: [5]` · `passed: [{ id: 'x', tick: 1 }]` · `passed: [{ id: 'selfSupply', tick: -1 }]` ·
+  `active: null, ticks: 5` · `e0: -1` · `e0: 2.5` · `active: 'selfSupply', e0: 0` · `passed: {}` · `passed: [5]` · `passed: [{ id: 'x', tick: 1 }]` · `passed: [{ id: 'selfSupply', tick: -1 }]` ·
   doppelte Id in `passed` · `active: 'selfSupply'` mit `selfSupply` in `passed`.
 
 ## Prüfschritte

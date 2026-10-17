@@ -27,6 +27,7 @@ rund 30 s unter 70 %): nach dem Laden pausieren und die Karte öffnen, dann entp
       `ak20-chronik.png`.
 - [ ] 5. **Laden mitten in der Auflage** (Review Focus 3): starten, speichern, laden → keine Meldung «bestanden/nicht bestanden», Chip zählt ab dem
       gespeicherten Stand weiter.
+- [ ] 5b. **v17-Spielstand laden** (R759 Auflage 7): einen Spielstand `version: 17` (z. B. `tools/render-qa/fixtures/*.json` oder ein v17-Szenario-Save) in den Browser laden: kein Absturz, Chip «Meisterprüfung» bzw. Ziel wie erwartet, Auflage nicht aktiv. Bild `ak12-v17-geladen.png`.
 - [ ] 6. Konsole: keine Fehler.
 - [ ] 7. Zeitmessung nachher (R392): `uptime` ≤ 4, dann der `vitest related`-Befehl aus T00 mit zusätzlich `src/sim/trial.ts src/ui/trial.ts src/ui/trialCard.ts`
       und `--outputFile=.studio/qa/i132/zeit-nach.json`; Abnahmeregel aus T00, Tabelle der Abweichungen im Report.
