@@ -967,3 +967,17 @@ keine Testlast erzeugen.
 Regelbezug: R335, R445, R464, R475, R670, R771, R772, VERFASSUNG §5 · Kosten bei Irrtum: Plan-Auflagen, die C1 vor T00 noch einmal anfassen muss (≈ 1 Start).
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R774 · 2026-10-17 · RULINGS-ARCHIV gemergt; Ad-hoc-Retro fällige Punkte: V1 angenommen, V2 ins nächste Werkzeug-Bündel
+
+Ruling: (1) `docs/rulings-archiv-773` @ `06d3478d` (R601–R699 ins Archiv, `rulings.md` 74 Rulings / 91 KB, Aufräumprüfung Exit 0) vor dem REL-27-Push auf main gemergt (`10a6ba57`),
+abweichend von R773 «nach dem Push», damit der Stand mit dem einzigen Push der Session (R335) live geht; reine Doku. (2) Retro `RETRO-ADHOC-FAELLIG-17` (studio-coach): Alarme
+kamen wieder, weil frühere Ad-hoc-Retros mit leeren bzw. falschen Trigger-IDs quittierten; Budget lead-tech 5/3 gehört zu TOOL-GUARD-REDACT (ca9d40c8), durch R725/R732 bewilligt,
+Hebel R735 V1/V3. **V1 angenommen:** opus-Einsatz `Delta-Review (frisch, nach BEDENKEN oder ZURÜCK)` in die Modelltabelle (Handbuch-Minor 1.65), Umsetzung studio-coach im
+Worktree mit `make studio-test` inkl. modelguard-Tests, Merge vor dem push-check; Messgrösse 0 Guard-Blocks über 5 Controller-Pakete bis 2026-11-30. **V2** (`log.py retro` warnt
+bei `adhoc` ohne Trigger; Trigger-IDs aus `state.incidents[].id`) ins nächste TOOL-BUENDEL. Cache-Write: Messauftrag mit Frist 2026-10-30 (R750 V3), drei rote Sessions in Folge
+vermerkt.
+
+Regelbezug: R335, R428, R471, R735, R750, R772, R773 · Kosten bei Irrtum: ein Handbuch-Minor, der den Modell-Guard für einen Einsatz falsch parst (studio-test deckt das).
+
+Entscheider: L0 · Anlass: Bericht lead-production RULINGS-ARCHIV, Bericht studio-coach RETRO-FAELLIG · ADR: —
