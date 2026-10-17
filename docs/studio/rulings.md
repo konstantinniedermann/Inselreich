@@ -2314,3 +2314,17 @@ Start nach ORT-A T09 — erfüllt —, Render-Tasks T09/T10 nach ORT-A-Merge, Me
 Regelbezug: gates.md Gate Plan, R553, R674, R765, R766, R769 V1 · Kosten bei Irrtum: ein Merge-Konflikt in `sprites.ts`/`iso.ts`, der mehr als eine Stelle kostet.
 
 Entscheider: L0 · Anlass: Gate-Urteile lead-qa und lead-production gate-stadtplanung-plan · ADR: —
+
+## R772 · 2026-10-17 · I-132 C2 abgenommen (Final-Review OK); Gate Merge und Release-Check REL-27 in der Folgesession
+
+Ruling: `feat/i132` @ `b8fabe4e` (Handoff `.studio/handoffs/2026-10-17-lead-tech-I-132-C2.md`) → abgenommen: T04–T06 fertig, Final-Review opus OK (vier niedrige Befunde in
+`docs/beobachtungen.md` auf dem Branch), Playtest inkl. v17-Spielstand ohne Absturz, `SAVE_VERSION` 18 = main + 1, Probe-Merge gegen main konfliktfrei. **Entscheid:** Zugang zur
+Meisterprüfung ab `monumentDone`, auch in der Gewürz-Phase; der Prüfungs-Chip ersetzt dort den Ziel-Chip, sein Titel nennt den Zielstand (Spec-Wortlaut). Offen vor dem Merge: voller
+`make check` auf `b8fabe4e` (letzter Lauf vor `c46fa474`; Final-Review fuhr wegen Last nur 533 gezielte Tests) und Browser-Nachprüfung des Hand-Cursors. **Folgesession:** ein
+`lead-qa`-Start für Gate Merge I-132 und Release-Check **REL-27** (I-132 + TOOL-BUENDEL-15/16) im Ruhefenster, danach Merge, push-check, Push (R335). Die Merge-Reihenfolge aus R771
+(ORT-A → I-132 → Stadtplanung) betrifft nur den Stadtplanung-Strang; I-132 wartet nicht auf ORT-A (R759). Befund an die Retro: Für frische Delta-Reviews auf opus fehlt ein Einsatz in
+der Modelltabelle; C2 nutzte «Final-Review».
+
+Regelbezug: R674, R697, R759, R764, R771 · Kosten bei Irrtum: ein Merge, dessen voller `make check` in der Folgesession rot wird.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-132 C2 · ADR: —
