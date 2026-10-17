@@ -2220,3 +2220,21 @@ trieb die Last auf 17). Budget: 6 von 18 Starts, Instanz 1 von 3. `SAVE_VERSION`
 Regelbezug: R674, R759, R760, R750 V3 · Kosten bei Irrtum: I-132 verliert eine Stunde Wanduhr.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I-132 C1 · ADR: —
+
+## R765 · 2026-10-17 · Gate Spec «Stadtplanung» (Variante B): OK mit Auflagen; Spec-Nachtrag ohne neues Gate; D6 erst nach M5
+
+Ruling: `design/stadtplanung` @ `1f1b2c89` (Urteile lead-tech und lead-qa: je BEDENKEN, kein ZURÜCK) → **Gate Spec OK mit Auflagen**, Nachtrag durch `lead-design` (sonnet, Spec-Nachtrag)
+ohne neues Gate, Prüfung der Auflagen im Gate Plan. **Technik:** A1 Save = `SAVE_VERSION` auf main + 1 beim Merge (R674; heute 19, falls I-132 vorher landet), Migration und AK-S1
+parametrisiert («Vorversion = SAVE_VERSION − 1»); A2 alle Lesestellen der Belegungsgrenze in §4 (`unlocks.ts:61`, `population.ts:141`, `flow.ts:68`), Lärmquellen einmal je Schritt
+sammeln; A3 neuer AK: Ladehinweis «n Werkstätten ausserhalb der Versorgung» (reiner Lesehelfer), Weiterlärmen stillstehender Werkstätten als bewusst benennen; A4 Park-Kategorie,
+Ebenen-Taste, Cache bleiben Plan-Entscheide; Reihenfolge «stilllegen → ruhig» im selben Schritt als Plan-Prüfpunkt. **QA:** Messwert für AK-B5, Feldliste für AK-P3; AK-L9 als
+`placeBuilding`-Test kennzeichnen; Playtest-Schritt «neues Spiel bis Minute 15: Steinbruch, Belegung fällt, Park hilft»; wertabhängige AKs (Radien, Kosten) lesen aus den Defs oder
+tragen «wertabhängig, Anpassung per Ruling»; AK für alte Stände mit Häusern im Lärm; Randfälle Rundreise mit `noSupply`, Steuer «niedrig» im Lärm, Park bei negativem Geld, Pause;
+M3/M4 mit mindestens 3 Seeds und beiden Controllern; Rückfall für den 75-%-Faktor; SP-5 erst nach M3–M6. **AK-Eindeutigkeit (R136/R417):** alle AKs der Spec tragen das Präfix
+`AK-STADT-` (z. B. `AK-STADT-L1`); der Befehl aus gates.md muss danach 0 Kollisionen liefern. **D6 wird nicht jetzt entschieden**, sondern nach M5 mit Tabelle alt/neu/Differenz und
+Begründung bei > 10 % (Schutz AK-W7 bleibt). **D9/D10** (Controller-Layouts als Testcode) angenommen, Risiko «keine Reserve» benannt; parametrisiertes Layout mit klarer
+Fehlermeldung als Plan-Option.
+
+Regelbezug: gates.md Gate Spec, R136, R417, R553, R674, R763 · Kosten bei Irrtum: ein Spec-Nachtrag mehr vor dem Plan.
+
+Entscheider: L0 · Anlass: Gate-Urteile lead-tech und lead-qa gate-stadtplanung · ADR: —
