@@ -323,8 +323,13 @@ class PushCheckTest(unittest.TestCase):
     def test_lastprotokoll_fehler_aendern_exit_nicht(self):
         h = Harness(self, loads=(9.0,))
         h.check_ts(0, marked="[]")
-        with mock.patch("loadsnap.record", side_effect=OSError("voll")):
+        err = io.StringIO()
+        with (
+            mock.patch("loadsnap.record", side_effect=OSError("voll")),
+            contextlib.redirect_stderr(err),
+        ):
             self.assertEqual(h.go(), 2)
+        self.assertIn("Lastprotokoll fehlgeschlagen (voll)", err.getvalue())
 
     def test_ereignis_schlusszeile_und_schreibfehler(self):
         h = Harness(self)
@@ -344,8 +349,13 @@ class PushCheckTest(unittest.TestCase):
         )
         h = Harness(self)
         h.check_ts(0, marked="[]")
-        with mock.patch("paths.append_event", side_effect=OSError("voll")):
+        err = io.StringIO()
+        with (
+            mock.patch("paths.append_event", side_effect=OSError("voll")),
+            contextlib.redirect_stderr(err),
+        ):
             self.assertEqual(h.go(), 0)
+        self.assertIn("Ereignis nicht geschrieben (voll)", err.getvalue())
 
 
 class GateTest(unittest.TestCase):

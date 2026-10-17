@@ -85,6 +85,10 @@ class MainTest(unittest.TestCase):
         )
         bin_patch.start()
         self.addCleanup(bin_patch.stop)
+        self.err = io.StringIO()  # Hook-Meldungen nicht ins Testlog streuen
+        err_patch = mock.patch.object(sys, "stderr", self.err)
+        err_patch.start()
+        self.addCleanup(err_patch.stop)
 
     def events(self):
         path = self.home / "events.jsonl"
@@ -115,6 +119,7 @@ class MainTest(unittest.TestCase):
         self.assertEqual(event["session_id"], "s-42")
         self.assertEqual(event["files"], ["a.ts"])
         self.assertEqual(event["source"], "log")
+        self.assertIn("Commit abgelehnt", self.err.getvalue())
 
     def test_fully_staged_file_is_formatted_and_restaged(self):
         run = FixRunner("a.ts\0b.md\0", bad="a.ts\n")

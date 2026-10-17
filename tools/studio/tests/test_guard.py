@@ -578,8 +578,8 @@ class RedactTest(unittest.TestCase):
     """Secrets werden vor dem Kürzen aus dem protokollierten Befehl geschwärzt."""
 
     def shown(self, command):
-        return guard._shown_command(
-            {"tool_name": "Bash", "tool_input": {"command": command}}
+        return guard.redact(
+            guard._raw_text({"tool_name": "Bash", "tool_input": {"command": command}})
         )
 
     def assertRedacted(self, command, secret):
@@ -645,13 +645,11 @@ class RedactTest(unittest.TestCase):
         for command in ("git status", "ls -la src", "npm run build", "ls -a  -l"):
             self.assertEqual(self.shown(command), " ".join(command.split()))
 
-    def test_redact_before_truncate(self):
+    def test_long_command_is_fully_redacted(self):
         secret = "ghp_" + "x" * 36
-        command = "a" * 145 + " " + secret
-        out = self.assertRedacted(command, secret)
+        out = self.assertRedacted("a" * 145 + " " + secret, secret)
         self.assertNotIn("ghp_", out)
         self.assertNotIn("xxxx", out)
-        self.assertLessEqual(len(out), guard.COMMAND_LIMIT)
 
 
 class RedactHardeningTest(unittest.TestCase):

@@ -21,6 +21,9 @@ import paths
 
 GRACE = 5.0  # Sekunden zwischen SIGTERM und SIGKILL
 POLL = 0.02
+LOAD_CAP = 8.0  # ab dieser 1-min-Last begrenzt testrun die Vitest-Worker
+WORKER_CAP = 4
+WORKERS_ENV = "VITEST_MAX_WORKERS"
 MAX_NAMES = 50
 MAX_NAME_LEN = 200
 MAX_MESSAGE_LEN = 200
@@ -146,23 +149,59 @@ def _base_event(suite: str, kind: str) -> dict:
     return event
 
 
-def build_event(suite: str, code: int, lines: list[str]) -> dict:
+def _start_load() -> float | None:
+    try:
+        return round(os.getloadavg()[0], 1)
+    except OSError:
+        return None
+
+
+def _plan_workers(suite: str, load: float | None) -> tuple[dict, int | None]:
+    """Umgebung fürs Kind und Workerzahl im Event (nur Vitest)."""
+    env = dict(os.environ)
+    if suite != "vitest":
+        return env, None
+    if WORKERS_ENV not in env and load is not None and load >= LOAD_CAP:
+        env[WORKERS_ENV] = str(WORKER_CAP)
+    try:
+        return env, int(env[WORKERS_ENV])
+    except (KeyError, ValueError):
+        return env, max(1, (os.cpu_count() or 2) - 1)
+
+
+def build_event(
+    suite: str,
+    code: int,
+    lines: list[str],
+    load: float | None = None,
+    workers: int | None = None,
+) -> dict:
     event = _base_event(suite, "test_passed" if code == 0 else "test_failed")
+    if load is not None:
+        event["load"] = load
+    if workers is not None:
+        event["workers"] = workers
     if code != 0:
         event["names"] = parse_names(lines, suite)
         messages = parse_messages(lines, suite)
         if messages:
             event["messages"] = messages
         event["exit"] = code
-        event["load"] = round(os.getloadavg()[0], 1)
     return event
 
 
-def _record(suite: str, code: int, lines: list[str], skip_exit: int | None) -> None:
+def _record(
+    suite: str,
+    code: int,
+    lines: list[str],
+    skip_exit: int | None,
+    load: float | None = None,
+    workers: int | None = None,
+) -> None:
     if os.environ.get("CI") or code == skip_exit:
         return
     try:
-        paths.append_event(build_event(suite, code, lines))
+        paths.append_event(build_event(suite, code, lines, load, workers))
     except Exception as error:  # noqa: BLE001 - testrun wirft nie
         print(f"testrun: Event nicht geschrieben ({error})", file=sys.stderr)
 
@@ -260,10 +299,11 @@ def _restore_handlers(previous: dict) -> None:
         signal.signal(sig, handler)
 
 
-def _run(command: list[str]) -> tuple[int, list[str]]:
+def _run(command: list[str], env: dict | None = None) -> tuple[int, list[str]]:
     lines: list[str] = []
     with subprocess.Popen(
         command,
+        env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -311,9 +351,11 @@ def main(argv: list[str] | None = None) -> int:
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
     if not command:
         parser.error("Befehl fehlt (nach --)")
+    load = _start_load()
+    env, workers = _plan_workers(args.suite, load)
     previous = _install_interrupt_handlers()
     try:
-        code, lines = _run(command)
+        code, lines = _run(command, env)
     except OSError as error:
         print(f"testrun: Befehl nicht startbar ({error})", file=sys.stderr)
         return 127
@@ -323,7 +365,7 @@ def main(argv: list[str] | None = None) -> int:
         return INTERRUPTED
     finally:
         _restore_handlers(previous)
-    _record(args.suite, code, lines, args.skip_exit)
+    _record(args.suite, code, lines, args.skip_exit, load, workers)
     return code
 
 

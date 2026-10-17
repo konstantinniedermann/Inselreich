@@ -168,7 +168,7 @@ class MessagesTest(unittest.TestCase):
         self.assertEqual(testrun.parse_messages([None, 3], "vitest"), {})
 
 
-class RunTest(unittest.TestCase):
+class RunBase(unittest.TestCase):
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
@@ -191,6 +191,8 @@ class RunTest(unittest.TestCase):
             return []
         return [json.loads(x) for x in path.read_text("utf-8").splitlines()]
 
+
+class RunTest(RunBase):
     def test_exit_and_output_pass_through(self):
         code, out, _ = self.run_main(
             ["--suite", "studio"],
@@ -457,8 +459,13 @@ class RunTest(unittest.TestCase):
         self.assertEqual(self.events(), [])
 
     def test_record_aborted_swallows_write_errors(self):
-        with mock.patch.object(paths_module, "append_event", side_effect=OSError("x")):
+        err = io.StringIO()
+        with (
+            mock.patch.object(paths_module, "append_event", side_effect=OSError("x")),
+            contextlib.redirect_stderr(err),
+        ):
             testrun._record_aborted("studio")  # wirft nicht
+        self.assertIn("testrun: Abbruch-Event nicht geschrieben (x)", err.getvalue())
         with (
             mock.patch.object(testrun, "_run", side_effect=KeyboardInterrupt),
             mock.patch.object(paths_module, "append_event", side_effect=OSError("x")),
@@ -471,6 +478,64 @@ class RunTest(unittest.TestCase):
         code, _, err = self.run_main(["--suite", "studio"], ["/nicht/vorhanden"])
         self.assertNotEqual(code, 0)
         self.assertIn("testrun:", err)
+
+
+class LoadWorkersTest(RunBase):
+    ECHO = "import os; print(os.environ.get('VITEST_MAX_WORKERS', 'unset'))"
+
+    def run_with_load(self, load, suite="vitest", preset=None):
+        env = {} if preset is None else {"VITEST_MAX_WORKERS": preset}
+        with (
+            mock.patch.dict(os.environ, env),
+            mock.patch.object(testrun.os, "getloadavg", return_value=(load, 0, 0)),
+        ):
+            if preset is None:
+                os.environ.pop("VITEST_MAX_WORKERS", None)
+            _, out, _ = self.run_main(["--suite", suite], py(self.ECHO))
+        return out.strip(), self.events()[-1]
+
+    def test_passed_event_has_load_and_workers(self):
+        _, event = self.run_with_load(3.04)
+        self.assertEqual(event["kind"], "test_passed")
+        self.assertEqual(event["load"], 3.0)
+        self.assertIsInstance(event["workers"], int)
+
+    def test_high_load_caps_workers_for_child(self):
+        seen, event = self.run_with_load(9.0)
+        self.assertEqual(seen, str(testrun.WORKER_CAP))
+        self.assertEqual(event["workers"], testrun.WORKER_CAP)
+        self.assertEqual(event["load"], 9.0)
+
+    def test_low_load_leaves_variable_alone(self):
+        seen, event = self.run_with_load(3.0)
+        self.assertEqual(seen, "unset")
+        self.assertEqual(event["workers"], max(1, (os.cpu_count() or 2) - 1))
+
+    def test_preset_workers_are_kept(self):
+        seen, event = self.run_with_load(9.0, preset="2")
+        self.assertEqual(seen, "2")
+        self.assertEqual(event["workers"], 2)
+
+    def test_studio_suite_has_no_workers(self):
+        seen, event = self.run_with_load(9.0, suite="studio")
+        self.assertEqual(seen, "unset")
+        self.assertNotIn("workers", event)
+        self.assertEqual(event["load"], 9.0)
+
+    def test_failed_event_has_start_load(self):
+        with mock.patch.object(testrun.os, "getloadavg", return_value=(2.0, 0, 0)):
+            self.run_main(["--suite", "studio"], py("raise SystemExit(1)"))
+        self.assertEqual(self.events()[0]["load"], 2.0)
+
+    def test_unreadable_load_drops_field_and_caps_nothing(self):
+        with (
+            mock.patch.dict(os.environ),
+            mock.patch.object(testrun.os, "getloadavg", side_effect=OSError),
+        ):
+            os.environ.pop("VITEST_MAX_WORKERS", None)
+            _, out, _ = self.run_main(["--suite", "vitest"], py(self.ECHO))
+        self.assertEqual(out.strip(), "unset")
+        self.assertNotIn("load", self.events()[0])
 
 
 class AbortedEventConsumersTest(unittest.TestCase):
