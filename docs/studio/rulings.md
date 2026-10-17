@@ -2116,3 +2116,16 @@ anschliessen. Budget: verbleibend 2 von 3 Starts (R754).
 Regelbezug: R730, R739, R746, R750 V3, R754 · Kosten bei Irrtum: ein selten durchlaufener Ringpfad bleibt im Code.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C4 · ADR: —
+
+## R757 · 2026-10-17 · Gate Merge TOOL-BUENDEL-15: OK, Merge lokal; Werkzeug-Bündel 16 startet
+
+Ruling: `tool/buendel-15` @ `ef0988d2` (Handoff `.studio/handoffs/2026-10-17-lead-tech-TOOL-BUENDEL-15.md`, Review OK in einer Runde, `make studio-test` 997 grün, ruff und docs-check
+Exit 0) → **Gate Merge OK**; `production-integrator` merged lokal nach main, kein Push (R335). R750 V1 erfüllt (`load`/`workers` in Testereignissen, Deckel 4 Worker bei Last ≥ 8);
+R744 erledigt; R753-Hinweise sind Testrauschen aus absichtlichen `OSError`-Tests, jetzt abgefangen. Diff 326 Zeilen knapp über E-068 (300) — ein Reviewer genügt hier, weil reiner
+Werkzeugcode ohne Spieleinfluss. **Befund:** Der Worker-Deckel greift nur bei Last genau 8, weil TOOL-TESTLOCK über 8 abbricht → **TOOL-BUENDEL-16** (`lead-tech`, sonnet,
+Werkzeug-Paket; Budget 3 Starts, Parallelität 1): (1) R755 V1 «inaktiv»-Fehlalarm für studio-director/lead-qa, (2) Deckel-Schwelle mit TOOL-TESTLOCK abstimmen (Vorschlag
+lead-tech mit Begründung, z. B. Deckel ab Last 6), (3) stdout-Rauschen `test_aufraeumen`.
+
+Regelbezug: R335, R744, R750, R753, R755, E-068 · Kosten bei Irrtum: ein Worker-Deckel, der in der Praxis selten wirkt, bis Bündel 16 gemergt ist.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-15 · ADR: —
