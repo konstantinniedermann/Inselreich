@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-16 (REL-26 live `6f14a354`, R753; Save v17; Studio-Sessions ca9d40c8 R709–R750 und Push-Session R751–R753; R747/R748 und R749 (Umnummerierung) bei anno-clone #2)
+Stand: 2026-10-17 (Session 21273458, R754–R772; main lokal 2 Werkzeug-Merges und I-132 abnahmebereit, nicht gepusht; live weiter REL-26 `6f14a354`, Save v17)
 
 ## Release-Notizen
 
@@ -143,19 +143,20 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475, R698 (Deckel 6), R708 V2. Ein Push je Session (R335). Actions-Sparregeln laut R747 der
-Parallel-Session gelockert (öffentliches Repo) — ob R488 V2 «ein Push je Tag» damit entfällt, steht dort.
+Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475, R698 (Deckel 6), R708 V2. Ein Push je Session (R335). Lokal auf main, ungepusht: TOOL-BUENDEL-15 (`43afeb6f`),
+TOOL-BUENDEL-16 (`7c7e3188`), Doku/Rulings bis R772.
 
-1. **REL-26 live** (R753, Push `8fe744df..6f14a354`): Spieler-Rückmeldungen zu «Bitte testen» abwarten; Push-check-Hinweise «Ereignis nicht geschrieben» und
-   «Lastprotokoll fehlgeschlagen» prüft das nächste Werkzeug-Bündel.
-2. **Werkzeug-Bündel 15** (R750 V1 + R744): Last/Worker in `test_passed`/`test_failed`, Worker-Deckel bei Last ≥ 8, `_shown_command`/`COMMAND_LIMIT` aus `guard.py` entfernen.
-   **Handbuch-Minor** (R750 V2 Tools-Schätzung, V3 eine Wartepause je Controller-Instanz) durch studio-coach.
-3. **ORT-A** (pausiert nach T06, R746; Puffer 9 von 12): C4 startet mit Ringpfad-Test `twoZonePieces` (sonst Rand 1), Merge `feat/ort-a-mess`, Fixture + Schwellen
-   (R730), T09 nur bei freiem Messfenster (N-102). Richtwert B/A ≈ 1,41.
-4. **I-132 «Meisterprüfung»** (Gate Spec R745, Variante S «Eigenversorgung»): Plan (lead-tech opus), Save main + 1 = 18 (falls Erweiterung 1 nicht vorher merged).
+1. **REL-27 = I-132 «Meisterprüfung» + TOOL-BUENDEL-15/16** (R772): ein `lead-qa`-Start für Gate Merge I-132 (`feat/i132` @ `b8fabe4e`, Final-Review OK, Save v18) und
+   Release-Check im Ruhefenster; vorher voller `make check` auf `b8fabe4e` und Browser-Nachprüfung Hand-Cursor; Merge, `make push-check`, Push. Release-Notiz schreiben.
+2. **Handbuch-Minor 1.64** (R769 V1/V2): falls HANDBUCH-1.64 nicht committet ist (studio-coach lief beim Session-Ende), neu starten.
+3. **ORT-A C9** (R768, R769 V3): T10 bei Last ≤ 8 (Item-Zählung, Sichtprüfung, `uptime` vor/nach), dann Strang k1 T11–T13 (Handoff `2026-10-17-lead-tech-ORT-A-C8.md`);
+   erster Task-Review deckt `23ce0ecc`. Absolute Release-Grenze in T23 statt E6 (R767). Budget neu erteilen (Rest 7 verfallen).
+4. **Stadtplanung Variante B** (R763–R771): Gate Plan OK mit Auflagen 1–5 (R771); Controller C1 arbeitet die Auflagen vor T00 ein (`plan/stadtplanung` @ `3824007c`), Budget 38 Starts,
+   Parallelität 2, 8 Instanzen; Render-Tasks T09/T10 erst nach ORT-A-Merge; kein I-132-Merge zwischen T02 und T04 (falls REL-27 dann noch offen).
 5. **I-119 + I-121 «Bewohner reagieren»** (R715): Plan erst nach ORT-A T20.
-6. Pool: ZEITRESERVE-PFLEGE (H-1, Last ≤ 4); I-128 Baustein Stadtplanung. Geparkt: I-110 (R722), I-124, I-130, I-131, I-134.
-7. Erweiterung 1 bleibt in der Nutzer-Session (R519); deren Save = main + 1 beim Merge (main jetzt v17).
+6. Pool: ZEITRESERVE-PFLEGE (H-1, Last ≤ 4). Geparkt: I-110 (R722), I-124, I-130, I-131 (wartet auf Edikt-Überarbeitung, R762), I-134.
+7. Erweiterung 1 bleibt in der Nutzer-Session (R519); deren Save = main + 1 beim Merge (nach I-132: v19).
+8. Messfristen: R750 V1/V3 und R755 V1 am 2026-10-30; R769 V3 am 2026-10-24.
 
 ## Aktuelles Projekt und Phase
 
@@ -180,21 +181,22 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts aus Session ca9d40c8. Parallel: L0-Session anno-clone #2 (TOOL-ACTIONS-FREI, Merge wartete auf diesen Ende-Commit).
+- Nichts aus Session 21273458 ausser ggf. HANDBUCH-1.64 (studio-coach, nur Doku; prüfen, ob committet). Fremdlast (apfsd, Dropbox, WebKit) hielt die 1-min-Last
+  über Stunden bei 6–14 — Mess-Tasks brauchen ein Ruhefenster (R760).
 
 ## Parallele Sessions
 
 - Nutzer-Session `c6709a04` (seit 2026-10-11 ≈ 08:30Z): Konzept „Erweiterung“ (`lead-design`), Worktree
   `.worktrees/erweiterung-1`, Branch `design/erweiterung-1` — geduldet, Deckel geteilt (R519). Nicht anfassen.
-- L0-Session anno-clone #2 (seit 2026-10-16 nachmittags): R747/R748 (Actions-Sparregeln, TOOL-ACTIONS-FREI); Ruling-Nummern vor jedem Ruling
-  gegen main prüfen (R129-Ausnahme, Kollision R747 → R749).
+- L0-Session anno-clone #2: seit 2026-10-16 ohne Heartbeat (R754); Ruling-Nummern trotzdem vor jedem Ruling gegen `origin/main` prüfen.
 
 ## Seit letzter Session erledigt
 
-- **Lokal gemergt (ca9d40c8):** UI-AUFRAEUM-4 (R710), TOOL-BUENDEL-14 (R718), I-114 (R720), BEOB-17 (R721), PERF-BILANZ-COV (R727), I-112 Ratsbeschluss
-  (`881f2976`, Save v17, R742), TOOL-GUARD-ALLOWLIST (`dcd0aa4f`, R744), IDEEN-12 (R737), I-122 + I-123 (`598a0215`, R747→R749).
-- **Gates/Entscheide:** Spec I-119+I-121 (R715), I-110 geparkt (R722), Spec I-122+I-123 (R738), Spec I-132 Variante S (R745); ORT-A T00–T08 und T04–T06 abgenommen.
-- **Prozess:** Prozess-Retro REL-21–25 (R712), Handbuch 1.60 und 1.61 (R712 V2, R735), Ad-hoc-Retro Budget (R735), Kurz-Retro ca9d40c8 (R750).
+- **Lokal gemergt (21273458):** TOOL-BUENDEL-15 (R757, `43afeb6f`), TOOL-BUENDEL-16 (R761, `7c7e3188`).
+- **Abnahmen:** ORT-A C4 (Ringpfad bleibt, R756), C6 (Importzyklus TEX behoben, R760), T09 gemessen und E6 per absoluter Grenze entschieden (R767); I-132 C1/C2 bis Final-Review OK
+  (R764, R772).
+- **Gates/Entscheide:** Gate Plan I-132 (R759); Brainstorming, Gate Spec, Nachtrag und Gate Plan «Stadtplanung» Variante B (R763, R765, R766, R771).
+- **Prozess:** Ad-hoc-Retro (R755), Handbuch 1.63 (R750 V2/V3), Kurz-Retro 21273458 (R769), Beobachtungen ergänzt (`6b822fb9`).
 
 ## Pausierte Pakete
 
@@ -210,9 +212,9 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Budget
 
-Offen: keine Freigaben (Restbudgets verfallen mit Session-Ende).
+Offen: keine Freigaben (Restbudgets verfallen mit Session-Ende; ORT-A 7, I-132 6 nicht verbraucht).
 
 ## Offene Entscheide
 
-- Nutzer: N-99 (Kenntnis R434), N-102 (Headless-Chrome des Projekts reflexionsinstrument beenden?).
+- Nutzer: N-99 (Kenntnis R434), N-101 (Darlehen verwerfen; ohne Antwort gilt Verwerfen), N-102 (Headless-Chrome des Projekts reflexionsinstrument beenden?).
 - L0: keine offenen.
