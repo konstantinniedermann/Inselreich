@@ -2238,3 +2238,14 @@ Fehlermeldung als Plan-Option.
 Regelbezug: gates.md Gate Spec, R136, R417, R553, R674, R763 · Kosten bei Irrtum: ein Spec-Nachtrag mehr vor dem Plan.
 
 Entscheider: L0 · Anlass: Gate-Urteile lead-tech und lead-qa gate-stadtplanung · ADR: —
+
+## R766 · 2026-10-17 · Spec-Nachtrag «Stadtplanung» abgenommen; Plan jetzt (lead-tech opus)
+
+Ruling: `design/stadtplanung` @ `75965223` → Nachtrag R765 vollständig (55 AKs mit Präfix `AK-STADT-`, 0 Kollisionen, Spec 39,3 KB, Messaufträge M3–M6 in Anhang 03). Rückfallreihenfolge
+für den Lärmfaktor (0,85, dann `noiseRadius` 2, dann Controller-Layout) übernommen. **plan-stadtplanung** an `lead-tech` (opus, Tech-Lead beim Plan; Budget 1 Start für eine
+Plan-Prüfung): Plan nach E-010 ab main mit Merge von `design/stadtplanung`; Zeilenverweise der Belegungsgrenze gegen den Code prüfen; SP-5 erst nach M3–M6; keine Testläufe während
+der ORT-A-Messung.
+
+Regelbezug: R674, R765, E-010 · Kosten bei Irrtum: ein Plan, der nach M3–M6 nachgeschärft wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design Spec-Nachtrag · ADR: —
