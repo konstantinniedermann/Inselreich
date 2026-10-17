@@ -9,7 +9,8 @@ Worktree `.worktrees/i132` (Branch `feat/i132`). Screenshots unter `.studio/qa/i
 `SCENARIO_OUT=.studio/qa/i132/saves npx vitest run tests/sim/scenario-saves.test.ts; echo EXIT=$?` schreibt die Szenario-Saves (migriert auf v18);
 verwendet wird `m13e2-bild-4` (Denkmal fertig, 4 Kaufmannshäuser × 20 = 80 Kaufleute, kein Gewürz-Erzeuger → Gewürz-Defizit). Laden per `localStorage`
 wie in früheren Browser-Checks; Weg im Report festhalten. Die Häuser des Szenarios sind unversorgt und schrumpfen (bei 1× fällt die Auflage nach
-rund 30 s unter 70 %): nach dem Laden pausieren, Karte und Start in der Pause (Starten in der Pause ist erlaubt), «Spiel läuft weiter» vor dem Start prüfen.
+rund 30 s unter 70 %): nach dem Laden pausieren und die Karte öffnen, dann entpausieren und 5 s messen («Spiel läuft weiter», AK 18), erneut pausieren und in der Pause starten
+(Starten in der Pause ist erlaubt).
 
 ## Ablauf
 

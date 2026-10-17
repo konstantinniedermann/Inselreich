@@ -60,8 +60,11 @@ Muster: `src/ui/councilCard.ts` und seine Verdrahtung in `app.ts` (`createCounci
 `tests/ui/trial.test.ts` (ergänzen): «AK-17 Abgleich mit startTrial»: je Grundfall aus T01 `trialStartReason(w)` gleich `startTrial(structuredClone(w), 'selfSupply')`
 (Grund bzw. `null` bei `ok`).
 
-`tests/ui/hud.test.ts` / `monumentView.test.ts`: bestehende Erwartungen an `data-field="goal"` bleiben; neu: `monumentStallReason` mit Auflage und Zukauf-Bedarf
-liefert «Auflage Eigenversorgung: kein Zukauf». Falls `ui/trade.ts` einen DOM-Test hat: Kauf-Knopf mit Auflage `unaffordable` und `title` = Grund.
+`tests/ui/trade.test.ts` (Muster der bestehenden DOM-Tests dort): «AK-19 Kauf-Knopf» — mit aktiver Auflage hat jeder `button[data-op="buy"]` nach
+`updateTrade` die Klasse `unaffordable` und `title` «Auflage Eigenversorgung: kein Zukauf»; ohne Auflage wie bisher.
+`tests/ui/hud.test.ts`: «Ziel-Chip» — `updateHud` mit `monumentDone`: Element `[data-field="goal"]` ist ein `button`, hat `goal-chip--action` und Text
+«Meisterprüfung»; Klick ruft `actions.toggleTrial` einmal; ohne `monumentDone` keine Klasse `goal-chip--action`.
+`tests/ui/monumentView.test.ts`: `monumentStallReason` mit Auflage und Zukauf-Bedarf liefert «Auflage Eigenversorgung: kein Zukauf».
 
 ## Prüfschritte
 

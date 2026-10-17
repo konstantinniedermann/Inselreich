@@ -3,7 +3,7 @@
 > **Für Arbeiter:** Umsetzung mit superpowers:subagent-driven-development; Schritte als Checkbox (`- [ ]`). Jeder Arbeiter bekommt nur seine
 > Task-Datei und die AK-IDs, nie den ganzen Plan oder die ganze Spec.
 
-Stand: Entwurf für Gate Plan. Owner `lead-tech` · Plan gegen main `04d88e38` (SAVE_VERSION 17), ohne Testläufe (Plan-Paket).
+Stand: Entwurf für Gate Plan; Plan-Prüfung qa-code-reviewer (BEDENKEN, 3 mittel, 5 niedrig) eingearbeitet. Owner `lead-tech` · Plan gegen main `04d88e38` (SAVE_VERSION 17), ohne Testläufe (Plan-Paket).
 Quelle: Spec [`2026-10-16-i132-meisterpruefung.md`](../specs/2026-10-16-i132-meisterpruefung.md) (20 AK), Anhang 01 §2, §6, §8; Rulings R745 (E1–E4), R711 R-4.
 Task-Dateien in [`2026-10-17-i132-meisterpruefung/`](2026-10-17-i132-meisterpruefung/).
 
@@ -62,17 +62,17 @@ Task-Dateien in [`2026-10-17-i132-meisterpruefung/`](2026-10-17-i132-meisterprue
 
 ## Dateimatrix (Ownership)
 
-| Datei                                                                                                      | T01 | T02 | T03 | T04 | T06 |
-| ---------------------------------------------------------------------------------------------------------- | --- | --- | --- | --- | --- |
-| `src/sim/defs/trials.ts` (neu), `src/sim/types.ts`, `src/sim/world.ts`, `src/sim/save.ts`                  | ja  |     |     |     |     |
-| `src/sim/trial.ts` (neu)                                                                                   | ja  | ja  |     |     |     |
-| `tests/sim/trial-save.test.ts` (neu), `tests/sim/helpers.ts`, Tests mit Faltkette (siehe T01)              | ja  |     |     |     |     |
-| `tests/sim/trial.test.ts` (neu)                                                                            | ja  | ja  |     |     |     |
-| `src/sim/trade.ts`, `src/sim/tick.ts`, `tests/sim/trial-run.test.ts` (neu), `tests/sim/balance.test.ts`    |     | ja  |     |     |     |
-| `src/ui/trial.ts` (neu), `tests/ui/trial.test.ts` (neu)                                                    |     |     | ja  |     |     |
-| `src/ui/trialCard.ts` (neu), `tests/ui/trialCard.test.ts` (neu), `src/ui/hud.ts`, `src/ui/app.ts`          |     |     |     | ja  |     |
-| `src/ui/inspect.ts`, `src/ui/trade.ts`, `src/ui/monumentView.ts`, `src/style.css`, betroffene `tests/ui/*` |     |     |     | ja  |     |
-| `README.md`, `docs/arc42.md`, `docs/spielwerte.md`, Spec-Kopf (Plan-Verweis)                               |     |     |     |     | ja  |
+| Datei                                                                                                                                                                        | T01 | T02 | T03 | T04 | T06 |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | --- | --- | --- | --- |
+| `src/sim/defs/trials.ts` (neu), `src/sim/types.ts`, `src/sim/world.ts`, `src/sim/save.ts`                                                                                    | ja  |     |     |     |     |
+| `src/sim/trial.ts` (neu)                                                                                                                                                     | ja  | ja  |     |     |     |
+| `tests/sim/trial-save.test.ts` (neu), `tests/sim/helpers.ts`, Tests mit Faltkette (siehe T01)                                                                                | ja  |     |     |     |     |
+| `tests/sim/trial.test.ts` (neu)                                                                                                                                              | ja  | ja  |     |     |     |
+| `src/sim/trade.ts`, `src/sim/tick.ts`, `tests/sim/trial-run.test.ts` (neu), `tests/sim/balance.test.ts`, `tests/sim/balance-monument.test.ts`                                |     | ja  |     |     |     |
+| `src/ui/trial.ts` (neu), `tests/ui/trial.test.ts` (neu; T04 ergänzt nach T03 einen Test)                                                                                     |     |     | ja  |     |     |
+| `src/ui/trialCard.ts` (neu), `tests/ui/trialCard.test.ts` (neu), `src/ui/hud.ts`, `src/ui/app.ts`                                                                            |     |     |     | ja  |     |
+| `src/ui/inspect.ts`, `src/ui/trade.ts`, `src/ui/monumentView.ts`, `src/style.css`, betroffene `tests/ui/*` (u. a. `trade`, `hud`, `monumentView`, Ergänzung `trial.test.ts`) |     |     |     | ja  |     |
+| `README.md`, `docs/arc42.md`, `docs/spielwerte.md`, Spec-Kopf (Plan-Verweis)                                                                                                 |     |     |     |     | ja  |
 
 Nicht angefasst: übrige `src/sim/`, `src/render/`, `src/audio/`, `docs/studio/`. **Parallele Pakete:** ORT-A C4 (`.worktrees/ort-a`) ändert
 `src/ui/app.ts` nur im Importblock von `devProbes` und im DEV-Messhaken (`exposeDevProbe`, `render`-Aufruf); I-132 ändert `app.ts` an der

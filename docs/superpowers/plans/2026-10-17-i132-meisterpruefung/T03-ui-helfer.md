@@ -48,7 +48,7 @@ export function trialCardView(world: World, preview: readonly DeficitLine[]): Tr
     Bestanden (`passed` nicht leer, nichts aktiv): `'Meisterprüfung ✓'`, `title` `` `Meisterprüfung bestanden: ${name}` ``, `fillPct` 100. Sonst `'Meisterprüfung'`,
     `title` `'Meisterprüfung: freiwillige Auflage — Klick für Details'`, `fillPct` 0. Aktiv hat Vorrang.
   - `selfSupplyPreview`: je Gut aus `GOOD_IDS` (Reihenfolge) Summe `net` von `goodsBalance(world, i)` über alle `world.islands`; aufnehmen, wenn
-    Summe `< -1e-9` (lokale Konstante `DEFICIT_EPS`, Kommentar «Gleitkomma-Toleranz wie flow.ts, kein Spielwert»); `perMin = perMinute(sum, GOODS_BALANCE_TICKS)`.
+    Summe `< -1e-9` (lokale Konstante `DEFICIT_EPS`, Kommentar «Gleitkomma-Toleranz wie flow.ts, kein Spielwert»); `perMin = perMinute(sum, GOODS_BALANCE_TICKS)`; nur Einträge mit `perMin < 0` nach dem Runden behalten (kein «−0 / min»).
   - `selfSupplyText`: leer → `'Deine Ketten decken den Bedarf'`; sonst `` `${GOODS[g].name} ${signedNum(perMin)} / min` `` mit `', '` verbunden
     (z. B. «Gewürz −36 / min, Stein −36 / min»; Zahlformat wie `signedNum`).
   - `trialStartReason(world)` = `trialStartBlock(world, 'selfSupply')`.
@@ -71,7 +71,8 @@ Welten über `createWorld(3)` und `putBuilding`/`houseNearKontor` aus `tests/sim
 - «AK-15 trialChip»: ohne `monumentDone` `null`; mit → `chip` `'Meisterprüfung'`; `trial = { active: 'selfSupply', ticks: 2000, e0: 75, passed: [] }` →
   `'Eigenversorgung 3:20 / 15:00'`, `fillPct` 22; `passed = [{ id: 'selfSupply', tick: 30000 }]` → `'Meisterprüfung ✓'`, `fillPct` 100.
 - «AK-16 selfSupplyPreview»: neue Welt ohne Häuser → `[]` und Text `'Deine Ketten decken den Bedarf'`; drei Kaufmannshäuser mit je 20 Einwohnern
-  im Kontor-Bereich, kein Erzeuger → Eintrag `spice` mit `perMin` = `perMinute(Summe, 100)` (erwartet −36) und kein Eintrag für Güter mit Summe ≥ 0;
+  im Kontor-Bereich, kein Erzeuger → genau die fünf Bedarfsgüter der Stufe 4 (`food`, `cloth`, `rum`, `glass`, `spice`) in `GOOD_IDS`-Reihenfolge, je
+  `perMin` = `perMinute(Summe, 100)` (Gewürz −36: 60 × 0,1 × 6); Gegenprobe: mit gesetztem Gewürz-Erzeuger-Überschuss fehlt `spice` in der Liste;
   Häuser auf Heimat **und** Fremdinsel (`twoIslandWorld()`) → Summe beider Inseln; Text enthält `'Gewürz −36 / min'`.
 - «AK-17 trialStartReason»: die sieben Grundfälle aus T01 (`monumentDone` falsch, aktiv, bestanden, Kasse −1, 59, 151; plus `null` bei 60) liefern
   die T01-Texte wörtlich; `serialize` vorher = nachher. (Gleichheit mit `startTrial` prüft T04 nach dem Merge.)

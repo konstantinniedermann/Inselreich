@@ -47,11 +47,13 @@ Dateien: `src/sim/trial.ts`, `src/sim/trade.ts`, `src/sim/tick.ts`, `tests/sim/t
 - «AK-7 Grenzfall 70 %»: `e0 = 100` gesetzt, Einwohner genau 70 → nach `tickTrial` aktiv, `ticks === 1`; Einwohner 69 → `active === null`, `passed` leer.
 - «AK-8 Zähler = step-Aufrufe»: gestartet, 37 × `step(w)` → `ticks === 37`; Quell-Scan `src/sim/trial.ts` ohne `/Date|performance|setTimeout|Math\.random/`.
 - «AK-9 Neustart»: nach Bestehen (AK-6-Schleife) `startTrial` → `'Bereits bestanden'`; nach «nicht bestanden» (AK-7) und nach Abbruch → `ok`, `ticks === 0`.
-- «Randfall Wachstum»: aktive Auflage, Kaufleute auf 160 und Einwohner über `e0` gesetzt → `tickTrial` zählt weiter, kein Abbruch (Spec §7).
+- «Randfall Wachstum und Kasse»: aktive Auflage, Kaufleute auf 160 und Einwohner über `e0` gesetzt → `tickTrial` zählt weiter, kein Abbruch; ebenso
+  bei `money = -500` (Spec §7: Kasse kein Abbruchkriterium). Schiffsladung braucht keinen Test (die Auflage liest weder Schiffe noch Lager).
 - «AK-10 Denkmal abgerissen»: `monumentDone = true`, kein Denkmal-Gebäude in `buildings` (`monument = null`) → `startTrial` `ok`.
-- «AK-11 Determinismus»: (a) zwei Läufe `merchantWorld(60)`, `crisisLevel = 'normal'`, Folge: 10 Schritte, `startTrial`, 190 Schritte, `abortTrial`,
-  100 Schritte, `startTrial`, 300 Schritte → `serialize` beider Läufe gleich. (b) dieselbe Welt einmal mit, einmal ohne Auflagen-Aktionen:
-  `serialize({ ...w, trial: null })` gleich (die Auflage verbraucht keinen Zufall und ändert ohne Kauf nichts ausser `trial`).
+- «AK-11 Determinismus»: (a) zwei Läufe `merchantWorld(60)`, `crisisLevel = 'normal'`, Folge: 10 Schritte, `startTrial`, 100 Schritte, `abortTrial`
+  (Zusicherung `ok: true`; die unversorgten Häuser fallen erst nach rund 300 Schritten unter 70 %), 100 Schritte, `startTrial`, 300 Schritte → `serialize` beider Läufe gleich. (b) dieselbe Welt einmal mit, einmal ohne Auflagen-Aktionen:
+  JSON-Vergleich `const raw = JSON.parse(serialize(w)); delete raw.trial;` beider Läufe gleich (die Auflage verbraucht keinen Zufall und ändert ohne
+  Kauf nichts ausser `trial`).
 - «AK-14 Wächter» (Schritt 7).
 
 ## Tests `trial-run.test.ts` (Referenzstand K'-arm, Anhang §2.1/§2.2)
@@ -64,7 +66,8 @@ von 200 steppen), `serialize` als `kSave`; Timeout `beforeAll` 20 000 ms, je Tes
   Schritt davor nicht; `passed` leer; Ende-Tick relativ zum Start ins Log (Anhang erwartet ≈ 375, kein Pin).
 - «AK-6 K'-arm mit Sollzufuhr besteht»: vor jedem `step`, wenn `w.tick % 100 === 0`, Heimat-Lager `spice` und `stone` je `+6`, gedeckelt auf
   `STORAGE_CAP` (Sollfluss Anhang §2.2). Nach 8999 Schritten aktiv; nach 9000 `passed[0]` = `{ id: 'selfSupply', tick: start + 9000 }`.
-  Scheitert der Lauf, ist das ein Befund an den Controller (kein Nachstellen der Zufuhr ohne Rückmeldung).
+  Scheitert der Lauf, ist das ein Befund an den Controller (kein Nachstellen der Zufuhr ohne Rückmeldung). Bewusste Abweichung, im Bericht nennen:
+  die Zufuhr emuliert den Sollfluss eigener Ketten (Anhang §2.2), gebaut wird nichts; AK 6 prüft damit Zählen und Bestehen, nicht den Ausbaupfad.
 
 ## Prüfschritte
 
