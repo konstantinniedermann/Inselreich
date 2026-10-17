@@ -275,7 +275,7 @@ bleibt Beipack-Kandidat für das nächste UI-Häppchen (die Karte besteht weiter
 - Doppelung: I-048 (Archiv, Schritt B verworfen R571, Zielsatz offen), I-129 (verworfen, Dauer-Zukauf), I-130/I-110/I-134 (geparkt bis `BUY_RISE` > 0), I-111 (Belohnung wiegt nichts). Kein §5.3-Fall: Regel innerhalb der Säule Wirtschaft, kein Wechsel von Säule, Genre oder Titel.
 - Bewertung lead-design: bestätigt (12), umbenannt. Einzige Idee der Runde, die das Kernproblem nicht mit einer Senke, sondern mit einem Engpass ausser Geld beantwortet: Geld kauft nicht mehr jede Kette frei, also zählt Produktion wieder im Mittel- und Spätspiel. Gleicher Ansatz wie I-132 «Eigenversorgung», aber dauerhaft und teilweise. Als Wirtschafts-Brainstorming Stufe voll mit `design-economy-designer`, das die drei Fassungen gegeneinander rechnet; ein Ergebnis entparkt I-110, I-130, I-134 und I-111.
 - Nutzen/Aufwand: hoher Nutzen (Bauen statt Kaufen wird eine Entscheidung) · M · Brainstorming ≈ 80 Tools, danach ≈ 2 Pakete
-- Entscheid: offen (IDEEN-13)
+- Entscheid: offen (IDEEN-13); Brainstorming design-I-144: Empfehlung verwerfen, alle drei Fassungen ohne Wahlfenster (Design-Vorlage `docs/superpowers/specs/2026-10-17-i144-zukauf-ordnung-design.md`, Rechnung `2026-10-17-i144-rechnung.md`); Gate Brainstorming L0
 
 ### I-145 · bewertet · Edikt-Wechsel nach Stadtgrösse
 
