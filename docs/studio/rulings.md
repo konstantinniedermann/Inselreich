@@ -2274,3 +2274,16 @@ ohne Push (R514 V3, Werkzeug-Merges `43afeb6f`, `7c7e3188`), Kurz-Retro, state.m
 Regelbezug: R68, R329, R514 V3, R750 V3, R767 · Kosten bei Irrtum: ORT-A verliert eine Session Wanduhr.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C8, Kontextgrenze · ADR: —
+
+## R769 · 2026-10-17 · Kurz-Retro 21273458: V1–V3 angenommen; Cache-Write-Ad-hoc durch R750 V3 gedeckt
+
+Ruling: Bericht `docs/studio/retros/2026-10-17-session-21273458-ende.md` (`9c3eeb16`) → angenommen. **V1:** Render-Pläne enthalten eine Browser-Ladeprobe nach höchstens 3
+Render-Tasks und vor jeder Messung; Messgrösse 0 Ladefehler erst in Messung oder Release über 2 Render-Stränge, Frist 2026-11-30. **V2:** Handbuch: kein L0-Commit auf main während
+eines Integrator-Merges; Integrator-Briefings nennen `.worktrees/integrate`; Messgrösse 0 neu gebaute Merges über 3 Merges, Frist 2026-11-15. V1 und V2 setzt der studio-coach als
+Handbuch-Minor in der Folgesession um. **V3:** ORT-A C9 darf T10 (Item-Zählung und Sichtprüfung ohne Zeitwert) bei 1-min-Last ≤ 8 fahren, `uptime` vor und nach dem Lauf im
+Bericht; Zeitwerte bleiben an `lastgate.mjs`; Frist 2026-10-24, Rückfall Warten auf `lastgate`. Hook-Ad-hoc «Cache-Write 5 min zwei Sessions rot» (26,7 %, Neuschreibung nach Pause
+9,5 %) ist durch R750 V3 (Frist 2026-10-30) gedeckt, keine eigene Retro.
+
+Regelbezug: R697, R750, R755, R768 · Kosten bei Irrtum: eine Item-Zählung, die unter Last ungenau ist und wiederholt wird.
+
+Entscheider: L0 · Anlass: Kurz-Retro studio-coach RETRO-S-21273458 · ADR: —
