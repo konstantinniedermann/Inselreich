@@ -10,7 +10,7 @@ Begleitdokumente: [VERFASSUNG.md](VERFASSUNG.md) · [verbesserung.md](verbesseru
 Verbesserung, Teil des Handbuchs) · [CHANGELOG.md](CHANGELOG.md) · [warteschlange.md](warteschlange.md)
 · [experimente.md](experimente.md) · [lernen.md](lernen.md) · [retros/](retros/) ·
 [metriken/](metriken/) · [gates.md](gates.md) · [roster.md](roster.md) · [rulings.md](rulings.md)
-(R1–R600: [rulings-archiv.md](rulings-archiv.md)) · [state.md](state.md) · [herkunft.md](herkunft.md)
+(R1–R699: [rulings-archiv.md](rulings-archiv.md)) · [state.md](state.md) · [herkunft.md](herkunft.md)
 · [Vorlagen](templates/) · Hierarchie [ADR-007](../adr/ADR-007-studio-hierarchie.md), Telemetrie
 [ADR-008](../adr/ADR-008-studio-telemetrie.md).
 
