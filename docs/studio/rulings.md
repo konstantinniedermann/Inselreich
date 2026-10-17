@@ -1112,3 +1112,17 @@ voller `make check`; danach setzt `lead-qa` das Gate nur für den Rest fort (Int
 Regelbezug: R781, M7-Spec §9.1, Handbuch «Kleine Fixes ≤ ~20 Zeilen» · Kosten bei Irrtum: ein dunkleres Rot fällt weniger auf als Signalrot; Sichtprüfung im nächsten Playtest.
 
 Entscheider: L0 · Anlass: Bericht lead-qa REL-28 · ADR: —
+
+## R785 · 2026-10-17 · Gate Merge REL-28 (I-136) OK; Kandidat im Worktree `integrate` auf lokalem main; Push-Auftrag
+
+Ruling: Gate Merge I-136 → **OK** (lead-qa: Delta `6f7bbc21..c51af713` eine Farbzeile + Doku, `make check` EXIT 0, R784 erfüllt). Arbeitsort-Frage des Integrators: weder Ausnahme
+von der Persona noch Handarbeit von L0 — der Integrator bleibt in `.worktrees/integrate` (R565 P1), setzt den Kandidaten aber auf **lokales `main`** statt `origin/main`
+(`git -C .worktrees/integrate checkout --detach main`), damit die ungepushten Doku-Commits R780–R785 mitkommen; dann `git merge --no-ff feat/i136` (@ `c51af713`), `make check`,
+`make check-ci-perf`, Merge-Commit. Der Hash dieses Merge-Commits gilt als Ruling-Hash. **Push-Auftrag:** nach `make push-check` EXIT 0 (bei 1-min-Last > 4 per until-Schleife auf
+Ruhefenster warten) `git push origin <geprüfter Hash>:main`, dann CI und Pages prüfen. L0 zieht danach lokales `main` per `git merge --ff-only origin/main` nach. Bis zum Merge-Bericht
+committet L0 nichts auf `main` (R697). Abweichung Persona Schritt 1 (`origin/main` → lokales `main`) gilt nur, wenn lokales `main` ausschliesslich ungepushte Doku-Commits über
+`origin/main` trägt.
+
+Regelbezug: R335, R565 P1/V2, R697, R781, R784 · Kosten bei Irrtum: ein Doku-Commit mehr im Release-Push (CI ignoriert reine Doku nicht, da I-136 Code enthält — ein Lauf).
+
+Entscheider: L0 · Anlass: Bericht lead-qa REL-28 (Fortsetzung) · ADR: —
