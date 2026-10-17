@@ -459,8 +459,13 @@ class RunTest(RunBase):
         self.assertEqual(self.events(), [])
 
     def test_record_aborted_swallows_write_errors(self):
-        with mock.patch.object(paths_module, "append_event", side_effect=OSError("x")):
+        err = io.StringIO()
+        with (
+            mock.patch.object(paths_module, "append_event", side_effect=OSError("x")),
+            contextlib.redirect_stderr(err),
+        ):
             testrun._record_aborted("studio")  # wirft nicht
+        self.assertIn("testrun: Abbruch-Event nicht geschrieben (x)", err.getvalue())
         with (
             mock.patch.object(testrun, "_run", side_effect=KeyboardInterrupt),
             mock.patch.object(paths_module, "append_event", side_effect=OSError("x")),
