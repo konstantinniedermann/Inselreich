@@ -436,3 +436,10 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: (a) `putBuilding` setzt `connected: true` ohne Weg; nach `deserialize` wird neu berechnet, ein Lauf mit und ohne Speichern kann daher ohne `recomputeConnectivity` auseinanderlaufen. (b) Der Referenzaufbau aus `balance-monument.test.ts` scheitert auf den Seeds 5, 6, 9, 12 mit «kein freier Erweiterungsplatz für fisher»; Seeds 1, 2, 4, 7, 8, 11, 13 tragen ihn.
 - Ursprung: lead-tech, I-132 T02
 - Erste Einschätzung: niedrig; (a) Testhelfer, bei Bedarf `recomputeConnectivity` im Helfer; (b) nur relevant, falls der Referenzaufbau auf weitere Seeds ausgedehnt wird.
+
+## 2026-10-17 · I-132 Final-Review (niedrig)
+
+- `src/ui/trial.ts:84`: Chronik «bestanden (m:ss)» zeigt absolute Spielzeit (`p.tick`, z. B. «312:40»), Text sollte «Zeitpunkt» nennen. Ursprung: I-132 Final-Review. Einschätzung: kosmetisch.
+- `src/ui/hud.ts:336`: Ziel-Chip ist ein `<button>`, vor dem Denkmal per Tab erreichbar ohne Wirkung; `tabIndex = -1` oder `disabled`, solange `trialChip` null ist.
+- `src/sim/trial.ts:1`: Kopfkommentar «ändert die Welt nicht» stimmt für `startTrial`/`abortTrial`/`tickTrial` nicht.
+- Merge-Reihenfolge: `feat/ort-a` und `feat/i132` konfliktieren in `docs/beobachtungen.md` (beide hängen am Dateiende an); Zweiter löst von Hand. `app.ts` merged sauber.
