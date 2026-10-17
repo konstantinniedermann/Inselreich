@@ -815,6 +815,32 @@ Keine Idee ändert Kernsäule, Genre oder Titel (§5.3). Erweiterung 1 berühren
 | 11   | I-121 | Wartende vor der Tür            | M      | 10    | nein / nein     | doppelt Bedarfssymbole, ≈ 2 Pakete         | Pool; mit I-119 als ein Paket                   |
 | 12   | I-113 | Gemeindeprojekt                 | M      | 9     | ja / ja         | Geldsenke ohne Wahl                        | verwerfen (Denkmal, I-079; I-112 deckt ab)      |
 
+## Rangliste IDEEN-12 (Ruling L0: R737; archiviert IDEEN-13)
+
+Breite Runde (R445, R731), Scouts A (Spieler-Rückmeldungen und Playtests seit REL-20), B (fehlende Genre-Mechaniken) und
+C (Spätspiel nach dem Denkmal): 14 Vorschläge, eingetragen als I-122–I-135. Keine Idee ändert Kernsäule, Genre oder Titel
+(§5.3); keine berührt Erweiterung 1. Leitbefund für die Bewertung: Bei festen, unbegrenzten Kaufpreisen ist Geld nur in den
+ersten 15 min knapp (R722); Ideen, die Geld geben, sparen oder Startboni verteilen, tragen deshalb nicht. Sortiert nach
+Raster-Summe, bei Gleichstand nach Nutzen je Aufwand. Pool-Pflege nach R599 in derselben Runde (16 Einträge und die Rangliste
+IDEEN-11 ins Archiv). Pool danach: 23 von 40 offen, nach dem Runden-Ruling wie empfohlen 13.
+
+| Rang | ID    | Name                                     | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                   | Empfehlung                                                   |
+| ---- | ----- | ---------------------------------------- | ------ | ----- | --------------- | ------------------------------------------------ | ------------------------------------------------------------ |
+| 1    | I-122 | Vorwarnung vor der Stammkunden-Lieferung | S      | 13    | nein / nein     | Kulanz wird Entscheidung, ≈ 50 Tools             | Top 1: Häppchen mit I-123, Kurzdesign Stufe leicht           |
+| 2    | I-132 | Selbstauflage «Meisterprüfung»           | M      | 11    | ja / nein       | Ziel nach dem Denkmal, Ketten zählen, ≈ 2 Pakete | Top 2: Kurzdesign Stufe voll mit Rechnung, I-133 als Auflage |
+| 3    | I-133 | Krisenstufe «stürmisch»                  | S      | 11    | ja / nein       | Schwierigkeit ohne Ziel, ≈ 50 Tools              | zusammenfassen in I-132 (Auflage «Sturmjahr»)                |
+| 4    | I-123 | Reichweite rechnet den Stammkunden mit   | S      | 11    | nein / nein     | Anzeige stimmt, ≈ 30 Tools als Beipack           | Beipack zu I-122                                             |
+| 5    | I-128 | Lärm und Rauch                           | M      | 10    | nein / ja       | räumliche Wahl, Regeländerung, ≈ 2 Pakete        | Top 3: Baustein Stadtplanung (mit I-061, I-051, I-045)       |
+| 6    | I-125 | Ereignis-Log im Spielstand               | S      | 9     | ja / nein       | nur nach dem Laden, UI-Zustand im Save           | verwerfen (Trigger offen, Trennung I-100)                    |
+| 7    | I-124 | Fernmarke anklicken                      | M      | 8     | nein / nein     | Komfort, Konflikt ORT-A                          | parken bis Playtest-Trigger und ORT-A gemergt                |
+| 8    | I-127 | Marktplatz-Ausbau mit zwei Zweigen       | S–M    | 8     | ja / nein       | «Weite» tot (Rechnung I-112)                     | verwerfen                                                    |
+| 9    | I-129 | Mindestbestand (Dauer-Zukauf)            | S–M    | 8     | ja / nein       | Ketten werden optional (K.O. Passung)            | verwerfen                                                    |
+| 10   | I-130 | Inselpreisgefälle beim Einkauf           | M      | 8     | nein / nein     | Rabatt ohne Geldengpass wirkungslos              | parken bis `BUY_RISE` > 0                                    |
+| 11   | I-131 | Amtsstube-Ausbau (zweiter Platz)         | S–M    | 8     | ja / nein       | Pflichtkauf, «welches lasse ich weg»             | parken bis I-112 live und Edikt-Überarbeitung (mit I-064)    |
+| 12   | I-134 | Vermächtnis für die nächste Insel        | M      | 7     | ja / nein       | Startbonus ohne Strategie (R722)                 | parken mit I-110 bis `BUY_RISE` > 0                          |
+| 13   | I-126 | Nebenauftrag neben dem Stammkunden       | M      | 6     | ja / ja         | nimmt dem Stammkunden seinen Preis               | verwerfen                                                    |
+| 14   | I-135 | Feuerschale und Nachtglanz               | S      | —     | nein / ja       | schon live (Leuchtfeuer Stufe 4)                 | verwerfen (Doppelung)                                        |
+
 ## Archiviert IDEEN-12 (Pool-Pflege R599)
 
 ### I-047 · live (REL-21) · Stammkunde (Liefervertrag)
@@ -1146,3 +1172,93 @@ Keine Idee ändert Kernsäule, Genre oder Titel (§5.3). Erweiterung 1 berühren
 - Bewertung lead-design: Doppelung mit dem Bestand. Empfehlung verwerfen.
 - Entscheid: verworfen (R737)
 - Archiviert IDEEN-12: verworfen mit R737, Statuspflege nach R599
+
+## Archiviert IDEEN-13 (Pool-Pflege R599)
+
+### I-112 · live (REL-26) · Ratsbeschluss je Stufe (einmalige Wahl)
+
+- Bereich: Inhalt · Säule: Bevölkerung · Quelle: IDEEN-11 Scout A; Genre-Mechanik Weichenstellung mit Ausschluss; Edikte I-031 (live, wechselbar) als Abgrenzung · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler wählt beim ersten Bürgerhaus einmalig «Zunftrecht» (Aufstieg kostet 2 Stein weniger) oder «Marktrecht» (Marktplatz-Reichweite +2) und baut danach dichter oder weiter."
+- Mechanik: Beim ersten Haus der Stufe 2, 3 und 4 erscheint eine Karte mit zwei dauerhaften Beschlüssen ohne Unterhalt; der andere verfällt für diese Partie. 3 × 2 Beschlüsse in `src/sim/defs/`, je ein Hebel auf Bauweise, Kette oder Kasse. Unentschieden bleibt die Karte offen und nichts wirkt.
+- Grösse: M · Risiko: Save (drei Wahlfelder, Migration «keine Wahl»); Baseline bitgleich, solange der Controller nicht wählt
+- Raster: Spass 3 · Passung 3 · Aufwand 2 · Risiko 2 = 13
+- Randfälle: Abriss des ersten Hauses nimmt nichts zurück; «Neue Insel» setzt zurück; Beschluss ohne Wirkungsfeld (kein Marktplatz) ist schwächer, nicht kaputt; Abstieg einer Stufe behält den Beschluss. Entartung: ein Beschluss, der immer gewinnt; je Paar muss jede Seite einen anderen Siedlungsstil belohnen (Rechnung `design-economy-designer`).
+- Doppelung: I-077 Spezialisierung (geparkt) wählt je Betrieb, I-064 «Bauherr» (geparkt) ist ein Edikt; I-031 Edikte sind wechselbar und einzeln aktiv. Neu: einmalig, dauerhaft, je Stufe.
+- Nutzen/Aufwand: echte Weichenstellung im Mittelspiel, prägt den Stadtplan · M · ≈ 2 Pakete (Werte-Rechnung ≈ 40 Tools)
+- Entscheid: gemergt (R742); live mit REL-26 (R753)
+
+### I-114 · live (REL-26) · Fernangebot zur Wahl (zwei Inseln)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-11 Scout B; `docs/spielwerte.md` «Fernangebot» (bei mehreren Inseln reihum nach Periode, ohne Zufall, also ohne Wahl) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht zwei Fernkarten, etwa «Möweninsel: 20 Stoff · 440» und «Felsbucht: 15 Rum · 450», und nimmt die mit der kürzeren Fahrt oder dem volleren Lager."
+- Mechanik: Ab Kontoren auf zwei Fremdinseln zeigt der Auftragstakt die zwei nächsten Angebote der heutigen Reihe; höchstens eines annehmbar, Frist 2:50, Menge und Prämie wie heute, der nächste Auftrag entfällt weiter.
+- Grösse: S · Risiko: vermutlich keins: beide Angebote sind aus der Periode ableitbar, gespeichert wird wie heute nur das angenommene (im Kurzdesign prüfen); Baseline bitgleich ohne Fremdkontor
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12
+- Randfälle: ein Fremdkontor: wie heute; Gut über der Stufe fällt aus, dann eine Karte; laufender Stammkunde: kein Fernangebot (wie heute); zwei Karten plus Auftragskarte: Platz im Kartenstapel bei 1280 px prüfen.
+- Doppelung: I-095 (erledigt, Handel 2) liefert das Angebot ohne Wahl; I-093 (verworfen) tauschte nach dem Annehmen; I-101 (Fernauftrag-Marke Seekarte) zeigt die Lage.
+- Nutzen/Aufwand: aus «nimm, was kommt» wird eine Wahl über Fahrzeit und Lager · S · ≈ 60 Tools
+- Umsetzung: umgesetzt (REL-26-Kandidat); Spec `docs/superpowers/specs/2026-10-16-i114-fernangebot-wahl.md`, Plan `docs/superpowers/plans/2026-10-16-i114-fernangebot-wahl.md`
+- Entscheid: gemergt (R720); live mit REL-26 (R753)
+
+### I-118 · live (REL-26) · Aufstiegs-Funkeln am Haus
+
+- Bereich: Grafik · Säule: Bevölkerung · Quelle: IDEEN-11 Scout C; README «Effekte» (Aufstieg nur als Ton), `src/render/fx.ts` (nur Krisen-Effekte) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht beim Aufstieg das Haus kurz aufglänzen und weiss, welches Haus gewachsen ist, ohne den Ton zuzuordnen."
+- Mechanik: Der Renderer vergleicht die Stufe je Haus mit dem Vorframe und zeichnet 1,5 s einen warmen Lichtkranz mit 6–8 Funken (grösser ab Stufe 3); nur im Bildausschnitt, höchstens 6 gleichzeitig, bei «Bewegung reduzieren» nur der Kranz. Prozedural, keine Assets.
+- Grösse: S · Risiko: keins (kein Save, keine Sim-Änderung)
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Randfälle: hohe Geschwindigkeit: Deckel, älteste zuerst; Pause friert ein; nach dem Laden kein Effekt (erster Frame merkt nur den Stand); Abstieg zeigt nichts.
+- Doppelung: I-007 Fest und I-009 Hörbarer Mangel (live) sind andere Anlässe; ORT-A/ORT-B betreffen statische Gestalt.
+- Nutzen/Aufwand: Fortschritt in der ersten Stunde sichtbar · S · ≈ 50 Tools
+- Entscheid: gemergt (R707); live mit REL-26 (R753)
+
+### I-120 · live (REL-26) · Wohlstandsklang der Stadt
+
+- Bereich: Ton · Säule: Bevölkerung · Quelle: IDEEN-11 Scout C; `src/audio/ambience.ts`, `src/audio/mix.ts` (Schicht `town` hängt nur an der Einwohnerzahl im Bild) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler hört eine gut versorgte Stadt lebhaft und eine darbende still, ohne auf Zahlen zu schauen."
+- Mechanik: Die Umgebungs-Mischung bekommt als Eingang den Anteil voll versorgter Häuser im Bild (gemittelt über ≈ 10 s): ab 80 % voller Pegel der Schicht `town`, unter 40 % halber Pegel, unter 20 % Wind statt Stadt; Gleiten mit `GLIDE_S`. Der Anteil kommt als Zahl über die UI-Verdrahtung; `src/audio/` importiert nichts aus `src/sim/`.
+- Grösse: S · Risiko: keins (reine Mix-Funktion, keine Assets)
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Randfälle: hohe Geschwindigkeit: Mittelung; Pause: Klang bleibt; Ton aus: ohne Wirkung; keine Häuser im Bild: Schicht aus wie heute.
+- Doppelung: I-009 (live) meldet einen einzelnen Mangel als Signal; dies ist die Dauerstimmung.
+- Nutzen/Aufwand: Versorgung hörbar, sehr günstig · S · ≈ 40 Tools
+- Entscheid: gemergt (R707); live mit REL-26 (R753)
+
+### I-122 · live (REL-26) · Vorwarnung vor der Stammkunden-Lieferung
+
+- Bereich: Ton · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-12 Scout A; Playtest `.studio/qa/REL-24-25/i091/report.md` Schritte 2 und 6 (Toast und Fehlerton erst zum Periodenbeginn, die Karte zeigt vorher still «nächste Lieferung 5 s · Lager 0/5») · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler hört 20 s vor der Lieferung einen leisen Hinweiston, sieht die Vertragskarte kurz aufleuchten und kauft noch 3 Rum nach, statt die Kulanz zu verbrauchen."
+- Mechanik: Ist das Lager unter der Vertragsmenge und die Restzeit der Periode ≤ `CONTRACT_WARN_S` (20 s, Wert in `src/sim/defs/` bei den Vertragswerten), hebt die UI die Karte einmal je Periode hervor und spielt einen Info-Klang über den bestehenden Vertragsklang-Pfad. Kein Toast, kein Log-Eintrag; reine Ableitung aus Lager, Vertrag und Periode.
+- Grösse: S · Risiko: keins (kein Save, Baseline unberührt; `src/audio/` bekommt nur ein Signal)
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13 · Raster (lead-design): Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13
+- Randfälle: Lager füllt sich in der Warnzeit → keine Wiederholung, Hervorhebung endet; Pause friert die Restzeit ein; hohe Geschwindigkeit: 20 Spielsekunden sind bei 4× nur 5 s, Wert in Spielzeit prüfen; Kulanz noch offen: Warnung trotzdem, Text nennt «Kulanz wird verbraucht».
+- Doppelung: I-091 (live) meldet den Fehlbestand erst beim Periodenwechsel; I-009 (live) ist Dauermangel der Häuser, kein Termin; I-109 (live) zeigt Reichweite ohne Vertrag (siehe I-123).
+- Bewertung lead-design: bestätigt (13). Einzige Idee der Runde mit echtem Playtest-Beleg; macht aus «Kulanz passiert mir» eine Entscheidung (nachkaufen oder Puffer verbrauchen), die I-091 laut Spec R663 gerade erzeugen wollte. Ideal als Häppchen mit I-123.
+- Nutzen/Aufwand: Stammkunde wird rechtzeitig entscheidbar · S · ≈ 50 Tools
+- Entscheid: gemergt (R747); live mit REL-26 (R753)
+
+### I-123 · live (REL-26) · Reichweite rechnet den Stammkunden mit
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-12 Scout A; `docs/beobachtungen.md` «10-16 · Reichweite ignoriert Handel und Aufträge» (abgehakt, Trigger: Spieler liest die Zeile als falsch); `src/ui/hud.ts:124–127` (`reachLine` «ohne Handel und Aufträge») · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht am Rum-Chip «leer in 3:20» und die Zahl stimmt auch dann, wenn der Stammkunde alle 90 s 5 Rum abholt."
+- Mechanik: `reachLine` zieht die Vertragsmenge je Periode als zusätzlichen Verbrauch ab (Menge ÷ Periode), nur für das Vertragsgut der Heimat; Zufallsauftrag und Handel bleiben draussen, der Zusatz lautet dann «(ohne Handel)». Periode und Menge stehen schon in `src/sim/defs/`.
+- Grösse: S · Risiko: keins (reine Anzeige)
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13 · Raster (lead-design): Spass 1 · Passung 3 · Aufwand 3 · Risiko 3 = 11
+- Randfälle: Vertrag gekündigt oder gebrochen → sofort ohne Abzug; Vertragsgut im Überschuss (Bilanz trotz Vertrag positiv) → «voll in …» mit Abzug; andere Insel angezeigt → kein Abzug.
+- Doppelung: I-109 (live) nennt die Grenze selbst; die Beobachtung ist abgehakt mit Spieler-Trigger, der noch nicht eingetreten ist.
+- Bewertung lead-design: Spass 2 → 1: Korrektur einer Anzeige ohne neue Entscheidung, und der Trigger (Spieler liest die Zeile falsch) ist nicht eingetreten. Als Beipack zu I-122 sinnvoll (gleiche Stelle, gleicher Moment), allein nicht.
+- Nutzen/Aufwand: Reichweite stimmt mit Vertrag · S · ≈ 30 Tools als Beipack
+- Entscheid: gemergt (R747); live mit REL-26 (R753)
+
+### I-133 · verworfen (R745) · Krisenstufe «stürmisch» im Spiel wählbar
+
+- Bereich: Bedienung · Säule: Insel besiedeln (Krisen) · Quelle: IDEEN-12 Scout C; `src/sim/defs/crises.ts` (Stufen aus/mild/normal, `period` 1200/600, Wahl nur bei «Neue Insel» über `src/ui/settings.ts`) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler stellt im Spätspiel auf «stürmisch», weil seine Stadt gut geschützt ist, und erlebt doppelt so viele Brände und Stürme."
+- Mechanik: Vierte Stufe «stürmisch» mit `period` 300, Gewichte fire 40 / storm 30 / boom 30; ab dem Wahlziel im Spiel umschaltbar, ohne Kosten. Werte in `src/sim/defs/crises.ts`.
+- Grösse: S · Risiko: Save (neuer Wert im Feld der Krisenstufe), `balance-crises.test.ts` erweitern; Baseline keins
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12 · Raster (lead-design): Spass 2 · Passung 2 · Aufwand 3 · Risiko 2 = 11
+- Randfälle: Umschalten während einer Krise wirkt erst auf den nächsten Zeitpunkt; der Boom-Ausgleich (150 %) ist im Geldüberschuss wertlos, also ist die Stufe reine Schwierigkeit; ohne Feuerwache dieselbe Wahl ohne Schutz.
+- Doppelung: I-058 (geparkt), I-076 (verworfen, vierte Krisenart). Neu ist die Stufe, keine neue Krise.
+- Bewertung lead-design: Als freie Einstellung ist «stürmisch» Schwierigkeit ohne Ziel (der Boom-Lohn zählt im Spätspiel nicht). Mit Ziel wird es eine Prüfung: Empfehlung zusammenfassen in I-132 als Auflage «Sturmjahr»; nur falls I-132 nicht kommt, als Einstellung allein.
+- Nutzen/Aufwand: Spätspiel-Herausforderung · S · ≈ 50 Tools (in I-132 enthalten)
+- Entscheid: eingeplant (R737) als Auflage «Sturmjahr» in I-132; verworfen (R745): gerechnet trivial (3 Feuerwachen halten ≥ 93 %)
