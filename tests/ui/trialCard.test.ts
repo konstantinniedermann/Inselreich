@@ -161,4 +161,22 @@ describe('I-132 Auflagen-Karte', () => {
     card.update(w);
     expect(host.children).toHaveLength(0);
   });
+
+  it('Statuszeile aktualisiert in place: Knopf bleibt derselbe Knoten, armed bleibt', () => {
+    const { host, card, action, onAbort } = setup();
+    const w = merchantWorld(60);
+    w.trial = { active: 'selfSupply', ticks: 10, e0: 60, passed: [] };
+    card.setOpen(true);
+    card.update(w);
+    const btn = action()!;
+    btn.fire('click'); // bewaffnet
+    w.trial = { ...w.trial, ticks: 20 };
+    card.update(w);
+    expect(action()).toBe(btn);
+    expect(host.children[0]!.children).toContain(btn);
+    expect(textOf(host.children[0]!)).toContain('Läuft: 0:02 / 15:00');
+    expect(btn.textContent).toBe('Wirklich abbrechen?');
+    btn.fire('click');
+    expect(onAbort).toHaveBeenCalledTimes(1);
+  });
 });

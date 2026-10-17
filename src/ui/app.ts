@@ -140,7 +140,7 @@ import { COUNCIL, COUNCIL_OPEN_MESSAGE } from '../sim/defs/council';
 import { councilEscapeHandled, councilOpenNext, councilOpened } from './council';
 import { createCouncilCard } from './councilCard';
 import { createTrialCard } from './trialCard';
-import { TRIAL_ABORT_MESSAGE, trialChipShown, trialStartMessage, trialTransition } from './trial';
+import { TRIAL_ABORT_MESSAGE, trialChip, trialStartMessage, trialTransition } from './trial';
 import { setMonumentBuy, setMonumentPaused, startMonumentStage } from '../sim/monument';
 import { monumentStageCost, monumentStartedText } from './monumentView';
 import { setPaused } from '../sim/pause';
@@ -666,7 +666,7 @@ function launch(
       councilCard.setOpen(councilOpenNext(councilCard.isOpen, 'toggle'));
     },
     toggleTrial: () => {
-      if (!trialChipShown(world)) return;
+      if (trialChip(world) === null) return;
       const next = !trialCard.isOpen;
       if (next) councilCard.setOpen(false);
       trialCard.setOpen(next);
@@ -998,7 +998,7 @@ function launch(
     const trialMsg = trialTransition(prevTrial, world.trial);
     if (trialMsg !== null) showMessage(trialMsg, 'info', true, true);
     prevTrial = cloneTrial(world.trial);
-    if (trialCard.isOpen && !trialChipShown(world)) trialCard.setOpen(false);
+    if (trialCard.isOpen && trialChip(world) === null) trialCard.setOpen(false);
     trialCard.update(world);
     updateNoticeStack(noticeStack, world, state.activeIsland);
     updateEventLog(

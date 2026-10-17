@@ -43,6 +43,7 @@ export function createTrialCard(
   let armed = false;
   let signature = '';
   let viewJson = '';
+  let statusEl: HTMLElement | null = null;
   let lastWorld: World | null = null;
   let lastLines: DeficitLine[] = [];
   let previewTick: number | null = null;
@@ -67,7 +68,11 @@ export function createTrialCard(
       el('p', 'trial-preview', `Ohne Zukauf fehlen: ${view.preview}`),
       el('p', 'trial-fire', view.fireHint),
     );
-    if (view.status !== null) root.append(el('p', 'trial-status', view.status));
+    statusEl = null;
+    if (view.status !== null) {
+      statusEl = el('p', 'trial-status', view.status);
+      root.append(statusEl);
+    }
     const a = view.action;
     if (a.kind === 'none') return;
     const btn = el('button', 'btn trial-action');
@@ -107,9 +112,15 @@ export function createTrialCard(
     const view = trialCardView(world, lastLines);
     if (lastKind !== view.action.kind) armed = false; // Review Focus 4
     lastKind = view.action.kind;
-    viewJson = JSON.stringify(view);
+    // Die Statuszeile zählt sekündlich: sie wird an Ort und Stelle gesetzt, der Neuaufbau (Fokus, Klick) bleibt aus.
+    viewJson = JSON.stringify({ ...view, status: view.status === null ? null : '' });
     const sig = armed ? `${viewJson}|armed` : viewJson;
-    if (sig === signature) return;
+    if (sig === signature) {
+      if (statusEl && view.status !== null && statusEl.textContent !== view.status) {
+        statusEl.textContent = view.status;
+      }
+      return;
+    }
     signature = sig;
     build(view);
   };
