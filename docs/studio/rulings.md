@@ -2183,3 +2183,14 @@ committet L0 nicht auf main (Lernpunkt aus R757-Merge).
 Regelbezug: R755, R757, E-068, R673 · Kosten bei Irrtum: ein hängender Bash-Aufruf bleibt bis zu 30 min ohne Inaktiv-Signal.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-16 · ADR: —
+
+## R762 · 2026-10-17 · TOOL-BUENDEL-16 gemergt; freie Plätze → Brainstorming «Stadtplanung» ohne Testläufe
+
+Ruling: Merge `7c7e3188` (TOOL-BUENDEL-16, `make studio-test` 1008 grün, R761) bestätigt. Freie Plätze im Deckel 6 (R475, R698): **design-stadtplanung** an `lead-design` (opus,
+Design-Lead; Budget 2 Starts, Parallelität 1): Designvorschlag mit 2–3 Varianten aus I-128, I-061, I-051, I-045 (Baustein laut R529/R737), Branch `design/stadtplanung`;
+**keine Test- oder Sim-Messläufe**, damit das Ruhefenster für ORT-A T09 (R760) erreichbar bleibt. I-131 bleibt geparkt: I-112 ist live, die zweite Bedingung (Edikt-Überarbeitung mit
+I-064) fehlt noch.
+
+Regelbezug: R475, R529, R698, R737, R760 · Kosten bei Irrtum: ein Designvorschlag, der vor dem nächsten Meilenstein-Brainstorming veraltet.
+
+Entscheider: L0 · Anlass: Merge-Bericht production-integrator, freie Kapazität · ADR: —
