@@ -21,7 +21,9 @@ import paths
 
 GRACE = 5.0  # Sekunden zwischen SIGTERM und SIGKILL
 POLL = 0.02
-LOAD_CAP = 8.0  # ab dieser 1-min-Last begrenzt testrun die Vitest-Worker
+# Ab dieser 1-min-Last begrenzt testrun die Vitest-Worker. Muss unter LOAD_MAX in
+# tools/testlock/testlock.ts (8) liegen: darüber bricht Testlock ab, der Deckel griffe nur bei Last 8.
+LOAD_CAP = 6.0
 WORKER_CAP = 4
 WORKERS_ENV = "VITEST_MAX_WORKERS"
 MAX_NAMES = 50
