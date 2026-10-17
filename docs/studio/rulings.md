@@ -1060,3 +1060,15 @@ Studio-Idee, daher keine Kenntnis an den Nutzer nötig.
 Regelbezug: R571, R599, R670, R722, R776, gates.md Gate Brainstorming · Kosten bei Irrtum: vier geparkte Ideen, die mit dem neuen Auslöser nie wieder geprüft werden.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-I-144 · ADR: —
+
+## R781 · 2026-10-17 · I-136 abgenommen; Gate Merge in der Folgesession (Ampel gelb, Push verbraucht)
+
+Ruling: `feat/i136` @ `6f7bbc21` → abgenommen: Final-Review opus BEDENKEN (arc42-Tabelle neu umgebrochen, zwei niedrige), Fixes `19a2fa30`/`e2849686`/`6f7bbc21`, frisches Delta-Review
+opus OK (Handbuch 1.65 «Delta-Review frisch»); Browser-Check OK (AK-F8–F10, Fahrzeit 27 s / 36 s = Inselkarte, Rot `rgb(255, 59, 92)` und zurück, keine Mutation im Leerlauf, v18 lädt);
+gezielte Tests 103 grün, `src/sim/` unberührt. Diff 20 Dateien +623/−28. **Gate Merge** (voller `make check` auf der Branch) und lokaler Merge erst in der Folgesession als Teil
+von **REL-28**, weil der Push dieser Session verbraucht ist (R335) und die Ampel gelb steht (keine neue Welle, R69); ein lokaler Merge jetzt bringt dem Spieler nichts. Drei niedrige
+Befunde in `docs/beobachtungen.md`. Budget I-136: 4 von 4 Starts verbraucht (Umsetzer, Final-Review, Playtester, Delta-Review), Fix-Runde als Fortsetzung.
+
+Regelbezug: R69, R335, R673, R693, R774, R778 · Kosten bei Irrtum: I-136 kommt eine Session später live.
+
+Entscheider: L0 · Anlass: Berichte qa-code-reviewer (Final- und Delta-Review), qa-playtester, tech-ui-engineer I-136 · ADR: —

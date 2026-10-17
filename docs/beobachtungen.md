@@ -457,3 +457,15 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - `src/ui/hud.ts:336`: Ziel-Chip ist ein `<button>`, vor dem Denkmal per Tab erreichbar ohne Wirkung; `tabIndex = -1` oder `disabled`, solange `trialChip` null ist.
 - `src/sim/trial.ts:1`: Kopfkommentar «ändert die Welt nicht» stimmt für `startTrial`/`abortTrial`/`tickTrial` nicht.
 - Merge-Reihenfolge: `feat/ort-a` und `feat/i132` konfliktieren in `docs/beobachtungen.md` (beide hängen am Dateiende an); Zweiter löst von Hand. `app.ts` merged sauber.
+
+## 2026-10-17 · ORT-A T10: Fixture ohne Bauland in Versorgung
+
+- Fundort: tools/render-qa/fixtures/ort-a-siedlung.json (T10-Playtest, .studio/qa/ort-a/browser-ort1/)
+- Beobachtung: Einzelhof (breiter Saum) und Bau am Patch-Rand nicht prüfbar, jeder Bauplatz liegt ausserhalb der Versorgung; Saum in der Siedlung sehr dezent; Item-Zählung über home(world) liefert für die Fremdinsel 0.
+- Ursprung: ORT-A T10 · Einschätzung: Fixture mit Freiland im Versorgungsradius ergänzen (erzeuge.mjs), Saumstärke ggf. Design-Frage.
+
+## 2026-10-17 · I-136 Playtest und Umsetzung (niedrig)
+
+- Fundort: Fernkarte (`src/ui/hud.ts`, «≈ 27 s Fahrt») gegen Inselkarte (`src/ui/islandCard.ts`, «Fahrzeit 0:27»). Beobachtung: gleicher Wert, zwei Zeitformate. Ursprung: I-136 Browser-Check. Einschätzung: Spec verlangt «s»; Angleichen als Beipack prüfen.
+- Fundort: `git stash list`. Beobachtung: neuer `stash@{0}` (WIP auf `feat/i136`, versehentlich, Änderung wiederhergestellt) schiebt die in state.md genannten Alt-Stashes auf `stash@{1}`/`{2}`. Ursprung: I-136 Umsetzer. Einschätzung: state.md verweist künftig per Hash statt Index; Aufräumen nur per Ruling (Guard sperrt `stash drop`).
+- Fundort: `src/ui/hud.ts:647` `FAR_TRAVEL_TIP`. Beobachtung: Test importiert die Konstante, Wortlaut ungesichert (Kann-Punkt Delta-Review). Ursprung: I-136 Delta-Review. Einschätzung: eine `toBe`-Zeile mit festem Text bei nächster Berührung.
