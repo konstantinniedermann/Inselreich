@@ -11,7 +11,8 @@ import {
 } from '../sim/defs/sea';
 import { effectiveCycle, traitOf } from '../sim/levels';
 import { HOME } from '../sim/world';
-import { islandName, seaLanes, travelTicks } from '../sim/islands';
+import { islandName, travelTicks } from '../sim/islands';
+import { homeLane } from './homeTravel';
 import { GOODS } from '../sim/defs/goods';
 import { perMinute } from './time';
 import type { Building, World } from '../sim/types';
@@ -78,16 +79,12 @@ export function formatIslandCard(def: IslandDef, width: number, height: number, 
   return parts.join(' · ');
 }
 
-const lanes = new WeakMap<World, ReturnType<typeof seaLanes>>();
-
 /** Karte der Fremdinsel `i` (≥ 1) oder `null`, wenn es sie nicht gibt. */
 export function islandCard(world: World, i: number): string | null {
   const isl = world.islands[i];
   if (!isl || i === HOME || isl.kind === 'home') return null;
   const def = ISLANDS.find((d) => d.kind === isl.kind);
-  let all = lanes.get(world);
-  if (!all) lanes.set(world, (all = seaLanes(world.islands)));
-  const lane = all.find((l) => l.a === HOME && l.b === i);
+  const lane = homeLane(world, i);
   if (!def || !lane) return null;
   return formatIslandCard(def, isl.width, isl.height, lane.d);
 }
