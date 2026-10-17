@@ -2249,3 +2249,16 @@ der ORT-A-Messung.
 Regelbezug: R674, R765, E-010 · Kosten bei Irrtum: ein Plan, der nach M3–M6 nachgeschärft wird.
 
 Entscheider: L0 · Anlass: Bericht lead-design Spec-Nachtrag · ADR: —
+
+## R767 · 2026-10-17 · ORT-A E6: Grenze relativ gerissen, absolut unkritisch → keine dritte Perf-Runde; absolute Release-Grenze; T10 und Strang k1 starten; I-132 C2 startet
+
+Ruling: T09 (`.studio/qa/ort-a/messung-ort1.md`, Handoff `.studio/handoffs/2026-10-17-lead-tech-ORT-A-C7.md`): `patchMs` B/A 1,74–1,96 (Grenze 1,20), absolut 4,0–8,6 ms je Patch; Hitch
+Σover25 = 0 in A und B; Render ±1 ms (Last). → **Option 3** statt T05b-Zusatzarbeit oder Saumreichweite: Die Spielerwirkung (kein Frame > 25 ms) ist erfüllt, eine dritte
+Perf-Runde derselben Befundklasse widerspräche R735 V1/R739. Die relative Frühwarnung E6 (AK-17) wird für ORT-A ersetzt durch eine **absolute Release-Grenze in T23**:
+`patchMs` ≤ 10 ms je Patch (Seeds 7, 14, Siedlung) und Σover25 = 0; reisst T23 sie, entscheidet L0 dann zwischen Zwei-Zonen-Ausbau und Saumreichweite. Spec-Abweichung AK-17
+mit diesem Ruling; die Galerie-Werte gelten. Trivial-Fixes `23ce0ecc` gehen in den nächsten Task-Review. **ORT-A C8:** T10 (qa-playtester, Item-Zählung Siedlung), dann Strang k1
+T11–T13 seriell; Budget **7 Starts** neu (ORT-A gesamt ≈ 39 von 57 laut Plan), Parallelität 1. **I-132 C2:** T04 jetzt (R764, Messung beendet), Parallelität 1 bis der Deckel frei ist.
+
+Regelbezug: R705, R735 V1, R739, R746, R764 · Kosten bei Irrtum: ein Release, das in T23 an der absoluten Grenze scheitert und dann die verschobene Perf-Runde braucht.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C7 (D-ORT1-E6) · ADR: —
