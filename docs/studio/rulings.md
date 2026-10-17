@@ -2194,3 +2194,17 @@ I-064) fehlt noch.
 Regelbezug: R475, R529, R698, R737, R760 · Kosten bei Irrtum: ein Designvorschlag, der vor dem nächsten Meilenstein-Brainstorming veraltet.
 
 Entscheider: L0 · Anlass: Merge-Bericht production-integrator, freie Kapazität · ADR: —
+
+## R763 · 2026-10-17 · Gate Brainstorming «Stadtplanung»: Variante B «Wohnen und Werkstatt» als Meilenstein-Kandidat; D1–D8 angenommen
+
+Ruling: `design/stadtplanung` @ `c8396fa6` (Handoff `.studio/handoffs/2026-10-17-lead-design-design-stadtplanung.md`) → **angenommen mit BEDENKEN der Selbstprüfung** (offene
+Messungen M1, M2, M4). Kernbefund bestätigt: Nähe bringt heute nichts; Lärm allein ergibt eine Pflicht, keine Wahl. **D1** Variante B (Lärm senkt Belegung im Radius 3, vier
+Werkstätten nur im Versorgungsradius, Park als Lärmschutz, Ebene aus I-045; 5 Pakete, ein Release); C erst nach Playtest von B. **D2** Strafe Belegung 75 % statt +15 s. **D3** alle vier
+Werkstätten inkl. Weberei. **D4** Lärm nur bei stehendem, angebundenem, nicht stillgelegtem, nicht brennendem Betrieb. **D5** Park ohne Weg, brennt nicht, Radius 2, ab U2. **D6**
+Balancing-Änderung erwartet, Ruling beim Gate Spec auf Basis M5. **D7** M1/M2 jetzt (lesend, ohne Sim-Lauf), dann Spec; M3–M5 erst nach ORT-A T09. **D8** Ideen-Status pflegt
+lead-production beim Merge des Vorschlags. Kein Nutzer-Vorbehalt (§5.3: keine Kernsäule berührt). Fortsetzung: dieselbe lead-design-Instanz mit den 2 freien Starts
+(design-economy-designer für M1/M2 auf Papier, design-spec-author für den Spec-Entwurf mit Platzhaltern für M3–M5).
+
+Regelbezug: R529, R722, R737, R762, VERFASSUNG §5.3 · Kosten bei Irrtum: eine Spec, die nach M4 (Park als Reflexbau) nachgeschärft wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-stadtplanung · ADR: —
