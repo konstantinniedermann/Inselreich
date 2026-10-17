@@ -415,6 +415,24 @@ bleibt Regressionsschutz); die Lese-Helfer in `src/sim/council.ts` liefern ohne 
 **Anteiliger Stufentakt (R711 R-3):** Ausgebaute Betriebe nehmen den neuen Takt anteilig: `floor(Stufentakt × neuer Grundtakt ÷ 50)`, mindestens 1 (Weberei Stufe 30 → 24).
 Die Reihenfolge ist Beschluss, dann Inselvorteil, beide abgerundet. Das Glockenrecht gilt auch für die Festreichweite der Kapelle.
 
+## Meisterprüfung (Auflage)
+
+Nach dem fertigen Denkmal (`monumentDone`) wählt der Spieler freiwillig die Auflage «Eigenversorgung»: 15 Minuten kein Zukauf an den Kontoren und für das Denkmal. Die Zahlen stehen nur in
+`src/sim/defs/trials.ts` (Änderung nur per Ruling, der Balancing-Test bleibt Regressionsschutz). Entscheide E1 bis E4: Ruling R745.
+
+| Wert                | Konstante              | Wert                             |
+| ------------------- | ---------------------- | -------------------------------- |
+| Dauer               | `TRIAL_DURATION_TICKS` | 9000 Ticks (15 min)              |
+| Startfenster, unten | `TRIAL_MIN_MERCHANTS`  | 60 Kaufleute (`WIN_MERCHANTS`)   |
+| Startfenster, oben  | `TRIAL_MAX_MERCHANTS`  | 150 Kaufleute                    |
+| Abbruchschwelle     | `TRIAL_FAIL_POP_PCT`   | 70 % der Starteinwohner          |
+| Auflagen            | `TRIAL_IDS`            | `selfSupply` («Eigenversorgung») |
+
+- **E1:** nur «Eigenversorgung»; Zukauf gesperrt, Verkauf, Aufträge, Stammkunde, Fernangebot, Schiffe und Bauen bleiben frei.
+- **E2:** keine Abriss- oder Steuersperre; die Abbruchschwelle deckelt das Verkleinern.
+- **E3:** Startfenster 60 bis 150 Kaufleute (Obergrenze geschätzt, Playtest-Trigger Spec §10).
+- **E4:** nicht bestanden, sobald die Einwohner unter 70 % der Starteinwohner fallen (90 % risse im Normalspiel in 11 von 16 Seeds).
+
 ## Krisen
 
 ### Krisenstufe

@@ -18,6 +18,7 @@ function load(text: string): World {
 function v16Of(w: World): Record<string, unknown> {
   const raw = json(w);
   delete raw.council;
+  delete raw.trial;
   raw.version = 16;
   return raw;
 }

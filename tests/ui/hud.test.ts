@@ -33,6 +33,8 @@ import {
   renderNoticeStack,
   updateNoticeStack,
   tierTooltip,
+  syncGoalChip,
+  bindGoalChip,
 } from '../../src/ui/hud';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
 import { HOME, home, createWorld } from '../../src/sim/world';
@@ -728,5 +730,39 @@ describe('I-109 Reichweite am Lager-Chip (AK-UR-04 bis 06)', () => {
     const w = SCENARIOS['bilanz-nahrung']!();
     expect(chipView(w, 'wood')).toEqual(chipView(w, 'wood'));
     expect(stockTooltip(w, 'wood')).toBe(stockTooltip(w, 'wood'));
+  });
+});
+
+describe('I-132 Ziel-Chip als Knopf', () => {
+  it('Meisterprüfung: Aktionsklasse, Text, Klick ruft toggleTrial einmal', () => {
+    const w = createWorld(3);
+    const el = new FakeElement('button');
+    const toggleTrial = vi.fn();
+    bindGoalChip(el as unknown as HTMLElement, { toggleTrial } as never);
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(el.classList.contains('goal-chip--action')).toBe(false);
+    el.fire('click');
+    expect(toggleTrial).toHaveBeenCalledTimes(1);
+    w.wonSpice = true; // Phase «done»; in «spice» zeigt der Chip die Meisterprüfung seit cb8e3958 ebenfalls (nächster Test)
+    w.monumentDone = true;
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(el.classList.contains('goal-chip--action')).toBe(true);
+    expect(el.textContent).toBe('Meisterprüfung');
+    expect(el.title).toBe('Meisterprüfung: freiwillige Auflage — Klick für Details');
+  });
+  it('monumentDone ohne wonSpice: Aktionsklasse und Text «Meisterprüfung» (Spec §5 Nr. 1)', () => {
+    const w = createWorld(3);
+    w.wonMerchants = true; // Phase «spice»: das Denkmal ist nach dem Kaufleute-Ziel baubar
+    w.monumentDone = true;
+    const el = new FakeElement('button');
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(el.classList.contains('goal-chip--action')).toBe(true);
+    expect(el.textContent).toBe('Meisterprüfung');
+    expect(el.title).toContain('Meisterprüfung: freiwillige Auflage');
+  });
+  it('Quelltext: Ziel-Element ist ein Knopf mit goal-chip', () => {
+    expect(readFileSync('src/ui/hud.ts', 'utf8')).toMatch(
+      /<button type="button" class="chip goal-chip" data-field="goal">/,
+    );
   });
 });

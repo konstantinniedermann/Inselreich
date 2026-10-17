@@ -29,5 +29,6 @@ describe('balance: scripted colony (Kurz-Spec Balancing)', () => {
     expect(t.winTick).not.toBeNull();
     expect(t.winTick!).toBeLessThanOrEqual(WIN_TICK_LIMIT);
     expectNoDecree(w);
+    expect(w.trial).toEqual({ active: null, ticks: 0, e0: 0, passed: [] });
   });
 });

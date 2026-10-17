@@ -161,6 +161,7 @@ function runA(trade: boolean): RunA {
       if (!w.monumentDone) expect(startMonumentStage(w)).toEqual({ ok: true });
     }
   }
+  expect(w.trial).toEqual({ active: null, ticks: 0, e0: 0, passed: [] });
   const endStock = {} as Record<MonumentGood, number>;
   for (const g of MONUMENT_GOODS) endStock[g] = home(w).stock[g];
   return { finish, diff: twin.money - w.money, endStock };

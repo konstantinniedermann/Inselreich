@@ -148,3 +148,20 @@ describe('AK-1 Zeile rest-monument', () => {
     expect(line.hidden).toBe(true);
   });
 });
+
+describe('I-132 Zeile rest-trial', () => {
+  it('Chronikzeile nach dem Denkmal; ohne Denkmal versteckt und leer', () => {
+    const w = monumentWorld();
+    const p = new FakeElement('div');
+    p.append(fieldEl('rest-trial'));
+    w.monumentDone = true;
+    updateRest(asEl(p), w);
+    const line = p.querySelector('[data-field="rest-trial"]')!;
+    expect(line.textContent).toBe('Meisterprüfung: offen');
+    expect(line.hidden).toBe(false);
+    w.monumentDone = false;
+    updateRest(asEl(p), w);
+    expect(line.textContent).toBe('');
+    expect(line.hidden).toBe(true);
+  });
+});

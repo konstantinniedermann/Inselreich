@@ -1,5 +1,6 @@
 import { home, isKontor } from '../sim/world';
 import { monumentChronicleLine } from './monumentView';
+import { trialChronicleLine } from './trial';
 import { phaseAt, type Phase } from '../render/daynight';
 import { maxInhabitantsOf } from '../sim/council';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
@@ -1125,6 +1126,7 @@ export function renderRest(panel: HTMLElement, world: World): void {
   panel.appendChild(bar);
   addLine(panel, '', 'goal-next');
   addLine(panel, '', 'rest-monument');
+  addLine(panel, '', 'rest-trial');
   addLine(panel, tierPath());
 
   addHeading(panel, 'Nächster Schritt');
@@ -1182,6 +1184,9 @@ export function updateRest(panel: HTMLElement, world: World): void {
   const monoText = monumentChronicleLine(world);
   const mono = setField(panel, 'rest-monument', monoText ?? '');
   if (mono && mono.hidden !== (monoText === null)) mono.hidden = monoText === null;
+  const trialText = trialChronicleLine(world);
+  const trialEl = setField(panel, 'rest-trial', trialText ?? '');
+  if (trialEl && trialEl.hidden !== (trialText === null)) trialEl.hidden = trialText === null;
   setField(panel, 'next-step', nextStep(world));
   setField(panel, 'rest-tax', v.tax);
   fillMapSigns(panel, world);

@@ -135,9 +135,12 @@ import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../si
 import { lockedTierFor } from './taxView';
 import { setEdict } from '../sim/edicts';
 import { decree } from '../sim/council';
+import { abortTrial, startTrial } from '../sim/trial';
 import { COUNCIL, COUNCIL_OPEN_MESSAGE } from '../sim/defs/council';
 import { councilEscapeHandled, councilOpenNext, councilOpened } from './council';
 import { createCouncilCard } from './councilCard';
+import { createTrialCard } from './trialCard';
+import { TRIAL_ABORT_MESSAGE, trialChip, trialStartMessage, trialTransition } from './trial';
 import { setMonumentBuy, setMonumentPaused, startMonumentStage } from '../sim/monument';
 import { monumentStageCost, monumentStartedText } from './monumentView';
 import { setPaused } from '../sim/pause';
@@ -635,9 +638,38 @@ function launch(
     },
   );
 
+  /** Auflagen-Karte der Meisterprüfung (I-132); `prevTrial` ab Start = geladener Stand (keine Meldung für Geladenes). */
+  const cloneTrial = (t: World['trial']): World['trial'] => ({ ...t, passed: [...t.passed] });
+  let prevTrial: World['trial'] | null = cloneTrial(world.trial);
+  const trialCard = createTrialCard(
+    gameEl,
+    () => {
+      const r = startTrial(world, 'selfSupply');
+      if (r.ok) showMessage(trialStartMessage());
+      else showError(friendlyReason(world, r.reason));
+      prevTrial = cloneTrial(world.trial);
+      refresh();
+    },
+    () => {
+      const r = abortTrial(world);
+      if (r.ok) showMessage(TRIAL_ABORT_MESSAGE);
+      else showError(friendlyReason(world, r.reason));
+      prevTrial = cloneTrial(world.trial);
+      refresh();
+    },
+    () => trialCard.setOpen(false),
+  );
+
   const actions: HudActions = {
     toggleCouncil: () => {
+      trialCard.setOpen(false);
       councilCard.setOpen(councilOpenNext(councilCard.isOpen, 'toggle'));
+    },
+    toggleTrial: () => {
+      if (trialChip(world) === null) return;
+      const next = !trialCard.isOpen;
+      if (next) councilCard.setOpen(false);
+      trialCard.setOpen(next);
     },
     jumpToIsland,
     openUpkeep: (opener) => openUpkeepCard(gameEl, world, jumpToBuilding, opener),
@@ -963,6 +995,11 @@ function launch(
     if (councilOpened(prevCouncil, world.council).length > 0) showMessage(COUNCIL_OPEN_MESSAGE);
     prevCouncil = { ...world.council };
     councilCard.update(world);
+    const trialMsg = trialTransition(prevTrial, world.trial);
+    if (trialMsg !== null) showMessage(trialMsg, 'info', true, true);
+    prevTrial = cloneTrial(world.trial);
+    if (trialCard.isOpen && trialChip(world) === null) trialCard.setOpen(false);
+    trialCard.update(world);
     updateNoticeStack(noticeStack, world, state.activeIsland);
     updateEventLog(
       logBox,
@@ -1077,6 +1114,7 @@ function launch(
       if (t.ok) upgradeSelected(t.id);
       else showError(t.reason);
     } else if (h.kind === 'council') {
+      trialCard.setOpen(false);
       councilCard.setOpen(councilOpenNext(councilCard.isOpen, 'toggle'));
     } else if (h.kind === 'help') {
       openHelp();
@@ -1188,6 +1226,10 @@ function launch(
       return;
     }
     if (a.type === 'cancel') {
+      if (trialCard.isOpen) {
+        trialCard.setOpen(false); // offene Auflagen-Karte zuerst
+        return;
+      }
       if (councilEscapeHandled(councilCard.isOpen)) {
         councilCard.setOpen(councilOpenNext(true, 'escape')); // offene Rats-Karte zuerst
         return;
@@ -1782,6 +1824,7 @@ function launch(
     cancelAnimationFrame(rafId);
     layers.dispose();
     councilCard.dispose();
+    trialCard.dispose();
     resizeObserver.disconnect();
     dprQuery?.removeEventListener('change', onDprChange);
     input?.unbind();
