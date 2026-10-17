@@ -1,8 +1,15 @@
 // Leser der Meisterprüfung (I-132): Sperrgründe, ohne die Welt zu ändern.
 import { TIERS } from './defs/tiers';
-import { TRIALS, TRIAL_MAX_MERCHANTS, TRIAL_MIN_MERCHANTS } from './defs/trials';
+import {
+  TRIALS,
+  TRIAL_DURATION_TICKS,
+  TRIAL_FAIL_POP_PCT,
+  TRIAL_MAX_MERCHANTS,
+  TRIAL_MIN_MERCHANTS,
+} from './defs/trials';
 import { merchants, populationByTier } from './population';
-import type { TrialId, World } from './types';
+import type { Result, TrialId, World } from './types';
+import { fail, ok } from './types';
 
 export const TRIAL_REASONS = {
   unknown: 'Unbekannte Auflage',
@@ -37,4 +44,39 @@ export function trialStartBlock(world: World, id: unknown): string | null {
 export function trialBuyBlock(world: World): string | null {
   const { active } = world.trial;
   return active === null ? null : `Auflage ${TRIALS[active].name}: kein Zukauf`;
+}
+
+/** Startet die Auflage `id`, wenn `trialStartBlock` nichts sperrt; sonst `{ ok: false, reason }` ohne Weltänderung. */
+export function startTrial(world: World, id: unknown): Result {
+  const why = trialStartBlock(world, id);
+  if (why !== null) return fail(why);
+  world.trial.active = id as TrialId;
+  world.trial.ticks = 0;
+  world.trial.e0 = trialPopulation(world);
+  return ok;
+}
+
+/** Bricht die laufende Auflage ab: kein Eintrag, `e0` bleibt stehen. */
+export function abortTrial(world: World): Result {
+  if (world.trial.active === null) return fail(TRIAL_REASONS.notActive);
+  world.trial.active = null;
+  world.trial.ticks = 0;
+  return ok;
+}
+
+/** Ein Schritt der Auflage: nicht bestanden unter der Schwelle, sonst zählen und bei Ablauf als bestanden eintragen. */
+export function tickTrial(world: World): void {
+  const t = world.trial;
+  if (t.active === null) return;
+  if (trialPopulation(world) * 100 < t.e0 * TRIAL_FAIL_POP_PCT) {
+    t.active = null;
+    t.ticks = 0;
+    return;
+  }
+  t.ticks += 1;
+  if (t.ticks === TRIAL_DURATION_TICKS) {
+    t.passed.push({ id: t.active, tick: world.tick });
+    t.active = null;
+    t.ticks = 0;
+  }
 }

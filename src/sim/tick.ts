@@ -7,6 +7,7 @@ import { tickProduction } from './production';
 import { tickShips, type ShipLoss } from './ships';
 import { tickMonument } from './monument';
 import { tickMarket } from './trade';
+import { tickTrial } from './trial';
 import { tickUnlocks } from './unlocks';
 import { WIN_CITIZENS, WIN_MERCHANTS, WIN_SPICE_MERCHANTS } from './defs/tiers';
 import { spiceLoop, spiceMerchants } from './goal3';
@@ -34,12 +35,13 @@ export interface StepReport {
   contract: ContractEvent | null;
 }
 
-/** Ein Simulationsschritt: Zähler, Produktion, Schiffe, Bevölkerung, Ratsbeschluss (öffnet ab Hausstufe 2/3/4), Steuern, Wirtschaft (Unterhalt), Markt, Aufträge, Krisen, Sieg, Freischaltung. */
+/** Ein Simulationsschritt: Zähler, Produktion, Schiffe, Bevölkerung, Auflage, Ratsbeschluss (öffnet ab Hausstufe 2/3/4), Steuern, Wirtschaft (Unterhalt), Markt, Aufträge, Krisen, Sieg, Freischaltung. */
 export function step(world: World): StepReport {
   world.tick += 1;
   tickProduction(world);
   const lost = tickShips(world);
   tickPopulation(world);
+  tickTrial(world);
   tickCouncil(world);
   tickTaxes(world);
   tickEconomy(world);

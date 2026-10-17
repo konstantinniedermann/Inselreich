@@ -17,6 +17,7 @@ import type { GoodId, MonumentGood, Result, World } from './types';
 import { fail, ok } from './types';
 import { islandName } from './islands';
 import { islandAt } from './placement';
+import { trialBuyBlock } from './trial';
 import { HOME } from './world';
 
 /** Ergebnis des Preiskerns: Gesamtpreis, gerundeter Mittelanteil und Anteil nach dem Kauf. */
@@ -105,6 +106,8 @@ export function noKontorTrade(world: World, island: number): string | null {
 export function buy(world: World, good: GoodId, n: number, island: number = HOME): Result {
   const isl = islandAt(world, island);
   if (isl === null) return fail('Unbekannte Insel');
+  const trial = trialBuyBlock(world);
+  if (trial !== null) return fail(trial);
   const noKontor = noKontorTrade(world, island);
   if (noKontor !== null) return fail(noKontor);
   const lock = goodLock(world, good);
@@ -173,9 +176,9 @@ export function tickMarket(world: World): void {
     for (const g of GOOD_IDS) world.buyPct[g] = Math.max(100, world.buyPct[g] - 1);
 }
 
-/** R7.1: `null` = Zukauf für das Denkmal möglich; sonst der Grund (Kontor der Heimat, Gut freigeschaltet). */
+/** R7.1: `null` = Zukauf für das Denkmal möglich; sonst der Grund (Auflage, Kontor der Heimat, Gut freigeschaltet). */
 export function monumentBuyBlock(world: World, good: MonumentGood): string | null {
-  return noKontorTrade(world, HOME) ?? goodLock(world, good);
+  return trialBuyBlock(world) ?? noKontorTrade(world, HOME) ?? goodLock(world, good);
 }
 
 /**
