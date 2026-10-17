@@ -2171,3 +2171,15 @@ Budget: 2 verbleibende Starts aus R758.
 Regelbezug: R329, R750 V3, R758 · Kosten bei Irrtum: T09 verschiebt sich in die Folgesession.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C6 · ADR: —
+
+## R761 · 2026-10-17 · Gate Merge TOOL-BUENDEL-16: OK, Merge lokal
+
+Ruling: `tool/buendel-16` @ `bbc94841` (Handoff `.studio/handoffs/2026-10-17-lead-tech-TOOL-BUENDEL-16.md`; Paket-Review opus BEDENKEN → Fix `bbc94841`, frischer Delta-Review opus OK;
+`make studio-test` 1008 grün, `studio-lint` Exit 0) → **Gate Merge OK**, `production-integrator` merged lokal in `.worktrees/integrate`, kein Push. Inhalt: R755 V1 (Ausnahme vom
+«inaktiv»-Signal für studio-director/lead-qa bei lebenden Nachfahren oder Bash-Heartbeat ≤ 1800 s), R757 (`LOAD_CAP` 6,0 < `LOAD_MAX`, per Test gekoppelt), Rauschen
+`test_aufraeumen`. Der Satz zur Ausnahme in `docs/studio/verbesserung.md` (Abschnitt inaktiv) trägt der studio-coach in der Session-Ende-Retro nach. Bis zum Merge-Bericht
+committet L0 nicht auf main (Lernpunkt aus R757-Merge).
+
+Regelbezug: R755, R757, E-068, R673 · Kosten bei Irrtum: ein hängender Bash-Aufruf bleibt bis zu 30 min ohne Inaktiv-Signal.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-16 · ADR: —
