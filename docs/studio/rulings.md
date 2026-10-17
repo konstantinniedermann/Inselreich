@@ -2078,3 +2078,17 @@ deckt die Retro ca9d40c8 ab (keine eigene, Abweichung von der Ende-Routine wegen
 Regelbezug: R335, R434, R751, R752 · Kosten bei Irrtum: eine fehlende Mini-Retro für eine Push-Session.
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-26 · ADR: —
+
+## R754 · 2026-10-17 · Session 21273458: «mach weiter» = Plan aus state.md; vier Pakete parallel
+
+Ruling: Nutzer: «mach weiter» → Plan aus `state.md` fortsetzen (R434, Autonomie §5). Parallel-Session anno-clone #2 ohne frische Heartbeats (letzte Ereignisse 2026-10-16) → diese
+Session ist die aktive L0-Session (R129); Ruling-Nummern weiter gegen `origin/main` prüfen. Start, Deckel 6 (R698): **(A) RETRO-ADHOC-17** `studio-coach` (sonnet, Kurz-Retro):
+Hook-Ad-hoc (Budget lead-tech 5 von 3, Cache-Write zwei Sessions rot, studio-director inaktiv) gegen R735/R750 abgleichen, nur Neues bewerten; im selben Start Handbuch-Minor
+R750 V2 (Schätzung nur in Tools) und V3 (eine Wartepause je Controller-Instanz). **(B) TOOL-BUENDEL-15** `lead-tech` (sonnet, Werkzeug-Paket): R750 V1, R744
+(`_shown_command`/`COMMAND_LIMIT`), push-check-Hinweise aus R753; Budget 5 Starts, Parallelität 1. **(C) plan-i132** `lead-tech` (opus, Tech-Lead beim Plan): Plan nach R745,
+Save main + 1 = v18; Budget 1 Start (eine Plan-Prüfung). **(D) ORT-A C4** `lead-tech` (sonnet, Controller): Schritte (a)–(c) aus R746, T09 nur bei freiem Messfenster;
+Budget 3 Starts aus dem ORT-A-Puffer (dann 12 von 12), Parallelität 1. Last beim Start 8,4: Testläufe halten TOOL-TESTLOCK ein (R380); Mehrbedarf vor dem Überschreiten melden.
+
+Regelbezug: R129, R380, R434, R698, R735, R744, R745, R746, R750, R753 · Kosten bei Irrtum: ein Werkzeug-Bündel, das bei hoher Last länger braucht als geschätzt.
+
+Entscheider: L0 · Anlass: Session-Start 21273458 · ADR: —
