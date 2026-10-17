@@ -19,7 +19,7 @@ export function createLaneCache(compute: Lanes = (w) => seaLanes(w.islands)): La
 /** Standard-Cache der UI. */
 export const laneCache: Lanes = createLaneCache();
 
-/** Seeweg-Länge Heimat–`island` in Kacheln; `null` für Heimat, fehlende Insel oder fehlende Lane. */
+/** Seeweg (Lane) Heimat–`island`, mit Länge `d` in Kacheln; `null` für Heimat, fehlende Insel oder fehlende Lane. */
 export function homeLane(world: World, island: number, lanes: Lanes = laneCache): Lane | null {
   if (island === HOME || world.islands[island] === undefined) return null;
   return lanes(world).find((l) => l.a === HOME && l.b === island) ?? null;
