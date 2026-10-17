@@ -6,6 +6,7 @@ import type { FarOffer, Order, World } from '../sim/types';
 import type { MapMark } from '../render/seaMap';
 import type { LogEntry } from './crisisLog';
 import { formatGameTime } from './time';
+import { homeTravelTicks, type Lanes } from './homeTravel';
 
 /** Texte, Lieferziel und Log-Einträge zum Fernangebot (Handel 2, Anhang 02); DOM-frei, liest nur die Welt. */
 
@@ -30,15 +31,42 @@ export function farOfferOf(world: World, which: 0 | 1): FarOffer | null {
   return which === 1 ? farAlternative(world) : world.farOffer;
 }
 
-/** T-02: Text des Fernangebots der Karte `which`; `null` ohne Angebot. Das Lager ist das der Fern-Insel. */
-export function farOfferText(world: World, which: 0 | 1 = 0): string | null {
+export interface FarOfferParts {
+  head: string;
+  travel: string | null;
+  stock: string;
+  short: boolean;
+  tip: string;
+}
+
+/** I-136: Teile des Fernangebots der Karte `which`; `null` ohne Angebot. Das Lager ist das der Fern-Insel. */
+export function farOfferParts(world: World, which: 0 | 1 = 0, lanes?: Lanes): FarOfferParts | null {
   const f = farOfferOf(world, which);
   const due = farOfferDue(world);
   if (f === null || due === null) return null;
-  return (
-    `Fernangebot ${islandName(world, f.island)}: ${f.amount} ${GOODS[f.good].name} · ${f.reward}` +
-    ` · Frist ${formatGameTime(due - world.tick)} · Lager ${stockOn(world, f.island, f.good)}/${f.amount}`
-  );
+  const have = stockOn(world, f.island, f.good);
+  const ticks = homeTravelTicks(world, f.island, lanes);
+  const short = have < f.amount;
+  return {
+    head:
+      `Fernangebot ${islandName(world, f.island)}: ${f.amount} ${GOODS[f.good].name} · ${f.reward}` +
+      ` · Frist ${formatGameTime(due - world.tick)}`,
+    travel: ticks === null ? null : `≈ ${formatGameTime(ticks)} Fahrt`,
+    stock: `Lager ${have}/${f.amount}`,
+    short,
+    tip: short ? `Fehlt ${f.amount - have} ${GOODS[f.good].name}` : '',
+  };
+}
+
+/** I-136: Text vor dem Lager-Teil, inklusive trennendem « · ». */
+export function farOfferLead(p: FarOfferParts): string {
+  return `${p.head}${p.travel === null ? '' : ` · ${p.travel}`} · `;
+}
+
+/** T-02: Text des Fernangebots der Karte `which`; `null` ohne Angebot (eine Quelle: `farOfferParts`). */
+export function farOfferText(world: World, which: 0 | 1 = 0, lanes?: Lanes): string | null {
+  const p = farOfferParts(world, which, lanes);
+  return p === null ? null : farOfferLead(p) + p.stock;
 }
 
 /** T-03: Tooltip des Annehmen-Knopfs der Karte `which`; leer ohne Angebot. */
