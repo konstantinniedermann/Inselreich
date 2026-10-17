@@ -429,3 +429,17 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: (a) Umbruch «Strafe / 135» bei 1280 px; (b) verzögerter Klang bei Pause-Annahme; (c) `querySelector` in `app.ts`; (d) hängender Playtester-Lauf (Skripthänger).
 - Ursprung: lead-tech, I-122/I-123, R747
 - Erste Einschätzung: niedrig; (a) und (b) vor der Auswertung im Browser prüfen.
+
+### 2026-10-17 · Spec Stadtplanung: 55 statt 53 Abnahmekriterien
+
+- Fundort: `docs/superpowers/specs/2026-10-17-stadtplanung-design.md` §9, R766 (Branch `plan/stadtplanung`)
+- Beobachtung: Spec und R766 nennen 55 AK (44 Vitest); gezählt sind 53 (42 Vitest). Die AK-Zuordnung im Plan deckt alle 53.
+- Ursprung: lead-tech, Plan Stadtplanung (Fund plan-stadtplanung), Gate Plan lead-production
+- Erste Einschätzung: niedrig; Zahl in der Spec durch lead-design korrigieren (T19 darf nur den Spec-Kopf ändern), Notiz im Gate-Plan-Ruling.
+
+### 2026-10-17 · Balancing-Controller nur auf Seed 3 tragfähig
+
+- Fundort: `tests/sim/controller.ts`, `forceTerrain` (Seed 3, Westküste), Referenzaufbau aus `balance-monument.test.ts`
+- Beobachtung: Die Controller sind auf Seed 3 gebaut; die Seeds 5, 6, 9, 12 tragen den Referenzaufbau nicht («kein freier Erweiterungsplatz für fisher»). Der I-132-Eintrag (b) vom selben Tag steht bisher nur auf Branch `feat/i132` (`docs/beobachtungen.md`, «Testhelfer `putBuilding` und Referenzaufbau Seed 5») und kommt mit dessen Merge; hier bewusst zusammengeführt. Stadtplanung T11/T12 braucht ≥ 3 Seeds für M3/M4 und meldet sonst einen Blocker an L0.
+- Ursprung: lead-tech, I-132 T02 (Fund I-132 C1) und Plan Stadtplanung (Fund plan-stadtplanung), Risiken «Weitere Seeds»
+- Erste Einschätzung: mittel für Stadtplanung (Messbarkeit), sonst niedrig; Seeds mit tragfähigem Aufbau früh in T11 bestimmen. Beim I-132-Merge die beiden Einträge zusammenlegen.
