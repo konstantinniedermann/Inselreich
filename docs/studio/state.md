@@ -148,7 +148,7 @@ TOOL-BUENDEL-16 (`7c7e3188`), Doku/Rulings bis R772.
 
 1. **REL-27 = I-132 «Meisterprüfung» + TOOL-BUENDEL-15/16** (R772): ein `lead-qa`-Start für Gate Merge I-132 (`feat/i132` @ `b8fabe4e`, Final-Review OK, Save v18) und
    Release-Check im Ruhefenster; vorher voller `make check` auf `b8fabe4e` und Browser-Nachprüfung Hand-Cursor; Merge, `make push-check`, Push. Release-Notiz schreiben.
-2. **Handbuch-Minor 1.64** (R769 V1/V2): falls HANDBUCH-1.64 nicht committet ist (studio-coach lief beim Session-Ende), neu starten.
+2. **Handbuch 1.64** (R769 V1/V2) ist umgesetzt (`98850213`); Messfristen V1 2026-11-30, V2 2026-11-15.
 3. **ORT-A C9** (R768, R769 V3): T10 bei Last ≤ 8 (Item-Zählung, Sichtprüfung, `uptime` vor/nach), dann Strang k1 T11–T13 (Handoff `2026-10-17-lead-tech-ORT-A-C8.md`);
    erster Task-Review deckt `23ce0ecc`. Absolute Release-Grenze in T23 statt E6 (R767). Budget neu erteilen (Rest 7 verfallen).
 4. **Stadtplanung Variante B** (R763–R771): Gate Plan OK mit Auflagen 1–5 (R771); Controller C1 arbeitet die Auflagen vor T00 ein (`plan/stadtplanung` @ `3824007c`), Budget 38 Starts,
@@ -181,7 +181,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts aus Session 21273458 ausser ggf. HANDBUCH-1.64 (studio-coach, nur Doku; prüfen, ob committet). Fremdlast (apfsd, Dropbox, WebKit) hielt die 1-min-Last
+- Nichts aus Session 21273458. Fremdlast (apfsd, Dropbox, WebKit) hielt die 1-min-Last
   über Stunden bei 6–14 — Mess-Tasks brauchen ein Ruhefenster (R760).
 
 ## Parallele Sessions
