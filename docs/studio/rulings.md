@@ -2158,3 +2158,16 @@ Worktree `.worktrees/i132`, Branch `feat/i132` ab main mit Merge von `plan/i132`
 Regelbezug: gates.md Gate Plan, R553, R674, R698, R708, R745 · Kosten bei Irrtum: eine Obergrenze, die nach dem Playtest verschoben wird.
 
 Entscheider: L0 · Anlass: Gate-Urteile lead-qa und lead-production gate-i132 · ADR: —
+
+## R760 · 2026-10-17 · ORT-A C6 abgenommen (FIX-TEX, Smoke grün); T09 wartet auf ein Ruhefenster des Studios
+
+Ruling: `feat/ort-a` @ `67cd0498` (Handoff `.studio/handoffs/2026-10-17-lead-tech-ORT-A-C6.md`) → abgenommen: `TEX` in `src/render/isoBase.ts`, Zyklus aufgelöst, `importZyklus.test.ts`
+(3 von 4 rot vor dem Fix), Review OK, `npx vitest run` 4318 grün, Browser-Smoke Seed 7 ohne Konsolenmeldung. T09 nicht gelaufen (Last 6,2–9,5 nach einer Pause, R750 V3 korrekt).
+Die Last stammt zum Teil aus dem Studio selbst (I-132, Werkzeug-Bündel). **Messfenster-Regel für diese Session:** L0 startet **C7** (T09, bei OK T10) erst, wenn kein anderer
+Agent Testläufe fährt (I-132 zwischen zwei Tasks oder pausiert, Bündel 16 gemergt) und `lastgate.mjs` frei meldet; C7 läuft die Messung am Stück. C7 nimmt die zwei Kleinbefunde
+mit (Trivial-Fix-Regel): `massif.ts` importiert `ISO_H` aus `isoBase` (Bestandszyklus `massif` ↔ `iso` weg), Pfad in `importZyklus.test.ts` unabhängig vom Arbeitsverzeichnis.
+Budget: 2 verbleibende Starts aus R758.
+
+Regelbezug: R329, R750 V3, R758 · Kosten bei Irrtum: T09 verschiebt sich in die Folgesession.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C6 · ADR: —
