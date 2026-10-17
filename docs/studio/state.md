@@ -8,6 +8,15 @@ Stand: 2026-10-17 (Session 21273458, R754–R772; main lokal 2 Werkzeug-Merges u
 
 ## Release-Notizen
 
+**REL-27 „Meisterprüfung“ (live, R779)** — Save **v18** (Migration v17→v18). Inhalt: I-132, TOOL-BUENDEL-15, TOOL-BUENDEL-16, Doku R773–R777 (Rulings-Archiv, IDEEN-13).
+Push `6f14a354..add28350`, CI-Lauf 39033715341, Pages-Lauf 39034234219 (automatisch). Quelle: `.studio/handoffs/2026-10-17-lead-qa-gate-REL-27.md`.
+
+- **Neu:** Nach dem fertigen Denkmal (auch in der Gewürz-Phase) wird der Ziel-Chip zum Knopf «Meisterprüfung»: 15 Minuten ohne Zukauf an Kontoren und Denkmal durchhalten,
+  Einwohner nicht unter 70 % des Starts; Abbruch jederzeit, Lohn: Chronikeintrag «Meisterprüfung: Eigenversorgung bestanden» (vom Studio vorgeschlagen, I-132). Die Inselchronik
+  zeigt den Stand der Prüfung.
+- **Bitte testen:** (1) Denkmal bauen, Chip «Meisterprüfung» anklicken (Hand-Zeiger, Karte öffnet, Esc schliesst); (2) «Auflage beginnen»: Kauf gesperrt, Zähler läuft bis 15:00;
+  (3) absichtlich scheitern (Einwohner unter 70 %): Meldung genau einmal, neuer Versuch möglich; (4) mitten in der Auflage speichern und laden, auch über den manuellen Slot; (5) Spielstand v17 laden.
+
 **REL-26 „Rat, Vorwarnung, Klang“ (live, R753)** — Save **v17** (Migration v16→v17). Inhalt: I-112, I-122 + I-123, I-114, I-118, I-120, UI-AUFRAEUM-4, BEOB-17, PERF-BILANZ-COV, TOOL-BUENDEL-14, TOOL-GUARD-ALLOWLIST, TOOL-ACTIONS-FREI, IDEEN-12. Push `8fe744df..6f14a354`, CI-Lauf 38914539819, Pages-Lauf 38915602338 (automatisch per `workflow_run`). Quelle: `.studio/handoffs/2026-10-16-lead-qa-release-REL-26.md`.
 
 - **Neu:** Der Rat tagt, sobald ein Haus Stufe 2, 3 oder 4 erreicht: Marke «Rat · n» in der Kopfzeile, `Umschalt+R` öffnet ihn, je Stufe ein Beschluss für die ganze Partie (kostenlos, nicht änderbar; vom Studio vorgeschlagen, I-112). Die Stammkunden-Karte warnt 30 s vor der Abrechnung bei behebbarem Fehlbestand, mit Klang (vom Studio vorgeschlagen, I-122); die Lager-Reichweite rechnet den Stammkunden mit (I-123). Fernangebot ist jetzt eine Wahl (I-114). Aufstiegs-Funkeln (I-118) und Wohlstandsklang (I-120). Menüabstand und Aufräumarbeiten; Werkzeug-/CI-Anpassungen ohne Spieleinfluss.
