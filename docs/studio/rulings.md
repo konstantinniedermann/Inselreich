@@ -992,3 +992,16 @@ bleibt Rückfallnetz; (d) die AK-Zahl 55/44 in R766 ist durch R771 auf 53/42 kor
 Regelbezug: R417, R464, R766, R769 V1, R771, R773 · Kosten bei Irrtum: eine Seed-Probe, die einen erst im vollen Lauf ausfallenden Seed übersieht (fängt T12).
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-stadtplanung-auflagen · ADR: —
+
+## R776 · 2026-10-17 · Gate Ideen-Runde IDEEN-13: Rangliste angenommen; Kurzdesign I-136 und Brainstorming I-144 jetzt
+
+Ruling: `docs/ideen-13` @ `e62a7c73` (Handoff `.studio/handoffs/2026-10-17-lead-design-IDEEN-13.md`) → angenommen und von L0 auf main gemergt (`8a594330`, reine Doku).
+Einplanen: **I-136** Fernkarte mit Fahrzeit und roter Lagerzahl (Häppchen, Kurzdesign Stufe leicht jetzt, lead-design sonnet); **I-137** Abstiegs-Dämpfer (Häppchen nach ORT-A
+T10); **I-144** Zukauf-Ordnung als Wirtschafts-Brainstorming Stufe voll jetzt (lead-design opus mit `design-economy-designer`, drei Fassungen gegeneinander gerechnet; Baseline-
+und Balancing-Neumessung braucht ein eigenes Ruling in der Spec). Beipack: I-138 (nur Textzeile) mit dem Umschalt+R-Befund; I-106 bleibt Beipack-Kandidat. Parken: I-139 bis I-132
+live, I-111 bis I-144 entschieden. Verworfen: I-141, I-142, I-143, I-145 (reine Geld-Senken tragen nicht, Leitbefund R722 bestätigt). Beide Design-Pakete sind lastfrei und laufen
+während der REL-27-Push-Sperre (R464). Budget: design-I-136 2 Starts, design-I-144 3 Starts.
+
+Regelbezug: R445, R464, R475, R571, R599, R722 · Kosten bei Irrtum: ein Brainstorming (≈ 80 Tools), dessen Ergebnis I-144 doch verwirft.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-13 · ADR: —
