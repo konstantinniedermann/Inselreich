@@ -19,7 +19,7 @@ Die Fahrzeit ist vorhandene Mathematik, keine Schätzung: `depart` setzt `ship.l
 1. **Fahrzeit-Helfer.** Neu in `src/ui/` (DOM-frei, liest nur die Welt): `homeTravelTicks(world, island): number | null`; `null`, wenn `island === HOME`, die Insel fehlt oder keine Lane Heimat–Insel existiert. Der Lane-Cache (`WeakMap<World, Lane[]>`) wird aus `islandCard.ts` in diesen Helfer verschoben, `islandCard` nutzt ihn mit; Ergebnis `travelTicks(lane.d)`. Kein neuer Wert in `defs/`.
 2. **Teile statt String.** Neu `farOfferParts(world, which): { head, travel, stock, short } | null` in `src/ui/farOrder.ts` (Muster `farOfferOf`); `farOfferText` setzt die Teile zusammen und bleibt zeichengleich zur Vorgänger-Form plus Fahrzeit-Segment (Tests dürfen `textContent === farOfferText` weiter vergleichen, `tests/ui/hud.test.ts:593`).
 3. **Text.** Reihenfolge: `Fernangebot {Insel}: {n} {Gut} · {Prämie} · Frist {t} · ≈ {Fahrzeit} Fahrt · Lager {s}/{n}`; Fahrzeit mit `formatGameTime(travelTicks)` (gleiche Zeitform wie «Frist»). `travel` entfällt samt « · », wenn `homeTravelTicks` `null` ist (kein «–», es gibt nichts zu zeigen).
-4. **Rot.** `short = stock < amount` (Lager der Fern-Insel, wie heute `stockOn`). Der Lager-Teil sitzt in einem eigenen `<span data-field="far-stock[-2]">`; bei `short` trägt er die Klasse `far-stock--low` (`color: var(--signal-red)`, `src/style.css` neben `.notice-stack .far-card`, ~Zeile 947-970). Nicht allein Farbe: die Zahl «3/12» bleibt sichtbar; der Tooltip des Spans nennt «Fehlt {n−s} {Gut}».
+4. **Rot.** `short = stock < amount` (Lager der Fern-Insel, wie heute `stockOn`). Der Lager-Teil sitzt in einem eigenen `<span data-field="far-stock[-2]">`; bei `short` trägt er die Klasse `far-stock--low` (`color: var(--tone-bad)`, `src/style.css` neben `.notice-stack .far-card`, ~Zeile 947-970). Nicht allein Farbe: die Zahl «3/12» bleibt sichtbar; der Tooltip des Spans nennt «Fehlt {n−s} {Gut}».
 5. **Tooltip Fahrzeit.** Auf der Karte (Text-Span) Zusatz: «Fahrzeit einer Einzelfahrt von der Heimat; ein Schiff muss erst bereitstehen.» Der Annehmen-Tooltip `farAcceptTooltip` bleibt unverändert.
 6. **Beide Karten gleich.** Gilt für Karte 0 und Karte 1 (`which`); Felder tragen `-2` (Muster `farCard`, `hud.ts:602-622`).
 7. **Zustand.** `updateFarCard` setzt Klasse und Texte nur bei Änderung (kein Flackern, kein DOM-Schreiben je Frame ohne Differenz, wie `setField`).
@@ -39,7 +39,7 @@ Vitest (`tests/ui/farOrder.test.ts`, `tests/ui/farChoice.test.ts`, `tests/ui/hud
 Browser-Check (`qa-playtester`, Headless):
 
 - AK-F8 Zwei Fernkarten sichtbar: beide zeigen «≈ … Fahrt»; Insel mit grösserem Seeweg zeigt die längere Zeit; Wert stimmt mit «Fahrzeit» der Inselkarte (Bauen/Inselkarte) überein.
-- AK-F9 Lager der Fern-Insel unter der Menge: Zahl rot (computed color = `--signal-red`); Ware per Schiff liefern: Zahl wird normal, ohne Neuladen.
+- AK-F9 Lager der Fern-Insel unter der Menge: Zahl rot (computed color = `--tone-bad`); Ware per Schiff liefern: Zahl wird normal, ohne Neuladen.
 - AK-F10 Kein Dauerschreiben (Vitest, `tests/ui/hud.test.ts`): zweiter `updateNoticeStack` mit unveränderter Welt schreibt weder Text noch Titel von `far-stock` und keinen Titel von `far-lead`. Browser: DOM-Beobachter auf `far-stock` (Text und `class`) meldet über 10 s keine Mutation; die tickende Fristzahl liegt im eigenen Span `far-lead` und ist ausgenommen (Plan I-136, P-2).
 
 ## Randfälle

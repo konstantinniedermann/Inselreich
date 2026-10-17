@@ -6,7 +6,7 @@ Dateien: `src/ui/hud.ts` (nur `farCard`, `updateFarCard`), `src/style.css` (ein 
 
 - `farCard(actions, which)`: `far-text[-2]` (Container, bleibt `data-field`) mit Kindern `<span data-field="far-lead[-2]">` und `<span data-field="far-stock[-2]">`.
 - `updateFarCard`: `p = farOfferParts(...)`; schreibt `far-lead.textContent = farOfferLead(p)`, `far-lead.title` = Fahrzeit-Tooltip («Fahrzeit einer Einzelfahrt von der Heimat; ein Schiff muss erst bereitstehen.») nur wenn `p.travel !== null`, `far-stock.textContent = p.stock`, `far-stock.title = p.tip`, `classList.toggle('far-stock--low', p.short)`; **jede** Zuweisung nur bei Differenz. Sichtbar-Logik der Karte unverändert (Karte 2 nur bei Wahl-Angebot).
-- CSS: `.notice-stack .far-card .far-stock--low { color: var(--signal-red); }`.
+- CSS: `.notice-stack .far-card .far-stock--low { color: var(--tone-bad); }`.
 
 ## Schritte (Tests zuerst, rot belegen)
 

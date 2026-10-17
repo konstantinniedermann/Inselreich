@@ -10,6 +10,6 @@ Dateien: `README.md` (Zeile «Fernangebot»), `docs/arc42.md` (Zeilen `order.ts`
 - [ ] `make check; echo EXIT=$?` (Testsperre R375 beachten, lange Läufe im Hintergrund, E-037) und `make docs-check; echo EXIT=$?`.
 - [ ] **Browser-Check (`qa-playtester`, Headless):** zwei Fernkarten (Kontore auf zwei Fremdinseln, Fernangebot offen) mit Screenshots unter `.studio/qa/I-136/`:
   - AK-F8: beide Karten zeigen «≈ … Fahrt»; Insel mit grösserem Seeweg zeigt die längere Zeit; **Wert der Fernkarte und «Fahrzeit» der Inselkarte (Mouse-over) sind beide als Screenshot belegt** und stimmen überein.
-  - AK-F9: Fern-Lager unter der Menge: `getComputedStyle(far-stock).color` = `rgb(255, 59, 92)`; Ware liefern: Farbe wechselt ohne Neuladen auf Normalfarbe (zweiter Screenshot).
+  - AK-F9: Fern-Lager unter der Menge: `getComputedStyle(far-stock).color` = `rgb(179, 38, 30)`; Ware liefern: Farbe wechselt ohne Neuladen auf Normalfarbe (zweiter Screenshot).
   - AK-F10: `MutationObserver` auf `far-stock` (Text und `class`) meldet über 10 s keine Mutation bei unverändertem Lager; die Fristzahl im `far-lead` ist ausgenommen.
 - [ ] Playtest-Report in `.studio/qa/I-136/`, Exit-Codes aller Prüfungen im Bericht. Commit `docs: I-136 T04 README, arc42`.

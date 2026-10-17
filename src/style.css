@@ -967,7 +967,7 @@ button.chip {
   min-width: 0;
 }
 .notice-stack .far-card .far-stock--low {
-  color: var(--signal-red);
+  color: var(--tone-bad);
 }
 .notice-stack .order-card.order-card--warn {
   border-left-color: var(--warn-amber);
