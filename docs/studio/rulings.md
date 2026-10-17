@@ -2298,3 +2298,19 @@ Ruhefenster, state.md). ORT-A C9 bleibt in der Folgesession.
 Regelbezug: R68, R434, R768, R769, VERFASSUNG §5.2 · Kosten bei Irrtum: zwei Berichte mehr im L0-Kontext vor der Übergabe.
 
 Entscheider: L0 · Anlass: Nutzerauftrag «weiter» · ADR: —
+
+## R771 · 2026-10-17 · Gate Plan «Stadtplanung»: OK mit Auflagen; Umsetzung ab der Folgesession (38 Starts)
+
+Ruling: `plan/stadtplanung` @ `3824007c` (Handoff `.studio/handoffs/2026-10-17-lead-tech-plan-stadtplanung.md`; lead-qa und lead-production je BEDENKEN, kein ZURÜCK) → **Gate Plan OK mit
+Auflagen**, eingearbeitet durch Controller C1 **vor T00** als Plan-Commit: (1) Browser-Ladeprobe (qa-playtester, Laden + Konsole) nach T10 und vor T11 (R769 V1), zählt zugleich als
+Playtester-Check der UI-Tasks T08/T09 (in deren Task-Dateien vermerken); (2) T02/T04: `messung-pins.md` mit Alt-Wert aus main je Zeile, unerwartete Pin-Verschiebung ist Befund an
+lead-tech (T04 erwartet nur `balance-edicts`), `make check` am Ende zitiert die bewegten Pins; (3) T06: Test «gleicher Seed, speichern und laden mittendrin, Fortsetzung JSON-gleich»
+mit Haus im Lärm, Park und Werkstatt in `noSupply`; (4) T11/T14: M3 und M5 auf demselben Commit von `mess/stadtplanung-basis`, Commit im Kopf von `anhang-04-messung.md`; T11 bestimmt
+zuerst die tragfähigen Seeds (< 3 → Blocker an L0); (5) Spec §9: AK-Summe 53 (42 Vitest) statt 55/44 korrigieren. Plan-Entscheid-Entwürfe 1–6 angenommen (Ownership-Ausnahmen,
+vorläufige Pins mit Marker «vorläufig bis Ruling D6» und Gate-Merge-Bedingung `rg` = 0, A2 als «höchstens zwei Sammlungen je Schritt» mit M6 als Kontrolle, Controller vor Regel,
+Start nach ORT-A T09 — erfüllt —, Render-Tasks T09/T10 nach ORT-A-Merge, Merge-Reihenfolge ORT-A → I-132 → Stadtplanung; kein I-132-Merge zwischen T02 und T04, nach jedem Merge
+`make check`). ≈ 660 Tools bewusst akzeptiert. Budget **38 Starts** (37 + Ladeprobe), Parallelität 2, 8 Controller-Instanzen — Freigabe beim Start in der Folgesession.
+
+Regelbezug: gates.md Gate Plan, R553, R674, R765, R766, R769 V1 · Kosten bei Irrtum: ein Merge-Konflikt in `sprites.ts`/`iso.ts`, der mehr als eine Stelle kostet.
+
+Entscheider: L0 · Anlass: Gate-Urteile lead-qa und lead-production gate-stadtplanung-plan · ADR: —
