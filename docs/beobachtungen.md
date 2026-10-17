@@ -457,3 +457,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - `src/ui/hud.ts:336`: Ziel-Chip ist ein `<button>`, vor dem Denkmal per Tab erreichbar ohne Wirkung; `tabIndex = -1` oder `disabled`, solange `trialChip` null ist.
 - `src/sim/trial.ts:1`: Kopfkommentar «ändert die Welt nicht» stimmt für `startTrial`/`abortTrial`/`tickTrial` nicht.
 - Merge-Reihenfolge: `feat/ort-a` und `feat/i132` konfliktieren in `docs/beobachtungen.md` (beide hängen am Dateiende an); Zweiter löst von Hand. `app.ts` merged sauber.
+
+## 2026-10-17 · I-136: Fernauftrag-Karte ohne Rotfärbung (niedrig)
+
+- `src/ui/farOrder.ts` (`farOrderText`): Lagerzahl der Fernauftrag-Karte bleibt ungefärbt, obwohl die Fernangebot-Karte mit I-136 bei Mangel rot wird; gleiche Teilung (`farOfferParts`-Muster) möglich. Ursprung: lead-tech, Plan I-136 (Auflage Gate Spec R778). Einschätzung: Beipack-Kandidat, kein eigenes Paket.
