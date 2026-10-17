@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-17 · Handbuch 1.63
+
+- Anlass: Kurz-Retro ca9d40c8, Umsetzung der angenommenen Vorschläge V2 und V3
+- Datenbasis: `docs/studio/retros/2026-10-16-session-ca9d40c8-ende.md` (B1 Minuten −51 %, B4 Pause 40 % lead-tech)
+- Ruling: R750 (V2, V3), R754
+- Änderungen: Briefing-Standard und `templates/briefing.md`: Schätzung nur in Tools, Minuten = Tools ÷ 6 durch das Werkzeug; Controller-Abschnitt: je Instanz höchstens eine Wartepause > 5 min, danach Handoff und Folgeinstanz
+
 ## 2026-10-16 · Persona production-integrator 1.15
 
 - Anlass: Nutzeranweisung, Repo öffentlich, Actions-Minuten zählen nicht

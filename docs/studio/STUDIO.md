@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.62 · Stand: 2026-10-16 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.63 · Stand: 2026-10-17 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -98,7 +98,8 @@ Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <S
 - `Schätzung` gilt für den ganzen Auftrag inklusive Unteraufträge; das Dashboard stellt sie dem
   Messwert gegenüber. Hauptgrösse sind Werkzeugaufrufe aus
   [metriken/richtwerte.md](metriken/richtwerte.md) (Median je Rolle, Modell, Plan-Art, summiert über
-  Starts inkl. Review und Fix-Runden); Leads schätzen in Tools, Minuten = Tools ÷ 6 (E-001, R433).
+  Starts inkl. Review und Fix-Runden). **Briefings schätzen nur in Tools** (R750 V2): die Minutenangabe der Kopfzeile
+  rechnet das Werkzeug als Tools ÷ 6, niemand schätzt sie frei (E-001, R433); Messgrösse |Minuten-Abweichung| ≤ 30 % in 2 Session-Retros.
 - Die Kopfzeile nennt die **Tabellenzeile** in Klammern (z. B. `(Tabellenzeile: lead-tech opus
 Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davor (die Telemetrie
   liest die erste Angabe mit „Tools“ bzw. „min“).
@@ -306,6 +307,9 @@ Ablauf eines Meilensteins (Stufe voll):
    `status --status waiting`. **Blocker (R438 V2):** Ein Controller mit Blocker meldet `waiting` und wird
    per `SendMessage` fortgesetzt, nicht durch eine neue Instanz ersetzt (Ausnahme: die Ablösung nach
    Abschlussbericht oder bei 200k Kontext, E-042, R319).
+   **Wartepause (R750 V3):** Je Controller-Instanz höchstens eine Wartepause > 5 min (Cache kalt); danach schreibt
+   sie ein Handoff und eine Folgeinstanz übernimmt, die zweite lange Pause wartet nie dieselbe Instanz ab. Messgrösse: Pause-Anteil
+   lead-tech ≤ 20 % (Stand 40 %) und Cache-Write 5 min ≤ 25 %, Bewertung 2026-10-30.
 5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
 6. **Gate Merge** (L0, eines je Meilenstein; R464 gilt auch hier auf seriellem Pfad: vor dem Gate startet L0 keine Umsetzer und Controller, solange `make check`/`make push-check` im Hauptbaum oder in `.worktrees/integrate` läuft, R565 P2) → Production-Lead lässt `production-integrator` die
    Stränge seriell mergen, CI und Pages prüfen.
