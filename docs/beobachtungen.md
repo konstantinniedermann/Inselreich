@@ -443,3 +443,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Beobachtung: Die Controller sind auf Seed 3 gebaut; die Seeds 5, 6, 9, 12 tragen den Referenzaufbau nicht («kein freier Erweiterungsplatz für fisher»). Der I-132-Eintrag (b) vom selben Tag steht bisher nur auf Branch `feat/i132` (`docs/beobachtungen.md`, «Testhelfer `putBuilding` und Referenzaufbau Seed 5») und kommt mit dessen Merge; hier bewusst zusammengeführt. Stadtplanung T11/T12 braucht ≥ 3 Seeds für M3/M4 und meldet sonst einen Blocker an L0.
 - Ursprung: lead-tech, I-132 T02 (Fund I-132 C1) und Plan Stadtplanung (Fund plan-stadtplanung), Risiken «Weitere Seeds»
 - Erste Einschätzung: mittel für Stadtplanung (Messbarkeit), sonst niedrig; Seeds mit tragfähigem Aufbau früh in T11 bestimmen. Beim I-132-Merge die beiden Einträge zusammenlegen.
+
+## 2026-10-17 · I-136: Fernauftrag-Karte ohne Rotfärbung (niedrig)
+
+- `src/ui/farOrder.ts` (`farOrderText`): Lagerzahl der Fernauftrag-Karte bleibt ungefärbt, obwohl die Fernangebot-Karte mit I-136 bei Mangel rot wird; gleiche Teilung (`farOfferParts`-Muster) möglich. Ursprung: lead-tech, Plan I-136 (Auflage Gate Spec R778). Einschätzung: Beipack-Kandidat, kein eigenes Paket.

@@ -40,7 +40,7 @@ Browser-Check (`qa-playtester`, Headless):
 
 - AK-F8 Zwei Fernkarten sichtbar: beide zeigen «≈ … Fahrt»; Insel mit grösserem Seeweg zeigt die längere Zeit; Wert stimmt mit «Fahrzeit» der Inselkarte (Bauen/Inselkarte) überein.
 - AK-F9 Lager der Fern-Insel unter der Menge: Zahl rot (computed color = `--signal-red`); Ware per Schiff liefern: Zahl wird normal, ohne Neuladen.
-- AK-F10 Kein Dauerschreiben: DOM-Beobachter meldet über 10 s bei unverändertem Text keine Mutation an den Far-Feldern (ausser Frist-Sekundentakt).
+- AK-F10 Kein Dauerschreiben (Vitest, `tests/ui/hud.test.ts`): zweiter `updateNoticeStack` mit unveränderter Welt schreibt weder Text noch Titel von `far-stock` und keinen Titel von `far-lead`. Browser: DOM-Beobachter auf `far-stock` (Text und `class`) meldet über 10 s keine Mutation; die tickende Fristzahl liegt im eigenen Span `far-lead` und ist ausgenommen (Plan I-136, P-2).
 
 ## Randfälle
 
