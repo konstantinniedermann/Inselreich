@@ -1376,7 +1376,7 @@ class InactiveExemptionTest(unittest.TestCase):
     def incident_ids(self, state):
         return [i["id"] for i in state["incidents"]]
 
-    def lead_events(self, role, tool=None, tool_at=10):
+    def lead_events(self, role, tool=None, tool_at=1000):
         events = [
             ev("turn_end", 0, status="idle"),
             spawn(1, "main", role),
@@ -1415,17 +1415,17 @@ class InactiveExemptionTest(unittest.TestCase):
         self.assertTrue(flat(state)["s1:main"]["inactive"])
 
     def test_lead_qa_with_recent_bash_run_is_not_inactive(self):
-        state = build(self.lead_events("lead-qa", "Bash"), now=10 + 900)
+        state = build(self.lead_events("lead-qa", "Bash"), now=1000 + 900)
         self.assertFalse(flat(state)["s1:a1"]["inactive"])
         self.assertNotIn("inaktiv:s1:a1", self.incident_ids(state))
 
     def test_lead_qa_bash_run_ends_after_long_run_limit(self):
-        now = 10 + model.LONG_RUN_SECONDS + 1
+        now = 1000 + model.LONG_RUN_SECONDS + 1
         state = build(self.lead_events("lead-qa", "Bash"), now=now)
         self.assertTrue(flat(state)["s1:a1"]["inactive"])
 
     def test_lead_qa_with_other_tool_is_inactive(self):
-        state = build(self.lead_events("lead-qa", "Read"), now=10 + 900)
+        state = build(self.lead_events("lead-qa", "Read"), now=1000 + 900)
         self.assertTrue(flat(state)["s1:a1"]["inactive"])
 
     def test_lead_qa_silent_is_still_inactive(self):
@@ -1434,7 +1434,7 @@ class InactiveExemptionTest(unittest.TestCase):
         self.assertIn("inaktiv:s1:a1", self.incident_ids(state))
 
     def test_lead_tech_is_never_exempt(self):
-        state = build(self.lead_events("lead-tech", "Bash"), now=10 + 900)
+        state = build(self.lead_events("lead-tech", "Bash"), now=1000 + 900)
         self.assertTrue(flat(state)["s1:a1"]["inactive"])
 
 
