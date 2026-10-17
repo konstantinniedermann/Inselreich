@@ -2129,3 +2129,16 @@ lead-tech mit Begründung, z. B. Deckel ab Last 6), (3) stdout-Rauschen `test_au
 Regelbezug: R335, R744, R750, R753, R755, E-068 · Kosten bei Irrtum: ein Worker-Deckel, der in der Praxis selten wirkt, bis Bündel 16 gemergt ist.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-15 · ADR: —
+
+## R758 · 2026-10-17 · ORT-A: Importzyklus TEX blockiert T09; Fix-Task FIX-TEX in C6, dann T09/T10; Puffer +2
+
+Ruling: Bericht C5 (`.studio/qa/ort-a/messung-ort1.md`, Handoff `.studio/handoffs/2026-10-17-lead-tech-ORT-A-C5.md`): `feat/ort-a` lädt im Browser nicht — `ReferenceError: Cannot access
+'TEX' before initialization` (`src/render/limits.ts:74`), Zyklus `iso.ts` → `ortsrand.ts` → `limits.ts` → `iso.ts`; Vitest und tsc sehen ihn nicht. T09 ungewertet (A-Werte nur Referenz).
+→ Empfehlung angenommen: **FIX-TEX** in C6 — `TEX` nach `src/render/isoBase.ts`, Re-Export in `iso.ts`, `limits.ts` importiert aus `isoBase`; Test, der `iso.ts` zuerst in frischem
+Modulgraphen lädt, mit Rot-Beleg; Task-Review. Danach T09 und (ohne E6-Bedarf) T10. Zusätzlich in C6: ein Browser-Smoke (Spiel lädt, keine Konsolenfehler) vor T09 als
+Vorbedingung. Budget: 2 verbleibende Starts aus R756 + **2 zusätzliche** (ORT-A-Puffer überschritten: 14 von 12, bewusst, weil ein Ladefehler sonst erst im Release auffiele).
+Lernpunkt an die Session-Retro: Render-Stränge laufen mehrere Tasks ohne Browser-Ladeprobe.
+
+Regelbezug: R746, R750 V3, R756 · Kosten bei Irrtum: zwei Starts über Puffer.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C5 · ADR: —
