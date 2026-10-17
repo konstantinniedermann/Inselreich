@@ -1005,3 +1005,17 @@ während der REL-27-Push-Sperre (R464). Budget: design-I-136 2 Starts, design-I-
 Regelbezug: R445, R464, R475, R571, R599, R722 · Kosten bei Irrtum: ein Brainstorming (≈ 80 Tools), dessen Ergebnis I-144 doch verwirft.
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-13 · ADR: —
+
+## R777 · 2026-10-17 · Gate Merge I-132 und Release-Check REL-27: OK; Merge, push-check, Push
+
+Ruling: `feat/i132` @ `b8fabe4e` (Handoff `.studio/handoffs/2026-10-17-lead-qa-gate-REL-27.md`) → **Gate Merge OK, Release-Check REL-27 OK**: voller `make check` Exit 0 (4460 Vitest,
+studio-test 997, Balancing unverändert), Probe-Merge konfliktfrei, `SAVE_VERSION` 18 = main + 1 mit getesteter Migration v17→v18, Browser-Check (Hand-Cursor, Zugang ab
+`monumentDone`, drei v17-Stände) ohne Befund. **REL-27 «Meisterprüfung»** = I-132 + TOOL-BUENDEL-15/16, dazu die Doku-Merges dieser Session (R774–R776) und, falls bis zum
+Integrator-Start abgenommen, Handbuch 1.65 (R774 V1). `production-integrator` merged `feat/i132` im Worktree `.worktrees/integrate`, holt main, fährt `make push-check` und pusht genau
+den geprüften Hash nach `origin/main` (R335, einziger Push der Session); bis zum Merge-Bericht committet L0 nichts auf main (R769 V2). Zeitreserve: die strenge Bewertung im
+push-check entscheidet (Warnungen im Gate-Lauf nur Render-Altlasten bei Last 5–10). Restrisiko: Laden über den manuellen Slot im Browser ungeprüft (Sim-Test deckt es). Danach
+Erweiterung 1 bekommt beim Merge v19 (R519).
+
+Regelbezug: R335, R464, R517, R519, R565 V2, R769 V2, R772 · Kosten bei Irrtum: ein Live-Release mit Ladefehler im manuellen Slot (Hotfix ≈ 1 Paket).
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-rel-27 · ADR: —
