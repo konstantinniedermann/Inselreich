@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-17 · Handbuch 1.65
+
+- Anlass: Ad-hoc-Retro `RETRO-ADHOC-FAELLIG-17`, V1 (frische Delta-Reviews nach BEDENKEN oder ZURÜCK liefen nur über einen Namenstrick durch den Modell-Guard)
+- Datenbasis: `docs/studio/retros/` (RETRO-ADHOC-FAELLIG-17), Rulings R772, R774
+- Ruling: R774 (V1)
+- Änderungen: Modelltabelle (Zeile `opus`) und Liste der Kopfzeilen um den Einsatz `Delta-Review frisch` ergänzt (Wortlaut ohne Klammer/Komma, damit der Präfix-Vergleich von `modelguard.py` greift; Anlass folgt nach dem Präfix); Beispiel in `templates/briefing.md`; Test in `test_modelguard.py`. Messgrösse: 0 Guard-Blocks über 5 Controller-Pakete bis 2026-11-30. Rückfall: Zeile streichen (Version 1.66)
+
 ## 2026-10-17 · Handbuch 1.64
 
 - Anlass: Kurz-Retro 21273458, Umsetzung der angenommenen Vorschläge V1 und V2

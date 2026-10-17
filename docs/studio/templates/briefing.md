@@ -12,7 +12,7 @@ Persona: <rolle>
 Paket: <id>
 Meilenstein: <id> (oder „ohne")
 Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <Starts>)   (ganzer Auftrag inkl. aller Unteraufträge; Tools aus docs/studio/metriken/richtwerte.md, nur Tools schätzen; die Minuten rechnet das Werkzeug als Tools ÷ 6, nicht Menschenzeit, R750 V2)
-Modell: <alias> (<Einsatz>)   (Pflicht bei stärkerem Modell als die Persona, dann auch im Agent-Aufruf; Einsatz aus der Modelltabelle, STUDIO.md „Modellwahl“, z. B. `opus (Tech-Lead beim Plan)`, `opus (Final-Review)`, `sonnet (Controller in der Umsetzung)`, `sonnet (lead-qa-Gate-Urteile)`, `sonnet (Kurz-Retro)`)
+Modell: <alias> (<Einsatz>)   (Pflicht bei stärkerem Modell als die Persona, dann auch im Agent-Aufruf; Einsatz aus der Modelltabelle, STUDIO.md „Modellwahl“, z. B. `opus (Tech-Lead beim Plan)`, `opus (Final-Review)`, `opus (Delta-Review frisch nach ZURÜCK)`, `sonnet (Controller in der Umsetzung)`, `sonnet (lead-qa-Gate-Urteile)`, `sonnet (Kurz-Retro)`)
 Budget: <n Starts / Parallelität k> (nur für Leads; Arbeiter: „keins, keine Agenten starten"; Plan-, Kurzdesign- und Gate-Leads: `Paket:` gleich der Freigabephase `plan-<paket>`, `design-<paket>`, `gate-<paket>`, R471)
 Prozessstufe: <leicht|voll>
 

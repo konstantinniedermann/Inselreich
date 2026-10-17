@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.64 · Stand: 2026-10-17 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.65 · Stand: 2026-10-17 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -133,7 +133,7 @@ Aufgabe (R71).
 
 | Stufe  | Alias    | Einsatz                                                                                                                                                                                                                               |
 | ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| stark  | `opus`   | Design-Lead, Tech-Lead beim Plan, Spec-Autor, Lizenzprüfung, Final-Review, Meilenstein-Retro                                                                                                                                          |
+| stark  | `opus`   | Design-Lead, Tech-Lead beim Plan, Spec-Autor, Lizenzprüfung, Final-Review, Delta-Review frisch, Meilenstein-Retro                                                                                                                     |
 | mittel | `sonnet` | Controller in der Umsetzung, `lead-qa`-Gate-Urteile, `lead-production`, Task-Reviews, Kurz-Retro, Umsetzung, Recherche, Spec-Nachtrag und Kurzdesign Stufe leicht (E-061), Plan-Instanz bei Stufe leicht und Werkzeug-Paketen (E-054) |
 | klein  | `haiku`  | mechanische Prüfungen (Formatierung, Links, Listen abgleichen)                                                                                                                                                                        |
 
@@ -154,7 +154,7 @@ Frontmatter der Persona verlangt; sonst verweigert der Hook den Start (Modus `de
 sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final-Review des Pakets X)`):
 
 - `opus`: `Modell: opus (Design-Lead)`, `(Tech-Lead beim Plan)`, `(Spec-Autor)`, `(Lizenzprüfung)`,
-  `(Final-Review)`, `(Meilenstein-Retro)`
+  `(Final-Review)`, `(Delta-Review frisch)` (neuer Start nach BEDENKEN oder ZURÜCK, R774; danach Anlass, z. B. `(Delta-Review frisch nach ZURÜCK)`), `(Meilenstein-Retro)`
 - `sonnet`: `Modell: sonnet (Controller in der Umsetzung)`, `(lead-qa-Gate-Urteile)`,
   `(lead-production)`, `(Task-Reviews)`, `(Kurz-Retro)`, `(Umsetzung)`, `(Recherche)`,
   `(Spec-Nachtrag und Kurzdesign Stufe leicht)`, `(Plan-Instanz bei Stufe leicht und Werkzeug-Paketen)`
