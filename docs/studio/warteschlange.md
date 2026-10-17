@@ -154,7 +154,7 @@ schliesst den Eintrag.
 - Von: L0
 - Antwort: Gegenstandslos: REL-20 ohne Pause live gepusht (R594/R595)
 
-## N-101 · offen · 2026-10-16 · Kenntnis: Darlehen (I-094) verworfen
+## N-101 · umgesetzt · 2026-10-16 · Kenntnis: Darlehen (I-094) verworfen
 
 - Frage: Du hast I-094 Darlehen anstossen lassen. Die Rechnung zeigt: Es ist vor dem Bürger-Ausbau immer richtig (Pflichtzug), danach wirkungslos, und kleine Zinsänderungen kippen das Ergebnis unvorhersehbar. Einverstanden mit Verwerfen?
 - Empfehlung: Ja, verwerfen (R670); Spec bleibt auf design/i091-i094 liegen
@@ -162,7 +162,7 @@ schliesst den Eintrag.
 - Kosten des Wartens: Keine: ohne Antwort gilt Verwerfen, Wiederaufnahme jederzeit ohne Neuarbeit
 - Blockiert: nichts
 - Von: L0
-- Antwort: –
+- Antwort: Nutzer 2026-10-17: einverstanden, verwerfen
 
 ## N-102 · offen · 2026-10-16 · Headless-Chrome aus Projekt reflexionsinstrument beenden?
 

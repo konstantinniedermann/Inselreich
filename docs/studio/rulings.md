@@ -2328,3 +2328,21 @@ der Modelltabelle; C2 nutzte «Final-Review».
 Regelbezug: R674, R697, R759, R764, R771 · Kosten bei Irrtum: ein Merge, dessen voller `make check` in der Folgesession rot wird.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I-132 C2 · ADR: —
+
+## R773 · 2026-10-17 · N-101 erledigt; Nutzer «Studio starten, am nächsten Release weiter»: REL-27 zuerst, lastfreie Pakete parallel
+
+Ruling: (1) **N-101** beantwortet (Nutzer: einverstanden, verwerfen) → I-094 bleibt verworfen im Archiv (R670), erledigt. (2) Auslegung «am nächsten Release weiterarbeiten» als
+**REL-27 = I-132 + TOOL-BUENDEL-15/16** (R772) im jetzigen Ruhefenster (1-min-Last 3,8): ein `lead-qa`-Start (sonnet) für vollen `make check` auf `feat/i132` @ `b8fabe4e`,
+Browser-Nachprüfung Hand-Cursor (qa-playtester), Gate Merge I-132 und Release-Check REL-27; danach Merge durch `production-integrator`, `make push-check`, Push (R335). Bis
+`push-check` Exit 0 starten keine Umsetzer oder Controller (R464); ORT-A C9 und Stadtplanung-Umsetzung danach. (3) Parallel nur lastfreie Pakete (Deckel 8, R475): **IDEEN-13**
+(lead-design opus, 2 Scouts, R445; letzte Runde vor einer Session), **RULINGS-ARCHIV** (lead-production, Aufräumen fällig: 173 Rulings / 203 KB; im Worktree, nur Rulings vor R700
+ins Archiv verschieben, damit L0-Anhänge am Ende konfliktfrei bleiben), **plan-stadtplanung-auflagen** (lead-tech opus arbeitet die Auflagen 1–5 aus R771 als Plan-Commit ein;
+Auslegung von R771 «Controller C1 vor T00» als Plan-Arbeit ohne Testlauf, damit sie während der Push-Sperre laufen darf), **RETRO-FAELLIG** (studio-coach: Budget lead-tech 5 von 3,
+fehlender Modell-Einsatz «Delta-Review opus» aus R772; Cache-Write durch R750 V3 gedeckt, R769).
+
+Zweck der Anweisung: das nächste Release ausliefern und das Studio auslasten; Auslegung widerspricht ihm nicht, weil REL-27 der einzige abnahmebereite Stand ist und die Parallelpakete
+keine Testlast erzeugen.
+
+Regelbezug: R335, R445, R464, R475, R670, R771, R772, VERFASSUNG §5 · Kosten bei Irrtum: Plan-Auflagen, die C1 vor T00 noch einmal anfassen muss (≈ 1 Start).
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
