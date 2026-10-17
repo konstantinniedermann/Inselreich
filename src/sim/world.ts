@@ -119,7 +119,7 @@ export function createWorld(
     reserve: { wood: 0, stone: 0 },
   };
   const world: World = {
-    version: 17,
+    version: 18,
     seed: seedUsed,
     islands: [homeIsland, ...foreignIslands(seedUsed, homeIsland)],
     tick: 0,
@@ -156,6 +156,7 @@ export function createWorld(
     farOffer: null,
     farSkip: null,
     council: { 2: null, 3: null, 4: null },
+    trial: { active: null, ticks: 0, e0: 0, passed: [] },
   };
   world.buildings[1] = {
     id: 1,

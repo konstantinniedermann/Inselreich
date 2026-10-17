@@ -25,6 +25,7 @@ import { MONUMENT_GOODS, MONUMENT_STAGES } from './defs/monument';
 import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
 import { EDICTS } from './defs/edicts';
 import { UNLOCK_IDS } from './defs/unlocks';
+import { TRIAL_DURATION_TICKS, TRIAL_IDS } from './defs/trials';
 import { ISLANDS, ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
 import {
   fitIsland,
@@ -51,7 +52,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 17;
+export const SAVE_VERSION = 18;
 
 export type { LoadResult };
 
@@ -935,6 +936,36 @@ function isValidCouncil(raw: Record<string, unknown>): boolean {
   return keys.every((k) => c[k] === null || c[k] === 'open' || c[k] === 'A' || c[k] === 'B');
 }
 
+/** v17 → v18 (I-132): `trial` mit Startwerten. Wirft nie. */
+export function migrateV17ToV18(raw: Record<string, unknown>): void {
+  raw.trial = { active: null, ticks: 0, e0: 0, passed: [] };
+  raw.version = 18;
+}
+
+const isCount = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0;
+const isTrialId = (v: unknown): boolean =>
+  typeof v === 'string' && (TRIAL_IDS as readonly string[]).includes(v);
+
+function isValidTrialPassed(passed: unknown, active: unknown): boolean {
+  if (!Array.isArray(passed)) return false;
+  const ids: unknown[] = [];
+  for (const p of passed) {
+    if (!isObject(p) || !isTrialId(p.id) || !isCount(p.tick)) return false;
+    ids.push(p.id);
+  }
+  return new Set(ids).size === ids.length && (active === null || !ids.includes(active));
+}
+
+function isValidTrial(raw: Record<string, unknown>): boolean {
+  const t = raw.trial;
+  if (!isObject(t) || Array.isArray(t)) return false;
+  if (t.active !== null && !isTrialId(t.active)) return false;
+  if (!isCount(t.ticks) || t.ticks >= TRIAL_DURATION_TICKS) return false;
+  if (!isCount(t.e0)) return false;
+  if (t.active === null ? t.ticks !== 0 : t.e0 <= 0) return false;
+  return isValidTrialPassed(t.passed, t.active);
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { stats } = raw;
@@ -951,6 +982,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidContractFields(raw)) return false;
   if (!isValidFarFields(raw)) return false;
   if (!isValidCouncil(raw)) return false;
+  if (!isValidTrial(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -995,6 +1027,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 14) migrateV14ToV15(raw);
   if (raw.version === 15) migrateV15ToV16(raw);
   if (raw.version === 16) migrateV16ToV17(raw);
+  if (raw.version === 17) migrateV17ToV18(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

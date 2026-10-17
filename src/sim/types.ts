@@ -309,7 +309,7 @@ export interface CouncilDef {
   lever: CouncilLever;
 }
 export interface World {
-  version: 17;
+  version: 18;
   seed: number;
   islands: Island[];
   tick: number;
@@ -363,6 +363,32 @@ export interface World {
   farSkip: number | null;
   /** Ratsbeschluss je Hausstufe (I-112): `null` = nicht erreicht, `'open'` = steht an, sonst gewählte Seite. */
   council: Record<CouncilTier, CouncilState>;
+  /** Freiwillige Auflage (I-132, Meisterprüfung). */
+  trial: TrialState;
+}
+
+/** Kennung einer Auflage (I-132). */
+export type TrialId = 'selfSupply';
+
+/** Texte einer Auflage (I-132). */
+export interface TrialDef {
+  name: string;
+  short: string;
+  rule: string;
+}
+
+/** Eine bestandene Auflage mit Tick des Bestehens. */
+export interface TrialPass {
+  id: TrialId;
+  tick: number;
+}
+
+/** Zustand der Meisterprüfung: laufende Auflage, Ticks, Anfangs-Einwohner, bestandene Auflagen. */
+export interface TrialState {
+  active: TrialId | null;
+  ticks: number;
+  e0: number;
+  passed: TrialPass[];
 }
 
 /** Eine Insel: Raster, Kontor, Lager und Lage im Archipel (M12 E0, E1). */
