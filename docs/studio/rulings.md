@@ -981,3 +981,14 @@ vermerkt.
 Regelbezug: R335, R428, R471, R735, R750, R772, R773 · Kosten bei Irrtum: ein Handbuch-Minor, der den Modell-Guard für einen Einsatz falsch parst (studio-test deckt das).
 
 Entscheider: L0 · Anlass: Bericht lead-production RULINGS-ARCHIV, Bericht studio-coach RETRO-FAELLIG · ADR: —
+
+## R775 · 2026-10-17 · Stadtplanung: Plan-Auflagen R771 eingearbeitet und abgenommen; Entwürfe (a)–(d) angenommen
+
+Ruling: `plan/stadtplanung` @ `b27e7e8f` (Handoff `.studio/handoffs/2026-10-17-lead-tech-plan-stadtplanung-auflagen.md`) → Auflagen 1–5 aus R771 erfüllt, kein neues Gate. Entwürfe
+angenommen: (a) T12 mitgezogen (Auflage 4 betrifft ihn); (b) Ladeprobe als eigener Task T10b ohne Umnummerierung (R769 V1); (c) Seed-Probe in T11 mit 3 000 Ticks, Blocker in T12
+bleibt Rückfallnetz; (d) die AK-Zahl 55/44 in R766 ist durch R771 auf 53/42 korrigiert. Umsetzung (Controller C1 ab T00, Budget 38 Starts, Parallelität 2) startet erst nach
+`make push-check` Exit 0 für REL-27 (R464). Der Plan-Index liegt mit 28,8 KB über der Task-Grenze von 10 KB (R417), wie schon beim Gate R771 akzeptiert; Task-Dateien ≤ 8,3 KB.
+
+Regelbezug: R417, R464, R766, R769 V1, R771, R773 · Kosten bei Irrtum: eine Seed-Probe, die einen erst im vollen Lauf ausfallenden Seed übersieht (fängt T12).
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-stadtplanung-auflagen · ADR: —
