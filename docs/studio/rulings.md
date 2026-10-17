@@ -2208,3 +2208,15 @@ lead-production beim Merge des Vorschlags. Kein Nutzer-Vorbehalt (§5.3: keine K
 Regelbezug: R529, R722, R737, R762, VERFASSUNG §5.3 · Kosten bei Irrtum: eine Spec, die nach M4 (Park als Reflexbau) nachgeschärft wird.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-stadtplanung · ADR: —
+
+## R764 · 2026-10-17 · I-132 C1 abgenommen (T00–T03); C2 (T04) startet nach ORT-A T09
+
+Ruling: `feat/i132` @ `cabbd8c8` (Handoff `.studio/handoffs/2026-10-17-lead-tech-I-132-C1.md`) → abgenommen: Auflagen R759 eingearbeitet (`075cba4d`); T01–T03 Review OK; Save v18 mit
+Migration und Abweise-Test, Balancing grün. Auflage 2 erfüllt: ohne Zufuhr scheitert die Prüfung auf Seed 3 und Seed 1 gleich (Tick 400, Minimum 51 von `e0` 75); `trial-run.test.ts`
+1,3 s. Abweichungen (zweiter Seed 1 statt 5, AK-11 mit 100 Kaufleuten, `recomputeConnectivity` vor dem Speichern-Test) als vertretbar übernommen. Fehlender Rundungstest
+`perMin → 0` geht in T04. **C2 (T04, tech-ui-engineer) startet erst, wenn ORT-A C7 die Messung T09 abgeschlossen oder abgegeben hat** (R760: kein Testlauf neben der Messung; T00
+trieb die Last auf 17). Budget: 6 von 18 Starts, Instanz 1 von 3. `SAVE_VERSION` 18 vor dem Merge gegen main + 1 prüfen (R674).
+
+Regelbezug: R674, R759, R760, R750 V3 · Kosten bei Irrtum: I-132 verliert eine Stunde Wanduhr.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-132 C1 · ADR: —
