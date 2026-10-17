@@ -33,7 +33,7 @@ Vitest (`tests/ui/farOrder.test.ts`, `tests/ui/farChoice.test.ts`, `tests/ui/hud
 - AK-F3 `farOfferText(world, 0|1)` enthält `≈ {formatGameTime(travelTicks)} Fahrt` genau einmal, zwischen «Frist» und «Lager»; beide Karten zeigen die Fahrzeit ihrer eigenen Insel (zwei verschiedene Inseln → zwei verschiedene Werte, wenn `d` verschieden).
 - AK-F4 Ohne Lane (`null`) entfällt das Segment, der Text sonst unverändert zur bisherigen Form.
 - AK-F5 `farOfferParts.short`: Lager 3 / Menge 12 → `true`; 12/12 → `false`; 20/12 → `false`; Lager der **Fern-Insel** zählt, nicht das der Heimat.
-- AK-F6 Bestehende Tests grün: `textContent` von `far-text` = `farOfferText` (hud.test.ts:593), Sichtbarkeit Karte 2 nur bei Wahl-Angebot (I-114).
+- AK-F6 Bestehende Tests grün: `textContent` von `far-lead` plus `far-stock` = `farOfferText` (Zwei-Span-Prüfung, hud.test.ts um Zeile 593; der Container `far-text` hat genau diese zwei Kinder), Sichtbarkeit Karte 2 nur bei Wahl-Angebot (I-114).
 - AK-F7 Sim unberührt: Replay-Hash/Baseline bitgleich, `tests/sim/balance.test.ts` unverändert, `SAVE_VERSION` unverändert (kein Test nötig ausser dem Lauf).
 
 Browser-Check (`qa-playtester`, Headless):
