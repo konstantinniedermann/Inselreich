@@ -1,6 +1,6 @@
 import { HOME } from '../sim/world';
 import { monumentChip } from './monumentView';
-import { trialChip } from './trial';
+import { trialChip, trialChipShown } from './trial';
 import { islandName } from '../sim/islands';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
@@ -314,7 +314,7 @@ export function updateStockChips(
 
 /** Ziel-Chip (I-132): Text und Tooltip; klickbar (Auflagen-Karte) genau, wenn die Meisterprüfung ansteht. */
 export function syncGoalChip(goalEl: HTMLElement, world: World): void {
-  const tc = trialChip(world);
+  const tc = trialChipShown(world) ? trialChip(world) : null;
   const goal = goalTexts(goalView(world), tc ?? monumentChip(world));
   if (goalEl.textContent !== goal.chip) goalEl.textContent = goal.chip;
   if (goalEl.title !== goal.title) goalEl.title = goal.title;

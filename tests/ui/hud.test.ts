@@ -750,6 +750,14 @@ describe('I-132 Ziel-Chip als Knopf', () => {
     expect(el.textContent).toBe('Meisterprüfung');
     expect(el.title).toBe('Meisterprüfung: freiwillige Auflage — Klick für Details');
   });
+  it('monumentDone ohne wonSpice: keine Aktionsklasse (Chip zeigt den Zielstand)', () => {
+    const w = createWorld(3);
+    w.monumentDone = true;
+    const el = new FakeElement('button');
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(el.classList.contains('goal-chip--action')).toBe(false);
+    expect(el.textContent).not.toBe('Meisterprüfung');
+  });
   it('Quelltext: Ziel-Element ist ein Knopf mit goal-chip', () => {
     expect(readFileSync('src/ui/hud.ts', 'utf8')).toMatch(
       /<button type="button" class="chip goal-chip" data-field="goal">/,

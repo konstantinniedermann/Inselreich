@@ -2,6 +2,7 @@ import { GOODS, GOOD_IDS } from '../sim/defs/goods';
 import { TICK_MS } from '../sim/defs/timing';
 import { TRIALS, TRIAL_DURATION_TICKS, TRIAL_FAIL_POP_PCT } from '../sim/defs/trials';
 import { goodsBalance } from '../sim/flow';
+import { goalView } from '../sim/queries';
 import { trialPopulation, trialStartBlock } from '../sim/trial';
 import type { GoodId, TrialState, World } from '../sim/types';
 import type { MonumentChip } from './monumentView';
@@ -44,6 +45,11 @@ export function trialChip(world: World): MonumentChip | null {
     title: 'Meisterprüfung: freiwillige Auflage — Klick für Details',
     fillPct: 0,
   };
+}
+
+/** Der Ziel-Chip zeigt die Meisterprüfung nur in der Phase «done»; nur dann ist der Zugang (Klick, Karte) offen. */
+export function trialChipShown(world: World): boolean {
+  return trialChip(world) !== null && goalView(world).phase === 'done';
 }
 
 export interface DeficitLine {

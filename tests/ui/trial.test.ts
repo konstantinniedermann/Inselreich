@@ -15,6 +15,7 @@ import {
   selfSupplyText,
   trialCardView,
   trialChip,
+  trialChipShown,
   trialChronicleLine,
   trialStartMessage,
   trialStartReason,
@@ -90,6 +91,18 @@ describe('AK-15 trialChip', () => {
     expect(c.title).toBe('Meisterprüfung bestanden: Eigenversorgung');
     const a = trialChip(worldWith({ passed, active: 'selfSupply', ticks: 2000, e0: 75 }))!;
     expect(a.chip).toBe('Eigenversorgung 3:20 / 15:00');
+  });
+});
+
+describe('trialChipShown', () => {
+  it('nur wenn der Ziel-Chip wirklich die Meisterprüfung zeigt (Phase done)', () => {
+    const w = worldWith();
+    w.wonSpice = false;
+    expect(trialChipShown(w)).toBe(false);
+    w.wonSpice = true;
+    expect(trialChipShown(w)).toBe(true);
+    w.monumentDone = false;
+    expect(trialChipShown(w)).toBe(false);
   });
 });
 
