@@ -1,7 +1,7 @@
 // Handel 2 T07: Texte, Lieferziel und Log-Einträge zum Fernangebot (AK-H2-28, 29, 33).
 import { describe, expect, it } from 'vitest';
 import { FAR_ORDER_DURATION } from '../../src/sim/defs/timing';
-import { acceptFarOrder, deliverOrder, previewOrder } from '../../src/sim/orders';
+import { acceptFarOrder, deliverOrder, farAlternative, previewOrder } from '../../src/sim/orders';
 import { GOODS } from '../../src/sim/defs/goods';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
@@ -13,6 +13,8 @@ import {
   farAcceptedMessage,
   farDeliveredEntry,
   farLogEntries,
+  farOfferLead,
+  farOfferParts,
   farOfferText,
   farOrderText,
   farOrderWarn,
@@ -41,9 +43,11 @@ describe('AK-H2-28 Texte', () => {
     const w = offerWorld();
     const B = islandOf(w, 'B');
     expect(farOfferText(w)).toBe(
-      `Fernangebot Felsbucht: 15 Rum · 450 · Frist ${formatGameTime(FAR_ORDER_DURATION)} · Lager 0/15`,
+      `Fernangebot Felsbucht: 15 Rum · 450 · Frist ${formatGameTime(FAR_ORDER_DURATION)} · ≈ 39 s Fahrt · Lager 0/15`,
     );
-    expect(farOfferText(w)).toBe('Fernangebot Felsbucht: 15 Rum · 450 · Frist 2:50 · Lager 0/15');
+    expect(farOfferText(w)).toBe(
+      'Fernangebot Felsbucht: 15 Rum · 450 · Frist 2:50 · ≈ 39 s Fahrt · Lager 0/15',
+    );
     w.islands[B]!.stock.rum = 7;
     w.islands[HOME]!.stock.rum = 99;
     expect(farOfferText(w)).toContain('Lager 7/15');
@@ -87,7 +91,9 @@ describe('AK-H2-28 Texte', () => {
   it('Review Focus 3: Angebot ohne Kontor', () => {
     const w = offerWorld();
     dropKontor(w, islandOf(w, 'B'));
-    expect(farOfferText(w)).toBe('Fernangebot Felsbucht: 15 Rum · 450 · Frist 2:50 · Lager 0/15');
+    expect(farOfferText(w)).toBe(
+      'Fernangebot Felsbucht: 15 Rum · 450 · Frist 2:50 · ≈ 39 s Fahrt · Lager 0/15',
+    );
     expect(farAcceptTooltip(w)).toContain('Liefern nur am Kontor Felsbucht');
   });
 });
@@ -222,5 +228,92 @@ describe('Log-Zähler bei Fernlieferung (T-16, Anhang 02 T.2)', () => {
     );
     expect(nextUnread(0, [e], false)).toBe(1);
     expect(nextUnread(3, [e], true)).toBe(3);
+  });
+});
+
+// I-136 T02: Fernkarte mit Fahrzeit und Lager-Teil (AK-F3, AK-F4, AK-F5).
+describe('I-136 Fernangebot-Teile', () => {
+  // Handrechnung (Seed 3, Felsbucht = Insel B, Rechteck x -74..-38, y 40..76; Heimat x 0..64, y 0..64):
+  //   Prämie: Rum buy 40 (defs/goods.ts) x ORDER_PREMIUM 0,75 = 30 je Stück, floor; x 15 = 450.
+  //   Seeweg d: Anker Heimat (31,5; 32,5) zu B (-49,5; 46,5), dx 81, dy 14; nur der Teil ausserhalb
+  //   der Rechtecke zählt: Heimat-Rand x = 0 bis B-Rand x = -38, dx 38, dy 6,6 -> 38,6 -> ceil d = 39.
+  //   Fahrzeit = SHIP_TICKS_PER_SEA_TILE 10 x 39 = 390 Ticks = 39 s; Frist FAR_ORDER_DURATION 1700 = 2:50.
+  const GOLDEN = 'Fernangebot Felsbucht: 15 Rum · 450 · Frist 2:50 · ≈ 39 s Fahrt · Lager 0/15';
+
+  it('AK-F4 Golden-String und Teile', () => {
+    const w = offerWorld();
+    expect(farOfferText(w)).toBe(GOLDEN);
+    const p = farOfferParts(w)!;
+    expect(p.head).toBe('Fernangebot Felsbucht: 15 Rum · 450 · Frist 2:50');
+    expect(p.travel).toBe('≈ 39 s Fahrt');
+    expect(p.stock).toBe('Lager 0/15');
+    expect(farOfferLead(p) + p.stock).toBe(GOLDEN);
+  });
+
+  it('AK-F4 ohne Lane: Vorgänger-Form ohne Fahrt', () => {
+    const w = offerWorld();
+    const p = farOfferParts(w, 0, () => [])!;
+    expect(p.travel).toBeNull();
+    expect(farOfferText(w, 0, () => [])).toBe(
+      'Fernangebot Felsbucht: 15 Rum · 450 · Frist 2:50 · Lager 0/15',
+    );
+  });
+
+  it('AK-F3 Reihenfolge Frist, Fahrt, Lager; Zweitkarte mit eigener Fahrzeit', () => {
+    const w = farWorld(4, ['A', 'B']);
+    stepAt(w, P);
+    const t0 = farOfferText(w, 0)!;
+    const t1 = farOfferText(w, 1)!;
+    for (const t of [t0, t1]) {
+      expect(t.split('Fahrt')).toHaveLength(2);
+      expect(t.indexOf('Frist')).toBeLessThan(t.indexOf('Fahrt'));
+      expect(t.indexOf('Fahrt')).toBeLessThan(t.indexOf('Lager'));
+    }
+    // d: A = 26, B = 39 (Seed 3), also 26 s und 39 s
+    const fahrt = (n: number) => (n === islandOf(w, 'A') ? '≈ 26 s Fahrt' : '≈ 39 s Fahrt');
+    expect(t0).toContain(fahrt(w.farOffer!.island));
+    expect(t1).toContain(fahrt(farAlternative(w)!.island));
+    expect(t0).not.toBe(t1);
+    expect(t0.match(/≈ \d+ s Fahrt/)![0]).not.toBe(t1.match(/≈ \d+ s Fahrt/)![0]);
+  });
+
+  it('AK-F5 short nach Fern-Lager', () => {
+    const w = offerWorld();
+    const B = islandOf(w, 'B');
+    w.islands[HOME]!.stock.rum = 99;
+    w.islands[B]!.stock.rum = 3;
+    expect(farOfferParts(w)!.short).toBe(true);
+    w.islands[B]!.stock.rum = 12;
+    expect(farOfferParts(w)!.short).toBe(true);
+    w.islands[B]!.stock.rum = 15;
+    expect(farOfferParts(w)!.short).toBe(false);
+    w.islands[B]!.stock.rum = 20;
+    expect(farOfferParts(w)!.short).toBe(false);
+  });
+
+  it('tip nennt die Fehlmenge, sonst leer', () => {
+    const w = offerWorld();
+    const B = islandOf(w, 'B');
+    w.islands[B]!.stock.rum = 6;
+    expect(farOfferParts(w)!.tip).toBe('Fehlt 9 Rum');
+    w.islands[B]!.stock.rum = 15;
+    expect(farOfferParts(w)!.tip).toBe('');
+  });
+
+  it('Randfälle: ohne Kontor, nur ein Angebot, ohne Schiff', () => {
+    const w = offerWorld();
+    const B = islandOf(w, 'B');
+    dropKontor(w, B);
+    const p = farOfferParts(w)!;
+    expect(p.stock).toBe('Lager 0/15');
+    expect(p.short).toBe(true);
+    expect(farOfferParts(w, 1)).toBeNull();
+    expect(farOfferParts(w, 0)!.travel).toBe('≈ 39 s Fahrt');
+    w.ships = [];
+    expect(farOfferParts(w)!.travel).not.toBeNull();
+  });
+
+  it('ohne Angebot: null', () => {
+    expect(farOfferParts(farWorld(3, ['B']))).toBeNull();
   });
 });

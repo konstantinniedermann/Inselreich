@@ -469,3 +469,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - Fundort: Fernkarte (`src/ui/hud.ts`, «≈ 27 s Fahrt») gegen Inselkarte (`src/ui/islandCard.ts`, «Fahrzeit 0:27»). Beobachtung: gleicher Wert, zwei Zeitformate. Ursprung: I-136 Browser-Check. Einschätzung: Spec verlangt «s»; Angleichen als Beipack prüfen.
 - Fundort: `git stash list`. Beobachtung: neuer `stash@{0}` (WIP auf `feat/i136`, versehentlich, Änderung wiederhergestellt) schiebt die in state.md genannten Alt-Stashes auf `stash@{1}`/`{2}`. Ursprung: I-136 Umsetzer. Einschätzung: state.md verweist künftig per Hash statt Index; Aufräumen nur per Ruling (Guard sperrt `stash drop`).
 - Fundort: `src/ui/hud.ts:647` `FAR_TRAVEL_TIP`. Beobachtung: Test importiert die Konstante, Wortlaut ungesichert (Kann-Punkt Delta-Review). Ursprung: I-136 Delta-Review. Einschätzung: eine `toBe`-Zeile mit festem Text bei nächster Berührung.
+
+## 2026-10-17 · I-136: Fernauftrag-Karte ohne Rotfärbung (niedrig)
+
+- `src/ui/farOrder.ts` (`farOrderText`): Lagerzahl der Fernauftrag-Karte bleibt ungefärbt, obwohl die Fernangebot-Karte mit I-136 bei Mangel rot wird; gleiche Teilung (`farOfferParts`-Muster) möglich. Ursprung: lead-tech, Plan I-136 (Auflage Gate Spec R778). Einschätzung: Beipack-Kandidat, kein eigenes Paket.

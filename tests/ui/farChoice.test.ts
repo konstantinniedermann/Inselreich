@@ -66,9 +66,15 @@ describe('AK-10 Kartenstapel', () => {
     const w = offerWorld(['A', 'B']);
     const { stack } = build(w);
     expect(stack.querySelector('[data-field="far-card-2"]')!.hidden).toBe(false);
-    expect(stack.querySelector('[data-field="far-text-2"]')!.textContent).toBe(farOfferText(w, 1));
+    expect(
+      stack.querySelector('[data-field="far-lead-2"]')!.textContent +
+        stack.querySelector('[data-field="far-stock-2"]')!.textContent,
+    ).toBe(farOfferText(w, 1));
     expect(stack.querySelector('[data-field="far-accept-2"]')!.title).toBe(farAcceptTooltip(w, 1));
-    expect(stack.querySelector('[data-field="far-text"]')!.textContent).toBe(farOfferText(w, 0));
+    expect(
+      stack.querySelector('[data-field="far-lead"]')!.textContent +
+        stack.querySelector('[data-field="far-stock"]')!.textContent,
+    ).toBe(farOfferText(w, 0));
   });
 
   it('ein Kontor: Karte 2 verborgen', () => {

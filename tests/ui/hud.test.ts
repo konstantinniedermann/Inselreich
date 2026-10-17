@@ -35,8 +35,9 @@ import {
   tierTooltip,
   syncGoalChip,
   bindGoalChip,
+  FAR_TRAVEL_TIP,
 } from '../../src/ui/hud';
-import { GOOD_IDS } from '../../src/sim/defs/goods';
+import { GOOD_IDS, GOODS } from '../../src/sim/defs/goods';
 import { HOME, home, createWorld } from '../../src/sim/world';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import type { Tier } from '../../src/sim/types';
@@ -49,7 +50,7 @@ import { flowLabel } from '../../src/ui/balanceFlow';
 import { putBuilding, twoIslandWorld } from '../sim/helpers';
 import { renderUpkeepList, UPKEEP_EMPTY_TEXT } from '../../src/ui/upkeepCard';
 import { FakeElement, fakeDocument } from './fakeDom';
-import { acceptFarOrder } from '../../src/sim/orders';
+import { acceptFarOrder, farAlternative } from '../../src/sim/orders';
 import { dropKontor, farWorld, islandOf, periodStart, stepAt } from '../sim/farHelpers';
 import { deliverLabel, orderCardText, orderVisible } from '../../src/ui/order';
 import { farAcceptTooltip, farOfferText, farOrderText } from '../../src/ui/farOrder';
@@ -592,8 +593,107 @@ describe('Meldungsstapel mit Fernkarte (Handel 2 T08)', () => {
     ]);
     const far = stack.querySelector('[data-field="far-card"]')!;
     expect(far.hidden).toBe(false);
-    expect(stack.querySelector('[data-field="far-text"]')!.textContent).toBe(farOfferText(w));
+    const text = stack.querySelector('[data-field="far-text"]')!;
+    const lead = stack.querySelector('[data-field="far-lead"]')!;
+    const stockEl = stack.querySelector('[data-field="far-stock"]')!;
+    expect(text.children).toEqual([lead, stockEl]);
+    expect(lead.textContent + stockEl.textContent).toBe(farOfferText(w));
+    expect(lead.title).toBe(FAR_TRAVEL_TIP);
     expect(stack.querySelector('[data-field="far-accept"]')!.title).toBe(farAcceptTooltip(w));
+  });
+
+  it('Zweitkarte: gleiche Zwei-Span-Form mit Suffix -2', () => {
+    const w = farWorld(4, ['A', 'B']);
+    stepAt(w, periodStart(1));
+    const { stack } = build(w);
+    const text = stack.querySelector('[data-field="far-text-2"]')!;
+    const lead = stack.querySelector('[data-field="far-lead-2"]')!;
+    const stockEl = stack.querySelector('[data-field="far-stock-2"]')!;
+    expect(stack.querySelector('[data-field="far-card-2"]')!.hidden).toBe(false);
+    expect(text.children).toEqual([lead, stockEl]);
+    expect(lead.textContent + stockEl.textContent).toBe(farOfferText(w, 1));
+    expect(lead.textContent).toContain('≈ ');
+    expect(lead.textContent).toContain(' Fahrt');
+  });
+
+  it('Rot-Klasse und Tooltip bei zu wenig Fern-Lager, beide Karten (AK-F5)', () => {
+    const w = farWorld(4, ['A', 'B']);
+    stepAt(w, periodStart(1));
+    const { stack } = build(w);
+    const cards: Array<[string, 0 | 1]> = [
+      ['', 0],
+      ['-2', 1],
+    ];
+    for (const [sfx, which] of cards) {
+      const o = which === 0 ? w.farOffer! : farAlternative(w)!;
+      const stockEl = stack.querySelector(`[data-field="far-stock${sfx}"]`)!;
+      expect(stockEl.classList.contains('far-stock--low')).toBe(true);
+      expect(stockEl.title).toBe(`Fehlt ${o.amount} ${GOODS[o.good].name}`);
+      w.islands[o.island]!.stock[o.good] = 3;
+      updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+      expect(stockEl.classList.contains('far-stock--low')).toBe(true);
+      expect(stockEl.title).toBe(`Fehlt ${o.amount - 3} ${GOODS[o.good].name}`);
+      w.islands[o.island]!.stock[o.good] = o.amount;
+      updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+      expect(stockEl.classList.contains('far-stock--low')).toBe(false);
+      expect(stockEl.title).toBe('');
+    }
+  });
+
+  it('Rot-Literal: Lager 3 von 15 Rum meldet "Fehlt 12 Rum"', () => {
+    const w = offerWorld();
+    w.islands[islandOf(w, 'B')]!.stock.rum = 3;
+    const { stack } = build(w);
+    const stockEl = stack.querySelector('[data-field="far-stock"]')!;
+    expect(stockEl.textContent).toBe('Lager 3/15');
+    expect(stockEl.title).toBe('Fehlt 12 Rum');
+    expect(stockEl.classList.contains('far-stock--low')).toBe(true);
+  });
+
+  it('Randfälle: ohne Kontor rot, ein Angebot ohne Karte 2, ohne Schiff mit Fahrzeit', () => {
+    const w = offerWorld();
+    dropKontor(w, islandOf(w, 'B'));
+    w.ships = [];
+    const { stack } = build(w);
+    const stockEl = stack.querySelector('[data-field="far-stock"]')!;
+    expect(stockEl.textContent).toBe('Lager 0/15');
+    expect(stockEl.classList.contains('far-stock--low')).toBe(true);
+    expect(stack.querySelector('[data-field="far-card-2"]')!.hidden).toBe(true);
+    const lead = stack.querySelector('[data-field="far-lead"]')!;
+    expect(lead.textContent).toContain('≈ ');
+    expect(lead.textContent).toContain('Fahrt');
+    expect(lead.title).toBe(FAR_TRAVEL_TIP);
+  });
+
+  it('AK-F10: zweiter Durchlauf mit gleicher Welt schreibt nichts in far-stock und lead-Titel', () => {
+    const w = farWorld(4, ['A', 'B']);
+    stepAt(w, periodStart(1));
+    const { stack } = build(w);
+    const writes: Record<string, number> = {};
+    const spy = (el: FakeElement, name: string, prop: 'textContent' | 'title'): void => {
+      let v = el[prop];
+      Object.defineProperty(el, prop, {
+        get: () => v,
+        set: (x: string) => {
+          writes[`${name}.${prop}`] = (writes[`${name}.${prop}`] ?? 0) + 1;
+          v = x;
+        },
+      });
+    };
+    for (const sfx of ['', '-2']) {
+      spy(stack.querySelector(`[data-field="far-stock${sfx}"]`)!, `stock${sfx}`, 'textContent');
+      spy(stack.querySelector(`[data-field="far-stock${sfx}"]`)!, `stock${sfx}`, 'title');
+      spy(stack.querySelector(`[data-field="far-lead${sfx}"]`)!, `lead${sfx}`, 'title');
+    }
+    updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+    updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+    expect(writes).toEqual({});
+    // Gegenprobe: eine Lageränderung schreibt genau einmal Text und Titel
+    const o = w.farOffer!;
+    w.islands[o.island]!.stock[o.good] = 1;
+    updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+    expect(writes['stock.textContent']).toBe(1);
+    expect(writes['stock.title']).toBe(1);
   });
 
   it('Klick auf Annehmen ruft acceptFar genau einmal', () => {

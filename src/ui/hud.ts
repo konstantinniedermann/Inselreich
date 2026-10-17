@@ -15,7 +15,7 @@ import type { GameState } from './app';
 import { blurAfterClick, setField } from './dom';
 import type { Settings } from './settings';
 import { orderVisible, renderOrder, updateOrder, type OrderActions } from './order';
-import { farAcceptTooltip, farMark, farOfferText } from './farOrder';
+import { farAcceptTooltip, farMark, farOfferLead, farOfferParts } from './farOrder';
 import { crisisCardText } from './crisis';
 import { taxEffect } from './guide';
 import { taxButtonTitle, taxSummaryText } from './taxView';
@@ -626,6 +626,11 @@ function farCard(actions: OrderActions, which: 0 | 1): HTMLElement {
   card.hidden = true;
   const text = document.createElement('span');
   text.dataset.field = `far-text${sfx}`;
+  const lead = document.createElement('span');
+  lead.dataset.field = `far-lead${sfx}`;
+  const stock = document.createElement('span');
+  stock.dataset.field = `far-stock${sfx}`;
+  text.append(lead, stock);
   const btn = document.createElement('button');
   btn.className = 'btn';
   btn.textContent = 'Annehmen';
@@ -638,15 +643,35 @@ function farCard(actions: OrderActions, which: 0 | 1): HTMLElement {
   return card;
 }
 
+/** I-136: Tooltip der Fahrzeit auf der Fernkarte. */
+export const FAR_TRAVEL_TIP =
+  'Fahrzeit einer Einzelfahrt von der Heimat; ein Schiff muss erst bereitstehen.';
+
 /** I-114: Sichtbarkeit, Text und Tooltip der Fernkarte `which`; Karte 2 nur bei Wahl-Angebot. */
 function updateFarCard(stack: HTMLElement, world: World, which: 0 | 1, visible: boolean): void {
   const sfx = which === 1 ? '-2' : '';
   const card = stack.querySelector<HTMLElement>(`[data-field="far-card${sfx}"]`);
   if (!card) return;
-  const text = visible ? farOfferText(world, which) : null;
-  const hidden = text === null;
+  const p = visible ? farOfferParts(world, which) : null;
+  const hidden = p === null;
   if (card.hidden !== hidden) card.hidden = hidden;
-  setField(stack, `far-text${sfx}`, text ?? '');
+  const lead = stack.querySelector<HTMLElement>(`[data-field="far-lead${sfx}"]`);
+  const stock = stack.querySelector<HTMLElement>(`[data-field="far-stock${sfx}"]`);
+  if (lead) {
+    const t = p === null ? '' : farOfferLead(p);
+    const tip = p === null || p.travel === null ? '' : FAR_TRAVEL_TIP;
+    if (lead.textContent !== t) lead.textContent = t;
+    if (lead.title !== tip) lead.title = tip;
+  }
+  if (stock) {
+    const t = p === null ? '' : p.stock;
+    const tip = p === null ? '' : p.tip;
+    const low = p !== null && p.short;
+    if (stock.textContent !== t) stock.textContent = t;
+    if (stock.title !== tip) stock.title = tip;
+    if (stock.classList.contains('far-stock--low') !== low)
+      stock.classList.toggle('far-stock--low', low);
+  }
   const btn = stack.querySelector<HTMLElement>(`[data-field="far-accept${sfx}"]`);
   const tip = farAcceptTooltip(world, which);
   if (btn && btn.title !== tip) btn.title = tip;

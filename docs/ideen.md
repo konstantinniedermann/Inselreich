@@ -184,7 +184,7 @@ bleibt Beipack-Kandidat für das nächste UI-Häppchen (die Karte besteht weiter
 - Doppelung: I-114 (live) liefert die Wahl ohne Fahrzeit; I-101 (live) zeigt nur die Lage; I-124 (geparkt, Fernmarke anklicken) ist Navigation, nicht Information.
 - Bewertung lead-design: bestätigt (13). Schliesst die Lücke zwischen der Spielerwirkung von I-114 und dem, was die Karte zeigt; ohne Fahrzeit ist die Wahl teils geraten. Kleinstes Häppchen der Runde mit Playtest-naher Quelle.
 - Nutzen/Aufwand: aus «Lage raten» wird eine lesbare Wahl · S · ≈ 40 Tools
-- Entscheid: offen (IDEEN-13)
+- Entscheid: R776 eingeplant; Kurzdesign `docs/superpowers/specs/2026-10-17-i136-fernkarte-design.md` (S, Fahrzeit exakt aus `laneTicks`, kein Save)
 
 ### I-137 · bewertet · Abstiegs-Dämpfer am Haus
 
