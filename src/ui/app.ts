@@ -80,6 +80,7 @@ import { contractKey, nextContractCursor, runContractJump } from './contractJump
 import { cutOffIds, newlyCut, runProblemJump, spot, type ProblemCursor } from './problems';
 import { trackFullSince } from './storageFull';
 import { openUpkeepCard } from './upkeepCard';
+import { openResumeCard } from './resumeCard';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
 import { createIslandLayers, idleSchedule } from './islandLayers';
@@ -494,6 +495,7 @@ function launch(
     // Hinweis eines alten Standes: einmal je Laden, nicht im Spielstand (Anhang 03 D)
     const notice = loadNotice(r);
     if (notice !== null) showMessage(notice, 'info', true, true);
+    openResumeCard(gameEl, r.world);
   };
 
   /** Manuelles Speichern: Menü-Knopf und Strg/Cmd+S gehen hier durch (kein Ton, Zustand bleibt). */
