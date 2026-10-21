@@ -1164,3 +1164,14 @@ Arbeiter-Debuglauf `vitest --root /` (Stadtplanung T07) lief 4 min mit 277 % CPU
 Regelbezug: R464, R786, R787 · Kosten bei Irrtum: der Lappen bleibt bis T20b sichtbar; das betrifft nur `feat/ort-a`, nicht live.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C11 · ADR: —
+
+## R789 · 2026-10-21 · Nutzerauftrag «mach weiter, 24 min»: REL-28 pushen, sonst nur Ende-Routine
+
+Ruling: Auslegung: In 24 min passt nur der anstehende Push (R785) und die Ende-Routine; keine neuen Umsetzer, Controller oder Ideen-Runden (R464 gilt bis zum Push ohnehin). Last 2,5 =
+Ruhefenster. L0 hat entgegen R697 den Doku-Commit `214bd248` (R786–R788) auf `main` gelegt, da der Merge-Bericht aus R785 ausblieb; Korrektur: `production-integrator` holt `main`
+in `.worktrees/integrate` (`git merge --no-ff main` über `ee70146d`, nur Doku-Delta), dann `make push-check`, Push des geprüften Hashes, CI und Pages. Danach `main` per `--ff-only`
+auf `origin/main`. Fällt `push-check` nicht in die Session, bleibt der Kandidat für den nächsten Start.
+
+Regelbezug: R335, R464, R697, R785 · Kosten bei Irrtum: ein zusätzlicher Merge-Commit nur mit Doku.
+
+Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-21 · ADR: —
