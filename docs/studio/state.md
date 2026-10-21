@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-21 (Kurz-Session 538f6a12, R789; live REL-28 `e28c80c2`, Save v18)
+Stand: 2026-10-21 (Session 538f6a12 Teil 2, R799; live REL-28 `e28c80c2`, Save v18; main lokal `413e9319` + Doku)
 
 ## Release-Notizen
 

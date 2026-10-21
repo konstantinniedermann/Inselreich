@@ -1247,3 +1247,50 @@ gestartet (ein Start weniger, reiner Werkzeug-Merge).
 Regelbezug: gates.md Gate Merge, R791, R335 · Kosten bei Irrtum: Dashboard-Fehler fallen erst im Betrieb auf; Rücknahme per Revert-Merge.
 
 Entscheider: L0 · Anlass: Bericht lead-qa TOOL-DASH-SCHLANK · ADR: —
+
+## R796 · 2026-10-21 · Stadtplanung C1 bis T08 abgenommen, Stopp vor T09
+
+Ruling: Bericht `lead-tech` (Handoff `.studio/handoffs/2026-10-21-lead-tech-STADTPLANUNG-C1.md`): T06 OK, T07/T08 BEDENKEN niedrig, Merge `feat/stadtplanung-ui` → `feat/stadtplanung`
+(`29460405`), Stand `fa6c1aeb`, Abschluss-`make check` Exit 0 (4645 Tests) → **abgenommen**. Park-Ring vorerst `PALETTE.signalOk`; zeigt die Sichtprobe in T10b/T18 eine
+Verwechslung, kommt `parkRing` in `PALETTE`. Fehlender DOM-Test `data-field="noise"` wird mit der Sichtprobe T18 abgedeckt. Verschobene Weberei-Positionen in drei UI-Tests
+(6 → 5 Kacheln, keine Assertion abgeschwächt) angenommen. Strang ruht bis zum ORT-A-Merge nach main (T09, `variants.test.ts` MAIN_REF/Park-Hash); Restbudget 9 verfällt mit
+Session-Ende.
+
+Regelbezug: R792, R794 · Kosten bei Irrtum: Farbe oder DOM-Test werden in T18 nachgezogen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech STADTPLANUNG-C1 · ADR: —
+
+## R797 · 2026-10-21 · Runden-Ruling IDEEN-14
+
+Ruling: Rangliste `lead-design` (Handoff `.studio/handoffs/2026-10-21-lead-design-IDEEN-14.md`, `docs/ideen-14` @ `e35cb74c`) angenommen. **Eingeplant:** UI-HAEPPCHEN-G aus
+I-155 («Zu spät»-Warnung an der Fern-Marke, Fahrzeit-Formel aus I-136) und I-148 («Wo war ich?»-Karte beim Fortsetzen); Kurzdesign sofort (keine Testläufe), Umsetzung
+nach Freigabe. I-146 (Wirkkreis) nach der ORT-A-Render-Freigabe (`overlays.ts`). **Zurückgestellt** für das Wirtschafts-Brainstorming: I-154, I-151, I-153 (nur mit
+Dominanz-Rechnung). **Geparkt:** I-152, I-149 (bis Erweiterung 1 geklärt). I-147 optional als späteres Häppchen. Pool-Obergrenze: 40 laut R445 gilt; Persona-Notiz «rund 30»
+ist veraltet → Beobachtung. `docs/ideen-14` geht mit dem nächsten Integrator-Merge nach main.
+
+Regelbezug: R208, R445, gates.md Gate Ideen-Runde · Kosten bei Irrtum: ein Häppchen mit geringem Nutzen; Rückstellung jederzeit umkehrbar.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-14 · ADR: —
+
+## R798 · 2026-10-21 · Gate Kurzdesign UI-HAEPPCHEN-G: OK, Plan sofort
+
+Ruling: Kurzdesign `lead-design` (`design/ui-haeppchen-g` @ `bee6ee20`, Spec `docs/superpowers/specs/2026-10-21-ui-haeppchen-g-design.md`, 21 AK) → **OK**. I-155 und I-148 je S,
+kein Save-Wechsel, keine Baseline-Änderung, nur Darstellungsfarbe `COLORS.markLate`. Designfragen: (1) leere «Wo war ich?»-Karte bleibt stumm, keine Abschalt-Einstellung;
+(2) «zu spät» nicht im HUD-Text des Fernauftrags (Beipack-Kandidat). Plan `lead-tech` (Stufe leicht) jetzt; Umsetzung erst nach Freigabe der Testsperre durch ORT-A C11, I-155
+vor I-148, Merge-Reihenfolge gegen `feat/stadtplanung` (`app.ts`, `style.css`) im Plan festlegen. Plan prüft `ship.to`/`ship.left` für die Ladungszählung. Budget 8 Starts.
+
+Regelbezug: R797, gates.md kombiniertes Gate Stufe leicht · Kosten bei Irrtum: Fehlalarm der Marke oder störende Karte; beides UI-only und leicht rückbaubar.
+
+Entscheider: L0 · Anlass: Bericht lead-design UI-HAEPPCHEN-G · ADR: —
+
+## R799 · 2026-10-21 · Gate Plan UI-HAEPPCHEN-G: OK, Start bei Last < 8
+
+Ruling: Plan `lead-tech` (`plan/ui-haeppchen-g` @ `512f370f`, Index `docs/superpowers/plans/2026-10-21-ui-haeppchen-g.md`, T01–T04) → **OK**; Entwürfe R799-E bis R802-E
+angenommen: ein serieller Strang, Parallelität 1, 6 Starts + 2 Reserve (Budget R798); Ladungszählung nur `ship.to === Fern-Insel` und `left ≤ Rest` (Überschätzung bei vollem
+Lager → nur unterlassener Hinweis, Beobachtung); Merge-Reihenfolge Stadtplanung vor UI-G, `app.ts`-Diff in eigenem Commit (Auflösung: beide Aufrufe, Karte zuletzt);
+Bestandstests `farMark.test.ts` AK-M5 und `seaMapDraw.test.ts` `mk()` ziehen mit exakten Werten mit (P-4). Render-Zeile in `seaMap.ts` macht `tech-ui-engineer` mit.
+Umsetzungsstart, sobald ein Platz frei ist und die 1-min-Last < 8 liegt (R708 V2).
+
+Regelbezug: R798, R708 V2, R270, R398 · Kosten bei Irrtum: Merge-Konflikt in `app.ts` (eine Zeile) oder Nachziehen zweier Testwerte.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan UI-HAEPPCHEN-G · ADR: —
