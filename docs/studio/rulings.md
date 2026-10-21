@@ -1126,3 +1126,41 @@ committet L0 nichts auf `main` (R697). Abweichung Persona Schritt 1 (`origin/mai
 Regelbezug: R335, R565 P1/V2, R697, R781, R784 · Kosten bei Irrtum: ein Doku-Commit mehr im Release-Push (CI ignoriert reine Doku nicht, da I-136 Code enthält — ein Lauf).
 
 Entscheider: L0 · Anlass: Bericht lead-qa REL-28 (Fortsetzung) · ADR: —
+
+## R786 · 2026-10-17 · ORT-A C10 abgenommen (k1 nach `feat/ort-a` @ `cb0cc48e`); C11: Browser-Check k1, T14, Strang k2
+
+Ruling: Bericht lead-tech ORT-A C10 (Handoff `.studio/handoffs/2026-10-17-lead-tech-ORT-A-C10.md`) → abgenommen, `make check` EXIT 0 bei Last 6,15. Entwürfe: (1) T12-Abweichungen
+angenommen (Argument `{zoom}`, PolyPath ohne Path2D, Ebenenreihenfolge über alle Blöcke, keine KS3 im Kern, `ROAD_FADE_COLOR`). (2) Test-Pins in `a3bae764` angenommen: AK-01-Hashes
+ändern sich zwingend durch den Wegfall der Konturstriche (AK-18), Salze 61/62 folgen der Verschiebung nach `isoBase.ts` (R782); alte Werte bleiben im Kommentar. (3) T13-Abweichungen
+angenommen (Saumbreiten 0,17/0,14/0,11, Saumfarbe als Mischung zur Erde); `lead-art` zur Kenntnis mit dem nächsten Art-Start. (4) Niedrige Reviewhinweise und die zwei Beobachtungen
+gehen nach `docs/beobachtungen.md` (Rauschen nur nahe Schwelle; Saum bei Wasseranteil; `edge.way` aus `occ`; Cache-Obergrenze ohne Test); die drei neuen langsamen Tests (3,9 s / 4,4 s /
+2,3 s) gehören zu ZEITRESERVE-PFLEGE. **Korrektur Lead-Aussage:** Stadtplanung T09/T10 warten auf den Merge von ORT-A nach **main** (R783), nicht auf den Strang-Merge.
+**C11** an `lead-tech` (sonnet): Browser-Check k1 durch `qa-playtester` (Füllregel bei überlappenden Wegen, Zoom 0,75, Nähte an 8er-Blockgrenzen, Wasser-/Sandkante, Übergang am
+Gebäude) parallel zu Strang k2 (T15, T16 je Umsetzer + Review); T14 (Messung k1) nur bei Last ≤ 4, sonst nach hinten. Budget **7 Starts**, Parallelität 2.
+
+Regelbezug: R424 (≤ 2 Browser-Läufe), R782, R783 · Kosten bei Irrtum: ein Browser-Befund in k1 zwingt k2 zu einer Nacharbeit.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C10 · ADR: —
+
+## R787 · 2026-10-17 · R464 nachgezogen: Umsetzer-Stopp bis REL-28-Push
+
+Ruling: L0 hat mit R786 (ORT-A C11) Umsetzer gestartet, obwohl seit R785 ein Push ansteht — Verstoss gegen R464. Korrektur: beide Controller (ORT-A, Stadtplanung C1) starten bis zum
+REL-28-Push keine neuen Umsetzer, Reviews oder `make check`; Laufendes endet regulär. Befund an die Session-Retro: Last 11–15 entsteht teils aus eigenen Testläufen und blockiert das
+Push-Ruhefenster (≤ 4).
+
+Regelbezug: R464, R785, R786 · Kosten bei Irrtum: ORT-A und Stadtplanung stehen bis zum Push still.
+
+Entscheider: L0 · Anlass: Last 14,5 bei wartendem Integrator · ADR: —
+
+## R788 · 2026-10-17 · ORT-A C11 Zwischenstand: k2 rot (paveImage), Entwürfe angenommen, Sackgassen-Lappen bei T20b mit lead-art
+
+Ruling: Bericht lead-tech ORT-A C11 (Handoff `.studio/handoffs/2026-10-17-lead-tech-ORT-A-C11.md`) → T15/T16 bleiben abgenommen, k2 aber nicht gemergt: `make check` rot an
+`tests/render/sprites-kanten.test.ts:134` (AK-L3-a, `paveImage` zeichnet einen 114-Punkte-Strich). Fix-Runde am T15-Umsetzer (Fortsetzung) nach dem REL-28-Push, Test bleibt
+unverändert; dann `make check` und Merge k2. Entwürfe: (1) T16 Kernschatten über `SHADOW` + `globalAlpha` angenommen (Bestandsfilter bleiben gültig, Rechnung geprüft); (2) neue Pins
+`bildmodus-ks.json`, `schatten-ks.json`, `HOME_CALLS*`, `shadowFills` angenommen; (3) Strangabschluss-`make check` bleibt Pflicht (wirkt: fand den Querbefund). (4) Browser-Check k1
+BEDENKEN: Sackgassen-Lappen (`ROAD_FADE_COLOR`) und Grasloch im 2×2-Wegblock sind Gestaltungsfragen → Sichtung in T20b mit `lead-art`-Urteil, kein Fix jetzt. Nebenbefund: ein
+Arbeiter-Debuglauf `vitest --root /` (Stadtplanung T07) lief 4 min mit 277 % CPU; L0 beendete PID 90052 → Retro.
+
+Regelbezug: R464, R786, R787 · Kosten bei Irrtum: der Lappen bleibt bis T20b sichtbar; das betrifft nur `feat/ort-a`, nicht live.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C11 · ADR: —
