@@ -1200,3 +1200,37 @@ auf `#analyse`. Wegen fehlender JS-Tests: Sichtprüfung per `qa-playtester` Pfli
 Regelbezug: R464, R790 · Kosten bei Irrtum: entfallene Karten müssten aus Git zurückgeholt werden.
 
 Entscheider: L0 · Anlass: Bericht lead-production TOOL-DASH-SCHLANK · ADR: —
+
+## R792 · 2026-10-21 · Sessionplan: drei Stränge parallel, Budgets neu erteilt
+
+Ruling: Nutzerauftrag «mach weiter» = Plan aus `state.md` fortsetzen. Parallel starten: (1) TOOL-DASH-SCHLANK an `lead-tech` (Plan Stufe leicht, 1 Umsetzer, Review,
+Sichtprüfung `qa-playtester`), Budget **4** Starts; (2) ORT-A C11 an `lead-tech` (Fix T15 `paveImage`, `make check` bei Last ≤ 6, Merge k2, T14/T17 nur bei Last ≤ 4, dann
+T18), Budget **6** Starts; (3) Stadtplanung C1 an `lead-tech` (Review T06/T07, `make check` bei Last ≤ 8, Merge `feat/stadtplanung-ui`, T08, Stopp vor T09), Budget **26**
+Starts. Deckel 6 (R698) gilt studioweit; `make check` der Stränge nie gleichzeitig (Testsperre R380 regelt). Vorfall «lead-tech inaktiv» ist ein Rest-Heartbeat der
+pausierten Session 2026-10-17 (Status nicht auf done geloggt); L0 schliesst ihn, Auswertung in der Kurz-Retro am Session-Ende statt Ad-hoc-Start.
+
+Regelbezug: R464, R698, R788, R790, R791 · Kosten bei Irrtum: Laststau bei gleichzeitigen Testläufen; Stränge warten dann auf die Sperre.
+
+Entscheider: L0 · Anlass: Session-Start · ADR: —
+
+## R793 · 2026-10-21 · ORT-A C11: Ruling-Entwürfe 1–5 aus der Übergabe
+
+Ruling: (1) T16-Kernschatten mit Stil `SHADOW` und `globalAlpha = a'/a` angenommen (Bestandsfilter bleiben gültig). (2) Bewusst geänderte Test-Pins (`bildmodus-ks.json`,
+`schatten-ks.json`, HOME_CALLS, shadowFills) angenommen, Kommentar «Abweichung durch T15/T16» Pflicht; `referenzen.json` bleibt. (3) Hofrand-/Pflaster-Töne nur Vorschlag an
+`lead-art`; AK-33-Schwellen wie beschrieben. (4) Sackgassen-Lappen und 2×2-Grasloch: nicht jetzt, bei T20b mit `lead-art` erneut ansehen. (5) Strangabschluss-`make check`
+bleibt Pflicht. Fix T15 ohne Lockern eines Tests.
+
+Regelbezug: R788 · Kosten bei Irrtum: Pins und Schatten-Semantik müssten in T20b nachgezogen werden.
+
+Entscheider: L0 · Anlass: Übergabe `2026-10-17-lead-tech-ORT-A-C11.md` · ADR: —
+
+## R794 · 2026-10-21 · Stadtplanung C1: Ruling-Entwürfe 1–5 aus der Übergabe
+
+Ruling: (1) Ownership-Ausnahmen angenommen (marketGain-Fix in `merchantsController.ts`, Test-Helfer `withoutSupplyRule` in `controller.ts`, additive Render-Fixtures für
+`park`). (2) Neue Pins aus `messung-pins.md` angenommen; Krisenprotokoll mild/normal main vs. Branch vor D6 messen, Testtitel mit Alt-Werten nachziehen. (3) Park-Platzhalter
+`FALLBACKS.public`, Höhe 0.5·ISO_H bis T10. (4) SAVE_VERSION 19 (main + 1) als Arbeitsannahme; Erweiterung 1 rechnet beim Merge neu. (5) AK-B2-05: Umbenennung plus
+erzwungener Brandtest angenommen. Die fünf Befunde aus der Übergabe trägt der Strang in `docs/beobachtungen.md` ein.
+
+Regelbezug: R715, R788 · Kosten bei Irrtum: Pins und Save-Nummer müssten beim Merge nachgezogen werden.
+
+Entscheider: L0 · Anlass: Übergabe `2026-10-17-lead-tech-STADTPLANUNG-C1.md` · ADR: —
