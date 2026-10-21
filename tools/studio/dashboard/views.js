@@ -1,8 +1,7 @@
-// Ansichten der Reiter Delegation, Aufwand, Qualität und Studio sowie die
-// Warteschlangen-Karte und das Retro-Banner (Live). Wie app.js: nur textContent.
+// Ansichten für Übersicht (Delegation, Warteschlange, Retro-Banner) und Analyse
+// (Aufwand, Qualität, Studio-Karten). Wie app.js: nur textContent.
 
 import {
-  DEPARTMENT_LABEL,
   clock,
   el,
   empty,
@@ -25,7 +24,6 @@ const EFFORT_GROUPS = [
 const OUTCOME_TONE = { angenommen: 'done', nacharbeit: 'waiting', verworfen: 'failed' };
 const QUEUE_TONE = { offen: 'waiting', beantwortet: 'done' };
 const CHANGELOG_LIMIT = 10;
-const DEPARTMENT_ORDER = ['production', 'design', 'tech', 'art', 'qa', 'extern'];
 
 let effortBy = storageGet('studio.effortBy') || 'by_role';
 let lastState = null;
@@ -190,16 +188,19 @@ export function renderBanner(state) {
   container.replaceChildren(
     el(
       'a',
-      { class: 'banner', href: '#qualitaet' },
+      { class: 'banner', href: '#analyse' },
       el('strong', {}, `Retro fällig: ${count} ${count === 1 ? 'Vorfall' : 'Vorfälle'}`),
-      el('span', {}, 'Details im Reiter Qualität'),
+      el('span', {}, 'Details im Reiter Analyse'),
     ),
   );
 }
 
 export function renderQueue(state) {
   const container = document.getElementById('queue');
-  const entries = ((state.docs || {}).queue || []).filter((q) => q.status in QUEUE_TONE);
+  // Übersicht: nur offene Nutzerentscheide (beantwortete stehen in der Datei).
+  const entries = ((state.docs || {}).queue || []).filter(
+    (q) => q.status in QUEUE_TONE && q.status !== 'beantwortet' && !field(q.fields, Q_ANSWER),
+  );
   if (!entries.length) {
     container.replaceChildren(empty('Keine offenen Nutzerentscheide'));
     return;
@@ -616,75 +617,13 @@ function changelogList(items) {
   );
 }
 
-function personaCard(p) {
-  return el(
-    'article',
-    { class: 'persona-card' },
-    el('span', { class: 'role' }, p.name),
-    el(
-      'div',
-      { class: 'chips' },
-      el('span', { class: 'chip id' }, p.version ? `v${p.version}` : 'ohne Version'),
-      el(
-        'span',
-        { class: 'chip model' },
-        !p.model || p.model === 'inherit' ? 'erbt Modell' : p.model,
-      ),
-    ),
-  );
-}
-
-function orgChart(personas) {
-  if (!personas.length) return empty('Keine Personas gefunden');
-  const level = (n) => personas.filter((p) => classify(p.name).level === n);
-  const l0 = level(0);
-  // Der Direktor ist die Hauptsession und hat evtl. keine Persona-Datei.
-  if (!l0.length) l0.push({ name: 'studio-director', version: '', model: 'Hauptsession' });
-  const l1 = level(1);
-  const l2 = level(2);
-  const lane = (title, cards) =>
-    el(
-      'div',
-      { class: 'lane' },
-      el('h3', {}, title),
-      cards.length
-        ? el('div', { class: 'persona-row' }, ...cards.map(personaCard))
-        : el('p', { class: 'empty' }, '–'),
-    );
-  const departments = DEPARTMENT_ORDER.filter((d) =>
-    l2.some((p) => classify(p.name).department === d),
-  );
-  return el(
-    'div',
-    { class: 'orgchart' },
-    lane('L0 · Direktion', l0),
-    lane('L1 · Leads und Studio-Rollen', l1),
-    ...departments.map((d) =>
-      lane(
-        `L2 · ${DEPARTMENT_LABEL[d]}`,
-        l2.filter((p) => classify(p.name).department === d),
-      ),
-    ),
-  );
-}
-
 export function renderStudio(state) {
   const docs = state.docs || {};
-  part('versions', state, (container) => {
-    const version = (v) => (v ? `v${v}` : 'nicht vorhanden');
-    container.replaceChildren(
-      tile('Verfassung', version(docs.constitution_version)),
-      tile('Handbuch', version(docs.handbook_version)),
-    );
-  });
   part('experiments', state, (container) => {
     container.replaceChildren(experimentList(docs.experiments || []));
   });
   part('changelog', state, (container) => {
     container.replaceChildren(changelogList(docs.changelog || []));
-  });
-  part('personas', state, (container) => {
-    container.replaceChildren(orgChart(docs.personas || []));
   });
   part('lernen', state, (container) => {
     container.replaceChildren(

@@ -486,7 +486,7 @@ Aufruf (kein `__main__`, ohne Ausgabe); es liefert nur die Zeilen für `metrics.
 
 ## Messung und Verbesserung
 
-Was wie gemessen wird, `log.py result`, Meilenstein-Zuordnung, Archiv, Dashboard-Reiter, Retros,
+Was wie gemessen wird, `log.py result`, Meilenstein-Zuordnung, Archiv, Dashboard-Reiter (Übersicht, Analyse), Retros,
 Experimente, Versionierung und Leitplanken: [verbesserung.md](verbesserung.md) (Teil des Handbuchs,
 R129). Grundsätze: [Verfassung §8 und §10](VERFASSUNG.md#8-transparenz-und-logging).
 
