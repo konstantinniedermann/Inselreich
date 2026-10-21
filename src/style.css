@@ -1564,3 +1564,25 @@ button.goal-chip.goal-chip--action {
   display: block;
   margin: 6px 0;
 }
+
+.card--resume {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card--resume h2 {
+  margin: 0;
+}
+.resume-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.resume-line {
+  padding: 3px 0;
+  border-bottom: 1px solid var(--gold);
+}
+.resume-problems {
+  margin: 0;
+}
