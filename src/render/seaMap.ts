@@ -33,6 +33,10 @@ export interface MapMark {
   kind: 'offer' | 'order';
   text: string;
   warn: boolean;
+  /** I-155: Ware aus der Heimat käme zu spät. */
+  late: boolean;
+  /** Zusatz für den Tooltip; `null` ohne Seeweg. */
+  tip: string | null;
 }
 
 /** Gerasterte Land-Maske einer Insel in Draufsicht, `r` Pixel je Kachel. */
@@ -61,6 +65,7 @@ export const COLORS = {
   hover: '#ffe08a',
   markFill: '#f2c14e',
   markWarn: '#ff6b5a',
+  markLate: '#ff9f1c',
 } as const;
 
 /** Grössen in CSS-Pixeln, gezeichnet × dpr: Radius Schiffspunkt, Kantenlänge Kontor-Marke. */
@@ -254,7 +259,7 @@ export function drawSeaMap(
     const a = tileToMap(l, mi.ox + mi.anchor.x + 0.5, mi.oy + mi.anchor.y + 0.5);
     const rad = MARK * px * 0.9;
     const cy = Math.max(rad, Math.min(l.h - rad, a.y - lift - (MARK + MARK_GAP) * px));
-    const col = mark.warn ? COLORS.markWarn : COLORS.markFill;
+    const col = mark.warn ? COLORS.markWarn : mark.late ? COLORS.markLate : COLORS.markFill;
     ctx.save();
     ctx.fillStyle = col;
     ctx.strokeStyle = col;
