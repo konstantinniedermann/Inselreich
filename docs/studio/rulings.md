@@ -1294,3 +1294,15 @@ Umsetzungsstart, sobald ein Platz frei ist und die 1-min-Last < 8 liegt (R708 V2
 Regelbezug: R798, R708 V2, R270, R398 · Kosten bei Irrtum: Merge-Konflikt in `app.ts` (eine Zeile) oder Nachziehen zweier Testwerte.
 
 Entscheider: L0 · Anlass: Bericht lead-tech Plan UI-HAEPPCHEN-G · ADR: —
+
+## R800 · 2026-10-21 · ORT-A C11: k2 abgenommen, Messung trotz fremdem Leerlauf-Chrome
+
+Ruling: Bericht `lead-tech` (Handoff `.studio/handoffs/2026-10-21-lead-tech-ORT-A-C11.md`): Fix T15 `b6a729a9`, Pins `2677d062` (HOME_CALLS/HOME_CALLS_OHNE_C 19062 → 19069,
+Hashes in `bildmodus-ks.json`/`schatten-ks.json`, Kommentar «Abweichung durch T15/T16»), `make check` EXIT=0, Merge k2 → `feat/ort-a` `126e88f4` → **abgenommen** (bestätigt R793 (1), (2), (5)).
+**Messfenster:** Der fremde Headless-Chrome aus Munica (PID 91387/91391, N-102) läuft im Leerlauf (≈ 0,1 % CPU). T14 und T17 laufen bei 1-min-Last ≤ 4 trotz der
+Meldung «belegt»; jeder Messbericht trägt den Vermerk «Messfenster belegt: fremder Leerlauf-Chrome (N-102)». Liegt ein Wert innerhalb von 10 % an seiner Grenze, wird er nach
+Antwort auf N-102 wiederholt. Messungen haben Vorrang: UI-HAEPPCHEN-G startet erst nach T17 (oder nach 30 min ohne Fenster, dann Zwischenstand). T18 nach T14.
+
+Regelbezug: R329, R380, R708 V2, R793 · Kosten bei Irrtum: eine Messung mit leicht verfälschtem Wert, wiederholbar.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C11 · ADR: —
