@@ -57,7 +57,7 @@ Lokal, nicht Teil des Spiels.
 - [Design-Spec M5 Spielerlebnis](superpowers/specs/2026-09-30-m5-spielerlebnis-design.md) — Steuerregler, Verkaufssättigung, Aufträge, Ambiente, Bedienkomfort, Save v2
 - [Design-Spec Studio](superpowers/specs/2026-09-30-studio-design.md) — Hierarchie, Telemetrie, Dashboard
 - [Design-Spec Studio 1.5](superpowers/specs/2026-09-30-studio-autonomie-design.md) — Projektleiter, Autonomie, Messung, Selbstverbesserung
-- [Design-Spec Prozess-Graph](superpowers/specs/2026-09-30-studio-prozessgraph-design.md) — Graph im Reiter Live, Namen, Nachrichten
+- [Design-Spec Prozess-Graph](superpowers/specs/2026-09-30-studio-prozessgraph-design.md) — Graph im Reiter Übersicht, Namen, Nachrichten
 
 ## Implementierungspläne
 
