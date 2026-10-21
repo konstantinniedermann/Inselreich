@@ -12,17 +12,15 @@ import {
   el,
   empty,
   knownDepartment,
-  knownStatus,
   statusBadge,
   statusText,
   storageGet,
   storageSet,
-  svg,
   syncSelect,
 } from './dom.js';
 import { renderGraph, setupGraph } from './graph.js';
 import { renderReleases } from './releases.js';
-import { applyFocus, dropMissing, openNodes, toggleNode } from './focus.js';
+import { applyFocus, dropMissing } from './focus.js';
 import {
   NOT_MEASURED,
   renderDelegation,
@@ -35,9 +33,6 @@ import {
 
 const POLL_MS = 2000;
 const FETCH_TIMEOUT_MS = 6000;
-// Periode der Inaktiv-Animation (style.css); Phase an die Uhr gekoppelt, damit
-// das Neuzeichnen alle 2 s die Animation nicht sichtbar neu startet.
-const INACTIVE_PULSE_MS = 2000;
 
 // --- Zustand und Poll-Schleife ---------------------------------------------
 
@@ -145,14 +140,12 @@ const VIEWS = [
   ['limits', renderLimits],
   ['sessions', renderSessions],
   ['releases', renderReleases],
-  ['org', renderOrg],
   ['graph', renderGraph],
   ['counts', renderCounts],
   ['decisions', renderDecisions],
   ['queue', renderQueue],
   ['budgets', renderBudgets],
   ['board', renderBoard],
-  ['pulse', renderPulse],
   ['chronicle', renderChronicle],
   ['feed', renderFeed],
   ['banner', renderBanner],
@@ -162,17 +155,9 @@ const VIEWS = [
   ['studio', renderStudio],
 ];
 
-function treeKeys(nodes, keys = new Set()) {
-  for (const node of nodes || []) {
-    keys.add(node.key);
-    treeKeys(node.children, keys);
-  }
-  return keys;
-}
-
 function render(state) {
   const rowIds = new Set(((state.graph && state.graph.rows) || []).map((r) => r.id));
-  dropMissing(treeKeys(state.tree), rowIds);
+  dropMissing(rowIds);
   for (const [id, view] of VIEWS) {
     try {
       view(state);
@@ -204,83 +189,6 @@ function renderSessions(state) {
     selectedSession = chosen;
     storageSet('studio.session', chosen);
   }
-}
-
-// Kachel (K1–K3): zugeklappt Emoji + Name, Titel, Status + Kurzaufgabe; Details aufgeklappt.
-function nodeCard(node, showSession) {
-  const status = knownStatus(node.status);
-  const idle = Number(node.idle_seconds) || 0;
-  const classes = [
-    'node',
-    `st-${status}`,
-    `dep-${knownDepartment(node.department)}`,
-    node.inactive ? 'inactive' : '',
-  ]
-    .join(' ')
-    .trim();
-  const state = statusText(node.status, node.inactive ? idle : null);
-  const meta = [
-    node.model,
-    node.package,
-    showSession ? `Session ${String(node.session_id).slice(0, 8)}` : '',
-  ]
-    .filter(Boolean)
-    .join(' · ');
-  const card = el(
-    'details',
-    {
-      class: classes,
-      'data-level': String(node.level),
-      'data-key': node.key,
-      open: openNodes.has(node.key) ? '' : null,
-    },
-    el(
-      'summary',
-      { class: 'node-summary' },
-      el('span', { class: 'node-name' }, `${node.emoji || ''} ${node.name || node.role}`.trim()),
-      el('span', { class: 'node-title' }, node.title || node.role || ''),
-      el(
-        'span',
-        { class: 'node-status' },
-        node.task_short ? `${state} · ${node.task_short}` : state,
-      ),
-    ),
-    el(
-      'div',
-      { class: 'node-details' },
-      meta ? el('p', { class: 'node-meta' }, meta) : null,
-      node.task ? el('p', { class: 'task' }, node.task) : null,
-      node.summary ? el('p', { class: 'summary' }, `Ergebnis: ${node.summary}`) : null,
-      el('p', { class: 'seen' }, `Lebenszeichen ${ago(idle)}`),
-    ),
-  );
-  if (node.inactive) card.style.animationDelay = `-${Date.now() % INACTIVE_PULSE_MS}ms`;
-  return card;
-}
-
-function orgBranch(node, showSession) {
-  const item = el('li', {}, nodeCard(node, showSession));
-  const children = node.children || [];
-  if (children.length) {
-    const depth = Math.min((Number(node.level) || 0) + 1, 2);
-    item.append(
-      el('ul', { class: `org org-l${depth}` }, ...children.map((c) => orgBranch(c, false))),
-    );
-  }
-  return item;
-}
-
-function renderOrg(state) {
-  const container = document.getElementById('org');
-  const roots = state.tree || [];
-  if (!roots.length) {
-    container.replaceChildren(empty('Noch keine Aktivität'));
-    return;
-  }
-  const showSession = roots.length > 1;
-  container.replaceChildren(
-    el('ul', { class: 'org org-root' }, ...roots.map((r) => orgBranch(r, showSession))),
-  );
 }
 
 function renderCounts(state) {
@@ -453,66 +361,6 @@ function renderBoard(state) {
   );
 }
 
-function renderPulse(state) {
-  const container = document.getElementById('pulse');
-  const minutes = state.pulse || [];
-  const departments = (state.departments || Object.keys(DEPARTMENT_LABEL)).map(knownDepartment);
-  const max = Math.max(1, ...minutes.map((m) => Number(m.total) || 0));
-  const width = 600;
-  const height = 120;
-  const slot = width / Math.max(minutes.length, 1);
-  const chart = svg('svg', {
-    viewBox: `0 0 ${width} ${height}`,
-    preserveAspectRatio: 'none',
-    class: 'pulse-chart',
-    role: 'img',
-    'aria-label': 'Events je Minute und Bereich, letzte 60 Minuten',
-  });
-  chart.append(
-    svg('line', { x1: 0, x2: width, y1: height - 0.5, y2: height - 0.5, class: 'axis' }),
-  );
-  minutes.forEach((m, i) => {
-    const x = i * slot + 1;
-    const group = svg('g', {});
-    const detail = departments
-      .filter((d) => m.by && m.by[d])
-      .map((d) => `${DEPARTMENT_LABEL[d]} ${m.by[d]}`)
-      .join(', ');
-    group.append(svg('title', {}, `${m.minute}: ${m.total} Events${detail ? ` (${detail})` : ''}`));
-    group.append(svg('rect', { x: i * slot, y: 0, width: slot, height, class: 'hit' }));
-    let y = height - 1;
-    for (const d of departments) {
-      const n = Number(m.by && m.by[d]) || 0;
-      if (!n) continue;
-      const h = (n / max) * (height - 8);
-      y -= h;
-      group.append(
-        svg('rect', { x, y, width: Math.max(slot - 2, 1), height: h, class: `seg dep-${d}` }),
-      );
-    }
-    chart.append(group);
-  });
-  const total = minutes.reduce((sum, m) => sum + (Number(m.total) || 0), 0);
-  const first = minutes[0]?.minute ?? '';
-  const last = minutes[minutes.length - 1]?.minute ?? '';
-  container.replaceChildren(
-    el(
-      'p',
-      { class: 'pulse-summary' },
-      total ? `${total} Events · Spitze ${max} je Minute` : 'Keine Aktivität in den letzten 60 min',
-    ),
-    chart,
-    el('div', { class: 'axis-labels' }, el('span', {}, first), el('span', {}, last)),
-    el(
-      'ul',
-      { class: 'legend' },
-      ...departments.map((d) =>
-        el('li', {}, el('span', { class: `dot dep-${d}` }), DEPARTMENT_LABEL[d]),
-      ),
-    ),
-  );
-}
-
 function renderChronicle(state) {
   const departments = state.departments || Object.keys(DEPARTMENT_LABEL);
   chronDept = syncSelect(
@@ -611,12 +459,12 @@ document.getElementById('chron-dept').addEventListener('change', (event) => {
   chronDept = event.target.value;
   if (lastState) renderChronicle(lastState);
 });
-const TABS = ['live', 'delegation', 'aufwand', 'qualitaet', 'studio'];
+const TABS = ['uebersicht', 'analyse'];
 
-// Reiter über den URL-Hash; unbekannter Hash fällt auf #live zurück.
+// Reiter über den URL-Hash; unbekannter Hash fällt auf #uebersicht zurück.
 function showTab() {
   const wanted = window.location.hash.slice(1);
-  const tab = TABS.includes(wanted) ? wanted : 'live';
+  const tab = TABS.includes(wanted) ? wanted : 'uebersicht';
   for (const section of document.querySelectorAll('[data-tab]')) {
     section.hidden = section.dataset.tab !== tab;
   }
@@ -626,13 +474,6 @@ function showTab() {
   }
 }
 window.addEventListener('hashchange', showTab);
-// Kachel-Klick = Agent fokussieren (K5, P28); das native Auf-/Zuklappen übernimmt focus.js.
-document.getElementById('org').addEventListener('click', (event) => {
-  const summary = event.target.closest('summary');
-  if (!summary) return;
-  event.preventDefault();
-  toggleNode(summary.parentElement.dataset.key);
-});
 setupGraph();
 showTab();
 setupTheme();
