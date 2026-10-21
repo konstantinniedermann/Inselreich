@@ -4,9 +4,17 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-17 (Session 21273458, R754–R772; main lokal 2 Werkzeug-Merges und I-132 abnahmebereit, nicht gepusht; live weiter REL-26 `6f14a354`, Save v17)
+Stand: 2026-10-21 (Kurz-Session 538f6a12, R789; live REL-28 `e28c80c2`, Save v18)
 
 ## Release-Notizen
+
+**REL-28 „Fernkarte mit Fahrzeit“ (live, R789)** — kein Save-Wechsel (v18). Inhalt: I-136, Doku R778–R789. Push `add28350..e28c80c2`, CI-Lauf 39579768546, Pages-Lauf 39580738479
+(automatisch). Quelle: `.studio/handoffs/2026-10-17-lead-qa-gate-REL-28.md`.
+
+- **Neu:** Die Fernangebot-Karte zeigt die Fahrzeit der Lieferung; die Lagerzahl der Fern-Insel wird bei Mangel dunkelrot (Zahl bleibt sichtbar, Tooltip «Fehlt n Gut») und
+  aktualisiert sich ohne Neuladen bei Lieferung (vom Studio vorgeschlagen, I-136).
+- **Bitte testen:** (1) Fernangebot: Fahrzeit plausibel zur Schiffsdistanz; (2) Fern-Insel mit zu wenig Lager: Zahl «x/y» dunkelrot, Tooltip «Fehlt …»; (3) Ware per Schiff
+  liefern: Zahl wird normal ohne Neuladen; (4) Fernauftrag-Karte: Zahl bleibt ungefärbt (bekannt); (5) Lesbarkeit der roten Zahl auf dem Pergament.
 
 **REL-27 „Meisterprüfung“ (live, R779)** — Save **v18** (Migration v17→v18). Inhalt: I-132, TOOL-BUENDEL-15, TOOL-BUENDEL-16, Doku R773–R777 (Rulings-Archiv, IDEEN-13).
 Push `6f14a354..add28350`, CI-Lauf 39033715341, Pages-Lauf 39034234219 (automatisch). Quelle: `.studio/handoffs/2026-10-17-lead-qa-gate-REL-27.md`.
@@ -152,20 +160,20 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475, R698 (Deckel 6), R708 V2. Ein Push je Session (R335). Lokal auf main, ungepusht: TOOL-BUENDEL-15 (`43afeb6f`),
-TOOL-BUENDEL-16 (`7c7e3188`), Doku/Rulings bis R772.
+Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475, R698 (Deckel 6), R708 V2. Ein Push je Session (R335).
 
-1. **REL-27 = I-132 «Meisterprüfung» + TOOL-BUENDEL-15/16** (R772): ein `lead-qa`-Start für Gate Merge I-132 (`feat/i132` @ `b8fabe4e`, Final-Review OK, Save v18) und
-   Release-Check im Ruhefenster; vorher voller `make check` auf `b8fabe4e` und Browser-Nachprüfung Hand-Cursor; Merge, `make push-check`, Push. Release-Notiz schreiben.
-2. **Handbuch 1.64** (R769 V1/V2) ist umgesetzt (`98850213`); Messfristen V1 2026-11-30, V2 2026-11-15.
-3. **ORT-A C9** (R768, R769 V3): T10 bei Last ≤ 8 (Item-Zählung, Sichtprüfung, `uptime` vor/nach), dann Strang k1 T11–T13 (Handoff `2026-10-17-lead-tech-ORT-A-C8.md`);
-   erster Task-Review deckt `23ce0ecc`. Absolute Release-Grenze in T23 statt E6 (R767). Budget neu erteilen (Rest 7 verfallen).
-4. **Stadtplanung Variante B** (R763–R771): Gate Plan OK mit Auflagen 1–5 (R771); Controller C1 arbeitet die Auflagen vor T00 ein (`plan/stadtplanung` @ `3824007c`), Budget 38 Starts,
-   Parallelität 2, 8 Instanzen; Render-Tasks T09/T10 erst nach ORT-A-Merge; kein I-132-Merge zwischen T02 und T04 (falls REL-27 dann noch offen).
+1. **R464-Stopp aufgehoben** (REL-28 live): ORT-A, Stadtplanung und TOOL-DASH-SCHLANK dürfen wieder Umsetzer starten; Push-Kontingent der Session 538f6a12 verbraucht.
+2. **TOOL-DASH-SCHLANK** (Nutzerauftrag, R790): Kurzdesign OK (R791, `design/dash-schlank` @ `77c0ad58`); Umsetzung 1 Umsetzer + 1 Sichtprüfung, Plan und
+   Umsetzung (Werkzeug, nach REL-28-Push). Hauptansicht nur «Projekt» und «Laufende Session».
+3. **ORT-A C11 fortsetzen** (R788, Handoff `2026-10-17-lead-tech-ORT-A-C11.md`): Fix T15 `paveImage` (Fugen als `p.line`/Füllung, Test bleibt), gezielte Tests, `make check` (Last ≤ 6),
+   Merge k2 nach `feat/ort-a`; T14/T17 Messungen bei Last ≤ 4; T18 danach. Sackgassen-Lappen und 2×2-Grasloch in T20b mit `lead-art`. Budget C11 neu erteilen (Rest 2 verfallen).
+4. **Stadtplanung C1 fortsetzen** (Handoff `2026-10-17-lead-tech-STADTPLANUNG-C1.md`): Ruling-Entwürfe 1–5 entscheiden, Review T06/T07, `make check` (Last ≤ 8), Merge
+   `feat/stadtplanung-ui`, T08, Stopp vor T09 (Render erst nach ORT-A-Merge nach main; dann `variants.test.ts` MAIN_REF/Park-Hash neu). Save v19 = main + 1. Budget 26 von 38 Rest neu erteilen.
 5. **I-119 + I-121 «Bewohner reagieren»** (R715): Plan erst nach ORT-A T20.
-6. Pool: ZEITRESERVE-PFLEGE (H-1, Last ≤ 4). Geparkt: I-110 (R722), I-124, I-130, I-131 (wartet auf Edikt-Überarbeitung, R762), I-134.
-7. Erweiterung 1 bleibt in der Nutzer-Session (R519); deren Save = main + 1 beim Merge (nach I-132: v19).
-8. Messfristen: R750 V1/V3 und R755 V1 am 2026-10-30; R769 V3 am 2026-10-24.
+6. Pool: ZEITRESERVE-PFLEGE (H-1, Last ≤ 4; neu: drei langsame ORT-A-Tests, R786). Geparkt: I-110, I-111, I-124, I-130, I-131, I-134 (R780).
+7. Erweiterung 1 bleibt in der Nutzer-Session (R519); deren Save = main + 1 beim Merge.
+8. Messfristen: R769 V3 am 2026-10-24; R750 V1/V3 und R755 V1 am 2026-10-30; R769 V2 2026-11-15, V1 2026-11-30.
+9. Befund für die nächste Retro: R697-Abweichung (L0-Doku-Commit vor Merge-Bericht, R789); Testlast aus eigenen Läufen blockiert Ruhefenster (R787).
 
 ## Aktuelles Projekt und Phase
 
@@ -190,8 +198,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts aus Session 21273458. Fremdlast (apfsd, Dropbox, WebKit) hielt die 1-min-Last
-  über Stunden bei 6–14 — Mess-Tasks brauchen ein Ruhefenster (R760).
+- Nichts. ORT-A (`ort-a`, `ort-a-k2`) und Stadtplanung (`stadt-sim`, `stadt-ui`) sauber pausiert; `design-dash-schlank` committet.
 
 ## Parallele Sessions
 
@@ -201,11 +208,9 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Seit letzter Session erledigt
 
-- **Lokal gemergt (21273458):** TOOL-BUENDEL-15 (R757, `43afeb6f`), TOOL-BUENDEL-16 (R761, `7c7e3188`).
-- **Abnahmen:** ORT-A C4 (Ringpfad bleibt, R756), C6 (Importzyklus TEX behoben, R760), T09 gemessen und E6 per absoluter Grenze entschieden (R767); I-132 C1/C2 bis Final-Review OK
-  (R764, R772).
-- **Gates/Entscheide:** Gate Plan I-132 (R759); Brainstorming, Gate Spec, Nachtrag und Gate Plan «Stadtplanung» Variante B (R763, R765, R766, R771).
-- **Prozess:** Ad-hoc-Retro (R755), Handbuch 1.63 (R750 V2/V3), Kurz-Retro 21273458 (R769), Beobachtungen ergänzt (`6b822fb9`).
+- **Session 2026-10-17 (R773–R788):** REL-27 live (R779); Handbuch 1.65 (R778); IDEEN-13 (R776); I-144 verworfen (R780); I-136 gebaut, Gate Merge erst ZURÜCK
+  (Signalrot), Fix `--tone-bad`, dann OK (R781, R784, R785); ORT-A C9/C10 abgenommen (R782, R786), C11 Zwischenstand (R788); Stadtplanung C1 T01–T05 OK, T06/T07 umgesetzt.
+- **Kurz-Session 2026-10-21:** R786–R788 committet, R789, REL-28 live (`e28c80c2`, CI/Pages grün); Nutzerauftrag Dashboard (R790), Kurzdesign gestartet; Kurz-Retro (3 Lernpunkte in lernen.md).
 
 ## Pausierte Pakete
 
@@ -221,7 +226,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Budget
 
-Offen: keine Freigaben (Restbudgets verfallen mit Session-Ende; ORT-A 7, I-132 6 nicht verbraucht).
+Offen: keine Freigaben (Restbudgets ORT-A C11 2, Stadtplanung 26 verfallen mit Session-Ende, R789).
 
 ## Offene Entscheide
 

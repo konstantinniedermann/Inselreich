@@ -1175,3 +1175,28 @@ auf `origin/main`. Fällt `push-check` nicht in die Session, bleibt der Kandidat
 Regelbezug: R335, R464, R697, R785 · Kosten bei Irrtum: ein zusätzlicher Merge-Commit nur mit Doku.
 
 Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-21 · ADR: —
+
+## R790 · 2026-10-21 · Nutzerauftrag Dashboard: nur Projektübersicht und laufende Session
+
+Ruling: Nutzer: «Das Dashboard hat viel zu viele Infos drin. Es soll nur eine generelle Übersicht über das Projekt und eine detailliertere über die laufende Session geben.» Auslegung:
+Paket **TOOL-DASH-SCHLANK**. Die Hauptansicht hat genau zwei Bereiche: (1) **Projekt** (Phase/Meilenstein, live-Release und Save, nächste Schritte, offene Nutzerentscheide) und
+(2) **Laufende Session** (aktive Agenten mit Paket und Heartbeat, Delegationen und Rulings dieser Session, Live-Feed, Budget und Aufwand der Session). Alle übrigen Karten (u. a.
+Organigramm, Prozess-Graph, Verlauf, Qualität, Schätzung vs. Ist, Kosten, Versionen) verlassen die Hauptansicht; ob gestrichen oder auf eine Nebenseite verschoben, entscheidet das
+Kurzdesign mit Begründung je Karte. Datenquellen und `metrics.py` bleiben unangetastet. Erster Schritt jetzt: Kurzdesign durch `lead-production` (ohne Code, ohne Tests, daher mit
+R464 vereinbar); Plan und Umsetzung in der Folgesession nach dem REL-28-Push.
+
+Regelbezug: R464, Verfassung §5 · Kosten bei Irrtum: eine Kurzdesign-Runde; die bisherigen Karten bleiben bis zur Umsetzung sichtbar.
+
+Entscheider: L0 · Anlass: Nutzerauftrag 2026-10-21 · ADR: —
+
+## R791 · 2026-10-21 · Gate Kurzdesign TOOL-DASH-SCHLANK: OK, Umsetzung in der Folgesession
+
+Ruling: Kurzdesign `lead-production` (`design/dash-schlank` @ `77c0ad58`, Handoff `.studio/handoffs/2026-10-21-lead-production-TOOL-DASH-SCHLANK.md`) → **OK**. Hauptansicht 7 Karten
+(Projekt: Stand, offene Entscheide, Releases mit Board; Laufende Session: Kopfzeile mit Zählern und Budget, Agenten-Graph, Live-Feed, Delegationen); Vorfälle nur als Banner.
+Reiter «Analyse» nimmt Aufwand, Schätzung, Kosten, Qualität, Vorfälle, Verlauf, Experimente, Changelog, Lernen und Chronik unverändert auf; Organigramme, Aktivität (60 min) und
+Versionen entfallen. `server.py` und Datenmodell bleiben. «Rulings dieser Session» nur, wenn aus vorhandenen Daten speisbar, sonst nur Delegationen (Entscheid im Plan). Banner-Link
+auf `#analyse`. Wegen fehlender JS-Tests: Sichtprüfung per `qa-playtester` Pflicht. Umsetzung 2 Starts nach dem REL-28-Push.
+
+Regelbezug: R464, R790 · Kosten bei Irrtum: entfallene Karten müssten aus Git zurückgeholt werden.
+
+Entscheider: L0 · Anlass: Bericht lead-production TOOL-DASH-SCHLANK · ADR: —
