@@ -1851,3 +1851,32 @@ time {
     grid-column: 1 / -1;
   }
 }
+
+/* --- Höhendeckel: lange Listen scrollen in der Karte ----------------------- */
+
+#budgets,
+#board,
+#queue,
+#decisions,
+#delegation {
+  max-height: 26rem;
+  overflow-y: auto;
+}
+
+#feed {
+  max-height: 32rem;
+}
+
+.graph-body {
+  max-height: 60vh;
+}
+
+.budget-sum {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+#releases {
+  min-width: 0;
+  overflow-x: auto;
+}

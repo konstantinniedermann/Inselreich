@@ -197,7 +197,10 @@ export function renderBanner(state) {
 
 export function renderQueue(state) {
   const container = document.getElementById('queue');
-  const entries = ((state.docs || {}).queue || []).filter((q) => q.status in QUEUE_TONE);
+  // Übersicht: nur offene Nutzerentscheide (beantwortete stehen in der Datei).
+  const entries = ((state.docs || {}).queue || []).filter(
+    (q) => q.status in QUEUE_TONE && q.status !== 'beantwortet' && !field(q.fields, Q_ANSWER),
+  );
   if (!entries.length) {
     container.replaceChildren(empty('Keine offenen Nutzerentscheide'));
     return;

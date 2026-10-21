@@ -268,7 +268,10 @@ function renderBudgets(state) {
     container.replaceChildren(empty('Keine Budgetfreigaben'));
     return;
   }
+  const sum = rows.reduce((n, b) => n + (Number(b.used) || 0), 0);
+  const total = rows.reduce((n, b) => n + (Number(b.granted) || 0), 0);
   container.replaceChildren(
+    el('p', { class: 'budget-sum' }, `Summe: ${sum} / ${total} Starts · ${rows.length} Leads`),
     el(
       'ul',
       { class: 'list budgets' },
