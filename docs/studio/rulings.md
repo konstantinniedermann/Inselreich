@@ -1234,3 +1234,16 @@ erzwungener Brandtest angenommen. Die fünf Befunde aus der Übergabe trägt der
 Regelbezug: R715, R788 · Kosten bei Irrtum: Pins und Save-Nummer müssten beim Merge nachgezogen werden.
 
 Entscheider: L0 · Anlass: Übergabe `2026-10-17-lead-tech-STADTPLANUNG-C1.md` · ADR: —
+
+## R795 · 2026-10-21 · Gate Merge TOOL-DASH-SCHLANK: BEDENKEN angenommen, Merge frei
+
+Ruling: Gate-Urteil `lead-qa` (Handoff `.studio/handoffs/2026-10-21-lead-qa-TOOL-DASH-SCHLANK.md`, Final-Review opus ohne ZURÜCK) → **Merge frei**. `production-integrator`
+merged `tool/dash-schlank` @ `5fecacfa` no-ff nach main, voller `make check` nach dem Merge (Teilbeleg vorher: studio-test 1009, docs-check, lint, tsc je Exit 0). Ergänzung zu R791
+angenommen: keine Karte «Rulings dieser Session» (state liefert keine Rulings), Agent-Fokus über Organigramm entfällt, Übersicht zeigt nur offene Nutzerentscheide; P1/P2 volle
+Breite. Höhendeckel der Karte «Stand» und tote Reste (`graph.js` `data-agents`, `style.css` `.dim`/1870, `views.js:93`/215–228, `effort.py:143`, `roster.md:50`) bleiben
+Beobachtung (Eintrag 2026-10-21). Kein Push in dieser Session ohne eigenes Gate (R335); der Stand geht mit dem nächsten Push. Integrator direkt statt über `lead-production`
+gestartet (ein Start weniger, reiner Werkzeug-Merge).
+
+Regelbezug: gates.md Gate Merge, R791, R335 · Kosten bei Irrtum: Dashboard-Fehler fallen erst im Betrieb auf; Rücknahme per Revert-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-qa TOOL-DASH-SCHLANK · ADR: —

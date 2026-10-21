@@ -473,3 +473,8 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 ## 2026-10-17 · I-136: Fernauftrag-Karte ohne Rotfärbung (niedrig)
 
 - `src/ui/farOrder.ts` (`farOrderText`): Lagerzahl der Fernauftrag-Karte bleibt ungefärbt, obwohl die Fernangebot-Karte mit I-136 bei Mangel rot wird; gleiche Teilung (`farOfferParts`-Muster) möglich. Ursprung: lead-tech, Plan I-136 (Auflage Gate Spec R778). Einschätzung: Beipack-Kandidat, kein eigenes Paket.
+
+## 2026-10-21 · TOOL-DASH-SCHLANK Final-Review (niedrig)
+
+- Fundort: `tools/studio/dashboard/graph.js:21,34,86,100,108,117` (`data-agents`, `agentKey` ungelesen), `style.css:1136` (`.graph-body .dim`), `style.css:1870` (`max-height: 60vh` wirkungslos neben `height: 60vh`), `views.js:93-99` (`classify`-Feld `level` tot), `views.js:215-228` (Zweig `answer ? 'beantwortet'` tot, weil Filter beantwortete ausschliesst), `tools/studio/effort.py:143` (Kommentar «Reiter Aufwand»), `docs/studio/roster.md:50` («im Organigramm»). Beobachtung: tote Reste nach Entfernen der Karten. Ursprung: Final-Review qa-code-reviewer (opus). Einschätzung: ein `refactor:`-Commit, je unter 5 Minuten, kein Test nötig; mit nächster Dashboard-Berührung.
+- Fundort: `#releases` (Stand-Karte, `releases.js`). Beobachtung: ohne Höhendeckel, ca. 2500 px (Seite gesamt 5750 statt 80000 px). Ursprung: Playtest und Final-Review TOOL-DASH-SCHLANK. Einschätzung: `max-height` plus `overflow-y: auto` oder Verdichten auf Live- und laufendes Release; Pfeil-Layer (Koordinaten relativ zur Box) danach im Browser prüfen.
