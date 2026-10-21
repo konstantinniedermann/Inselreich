@@ -125,13 +125,13 @@ warum keiner folgt. Der Retro-Bericht enthält dazu den Abschnitt „Effizienz-A
 
 **Dashboard-Reiter** (`make studio`, URL `http://127.0.0.1:8765/`):
 
-| Reiter     | Link          | Zeigt                                                                                                          |
-| ---------- | ------------- | -------------------------------------------------------------------------------------------------------------- |
-| Live       | `#live`       | Organigramm, Prozess-Graph, Pakete, offene L0-Entscheide, Nutzerentscheid-Warteschlange, Banner „Retro fällig" |
-| Delegation | `#delegation` | Zeitachse wer → wen, mit Briefing- und Bericht-Links, Schätzung und Ist                                        |
-| Aufwand    | `#aufwand`    | Tabellen je Agent, Paket, Lead, Meilenstein, Modell; Schätzung vs. Ist                                         |
-| Qualität   | `#qualitaet`  | Kennzahlen, offene Vorfälle, Verlauf über die Meilensteine (aus `metriken/`)                                   |
-| Studio     | `#studio`     | Handbuch- und Verfassungsversion, CHANGELOG, Experimente, lernen.md, Personas mit Versionen                    |
+| Reiter    | Link          | Zeigt                                                                                                                                                                                               |
+| --------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Übersicht | `#uebersicht` | Standard. Projekt: Stand und Releases, offene Entscheide (Warteschlange, L0), Meilenstein-Board. Laufende Session: Status und Budget, Prozess-Graph, Live-Feed, Delegationen; Banner „Retro fällig" |
+| Analyse   | `#analyse`    | Aufwand, Schätzung vs. Ist, Sitzungskosten, Qualität, offene Vorfälle, Verlauf je Meilenstein, Experimente, CHANGELOG, lernen.md, Chronik                                                           |
+
+Unbekannte Hashes fallen auf `#uebersicht` zurück. Organigramm, Aktivität (60 min), Versionen und das
+Personas-Organigramm entfielen (TOOL-DASH-SCHLANK).
 
 ## Verbesserungsschleife
 
