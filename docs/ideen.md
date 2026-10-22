@@ -317,14 +317,14 @@ bleibt Beipack-Kandidat für das nächste UI-Häppchen (die Karte besteht weiter
 - Nutzen/Aufwand: Versorgungslücken ohne Neubau lesbar · S · ≈ 40 Tools
 - Entscheid: offen (IDEEN-14)
 
-### I-147 · neu · Zweiter Autosave-Platz «Davor»
+### I-147 · umgesetzt · Zweiter Autosave-Platz «Davor»
 
 - Bereich: Technik/Bedienung · Säule: Bedienung (Spielfluss) · Quelle: `src/ui/storage.ts` (nur `manual`, `auto`); README «Speichern, Laden»
 - Spielerwirkung: „Der Spieler lädt nach einem Fehlklick einen Stand von vor etwa vier Minuten, statt dass der Autosave den Fehler überschreibt." Autosave wechselt zwischen zwei Plätzen; Ladeliste zeigt beide mit Spielzeit. Kein Undo in der Sim. Doppelung: I-071 (Undo, verworfen) ist anders.
 - Grösse: S · Risiko: Browser-Speicher (zweiter Schlüssel, Quote); Save-Format unberührt
 - Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 2 = 11 (lead-design: Risiko 3 → 2)
 - Nutzen/Aufwand: Entscheide mutig statt vorsichtig · S · ≈ 50 Tools
-- Entscheid: offen (IDEEN-14)
+- Entscheid: eingeplant als UI-Häppchen H P1. Umgesetzt in UI-HAEPPCHEN-H (Strang 1), Release folgt.
 
 ### I-148 · umgesetzt · «Wo war ich?»-Karte beim Fortsetzen
 

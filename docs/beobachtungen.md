@@ -487,3 +487,8 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 ## 2026-10-22 · WIRTSCHAFT-BS-1: Scout-Idee mit falscher Code-Annahme (niedrig)
 
 - Fundort: `docs/ideen.md` (Branch `docs/ideen-14`), I-154 «Rückfracht auf der Route». Beobachtung: Die Idee nimmt an, Routen führen nur Hinfracht und die Routen-Bilanz zähle nur sie; beides gibt es seit M12 (`Route.ab/ba`, `routeBalance.ts:61-63`, «Holen/Bringen» in `src/ui/ships.ts`). Ursprung: lead-design, Dominanz-Rechnung WIRTSCHAFT-BS-1. Einschätzung: Persona `design-idea-scout` sollte «fehlt»-Annahmen gegen Code prüfen (eine `rg`-Suche) und die Fundstelle nennen; Kandidat für die nächste Persona-Pflege.
+
+## 2026-10-22 · UI-HAEPPCHEN-H P1: Autosave «Davor» (niedrig)
+
+- Fundort: `src/ui/storage.ts` (`autosaveOnHide`, `saveAutoNewest`). Beobachtung: Lädt der Spieler «Davor» und lädt danach die Seite neu, schreibt `pagehide` den geladenen (älteren) Stand in den neuesten Platz; der neuere Stand geht verloren (Spec Regel 4, in der README vermerkt). Ursprung: Playtest T03 (Urteil BEDENKEN). Einschätzung: Designfrage: nach dem Laden von «Davor» den Zeiger auf diesen Platz setzen oder `pagehide` auslassen, bis neu gespielt wird.
+- Fundort: `docs/superpowers/plans/2026-10-22-ui-haeppchen-h/T03-*.md`. Beobachtung: Die Task-Datei nennt etwa 2 Spielminuten Abstand der Plätze; bei Tempo 3 sind es etwa 8 Spielminuten (2 Echtminuten, Takt 120 s Echtzeit). Ursprung: Playtest T03. Einschätzung: Text in der Task-Datei beim nächsten Anfassen angleichen.
