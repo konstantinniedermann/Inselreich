@@ -487,3 +487,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 ## 2026-10-22 · WIRTSCHAFT-BS-1: Scout-Idee mit falscher Code-Annahme (niedrig)
 
 - Fundort: `docs/ideen.md` (Branch `docs/ideen-14`), I-154 «Rückfracht auf der Route». Beobachtung: Die Idee nimmt an, Routen führen nur Hinfracht und die Routen-Bilanz zähle nur sie; beides gibt es seit M12 (`Route.ab/ba`, `routeBalance.ts:61-63`, «Holen/Bringen» in `src/ui/ships.ts`). Ursprung: lead-design, Dominanz-Rechnung WIRTSCHAFT-BS-1. Einschätzung: Persona `design-idea-scout` sollte «fehlt»-Annahmen gegen Code prüfen (eine `rg`-Suche) und die Fundstelle nennen; Kandidat für die nächste Persona-Pflege.
+
+## 2026-10-22 · DOKU-AUDIT-1b: ADR-011 steht noch auf «vorgeschlagen» (niedrig)
+
+- Fundort: `docs/adr/` ADR-011 (Asset-Pipeline), Kopfzeile «Status: vorgeschlagen (angenommen mit dem Gate Plan M7)». Beobachtung: Die Pipeline ist seit M7 in Betrieb (Assets-Strang, `tests/assets/`, `docs/CREDITS.md`), der Status-Wortlaut ist aber ein Zwitter. Ursprung: DOKU-AUDIT-1. Einschätzung: Statuszeile auf «angenommen» setzen (Ruling-Bezug Gate Plan M7), reiner Doku-Fix; zusammen mit der Prüfung weiterer ADR-Statuszeilen in einer Doku-Runde erledigen.
