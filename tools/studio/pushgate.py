@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
 import subprocess
 import sys
 from collections.abc import Mapping
@@ -19,7 +20,9 @@ from pathlib import Path
 MODE = "deny"  # Rückfall "warn": Hinweis statt Block (Entscheid per Ruling von L0)
 SUFFIX = " (pushgate, R844 V1)"
 TAIL_BYTES = 4 * 1024 * 1024
-GIT_TIMEOUT = 3
+GIT_TIMEOUT = 2  # zwei git-Aufrufe bleiben unter dem Hook-Timeout von 5 s
+MAX_DEPTH = 3
+BARE_HEAD = {"HEAD", "@"}
 APPROVAL_FILE = "push-freigabe"
 MIN_PREFIX = 7
 MAIN_REFS = {"main", "refs/heads/main"}
@@ -74,19 +77,32 @@ def positionals(args: list[str]) -> list[str]:
     return found
 
 
+def _current_is_main(cwd: str) -> bool:
+    return _git(cwd, "rev-parse", "--abbrev-ref", "HEAD") == "main"
+
+
+def _spec_source(spec: str, cwd: str) -> str | None:
+    """Quelle eines Refspecs, wenn er nach main zeigt; sonst None."""
+    source, colon, target = spec.lstrip("+").partition(":")
+    if not colon and source in BARE_HEAD:
+        return "HEAD" if _current_is_main(cwd) else None
+    if not colon:
+        target = source
+    return source if target in MAIN_REFS and source else None
+
+
 def main_sources(args: list[str], cwd: str) -> list[str]:
     """Quellen (Refs/Hashes) aller Refspecs, die nach main zeigen."""
-    specs = positionals(args)[1:]
-    if not specs:
-        branch = _git(cwd, "rev-parse", "--abbrev-ref", "HEAD")
-        return ["HEAD"] if branch == "main" else []
-    sources = []
-    for spec in specs:
-        source, colon, target = spec.lstrip("+").partition(":")
-        if not colon:
-            target = source
-        if target in MAIN_REFS and source:
-            sources.append(source)
+    own_remote = any(a == "--repo" or a.startswith("--repo=") for a in args)
+    plain = positionals(args)
+    specs = plain if own_remote else plain[1:]
+    sources = [found for spec in specs if (found := _spec_source(spec, cwd))]
+    if ("--all" in args or "--mirror" in args) and _git(
+        cwd, "rev-parse", "--verify", "--quiet", "refs/heads/main"
+    ):
+        sources.append("refs/heads/main")
+    if not specs and "--tags" not in args and _current_is_main(cwd):
+        sources.append("HEAD")
     return sources
 
 
@@ -192,25 +208,45 @@ def protect_reason(payload: Mapping) -> str | None:
     )
 
 
-def bash_reason(payload: Mapping, cwd: str) -> str | None:
-    """Grund für die Abweisung oder None."""
+def _next_cwd(cwd: str, args: list[str]) -> str:
+    """Arbeitsverzeichnis nach `cd`; unbekannte Ziele (`-`, `$VAR`) lassen es stehen."""
+    if not args or args[0] == "-" or "$" in args[0]:
+        return cwd
+    return os.path.normpath(os.path.join(cwd, os.path.expanduser(args[0])))
+
+
+def _check(command: str, cwd: str, payload: Mapping, depth: int) -> str | None:
     import guard
 
+    for words, _raw, _writes, _assigns in guard.segments(command):
+        name = os.path.basename(words[0]) if words else ""
+        if name == "cd":
+            cwd = _next_cwd(cwd, words[1:])
+            continue
+        found = split_git_push(words)
+        if found is not None:
+            directory, args = found
+            where = os.path.join(cwd, directory) if directory else cwd
+            for source in main_sources(args, where):
+                reason = check_source(source, where, payload)
+                if reason:
+                    return reason
+            continue
+        text = guard._shell_text(name, words[1:])
+        if text is not None and depth < MAX_DEPTH:
+            reason = _check(text, cwd, payload, depth + 1)
+            if reason:
+                return reason
+    return None
+
+
+def bash_reason(payload: Mapping, cwd: str) -> str | None:
+    """Grund für die Abweisung oder None."""
     data = payload.get("tool_input")
     command = str((data or {}).get("command") or "") if isinstance(data, dict) else ""
     if "push" not in command:
         return None
-    for words, _raw, _writes, _assigns in guard.segments(command):
-        found = split_git_push(words)
-        if found is None:
-            continue
-        directory, args = found
-        where = str(Path(cwd, directory)) if directory else cwd
-        for source in main_sources(args, where):
-            reason = check_source(source, where, payload)
-            if reason:
-                return reason
-    return None
+    return _check(command, cwd, payload, 0)
 
 
 def _log_block(payload: Mapping, found: str) -> None:

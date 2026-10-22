@@ -280,5 +280,67 @@ class RegistrationTest(unittest.TestCase):
         self.assertTrue(any("guard.py" in c and "pushgate" not in c for c in commands))
 
 
+class ReviewFixTest(GateCase):
+    def other_repo(self, branch="feat/x"):
+        other = self.repo.parent / "other"
+        other.mkdir(exist_ok=True)
+        git(other, "init", "-b", branch)
+        git(other, "commit", "--allow-empty", "-m", "zwei")
+        return other
+
+    def test_bare_head_and_at_map_to_current_branch(self):
+        for command in (
+            "git push origin HEAD",
+            "git push -u origin HEAD",
+            "git push origin @",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(self.reason(command))
+        git(self.repo, "checkout", "-b", "feat/x")
+        self.assertIsNone(self.reason("git push origin HEAD"))
+        self.assertIsNone(self.reason("git push origin @"))
+
+    def test_cd_between_segments_is_followed(self):
+        other = self.other_repo()
+        self.assertIsNotNone(self.reason(f"cd {self.repo} && git push origin HEAD"))
+        self.assertIsNone(self.reason(f"cd {other} && git push"))
+        git(self.repo, "checkout", "-b", "feat/y")
+        self.assertIsNotNone(
+            self.reason(f"cd {self.repo.parent} && cd repo && git push origin main")
+        )
+
+    def test_tags_only_is_not_a_main_push(self):
+        self.assertIsNone(self.reason("git push --tags"))
+        self.assertIsNone(self.reason("git push origin --tags"))
+        self.assertIsNotNone(self.reason("git push origin main --tags"))
+
+    def test_all_and_mirror_push_main_too(self):
+        git(self.repo, "checkout", "-b", "feat/x")
+        for command in ("git push --all origin", "git push origin --mirror"):
+            with self.subTest(command=command):
+                self.assertIsNotNone(self.reason(command))
+
+    def test_valued_options_do_not_shift_positionals(self):
+        git(self.repo, "checkout", "-b", "feat/x")
+        for command in (
+            "git push --repo origin main",
+            "git push --receive-pack=x origin main",
+            "git push --receive-pack x origin main",
+            "git push -o ci.skip origin main",
+            "git push --push-option ci.skip origin main",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(self.reason(command))
+        self.assertIsNone(self.reason("git push -o main origin feat/x"))
+
+    def test_git_calls_stay_within_hook_budget(self):
+        self.assertLessEqual(2 * pushgate.GIT_TIMEOUT, 4)
+
+    def test_shell_c_is_checked_recursively(self):
+        self.assertIsNotNone(self.reason("bash -c 'git push origin main'"))
+        self.assertIsNotNone(self.reason('sh -c "cd . && git push origin HEAD"'))
+        self.assertIsNone(self.reason("bash -c 'echo hallo'"))
+
+
 if __name__ == "__main__":
     unittest.main()
