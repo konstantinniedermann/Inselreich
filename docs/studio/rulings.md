@@ -1861,3 +1861,16 @@ ORT-A-Merge (T03); AK-W4 nach SEERECHT-Merge nachprüfen; AK-W10 Kontrast 4,063 
 Verfassung berührt?: nein · Regelbezug: R830, R832, R845 · Kosten bei Irrtum: Klang stört; Abschalten per Revert vor dem Push.
 
 Entscheider: L0 · Anlass: Zwischenbericht lead-tech LEBEN-SEE · ADR: —
+
+## R847 · 2026-10-22 · TOOL-MESSFENSTER A/B abgenommen fürs Bündel; T00 bleibt gesperrt; UI-BEIPACK-FERN startet
+
+Ruling: Bericht `lead-tech` (`feat/tool-messfenster` @ `5c138f56`, Final-Review opus nach zwei Fix-Runden OK, Teilbeleg 99/99 + `test_pushcheck` 37 + `studio-test` 1014;
+Handoff `.studio/handoffs/2026-10-22-lead-tech-TOOL-MESSFENSTER.md`) → **Stränge A/B abgenommen**, gehen mit Ergänzungsurteil `lead-qa` in REL-30 (vor TOOL-PUSHSPERRE T05).
+Entwurf 2 (`smoke.mjs` ohne Sperre, später Warnung) angenommen. **T00** startet erst, wenn L0 das Ende der ORT-A-Messungen meldet; T06 nur bei positivem T00; Restbudget 6.
+Befunde ausserhalb Scope → `docs/beobachtungen.md` (L0 trägt ein). **Frei gewordener Test-Platz → UI-BEIPACK-FERN** (R836) an einen `lead-tech`-Controller (sonnet), Budget **4**,
+mit dem Ziel, noch ins Bündel REL-30 zu kommen (Voraussetzung für Seerecht T04).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: `pushcheck.py`/`tests/test_pushcheck.py` mit TOOL-PUSHSPERRE T05 (Reihenfolge Messfenster → T05)
+Regelbezug: R824, R835, R836 · Kosten bei Irrtum: Sperre blockiert Testläufe; `make messfenster-frei` bzw. Revert.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-MESSFENSTER · ADR: —
