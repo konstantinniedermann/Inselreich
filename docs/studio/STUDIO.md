@@ -363,7 +363,7 @@ Regeln dazu:
   Schlussbericht ist der Report, Screenshots und Proben liegen unter `.studio/qa/<paket>/`.
 - **Release (Stufe leicht, E-028):** Auslöser: 3 Häppchen release-reif, Session-Ende mit ≥ 1 reifem
   Häppchen oder Meilenstein-Merge; höchstens 4 je Release; Hotfix (CI rot, Absturz, defekter Spielstand)
-  einzeln. Das nächste Häppchen startet nach Review-OK, nicht nach dem Merge; disjunkte Dateien laufen
+  einzeln. Diese Auslöser lösen nur das **lokale Bündeln** aus (Gate Merge und Merge nach main nach vollem Lauf); gepusht wird höchstens einmal je Kalendertag und gebündelt, nach dem ersten abgeschlossenen Release-Stand des Tages oder beim ersten Push-Fenster des Folgetags (R817, R816). Das nächste Häppchen startet nach Review-OK, nicht nach dem Merge; disjunkte Dateien laufen
   parallel (§5.8). Konfliktregeln (Dateimatrix, Stapel, Delta-Review, Kandidat frisch aufbauen), Prüfliste
   UI-Task → Screenshot und Release-Notiz in `state.md` („Neu“, „Bitte testen“): [gates.md](gates.md#gate-merge-release).
   **Nach jedem Merge eines Releases auf main startet L0 den `studio-process-coach` (R127, R316).**

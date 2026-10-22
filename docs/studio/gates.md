@@ -208,7 +208,7 @@ Prüfen: `lead-qa` (`opus`, Review über den Kandidaten, CI) · `lead-art` nur b
 **Auslöser:** 3 Häppchen „release-reif“ (Review-OK, Abnahme durch den Lead, Teilbeleg grün, `log.py
 result` mit Häppchen-ID), oder Session-Ende mit ≥ 1 release-reifem Häppchen, oder ein Meilenstein-Merge
 (fertige Häppchen fahren im selben Lauf mit). Höchstens 4 Häppchen je Release. **Hotfix** (CI auf main
-rot, Absturz, defekter Spielstand) geht einzeln.
+rot, Absturz, defekter Spielstand) geht einzeln. Die Auslöser lösen nur das lokale Bündeln aus (Gate Merge, Merge nach main nach vollem Lauf); gepusht wird höchstens einmal je Kalendertag und gebündelt: nach dem ersten abgeschlossenen Release-Stand des Tages oder beim ersten Push-Fenster des Folgetags (R817, R816).
 
 **Ablauf (Paket-ID `REL-nn` für Integrator, Release-Lauf, Review, Gate):**
 
