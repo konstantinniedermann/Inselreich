@@ -15,6 +15,7 @@
 //   release(Opts & { owner, pid? }): { ok, reason? }      // nur die eigene (owner, und pid falls beides gesetzt)
 //   status(Opts): { frei, lock?, text }                   // liest nur, löscht nichts
 //   defaultLockPath(), defaultTestlockPath()
+//   takeOver(path, now): boolean                          // verwaiste Sperre unter Wächter löschen (stderr-Hinweis)
 // Übernahme verwaister Sperren nur unter Wächterverzeichnis <datei>.takeover (mkdir atomar), Hinweis auf stderr.
 // acquire folgt dem Dekker-Muster: erst eigene Sperre atomar setzen, dann die lebende Testsperre prüfen.
 import { execFileSync } from 'node:child_process';
@@ -109,7 +110,7 @@ function testlockHolder(path: string): number | undefined {
 }
 
 // Übernahme einer verwaisten Sperre unter Wächter; true = Datei wurde entfernt.
-function takeOver(path: string, now: number): boolean {
+export function takeOver(path: string, now: number): boolean {
   const guard = `${path}.takeover`;
   try {
     mkdirSync(guard);

@@ -21,6 +21,12 @@ import {
 import { constants, loadavg } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  defaultLockPath as messfensterPath,
+  isOrphan as messfensterOrphan,
+  readLock as readMessfenster,
+  takeOver as takeOverMessfenster,
+} from '../messfenster/lock.ts';
 import { findOrphans, orphanNotice } from './orphans.ts';
 
 export const LOAD_MAX = 8;
@@ -69,7 +75,7 @@ function reportOrphans(): void {
 }
 
 // Lastprotokoll bei Abbruch (R588 V3): Python-CLI druckt die Zeile und schreibt das Event; Fehler egal.
-function loadProtocol(reason: 'load' | 'lock', load?: number): void {
+function loadProtocol(reason: 'load' | 'lock' | 'messfenster', load?: number): void {
   try {
     const script = resolve(dirname(fileURLToPath(import.meta.url)), '../studio/loadsnap.py');
     const args = [script, '--reason', reason, '--source', 'testlock'];
@@ -212,5 +218,17 @@ if (isSet(env.CI) || isSet(env.GITHUB_ACTIONS) || env.STUDIO_TESTLOCK_HELD) {
     }
   };
   process.on('exit', release);
+  // Dekker (P-4): Testsperre ist gesetzt, erst jetzt das Messfenster prüfen; belegt => eigene Sperre lösen.
+  const mPath = messfensterPath();
+  const m = readMessfenster(mPath);
+  if (m && messfensterOrphan(m)) takeOverMessfenster(mPath, Date.now());
+  else if (m) {
+    release();
+    console.error(
+      `testlock: ABBRUCH, Messfenster (Eigentümer ${m.owner}, ${m.zweck}, bis ${m.ende}). Nicht warten; später erneut oder gezielt per "npx vitest run <datei>".`,
+    );
+    loadProtocol('messfenster', load);
+    process.exit(EXIT_BLOCKED);
+  }
   run();
 }

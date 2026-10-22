@@ -16,6 +16,7 @@ writeFileSync(loadPs, '  11 90.0 node vitest worker\n  12 5.0 bash\n');
 function setup() {
   const lock = join(mkdtempSync(join(tmpdir(), 'testlock-')), 'lock');
   const studio = mkdtempSync(join(tmpdir(), 'studio-home-'));
+  const mess = join(mkdtempSync(join(tmpdir(), 'messfenster-')), 'messfenster'); // nie die echte Sperre
   const run = (extra: Record<string, string | undefined>, ...cmd: string[]) =>
     spawnSync('node', [script, ...cmd], {
       encoding: 'utf8',
@@ -25,6 +26,7 @@ function setup() {
         GITHUB_ACTIONS: undefined,
         STUDIO_TESTLOCK_HELD: undefined,
         TESTLOCK_PATH: lock,
+        MESSFENSTER_PATH: mess,
         TESTLOCK_FAKE_LOAD: '1',
         STUDIO_HOME: studio, // Abbruch-Events nie ins echte .studio
         LOADSNAP_PS_FIXTURE: loadPs,
@@ -40,7 +42,7 @@ function setup() {
           .map((l) => JSON.parse(l) as Record<string, unknown>)
       : [];
   };
-  return { lock, studio, run, events };
+  return { lock, studio, mess, run, events };
 }
 
 const holder = (pid: number, cmd: string) =>
@@ -132,6 +134,60 @@ describe('testlock', () => {
   it('verschachtelt (STUDIO_TESTLOCK_HELD): läuft ohne zweite Sperre', () => {
     const { lock, run } = setup();
     writeFileSync(lock, holder(1, 'x'));
+    expect(run({ STUDIO_TESTLOCK_HELD: '1' }, 'node', '-e', '0').status).toBe(0);
+  });
+});
+
+const messLock = (owner: string, ende: string, pid?: number) =>
+  JSON.stringify({ owner, ...(pid ? { pid } : {}), start: ende, ende, zweck: 'Perf', cwd: '/x' });
+const IN_ZUKUNFT = '2999-01-01T00:00:00.000Z';
+
+describe('testlock und Messfenster (P-4, P-5)', () => {
+  it('Messfenster gesetzt: Exit 3, Meldung mit Eigentümer/Zweck/bis, Befehl läuft nicht, Testsperre gelöst', () => {
+    const { lock, mess, run } = setup();
+    writeFileSync(mess, messLock('l0', IN_ZUKUNFT));
+    const p = run({}, 'node', '-e', 'console.log("GELAUFEN")');
+    expect(p.status).toBe(3);
+    expect(p.stderr).toContain(
+      `testlock: ABBRUCH, Messfenster (Eigentümer l0, Perf, bis ${IN_ZUKUNFT})`,
+    );
+    expect(p.stdout).not.toContain('GELAUFEN');
+    expect(existsSync(lock)).toBe(false); // Dekker: eigene Testsperre wieder gelöst
+    expect(existsSync(mess)).toBe(true);
+  });
+
+  it('Messfenster-Abbruch schreibt Event load_abort mit Grund messfenster', () => {
+    const { mess, run, events } = setup();
+    writeFileSync(mess, messLock('l0', IN_ZUKUNFT));
+    run({}, 'node', '-e', '0');
+    expect(events()).toHaveLength(1);
+    expect(events()[0]).toMatchObject({
+      kind: 'load_abort',
+      source: 'testlock',
+      reason: 'messfenster',
+    });
+  });
+
+  it('verwaiste Messfenster-Sperre (Zeit abgelaufen): übernommen, Lauf startet', () => {
+    const { mess, run } = setup();
+    writeFileSync(mess, messLock('l0', '2000-01-01T00:00:00.000Z'));
+    const p = run({}, 'node', '-e', 'console.log("GELAUFEN")');
+    expect(p.status).toBe(0);
+    expect(p.stderr).toContain('verwaist');
+    expect(p.stdout).toContain('GELAUFEN');
+    expect(existsSync(mess)).toBe(false);
+  });
+
+  it('Messfenster mit toter PID: übernommen, Lauf startet', () => {
+    const { mess, run } = setup();
+    writeFileSync(mess, messLock('x', IN_ZUKUNFT, 2147483646));
+    expect(run({}, 'node', '-e', '0').status).toBe(0);
+  });
+
+  it('CI und verschachtelt: Messfenster wird ignoriert', () => {
+    const { mess, run } = setup();
+    writeFileSync(mess, messLock('l0', IN_ZUKUNFT));
+    expect(run({ CI: 'true' }, 'node', '-e', '0').status).toBe(0);
     expect(run({ STUDIO_TESTLOCK_HELD: '1' }, 'node', '-e', '0').status).toBe(0);
   });
 });
