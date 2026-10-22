@@ -1431,3 +1431,16 @@ dem Push-Check von REL-29 (Bündel: UI-G, TOOL-DASH-SCHLANK, Doku). Handbuch-Min
 Regelbezug: R335, R380, R429, R503, R517, R795 · Kosten bei Irrtum: Integrationsfehler fallen erst im Push-Check auf; dann ein Fix-Paket vor dem Push.
 
 Entscheider: L0 · Anlass: Nutzerauftrag, Retro PROZESS-LAST · ADR: —
+
+## R811 · 2026-10-22 · UI-HAEPPCHEN-G zum Gate Merge; Reihenfolge vor Stadtplanung; Bündel REL-29
+
+Ruling: Bericht `lead-tech` (`feat/ui-haeppchen-g` @ `134ac43e`, Handoff `.studio/handoffs/2026-10-22-lead-tech-UI-HAEPPCHEN-G.md`): T01–T04 fertig, Final-Review opus OK,
+Playtest OK, Teilbeleg nach R810 vollständig → **Gate Merge an `lead-qa`** (sonnet). Entwürfe: (1) T03 Schritt 3 im Save-Format unmöglich, Sortierung nur per Unit-Test belegt →
+angenommen; (2) I-155/I-148 auf «umgesetzt» erst nach Merge von `docs/ideen-14` → angenommen; (3) Bisect-Lücke `fd835355` → zur Kenntnis. **Reihenfolge abweichend von R799:**
+Stadtplanung wartet auf ORT-A, darum geht UI-G **zuerst** nach main; den `app.ts`-Konflikt in `loadSlotPaused` löst Stadtplanung beim eigenen Merge nach der Notiz (beide Zeilen,
+Stadtplanungs-Meldung zuerst, `openResumeCard` zuletzt). **Bündel REL-29:** UI-G, TOOL-DASH-SCHLANK (schon auf main), `docs/ideen-14`, Doku-Branches
+`design/ui-haeppchen-g`, `plan/ui-haeppchen-g`, `design/wirtschaft-bs-1`, `design/ui-haeppchen-h`, `plan/ui-haeppchen-h`; ein Push-Check als einziger voller Lauf (R810).
+
+Regelbezug: R799, R810, gates.md Gate Merge · Kosten bei Irrtum: Konfliktlösung in `app.ts` beim Stadtplanungs-Merge (eine Zeile).
+
+Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-G · ADR: —
