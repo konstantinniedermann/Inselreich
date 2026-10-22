@@ -1686,3 +1686,14 @@ UI-BEIPACK-FERN per `git merge`). Plan `lead-tech` (Stufe leicht, sonnet), keine
 Regelbezug: R827, gates.md kombiniertes Gate Stufe leicht · Kosten bei Irrtum: UI-only, rückbaubar.
 
 Entscheider: L0 · Anlass: Bericht lead-design UI-HAEPPCHEN-I · ADR: —
+
+## R832 · 2026-10-22 · Gate Plan LEBEN-SEE: OK; Warteschlange für Test-Controller-Plätze
+
+Ruling: Plan `lead-tech` (`plan/leben-see` @ `b5425214`, T01–T08, Strang A Kielwasser, Strang B Klang) → **OK**, Entwürfe angenommen: Budget **11**, Parallelität 3; Strang B und
+T01/T02 sofort bei Start, T03 nach ORT-A-Merge per `git merge main`; AK-K9 nur bei Befund eine `app.ts`-Zeile; AK-W4 bindet ohne Seerecht-Fixture an 10 Ticks; Hörurteil `shipDock`
+als «Bitte testen». **Reihenfolge für frei werdende Test-Controller-Plätze (≤ 3, R826):** 1. SEERECHT (R828), 2. LEBEN-SEE, 3. UI-HAEPPCHEN-I (nach Gate Plan), 4. UI-BEIPACK-FERN
+(nach UI-H P1). Wird ein Platz frei, startet L0 ohne weiteres Ruling den nächsten.
+
+Regelbezug: R826, R828, R830 · Kosten bei Irrtum: Wartezeit einzelner Pakete.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan LEBEN-SEE · ADR: —
