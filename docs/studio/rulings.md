@@ -1890,3 +1890,16 @@ Verfassung berührt?: ja, §1.3 (`guard.py` unverändert, zusätzlicher Hook-Ein
 Regelbezug: R815, R844, R845 · Kosten bei Irrtum: Pin bleibt knapp; Flake-Verdacht hält an, bis die Ursache geklärt ist.
 
 Entscheider: L0 · Anlass: Zwischenbericht lead-tech TOOL-PUSHSPERRE · ADR: —
+
+## R849 · 2026-10-22 · UI-HAEPPCHEN-I A und B abgenommen fürs Bündel; Limit-Ampel gelb
+
+Ruling: Zwischenbericht `lead-tech` UI-HAEPPCHEN-I (Handoff `.studio/handoffs/2026-10-22-lead-tech-UI-HAEPPCHEN-I.md`): **Strang A** `feat/ui-haeppchen-i-a` @ `a83b8ee0` (Kasse leer,
+Wachstumsbremse ohne Lärm; Final-Review opus BEDENKEN niedrig) und **Strang B** `feat/ui-haeppchen-i-b` @ `e085f342` (Bestand im Tooltip; Final-Review OK) → **abgenommen**,
+Ergänzungsurteil `lead-qa` beim Bündel REL-30. R-E1 bis R-E3 angenommen (AK-I27 0,1 ms bei 423 Häusern; Vorab-Zeittest entfällt). Fehlende Tests AK-I22/AK-I25 kommen mit T05 nach
+dem Stadtplanung-Merge (Branch `feat/ui-haeppchen-i-a2`); Restbudget 8. Der Plan schrieb `make check` je Strang vor → Plan-Vorlage und offene Pläne auf Teilbeleg prüfen (Beobachtung,
+`studio-coach` beim nächsten Handbuch-Minor). **Limit-Ampel gelb** (5-h-Fenster 60 %, R826): keine neuen Wellen; laufende Arbeit abschliessen, Bündel REL-30 für morgen vorbereiten.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: UI-BEIPACK-FERN (`hud.ts`, disjunkt, `merge-tree` sauber); Stadtplanung für T05
+Regelbezug: R826, R831, R833 · Kosten bei Irrtum: UI-only.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech UI-HAEPPCHEN-I · ADR: —
