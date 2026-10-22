@@ -189,3 +189,77 @@ console.log('lock=' + existsSync(process.env.MESSFENSTER_PATH));
     expect(r.stderr).toContain('Testsperre belegt');
   });
 });
+
+describe('T04 Fix: Signal an den Wrapper beendet das Kind und löst die Sperre', () => {
+  const wrapperDriver = (cliPath: string) => `
+import { spawn } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { scheduler } from 'node:timers/promises';
+const pidfile = process.env.KIND_PIDFILE;
+const kind = "require('fs').writeFileSync(process.env.KIND_PIDFILE, String(process.pid)); require('node:timers/promises').scheduler.wait(30000)";
+const w = spawn('node', ['${cliPath}', '--', 'node', '-e', kind], { stdio: 'inherit' });
+const ende = new Promise((r) => w.on('exit', (code, sig) => r({ code, sig })));
+for (let i = 0; i < 200 && !existsSync(pidfile); i++) await scheduler.wait(50);
+const kpid = Number(readFileSync(pidfile, 'utf8'));
+const lockDa = existsSync(process.env.MESSFENSTER_PATH);
+w.kill('SIGTERM');
+const r = await ende;
+await scheduler.wait(200);
+let lebt = true;
+try { process.kill(kpid, 0); } catch { lebt = false; }
+console.log(JSON.stringify({ lockDa, code: r.code, kindLebt: lebt, lockDanach: existsSync(process.env.MESSFENSTER_PATH) }));
+`;
+  const check = (cliPath: string) => {
+    const s = setup();
+    const r = s.run(s.driver('wrapper.mjs', wrapperDriver(cliPath)), [], {
+      KIND_PIDFILE: join(s.dir, 'kind.pid'),
+    });
+    return JSON.parse(r.stdout.trim().split('\n').pop() ?? '{}');
+  };
+  it('messsperre.mjs: SIGTERM => Kind tot, Sperre gelöst, Exit 143', () => {
+    const r = check(new URL(messsperre).pathname);
+    expect(r).toEqual({ lockDa: true, code: 143, kindLebt: false, lockDanach: false });
+  });
+});
+
+describe('T04 Fix: perf.mjs nimmt das Messfenster', () => {
+  const perf = new URL('../../tools/render-qa/perf.mjs', import.meta.url).pathname;
+  it('lebende Testsperre: Exit 3 «Testsperre belegt» (Einzelseed und Seedliste)', () => {
+    const s = setup();
+    writeFileSync(s.testlockPath, JSON.stringify({ pid: PID }));
+    for (const seed of ['7', '7,14']) {
+      const r = s.run(perf, ['--a', '.', '--b', '.', '--seed', seed]);
+      expect(r.status).toBe(3);
+      expect(r.stderr).toContain('Testsperre belegt');
+    }
+    expect(existsSync(s.lockPath)).toBe(false);
+  });
+  it('--help setzt keine Sperre und endet mit 0', () => {
+    const s = setup();
+    writeFileSync(s.testlockPath, JSON.stringify({ pid: PID }));
+    const r = s.run(perf, ['--help']);
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain('Aufruf: perf.mjs');
+  });
+  it('Aufruffehler (Exit 2) hinterlässt keine Sperre', () => {
+    const s = setup();
+    const r = s.run(perf, ['--a', '.']);
+    expect(r.status).toBe(2);
+    expect(existsSync(s.lockPath)).toBe(false);
+  });
+});
+
+describe('T04 Fix: sitzung.cli reicht dauerMin durch', () => {
+  it('Sperre dauert die angegebene Zeit (Vorgabe 20, Option 45)', () => {
+    const s = setup();
+    const drv = (opt: string) => `
+import { readFileSync } from 'node:fs';
+import { cli } from '${sitzung}';
+cli({}, 'H'${opt});
+const l = JSON.parse(readFileSync(process.env.MESSFENSTER_PATH, 'utf8'));
+console.log(Math.round((Date.parse(l.ende) - Date.parse(l.start)) / 60000));
+`;
+    expect(s.run(s.driver('d20.mjs', drv(''))).stdout.trim()).toBe('20');
+    expect(s.run(s.driver('d45.mjs', drv(', { dauerMin: 45 }'))).stdout.trim()).toBe('45');
+  });
+});

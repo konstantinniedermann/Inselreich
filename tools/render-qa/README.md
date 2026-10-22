@@ -44,8 +44,9 @@ Messungen und volle Testläufe schliessen sich über `.studio/messfenster` (Bibl
 oder per `make messfenster ARGS="--run -- <befehl>"` starten (`--dauer <min>`, Vorgabe 70; `--zweck <text>`). Belegt das
 Messfenster oder lebt die Testsperre, bricht der Start mit Exit 3 ab (kein Warten). Die Sperre fällt in `finally`, bei
 Exception und bei SIGTERM/SIGINT/SIGHUP. Kinder des Wrappers erben `MESSFENSTER_HELD=<pid>` und nehmen keine zweite Sperre.
-`sitzung.cli` (hitch, kalt, altwald, proben, seekarte, blindprobe) und `perf-lauf.sh` setzen sie selbst (20 min);
-`perf.mjs` und `smoke.mjs` laufen über `perf-lauf.sh` bzw. `make messfenster --run`. Befehl unter Sperre ohne Wächter-Prüfung:
+`sitzung.cli` (hitch, kalt, altwald, proben, seekarte, blindprobe; Option `dauerMin`, Vorgabe 20), `perf.mjs` und
+`perf-lauf.sh` setzen sie selbst (20 min). `smoke.mjs` ist keine Messung und nimmt sie nicht. Ein Signal an den Wrapper
+beendet zuerst das Kind (danach SIGKILL nach 5 s), löst dann die Sperre und endet mit 128+n. Befehl unter Sperre ohne Wächter-Prüfung:
 `node tools/render-qa/messsperre.mjs [--dauer <min>] [--zweck <text>] -- <befehl>`.
 
 ## Namensschema (E-039, R315)

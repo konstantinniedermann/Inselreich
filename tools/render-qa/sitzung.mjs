@@ -29,7 +29,7 @@ export const defaultRoot = () =>
  * Liest benannte Argumente. `opts` im Format von util.parseArgs; `--help` gibt `help` aus (Exit 0), unbekannte
  * Optionen brechen mit Exit 2 ab. Der Lastabbruch (R329) und die Messfenster-Sperre (Exit 3 bei belegt, TOOL-MESSFENSTER) laufen erst danach (also nicht bei --help).
  */
-export function cli(opts, help, { gate = true } = {}) {
+export function cli(opts, help, { gate = true, dauerMin = 20 } = {}) {
   let values;
   try {
     ({ values } = parseArgs({ options: { help: { type: 'boolean' }, ...opts }, strict: true }));
@@ -43,7 +43,7 @@ export function cli(opts, help, { gate = true } = {}) {
   }
   if (gate) {
     gateOrExit();
-    holdMessfenster({ owner: 'sitzung', dauerMin: 20, zweck: process.argv[1] ?? 'Messung' });
+    holdMessfenster({ owner: 'sitzung', dauerMin, zweck: process.argv[1] ?? 'Messung' });
   }
   return values;
 }

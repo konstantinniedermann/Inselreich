@@ -13,7 +13,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { loadavg } from 'node:os';
 import { basename, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { holdMessfenster } from './messsperre.mjs';
+import { beendeKind, holdMessfenster } from './messsperre.mjs';
 
 const DEFAULT_LOAD = 4;
 const RUN_DAUER_MIN = 70; // Block für --run (Plan P-6)
@@ -270,7 +270,7 @@ function main(argv) {
     owner: 'messfenster',
     dauerMin,
     zweck: zweck || run.join(' ').slice(0, 80),
-    onSignal: (sig) => child.kill(sig),
+    onSignal: (sig) => beendeKind(child, sig),
   });
   const child = spawn('caffeinate', ['-i', ...run], { stdio: 'inherit' });
   child.on('error', (e) => {

@@ -1,4 +1,4 @@
-/* global process, console */
+/* global process, console, setTimeout, clearTimeout */
 // messsperre.mjs — Messwerkzeuge setzen und lösen das Messfenster (TOOL-MESSFENSTER, P-6, Ruling-Entwurf R824-E5).
 // Nutzt acquire/release aus tools/messfenster/lock.ts (Dekker-Muster: eigene Sperre, dann Testsperre prüfen).
 //   import { withMessfenster, holdMessfenster } from './messsperre.mjs';
@@ -32,13 +32,15 @@ export function gehalten(env = process.env) {
 
 /**
  * Nimmt die Sperre synchron oder beendet den Prozess mit Exit 3. Löst sie über `release()`, beim Prozessende und bei
- * Signalen (Exit 128+n). `onSignal(sig)` läuft vor dem Beenden (z. B. Kind weiterreichen).
+ * Signalen (Exit 128+n). `onSignal(sig)` darf ein Promise liefern und wird abgewartet, bevor die Sperre fällt
+ * (z. B. Kind beenden, `beendeKind`). `signale: false`: der Aufrufer behandelt Signale selbst (Sperre fällt beim Exit).
  */
 export function holdMessfenster({
   owner,
   dauerMin = VORGABE_DAUER_MIN,
   zweck = '',
   onSignal,
+  signale = true,
 } = {}) {
   if (gehalten()) return { gehalten: false, release() {} };
   const pid = process.pid;
@@ -49,11 +51,17 @@ export function holdMessfenster({
   }
   const vorher = process.env.MESSFENSTER_HELD;
   process.env.MESSFENSTER_HELD = String(pid);
-  const handlers = SIGNALE.map((sig) => {
-    const h = () => {
-      onSignal?.(sig);
-      lose();
-      process.exit(128 + constants.signals[sig]);
+  let beendet = false;
+  const handlers = (signale ? SIGNALE : []).map((sig) => {
+    const h = async () => {
+      if (beendet) return;
+      beendet = true;
+      try {
+        await onSignal?.(sig);
+      } finally {
+        lose();
+        process.exit(128 + constants.signals[sig]);
+      }
     };
     process.on(sig, h);
     return [sig, h];
@@ -82,11 +90,24 @@ export async function withMessfenster(fn, opts) {
   }
 }
 
-/** Startet `befehl` (Kind erbt MESSFENSTER_HELD) und liefert dessen Exit-Code; Signale gehen an das Kind. */
-export function startKind(befehl, kind = spawn) {
+/** Beendet das Kind mit `sig`, wartet auf dessen Exit und schickt nach `timeoutMs` SIGKILL. */
+export function beendeKind(child, sig = 'SIGTERM', timeoutMs = 5000) {
+  if (!child || child.exitCode !== null || child.signalCode !== null) return Promise.resolve();
+  return new Promise((fertig) => {
+    const t = setTimeout(() => child.kill('SIGKILL'), timeoutMs);
+    child.once('exit', () => {
+      clearTimeout(t);
+      fertig();
+    });
+    child.kill(sig);
+  });
+}
+
+/** Startet `befehl` (Kind erbt MESSFENSTER_HELD) und liefert dessen Exit-Code; `onStart(child)` gibt das Kind frei. */
+export function startKind(befehl, onStart = () => {}, kind = spawn) {
   return new Promise((fertig) => {
     const child = kind(befehl[0], befehl.slice(1), { stdio: 'inherit' });
-    for (const sig of SIGNALE) process.once(sig, () => child.kill(sig));
+    onStart(child);
     child.on('error', (e) => {
       console.error(`Start fehlgeschlagen: ${e.message}`);
       fertig(1);
@@ -112,10 +133,12 @@ async function main(argv) {
     console.error('messsperre: --dauer muss eine positive Zahl (Minuten) sein.');
     return 2;
   }
-  return withMessfenster(() => startKind(argv.slice(i + 1)), {
+  let kind = null;
+  return withMessfenster(() => startKind(argv.slice(i + 1), (c) => (kind = c)), {
     owner: 'messsperre',
     dauerMin,
     zweck: opt('zweck') ?? argv[i + 1],
+    onSignal: (sig) => beendeKind(kind, sig),
   });
 }
 
