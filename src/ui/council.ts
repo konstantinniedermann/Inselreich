@@ -31,7 +31,7 @@ export const councilBadgeActive = (world: World): boolean => openCouncilTiers(wo
 
 /** Inhalt des Rats-Fensters: offene Stufen mit zwei Karten, gefasste Beschlüsse als Zeilen. */
 export function councilCards(world: World): CouncilView {
-  const sides: CouncilSide[] = ['A', 'B'];
+  const sides = ['A', 'B'] as const;
   const open = openCouncilTiers(world).map((tier) => ({
     tier,
     cards: sides.map((side) => ({

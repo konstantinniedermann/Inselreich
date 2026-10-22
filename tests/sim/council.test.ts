@@ -11,7 +11,11 @@ import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { demolish } from '../../src/sim/build';
 import {
   councilCycle,
+  councilSides,
   decree,
+  laneTicksOf,
+  seaTileTicks,
+  travelTicksOf,
   maxInhabitantsOf,
   openCouncilTiers,
   serviceRadiusOf,
@@ -25,6 +29,9 @@ import { serviceAvailable, tickPopulation, tierCap, upgradeStatus } from '../../
 import { coverageMask, placementZone } from '../../src/sim/queries';
 import { serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
+import { laneTicks } from '../../src/sim/islands';
+import { SHIP_TICKS_PER_SEA_TILE } from '../../src/sim/defs/sea';
+import { laneWorld, shipLiteral } from './seaHelpers';
 import type { BuildingDefId, CouncilTier, World } from '../../src/sim/types';
 import {
   houseNearKontor,
@@ -73,7 +80,9 @@ describe('AK-10 Tabelle', () => {
       'Kapellen reichen 3 Felder weiter. Spart Kapellen in weiten Städten.',
     );
     expect(COUNCIL[4].B.text).toBe('Kaufmannshäuser fassen 22 statt 20 Kaufleute.');
-    expect(COUNCIL_NOTE).toBe('Gilt für die ganze Partie, der andere Beschluss verfällt.');
+    expect(COUNCIL_NOTE).toBe(
+      'Gilt für die ganze Partie, die übrigen Beschlüsse der Stufe verfallen.',
+    );
     expect(COUNCIL_OPEN_MESSAGE).toBe('Der Rat tagt: ein Beschluss steht an');
   });
 });
@@ -461,5 +470,99 @@ describe('Konsistenz Rat-Tabelle', () => {
         expect(def.cycle, `${t}${s}: ${lever.defId} ohne cycle`).toBeDefined();
       }
     expect(n).toBeGreaterThan(0);
+  });
+});
+
+describe('I-153 Seerecht', () => {
+  it('AK-SR-1 Tabelle: Stufe 4 hat C, Stufen 2 und 3 nur A und B', () => {
+    expect(Object.keys(COUNCIL[4])).toEqual(['A', 'B', 'C']);
+    expect(Object.keys(COUNCIL[2])).toEqual(['A', 'B']);
+    expect(Object.keys(COUNCIL[3])).toEqual(['A', 'B']);
+    expect(COUNCIL[4].C).toEqual({
+      name: 'Seerecht',
+      text: 'Schiffe fahren 25 % schneller. Spart ab etwa 80 Kaufleuten ein Schiff auf langen Gewürzrouten.',
+      lever: { kind: 'seaTileTicks', value: 8 },
+    });
+    expect(SHIP_TICKS_PER_SEA_TILE).toBe(10);
+    expect(councilSides(4)).toEqual(['A', 'B', 'C']);
+    expect(councilSides(2)).toEqual(['A', 'B']);
+  });
+
+  it('AK-SR-2 decree(4, C) gelingt einmalig', () => {
+    const w = createWorld(3);
+    w.council[4] = 'open';
+    expect(decree(w, 4, 'C')).toEqual({ ok: true });
+    expect(w.council[4]).toBe('C');
+    expect(decree(w, 4, 'A')).toEqual({ ok: false, reason: 'Schon beschlossen' });
+    expect(w.council[4]).toBe('C');
+    w.council[4] = null;
+    expect(decree(w, 4, 'C')).toEqual({ ok: false, reason: 'Beschluss nicht offen' });
+  });
+
+  it('AK-SR-3 ungültige Seiten werden abgewiesen, ohne Änderung und ohne Wurf', () => {
+    const w = createWorld(3);
+    w.council[2] = 'open';
+    w.council[3] = 'open';
+    w.council[4] = 'open';
+    const before = JSON.stringify(w);
+    const bad: [unknown, unknown][] = [
+      [2, 'C'],
+      [3, 'C'],
+      [4, 'D'],
+      [4, null],
+    ];
+    for (const [t, s] of bad) {
+      expect(() => decree(w, t, s)).not.toThrow();
+      expect(decree(w, t, s)).toEqual({ ok: false, reason: 'Ungültige Seite' });
+    }
+    expect(JSON.stringify(w)).toBe(before);
+  });
+
+  it('AK-SR-4 Fahrzeit-Helfer: 10 je Feld ohne Seerecht, 8 mit Seerecht', () => {
+    const { w, island } = laneWorld(30);
+    const plain = [{}, { 4: 'A' }, { 4: 'B' }, { 2: 'A', 3: 'B' }] as const;
+    for (const c of plain) {
+      Object.assign(w.council, c);
+      expect(seaTileTicks(w)).toBe(10);
+      expect(travelTicksOf(w, 30)).toBe(300);
+      for (let i = 0; i < w.islands.length; i++)
+        expect(laneTicksOf(w, 0, i)).toBe(laneTicks(w.islands, 0, i));
+    }
+    w.council[4] = 'C';
+    expect(seaTileTicks(w)).toBe(8);
+    expect(travelTicksOf(w, 30)).toBe(240);
+    expect(laneTicksOf(w, 0, island)).toBe(8 * 30);
+    expect(laneTicksOf(w, 2, 2)).toBe(0);
+  });
+
+  it('AK-SR-5 decree rechnet Restfahrzeit um, sonst nichts', () => {
+    const w = createWorld(3);
+    w.council[4] = 'open';
+    const lefts = [350, 7, 2, 1];
+    const ships = lefts.map((left) =>
+      shipLiteral(w, { to: 1, left, cargo: { wood: 3 }, route: null }),
+    );
+    const homing = shipLiteral(w, { to: 0, left: 100, homing: true });
+    const idle = shipLiteral(w, { port: 1, to: null, left: 0 });
+    const meta = (s: typeof idle) => ({ port: s.port, to: s.to, cargo: s.cargo, route: s.route });
+    const before = [...ships, homing, idle].map(meta);
+    expect(decree(w, 4, 'C').ok).toBe(true);
+    expect(ships.map((s) => s.left)).toEqual([280, 6, 2, 1]);
+    expect(homing.left).toBe(80);
+    expect(idle.to).toBeNull();
+    expect(idle.left).toBe(0);
+    expect([...ships, homing, idle].map(meta)).toEqual(before);
+    expect(decree(w, 4, 'A').ok).toBe(false);
+    expect(ships.map((s) => s.left)).toEqual([280, 6, 2, 1]);
+  });
+
+  it('Schiff mit left 1 liegt nach decree und einem step im Zielhafen', () => {
+    const w = createWorld(3);
+    w.council[4] = 'open';
+    const ship = shipLiteral(w, { port: 0, to: 0, left: 1 });
+    decree(w, 4, 'C');
+    step(w);
+    expect(ship.to).toBeNull();
+    expect(ship.port).toBe(0);
   });
 });

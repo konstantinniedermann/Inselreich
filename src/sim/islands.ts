@@ -70,15 +70,21 @@ export function islandName(world: World, i: number): string {
   return ISLANDS.find((d) => d.kind === kind)?.name ?? HOME_NAME;
 }
 
-export const travelTicks = (d: number): number => SHIP_TICKS_PER_SEA_TILE * d;
+export const travelTicks = (d: number, perTile: number = SHIP_TICKS_PER_SEA_TILE): number =>
+  perTile * d;
 
 /** Fahrzeit zwischen zwei Inseln in Ticks (Lane `{min, max}`); `a === b` → 0. */
-export function laneTicks(islands: readonly LaneIsland[], a: number, b: number): number {
+export function laneTicks(
+  islands: readonly LaneIsland[],
+  a: number,
+  b: number,
+  perTile: number = SHIP_TICKS_PER_SEA_TILE,
+): number {
   if (a === b) return 0;
   const lo = Math.min(a, b);
   const hi = Math.max(a, b);
   const lane = seaLanes(islands).find((l) => l.a === lo && l.b === hi);
-  return lane === undefined ? 0 : travelTicks(lane.d);
+  return lane === undefined ? 0 : travelTicks(lane.d, perTile);
 }
 
 // ---------- Anker ----------

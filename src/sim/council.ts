@@ -1,6 +1,8 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { COUNCIL, COUNCIL_TIERS } from './defs/council';
 import { TIERS } from './defs/tiers';
+import { laneTicks, travelTicks } from './islands';
+import { SHIP_TICKS_PER_SEA_TILE } from './defs/sea';
 import { fail, ok } from './types';
 import type {
   BuildingDefId,
@@ -12,19 +14,20 @@ import type {
   World,
 } from './types';
 
-/* Einziger Leseort (R706 a) für die Ratsbeschluss-Hebel: Dienst-Reichweite, Hausgrösse, Takt. */
+/* Einziger Leseort (R706 a) für die Ratsbeschluss-Hebel: Dienst-Reichweite, Hausgrösse, Takt, Fahrzeit. */
 
 /** Wert des Hebels `kind` für `key` (defId bzw. Stufe) aus den beschlossenen Stufen; `undefined` ohne Treffer. */
 function activeLever(
-  world: World,
+  world: Pick<World, 'council'>,
   kind: CouncilDef['lever']['kind'],
-  key: string | number,
+  key?: string | number,
 ): number | undefined {
   for (const t of COUNCIL_TIERS) {
     const side = world.council[t];
-    if (side !== 'A' && side !== 'B') continue;
-    const lever = COUNCIL[t][side].lever;
-    if (lever.kind !== kind) continue;
+    if (side === null || side === 'open') continue;
+    const lever = COUNCIL[t][side]?.lever;
+    if (lever === undefined || lever.kind !== kind) continue;
+    if (!('defId' in lever || 'tier' in lever)) return lever.value;
     if (('defId' in lever ? lever.defId : lever.tier) === key) return lever.value;
   }
   return undefined;
@@ -44,6 +47,21 @@ export function councilCycle(world: World, defId: BuildingDefId, cycle: number):
   if (v === undefined) return cycle;
   return Math.max(1, Math.floor((cycle * v) / BUILDING_DEFS[defId].cycle!));
 }
+
+/** Ticks je Seefeld; mit Seerecht der Ratswert, sonst der Def-Wert. */
+export const seaTileTicks = (world: Pick<World, 'council'>): number =>
+  activeLever(world, 'seaTileTicks') ?? SHIP_TICKS_PER_SEA_TILE;
+
+/** Fahrzeit über `d` Seefelder in Ticks unter dem Ratsbeschluss. */
+export const travelTicksOf = (world: Pick<World, 'council'>, d: number): number =>
+  travelTicks(d, seaTileTicks(world));
+
+/** Fahrzeit zwischen zwei Inseln in Ticks unter dem Ratsbeschluss. */
+export const laneTicksOf = (
+  world: Pick<World, 'islands' | 'council'>,
+  a: number,
+  b: number,
+): number => laneTicks(world.islands, a, b, seaTileTicks(world));
 
 /** Höchste Hausstufe über alle Inseln (0 ohne Haus). */
 function highestHouseTier(world: World): number {
@@ -66,23 +84,40 @@ export function tickCouncil(world: World): void {
 }
 
 const isTier = (v: unknown): v is CouncilTier => (COUNCIL_TIERS as readonly unknown[]).includes(v);
-const isSide = (v: unknown): v is CouncilSide => v === 'A' || v === 'B';
+
+/** Gültige Seite der Stufe `tier` (C nur, wo die Tabelle sie führt). */
+export const isCouncilSide = (tier: CouncilTier, side: unknown): side is CouncilSide =>
+  typeof side === 'string' &&
+  (COUNCIL[tier] as Record<string, CouncilDef | undefined>)[side] !== undefined;
+
+/** Vorhandene Seiten der Stufe in der Reihenfolge A, B, C. */
+export const councilSides = (tier: CouncilTier): CouncilSide[] =>
+  (['A', 'B', 'C'] as const).filter((s) => COUNCIL[tier][s] !== undefined);
 
 /** Grund, den `decree` liefern würde, oder null; ändert nichts. */
 export function decreeReason(world: World, tier: unknown, side: unknown): string | null {
   if (!isTier(tier)) return 'Ungültige Stufe';
-  if (!isSide(side)) return 'Ungültige Seite';
+  if (!isCouncilSide(tier, side)) return 'Ungültige Seite';
   const state = world.council[tier];
   if (state === null) return 'Beschluss nicht offen';
   if (state !== 'open') return 'Schon beschlossen';
   return null;
 }
 
+/** Rechnet die Restfahrzeit aller fahrenden Schiffe auf den neuen Feldwert um, mindestens 1. */
+function rescaleVoyages(world: World, alt: number, neu: number): void {
+  if (neu === alt) return;
+  for (const ship of world.ships)
+    if (ship.to !== null) ship.left = Math.max(1, Math.ceil((ship.left * neu) / alt));
+}
+
 /** Beschliesst die Seite einer offenen Stufe, einmalig; kein Geld, keine Pause-Sperre. */
 export function decree(world: World, tier: unknown, side: unknown): Result {
   const reason = decreeReason(world, tier, side);
   if (reason !== null) return fail(reason);
+  const alt = seaTileTicks(world);
   world.council[tier as CouncilTier] = side as CouncilSide;
+  rescaleVoyages(world, alt, seaTileTicks(world));
   return ok;
 }
 
