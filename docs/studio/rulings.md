@@ -1456,3 +1456,16 @@ Push-Checks unverändert bleiben). ORT-A-Messungen und Push-Check nie gleichzeit
 Regelbezug: R335, R464, R503, R517, R810, R811 · Kosten bei Irrtum: roter CI-Lauf, Behebung hat Vorrang; Rücknahme per Revert.
 
 Entscheider: L0 · Anlass: Gate-Urteil lead-qa REL-29 · ADR: —
+
+## R813 · 2026-10-22 · Verfassung vor R810: verfassungskonforme Lesart bis N-103
+
+Ruling: Hinweis `studio-coach` (N-103): Verfassung §7.1/§7.2/§9.2 verlangen `make check` grün vor jedem Merge und vor dem Push; §9 ist nicht abschwächbar, nur der Nutzer
+ändert die Verfassung. R810 V1 und Handbuch 1.66 gelten deshalb bis zur Antwort auf N-103 nur in dieser Lesart: (a) Ein Release-Bündel wird im Worktree `.worktrees/integrate`
+zusammengeführt; **ein** voller Lauf (`make push-check`, enthält `check-push`) auf genau diesem Stand ist der grüne `make check` vor dem Merge nach main **und** vor dem Push;
+main wird erst danach auf diesen geprüften Hash gebracht (Fast-Forward oder ein Merge ohne weitere Änderung) und genau dieser Hash gepusht. (b) Strang-interne Merges
+(z. B. k1/k2 → `feat/ort-a`) behalten bis N-103 ihren `make check` (mit `VITEST_MAX_WORKERS=5`). (c) Paket-Gates brauchen nur den Teilbeleg, weil sie selbst nicht mergen.
+R812 wird entsprechend ausgeführt. N-103 wird dem Nutzer direkt vorgelegt.
+
+Regelbezug: Verfassung §1, §7, §9.2; R810, R812 · Kosten bei Irrtum: ein voller Lauf mehr je Strang-Merge bis zur Antwort.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Handbuch 1.66 · ADR: —
