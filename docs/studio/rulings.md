@@ -1590,3 +1590,164 @@ Fensterregel R803 bleibt. (2) **ORT-A AK-31:** Variante 1 des Umsetzers angenomm
 Regelbezug: Verfassung §5.8, R424, R445, R475, R698, R803, R810 · Kosten bei Irrtum: mehr Koordination; Plan-Arbeit, die nach Merges nachgezogen werden muss.
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R824 · 2026-10-22 · Gate Plan TOOL-MESSFENSTER: OK, Umsetzung als dritter Controller, T00 erst nach ORT-A-Messungen
+
+Ruling: Plan `lead-tech` (`plan/tool-messfenster` @ `1a1d61f7`, T00–T07) → **OK**; Entwürfe R824-E1 bis E5 angenommen (Sperre `.studio/messfenster` im Hauptrepo für alle Worktrees,
+Abbruchpräfix «testlock: ABBRUCH» bleibt für `pushcheck.py` Exit 3, vorläufige A/A-Grenzen Hitch Σ ≤ 2 / kein Fenster > 40 ms und Render max(0,4 ms; 3 %), `kantenprofil.mjs` beim
+ORT-A-Merge). Umsetzung durch einen **dritten `lead-tech`-Controller** (sonnet), Budget **11**, Parallelität 2; Stränge A (T01–T03, T07) und B (T05, T04) sofort mit Teilbeleg;
+**T00** (70-min-A/A-Messblock, exklusiv) erst, wenn ORT-A seine Messungen abgeschlossen hat, und nie parallel zu ORT-A- oder LEBEN-STRASSE-Messungen; T06 nur bei positivem T00.
+Merge nach main im Release-Bündel.
+
+Regelbezug: R810 V3/V4, R823 (≤ 3 Test-Controller) · Kosten bei Irrtum: Werkzeug-Fehler blockiert Testläufe; Rücknahme per Revert vor dem Bündel-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan TOOL-MESSFENSTER · ADR: —
+
+## R825 · 2026-10-22 · BEOB-18 abgenommen; Pakete P1–P3 eingeplant
+
+Ruling: Bericht `lead-production` (`docs/beob-18` @ `9ea1fe33`, Marke 2026-10-22, Archiv auf 43,9 KB) → **abgenommen**; Merge im Release-Bündel (Konflikt am Dateiende mit
+`feat/ort-a` erwartet, Auflösung: beide Abschnitte behalten). Pakete: **P1 UI-BEIPACK-FERN** (S, nach UI-HAEPPCHEN-H P1, gleiche Dateien), **P2 TOOL-DASH-REST** (XS, `refactor:`)
+und **P3 PERSONA-SCOUT-PFLEGE** (XS, `lead-design`, inkl. I-154-Korrektur) auf das Board; P2 und P3 starten, sobald der Deckel 10 Plätze frei hat (Ideen-Scouts laufen gerade).
+`perf.test.ts`-Pin AK-E0-15a auf der ZEITRESERVE-PFLEGE-Liste.
+
+Regelbezug: R287, R288, R471, R823 · Kosten bei Irrtum: kleine Pakete warten länger.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-18 · ADR: —
+
+## R826 · 2026-10-22 · Dauerregel: Kapazität voll nutzen, gesteuert durch die Limit-Ampel
+
+Ruling: Nutzer: «hast du meinen letzten auftrag generell verstanden? auch in zukünftigen sessions? voraussetzung sind natürlich das ampelsystem mit den limits». **Dauerregel für
+jede Session:** L0 hält den Studio-Deckel von **10 Agenten** (R823) aktiv voll, solange die Limit-Ampel (`.studio/limits.json`, STUDIO.md «Limits und Sessiongrösse») es erlaubt:
+**grün** (5-h-Fenster < 60 % und Woche < 80 %) → Deckel ausschöpfen, nach jedem Bericht nachfüllen, jeden Strang mit eigenem Agenten bearbeiten (Umsetzung, Pläne, Specs, Gates,
+Pflege, Ideen); höchstens **3 Controller mit Testläufen**, ≤ 2 Browser-Läufe, Fensterregel R803. **gelb** (5-h 60–80 % oder Woche > 80 %) → keine neuen Wellen, Angefangenes abschliessen.
+**rot** (5-h > 80 %) → Ende-Routine. Engpass Rechnerlast → zusätzliche Plätze mit testfreier Arbeit füllen, nicht leer lassen. Ersetzt R698; ergänzt R475 und R445. Handbuch-Minor
+durch `studio-coach`.
+
+Regelbezug: Verfassung §5.8, R69, R424, R445, R475, R698, R823 · Kosten bei Irrtum: höherer Verbrauch im 5-h-Fenster; die Ampel bremst rechtzeitig.
+
+Entscheider: Nutzer (Auftrag), L0 (Auslegung) · Anlass: Nutzerfrage · ADR: —
+
+## R827 · 2026-10-22 · Runden-Ruling IDEEN-15; Kurzdesigns auf den frei gewordenen Plätzen
+
+Ruling: Rangliste `lead-design` (`docs/ideen-15` @ `0b5ae668`, Handoff `.studio/handoffs/2026-10-22-lead-design-IDEEN-15.md`, Pool 25/40) → **angenommen** wie Entwurf R-IDEEN-15:
+eingeplant **UI-HAEPPCHEN-I** (I-170, I-168, I-167; Umsetzung nach Stadtplanung-Merge), **LEBEN-SEE** (I-157 Kielwasser, I-156 Anlege-Klang), Kurzdesign **AUFLAGEN-KERN**
+Stufe voll (I-163 gegen I-161 mit Dominanz-Rechnung, dazu I-162; gebaut wird höchstens eine Auflage); I-159 nach ORT-A- und Stadtplanung-Merge; geparkt I-169, I-160, I-164, I-166
+(Beipack); verworfen I-158. R805 (4) ergänzt: neue Auflagen sperren den Zukauf ihrer Zielgüter, Lohn ehrenhalber. Sofort gestartet (R826, Ampel grün): Kurzdesign UI-HAEPPCHEN-I
+(`lead-design`, sonnet, 1), Kurzdesign LEBEN-SEE (`lead-art`, sonnet, 1), Kurzdesign AUFLAGEN-KERN (`lead-design`, opus, 2), Spec-Nachtrag I-119/I-121 gegen LEBEN-STRASSE plus P3
+PERSONA-SCOUT-PFLEGE (`lead-design`, sonnet, 1). Alle ohne Testläufe; `docs/ideen-15` geht ins nächste Release-Bündel.
+
+Regelbezug: R208, R445, R805, R825, R826 · Kosten bei Irrtum: Designarbeit, die nach Merges nachgezogen wird.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-15 · ADR: —
+
+## R828 · 2026-10-22 · Gate Plan SEERECHT: BEDENKEN angenommen, ein Controller mit Parallelität 2, Start bei freiem Test-Slot
+
+Ruling: Gate-Urteil `lead-qa` BEDENKEN (Handoff `.studio/handoffs/2026-10-22-lead-qa-gate-plan-SEERECHT.md`) → **Plan frei** (`plan/seerecht` @ `792d565d`) unter den Auflagen B1–B3,
+N1–N4 (R-SR-P1): **ein** `lead-tech`-Controller mit Folgeinstanzen und Parallelität 2 statt drei Controllern (Instanz 1: T01, dann T02 ∥ T05; Instanz 2: T03 ∥ T04, dann T06, T07;
+Instanz 3: T08, T09 nach Stadtplanung-Merge); T01 beginnt mit der Seed-Suche d 30/35, ohne Fund `blocked` mit Messwerten; Wächter AK-SR-21 mit geschärftem Muster (Fehltreffer
+`src/ui/time.ts:24`, `src/render/sprites.ts:2067`); AK-SR-14-Reihenfolge als Review-Beleg; Risiko Wert 8 in den Plan-Index; T07 prüft die Fernkarte in der Pause; T01-Dateiliste
+ergänzen. SR-E2–SR-E5 angenommen (v20 nach Stadtplanung, `isValidCouncil` vorn, Typform, AK-SR-18 in `farLate.test.ts`). R-SR-P2 Merge-Reihenfolge Stadtplanung → T09 → Gate
+Merge; R-SR-P3 Balancing-Lauf in T09 verbindlich. Budget **21** Starts. **Start**, sobald einer der drei Test-Controller-Plätze frei wird (R826).
+
+Regelbezug: R805, R814, R826, gates.md Gate Plan · Kosten bei Irrtum: Seed-Fixture blockiert T01; dann Fixture-Ruling.
+
+Entscheider: L0 · Anlass: Gate-Urteil lead-qa Plan SEERECHT · ADR: —
+
+## R829 · 2026-10-22 · Nachtrag I-119/I-121 und Persona-Scout 1.3 abgenommen; P2 TOOL-DASH-REST direkt
+
+Ruling: (1) Spec-Nachtrag I-119/I-121 (`design/i119-i121` @ `7c5638a0`: AK-A6, A8, A9, B3, B5 nachgezogen, neu AK-A10, AK-B8; setzt auf LEBEN-STRASSE auf; `RUN_TICKS` 60 prüft der
+Plan) → **abgenommen**; Plan erst nach Merge von LEBEN-STRASSE und ORT-A T20. (2) Persona `design-idea-scout` 1.3 (`f9865e84`) → **abgenommen** (P3 erledigt). (3) Frei gewordener
+Platz: **P2 TOOL-DASH-REST** (XS, R825) direkt an `tech-ui-engineer` (sonnet) ohne Lead, `refactor:`, Teilbeleg `make studio-test`, Branch `tool/dash-rest`; Budget **1**; Merge im Bündel.
+
+Regelbezug: R715, R825, R826, STUDIO.md «L0 briefet den Umsetzer direkt» · Kosten bei Irrtum: gering.
+
+Entscheider: L0 · Anlass: Bericht lead-design I119-NACHTRAG · ADR: —
+
+## R830 · 2026-10-22 · Gate Kurzdesign LEBEN-SEE: OK, Plan sofort
+
+Ruling: Kurzdesign `lead-art` (`design/leben-see` @ `3fef2126`, 24 AK: W1–W13 Kielwasser, K1–K11 Klang; S + S; kein Save, keine Baseline, kein Asset) → **OK**. Designfragen nach
+Empfehlung: gekrümmte Spur entlang der Fahrlinie, direkt vor dem Rumpf (ORT-A-Schattenblock unberührt), Werte zentral in `wake.ts`; **ein** Klang beim Anlegen (I-156 geändert,
+weil Schiffe im selben Tick ablegen), synthetische Figur `shipDock`, kein Schalter vor dem Hörurteil; Rumpf-Spiegelung zurückgestellt. Kein Rebase: die `renderer.ts`-Zeilen holen
+nach dem ORT-A-Merge `main` per `git merge main`. AK-W4 bindet an die zum Zeitpunkt vorhandene Fahrzeit-Variante. Das Hörurteil kommt als «Bitte testen» in die Release-Notiz.
+Plan `lead-tech` (Stufe leicht, sonnet), keine Testläufe; Budget **2**.
+
+Regelbezug: R827, gates.md kombiniertes Gate Stufe leicht · Kosten bei Irrtum: Klang oder Spur stört; rückbaubar.
+
+Entscheider: L0 · Anlass: Bericht lead-art LEBEN-SEE · ADR: —
+
+## R831 · 2026-10-22 · Gate Kurzdesign UI-HAEPPCHEN-I: OK, F1–F8 nach Empfehlung, Plan sofort
+
+Ruling: Kurzdesign `lead-design` (`design/ui-haeppchen-i` @ `3da866fa`, AK-I1–I29; P1 I-168 Kasse leer, P2 I-167 Bestand im Tooltip, P3 I-170 Wachstumsbremse; kein Save, keine
+Baseline, `src/sim` unberührt) → **OK**. Befund angenommen: Lärm senkt nur die Belegung, Park ist Gegenmittel, kein Grund → Lärm als eigene Zeile, Park als Hinweis; Korrektur I-170
+in `docs/ideen.md` bei der nächsten Pool-Pflege. F1 kein Klick-Sprung, F2 eine Ursache je Haus, F3 Lärm eigene Zeile, F4 «ohne Mangel», F5 Spitzenstufe zeigen, F6 Geld-Chip färben
+(Gelb ab 3:00, Rot ab 1:00), F7 «alle Inseln» nur bei mehr, F8 P1/P2 sofort nach Plan, P3 nach Stadtplanung-Merge. P3 über 4 ms Rechenzeit → zurück an L0. Kein Rebase (Konflikte mit
+UI-BEIPACK-FERN per `git merge`). Plan `lead-tech` (Stufe leicht, sonnet), keine Testläufe; Budget **2**.
+
+Regelbezug: R827, gates.md kombiniertes Gate Stufe leicht · Kosten bei Irrtum: UI-only, rückbaubar.
+
+Entscheider: L0 · Anlass: Bericht lead-design UI-HAEPPCHEN-I · ADR: —
+
+## R832 · 2026-10-22 · Gate Plan LEBEN-SEE: OK; Warteschlange für Test-Controller-Plätze
+
+Ruling: Plan `lead-tech` (`plan/leben-see` @ `b5425214`, T01–T08, Strang A Kielwasser, Strang B Klang) → **OK**, Entwürfe angenommen: Budget **11**, Parallelität 3; Strang B und
+T01/T02 sofort bei Start, T03 nach ORT-A-Merge per `git merge main`; AK-K9 nur bei Befund eine `app.ts`-Zeile; AK-W4 bindet ohne Seerecht-Fixture an 10 Ticks; Hörurteil `shipDock`
+als «Bitte testen». **Reihenfolge für frei werdende Test-Controller-Plätze (≤ 3, R826):** 1. SEERECHT (R828), 2. LEBEN-SEE, 3. UI-HAEPPCHEN-I (nach Gate Plan), 4. UI-BEIPACK-FERN
+(nach UI-H P1). Wird ein Platz frei, startet L0 ohne weiteres Ruling den nächsten.
+
+Regelbezug: R826, R828, R830 · Kosten bei Irrtum: Wartezeit einzelner Pakete.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan LEBEN-SEE · ADR: —
+
+## R833 · 2026-10-22 · Gate Plan UI-HAEPPCHEN-I: OK, in der Warteschlange Platz 3
+
+Ruling: Plan `lead-tech` (`plan/ui-haeppchen-i` @ `cc2dbddd`, T01–T10, 29 AK zugeordnet) → **OK**; Entwürfe R832-E bis R835-E angenommen (Nummern im Plan sind Entwurfsnummern):
+Lärm-Zeile T05 nach Stadtplanung-Merge auf eigenem Branch `feat/ui-haeppchen-i-a2`, damit P1/P3-Grundteil früher ins Bündel können; Rechenzeit AK-I27 zweistufig, über 4 ms
+`blocked` und zurück an L0 (Rückfall 2000 ms oder nur sichtbarer Chip); Konfliktregeln (`hud.ts` per `git merge main`, README-Zeilen unten anfügen). Budget **16**, Parallelität 2.
+Start laut R832 als Platz 3 der Warteschlange.
+
+Regelbezug: R831, R832 · Kosten bei Irrtum: UI-only.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan UI-HAEPPCHEN-I · ADR: —
+
+## R834 · 2026-10-22 · TOOL-DASH-REST abgenommen, wartet aufs Bündel
+
+Ruling: Review `qa-code-reviewer` OK (`tool/dash-rest` @ `7a442f43`, alle Entfernungen per `rg` belegt, `make studio-test` 1009 OK) → **Strang abgenommen**; Gate Merge im nächsten
+Release-Bündel. Stilhinweis `views.js:~213` (Pfeil mit Ausdruck) entfällt als Kann.
+
+Regelbezug: R825, R829, Verfassung §9.1 · Kosten bei Irrtum: gering.
+
+Entscheider: L0 · Anlass: Review TOOL-DASH-REST · ADR: —
+
+## R835 · 2026-10-22 · Gate Kurzdesign UI-BEIPACK-FERN: OK; vor Seerecht T04; Nachtrag Seerecht-Plan
+
+Ruling: Kurzdesign `lead-design` (`design/ui-beipack-fern` @ `651f0520`, AK-BF1–BF17, S, alle sechs Befunde bestätigt) → **OK**. F1 `Umschalt+R` ohne Marke ignorieren
+(`councilToggleAllowed`), F2 «zu spät» hinter der Lagerzahl ohne eigene Farbe, F3 Format «27 s» einheitlich, F4 Chronik «bestanden (bei Spielzeit 12:34)». Keine Überschneidung mit
+UI-H P1 → die Abhängigkeit aus R825/R832 entfällt; Reihenfolge: **Beipack vor Seerecht T04**. Seerecht-Plan bekommt einen Nachtrag (AK-SR-16 «30 s»/«24 s», T04 nutzt
+`formatGameTime(ticks)`), als Fortsetzung des Plan-Leads. Plan UI-BEIPACK-FERN `lead-tech` (Stufe leicht, sonnet), Budget **2**; Warteschlange R832 neu: 1. SEERECHT, 2. LEBEN-SEE, 3. UI-BEIPACK-FERN (S, kurz), 4. UI-HAEPPCHEN-I.
+
+Regelbezug: R825, R828, R832 · Kosten bei Irrtum: Format-Doppelumbau, falls Seerecht vorher startet; durch Nachtrag abgefangen.
+
+Entscheider: L0 · Anlass: Bericht lead-design UI-BEIPACK-FERN · ADR: —
+
+## R836 · 2026-10-22 · Gate Plan UI-BEIPACK-FERN: OK, Warteschlange Platz 3
+
+Ruling: Plan `lead-tech` (`plan/ui-beipack-fern` @ `2bd4e3db`, T01–T05, ein Strang) → **OK**; Entwürfe R836-E bis R839-E angenommen (`farOrderParts` einzige Quelle, Beipack vor
+Seerecht T04, Merge per `git merge main`, Seerecht-Nachtrag läuft beim Plan-Lead). Budget **4**, Parallelität 1. Start laut R835 als Platz 3 der Test-Warteschlange.
+
+Regelbezug: R835 · Kosten bei Irrtum: UI-only.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan UI-BEIPACK-FERN · ADR: —
+
+## R837 · 2026-10-22 · LEBEN-STRASSE T01–T05 abgenommen, Stopp vor T06; SEERECHT startet auf dem frei gewordenen Test-Platz
+
+Ruling: Zwischenbericht `lead-tech` (`feat/leben-strasse` @ `66a944ba`, T01–T05, Reviews BEDENKEN alle behoben, Teilbeleg 172 Tests, `src/sim` ohne Diff; Handoff
+`.studio/handoffs/2026-10-22-lead-tech-LEBEN-STRASSE.md`) → **abgenommen bis T05**. Entwürfe: E1 Träger-Geometrie bei Tempo 0 bleibt auf dem zuletzt gemerkten Tempo ≥ 1
+(`tickClock` merkt `pace` je Welt; Ergänzung zu R822) → angenommen; E2 Arbeitssatz mischt zum Holzbraun (`wallTimber`) für ΔE ≥ 10, `MIN_TORSO_CONTRAST` 1,35 → angenommen,
+Sichtprüfung in T08; E3 Posen-Sprung beim Tempowechsel → T08 prüft, Folge per Ruling. Abweichungen (frühe `renderer.ts`-Zeilen, `WalkerMotion`, Beinschwung 0,45·W) angenommen;
+das ausgelassene Delta-Review holt das opus-Final-Review nach. Strang ruht bis zum ORT-A-Merge (T06 mit `git merge main`); Restbudget 5. Worktree `.worktrees/leben-strasse-look`
+ist gemergt und darf per `git worktree remove` (ohne `--force`) weg. **Frei gewordener Test-Platz → SEERECHT** (R828/R832) an einen `lead-tech`-Controller (sonnet), Budget **21**;
+T04 erst nach UI-BEIPACK-FERN auf main, T08/T09 nach Stadtplanung.
+
+Regelbezug: R803, R822, R826, R828, R832, R835 · Kosten bei Irrtum: Farbe/Tempo im Browser-Check nachziehen.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech LEBEN-STRASSE · ADR: —

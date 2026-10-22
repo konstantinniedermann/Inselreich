@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.67 · Stand: 2026-10-22 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.68 · Stand: 2026-10-22 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -171,6 +171,16 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
   parallel, weniger Starts, zuerst Angefangenes abschliessen (Reviews, Fix-Runden, Merges, R166),
   `state.md` nachführen, Session beenden. Richtwerte: ab etwa 60 % keine neuen Wellen, ab etwa
   80 % Session-Ende-Routine; Wochenfenster über 80 %: Parallelität reduzieren. Kein Downgrade (R71).
+- **Studio-Deckel und Limit-Ampel (R826, R823; ersetzt R698 «6» und «≤ 8» aus R424):** Der Studio-Deckel
+  beträgt **10 Agenten gleichzeitig**, davon höchstens **3 Controller mit Testläufen** und **≤ 2 Browser-Läufe**.
+  Die Stufen der Ampel (`.studio/limits.json`) konkretisieren die Richtwerte von R69 (60 % und 80 %), sie widersprechen ihnen nicht:
+  **grün** (5-h-Fenster < 60 % und Woche < 80 %) · **gelb** (5-h 60–80 % oder Woche > 80 %) · **rot** (5-h > 80 %).
+  - **Pflicht für L0 bei grün:** den Deckel aktiv voll halten, nach jedem Bericht nachfüllen und jeden Strang
+    mit eigenem Agenten bearbeiten (Umsetzung, Pläne, Specs, Gates, Pflege, Ideen; R475, R445).
+  - **Gelb:** keine neuen Wellen, Angefangenes abschliessen (Wochenfenster > 80 %: zusätzlich Parallelität reduzieren, R69).
+  - **Rot:** Session-Ende-Routine.
+  - **Engpass Rechnerlast:** Zusätzliche Plätze werden mit testfreier Arbeit gefüllt (Plan, Spec, Gate, Pflege, Ideen), nicht leer gelassen.
+  - **Fensterregel (R803):** Last ≤ 4 gehört den Messungen (Lastgrenze R329), gezielte Tests laufen bei Last 4–8.
 - **Sessiongrösse (R68, E-010):** Eine Session umfasst etwa einen Abschnitt (Welle bzw. Phase). L0
   übergibt über `state.md` nach jedem abgeschlossenen Gate-Block, spätestens bei 25 % Kontext
   (vorher 50 %), und liest keine Bilder; Screenshots prüft `qa-playtester` und berichtet in Text.

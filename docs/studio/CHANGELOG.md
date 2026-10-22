@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-22 · Persona design-idea-scout 1.3
+
+- Anlass: Auftrag P3 PERSONA-SCOUT-PFLEGE (Behauptung «fehlt» ohne Codebeleg)
+- Datenbasis: Auftrag R825
+- Ruling: R825
+- Änderungen: Qualitätsmassstab: Eine Idee, die behauptet, etwas fehle, belegt das mit einer `rg`-Suche im Code und nennt Fundstellen bzw. «kein Treffer» mit Suchmuster
+
+## 2026-10-22 · Handbuch 1.68
+
+- Anlass: Dauerregel des Nutzers «Kapazität voll nutzen, gesteuert durch die Limit-Ampel»
+- Datenbasis: Rulings R823, R826 (`rulings.md`)
+- Ruling: R826 (ersetzt R698, ergänzt R475, R445, R803)
+- Änderungen: Studio-Deckel 10 Agenten (≤ 3 Controller mit Testläufen, ≤ 2 Browser-Läufe) und Ampelstufen grün/gelb/rot im Abschnitt «Limits und Sessiongrösse» (`STUDIO.md`), abgeglichen mit R69; Pflicht zum Nachfüllen bei grün, testfreie Arbeit bei Rechnerlast, Fensterregel R803; Output-Style `projektleiter.md` um einen Kapazitäts-Satz ergänzt. Rückfall: R826 aufheben (Version 1.69).
+
 ## 2026-10-22 · Handbuch 1.67
 
 - Anlass: Nutzerentscheid N-103 («ja») und Anordnung «die releases/pushs generell mehr bündeln. einer pro tag reicht völlig»; Verfassung 1.3
