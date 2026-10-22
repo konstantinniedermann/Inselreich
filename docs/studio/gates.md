@@ -22,6 +22,8 @@ in der [Verfassung](VERFASSUNG.md) (§3, §4, §9); kein Gate schwächt sie ab.
    nennt, welche und warum); ein ZURÜCK → zurück an den Autor, ausser L0 überstimmt es mit
    ausdrücklicher Begründung im Ruling.
 4. Ruling schreiben (`Ruling: Gate <name> <id> bestanden — <warum> — <Kosten bei Irrtum>`),
+   ab R845 mit den Pflichtfeldern „Verfassung berührt?“ und bei Plan-Gates „Überschneidung mit offenen Paketen“
+   (Dateien, Branches; R844 V4),
    Paketstatus nachführen.
 
 In der Prozessstufe **leicht** fallen Gate Brainstorming, Spec und Plan zu einem Gate zusammen
