@@ -7,6 +7,7 @@ import {
   AUTO2_KEY,
   AUTO_KEY,
   AUTO_LAST_KEY,
+  AUTO_WRITTEN_KEY,
   SAVE_KEY,
   autosaveOnHide,
   listSavesFrom,
@@ -380,5 +381,55 @@ describe('Zeiger beim Laden eines Autosave-Platzes (R850)', () => {
     const ok2 = { [AUTO2_KEY]: saveAtTick(100), [AUTO_LAST_KEY]: 'auto' };
     expect(newestAuto(fake(ok2))).toBe('auto2');
     expect(otherAuto(fake(ok2))).toBe('auto');
+  });
+});
+
+describe('Etikett folgt dem Schreibzeitpunkt (R851)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const use = (m: ReturnType<typeof mem>): void => void vi.stubGlobal('localStorage', m);
+
+  it('Davor laden und weiterspielen: der zuletzt geschriebene Platz ist vorn, auch bei kleinerer Spielzeit', () => {
+    const m = mem({
+      [AUTO_KEY]: saveAtTick(300),
+      [AUTO2_KEY]: saveAtTick(900),
+      [AUTO_LAST_KEY]: 'auto2',
+      [AUTO_WRITTEN_KEY]: 'auto2',
+    });
+    use(m);
+    const r = loadSlot('auto');
+    // Laden verschiebt nur den Schreibzeiger, nicht die Etiketten
+    expect(listSavesFrom(m).map((i) => i.slot)).toEqual(['auto2', 'auto']);
+    autosaveOnHide(worldAt(310)); // schreibt in den Zeiger-Platz «auto»
+    expect(r.ok).toBe(true);
+    const list = listSavesFrom(m);
+    expect(list.map((i) => i.slot)).toEqual(['auto', 'auto2']);
+    expect(list[0]!.tick).toBeLessThan(list[1]!.tick);
+    // periodisch: wechselt den Platz, der neue Stand heisst vorn
+    saveAuto(worldAt(320));
+    expect(listSavesFrom(m).map((i) => i.slot)).toEqual(['auto2', 'auto']);
+  });
+
+  it('ohne oder mit ungültigem Schreibzeiger gilt die bisherige Regel', () => {
+    const both = {
+      [AUTO_KEY]: saveAtTick(100),
+      [AUTO2_KEY]: saveAtTick(200),
+      [AUTO_LAST_KEY]: 'auto',
+    };
+    expect(listSavesFrom(fake(both)).map((i) => i.slot)).toEqual(['auto', 'auto2']);
+    expect(
+      listSavesFrom(fake({ ...both, [AUTO_WRITTEN_KEY]: 'quatsch' })).map((i) => i.slot),
+    ).toEqual(['auto', 'auto2']);
+  });
+
+  it('scheitert das Schreiben, bleibt der Schreibzeiger unberührt', () => {
+    const start = {
+      [AUTO_KEY]: saveAtTick(10),
+      [AUTO_WRITTEN_KEY]: 'auto',
+      [AUTO_LAST_KEY]: 'auto',
+    };
+    const m = mem(start, [AUTO2_KEY]);
+    use(m);
+    saveAuto(worldAt(99));
+    expect(m.data).toEqual(start);
   });
 });
