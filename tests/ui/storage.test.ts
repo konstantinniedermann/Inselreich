@@ -4,11 +4,16 @@ import { SAVE_VERSION, deserialize, serialize } from '../../src/sim/save';
 import { ok, type World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 import {
+  AUTO2_KEY,
   AUTO_KEY,
+  AUTO_LAST_KEY,
   SAVE_KEY,
   autosaveOnHide,
   listSavesFrom,
   loadNotice,
+  newestAuto,
+  otherAuto,
+  saveAuto,
   saveToStorage,
   storageProblem,
   type StorageLike,
@@ -180,5 +185,141 @@ describe('saveToStorage Fehlerweg (AK-UT-09)', () => {
       ok: false,
       reason: 'Speichern fehlgeschlagen',
     });
+  });
+});
+
+/** Schreibbarer Fake-Speicher; `failKeys` lassen `setItem` für diese Schlüssel werfen. */
+function mem(entries: Record<string, string> = {}, failKeys: string[] = []) {
+  const data = { ...entries };
+  const removed: string[] = [];
+  return {
+    data,
+    removed,
+    getItem: (k: string): string | null => data[k] ?? null,
+    setItem(k: string, v: string): void {
+      if (failKeys.includes(k)) throw new Error('QuotaExceededError');
+      data[k] = v;
+    },
+    removeItem(k: string): void {
+      removed.push(k);
+      delete data[k];
+    },
+  };
+}
+const worldAt = (tick: number): World => {
+  const w = createWorld(7);
+  w.tick = tick;
+  return w;
+};
+
+describe('Autosave-Plätze (I-147, AK-H1 bis H3, H5, H6, H8, H10)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const use = (m: ReturnType<typeof mem>): void => void vi.stubGlobal('localStorage', m);
+
+  it('H1: saveAuto wechselt die Plätze und setzt den Zeiger', () => {
+    const m = mem({ [AUTO_KEY]: saveAtTick(10), [AUTO_LAST_KEY]: 'auto' });
+    use(m);
+    const seen: (string | undefined)[] = [];
+    for (let i = 1; i <= 3; i++) {
+      expect(saveAuto(worldAt(100 + i))).toEqual(ok);
+      seen.push(m.data[AUTO_LAST_KEY]);
+    }
+    expect(seen).toEqual(['auto2', 'auto', 'auto2']);
+  });
+
+  it('H2: otherAuto ohne Zeiger wählt fehlenden, beschädigten, sonst älteren Platz', () => {
+    expect(otherAuto(fake({ [AUTO_KEY]: saveAtTick(5) }))).toBe('auto2');
+    expect(otherAuto(fake({ [AUTO2_KEY]: saveAtTick(5) }))).toBe('auto');
+    expect(otherAuto(fake({ [AUTO_KEY]: saveAtTick(500), [AUTO2_KEY]: saveAtTick(300) }))).toBe(
+      'auto2',
+    );
+    expect(otherAuto(fake({ [AUTO_KEY]: saveAtTick(300), [AUTO2_KEY]: saveAtTick(500) }))).toBe(
+      'auto',
+    );
+    expect(otherAuto(fake({ [AUTO_KEY]: saveAtTick(300), [AUTO2_KEY]: saveAtTick(300) }))).toBe(
+      'auto2',
+    );
+    expect(otherAuto(fake({ [AUTO_KEY]: 'kaputt', [AUTO2_KEY]: saveAtTick(300) }))).toBe('auto');
+  });
+
+  it('H3: newestAuto folgt dem Zeiger, sonst der grösseren Spielzeit', () => {
+    const both = { [AUTO_KEY]: saveAtTick(900), [AUTO2_KEY]: saveAtTick(100) };
+    expect(newestAuto(fake({ ...both, [AUTO_LAST_KEY]: 'auto2' }))).toBe('auto2');
+    expect(newestAuto(fake(both))).toBe('auto');
+    expect(newestAuto(fake({ [AUTO_KEY]: saveAtTick(1), [AUTO2_KEY]: saveAtTick(1) }))).toBe(
+      'auto',
+    );
+    expect(newestAuto(fake({ [AUTO2_KEY]: saveAtTick(1) }))).toBe('auto2');
+    expect(newestAuto(fake({}))).toBeNull();
+    // ein Platz: der andere ist der leere, kein «Davor»
+    expect(otherAuto(fake({ [AUTO_KEY]: saveAtTick(1), [AUTO_LAST_KEY]: 'auto' }))).toBe('auto2');
+  });
+
+  it('H3: listSavesFrom führt den neuesten Autosave vor dem «Davor»', () => {
+    const s = fake({
+      [AUTO_KEY]: saveAtTick(100),
+      [AUTO2_KEY]: saveAtTick(200),
+      [AUTO_LAST_KEY]: 'auto2',
+    });
+    expect(listSavesFrom(s).map((i) => i.slot)).toEqual(['auto2', 'auto']);
+  });
+
+  it('H5: autosaveOnHide schreibt den neuesten Platz, Zeiger und anderer Platz bleiben', () => {
+    const older = saveAtTick(50);
+    const m = mem({ [AUTO_KEY]: older, [AUTO2_KEY]: saveAtTick(80), [AUTO_LAST_KEY]: 'auto2' });
+    use(m);
+    autosaveOnHide(worldAt(200));
+    expect(m.data[AUTO_LAST_KEY]).toBe('auto2');
+    expect(m.data[AUTO_KEY]).toBe(older);
+    expect(m.data[AUTO2_KEY]).toBe(serialize(worldAt(200)));
+  });
+
+  it('H5: Tick 0 schreibt nichts, ohne Autosave landet der Stand in auto', () => {
+    const m = mem();
+    use(m);
+    autosaveOnHide(worldAt(0));
+    expect(m.data).toEqual({});
+    autosaveOnHide(worldAt(9));
+    expect(m.data[AUTO_KEY]).toBe(serialize(worldAt(9)));
+    expect(m.data[AUTO_LAST_KEY]).toBeUndefined();
+  });
+
+  it('H6: scheitert das Ziel, bleiben anderer Platz und Zeiger bitgleich', () => {
+    const start = { [AUTO_KEY]: saveAtTick(10), [AUTO_LAST_KEY]: 'auto' };
+    const m = mem(start, [AUTO2_KEY]);
+    use(m);
+    expect(saveAuto(worldAt(99))).toEqual({ ok: false, reason: 'Autosave fehlgeschlagen' });
+    expect(m.data).toEqual(start);
+    expect(m.removed).toEqual([]);
+  });
+
+  it('H6: scheitert nur der Zeiger, gilt der Stand als gespeichert', () => {
+    const m = mem({ [AUTO_KEY]: saveAtTick(10), [AUTO_LAST_KEY]: 'auto' }, [AUTO_LAST_KEY]);
+    use(m);
+    expect(saveAuto(worldAt(99))).toEqual(ok);
+    expect(deserialize(m.data[AUTO2_KEY]!).ok).toBe(true);
+  });
+
+  it('H8: auto2 wird von storageProblem und listSavesFrom mitgeprüft', () => {
+    expect(storageProblem(fake({ [AUTO2_KEY]: 'kaputt' }))).toBe('damaged');
+    const newer = JSON.stringify({ version: SAVE_VERSION + 1 });
+    expect(storageProblem(fake({ [AUTO2_KEY]: newer }))).toBe('newer');
+    const throwing: StorageLike = {
+      getItem() {
+        throw new Error('gesperrt');
+      },
+    };
+    expect(storageProblem(throwing)).toBe('unavailable');
+    expect(listSavesFrom(throwing)).toEqual([]);
+  });
+
+  it('H10: beide Plätze tragen dasselbe Format wie serialize', () => {
+    const m = mem();
+    use(m);
+    const w = worldAt(42);
+    saveAuto(w);
+    saveAuto(w);
+    expect(m.data[AUTO_KEY]).toBe(serialize(w));
+    expect(m.data[AUTO2_KEY]).toBe(serialize(w));
   });
 });
