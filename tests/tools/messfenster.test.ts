@@ -120,7 +120,7 @@ describe('messfenster lock', () => {
 
   it('verwaiste Sperre wird übernommen (Hinweis auf stderr) und der Wächter danach entfernt', () => {
     const { path, cli, write, base } = setup();
-    write({ ...base, ende: new Date(Date.now() - 60 * MIN).toISOString() });
+    write({ ...base, ende: '2000-01-01T00:00:00.000Z' });
     const p = cli('set', '--owner', 'b', '--dauer', '30', '--zweck', 'neu');
     expect(p.status).toBe(0);
     expect(p.stderr).toContain('verwaist');
@@ -130,7 +130,7 @@ describe('messfenster lock', () => {
 
   it('Wächter belegt: verwaiste Sperre wird nicht übernommen', () => {
     const { path, cli, write, base } = setup();
-    write({ ...base, ende: new Date(Date.now() - 60 * MIN).toISOString() });
+    write({ ...base, ende: '2000-01-01T00:00:00.000Z' });
     mkdirSync(`${path}.takeover`);
     const p = cli('set', '--owner', 'b', '--dauer', '30', '--zweck', 'neu');
     expect(p.status).toBe(3);
