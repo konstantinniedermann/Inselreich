@@ -487,3 +487,5 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 ## 2026-10-22 · WIRTSCHAFT-BS-1: Scout-Idee mit falscher Code-Annahme (niedrig)
 
 - Fundort: `docs/ideen.md` (Branch `docs/ideen-14`), I-154 «Rückfracht auf der Route». Beobachtung: Die Idee nimmt an, Routen führen nur Hinfracht und die Routen-Bilanz zähle nur sie; beides gibt es seit M12 (`Route.ab/ba`, `routeBalance.ts:61-63`, «Holen/Bringen» in `src/ui/ships.ts`). Ursprung: lead-design, Dominanz-Rechnung WIRTSCHAFT-BS-1. Einschätzung: Persona `design-idea-scout` sollte «fehlt»-Annahmen gegen Code prüfen (eine `rg`-Suche) und die Fundstelle nennen; Kandidat für die nächste Persona-Pflege.
+
+- 2026-10-22 · `tools/studio/pushcheck.py` `LOAD_WAIT = 3.0` gegen Handbuch «Warten auf 1-min-Load ≤ 4» (STUDIO.md Push-Takt). Ursprung: Plan TOOL-PUSHSPERRE (lead-tech, R845). Einschätzung: niedrig; Code und Handbuch angleichen, wenn TOOL-PUSHSPERRE T05 `pushcheck.py` ohnehin berührt.
