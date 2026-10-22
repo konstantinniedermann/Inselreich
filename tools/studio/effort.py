@@ -140,7 +140,7 @@ def delegations(records: list[dict], results: list[dict] | None = None) -> list[
                 "estimate": rec["estimate"],
                 "duration_s": rec["duration_s"],
                 "tool_calls": rec["tool_calls"],
-                # wie im Reiter Aufwand: Input + Cache-Schreiben + Cache-Lesen
+                # Input + Cache-Schreiben + Cache-Lesen
                 "tokens_in": _sum_tokens(rec["tokens"], "input", *CACHE_FIELDS),
                 "input": _sum_tokens(rec["tokens"], "input"),
                 "cache_write": _sum_tokens(rec["tokens"], "cache_write"),
