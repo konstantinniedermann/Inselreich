@@ -1971,3 +1971,15 @@ Verfassung berührt?: nein (`guard.py` unberührt, eigenes Hook-Modul) · Übers
 Regelbezug: Verfassung §2, §8.1; ADR-007; R646/R647; R853 · Kosten bei Irrtum: ein Lead wird bei einem legitimen Hintergrundstart blockiert; Rückfall `MODE = "warn"`.
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R855 · 2026-10-22 · UI-BEIPACK-FERN abgenommen fürs Bündel REL-30
+
+Ruling: Bericht `lead-tech` (`feat/ui-beipack-fern` @ `9694e945`, Opus-Review BEDENKEN → H1/N1 behoben, Delta-Review opus OK, Playtest BF13–BF17 bestanden, Teilbeleg, `src/sim` nur
+Kopfkommentar; Handoff `.studio/handoffs/2026-10-22-lead-tech-UI-BEIPACK-FERN.md`) → **abgenommen**, Ergänzungsurteil `lead-qa` im Bündel REL-30; Merge **vor** Seerecht T04.
+R837-E/R838-E/R840-E (Entwurfsnummern) angenommen. N2, N3 und das überflüssige `as never` in `order.test.ts:769` → Beobachtung. Der volle Lauf kommt im Push-Check des Bündels.
+Befund des Controllers: Arbeiter-Starts mit `run_in_background: false` liefen trotzdem asynchron → Prüfauftrag zur Benachrichtigungs-Zustellung (R854 wird ggf. nachgeschärft).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: UI-HAEPPCHEN-I (`hud.ts`), Stadtplanung (`app.ts`), Seerecht (`islandCard.ts`); Auflösung per `git merge main`
+Regelbezug: R835, R836, R854 · Kosten bei Irrtum: UI-only.
+
+Entscheider: L0 · Anlass: Bericht lead-tech UI-BEIPACK-FERN · ADR: —
