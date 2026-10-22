@@ -14,12 +14,14 @@ const messsperre = new URL('../../tools/render-qa/messsperre.mjs', import.meta.u
 const { dauerAus } = (await import(/* @vite-ignore */ messsperre)) as {
   dauerAus(wert: string | undefined, umgebung: string | undefined, vorgabe: number): number;
 };
-const ENKEL_DRIVER = `
+const enkelDriver = (verschachtelt: boolean) => `
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { scheduler } from 'node:timers/promises';
 const pidfile = process.env.KIND_PIDFILE;
-const w = spawn('node', [new URL('${messsperre}').pathname, '--', 'sh', '-c', 'sleep 30 & echo $! > "$KIND_PIDFILE"; wait'], { stdio: 'inherit' });
+const cli = new URL('${messsperre}').pathname;
+const vor = ${verschachtelt} ? [cli, '--', 'node', cli, '--'] : [cli, '--'];
+const w = spawn('node', [...vor, 'sh', '-c', 'sleep 30 & echo $! > "$KIND_PIDFILE"; wait'], { stdio: 'inherit' });
 const ende = new Promise((r) => w.on('exit', (code) => r(code)));
 for (let i = 0; i < 200 && !existsSync(pidfile); i++) await scheduler.wait(50);
 await scheduler.wait(100);
@@ -251,7 +253,17 @@ console.log(JSON.stringify({ lockDa, code: r.code, kindLebt: lebt, lockDanach: e
 describe('T04 Final-Review: Enkelprozesse und Dauer', () => {
   it('SIGTERM an den Wrapper beendet auch Enkelprozesse (Prozessgruppe) und löst die Sperre', () => {
     const s = setup();
-    const driver = s.driver('enkel.mjs', ENKEL_DRIVER);
+    const driver = s.driver('enkel.mjs', enkelDriver(false));
+    const r = s.run(driver, [], { KIND_PIDFILE: join(s.dir, 'enkel.pid') });
+    expect(JSON.parse(r.stdout.trim().split('\n').pop() ?? '{}')).toEqual({
+      code: 143,
+      enkelLebt: false,
+      lockDanach: false,
+    });
+  });
+  it('verschachtelte Wrapper: SIGTERM an den äusseren beendet auch den Enkel des inneren, Sperre gelöst', () => {
+    const s = setup();
+    const driver = s.driver('verschachtelt.mjs', enkelDriver(true));
     const r = s.run(driver, [], { KIND_PIDFILE: join(s.dir, 'enkel.pid') });
     expect(JSON.parse(r.stdout.trim().split('\n').pop() ?? '{}')).toEqual({
       code: 143,

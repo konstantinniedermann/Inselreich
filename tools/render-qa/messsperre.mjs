@@ -94,7 +94,7 @@ export function holdMessfenster({
 export async function withMessfenster(fn, opts) {
   const h = holdMessfenster(opts);
   try {
-    return await fn();
+    return await fn(h);
   } finally {
     h.release();
   }
@@ -131,10 +131,10 @@ export async function beendeKind(child, sig = 'SIGTERM', timeoutMs = 5000) {
   }
 }
 
-/** Startet `befehl` (Kind erbt MESSFENSTER_HELD) und liefert dessen Exit-Code; `onStart(child)` gibt das Kind frei. */
-export function startKind(befehl, onStart = () => {}, kind = spawn) {
+/** Startet `befehl` (Kind erbt MESSFENSTER_HELD; `detached` nur für den Sperr-Besitzer, sonst Gruppe des äusseren Wrappers) und liefert dessen Exit-Code; `onStart(child)` gibt das Kind frei. */
+export function startKind(befehl, onStart = () => {}, { detached = true, kind = spawn } = {}) {
   return new Promise((fertig) => {
-    const child = kind(befehl[0], befehl.slice(1), { stdio: 'inherit', detached: true });
+    const child = kind(befehl[0], befehl.slice(1), { stdio: 'inherit', detached });
     onStart(child);
     child.on('error', (e) => {
       console.error(`Start fehlgeschlagen: ${e.message}`);
@@ -162,12 +162,15 @@ async function main(argv) {
     return 2;
   }
   let kind = null;
-  return withMessfenster(() => startKind(argv.slice(i + 1), (c) => (kind = c)), {
-    owner: 'messsperre',
-    dauerMin,
-    zweck: opt('zweck') ?? argv[i + 1],
-    onSignal: (sig) => beendeKind(kind, sig),
-  });
+  return withMessfenster(
+    (h) => startKind(argv.slice(i + 1), (c) => (kind = c), { detached: h.gehalten }),
+    {
+      owner: 'messsperre',
+      dauerMin,
+      zweck: opt('zweck') ?? argv[i + 1],
+      onSignal: (sig) => beendeKind(kind, sig),
+    },
+  );
 }
 
 if (process.argv[1] && process.argv[1] === fileURLToPath(import.meta.url)) {
