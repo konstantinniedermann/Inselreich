@@ -74,16 +74,18 @@ function autoTick(storage: StorageLike, slot: AutoSlot): number | null {
   return r.ok ? r.world.tick : null;
 }
 
-/** Neuester gültiger Autosave-Platz: Zeiger, sonst grössere Spielzeit (Gleichstand `auto`); keiner gültig: `null`. */
-export function newestAuto(storage: StorageLike): AutoSlot | null {
-  const a = autoTick(storage, 'auto');
-  const b = autoTick(storage, 'auto2');
+/** Neuester Platz aus den Spielzeiten (`null` = ungültig) und dem Zeiger: Zeiger auf gültigen Platz, sonst grössere Spielzeit (Gleichstand `auto`). */
+function pickNewest(a: number | null, b: number | null, p: AutoSlot | null): AutoSlot | null {
   if (a === null && b === null) return null;
   if (a === null) return 'auto2';
   if (b === null) return 'auto';
-  const p = readPointer(storage);
   if (p !== null) return p;
   return b > a ? 'auto2' : 'auto';
+}
+
+/** Neuester gültiger Autosave-Platz: Zeiger, sonst grössere Spielzeit (Gleichstand `auto`); keiner gültig: `null`. */
+export function newestAuto(storage: StorageLike): AutoSlot | null {
+  return pickNewest(autoTick(storage, 'auto'), autoTick(storage, 'auto2'), readPointer(storage));
 }
 
 /** Ziel des nächsten periodischen Autosaves: der Platz ausser dem Zeiger; ohne Zeiger der fehlende oder beschädigte, sonst der ältere (Gleichstand `auto2`). */
@@ -95,6 +97,16 @@ export function otherAuto(storage: StorageLike): AutoSlot {
   if (a === null) return 'auto';
   if (b === null) return 'auto2';
   return a < b ? 'auto' : 'auto2';
+}
+
+/** Ein geladener Autosave-Platz gilt als neuester: der Zeiger zeigt auf ihn; Schreibfehler bleiben stumm, `manual` ändert nichts. */
+export function markAutoLoaded(slot: Slot): void {
+  if (slot === 'manual') return;
+  try {
+    localStorage.setItem(AUTO_LAST_KEY, slot);
+  } catch {
+    // Zeiger ist nur Komfort
+  }
 }
 
 function writeAuto(world: World, target: AutoSlot, moveMarker: boolean): Result {
@@ -133,17 +145,17 @@ export function saveAutoNewest(world: World): Result {
 
 /** Nur die Slots, die `deserialize` akzeptiert (kaputte oder fremde Stände fehlen); wirft nie. */
 export function listSavesFrom(storage: StorageLike): SaveInfo[] {
-  const out: SaveInfo[] = [];
-  const newest = newestAuto(storage);
-  // Reihenfolge: manuell, neuester Autosave, «Davor»
-  const order: Slot[] = SLOTS.filter((s) => s !== 'auto2');
-  if (newest === 'auto2') order.splice(order.indexOf('auto'), 1, 'auto2', 'auto');
-  else order.push('auto2');
-  for (const slot of order) {
+  const read = (slot: Slot): SaveInfo | null => {
     const r = readSlot(storage, slot);
-    if (r.ok) out.push({ slot, tick: r.world.tick });
-  }
-  return out;
+    return r.ok ? { slot, tick: r.world.tick } : null;
+  };
+  const manual = read('manual');
+  const auto = read('auto');
+  const auto2 = read('auto2');
+  // Reihenfolge: manuell, neuester Autosave, «Davor»
+  const newest = pickNewest(auto?.tick ?? null, auto2?.tick ?? null, readPointer(storage));
+  const autos = newest === 'auto2' ? [auto2, auto] : [auto, auto2];
+  return [manual, ...autos].filter((i): i is SaveInfo => i !== null);
 }
 
 /** Wie `listSavesFrom` auf `localStorage`; ein gesperrter Speicher ergibt eine leere Liste. */
@@ -158,7 +170,9 @@ export function listSaves(): SaveInfo[] {
 /** Liest einen Slot; ein fehlender oder unlesbarer Speicher liefert einen Grund statt Fehler. */
 export function loadSlot(slot: Slot): LoadResult {
   try {
-    return readSlot(localStorage, slot);
+    const r = readSlot(localStorage, slot);
+    if (r.ok) markAutoLoaded(slot);
+    return r;
   } catch {
     return { ok: false, reason: 'Speicher nicht verfügbar' };
   }
