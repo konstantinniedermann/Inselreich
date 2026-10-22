@@ -423,7 +423,7 @@ Fenster, Laternen, Feuer oder Glühwürmchen leuchten.
 
 ```mermaid
 flowchart LR
-  T["tick += 1"] --> P["Produktion"] --> H["Schiffe (tickShips)"] --> B["Bevölkerung"] --> R["Rat (tickCouncil)"] --> S["Steuern"] --> W["Wirtschaft (Unterhalt)"] --> D["Denkmal (tickMonument)"]
+  T["tick += 1"] --> P["Produktion"] --> H["Schiffe (tickShips)"] --> B["Bevölkerung"] --> A["Auflage (tickTrial)"] --> R["Rat (tickCouncil)"] --> S["Steuern"] --> W["Wirtschaft (Unterhalt)"] --> D["Denkmal (tickMonument)"]
   D --> M["Markt-Erholung"] --> O["Aufträge"] --> K["Krisen"] --> V["Sieg: won, wonMerchants, wonSpice"] --> U["Freischaltung (tickUnlocks)"]
 ```
 
@@ -960,8 +960,8 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
 
 ### Persistenz
 
-- `serialize(world)` ist `JSON.stringify(world)`; die Welt enthält ein Versionsfeld (`version: 14`,
-  `SAVE_VERSION`). Gespeichert wird seit I-047 Version 14 (Felder bis v10 unverändert; Details zu v13 und v14 unten): Raster, Kontor und Lager liegen je Insel in `islands[i]`
+- `serialize(world)` ist `JSON.stringify(world)`; die Welt enthält ein Versionsfeld (`version: 18`,
+  `SAVE_VERSION`). Gespeichert wird immer die aktuelle Version 18 (Felder bis v10 unverändert; Details zu v13 bis v18 unten): Raster, Kontor und Lager liegen je Insel in `islands[i]`
   (`kind`, `width`, `height`, `tiles`, `kontorId`, `stock`, `ox`, `oy`, `anchor`), jedes Gebäude trägt `island` (Index);
   Seit M14-E1 kennt die Welt die Heimat (Index 0) und die Fremdinseln A, B, C (ohne Kontor, `kontorId null`, Lager 0). Ab v9 (M12 Seefahrt) kommen `ships` (Liste der Schiffe mit `id`, `port`, `to`, `left`, `cargo`, `route`, `homing`), `nextShipId` und `wonSpice` hinzu; das Gut Gewürz (`spice`) liegt je Insel im Lager und hat einen Verkaufsanteil in `sellPct`.
 - Inselbezug der Regeln (E0): Aktionen mit Bauplatz (`placeBuilding`, `placeRoad`, `buy`, `sell`, Wald, `coverageMask`
@@ -1019,7 +1019,7 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
 - **Save v14 (I-047, Stammkunde):** `SAVE_VERSION` ist 14. Die Welt trägt als letzte Schlüssel (nach `buyPct`) `contract` (`null` oder `{ good, amount, price, island }`) und `contractOffer` (`null` oder `{ good, island }`). `migrateV13ToV14` wirft nie und setzt beide auf `null`. Die Ladeprüfung (`isValidContractFields`) verlangt Güter mit Auftragsdef, ganzzahlige `amount ≥ 1` und `price ≥ 0`, eine gültige Insel, und die Invarianten `contract ≠ null ⇒ order === null && contractOffer === null` sowie `contractOffer ≠ null ⇒ order === null`; sonst `Beschädigter Spielstand`. Die Kette lautet v1 … v14; eine Version über 14 ergibt `Unbekannte Version`. Der Test-Helfer `foldBackToV13` entfernt beide Felder ohne Umordnen; ein Stand mit Vertrag oder Angebot ist nicht rückfaltbar (Fehler).
 - **Save v15 (Handel 2, Fernangebot):** `SAVE_VERSION` ist 15. Letzte Schlüssel der Welt sind `farOffer` (`null` oder `{ island, good, amount, reward }`) und `farSkip` (`null` oder Periodenindex); `Order.island` gibt es nur beim Fernauftrag. `migrateV14ToV15` setzt `farOffer` und `farSkip` auf `null`. Die Kette lautet v1 … v15; eine Version über 15 ergibt `Unbekannte Version`. Die Ladeprüfung `isValidFarFields` prüft die Felder, das Fristfenster kommt ohne `FAR_ORDER_DURATION` aus (P-3); ungültig ergibt `Beschädigter Spielstand`. Der Test-Helfer `foldBackFarOrders` faltet auf v14 zurück (Fernzustand nicht rückfaltbar ergibt Fehler).
 - **Save v16 (I-091, Stammkunde Treue):** `SAVE_VERSION` ist 16; gespeichert wird immer Version 16. `Contract.deliveries` (ganzzahlig ≥ 0, Treue-Zähler, gedeckelt auf `CONTRACT_LOYAL_AFTER`) ist neu. `migrateV15ToV16` wirft nie und setzt `contract.deliveries = 0`, ein fehlender Vertrag (`null`) bleibt. Die Kette lautet v1 … v16; eine Version über 16 ergibt `Unbekannte Version`; ein ungültiger Zähler ergibt `Beschädigter Spielstand`. Der Test-Helfer `foldBackDeliveries` faltet auf v15 zurück.
-- **Save v17 (I-112, Ratsbeschluss):** `SAVE_VERSION` ist 17 (vorläufig; beim Merge main + 1, R674). Die Welt trägt `council: Record<2 | 3 | 4, null | 'open' | 'A' | 'B'>` (JSON-fähig, ADR-002); `null` = noch nicht erreicht, `'open'` = Beschluss steht an, `'A'`/`'B'` = gefasst. `migrateV16ToV17` wirft nie und setzt `council[n] = 'open'`, wenn ein Haus mit Stufe ≥ n existiert, sonst `null` (R711 R-4); die Ladeprüfung weist ungültige Werte als `Beschädigter Spielstand` ab.
+- **Save v17 (I-112, Ratsbeschluss):** `SAVE_VERSION` war 17 (seit v18 abgelöst). Die Welt trägt `council: Record<2 | 3 | 4, null | 'open' | 'A' | 'B'>` (JSON-fähig, ADR-002); `null` = noch nicht erreicht, `'open'` = Beschluss steht an, `'A'`/`'B'` = gefasst. `migrateV16ToV17` wirft nie und setzt `council[n] = 'open'`, wenn ein Haus mit Stufe ≥ n existiert, sonst `null` (R711 R-4); die Ladeprüfung weist ungültige Werte als `Beschädigter Spielstand` ab.
 - **Save v18 (I-132, Meisterprüfung):** `SAVE_VERSION` ist 18. Die Welt trägt `trial` (`active`, `ticks`, `e0`, `passed`). `migrateV17ToV18` wirft nie und setzt Startwerte (`active: null`, `ticks: 0`, `e0: 0`, `passed: []`; R711 R-4). Die Ladeprüfung weist ungültige Werte mit `Beschädigter Spielstand` ab, eine Version über 18 mit `Unbekannte Version`. Ohne Auflage bleibt der Lauf bitgleich.
 - Menge und Prämie eines laufenden Auftrags werden nur strukturell geprüft (nicht gegen die aktuellen
   Spielwerte), damit geänderte Werte alte Stände nicht abweisen. Die Auftrags- und Krisentakte
