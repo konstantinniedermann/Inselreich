@@ -1307,9 +1307,20 @@ Regelbezug: R329, R380, R708 V2, R793 · Kosten bei Irrtum: eine Messung mit lei
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C11 · ADR: —
 
-## R801 · 2026-10-22 · Sessionplan: ORT-A-Messungen, UI-HAEPPCHEN-G, HAUSHALT-02; kein Push vor Release
+## R801 · 2026-10-21 · ORT-A C11: Ring-Test AK-26 auf Abstand 1, Fixes k1/k2 zur Messung
 
-Ruling: Nutzerauftrag «mach weiter» = Plan aus `state.md` und R792–R800 fortsetzen (die Vorsession endete ohne Ende-Routine; L0 führt `state.md` am Ende nach). Parallel:
+Ruling: Fix k1 `84b31a92` (`hofsaumTileChanged`: äusserer Ring nur noch bei Wegänderung im Abstand 1, 9 statt 25 Kacheln, 1 statt 9 Stücke) und Fix k2 `0f86a144` (Schatten
+ruhender Objekte als `Path2D` im LRU-Cache) zur Wiederholungsmessung freigegeben. Die Änderung in `tests/render/wegsaum.test.ts` («AK-26 Ring»: Abstand 1 wahr, Abstand 2
+falsch) gilt nicht als Lockerung, weil `terrainPatch.test.ts` den Patch pixelweise gegen den Vollaufbau prüft (bitgleich) → **angenommen**. Abnahme der Fixes erst mit
+bestandenen Messungen AK-31, AK-37, AK-39.
+
+Regelbezug: R793, R800 · Kosten bei Irrtum: ein Saum-Artefakt bei Wegen im Abstand 2, das der Pixelvergleich übersehen hätte; Rücknahme ein Commit.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech ORT-A C11 · ADR: —
+
+## R802 · 2026-10-22 · Sessionplan: ORT-A-Messungen, UI-HAEPPCHEN-G, HAUSHALT-02; kein Push vor Release
+
+Ruling: Nutzerauftrag «mach weiter» = Plan aus `state.md` und R792–R800 fortsetzen (die Vorsession endete ohne Ende-Routine, ihr Ruling-Entwurf ist als R801 nachgetragen; L0 führt `state.md` am Ende nach). Parallel:
 (1) **ORT-A C11** an `lead-tech` (Controller, sonnet): T14 und T17 nacheinander bei 1-min-Last ≤ 4 mit Vermerk laut R800, danach T18; Budget **6** Starts neu. (2)
 **UI-HAEPPCHEN-G** Umsetzung an `lead-tech` (Controller, sonnet) nach Plan `plan/ui-haeppchen-g` @ `512f370f`, Worktree `.worktrees/ui-haeppchen-g-impl`, Budget **8**.
 Die 30-min-Frist aus R800 ist seit der Vorsession abgelaufen und die Last kommt nicht vom Studio (6,8 ohne Agenten); deshalb startet G sofort, nur gezielte Tests, `make check`
@@ -1320,3 +1331,16 @@ Werkzeug/Doku voraus (TOOL-DASH-SCHLANK, R795); kein eigener Push dafür, der St
 Regelbezug: R335, R380, R464, R685, R698, R708 V2, R800 · Kosten bei Irrtum: Messfenster für ORT-A verschiebt sich; Dashboard-Fix bleibt länger lokal.
 
 Entscheider: L0 · Anlass: Session-Start · ADR: —
+
+## R803 · 2026-10-22 · Ein Controller für ORT-A C11 und UI-HAEPPCHEN-G; Stand der Wiederholungsmessung
+
+Ruling: Ergänzung zu R802 nach Sichtung der Vorsession (Ereignisse, Scratchpad `e6dbb809…/m2.log`): Die Wiederholungsmessung lief bis T14-AK32 und brach ab. Stand mit Vermerk
+N-102: **AK-39 bestanden** (Seed 7 −0,2, Seed 14 0,0, Fixture −1,3 ms), **AK-30 bestanden** (+0,048 ms), **AK-31 nicht bestanden** (Σover25 B = 1 bei Seed 14, Patch 6–8 ms
+gegen 2,5 ms), **AK-37 offen** (Schatten-Kern-L* 45,4 → 41,4, Stichprobe n = 1 statt 20), AK-32 fehlt. UI-HAEPPCHEN-G: T01 und T02 committet (`a3c61ffb`…`638d87d1`), aber
+ohne einen Prüflauf. Weil beide Stränge um dieselben Last-Fenster konkurrieren, führt **ein** `lead-tech`-Controller beide (Budget 14 = 6 + 8, Parallelität 2): Last ≤ 4 →
+ORT-A-Messung; Last 4–8 → Prüfläufe UI-G; nie beides gleichzeitig. Reihenfolge ORT-A: AK-37 korrekt mit n = 20 (oder begründete Abweichung gegen R793 (1) als Entwurf), Fix
+AK-31, Nachmessung AK-31/AK-32, Merge k1/k2 nach `feat/ort-a`, dann T18.
+
+Regelbezug: R329, R380, R708 V2, R793, R800, R801, R802 · Kosten bei Irrtum: ein Controller als Engpass; ein zweiter Lead kann jederzeit abgespalten werden.
+
+Entscheider: L0 · Anlass: Sichtung Vorsession · ADR: —
