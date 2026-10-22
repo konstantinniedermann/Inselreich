@@ -175,5 +175,110 @@ class MainTest(GateCase):
             self.assertEqual(pushgate.main(), 0)
 
 
+class ApprovalTest(GateCase):
+    def approve(self, text):
+        (self.home / "push-freigabe").write_text(text, encoding="utf-8")
+
+    def kinds(self):
+        lines = (self.home / "events.jsonl").read_text(encoding="utf-8").splitlines()
+        return [json.loads(line) for line in lines]
+
+    def test_short_hash_allows_and_is_consumed(self):
+        self.approve(f"{self.head[:7]} R900 Hotfix\n")
+        self.assertIsNone(self.reason("git push origin HEAD:main"))
+        self.assertFalse((self.home / "push-freigabe").exists())
+        used = [e for e in self.kinds() if e["kind"] == "push_freigabe"]
+        self.assertEqual(used[0]["head"], self.head)
+        self.assertIn("R900", used[0]["reason"])
+        self.assertTrue(used[0]["used"])
+
+    def test_second_push_of_same_hash_is_denied(self):
+        self.approve(f"{self.head} R900\n")
+        self.assertIsNone(self.reason("git push origin HEAD:main"))
+        self.assertIsNotNone(self.reason("git push origin HEAD:main"))
+
+    def test_other_hash_or_broken_file_has_no_effect(self):
+        for text in ("a" * 40 + " R1\n", "", "kaputt\n", f"{self.head[:6]} zu kurz\n"):
+            with self.subTest(text=text):
+                self.approve(text)
+                self.assertIsNotNone(self.reason("git push origin HEAD:main"))
+                self.assertTrue((self.home / "push-freigabe").exists())
+
+    def test_passing_check_does_not_consume_approval(self):
+        self.event(self.head, 0)
+        self.approve(f"{self.head} R900\n")
+        self.assertIsNone(self.reason("git push origin HEAD:main"))
+        self.assertTrue((self.home / "push-freigabe").exists())
+
+    def test_delete_failure_still_allows(self):
+        self.approve(f"{self.head} R900\n")
+        with mock.patch.object(Path, "unlink", side_effect=OSError):
+            self.assertIsNone(self.reason("git push origin HEAD:main"))
+        used = [e for e in self.kinds() if e["kind"] == "push_freigabe"]
+        self.assertFalse(used[0]["used"])
+
+
+class SelfProtectionTest(GateCase):
+    def protect(self, tool, data, agent_id=None):
+        payload = {"tool_name": tool, "tool_input": data}
+        if agent_id:
+            payload["agent_id"] = agent_id
+        return pushgate.protect_reason(payload)
+
+    def test_agent_naming_the_file_in_bash_is_denied(self):
+        found = self.protect(
+            "Bash", {"command": "echo x > .studio/push-freigabe"}, agent_id="a1"
+        )
+        self.assertIn("nur L0", found)
+        self.assertIn("kein Schutz gegen Absicht", found)
+
+    def test_agent_writing_the_file_is_denied(self):
+        for tool in ("Write", "Edit", "MultiEdit"):
+            with self.subTest(tool=tool):
+                data = {"file_path": "/x/.studio/push-freigabe"}
+                self.assertIsNotNone(self.protect(tool, data, agent_id="a1"))
+
+    def test_l0_without_agent_id_may_write(self):
+        data = {"command": "echo x > .studio/push-freigabe"}
+        self.assertIsNone(self.protect("Bash", data))
+        self.assertIsNone(self.protect("Write", {"file_path": "a/push-freigabe"}))
+
+    def test_unrelated_agent_calls_pass(self):
+        self.assertIsNone(self.protect("Bash", {"command": "ls"}, agent_id="a1"))
+
+    def test_main_denies_agent_write_even_for_non_bash_tools(self):
+        payload = {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {"file_path": ".studio/push-freigabe"},
+            "agent_id": "a1",
+            "cwd": str(self.repo),
+        }
+        out = io.StringIO()
+        with (
+            mock.patch.object(sys, "stdin", io.StringIO(json.dumps(payload))),
+            redirect_stdout(out),
+        ):
+            pushgate.main()
+        data = json.loads(out.getvalue())["hookSpecificOutput"]
+        self.assertEqual(data["permissionDecision"], "deny")
+
+
+class RegistrationTest(unittest.TestCase):
+    def test_settings_register_pushgate_and_keep_guard(self):
+        root = Path(__file__).resolve().parents[3]
+        settings = json.loads((root / ".claude/settings.json").read_text("utf-8"))
+        entries = settings["hooks"]["PreToolUse"]
+        commands = {
+            hook["command"]: entry["matcher"]
+            for entry in entries
+            for hook in entry["hooks"]
+        }
+        gate = [c for c in commands if "pushgate.py" in c]
+        self.assertEqual(len(gate), 1)
+        self.assertEqual(commands[gate[0]], "Bash|Write|Edit|MultiEdit")
+        self.assertTrue(any("guard.py" in c and "pushgate" not in c for c in commands))
+
+
 if __name__ == "__main__":
     unittest.main()

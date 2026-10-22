@@ -20,6 +20,8 @@ MODE = "deny"  # Rückfall "warn": Hinweis statt Block (Entscheid per Ruling von
 SUFFIX = " (pushgate, R844 V1)"
 TAIL_BYTES = 4 * 1024 * 1024
 GIT_TIMEOUT = 3
+APPROVAL_FILE = "push-freigabe"
+MIN_PREFIX = 7
 MAIN_REFS = {"main", "refs/heads/main"}
 GLOBAL_VALUE_OPTIONS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace"}
 PUSH_VALUE_OPTIONS = {"--repo", "-o", "--push-option", "--receive-pack", "--exec"}
@@ -122,14 +124,72 @@ def deny_text(head: str, code: int | None) -> str:
     )
 
 
-def check_source(source: str, cwd: str) -> str | None:
+def _approval_reason(head: str, path: Path) -> str | None:
+    """Grund der Freigabezeile, wenn ihr Hash-Präfix zu `head` passt; sonst None."""
+    try:
+        parts = path.read_text(encoding="utf-8").strip().split(None, 1)
+    except OSError:
+        return None
+    if not parts or len(parts[0]) < MIN_PREFIX or not head.startswith(parts[0].lower()):
+        return None
+    return parts[1] if len(parts) > 1 else ""
+
+
+def consume_approval(head: str, payload: Mapping) -> bool:
+    """Einmal gültige Freigabe prüfen und verbrauchen (Datei löschen, Ereignis)."""
+    from paths import append_event, now_iso, studio_home
+
+    path = studio_home() / APPROVAL_FILE
+    reason = _approval_reason(head, path)
+    if reason is None:
+        return False
+    used = True
+    try:
+        path.unlink()
+    except OSError:
+        used = False
+    with contextlib.suppress(Exception):
+        append_event(
+            {
+                "ts": now_iso(),
+                "session_id": str(payload.get("session_id") or ""),
+                "agent_id": str(payload.get("agent_id") or "main"),
+                "source": "hook",
+                "kind": "push_freigabe",
+                "head": head,
+                "reason": reason,
+                "used": used,
+            }
+        )
+    return True
+
+
+def check_source(source: str, cwd: str, payload: Mapping) -> str | None:
     from paths import events_file
 
     head = _resolve(cwd, source)
     if head is None:
         return f"Push nach main abgewiesen: Hash nicht auflösbar ({source})" + SUFFIX
     code = last_check_exit(head, events_file())
-    return None if code == 0 else deny_text(head, code)
+    if code == 0 or consume_approval(head, payload):
+        return None
+    return deny_text(head, code)
+
+
+def protect_reason(payload: Mapping) -> str | None:
+    """Selbstschutz: Agenten (mit agent_id) legen die Freigabedatei nicht an. Best effort."""
+    if not payload.get("agent_id"):
+        return None
+    data = payload.get("tool_input")
+    if not isinstance(data, dict):
+        return None
+    text = f"{data.get('command') or ''} {data.get('file_path') or ''}"
+    if APPROVAL_FILE not in text:
+        return None
+    return (
+        "Freigabe legt nur L0 an: Agenten schreiben `push-freigabe` nicht. Das ist Schutz "
+        "gegen Versehen, kein Schutz gegen Absicht (Verfassung §1.3)" + SUFFIX
+    )
 
 
 def bash_reason(payload: Mapping, cwd: str) -> str | None:
@@ -147,7 +207,7 @@ def bash_reason(payload: Mapping, cwd: str) -> str | None:
         directory, args = found
         where = str(Path(cwd, directory)) if directory else cwd
         for source in main_sources(args, where):
-            reason = check_source(source, where)
+            reason = check_source(source, where, payload)
             if reason:
                 return reason
     return None
@@ -179,10 +239,11 @@ def main() -> int:
         if (
             not isinstance(payload, dict)
             or payload.get("hook_event_name") != "PreToolUse"
-            or payload.get("tool_name") != "Bash"
         ):
             return 0
-        found = bash_reason(payload, str(payload.get("cwd") or "."))
+        found = protect_reason(payload)
+        if not found and payload.get("tool_name") == "Bash":
+            found = bash_reason(payload, str(payload.get("cwd") or "."))
         if not found:
             return 0
         _log_block(payload, found)
