@@ -111,7 +111,7 @@ Eine zweite Tabelle gibt es nicht. Die Ableitung ist rein und hat einen Test, de
    (R827). Eine bestandene Auflage lässt sich nicht erneut starten, eine andere schon.
 7. **Pause, Tempo, Krisen, Steuer, Bauen:** wie I-132 §3.2. Gezählt werden Sim-Ticks, Krisen zählen mit, und nichts
    Weiteres ist gesperrt. Insbesondere gibt es **keine Abriss-Sperre**, denn G3' deckt den Abriss ab (§4.4).
-8. **Kein Zufall, kein Geld:** `tickTrial` und `noteTrialSale` schreiben nur `world.trial`. Ohne aktive Auflage kehren sie
+8. **Kein Zufall, kein Geld:** `tickTrial` und `noteTrialSale` schreiben nur `world.trial`; `cloneTrial` (`app.ts:644`) kopiert tief. Ohne aktive Auflage kehren sie
    früh zurück. Der Lauf bleibt dann bitgleich.
 
 ### 3.3 Bedienung (UI, desktop-first ab 1280 px)
@@ -158,12 +158,12 @@ Vorprodukte kannst du nicht zukaufen.»
 
 ### 4.2 Werte beim Start und Zählregel
 
-| Grösse | Festgehalten beim Start                                                                                                                                                                                                                                                                                                  | Gegenmittel |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| `good` | gewähltes Zielgut                                                                                                                                                                                                                                                                                                        | –           |
-| `goal` | `TRIAL_EXPORT_GOALS[good] + s0`. `s0` = Bestand des Zielguts + `min` über die Vorprodukte des Erzeugers, jeweils summiert über alle Inseln und alle Schiffsladungen. Kein Vorprodukt (Stein): nur das Zielgut                                                                                                            | G1          |
-| `sold` | 0. Steigt nur über `noteTrialSale`                                                                                                                                                                                                                                                                                       | –           |
-| `c0`   | Summe der **Belegungsgrenzen ohne Steuerfaktor** aller Häuser, deren Stufe das Zielgut braucht, über alle Inseln. Bei Stein zählen die Häuser, die Glas brauchen. Die Belegungsgrenze ist die Obergrenze der Stufe mit Ratsbeschluss (`maxInhabitantsOf`), mit Lärmfaktor, sobald Stadtplanung auf main ist (`quiet.ts`) | G3'         |
+| Grösse | Festgehalten beim Start                                                                                                                                                                                                                                      | Gegenmittel |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| `good` | gewähltes Zielgut                                                                                                                                                                                                                                            | –           |
+| `goal` | `TRIAL_EXPORT_GOALS[good] + s0`. `s0` = Bestand des Zielguts + `min` über die Vorprodukte des Erzeugers, jeweils summiert über alle Inseln und alle Schiffsladungen. Kein Vorprodukt (Stein): nur das Zielgut                                                | G1          |
+| `sold` | 0. Steigt nur über `noteTrialSale`                                                                                                                                                                                                                           | –           |
+| `c0`   | Summe der je Haus abgerundeten Grenzen `floor(maxInhabitantsOf × Lärmfaktor)`, mindestens 1, ohne Steuerfaktor, über alle Häuser, deren Stufe das Zielgut braucht (Stein: Glas). Lärmfaktor `NOISE_OCCUPANCY` wie `houseCap` auf Stadtplanung (Anhang 03 §1) | G3'         |
 
 **Vollbedingung G3':** Ein Verkauf zählt nur, wenn die Einwohner aller Bedarfsträger-Häuser zusammen mindestens `c0`
 betragen. Das prüft `noteTrialSale` im Moment des Verkaufs. Die Steuer «hoch» macht die Häuser nicht voll, ein Abriss
@@ -249,83 +249,84 @@ Aushungern mit einer Zahl und ohne neuen Sperrgrund beim Abriss (Entscheidung le
 
 **Balancing-Test:** Kein Spielwert ändert sich, und der Controller ruft `startTrial` nie auf. Die Basisläufe bleiben
 bitgleich, weil `tickTrial` und `noteTrialSale` ohne Auflage früh zurückkehren und `buy` nur das Feld prüft.
-`tests/sim/balance.test.ts:32` hält aber das Literal der Startwerte fest. Es zieht auf
+Das Literal der Startwerte steht aber an mehreren Stellen (AK-AUF-K14) und zieht auf
 `{ active: null, ticks: 0, e0: 0, sale: null, passed: [] }` mit. Das ist eine Formänderung ohne neue Zahl. Ruling-Entwurf
 R-6 (§11).
 
 ## 7 Abnahmekriterien
 
+Alle 22 AK tragen den Präfix `AUF-` (Kollision mit m5/m6/m7/i101/i120, R136), dazu vier neue (K15 bis K18). Wortlaut der
+Nachträge, Randfälle und Prüfwerte: [anhang-03-testmatrix.md](2026-10-22-auflagen-kern-design/anhang-03-testmatrix.md), dort
+gilt bei Abweichung der Anhang. Der Plan startet nach dem Merge von Stadtplanung und Seerecht, die Lärm-AK sind unbedingt.
+
 Vitest gegen `src/sim/` (`tests/sim/trial.test.ts` erweitert, `tests/sim/trial-export.test.ts` neu, Szenarien mit
 `monumentDone`, gesetzten Häusern und Lagern):
 
-1. **AK-K1 Defs:** `TRIAL_IDS = ['selfSupply', 'export']`. `TRIALS.selfSupply` hat `goal: 'hold'`, `lock: 'all'`;
-   `TRIALS.export` hat `goal: 'sell'`, `lock: 'chain'`. `TRIAL_EXPORT_GOALS` = `{ rum: 450, cloth: 450, glass: 320,
-stone: 750 }`. `TRIAL_WARN_POP_PCT = 85`. Ein Test liest Tabelle und Konstanten.
-2. **AK-K2 Sperrliste:** Die abgeleitete Sperrliste ist für glass `[glass, stone, wood]`, für rum `[rum, cane]`, für cloth
-   `[cloth, wool]` und für stone `[stone]`, ohne Reihenfolgebindung.
-3. **AK-K3 Start gemeinsam:** Alle Gründe aus I-132 AK 2 gelten für `export` genauso. Dazu kommen «Zielgut wählen» (ohne
-   Gut, mit `'food'`, mit Zahl) und «… noch nicht freigeschaltet». Kein Fehlschlag ändert die Welt, keiner wirft.
-4. **AK-K4 selfSupply bitgleich:** Nach `startTrial(w, 'selfSupply')` ist `sale = null`, und `buy` scheitert für jedes Gut
-   mit «Auflage Eigenversorgung: kein Zukauf». Die bestehenden I-132-Tests laufen ohne inhaltliche Änderung (Form `sale`
-   ergänzt).
-5. **AK-K5 Start export:** Szenario mit Rum 60 Heimat, 30 Fremdinsel, 20 auf einem Schiff, Zuckerrohr 50 / 40 / 0.
-   `startTrial(w, 'export', 'rum')` ergibt `sale.goal = 450 + 110 + min(90) = 650` (Zuckerrohr ist das einzige Vorprodukt,
-   `min` über eine Liste) und `sold = 0`. Bei Glas mit Stein 70 und Holz 40 geht `min(70, 40) = 40` ins Ziel.
-6. **AK-K6 Sperre chain:** Während `export` mit Glas scheitern `buy(glass)`, `buy(stone)` und `buy(wood)` an jedem Kontor
-   mit Grund, Geld und Lager bleiben unverändert. `buy(spice)` und `buy(food)` arbeiten wie ohne Auflage.
-   `monumentBuyBlock` sperrt Glas und Stein, Werkzeug und Gewürz nicht.
-7. **AK-K7 Zählen:** `sell(w, rum, 40)` zählt +40, solange G3' erfüllt ist. `sell` eines anderen Guts zählt nicht.
-   `sell` an Fremdkontoren zählt. Erfüllte Aufträge, Stammkunde und Fernangebot zählen nicht.
-8. **AK-K8 G3':** Gleiches Szenario: Ein Kaufmannshaus wird abgerissen, und der folgende Verkauf zählt nicht, Geld fliesst
-   trotzdem. Ebenso bei Steuer «hoch», sobald die Einwohner unter `c0` fallen. Nach Neubau und Auffüllen über `c0` zählt
-   der Verkauf wieder. Ein neues Bedarfsträger-Haus während der Auflage lässt die Zählung laufen.
-9. **AK-K9 Bestehen:** Bei `sold ≥ goal` ist nach dem nächsten `step` `active = null` und `sale = null`, und `passed`
-   enthält `{ id: 'export', tick, good: 'rum' }`. Vor diesem `step` läuft die Auflage noch. Gibt es beim selben Tick auch
-   den Abbruch unter 70 %, hat der Abbruch Vorrang.
-10. **AK-K10 Zeit abgelaufen:** Mit `sold < goal` endet die Auflage bei `ticks = 9000` als nicht bestanden, `passed` bleibt
-    unverändert. Bei 8999 Ticks läuft sie noch.
-11. **AK-K11 Abbruch und Neustart:** `abortTrial` setzt `sale = null`. Ein Neustart mit Stoff hält `s0` und `c0` neu fest.
-    Ist `export` bestanden, heisst der Grund «bereits bestanden», und `selfSupply` bleibt startbar (und umgekehrt).
-12. **AK-K12 Bitgleich ohne Auflage, Determinismus:** Ohne `startTrial` bleiben alle Kennzahlen der Balancing-Läufe
-    (Ticks, Einwohner, Geld, Siegtick) gleich wie vor dem Paket. Zwei Läufe mit gleichem Seed und gleicher Aktionsfolge
-    inklusive `startTrial`, `sell` und `abortTrial` liefern gleiche Welt-Hashes.
-13. **AK-K13 Save:**
-    - Speichern und Laden erhält `trial`, getestet für inaktiv, `hold` aktiv, `sell` aktiv mit `sold > 0` und `passed`
-      mit Gut.
-    - Die Migration vom Vorgänger setzt `sale: null` und `passed[].good: null`.
-    - Abgewiesen werden mit Hinweis: `sale` bei `selfSupply`, fehlendes `sale` bei `export`, `good: 'food'`, `goal: 0`,
-      negatives `sold`, `passed` mit `export` ohne Gut.
-    - Eine Version über der eigenen wird mit «Unbekannte Version» abgewiesen.
-14. **AK-K14 Balancing:** Alle Balancing-Tests bleiben grün. Nur das Literal in `balance.test.ts:32` zieht auf die neue
-    Form mit (Ruling R-6), und `trial` steht am Ende auf den Startwerten.
+1. **AK-AUF-K1 Defs:** `TRIAL_IDS = ['selfSupply', 'export']`. `TRIALS.selfSupply`: `goal: 'hold'`, `lock: 'all'`;
+   `TRIALS.export`: `goal: 'sell'`, `lock: 'chain'`. `TRIAL_EXPORT_GOALS` = `{ rum: 450, cloth: 450, glass: 320, stone: 750 }`.
+   `TRIAL_WARN_POP_PCT = 85`.
+2. **AK-AUF-K2 Sperrliste:** abgeleitet: glass `[glass, stone, wood]`, rum `[rum, cane]`, cloth `[cloth, wool]`, stone
+   `[stone]`, ohne Reihenfolgebindung.
+3. **AK-AUF-K3 Start gemeinsam:** Gründe aus [I-132](2026-10-16-i132-meisterpruefung.md) AK 2 gelten auch für `export`; dazu
+   «Zielgut wählen» (ohne Gut, `'food'`, Zahl, `'constructor'` per `Object.hasOwn`) und «… noch nicht freigeschaltet». Kein
+   Fehlschlag ändert die Welt, keiner wirft.
+4. **AK-AUF-K4 selfSupply bitgleich:** Nach `startTrial(w, 'selfSupply')` ist `sale = null`, `buy` scheitert für jedes Gut mit
+   «Auflage Eigenversorgung: kein Zukauf». Die I-132-Tests ändern sich nur in der Form `sale`.
+5. **AK-AUF-K5 Start export:** Rum 60 Heimat, 30 Fremdinsel, 20 auf Schiff, Zuckerrohr 50 / 40 / 0: `sale.goal = 450 + 110 +
+min(90) = 650`, `sold = 0`. Glas 25, Stein 70, Holz 40: Ziel 320 + 25 + `min(70, 40)` = 385.
+6. **AK-AUF-K6 Sperre chain:** Bei Glas scheitern `buy(glass)`, `buy(stone)`, `buy(wood)` an jedem Kontor mit Grund, Geld und
+   Lager unverändert. `buy(spice)`, `buy(food)` wie ohne Auflage. `monumentBuyBlock` sperrt Glas und Stein, nicht Werkzeug
+   und Gewürz.
+7. **AK-AUF-K7 Zählen:** `sell(w, rum, 40)` zählt +40 bei erfülltem G3'. Anderes Gut, Fremdkontor (zählt), Aufträge,
+   Stammkunde, Fernangebot (zählen nicht). Fehlgeschlagener `sell` zählt nicht; `sold` darf `goal` überschreiten.
+8. **AK-AUF-K8 G3':** Abriss eines Kaufmannshauses oder Steuer «hoch» unter `c0`: Verkauf zählt nicht, Geld fliesst. Nach
+   Neubau und Auffüllen über `c0` zählt er wieder; ein neues Bedarfsträger-Haus lässt die Zählung laufen.
+9. **AK-AUF-K9 Bestehen:** Bei `sold ≥ goal` nach dem nächsten `step`: `active = null`, `sale = null`, `passed` hat
+   `{ id: 'export', tick, good: 'rum' }`. Davor läuft sie. Abbruch unter 70 % im selben Tick hat Vorrang.
+10. **AK-AUF-K10 Zeit abgelaufen:** `sold < goal` bei `ticks = 9000`: nicht bestanden, `passed` unverändert; bei 8999 läuft sie.
+    `sold ≥ goal` genau bei Tick 9000 ist bestanden.
+11. **AK-AUF-K11 Abbruch und Neustart:** `abortTrial` setzt `sale = null`. Neustart mit Stoff hält `s0`, `c0` neu fest. Ist
+    `export` bestanden: «bereits bestanden», `selfSupply` startbar (und umgekehrt).
+12. **AK-AUF-K12 Bitgleich, Determinismus:** Die vorhandenen Pins in `balance.test.ts` und `balance-monument.test.ts` bleiben
+    ohne Auflage unverändert grün. Zwei Läufe mit gleichem Seed und Aktionsfolge (`startTrial`, `sell`, `abortTrial`)
+    liefern gleiche JSON-Welten.
+13. **AK-AUF-K13 Save:** Speichern und Laden erhält `trial` (inaktiv, `hold`, `sell` mit `sold > 0`, `passed` mit Gut).
+    Migration setzt `sale: null`, `passed[].good: null`. Abgewiesen mit Hinweis: `sale` bei `selfSupply`, fehlendes `sale`
+    bei `export`, `good: 'food'`, `goal: 0`, negatives `sold`, `passed` mit `export` ohne Gut. Version über der eigenen:
+    «Unbekannte Version».
+14. **AK-AUF-K14 Balancing, Literal:** Alle Balancing-Tests bleiben grün. Das Startwert-Literal zieht an allen Stellen mit
+    (R-6): `balance.test.ts:32`, `balance-monument.test.ts:164`, `trial.test.ts:29/203/273`, `trial-save.test.ts`,
+    `tests/ui/trial.test.ts:42`, `src/sim/world.ts:159`.
+15. **AK-AUF-K15 Gleichgewicht:** Voll versorgte Stadt, Steuer «normal», mit und ohne Lärmhaus erreicht Einwohner = `c0`
+    (Summe der abgerundeten Grenzen); `sell` zählt sofort.
+16. **AK-AUF-K16 Lärm während der Auflage:** Eine neue Lärmquelle senkt die Einwohner unter `c0`: Zählung ruht, `c0` bleibt.
+17. **AK-AUF-K17 Steuer «niedrig»:** verhält sich wie «normal» (gleiche Einwohner, `sell` zählt).
+18. **AK-AUF-K18 Determinismus über Save:** N Ticks, speichern, laden, M Ticks = N+M Ticks (JSON), mit aktivem `sell`,
+    `sold > 0`.
 
 Reine UI-Helfer (`tests/ui/trial.test.ts` erweitert):
 
-15. **AK-U1 Chip:** liefert die fünf Zustände aus §3.3 mit Texten aus den Defs. Die warme Klasse greift genau bei
-    Einwohner × 100 < `e0` × 85, die Grenze 85 % selbst ist nicht warm.
-16. **AK-U2 Puffer (I-162):**
-    - Grenze `ceil(e0 × 0,7)` und Puffer: `e0 = 401` ergibt Grenze 281. Bei 280 Einwohnern bricht die Sim ab, bei 281
-      nicht. Der Test prüft Sim und Anzeige gegeneinander.
-    - Puffer nie negativ.
-    - Bei `sell` gilt Takt = `ceil((goal − sold) ÷ Restminuten)`.
-17. **AK-U3 Vorschau Ausfuhr:** Je Gut aus `TRIAL_EXPORT_GOALS` stehen Grundziel, `s0`, wirksames Ziel, Überschuss je
-    Minute und nötiger Takt da. Ein gesperrtes Gut trägt seinen Grund. Die Startbegründung ist dieselbe wie bei
-    `startTrial`, ohne Weltänderung.
-18. **AK-U4 Chronik und Meldungen:** eine Zeile je Auflage. Bestanden mit Gut. Die Meldungen unterscheiden «Zeit
-    abgelaufen» mit Zahlen und «Einwohner unter 70 %». Ein geladener Stand löst keine Meldung aus.
-19. **AK-U5 Handel:** Für jedes Gut entspricht der Sperrgrund `trialBuyBlock(world, good)`. Während `sell` steht in der
-    Zielgut-Zeile der Zählhinweis.
+19. **AK-AUF-U1 Chip:** fünf Zustände aus §3.3 mit Texten aus den Defs. Warm genau bei Einwohner × 100 < `e0` × 85, 85 % selbst
+    nicht.
+20. **AK-AUF-U2 Puffer (I-162):** Grenze `ceil(e0 × 70 ÷ 100)` ganzzahlig, Prüfwerte `e0` = 10, 20, 100 (und 401 → 281);
+    Sim und Anzeige gegeneinander. Puffer nie negativ. Takt bei `sell` = `ceil((goal − sold) ÷ Restminuten)`.
+21. **AK-AUF-U3 Vorschau Ausfuhr:** je Gut Grundziel, `s0`, wirksames Ziel, Überschuss je Minute, nötiger Takt; gesperrtes Gut
+    mit Grund, derselbe wie bei `startTrial`, ohne Weltänderung.
+22. **AK-AUF-U4 Chronik und Meldungen:** eine Zeile je Auflage, bestanden mit Gut. «Zeit abgelaufen» mit Zahlen und
+    «Einwohner unter 70 %» unterscheiden sich. Geladener Stand löst keine Meldung aus. `cloneTrial` kopiert tief:
+    «512 von 630» stammt aus dem Vorzustand, auch nach `sale = null`.
+23. **AK-AUF-U5 Handel:** Sperrgrund je Gut = `trialBuyBlock(world, good)`. Bei `sell` steht der Zählhinweis in der
+    Zielgut-Zeile.
 
 Browser-Check bei 1280 px (qa-playtester, Screenshots `.studio/qa/AUFLAGEN-KERN/`, Spielstand mit `monumentDone` und
 Weidenau):
 
-20. **AK-B1:** Die Karte zeigt beide Abschnitte. Die Gutwahl zeigt Ziel, Vorrat und Takt. «Auflage beginnen» ist erst
-    nach der Wahl wirksam. Das Spiel läuft weiter, `Esc` schliesst.
-21. **AK-B2:** Nach dem Start ist nur Kaufen von Rum und Zuckerrohr blass, Gewürz bleibt kaufbar. Der Chip zeigt
-    Fortschritt und Zeit. Die Kopfzeile bleibt einzeilig, auch mit Rats-Marke.
-22. **AK-B3:** Nach einem Abriss eines Kaufmannshauses steht in der Statuszeile «zählt nicht: Stadt nicht voll». Bei 4×
-    erscheint Puffer-Warnung (warmer Chip) bei einem Stand mit fallenden Einwohnern. Das Bestehen erzeugt Meldung und
-    Chronikzeile mit Gut.
+24. **AK-AUF-B1:** Karte zeigt beide Abschnitte; Gutwahl zeigt Ziel, Vorrat, Takt; «Auflage beginnen» erst nach der Wahl
+    wirksam; Spiel läuft weiter, `Esc` schliesst.
+25. **AK-AUF-B2:** Nach dem Start sind nur Rum und Zuckerrohr kaufbar blass, Gewürz bleibt. Chip zeigt Fortschritt und Zeit;
+    Kopfzeile bleibt einzeilig, auch mit Rats-Marke.
+26. **AK-AUF-B3:** Prüfstand wie B1 plus Skript (Anhang 03 §2): Abriss eines Kaufmannshauses zeigt «zählt nicht: Stadt nicht
+    voll»; bei 4× mit Aushungern fallende Einwohner geben den warmen Chip; Bestehen erzeugt Meldung und Chronikzeile mit Gut.
 
 ## 8 Randfälle
 
@@ -367,7 +368,7 @@ Weidenau):
 - **G3' ruht nach Dienstbrand** etwa 800 Ticks [M]. Wer daran mehrfach scheitert, braucht einen deutlicheren Hinweis,
   keine weichere Regel.
 - **Ungemessen:** Die Ausbau-Zyklen ×0,6 / ×0,4 und Felsbucht-Stein Stufe 2 sind [S]. Die Bauplatzzahl der Heimat ist
-  kartenabhängig. Messlauf im Plan (Controller-Szenario K'-arm mit Rum-Ausfuhr) als Beleg für AK-K9, keine Pins.
+  kartenabhängig. Messlauf T5 mit mindestens 2 Seeds als Beleg für AK-AUF-K9, keine Pins. Rückfall R553: Zielmenge per Werte-Ruling senken, beim Glas den Baustoff-Aufschlag streichen (Anhang 03 §3).
 
 ## 11 Entscheidungsbedarf (Entwürfe für L0, Format `<was> — <warum> — <Kosten bei Irrtum>`)
 
@@ -382,7 +383,7 @@ Weidenau):
    dominant — Werte in den Defs, nach Playtest nachziehbar.
 5. **R-5** «I-161 verworfen (Archiv), Begründung (a) nicht erfüllt und 87 % Überschneidung mit Eigenversorgung» — Kriterium
    R805 (4) — eine Wachstumsprüfung fehlt, später als neue Idee mit Plätzen statt Einwohnern möglich.
-6. **R-6** «Balancing-Test: Literal der `trial`-Startwerte zieht auf die neue Form mit, keine Zahl ändert sich» —
+6. **R-6** «Literal der `trial`-Startwerte zieht an allen Stellen (AK-AUF-K14) auf die neue Form mit, keine Zahl ändert sich» —
    Verfassung §3 (bewusste Änderung als Ruling) — keine Spielfolge.
 7. **D2 (Empfehlung, kein Ruling nötig):** ein Abzeichen je Auflage, nicht je Gut (YAGNI). Der Wiederspielwert liegt in
    der Gutwahl der nächsten Partie.
@@ -394,14 +395,14 @@ Kein Nutzer-Vorbehalt: Kernsäule, Genre und Titel bleiben unverändert (§5.3).
 **M**, ein Umsetzungspaket `AUFLAGEN-KERN` nach dem Seerecht-Merge (oder mit Nachzug-Task für die Version), Schätzung
 6 Tasks:
 
-| Task | Inhalt                                                                                                                       | AK               |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| T1   | Defs, Typen, Weltfeld, Save mit Migration und Prüfung, Literal im Balancing-Test                                             | K1, K2, K13, K14 |
-| T2   | Kern-Sim: Start mit Gut, Sperre je Gut, `tickTrial` mit Zielart, `noteTrialSale`, G1, G3'                                    | K3 bis K12       |
-| T3   | UI-Helfer: Chip, Puffer, Vorschau Ausfuhr, Chronik, Meldungen, Kartenmodell mit Abschnitten                                  | U1 bis U5        |
-| T4   | UI-Verdrahtung: Karte mit Gutwahl, Handelsknöpfe je Gut, `app.ts`, «Wo war ich?»                                             | U5               |
-| T5   | Messlauf K'-arm mit Rum-Ausfuhr (Beleg, keine Pins), Version nach main + 1                                                   | K9 (Lauf)        |
-| T6   | Doku (`docs/spielwerte.md` Abschnitt «Meisterprüfung», `arc42.md` Save und `trial.ts`, README-Kurzhinweis) und Browser-Check | B1 bis B3        |
+| Task | Inhalt                                                                                                                       | AK                 |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| T1   | Defs, Typen, Weltfeld, Save mit Migration und Prüfung, Literal an allen Stellen (K14)                                        | K1, K2, K13, K14   |
+| T2   | Kern-Sim: Start mit Gut, Sperre je Gut, `tickTrial` mit Zielart, `noteTrialSale`, G1, G3'                                    | K3 bis K12, K15–18 |
+| T3   | UI-Helfer: Chip, Puffer, Vorschau Ausfuhr, Chronik, Meldungen, Kartenmodell mit Abschnitten                                  | U1 bis U5          |
+| T4   | UI-Verdrahtung: Karte mit Gutwahl, Handelsknöpfe je Gut, `app.ts`, «Wo war ich?»                                             | U5                 |
+| T5   | Messlauf K'-arm mit Rum-Ausfuhr (Beleg, keine Pins), Version nach main + 1                                                   | K9 (Lauf)          |
+| T6   | Doku (`docs/spielwerte.md` Abschnitt «Meisterprüfung», `arc42.md` Save und `trial.ts`, README-Kurzhinweis) und Browser-Check | B1 bis B3          |
 
 Rund 250 bis 320 Tools. Den Plan schreibt `lead-tech`.
 
