@@ -313,7 +313,7 @@ Ablauf eines Meilensteins (Stufe voll):
 5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
 6. **Gate Merge** (L0, eines je Meilenstein; R464 gilt auch hier auf seriellem Pfad: vor dem Gate startet L0 keine Umsetzer und Controller, solange `make check`/`make push-check` im Hauptbaum oder in `.worktrees/integrate` läuft, R565 P2) → Production-Lead lässt `production-integrator` die
    Stränge seriell mergen, CI und Pages prüfen.
-   **Teilbeleg und Release-Bündel (R810):** Strangabschluss und Gate Merge brauchen nur den Teilbeleg (gezielte Tests der berührten Dateien, `npx tsc --noEmit`, `make lint`, bei Werkzeug `make studio-test`). Der volle Testlauf läuft **einmal je Release** als `make push-check` auf dem gebündelten Stand; er ist der grüne volle Lauf vor dem Merge nach `main` und vor dem Push (Verfassung 1.3 §9.2/§7, N-103, R816); main wird erst danach auf diesen geprüften Hash gebracht (Fast-Forward oder ein Merge ohne weitere Änderung). Ein separater `make check` vor dem Push und ein Integrator-`make check` je Merge entfallen. **Strang-interne Merges** (z. B. k1/k2 → Strang-Branch) brauchen nur den Teilbeleg. Pakete werden lokal nach main gemergt und sammeln sich dort; ein Release umfasst alles, was bis zum Push-Fenster abgenommen ist, und geht höchstens einmal je Kalendertag live (R816). Rot im Push-Check: Behebung vor dem Push, Ursache dem Paket zuordnen. **Volle Läufe mit `VITEST_MAX_WORKERS=5`** (Experiment E-071, `experimente.md`): rote Zeit-/Timeout-Dateien einmal einzeln bei Last ≤ 4 wiederholen, die Wiederholung im Event vermerken. **Offen, nicht umgesetzt:** V5 (`loadsnap.py` mit Skriptname und Klasse eigen/fremd, kleines Werkzeugpaket bei freiem Platz), V3/V4 (Messfenster-Sperrdatei, A/A-Kontrolle statt Lastgrenze; später gemeinsam als Plan).
+   **Teilbeleg und Release-Bündel (R810):** Strangabschluss und Gate Merge brauchen nur den Teilbeleg (gezielte Tests der berührten Dateien, `npx tsc --noEmit`, `make lint`, bei Werkzeug `make studio-test`). Der volle Testlauf läuft **einmal je Release** als `make push-check` auf dem gebündelten Stand; er ist der grüne volle Lauf vor dem Merge nach `main` und vor dem Push (Verfassung 1.3 §9.2/§7, N-103, R816); main wird erst danach auf diesen geprüften Hash gebracht (Fast-Forward oder ein Merge ohne weitere Änderung). Ein separater `make check` vor dem Push und ein Integrator-`make check` je Merge entfallen. **Strang-interne Merges** (z. B. k1/k2 → Strang-Branch) brauchen nur den Teilbeleg. Pakete werden lokal nach main gemergt und sammeln sich dort; ein Release umfasst alles, was bis zum Push-Fenster abgenommen ist, und geht höchstens einmal je Kalendertag live (R816). Rot im Push-Check: Behebung vor dem Push, Ursache dem Paket zuordnen. **Volle Läufe mit `VITEST_MAX_WORKERS=5`** (Experiment E-071, `experimente.md`): rote Zeit-/Timeout-Dateien einmal einzeln bei Last ≤ 4 wiederholen, die Wiederholung im Event vermerken. **Offen, nicht umgesetzt:** V5 (`loadsnap.py` mit Skriptname und Klasse eigen/fremd, kleines Werkzeugpaket bei freiem Platz), V4 (A/A-Kontrolle statt Lastgrenze; V3, die Messfenster-Sperre, ist umgesetzt, siehe Lastregel).
 7. L0 beendet den Meilenstein (`log.py milestone --id M5 --status done`), lässt die Metriken
    verdichten (`python3 tools/studio/metrics.py --milestone M5`) und startet die Pflicht-Retro
    ([Verbesserungsschleife](verbesserung.md#verbesserungsschleife)).
@@ -463,6 +463,17 @@ Parallelitätsgrenzen je Budget sind Richtwerte, keine Deckel.
   Ruckel-Messungen gelten nur bei 1-min-Load ≤ 4; `uptime` vor und nach dem Lauf steht im Beleg. Eine Schwelle wird erst
   gelockert, wenn ein Lauf ohne Last rot ist. Messläufe mit Wanduhr-Limit je Lauf und `caffeinate`
   (R303); nie per `pkill -f` beenden, nur per PID.
+- **Messfenster-Sperre (V3, TOOL-MESSFENSTER):** `<Hauptrepo>/.studio/messfenster` (JSON: Eigentümer, optional PID,
+  Start, Ende, Zweck) ist die einzige Koordination zwischen Messung und Testlauf; Bibliothek und CLI
+  `tools/messfenster/lock.ts` (`set|clear|status`). Messwerkzeuge setzen und lösen sie selbst; `testlock` und
+  `pushcheck.py` brechen bei belegtem Messfenster mit `testlock: ABBRUCH, Messfenster (…)` und Exit 3 ab (kein Warten),
+  ein Messstart bei lebender Testsperre bricht ebenfalls ab. Verwaist ist eine Sperre nach Tod der PID oder nach
+  `ende` + 5 min; sie wird beim nächsten Zugriff mit Hinweis übernommen. L0 setzt Blöcke von Hand mit
+  `make messfenster-sperre` (Vorgabe 70 min, ohne PID) und löst sie mit `make messfenster-frei`. Neue Messwerkzeuge
+  nutzen `withMessfenster` (`tools/render-qa/messsperre.mjs`) oder laufen per `make messfenster ARGS="--run -- …"`.
+  Die Lastgrenze (R329, Load ≤ 4) und R800 bleiben unverändert gültig. Die A/A-Kontrolle `make messguete`
+  (vorläufige Grenzen in `tools/render-qa/aa-grenzen.json`) liegt bereit; die Umstellung der Lastregel erfolgt erst
+  nach positiver Mess-Task T00 per Ruling (V4).
 - **Bildrunden (R233 V3):** höchstens 2 je Häppchen; danach Stopp-Bericht an L0 und Gate-Entscheid
   statt eines dritten Anlaufs.
 - **Hänger-Alarm (R166):** Zeigt ein Agent seit mehr als 12 min kein Tool-Ereignis, stösst ihn der
