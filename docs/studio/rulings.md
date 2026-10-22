@@ -1639,3 +1639,16 @@ PERSONA-SCOUT-PFLEGE (`lead-design`, sonnet, 1). Alle ohne Testläufe; `docs/ide
 Regelbezug: R208, R445, R805, R825, R826 · Kosten bei Irrtum: Designarbeit, die nach Merges nachgezogen wird.
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-15 · ADR: —
+
+## R828 · 2026-10-22 · Gate Plan SEERECHT: BEDENKEN angenommen, ein Controller mit Parallelität 2, Start bei freiem Test-Slot
+
+Ruling: Gate-Urteil `lead-qa` BEDENKEN (Handoff `.studio/handoffs/2026-10-22-lead-qa-gate-plan-SEERECHT.md`) → **Plan frei** (`plan/seerecht` @ `792d565d`) unter den Auflagen B1–B3,
+N1–N4 (R-SR-P1): **ein** `lead-tech`-Controller mit Folgeinstanzen und Parallelität 2 statt drei Controllern (Instanz 1: T01, dann T02 ∥ T05; Instanz 2: T03 ∥ T04, dann T06, T07;
+Instanz 3: T08, T09 nach Stadtplanung-Merge); T01 beginnt mit der Seed-Suche d 30/35, ohne Fund `blocked` mit Messwerten; Wächter AK-SR-21 mit geschärftem Muster (Fehltreffer
+`src/ui/time.ts:24`, `src/render/sprites.ts:2067`); AK-SR-14-Reihenfolge als Review-Beleg; Risiko Wert 8 in den Plan-Index; T07 prüft die Fernkarte in der Pause; T01-Dateiliste
+ergänzen. SR-E2–SR-E5 angenommen (v20 nach Stadtplanung, `isValidCouncil` vorn, Typform, AK-SR-18 in `farLate.test.ts`). R-SR-P2 Merge-Reihenfolge Stadtplanung → T09 → Gate
+Merge; R-SR-P3 Balancing-Lauf in T09 verbindlich. Budget **21** Starts. **Start**, sobald einer der drei Test-Controller-Plätze frei wird (R826).
+
+Regelbezug: R805, R814, R826, gates.md Gate Plan · Kosten bei Irrtum: Seed-Fixture blockiert T01; dann Fixture-Ruling.
+
+Entscheider: L0 · Anlass: Gate-Urteil lead-qa Plan SEERECHT · ADR: —
