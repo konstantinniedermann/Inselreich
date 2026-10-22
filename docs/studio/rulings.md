@@ -1917,3 +1917,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: UI-HAEPPCHEN-
 Regelbezug: R807, R808, R817 · Kosten bei Irrtum: P1 verpasst das Bündel morgen; dann REL-31.
 
 Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-H P1 · ADR: —
+
+## R851 · 2026-10-22 · UI-HAEPPCHEN-H P1: Fix R850 angenommen; Beschriftung nach Speicherzeit
+
+Ruling: Fix-Runde `lead-tech` (`feat/ui-haeppchen-h-p1` @ `027be9dc`: `markAutoLoaded(slot)` in `storage.ts`, Rot-Beleg, defekter Zeiger abgedeckt, Mehrfach-Parsen behoben, Spec-Regeln 4/10
+mit Vermerk, Teilbeleg 53/53, Delta-Review opus BEDENKEN niedrig) → **angenommen**. Letzte kleine Runde: Beschriftung in Ladeliste und Startkarte nach **Speicherzeitpunkt** (zuletzt
+geschrieben = «Autosave», der andere = «Autosave davor»), unabhängig vom Zeiger; der Zeiger bestimmt nur das Schreibziel. Ist das mehr als eine kleine Runde, geht es als Beobachtung und
+«Bitte testen» ins Bündel. Danach Ergänzungsurteil `lead-qa` im Bündel REL-30.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R850 · Kosten bei Irrtum: verwirrende Beschriftung, UI-only.
+
+Entscheider: L0 · Anlass: Fix-Runde lead-tech UI-HAEPPCHEN-H P1 · ADR: —
