@@ -34,6 +34,8 @@ import { SHIP_TICKS_PER_SEA_TILE } from '../../src/sim/defs/sea';
 import { laneWorld, shipLiteral } from './seaHelpers';
 import type { BuildingDefId, CouncilTier, World } from '../../src/sim/types';
 import {
+  fnv1a32,
+  sortedJson,
   houseNearKontor,
   placeService,
   putBuilding,
@@ -564,5 +566,55 @@ describe('I-153 Seerecht', () => {
     step(w);
     expect(ship.to).toBeNull();
     expect(ship.port).toBe(0);
+  });
+});
+
+describe('I-153 Seerecht in Fahrten', () => {
+  const route = (island: number) => ({ a: 0, b: island, ab: [], ba: [] });
+
+  it('AK-SR-5 Rückruf: heimwärts ablegendes Schiff fährt mit Seerecht-Zeit', () => {
+    const { w, island } = laneWorld(30);
+    w.council[4] = 'open';
+    const ship = shipLiteral(w, { to: island, left: 1, homing: true });
+    expect(decree(w, 4, 'C').ok).toBe(true);
+    step(w);
+    expect(ship.port).toBe(island);
+    expect(ship.to).toBe(0);
+    expect(ship.left).toBe(8 * 30);
+  });
+
+  it('AK-SR-6 Abfahrt nach Beschluss: 8 Ticks je Feld, ohne Beschluss 10', () => {
+    for (const [seerecht, per] of [
+      [true, 8],
+      [false, 10],
+    ] as const) {
+      const { w, island } = laneWorld(30);
+      if (seerecht) {
+        w.council[4] = 'open';
+        decree(w, 4, 'C');
+      }
+      const ship = shipLiteral(w, { route: route(island) });
+      step(w);
+      expect(ship.left).toBe(per * 30);
+      for (let i = 0; i < per * 30 - 1; i++) step(w);
+      expect(ship.port).toBe(0);
+      step(w);
+      expect(ship.port).toBe(island);
+    }
+  });
+
+  it('AK-SR-10 Determinismus: gleicher Seed und Aktionsfolge, gleicher Zustand', () => {
+    const run = (): string => {
+      const { w, island } = laneWorld(30);
+      w.council[4] = 'open';
+      shipLiteral(w, { route: route(island) });
+      shipLiteral(w, { to: island, left: 123, homing: true });
+      shipLiteral(w, { to: island, left: 77, route: route(island) });
+      for (let i = 0; i < 40; i++) step(w);
+      decree(w, 4, 'C');
+      for (let i = 0; i < 200; i++) step(w);
+      return sortedJson(w);
+    };
+    expect(fnv1a32(run())).toBe(fnv1a32(run()));
   });
 });

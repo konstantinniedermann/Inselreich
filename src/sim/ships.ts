@@ -1,7 +1,8 @@
 import { ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
 import { GOOD_IDS, STORAGE_CAP } from './defs/goods';
 import { checkAfford, pay } from './economy';
-import { islandName, laneTicks } from './islands';
+import { laneTicksOf } from './council';
+import { islandName } from './islands';
 import { fail, ok } from './types';
 import type { GoodId, Result, Route, RouteGood, Ship, World } from './types';
 import { functionLock, goodLock } from './unlocks';
@@ -141,7 +142,7 @@ const otherPort = (route: Route, port: number): number => (port === route.a ? ro
 
 function depart(world: World, ship: Ship, to: number): void {
   ship.to = to;
-  ship.left = laneTicks(world.islands, ship.port, to);
+  ship.left = laneTicksOf(world, ship.port, to);
 }
 
 /** Entlädt jedes Gut ausserhalb `keep` in `GOOD_IDS`-Reihenfolge bis zur Lagergrenze; Rest bleibt an Bord. */
