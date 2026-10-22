@@ -281,6 +281,7 @@ describe('sound', () => {
       stormWarning: 5000,
       boom: 2000,
       monumentDone: 3000,
+      shipDock: 4000,
     });
   });
 
@@ -721,5 +722,96 @@ describe('M10 Ton unlock', () => {
     };
     expect(count('win')).toBeGreaterThan(0);
     expect(count('unlock')).toBe(count('win'));
+  });
+});
+
+describe('LEBEN-SEE shipDock', () => {
+  const setup = (opts: { muted?: boolean } = {}) => {
+    const { ctx, log } = fakeCtx();
+    const s = createSound({ muted: opts.muted ?? false, volume: 0.4 }, () => ctx, fakeIo());
+    return { ctx, log, s };
+  };
+  /** Spitzen der Stimm-Gains, die seit `base` entstanden sind. */
+  const peaksSince = (log: ReturnType<typeof fakeCtx>['log'], base: number): number[] =>
+    log.gains
+      .slice(base)
+      .map((g) =>
+        Math.max(
+          0,
+          ...log.sets.filter((x) => x.gain === g.gain && x.kind === 'ramp').map((x) => x.v),
+        ),
+      );
+  const maxPeak = (e: SoundEvent): number => {
+    const { log, s } = setup();
+    s.unlock();
+    const base = log.gains.length;
+    s.play(e);
+    return Math.max(...peaksSince(log, base));
+  };
+
+  it('AK-K5 erzeugt synthetische Bausteine, jede Spitze <= 0,08, kein Sample', () => {
+    const { ctx, log } = setup();
+    let fetches = 0;
+    const io = {
+      ...fakeIo(),
+      fetchBuffer: () => ((fetches += 1), Promise.reject(new Error('404'))),
+    };
+    const s = createSound({ muted: false, volume: 0.4 }, () => ctx, io);
+    s.unlock();
+    fetches = 0;
+    const base = log.gains.length;
+    s.play('shipDock');
+    const peaks = peaksSince(log, base);
+    expect(peaks.length).toBeGreaterThan(1);
+    peaks.forEach((p) => {
+      expect(p).toBeGreaterThan(0);
+      expect(p).toBeLessThanOrEqual(0.08);
+    });
+    expect(fetches).toBe(0);
+    expect(Object.keys(SFX_FILES)).not.toContain('shipDock');
+  });
+
+  it('AK-K6 Entprellung 4000 ms an ctx.currentTime, Zähler nur gespielte', () => {
+    const { ctx, log, s } = setup();
+    s.unlock();
+    s.play('shipDock');
+    const n1 = log.gains.length;
+    setTime(ctx, 3.9);
+    s.play('shipDock');
+    expect(log.gains.length).toBe(n1);
+    expect(s.debugState().events.shipDock).toBe(1);
+    setTime(ctx, 4);
+    s.play('shipDock');
+    expect(log.gains.length).toBeGreaterThan(n1);
+    expect(s.debugState().events.shipDock).toBe(2);
+    expect(THROTTLE_MS.shipDock).toBe(4000);
+  });
+
+  it('AK-K7 Hierarchie: leiser als coin, build, order, alarm; kein Ducking', () => {
+    const own = maxPeak('shipDock');
+    (['coin', 'build', 'order', 'alarm'] as SoundEvent[]).forEach((e) =>
+      expect(own).toBeLessThan(maxPeak(e)),
+    );
+    const { s } = setup();
+    s.unlock();
+    s.play('shipDock');
+    expect(s.debugState().duck).toBe(1);
+  });
+
+  it('AK-K8 stumm, verborgen, vor unlock: keine Bausteine', () => {
+    const a = setup({ muted: true });
+    a.s.unlock();
+    const baseA = a.log.nodes;
+    a.s.play('shipDock');
+    expect(a.log.nodes).toBe(baseA);
+    const b = setup();
+    b.s.unlock();
+    b.s.setHidden(true);
+    const baseB = b.log.nodes;
+    b.s.play('shipDock');
+    expect(b.log.nodes).toBe(baseB);
+    const c = setup();
+    c.s.play('shipDock');
+    expect(c.log.nodes).toBe(0);
   });
 });
