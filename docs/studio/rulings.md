@@ -1785,3 +1785,15 @@ R553-Rückfall) prüft der Plan bzw. das Review T3. Plan erst nach den Merges vo
 Regelbezug: R839 · Kosten bei Irrtum: Nachtrag beim Plan.
 
 Entscheider: L0 · Anlass: Wiedervorlage lead-qa · ADR: —
+
+## R841 · 2026-10-22 · Freie Plätze (Ampel grün, 5-h 40 %): Bündel-Vorprüfung REL-30, Prozess-Retro REL-29, Doku-Audit
+
+Ruling: Text-Plätze leer, Test-Plätze belegt (R826). Starten: (1) **Gate Merge REL-30 vorab** an `lead-qa` (sonnet): Teilbelege und Merge-Trockenlauf aller bündelfertigen Branches
+(TOOL-LOADSNAP, TOOL-DASH-REST, `docs/beob-18`, `docs/ideen-15`, Design-/Plan-Branches), Merge-Reihenfolge und Konfliktauflösungen, Release-Notiz-Entwurf; keine Testläufe; Budget **1**.
+(2) **Prozess-Aussensicht REL-29** an `studio-process-coach` (sonnet, R127/R316 nach jedem Release; inkl. Vorfall R815, Kapazitätswechsel R823/R826); Budget **1**. (3) **DOKU-AUDIT**
+an `lead-production` (sonnet, Skill `doku-audit`) vor dem nächsten Release: README, arc42, `docs/index.md`, STUDIO-Querverweise gegen main; Befunde als Bericht, Trivial-Fixes auf
+Branch `docs/doku-audit-1`; Budget **1**.
+
+Regelbezug: R127, R316, R826 · Kosten bei Irrtum: gering, alles testfrei.
+
+Entscheider: L0 · Anlass: freie Kapazität · ADR: —
