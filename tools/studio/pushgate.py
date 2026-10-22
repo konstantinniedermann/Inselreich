@@ -52,7 +52,7 @@ def _resolve(cwd: str, ref: str) -> str | None:
 
 def split_git_push(words: list[str]) -> tuple[str | None, list[str]] | None:
     """(-C-Verzeichnis, Push-Argumente) für `git … push …`, sonst None."""
-    if not words or words[0] != "git":
+    if not words or os.path.basename(words[0]) != "git":
         return None
     index, directory = 1, None
     while index < len(words) and words[index].startswith("-"):

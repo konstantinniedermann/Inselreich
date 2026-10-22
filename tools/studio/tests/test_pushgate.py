@@ -341,6 +341,17 @@ class ReviewFixTest(GateCase):
         self.assertIsNotNone(self.reason('sh -c "cd . && git push origin HEAD"'))
         self.assertIsNone(self.reason("bash -c 'echo hallo'"))
 
+    def test_git_is_recognised_by_basename_and_prefix(self):
+        for command in (
+            "/usr/bin/git push origin main",
+            "command git push origin main",
+            "env FOO=1 git push origin main",
+            "sudo /usr/bin/git -C . push origin main",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(self.reason(command))
+        self.assertIsNone(self.reason("/usr/bin/git push origin feat/x"))
+
 
 if __name__ == "__main__":
     unittest.main()
