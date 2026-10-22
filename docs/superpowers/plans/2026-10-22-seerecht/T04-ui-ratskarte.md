@@ -1,6 +1,6 @@
 # T04 · UI-Leser (Inselkarte, Heimfahrt, Fernauftrag) und Rats-Karte mit drei Karten
 
-Umsetzer `tech-ui-engineer` · ≈ 45 Tools · AK-SR-16 bis AK-SR-19 · blocked-by: T01 · Worktree `.worktrees/seerecht-ui` (`feat/seerecht-ui` ab `feat/seerecht` nach T01) · Spec §3.2, §4, §6.2
+Umsetzer `tech-ui-engineer` · ≈ 45 Tools · AK-SR-16 bis AK-SR-19 · blocked-by: T01, UI-BEIPACK-FERN auf main (R835) · Worktree `.worktrees/seerecht-ui` (`feat/seerecht-ui` ab `feat/seerecht` nach T01, vor Start `git merge main`, damit das Beipack-Format «27 s» in `islandCard.ts` vorliegt) · Spec §3.2, §4, §6.2
 
 ## Dateien
 
@@ -16,14 +16,14 @@ Umsetzer `tech-ui-engineer` · ≈ 45 Tools · AK-SR-16 bis AK-SR-19 · blocked-
 ## Verhalten
 
 1. `homeTravelTicks`: `travelTicksOf(world, lane.d)`; `laneCache` bleibt (Seeweg `d` ändert sich beim Beschluss nicht, `seaLanes` weiter einmal je Welt, `homeTravelFrame.test.ts`).
-2. `islandCard(world, i)`: `formatIslandCard(def, w, h, travelTicksOf(world, lane.d))`; `formatIslandCard` rechnet `seconds = ticks * TICK_MS / 1000`. Import `travelTicks` aus `islands.ts` entfällt.
+2. `islandCard(world, i)`: `formatIslandCard(def, w, h, travelTicksOf(world, lane.d))`; `formatIslandCard` formatiert `Fahrzeit ${formatGameTime(ticks)}` (R835; nach UI-BEIPACK-FERN steht `formatGameTime` dort schon mit `d`-Umrechnung, T04 ersetzt nur das Argument durch `ticks`). Kein eigenes `clock`/`TICK_MS` mehr. Import `travelTicks` aus `islands.ts` entfällt.
 3. `councilCards`: Karten über `councilSides(tier)` (Stufe 4: A, B, C), Liste gefasster Beschlüsse für jede Seite (`s !== null && s !== 'open'`), `note: COUNCIL_NOTE`.
 4. CSS: `.council-grid` mit `grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr)` statt fester `1fr 1fr` (zwei bzw. drei Spalten je Zeile); `.council-card` Breite `min(560px, 60%)`. Keine neuen Klassen.
 
 ## Steps
 
 - [ ] **Tests rot.**
-  - `tests/ui/islandCard.test.ts`: Bestandsaufrufe von `formatIslandCard` auf Ticks umstellen (d 27 → 270, d 38 → 380, d 65 → 650; Erwartungen unverändert). `AK-SR-16`: `formatIslandCard(def, 24, 24, 300)` enthält «Fahrzeit 0:30», mit 240 «Fahrzeit 0:24»; `islandCard(w, island)` bei `laneWorld(30)` enthält «Fahrzeit 0:30», nach `w.council[4] = 'C'` (ohne Tick) «Fahrzeit 0:24».
+  - `tests/ui/islandCard.test.ts`: Bestandsaufrufe von `formatIslandCard` (Stand nach UI-BEIPACK-FERN) auf Ticks umstellen (d × 10, z. B. d 27 → 270; Erwartungen im Beipack-Format unverändert). `AK-SR-16` (R835): `formatIslandCard(def, 24, 24, 300)` enthält «Fahrzeit 30 s», mit 240 «Fahrzeit 24 s» (gegen `formatGameTime(300)`/`(240)` gegengeprüft); `islandCard(w, island)` bei `laneWorld(30)` enthält «Fahrzeit 30 s», nach `w.council[4] = 'C'` (ohne Tick) «Fahrzeit 24 s».
   - `tests/ui/homeTravel.test.ts` `AK-SR-17`: injizierte Lanes `() => [{ a: 0, b: 1, d: 30, points: [] }]` (Muster Z. 20): 300; mit `council[4] = 'C'` 240.
   - `tests/ui/farLate.test.ts` `AK-SR-18` (P-6): Fernauftrag auf Insel mit d 30 (`farWorld` + injizierte Lanes d 30 oder `laneWorld(30)`), Rest 260, Lager und rechtzeitige Fracht unter der Menge. Ohne Seerecht `farLate` wahr, `farMark(w).text` endet auf «· zu spät»; mit `council[4] = 'C'` `farLate` falsch, `text` ohne «zu spät», `tip` beginnt mit `Fahrzeit ≈ ${formatGameTime(240)}`. Fernangebot: `farOfferParts(w)!.travel === `≈ ${formatGameTime(240)} Fahrt``.
   - `tests/ui/council.test.ts` `AK-SR-19`: Stufe 4 offen → `cards.map(c => c.name)` = `['Glasrecht', 'Hofrecht', 'Seerecht']`, Texte = `COUNCIL[4][side].text`; Stufe 2 bzw. 3 offen → zwei Karten; Stufe 3 und 4 offen → `open.map(o => o.tier)` = `[3, 4]` mit 2 bzw. 3 Karten; nach `decree(w, 4, 'C')` enthält `decided` «Stufe 4: Seerecht»; `note` = «Gilt für die ganze Partie, die übrigen Beschlüsse der Stufe verfallen.»

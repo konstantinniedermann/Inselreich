@@ -1,11 +1,11 @@
 # T01 · Typ, Defs, Fahrzeit-Helfer, `decree` mit Umrechnung
 
-Umsetzer `tech-sim-engineer` · ≈ 50 Tools · AK-SR-1 bis AK-SR-4, AK-SR-5 (Umrechnung, ohne Rückruf) · blocked-by: – · Worktree `.worktrees/seerecht` (`feat/seerecht` ab `plan/seerecht`, vorher `git merge main`) · Spec §3.1–§3.4, §5 (nur `isSide`)
+Umsetzer `tech-sim-engineer` · ≈ 50 Tools · AK-SR-1 bis AK-SR-4, AK-SR-5 (Umrechnung, ohne Rückruf), Step 0 Seed-Suche (R828 B3) · blocked-by: – · Worktree `.worktrees/seerecht` (`feat/seerecht` ab `plan/seerecht`, vorher `git merge main`) · Spec §3.1–§3.4, §5 (nur `isSide`)
 
 ## Dateien
 
-- ändern: `src/sim/types.ts`, `src/sim/defs/council.ts`, `src/sim/islands.ts`, `src/sim/council.ts`, `tests/sim/council.test.ts`, `tests/sim/seaHelpers.ts`
-- nur Typ-Anpassung, Verhalten gleich: `src/ui/council.ts` (nur `const sides = ['A', 'B'] as const` statt `CouncilSide[]`; Zeile 46 bleibt, drei Karten und Liste erst in T04), `src/ui/app.ts` **nur** Zeile ≈ 633 (`COUNCIL[tier][side]?.name ?? side`), kein Import-Diff
+- ändern: `src/sim/types.ts`, `src/sim/defs/council.ts`, `src/sim/islands.ts`, `src/sim/council.ts`, `tests/sim/council.test.ts`, `tests/sim/seaHelpers.ts`, `tests/sim/seePins.ts` (neue Pins `SEED_D30`, `SEED_D35`, ggf. Versatz)
+- nur Typ-Anpassung, Verhalten gleich (Zeilen-Okay R828 N4): `tests/ui/council.test.ts`, `tests/ui/councilCard.test.ts` (nur falls `tsc` dort wegen `CouncilSide` mit `'C'` fällt; keine Erwartung ändern), `src/ui/council.ts` (nur `const sides = ['A', 'B'] as const` statt `CouncilSide[]`; Zeile 46 bleibt, drei Karten und Liste erst in T04), `src/ui/app.ts` **nur** Zeile ≈ 633 (`COUNCIL[tier][side]?.name ?? side`), kein Import-Diff
 - nicht ändern: `src/sim/defs/sea.ts`, `src/sim/save.ts` (T05), `ships.ts`/`routeBalance.ts` (T02), Render/UI-Leser
 
 ## Interfaces
@@ -20,7 +20,7 @@ Umsetzer `tech-sim-engineer` · ≈ 50 Tools · AK-SR-1 bis AK-SR-4, AK-SR-5 (Um
     - `laneTicksOf(world: Pick<World, 'islands' | 'council'>, a: number, b: number): number` = `laneTicks(world.islands, a, b, seaTileTicks(world))` (genau **ein** `laneTicks`-Aufruf, `ships-rng.test.ts` zählt ihn)
     - `isCouncilSide(tier: CouncilTier, side: unknown): side is CouncilSide` (String und `COUNCIL[tier][side] !== undefined`)
     - `councilSides(tier: CouncilTier): CouncilSide[]` (Reihenfolge A, B, C; nur vorhandene)
-  - `tests/sim/seaHelpers.ts`: `laneWorld(d: number): { w: World; island: number }` — Welt mit Kontor auf `island` (≥ 1), `laneTicks(w.islands, 0, island) === SHIP_TICKS_PER_SEA_TILE * d`, deterministisch (feste Seed-Suche über `seaWorld`/`createWorld`; findet sich keine, Insel per `ox`/`oy` schrittweise verschieben); wirft mit Klartext, wenn nichts passt. Gewählten Seed/Versatz im Bericht nennen.
+  - `tests/sim/seaHelpers.ts`: `laneWorld(d: number): { w: World; island: number }` — Welt mit Kontor auf `island` (≥ 1), `laneTicks(w.islands, 0, island) === SHIP_TICKS_PER_SEA_TILE * d`, deterministisch aus den Pins von Step 0 (keine Suche zur Laufzeit); wirft mit Klartext, wenn der Pin nicht mehr passt.
 
 ## Verhalten
 
@@ -31,6 +31,7 @@ Umsetzer `tech-sim-engineer` · ≈ 50 Tools · AK-SR-1 bis AK-SR-4, AK-SR-5 (Um
 
 ## Steps
 
+- [ ] **Step 0 Seed-Suche (zuerst, R828 B3):** kurze Probe-Testdatei (`tests/sim/probe-seed.test.ts`, nicht committen, nach dem Lauf löschen; Lauf unter Testsperre): für Seeds 1–500 `createWorld(seed)` (wie `seaWorld`), je Fremdinsel i `d = laneTicks(w.islands, 0, i) / SHIP_TICKS_PER_SEA_TILE`; ersten Seed mit d 30 und ersten mit d 35 notieren (Insel-Index dazu). Ohne Fund: Inselversatz (`ox`/`oy` der Insel schrittweise ±1, höchstens 20 Schritte je Richtung, Insel bleibt ohne Überlappung) prüfen. Ergebnis als `SEED_D30`, `SEED_D35` (+ Insel, ggf. Versatz) in `tests/sim/seePins.ts` (Muster `SEED_D37`). **Findet sich weder per Seed noch per Versatz d 30 bzw. d 35: sofort `blocked` an den Controller mit Messwerten (vorkommende d je Seed, Versatz-Ergebnis), kein Ausweichen auf andere d** (AK-Zahlen sind Spec-Werte, Fixture-Ruling L0).
 - [ ] **Test rot** in `tests/sim/council.test.ts`, neuer Block `describe('I-153 Seerecht')`; Z. 76 auf den neuen Notiz-Text (AK-SR-1/F1).
   - `AK-SR-1`: `Object.keys(COUNCIL[4])` = `['A','B','C']`, `COUNCIL[2]`/`[3]` = `['A','B']`; `COUNCIL[4].C` Name, Text wörtlich, `lever` `{ kind: 'seaTileTicks', value: 8 }`; `SHIP_TICKS_PER_SEA_TILE === 10`; `councilSides(4)` = `['A','B','C']`, `councilSides(2)` = `['A','B']`.
   - `AK-SR-2`: `council[4] = 'open'` → `decree(w, 4, 'C')` `{ ok: true }`, `council[4] === 'C'`; `decree(w, 4, 'A')` → `{ ok: false, reason: 'Schon beschlossen' }`, Wert `'C'`; `council[4] = null` → «Beschluss nicht offen».

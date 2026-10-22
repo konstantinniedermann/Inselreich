@@ -24,7 +24,7 @@ Umsetzer `tech-sim-engineer` · ≈ 40 Tools · AK-SR-11, AK-SR-13, AK-SR-14 · 
   - `AK-SR-11` Runde: `council[4] = 'open'`, Schiff fährt mit `left = 10 * d`, `decree(w, 4, 'C')` (left jetzt `8 * d`), `deserialize(serialize(w))` ok, `sortedJson` gleich (inkl. `left`). Review Focus 5: zweites Schiff mit `left = 10 * d − 1` vor dem Beschluss → nach Umrechnung ≤ `8 * d`, lädt.
   - `AK-SR-13`: Stand mit `council[2] = 'C'` bzw. `council[3] = 'C'` → `{ ok: false, reason: 'Beschädigter Spielstand' }`, `expect(() => deserialize(…)).not.toThrow()`; `council[4] = 'C'` ohne Schiffe → ok.
   - `AK-SR-14` streng: mit `council[4] = 'C'` Schiff `left = 10 * d` → abgewiesen, `left = 8 * d` → ok, `left = 8 * d + 1` (zwischen 8d und 10d, alter Stand ohne Umrechnung) → abgewiesen; ohne `'C'` `left = 10 * d` → ok.
-  - `AK-SR-14` Reihenfolge (eigener `it`): Stand mit fahrendem Schiff (`left = 10 * d`) und manipuliertem `council`: `null`, `[]`, `'C'`, `{ 2: null, 3: null }`, `{ 2: null, 3: null, 4: null, 5: null }`, `{ 2: 'C', 3: null, 4: 'C' }` → je «Beschädigter Spielstand», kein Wurf. Kommentar: Reihenfolge `isValidCouncil` vor `isValidV9Fields` prüft der Reviewer im Code, weil `isWellFormedSafe` Würfe abfängt.
+  - `AK-SR-14` Reihenfolge (eigener `it`): Stand mit fahrendem Schiff (`left = 10 * d`) und manipuliertem `council`: `null`, `[]`, `'C'`, `{ 2: null, 3: null }`, `{ 2: null, 3: null, 4: null, 5: null }`, `{ 2: 'C', 3: null, 4: 'C' }` → je «Beschädigter Spielstand», kein Wurf. Dieser `it` ist Verhaltensschutz, **kein** Reihenfolge-Beleg (kein Rot möglich, `isWellFormedSafe` fängt Würfe); die Reihenfolge belegt das Task-Review (R828 N1).
   - Bestand `AK-9 (R-4) Abweisen` («council[3] = "X"») bleibt unverändert grün.
 - [ ] **Lauf rot:** `npx vitest run tests/sim/council-save.test.ts; echo EXIT=$?` → ≠ 0 (`'C'` heute ungültig, `10 * d` mit `'C'` heute gültig).
 - [ ] **Umsetzen** nach Verhalten 1–3.
@@ -33,4 +33,4 @@ Umsetzer `tech-sim-engineer` · ≈ 40 Tools · AK-SR-11, AK-SR-13, AK-SR-14 · 
 
 ## Task-Review
 
-`isValidCouncil` steht vor `isValidV9Fields`, Zugriff auf `raw.council[4]` nur nach geprüfter Form; kein Literal 8/10; `SAVE_VERSION` unverändert (ausser Ausnahme oben); alte Stände ohne `'C'` laden (bestehende Save-Tests grün).
+**Review-Beleg (R828 N1, kein Test-Beleg):** Der Diff zeigt `isValidCouncil` unmittelbar vor `isValidV9Fields` in `isWellFormed`, `seaTileTicks(raw…)` erst danach, kein weiterer Zugriff auf `raw.council[4]` vor der Formprüfung; der Reviewer zitiert die Zeilen im Urteil, der Controller-Bericht weist AK-SR-14-Reihenfolge als Review-Beleg aus. Weiter: `isValidCouncil` steht vor `isValidV9Fields`, Zugriff auf `raw.council[4]` nur nach geprüfter Form; kein Literal 8/10; `SAVE_VERSION` unverändert (ausser Ausnahme oben); alte Stände ohne `'C'` laden (bestehende Save-Tests grün).
