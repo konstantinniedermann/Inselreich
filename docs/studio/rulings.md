@@ -1369,3 +1369,13 @@ verworfen als Doppelung (Holen/Bringen seit M12, `routeBalance.ts`); «zurück l
 Regelbezug: R670, R797, R804 · Kosten bei Irrtum: Seerecht als schwache Karte; Wert ist in `src/sim/defs/` leicht nachziehbar.
 
 Entscheider: L0 · Anlass: Bericht lead-design WIRTSCHAFT-BS-1 · ADR: —
+
+## R806 · 2026-10-22 · Kurzdesign UI-HAEPPCHEN-H (I-147, I-146) auf freiem Platz
+
+Ruling: Freier Platz (R475): Kurzdesign **UI-HAEPPCHEN-H** an `lead-design` (sonnet, Kurzdesign Stufe leicht) aus I-147 (zweiter Autosave-Platz «Davor») und I-146 (Wirkkreis bei
+ausgewählter Kapelle, Schule, Feuerwache; R797 «nach ORT-A-Render-Freigabe»). Nur Kurzdesign mit AK, keine Testläufe; Umsetzung frühestens nach UI-HAEPPCHEN-G (I-147 berührt
+den Ladepfad von I-148) und für I-146 nach dem ORT-A-Merge nach main. Budget **2** Starts.
+
+Regelbezug: R475, R797 · Kosten bei Irrtum: ein Kurzdesign, das liegen bleibt.
+
+Entscheider: L0 · Anlass: freie Kapazität · ADR: —
