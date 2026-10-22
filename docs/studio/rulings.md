@@ -1762,3 +1762,17 @@ Strang ruht bis UI-BEIPACK-FERN auf main (T04) bzw. Stadtplanung (T08/T09); Rest
 Regelbezug: R828, R832, R835 · Kosten bei Irrtum: Nachzug der Seed-Pins bei Generator-Änderung.
 
 Entscheider: L0 · Anlass: Zwischenbericht lead-tech SEERECHT · ADR: —
+
+## R839 · 2026-10-22 · Gate Spec AUFLAGEN-KERN: BEDENKEN angenommen, Nachtrag sofort, Plan nach Stadtplanung und Seerecht
+
+Ruling: Gate-Urteil `lead-qa` BEDENKEN (Handoff `.studio/handoffs/2026-10-22-lead-qa-gate-spec-AUFLAGEN-KERN.md`) → Entwürfe R-1 bis R-7 **angenommen**: I-163 «Ausfuhrmeister»
+wird gebaut, I-161 verworfen, G1/G2/G3' gelten; Rückfall «Vorprodukte ohne Baustoffe» als Defs-Änderung; Zielmengen vorläufig (Messlauf T5 mit ≥ 2 Seeds); R-6 nennt alle
+Literal-Stellen (`balance.test.ts:32`, `balance-monument.test.ts:164`, `trial.test.ts`, `trial-save.test.ts`, `tests/ui/trial.test.ts:42`, `world.ts:159`). **Nachtrag jetzt** durch
+`lead-design` (sonnet, Spec-Nachtrag): Präfix `AUF-` für alle 22 AK; `c0` als Summe der abgerundeten Hausgrenzen inkl. Lärmfaktor (Stadtplanung) plus drei neue AK (Gleichgewicht
+mit/ohne Lärmhaus, Lärmquelle während der Auflage, Steuer «niedrig»); AK-U2 ganzzahlig (`e0` = 10/20/100); AK-K12 gegen bestehende Pins plus Determinismus-AK mit Speichern/Laden;
+tiefe Kopie in `cloneTrial`; Randfälle K3/K5/K7/K10/B3; Rückfall R553 benannt; Nachträge in Anhang 03 «Testmatrix» (Grösse). Danach Wiedervorlage `lead-qa` nur zu Befunden 1–3.
+**Plan** erst nach den Merges von Stadtplanung und Seerecht; Save v21. Budget Nachtrag **1**, Wiedervorlage **1**.
+
+Regelbezug: R136, R553, R670, R805, R827, gates.md Gate Spec · Kosten bei Irrtum: Zählung ruht dauerhaft (G3') — durch die neuen AK abgefangen.
+
+Entscheider: L0 · Anlass: Gate-Urteil lead-qa AUFLAGEN-KERN · ADR: —
