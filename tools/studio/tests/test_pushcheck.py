@@ -13,6 +13,11 @@ CHECK_PUSH = "make check-push"
 CHECK_TS = "node tools/zeitreserve/check.ts"
 VITEST = "node tools/testlock/testlock.ts"
 PERF = "make check-ci-perf"
+MESS = "node tools/messfenster/lock.ts status"
+MESS_BELEGT = (
+    3,
+    "Messfenster belegt: Eigentümer l0, Zweck Perf, bis 2026-10-22T13:00:00.000Z\n",
+)
 
 
 class Harness:
@@ -59,7 +64,9 @@ class Harness:
         return 0, ""
 
     def names(self) -> list[str]:
-        return [key for key, _ in self.calls]
+        return [
+            key for key, _ in self.calls if key != MESS
+        ]  # Messfenster-Vorabprüfung nicht mitzählen
 
     def count(self, prefix: str) -> int:
         return sum(1 for key in self.names() if key.startswith(prefix))
@@ -356,6 +363,76 @@ class PushCheckTest(unittest.TestCase):
         ):
             self.assertEqual(h.go(), 0)
         self.assertIn("Ereignis nicht geschrieben (voll)", err.getvalue())
+
+
+class MessfensterTest(unittest.TestCase):
+    """Messfenster belegt: sofortiger Abbruch, Exit 3, ohne Load-Warteschleife (P-2, P-5)."""
+
+    def gate(self, h: Harness) -> int:
+        with contextlib.redirect_stdout(h.output):
+            return pushcheck.main_gate(
+                run=h.run,
+                load=h.load,
+                sleep=h.sleep,
+                git=h.git,
+                marked=h.marked,
+                retry_out=h.retry_out,
+                measurement=h.measurement,
+            )
+
+    def check_abort(self, h: Harness, code: int) -> None:
+        self.assertEqual(code, 3)
+        self.assertEqual(h.sleeps, 0)
+        self.assertEqual([k for k, _ in h.calls], [MESS])  # nichts Weiteres gestartet
+        self.assertIn(
+            "testlock: ABBRUCH, Messfenster (Eigentümer l0, Zweck Perf, bis 2026-10-22T13:00:00.000Z)",
+            h.output.getvalue(),
+        )
+        kinds = [e["kind"] for e in h.events()]
+        self.assertNotIn("test_failed", kinds)
+        (snap,) = [e for e in h.events() if e["kind"] == "load_abort"]
+        self.assertEqual(snap["reason"], "messfenster")
+        self.assertEqual(snap["source"], "pushcheck")
+
+    def test_push_check_bricht_sofort_ab(self):
+        h = Harness(self, loads=(9.0,))  # hohe Last: ohne Abbruch würde gewartet
+        h.handlers[MESS] = MESS_BELEGT
+        self.check_abort(h, h.go())
+
+    def test_gate_bricht_sofort_ab(self):
+        h = Harness(self, loads=(9.0,))
+        h.handlers[MESS] = MESS_BELEGT
+        self.check_abort(h, self.gate(h))
+
+    def test_frei_bisheriges_verhalten(self):
+        h = Harness(self)
+        h.handlers[MESS] = (0, "Messfenster frei\n")
+        h.check_ts(0, marked="[]")
+        self.assertEqual(h.go(), 0)
+        self.assertEqual(h.count(CHECK_PUSH), 1)
+
+    def test_cli_fehler_gilt_als_frei_mit_warnung(self):
+        h = Harness(self)
+        h.handlers[MESS] = (127, "node: not found")
+        h.check_ts(0, marked="[]")
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(h.go(), 0)
+        self.assertIn("Messfenster", err.getvalue())
+
+    def test_run_wirft_gilt_als_frei(self):
+        h = Harness(self)
+        h.check_ts(0, marked="[]")
+        real = h.run
+
+        def run(cmd, env=None):
+            if " ".join(cmd) == MESS:
+                raise OSError("kein node")
+            return real(cmd, env)
+
+        h.run = run
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(h.go(), 0)
 
 
 class GateTest(unittest.TestCase):
