@@ -34,6 +34,7 @@ import {
   seaMapTip,
   seaMapUnavailable,
 } from './seaMapView';
+import { cashReach } from './cashReach';
 import { iconChip } from './messages';
 import { formatGameTime, GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
 import { flowLabel, flowText, flowTitle } from './balanceFlow';
@@ -145,7 +146,13 @@ export function popChipView(world: World, tier: Tier): ChipView {
 }
 
 export function moneyView(world: World): ChipView {
-  return { icon: 'money', text: String(world.money), label: `Geld ${world.money}` };
+  const reach = cashReach(world.money, world.stats.taxes, world.stats.upkeep);
+  const label = `Geld ${world.money}`;
+  return {
+    icon: 'money',
+    text: String(world.money),
+    label: reach ? `${label}. ${reach.text}` : label,
+  };
 }
 
 /** Bilanz: Waage und Wert; `label` ist der bisherige Text. */
@@ -180,8 +187,19 @@ export function chipRole(tagName: string): 'img' | null {
 
 /** Kontostand; läuft je Frame (Spec 7), ohne Interpolation. */
 export function updateMoney(header: HTMLElement, world: World): void {
-  setChip(header, 'money', moneyView(world))?.classList.toggle('negative', world.money < 0);
+  const el = setChip(header, 'money', moneyView(world));
+  if (!el) return;
+  el.classList.toggle('negative', world.money < 0);
+  const reach = cashReach(world.money, world.stats.taxes, world.stats.upkeep);
+  el.classList.toggle('reach-warn', reach?.level === 'warn');
+  el.classList.toggle('reach-alarm', reach?.level === 'alarm');
+  const text = reach?.text ?? '';
+  if (moneyTipShown.get(el) === text) return;
+  moneyTipShown.set(el, text);
+  if (reach) el.title = text;
+  else el.removeAttribute('title');
 }
+const moneyTipShown = new WeakMap<HTMLElement, string>();
 
 /** Mindestabstand (ms) zwischen zwei Aktualisierungen der Bilanz-Anzeige. */
 export const BALANCE_REFRESH_MS = 500;

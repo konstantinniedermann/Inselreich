@@ -19,6 +19,7 @@ import {
   houseConsumers,
   shouldBlurAfterClick,
   moneyView,
+  updateMoney,
   popChipView,
   balanceTooltip,
   taxButtonText,
@@ -37,6 +38,7 @@ import {
   bindGoalChip,
   FAR_TRAVEL_TIP,
 } from '../../src/ui/hud';
+import { secToTicks } from '../../src/ui/reach';
 import { GOOD_IDS, GOODS } from '../../src/sim/defs/goods';
 import { HOME, home, createWorld } from '../../src/sim/world';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
@@ -864,5 +866,71 @@ describe('I-132 Ziel-Chip als Knopf', () => {
     expect(readFileSync('src/ui/hud.ts', 'utf8')).toMatch(
       /<button type="button" class="chip goal-chip" data-field="goal">/,
     );
+  });
+});
+
+describe('Geld-Chip: Kasse-leer-Hinweis (I-168)', () => {
+  class Chip extends FakeElement {
+    removed = 0;
+    removeAttribute(name: string): void {
+      if (name === 'title') this.title = '';
+      this.removed += 1;
+    }
+  }
+  const setup = () => {
+    const header = new FakeElement('header');
+    const chip = new Chip('span');
+    chip.dataset.field = 'money';
+    header.append(chip);
+    vi.stubGlobal('document', fakeDocument);
+    return { header: header as unknown as HTMLElement, chip };
+  };
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('I4/I6: Klasse, Tooltip und aria-label nur bei Reichweite; Chip-Text bleibt', () => {
+    const { header, chip } = setup();
+    const w = createWorld(3);
+    w.money = (secToTicks(120) * 12) / 100;
+    w.stats = { taxes: 0, upkeep: 12 };
+    updateMoney(header, w);
+    expect(chip.classList.contains('reach-warn')).toBe(true);
+    expect(chip.title).toMatch(/^Kasse leer in ≈ /);
+    expect(chip.getAttribute('aria-label')).toContain(chip.title);
+    w.stats = { taxes: 12, upkeep: 0 };
+    updateMoney(header, w);
+    expect(chip.classList.contains('reach-warn')).toBe(false);
+    expect(chip.title).toBe('');
+    expect(chip.getAttribute('aria-label')).toBe(`Geld ${w.money}`);
+    expect(chip.querySelector('.chip-value')!.textContent).toBe(String(w.money));
+  });
+  it('I5: negatives Geld behält negative und zeigt die Zeile', () => {
+    const { header, chip } = setup();
+    const w = createWorld(3);
+    w.money = -4;
+    w.stats = { taxes: 0, upkeep: 12 };
+    updateMoney(header, w);
+    expect(chip.classList.contains('negative')).toBe(true);
+    expect(chip.title).toMatch(/^Kasse ist leer/);
+  });
+  it('I7: Welt bleibt unverändert, 1000 Aufrufe schreiben Tooltip und aria-label je höchstens einmal', () => {
+    const { header, chip } = setup();
+    const w = createWorld(3);
+    w.money = (secToTicks(120) * 12) / 100;
+    w.stats = { taxes: 0, upkeep: 12 };
+    const before = JSON.stringify(w);
+    const set = vi.spyOn(chip, 'setAttribute');
+    let titleWrites = 0;
+    let title = '';
+    Object.defineProperty(chip, 'title', {
+      get: () => title,
+      set: (v: string) => {
+        titleWrites += 1;
+        title = v;
+      },
+    });
+    for (let i = 0; i < 1000; i++) updateMoney(header, w);
+    expect(titleWrites).toBeLessThanOrEqual(1);
+    expect(set.mock.calls.filter(([n]) => n === 'aria-label').length).toBeLessThanOrEqual(1);
+    expect(JSON.stringify(w)).toBe(before);
   });
 });
