@@ -2011,3 +2011,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: LEBEN-STRASSE
 Regelbezug: R793, R800, R823 · Kosten bei Irrtum: AK-37 falsch referenziert; Nachmessung gegen die Basis jederzeit möglich.
 
 Entscheider: L0 · Anlass: Pausenbericht lead-tech ORT-A · ADR: —
+
+## R858 · 2026-10-22 · Kurz-Retro abgenommen; Briefing-Vorlage auf Teilbeleg
+
+Ruling: Kurz-Retro `studio-coach` (`docs/studio/retros/2026-10-22-session-3b332328-ende.md`, Handbuch 1.70, `cbc9d360`) → **abgenommen**. Empfehlung angenommen:
+`docs/studio/templates/briefing.md` (Z. 23, 81) verlangt noch «make check grün» → auf Teilbeleg (Verfassung 1.3 §9.2) umstellen und offene Pläne (Seerecht, LEBEN-_, UI-I, TOOL-_)
+mitprüfen; erstes Paket der nächsten Session neben dem Bündel REL-30 (`studio-coach`, Budget 1). Rote Effizienz-Ampel (Steuerung 60,7 %, Cache-Write 29,3 %, L0-Kontext 516k) →
+Messaufträge laut Retro; Hebel ist TOOL-RUECKKANAL (R856).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle offenen Pläne (nur DoD-Zeile)
+Regelbezug: R849, R856 · Kosten bei Irrtum: ein überflüssiger voller Lauf je Strang.
+
+Entscheider: L0 · Anlass: Kurz-Retro Session-Ende · ADR: —

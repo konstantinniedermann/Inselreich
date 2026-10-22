@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-22 (Session 3b332328 Ende, R857; live REL-29 `d9580844`, Save v18, Verfassung 1.3, Handbuch 1.69/1.70; main lokal = live + Doku/Rulings)
+Stand: 2026-10-22 (Session 3b332328 Ende, R858; live REL-29 `d9580844`, Save v18, Verfassung 1.3, Handbuch 1.69/1.70; main lokal = live + Doku/Rulings)
 
 ## Release-Notizen
 
@@ -194,7 +194,7 @@ Kalendertag (R816, R817), gebündelt; voller Lauf nur vor Merge nach main bzw. P
 3. **TOOL-MESSFENSTER T00** (70-min-A/A-Block) erst nach Ende der ORT-A-Messungen (R824, R847); T06 nur bei positivem T00.
 4. **TOOL-PUSHSPERRE T05** nach TOOL-MESSFENSTER auf main (R848).
 5. **SEERECHT** T04 nach UI-BEIPACK-FERN auf main, T06/T07 danach (R838; `feat/seerecht*`, Restbudget 13).
-6. **TOOL-RUECKKANAL** (R856): Arbeiter melden per `SendMessage` an ihren Lead (Adresse im Briefing, Werkzeug in Arbeiter-Personas). Feedback-Entwurf an Anthropic liegt bei `/feedback`.
+6. **Briefing-Vorlage** `docs/studio/templates/briefing.md` auf Teilbeleg umstellen, offene Pläne mitprüfen (R858, `studio-coach`). **TOOL-RUECKKANAL** (R856): Arbeiter melden per `SendMessage` an ihren Lead (Adresse im Briefing, Werkzeug in Arbeiter-Personas). Feedback-Entwurf an Anthropic liegt bei `/feedback`.
 7. Pool: ZEITRESERVE-PFLEGE (Ursache Sim-Verlangsamung AK-E0-15a 1,59 → 2,3 ms, R848; drei langsame ORT-A-Tests). Messfristen: R769 V3 2026-10-24; R750 V1/V3, R755 V1 2026-10-30;
    R769 V2 2026-11-15, V1 2026-11-30; E-071 nach drei vollen Läufen. Erweiterung 1 bleibt in der Nutzer-Session (R519).
 
