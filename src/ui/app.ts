@@ -138,7 +138,12 @@ import { setEdict } from '../sim/edicts';
 import { decree } from '../sim/council';
 import { abortTrial, startTrial } from '../sim/trial';
 import { COUNCIL, COUNCIL_OPEN_MESSAGE } from '../sim/defs/council';
-import { councilEscapeHandled, councilOpenNext, councilOpened } from './council';
+import {
+  councilEscapeHandled,
+  councilOpenNext,
+  councilOpened,
+  councilToggleAllowed,
+} from './council';
 import { createCouncilCard } from './councilCard';
 import { createTrialCard } from './trialCard';
 import { TRIAL_ABORT_MESSAGE, trialChip, trialStartMessage, trialTransition } from './trial';
@@ -1115,7 +1120,7 @@ function launch(
       const t = upgradeTarget(state.panel, world);
       if (t.ok) upgradeSelected(t.id);
       else showError(t.reason);
-    } else if (h.kind === 'council') {
+    } else if (h.kind === 'council' && councilToggleAllowed(world)) {
       trialCard.setOpen(false);
       councilCard.setOpen(councilOpenNext(councilCard.isOpen, 'toggle'));
     } else if (h.kind === 'help') {
