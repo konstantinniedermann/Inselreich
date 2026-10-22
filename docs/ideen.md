@@ -326,14 +326,14 @@ bleibt Beipack-Kandidat für das nächste UI-Häppchen (die Karte besteht weiter
 - Nutzen/Aufwand: Entscheide mutig statt vorsichtig · S · ≈ 50 Tools
 - Entscheid: offen (IDEEN-14)
 
-### I-148 · neu · «Wo war ich?»-Karte beim Fortsetzen
+### I-148 · umgesetzt · «Wo war ich?»-Karte beim Fortsetzen
 
 - Bereich: Bedienung · Säule: Bedienung, Handel und Aufträge · Quelle: README «Ein geladenes Spiel pausiert»; laufende Fristen (Stammkunde, Fernauftrag 2:50, Auflage 15:00)
 - Spielerwirkung: „Der Spieler sieht beim Fortsetzen, welche Fristen laufen und wie viele Probleme offen sind, und weiss, wo er wieder einsteigt." Reine Lesefunktion (`src/ui/`), schliesst mit Esc oder Klick, Spiel bleibt pausiert. Doppelung: I-002, I-042 (live, springen nur), I-100, I-125 anders.
 - Grösse: S · Risiko: keins
 - Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
 - Nutzen/Aufwand: Wiedereinstieg ohne Suchen · S · ≈ 60 Tools
-- Entscheid: offen (IDEEN-14)
+- Entscheid: R811: eingeplant als UI-Häppchen G. Umgesetzt in UI-HAEPPCHEN-G (REL-29).
 
 ### I-149 · neu · Liegeplätze am Kontor (Engpass ausser Geld)
 
@@ -380,11 +380,11 @@ bleibt Beipack-Kandidat für das nächste UI-Häppchen (die Karte besteht weiter
 - Nutzen/Aufwand: Route wird Kreislauf · M · ≈ 3 Pakete
 - Entscheid: offen (IDEEN-14)
 
-### I-155 · neu · «Zu spät» an der Fern-Marke
+### I-155 · umgesetzt · «Zu spät» an der Fern-Marke
 
 - Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: Beobachtung: Fahrzeit (I-136) und Restzeit (I-101) stehen nie zusammen
 - Spielerwirkung: „Der Spieler sieht die Fern-Marke in Warnfarbe, sobald die Restzeit kleiner ist als die Fahrzeit (Tooltip «Fahrzeit ≈ 39 s, Rest 0:30»)." Reine Anzeige, Fahrzeit-Formel aus I-136. Doppelung: I-122 (Stammkunde), I-124 (klickbar, geparkt) anders.
 - Grösse: S · Risiko: keins
 - Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
 - Nutzen/Aufwand: verpasster Fernauftrag vermeidbar · S · ≈ 40 Tools
-- Entscheid: offen (IDEEN-14)
+- Entscheid: R811: eingeplant als UI-Häppchen G. Umgesetzt in UI-HAEPPCHEN-G (REL-29).
