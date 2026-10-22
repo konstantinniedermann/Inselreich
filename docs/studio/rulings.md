@@ -1955,3 +1955,19 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
 Regelbezug: Verfassung §8.1, R803, R826, Handbuch 1.39 (Warten per Benachrichtigung) · Kosten bei Irrtum: einige zusätzliche Nachfragen.
 
 Entscheider: L0 · Anlass: Nutzerhinweis · ADR: —
+
+## R854 · 2026-10-22 · Nutzerauftrag Berichtshierarchie: Vordergrund-Regel technisch erzwingen
+
+Ruling: Nutzer: «es würde doch mehr sinn machen wenn es eine klare hierarchie der delegationen und rückmeldungen gibt. die worker sollten sich nicht bei dir melden … sondern bei ihrem
+auftraggeber/chef.» Befund: Die Hierarchie steht bereits im Handbuch (STUDIO.md «Berichtsweg L2 → L1 → L0», «Vordergrund-Regel»: Leads starten Arbeiter mit `run_in_background: false`,
+das Ergebnis kommt als Rückgabewert direkt zum Lead). Heute haben Leads Arbeiter trotzdem **im Hintergrund** gestartet; dadurch landeten Arbeiter-Meldungen bei L0 und die Leads
+schliefen ein (R853). Die Regel war nur Text. **Entscheid:** (1) **TOOL-VORDERGRUND**: `tools/studio/waitguard.py` bekommt Regel C — ein `Agent`/`Task`-Aufruf mit
+`run_in_background: true` durch einen Aufrufer mit `agent_type` «lead-*» (und durch jeden Arbeiter) wird mit `deny` und Hinweis «Arbeiter im Vordergrund starten, parallel = mehrere
+Aufrufe in einer Nachricht» abgelehnt; L0 (Hauptsession) bleibt frei, Leads im Hintergrund zu starten (ADR-007). TDD mit `make studio-test`, Umsetzer `tech-ui-engineer` direkt, Review
+`qa-code-reviewer`; Budget **2**; wirkt nach dem Merge im Bündel REL-30. (2) Bis dahin weist L0 laufende Leads auf die Regel hin. (3) R853 (1) bleibt als Rückfall: landet doch eine
+Arbeiter-Meldung bei L0, leitet L0 sie weiter. (4) Arbeiter senden nie per `SendMessage` an `main`; das ergänzt `studio-coach` in den Arbeiter-Personas.
+
+Verfassung berührt?: nein (`guard.py` unberührt, eigenes Hook-Modul) · Überschneidung mit offenen Paketen: `waitguard.py` in keinem offenen Branch
+Regelbezug: Verfassung §2, §8.1; ADR-007; R646/R647; R853 · Kosten bei Irrtum: ein Lead wird bei einem legitimen Hintergrundstart blockiert; Rückfall `MODE = "warn"`.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
