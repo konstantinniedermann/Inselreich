@@ -49,6 +49,8 @@ function farOrderWorld(): World {
 }
 function contractWorld(): World {
   const w = farOrderWorld();
+  // Das Angebot entsteht sonst erst bei erfüllter Lieferung ab Haus-Stufe 3; hier direkt setzen.
+  w.contractOffer = { good: w.order!.good, island: w.order!.island! };
   const r = acceptContract(w);
   if (!r.ok) throw new Error(r.reason);
   w.tick = periodStart(1) + 10;
