@@ -1047,7 +1047,7 @@ fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render 
     oder ein gesperrter Speicher ergibt den Standard, ein Schreibfehler wird als `Result` gemeldet.
   - Die Einstellungen gehören nicht zum Spielstand und überleben „Neu" und „Laden". M7 ändert das
     Spielstand-Format nicht (weiter v3).
-- **Autosave beim Verlassen der Seite** (M7-UX L1): `pagehide` ruft `autosaveOnHide`; es überschreibt nur den neuesten Platz (Zeiger bleibt) und schreibt nur bei
+- **Autosave beim Verlassen der Seite** (M7-UX L1): `pagehide` ruft `autosaveOnHide`; es überschreibt nur den neuesten Platz (Zeiger bleibt; Laden eines Autosave-Platzes setzt den Zeiger auf ihn, `markAutoLoaded`) und schreibt nur bei
   Tick > 0, fängt jeden Fehler und zeigt keine Meldung. Beim nächsten Seitenstart bietet die Startkarte
   „Fortsetzen — Autosave" als primäre Wahl an; Laden aus Startkarte und Menü startet pausiert.
 - Laden und «Neu» beenden das laufende Spiel über `dispose()` (alle Modalkarten per `closeAllModals`, Loop,
