@@ -1379,3 +1379,15 @@ den Ladepfad von I-148) und für I-146 nach dem ORT-A-Merge nach main. Budget **
 Regelbezug: R475, R797 · Kosten bei Irrtum: ein Kurzdesign, das liegen bleibt.
 
 Entscheider: L0 · Anlass: freie Kapazität · ADR: —
+
+## R807 · 2026-10-22 · Gate Kurzdesign UI-HAEPPCHEN-H: OK, F1–F7 nach Empfehlung, Plan sofort
+
+Ruling: Kurzdesign `lead-design` (`design/ui-haeppchen-h` @ `acf7d5ef`, 24 AK: P1 I-147 13, P2 I-146 11) → **OK**. Designfragen nach Empfehlung: F1 Zeiger-Schlüssel
+`inselreich.save.auto.last` ja; F2 `pagehide` überschreibt den neuesten Platz, nie Wechsel; F3 «Davor laden» als Nebenwahl auf der Startkarte; F4 Quote nur messen (AK-H13),
+über 1 MB je Stand zurück an L0; F5 Kreis auch für das Bad (gleiche Eigenschaft `serviceRadius`, kleine Erweiterung, konsistent), nicht der Marktplatz; F6 bei Auswahl nur der
+Einzelkreis, Cache unberührt; F7 Reihenfolge G vor H, P2 nach ORT-A-Merge nach main, P1 darf früher. Kein Save-Wechsel, keine Baseline-Änderung. Plan `lead-tech` (Stufe leicht,
+sonnet) jetzt, ohne Testläufe; Budget **2** Starts für den Plan, Umsetzung erst per eigenem Gate Plan.
+
+Regelbezug: R806, gates.md kombiniertes Gate Stufe leicht · Kosten bei Irrtum: UI-only, leicht rückbaubar.
+
+Entscheider: L0 · Anlass: Bericht lead-design UI-HAEPPCHEN-H · ADR: —
