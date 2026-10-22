@@ -1602,3 +1602,14 @@ Merge nach main im Release-Bündel.
 Regelbezug: R810 V3/V4, R823 (≤ 3 Test-Controller) · Kosten bei Irrtum: Werkzeug-Fehler blockiert Testläufe; Rücknahme per Revert vor dem Bündel-Merge.
 
 Entscheider: L0 · Anlass: Bericht lead-tech Plan TOOL-MESSFENSTER · ADR: —
+
+## R825 · 2026-10-22 · BEOB-18 abgenommen; Pakete P1–P3 eingeplant
+
+Ruling: Bericht `lead-production` (`docs/beob-18` @ `9ea1fe33`, Marke 2026-10-22, Archiv auf 43,9 KB) → **abgenommen**; Merge im Release-Bündel (Konflikt am Dateiende mit
+`feat/ort-a` erwartet, Auflösung: beide Abschnitte behalten). Pakete: **P1 UI-BEIPACK-FERN** (S, nach UI-HAEPPCHEN-H P1, gleiche Dateien), **P2 TOOL-DASH-REST** (XS, `refactor:`)
+und **P3 PERSONA-SCOUT-PFLEGE** (XS, `lead-design`, inkl. I-154-Korrektur) auf das Board; P2 und P3 starten, sobald der Deckel 10 Plätze frei hat (Ideen-Scouts laufen gerade).
+`perf.test.ts`-Pin AK-E0-15a auf der ZEITRESERVE-PFLEGE-Liste.
+
+Regelbezug: R287, R288, R471, R823 · Kosten bei Irrtum: kleine Pakete warten länger.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-18 · ADR: —
