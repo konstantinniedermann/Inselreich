@@ -1590,3 +1590,15 @@ Fensterregel R803 bleibt. (2) **ORT-A AK-31:** Variante 1 des Umsetzers angenomm
 Regelbezug: Verfassung §5.8, R424, R445, R475, R698, R803, R810 · Kosten bei Irrtum: mehr Koordination; Plan-Arbeit, die nach Merges nachgezogen werden muss.
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R824 · 2026-10-22 · Gate Plan TOOL-MESSFENSTER: OK, Umsetzung als dritter Controller, T00 erst nach ORT-A-Messungen
+
+Ruling: Plan `lead-tech` (`plan/tool-messfenster` @ `1a1d61f7`, T00–T07) → **OK**; Entwürfe R824-E1 bis E5 angenommen (Sperre `.studio/messfenster` im Hauptrepo für alle Worktrees,
+Abbruchpräfix «testlock: ABBRUCH» bleibt für `pushcheck.py` Exit 3, vorläufige A/A-Grenzen Hitch Σ ≤ 2 / kein Fenster > 40 ms und Render max(0,4 ms; 3 %), `kantenprofil.mjs` beim
+ORT-A-Merge). Umsetzung durch einen **dritten `lead-tech`-Controller** (sonnet), Budget **11**, Parallelität 2; Stränge A (T01–T03, T07) und B (T05, T04) sofort mit Teilbeleg;
+**T00** (70-min-A/A-Messblock, exklusiv) erst, wenn ORT-A seine Messungen abgeschlossen hat, und nie parallel zu ORT-A- oder LEBEN-STRASSE-Messungen; T06 nur bei positivem T00.
+Merge nach main im Release-Bündel.
+
+Regelbezug: R810 V3/V4, R823 (≤ 3 Test-Controller) · Kosten bei Irrtum: Werkzeug-Fehler blockiert Testläufe; Rücknahme per Revert vor dem Bündel-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan TOOL-MESSFENSTER · ADR: —
