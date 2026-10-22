@@ -1674,3 +1674,15 @@ Plan `lead-tech` (Stufe leicht, sonnet), keine Testläufe; Budget **2**.
 Regelbezug: R827, gates.md kombiniertes Gate Stufe leicht · Kosten bei Irrtum: Klang oder Spur stört; rückbaubar.
 
 Entscheider: L0 · Anlass: Bericht lead-art LEBEN-SEE · ADR: —
+
+## R831 · 2026-10-22 · Gate Kurzdesign UI-HAEPPCHEN-I: OK, F1–F8 nach Empfehlung, Plan sofort
+
+Ruling: Kurzdesign `lead-design` (`design/ui-haeppchen-i` @ `3da866fa`, AK-I1–I29; P1 I-168 Kasse leer, P2 I-167 Bestand im Tooltip, P3 I-170 Wachstumsbremse; kein Save, keine
+Baseline, `src/sim` unberührt) → **OK**. Befund angenommen: Lärm senkt nur die Belegung, Park ist Gegenmittel, kein Grund → Lärm als eigene Zeile, Park als Hinweis; Korrektur I-170
+in `docs/ideen.md` bei der nächsten Pool-Pflege. F1 kein Klick-Sprung, F2 eine Ursache je Haus, F3 Lärm eigene Zeile, F4 «ohne Mangel», F5 Spitzenstufe zeigen, F6 Geld-Chip färben
+(Gelb ab 3:00, Rot ab 1:00), F7 «alle Inseln» nur bei mehr, F8 P1/P2 sofort nach Plan, P3 nach Stadtplanung-Merge. P3 über 4 ms Rechenzeit → zurück an L0. Kein Rebase (Konflikte mit
+UI-BEIPACK-FERN per `git merge`). Plan `lead-tech` (Stufe leicht, sonnet), keine Testläufe; Budget **2**.
+
+Regelbezug: R827, gates.md kombiniertes Gate Stufe leicht · Kosten bei Irrtum: UI-only, rückbaubar.
+
+Entscheider: L0 · Anlass: Bericht lead-design UI-HAEPPCHEN-I · ADR: —
