@@ -1697,3 +1697,14 @@ als «Bitte testen». **Reihenfolge für frei werdende Test-Controller-Plätze (
 Regelbezug: R826, R828, R830 · Kosten bei Irrtum: Wartezeit einzelner Pakete.
 
 Entscheider: L0 · Anlass: Bericht lead-tech Plan LEBEN-SEE · ADR: —
+
+## R833 · 2026-10-22 · Gate Plan UI-HAEPPCHEN-I: OK, in der Warteschlange Platz 3
+
+Ruling: Plan `lead-tech` (`plan/ui-haeppchen-i` @ `cc2dbddd`, T01–T10, 29 AK zugeordnet) → **OK**; Entwürfe R832-E bis R835-E angenommen (Nummern im Plan sind Entwurfsnummern):
+Lärm-Zeile T05 nach Stadtplanung-Merge auf eigenem Branch `feat/ui-haeppchen-i-a2`, damit P1/P3-Grundteil früher ins Bündel können; Rechenzeit AK-I27 zweistufig, über 4 ms
+`blocked` und zurück an L0 (Rückfall 2000 ms oder nur sichtbarer Chip); Konfliktregeln (`hud.ts` per `git merge main`, README-Zeilen unten anfügen). Budget **16**, Parallelität 2.
+Start laut R832 als Platz 3 der Warteschlange.
+
+Regelbezug: R831, R832 · Kosten bei Irrtum: UI-only.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan UI-HAEPPCHEN-I · ADR: —
