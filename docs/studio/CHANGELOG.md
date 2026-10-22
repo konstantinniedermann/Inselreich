@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-22 · Persona design-idea-scout 1.3
+
+- Anlass: Auftrag P3 PERSONA-SCOUT-PFLEGE (Behauptung «fehlt» ohne Codebeleg)
+- Datenbasis: Auftrag R825
+- Ruling: R825
+- Änderungen: Qualitätsmassstab: Eine Idee, die behauptet, etwas fehle, belegt das mit einer `rg`-Suche im Code und nennt Fundstellen bzw. «kein Treffer» mit Suchmuster
+
 ## 2026-10-22 · Handbuch 1.68
 
 - Anlass: Dauerregel des Nutzers «Kapazität voll nutzen, gesteuert durch die Limit-Ampel»
