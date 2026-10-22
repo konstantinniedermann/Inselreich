@@ -1554,3 +1554,13 @@ Wechsel. **Kein Rebase** (Dauerregel): der Anbindungs-Task (`renderer.ts`, `app.
 Regelbezug: R819, gates.md kombiniertes Gate Stufe leicht, CLAUDE.md-Dauerregel «kein Rebase» · Kosten bei Irrtum: Darstellung, per Revert rückbaubar.
 
 Entscheider: L0 · Anlass: Bericht lead-art LEBEN-STRASSE · ADR: —
+
+## R821 · 2026-10-22 · TOOL-LOADSNAP fertig, wartet aufs nächste Release-Bündel
+
+Ruling: Bericht `lead-tech` TOOL-LOADSNAP (`tool/loadsnap` @ `3d52f696`, `make studio-test` 1017 OK, Review OK mit drei niedrigen Befunden, zwei behoben, Repo-Root fest
+hinnehmbar) → **Strang abgenommen**. Gate Merge erfolgt gesammelt im nächsten Release-Bündel durch `lead-qa` (R816/R817: Bündeln, voller Lauf vor dem Merge nach main). Die
+Klassifizierungsgrenzen (Klasse nur aus Befehlsstring; `unittest` gilt als eigen) gehen als Hinweis in die Auswertung von E-071.
+
+Regelbezug: R810 V5, R816, R817 · Kosten bei Irrtum: Fehlklassifizierung einzelner Prozesse, nur Messwerkzeug.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-LOADSNAP · ADR: —
