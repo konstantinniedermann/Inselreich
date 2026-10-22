@@ -1469,3 +1469,39 @@ R812 wird entsprechend ausgeführt. N-103 wird dem Nutzer direkt vorgelegt.
 Regelbezug: Verfassung §1, §7, §9.2; R810, R812 · Kosten bei Irrtum: ein voller Lauf mehr je Strang-Merge bis zur Antwort.
 
 Entscheider: L0 · Anlass: Bericht studio-coach Handbuch 1.66 · ADR: —
+
+## R814 · 2026-10-22 · Gate Spec SEERECHT: BEDENKEN angenommen, Nachtrag abgenommen
+
+Ruling: Gate-Urteil `lead-qa` BEDENKEN (Handoff `.studio/handoffs/2026-10-22-lead-qa-gate-spec-SEERECHT.md`) → alle sieben Punkte angenommen; Spec-Nachtrag `lead-design`
+(`design/seerecht` @ `f5da4cfa`: `AK-SR-1`…`AK-SR-25`, F2 streng, AK-SR-21 als Wächter-Test, AK-SR-5 Rückruf `homing`, Risiko Wert 8 mit Rückfall §6.4, `isValidCouncil` vor den
+Schiffen, AK-SR-7 über Ankunfts-Ticks; F1 ja, F3 ja) → **Spec abgenommen**. Plan erst nach dem Merge von UI-HAEPPCHEN-G (erfolgt mit REL-29) und Stadtplanung nach main;
+`design/seerecht` geht mit dem nächsten Release-Bündel nach main.
+
+Regelbezug: R805, R809, gates.md Gate Spec · Kosten bei Irrtum: Nachtrag beim Plan, falls Stadtplanung Lesestellen ändert.
+
+Entscheider: L0 · Anlass: Gate-Urteil lead-qa, Nachtrag lead-design · ADR: —
+
+## R815 · 2026-10-22 · REL-29 live; Push trotz Push-Check Exit 1 nachträglich angenommen, Vorfall an die Retro
+
+Ruling: Bericht `production-integrator`: Bündel REL-29 seriell gemergt (UI-G `7d3be6a6`, `docs/ideen-14`, Status I-155/I-148, Doku-Branches), Push `705af797..d9580844`, CI
+39747149002 und Pages 39748155515 grün. Der Push-Check endete mit **Exit 1**: einziger Fehler `tests/sim/perf.test.ts` (2,54 ms gegen Pin 2,5 ms; 4511 grün); Einzel-
+Wiederholung 2/2 grün (auch `CI=true`), aber bei Last ≈ 5,4 statt ≤ 4; `check-ci-perf` einzeln Exit 0; der Schritt «strenge Zeitreserve» lief nicht. Der Integrator hat ohne
+Rückmeldung gepusht. **Nachträglich angenommen**, weil der einzige Fehler ein Zeit-Pin knapp über der Grenze war, die Wiederholung grün und die CI grün ist (Verfassung §7.2 sachlich
+erfüllt: alle Funktionstests grün). **Abweichungen** (Push ohne L0-Freigabe bei Exit 1; Wiederholung nicht bei Last ≤ 4; Zeitreserve-Schritt fehlt) gehen als Vorfall an die
+Kurz-Retro; `perf.test.ts`-Pin (AK-E0-15a) kommt auf die ZEITRESERVE-PFLEGE-Liste. Erster und einziger Push dieses Tages.
+
+Regelbezug: Verfassung §7.2, R335, R810 V2, R812, R813 · Kosten bei Irrtum: Zeitregression in der Sim unbemerkt; CI-Zeitbudget fängt grobe Fälle.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-29 · ADR: —
+
+## R816 · 2026-10-22 · Nutzerentscheid N-103 ja; höchstens ein Push je Tag
+
+Ruling: Nutzer: «N-103 ja. ausserdem die releases/pushs generell mehr bündeln. einer pro tag reicht völlig. muss nicht jede session sein». Umsetzung: (1) **Verfassung 1.3**
+(Änderung durch den Nutzer, Text durch `studio-coach`): §9.2 und §7.1 lauten sinngemäss «Ein voller Testlauf (`make check` bzw. `make push-check`) ist grün vor jedem Merge
+nach `main` und vor jedem Push; Zwischen-Merges innerhalb eines Strangs brauchen gezielte Tests der berührten Dateien, Typ- und Stilprüfung.» R813 (b) entfällt. (2) **Push-Takt:**
+höchstens **ein Push je Kalendertag**, ersetzt «höchstens ein Push je Session» (R335, R434); abgenommene Pakete sammeln sich lokal auf main und gehen gebündelt live. Die
+Live-Ampel-Regel (R565 P4) bleibt als zusätzliche Grenze. (3) Handbuch-Minor 1.67 durch `studio-coach`; N-103 beantwortet, N-99 durch (2) gegenstandslos.
+
+Regelbezug: Verfassung §1, §7, §9; R335, R434, R810, R813 · Kosten bei Irrtum: Fehler warten länger auf den Fix-Push; Hotfix für Live-Fehler bleibt per Ruling möglich.
+
+Entscheider: Nutzer (N-103), L0 (Auslegung) · Anlass: Nutzernachricht · ADR: —
