@@ -1834,3 +1834,18 @@ Paketen» in Ruling- und Plan-Vorlage → `studio-coach` (Handbuch-Minor 1.69, B
 Regelbezug: R127, R316, R815, R826 · Kosten bei Irrtum: Push-Sperre blockiert einen legitimen Push; Freigabedatei als Ausweg.
 
 Entscheider: L0 · Anlass: Retro REL-29 · ADR: —
+
+## R845 · 2026-10-22 · Gate Plan TOOL-PUSHSPERRE: OK, eigener Hook statt Guard-Änderung
+
+Ruling: Plan `lead-tech` (`plan/tool-pushsperre` @ `f4affcdb`, T01–T05) → **OK**, Entwürfe angenommen: (1) `guard.py` bleibt unberührt (Verfassung §1.3); V1 als **eigener PreToolUse-Hook**
+`tools/studio/pushgate.py` (Muster `waitguard.py`/`modelguard.py`) mit zusätzlichem Eintrag in `.claude/settings.json`, der keinen bestehenden Guard schwächt; Freigabedatei
+`.studio/push-freigabe` (Hash + Grund, einmal gültig) nur durch L0. (2) V3-Hook: `stampcheck.py` schärfen (letzte `## R…`-Überschrift, Schwelle 2, Meldung «PFLICHT» am Kontextanfang).
+(3) Pin `perf.test.ts` AK-E0-15a erst nach Messprotokoll (T04; Vorschlag Best-of-3), Annahme: unter Last 5,4 ≤ 1/10 rot, 11-fach langsamer Schritt bleibt rot. (4) T05
+(`pushcheck.py`-Wiederholung inkl. Nachholen von `studio-test build pages-limit`) erst nach TOOL-MESSFENSTER auf main; Stränge A und P davor. Budget **10**, Parallelität 2. Start auf dem
+nächsten freien Test-Platz (Warteschlange: TOOL-PUSHSPERRE, UI-BEIPACK-FERN, UI-HAEPPCHEN-I). Beobachtung: `LOAD_WAIT = 3.0` im Code gegen «Last ≤ 4» im Handbuch.
+
+Verfassung berührt?: ja, §1.3 (geschützte Guard-Datei bleibt unverändert; neuer Hook ergänzt nur) · Überschneidung mit offenen Paketen: `pushcheck.py`, `tests/test_pushcheck.py` mit
+TOOL-MESSFENSTER (`feat/tool-messfenster`), Reihenfolge Messfenster → T05.
+Regelbezug: R815, R844 · Kosten bei Irrtum: Hook blockiert legitimen Push; Freigabedatei oder Entfernen des Eintrags.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan TOOL-PUSHSPERRE · ADR: —
