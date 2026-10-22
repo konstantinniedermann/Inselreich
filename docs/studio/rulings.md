@@ -1505,3 +1505,16 @@ Live-Ampel-Regel (R565 P4) bleibt als zusätzliche Grenze. (3) Handbuch-Minor 1.
 Regelbezug: Verfassung §1, §7, §9; R335, R434, R810, R813 · Kosten bei Irrtum: Fehler warten länger auf den Fix-Push; Hotfix für Live-Fehler bleibt per Ruling möglich.
 
 Entscheider: Nutzer (N-103), L0 (Auslegung) · Anlass: Nutzernachricht · ADR: —
+
+## R817 · 2026-10-22 · Verfassung 1.3 und Handbuch 1.67 abgenommen; Release-Auslöser nach Tagestakt; UI-HAEPPCHEN-H P1 startet
+
+Ruling: (1) Bericht `studio-coach` (`515c0cb2`): Verfassung 1.3, Handbuch 1.67, Persona `production-integrator` 1.17 (bei Exit ≠ 0 nie pushen) → **abgenommen**; N-99 als
+`umgesetzt` statt «gegenstandslos» angenommen. (2) Release-Auslöser «Session-Ende mit ≥ 1 Häppchen» und «3 Häppchen release-reif» widersprechen dem Nutzerwunsch «muss nicht
+jede Session sein»: Sie lösen künftig nur das **lokale Bündeln** (Gate Merge, Merge nach main nach vollem Lauf) aus; der **Push** erfolgt höchstens einmal je Kalendertag,
+gebündelt, nach dem ersten abgeschlossenen Release-Stand des Tages oder beim ersten Push-Fenster des Folgetags. `studio-coach` zieht das als Fortsetzung in 1.67 nach. (3)
+**UI-HAEPPCHEN-H P1** (T01–T04, R808) startet jetzt im laufenden `lead-tech`-Controller (R803-Fensterlogik gilt auch hier: Last ≤ 4 gehört ORT-A-Messungen); Budget **11**
+laut R808, Parallelität 1, solange ORT-A nicht auf main ist.
+
+Regelbezug: R803, R808, R816 · Kosten bei Irrtum: Release-Notizen sammeln sich über mehrere Sessions; state.md trägt sie.
+
+Entscheider: L0 · Anlass: Bericht studio-coach, Merge UI-G · ADR: —
