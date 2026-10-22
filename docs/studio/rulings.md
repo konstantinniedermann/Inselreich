@@ -1355,3 +1355,17 @@ Save-Folgen gegen Stadtplanung (v19) und Erweiterung 1 benennen. Budget **3** St
 Regelbezug: R445, R475, R797 · Kosten bei Irrtum: ein Designvorschlag, der liegen bleibt.
 
 Entscheider: L0 · Anlass: HAUSHALT-02-Bericht, freie Kapazität · ADR: —
+
+## R805 · 2026-10-22 · Gate WIRTSCHAFT-BS-1: I-153 Seerecht bauen, I-154 und I-151 verworfen
+
+Ruling: Designvorschlag `lead-design` (`design/wirtschaft-bs-1` @ `04f733f5`, Handoff `.studio/handoffs/2026-10-22-lead-design-WIRTSCHAFT-BS-1.md`) → Entwürfe R-1 bis R-4
+**angenommen**. (1) **I-153 Seerecht** wird gebaut, mit Änderungen: 8 statt 10 Ticks je Seekachel, Restfahrzeit fahrender Schiffe beim Beschluss umrechnen, ein gemeinsamer
+Fahrzeit-Helfer (auch für die «Zu spät»-Marke I-155), Kartentext mit Zahl. Spec Stufe voll erst nach UI-HAEPPCHEN-G und Stadtplanung; eine Save-Nummer entscheidet `lead-tech`
+im Plan, nie neben Stadtplanung v19. Die BEDENKEN (Glasrecht bei 60–120 Kaufleuten gleich gut oder besser; Stufe 4 zeigt drei Karten) prüft die Spec ausdrücklich. (2) **I-154**
+verworfen als Doppelung (Holen/Bringen seit M12, `routeBalance.ts`); «zurück leer» als möglicher UI-Beipack. (3) Seerecht-Wert geht in die Balancing-Prüfung von Erweiterung 1.
+(4) **I-151** verworfen; Kriterium für künftige Auflagen: Bedarf über die Laufzeit weit über der Lagergrenze, Geld kein Ausweg. Archivierung I-151/I-154 mit dem Merge von
+`docs/ideen-14`.
+
+Regelbezug: R670, R797, R804 · Kosten bei Irrtum: Seerecht als schwache Karte; Wert ist in `src/sim/defs/` leicht nachziehbar.
+
+Entscheider: L0 · Anlass: Bericht lead-design WIRTSCHAFT-BS-1 · ADR: —
