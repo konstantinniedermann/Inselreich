@@ -211,6 +211,18 @@ describe('AK-M13E2-30 monumentStallReason', () => {
   });
 });
 
+describe('I-132 Auflage sperrt Zukauf im Denkmal-Panel', () => {
+  it('monumentStallReason und Zeilen nennen den Auflagen-Grund', () => {
+    const w = running();
+    w.money = 100000;
+    for (const g of ['stone', 'tools', 'glass', 'spice'] as const) w.monument!.buy[g] = true;
+    expect(monumentStallReason(w)).not.toBe('Auflage Eigenversorgung: kein Zukauf');
+    w.trial = { active: 'selfSupply', ticks: 1, e0: 10, passed: [] };
+    expect(monumentStallReason(w)).toBe('Auflage Eigenversorgung: kein Zukauf');
+    expect(monumentRows(w)[0]!.buyText).toBe('zukaufen — Auflage Eigenversorgung: kein Zukauf');
+  });
+});
+
 describe('AK-M13E2-32 Texte', () => {
   it('monumentStageLine', () => {
     const w = monumentWorld();

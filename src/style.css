@@ -144,7 +144,7 @@ body {
   gap: 6px;
   align-items: center;
   pointer-events: none;
-  z-index: 10;
+  z-index: 11;
 }
 .toast {
   max-width: 340px;
@@ -966,9 +966,30 @@ button.chip {
   flex: 1 1 100%;
   min-width: 0;
 }
+.notice-stack .far-card .far-stock--low {
+  color: var(--tone-bad);
+}
 .notice-stack .order-card.order-card--warn {
   border-left-color: var(--warn-amber);
   background: var(--warn-parchment);
+}
+@keyframes order-soon {
+  0% {
+    box-shadow:
+      0 0 0 3px var(--warn-amber),
+      0 0 14px var(--warn-amber);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+.notice-stack .order-card.order-card--soon {
+  animation: order-soon 2.5s ease-out 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .notice-stack .order-card.order-card--soon {
+    animation: none;
+  }
 }
 .notice-stack [hidden] {
   display: none;
@@ -1424,6 +1445,92 @@ button.hud-balance:focus-visible {
   font-weight: 600;
 }
 
+/* Rats-Karte und Marke (I-112): schwebt rechts oben in der Spielfläche, kein Modal */
+.council-badge[hidden] {
+  display: none;
+}
+.council-badge--active {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold);
+}
+.council-card {
+  position: absolute;
+  top: 48px;
+  right: 8px;
+  z-index: 10; /* über .notice-stack (9), unter Hover und Modal */
+  width: min(420px, 60%);
+  max-height: calc(100% - 64px);
+  overflow-y: auto;
+}
+.council-card[hidden] {
+  display: none;
+}
+.council-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.council-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.council-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 6px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--parchment-edge);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.council-option[aria-pressed='true'] {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold);
+}
+.council-note {
+  font-size: 13px;
+}
+
+/* Auflagen-Karte der Meisterprüfung (I-132): wie die Rats-Karte, kein Modal */
+.trial-card {
+  position: absolute;
+  top: 48px;
+  right: 8px;
+  z-index: 10; /* über .notice-stack (9), unter Hover und Modal */
+  width: min(420px, 60%);
+  max-height: calc(100% - 64px);
+  overflow-y: auto;
+}
+.trial-card[hidden] {
+  display: none;
+}
+.trial-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.trial-rule,
+.trial-condition,
+.trial-preview,
+.trial-fire,
+.trial-status {
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+/* Ziel-Chip als Knopf (I-132): sieht aus wie ein Chip; klickbar nur mit anstehender Meisterprüfung */
+button.goal-chip {
+  cursor: default;
+}
+button.goal-chip.goal-chip--action {
+  cursor: pointer;
+}
+
 /* Pause-Overlay (I-097) */
 .pause-overlay {
   position: absolute;
@@ -1451,4 +1558,31 @@ button.hud-balance:focus-visible {
 }
 .pause-overlay__hint {
   margin-left: 10px;
+}
+
+.menu-field {
+  display: block;
+  margin: 6px 0;
+}
+
+.card--resume {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card--resume h2 {
+  margin: 0;
+}
+.resume-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.resume-line {
+  padding: 3px 0;
+  border-bottom: 1px solid var(--gold);
+}
+.resume-problems {
+  margin: 0;
 }

@@ -1,6 +1,7 @@
 import { home, islandOf } from '../sim/world';
 // guide.ts — rein: nächster Schritt, Steuerwirkung, Abhilfe und Kartenzeichen als Klartext (Spec L5–L7).
 import { PALETTE } from '../render/palette';
+import { maxInhabitantsOf } from '../sim/council';
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
 import { GOOD_IDS, GOODS } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, TIER_IDS, WIN_SPICE_MERCHANTS } from '../sim/defs/tiers';
@@ -43,7 +44,7 @@ function lockedSentence(w: World, ids: readonly (BuildingDefId | undefined)[]): 
     if (id === undefined) continue;
     const e = entryOfBuilding(id);
     if (e !== null && buildLock(w, id) !== null)
-      return `${nm(id)} kommt, ${unlockText(e, 'whenText')}`;
+      return `${nm(id)} kommt, ${unlockText(w, e, 'whenText')}`;
   }
   return null;
 }
@@ -144,7 +145,7 @@ export function nextStep(w: World): string {
   const canRise = (h: Building): boolean =>
     TIERS[h.house!.tier].upgradeCost !== null && tierLock(w, h.house!.tier + 1) === null;
   const full = houses.filter(
-    (h) => h.house!.inhabitants === TIERS[h.house!.tier].maxInhabitants && canRise(h),
+    (h) => h.house!.inhabitants === maxInhabitantsOf(w, h.house!.tier) && canRise(h),
   );
   // Regel 3: erst Diagnosen (Versorgung, Güter), dann neue Güter der nächsten Stufe voller Häuser
   for (const h of houses)

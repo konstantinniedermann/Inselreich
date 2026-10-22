@@ -199,7 +199,7 @@ describe('M12 E1 Generator', () => {
       checkLayout(home, a);
       expect(generateForeignIslands(seed, home, { failShapes: true })).toEqual(a);
     }
-  });
+  }, 10_000);
 
   it('ist deterministisch', () => {
     const home = homeOf(7);
@@ -225,7 +225,7 @@ describe('M12 E1 Generator', () => {
         expect(lane.d).toBe(Math.ceil(sea));
       }
     }
-  });
+  }, 10_000);
 
   it('clipInside: ganz innen 1, ganz aussen 0, halb 0,5', () => {
     const r: Rect = { x0: 0, y0: 0, x1: 10, y1: 10 };

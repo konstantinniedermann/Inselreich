@@ -11,8 +11,8 @@ und wird unverändert kopiert.
 Persona: <rolle>
 Paket: <id>
 Meilenstein: <id> (oder „ohne")
-Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <Starts>)   (ganzer Auftrag inkl. aller Unteraufträge; Tools aus docs/studio/metriken/richtwerte.md, Leads schätzen in Tools, Minuten = Tools ÷ 6, nicht Menschenzeit)
-Modell: <alias> (<Einsatz>)   (Pflicht bei stärkerem Modell als die Persona, dann auch im Agent-Aufruf; Einsatz aus der Modelltabelle, STUDIO.md „Modellwahl“, z. B. `opus (Tech-Lead beim Plan)`, `opus (Final-Review)`, `sonnet (Controller in der Umsetzung)`, `sonnet (lead-qa-Gate-Urteile)`, `sonnet (Kurz-Retro)`)
+Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <Starts>)   (ganzer Auftrag inkl. aller Unteraufträge; Tools aus docs/studio/metriken/richtwerte.md, nur Tools schätzen; die Minuten rechnet das Werkzeug als Tools ÷ 6, nicht Menschenzeit, R750 V2)
+Modell: <alias> (<Einsatz>)   (Pflicht bei stärkerem Modell als die Persona, dann auch im Agent-Aufruf; Einsatz aus der Modelltabelle, STUDIO.md „Modellwahl“, z. B. `opus (Tech-Lead beim Plan)`, `opus (Final-Review)`, `opus (Delta-Review frisch nach ZURÜCK)`, `sonnet (Controller in der Umsetzung)`, `sonnet (lead-qa-Gate-Urteile)`, `sonnet (Kurz-Retro)`)
 Budget: <n Starts / Parallelität k> (nur für Leads; Arbeiter: „keins, keine Agenten starten"; Plan-, Kurzdesign- und Gate-Leads: `Paket:` gleich der Freigabephase `plan-<paket>`, `design-<paket>`, `gate-<paket>`, R471)
 Prozessstufe: <leicht|voll>
 
@@ -33,7 +33,7 @@ Prozessstufe: <leicht|voll>
    „Entfällt eine Vorbedingung, nennt die Abnahme die Fehlerrichtung und belegt, dass das abhängige Gate erfüllbar bleibt (R395)“;
    Plan-Paket „Format nach E-010: Index plus Task-Dateien ≤ 10 KB (R417)“;
    jedes Paket mit Doku-Commit „`make docs-check` Exit 0 vor dem Commit (Übergang bis TOOL-PRETTIER-HOOK, R417)“;
-   Integrator-Briefing „`make check` und `make check-ci-perf` je mit Exit-Code im Bericht (R459, E-058)“; `make push-check` Exit 1 bei ruhiger Startlast ist Substanz, kein erneuter Lauf; „höchstens n Läufe“ gilt nur für Exit 2 (R598 V3); Arbeitsort „Worktree `.worktrees/integrate`, nie der Hauptcheckout; bei Widerspruch gilt die Persona und du meldest; anderer Hash als im Ruling nur nach Meldung pushen (R565 V2, E-063)“;
+   Integrator-Briefing „`make check` und `make check-ci-perf` je mit Exit-Code im Bericht (R459, E-058)“; `make push-check` Exit 1 bei ruhiger Startlast ist Substanz, kein erneuter Lauf; „höchstens n Läufe“ gilt nur für Exit 2 (R598 V3); bis zum Merge-Bericht committet L0 nichts auf main (R769 V2); Arbeitsort „Worktree `.worktrees/integrate`, nie der Hauptcheckout; bei Widerspruch gilt die Persona und du meldest; anderer Hash als im Ruling nur nach Meldung pushen (R565 V2, E-063)“;
    jedes Paket mit Plan „Prüfschritte des Plans (z. B. Task-Reviews) nicht zur Budgetersparnis streichen — Mehrbedarf melden“;
    Paket Stufe leicht mit ≥ 2 Tasks und Diff ≤ 300 Zeilen „ein einziger qa-code-reviewer reviewt den Paket-Diff am Ende, nicht je Task (E-068, R693)“;
    Controller-Briefing „Delta-Review nach ZURÜCK oder BEDENKEN: immer frischer Start (opus), nie Fortsetzung desselben Reviewers (R673, R708)“

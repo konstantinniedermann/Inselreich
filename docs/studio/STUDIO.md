@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.60 · Stand: 2026-10-16 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.68 · Stand: 2026-10-22 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -10,7 +10,7 @@ Begleitdokumente: [VERFASSUNG.md](VERFASSUNG.md) · [verbesserung.md](verbesseru
 Verbesserung, Teil des Handbuchs) · [CHANGELOG.md](CHANGELOG.md) · [warteschlange.md](warteschlange.md)
 · [experimente.md](experimente.md) · [lernen.md](lernen.md) · [retros/](retros/) ·
 [metriken/](metriken/) · [gates.md](gates.md) · [roster.md](roster.md) · [rulings.md](rulings.md)
-(R1–R600: [rulings-archiv.md](rulings-archiv.md)) · [state.md](state.md) · [herkunft.md](herkunft.md)
+(R1–R699: [rulings-archiv.md](rulings-archiv.md)) · [state.md](state.md) · [herkunft.md](herkunft.md)
 · [Vorlagen](templates/) · Hierarchie [ADR-007](../adr/ADR-007-studio-hierarchie.md), Telemetrie
 [ADR-008](../adr/ADR-008-studio-telemetrie.md).
 
@@ -98,7 +98,8 @@ Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <S
 - `Schätzung` gilt für den ganzen Auftrag inklusive Unteraufträge; das Dashboard stellt sie dem
   Messwert gegenüber. Hauptgrösse sind Werkzeugaufrufe aus
   [metriken/richtwerte.md](metriken/richtwerte.md) (Median je Rolle, Modell, Plan-Art, summiert über
-  Starts inkl. Review und Fix-Runden); Leads schätzen in Tools, Minuten = Tools ÷ 6 (E-001, R433).
+  Starts inkl. Review und Fix-Runden). **Briefings schätzen nur in Tools** (R750 V2): die Minutenangabe der Kopfzeile
+  rechnet das Werkzeug als Tools ÷ 6, niemand schätzt sie frei (E-001, R433); Messgrösse |Minuten-Abweichung| ≤ 30 % in 2 Session-Retros.
 - Die Kopfzeile nennt die **Tabellenzeile** in Klammern (z. B. `(Tabellenzeile: lead-tech opus
 Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davor (die Telemetrie
   liest die erste Angabe mit „Tools“ bzw. „min“).
@@ -132,7 +133,7 @@ Aufgabe (R71).
 
 | Stufe  | Alias    | Einsatz                                                                                                                                                                                                                               |
 | ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| stark  | `opus`   | Design-Lead, Tech-Lead beim Plan, Spec-Autor, Lizenzprüfung, Final-Review, Meilenstein-Retro                                                                                                                                          |
+| stark  | `opus`   | Design-Lead, Tech-Lead beim Plan, Spec-Autor, Lizenzprüfung, Final-Review, Delta-Review frisch, Meilenstein-Retro                                                                                                                     |
 | mittel | `sonnet` | Controller in der Umsetzung, `lead-qa`-Gate-Urteile, `lead-production`, Task-Reviews, Kurz-Retro, Umsetzung, Recherche, Spec-Nachtrag und Kurzdesign Stufe leicht (E-061), Plan-Instanz bei Stufe leicht und Werkzeug-Paketen (E-054) |
 | klein  | `haiku`  | mechanische Prüfungen (Formatierung, Links, Listen abgleichen)                                                                                                                                                                        |
 
@@ -153,7 +154,7 @@ Frontmatter der Persona verlangt; sonst verweigert der Hook den Start (Modus `de
 sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final-Review des Pakets X)`):
 
 - `opus`: `Modell: opus (Design-Lead)`, `(Tech-Lead beim Plan)`, `(Spec-Autor)`, `(Lizenzprüfung)`,
-  `(Final-Review)`, `(Meilenstein-Retro)`
+  `(Final-Review)`, `(Delta-Review frisch)` (neuer Start nach BEDENKEN oder ZURÜCK, R774; danach Anlass, z. B. `(Delta-Review frisch nach ZURÜCK)`), `(Meilenstein-Retro)`
 - `sonnet`: `Modell: sonnet (Controller in der Umsetzung)`, `(lead-qa-Gate-Urteile)`,
   `(lead-production)`, `(Task-Reviews)`, `(Kurz-Retro)`, `(Umsetzung)`, `(Recherche)`,
   `(Spec-Nachtrag und Kurzdesign Stufe leicht)`, `(Plan-Instanz bei Stufe leicht und Werkzeug-Paketen)`
@@ -170,6 +171,16 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
   parallel, weniger Starts, zuerst Angefangenes abschliessen (Reviews, Fix-Runden, Merges, R166),
   `state.md` nachführen, Session beenden. Richtwerte: ab etwa 60 % keine neuen Wellen, ab etwa
   80 % Session-Ende-Routine; Wochenfenster über 80 %: Parallelität reduzieren. Kein Downgrade (R71).
+- **Studio-Deckel und Limit-Ampel (R826, R823; ersetzt R698 «6» und «≤ 8» aus R424):** Der Studio-Deckel
+  beträgt **10 Agenten gleichzeitig**, davon höchstens **3 Controller mit Testläufen** und **≤ 2 Browser-Läufe**.
+  Die Stufen der Ampel (`.studio/limits.json`) konkretisieren die Richtwerte von R69 (60 % und 80 %), sie widersprechen ihnen nicht:
+  **grün** (5-h-Fenster < 60 % und Woche < 80 %) · **gelb** (5-h 60–80 % oder Woche > 80 %) · **rot** (5-h > 80 %).
+  - **Pflicht für L0 bei grün:** den Deckel aktiv voll halten, nach jedem Bericht nachfüllen und jeden Strang
+    mit eigenem Agenten bearbeiten (Umsetzung, Pläne, Specs, Gates, Pflege, Ideen; R475, R445).
+  - **Gelb:** keine neuen Wellen, Angefangenes abschliessen (Wochenfenster > 80 %: zusätzlich Parallelität reduzieren, R69).
+  - **Rot:** Session-Ende-Routine.
+  - **Engpass Rechnerlast:** Zusätzliche Plätze werden mit testfreier Arbeit gefüllt (Plan, Spec, Gate, Pflege, Ideen), nicht leer gelassen.
+  - **Fensterregel (R803):** Last ≤ 4 gehört den Messungen (Lastgrenze R329), gezielte Tests laufen bei Last 4–8.
 - **Sessiongrösse (R68, E-010):** Eine Session umfasst etwa einen Abschnitt (Welle bzw. Phase). L0
   übergibt über `state.md` nach jedem abgeschlossenen Gate-Block, spätestens bei 25 % Kontext
   (vorher 50 %), und liest keine Bilder; Screenshots prüft `qa-playtester` und berichtet in Text.
@@ -202,6 +213,16 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
 - **Studio-Coach:** Der Coach bekommt je Retro 1 Start (Stabsstelle, ohne Arbeiter).
 - **Mehrbedarf:** vor dem Überschreiten per [templates/budgetantrag.md](templates/budgetantrag.md)
   an L0. Ohne Freigabe kein weiterer Start.
+- **Umschnitt-Regel (R735 V1):** Ein Antrag nach dem zweiten ZURÜCK oder BEDENKEN (hoch) derselben
+  Befundklasse nennt die Klasse je Runde und eine Ansatz-Alternative (Feld im Antrag). L0
+  bewilligt dann keinen weiteren Fix-Start ohne Ansatzprüfung. Messung: höchstens 1 Start über
+  Budget je Paket über 5 Pakete, bis 2026-11-30 (Beleg `log.py budget`, Rulings).
+- **Messwerkzeug-Tasks (R735 V2):** Ist das Messfenster belegt (Browser-Läufe nicht möglich),
+  bekommt ein Task, dessen Ergebnis ein Browser-Lauf ist, höchstens 2 Review-Runden; der Rest
+  geht in ein Paket mit freiem Fenster. Messung: höchstens 2 Starts über Plan je Task über
+  3 Tasks, bis 2026-12-15.
+- **Kumulierter Stand (R735 V3):** Jedes Budget-Ruling nennt „n von m“ (verbraucht von
+  freigegeben); Messung 10 von 10 Rulings bis 2026-11-15.
 - **Zwischenstand bei halbem Deckel (R224 (3)):** Hat ein Auftrag oder eine Fix-Runde einen Deckel
   (Tools oder Starts), meldet der Lead bei der Hälfte einen Zwischenstand an L0, loggt ihn als
   `log.py status --status waiting --task "Zwischenstand <Paket>: <Stand>"` und hält an, bis L0
@@ -296,9 +317,13 @@ Ablauf eines Meilensteins (Stufe voll):
    `status --status waiting`. **Blocker (R438 V2):** Ein Controller mit Blocker meldet `waiting` und wird
    per `SendMessage` fortgesetzt, nicht durch eine neue Instanz ersetzt (Ausnahme: die Ablösung nach
    Abschlussbericht oder bei 200k Kontext, E-042, R319).
+   **Wartepause (R750 V3):** Je Controller-Instanz höchstens eine Wartepause > 5 min (Cache kalt); danach schreibt
+   sie ein Handoff und eine Folgeinstanz übernimmt, die zweite lange Pause wartet nie dieselbe Instanz ab. Messgrösse: Pause-Anteil
+   lead-tech ≤ 20 % (Stand 40 %) und Cache-Write 5 min ≤ 25 %, Bewertung 2026-10-30.
 5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
 6. **Gate Merge** (L0, eines je Meilenstein; R464 gilt auch hier auf seriellem Pfad: vor dem Gate startet L0 keine Umsetzer und Controller, solange `make check`/`make push-check` im Hauptbaum oder in `.worktrees/integrate` läuft, R565 P2) → Production-Lead lässt `production-integrator` die
    Stränge seriell mergen, CI und Pages prüfen.
+   **Teilbeleg und Release-Bündel (R810):** Strangabschluss und Gate Merge brauchen nur den Teilbeleg (gezielte Tests der berührten Dateien, `npx tsc --noEmit`, `make lint`, bei Werkzeug `make studio-test`). Der volle Testlauf läuft **einmal je Release** als `make push-check` auf dem gebündelten Stand; er ist der grüne volle Lauf vor dem Merge nach `main` und vor dem Push (Verfassung 1.3 §9.2/§7, N-103, R816); main wird erst danach auf diesen geprüften Hash gebracht (Fast-Forward oder ein Merge ohne weitere Änderung). Ein separater `make check` vor dem Push und ein Integrator-`make check` je Merge entfallen. **Strang-interne Merges** (z. B. k1/k2 → Strang-Branch) brauchen nur den Teilbeleg. Pakete werden lokal nach main gemergt und sammeln sich dort; ein Release umfasst alles, was bis zum Push-Fenster abgenommen ist, und geht höchstens einmal je Kalendertag live (R816). Rot im Push-Check: Behebung vor dem Push, Ursache dem Paket zuordnen. **Volle Läufe mit `VITEST_MAX_WORKERS=5`** (Experiment E-071, `experimente.md`): rote Zeit-/Timeout-Dateien einmal einzeln bei Last ≤ 4 wiederholen, die Wiederholung im Event vermerken. **Offen, nicht umgesetzt:** V5 (`loadsnap.py` mit Skriptname und Klasse eigen/fremd, kleines Werkzeugpaket bei freiem Platz), V3/V4 (Messfenster-Sperrdatei, A/A-Kontrolle statt Lastgrenze; später gemeinsam als Plan).
 7. L0 beendet den Meilenstein (`log.py milestone --id M5 --status done`), lässt die Metriken
    verdichten (`python3 tools/studio/metrics.py --milestone M5`) und startet die Pflicht-Retro
    ([Verbesserungsschleife](verbesserung.md#verbesserungsschleife)).
@@ -348,7 +373,7 @@ Regeln dazu:
   Schlussbericht ist der Report, Screenshots und Proben liegen unter `.studio/qa/<paket>/`.
 - **Release (Stufe leicht, E-028):** Auslöser: 3 Häppchen release-reif, Session-Ende mit ≥ 1 reifem
   Häppchen oder Meilenstein-Merge; höchstens 4 je Release; Hotfix (CI rot, Absturz, defekter Spielstand)
-  einzeln. Das nächste Häppchen startet nach Review-OK, nicht nach dem Merge; disjunkte Dateien laufen
+  einzeln. Diese Auslöser lösen nur das **lokale Bündeln** aus (Gate Merge und Merge nach main nach vollem Lauf); gepusht wird höchstens einmal je Kalendertag und gebündelt, nach dem ersten abgeschlossenen Release-Stand des Tages oder beim ersten Push-Fenster des Folgetags (R817, R816). Das nächste Häppchen startet nach Review-OK, nicht nach dem Merge; disjunkte Dateien laufen
   parallel (§5.8). Konfliktregeln (Dateimatrix, Stapel, Delta-Review, Kandidat frisch aufbauen), Prüfliste
   UI-Task → Screenshot und Release-Notiz in `state.md` („Neu“, „Bitte testen“): [gates.md](gates.md#gate-merge-release).
   **Nach jedem Merge eines Releases auf main startet L0 den `studio-process-coach` (R127, R316).**
@@ -366,7 +391,7 @@ Regeln dazu:
   (`SendMessage`-Fortsetzung, kein neuer Start; `git diff <final-review-commit>..HEAD`) Pflicht, bevor der Bericht an L0 geht.
   **Release mit einem Häppchen (R249 (1)):** Hat das Häppchen ein `opus`-Final-Review und einen
   Browser-Check auf demselben Stand, prüft das Release-Review nur das Delta seit dem Final-Review
-  (`git diff <final-review-commit> <kandidat> -- src/ tests/`, `make check`, `make check-ci-perf`;
+  (`git diff <final-review-commit> <kandidat> -- src/ tests/`, Teilbeleg, `make check-ci-perf`;
   Browser nur für Neues); ein Delta in `src/` führt zum vollen Release-Review.
   **Release-Check nur in der Push-Session (R712 V2):** Der Release-Check läuft ausschliesslich in der Session, die pusht, am zu pushenden
   Hash und stützt sich auf die Final-Reviews und Browser-Belege der Paket-Gates; Vorab-Check und Delta-Check entfallen, «Release-Check jetzt,
@@ -379,10 +404,9 @@ Regeln dazu:
 - **Merge** (Meilenstein oder Release): nur nach dem L0-Gate, davor Konflikt-Probe (R330 (5)): L0 oder
   Production-Lead prüft vor dem Integrator-Start je Branch `git merge-tree --write-tree main <branch>` (ändert
   weder Index noch Arbeitsbaum, kein Push); Konflikte gehen vor dem Start an den Production-Lead (§6), seriell durch `production-integrator` ausschliesslich im
-  Worktree `.worktrees/integrate` (Merge, `make push-check` und Push laufen nur dort, nie im Hauptcheckout, R565 P1; solange Integrator oder `push-check` laufen, committet L0 nichts auf `main`; „push-bereit“ ist die `LOAD_WAIT`-Schwelle von `push-check`, ein Exit 1 bei ruhiger Startlast ist Substanz und kein Grund für einen erneuten Lauf, „höchstens n Läufe“ gilt nur für Exit 2 (R598 V2/V3); zwischen Gate Merge Release und Push höchstens 2 weitere Test-Arbeiter (R588 V1, `gates.md`); die Zwischenregel R562 entfällt damit. **Briefing (R565 V2, E-063):** die Integrator-Pflichtzeile nennt `.worktrees/integrate` als Arbeitsort; widerspricht das Briefing der Persona, gilt die Persona und der Integrator meldet; ein anderer Hash als im Ruling wird nur nach Meldung an L0 gepusht) (Merges bleiben lokal; der gebündelte Push erfolgt von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
-  je Branch `git merge --no-ff --no-commit`, `make check` — grün: committen, rot: `git merge --abort` und
-  melden. Kein Push je Merge (N-98, R335): der Push-Takt richtet sich nach der Live-Ampel (`python3 tools/studio/metrics.py --efficiency`, Abschnitt „Actions-Minuten (Monat)“, Zeile Konto-Prognose; R565 P4): bei GRÜN/GELB nach Abschluss jedes zu pushenden Stands, bei ROT höchstens ein Push je Tag (R488 V2); „höchstens ein Push je Session“ (R335) gilt daneben weiter; je Push nach Abschluss des zu pushenden Stands (nicht zwingend am Session-Ende, R421; siehe „Session-Start und -Ende“), immer gezielt per `git push origin <geprüfter Hash>:main`, und erst nach grünem **`make push-check`** (R517/R518, ersetzt die Einzelkette `tsc`/`lint`/`zeittests`/`conflicts`/`check`/`zeitreserve-push`/`check-ci-perf`; `pushcheck.py`). Ablauf (R503): Vorprüfungen (`make conflicts`, `npx tsc --noEmit`, `make lint`, `make zeittests`, Abbruch beim ersten Fehler), Warten auf 1-min-Load ≤ 4, genau ein `make check-push` (= `make check` ohne lockeres `zeitreserve`), strenge Zeitreserve-Bewertung, `make check-ci-perf`. Exit 0 = pushbar, 1 = rot, 2 = nicht belastbar (Last), 3 = Testsperre belegt. **D1:** Exit 2 wegen Last gilt als Exit 0, wenn die Markierungsliste existiert, gültig und leer ist (sichtbar in Schlusszeile und Ereignis `push_check`); fehlt die Datei oder ist sie ungültig, bleibt es Exit 2. **D2:** Nachmessung der markierten Dateien höchstens einmal, bei Exit 2 (Last) oder Exit 1 mit `loadStart` > 3. Die Schlusszeile `push-check: EXIT=… · geprüfter Hash …` nennt den geprüften Hash; gepusht wird genau dieser (`git push origin <geprüfter Hash>:main`); verändert sich HEAD oder der getrackte Arbeitsbaum während des Laufs, ist es Exit 1. Aufruf immer als `make push-check; echo EXIT=$?`, nie in eine Pipe. Die Einzelschritte bleiben für die Fehlersuche nutzbar. Steht ein Push an, startet L0 keine Umsetzer und Controller, bis `make push-check` Exit 0 meldet; Gates, Kurzdesigns und Pläne ohne Testläufe dürfen parallel laufen (R464). Ausnahme (R514 V1): Fixes eines benannten Push-Blockers dürfen vor dem Push laufen, wenn ein Ruling Test und Paket nennt; es laufen nur gezielte Tests der berührten Dateien, `make check` nur durch den Integrator. Danach CI (`gh run list --branch main --limit 3`; nur bei Code-Pushes
-  erwartbar, N-98), enthält der Push ein Release, Pages per `gh workflow run Pages --ref main` (bei roter CI nur, wenn ausschliesslich Studio-Werkzeuge (`tools/studio`) rot sind und alle Spiel-Tests grün, R450) und
+  Worktree `.worktrees/integrate` (Merge, `make push-check` und Push laufen nur dort, nie im Hauptcheckout, R565 P1; von Beginn des Gate-Merge-Rulings bis zum Merge-Bericht, solange Integrator oder `push-check` laufen, committet L0 nichts auf `main` (R697, R769 V2); „push-bereit“ ist die `LOAD_WAIT`-Schwelle von `push-check`, ein Exit 1 bei ruhiger Startlast ist Substanz und kein Grund für einen erneuten Lauf, „höchstens n Läufe“ gilt nur für Exit 2 (R598 V2/V3); zwischen Gate Merge Release und Push höchstens 2 weitere Test-Arbeiter (R588 V1, `gates.md`); die Zwischenregel R562 entfällt damit. **Render-Pläne (R769 V1):** enthalten eine Browser-Ladeprobe (Spiel lädt, keine Konsolenfehler) als eigenen Task nach höchstens 3 Render-Tasks und vor jeder Messung (Prüffrage 4 Gate Plan, `gates.md`). **Briefing (R565 V2, E-063):** die Integrator-Pflichtzeile nennt `.worktrees/integrate` als Arbeitsort; widerspricht das Briefing der Persona, gilt die Persona und der Integrator meldet; ein anderer Hash als im Ruling wird nur nach Meldung an L0 gepusht) (Merges bleiben lokal; der gebündelte Push erfolgt von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
+  je Branch `git merge --no-ff --no-commit`, Teilbeleg (R810) — grün: committen, rot: `git merge --abort` und
+  melden. Kein Push je Merge (N-98, R335): der Push-Takt richtet sich nach der Live-Ampel (`python3 tools/studio/metrics.py --efficiency`, Abschnitt „Actions-Minuten (Monat)“, Zeile Konto-Prognose; R565 P4): **höchstens ein Push je Kalendertag** (R816, ersetzt „höchstens ein Push je Session“, R335/R434; Hotfix für einen Live-Fehler nur per Ruling); die Live-Ampel gilt als zusätzliche Grenze: bei ROT bleibt es bei höchstens einem Push je Tag (R488 V2, gilt nur, solange Minuten abgerechnet werden; Inselreich ist öffentlich, die Prognose zählt diese Minuten nicht, R747); **Bei Exit ≠ 0 von `make push-check` nie pushen, an L0 melden** (R815); je Push nach Abschluss des zu pushenden Stands (nicht zwingend am Session-Ende, R421; siehe „Session-Start und -Ende“), immer gezielt per `git push origin <geprüfter Hash>:main`, und erst nach grünem **`make push-check`** (R517/R518, R810: der einzige volle Lauf je Release, ersetzt auch den separaten `make check` vor dem Push und den Integrator-`make check` je Merge; ersetzt die Einzelkette `tsc`/`lint`/`zeittests`/`conflicts`/`check`/`zeitreserve-push`/`check-ci-perf`; `pushcheck.py`). Ablauf (R503): Vorprüfungen (`make conflicts`, `npx tsc --noEmit`, `make lint`, `make zeittests`, Abbruch beim ersten Fehler), Warten auf 1-min-Load ≤ 4, genau ein `make check-push` (= `make check` ohne lockeres `zeitreserve`), strenge Zeitreserve-Bewertung, `make check-ci-perf`. Exit 0 = pushbar, 1 = rot, 2 = nicht belastbar (Last), 3 = Testsperre belegt. **D1:** Exit 2 wegen Last gilt als Exit 0, wenn die Markierungsliste existiert, gültig und leer ist (sichtbar in Schlusszeile und Ereignis `push_check`); fehlt die Datei oder ist sie ungültig, bleibt es Exit 2. **D2:** Nachmessung der markierten Dateien höchstens einmal, bei Exit 2 (Last) und bei Exit 1 immer, unabhängig von `loadStart`. Die Schlusszeile `push-check: EXIT=… · geprüfter Hash …` nennt den geprüften Hash; gepusht wird genau dieser (`git push origin <geprüfter Hash>:main`); verändert sich HEAD oder der getrackte Arbeitsbaum während des Laufs, ist es Exit 1. Aufruf immer als `make push-check; echo EXIT=$?`, nie in eine Pipe. Die Einzelschritte bleiben für die Fehlersuche nutzbar. Steht ein Push an, startet L0 keine Umsetzer und Controller, bis `make push-check` Exit 0 meldet; Gates, Kurzdesigns und Pläne ohne Testläufe dürfen parallel laufen (R464). Ausnahme (R514 V1): Fixes eines benannten Push-Blockers dürfen vor dem Push laufen, wenn ein Ruling Test und Paket nennt; es laufen nur gezielte Tests der berührten Dateien, der volle Lauf nur als `make push-check` durch den Integrator. Danach CI (`gh run list --branch main --limit 3`; läuft bei jedem Push, R747); Pages startet automatisch nach grüner CI auf main, der Handstart `gh workflow run Pages --ref main` entfällt und bleibt nur für Reruns und die R450-Ausnahme (bei roter CI nur, wenn ausschliesslich Studio-Werkzeuge (`tools/studio`) rot sind und alle Spiel-Tests grün), dann den Deploy-Lauf prüfen, und
   `python3 tools/studio/ci.py`. CI rot → Behebung hat Vorrang, Ad-hoc-Retro. Konflikt: stoppen (§6).
 
 - **Discovery-Strang (E-027, R208):** `lead-design` verantwortet Ideen-Runden (`IDEEN-nn`) nach jedem
@@ -429,7 +453,7 @@ und Scratchpad-Ordner erlaubt); Edit/Write auf `VERFASSUNG.md` oder `guard.py`; 
   `git restore`, `git switch --discard-changes`); `git stash` sperrt der Guard seit R579 ausser `list`/`show` (E-064), zum Zwischenparken dient ein temporärer WIP-Commit. Eine Warnung beim Session-Start meldet, wenn der Stand in `state.md` mehr als 5 Rulings hinter `rulings.md` liegt (E-065).
 - **Bekannte Grenzen** ([verbesserung.md](verbesserung.md#guard-bekannte-grenzen)): Er schützt
   gegen Versehen, nicht gegen Absicht; das Verbot gilt auch dort, wo er nichts erkennt.
-- **Warte-Guard** (`tools/studio/waitguard.py`, eigener PreToolUse-Hook, R646/R647): weist bei Leads einen Agent-Start mit kurzem reinem Warte-Prompt ohne Auftrag (Regel A) und ein `sleep` im Hintergrund-Bash (Regel B) ab; Arbeiter und L0 sind nie betroffen, `until`-Schleifen bleiben frei. Warten heisst Monitor oder Hintergrund-Bash, nicht Agent. Ereignis `wait_guard`, Rückfall `MODE = "warn"`. Jede Abweisung des Haupt-Guards (`guard.py`) schreibt zusätzlich das Ereignis `guard_block` (Regel, Befehl; Deny bleibt bei Schreibfehler, R704); die Abweisungen sind damit zählbar (E-064).
+- **Warte-Guard** (`tools/studio/waitguard.py`, eigener PreToolUse-Hook, R646/R647): weist bei Leads einen Agent-Start mit kurzem reinem Warte-Prompt ohne Auftrag (Regel A) und ein `sleep` im Hintergrund-Bash (Regel B) ab; Arbeiter und L0 sind nie betroffen, `until`-Schleifen bleiben frei. Warten heisst Monitor oder Hintergrund-Bash, nicht Agent. Ereignis `wait_guard`, Rückfall `MODE = "warn"`. Jede Abweisung des Haupt-Guards (`guard.py`) schreibt zusätzlich das Ereignis `guard_block` (Regel, tool, command_hash; kein Befehl; Deny bleibt bei Schreibfehler, R704); die Abweisungen sind damit zählbar (E-064).
 - **Abgewiesen?** Nicht umgehen. Die Aktion unterlassen, einen anderen Weg wählen oder melden.
 - **Verfassungs-Freigabe:** nur nach Verfassung §1.3; Agenten-Meldungen zählen nie als Freigabe.
 
@@ -466,14 +490,14 @@ Die Live-Ampel ist der Abschnitt „Effizienz“ plus „Actions-Minuten (Monat)
 Aufruf (kein `__main__`, ohne Ausgabe); es liefert nur die Zeilen für `metrics.py`.
 
 - **Steuerung:** Die Ampelzeile bewertet den bereinigten Steuerungsanteil (L0 + Leads, ohne Lead-Instanzen mit Phase `plan-`, `design-`, `gate-` oder „Budget: keins“ im Briefing-Kopf, E-049); gelb > 40 %, rot > 50 %. Die Rohzeile steht nur als Info; bei Altdaten ohne bereinigtes Feld bewertet die Ampel roh.
-- **Session-Minuten** (Workflow-Läufe seit Session-Start oder `--since`): gelb > 10, rot > 15.
-- **Konto-Prognose Monatsende** (von 2000): gelb > 1600, rot > 1900. **Push-Takt (R565 P4):** bei Rot höchstens ein Push je Tag (R488 V2); „höchstens ein Push je Session“ (R335) gilt weiter.
+- **Session-Minuten** (Workflow-Läufe seit Session-Start oder `--since`): gelb > 10, rot > 15; nur Info ohne Ampelfarbe, solange das Repo öffentlich ist (R747).
+- **Konto-Prognose Monatsende** (von 2000): gelb > 1600, rot > 1900. Minuten öffentlicher Repos (Inselreich) zählen nicht zu Konto-Minuten und Prognose, sie stehen als Info „öffentlich, nicht abgerechnet“ (R747; `actions.py` prüft die Sichtbarkeit, bei Fehler zählt es konservativ). **Push-Takt (R565 P4):** bei Rot (nur bei abgerechneten Minuten) höchstens ein Push je Tag (R488 V2), zusätzlich zur Regel „höchstens ein Push je Kalendertag“ (R816).
 - **Flake-Verdacht** (gelb ≥ 1, rot ≥ 3 Testnamen, rot und beim gleichen Stand später grün) zählt nur Läufe im Zeitraum von `--sessions N` bzw. `--since`; der Stand umfasst Suite, Commit, Diff und Arbeitsbaum (Feld `tree`), Arbeitsbäume vermischen sich nicht. Ohne `--sessions` gilt das ganze Lager. Die Zeile nennt je Flake-Namen die 1-min-Last des roten Laufs (`?` bei fehlender Last) und zählt getrennt `davon Last ≥ 8: n von m` (E-070, R695); die Rohzahl bleibt Bewertungsgrundlage.
 - **Vorfälle:** Eine rote Ampelzeile in zwei benachbarten grossen Sessions erzeugt je Kennzahl höchstens einen Vorfall (`ampel_incidents`, `tools/studio/effort.py`).
 
 ## Messung und Verbesserung
 
-Was wie gemessen wird, `log.py result`, Meilenstein-Zuordnung, Archiv, Dashboard-Reiter, Retros,
+Was wie gemessen wird, `log.py result`, Meilenstein-Zuordnung, Archiv, Dashboard-Reiter (Übersicht, Analyse), Retros,
 Experimente, Versionierung und Leitplanken: [verbesserung.md](verbesserung.md) (Teil des Handbuchs,
 R129). Grundsätze: [Verfassung §8 und §10](VERFASSUNG.md#8-transparenz-und-logging).
 
@@ -491,7 +515,7 @@ automatisch. Aufrufe: `log.py --help`, Abschnitt „Bericht und Logging" der Per
 
 **Studio-Session (R434):** Eine Studio-Session reicht von der Start-Routine bis zur Ende-Routine
 (unten). Nach abgeschlossener Ende-Routine beginnt eine neue Studio-Session, auch bei gleicher
-Claude-Session-ID. „Höchstens ein Push je Session“ (R335) meint die Studio-Session.
+Claude-Session-ID. Die Studio-Session gilt für Start- und Ende-Routine; der Push-Takt zählt nach Kalendertagen, nicht nach Sessions (R816).
 
 **Start** (ersetzt in diesem Repo die „wir starten"-Routine aus `../CLAUDE.md`, soweit sie
 nachfragen oder warten verlangt; Verfassung §1.4):
@@ -535,7 +559,7 @@ Abnahme pushen (R107).
 2. `python3 tools/studio/ci.py` (CI-Läufe erfassen), dann `make studio-metrics` (Session); bei
    Meilenstein-Ende zusätzlich `python3 tools/studio/metrics.py --milestone <id>`.
    2b. **Aufräumen nach Releases (R682):** Ging ein Release live, einmal `make studio-aufraeumen` (Trockenlauf, Liste und Summe prüfen), dann `make studio-aufraeumen ARGS=--apply`. Das Werkzeug löscht nur Bilder (png, jpg, jpeg, webp, gif) in `.studio/qa/` und `.studio/archiv/worktrees/` von Paketen in live Releases (nicht zuordenbare erst nach 14 Tagen); Berichte (`*.md`, `*.json`, `*.txt`) bleiben. **Archivregel:** Specs und Pläne eines Pakets in einem live Release wandern per `git mv` nach `docs/superpowers/archiv/specs/` und `.../plans/` (Ausnahme: Grundlagen-Specs, auf die CLAUDE.md, arc42, README oder ADRs dauerhaft verweisen), Links nachführen; Rulings älter als die jüngsten rund 80 wandern wörtlich nach `rulings-archiv.md`. `.ignore` im Repo-Root blendet Archive für `rg`/Grep/Glob aus; explizite Pfade bleiben lesbar, `grep -r` ignoriert `.ignore` (`rg` nutzen).
-   2a. Wurde seit dem letzten Push Code gemergt: einmal `make push-check` (ohne Push) im Ruhefenster vor Session-Ende (R514 V3, R518). Ein Blocker steht als Punkt in `state.md` „Fortsetzung“.
+   2a. Steht heute ein Push an und wurde seit dem letzten Push Code gemergt: einmal `make push-check` im Ruhefenster vor Session-Ende; sonst sammelt sich der Stand lokal bis zum nächsten Pushtag (R816) (R514 V3, R518). Ein Blocker steht als Punkt in `state.md` „Fortsetzung“.
 3. Kurz-Retro durch den Coach (Befunde, ggf. ≤ 3 Experiment-Vorschläge; L0 entscheidet per
    Ruling).
 4. `docs/studio/state.md` nachführen (Projekt und Phase, **Seit letzter Session erledigt**,
@@ -548,6 +572,6 @@ Abnahme pushen (R107).
    (R438 V4 b).
    Danach `python3 tools/studio/log.py status --role studio-director --status done --summary "<Kurzbericht>"`.
 
-Gebündelter Push (höchstens einer je Session, nach Abschluss des zu pushenden Stands, immer `git push origin <geprüfter Hash>:main`): `production-integrator` pusht auf L0-Auftrag, prüft CI (läuft nur, wenn Code dabei ist) und löst bei einem Release Pages mit `gh workflow run Pages --ref main` aus und prüft den Deploy.
+Gebündelter Push (höchstens einer je Kalendertag, R816; nach Abschluss des zu pushenden Stands, immer `git push origin <geprüfter Hash>:main`): `production-integrator` pusht auf L0-Auftrag, prüft CI (läuft bei jedem Push, R747) und den Deploy-Lauf (Pages startet automatisch nach grüner CI; Handstart nur für Reruns und die R450-Ausnahme).
 
 Danach Skill `session-wrap-up`; Push laut [Verfassung §7](VERFASSUNG.md#7-commits-und-pushes).

@@ -231,13 +231,15 @@ Höhe einer Lieferung (Wert je Lieferung), danach geht es mit Zufallsaufträgen 
 er das einmal: keine Strafe, der Vertrag läuft weiter, der Zähler beginnt bei 0. Der Deckel liegt bei einer Kulanz je
 5 Lieferungen; einen Geldbonus für Treue gibt es nicht (R670). Kündigen und ein neuer Vertrag beginnen bei 0.
 
+**Vorwarnung (I-122):** `CONTRACT_WARN_TICKS = 300` (30 s Spielzeit, Wert in `src/sim/defs/goods.ts`) ist das Fenster vor der Vertragsabrechnung, in dem die Karte einen behebbaren Fehlbestand (`stock`, `kontor`) ankündigt. Der Wert wirkt nur auf Anzeige und Klang, nie auf den Spielverlauf (kein Spieleffekt, Balancing unberührt). **Reichweite (I-123):** Die Lager-Reichweite des Vertragsguts auf der Lieferinsel zieht `Menge × 100 / ORDER_PERIOD` je Bilanzfenster ab; reine Anzeige.
+
 #### Fernangebot
 
 Mit einem Kontor auf einer Fremdinsel und einem Haus mindestens der Stufe des Guts bietet der Händler zu
 Beginn eines Auftragstakts ein **Fernangebot** an (nicht bei laufendem Stammkunden). Es steht als eigene
 Karte unter der Auftragskarte. **Annehmen** ersetzt den Auftrag der Periode; geliefert wird nur aus dem
 Lager der Fern-Insel. Die Frist beträgt 2:50 ab Auftragsbeginn. Bei mehreren Inseln wechselt das Angebot
-reihum (nach Periode, ohne Zufall). Nach einem angenommenen Fernauftrag entfällt der nächste Auftrag.
+reihum (nach Periode, ohne Zufall). Mit Kontoren auf zwei Fremdinseln kommt ein zweites Angebot hinzu: die nächste wählbare Insel in der Rotation, mit gleicher Menge und Prämie je Gut wie in der Tabelle. Nur eines ist annehmbar; ein Mehrverdienst pro Periode entsteht nicht. Nach einem angenommenen Fernauftrag entfällt der nächste Auftrag.
 Wert = Menge × Prämie je Einheit der Tabelle oben.
 
 | Insel      | Gut   | ab Stufe | Menge | Wert |
@@ -393,6 +395,43 @@ Kaufleute steigen nicht auf; für sie gibt es kein ‹niedrig›. ‹hoch› loh
   für die nächste Auszahlung.
 - «Hoch» bringt kurzfristig Geld, verfehlt auf Dauer aber das Ziel (weniger Einwohner, kein
   Aufstieg). «Niedrig» kostet Geld, lässt Häuser aber schneller aufsteigen.
+
+## Rat (Ratsbeschluss)
+
+Ab dem ersten Haus der Stufe 2, 3 und 4 (auf irgendeiner Insel) wird je ein Beschluss «offen» und bleibt es dauerhaft, auch nach Abriss oder Abstieg. Der Spieler wählt
+einmal pro Stufe eine von zwei Seiten (A: schnellere Kette, B: Form der Stadt); der Beschluss gilt reichsweit bis Partie-Ende, kostet nichts und lässt sich nicht
+rückgängig machen. Ein offener Beschluss wirkt nicht und läuft nicht ab. Die Zahlen stehen nur in `src/sim/defs/council.ts` (Änderung nur per Ruling, der Balancing-Test
+bleibt Regressionsschutz); die Lese-Helfer in `src/sim/council.ts` liefern ohne Beschluss genau den Wert aus den Defs.
+
+| Stufe (Auslöser) | Seite | Name         | Wirkung                                                | alt → neu |
+| ---------------- | ----- | ------------ | ------------------------------------------------------ | --------- |
+| 2                | A     | Webordnung   | Webereien +25 % schneller (Takt `weaver`)              | 50 → 40   |
+| 2                | B     | Glockenrecht | Kapellen reichen 3 Felder weiter (`chapel`-Reichweite) | 10 → 13   |
+| 3                | A     | Brennrecht   | Brennereien +25 % schneller (Takt `distillery`)        | 50 → 40   |
+| 3                | B     | Wohnordnung  | Bürgerhäuser fassen 16 statt 15 Bürger                 | 15 → 16   |
+| 4                | A     | Glasrecht    | Glashütten +67 % schneller (Takt `glassworks`)         | 50 → 30   |
+| 4                | B     | Hofrecht     | Kaufmannshäuser fassen 22 statt 20 Kaufleute           | 20 → 22   |
+
+**Anteiliger Stufentakt (R711 R-3):** Ausgebaute Betriebe nehmen den neuen Takt anteilig: `floor(Stufentakt × neuer Grundtakt ÷ 50)`, mindestens 1 (Weberei Stufe 30 → 24).
+Die Reihenfolge ist Beschluss, dann Inselvorteil, beide abgerundet. Das Glockenrecht gilt auch für die Festreichweite der Kapelle.
+
+## Meisterprüfung (Auflage)
+
+Nach dem fertigen Denkmal (`monumentDone`) wählt der Spieler freiwillig die Auflage «Eigenversorgung»: 15 Minuten kein Zukauf an den Kontoren und für das Denkmal. Die Zahlen stehen nur in
+`src/sim/defs/trials.ts` (Änderung nur per Ruling, der Balancing-Test bleibt Regressionsschutz). Entscheide E1 bis E4: Ruling R745.
+
+| Wert                | Konstante              | Wert                             |
+| ------------------- | ---------------------- | -------------------------------- |
+| Dauer               | `TRIAL_DURATION_TICKS` | 9000 Ticks (15 min)              |
+| Startfenster, unten | `TRIAL_MIN_MERCHANTS`  | 60 Kaufleute (`WIN_MERCHANTS`)   |
+| Startfenster, oben  | `TRIAL_MAX_MERCHANTS`  | 150 Kaufleute                    |
+| Abbruchschwelle     | `TRIAL_FAIL_POP_PCT`   | 70 % der Starteinwohner          |
+| Auflagen            | `TRIAL_IDS`            | `selfSupply` («Eigenversorgung») |
+
+- **E1:** nur «Eigenversorgung»; Zukauf gesperrt, Verkauf, Aufträge, Stammkunde, Fernangebot, Schiffe und Bauen bleiben frei.
+- **E2:** keine Abriss- oder Steuersperre; die Abbruchschwelle deckelt das Verkleinern.
+- **E3:** Startfenster 60 bis 150 Kaufleute (Obergrenze geschätzt, Playtest-Trigger Spec §10).
+- **E4:** nicht bestanden, sobald die Einwohner unter 70 % der Starteinwohner fallen (90 % risse im Normalspiel in 11 von 16 Seeds).
 
 ## Krisen
 

@@ -6,6 +6,7 @@ import {
   acceptContract,
   acceptFarOrder,
   cancelContract,
+  contractWarning,
   declineContract,
   deliverOrder,
 } from '../sim/orders';
@@ -79,6 +80,7 @@ import { contractKey, nextContractCursor, runContractJump } from './contractJump
 import { cutOffIds, newlyCut, runProblemJump, spot, type ProblemCursor } from './problems';
 import { trackFullSince } from './storageFull';
 import { openUpkeepCard } from './upkeepCard';
+import { openResumeCard } from './resumeCard';
 import { createCachePlan, type CachePlan } from '../render/cachePlan';
 import { buildTerrainLayer, defaultTerrainScale, terrainJob } from '../render/terrain';
 import { createIslandLayers, idleSchedule } from './islandLayers';
@@ -133,6 +135,13 @@ import { clearForest, plantForest } from '../sim/forest';
 import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../sim/tax';
 import { lockedTierFor } from './taxView';
 import { setEdict } from '../sim/edicts';
+import { decree } from '../sim/council';
+import { abortTrial, startTrial } from '../sim/trial';
+import { COUNCIL, COUNCIL_OPEN_MESSAGE } from '../sim/defs/council';
+import { councilEscapeHandled, councilOpenNext, councilOpened } from './council';
+import { createCouncilCard } from './councilCard';
+import { createTrialCard } from './trialCard';
+import { TRIAL_ABORT_MESSAGE, trialChip, trialStartMessage, trialTransition } from './trial';
 import { setMonumentBuy, setMonumentPaused, startMonumentStage } from '../sim/monument';
 import { monumentStageCost, monumentStartedText } from './monumentView';
 import { setPaused } from '../sim/pause';
@@ -144,10 +153,13 @@ import {
   announceContract,
   contractAgreedMessage,
   deliveredMessage,
+  flashOrderCard,
   orderMessageFor,
   orderVisible,
   runContractAction,
+  warnPeriod,
 } from './order';
+import { warnStep } from './warnStep';
 import {
   friendlyReason,
   hintPosition,
@@ -397,8 +409,8 @@ function launch(
 
   const noticeStack = renderNoticeStack(gameEl, world, {
     deliver: () => actions.deliverOrder(),
-    acceptFar: () => {
-      const r = acceptFarOrder(world);
+    acceptFar: (pick = 0) => {
+      const r = acceptFarOrder(world, pick);
       if (!r.ok) showError(r.reason);
       else showMessage(farAcceptedMessage(world, world.order!));
       farPrev = farSnap(world);
@@ -483,6 +495,7 @@ function launch(
     // Hinweis eines alten Standes: einmal je Laden, nicht im Spielstand (Anhang 03 D)
     const notice = loadNotice(r);
     if (notice !== null) showMessage(notice, 'info', true, true);
+    openResumeCard(gameEl, r.world);
   };
 
   /** Manuelles Speichern: Menü-Knopf und Strg/Cmd+S gehen hier durch (kein Ton, Zustand bleibt). */
@@ -610,7 +623,56 @@ function launch(
     refresh();
   };
 
+  /** Rats-Karte (I-112): kein Modal, keine Pause; `prevCouncil` ab Start = geladener Stand (kein Hinweis für Altes). */
+  let prevCouncil: World['council'] | null = { ...world.council };
+  const councilCard = createCouncilCard(
+    gameEl,
+    (tier, side) => {
+      const r = decree(world, tier, side);
+      if (r.ok) {
+        showMessage(`Beschluss gefasst: ${COUNCIL[tier][side].name}`);
+        sound.play('build');
+      } else showError(friendlyReason(world, r.reason));
+      refresh();
+    },
+    () => {
+      councilCard.setOpen(councilOpenNext(true, 'escape'));
+    },
+  );
+
+  /** Auflagen-Karte der Meisterprüfung (I-132); `prevTrial` ab Start = geladener Stand (keine Meldung für Geladenes). */
+  const cloneTrial = (t: World['trial']): World['trial'] => ({ ...t, passed: [...t.passed] });
+  let prevTrial: World['trial'] | null = cloneTrial(world.trial);
+  const trialCard = createTrialCard(
+    gameEl,
+    () => {
+      const r = startTrial(world, 'selfSupply');
+      if (r.ok) showMessage(trialStartMessage());
+      else showError(friendlyReason(world, r.reason));
+      prevTrial = cloneTrial(world.trial);
+      refresh();
+    },
+    () => {
+      const r = abortTrial(world);
+      if (r.ok) showMessage(TRIAL_ABORT_MESSAGE);
+      else showError(friendlyReason(world, r.reason));
+      prevTrial = cloneTrial(world.trial);
+      refresh();
+    },
+    () => trialCard.setOpen(false),
+  );
+
   const actions: HudActions = {
+    toggleCouncil: () => {
+      trialCard.setOpen(false);
+      councilCard.setOpen(councilOpenNext(councilCard.isOpen, 'toggle'));
+    },
+    toggleTrial: () => {
+      if (trialChip(world) === null) return;
+      const next = !trialCard.isOpen;
+      if (next) councilCard.setOpen(false);
+      trialCard.setOpen(next);
+    },
     jumpToIsland,
     openUpkeep: (opener) => openUpkeepCard(gameEl, world, jumpToBuilding, opener),
     toggleGoodFocus: (good) => runFocusToggle(focusDeps, good),
@@ -932,6 +994,14 @@ function launch(
     trackFullSince(fullSince, world);
     syncContractCursor();
     updateHud(hudEl, state, actions);
+    if (councilOpened(prevCouncil, world.council).length > 0) showMessage(COUNCIL_OPEN_MESSAGE);
+    prevCouncil = { ...world.council };
+    councilCard.update(world);
+    const trialMsg = trialTransition(prevTrial, world.trial);
+    if (trialMsg !== null) showMessage(trialMsg, 'info', true, true);
+    prevTrial = cloneTrial(world.trial);
+    if (trialCard.isOpen && trialChip(world) === null) trialCard.setOpen(false);
+    trialCard.update(world);
     updateNoticeStack(noticeStack, world, state.activeIsland);
     updateEventLog(
       logBox,
@@ -1045,6 +1115,9 @@ function launch(
       const t = upgradeTarget(state.panel, world);
       if (t.ok) upgradeSelected(t.id);
       else showError(t.reason);
+    } else if (h.kind === 'council') {
+      trialCard.setOpen(false);
+      councilCard.setOpen(councilOpenNext(councilCard.isOpen, 'toggle'));
     } else if (h.kind === 'help') {
       openHelp();
     } else if (h.kind === 'islandHome') {
@@ -1155,6 +1228,14 @@ function launch(
       return;
     }
     if (a.type === 'cancel') {
+      if (trialCard.isOpen) {
+        trialCard.setOpen(false); // offene Auflagen-Karte zuerst
+        return;
+      }
+      if (councilEscapeHandled(councilCard.isOpen)) {
+        councilCard.setOpen(councilOpenNext(true, 'escape')); // offene Rats-Karte zuerst
+        return;
+      }
       clearRoadLine();
       clearGoodFocus();
       demolishConfirm = confirmStep(world, demolishConfirm, { kind: 'reset' }).state; // auch wenn nur ein Toast schliesst
@@ -1504,6 +1585,9 @@ function launch(
   let prevWork = workProgress(world);
   let prevEconTick = world.tick;
   let prevOrderVisible = orderVisible(world);
+  // Vorwarnung (I-122): Priming beim Laden, damit ein Stand im Fenster keinen Klang auslöst
+  let warnedPeriod: number | null = contractWarning(world) !== null ? warnPeriod(world) : null;
+  let cancelFlash: () => void = () => {};
   // Nach dem Laden ist der geladene Stand die Vergleichsbasis: eine laufende Krise erzeugt keinen Eintrag
   let prevCrisis = crisisView(world);
   let prevMonument = monumentSnapshot(world);
@@ -1589,6 +1673,17 @@ function launch(
           },
           world,
         );
+        if (ticks > 0) {
+          const w = warnStep(warnedPeriod, world);
+          warnedPeriod = w.warnedPeriod;
+          if (w.fire) {
+            recordContractSound('contractWarn');
+            sound.play('contractWarn');
+            const card = document.querySelector<HTMLElement>('.order-card');
+            cancelFlash();
+            if (card) cancelFlash = flashOrderCard(card);
+          }
+        }
         if (ticks === MAX_TICKS_PER_FRAME) acc = 0;
       }
       input?.applyKeys(dt);
@@ -1727,8 +1822,11 @@ function launch(
   const dispose = (): void => {
     if (disposed) return;
     disposed = true;
+    cancelFlash();
     cancelAnimationFrame(rafId);
     layers.dispose();
+    councilCard.dispose();
+    trialCard.dispose();
     resizeObserver.disconnect();
     dprQuery?.removeEventListener('change', onDprChange);
     input?.unbind();

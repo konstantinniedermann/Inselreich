@@ -22,6 +22,139 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-22 · Handbuch 1.68
+
+- Anlass: Dauerregel des Nutzers «Kapazität voll nutzen, gesteuert durch die Limit-Ampel»
+- Datenbasis: Rulings R823, R826 (`rulings.md`)
+- Ruling: R826 (ersetzt R698, ergänzt R475, R445, R803)
+- Änderungen: Studio-Deckel 10 Agenten (≤ 3 Controller mit Testläufen, ≤ 2 Browser-Läufe) und Ampelstufen grün/gelb/rot im Abschnitt «Limits und Sessiongrösse» (`STUDIO.md`), abgeglichen mit R69; Pflicht zum Nachfüllen bei grün, testfreie Arbeit bei Rechnerlast, Fensterregel R803; Output-Style `projektleiter.md` um einen Kapazitäts-Satz ergänzt. Rückfall: R826 aufheben (Version 1.69).
+
+## 2026-10-22 · Handbuch 1.67
+
+- Anlass: Nutzerentscheid N-103 («ja») und Anordnung «die releases/pushs generell mehr bündeln. einer pro tag reicht völlig»; Verfassung 1.3
+- Datenbasis: Warteschlange N-103, Bericht R815 (REL-29)
+- Ruling: R816 (löst R813 ab)
+- Änderungen: Push-Takt «höchstens ein Push je Session» (R335, R434) wird «höchstens ein Push je Kalendertag», Live-Ampel R565 P4 bleibt zusätzliche Grenze; Strang-interne Merges nur mit Teilbeleg, `make push-check` ist der volle Lauf vor Merge nach `main` und vor Push (Verfassung 1.3 §9.2/§7); Hinweis auf R813 und «offener Widerspruch» entfernt (STUDIO.md, `gates.md`); «bei Exit ≠ 0 nie pushen» ins Handbuch; Studio-Ende-Routine 2a nur bei anstehendem Push; Nachtrag R817 (2): Release-Auslöser lösen nur das lokale Bündeln aus, Push einmal je Kalendertag nach dem ersten abgeschlossenen Release-Stand des Tages oder im ersten Push-Fenster des Folgetags (`STUDIO.md`, `gates.md`). Rückfall: R816 aufheben (Version 1.68), Verfassung ändert nur der Nutzer. Verfassung 1.2 → 1.3 durch den Nutzer bestätigt (Nutzer, N-103, 2026-10-22)
+
+## 2026-10-22 · Persona production-integrator 1.17
+
+- Anlass: Vorfall R815: Push trotz `make push-check` Exit 1 ohne L0-Freigabe; Wiederholung nicht bei Last ≤ 4
+- Datenbasis: R815, Bericht production-integrator REL-29
+- Ruling: R816
+- Änderungen: «Bei Exit ≠ 0 nie pushen, an L0 melden und auf Freigabe warten» in Schritt 4 und Qualitätsmassstab; Wiederholung nur bei Last ≤ 4 und ohne Freigabewirkung; Push höchstens einmal je Kalendertag statt je Session
+
+## 2026-10-22 · Handbuch 1.66
+
+- Anlass: Nutzerauftrag «Tests auf ein Minimum, Releases bündeln»; Ad-hoc-Retro Rechnerlast-Fenster
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810 (V1, V2; V5 und V3/V4 nur als offene Punkte vermerkt)
+- Änderungen: Gate Merge (Teilbeleg und Release-Bündel): Strangabschluss und Gate Merge nur mit Teilbeleg, voller Lauf einmal je Release als `make push-check`, kein separater `make check` vor dem Push, kein Integrator-`make check` je Merge; Delta-Review, Integrator-Zeile, R514-Ausnahme und `gates.md` (Gate Merge, Gate Merge Release) nachgezogen; Experiment E-071 (`VITEST_MAX_WORKERS=5`, Wiederholung roter Zeitdateien bei Last ≤ 4). Offen: V5 `loadsnap.py`, V3/V4 Sperrdatei und A/A-Kontrolle. Rückfall: R810 aufheben (Version 1.67). Offener Widerspruch: Verfassung §7.1/§7.2/§9.2 nennen `make check` vor jedem Merge/Push, Warteschlange N-103
+
+## 2026-10-22 · Persona production-integrator 1.16
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Schritt 3: Teilbeleg statt `make check` je Merge; Push-Check ist der einzige volle Lauf; Qualitätsmassstab und Bericht nachgezogen
+
+## 2026-10-22 · Persona lead-qa 1.12
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Regression und Qualitätsmassstab: Teilbeleg je Paket, voller Lauf als `make push-check` je Release
+
+## 2026-10-22 · Persona lead-production 1.13
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Aufräum-Messung, Qualitätsmassstab und Rollentabelle: Teilbeleg je Merge statt `make check`
+
+## 2026-10-22 · Persona lead-tech 1.17
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Qualitätsmassstab: Teilbeleg statt `make check`
+
+## 2026-10-22 · Persona tech-ui-engineer 1.8
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Abschlusskriterium und Bericht: Teilbeleg statt `make check` je Strang
+
+## 2026-10-22 · Persona tech-sim-engineer 1.6
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Abschlusskriterium und Bericht: Teilbeleg statt `make check` je Strang, Balancing-Test bei Änderung in `src/sim/defs/`
+
+## 2026-10-22 · Persona art-rendering-engineer 1.3
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Abschlusskriterium und Bericht: Teilbeleg statt `make check` je Strang
+
+## 2026-10-22 · Persona art-audio-engineer 1.2
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Abschlusskriterium und Bericht: Teilbeleg statt `make check` je Strang
+
+## 2026-10-22 · Persona qa-code-reviewer 1.7
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Review führt den Teilbeleg statt `make check` aus
+
+## 2026-10-17 · Handbuch 1.65
+
+- Anlass: Ad-hoc-Retro `RETRO-ADHOC-FAELLIG-17`, V1 (frische Delta-Reviews nach BEDENKEN oder ZURÜCK liefen nur über einen Namenstrick durch den Modell-Guard)
+- Datenbasis: `docs/studio/retros/` (RETRO-ADHOC-FAELLIG-17), Rulings R772, R774
+- Ruling: R774 (V1)
+- Änderungen: Modelltabelle (Zeile `opus`) und Liste der Kopfzeilen um den Einsatz `Delta-Review frisch` ergänzt (Wortlaut ohne Klammer/Komma, damit der Präfix-Vergleich von `modelguard.py` greift; Anlass folgt nach dem Präfix); Beispiel in `templates/briefing.md`; Test in `test_modelguard.py`. Messgrösse: 0 Guard-Blocks über 5 Controller-Pakete bis 2026-11-30. Rückfall: Zeile streichen (Version 1.66)
+
+## 2026-10-17 · Handbuch 1.64
+
+- Anlass: Kurz-Retro 21273458, Umsetzung der angenommenen Vorschläge V1 und V2
+- Datenbasis: `docs/studio/retros/2026-10-17-session-21273458-ende.md` (B1 Ladefehler erst in T09, B2 Merge neu gebaut)
+- Ruling: R769 (V1, V2)
+- Änderungen: Gate Plan Prüffrage 4 (Browser-Ladeprobe nach höchstens 3 Render-Tasks und vor jeder Messung) und Absatz Render-Pläne in STUDIO.md; kein L0-Commit auf main vom Gate-Merge-Ruling bis zum Merge-Bericht; Integrator-Pflichtzeile mit `.worktrees/integrate` bestand (R565 V2)
+
+## 2026-10-17 · Handbuch 1.63
+
+- Anlass: Kurz-Retro ca9d40c8, Umsetzung der angenommenen Vorschläge V2 und V3
+- Datenbasis: `docs/studio/retros/2026-10-16-session-ca9d40c8-ende.md` (B1 Minuten −51 %, B4 Pause 40 % lead-tech)
+- Ruling: R750 (V2, V3), R754
+- Änderungen: Briefing-Standard und `templates/briefing.md`: Schätzung nur in Tools, Minuten = Tools ÷ 6 durch das Werkzeug; Controller-Abschnitt: je Instanz höchstens eine Wartepause > 5 min, danach Handoff und Folgeinstanz
+
+## 2026-10-16 · Persona production-integrator 1.15
+
+- Anlass: Nutzeranweisung, Repo öffentlich, Actions-Minuten zählen nicht
+- Datenbasis: Auftrag TOOL-ACTIONS-FREI
+- Ruling: R747
+- Änderungen: Schritte 4/5: CI läuft bei jedem Push, Pages startet automatisch nach grüner CI, Handstart nur für Reruns und R450-Ausnahme
+
+## 2026-10-16 · Handbuch 1.62
+
+- Anlass: Nutzeranweisung, Repo öffentlich, Actions-Minuten zählen nicht
+- Datenbasis: Auftrag TOOL-ACTIONS-FREI (Billing-Usage Oktober: netto 0)
+- Ruling: R747
+- Änderungen: Push-Ablauf und Session-Ende (kein Pages-Handstart, CI bei jedem Push, R488 V2 nur bei abgerechneten Minuten, R335 bleibt); Live-Ampel (öffentliche Repo-Minuten nur Info)
+
+## 2026-10-16 · Handbuch 1.61
+
+- Anlass: Ad-hoc-Retro Budgetüberschreitungen (TOOL-GUARD-REDACT 5 von 3, ORT-A T08 +5 Starts)
+- Datenbasis: `docs/studio/retros/2026-10-16-adhoc-budget.md`
+- Ruling: R735
+- Änderungen: Abschnitt Budget: Umschnitt-Regel (V1), Messwerkzeug-Tasks höchstens 2 Review-Runden (V2), kumulierter Stand im Budget-Ruling (V3); Vorlage `budgetantrag.md` mit Pflichtfeld Befundklasse/Ansatz-Alternative; Messgrössen und Fristen im Text, kein Experiment
+
 ## 2026-10-16 · Handbuch 1.60
 
 - Anlass: Prozess-Retro REL-21 bis REL-25, V2

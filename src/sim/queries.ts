@@ -1,3 +1,4 @@
+import { serviceRadiusOf } from './council';
 import { BUILDING_DEFS } from './defs/buildings';
 import { GOOD_IDS, STORAGE_CAP } from './defs/goods';
 import { TIERS, WIN_CITIZENS, WIN_MERCHANTS, WIN_SPICE_MERCHANTS } from './defs/tiers';
@@ -70,6 +71,7 @@ function siteZone(defId: BuildingDefId): { terrain: 'forest' | 'grass'; radius: 
 }
 
 export { goodsBalance } from './flow';
+export { buildCoverage, type Coverage } from './coverage';
 
 /** Güter aus `consumes` mit Bestand < 1, Reihenfolge wie `consumes`; leer ohne `consumes` (M8 12). */
 export function missingInputs(world: World, b: Building): GoodId[] {
@@ -154,7 +156,10 @@ function coverageSources(
   return buildings.map((b) => {
     const def = BUILDING_DEFS[b.defId];
     const c = center(def, b.x, b.y);
-    return { ...c, radius: (kind === 'supply' ? def.supplyRadius : def.serviceRadius) ?? 0 };
+    return {
+      ...c,
+      radius: (kind === 'supply' ? def.supplyRadius : serviceRadiusOf(world, b.defId)) ?? 0,
+    };
   });
 }
 
@@ -186,7 +191,7 @@ export function placementZone(
   if (!isl) return null;
   const def = BUILDING_DEFS[defId];
   const c = center(def, x, y);
-  const circle = def.supplyRadius ?? def.serviceRadius;
+  const circle = def.supplyRadius ?? serviceRadiusOf(world, defId);
   if (circle !== undefined) {
     return { ...c, radius: circle, tiles: tilesInRadius(isl, c.cx, c.cy, circle) };
   }

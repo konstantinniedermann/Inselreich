@@ -344,6 +344,16 @@ describe('M13-E2 Ziel-Chip mit Denkmal (AK-M13E2-31, U-8)', () => {
     expect(goalTexts(spiceView(true), null)).toEqual(goalTexts(spiceView(true)));
   });
 
+  it('I-132 Phase spice mit Auflagen-Chip: Chip ersetzt, Titel behält den Zielstand', () => {
+    const chip = { chip: 'Meisterprüfung', title: 'Meisterprüfung: Test', fillPct: 0 };
+    const plain = goalTexts(spiceView(true));
+    const t = goalTexts(spiceView(true), chip);
+    expect(t.chip).toBe('Meisterprüfung');
+    expect(t.title).toBe(`Meisterprüfung: Test · ${plain.title}`);
+    expect(t.rest).toBe(plain.rest);
+    expect(t.fillPct).toBe(plain.fillPct);
+  });
+
   it('AK-M13E2-31 done ohne Denkmal: «Wahlziel: Denkmal bauen», Balken 0', () => {
     const w = doneWorld();
     const t = goalTexts(doneView, monumentChip(w));

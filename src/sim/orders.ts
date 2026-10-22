@@ -3,6 +3,7 @@ import {
   CONTRACT_MIN_TIER,
   CONTRACT_PENALTY_PCT,
   CONTRACT_PREMIUM,
+  CONTRACT_WARN_TICKS,
   GOODS,
   GOOD_IDS,
   ORDER_PREMIUM,
@@ -17,6 +18,7 @@ import type {
   Contract,
   ContractBreakReason,
   ContractEvent,
+  FarOffer,
   GoodId,
   Result,
   Tier,
@@ -94,15 +96,33 @@ export function farEligible(world: World): number[] {
   return out;
 }
 
+/** Fernangebot für eine wählbare Fremdinsel: Vorliebe-Gut, Fernmenge und Prämie nach Formel. */
+function farOfferFor(world: World, island: number): FarOffer {
+  const good = farGood(world, island)!;
+  const amount = GOODS[good].order!.far!;
+  return { island, good, amount, reward: amount * orderUnitReward(good) };
+}
+
 /** Fernangebot der Periode `k` nach R2/R3: Rotation ohne Zufall; nicht bei Vertrag oder Sperre. */
 function offerFarOrder(world: World, k: number): void {
   if (world.contract !== null || functionLock(world, 'orders') !== null) return;
   const e = farEligible(world);
   if (e.length === 0) return;
-  const island = e[k % e.length]!;
-  const good = farGood(world, island)!;
-  const amount = GOODS[good].order!.far!;
-  world.farOffer = { island, good, amount, reward: amount * orderUnitReward(good) };
+  world.farOffer = farOfferFor(world, e[k % e.length]!);
+}
+
+/**
+ * Zweites Fernangebot zur Wahl (I-114): die nächste wählbare Insel der Rotation, `e[(period + 1) % n]`.
+ * Reine Lesefunktion ohne RNG; `null` ohne Erstangebot, Auftrag, bei Vertrag oder Sperre, bei weniger als zwei wählbaren Inseln
+ * oder wenn die Rotation wieder auf die Insel des Erstangebots fällt.
+ */
+export function farAlternative(world: World): FarOffer | null {
+  if (world.farOffer === null || world.order === null || world.contract !== null) return null;
+  if (functionLock(world, 'orders') !== null) return null;
+  const e = farEligible(world);
+  if (e.length < 2) return null;
+  const island = e[(world.order.period + 1) % e.length]!;
+  return island === world.farOffer.island ? null : farOfferFor(world, island);
 }
 
 /** Erste zutreffende Bruchbedingung des laufenden Vertrags (R6), sonst `null`. */
@@ -171,14 +191,16 @@ export function tickOrders(world: World): ContractEvent | null {
 
 /**
  * Nimmt das Fernangebot an (R5): ersetzt den Zufallsauftrag der Periode durch den Fernauftrag mit langer Frist und
- * sperrt die Folgeperiode. Prüfreihenfolge Sperre, Angebot, Vertrag, Kontor, Auftrag (Guard, Plan T4); kostet nichts.
+ * sperrt die Folgeperiode. `pick` 1 wählt die Zweitkarte (`farAlternative`), 0 das Erstangebot.
+ * Prüfreihenfolge Sperre, Angebot, Vertrag, Zweitangebot, Kontor, Auftrag (Guard, Plan T4); kostet nichts.
  */
-export function acceptFarOrder(world: World): Result {
+export function acceptFarOrder(world: World, pick: 0 | 1 = 0): Result {
   const lock = functionLock(world, 'orders');
   if (lock !== null) return fail(lock);
-  const offer = world.farOffer;
-  if (offer === null) return fail('Kein Fernangebot');
+  if (world.farOffer === null) return fail('Kein Fernangebot');
   if (world.contract !== null) return fail('Vertrag läuft');
+  const offer = pick === 1 ? farAlternative(world) : world.farOffer;
+  if (offer === null) return fail('Kein zweites Angebot');
   const noKontor = noKontorTrade(world, offer.island);
   if (noKontor !== null) return fail(noKontor);
   const o = world.order;
@@ -280,4 +302,46 @@ export function previewOrder(world: World): { tick: number; good: GoodId } | nul
   const tick = nextOrderTick(world);
   const k = (tick - ORDER_FIRST_TICK) / ORDER_PERIOD;
   return { tick, good: orderForPeriod(world.seed, k, maxHouseTier(world)).good };
+}
+
+/** Nächster Periodenbeginn strikt nach `tick` (ohne `farSkip`: der Vertrag wird jede Periode abgerechnet). */
+export function nextSettleTick(world: World): number {
+  const t = world.tick;
+  if (t < ORDER_FIRST_TICK) return ORDER_FIRST_TICK;
+  return ORDER_FIRST_TICK + ORDER_PERIOD * (Math.floor((t - ORDER_FIRST_TICK) / ORDER_PERIOD) + 1);
+}
+
+export interface ContractWarning {
+  good: GoodId;
+  island: number;
+  amount: number;
+  stock: number;
+  missing: number;
+  reason: 'stock' | 'kontor';
+  restTicks: number;
+  outcome: 'excuse' | 'break';
+  penalty: number; // penalty 0 bei 'excuse'
+}
+
+/** Vorwarnung (I-122): reine Lesefunktion, kein RNG, schreibt nie. `null` ausserhalb des Fensters oder wenn der Spieler nichts tun kann. */
+export function contractWarning(world: World): ContractWarning | null {
+  const c = world.contract;
+  if (c === null) return null;
+  const restTicks = nextSettleTick(world) - world.tick;
+  if (restTicks > CONTRACT_WARN_TICKS) return null;
+  const reason = breakReason(world, c);
+  if (reason !== 'stock' && reason !== 'kontor') return null; // null = liefert, 'lock'/'island' = nicht behebbar
+  const stock = world.islands[c.island]!.stock[c.good];
+  const excuse = c.deliveries >= CONTRACT_LOYAL_AFTER;
+  return {
+    good: c.good,
+    island: c.island,
+    amount: c.amount,
+    stock,
+    missing: Math.max(0, c.amount - stock),
+    reason,
+    restTicks,
+    outcome: excuse ? 'excuse' : 'break',
+    penalty: excuse ? 0 : contractPenalty(c),
+  };
 }

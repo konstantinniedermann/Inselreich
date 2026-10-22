@@ -49,7 +49,8 @@ export type SoundEvent =
   | 'stormWarning'
   | 'boom'
   | 'unlock'
-  | 'monumentDone';
+  | 'monumentDone'
+  | 'contractWarn';
 
 export interface SoundOptions {
   muted: boolean;
@@ -118,6 +119,7 @@ export const THROTTLE_MS: Partial<Record<SoundEvent, number>> = {
   upgrade: 300,
   error: 150,
   alarm: 2000,
+  contractWarn: 2000,
   stormWarning: 5000,
   boom: 2000,
   // Länger als die Figur (FIGURE_S), damit ein zweites Ereignis die Schläge nicht doppelt spielt.
@@ -363,6 +365,11 @@ export function createSound(
       tone(D5, 0.12, 0.24, 0.3 * FX, 'triangle');
     },
     error: () => tone(130, 0, 0.1, 0.5, 'sawtooth', 100),
+    // Vorwarnung Vertragsfrist (I-122): zwei kurze, leise Sinustöne, kein Ducking.
+    contractWarn: () => {
+      tone(A5, 0, 0.12, 0.18, 'sine');
+      tone(D5, 0.14, 0.2, 0.18, 'sine');
+    },
     win: () => winFigure(1),
     // Freischaltung (M10): dieselbe Figur wie `win`, kleinerer Pegel (Wahl und Pegel bei lead-art offen)
     unlock: () => winFigure(UNLOCK_LEVEL),

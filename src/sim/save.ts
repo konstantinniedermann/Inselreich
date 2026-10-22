@@ -25,6 +25,7 @@ import { MONUMENT_GOODS, MONUMENT_STAGES } from './defs/monument';
 import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
 import { EDICTS } from './defs/edicts';
 import { UNLOCK_IDS } from './defs/unlocks';
+import { TRIAL_DURATION_TICKS, TRIAL_IDS } from './defs/trials';
 import { ISLANDS, ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
 import {
   fitIsland,
@@ -51,7 +52,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 16;
+export const SAVE_VERSION = 18;
 
 export type { LoadResult };
 
@@ -903,6 +904,68 @@ export function migrateV15ToV16(raw: Record<string, unknown>): void {
   raw.version = 16;
 }
 
+/** Höchste Hausstufe über alle Inseln; 1, wenn keine Häuser lesbar sind. Wirft nie. */
+function highestHouseTier(raw: Record<string, unknown>): number {
+  const b = raw.buildings;
+  if (!isObject(b)) return 1;
+  let top = 1;
+  for (const id of Object.keys(b)) {
+    const house = isObject(b[id]) ? (b[id] as Record<string, unknown>).house : null;
+    const tier = isObject(house) ? house.tier : null;
+    if (typeof tier === 'number' && tier > top) top = tier;
+  }
+  return top;
+}
+
+/** v16 → v17 (I-112, R711 R-4): `council[n] = 'open'`, wenn ein Haus mit Stufe ≥ n existiert, sonst `null`. Wirft nie. */
+export function migrateV16ToV17(raw: Record<string, unknown>): void {
+  const top = highestHouseTier(raw);
+  raw.council = {
+    2: top >= 2 ? 'open' : null,
+    3: top >= 3 ? 'open' : null,
+    4: top >= 4 ? 'open' : null,
+  };
+  raw.version = 17;
+}
+
+function isValidCouncil(raw: Record<string, unknown>): boolean {
+  const c = raw.council;
+  if (!isObject(c)) return false;
+  const keys = Object.keys(c);
+  if (keys.length !== 3 || keys.join() !== '2,3,4') return false;
+  return keys.every((k) => c[k] === null || c[k] === 'open' || c[k] === 'A' || c[k] === 'B');
+}
+
+/** v17 → v18 (I-132): `trial` mit Startwerten. Wirft nie. */
+export function migrateV17ToV18(raw: Record<string, unknown>): void {
+  raw.trial = { active: null, ticks: 0, e0: 0, passed: [] };
+  raw.version = 18;
+}
+
+const isCount = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0;
+const isTrialId = (v: unknown): boolean =>
+  typeof v === 'string' && (TRIAL_IDS as readonly string[]).includes(v);
+
+function isValidTrialPassed(passed: unknown, active: unknown): boolean {
+  if (!Array.isArray(passed)) return false;
+  const ids: unknown[] = [];
+  for (const p of passed) {
+    if (!isObject(p) || !isTrialId(p.id) || !isCount(p.tick)) return false;
+    ids.push(p.id);
+  }
+  return new Set(ids).size === ids.length && (active === null || !ids.includes(active));
+}
+
+function isValidTrial(raw: Record<string, unknown>): boolean {
+  const t = raw.trial;
+  if (!isObject(t) || Array.isArray(t)) return false;
+  if (t.active !== null && !isTrialId(t.active)) return false;
+  if (!isCount(t.ticks) || t.ticks >= TRIAL_DURATION_TICKS) return false;
+  if (!isCount(t.e0)) return false;
+  if (t.active === null ? t.ticks !== 0 : t.e0 <= 0) return false;
+  return isValidTrialPassed(t.passed, t.active);
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { stats } = raw;
@@ -918,6 +981,8 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidV12Fields(raw)) return false;
   if (!isValidContractFields(raw)) return false;
   if (!isValidFarFields(raw)) return false;
+  if (!isValidCouncil(raw)) return false;
+  if (!isValidTrial(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -961,6 +1026,8 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 13) migrateV13ToV14(raw);
   if (raw.version === 14) migrateV14ToV15(raw);
   if (raw.version === 15) migrateV15ToV16(raw);
+  if (raw.version === 16) migrateV16ToV17(raw);
+  if (raw.version === 17) migrateV17ToV18(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

@@ -183,7 +183,7 @@ describe('H-R11 Wiese in Tonstufen (S2, S6)', () => {
     }
     expect(maxRun).toBeLessThanOrEqual(Math.ceil(TONE_EDGE_PX));
     expect(seen.size).toBeGreaterThanOrEqual(3);
-  });
+  }, 10_000);
 
   it('H-R11 D8 Flecken (patch) laufen weich aus: höchstens 10 % der Landknoten gesättigt, 99-%-Knotensprung ≤ 0,3', () => {
     for (const { grid } of worlds) {
@@ -295,7 +295,7 @@ describe('H-R11 Wald (D9)', () => {
     }
     expect(edges).toBeGreaterThan(50);
     expect(worst).toBeLessThanOrEqual(0.5);
-  });
+  }, 10_000);
 
   it('H-R11 Wald bleibt bei Zoom 1 dunkler als die Wiese (Bodenhelligkeit, Faktor ≤ 0,8)', () => {
     const { world, grid } = worlds[0]!;

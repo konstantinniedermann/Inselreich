@@ -43,8 +43,8 @@ export interface GoalTexts {
 const pct = (current: number, target: number): number => Math.min(100, (current / target) * 100);
 
 /**
- * Texte der Zielanzeige je Phase (Tabelle Spec M8 14.1). `chip` (Wahlziel Denkmal, M13-E2 U-8) wirkt nur in
- * Phase 'done'; ohne `chip` bleiben alle Texte wie vor M13-E2.
+ * Texte der Zielanzeige je Phase (Tabelle Spec M8 14.1). `chip` (Wahlziel Denkmal, M13-E2 U-8; Meisterprüfung, I-132) wirkt in
+ * Phase 'done', in 'spice' nur die Meisterprüfung (Text ersetzt, Titel ergänzt); ohne `chip` bleiben alle Texte wie vor M13-E2.
  */
 export function goalTexts(view: GoalView, chip?: MonumentChip | null): GoalTexts {
   const citizen = TIERS[3];
@@ -70,16 +70,20 @@ export function goalTexts(view: GoalView, chip?: MonumentChip | null): GoalTexts
         next: `Danach: ${THIRD_GOAL_NAME} — ${WIN_SPICE_MERCHANTS} ${merchant.name} mit ${GOODS.spice.name} von einer fernen Insel`,
         fillPct: pct(view.current, view.target),
       };
-    case 'spice':
+    case 'spice': {
+      const spiceTitle = `Drittes Ziel: ${view.target} ${merchant.name}, ${SPICE_HOLD_SECONDS} s voll versorgt — ${GOODS.spice.name} per Schiff von deiner eigenen Plantage`;
       return {
-        chip: `Ziel ${view.current} / ${view.target} ${merchant.name} mit ${GOODS.spice.name}`,
-        title: `Drittes Ziel: ${view.target} ${merchant.name}, ${SPICE_HOLD_SECONDS} s voll versorgt — ${GOODS.spice.name} per Schiff von deiner eigenen Plantage`,
+        chip: chip
+          ? chip.chip
+          : `Ziel ${view.current} / ${view.target} ${merchant.name} mit ${GOODS.spice.name}`,
+        title: chip ? `${chip.title} · ${spiceTitle}` : spiceTitle,
         rest: `${view.current} / ${view.target} ${merchant.name} mit ${GOODS.spice.name}`,
         next: view.loop
           ? null
           : `Fehlt: Schiffsroute, die ${GOODS.spice.name} von deiner Plantage heimholt`,
         fillPct: pct(view.current, view.target),
       };
+    }
     case 'done':
       return {
         chip: chip ? chip.chip : `${THIRD_GOAL_NAME} · ${view.current} ${merchant.name}`,

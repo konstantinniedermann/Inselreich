@@ -23,6 +23,7 @@ import {
 import { reserveHolds } from '../../src/sim/queries';
 import type { Building, GoodId, World } from '../../src/sim/types';
 import { placeTownhall } from '../sim/helpers';
+import { FakeElement } from './fakeDom';
 
 describe('boomGood (Marke nur am Boom-Gut)', () => {
   it('trifft genau das Boom-Gut, nach dem Boom keines', () => {
@@ -294,5 +295,37 @@ describe('I-048 Kaufanteil', () => {
       amount: 5,
       island: HOME,
     });
+  });
+});
+
+describe('AK-19 Kauf-Knopf bei aktiver Auflage (I-132)', () => {
+  const buttons = (): FakeElement[] =>
+    (['buy', 'sell'] as const).map((op) => {
+      const b = new FakeElement('button');
+      b.dataset.op = op;
+      b.dataset.good = 'wood';
+      b.dataset.n = '1';
+      b.querySelector = () => null; // kein <small> im Fake
+      return b;
+    });
+  const panelOf = (btns: FakeElement[]): HTMLElement =>
+    ({
+      querySelector: () => null,
+      querySelectorAll: () => btns,
+    }) as unknown as HTMLElement;
+
+  it('mit Auflage: jeder Kauf-Knopf blass mit Grund; Verkauf unberührt', () => {
+    const w = createWorld(3, { unlockAll: true });
+    placeTownhall(w);
+    w.money = 100000;
+    const [buyBtn, sellBtn] = buttons();
+    updateTrade(panelOf([buyBtn!, sellBtn!]), w);
+    expect(buyBtn!.classList.contains('unaffordable')).toBe(false);
+    expect(buyBtn!.title).not.toBe('Auflage Eigenversorgung: kein Zukauf');
+    w.trial = { active: 'selfSupply', ticks: 1, e0: 10, passed: [] };
+    updateTrade(panelOf([buyBtn!, sellBtn!]), w);
+    expect(buyBtn!.classList.contains('unaffordable')).toBe(true);
+    expect(buyBtn!.title).toBe('Auflage Eigenversorgung: kein Zukauf');
+    expect(sellBtn!.title).not.toBe('Auflage Eigenversorgung: kein Zukauf');
   });
 });

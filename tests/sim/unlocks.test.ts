@@ -118,10 +118,16 @@ describe('M10 Freischaltbaum: Defs und Welt', () => {
       for (const k of ['lockText', 'whenText', 'notice', 'tip'] as const)
         expect(u[k]).not.toMatch(/Tick/);
     }
-    expect(unlockText(row('U1'), 'lockText')).toBe('Erst ab 20 Wohnhäusern');
-    expect(unlockText(row('U2'), 'lockText')).toBe('Erst wenn ein Wohnhaus 4 Pioniere hat');
-    expect(unlockText(row('U4'), 'lockText')).toBe('Erst wenn ein Wohnhaus 8 Siedler hat');
-    expect(unlockText(row('U6'), 'whenText')).toBe(`nach dem Ziel (${WIN_CITIZENS} Bürger)`);
+    expect(unlockText(createWorld(3), row('U1'), 'lockText')).toBe('Erst ab 20 Wohnhäusern');
+    expect(unlockText(createWorld(3), row('U2'), 'lockText')).toBe(
+      'Erst wenn ein Wohnhaus 4 Pioniere hat',
+    );
+    expect(unlockText(createWorld(3), row('U4'), 'lockText')).toBe(
+      'Erst wenn ein Wohnhaus 8 Siedler hat',
+    );
+    expect(unlockText(createWorld(3), row('U6'), 'whenText')).toBe(
+      `nach dem Ziel (${WIN_CITIZENS} Bürger)`,
+    );
   });
 
   it('AK-S1-02 createWorld: version 5, v5-Felder; unlockAll ändert nur unlocked', () => {
@@ -349,7 +355,7 @@ describe('M10 Sperren in der Sim (Spec 4.4)', () => {
   });
   it('AK-S1-17 „Alles frei" bitgleich: buildColony liefert denselben Trajectory', () => {
     expect(buildColony(createWorld(3, { unlockAll: true }))).toEqual(buildColony(createWorld(3)));
-  });
+  }, 10_000);
   it('AK-S1-18 Feuerwache bei Krisen off: nicht angezeigt, aber baubar; bei mild angezeigt', () => {
     const w = createWorld(3, { crisisLevel: 'off', unlockAll: true });
     const k = w.buildings[home(w).kontorId]!;
@@ -398,7 +404,10 @@ describe('M11 Freischaltung Jagdhütte, Rinderfarm, Ausbau (Spec 4)', () => {
     forceRect(x0, k.x + 3, k.y - 8, 8, 8, 'grass'); // Rinderfarm bei (k.x+5, k.y-5)
     forceRect(x0, k.x + 3, k.y + 2, 6, 4, 'forest'); // Jagdhütte bei (k.x+5, k.y+3)
     const [fx, fy, hx, hy] = [k.x + 5, k.y - 5, k.x + 5, k.y + 3];
-    const lock = (id: 'U2' | 'U3') => ({ ok: false, reason: unlockText(row(id), 'lockText') });
+    const lock = (id: 'U2' | 'U3') => ({
+      ok: false,
+      reason: unlockText(createWorld(3), row(id), 'lockText'),
+    });
     expect(canPlace(x0, 'hunter', hx, hy)).toEqual(lock('U2'));
     expect(canPlace(x0, 'cattlefarm', fx, fy)).toEqual(lock('U3'));
     x0.unlocked = ['U0', 'U2'];

@@ -1,3 +1,4 @@
+import { serviceRadiusOf } from './council';
 import { BUILDING_DEFS } from './defs/buildings';
 import { CRISIS_LEVELS, CRISIS_SALT, CRISIS_WEIGHTS, FIRE_HIT_RADIUS } from './defs/crises';
 import {
@@ -178,7 +179,7 @@ export function isProtected(world: World, b: Building): boolean {
     const def = BUILDING_DEFS[s.defId];
     if (def.fireProtection !== true || !s.connected || s.island !== b.island) return false;
     const sc = center(def, s.x, s.y);
-    return Math.hypot(sc.cx - c.cx, sc.cy - c.cy) <= (def.serviceRadius ?? 0);
+    return Math.hypot(sc.cx - c.cx, sc.cy - c.cy) <= (serviceRadiusOf(world, s.defId) ?? 0);
   });
 }
 

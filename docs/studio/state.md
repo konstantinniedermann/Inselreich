@@ -4,9 +4,31 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-16 (Studio-Session 66d37b15, R688–R708; REL-24+REL-25 live `8fe744df` (R697, CI 38887719217, Pages 38888562306); Sammelmerge TOOL-E070, IDEEN-11, ORT-A-Spec; Save v16)
+Stand: 2026-10-21 (Session 538f6a12 Teil 2, R799; live REL-28 `e28c80c2`, Save v18; main lokal `413e9319` + Doku)
 
 ## Release-Notizen
+
+**REL-28 „Fernkarte mit Fahrzeit“ (live, R789)** — kein Save-Wechsel (v18). Inhalt: I-136, Doku R778–R789. Push `add28350..e28c80c2`, CI-Lauf 39579768546, Pages-Lauf 39580738479
+(automatisch). Quelle: `.studio/handoffs/2026-10-17-lead-qa-gate-REL-28.md`.
+
+- **Neu:** Die Fernangebot-Karte zeigt die Fahrzeit der Lieferung; die Lagerzahl der Fern-Insel wird bei Mangel dunkelrot (Zahl bleibt sichtbar, Tooltip «Fehlt n Gut») und
+  aktualisiert sich ohne Neuladen bei Lieferung (vom Studio vorgeschlagen, I-136).
+- **Bitte testen:** (1) Fernangebot: Fahrzeit plausibel zur Schiffsdistanz; (2) Fern-Insel mit zu wenig Lager: Zahl «x/y» dunkelrot, Tooltip «Fehlt …»; (3) Ware per Schiff
+  liefern: Zahl wird normal ohne Neuladen; (4) Fernauftrag-Karte: Zahl bleibt ungefärbt (bekannt); (5) Lesbarkeit der roten Zahl auf dem Pergament.
+
+**REL-27 „Meisterprüfung“ (live, R779)** — Save **v18** (Migration v17→v18). Inhalt: I-132, TOOL-BUENDEL-15, TOOL-BUENDEL-16, Doku R773–R777 (Rulings-Archiv, IDEEN-13).
+Push `6f14a354..add28350`, CI-Lauf 39033715341, Pages-Lauf 39034234219 (automatisch). Quelle: `.studio/handoffs/2026-10-17-lead-qa-gate-REL-27.md`.
+
+- **Neu:** Nach dem fertigen Denkmal (auch in der Gewürz-Phase) wird der Ziel-Chip zum Knopf «Meisterprüfung»: 15 Minuten ohne Zukauf an Kontoren und Denkmal durchhalten,
+  Einwohner nicht unter 70 % des Starts; Abbruch jederzeit, Lohn: Chronikeintrag «Meisterprüfung: Eigenversorgung bestanden» (vom Studio vorgeschlagen, I-132). Die Inselchronik
+  zeigt den Stand der Prüfung.
+- **Bitte testen:** (1) Denkmal bauen, Chip «Meisterprüfung» anklicken (Hand-Zeiger, Karte öffnet, Esc schliesst); (2) «Auflage beginnen»: Kauf gesperrt, Zähler läuft bis 15:00;
+  (3) absichtlich scheitern (Einwohner unter 70 %): Meldung genau einmal, neuer Versuch möglich; (4) mitten in der Auflage speichern und laden, auch über den manuellen Slot; (5) Spielstand v17 laden.
+
+**REL-26 „Rat, Vorwarnung, Klang“ (live, R753)** — Save **v17** (Migration v16→v17). Inhalt: I-112, I-122 + I-123, I-114, I-118, I-120, UI-AUFRAEUM-4, BEOB-17, PERF-BILANZ-COV, TOOL-BUENDEL-14, TOOL-GUARD-ALLOWLIST, TOOL-ACTIONS-FREI, IDEEN-12. Push `8fe744df..6f14a354`, CI-Lauf 38914539819, Pages-Lauf 38915602338 (automatisch per `workflow_run`). Quelle: `.studio/handoffs/2026-10-16-lead-qa-release-REL-26.md`.
+
+- **Neu:** Der Rat tagt, sobald ein Haus Stufe 2, 3 oder 4 erreicht: Marke «Rat · n» in der Kopfzeile, `Umschalt+R` öffnet ihn, je Stufe ein Beschluss für die ganze Partie (kostenlos, nicht änderbar; vom Studio vorgeschlagen, I-112). Die Stammkunden-Karte warnt 30 s vor der Abrechnung bei behebbarem Fehlbestand, mit Klang (vom Studio vorgeschlagen, I-122); die Lager-Reichweite rechnet den Stammkunden mit (I-123). Fernangebot ist jetzt eine Wahl (I-114). Aufstiegs-Funkeln (I-118) und Wohlstandsklang (I-120). Menüabstand und Aufräumarbeiten; Werkzeug-/CI-Anpassungen ohne Spieleinfluss.
+- **Bitte testen:** (1) Haus auf Stufe 2 bringen: Marke «Rat · 1», `Umschalt+R`, Beschluss fassen, Marke weg und Wirkung sichtbar; (2) Stammkunde: Lager knapp halten, 30 s vor Abrechnung erscheint Warnzusatz plus Klang, Fehlbestand beheben löscht ihn; (3) Spielstand v16 laden: Rat-Beschlüsse passend zu den Häusern, speichern und neu laden; (4) Fernangebot mit Kontor auf Fern-Insel: Wahl annehmen/ablehnen; (5) Haus steigt auf: Funkeln und Klang, bei Pause kein Klang.
 
 **REL-24 + REL-25 „Ereignis-Log, Pause, Treue“ (live, R697)** — Save **v16** (Migration v15→v16). Push `2e7a269f..8fe744df`, CI-Lauf 38887719217,
 Pages-Lauf 38888562306. Inhalt: UI-HAEPPCHEN-D/E/F, I-091, BEOB-15, TOOL-METRIK-ZEITRAUM. Quelle: `.studio/handoffs/2026-10-16-lead-qa-gate-REL-24-25.md`.
@@ -138,20 +160,20 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475; R698 (Nutzer: «spawnen, solange Kapazität da ist», Deckel 6, bei Last > 8 Plätze
-freihalten, R703). **Neues Claude-Gespräch** (Nutzer startet es). Ein Push je Session (R335); L0 committet während eines `make push-check`
-nicht auf main (R697).
+Keine Nutzer-Aufträge offen. Daueraufträge: R445, R475, R698 (Deckel 6), R708 V2. Ein Push je Session (R335).
 
-1. **UI-AUFRAEUM-4** (R694, Budget 8, `feat/ui-aufraeum-4` in `.worktrees/ui-aufraeum-4`): Stand aus dem Handoff
-   `.studio/handoffs/2026-10-16-lead-tech-UI-AUFRAEUM-4.md` lesen, fortsetzen bis Gate Merge (lead-qa), Merge.
-2. **I-114** «Fernangebot zur Wahl» (R699/R701/R703, `feat/i114` @ `5cef8359`, T01 fertig): nach Merge UI-AUFRAEUM-4 T02–T04, dann Gate Merge.
-3. **REL-26** (lokal: I-120 + I-118 gemergt R707; dazu UI-AUFRAEUM-4, I-114): Release-Check + Push, sobald 1 und 2 gemergt.
-4. **ORT-A «Wege und Kanten»** (Plan-Gate R705, Budget 57, Parallelität 2): Umsetzung starten (`plan/ort-a` @ `39d3cdd1`), Controller meldet
-   nach T09 (Patch-Zeit) an L0. Messungen nur bei Last ≤ 4; N-102 (Fremd-Chrome) offen → Vermerk «Messfenster belegt».
-5. **I-112 «Ratsbeschluss»** (Kurzdesign V3 R706, `design/i112` @ `37bfbe29`): Plan (lead-tech opus) mit Testbarkeits-Check lead-qa; Save main + 1.
-6. **Erweiterung 1** «Stände und Segel» bleibt in der Nutzer-Session (R519); Save-Nummer = main + 1 beim Merge (R674, main jetzt v16).
-7. Merge der Kurzdesign-/Plan-Branches `design/i114`, `design/i120-i118`, `design/i112`, `plan/*` mit dem jeweiligen Paket-Merge.
-8. Retro 66d37b15 (studio-coach) auswerten, falls ihr Bericht erst nach Session-Ende kam (`docs/studio/retros/2026-10-16-session-66d37b15-ende.md`).
+1. **R464-Stopp aufgehoben** (REL-28 live): ORT-A, Stadtplanung und TOOL-DASH-SCHLANK dürfen wieder Umsetzer starten; Push-Kontingent der Session 538f6a12 verbraucht.
+2. **TOOL-DASH-SCHLANK** (Nutzerauftrag, R790): Kurzdesign OK (R791, `design/dash-schlank` @ `77c0ad58`); Umsetzung 1 Umsetzer + 1 Sichtprüfung, Plan und
+   Umsetzung (Werkzeug, nach REL-28-Push). Hauptansicht nur «Projekt» und «Laufende Session».
+3. **ORT-A C11 fortsetzen** (R788, Handoff `2026-10-17-lead-tech-ORT-A-C11.md`): Fix T15 `paveImage` (Fugen als `p.line`/Füllung, Test bleibt), gezielte Tests, `make check` (Last ≤ 6),
+   Merge k2 nach `feat/ort-a`; T14/T17 Messungen bei Last ≤ 4; T18 danach. Sackgassen-Lappen und 2×2-Grasloch in T20b mit `lead-art`. Budget C11 neu erteilen (Rest 2 verfallen).
+4. **Stadtplanung C1 fortsetzen** (Handoff `2026-10-17-lead-tech-STADTPLANUNG-C1.md`): Ruling-Entwürfe 1–5 entscheiden, Review T06/T07, `make check` (Last ≤ 8), Merge
+   `feat/stadtplanung-ui`, T08, Stopp vor T09 (Render erst nach ORT-A-Merge nach main; dann `variants.test.ts` MAIN_REF/Park-Hash neu). Save v19 = main + 1. Budget 26 von 38 Rest neu erteilen.
+5. **I-119 + I-121 «Bewohner reagieren»** (R715): Plan erst nach ORT-A T20.
+6. Pool: ZEITRESERVE-PFLEGE (H-1, Last ≤ 4; neu: drei langsame ORT-A-Tests, R786). Geparkt: I-110, I-111, I-124, I-130, I-131, I-134 (R780).
+7. Erweiterung 1 bleibt in der Nutzer-Session (R519); deren Save = main + 1 beim Merge.
+8. Messfristen: R769 V3 am 2026-10-24; R750 V1/V3 und R755 V1 am 2026-10-30; R769 V2 2026-11-15, V1 2026-11-30.
+9. Befund für die nächste Retro: R697-Abweichung (L0-Doku-Commit vor Merge-Bericht, R789); Testlast aus eigenen Läufen blockiert Ruhefenster (R787).
 
 ## Aktuelles Projekt und Phase
 
@@ -176,20 +198,19 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- UI-AUFRAEUM-4 (lead-tech, R698): lief bei Session-Ende noch; Fortsetzung siehe oben Punkt 1.
+- Nichts. ORT-A (`ort-a`, `ort-a-k2`) und Stadtplanung (`stadt-sim`, `stadt-ui`) sauber pausiert; `design-dash-schlank` committet.
 
 ## Parallele Sessions
 
 - Nutzer-Session `c6709a04` (seit 2026-10-11 ≈ 08:30Z): Konzept „Erweiterung“ (`lead-design`), Worktree
   `.worktrees/erweiterung-1`, Branch `design/erweiterung-1` — geduldet, Deckel geteilt (R519). Nicht anfassen.
+- L0-Session anno-clone #2: seit 2026-10-16 ohne Heartbeat (R754); Ruling-Nummern trotzdem vor jedem Ruling gegen `origin/main` prüfen.
 
 ## Seit letzter Session erledigt
 
-- **Live:** REL-24 «Ereignis-Log vollständig» + REL-25 (I-091 Kulanz, UI-HAEPPCHEN-F), Push `2e7a269f..8fe744df` (R697), Save v16.
-- **Lokal gemergt:** I-120 Wohlstandsklang + I-118 Aufstiegs-Funkeln (R707), TOOL-E070, TOOL-BUENDEL-13 (Timeouts, `guard_block`), BEOB-16,
-  IDEEN-11, Ortsrand-Brainstorming + ORT-A-Spec.
-- **Gates:** Plan UI-AUFRAEUM-4 (R694), Kurzdesign + Plan I-114 (R699/R701), Kurzdesign + Plan I-120/I-118 (R700/R702), Spec + Plan ORT-A
-  (R696/R705), Kurzdesign I-112 (R706). E-064 behalten, E-068 laufend (R693).
+- **Session 2026-10-17 (R773–R788):** REL-27 live (R779); Handbuch 1.65 (R778); IDEEN-13 (R776); I-144 verworfen (R780); I-136 gebaut, Gate Merge erst ZURÜCK
+  (Signalrot), Fix `--tone-bad`, dann OK (R781, R784, R785); ORT-A C9/C10 abgenommen (R782, R786), C11 Zwischenstand (R788); Stadtplanung C1 T01–T05 OK, T06/T07 umgesetzt.
+- **Kurz-Session 2026-10-21:** R786–R788 committet, R789, REL-28 live (`e28c80c2`, CI/Pages grün); Nutzerauftrag Dashboard (R790), Kurzdesign gestartet; Kurz-Retro (3 Lernpunkte in lernen.md).
 
 ## Pausierte Pakete
 
@@ -205,9 +226,9 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Budget
 
-Offen: keine Freigaben (Restbudgets verfallen mit Session-Ende).
+Offen: keine Freigaben (Restbudgets ORT-A C11 2, Stadtplanung 26 verfallen mit Session-Ende, R789).
 
 ## Offene Entscheide
 
-- Nutzer: N-99 (Kenntnis R434), N-102 (Headless-Chrome des Projekts reflexionsinstrument beenden?).
+- Nutzer: N-99 (Kenntnis R434), N-101 (Darlehen verwerfen; ohne Antwort gilt Verwerfen), N-102 (Headless-Chrome des Projekts reflexionsinstrument beenden?).
 - L0: keine offenen.

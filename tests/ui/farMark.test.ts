@@ -10,6 +10,7 @@ import {
   farOrderText,
   farOrderWarn,
 } from '../../src/ui/farOrder';
+import { homeTravelTicks } from '../../src/ui/homeTravel';
 import { SEA_MAP_H, SEA_MAP_PAD, SEA_MAP_W, seaMapKey, seaMapTip } from '../../src/ui/seaMapView';
 import { formatGameTime } from '../../src/ui/time';
 import { dropKontor, farWorld, islandOf, periodStart, stepAt } from '../sim/farHelpers';
@@ -26,6 +27,10 @@ function orderWorld(): World {
   const w = offerWorld();
   acceptFarOrder(w);
   return w;
+}
+function tipOf(w: World, rest: number): string {
+  const t = homeTravelTicks(w, islandOf(w, 'B'))!;
+  return `Fahrzeit ≈ ${formatGameTime(t)}, Rest ${formatGameTime(rest)}`;
 }
 function landPoint(w: World, i: number) {
   const s = w.islands[i]!;
@@ -133,13 +138,13 @@ describe('AK-M5 seaMapTip', () => {
     stepAt(w, P);
     const off = seaMapTip(w, l, p.x, p.y)!;
     expect(off).toBe(
-      `${baseB} · Fernangebot: 15 Rum · ${formatGameTime(farOfferDue(w)! - w.tick)}`,
+      `${baseB} · Fernangebot: 15 Rum · ${formatGameTime(farOfferDue(w)! - w.tick)} · ${tipOf(w, farOfferDue(w)! - w.tick)}`,
     );
     expect(seaMapTip(w, l, q.x, q.y)).toBe(baseHome);
     acceptFarOrder(w);
     expect(
       seaMapTip(w, l, p.x, p.y)!.endsWith(
-        `· Fernauftrag: 15 Rum · ${formatGameTime(w.order!.due - w.tick)}`,
+        `· Fernauftrag: 15 Rum · ${formatGameTime(w.order!.due - w.tick)} · ${tipOf(w, w.order!.due - w.tick)}`,
       ),
     ).toBe(true);
     w.order = null;

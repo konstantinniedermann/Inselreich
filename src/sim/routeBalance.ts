@@ -1,3 +1,4 @@
+import type { Coverage } from './coverage';
 import { GOODS } from './defs/goods';
 import { SHIP } from './defs/sea';
 import { goodsBalance } from './flow';
@@ -20,10 +21,10 @@ export interface RouteBalance {
 }
 
 /** Bilanz der Quellinsel aus dem Memo des Aufrufers; füllt es bei Bedarf. */
-function balanceOf(world: World, island: number, balances: Balances) {
+function balanceOf(world: World, island: number, balances: Balances, cov?: Coverage) {
   let bal = balances.get(island);
   if (bal === undefined) {
-    bal = goodsBalance(world, island);
+    bal = goodsBalance(world, island, cov);
     balances.set(island, bal);
   }
   return bal;
@@ -53,13 +54,14 @@ export function routeBalance(
   world: World,
   route: Route,
   balances: Balances = new Map(),
+  cov?: Coverage,
 ): RouteBalance | null {
   const cycleTicks =
     laneTicks(world.islands, route.a, route.b) + laneTicks(world.islands, route.b, route.a);
   if (cycleTicks <= 0) return null;
   const value =
-    directionValue(route.ab, balanceOf(world, route.a, balances), cycleTicks) +
-    directionValue(route.ba, balanceOf(world, route.b, balances), cycleTicks);
+    directionValue(route.ab, balanceOf(world, route.a, balances, cov), cycleTicks) +
+    directionValue(route.ba, balanceOf(world, route.b, balances, cov), cycleTicks);
   const goodsPer100 = (value * FLOW_TICKS) / cycleTicks;
   const upkeepPer100 = SHIP.upkeep;
   return { cycleTicks, goodsPer100, upkeepPer100, net100: goodsPer100 - upkeepPer100 };

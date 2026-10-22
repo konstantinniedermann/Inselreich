@@ -125,13 +125,13 @@ warum keiner folgt. Der Retro-Bericht enthält dazu den Abschnitt „Effizienz-A
 
 **Dashboard-Reiter** (`make studio`, URL `http://127.0.0.1:8765/`):
 
-| Reiter     | Link          | Zeigt                                                                                                          |
-| ---------- | ------------- | -------------------------------------------------------------------------------------------------------------- |
-| Live       | `#live`       | Organigramm, Prozess-Graph, Pakete, offene L0-Entscheide, Nutzerentscheid-Warteschlange, Banner „Retro fällig" |
-| Delegation | `#delegation` | Zeitachse wer → wen, mit Briefing- und Bericht-Links, Schätzung und Ist                                        |
-| Aufwand    | `#aufwand`    | Tabellen je Agent, Paket, Lead, Meilenstein, Modell; Schätzung vs. Ist                                         |
-| Qualität   | `#qualitaet`  | Kennzahlen, offene Vorfälle, Verlauf über die Meilensteine (aus `metriken/`)                                   |
-| Studio     | `#studio`     | Handbuch- und Verfassungsversion, CHANGELOG, Experimente, lernen.md, Personas mit Versionen                    |
+| Reiter    | Link          | Zeigt                                                                                                                                                                                               |
+| --------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Übersicht | `#uebersicht` | Standard. Projekt: Stand und Releases, offene Entscheide (Warteschlange, L0), Meilenstein-Board. Laufende Session: Status und Budget, Prozess-Graph, Live-Feed, Delegationen; Banner „Retro fällig" |
+| Analyse   | `#analyse`    | Aufwand, Schätzung vs. Ist, Sitzungskosten, Qualität, offene Vorfälle, Verlauf je Meilenstein, Experimente, CHANGELOG, lernen.md, Chronik                                                           |
+
+Unbekannte Hashes fallen auf `#uebersicht` zurück. Organigramm, Aktivität (60 min), Versionen und das
+Personas-Organigramm entfielen (TOOL-DASH-SCHLANK).
 
 ## Verbesserungsschleife
 
@@ -250,7 +250,7 @@ Wann wer loggt:
 
 `idle` (L0 wartet auf den Nutzer) und `ended` (Session-Ende) setzen die Hooks. Als inaktiv markiert
 das Dashboard Knoten ohne Lebenszeichen seit 5 Minuten (`STUDIO_INACTIVE_SECONDS`), ausser `idle`
-und Knoten mit aktiven Kindern (R9). Dashboard: `make studio` (URL `http://127.0.0.1:8765/`),
+und Knoten mit aktiven Kindern (R9). Ausserdem gelten `studio-director` und `lead-qa` nicht als inaktiv, solange Kind-Agenten Heartbeats senden oder der letzte Bash-Heartbeat höchstens 1800 s zurückliegt (R755 V1, R761); andere Rollen, auch `lead-tech` in einer Controller-Wartepause, bleiben davon unberührt. Dashboard: `make studio` (URL `http://127.0.0.1:8765/`),
 beenden mit `make studio-stop`, Ereignisse archivieren mit `make studio-archive`, Metriken
 verdichten mit `make studio-metrics`. Vor Commits an `tools/studio/`: `make studio-lint` (Ruff über
 `uvx`; bewusst nicht Teil von `make check`).

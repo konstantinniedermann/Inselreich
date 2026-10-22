@@ -1,3 +1,4 @@
+import { councilCycle } from './council';
 import { BUILDING_DEFS, PAUSED_UPKEEP_PCT } from './defs/buildings';
 import { LEVELS, type LevelDef } from './defs/levels';
 import { ISLANDS, TRAIT_BUILDINGS, TRAIT_CYCLE_PCT, type IslandTrait } from './defs/sea';
@@ -28,11 +29,18 @@ export const islandCycle = (
   traitOf(world, island, defId) === undefined
     ? cycle
     : Math.max(1, Math.floor((cycle * TRAIT_CYCLE_PCT) / 100));
+/** Zyklus nach Ratsbeschluss und Inselvorteil. Einziger Leseort (R706 a). */
+export const effectiveCycle = (
+  world: World,
+  island: number,
+  defId: BuildingDefId,
+  cycle: number,
+): number => islandCycle(world, island, defId, councilCycle(world, defId, cycle));
 /** Zyklus (Ticks) des stehenden Betriebs; `undefined` ohne Zyklus. Einziger Leseort (Spec 3.1, R1.8). */
 export function cycleOf(world: World, b: Building): number | undefined {
   const base = BUILDING_DEFS[b.defId].cycle;
   if (base === undefined) return undefined;
-  return islandCycle(world, b.island, b.defId, levelDef(b)?.cycle ?? base);
+  return effectiveCycle(world, b.island, b.defId, levelDef(b)?.cycle ?? base);
 }
 /** Unterhalt je 100 Ticks des stehenden Gebäudes. */
 export const upkeepOf = (b: Building): number =>

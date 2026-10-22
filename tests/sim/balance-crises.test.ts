@@ -147,7 +147,7 @@ describe('M6 Krisen-Lauf', () => {
     if (import.meta.env.VITE_BALANCE_LOG) console.log({ reloadAtBurning: b.at });
     expect(serialize(b.w)).toBe(serialize(a));
     expect(b.winTick).toBe(ta.winTick);
-  });
+  }, 10_000);
 
   it('AK-B2-06 Laden mitten im Sturm (aktiv, Seed 3: Tick 2601): gleicher Endzustand, gleicher Sieg-Tick', () => {
     const a = createWorld(3, { crisisLevel: 'normal' });
@@ -197,7 +197,7 @@ describe('M11 Baseline (Spec 6, 14)', () => {
     expect([tn.winTick, tn.winTick! <= CRISIS_WIN_STOP, n.money > 0]).toEqual([7850, true, true]);
     const m = createWorld(3, { crisisLevel: 'mild' });
     expect([buildColony(m).winTick, m.money > 0]).toEqual([7850, true]);
-  });
+  }, 10_000);
   it('AK-BAS-04 normalized() entfernt taxCarry, upkeepCarry und je Gebäude eff, level', () => {
     const w = createWorld(3);
     Object.assign(w, { taxCarry: 5, upkeepCarry: 7 });

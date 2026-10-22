@@ -4,6 +4,8 @@ import { serialize } from '../../src/sim/save';
 import { createWorld } from '../../src/sim/world';
 import {
   fnv1a32,
+  foldBackCouncil,
+  foldBackTrial,
   foldBackDeliveries,
   foldBackFarOrders,
   foldBackToV9,
@@ -37,8 +39,11 @@ describe('foldBackToV12', () => {
 });
 
 describe('foldBackFarOrders (Handel 2, A4)', () => {
+  /** Aktueller Stand ohne `council` (I-112: dessen Faltschritt liegt davor), Version eins tiefer. */
   const current = (): Record<string, unknown> =>
-    JSON.parse(serialize(createWorld(3))) as Record<string, unknown>;
+    foldBackCouncil(
+      foldBackTrial(JSON.parse(serialize(createWorld(3))) as Record<string, unknown>),
+    );
   /** Stand «eine Version älter», ohne Fernfelder. */
   const plain = (): Record<string, unknown> => {
     const x = current();

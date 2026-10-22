@@ -295,8 +295,21 @@ export interface Ship {
   route: Route | null;
   homing: boolean;
 }
+export type CouncilTier = 2 | 3 | 4;
+export type CouncilSide = 'A' | 'B';
+export type CouncilState = null | 'open' | CouncilSide;
+/** Wirksamer Wert, den ein Beschluss überschreibt (Defs bleiben unverändert). */
+export type CouncilLever =
+  | { kind: 'cycle'; defId: BuildingDefId; value: number }
+  | { kind: 'serviceRadius'; defId: BuildingDefId; value: number }
+  | { kind: 'maxInhabitants'; tier: Tier; value: number };
+export interface CouncilDef {
+  name: string;
+  text: string;
+  lever: CouncilLever;
+}
 export interface World {
-  version: 16;
+  version: 18;
   seed: number;
   islands: Island[];
   tick: number;
@@ -348,6 +361,34 @@ export interface World {
   farOffer: FarOffer | null;
   /** Periode, deren Zufallsauftrag und Fernangebot entfallen (Sperre nach angenommenem Fernauftrag, R7); `null` = keine. */
   farSkip: number | null;
+  /** Ratsbeschluss je Hausstufe (I-112): `null` = nicht erreicht, `'open'` = steht an, sonst gewählte Seite. */
+  council: Record<CouncilTier, CouncilState>;
+  /** Freiwillige Auflage (I-132, Meisterprüfung). */
+  trial: TrialState;
+}
+
+/** Kennung einer Auflage (I-132). */
+export type TrialId = 'selfSupply';
+
+/** Texte einer Auflage (I-132). */
+export interface TrialDef {
+  name: string;
+  short: string;
+  rule: string;
+}
+
+/** Eine bestandene Auflage mit Tick des Bestehens. */
+export interface TrialPass {
+  id: TrialId;
+  tick: number;
+}
+
+/** Zustand der Meisterprüfung: laufende Auflage, Ticks, Anfangs-Einwohner, bestandene Auflagen. */
+export interface TrialState {
+  active: TrialId | null;
+  ticks: number;
+  e0: number;
+  passed: TrialPass[];
 }
 
 /** Eine Insel: Raster, Kontor, Lager und Lage im Archipel (M12 E0, E1). */

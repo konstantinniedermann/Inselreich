@@ -138,19 +138,15 @@ class PushCheckTest(unittest.TestCase):
         self.assertEqual(vitest[0][1]["ZEITRESERVE_OUT"], str(h.retry_out))
         self.assertEqual(sum("--retry" in k for k in h.names()), 1)
 
-    def test_exit_1_loadstart_entscheidet(self):
-        for load_start, retries in ((2.5, 0), (3.6, 1), (None, 0)):
+    def test_exit_1_wird_immer_nachgemessen(self):
+        for load_start in (0.5, 2.5, 3.0, 3.6, None):
             with self.subTest(load_start=load_start):
                 h = Harness(self)
                 h.check_ts(1, marked='["tests/a.test.ts"]', load_start=load_start)
                 h.handlers["make check-ci-perf"] = (0, "")
                 code = h.go()
-                self.assertEqual(h.count(VITEST), retries)
-                if retries == 0:
-                    self.assertEqual(code, 1)
-                    self.assertEqual(h.count(PERF), 0)
-                else:
-                    self.assertEqual(code, 0)
+                self.assertEqual(h.count(VITEST), 1)
+                self.assertEqual(code, 0)
 
     def test_markierungsliste_d1_und_b1(self):
         h = Harness(self)
@@ -233,7 +229,7 @@ class PushCheckTest(unittest.TestCase):
         self.assertEqual(h.count(VITEST), 1)
         self.assertEqual(sum("--retry" in k for k in h.names()), 0)
 
-    def test_exit_1_mit_hohem_loadstart_und_leerer_oder_ungueltiger_liste(self):
+    def test_exit_1_mit_leerer_oder_ungueltiger_liste(self):
         for marked, expected in (("[]", 1), (None, 2), ("kein json", 2)):
             with self.subTest(marked=marked):
                 h = Harness(self)
@@ -327,8 +323,13 @@ class PushCheckTest(unittest.TestCase):
     def test_lastprotokoll_fehler_aendern_exit_nicht(self):
         h = Harness(self, loads=(9.0,))
         h.check_ts(0, marked="[]")
-        with mock.patch("loadsnap.record", side_effect=OSError("voll")):
+        err = io.StringIO()
+        with (
+            mock.patch("loadsnap.record", side_effect=OSError("voll")),
+            contextlib.redirect_stderr(err),
+        ):
             self.assertEqual(h.go(), 2)
+        self.assertIn("Lastprotokoll fehlgeschlagen (voll)", err.getvalue())
 
     def test_ereignis_schlusszeile_und_schreibfehler(self):
         h = Harness(self)
@@ -348,8 +349,13 @@ class PushCheckTest(unittest.TestCase):
         )
         h = Harness(self)
         h.check_ts(0, marked="[]")
-        with mock.patch("paths.append_event", side_effect=OSError("voll")):
+        err = io.StringIO()
+        with (
+            mock.patch("paths.append_event", side_effect=OSError("voll")),
+            contextlib.redirect_stderr(err),
+        ):
             self.assertEqual(h.go(), 0)
+        self.assertIn("Ereignis nicht geschrieben (voll)", err.getvalue())
 
 
 class GateTest(unittest.TestCase):

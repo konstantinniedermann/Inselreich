@@ -11,9 +11,9 @@ from types import MappingProxyType
 from unittest import mock
 
 import modelguard
-from paths import repo_root
 
-STUDIO = repo_root() / "docs" / "studio" / "STUDIO.md"
+# eigener Checkout (auch im Worktree), nicht das Hauptrepo
+STUDIO = Path(__file__).resolve().parents[3] / "docs" / "studio" / "STUDIO.md"
 TABLE = modelguard.model_table(STUDIO.read_text("utf-8"))
 PERSONAS = {
     "lead-qa": {"model": "sonnet"},
@@ -61,6 +61,14 @@ class ReasonTest(unittest.TestCase):
     def test_table_exception_in_header_allows(self):
         prompt = "Persona: lead-qa\nModell: opus (Final-Review über die Branch)"
         self.assertIsNone(call("lead-qa", prompt, "opus"))
+
+    def test_delta_review_frisch_is_allowed_for_qa_code_reviewer(self):
+        for anlass in ("", " nach ZURÜCK", " nach BEDENKEN, Paket X"):
+            prompt = f"Persona: qa-code-reviewer\nModell: opus (Delta-Review frisch{anlass})"
+            self.assertIsNone(call("qa-code-reviewer", prompt, "opus"), anlass)
+        self.assertIsNotNone(
+            call("qa-code-reviewer", "Modell: opus (Delta-Review)", "opus")
+        )
 
     def test_bold_header_and_prefix_match(self):
         prompt = "- **Persona:** lead-qa\n- **Modell:** OPUS (final-review, Branch x)"

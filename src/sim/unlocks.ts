@@ -1,6 +1,7 @@
+import { maxInhabitantsOf } from './council';
 import { BUILDING_DEFS, BUILDING_IDS } from './defs/buildings';
 import { MONUMENT_UNLOCK } from './defs/monument';
-import { TIERS, WIN_CITIZENS } from './defs/tiers';
+import { WIN_CITIZENS } from './defs/tiers';
 import {
   FUNCTION_ENTRY,
   FUNCTION_LABELS,
@@ -38,12 +39,12 @@ export function isUnlocked(w: World, id: UnlockId): boolean {
 }
 
 /** Text mit gefüllten Platzhaltern (Spec 4.5): {min} aus trigger.min, {max} aus TIERS[tier − 1], {WIN_CITIZENS}. */
-export function unlockText(def: UnlockDef, field: 'lockText' | 'whenText'): string {
+export function unlockText(world: World, def: UnlockDef, field: 'lockText' | 'whenText'): string {
   const t = def.trigger;
   let s = def[field].replace('{WIN_CITIZENS}', String(WIN_CITIZENS));
   if (t.kind === 'houses') s = s.replace('{min}', String(t.min));
   if (t.kind === 'tierWish')
-    s = s.replace('{max}', String(TIERS[(t.tier - 1) as Tier].maxInhabitants));
+    s = s.replace('{max}', String(maxInhabitantsOf(world, (t.tier - 1) as Tier)));
   return s;
 }
 
@@ -57,7 +58,7 @@ function fulfilled(w: World, t: UnlockTrigger): boolean {
     case 'tierWish':
       return housesOf(w).some((b) => {
         const h = b.house!;
-        const full = h.inhabitants === TIERS[h.tier].maxInhabitants;
+        const full = h.inhabitants === maxInhabitantsOf(w, h.tier);
         return (full && h.tier < t.tier ? h.tier + 1 : h.tier) >= t.tier;
       });
     case 'tierReached':
@@ -74,8 +75,8 @@ export function entryOfBuilding(defId: BuildingDefId): UnlockDef | null {
 /** Sperrgrund eines nicht freien Eintrags; U6 nennt den M8-Grund (W3: Defs-Text, falls tierLock schon null ist). */
 export function lockReason(w: World, def: UnlockDef): string {
   const t = def.trigger;
-  if (t.kind === 'tierOpen') return tierLock(w, t.tier) ?? unlockText(def, 'lockText');
-  return unlockText(def, 'lockText');
+  if (t.kind === 'tierOpen') return tierLock(w, t.tier) ?? unlockText(w, def, 'lockText');
+  return unlockText(w, def, 'lockText');
 }
 
 export function buildLock(w: World, defId: BuildingDefId): string | null {
@@ -150,7 +151,7 @@ function progress(w: World, t: UnlockTrigger): { now: number | null; need: numbe
     let best = 0;
     for (const b of housesOf(w))
       if (b.house!.tier === prev) best = Math.max(best, b.house!.inhabitants);
-    return { now: best, need: TIERS[prev].maxInhabitants };
+    return { now: best, need: maxInhabitantsOf(w, prev) };
   }
   if (t.kind === 'tierOpen') return { now: citizens(w), need: WIN_CITIZENS };
   return { now: null, need: null };
@@ -178,7 +179,7 @@ export function nextUnlocks(w: World): NextUnlock[] {
       ),
       ...u.functions.flatMap((f) => FUNCTION_LABELS[f]),
     ],
-    when: unlockText(u, 'whenText'),
+    when: unlockText(w, u, 'whenText'),
     ...progress(w, u.trigger),
     taxBlocks: triggerTaxBlocked(w, u.trigger),
   }));

@@ -12,7 +12,7 @@ import { setTaxLevel } from '../../src/sim/tax';
 import { step } from '../../src/sim/tick';
 import type { Building, BuildingDefId, HouseState, Tier, World } from '../../src/sim/types';
 import { placeService, placeTownhall, putBuilding, setHouse, village } from './helpers';
-import { home } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
 import { foundKontor2Literal, seaWorld } from './seaHelpers';
 
 const hs = (tier: Tier, inhabitants: number): HouseState => ({
@@ -70,9 +70,9 @@ function upTick(w: World, h: Building, until: number): number {
 describe('M11 Gedämpfter Aufstieg (Spec 3.2)', () => {
   it('AK-P1-08 deficitGood 1→2: Budget = Δ → null; Nahrung 1,999 → food; Stoff 1,599 → cloth', () => {
     const h = hs(1, 4);
-    expect(deficitGood({ food: 2.0, cloth: 1.6 }, h)).toBeNull();
-    expect(deficitGood({ food: 1.999, cloth: 1.6 }, h)).toBe('food');
-    expect(deficitGood({ food: 2.0, cloth: 1.599 }, h)).toBe('cloth');
+    expect(deficitGood(createWorld(3), { food: 2.0, cloth: 1.6 }, h)).toBeNull();
+    expect(deficitGood(createWorld(3), { food: 1.999, cloth: 1.6 }, h)).toBe('food');
+    expect(deficitGood(createWorld(3), { food: 2.0, cloth: 1.599 }, h)).toBe('cloth');
   });
   it('AK-P1-09 volles Pionierhaus: 2 Fischer t0+300; 1 Fischer erst t0+600; niedrig 150/300; hoch nie', () => {
     const a = ready(1, 2, 1); // Nahrung 5,0 − 2,0 = 3,0 ≥ Δ 2,0; Stoff 2,0 ≥ 1,6
@@ -101,11 +101,17 @@ describe('M11 Gedämpfter Aufstieg (Spec 3.2)', () => {
       expect(Object.keys(d).sort()).toEqual(Object.keys(exp).sort());
       for (const g of Object.keys(exp)) expect(Math.abs(d[g]! - exp[g]!)).toBeLessThan(1e-9);
     };
-    near(upgradeDelta(hs(1, 4)), { food: 2.0, cloth: 1.6 });
-    near(upgradeDelta(hs(2, 8)), { food: 3.5, cloth: 1.4, rum: 3.0 });
+    near(upgradeDelta(createWorld(3), hs(1, 4)), { food: 2.0, cloth: 1.6 });
+    near(upgradeDelta(createWorld(3), hs(2, 8)), { food: 3.5, cloth: 1.4, rum: 3.0 });
     // R226 F-03: Kaufleute brauchen Gewürz, Δ 20 × 0,1 = 2,0
-    near(upgradeDelta(hs(3, 15)), { food: 2.5, cloth: 1.0, rum: 1.0, glass: 2.0, spice: 2.0 });
-    expect(upgradeDelta(hs(4, 20))).toEqual({});
+    near(upgradeDelta(createWorld(3), hs(3, 15)), {
+      food: 2.5,
+      cloth: 1.0,
+      rum: 1.0,
+      glass: 2.0,
+      spice: 2.0,
+    });
+    expect(upgradeDelta(createWorld(3), hs(4, 20))).toEqual({});
   });
   it('AK-P1-12 Rum 100 im Lager bei Rum-Defizit → 600; brennende Brennerei zählt nominell', () => {
     const { w, houses } = village(1, { unlockAll: true });
@@ -185,7 +191,7 @@ describe('M12 E2 Bilanz je Insel (AK-E2-06)', () => {
     const s = twoIslands();
     const h = fullCitizenHouse(s, 0);
     supplyAllButSpice(s, 0);
-    expect(goodsBalance(s, 0).spice.net).toBeLessThan(upgradeDelta(h.house!).spice ?? 0); // Defizit
+    expect(goodsBalance(s, 0).spice.net).toBeLessThan(upgradeDelta(s, h.house!).spice ?? 0); // Defizit
     expect(waitReason(s, h)).toBeUndefined(); // einfache Wartezeit abgelaufen, kein × Faktor
     h.house!.satisfiedSince += 1;
     expect(waitReason(s, h)).toBe(`Bedürfnisse noch nicht ${UPGRADE_WAIT} Ticks erfüllt`);
@@ -216,7 +222,9 @@ describe('M12 E2 Bilanz je Insel (AK-E2-06)', () => {
   });
   it('deficitGood überspringt Güter per skip', () => {
     const h = hs(1, 4);
-    expect(deficitGood({ food: 0, cloth: 0 }, h)).toBe('food');
-    expect(deficitGood({ food: 0, cloth: 0 }, h, (g) => g === 'food')).toBe('cloth');
+    expect(deficitGood(createWorld(3), { food: 0, cloth: 0 }, h)).toBe('food');
+    expect(deficitGood(createWorld(3), { food: 0, cloth: 0 }, h, (g) => g === 'food')).toBe(
+      'cloth',
+    );
   });
 });

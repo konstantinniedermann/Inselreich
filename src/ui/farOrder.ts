@@ -1,10 +1,12 @@
 import { GOODS } from '../sim/defs/goods';
 import { FAR_ORDER_DURATION, ORDER_FIRST_TICK, ORDER_PERIOD } from '../sim/defs/timing';
 import { islandName } from '../sim/islands';
+import { farAlternative } from '../sim/orders';
 import type { FarOffer, Order, World } from '../sim/types';
 import type { MapMark } from '../render/seaMap';
 import type { LogEntry } from './crisisLog';
 import { formatGameTime } from './time';
+import { homeTravelTicks, type Lanes } from './homeTravel';
 
 /** Texte, Lieferziel und Log-Einträge zum Fernangebot (Handel 2, Anhang 02); DOM-frei, liest nur die Welt. */
 
@@ -24,20 +26,52 @@ export function farOfferDue(world: World): number | null {
   return ORDER_FIRST_TICK + period * ORDER_PERIOD + FAR_ORDER_DURATION;
 }
 
-/** T-02: Text des offenen Fernangebots; `null` ohne Angebot. Das Lager ist das der Fern-Insel. */
-export function farOfferText(world: World): string | null {
-  const f = world.farOffer;
-  const due = farOfferDue(world);
-  if (f === null || due === null) return null;
-  return (
-    `Fernangebot ${islandName(world, f.island)}: ${f.amount} ${GOODS[f.good].name} · ${f.reward}` +
-    ` · Frist ${formatGameTime(due - world.tick)} · Lager ${stockOn(world, f.island, f.good)}/${f.amount}`
-  );
+/** I-114: Angebot der Karte `which` (0 Erstangebot, 1 Zweitkarte); `null`, wenn es die Karte nicht gibt. */
+export function farOfferOf(world: World, which: 0 | 1): FarOffer | null {
+  return which === 1 ? farAlternative(world) : world.farOffer;
 }
 
-/** T-03: Tooltip des Annehmen-Knopfs; leer ohne Angebot. */
-export function farAcceptTooltip(world: World): string {
-  const f = world.farOffer;
+export interface FarOfferParts {
+  head: string;
+  travel: string | null;
+  stock: string;
+  short: boolean;
+  tip: string;
+}
+
+/** I-136: Teile des Fernangebots der Karte `which`; `null` ohne Angebot. Das Lager ist das der Fern-Insel. */
+export function farOfferParts(world: World, which: 0 | 1 = 0, lanes?: Lanes): FarOfferParts | null {
+  const f = farOfferOf(world, which);
+  const due = farOfferDue(world);
+  if (f === null || due === null) return null;
+  const have = stockOn(world, f.island, f.good);
+  const ticks = homeTravelTicks(world, f.island, lanes);
+  const short = have < f.amount;
+  return {
+    head:
+      `Fernangebot ${islandName(world, f.island)}: ${f.amount} ${GOODS[f.good].name} · ${f.reward}` +
+      ` · Frist ${formatGameTime(due - world.tick)}`,
+    travel: ticks === null ? null : `≈ ${formatGameTime(ticks)} Fahrt`,
+    stock: `Lager ${have}/${f.amount}`,
+    short,
+    tip: short ? `Fehlt ${f.amount - have} ${GOODS[f.good].name}` : '',
+  };
+}
+
+/** I-136: Text vor dem Lager-Teil, inklusive trennendem « · ». */
+export function farOfferLead(p: FarOfferParts): string {
+  return `${p.head}${p.travel === null ? '' : ` · ${p.travel}`} · `;
+}
+
+/** T-02: Text des Fernangebots der Karte `which`; `null` ohne Angebot (eine Quelle: `farOfferParts`). */
+export function farOfferText(world: World, which: 0 | 1 = 0, lanes?: Lanes): string | null {
+  const p = farOfferParts(world, which, lanes);
+  return p === null ? null : farOfferLead(p) + p.stock;
+}
+
+/** T-03: Tooltip des Annehmen-Knopfs der Karte `which`; leer ohne Angebot. */
+export function farAcceptTooltip(world: World, which: 0 | 1 = 0): string {
+  const f = farOfferOf(world, which);
   if (f === null) return '';
   return `Ersetzt den Auftrag. Liefern nur am Kontor ${islandName(world, f.island)}. Der nächste Auftrag entfällt.`;
 }
@@ -113,8 +147,27 @@ export function farLogEntries(prev: FarSnap, world: World): LogEntry[] {
   return out;
 }
 
+/**
+ * I-155: Kommt Ware aus der Heimat nicht mehr rechtzeitig? Wahr, wenn die Fahrt (strikt) länger dauert als `rest`
+ * und Lager der Fern-Insel plus rechtzeitig eintreffende Fracht die Menge nicht decken. Liest nur die Welt.
+ */
+export function farLate(
+  world: World,
+  x: { island: number; amount: number; good: Order['good'] },
+  rest: number,
+  lanes?: Lanes,
+): boolean {
+  if (rest <= 0 || world.islands[x.island]!.kontorId === null) return false;
+  const travel = homeTravelTicks(world, x.island, lanes);
+  if (travel === null || rest >= travel) return false;
+  let have = stockOn(world, x.island, x.good);
+  for (const s of world.ships)
+    if (s.to === x.island && s.left <= rest) have += s.cargo[x.good] ?? 0;
+  return have < x.amount;
+}
+
 /** I-101: Marke der Seekarte für Fernauftrag (Vorrang) bzw. Fernangebot; `null` sonst. Liest nur die Welt. */
-export function farMark(world: World): MapMark | null {
+export function farMark(world: World, lanes?: Lanes): MapMark | null {
   const o = world.order;
   const f = world.farOffer;
   let kind: MapMark['kind'];
@@ -129,10 +182,18 @@ export function farMark(world: World): MapMark | null {
     x = f;
     ticks = farOfferDue(world)! - world.tick;
   } else return null;
+  const late = farLate(world, x, ticks, lanes);
+  const travel = homeTravelTicks(world, x.island, lanes);
   return {
     island: x.island,
     kind,
-    text: `${x.amount} ${GOODS[x.good].name} · ${formatGameTime(ticks)}`,
+    text: `${x.amount} ${GOODS[x.good].name} · ${formatGameTime(ticks)}${late ? ' · zu spät' : ''}`,
     warn: world.islands[x.island]!.kontorId === null,
+    late,
+    tip:
+      travel === null
+        ? null
+        : `Fahrzeit ≈ ${formatGameTime(travel)}, Rest ${formatGameTime(ticks)}` +
+          (late ? ' · zu spät für Ware aus der Heimat' : ''),
   };
 }

@@ -79,6 +79,8 @@ export const CONTRACT_PENALTY_PCT = 100;
 export const CONTRACT_MIN_TIER = 3;
 /** Lieferungen, nach denen ein Vertrag treu ist und einen Fehlbestand einmal verzeiht (I-091 R-T2). */
 export const CONTRACT_LOYAL_AFTER = 5;
+/** Warnfenster vor der Vertragsabrechnung in Ticks (I-122): 30 s bei 1×, nur Anzeige und Klang. */
+export const CONTRACT_WARN_TICKS = 300;
 export const STORAGE_CAP = 100;
 export const START_MONEY = 5000;
 export const START_STOCK: Record<GoodId, number> = {

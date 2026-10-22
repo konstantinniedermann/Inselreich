@@ -6,6 +6,7 @@ Regeln: docs/studio/VERFASSUNG.md §6 und §1. Best effort; Fehler lassen zu.
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import json
 import os
 import re
@@ -541,7 +542,107 @@ RULE_KEYWORDS = (
     ("worktree remove", "delete"),
     ("Freigabe-Formel", "constitution"),
 )
-COMMAND_LIMIT = 160
+# Fester Kurztext je Regel für das Ereignis: enthält nie Befehlsteile.
+RULE_SUMMARY = {
+    "stash": FORBIDDEN + ": git stash",
+    "force-push": FORBIDDEN + ": Force-Push",
+    "rebase": FORBIDDEN + ": git rebase",
+    "reset-hard": FORBIDDEN + ": git reset --hard",
+    "delete": FORBIDDEN + ": Löschen",
+    "kill-by-name": FORBIDDEN + ": Prozess per Namen beenden",
+    "constitution": PROTECTED,
+    "model": MODEL_MISSING,
+}
+REDACTED = "[REDACTED]"
+# Schwärzung für das Ereignisprotokoll: ersetzt nur den Secret-Teil; Unter-
+# Schwärzung ist inakzeptabel, Über-Schwärzung hinnehmbar. Ein Wert ist ein
+# Quoted-String (mit Leerzeichen) oder ein Token bis zum nächsten Leerzeichen.
+# Schlüsselwörter werden ohne führendes `[\w-]*` gesucht (sonst quadratische
+# Laufzeit, ReDoS); Präfixe vor dem Wort bleiben dadurch einfach stehen.
+# Namen gelten als Wortsegmente (`DB_PASS`, `ACCESS_TOKEN_V2`, `SECRETS`), nicht
+# als Teilstrings: `keyboard=`, `monkey=`, `author=` bleiben unverändert.
+# `-p PW` mit Leerzeichen wird nur in Befehlen mit docker login/sshpass/mysql*/
+# mongo* geschwärzt (dort ist es das Passwort; `mysql -p db` wird überschwärzt).
+# `token`, `secret`, `password`, `passwd`, `credential`, `passphrase`, `apikey`
+# gelten auch mit Präfix (`PGPASSWORD`, `accessToken`); `key`, `auth`, `pass`,
+# `pwd` nur am Wortanfang oder als CamelCase-Segment (`privateKey`).
+# Das Ereignis `guard_block` speichert keinen Befehl (R743): nur Regel, Werkzeug,
+# fester `summary` je Regel und `command_hash` über den geschwärzten Text; diese
+# Schwärzung ist die zweite Linie für andere Ausgaben.
+# Bewusste Restlücken der Schwärzung: Secrets in verschachtelten/verketteten/
+# escapten Quotes, Werte aus Dateien oder Variablen (`$(cat f)`), Passwort als
+# nacktes Positionsargument ohne Schlüsselwort, `-u` ohne `:` im Wert,
+# `https://TOKEN@host` ohne Präfix, Passwort mit `/` oder `@` in URL-Credentials,
+# `Authorization:` ohne Schema, `?key=` in URLs, Flag-Präfix länger als 40
+# Zeichen, Namens-Suffix mit mehr als 5 Segmenten, Namen mit Präfix vor
+# `key`/`auth`/`pass`/`pwd` in Kleinschreibung (`dbkey=`); `-pattern` wird zu
+# `-p[REDACTED]`.
+_VALUE = r"""(?:"[^"]*"|'[^']*'|[^\s'"]+)"""
+_USERPASS = r"""(?:"[^"]*:[^"]*"|'[^']*:[^']*'|[^\s'"]*:[^\s'"]*)"""
+_BOUND_NAMES = r"(?:key|auth|pass|pwd)s?"
+_FREE_NAMES = r"(?:token|apikey|secret|password|passwd|credential|passphrase)s?"
+# key/auth/pass/pwd nur am Wortanfang oder als CamelCase-Segment (`privateKey`).
+_KEYWORDS = (
+    r"(?:(?<![A-Za-z0-9])"
+    + _BOUND_NAMES
+    + r"|(?<=[a-z0-9])(?-i:Key|Auth|Pass|Pwd)s?|"
+    + _FREE_NAMES
+    + ")"
+)
+_NAME_SUFFIX = r"(?:[_-][A-Za-z0-9]{1,20}){0,5}"
+_FLAG_KEYWORDS = r"(?:token|apikey|secret|password|passwd|passphrase|pass|pwd|credential|auth|cookie|[-_]?key)"
+_PW_CONTEXT = re.compile(r"(?i)\b(?:docker\s+login|sshpass|mysql\w*|mongo\w*)\b")
+_SPACED_P = re.compile(r"(?<!\S)(-p\s+)[^\s'\"-]\S*")
+_DASH_P = re.compile(r"(?<!\S)(-p)-\S+")
+_B = r"(?<![A-Za-z0-9])"
+REDACT_PATTERNS = (
+    (re.compile(_B + r"gh[pousr]_[A-Za-z0-9]{20,}"), REDACTED),
+    (re.compile(r"github_pat_[A-Za-z0-9_]{20,}"), REDACTED),
+    (re.compile(_B + r"glpat-[A-Za-z0-9_-]{20,}"), REDACTED),
+    (re.compile(_B + r"sk-[A-Za-z0-9_-]{20,}"), REDACTED),
+    (re.compile(_B + r"sk_(?:live|test)_[A-Za-z0-9]{10,}"), REDACTED),
+    (re.compile(_B + r"xox[a-z]-[A-Za-z0-9-]{10,}"), REDACTED),
+    (re.compile(_B + r"xapp-[A-Za-z0-9-]{10,}"), REDACTED),
+    (re.compile(r"AKIA[0-9A-Z]{16}"), REDACTED),
+    (
+        re.compile(
+            r"(?i)(\bauthorization\s*:\s*['\"]?(?:basic|bearer|token)\s+)[^\s'\"]+"
+        ),
+        r"\1" + REDACTED,
+    ),
+    (re.compile(r"(?i)(\b(?:set-)?cookie\s*:\s*)[^'\"]+"), r"\1" + REDACTED),
+    (re.compile(r"(?i)(\bBearer\s+)" + _VALUE), r"\1" + REDACTED),
+    (
+        re.compile(r"(?<!\S)(-u|-U|--user|--proxy-user)(=|\s*)" + _USERPASS),
+        r"\1\2" + REDACTED,
+    ),
+    (
+        re.compile(r"(?i)(?<!\S)(--[\w-]{0,40}?" + _FLAG_KEYWORDS + r"\s+)" + _VALUE),
+        r"\1" + REDACTED,
+    ),
+    (
+        re.compile(
+            r"(?i)(" + _KEYWORDS + _NAME_SUFFIX + r"""["']?\s*[=:]\s*)""" + _VALUE
+        ),
+        r"\1" + REDACTED,
+    ),
+    (
+        re.compile(
+            r"""(?<!\S)(-p)(?:\s+(?:"[^"]*"|'[^']*')|"[^"]*"|'[^']*'|[^\s\-'"]\S*)"""
+        ),
+        r"\1" + REDACTED,
+    ),
+    (re.compile(r"(://)[^\s/:@]+:[^\s/@]+@"), r"\1" + REDACTED + "@"),
+)
+
+
+def redact(text: str) -> str:
+    for pattern, replacement in REDACT_PATTERNS:
+        text = pattern.sub(replacement, text)
+    if _PW_CONTEXT.search(text):
+        text = _SPACED_P.sub(r"\1" + REDACTED, text)
+        text = _DASH_P.sub(r"\1" + REDACTED, text)
+    return text
 
 
 def rule_of(found: str) -> str:
@@ -558,7 +659,7 @@ def rule_of(found: str) -> str:
     return "other"
 
 
-def _shown_command(payload: dict) -> str:
+def _raw_text(payload: dict) -> str:
     data = payload.get("tool_input")
     data = data if isinstance(data, dict) else {}
     tool = payload.get("tool_name")
@@ -568,7 +669,11 @@ def _shown_command(payload: dict) -> str:
         text = str(data.get("file_path") or data.get("notebook_path") or "")
     else:
         text = str(data.get("description", ""))
-    return " ".join(text.split())[:COMMAND_LIMIT]
+    return " ".join(text.split())
+
+
+def _command_hash(payload: dict) -> str:
+    return hashlib.sha256(redact(_raw_text(payload)).encode("utf-8")).hexdigest()[:12]
 
 
 def _log_block(payload: dict, found: str) -> None:
@@ -585,9 +690,9 @@ def _log_block(payload: dict, found: str) -> None:
                 "kind": "guard_block",
                 "rule": rule_of(found),
                 "tool": str(payload.get("tool_name") or ""),
-                "command": _shown_command(payload),
+                "command_hash": _command_hash(payload),
                 "persona": str(payload.get("agent_type") or ""),
-                "summary": found[:COMMAND_LIMIT],
+                "summary": RULE_SUMMARY.get(rule_of(found), rule_of(found)),
             }
         )
 

@@ -134,7 +134,7 @@ schliesst den Eintrag.
 - Von: l0
 - Antwort: Nutzer 2026-10-08: einschalten mit den drei Sparregeln (paths-ignore Doku, Pages nur manuell beim Release, CI cancel-in-progress); R334
 
-## N-99 · offen · 2026-10-10 · Kenntnis: zweiter Push im selben Claude-Gespräch (R434)
+## N-99 · umgesetzt · 2026-10-10 · Kenntnis: zweiter Push im selben Claude-Gespräch (R434)
 
 - Frage: Zur Kenntnis: Nach abgeschlossener Ende-Routine zählt 'mach weiter' im selben Claude-Gespräch als neue Studio-Session mit eigenem Push (R434). Einverstanden?
 - Empfehlung: Ja, belassen; künftig empfiehlt die Ende-Routine ein neues Claude-Gespräch (R438 V4 b)
@@ -142,7 +142,7 @@ schliesst den Eintrag.
 - Kosten des Wartens: keine; ohne Antwort gilt R434 weiter
 - Blockiert: nichts
 - Von: l0
-- Antwort: –
+- Antwort: gegenstandslos (R816: ein Push je Tag)
 
 ## N-100 · beantwortet · 2026-10-13 · Dropbox während des Push-Gates pausieren
 
@@ -154,7 +154,7 @@ schliesst den Eintrag.
 - Von: L0
 - Antwort: Gegenstandslos: REL-20 ohne Pause live gepusht (R594/R595)
 
-## N-101 · offen · 2026-10-16 · Kenntnis: Darlehen (I-094) verworfen
+## N-101 · umgesetzt · 2026-10-16 · Kenntnis: Darlehen (I-094) verworfen
 
 - Frage: Du hast I-094 Darlehen anstossen lassen. Die Rechnung zeigt: Es ist vor dem Bürger-Ausbau immer richtig (Pflichtzug), danach wirkungslos, und kleine Zinsänderungen kippen das Ergebnis unvorhersehbar. Einverstanden mit Verwerfen?
 - Empfehlung: Ja, verwerfen (R670); Spec bleibt auf design/i091-i094 liegen
@@ -162,14 +162,24 @@ schliesst den Eintrag.
 - Kosten des Wartens: Keine: ohne Antwort gilt Verwerfen, Wiederaufnahme jederzeit ohne Neuarbeit
 - Blockiert: nichts
 - Von: L0
-- Antwort: –
+- Antwort: Nutzer 2026-10-17: einverstanden, verwerfen
 
-## N-102 · offen · 2026-10-16 · Headless-Chrome aus Projekt reflexionsinstrument beenden?
+## N-102 · offen · 2026-10-16 · Headless-Chrome aus Projekt Munica beenden?
 
-- Frage: Seit ≈ 17 h laufen 6 Headless-Chrome-Prozesse (Port 9333) aus einer Session des Projekts reflexionsinstrument. Sie verbrauchen kaum CPU (0,1 %), lassen aber die Leistungsmessung von ORT-A das Messfenster als belegt werten. Beendest du sie?
+- Frage: Seit gut 2 Tagen läuft ein Headless-Chrome (PID 91387, Port 9333) aus einer Claude-Session des Projekts Munica (Nachtrag 2026-10-21, vorher als reflexionsinstrument gemeldet). Er lässt die ORT-A-Leistungsmessung das Messfenster als belegt werten. Beendest du ihn (z. B. `kill 91387`)?
 - Empfehlung: Du beendest sie selbst (fremdes Projekt, ausserhalb des Studios); sonst laufen die ORT-A-Messungen mit Vermerk.
 - Begründung: Prozesse eines anderen Projekts liegen ausserhalb der Studio-Befugnis; der Guard sperrt pkill -f.
 - Kosten des Wartens: Gering: ORT-A-Leistungsmessungen tragen den Vermerk «Messfenster belegt» bis zur Antwort.
 - Blockiert: nichts hart; Messgüte ORT-A
 - Von: lead-tech
 - Antwort: –
+
+## N-103 · beantwortet · 2026-10-22 · Verfassung §7/§9.2 vs. R810 (make check vor Merge/Push)
+
+- Frage: Verfassung §7.1, §7.2 und §9.2 verlangen make check vor jedem Merge bzw. Push; R810 ersetzt das durch Teilbeleg je Merge und make push-check (enthält make check-push) einmal je Release. Soll §9.2/§7 auf voller Lauf vor jedem Push bzw. Release, Teilbeleg je lokalem Merge gelockert werden?
+- Empfehlung: Klarstellung in §7/§9.2; bis dahin Handbuch 1.66 als Auslegung
+- Begründung: Verfassung steht über Handbuch und R810; §9 ist nicht abschwächbar
+- Kosten des Wartens: Auslegungsstreit bei jedem Merge ohne vollen Lauf
+- Blockiert: nichts
+- Von: studio-coach
+- Antwort: Nutzer 2026-10-22: ja (R816; Verfassung 1.3)

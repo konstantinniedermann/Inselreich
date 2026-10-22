@@ -211,7 +211,7 @@ describe('AK-PU-06..09 Kacheln', () => {
   it('AK-PU-09 houseTiles', () => {
     const h = put(w, 'house');
     setHouse(h, 1, 3, []);
-    expect(houseTiles(h)).toEqual([
+    expect(houseTiles(w, h)).toEqual([
       {
         key: 'inhabitants',
         label: 'Einwohner',
@@ -219,7 +219,7 @@ describe('AK-PU-06..09 Kacheln', () => {
         sub: null,
       },
     ]);
-    expect(houseTiles(put(w, 'fisher'))).toEqual([]);
+    expect(houseTiles(w, put(w, 'fisher'))).toEqual([]);
   });
   it('TILE_LAYOUT: ein Eintrag je StatKey, Etiketten eine Quelle', () => {
     const keys: StatKey[] = ['output', 'utilization', 'input', 'upkeep', 'inhabitants'];
@@ -230,7 +230,7 @@ describe('AK-PU-06..09 Kacheln', () => {
       ...statTiles(w, put(w, 'fisher')),
       ...statTiles(w, put(w, 'weaver')),
       ...statTiles(w, put(w, 'chapel')),
-      ...houseTiles(h),
+      ...houseTiles(w, h),
     ];
     expect(new Set(tiles.map((t) => t.key)).size).toBeGreaterThanOrEqual(4);
     for (const t of tiles) expect(t.label).toBe(TILE_LAYOUT[t.key].label);

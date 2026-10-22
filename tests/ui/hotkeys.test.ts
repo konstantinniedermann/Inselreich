@@ -350,7 +350,8 @@ describe('TASTEN-KOMFORT Tasten (Teil A, C)', () => {
   });
 
   it('AK-TK-16 andere Tasten mit Umschalt unverändert', () => {
-    for (const k of Object.keys(TOOL_HOTKEYS).filter((k) => k !== 'u')) {
+    for (const k of Object.keys(TOOL_HOTKEYS).filter((k) => k !== 'u' && k !== 'r')) {
+      // r: Umschalt+R = Rat (I-112)
       expect(hotkeyAction(k.toUpperCase(), SH, false)).toEqual(hotkeyAction(k, NONE, false));
     }
     expect(hotkeyAction('?', SH, false)).toEqual({ kind: 'help' });

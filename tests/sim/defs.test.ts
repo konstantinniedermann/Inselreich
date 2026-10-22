@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS, BUILDING_IDS, ROAD_COST } from '../../src/sim/defs/buildings';
-import { CONTRACT_LOYAL_AFTER, GOODS, GOOD_IDS, START_STOCK } from '../../src/sim/defs/goods';
+import {
+  CONTRACT_LOYAL_AFTER,
+  CONTRACT_WARN_TICKS,
+  GOODS,
+  GOOD_IDS,
+  START_STOCK,
+} from '../../src/sim/defs/goods';
 import {
   TAX_CARRY_DIVISOR,
   TAX_UNIT,
@@ -485,5 +491,12 @@ describe('AK-TR-11 Treue-Schwelle', () => {
   it('CONTRACT_LOYAL_AFTER ist eine ganze Zahl >= 1', () => {
     expect(Number.isInteger(CONTRACT_LOYAL_AFTER)).toBe(true);
     expect(CONTRACT_LOYAL_AFTER).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('AK-W6 Warnfenster', () => {
+  it('CONTRACT_WARN_TICKS ist eine positive ganze Zahl', () => {
+    expect(Number.isInteger(CONTRACT_WARN_TICKS)).toBe(true);
+    expect(CONTRACT_WARN_TICKS).toBeGreaterThan(0);
   });
 });

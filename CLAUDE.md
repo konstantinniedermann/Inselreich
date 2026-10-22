@@ -16,7 +16,7 @@ Grafik und Audio eigen oder offen lizenziert mit Nachweis (ADR-006).
 - Rangfolge: `docs/studio/VERFASSUNG.md` > Handbuch `docs/studio/STUDIO.md`. Die Verfassung ändert
   nur der Nutzer.
 - **In diesem Repo ersetzt die Autonomie-Regel der Verfassung (§5) das Nachfragen und Warten aus
-  `../CLAUDE.md` („Entwickler-Kontext", „Beim Start" Punkt 3):** L0 fragt nicht zurück, Vorbehalte
+  `../CLAUDE.md` („Zusammenarbeit mit dem Nutzer", Skill `session-start`):** L0 fragt nicht zurück, Vorbehalte
   gehen in `docs/studio/warteschlange.md`.
 - Start- und Ende-Routine: `docs/studio/STUDIO.md`, Abschnitt „Session-Start und -Ende".
 

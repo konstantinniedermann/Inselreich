@@ -717,3 +717,15 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/studio/efficiency.py`, `tools/studio/tests/test_efficiency.py` (Werkzeug-Paket, ≈ 6 Tools)
 - Ruling: –
 - Bewertung: –
+
+## E-071 · vorgeschlagen (R810 angenommen, läuft passiv ohne Platz wie E-059) · Volle Läufe mit 5 statt 9 Vitest-Workern
+
+- Hypothese: Wenn volle Läufe mit `VITEST_MAX_WORKERS=5` statt 9 laufen und rote Zeit-/Timeout-Dateien einmal einzeln bei Last ≤ 4 wiederholt werden, sinkt der Anteil lastbedingter Rotläufe (Retro [adhoc-last](retros/2026-10-22-adhoc-last.md) V2), ohne die Laufzeit des vollen Laufs untragbar zu verlängern.
+- Messgrösse: Über die ersten 3 vollen Läufe (`make push-check`) nach Start: Exit-2- und lastbedingte Exit-1-Rate ≤ 1 von 3 (Ausgang laut Retro: Last ≥ 8 bei 5 von 8 Flake-Fällen) und Laufzeit je voller Lauf ≤ 1,5 × Ausgangswert (Ausgang aus den `push_check`-Events); jede Wiederholung steht als Vermerk im Event.
+- Messbarkeit: unverändert; Events `push_check`/`check_*` und Flake-Zeile der Ampel bleiben, die Wiederholung kommt als Vermerk hinzu.
+- Zeitraum: bis zum dritten vollen Lauf, höchstens bis 2026-11-19.
+- Rückfall: Umgebungsvariable entfernen (Standard 9 Worker), Handbuch-Absatz „Teilbeleg und Release-Bündel“ ohne die Worker-Zeile (Version 1.67).
+- Dateien: `docs/studio/STUDIO.md` (Gate-Merge-Absatz), Umgebungsvariable beim Aufruf, kein Code
+- Ruling: R810
+- Start: Handbuch 1.66 (Variable wirkt sofort, Zählung `laufend` erst bei freiem Platz; 3 laufen: E-063, E-066, E-068)
+- Bewertung: –

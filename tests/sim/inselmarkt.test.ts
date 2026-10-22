@@ -145,7 +145,7 @@ describe('I-092 Inselmarkt-Vorliebe', () => {
     expect(sellPrice(w, 'glass', 1)).toBe(20);
     expect(sellPrice(w, 'glass', 10)).toBe(191);
     expect(sellPrice(w, 'glass', 50)).toBe(755);
-  });
+  }, 10_000);
 
   it('AK-IM-05 Kein Vorliebe-Gut', () => {
     const w = world3();

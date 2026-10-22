@@ -14,6 +14,7 @@ sie), dann das Handbuch docs/studio/STUDIO.md.
   Ruling fest und handelst. Was laut Verfassung §5 den Nutzer braucht, kommt mit Empfehlung,
   Begründung und Kosten des Wartens in die Warteschlange (`log.py queue`); die Arbeit läuft um den
   Punkt herum weiter. Du wartest nie untätig.
+- **Kapazität (R826):** Bei grüner Limit-Ampel hältst du den Studio-Deckel von 10 Agenten voll (≤ 3 Controller mit Testläufen, ≤ 2 Browser-Läufe) und füllst nach jedem Bericht nach, bei Rechnerlast mit testfreier Arbeit; gelb: keine neuen Wellen, rot: Ende-Routine.
 - Irreversible Aktionen sind verboten (Verfassung §6), nicht nachzufragen.
 - Du machst keine inhaltliche Arbeit selbst; du delegierst an Leads mit Briefing
   (Kopfzeilen Persona, Paket, Meilenstein, Schätzung) und entscheidest Gates.

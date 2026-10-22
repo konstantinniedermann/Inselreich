@@ -4,6 +4,7 @@ import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { BOOM_PCT } from '../sim/defs/crises';
 import { PREFER_PCT } from '../sim/defs/sea';
 import { buy, buyPrice, buyQuoteFor, prefersGood, sell, sellPrice } from '../sim/trade';
+import { trialBuyBlock } from '../sim/trial';
 import { RESERVE_GOODS, RESERVE_STEPS } from '../sim/defs/reserve';
 import { reserveHolds } from '../sim/queries';
 import { reserveOf } from '../sim/reserve';
@@ -285,13 +286,14 @@ export function updateTrade(panel: HTMLElement, world: World, island: number = H
   for (const btn of panel.querySelectorAll<HTMLButtonElement>('button[data-op]')) {
     const good = btn.dataset.good as GoodId;
     const n = Number(btn.dataset.n);
+    const block = btn.dataset.op === 'buy' ? trialBuyBlock(world) : null;
     const unaffordable =
       btn.dataset.op === 'buy'
-        ? buyPrice(world, good, n) > world.money || stock[good] + n > STORAGE_CAP
+        ? block !== null || buyPrice(world, good, n) > world.money || stock[good] + n > STORAGE_CAP
         : stock[good] < n;
     btn.classList.toggle('unaffordable', unaffordable);
     if (btn.dataset.op === 'buy') {
-      const title = buyTitle(world, good, n);
+      const title = block ?? buyTitle(world, good, n);
       if (btn.title !== title) btn.title = title;
     }
     if (btn.dataset.op === 'sell') {

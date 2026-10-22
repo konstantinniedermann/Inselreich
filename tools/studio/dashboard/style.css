@@ -1,4 +1,4 @@
-/* Studio-Dashboard — Card-UI, CSS Grid, mobile-first, hell/dunkel. */
+/* Studio-Dashboard — Card-UI, CSS Grid, desktop-first, hell/dunkel. */
 
 :root {
   color-scheme: light;
@@ -469,118 +469,6 @@ body[data-stale='true'] .grid {
   font-weight: 600;
 }
 
-/* --- Organigramm ---------------------------------------------------------- */
-
-.org {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.org-root > li + li {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px dashed var(--border);
-}
-
-.org-root > li > .node {
-  max-width: 560px;
-}
-
-.org-l1 {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
-  margin-top: 12px;
-}
-
-@media (min-width: 720px) {
-  .org-l1 {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  }
-}
-
-.org-l1 > li {
-  background: var(--lane);
-  border-radius: 10px;
-  padding: 8px;
-  min-width: 0;
-}
-
-.org-l2 {
-  display: grid;
-  gap: 8px;
-  margin: 8px 0 0 8px;
-  padding-left: 10px;
-  border-left: 2px solid var(--border);
-}
-
-.org-l2 .org-l2 {
-  margin-left: 4px;
-}
-
-.node {
-  display: grid;
-  gap: 6px;
-  padding: 10px 12px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--dep, var(--border));
-  border-radius: 8px;
-  min-width: 0;
-}
-
-.node.st-ended {
-  border-style: dashed;
-  border-left-style: dashed;
-  opacity: 0.8;
-}
-
-.task {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.summary {
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.seen {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 4px 8px;
-  color: var(--muted);
-  font-size: 0.8rem;
-}
-
-.node.inactive {
-  outline: 2px solid var(--danger);
-  outline-offset: 1px;
-  animation: inactive-pulse 2s ease-in-out infinite; /* = INACTIVE_PULSE_MS */
-}
-
-@keyframes inactive-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger) 45%, transparent);
-  }
-  50% {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--danger) 0%, transparent);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .node.inactive {
-    animation: none;
-    outline-width: 3px;
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 25%, transparent);
-  }
-}
-
 /* --- Status-Kacheln ------------------------------------------------------- */
 
 .counts {
@@ -835,64 +723,6 @@ body[data-stale='true'] .grid {
     display: inline;
     margin-left: 6px;
   }
-}
-
-/* --- Puls ----------------------------------------------------------------- */
-
-.pulse-summary {
-  color: var(--muted);
-  font-size: 0.85rem;
-  margin-bottom: 8px;
-}
-
-.pulse-chart {
-  display: block;
-  width: 100%;
-  height: 120px;
-}
-
-.pulse-chart .axis {
-  stroke: var(--border);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
-
-.pulse-chart .hit {
-  fill: transparent;
-}
-
-.pulse-chart g:hover .hit {
-  fill: var(--hover);
-}
-
-.pulse-chart .seg {
-  fill: var(--dep);
-}
-
-.axis-labels {
-  display: flex;
-  justify-content: space-between;
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-  margin-top: 4px;
-}
-
-.legend {
-  list-style: none;
-  margin: 10px 0 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.legend li {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
 }
 
 /* --- Chronik und Feed ----------------------------------------------------- */
@@ -1182,34 +1012,7 @@ time {
   fill: var(--accent);
 }
 
-/* --- Studio: Organigramm der Personas, lernen.md -------------------------- */
-
-.orgchart {
-  display: grid;
-  gap: 14px;
-}
-
-.lane h3 {
-  font-size: 0.75rem;
-  font-weight: 650;
-  color: var(--muted);
-  margin-bottom: 6px;
-}
-
-.persona-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 8px;
-}
-
-.persona-card {
-  display: grid;
-  gap: 4px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--lane);
-}
+/* --- Studio: lernen.md ---------------------------------------------------- */
 
 .lernen {
   margin: 0;
@@ -1231,53 +1034,6 @@ time {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 4px 8px;
-}
-
-/* --- Kacheln: zugeklappt / aufgeklappt (Spec Prozess-Graph, K1–K3) ----------- */
-
-.node > summary {
-  display: grid;
-  gap: 2px;
-  list-style: none;
-  cursor: pointer;
-}
-
-.node > summary::-webkit-details-marker {
-  display: none;
-}
-
-.node-name {
-  font-weight: 700;
-}
-
-.node[data-level='0'] .node-name,
-.node[data-level='1'] .node-name {
-  font-size: 1.05rem;
-}
-
-.node-title {
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.node-status {
-  font-size: 0.85rem;
-}
-
-.node-details {
-  display: grid;
-  gap: 6px;
-  margin-top: 8px;
-  overflow-wrap: anywhere;
-}
-
-.node-meta {
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.node.highlight {
-  box-shadow: 0 0 0 3px var(--dep, var(--border)); /* kein outline: .inactive behält seinen roten Rand */
 }
 
 /* --- Prozess-Graph (Spec Prozess-Graph, Abschnitt G) ------------------------ */
@@ -2006,4 +1762,121 @@ time {
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
+}
+
+/* --- Übersicht: Bereiche und 12-Spalten-Raster (TOOL-DASH-SCHLANK) --------- */
+
+.area {
+  max-width: 1680px;
+  margin: 8px auto 0;
+  padding: 0 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.card h3.sub {
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--muted);
+  margin: 8px 0 6px;
+}
+
+.fold > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold > summary h2 {
+  display: inline-block;
+  margin-bottom: 0;
+}
+
+.fold > summary h2::before {
+  content: '▸ ';
+}
+
+.fold[open] > summary h2::before {
+  content: '▾ ';
+}
+
+.fold[open] > summary {
+  margin-bottom: 12px;
+}
+
+.session-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px 24px;
+  align-items: start;
+}
+
+@media (min-width: 1200px) {
+  .grid12 {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  .grid12 > .span-5 {
+    grid-column: span 5;
+  }
+
+  .grid12 > .span-6 {
+    grid-column: span 6;
+  }
+
+  .grid12 > .span-7 {
+    grid-column: span 7;
+  }
+
+  .grid12 > .span-12 {
+    grid-column: 1 / -1;
+  }
+
+  .grid12 > .row-2 {
+    grid-row: span 2;
+  }
+
+  .session-head {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 720px) and (max-width: 1199.98px) {
+  .grid12 > .span-12 {
+    grid-column: 1 / -1;
+  }
+}
+
+/* --- Höhendeckel: lange Listen scrollen in der Karte ----------------------- */
+
+#budgets,
+#board,
+#queue,
+#decisions,
+#delegation {
+  max-height: 26rem;
+  overflow-y: auto;
+}
+
+#feed {
+  max-height: 32rem;
+}
+
+.graph-body {
+  max-height: 60vh;
+}
+
+.budget-sum {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+#releases {
+  min-width: 0;
+  overflow-x: auto;
 }

@@ -1,8 +1,15 @@
 import { HOME } from '../sim/world';
 import { islandName } from '../sim/islands';
 import { CONTRACT_LOYAL_AFTER, GOODS } from '../sim/defs/goods';
-import { contractUnitPrice, nextOrderTick, previewOrder } from '../sim/orders';
-import { ORDER_PERIOD } from '../sim/defs/timing';
+import {
+  contractUnitPrice,
+  contractWarning,
+  nextOrderTick,
+  nextSettleTick,
+  previewOrder,
+  type ContractWarning,
+} from '../sim/orders';
+import { ORDER_FIRST_TICK, ORDER_PERIOD } from '../sim/defs/timing';
 import type { StepReport } from '../sim/tick';
 import type { SoundEvent } from '../audio/sound';
 import { functionLock } from '../sim/unlocks';
@@ -16,8 +23,8 @@ import { GOODS_BALANCE_TICKS, formatGameTime, perMinute } from './time';
 export interface OrderActions {
   /** Liefert aus dem Lager der aktiven Insel. */
   deliver(): void;
-  /** Nimmt das Fernangebot an. */
-  acceptFar(): void;
+  /** Nimmt das Fernangebot an; `pick` 1 wählt die Zweitkarte. */
+  acceptFar(pick?: 0 | 1): void;
   /** Nimmt das Stammkunde-Angebot an. */
   accept(): void;
   /** Lehnt das Angebot ab. */
@@ -90,10 +97,12 @@ export function orderCardText(world: World, island: number = HOME): string {
   const c = world.contract;
   if (c !== null) {
     const stock = world.islands[c.island]!.stock[c.good];
+    const settle = formatGameTime(nextSettleTick(world) - world.tick);
     return (
       `Stammkunde: ${c.amount} ${GOODS[c.good].name}${islandSuffix(world, c.island)}` +
-      ` · nächste Lieferung ${rest()} · Lager ${stock}/${c.amount}` +
-      ` · ${loyaltyText(c)}`
+      ` · nächste Lieferung ${settle} · Lager ${stock}/${c.amount}` +
+      ` · ${loyaltyText(c)}` +
+      warnSuffix(world, contractWarning(world))
     );
   }
   const offer = world.contractOffer;
@@ -122,6 +131,43 @@ export function orderCardText(world: World, island: number = HOME): string {
     ` · Lager ${world.islands[island]!.stock[o.good]}/${o.amount}` +
     (next === null ? '' : ` · danach voraussichtlich ${GOODS[next.good].name}`)
   );
+}
+
+/** Warnzusatz der Vertragskarte (I-122); leer ausserhalb des Warnfensters. */
+function warnSuffix(world: World, w: ContractWarning | null): string {
+  if (w === null) return '';
+  const what =
+    w.reason === 'stock'
+      ? ` · Fehlt: ${w.missing} ${GOODS[w.good].name}`
+      : ` · kein Kontor${islandSuffix(world, w.island)}`;
+  return (
+    what + (w.outcome === 'excuse' ? ' · Kulanz wird verbraucht' : ` · sonst Strafe ${w.penalty}`)
+  );
+}
+
+/** Abrechnungsperiode, auf die sich die Vorwarnung bezieht. */
+export function warnPeriod(world: World): number {
+  return (nextSettleTick(world) - ORDER_FIRST_TICK) / ORDER_PERIOD;
+}
+
+/** Erste Meldung je Periode: Warnung da und für diese Periode noch nicht gemeldet. */
+export function shouldWarnNow(
+  prev: number | null,
+  w: ContractWarning | null,
+  period: number,
+): boolean {
+  return w !== null && prev !== period;
+}
+
+/** Hebt die Auftragskarte 2500 ms hervor; Rückgabe bricht ab (Timer weg, Klasse entfernt). */
+export function flashOrderCard(el: HTMLElement): () => void {
+  el.classList.remove('order-card--soon');
+  el.classList.add('order-card--soon');
+  const timer = setTimeout(() => el.classList.remove('order-card--soon'), 2500);
+  return () => {
+    clearTimeout(timer);
+    el.classList.remove('order-card--soon');
+  };
 }
 
 function islandSuffix(world: World, island: number): string {
@@ -316,6 +362,7 @@ export function updateOrder(el: HTMLElement, world: World, island: number = HOME
   setHidden('order-producer', world.contract === null);
   setHidden('order-cancel', world.contract === null);
   el.classList.toggle('order-card--warn', contractWarn(world) || farOrderWarn(world));
+  if (contractWarning(world) === null) el.classList.toggle('order-card--soon', false);
   const btn = el.querySelector<HTMLElement>('[data-field="order-deliver"]');
   if (btn) btn.hidden = world.order === null;
   const target = deliverTarget(world, island);

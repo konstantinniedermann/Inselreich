@@ -108,9 +108,9 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   kein zweiter Finger dazukam und nicht verschoben wurde.
 - **Bilanz in der Kopfzeile:** Der Chip zeigt Einnahmen und Unterhalt getrennt, z. B. «+540 / −780» je Minute (ab 10 000 gekürzt, z. B. «12,3k»). Die Netto-Bilanz («Bilanz −240 / min») steht an erster Stelle im Tooltip, darunter Steuern und Unterhalt mit vollen Zahlen. Ist der Unterhalt höher als die Einnahmen, färbt sich der Chip rot; ein Klick öffnet weiter die Unterhaltskarte.
 - **Bilanz danach:** Der Tooltip eines Betriebs oder Dienstes in der Bauleiste nennt «Bilanz danach: +120 → +95 / min» (Bilanz heute gegen Bilanz nach dem Bau, inselübergreifend wie die Kopfzeile); beim Wohnhaus «→ bis zu … (Steuer bei voller Belegung)». Die Ausbau-Karte im Info-Panel zeigt dieselbe Zeile für die nächste Stufe. Der Aufstieg eines Hauses ist darin noch nicht eingerechnet.
-- **Stammkunde (Vertragskarte):** Die Angebotskarte nennt neben Gut und Preis «Markt jetzt ≈ N» (Preis der ersten Einheit wie im Handelsdialog) und «Erzeugung x / min» der Lieferinsel, oder «keine Erzeugung». Auf der Vertragskarte springt «Zum Erzeuger» zu einem Erzeuger des Vertragsguts; jeder weitere Klick wechselt reihum zum nächsten. Nach 5 pünktlichen Lieferungen ist der Stammkunde treu und verzeiht einen Fehlbestand einmal ohne Strafe; danach zählt die Treue neu. Kündigen setzt sie zurück.
-- **Fernangebot:** Hast du ein Kontor auf einer fernen Insel, steht neben dem Auftrag oft ein **Fernangebot**: eine grosse Menge des Guts, das diese Insel mag (Möweninsel Stoff, Felsbucht Rum, Weidenau Glas). **Annehmen** ersetzt den Auftrag. Du hast dann 2:50 ab Auftragsbeginn Zeit und lieferst nur am Kontor dieser Insel (**Liefern** nennt die Insel); der nächste Auftrag entfällt. Ein verpasster Fernauftrag kostet nichts ausser diesem Auftrag.
-- **Marke an der Fern-Insel:** Läuft ein Fernangebot oder ein Fernauftrag, trägt die Insel auf der Seekarte eine Marke «15 Rum · 1:20» (Menge, Gut, Restzeit): hohl beim noch nicht angenommenen Angebot, gefüllt beim angenommenen Auftrag, in Warnfarbe, wenn dort kein Kontor mehr steht. Der Hover-Text der Insel nennt «Fernauftrag: …» bzw. «Fernangebot: …». Lieferung oder Verfall nehmen die Marke weg.
+- **Stammkunde (Vertragskarte):** Die Angebotskarte nennt neben Gut und Preis «Markt jetzt ≈ N» (Preis der ersten Einheit wie im Handelsdialog) und «Erzeugung x / min» der Lieferinsel, oder «keine Erzeugung». Auf der Vertragskarte springt «Zum Erzeuger» zu einem Erzeuger des Vertragsguts; jeder weitere Klick wechselt reihum zum nächsten. Nach 5 pünktlichen Lieferungen ist der Stammkunde treu und verzeiht einen Fehlbestand einmal ohne Strafe; danach zählt die Treue neu. Kündigen setzt sie zurück. **Vorwarnung (I-122):** In den letzten 30 s Spielzeit vor der Lieferung prüft die Karte, ob das Lager reicht. Fehlt Ware, leuchtet die Vertragskarte einmal je Lieferperiode kurz auf, ein leiser Doppelton erklingt (kein Meldungsfenster, kein Log-Eintrag), und die Karte nennt «Fehlt N Gut» samt Folge («Kulanz wird verbraucht» oder «sonst Strafe N»); fehlt das Kontor auf der Lieferinsel, steht «kein Kontor». Kaufst du rechtzeitig nach, endet die Warnung ohne Wiederholung.
+- **Fernangebot:** Hast du ein Kontor auf einer fernen Insel, steht neben dem Auftrag oft ein **Fernangebot**: eine grosse Menge des Guts, das diese Insel mag (Möweninsel Stoff, Felsbucht Rum, Weidenau Glas). **Annehmen** ersetzt den Auftrag. Du hast dann 2:50 ab Auftragsbeginn Zeit und lieferst nur am Kontor dieser Insel (**Liefern** nennt die Insel); der nächste Auftrag entfällt. Ein verpasster Fernauftrag kostet nichts ausser diesem Auftrag. Mit Kontoren auf zwei Fremdinseln zeigt der Händler **zwei Fernkarten** zur Wahl (etwa nach Fahrzeit oder vollem Lager). Jede Karte nennt die Fahrzeit einer Einzelfahrt von der Heimat («≈ 39 s Fahrt») und färbt die Lagerzahl rot, wenn die Fern-Insel weniger hat als verlangt (Tooltip «Fehlt n Gut»); nur eine ist annehmbar, mit dem Annehmen verschwindet die andere, und die Folgeperiode bleibt wie bisher gesperrt.
+- **Marke an der Fern-Insel:** Läuft ein Fernangebot oder ein Fernauftrag, trägt die Insel auf der Seekarte eine Marke «15 Rum · 1:20» (Menge, Gut, Restzeit): hohl beim noch nicht angenommenen Angebot, gefüllt beim angenommenen Auftrag, in Warnfarbe, wenn dort kein Kontor mehr steht. Der Hover-Text der Insel nennt «Fernauftrag: …» bzw. «Fernangebot: …». Lieferung oder Verfall nehmen die Marke weg. **Zu spät:** Würde Ware aus der Heimat nicht mehr rechtzeitig ankommen (Fahrzeit länger als die Restzeit, und Lager der Fern-Insel samt rechtzeitig eintreffender Fracht decken die Menge nicht), trägt die Marke «· zu spät» und wird orange; der Hover-Text nennt Fahrzeit und Restzeit.
 - **Routen-Bilanz:** Im Schiff-Panel zeigt die Zeile unter einer Route «Warenwert +310 / min · Unterhalt 90 → +220 · nominal». «Nominal» heisst: Überschuss der Quellinsel, ohne Lager, Reserve und Handel, also eine Untergrenze; weitere Schiffe auf derselben Route teilen den Überschuss (Tooltip). Ein Verlust steht mit Minus in Warnfarbe.
 - **Aufstieg:** Steigt ein Haus eine Stufe auf, leuchtet es kurz mit einem Lichtkranz und Funken auf; bei «Bewegung reduzieren» nur als ruhiger Schein ohne Funken. In der Pause steht das Funkeln still.
 - **Auftragsvorschau:** Die Auftragskarte zeigt das voraussichtliche Gut des nächsten Auftrags; ein Stufenaufstieg kann es ändern.
@@ -150,6 +150,7 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
 | `Cmd`/`Strg` + Klick    | Gebäudetyp unter dem Zeiger als Bauwerkzeug wählen (Pipette)                                                                                                                                                                              |
 | `1` / `2` / `3`         | Tempo 1× / 2× / 4× (hebt die Pause auf)                                                                                                                                                                                                   |
 | `Umschalt` + Weg ziehen | Gerade oder L-förmige Wegstrecke (Vorschau, Bau beim Loslassen)                                                                                                                                                                           |
+| `Umschalt` + `R`        | Rat öffnen oder schliessen (nur wenn die Marke «Rat» da ist)                                                                                                                                                                              |
 | `R` / `X`               | Weg / Abriss                                                                                                                                                                                                                              |
 | `H` / `M` / `K` / `U`   | Wohnhaus / Marktplatz / Kapelle / Schule                                                                                                                                                                                                  |
 | `F` / `L` / `B` / `G`   | Fischerhütte / Holzfäller / Steinbruch / Schäferei                                                                                                                                                                                        |
@@ -200,6 +201,23 @@ Tooltips von 2× und 4× sagen, wie viel schneller die Spielzeit läuft.
 - **Pause-Anzeige:** Bei Pause erscheinen ein getönter Kartenrand und das Banner «Pause»; `P` oder `1×` setzt fort.
 - **Wasser** bewegt sich; an der Küste läuft ein Schaumsaum.
 
+### Rat
+
+Sobald ein Haus zum ersten Mal die Stufe 2 (Siedler), 3 (Bürger) oder 4 (Kaufleute) erreicht, tagt der Rat: In der Kopfzeile erscheint die Marke **«Rat · n»** (n = offene Beschlüsse), dazu die Meldung «Der Rat tagt: ein Beschluss steht an». Das Spiel läuft weiter, nichts pausiert.
+
+- **Bedienung:** Klick auf die Marke oder `Umschalt` + `R` öffnet die Rats-Karte, `Esc` schliesst sie ohne Wahl. Je offene Stufe stehen zwei Karten nebeneinander. Eine Karte anklicken markiert sie; erst **«Beschluss fassen»** gilt (Schutz vor Fehlklick).
+- **Wirkung:** Der Beschluss gilt für die ganze Partie und alle Inseln, kostet nichts, lässt sich nicht ändern; der andere Beschluss der Stufe verfällt. Gefasste Beschlüsse stehen als Liste in derselben Karte («Stufe 2: Webordnung»), die Marke bleibt als neutrales «Rat» sichtbar. Ein offener Beschluss kann beliebig lange warten.
+- **Die sechs Beschlüsse:** Stufe 2 Webordnung (Webereien +25 % schneller) oder Glockenrecht (Kapellen reichen 3 Felder weiter); Stufe 3 Brennrecht (Brennereien +25 % schneller) oder Wohnordnung (Bürgerhäuser fassen 16 statt 15); Stufe 4 Glasrecht (Glashütten +67 % schneller) oder Hofrecht (Kaufmannshäuser fassen 22 statt 20). Alle Zahlen: [`docs/spielwerte.md`](docs/spielwerte.md#rat-ratsbeschluss).
+
+### Meisterprüfung
+
+Ist das Denkmal fertig, wird der Ziel-Chip in der Kopfzeile zum Knopf «Meisterprüfung» (auch in der Gewürz-Phase). Ein Klick öffnet die Auflagen-Karte; `Esc` oder «Schliessen» schliesst sie. Das Spiel läuft weiter.
+
+- **Auflage «Eigenversorgung»:** Sie sperrt den Zukauf an allen Kontoren und für das Denkmal. Verkauf, Aufträge, Schiffe und Bauen bleiben frei. Du hältst 15 Minuten durch, die Einwohner dürfen nicht unter 70 % des Starts fallen.
+- **Start:** mit 60 bis 150 Kaufleuten und ohne Schulden. Die Karte zeigt, welche Güter ohne Zukauf fehlen; ist der Start gesperrt, steht der Grund im Knopf.
+- **Abbruch:** jederzeit über «Abbrechen» (zweiter Klick bestätigt), ohne Folgen.
+- **Lohn:** Bei Erfolg trägt die Inselchronik «Meisterprüfung: Eigenversorgung bestanden». Wer scheitert, kann es später neu versuchen.
+
 ### Einstellungen, Ton und Anzeige
 
 In der Kopfzeile stehen rechts **Steuer**, Tempo, **Stumm**, **Einstellungen** und **Menü**. «Einstellungen» öffnet eine Karte mit:
@@ -246,11 +264,12 @@ Die Regeln mit allen Zahlen stehen in [`docs/spielwerte.md`](docs/spielwerte.md)
 - Wirtschaft: Produktionsketten, Handel, Handelsaufträge, Seefahrt und Gewürz, Unterhalt, Stilllegen, Abriss
 - Bevölkerung: Stufen, Versorgung, Bedürfnisse, Aufstieg, Steuern
 - Krisen: Krisenstufe, Brand und Feuerwache, Sturm, Boom, Krisenkarte
+- Rat (Ratsbeschluss): die sechs Beschlüsse mit allen Werten
 
 Ereignisse zeigt ungelesene Meldungen als (n neu), ab 10 (9+ neu); Aufklappen setzt den Zähler zurück.
 
 - **Ereignis-Log:** Die Box unten links erscheint, sobald ein Eintrag da ist, auch bei «Krisen: aus». Sie hält die letzten 20 Einträge. Neben Krisen und Monument stehen darin ein verfallener Zufallsauftrag («Auftrag verfallen: …»), ein verfallenes Stammkunden-Angebot («Stammkunden-Angebot verfallen: …») sowie jede Vertragslieferung und jeder Vertragsbruch. Diese Einträge zählen nur bei Lieferung und Bruch als «neu»; die Meldung oben rechts erscheint wie bisher nur einmal.
-- **Reichweite am Lager-Chip:** Fällt oder steigt ein Gut so, dass das Lager bald leer oder voll ist, trägt der Chip eine Zeit, z. B. «↓ 2:00» oder «↓ 40 s» (Zeit in Spielzeit bei 1×). Leer wird bei höchstens 3 Minuten gelb, bei höchstens 1 Minute rot, ein leeres Lager mit Verbrauch zeigt «0 ↓ leer». Voll wird bei höchstens 1 Minute gedämpft markiert, nie rot. Der Tooltip nennt die Zeit und die Rate je Minute immer, auch ausserhalb der Schwelle. Die Reichweite rechnet nur mit der Erzeugung und dem Verbrauch der Insel, nicht mit Handel und Aufträgen.
+- **Reichweite am Lager-Chip:** Fällt oder steigt ein Gut so, dass das Lager bald leer oder voll ist, trägt der Chip eine Zeit, z. B. «↓ 2:00» oder «↓ 40 s» (Zeit in Spielzeit bei 1×). Leer wird bei höchstens 3 Minuten gelb, bei höchstens 1 Minute rot, ein leeres Lager mit Verbrauch zeigt «0 ↓ leer». Voll wird bei höchstens 1 Minute gedämpft markiert, nie rot. Der Tooltip nennt die Zeit und die Rate je Minute immer, auch ausserhalb der Schwelle. Die Reichweite rechnet mit der Erzeugung und dem Verbrauch der Insel; läuft ein Stammkunde für dieses Gut auf dieser Insel, zieht sie seine Lieferung je Periode ab (Tooltip: «mit Stammkunde, ohne Handel und Aufträge»). Handel und Zufallsaufträge bleiben draussen.
 
 ## Speichern, Laden, Neue Insel
 
@@ -265,6 +284,7 @@ Ereignisse zeigt ungelesene Meldungen als (n neu), ab 10 (9+ neu); Aufklappen se
   laufende Spiel bleibt unverändert. Ungespeicherter Fortschritt geht verloren (Hinweis über der Liste).
   Ein geladenes Spiel **pausiert**; `P` oder `1×` setzt es fort. Die Kamera bleibt, wenn der Stand dieselbe
   Karte hat, sonst springt sie zum Kontor.
+  Gibt es offene Fristen (Auftrag, Fernauftrag, Fernangebot, Stammkunde, Auflage) oder Probleme, öffnet sich beim Laden die Karte «Wo war ich?» mit Spielzeit, den Fristen nach Restzeit und der Problemzahl; `Esc` oder «Weiter» schliesst sie, das Spiel bleibt pausiert. Ohne Fristen und Probleme erscheint sie nicht.
 - **Beim Start:** Die Startkarte bietet den Autosave («Fortsetzen») und den gespeicherten Stand an.
 - **Neue Insel:** Menü → «Neue Insel» fragt zuerst «Neue Insel beginnen?» (Ja / Abbrechen), dann entsteht
   eine neue Insel mit Tempo 1× und der gewählten Krisenstufe. Der Autosave bleibt, bis der nächste ihn

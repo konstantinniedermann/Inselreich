@@ -33,8 +33,11 @@ import {
   renderNoticeStack,
   updateNoticeStack,
   tierTooltip,
+  syncGoalChip,
+  bindGoalChip,
+  FAR_TRAVEL_TIP,
 } from '../../src/ui/hud';
-import { GOOD_IDS } from '../../src/sim/defs/goods';
+import { GOOD_IDS, GOODS } from '../../src/sim/defs/goods';
 import { HOME, home, createWorld } from '../../src/sim/world';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
 import type { Tier } from '../../src/sim/types';
@@ -47,7 +50,7 @@ import { flowLabel } from '../../src/ui/balanceFlow';
 import { putBuilding, twoIslandWorld } from '../sim/helpers';
 import { renderUpkeepList, UPKEEP_EMPTY_TEXT } from '../../src/ui/upkeepCard';
 import { FakeElement, fakeDocument } from './fakeDom';
-import { acceptFarOrder } from '../../src/sim/orders';
+import { acceptFarOrder, farAlternative } from '../../src/sim/orders';
 import { dropKontor, farWorld, islandOf, periodStart, stepAt } from '../sim/farHelpers';
 import { deliverLabel, orderCardText, orderVisible } from '../../src/ui/order';
 import { farAcceptTooltip, farOfferText, farOrderText } from '../../src/ui/farOrder';
@@ -585,12 +588,112 @@ describe('Meldungsstapel mit Fernkarte (Handel 2 T08)', () => {
     expect(stack.children.map((c) => c.dataset.field ?? c.className)).toEqual([
       'order-card',
       'far-card',
+      'far-card-2',
       'crisis-card',
     ]);
     const far = stack.querySelector('[data-field="far-card"]')!;
     expect(far.hidden).toBe(false);
-    expect(stack.querySelector('[data-field="far-text"]')!.textContent).toBe(farOfferText(w));
+    const text = stack.querySelector('[data-field="far-text"]')!;
+    const lead = stack.querySelector('[data-field="far-lead"]')!;
+    const stockEl = stack.querySelector('[data-field="far-stock"]')!;
+    expect(text.children).toEqual([lead, stockEl]);
+    expect(lead.textContent + stockEl.textContent).toBe(farOfferText(w));
+    expect(lead.title).toBe(FAR_TRAVEL_TIP);
     expect(stack.querySelector('[data-field="far-accept"]')!.title).toBe(farAcceptTooltip(w));
+  });
+
+  it('Zweitkarte: gleiche Zwei-Span-Form mit Suffix -2', () => {
+    const w = farWorld(4, ['A', 'B']);
+    stepAt(w, periodStart(1));
+    const { stack } = build(w);
+    const text = stack.querySelector('[data-field="far-text-2"]')!;
+    const lead = stack.querySelector('[data-field="far-lead-2"]')!;
+    const stockEl = stack.querySelector('[data-field="far-stock-2"]')!;
+    expect(stack.querySelector('[data-field="far-card-2"]')!.hidden).toBe(false);
+    expect(text.children).toEqual([lead, stockEl]);
+    expect(lead.textContent + stockEl.textContent).toBe(farOfferText(w, 1));
+    expect(lead.textContent).toContain('≈ ');
+    expect(lead.textContent).toContain(' Fahrt');
+  });
+
+  it('Rot-Klasse und Tooltip bei zu wenig Fern-Lager, beide Karten (AK-F5)', () => {
+    const w = farWorld(4, ['A', 'B']);
+    stepAt(w, periodStart(1));
+    const { stack } = build(w);
+    const cards: Array<[string, 0 | 1]> = [
+      ['', 0],
+      ['-2', 1],
+    ];
+    for (const [sfx, which] of cards) {
+      const o = which === 0 ? w.farOffer! : farAlternative(w)!;
+      const stockEl = stack.querySelector(`[data-field="far-stock${sfx}"]`)!;
+      expect(stockEl.classList.contains('far-stock--low')).toBe(true);
+      expect(stockEl.title).toBe(`Fehlt ${o.amount} ${GOODS[o.good].name}`);
+      w.islands[o.island]!.stock[o.good] = 3;
+      updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+      expect(stockEl.classList.contains('far-stock--low')).toBe(true);
+      expect(stockEl.title).toBe(`Fehlt ${o.amount - 3} ${GOODS[o.good].name}`);
+      w.islands[o.island]!.stock[o.good] = o.amount;
+      updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+      expect(stockEl.classList.contains('far-stock--low')).toBe(false);
+      expect(stockEl.title).toBe('');
+    }
+  });
+
+  it('Rot-Literal: Lager 3 von 15 Rum meldet "Fehlt 12 Rum"', () => {
+    const w = offerWorld();
+    w.islands[islandOf(w, 'B')]!.stock.rum = 3;
+    const { stack } = build(w);
+    const stockEl = stack.querySelector('[data-field="far-stock"]')!;
+    expect(stockEl.textContent).toBe('Lager 3/15');
+    expect(stockEl.title).toBe('Fehlt 12 Rum');
+    expect(stockEl.classList.contains('far-stock--low')).toBe(true);
+  });
+
+  it('Randfälle: ohne Kontor rot, ein Angebot ohne Karte 2, ohne Schiff mit Fahrzeit', () => {
+    const w = offerWorld();
+    dropKontor(w, islandOf(w, 'B'));
+    w.ships = [];
+    const { stack } = build(w);
+    const stockEl = stack.querySelector('[data-field="far-stock"]')!;
+    expect(stockEl.textContent).toBe('Lager 0/15');
+    expect(stockEl.classList.contains('far-stock--low')).toBe(true);
+    expect(stack.querySelector('[data-field="far-card-2"]')!.hidden).toBe(true);
+    const lead = stack.querySelector('[data-field="far-lead"]')!;
+    expect(lead.textContent).toContain('≈ ');
+    expect(lead.textContent).toContain('Fahrt');
+    expect(lead.title).toBe(FAR_TRAVEL_TIP);
+  });
+
+  it('AK-F10: zweiter Durchlauf mit gleicher Welt schreibt nichts in far-stock und lead-Titel', () => {
+    const w = farWorld(4, ['A', 'B']);
+    stepAt(w, periodStart(1));
+    const { stack } = build(w);
+    const writes: Record<string, number> = {};
+    const spy = (el: FakeElement, name: string, prop: 'textContent' | 'title'): void => {
+      let v = el[prop];
+      Object.defineProperty(el, prop, {
+        get: () => v,
+        set: (x: string) => {
+          writes[`${name}.${prop}`] = (writes[`${name}.${prop}`] ?? 0) + 1;
+          v = x;
+        },
+      });
+    };
+    for (const sfx of ['', '-2']) {
+      spy(stack.querySelector(`[data-field="far-stock${sfx}"]`)!, `stock${sfx}`, 'textContent');
+      spy(stack.querySelector(`[data-field="far-stock${sfx}"]`)!, `stock${sfx}`, 'title');
+      spy(stack.querySelector(`[data-field="far-lead${sfx}"]`)!, `lead${sfx}`, 'title');
+    }
+    updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+    updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+    expect(writes).toEqual({});
+    // Gegenprobe: eine Lageränderung schreibt genau einmal Text und Titel
+    const o = w.farOffer!;
+    w.islands[o.island]!.stock[o.good] = 1;
+    updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
+    expect(writes['stock.textContent']).toBe(1);
+    expect(writes['stock.title']).toBe(1);
   });
 
   it('Klick auf Annehmen ruft acceptFar genau einmal', () => {
@@ -727,5 +830,39 @@ describe('I-109 Reichweite am Lager-Chip (AK-UR-04 bis 06)', () => {
     const w = SCENARIOS['bilanz-nahrung']!();
     expect(chipView(w, 'wood')).toEqual(chipView(w, 'wood'));
     expect(stockTooltip(w, 'wood')).toBe(stockTooltip(w, 'wood'));
+  });
+});
+
+describe('I-132 Ziel-Chip als Knopf', () => {
+  it('Meisterprüfung: Aktionsklasse, Text, Klick ruft toggleTrial einmal', () => {
+    const w = createWorld(3);
+    const el = new FakeElement('button');
+    const toggleTrial = vi.fn();
+    bindGoalChip(el as unknown as HTMLElement, { toggleTrial } as never);
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(el.classList.contains('goal-chip--action')).toBe(false);
+    el.fire('click');
+    expect(toggleTrial).toHaveBeenCalledTimes(1);
+    w.wonSpice = true; // Phase «done»; in «spice» zeigt der Chip die Meisterprüfung seit cb8e3958 ebenfalls (nächster Test)
+    w.monumentDone = true;
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(el.classList.contains('goal-chip--action')).toBe(true);
+    expect(el.textContent).toBe('Meisterprüfung');
+    expect(el.title).toBe('Meisterprüfung: freiwillige Auflage — Klick für Details');
+  });
+  it('monumentDone ohne wonSpice: Aktionsklasse und Text «Meisterprüfung» (Spec §5 Nr. 1)', () => {
+    const w = createWorld(3);
+    w.wonMerchants = true; // Phase «spice»: das Denkmal ist nach dem Kaufleute-Ziel baubar
+    w.monumentDone = true;
+    const el = new FakeElement('button');
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(el.classList.contains('goal-chip--action')).toBe(true);
+    expect(el.textContent).toBe('Meisterprüfung');
+    expect(el.title).toContain('Meisterprüfung: freiwillige Auflage');
+  });
+  it('Quelltext: Ziel-Element ist ein Knopf mit goal-chip', () => {
+    expect(readFileSync('src/ui/hud.ts', 'utf8')).toMatch(
+      /<button type="button" class="chip goal-chip" data-field="goal">/,
+    );
   });
 });

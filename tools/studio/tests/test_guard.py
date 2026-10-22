@@ -259,7 +259,7 @@ class GuardEventTest(unittest.TestCase):
             self.assertEqual(event["source"], "hook")
             self.assertEqual(event["rule"], "stash")
             self.assertEqual(event["tool"], "Bash")
-            self.assertEqual(event["command"], "git stash push -m x")
+            self.assertNotIn("command", event)
             self.assertEqual(event["persona"], "tech-sim-engineer")
             self.assertEqual(event["session_id"], "s1")
             self.assertTrue(event["summary"].startswith(guard.FORBIDDEN))
@@ -272,13 +272,13 @@ class GuardEventTest(unittest.TestCase):
             self.run_hook({**prompt, "prompt": "git stash"}, home)
             self.assertEqual(self.events(home), [])
 
-    def test_long_command_is_shortened_to_one_line(self):
+    def test_long_command_gives_one_short_line(self):
         with tempfile.TemporaryDirectory() as home:
             command = "git stash push -m " + "x" * 300 + "\necho zwei"
             self.run_hook(self.bash(command), home)
-            shown = self.events(home)[0]["command"]
-            self.assertEqual(len(shown), 160)
-            self.assertNotIn("\n", shown)
+            path = Path(home) / "events.jsonl"
+            self.assertEqual(len(path.read_text("utf-8").splitlines()), 1)
+            self.assertLess(len(path.read_text("utf-8")), 500)
 
     def test_file_tool_and_agent_command_fields(self):
         with tempfile.TemporaryDirectory() as home:
@@ -291,7 +291,7 @@ class GuardEventTest(unittest.TestCase):
             self.run_hook(edit, home)
             event = self.events(home)[0]
             self.assertEqual(event["rule"], "constitution")
-            self.assertEqual(event["command"], "/r/docs/studio/VERFASSUNG.md")
+            self.assertNotIn("command", event)
             self.assertEqual(event["persona"], "")
 
     def test_write_failure_keeps_deny(self):
@@ -572,3 +572,497 @@ class PersonaModelTest(unittest.TestCase):
         text = guard.deny_text(found)
         self.assertIn("R167", text)
         self.assertNotIn("Verfassung §6", text)
+
+
+class RedactTest(unittest.TestCase):
+    """Secrets werden vor dem Kürzen aus dem protokollierten Befehl geschwärzt."""
+
+    def shown(self, command):
+        return guard.redact(
+            guard._raw_text({"tool_name": "Bash", "tool_input": {"command": command}})
+        )
+
+    def assertRedacted(self, command, secret):
+        out = self.shown(command)
+        self.assertNotIn(secret, out)
+        self.assertIn("[REDACTED]", out)
+        return out
+
+    def test_github_tokens(self):
+        for prefix in ("ghp_", "gho_", "ghu_", "ghs_", "ghr_"):
+            secret = prefix + "x" * 36
+            out = self.assertRedacted(f"git push https://x/{secret} now", secret)
+            self.assertTrue(out.startswith("git push"))
+            self.assertTrue(out.endswith(" now"))
+
+    def test_github_pat(self):
+        secret = "github_pat_" + "A1b2" * 10
+        self.assertRedacted(f"export T={secret}", secret)
+
+    def test_sk_tokens(self):
+        for secret in ("sk-" + "x" * 30, "sk-ant-" + "x" * 30):
+            self.assertRedacted(f"curl -H key:{secret} host", secret)
+
+    def test_slack_tokens(self):
+        for secret in ("xoxb-" + "1" * 12 + "-abc", "xoxp-" + "1" * 12 + "-abc"):
+            self.assertRedacted(f"echo {secret}", secret)
+
+    def test_aws_key(self):
+        secret = "AKIA" + "ABCD1234" * 2
+        self.assertRedacted(f"aws --key {secret}", secret)
+
+    def test_bearer(self):
+        out = self.assertRedacted(
+            "curl -H 'Authorization: Bearer abc123.def-456' host", "abc123"
+        )
+        self.assertIn("Bearer", out)
+
+    def test_token_flag(self):
+        self.assertRedacted("tool --token=geheim123 run", "geheim123")
+        self.assertRedacted("tool --token geheim123 run", "geheim123")
+        self.assertIn("run", self.shown("tool --token geheim123 run"))
+
+    def test_key_value_assignments(self):
+        for name in ("password", "PASSWORD", "passwd", "secret", "api_key", "Api_Key"):
+            self.assertRedacted(f"run {name}=geheim123 --x", "geheim123")
+
+    def test_attached_p_password(self):
+        self.assertRedacted("mysql -u root -pgeheim db", "geheim")
+        self.assertEqual(self.shown("ls -p db"), "ls -p db")
+        self.assertEqual(self.shown("git log -p"), "git log -p")
+
+    def test_url_credentials(self):
+        out = self.assertRedacted(
+            "git clone https://alice:geheim@host.example/r.git", "geheim"
+        )
+        self.assertIn("host.example/r.git", out)
+        self.assertEqual(
+            self.shown("git clone https://host.example/r.git"),
+            "git clone https://host.example/r.git",
+        )
+
+    def test_harmless_unchanged(self):
+        for command in ("git status", "ls -la src", "npm run build", "ls -a  -l"):
+            self.assertEqual(self.shown(command), " ".join(command.split()))
+
+    def test_long_command_is_fully_redacted(self):
+        secret = "ghp_" + "x" * 36
+        out = self.assertRedacted("a" * 145 + " " + secret, secret)
+        self.assertNotIn("ghp_", out)
+        self.assertNotIn("xxxx", out)
+
+
+class RedactHardeningTest(unittest.TestCase):
+    """Unter-Schwärzung ist inakzeptabel, Über-Schwärzung hinnehmbar."""
+
+    shown = RedactTest.shown
+    assertRedacted = RedactTest.assertRedacted
+
+    def test_curl_user(self):
+        for cmd in (
+            "curl -u alice:geheim123 host",
+            "curl --user alice:geheim123 host",
+            "curl --user=alice:geheim123 host",
+            "curl -u 'alice:geheim123' host",
+        ):
+            self.assertRedacted(cmd, "geheim123")
+            self.assertTrue(self.shown(cmd).endswith("host"))
+        self.assertEqual(
+            self.shown("git push -u origin main"), "git push -u origin main"
+        )
+
+    def test_authorization_header(self):
+        cases = (
+            ("curl -H 'Authorization: Basic Zm9vOmJhcg==' h", "Zm9vOmJhcg=="),
+            ('curl -H "authorization: Token geheim123" h', "geheim123"),
+            ("curl -H 'AUTHORIZATION: Bearer geheim123' h", "geheim123"),
+            ("curl -H 'Authorization: Basic geheim123' h", "geheim123"),
+        )
+        for cmd, secret in cases:
+            out = self.assertRedacted(cmd, secret)
+            self.assertTrue(out.endswith(" h"))
+
+    def test_key_value_case_insensitive(self):
+        for name in ("token", "TOKEN", "Api_Key", "SECRET", "Password"):
+            self.assertRedacted(f"run {name}=geheim123 x", "geheim123")
+
+    def test_env_assignments(self):
+        for name in ("GITHUB_TOKEN", "AWS_SECRET", "MY_KEY", "DB_PASSWORD"):
+            out = self.assertRedacted(f"{name}=geheim123 npm run build", "geheim123")
+            self.assertTrue(out.endswith("npm run build"))
+
+    def test_quoted_values(self):
+        cases = (
+            ("mysql -p 'geheim 123' db", "geheim"),
+            ('mysql -p "geheim 123" db', "geheim"),
+            ("mysql -p'geheim 123' db", "geheim"),
+            ('tool --password "geheim 123" go', "geheim"),
+            ("tool password='geheim 123' go", "geheim"),
+            ("tool --token 'geheim 123' go", "geheim"),
+            ('tool --token="geheim 123" go', "geheim"),
+        )
+        for cmd, secret in cases:
+            out = self.assertRedacted(cmd, secret)
+            self.assertNotIn("123", out)
+            self.assertTrue(out.split()[-1] in ("db", "go"), out)
+
+    def test_p_flag_unchanged(self):
+        self.assertEqual(self.shown("ls -p db"), "ls -p db")
+        self.assertEqual(self.shown("git log -p"), "git log -p")
+
+    def test_word_boundary_for_prefixes(self):
+        harmless = "run task-" + "x" * 30 + " and mygh_" + "y" * 30
+        self.assertEqual(self.shown(harmless), harmless)
+        self.assertRedacted("run sk-" + "x" * 30, "sk-xxx")
+        self.assertRedacted("run (ghp_" + "x" * 36 + ")", "ghp_")
+
+
+class RedactReviewTest(unittest.TestCase):
+    """Review-Nachträge: Doppelpunkt-Form, -uuser:pw, apikey, weitere Präfixe."""
+
+    shown = RedactTest.shown
+    assertRedacted = RedactTest.assertRedacted
+
+    def test_colon_form(self):
+        cases = (
+            ("echo password: hunter2 x", "hunter2"),
+            ("echo SECRET: hunter2 x", "hunter2"),
+            ("echo token: hunter2 x", "hunter2"),
+            ("echo api_key: hunter2 x", "hunter2"),
+            ("echo passwd: hunter2 x", "hunter2"),
+            ('echo {"password": "hunter2 x"} y', "hunter2"),
+            ('echo \'{"secret": "hunter2"}\' y', "hunter2"),
+            ("curl -H 'X-API-Key: hunter2' h", "hunter2"),
+        )
+        for cmd, secret in cases:
+            out = self.assertRedacted(cmd, secret)
+            self.assertNotIn("hunter2 x", out)
+
+    def test_u_attached(self):
+        self.assertRedacted("curl -uuser:geheim123 h", "geheim123")
+        self.assertRedacted("curl -u'user:geheim123' h", "geheim123")
+
+    def test_apikey_variants(self):
+        for cmd in (
+            "run apikey=geheim123 x",
+            "run api-key=geheim123 x",
+            "run --apikey geheim123 x",
+            "run --api-key geheim123 x",
+            "run --secret-key geheim123 x",
+            "run --pass geheim123 x",
+            "run --passwd geheim123 x",
+            "run --api-key 'geheim 123' x",
+        ):
+            out = self.assertRedacted(cmd, "geheim")
+            self.assertTrue(out.endswith(" x"), out)
+
+    def test_more_prefixes(self):
+        for secret in (
+            "xoxa-" + "1" * 12,
+            "xoxs-" + "1" * 12,
+            "xapp-" + "1" * 12 + "-abc",
+            "glpat-" + "x" * 20,
+            "sk_live_" + "x" * 20,
+            "sk_test_" + "x" * 20,
+        ):
+            self.assertRedacted(f"echo {secret} end", secret)
+
+    def test_harmless_unchanged(self):
+        for cmd in (
+            "git push -u origin main",
+            "echo keyboard=3",
+            "python tokenizer.py",
+            "ls -la",
+            "git commit -m 'fix: token handling'",
+            "npm run build --silent",
+            "git log --pretty=format:%h",
+            "git push origin main:main",
+        ):
+            self.assertEqual(self.shown(cmd), cmd)
+
+    def test_no_redos(self):
+        import time
+
+        size = 500_000
+        inputs = (
+            "a-" * (size // 2),
+            "-u " * (size // 3),
+            "token " * (size // 6),
+            'password=" ' * (size // 11),
+            "--a-" * (size // 4),
+            "sk-" * (size // 3),
+            "password" * (size // 8),
+            "x: " * (size // 3),
+        )
+        for text in inputs:
+            start = time.perf_counter()
+            guard.redact(text)
+            self.assertLess(time.perf_counter() - start, 1.0, text[:20])
+
+
+class RedactDeltaTest(unittest.TestCase):
+    """Delta-Review: -p PW mit Leerzeichen, Namens-Segmente, Proxy-User, Cookie."""
+
+    shown = RedactTest.shown
+    assertRedacted = RedactTest.assertRedacted
+
+    def test_spaced_p_in_password_tools(self):
+        for cmd in (
+            "docker login -u bob -p geheim123 reg.example",
+            "sshpass -p geheim123 ssh host",
+            "mysql -u root -p geheim123 db",
+            "mysqldump -p geheim123 db",
+            "mongo -p geheim123 db",
+        ):
+            out = self.assertRedacted(cmd, "geheim123")
+            self.assertIn("-p", out)
+
+    def test_spaced_p_elsewhere_unchanged(self):
+        for cmd in (
+            "git log -p",
+            "grep -p foo file",
+            "ls -p src",
+            "docker run -p 80:80 img",
+        ):
+            self.assertEqual(self.shown(cmd), cmd)
+
+    def test_name_segments(self):
+        for name in (
+            "DB_PASS",
+            "MYSQL_PWD",
+            "ACCESS_TOKEN_V2",
+            "SECRETS",
+            "TOKENS",
+            "KEY",
+            "CREDENTIALS",
+            "AUTH",
+            "my-auth-token",
+            "pwd",
+        ):
+            self.assertRedacted(f"run {name}=geheim123 x", "geheim123")
+            self.assertRedacted(f"run {name}: geheim123 x", "geheim123")
+
+    def test_flag_keywords(self):
+        for flag in ("--pwd", "--credential", "--auth", "--cookie"):
+            self.assertRedacted(f"run {flag} geheim123 x", "geheim123")
+
+    def test_names_unchanged(self):
+        for cmd in (
+            "echo keyboard=3",
+            "echo monkey=1",
+            "git log --author=bob",
+            "PATH=/usr/bin ls",
+            "python tokenizer.py",
+            "echo passenger=2 bypass=1",
+            "ls -la",
+            "git push origin main:main",
+        ):
+            self.assertEqual(self.shown(cmd), cmd)
+
+    def test_proxy_user_and_cookie(self):
+        self.assertRedacted("curl --proxy-user bob:geheim123 h", "geheim123")
+        self.assertRedacted("curl -U bob:geheim123 h", "geheim123")
+        out = self.assertRedacted("curl -H 'Cookie: sid=geheim123; a=b' h", "geheim")
+        self.assertNotIn("a=b", out)
+        self.assertTrue(out.endswith("' h"))
+
+
+SECRET_COMMANDS = (
+    ("ghp_" + "x" * 36, "geheim123"),
+    ("github_pat_" + "A1b2" * 10, "geheim123"),
+    ("sk-" + "x" * 30, "geheim123"),
+    ("xoxb-" + "1" * 12 + "-abc", "geheim123"),
+    ("AKIA" + "ABCD1234" * 2, "geheim123"),
+    ("curl -H 'Authorization: Bearer abc123.def-456' host", "abc123"),
+    ("tool --token geheim123 run", "geheim123"),
+    ("run password=geheim123 --x", "geheim123"),
+    ("mysql -u root -pgeheim db", "geheim"),
+    ("git clone https://alice:geheim@host.example/r.git", "geheim"),
+    ("curl -u alice:geheim123 host", "geheim123"),
+    ("curl -H 'Authorization: Basic Zm9vOmJhcg==' h", "Zm9vOmJhcg"),
+    ("tool --token 'geheim 123' go", "geheim"),
+    ("echo password: hunter2 x", "hunter2"),
+    ("curl -H 'X-API-Key: hunter2' h", "hunter2"),
+    ("docker login -u bob -p geheim123 reg.example", "geheim123"),
+    ("curl -H 'Cookie: sid=geheim123; a=b' h", "geheim123"),
+    ("PGPASSWORD=geheim123", "geheim123"),
+    ("accessToken=geheim123", "geheim123"),
+    ("clientSecret=geheim123", "geheim123"),
+    ("GITHUBTOKEN=geheim123", "geheim123"),
+    ('{"accessToken": "geheim123"}', "geheim123"),
+    ("--passphrase geheim123", "geheim123"),
+    ("sshpass -p-geheim123 ssh h", "geheim123"),
+)
+
+
+class GuardAllowlistTest(unittest.TestCase):
+    """Das Ereignis speichert keinen Befehl: nur Regel, Werkzeug, Festtext, Hash."""
+
+    run_hook = HookTest.run_hook
+    bash = GuardEventTest.bash
+    events = GuardEventTest.events
+
+    def blocked(self, payload):
+        with tempfile.TemporaryDirectory() as home:
+            out = self.run_hook(payload, home)
+            self.assertEqual(out["hookSpecificOutput"]["permissionDecision"], "deny")
+            line = (Path(home) / "events.jsonl").read_text("utf-8")
+            return line, self.events(home)[0]
+
+    def blocked_line(self, command):
+        return self.blocked(self.bash(command))
+
+    def test_no_secret_reaches_event_line(self):
+        import shlex
+
+        for text, secret in SECRET_COMMANDS:
+            for command in (
+                f"git stash push -m {shlex.quote(text)}",
+                f"git push --force {shlex.quote(text)}",
+                f"git stash {shlex.quote(text)}",
+                f"git push +{shlex.quote(text)}",
+                f"git pull --rebase={shlex.quote(text)}",
+                f"rm -rf /etc/{shlex.quote(text)}",
+            ):
+                with self.subTest(command=command):
+                    line, _event = self.blocked_line(command)
+                    self.assertNotIn(secret, line)
+
+    def test_event_has_only_fixed_fields(self):
+        _line, event = self.blocked_line("git stash push -m x")
+        self.assertEqual(
+            sorted(event),
+            sorted(
+                [
+                    "ts",
+                    "session_id",
+                    "agent_id",
+                    "source",
+                    "kind",
+                    "rule",
+                    "tool",
+                    "command_hash",
+                    "persona",
+                    "summary",
+                ]
+            ),
+        )
+
+    def test_free_tokens_nowhere_in_line(self):
+        cases = (
+            self.bash("echo correct-horse-staple; git stash"),
+            self.bash("git stash hunter2"),
+            {
+                "hook_event_name": "PreToolUse",
+                "session_id": "s1",
+                "tool_name": "Agent",
+                "tool_input": {
+                    "subagent_type": "general-purpose",
+                    "prompt": "Persona: x",
+                    "description": "hunter2 los",
+                },
+            },
+            {
+                "hook_event_name": "PreToolUse",
+                "session_id": "s1",
+                "tool_name": "Edit",
+                "tool_input": {"file_path": "/r/docs/studio/VERFASSUNG.md"},
+            },
+        )
+        for payload in cases:
+            with self.subTest(payload=payload):
+                line, _event = self.blocked(payload)
+                for word in ("correct-horse-staple", "hunter2", "VERFASSUNG.md"):
+                    self.assertNotIn(word, line)
+
+    def test_file_tool_path_not_logged(self):
+        payload = {
+            "hook_event_name": "PreToolUse",
+            "session_id": "s1",
+            "tool_name": "Edit",
+            "tool_input": {"file_path": "/r/docs/studio/VERFASSUNG.md"},
+        }
+        guard_payload = {**payload, "tool_input": {"file_path": "geheim123.txt"}}
+        with tempfile.TemporaryDirectory() as home:
+            self.run_hook(payload, home)
+            self.assertNotIn(
+                "geheim123", (Path(home) / "events.jsonl").read_text("utf-8")
+            )
+        self.assertNotIn("geheim123", json.dumps(self.logged_event(guard_payload)))
+
+    def logged_event(self, payload):
+        events = []
+        import paths
+
+        original = paths.append_event
+        paths.append_event = events.append
+        try:
+            guard._log_block(payload, guard.PROTECTED)
+        finally:
+            paths.append_event = original
+        return events[0]
+
+    def test_summary_is_fixed_text_per_rule(self):
+        for command, rule in (
+            ("git push +https://u:geheim@h/x", "force-push"),
+            ("git pull --rebase=geheim123", "rebase"),
+            ("git stash ghp_" + "x" * 36, "stash"),
+        ):
+            with self.subTest(command=command):
+                _line, event = self.blocked_line(command)
+                self.assertEqual(event["rule"], rule)
+                self.assertEqual(event["summary"], guard.RULE_SUMMARY[rule])
+
+    def test_hash_covers_redacted_text(self):
+        import hashlib
+
+        payload = self.bash("git stash push -m ghp_" + "x" * 36)
+        expected = hashlib.sha256(b"git stash push -m [REDACTED]").hexdigest()[:12]
+        self.assertEqual(guard._command_hash(payload), expected)
+
+    def test_command_hash_is_stable_12_hex(self):
+        _, first = self.blocked_line("git stash push -m x")
+        _, again = self.blocked_line("git  stash  push -m x")
+        _, other = self.blocked_line("git stash push -m y")
+        self.assertRegex(first["command_hash"], r"^[0-9a-f]{12}$")
+        self.assertEqual(first["command_hash"], again["command_hash"])
+        self.assertNotEqual(first["command_hash"], other["command_hash"])
+
+
+class RedactNamesTest(unittest.TestCase):
+    """Namen mit Präfix ohne Wortgrenze; Wortgrenze nur noch für key/auth/pass/pwd."""
+
+    shown = RedactTest.shown
+    assertRedacted = RedactTest.assertRedacted
+
+    def test_prefixed_names(self):
+        for name in (
+            "PGPASSWORD",
+            "accessToken",
+            "clientSecret",
+            "GITHUBTOKEN",
+            "dbpassword",
+            "privateKey",
+            "_authToken",
+            "myPass",
+        ):
+            self.assertRedacted(f"run {name}=geheim123 x", "geheim123")
+
+    def test_json_and_passphrase(self):
+        self.assertRedacted('echo {"accessToken": "geheim123"} y', "geheim123")
+        self.assertRedacted("run --passphrase geheim123 x", "geheim123")
+        self.assertRedacted("run passphrase=geheim123 x", "geheim123")
+
+    def test_sshpass_attached_dash(self):
+        self.assertRedacted("sshpass -p-geheim123 ssh h", "geheim123")
+
+    def test_still_unchanged(self):
+        for cmd in (
+            "echo keyboard=3",
+            "echo monkey=1",
+            "git log --author=bob",
+            "python tokenizer.py",
+            "echo passenger=2 bypass=1",
+            "sshpass -f file ssh h",
+        ):
+            self.assertEqual(self.shown(cmd), cmd)

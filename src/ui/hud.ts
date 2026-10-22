@@ -1,12 +1,13 @@
 import { HOME } from '../sim/world';
 import { monumentChip } from './monumentView';
+import { trialChip } from './trial';
 import { islandName } from '../sim/islands';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
 import { TAX_LEVELS, TIERS, TIER_IDS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
 import { SERVICE_BUILDING, populationByTier } from '../sim/population';
-import { crisisView, goalView, goodsBalance } from '../sim/queries';
+import { buildCoverage, crisisView, goalView, goodsBalance } from '../sim/queries';
 import { townhallActive } from '../sim/townhall';
 import { functionLock, goodUnlocked, isUnlocked } from '../sim/unlocks';
 import type { GoodId, TaxLevel, Tier, UnlockId, World } from '../sim/types';
@@ -14,10 +15,11 @@ import type { GameState } from './app';
 import { blurAfterClick, setField } from './dom';
 import type { Settings } from './settings';
 import { orderVisible, renderOrder, updateOrder, type OrderActions } from './order';
-import { farAcceptTooltip, farMark, farOfferText } from './farOrder';
+import { farAcceptTooltip, farMark, farOfferLead, farOfferParts } from './farOrder';
 import { crisisCardText } from './crisis';
 import { taxEffect } from './guide';
 import { taxButtonTitle, taxSummaryText } from './taxView';
+import { councilBadge, councilBadgeActive } from './council';
 import { goalTexts } from './goal';
 import type { IconId } from './icons';
 import { islandList } from './islandJump';
@@ -36,6 +38,7 @@ import { iconChip } from './messages';
 import { formatGameTime, GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
 import { flowLabel, flowText, flowTitle } from './balanceFlow';
 import { reachView, TREND_EPS } from './reach';
+import { contractDrain } from './contractDrain';
 
 const SPEEDS: { value: GameState['speed']; label: string }[] = [
   { value: 0, label: '⏸' },
@@ -82,9 +85,9 @@ export interface ChipView {
  * Lager-Chip aus Bestand und Bilanz (je 100 Ticks): „{Bestand} {Pfeil}"; nahe an leer oder voll mit Zeit
  * („12 ↓ 2:10", „40 ↑ 0:40"), bei Bestand 0 und Verbrauch „0 ↓ leer". `label` enthält denselben Text.
  */
-export function stockChipView(good: GoodId, stock: number, net: number): ChipView {
+export function stockChipView(good: GoodId, stock: number, net: number, drain = 0): ChipView {
   const arrow = trendArrow(net);
-  const r = reachView(stock, net, STORAGE_CAP);
+  const r = reachView(stock, net - drain, STORAGE_CAP);
   let text = `${stock} ${arrow}`;
   let reach: ChipView['reach'];
   if (r.kind === 'empty' && stock <= 0) {
@@ -102,25 +105,37 @@ export function stockChipView(good: GoodId, stock: number, net: number): ChipVie
   return view;
 }
 
+/** Bilanz je Gut (`goodsBalance`); Aufrufer mit mehreren Chips rechnen sie einmal und reichen sie durch. */
+type Balance = ReturnType<typeof goodsBalance>;
+
 /** Lager-Chip einer Insel; `label` ist der bisherige Text „{Gut} {Bestand} {Pfeil}" plus Reichweite. */
-export function chipView(world: World, good: GoodId, island: number = HOME): ChipView {
+export function chipView(
+  world: World,
+  good: GoodId,
+  island: number = HOME,
+  balance: Balance = goodsBalance(world, island),
+): ChipView {
   return stockChipView(
     good,
     world.islands[island]!.stock[good],
-    goodsBalance(world, island)[good].net,
+    balance[good].net,
+    contractDrain(world, good, island),
   );
 }
 
 /** Tooltip-Zeile zur Reichweite („Leer in 2:10 bei −6 / min …"); leer bei Gleichstand oder Sättigung. */
-export function reachLine(stock: number, net: number): string {
-  const r = reachView(stock, net, STORAGE_CAP);
+export function reachLine(stock: number, net: number, drain = 0): string {
+  const eff = net - drain;
+  const r = reachView(stock, eff, STORAGE_CAP);
   if (r.kind === null) return '';
-  const rate = signedNum(perMinute(net, GOODS_BALANCE_TICKS));
+  const rate = signedNum(perMinute(eff, GOODS_BALANCE_TICKS));
+  const note =
+    drain > 0 ? '(mit Stammkunde, ohne Handel und Aufträge)' : '(ohne Handel und Aufträge)';
   if (r.kind === 'empty' && stock <= 0) {
-    return `Jetzt leer bei ${rate} / min (ohne Handel und Aufträge)\n`;
+    return `Jetzt leer bei ${rate} / min ${note}\n`;
   }
   const word = r.kind === 'empty' ? 'Leer' : 'Voll';
-  return `${word} in ${formatGameTime(r.ticks)} bei ${rate} / min (ohne Handel und Aufträge)\n`;
+  return `${word} in ${formatGameTime(r.ticks)} bei ${rate} / min ${note}\n`;
 }
 
 /** Einwohner-Chip einer Stufe: Stufen-Symbol und Zahl. */
@@ -214,6 +229,9 @@ export interface HudActions {
   openHelp(opener: HTMLElement): void;
   /** Wählt die erste aktive Amtsstube und öffnet ihr Info-Panel (Spec 11.8). */
   openTownhall(): void;
+  /** Rats-Karte öffnen/schliessen (Marke «Rat», I-112). */
+  toggleCouncil(): void;
+  toggleTrial(): void;
   /** Liefert den aktiven Auftrag ab; zeigt selbst Meldung bzw. Grund. */
   deliverOrder(): void;
   /** Springt mit der Kamera zur Insel `index` (Knopf „Inseln", M12 E2). */
@@ -265,12 +283,58 @@ function renderSoundControls(box: Element, actions: HudActions): void {
   box.append(mute, helpBtn, settingsBtn, menuBtn);
 }
 
+/** Lager-Chips der Kopfzeile; die Bilanz (mit einmal gebauter Coverage) wird je Refresh nur einmal gerechnet. */
+export function updateStockChips(
+  header: HTMLElement,
+  world: World,
+  island: number,
+  focused: GoodId | null,
+): void {
+  const balance = goodsBalance(world, island, buildCoverage(world));
+  for (const good of GOOD_IDS) {
+    const b = balance[good];
+    const cv = chipView(world, good, island, balance);
+    const chip = setChip(header, `stock-${good}`, cv);
+    if (chip) {
+      const hide = stockChipHidden(world, good, island);
+      if (chip.hidden !== hide) chip.hidden = hide;
+      chip.classList.toggle('negative', b.net <= -TREND_EPS);
+      chip.classList.toggle('reach-warn', cv.reach === 'warn');
+      chip.classList.toggle('reach-alarm', cv.reach === 'alarm');
+      chip.classList.toggle('reach-full', cv.reach === 'full-warn');
+      if (!hide) {
+        const tip = stockTooltip(world, good, island, balance);
+        if (chip.title !== tip) chip.title = tip;
+      }
+      const pressed = String(focused === good);
+      if (chip.getAttribute('aria-pressed') !== pressed) chip.setAttribute('aria-pressed', pressed);
+    }
+  }
+}
+
+/** Ziel-Chip (I-132): Text und Tooltip; klickbar (Auflagen-Karte) genau, wenn die Meisterprüfung ansteht. */
+export function syncGoalChip(goalEl: HTMLElement, world: World): void {
+  const tc = trialChip(world);
+  const goal = goalTexts(goalView(world), tc ?? monumentChip(world));
+  if (goalEl.textContent !== goal.chip) goalEl.textContent = goal.chip;
+  if (goalEl.title !== goal.title) goalEl.title = goal.title;
+  goalEl.classList.toggle('goal-chip--action', tc !== null);
+}
+
+export function bindGoalChip(goalEl: HTMLElement, actions: Pick<HudActions, 'toggleTrial'>): void {
+  goalEl.addEventListener('click', (ev) => {
+    if (blurAfterClick(ev.detail)) goalEl.blur();
+    actions.toggleTrial();
+  });
+}
+
 /** Baut die Kopfzeile beim ersten Aufruf auf und aktualisiert danach nur die Werte (Spec L2). */
 export function updateHud(header: HTMLElement, state: GameState, actions: HudActions): void {
   if (!header.querySelector('.hud-row')) {
     header.innerHTML =
       '<div class="hud-row">' +
-      '<span class="pop-chips"></span><span class="chip" data-field="goal"></span>' +
+      '<span class="pop-chips"></span><button type="button" class="chip goal-chip" data-field="goal"></button>' +
+      '<button class="btn council-badge" data-field="council-badge" type="button" hidden></button>' +
       '<span class="hud-money" data-field="money"></span>' +
       '<span class="hud-tax" hidden><button class="btn" data-field="tax" type="button"></button></span>' +
       '<span class="hud-islands" hidden><button class="btn" data-field="islands" type="button" aria-haspopup="true" aria-expanded="false">Inseln</button>' +
@@ -321,6 +385,13 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       if (blurAfterClick(ev.detail)) taxBtn.blur();
       actions.openTownhall();
     });
+    const goalBtn = header.querySelector<HTMLElement>('[data-field="goal"]');
+    if (goalBtn) bindGoalChip(goalBtn, actions);
+    const councilBtn = header.querySelector<HTMLButtonElement>('[data-field="council-badge"]');
+    councilBtn?.addEventListener('click', (ev) => {
+      if (blurAfterClick(ev.detail)) councilBtn.blur();
+      actions.toggleCouncil();
+    });
     const soundBox = header.querySelector('.hud-sound');
     if (soundBox) renderSoundControls(soundBox, actions);
     bindIslandMenu(header, state, actions);
@@ -341,9 +412,16 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     const hide = popChipHidden(world, tier);
     if (chip && chip.hidden !== hide) chip.hidden = hide;
   }
-  const goal = goalTexts(goalView(world), monumentChip(world));
-  const goalEl = setField(header, 'goal', goal.chip);
-  if (goalEl && goalEl.title !== goal.title) goalEl.title = goal.title;
+  const goalEl = header.querySelector<HTMLElement>('[data-field="goal"]');
+  if (goalEl) syncGoalChip(goalEl, world);
+  const badge = councilBadge(world);
+  const badgeEl = setField(header, 'council-badge', badge ?? '');
+  if (badgeEl) {
+    if (badgeEl.hidden !== (badge === null)) badgeEl.hidden = badge === null;
+    const act = councilBadgeActive(world);
+    if (badgeEl.classList.contains('council-badge--active') !== act)
+      badgeEl.classList.toggle('council-badge--active', act);
+  }
   updateMoney(header, world);
   const island = state.activeIsland;
   const prefix = stockPrefix(world, island);
@@ -363,26 +441,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     if (!seafaring) closeIslandMenu(islandsBox);
     else seaMapRedraw.get(islandsBox)?.();
   }
-  const balance = goodsBalance(world, island);
-  for (const good of GOOD_IDS) {
-    const b = balance[good];
-    const cv = chipView(world, good, island);
-    const chip = setChip(header, `stock-${good}`, cv);
-    if (chip) {
-      const hide = stockChipHidden(world, good, island);
-      if (chip.hidden !== hide) chip.hidden = hide;
-      chip.classList.toggle('negative', b.net <= -TREND_EPS);
-      chip.classList.toggle('reach-warn', cv.reach === 'warn');
-      chip.classList.toggle('reach-alarm', cv.reach === 'alarm');
-      chip.classList.toggle('reach-full', cv.reach === 'full-warn');
-      if (!hide) {
-        const tip = stockTooltip(world, good, island);
-        if (chip.title !== tip) chip.title = tip;
-      }
-      const pressed = String(actions.focusedGood() === good);
-      if (chip.getAttribute('aria-pressed') !== pressed) chip.setAttribute('aria-pressed', pressed);
-    }
-  }
+  updateStockChips(header, world, island, actions.focusedGood());
   const tax = taxView(world);
   const taxBox = header.querySelector<HTMLElement>('.hud-tax');
   if (taxBox) {
@@ -550,41 +609,81 @@ export function renderNoticeStack(
   crisis.className = 'card card--crisis';
   crisis.dataset.field = 'crisis-card';
   crisis.hidden = true;
-  const far = document.createElement('span');
-  far.className = 'card far-card';
-  far.dataset.field = 'far-card';
-  far.hidden = true;
-  const farText = document.createElement('span');
-  farText.dataset.field = 'far-text';
-  const farBtn = document.createElement('button');
-  farBtn.className = 'btn';
-  farBtn.textContent = 'Annehmen';
-  farBtn.dataset.field = 'far-accept';
-  farBtn.addEventListener('click', () => {
-    farBtn.blur();
-    actions.acceptFar();
-  });
-  far.append(farText, farBtn);
-  stack.append(order, far, crisis);
+  const far = farCard(actions, 0);
+  const far2 = farCard(actions, 1);
+  stack.append(order, far, far2, crisis);
   gameEl.appendChild(stack);
   updateNoticeStack(stack, world);
   return stack;
+}
+
+/** I-114: Fernkarte `which` (0 Erstangebot, 1 Zweitkarte); Felder tragen bei Karte 2 das Suffix `-2`. */
+function farCard(actions: OrderActions, which: 0 | 1): HTMLElement {
+  const sfx = which === 1 ? '-2' : '';
+  const card = document.createElement('span');
+  card.className = 'card far-card';
+  card.dataset.field = `far-card${sfx}`;
+  card.hidden = true;
+  const text = document.createElement('span');
+  text.dataset.field = `far-text${sfx}`;
+  const lead = document.createElement('span');
+  lead.dataset.field = `far-lead${sfx}`;
+  const stock = document.createElement('span');
+  stock.dataset.field = `far-stock${sfx}`;
+  text.append(lead, stock);
+  const btn = document.createElement('button');
+  btn.className = 'btn';
+  btn.textContent = 'Annehmen';
+  btn.dataset.field = `far-accept${sfx}`;
+  btn.addEventListener('click', () => {
+    btn.blur();
+    actions.acceptFar(which);
+  });
+  card.append(text, btn);
+  return card;
+}
+
+/** I-136: Tooltip der Fahrzeit auf der Fernkarte. */
+export const FAR_TRAVEL_TIP =
+  'Fahrzeit einer Einzelfahrt von der Heimat; ein Schiff muss erst bereitstehen.';
+
+/** I-114: Sichtbarkeit, Text und Tooltip der Fernkarte `which`; Karte 2 nur bei Wahl-Angebot. */
+function updateFarCard(stack: HTMLElement, world: World, which: 0 | 1, visible: boolean): void {
+  const sfx = which === 1 ? '-2' : '';
+  const card = stack.querySelector<HTMLElement>(`[data-field="far-card${sfx}"]`);
+  if (!card) return;
+  const p = visible ? farOfferParts(world, which) : null;
+  const hidden = p === null;
+  if (card.hidden !== hidden) card.hidden = hidden;
+  const lead = stack.querySelector<HTMLElement>(`[data-field="far-lead${sfx}"]`);
+  const stock = stack.querySelector<HTMLElement>(`[data-field="far-stock${sfx}"]`);
+  if (lead) {
+    const t = p === null ? '' : farOfferLead(p);
+    const tip = p === null || p.travel === null ? '' : FAR_TRAVEL_TIP;
+    if (lead.textContent !== t) lead.textContent = t;
+    if (lead.title !== tip) lead.title = tip;
+  }
+  if (stock) {
+    const t = p === null ? '' : p.stock;
+    const tip = p === null ? '' : p.tip;
+    const low = p !== null && p.short;
+    if (stock.textContent !== t) stock.textContent = t;
+    if (stock.title !== tip) stock.title = tip;
+    if (stock.classList.contains('far-stock--low') !== low)
+      stock.classList.toggle('far-stock--low', low);
+  }
+  const btn = stack.querySelector<HTMLElement>(`[data-field="far-accept${sfx}"]`);
+  const tip = farAcceptTooltip(world, which);
+  if (btn && btn.title !== tip) btn.title = tip;
 }
 
 /** Aktualisiert Auftrag und Krisenkarte; eine leere Krisenkarte ist verborgen. */
 export function updateNoticeStack(stack: HTMLElement, world: World, island: number = HOME): void {
   const orderEl = stack.querySelector<HTMLElement>('.order-card');
   if (orderEl) updateOrder(orderEl, world, island);
-  const farEl = stack.querySelector<HTMLElement>('[data-field="far-card"]');
-  if (farEl) {
-    const text = orderVisible(world) ? farOfferText(world) : null;
-    const hidden = text === null;
-    if (farEl.hidden !== hidden) farEl.hidden = hidden;
-    setField(stack, 'far-text', text ?? '');
-    const btn = stack.querySelector<HTMLElement>('[data-field="far-accept"]');
-    const tip = farAcceptTooltip(world);
-    if (btn && btn.title !== tip) btn.title = tip;
-  }
+  const visible = orderVisible(world);
+  updateFarCard(stack, world, 0, visible);
+  updateFarCard(stack, world, 1, visible);
   const crisis = crisisCardText(crisisView(world), world);
   const crisisEl = setField(stack, 'crisis-card', crisis.text);
   if (crisisEl) {
@@ -692,13 +791,18 @@ function focusLine(world: World, good: GoodId, island: number): string {
   return line;
 }
 
-export function stockTooltip(world: World, good: GoodId, island: number = HOME): string {
-  const b = goodsBalance(world, island)[good];
+export function stockTooltip(
+  world: World,
+  good: GoodId,
+  island: number = HOME,
+  balance: Balance = goodsBalance(world, island),
+): string {
+  const b = balance[good];
   const pm = (x: number): number => perMinute(x, GOODS_BALANCE_TICKS);
   return (
     `${GOODS[good].name} ${world.islands[island]!.stock[good]} / ${STORAGE_CAP} · ${signedNum(pm(b.net))} / min ` +
     `(Erzeugung ${pm(b.produced)} / min, Verbrauch ${pm(b.consumed)} / min)\n` +
-    reachLine(world.islands[island]!.stock[good], b.net) +
+    reachLine(world.islands[island]!.stock[good], b.net, contractDrain(world, good, island)) +
     focusLine(world, good, island)
   );
 }

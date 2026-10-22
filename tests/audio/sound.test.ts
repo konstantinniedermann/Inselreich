@@ -277,6 +277,7 @@ describe('sound', () => {
       upgrade: 300,
       error: 150,
       alarm: 2000,
+      contractWarn: 2000,
       stormWarning: 5000,
       boom: 2000,
       monumentDone: 3000,
