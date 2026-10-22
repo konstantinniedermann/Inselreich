@@ -1542,3 +1542,15 @@ falls nicht disjunkt. Budget **2** Starts.
 Regelbezug: ADR-012, R797 (Render nach ORT-A), CLAUDE.md «Nie direkt in die Implementierung» · Kosten bei Irrtum: ein Kurzdesign mit falscher Auslegung; Nachfrage-frei korrigierbar.
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R820 · 2026-10-22 · Gate Kurzdesign LEBEN-STRASSE: OK, Plan sofort
+
+Ruling: Kurzdesign `lead-art` (`design/leben-strasse` @ `90c74b60`, 22 AK: AK-T1–T10 Tempo, AK-V1–V12 Optik; P1 Tempo S–M, P2 Optik M) → **OK**. Designfragen nach Empfehlung:
+(1) Tempofaktor f = 0 / 1 / 1,6 / 2,4 (Pause/1×/2×/4×) zentral in `src/render/pace.ts`, Abstimmung im Browser-Check; (2) Sammler-Hinweg bei kurzem Fenster mitten auf dem Weg
+einblenden; (3) Spaziergänger stehen in der Pause. Ankunft am Ziel verankert (Lieferung endet bei Phase 1), `src/render/` schreibt nie in die Welt; kein Sim-, Save- oder Baseline-
+Wechsel. **Kein Rebase** (Dauerregel): der Anbindungs-Task (`renderer.ts`, `app.ts`) holt nach dem ORT-A-Merge `main` per `git merge main` herein; P1/P2 in `life.ts`, `errands.ts`,
+`pace.ts` und Tests dürfen sofort starten. Plan `lead-tech` (Stufe leicht, sonnet), keine Testläufe; Budget **2** Starts. Luminanz-Mindestwert AK-V8 legt der Plan per Messung fest.
+
+Regelbezug: R819, gates.md kombiniertes Gate Stufe leicht, CLAUDE.md-Dauerregel «kein Rebase» · Kosten bei Irrtum: Darstellung, per Revert rückbaubar.
+
+Entscheider: L0 · Anlass: Bericht lead-art LEBEN-STRASSE · ADR: —
