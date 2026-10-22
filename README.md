@@ -279,8 +279,8 @@ Ereignisse zeigt ungelesene Meldungen als (n neu), ab 10 (9+ neu); Aufklappen se
   zwei eigene Autosave-Plätze im Wechsel: Der neueste Stand ersetzt jeweils den älteren, der vorige bleibt
   als «Autosave davor» erhalten (so lässt sich nach einem Fehlklick ein Stand von vor etwa zwei bis vier
   Minuten laden). Beim Verlassen oder Schliessen der Seite überschreibt ein weiteres Speichern (still, nur
-  wenn das Spiel schon begonnen hat) nur den neuesten Platz; «Davor» bleibt unberührt. Lädst du einen
-  Autosave-Stand, gilt dieser Platz als neuester: Das Verlassen der Seite überschreibt ihn, der andere Stand
+  wenn das Spiel schon begonnen hat) nur den neuesten Platz; «Davor» bleibt unberührt. Welcher Stand «Autosave» und welcher «Autosave davor» heisst, richtet sich nach dem Zeitpunkt des letzten Schreibens, nicht nach der Spielzeit. Lädst du einen
+  Autosave-Stand, schreibt das nächste Speichern in diesen Platz: Das Verlassen der Seite überschreibt ihn, der andere Stand
   (auch ein neuerer) bleibt bis zum nächsten Autosave erhalten. Scheitert das periodische Speichern, erscheint einmal eine Meldung;
   das Spiel läuft weiter.
 - **Laden:** Menü → «Laden» zeigt die vorhandenen Stände («Autosave — Spielzeit m:ss», «Autosave davor — Spielzeit m:ss», «Gespeichert —
