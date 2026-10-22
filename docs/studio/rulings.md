@@ -1708,3 +1708,12 @@ Start laut R832 als Platz 3 der Warteschlange.
 Regelbezug: R831, R832 · Kosten bei Irrtum: UI-only.
 
 Entscheider: L0 · Anlass: Bericht lead-tech Plan UI-HAEPPCHEN-I · ADR: —
+
+## R834 · 2026-10-22 · TOOL-DASH-REST abgenommen, wartet aufs Bündel
+
+Ruling: Review `qa-code-reviewer` OK (`tool/dash-rest` @ `7a442f43`, alle Entfernungen per `rg` belegt, `make studio-test` 1009 OK) → **Strang abgenommen**; Gate Merge im nächsten
+Release-Bündel. Stilhinweis `views.js:~213` (Pfeil mit Ausdruck) entfällt als Kann.
+
+Regelbezug: R825, R829, Verfassung §9.1 · Kosten bei Irrtum: gering.
+
+Entscheider: L0 · Anlass: Review TOOL-DASH-REST · ADR: —
