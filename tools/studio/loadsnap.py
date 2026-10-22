@@ -26,17 +26,22 @@ CMD_MAX = 60
 TOP_N = 5
 REPO_ROOT = "/Users/KN/CAS/projekte/anno-clone"
 _INTERPRETER = re.compile(r"^(python[\d.]*|node|bash|sh|zsh|ruby|perl|deno|bun|tsx)$", re.I)
-_TOOL = re.compile(r"(?<![\w-])(vitest|vite|render-qa|testlock|pushcheck|loadsnap)(?![\w-])")
+_TOOL = re.compile(r"(?<![\w-])(vitest|vite|render-qa|testlock|pushcheck|loadsnap|unittest|testrun)(?![\w-])")
 _LINE = re.compile(r"^\s*(\d+)\s+(\d+(?:[.,]\d+)?)\s+(.*\S)\s*$")
 
 
+_SCRIPT_EXT = (".py", ".js", ".mjs", ".cjs", ".ts", ".sh")
+
+
 def script_name(cmd: str) -> str:
-    """Skriptname eines Befehls (Basename), nie weitere Argumente."""
+    """Skriptname eines Befehls (Basename), nie Optionen oder weitere Argumente."""
     tokens = cmd.split()
     if not tokens:
         return ""
     program = tokens[0].rsplit("/", 1)[-1]
     if not _INTERPRETER.match(program):
+        if ".app/" in cmd:  # Pfad mit Leerzeichen: Programmteil bis zur ersten Option
+            return cmd.split(" -", 1)[0].rsplit("/", 1)[-1].strip()
         return program
     rest = tokens[1:]
     for i, token in enumerate(rest):
@@ -44,9 +49,10 @@ def script_name(cmd: str) -> str:
             return "-c"
         if token == "-m":
             return rest[i + 1].rsplit("/", 1)[-1] if i + 1 < len(rest) else "-m"
-        if token.startswith("-"):
-            continue
-        return token.rsplit("/", 1)[-1]
+        if not token.startswith("-") and (token.endswith(_SCRIPT_EXT) or "/" in token):
+            return token.rsplit("/", 1)[-1]
+    if rest and not rest[0].startswith("-"):  # direkt nach dem Interpreter: Skript ohne Endung
+        return rest[0].rsplit("/", 1)[-1]
     return program
 
 

@@ -57,6 +57,16 @@ class ScriptKlasseTest(unittest.TestCase):
         self.assertEqual(self.script("node /x/tools/perf.mjs --n 3"), "perf.mjs")
         self.assertEqual(self.script("bash -e run.sh"), "run.sh")
 
+    def test_script_optionswerte_leaken_nicht(self):
+        self.assertEqual(self.script("python3 -W ignore x.py"), "x.py")
+        self.assertEqual(self.script("node -r foo x.js"), "x.js")
+        self.assertEqual(self.script("python3 --token abc"), "python3")
+        self.assertEqual(self.script("python3 -m modul --token abc"), "modul")
+
+    def test_script_app_pfad_mit_leerzeichen(self):
+        cmd = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --flag=x"
+        self.assertEqual(self.script(cmd), "Google Chrome")
+
     def test_script_ohne_argument_oder_interpreter(self):
         self.assertEqual(self.script("/x/Python.app/Contents/MacOS/Python a/b.py -v"), "b.py")
         self.assertEqual(self.script("vim"), "vim")
@@ -80,6 +90,8 @@ class ScriptKlasseTest(unittest.TestCase):
         self.assertEqual(k("Google Chrome --user-data-dir=/Users/x/Library/Chrome"), "fremd")
         self.assertEqual(k("/Applications/Foo.app/Contents/MacOS/Foo"), "fremd")
         self.assertEqual(k("python3 other.py"), "fremd")
+        self.assertEqual(k("python3 -m unittest discover"), "eigen")
+        self.assertEqual(k("python3 tools/studio/testrun.py --suite x"), "eigen")
 
     def test_snapshot_summen_und_felder(self):
         text = (
