@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 TESTLOCK := tools/testlock/testlock.ts
-.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint stampcheck studio studio-stop studio-archive studio-aufraeumen studio-metrics pages-limit zeittests zeitreserve zeitreserve-push zeitreserve-gate gate-ensemble conflicts check-ci-perf messfenster check-run check-push push-check
+.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint stampcheck studio studio-stop studio-archive studio-aufraeumen studio-metrics pages-limit zeittests zeitreserve zeitreserve-push zeitreserve-gate gate-ensemble conflicts check-ci-perf messfenster messguete check-run check-push push-check
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -84,6 +84,9 @@ pages-limit: ## Plattformgrenze GitHub Pages prüfen (dist/ nach build, Schwelle
 
 messfenster: ## Messfenster prüfen (Last, fremde vitest/vite/Chrome); Serie: ARGS="--run -- node tools/render-qa/perf.mjs ..."
 	node tools/render-qa/messfenster.mjs $(ARGS)
+
+messguete: ## A/A-Gate der Messgüte (Hitch/Render-Ausgabe aus Datei oder stdin); ARGS="<datei> ..."
+	node tools/render-qa/aagate.mjs $(ARGS)
 
 check: ## Gleich wie CI: conflicts, lint, zeittests, test, zeitreserve, studio-test, build, pages-limit; mit Testsperre (R375)
 	@python3 tools/studio/stampcheck.py

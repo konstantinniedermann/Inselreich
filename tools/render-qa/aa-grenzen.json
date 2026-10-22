@@ -1,0 +1,6 @@
+{
+  "vorlaeufig": true,
+  "quelle": "Plan TOOL-MESSFENSTER, Datenlage: Hitch A/A (3 saubere Blöcke: Σover25 = 0; Block bei Last bis 6,5: 4 von 12 Fenstern over25 21-25, max 50-67 ms, Σ >= 90); Render-Median nur aus ca. 10 A/B-Paaren ohne Effekt (|Δ| bis 0,4 ms / 2,2 %), keine echten A/A. Werte werden nach T00 per Ruling angepasst.",
+  "hitch": { "summeOver25Max": 2, "fensterMaxMs": 40 },
+  "render": { "deltaMsMax": 0.4, "deltaPctMax": 3 }
+}
