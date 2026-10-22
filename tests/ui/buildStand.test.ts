@@ -39,7 +39,7 @@ describe('standLine (I-167)', () => {
     expect(standLine(w, 'fisher', 0)).toBe('Steht: 2 · alle Inseln: 5');
   });
 
-  it('nur auf anderer Insel: Steht: noch keins · alle Inseln', () => {
+  it('nur auf anderer Insel: Steht: 0 · alle Inseln: 1', () => {
     const w = createWorld(3);
     add(w, 'fisher', 1);
     expect(standLine(w, 'fisher', 0)).toBe('Steht: 0 · alle Inseln: 1');

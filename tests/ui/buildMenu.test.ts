@@ -278,10 +278,13 @@ describe('I-112 Takt-Zeilen folgen dem Ratsbeschluss', () => {
 
 describe('I-167 Bestandszeile im Tooltip (AK-I13, AK-I14)', () => {
   const fakeEl = (defId: string) => ({ dataset: { defId }, textContent: '' });
+  const hidden = Array.from({ length: 20 }, () => fakeEl('weaver'));
+  // verborgene Tooltips hängen unter dem Selektor ohne `.show` im DOM
   const navWith = (shown: ReturnType<typeof fakeEl>[]) =>
     ({
       querySelector: () => null,
-      querySelectorAll: (sel: string) => (sel === '.tooltip.show .tt-stand' ? shown : []),
+      querySelectorAll: (sel: string) =>
+        sel === '.tooltip.show .tt-stand' ? shown : sel === '.tt-stand' ? hidden : [],
     }) as unknown as HTMLElement;
 
   it('AK-I13 sichtbare Zeile wird gefüllt, Kontor bleibt leer', () => {
@@ -296,7 +299,6 @@ describe('I-167 Bestandszeile im Tooltip (AK-I13, AK-I14)', () => {
   it('AK-I14 ein offener Tooltip: genau ein standLine-Aufruf je Auffrischung', () => {
     const w = createWorld(3, { unlockAll: true });
     const open = fakeEl('fisher');
-    const hidden = Array.from({ length: 20 }, () => fakeEl('weaver'));
     spy.stand = 0;
     updateBuildMenu(navWith([open]), w, 0);
     expect(spy.stand).toBe(1);
