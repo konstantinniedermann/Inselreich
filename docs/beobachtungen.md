@@ -487,3 +487,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 ## 2026-10-22 · WIRTSCHAFT-BS-1: Scout-Idee mit falscher Code-Annahme (niedrig)
 
 - Fundort: `docs/ideen.md` (Branch `docs/ideen-14`), I-154 «Rückfracht auf der Route». Beobachtung: Die Idee nimmt an, Routen führen nur Hinfracht und die Routen-Bilanz zähle nur sie; beides gibt es seit M12 (`Route.ab/ba`, `routeBalance.ts:61-63`, «Holen/Bringen» in `src/ui/ships.ts`). Ursprung: lead-design, Dominanz-Rechnung WIRTSCHAFT-BS-1. Einschätzung: Persona `design-idea-scout` sollte «fehlt»-Annahmen gegen Code prüfen (eine `rg`-Suche) und die Fundstelle nennen; Kandidat für die nächste Persona-Pflege.
+
+## 2026-10-22 · LEBEN-SEE: `hidden`-Prüfung uneinheitlich in `sound.ts` (niedrig)
+
+- Fundort: `src/audio/sound.ts` (`playBuild`, `playShortage`, `playWork`). Beobachtung: Seit LEBEN-SEE T05 prüft `play()` `hidden`; die drei Varianten prüfen es nicht und legen bei verborgenem Tab Knoten an. Ursprung: Final-Review Strang Klang. Einschätzung: hörbar folgenlos (Kontext suspendiert), nur uneinheitlich; Beipack-Kandidat.
