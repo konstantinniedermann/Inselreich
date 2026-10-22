@@ -483,3 +483,7 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 - Fundort: `src/ui/farOrder.ts` (`farOrderText`). Beobachtung: Der HUD-Text des Fernauftrags trägt kein «zu spät»; nur Marke, Tooltip und «Wo war ich?»-Karte zeigen es. Ursprung: Spec UI-HAEPPCHEN-G (Ruling R-Kurzdesign). Einschätzung: Beipack-Kandidat, zusammen mit dem Eintrag zur Rotfärbung vom 2026-10-17.
 - Fundort: `src/ui/farOrder.ts` (`farLate`). Beobachtung: Zählt Fracht eines Schiffs voll mit, auch wenn das Fern-Lager beim Eintreffen voll wäre; die Ladung kann so überschätzt werden und «zu spät» fehlt. Ursprung: UI-HAEPPCHEN-G T01. Einschätzung: niedrig, Näherung bewusst einfach.
+
+## 2026-10-22 · WIRTSCHAFT-BS-1: Scout-Idee mit falscher Code-Annahme (niedrig)
+
+- Fundort: `docs/ideen.md` (Branch `docs/ideen-14`), I-154 «Rückfracht auf der Route». Beobachtung: Die Idee nimmt an, Routen führen nur Hinfracht und die Routen-Bilanz zähle nur sie; beides gibt es seit M12 (`Route.ab/ba`, `routeBalance.ts:61-63`, «Holen/Bringen» in `src/ui/ships.ts`). Ursprung: lead-design, Dominanz-Rechnung WIRTSCHAFT-BS-1. Einschätzung: Persona `design-idea-scout` sollte «fehlt»-Annahmen gegen Code prüfen (eine `rg`-Suche) und die Fundstelle nennen; Kandidat für die nächste Persona-Pflege.
