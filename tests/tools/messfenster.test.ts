@@ -155,6 +155,17 @@ describe('messfenster lock', () => {
     expect(readLock(path)?.owner).toBe('a');
   });
 
+  it('CLI: ungültige --pid (NaN, 0, negativ, Bruch) => Exit 2 mit deutscher Meldung, keine Sperre', () => {
+    const { path, cli } = setup();
+    for (const bad of ['abc', '0', '-5', '1.5']) {
+      const p = cli('set', '--owner', 'a', '--dauer', '30', '--zweck', 'z', '--pid', bad);
+      expect(p.status).toBe(2);
+      expect(p.stderr).toContain('--pid');
+    }
+    expect(cli('clear', '--owner', 'a', '--pid', 'abc').status).toBe(2);
+    expect(existsSync(path)).toBe(false);
+  });
+
   it('CLI status: frei Exit 0, belegt Exit 3 mit deutscher Zeile', () => {
     const { cli } = setup();
     expect(cli('status').status).toBe(0);

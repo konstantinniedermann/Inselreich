@@ -123,9 +123,13 @@ export function takeOver(path: string, now: number): boolean {
     return false;
   }
   try {
-    const now_ = readLock(path);
-    if (now_ && !isOrphan(now_, now)) return false; // inzwischen neu und lebend
-    if (now_ === null) {
+    // Schmales ABA-Fenster: zwischen Lesen und unlink könnte ein anderer Prozess die verwaiste Datei
+    // ersetzen. Alle Übernehmer laufen unter dem Wächter; ein reiner Setzer (link) trifft nur freie
+    // Pfade. Nach dem Lesen bleibt ein Rest von Mikrosekunden, den die Zeit-/PID-Prüfung beim
+    // nächsten Zugriff als Verwaisung wieder auffängt (Messfenster ist ein Koordinationshinweis).
+    const current = readLock(path);
+    if (current && !isOrphan(current, now)) return false; // inzwischen neu und lebend
+    if (current === null) {
       try {
         statSync(path);
       } catch {
@@ -133,7 +137,7 @@ export function takeOver(path: string, now: number): boolean {
       }
     }
     console.error(
-      `messfenster: verwaiste Sperre (Eigentümer ${now_?.owner ?? '?'}, bis ${now_?.ende ?? '?'}) übernommen.`,
+      `messfenster: verwaiste Sperre (Eigentümer ${current?.owner ?? '?'}, bis ${current?.ende ?? '?'}) übernommen.`,
     );
     try {
       unlinkSync(path);
@@ -241,6 +245,10 @@ function cli(args: string[]): number {
     return 2;
   }
   const pid = num(opt('pid'));
+  if (pid !== undefined && !(Number.isInteger(pid) && pid > 0)) {
+    console.error('messfenster: --pid muss eine positive ganze Zahl sein.');
+    return 2;
+  }
   if (cmd === 'clear') {
     const r = release({ owner, pid });
     if (!r.ok) console.error(`messfenster: ${r.reason}`);

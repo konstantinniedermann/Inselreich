@@ -5,6 +5,7 @@
 // Auf CI (CI/GITHUB_ACTIONS) und in verschachtelten Läufen (STUDIO_TESTLOCK_HELD) läuft der Befehl direkt.
 // TESTLOCK_FAKE_LOAD und TESTLOCK_PATH gibt es nur für Tests, nie zum Umgehen echter Prüfungen (R378).
 // Vor Last- und Sperrprüfung: Hinweis (nur stderr, nichts wird beendet) auf verwaiste Vitest-Prozesse.
+// TESTLOCK_AFTER_LOCK_HOOK (Skript zwischen Testsperre und Messfenster-Prüfung) gibt es nur für Tests (R378).
 // TESTLOCK_PS_FIXTURE (Pfad zu einer ps-Ausgabe) gibt es nur für Tests (R378).
 // Übernahme toter Sperren: nur unter einem Wächterverzeichnis (<lock>.takeover, mkdir ist atomar); die tote
 // Sperrdatei kann nur ein Wächterhalter löschen, daher kein ABA-Fenster.
@@ -219,6 +220,10 @@ if (isSet(env.CI) || isSet(env.GITHUB_ACTIONS) || env.STUDIO_TESTLOCK_HELD) {
   };
   process.on('exit', release);
   // Dekker (P-4): Testsperre ist gesetzt, erst jetzt das Messfenster prüfen; belegt => eigene Sperre lösen.
+  // TESTLOCK_AFTER_LOCK_HOOK (Pfad zu einem node-Skript) gibt es nur für Tests (R378): läuft genau hier,
+  // um die Dekker-Reihenfolge zu belegen (Messfenster erscheint nach der Testsperre).
+  if (env.TESTLOCK_AFTER_LOCK_HOOK !== undefined)
+    execFileSync('node', [env.TESTLOCK_AFTER_LOCK_HOOK], { stdio: 'inherit' });
   const mPath = messfensterPath();
   const m = readMessfenster(mPath);
   if (m && messfensterOrphan(m)) takeOverMessfenster(mPath, Date.now());

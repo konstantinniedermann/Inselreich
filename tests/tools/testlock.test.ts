@@ -156,6 +156,26 @@ describe('testlock und Messfenster (P-4, P-5)', () => {
     expect(existsSync(mess)).toBe(true);
   });
 
+  it('Dekker-Reihenfolge: Messfenster erscheint nach der Testsperre und vor der Prüfung => Abbruch, Testsperre gelöst', () => {
+    const { lock, mess, run } = setup();
+    const dir = mkdtempSync(join(tmpdir(), 'dekker-'));
+    const marker = join(dir, 'marker');
+    const hook = join(dir, 'hook.cjs');
+    // Hook läuft zwischen Nehmen der Testsperre und Messfenster-Prüfung (TESTLOCK_AFTER_LOCK_HOOK, nur Tests, R378)
+    writeFileSync(
+      hook,
+      `const fs = require('node:fs');
+fs.writeFileSync(${JSON.stringify(marker)}, fs.existsSync(${JSON.stringify(lock)}) ? 'testsperre-da' : 'testsperre-fehlt');
+fs.writeFileSync(${JSON.stringify(mess)}, JSON.stringify({ owner: 'spaet', start: 'x', ende: ${JSON.stringify(IN_ZUKUNFT)}, zweck: 'Perf', cwd: '/x' }));`,
+    );
+    const p = run({ TESTLOCK_AFTER_LOCK_HOOK: hook }, 'node', '-e', 'console.log("GELAUFEN")');
+    expect(readFileSync(marker, 'utf8')).toBe('testsperre-da');
+    expect(p.status).toBe(3);
+    expect(p.stderr).toContain('Messfenster (Eigentümer spaet');
+    expect(p.stdout).not.toContain('GELAUFEN');
+    expect(existsSync(lock)).toBe(false);
+  });
+
   it('Messfenster-Abbruch schreibt Event load_abort mit Grund messfenster', () => {
     const { mess, run, events } = setup();
     writeFileSync(mess, messLock('l0', IN_ZUKUNFT));
