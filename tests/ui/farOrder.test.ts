@@ -5,7 +5,7 @@ import { acceptFarOrder, deliverOrder, farAlternative, previewOrder } from '../.
 import { GOODS } from '../../src/sim/defs/goods';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
-import type { World } from '../../src/sim/types';
+import type { Ship, World } from '../../src/sim/types';
 import { HOME } from '../../src/sim/world';
 import {
   deliverTarget,
@@ -364,6 +364,25 @@ describe('UI-BEIPACK-FERN farOrderParts (AK-BF1, BF2)', () => {
     const l = lateWorld();
     expect(farOrderParts(l, l.order!).late).toBe(true);
     expect(farOrderText(l, l.order!).endsWith(' · zu spät')).toBe(true);
+  });
+
+  it('BF2 rechtzeitige Fracht: kein «zu spät», verspätete schon', () => {
+    const w = lateWorld();
+    const o = w.order!;
+    const rest = o.due - w.tick;
+    const ship = (left: number): Ship => ({
+      id: 90,
+      port: 0,
+      to: o.island!,
+      left,
+      cargo: { [o.good]: o.amount },
+      route: null,
+      homing: false,
+    });
+    w.ships = [ship(rest)];
+    expect(farOrderText(w, o).endsWith('zu spät')).toBe(false);
+    w.ships = [ship(rest + 1)];
+    expect(farOrderText(w, o).endsWith(' · zu spät')).toBe(true);
   });
 
   it('BF2 Lager deckt die Menge: kein «zu spät»', () => {

@@ -26,7 +26,7 @@ import {
 import * as production from '../../src/ui/production';
 import { seaWorld } from '../sim/seaHelpers';
 import { farWorld, periodStart, stepAt } from '../sim/farHelpers';
-import { acceptFarOrder } from '../../src/sim/orders';
+import { acceptContract, acceptFarOrder } from '../../src/sim/orders';
 import { farOrderText } from '../../src/ui/farOrder';
 import { homeTravelTicks } from '../../src/ui/homeTravel';
 import { diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
@@ -756,7 +756,8 @@ describe('UI-BEIPACK-FERN Auftragskarte Fernauftrag (AK-BF3, BF4)', () => {
   it('BF3 Stammkunde ohne order-stock', () => {
     const { w, el, text } = setup();
     w.order = null;
-    w.contract = { good: 'rum', island: HOME, amount: 5, deliveries: 0 } as never;
+    w.contractOffer = { good: 'rum', island: HOME };
+    acceptContract(w);
     updateOrder(el as unknown as HTMLElement, w);
     expect(el.querySelector('[data-field="order-stock"]')).toBeNull();
     expect(text.textContent).toBe(orderCardText(w));
