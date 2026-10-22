@@ -147,8 +147,27 @@ export function farLogEntries(prev: FarSnap, world: World): LogEntry[] {
   return out;
 }
 
+/**
+ * I-155: Kommt Ware aus der Heimat nicht mehr rechtzeitig? Wahr, wenn die Fahrt (strikt) länger dauert als `rest`
+ * und Lager der Fern-Insel plus rechtzeitig eintreffende Fracht die Menge nicht decken. Liest nur die Welt.
+ */
+export function farLate(
+  world: World,
+  x: { island: number; amount: number; good: Order['good'] },
+  rest: number,
+  lanes?: Lanes,
+): boolean {
+  if (rest <= 0 || world.islands[x.island]!.kontorId === null) return false;
+  const travel = homeTravelTicks(world, x.island, lanes);
+  if (travel === null || rest >= travel) return false;
+  let have = stockOn(world, x.island, x.good);
+  for (const s of world.ships)
+    if (s.to === x.island && s.left <= rest) have += s.cargo[x.good] ?? 0;
+  return have < x.amount;
+}
+
 /** I-101: Marke der Seekarte für Fernauftrag (Vorrang) bzw. Fernangebot; `null` sonst. Liest nur die Welt. */
-export function farMark(world: World): MapMark | null {
+export function farMark(world: World, lanes?: Lanes): MapMark | null {
   const o = world.order;
   const f = world.farOffer;
   let kind: MapMark['kind'];
@@ -163,10 +182,18 @@ export function farMark(world: World): MapMark | null {
     x = f;
     ticks = farOfferDue(world)! - world.tick;
   } else return null;
+  const late = farLate(world, x, ticks, lanes);
+  const travel = homeTravelTicks(world, x.island, lanes);
   return {
     island: x.island,
     kind,
-    text: `${x.amount} ${GOODS[x.good].name} · ${formatGameTime(ticks)}`,
+    text: `${x.amount} ${GOODS[x.good].name} · ${formatGameTime(ticks)}${late ? ' · zu spät' : ''}`,
     warn: world.islands[x.island]!.kontorId === null,
+    late,
+    tip:
+      travel === null
+        ? null
+        : `Fahrzeit ≈ ${formatGameTime(travel)}, Rest ${formatGameTime(ticks)}` +
+          (late ? ' · zu spät für Ware aus der Heimat' : ''),
   };
 }

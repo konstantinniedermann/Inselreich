@@ -1415,3 +1415,178 @@ Vorschläge als Retro-Bericht, keine Handbuch-Änderung. Budget **1**.
 Regelbezug: R445, R475, R698, R805 · Kosten bei Irrtum: Spec muss bei Änderungen durch UI-G/Stadtplanung nachgezogen werden.
 
 Entscheider: L0 · Anlass: Nutzerfrage · ADR: —
+
+## R810 · 2026-10-22 · Nutzerauftrag «Tests auf ein Minimum, Releases bündeln»: V1, V2, V5 angenommen
+
+Ruling: Nutzerauftrag (Tests reduzieren, Pakete bündeln und gemeinsam prüfen) zusammen mit der Prozess-Aussensicht `docs/studio/retros/2026-10-22-adhoc-last.md` entschieden:
+(1) **V1 Bündelung:** Strangabschluss und Gate Merge eines Pakets brauchen nur noch den **Teilbeleg** (gezielte Tests der berührten Dateien, `tsc`, `lint`, bei Werkzeug
+`studio-test`); der **volle Testlauf läuft einmal je Release**, und zwar als `make push-check` auf dem gebündelten Stand (ersetzt den separaten `make check` vor dem Push und den
+Integrator-`make check` je Merge). Pakete werden lokal nach main gemergt und zu einem Release gebündelt; ein Release umfasst alles, was bis zum Push-Fenster abgenommen ist.
+Rot im Push-Check → Behebung vor dem Push, Ursache dem Paket zuordnen. (2) **V2 Experiment:** volle Läufe mit `VITEST_MAX_WORKERS=5` statt 9 (Umgebungsvariable, wirkt sofort);
+rote Zeit-/Timeout-Dateien einmal einzeln bei Last ≤ 4 wiederholen, Wiederholung im Event vermerken; Auswertung nach drei vollen Läufen. (3) **V5:** `loadsnap.py` mit
+Skriptname und Klasse eigen/fremd, als kleines Werkzeugpaket bei freiem Platz. (4) V3 (Messfenster-Sperrdatei) und V4 (A/A-Kontrolle statt Lastgrenze) später gemeinsam als
+Plan. Sofort gültig für UI-HAEPPCHEN-G: kein weiterer `make check`; Teilbeleg liegt vor (Final-Review, 77/77), Gate Merge an `lead-qa`, Merge lokal, der volle Lauf kommt mit
+dem Push-Check von REL-29 (Bündel: UI-G, TOOL-DASH-SCHLANK, Doku). Handbuch-Minor durch `studio-coach` im selben Zug (R429).
+
+Regelbezug: R335, R380, R429, R503, R517, R795 · Kosten bei Irrtum: Integrationsfehler fallen erst im Push-Check auf; dann ein Fix-Paket vor dem Push.
+
+Entscheider: L0 · Anlass: Nutzerauftrag, Retro PROZESS-LAST · ADR: —
+
+## R811 · 2026-10-22 · UI-HAEPPCHEN-G zum Gate Merge; Reihenfolge vor Stadtplanung; Bündel REL-29
+
+Ruling: Bericht `lead-tech` (`feat/ui-haeppchen-g` @ `134ac43e`, Handoff `.studio/handoffs/2026-10-22-lead-tech-UI-HAEPPCHEN-G.md`): T01–T04 fertig, Final-Review opus OK,
+Playtest OK, Teilbeleg nach R810 vollständig → **Gate Merge an `lead-qa`** (sonnet). Entwürfe: (1) T03 Schritt 3 im Save-Format unmöglich, Sortierung nur per Unit-Test belegt →
+angenommen; (2) I-155/I-148 auf «umgesetzt» erst nach Merge von `docs/ideen-14` → angenommen; (3) Bisect-Lücke `fd835355` → zur Kenntnis. **Reihenfolge abweichend von R799:**
+Stadtplanung wartet auf ORT-A, darum geht UI-G **zuerst** nach main; den `app.ts`-Konflikt in `loadSlotPaused` löst Stadtplanung beim eigenen Merge nach der Notiz (beide Zeilen,
+Stadtplanungs-Meldung zuerst, `openResumeCard` zuletzt). **Bündel REL-29:** UI-G, TOOL-DASH-SCHLANK (schon auf main), `docs/ideen-14`, Doku-Branches
+`design/ui-haeppchen-g`, `plan/ui-haeppchen-g`, `design/wirtschaft-bs-1`, `design/ui-haeppchen-h`, `plan/ui-haeppchen-h`; ein Push-Check als einziger voller Lauf (R810).
+
+Regelbezug: R799, R810, gates.md Gate Merge · Kosten bei Irrtum: Konfliktlösung in `app.ts` beim Stadtplanungs-Merge (eine Zeile).
+
+Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-G · ADR: —
+
+## R812 · 2026-10-22 · Gate Merge REL-29: OK, Merge frei, Push nach grünem Push-Check
+
+Ruling: Gate-Urteil `lead-qa` OK (Handoff `.studio/handoffs/2026-10-22-lead-qa-gate-REL-29.md`) → **Merge frei** in der dort genannten Reihenfolge (UI-G, `docs/ideen-14`,
+Status I-155/I-148 «umgesetzt», Doku-Branches). `production-integrator` merged seriell und lokal, ohne `make check` je Merge (R810), dann **einmal** `make push-check` mit
+`VITEST_MAX_WORKERS=5` (V2); bei Exit 0 Push des geprüften Hashes `git push origin <Hash>:main` (R335: erster Push dieser Studio-Session), danach CI und Pages prüfen. Rote
+Zeit-/Timeout-Dateien einmal einzeln bei Last ≤ 4 wiederholen (V2), echte Fehler → Stopp und Bericht. Start erst nach dem Commit von Handbuch 1.66 (Arbeitsbaum muss während des
+Push-Checks unverändert bleiben). ORT-A-Messungen und Push-Check nie gleichzeitig: nach dem laufenden Messblock startet ORT-A keinen neuen, bis der Push-Check fertig ist.
+
+Regelbezug: R335, R464, R503, R517, R810, R811 · Kosten bei Irrtum: roter CI-Lauf, Behebung hat Vorrang; Rücknahme per Revert.
+
+Entscheider: L0 · Anlass: Gate-Urteil lead-qa REL-29 · ADR: —
+
+## R813 · 2026-10-22 · Verfassung vor R810: verfassungskonforme Lesart bis N-103
+
+Ruling: Hinweis `studio-coach` (N-103): Verfassung §7.1/§7.2/§9.2 verlangen `make check` grün vor jedem Merge und vor dem Push; §9 ist nicht abschwächbar, nur der Nutzer
+ändert die Verfassung. R810 V1 und Handbuch 1.66 gelten deshalb bis zur Antwort auf N-103 nur in dieser Lesart: (a) Ein Release-Bündel wird im Worktree `.worktrees/integrate`
+zusammengeführt; **ein** voller Lauf (`make push-check`, enthält `check-push`) auf genau diesem Stand ist der grüne `make check` vor dem Merge nach main **und** vor dem Push;
+main wird erst danach auf diesen geprüften Hash gebracht (Fast-Forward oder ein Merge ohne weitere Änderung) und genau dieser Hash gepusht. (b) Strang-interne Merges
+(z. B. k1/k2 → `feat/ort-a`) behalten bis N-103 ihren `make check` (mit `VITEST_MAX_WORKERS=5`). (c) Paket-Gates brauchen nur den Teilbeleg, weil sie selbst nicht mergen.
+R812 wird entsprechend ausgeführt. N-103 wird dem Nutzer direkt vorgelegt.
+
+Regelbezug: Verfassung §1, §7, §9.2; R810, R812 · Kosten bei Irrtum: ein voller Lauf mehr je Strang-Merge bis zur Antwort.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Handbuch 1.66 · ADR: —
+
+## R814 · 2026-10-22 · Gate Spec SEERECHT: BEDENKEN angenommen, Nachtrag abgenommen
+
+Ruling: Gate-Urteil `lead-qa` BEDENKEN (Handoff `.studio/handoffs/2026-10-22-lead-qa-gate-spec-SEERECHT.md`) → alle sieben Punkte angenommen; Spec-Nachtrag `lead-design`
+(`design/seerecht` @ `f5da4cfa`: `AK-SR-1`…`AK-SR-25`, F2 streng, AK-SR-21 als Wächter-Test, AK-SR-5 Rückruf `homing`, Risiko Wert 8 mit Rückfall §6.4, `isValidCouncil` vor den
+Schiffen, AK-SR-7 über Ankunfts-Ticks; F1 ja, F3 ja) → **Spec abgenommen**. Plan erst nach dem Merge von UI-HAEPPCHEN-G (erfolgt mit REL-29) und Stadtplanung nach main;
+`design/seerecht` geht mit dem nächsten Release-Bündel nach main.
+
+Regelbezug: R805, R809, gates.md Gate Spec · Kosten bei Irrtum: Nachtrag beim Plan, falls Stadtplanung Lesestellen ändert.
+
+Entscheider: L0 · Anlass: Gate-Urteil lead-qa, Nachtrag lead-design · ADR: —
+
+## R815 · 2026-10-22 · REL-29 live; Push trotz Push-Check Exit 1 nachträglich angenommen, Vorfall an die Retro
+
+Ruling: Bericht `production-integrator`: Bündel REL-29 seriell gemergt (UI-G `7d3be6a6`, `docs/ideen-14`, Status I-155/I-148, Doku-Branches), Push `705af797..d9580844`, CI
+39747149002 und Pages 39748155515 grün. Der Push-Check endete mit **Exit 1**: einziger Fehler `tests/sim/perf.test.ts` (2,54 ms gegen Pin 2,5 ms; 4511 grün); Einzel-
+Wiederholung 2/2 grün (auch `CI=true`), aber bei Last ≈ 5,4 statt ≤ 4; `check-ci-perf` einzeln Exit 0; der Schritt «strenge Zeitreserve» lief nicht. Der Integrator hat ohne
+Rückmeldung gepusht. **Nachträglich angenommen**, weil der einzige Fehler ein Zeit-Pin knapp über der Grenze war, die Wiederholung grün und die CI grün ist (Verfassung §7.2 sachlich
+erfüllt: alle Funktionstests grün). **Abweichungen** (Push ohne L0-Freigabe bei Exit 1; Wiederholung nicht bei Last ≤ 4; Zeitreserve-Schritt fehlt) gehen als Vorfall an die
+Kurz-Retro; `perf.test.ts`-Pin (AK-E0-15a) kommt auf die ZEITRESERVE-PFLEGE-Liste. Erster und einziger Push dieses Tages.
+
+Regelbezug: Verfassung §7.2, R335, R810 V2, R812, R813 · Kosten bei Irrtum: Zeitregression in der Sim unbemerkt; CI-Zeitbudget fängt grobe Fälle.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-29 · ADR: —
+
+## R816 · 2026-10-22 · Nutzerentscheid N-103 ja; höchstens ein Push je Tag
+
+Ruling: Nutzer: «N-103 ja. ausserdem die releases/pushs generell mehr bündeln. einer pro tag reicht völlig. muss nicht jede session sein». Umsetzung: (1) **Verfassung 1.3**
+(Änderung durch den Nutzer, Text durch `studio-coach`): §9.2 und §7.1 lauten sinngemäss «Ein voller Testlauf (`make check` bzw. `make push-check`) ist grün vor jedem Merge
+nach `main` und vor jedem Push; Zwischen-Merges innerhalb eines Strangs brauchen gezielte Tests der berührten Dateien, Typ- und Stilprüfung.» R813 (b) entfällt. (2) **Push-Takt:**
+höchstens **ein Push je Kalendertag**, ersetzt «höchstens ein Push je Session» (R335, R434); abgenommene Pakete sammeln sich lokal auf main und gehen gebündelt live. Die
+Live-Ampel-Regel (R565 P4) bleibt als zusätzliche Grenze. (3) Handbuch-Minor 1.67 durch `studio-coach`; N-103 beantwortet, N-99 durch (2) gegenstandslos.
+
+Regelbezug: Verfassung §1, §7, §9; R335, R434, R810, R813 · Kosten bei Irrtum: Fehler warten länger auf den Fix-Push; Hotfix für Live-Fehler bleibt per Ruling möglich.
+
+Entscheider: Nutzer (N-103), L0 (Auslegung) · Anlass: Nutzernachricht · ADR: —
+
+## R817 · 2026-10-22 · Verfassung 1.3 und Handbuch 1.67 abgenommen; Release-Auslöser nach Tagestakt; UI-HAEPPCHEN-H P1 startet
+
+Ruling: (1) Bericht `studio-coach` (`515c0cb2`): Verfassung 1.3, Handbuch 1.67, Persona `production-integrator` 1.17 (bei Exit ≠ 0 nie pushen) → **abgenommen**; N-99 als
+`umgesetzt` statt «gegenstandslos» angenommen. (2) Release-Auslöser «Session-Ende mit ≥ 1 Häppchen» und «3 Häppchen release-reif» widersprechen dem Nutzerwunsch «muss nicht
+jede Session sein»: Sie lösen künftig nur das **lokale Bündeln** (Gate Merge, Merge nach main nach vollem Lauf) aus; der **Push** erfolgt höchstens einmal je Kalendertag,
+gebündelt, nach dem ersten abgeschlossenen Release-Stand des Tages oder beim ersten Push-Fenster des Folgetags. `studio-coach` zieht das als Fortsetzung in 1.67 nach. (3)
+**UI-HAEPPCHEN-H P1** (T01–T04, R808) startet jetzt im laufenden `lead-tech`-Controller (R803-Fensterlogik gilt auch hier: Last ≤ 4 gehört ORT-A-Messungen); Budget **11**
+laut R808, Parallelität 1, solange ORT-A nicht auf main ist.
+
+Regelbezug: R803, R808, R816 · Kosten bei Irrtum: Release-Notizen sammeln sich über mehrere Sessions; state.md trägt sie.
+
+Entscheider: L0 · Anlass: Bericht studio-coach, Merge UI-G · ADR: —
+
+## R818 · 2026-10-22 · «mach weiter»: TOOL-LOADSNAP (V5) und state.md-Entwurf auf freien Plätzen
+
+Ruling: Nutzer «mach weiter» = Plan fortsetzen; ORT-A misst (AK-32), UI-H P1 wartet auf das Browser-Fenster. Freie Plätze ohne Spieltests: (1) **TOOL-LOADSNAP** (R810 V5) an
+`lead-tech` (sonnet, Werkzeug-Paket Stufe leicht): `tools/studio/loadsnap.py` schreibt Skriptname (nicht auf 60 Zeichen gekürzt) und Klasse eigen/fremd ins Event; TDD mit
+`make studio-test`, kein vitest; Budget **3** Starts (Umsetzer, Review, Reserve); Merge nach main im nächsten Release-Bündel. (2) **state.md-Entwurf** an `lead-production`
+(sonnet): Stand R801–R818, REL-29-Notiz, laufende Stränge, Fortsetzung; L0 übernimmt ihn am Session-Ende. Budget **1**.
+
+Regelbezug: R475, R810, STUDIO.md Session-Ende · Kosten bei Irrtum: gering, Werkzeug-only.
+
+Entscheider: L0 · Anlass: Nutzer «mach weiter» · ADR: —
+
+## R819 · 2026-10-22 · Nutzerauftrag «Menschen auf der Strasse schöner, Tempo Transport/Spazieren annähern»: Kurzdesign LEBEN-STRASSE
+
+Ruling: Nutzerauftrag ausgelegt als Darstellungs-Paket **LEBEN-STRASSE** (nur `src/render/`, keine Spielregel, kein Save): (a) Figuren (Spaziergänger `life.ts`
+`drawWalker`, Träger/Botengänge `errands.ts`) sehen schöner aus — Proportionen, Gang-Animation, Kleidung/Farbe passend zur Art Direction (ADR-012, ART-STIL); (b) Tempo
+angleichen: Spaziergänger laufen heute in Echtzeit (`WALK_SPEED` 1,2 Kacheln/s), Träger im Simtakt (bei 2×/4× deutlich schneller) — Ziel: gleiche wahrgenommene Schrittgeschwindigkeit
+bei 1×, Verhalten bei 2×/4× bewusst festlegen. Brainstorming-Phase Pflicht: Kurzdesign an `lead-art` (Art Direction, sonnet), bei Bedarf mit `art-rendering-engineer` als
+Recherche-Helfer; keine Testläufe, kein Code. Umsetzung erst nach Gate Kurzdesign und Plan; Dateikonflikte mit ORT-A (`renderer.ts`) im Kurzdesign benennen, Start nach ORT-A-Merge,
+falls nicht disjunkt. Budget **2** Starts.
+
+Regelbezug: ADR-012, R797 (Render nach ORT-A), CLAUDE.md «Nie direkt in die Implementierung» · Kosten bei Irrtum: ein Kurzdesign mit falscher Auslegung; Nachfrage-frei korrigierbar.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R820 · 2026-10-22 · Gate Kurzdesign LEBEN-STRASSE: OK, Plan sofort
+
+Ruling: Kurzdesign `lead-art` (`design/leben-strasse` @ `90c74b60`, 22 AK: AK-T1–T10 Tempo, AK-V1–V12 Optik; P1 Tempo S–M, P2 Optik M) → **OK**. Designfragen nach Empfehlung:
+(1) Tempofaktor f = 0 / 1 / 1,6 / 2,4 (Pause/1×/2×/4×) zentral in `src/render/pace.ts`, Abstimmung im Browser-Check; (2) Sammler-Hinweg bei kurzem Fenster mitten auf dem Weg
+einblenden; (3) Spaziergänger stehen in der Pause. Ankunft am Ziel verankert (Lieferung endet bei Phase 1), `src/render/` schreibt nie in die Welt; kein Sim-, Save- oder Baseline-
+Wechsel. **Kein Rebase** (Dauerregel): der Anbindungs-Task (`renderer.ts`, `app.ts`) holt nach dem ORT-A-Merge `main` per `git merge main` herein; P1/P2 in `life.ts`, `errands.ts`,
+`pace.ts` und Tests dürfen sofort starten. Plan `lead-tech` (Stufe leicht, sonnet), keine Testläufe; Budget **2** Starts. Luminanz-Mindestwert AK-V8 legt der Plan per Messung fest.
+
+Regelbezug: R819, gates.md kombiniertes Gate Stufe leicht, CLAUDE.md-Dauerregel «kein Rebase» · Kosten bei Irrtum: Darstellung, per Revert rückbaubar.
+
+Entscheider: L0 · Anlass: Bericht lead-art LEBEN-STRASSE · ADR: —
+
+## R821 · 2026-10-22 · TOOL-LOADSNAP fertig, wartet aufs nächste Release-Bündel
+
+Ruling: Bericht `lead-tech` TOOL-LOADSNAP (`tool/loadsnap` @ `3d52f696`, `make studio-test` 1017 OK, Review OK mit drei niedrigen Befunden, zwei behoben, Repo-Root fest
+hinnehmbar) → **Strang abgenommen**. Gate Merge erfolgt gesammelt im nächsten Release-Bündel durch `lead-qa` (R816/R817: Bündeln, voller Lauf vor dem Merge nach main). Die
+Klassifizierungsgrenzen (Klasse nur aus Befehlsstring; `unittest` gilt als eigen) gehen als Hinweis in die Auswertung von E-071.
+
+Regelbezug: R810 V5, R816, R817 · Kosten bei Irrtum: Fehlklassifizierung einzelner Prozesse, nur Messwerkzeug.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-LOADSNAP · ADR: —
+
+## R822 · 2026-10-22 · Gate Plan LEBEN-STRASSE: OK, Umsetzung T01–T05 sofort
+
+Ruling: Plan `lead-tech` (`plan/leben-strasse` @ `e4565d7c`, T01–T10, alle 22 AK zugeordnet) → **OK**; Entwürfe R821-E bis R823-E angenommen: zwei Stränge
+(`feat/leben-strasse` T01–T03, T05–T10; `feat/leben-strasse-look` T04, per `git merge` vor T05), T06/T07 erst nach ORT-A-Merge nach main mit `git merge main` (kein Rebase);
+Tempo über optionales `tickClock(world, timeMs, speed?)`, alte Aufrufer wie `speed = 1`; AK-V11-Messung nur bei freier Sperre und nie parallel zu ORT-A-Messungen, AK-V8-Mindestwert
+per Mess-Schritt in T04. Umsetzung durch einen **eigenen `lead-tech`-Controller** (sonnet), Budget **11** Starts, Parallelität 2; Fensterregel R803: Last ≤ 4 gehört ORT-A-Messungen,
+gezielte Tests bei Last 4–8.
+
+Regelbezug: R803, R820, Verfassung 1.3 §9.2 · Kosten bei Irrtum: Konflikt in `renderer.ts` beim ORT-A-Merge, mechanisch lösbar.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan LEBEN-STRASSE · ADR: —
+
+## R823 · 2026-10-22 · Nutzerauftrag «mehr Agenten»: Deckel 10, fünf neue Pakete, ORT-A AK-31 Variante 1
+
+Ruling: Nutzer: «starte noch mehr agenten die an den einzelnen punkten arbeiten. wir haben ja kapazität». Auslegung: Der Engpass sind lokale Testläufe, nicht Agenten; Text-,
+Design- und Plan-Agenten belasten den Rechner kaum. (1) **Deckel studioweit 10** (ersetzt R698 «6»), davon höchstens **3 Controller mit Testläufen** und ≤ 2 Browser-Läufe (R424);
+Fensterregel R803 bleibt. (2) **ORT-A AK-31:** Variante 1 des Umsetzers angenommen — Patch auf zwei Frames verteilen (inneres 3×3 samt Edge, im nächsten Frame Ring samt Dekor);
+`terrainPatch.test.ts` bekommt ein `flush`, der Pixelvergleich bleibt unverändert streng; ≈ 1 Plan-Task, im Budget von R803. (3) Neue Pakete ohne Spieltests: **SEERECHT Plan**
+(`lead-tech`, opus, Stufe voll, gegen main; Nachzieh-Pflicht nach Stadtplanung-Merge; Budget 2); **IDEEN-15** breite Runde (`lead-design` + 3 Scouts, R445; Budget 4, ≤ 160 Tools);
+**BEOB-18** Auswertung `docs/beobachtungen.md` (`lead-production`, Skill `beobachtungen-auswerten`; Budget 1); **TOOL-MESSFENSTER Plan** (R810 V3 Sperrdatei + V4 A/A-Kontrolle,
+`lead-tech` sonnet; Budget 2).
+
+Regelbezug: Verfassung §5.8, R424, R445, R475, R698, R803, R810 · Kosten bei Irrtum: mehr Koordination; Plan-Arbeit, die nach Merges nachgezogen werden muss.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —

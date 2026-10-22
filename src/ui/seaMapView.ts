@@ -24,7 +24,8 @@ export function seaMapKey(world: World, l: MapLayout): string {
     return `${d.id}:${Math.round(m.x)},${Math.round(m.y)}`;
   });
   const m = farMark(world);
-  const mark = m === null ? '-' : `${m.island}:${m.kind}:${m.text}:${m.warn ? 1 : 0}`;
+  const mark =
+    m === null ? '-' : `${m.island}:${m.kind}:${m.text}:${m.warn ? 1 : 0}${m.late ? 1 : 0}`;
   return `${world.islands.length}|${flags}|${dots.join(';')}|m:${mark}`;
 }
 
@@ -43,5 +44,6 @@ export function seaMapTip(world: World, l: MapLayout, px: number, py: number): s
   const m = farMark(world);
   if (m !== null && m.island === i)
     parts.push(`${m.kind === 'order' ? 'Fernauftrag' : 'Fernangebot'}: ${m.text}`);
+  if (m !== null && m.island === i && m.tip !== null) parts.push(m.tip);
   return parts.join(' · ');
 }

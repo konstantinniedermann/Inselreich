@@ -236,6 +236,8 @@ describe('drawSeaMap Marke Fernangebot/Fernauftrag (I-101 T01, AK-M6/M7)', () =>
     kind: 'offer',
     text: 'Holz 5',
     warn: false,
+    late: false,
+    tip: null,
     ...over,
   });
   function run(
@@ -282,6 +284,17 @@ describe('drawSeaMap Marke Fernangebot/Fernauftrag (I-101 T01, AK-M6/M7)', () =>
     expect(
       off.calls.some((c) => c[0] === 'set' && c[1] === 'strokeStyle' && c[2] === COLORS.markWarn),
     ).toBe(true);
+  });
+  it('M6a late: markLate in Text und Strich, warn hat Vorrang', () => {
+    expect(COLORS.markLate).not.toBe(COLORS.markFill);
+    expect(COLORS.markLate).not.toBe(COLORS.markWarn);
+    const late = run(mk({ kind: 'order', late: true })).r;
+    expect(late.texts[0]!.fill).toBe(COLORS.markLate);
+    expect(late.calls.some((c) => c[0] === 'set' && c[2] === COLORS.markLate)).toBe(true);
+    const both = run(mk({ kind: 'order', late: true, warn: true })).r;
+    expect(both.texts[0]!.fill).toBe(COLORS.markWarn);
+    expect(both.calls.some((c) => c[0] === 'set' && c[2] === COLORS.markLate)).toBe(false);
+    expect(run(mk({ kind: 'order' })).r.texts[0]!.fill).toBe(COLORS.markFill);
   });
   it('M6b ohne Marke und mit mark null: Aufrufliste bitgleich', () => {
     const a = run(undefined).r.calls;

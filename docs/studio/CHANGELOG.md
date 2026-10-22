@@ -22,6 +22,90 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-22 · Handbuch 1.67
+
+- Anlass: Nutzerentscheid N-103 («ja») und Anordnung «die releases/pushs generell mehr bündeln. einer pro tag reicht völlig»; Verfassung 1.3
+- Datenbasis: Warteschlange N-103, Bericht R815 (REL-29)
+- Ruling: R816 (löst R813 ab)
+- Änderungen: Push-Takt «höchstens ein Push je Session» (R335, R434) wird «höchstens ein Push je Kalendertag», Live-Ampel R565 P4 bleibt zusätzliche Grenze; Strang-interne Merges nur mit Teilbeleg, `make push-check` ist der volle Lauf vor Merge nach `main` und vor Push (Verfassung 1.3 §9.2/§7); Hinweis auf R813 und «offener Widerspruch» entfernt (STUDIO.md, `gates.md`); «bei Exit ≠ 0 nie pushen» ins Handbuch; Studio-Ende-Routine 2a nur bei anstehendem Push; Nachtrag R817 (2): Release-Auslöser lösen nur das lokale Bündeln aus, Push einmal je Kalendertag nach dem ersten abgeschlossenen Release-Stand des Tages oder im ersten Push-Fenster des Folgetags (`STUDIO.md`, `gates.md`). Rückfall: R816 aufheben (Version 1.68), Verfassung ändert nur der Nutzer. Verfassung 1.2 → 1.3 durch den Nutzer bestätigt (Nutzer, N-103, 2026-10-22)
+
+## 2026-10-22 · Persona production-integrator 1.17
+
+- Anlass: Vorfall R815: Push trotz `make push-check` Exit 1 ohne L0-Freigabe; Wiederholung nicht bei Last ≤ 4
+- Datenbasis: R815, Bericht production-integrator REL-29
+- Ruling: R816
+- Änderungen: «Bei Exit ≠ 0 nie pushen, an L0 melden und auf Freigabe warten» in Schritt 4 und Qualitätsmassstab; Wiederholung nur bei Last ≤ 4 und ohne Freigabewirkung; Push höchstens einmal je Kalendertag statt je Session
+
+## 2026-10-22 · Handbuch 1.66
+
+- Anlass: Nutzerauftrag «Tests auf ein Minimum, Releases bündeln»; Ad-hoc-Retro Rechnerlast-Fenster
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810 (V1, V2; V5 und V3/V4 nur als offene Punkte vermerkt)
+- Änderungen: Gate Merge (Teilbeleg und Release-Bündel): Strangabschluss und Gate Merge nur mit Teilbeleg, voller Lauf einmal je Release als `make push-check`, kein separater `make check` vor dem Push, kein Integrator-`make check` je Merge; Delta-Review, Integrator-Zeile, R514-Ausnahme und `gates.md` (Gate Merge, Gate Merge Release) nachgezogen; Experiment E-071 (`VITEST_MAX_WORKERS=5`, Wiederholung roter Zeitdateien bei Last ≤ 4). Offen: V5 `loadsnap.py`, V3/V4 Sperrdatei und A/A-Kontrolle. Rückfall: R810 aufheben (Version 1.67). Offener Widerspruch: Verfassung §7.1/§7.2/§9.2 nennen `make check` vor jedem Merge/Push, Warteschlange N-103
+
+## 2026-10-22 · Persona production-integrator 1.16
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Schritt 3: Teilbeleg statt `make check` je Merge; Push-Check ist der einzige volle Lauf; Qualitätsmassstab und Bericht nachgezogen
+
+## 2026-10-22 · Persona lead-qa 1.12
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Regression und Qualitätsmassstab: Teilbeleg je Paket, voller Lauf als `make push-check` je Release
+
+## 2026-10-22 · Persona lead-production 1.13
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Aufräum-Messung, Qualitätsmassstab und Rollentabelle: Teilbeleg je Merge statt `make check`
+
+## 2026-10-22 · Persona lead-tech 1.17
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Qualitätsmassstab: Teilbeleg statt `make check`
+
+## 2026-10-22 · Persona tech-ui-engineer 1.8
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Abschlusskriterium und Bericht: Teilbeleg statt `make check` je Strang
+
+## 2026-10-22 · Persona tech-sim-engineer 1.6
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Abschlusskriterium und Bericht: Teilbeleg statt `make check` je Strang, Balancing-Test bei Änderung in `src/sim/defs/`
+
+## 2026-10-22 · Persona art-rendering-engineer 1.3
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Abschlusskriterium und Bericht: Teilbeleg statt `make check` je Strang
+
+## 2026-10-22 · Persona art-audio-engineer 1.2
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Abschlusskriterium und Bericht: Teilbeleg statt `make check` je Strang
+
+## 2026-10-22 · Persona qa-code-reviewer 1.7
+
+- Anlass: Handbuch 1.66, direkter Widerspruch der Persona zu R810
+- Datenbasis: `docs/studio/retros/2026-10-22-adhoc-last.md`
+- Ruling: R810
+- Änderungen: Review führt den Teilbeleg statt `make check` aus
+
 ## 2026-10-17 · Handbuch 1.65
 
 - Anlass: Ad-hoc-Retro `RETRO-ADHOC-FAELLIG-17`, V1 (frische Delta-Reviews nach BEDENKEN oder ZURÜCK liefen nur über einen Namenstrick durch den Modell-Guard)
