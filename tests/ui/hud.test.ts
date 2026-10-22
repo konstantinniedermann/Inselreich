@@ -598,7 +598,9 @@ describe('Meldungsstapel mit Fernkarte (Handel 2 T08)', () => {
     const stockEl = stack.querySelector('[data-field="far-stock"]')!;
     expect(text.children).toEqual([lead, stockEl]);
     expect(lead.textContent + stockEl.textContent).toBe(farOfferText(w));
-    expect(lead.title).toBe(FAR_TRAVEL_TIP);
+    expect(lead.title).toBe(
+      'Fahrzeit einer Einzelfahrt von der Heimat; ein Schiff muss erst bereitstehen.',
+    );
     expect(stack.querySelector('[data-field="far-accept"]')!.title).toBe(farAcceptTooltip(w));
   });
 
@@ -662,7 +664,9 @@ describe('Meldungsstapel mit Fernkarte (Handel 2 T08)', () => {
     const lead = stack.querySelector('[data-field="far-lead"]')!;
     expect(lead.textContent).toContain('≈ ');
     expect(lead.textContent).toContain('Fahrt');
-    expect(lead.title).toBe(FAR_TRAVEL_TIP);
+    expect(lead.title).toBe(
+      'Fahrzeit einer Einzelfahrt von der Heimat; ein Schiff muss erst bereitstehen.',
+    );
   });
 
   it('AK-F10: zweiter Durchlauf mit gleicher Welt schreibt nichts in far-stock und lead-Titel', () => {
@@ -830,6 +834,14 @@ describe('I-109 Reichweite am Lager-Chip (AK-UR-04 bis 06)', () => {
     const w = SCENARIOS['bilanz-nahrung']!();
     expect(chipView(w, 'wood')).toEqual(chipView(w, 'wood'));
     expect(stockTooltip(w, 'wood')).toBe(stockTooltip(w, 'wood'));
+  });
+});
+
+describe('UI-BEIPACK-FERN FAR_TRAVEL_TIP (AK-BF7)', () => {
+  it('BF7 Konstante ist auf den Festtext gepinnt', () => {
+    expect(FAR_TRAVEL_TIP).toBe(
+      'Fahrzeit einer Einzelfahrt von der Heimat; ein Schiff muss erst bereitstehen.',
+    );
   });
 });
 
