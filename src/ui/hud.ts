@@ -35,6 +35,7 @@ import {
   seaMapUnavailable,
 } from './seaMapView';
 import { cashReach } from './cashReach';
+import { brakeLines, growthBrakes } from './growthBrake';
 import { iconChip } from './messages';
 import { formatGameTime, GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
 import { flowLabel, flowText, flowTitle } from './balanceFlow';
@@ -207,6 +208,12 @@ export const BALANCE_REFRESH_MS = 500;
 export const balanceDue = (nowMs: number, lastMs: number): boolean =>
   nowMs - lastMs >= BALANCE_REFRESH_MS;
 const balanceShownAt = new WeakMap<HTMLElement, number>();
+/** Mindestabstand (ms) zwischen zwei Berechnungen der Wachstumsbremse (Einwohner-Chip-Tooltips). */
+export const BRAKE_REFRESH_MS = 1000;
+/** Ist die Wachstumsbremse wieder fällig? */
+export const brakeRefreshDue = (nowMs: number, lastMs: number): boolean =>
+  nowMs - lastMs >= BRAKE_REFRESH_MS;
+const brakeShownAt = new WeakMap<HTMLElement, number>();
 
 /**
  * Setzt Symbol, Wert und `aria-label` eines `data-field`-Elements. Der Symbol-Chip entsteht einmal; danach
@@ -425,10 +432,20 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       balEl.classList.toggle('negative', world.stats.taxes - world.stats.upkeep < 0);
     }
   }
+  const brakeDue = brakeRefreshDue(nowMs, brakeShownAt.get(header) ?? -Infinity);
+  let brakes: ReturnType<typeof growthBrakes> | null = null;
   for (const tier of TIER_IDS) {
     const chip = setChip(header, `pop-${tier}`, popChipView(world, tier));
     const hide = popChipHidden(world, tier);
     if (chip && chip.hidden !== hide) chip.hidden = hide;
+    if (chip && !hide && brakeDue) {
+      if (brakes === null) {
+        brakes = growthBrakes(world, state.activeIsland);
+        brakeShownAt.set(header, nowMs);
+      }
+      const tip = [tierTooltip(tier), ...brakeLines(brakes[tier], false)].join('\n');
+      if (chip.title !== tip) chip.title = tip;
+    }
   }
   const goalEl = header.querySelector<HTMLElement>('[data-field="goal"]');
   if (goalEl) syncGoalChip(goalEl, world);
