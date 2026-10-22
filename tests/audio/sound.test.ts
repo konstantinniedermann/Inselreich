@@ -141,6 +141,7 @@ const ALL: SoundEvent[] = [
   'stormWarning',
   'boom',
   'monumentDone',
+  'shipDock',
 ];
 
 describe('sound', () => {
