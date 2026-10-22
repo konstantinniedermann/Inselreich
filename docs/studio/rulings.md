@@ -1444,3 +1444,15 @@ Stadtplanungs-Meldung zuerst, `openResumeCard` zuletzt). **Bündel REL-29:** UI-
 Regelbezug: R799, R810, gates.md Gate Merge · Kosten bei Irrtum: Konfliktlösung in `app.ts` beim Stadtplanungs-Merge (eine Zeile).
 
 Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-G · ADR: —
+
+## R812 · 2026-10-22 · Gate Merge REL-29: OK, Merge frei, Push nach grünem Push-Check
+
+Ruling: Gate-Urteil `lead-qa` OK (Handoff `.studio/handoffs/2026-10-22-lead-qa-gate-REL-29.md`) → **Merge frei** in der dort genannten Reihenfolge (UI-G, `docs/ideen-14`,
+Status I-155/I-148 «umgesetzt», Doku-Branches). `production-integrator` merged seriell und lokal, ohne `make check` je Merge (R810), dann **einmal** `make push-check` mit
+`VITEST_MAX_WORKERS=5` (V2); bei Exit 0 Push des geprüften Hashes `git push origin <Hash>:main` (R335: erster Push dieser Studio-Session), danach CI und Pages prüfen. Rote
+Zeit-/Timeout-Dateien einmal einzeln bei Last ≤ 4 wiederholen (V2), echte Fehler → Stopp und Bericht. Start erst nach dem Commit von Handbuch 1.66 (Arbeitsbaum muss während des
+Push-Checks unverändert bleiben). ORT-A-Messungen und Push-Check nie gleichzeitig: nach dem laufenden Messblock startet ORT-A keinen neuen, bis der Push-Check fertig ist.
+
+Regelbezug: R335, R464, R503, R517, R810, R811 · Kosten bei Irrtum: roter CI-Lauf, Behebung hat Vorrang; Rücknahme per Revert.
+
+Entscheider: L0 · Anlass: Gate-Urteil lead-qa REL-29 · ADR: —
