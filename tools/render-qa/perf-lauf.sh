@@ -37,7 +37,7 @@ while [ $# -gt 0 ]; do
 done
 # Messfenster-Sperre (TOOL-MESSFENSTER): einmal neu starten unter messsperre.mjs; MESSFENSTER_HELD schützt vor einer zweiten Sperre.
 if [ "${PERF_LAUF_GESPERRT:-}" != 1 ]; then
-  PERF_LAUF_GESPERRT=1 exec node "$HERE/messsperre.mjs" --zweck "perf-lauf $SEEDS $FOCI" -- "${BASH_SOURCE[0]}" ${ORIG_ARGS[@]+"${ORIG_ARGS[@]}"}
+  PERF_LAUF_GESPERRT=1 exec node "$HERE/messsperre.mjs" --dauer "${MESSFENSTER_DAUER:-70}" --zweck "perf-lauf $SEEDS $FOCI" -- "${BASH_SOURCE[0]}" ${ORIG_ARGS[@]+"${ORIG_ARGS[@]}"}
 fi
 [ -n "$B" ] || B="$A"
 [ -n "$OUT" ] || OUT="$A/.studio/qa/perf"

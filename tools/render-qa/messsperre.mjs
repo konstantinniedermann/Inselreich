@@ -1,4 +1,4 @@
-/* global process, console, setTimeout, clearTimeout */
+/* global process, console, setTimeout */
 // messsperre.mjs — Messwerkzeuge setzen und lösen das Messfenster (TOOL-MESSFENSTER, P-6, Ruling-Entwurf R824-E5).
 // Nutzt acquire/release aus tools/messfenster/lock.ts (Dekker-Muster: eigene Sperre, dann Testsperre prüfen).
 //   import { withMessfenster, holdMessfenster } from './messsperre.mjs';
@@ -13,6 +13,16 @@ import { acquire, release } from '../messfenster/lock.ts';
 
 export const EXIT_BELEGT = 3;
 export const VORGABE_DAUER_MIN = 20;
+export const BLOCK_DAUER_MIN = 70; // Serien (Seedliste, perf-lauf.sh): wie messfenster --run
+
+/** Dauer in Minuten aus Option, dann Umgebung, sonst Vorgabe; ungültige Werte zählen nicht. */
+export function dauerAus(wert, umgebung, vorgabe) {
+  for (const w of [wert, umgebung]) {
+    const n = Number(w);
+    if (w !== undefined && w !== '' && n > 0) return n;
+  }
+  return vorgabe;
+}
 const SIGNALE = ['SIGINT', 'SIGTERM', 'SIGHUP'];
 
 function lebt(pid) {
@@ -90,23 +100,41 @@ export async function withMessfenster(fn, opts) {
   }
 }
 
-/** Beendet das Kind mit `sig`, wartet auf dessen Exit und schickt nach `timeoutMs` SIGKILL. */
-export function beendeKind(child, sig = 'SIGTERM', timeoutMs = 5000) {
-  if (!child || child.exitCode !== null || child.signalCode !== null) return Promise.resolve();
-  return new Promise((fertig) => {
-    const t = setTimeout(() => child.kill('SIGKILL'), timeoutMs);
-    child.once('exit', () => {
-      clearTimeout(t);
-      fertig();
-    });
-    child.kill(sig);
-  });
+const gruppeLebt = (pid) => {
+  try {
+    process.kill(-pid, 0);
+    return true;
+  } catch (e) {
+    return e.code === 'EPERM';
+  }
+};
+const killGroup = (pid, sig) => {
+  try {
+    process.kill(-pid, sig);
+  } catch {
+    /* Gruppe schon weg */
+  }
+};
+
+/**
+ * Beendet die Prozessgruppe des Kindes (Kind und Enkel, das Kind läuft `detached`): erst `sig`, nach `timeoutMs`
+ * SIGKILL; kehrt erst zurück, wenn die Gruppe leer ist.
+ */
+export async function beendeKind(child, sig = 'SIGTERM', timeoutMs = 5000) {
+  const pid = child?.pid;
+  if (!Number.isInteger(pid) || pid <= 1 || !gruppeLebt(pid)) return;
+  killGroup(pid, sig);
+  const frist = Date.now() + timeoutMs;
+  while (gruppeLebt(pid)) {
+    if (Date.now() > frist) killGroup(pid, 'SIGKILL');
+    await new Promise((r) => setTimeout(r, 50));
+  }
 }
 
 /** Startet `befehl` (Kind erbt MESSFENSTER_HELD) und liefert dessen Exit-Code; `onStart(child)` gibt das Kind frei. */
 export function startKind(befehl, onStart = () => {}, kind = spawn) {
   return new Promise((fertig) => {
-    const child = kind(befehl[0], befehl.slice(1), { stdio: 'inherit' });
+    const child = kind(befehl[0], befehl.slice(1), { stdio: 'inherit', detached: true });
     onStart(child);
     child.on('error', (e) => {
       console.error(`Start fehlgeschlagen: ${e.message}`);
@@ -128,7 +156,7 @@ async function main(argv) {
     );
     return argv.includes('--help') ? 0 : 2;
   }
-  const dauerMin = Number(opt('dauer') ?? VORGABE_DAUER_MIN);
+  const dauerMin = Number(opt('dauer') ?? process.env.MESSFENSTER_DAUER ?? VORGABE_DAUER_MIN);
   if (!(dauerMin > 0)) {
     console.error('messsperre: --dauer muss eine positive Zahl (Minuten) sein.');
     return 2;

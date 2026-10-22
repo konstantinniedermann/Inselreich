@@ -1,7 +1,7 @@
 // T04 TOOL-MESSFENSTER: Messwerkzeuge setzen/lösen das Messfenster (tools/render-qa/messsperre.mjs).
 // Läuft über kleine Treiber-Skripte in Temp-Verzeichnissen, alles gegen MESSFENSTER_PATH/TESTLOCK_PATH.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -11,6 +11,26 @@ const nodeEnv = (globalThis as unknown as { process: { env: Record<string, strin
 const PID = (globalThis as unknown as { process: { pid: number } }).process.pid;
 const DEAD_PID = 2_000_000_000;
 const messsperre = new URL('../../tools/render-qa/messsperre.mjs', import.meta.url).href;
+const { dauerAus } = (await import(/* @vite-ignore */ messsperre)) as {
+  dauerAus(wert: string | undefined, umgebung: string | undefined, vorgabe: number): number;
+};
+const ENKEL_DRIVER = `
+import { spawn } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { scheduler } from 'node:timers/promises';
+const pidfile = process.env.KIND_PIDFILE;
+const w = spawn('node', [new URL('${messsperre}').pathname, '--', 'sh', '-c', 'sleep 30 & echo $! > "$KIND_PIDFILE"; wait'], { stdio: 'inherit' });
+const ende = new Promise((r) => w.on('exit', (code) => r(code)));
+for (let i = 0; i < 200 && !existsSync(pidfile); i++) await scheduler.wait(50);
+await scheduler.wait(100);
+const epid = Number(readFileSync(pidfile, 'utf8'));
+w.kill('SIGTERM');
+const code = await ende;
+await scheduler.wait(200);
+let lebt = true;
+try { process.kill(epid, 0); } catch { lebt = false; }
+console.log(JSON.stringify({ code, enkelLebt: lebt, lockDanach: existsSync(process.env.MESSFENSTER_PATH) }));
+`;
 const sitzung = new URL('../../tools/render-qa/sitzung.mjs', import.meta.url).href;
 
 function setup() {
@@ -196,8 +216,8 @@ import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { scheduler } from 'node:timers/promises';
 const pidfile = process.env.KIND_PIDFILE;
-const kind = "require('fs').writeFileSync(process.env.KIND_PIDFILE, String(process.pid)); require('node:timers/promises').scheduler.wait(30000)";
-const w = spawn('node', ['${cliPath}', '--', 'node', '-e', kind], { stdio: 'inherit' });
+const kindArgs = JSON.parse(process.env.KIND_ARGS);
+const w = spawn('node', ['${cliPath}', '--', ...kindArgs], { stdio: 'inherit' });
 const ende = new Promise((r) => w.on('exit', (code, sig) => r({ code, sig })));
 for (let i = 0; i < 200 && !existsSync(pidfile); i++) await scheduler.wait(50);
 const kpid = Number(readFileSync(pidfile, 'utf8'));
@@ -209,16 +229,65 @@ let lebt = true;
 try { process.kill(kpid, 0); } catch { lebt = false; }
 console.log(JSON.stringify({ lockDa, code: r.code, kindLebt: lebt, lockDanach: existsSync(process.env.MESSFENSTER_PATH) }));
 `;
-  const check = (cliPath: string) => {
+  const direkt = [
+    'node',
+    '-e',
+    "require('fs').writeFileSync(process.env.KIND_PIDFILE, String(process.pid)); require('node:timers/promises').scheduler.wait(30000)",
+  ];
+  const check = (cliPath: string, kind: string[] = direkt) => {
     const s = setup();
     const r = s.run(s.driver('wrapper.mjs', wrapperDriver(cliPath)), [], {
       KIND_PIDFILE: join(s.dir, 'kind.pid'),
+      KIND_ARGS: JSON.stringify(kind),
     });
     return JSON.parse(r.stdout.trim().split('\n').pop() ?? '{}');
   };
   it('messsperre.mjs: SIGTERM => Kind tot, Sperre gelöst, Exit 143', () => {
     const r = check(new URL(messsperre).pathname);
     expect(r).toEqual({ lockDa: true, code: 143, kindLebt: false, lockDanach: false });
+  });
+});
+
+describe('T04 Final-Review: Enkelprozesse und Dauer', () => {
+  it('SIGTERM an den Wrapper beendet auch Enkelprozesse (Prozessgruppe) und löst die Sperre', () => {
+    const s = setup();
+    const driver = s.driver('enkel.mjs', ENKEL_DRIVER);
+    const r = s.run(driver, [], { KIND_PIDFILE: join(s.dir, 'enkel.pid') });
+    expect(JSON.parse(r.stdout.trim().split('\n').pop() ?? '{}')).toEqual({
+      code: 143,
+      enkelLebt: false,
+      lockDanach: false,
+    });
+  });
+  it('CLI --dauer 70 setzt ende = start + 70 min', () => {
+    const s = setup();
+    const r = s.run(new URL(messsperre).pathname, [
+      '--dauer',
+      '70',
+      '--',
+      'node',
+      '-e',
+      "const l=JSON.parse(require('fs').readFileSync(process.env.MESSFENSTER_PATH,'utf8'));console.log(Math.round((Date.parse(l.ende)-Date.parse(l.start))/60000))",
+    ]);
+    expect(r.stdout.trim()).toBe('70');
+  });
+  it('dauerAus: Wert, Umgebung, Vorgabe; ungültig => Vorgabe', () => {
+    expect(dauerAus('45', undefined, 20)).toBe(45);
+    expect(dauerAus(undefined, '90', 20)).toBe(90);
+    expect(dauerAus(undefined, undefined, 70)).toBe(70);
+    expect(dauerAus('x', '-1', 70)).toBe(70);
+  });
+  it('perf-lauf.sh und perf.mjs: Block-Vorgabe 70 min, überschreibbar über MESSFENSTER_DAUER', () => {
+    const lauf = readFileSync(
+      new URL('../../tools/render-qa/perf-lauf.sh', import.meta.url).pathname,
+      'utf8',
+    );
+    expect(lauf).toContain('--dauer "${MESSFENSTER_DAUER:-70}"');
+    const perf = readFileSync(
+      new URL('../../tools/render-qa/perf.mjs', import.meta.url).pathname,
+      'utf8',
+    );
+    expect(perf).toContain('dauerAus(opt.dauer, process.env.MESSFENSTER_DAUER');
   });
 });
 

@@ -272,7 +272,7 @@ function main(argv) {
     zweck: zweck || run.join(' ').slice(0, 80),
     onSignal: (sig) => beendeKind(child, sig),
   });
-  const child = spawn('caffeinate', ['-i', ...run], { stdio: 'inherit' });
+  const child = spawn('caffeinate', ['-i', ...run], { stdio: 'inherit', detached: true });
   child.on('error', (e) => {
     console.error(`Start fehlgeschlagen: ${e.message}`);
     sperre.release();

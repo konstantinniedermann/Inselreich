@@ -43,7 +43,7 @@ export function parseHitch(text) {
 /** perf-JSON-Zeilen -> Paare [{ profil, deltaMs, deltaPct }]. */
 export function parsePerf(text) {
   return jsonZeilen(text)
-    .filter(({ obj }) => typeof obj.deltaMs === 'number' && typeof obj.deltaPct === 'number')
+    .filter(({ obj }) => 'deltaMs' in obj || 'deltaPct' in obj)
     .map(({ obj }) => ({
       profil: `${obj.view} seed=${obj.seed} ${obj.focus ?? '-'}`,
       deltaMs: obj.deltaMs,
@@ -51,9 +51,14 @@ export function parsePerf(text) {
     }));
 }
 
+const zahl = (x) => typeof x === 'number' && Number.isFinite(x);
+
 export function bewerteHitch(fenster, grenzen) {
   const g = grenzen.hitch;
   const gruende = [];
+  const kaputt = fenster.filter((f) => !zahl(f.over25) || !zahl(f.max)).length;
+  if (kaputt)
+    gruende.push(`Hitch: Daten unvollständig (${kaputt} Fenster ohne Zahl für over25/max)`);
   const summe = fenster.reduce((s, f) => s + f.over25, 0);
   if (summe > g.summeOver25Max) {
     gruende.push(`Hitch: Summe over25 = ${summe} (Grenze ${g.summeOver25Max})`);
@@ -69,6 +74,10 @@ export function bewerteRender(paare, grenzen) {
   const g = grenzen.render;
   const gruende = [];
   for (const p of paare) {
+    if (!zahl(p.deltaMs) || !zahl(p.deltaPct)) {
+      gruende.push(`Render ${p.profil}: Daten unvollständig (deltaMs/deltaPct)`);
+      continue;
+    }
     const imMs = Math.abs(p.deltaMs) <= g.deltaMsMax;
     const imPct = Math.abs(p.deltaPct) <= g.deltaPctMax;
     if (!imMs && !imPct) {

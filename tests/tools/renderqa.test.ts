@@ -265,6 +265,18 @@ describe('T05 aagate (A/A-Kontrolle, Messgüte)', async () => {
   it('urteil: ohne Daten ungültig (nichts belegt)', () => {
     expect(ag.urteil({ hitch: [], render: [] }, grenzen).urteil).toBe('ungueltig (A/A ausserhalb)');
   });
+  it('unvollständige oder nicht numerische Werte sind ungültig mit Grund «Daten unvollständig»', () => {
+    const ohneOver = `A aa-abc seed=7 lauf=1 ${JSON.stringify({ baseMedian: 16.7, res: [{ x: 1, y: 1, max: 20 }] })}`;
+    const ohneMax = `A aa-abc seed=7 lauf=1 ${JSON.stringify({ baseMedian: 16.7, res: [{ x: 1, y: 1, over25: 0 }] })}`;
+    const text = `A aa-abc seed=7 lauf=1 ${JSON.stringify({ baseMedian: 16.7, res: [{ over25: 'x', max: null }] })}`;
+    for (const z of [ohneOver, ohneMax, text]) {
+      const r = ag.urteil({ hitch: ag.parseHitch(z), render: [] }, grenzen);
+      expect(r.urteil).toBe('ungueltig (A/A ausserhalb)');
+      expect(r.gruende.join(' ')).toContain('Daten unvollständig');
+    }
+    const p = ag.parsePerf(JSON.stringify({ view: 'v', seed: 1, deltaMs: 'a', deltaPct: 1 }));
+    expect(ag.urteil({ hitch: [], render: p }, grenzen).urteil).toBe('ungueltig (A/A ausserhalb)');
+  });
   it('CLI: Exit 0 gültig, Exit 1 ungültig, deutscher Text', async () => {
     const fs = await import('node:fs');
     const os = await import('node:os');

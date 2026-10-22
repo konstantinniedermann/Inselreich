@@ -151,6 +151,10 @@ describe('testlock und Messfenster (P-4, P-5)', () => {
     expect(p.stderr).toContain(
       `testlock: ABBRUCH, Messfenster (Eigentümer l0, Perf, bis ${IN_ZUKUNFT})`,
     );
+    expect(p.stderr).toContain(
+      `warten bis ${IN_ZUKUNFT}; keine Testläufe während des Messfensters`,
+    );
+    expect(p.stderr).not.toContain('npx vitest run');
     expect(p.stdout).not.toContain('GELAUFEN');
     expect(existsSync(lock)).toBe(false); // Dekker: eigene Testsperre wieder gelöst
     expect(existsSync(mess)).toBe(true);

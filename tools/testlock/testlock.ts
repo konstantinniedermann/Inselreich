@@ -230,7 +230,7 @@ if (isSet(env.CI) || isSet(env.GITHUB_ACTIONS) || env.STUDIO_TESTLOCK_HELD) {
   else if (m) {
     release();
     console.error(
-      `testlock: ABBRUCH, Messfenster (Eigentümer ${m.owner}, ${m.zweck}, bis ${m.ende}). Nicht warten; später erneut oder gezielt per "npx vitest run <datei>".`,
+      `testlock: ABBRUCH, Messfenster (Eigentümer ${m.owner}, ${m.zweck}, bis ${m.ende}). Bitte warten bis ${m.ende}; keine Testläufe während des Messfensters.`,
     );
     loadProtocol('messfenster', load);
     process.exit(EXIT_BLOCKED);
