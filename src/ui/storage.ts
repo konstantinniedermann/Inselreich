@@ -4,7 +4,7 @@ import { fail, ok, type Result, type World } from '../sim/types';
 /** Manueller Speicherplatz (Schlüssel bleibt v1, das Format ist v2 mit Migration). */
 export const SAVE_KEY = 'inselreich.save.v1';
 export const AUTO_KEY = 'inselreich.save.auto';
-/** Zweiter Autosave-Platz («Davor») und Zeiger auf den zuletzt geschriebenen Platz. */
+/** Zweiter Autosave-Platz («Davor») und Zeiger auf das Schreibziel (R850; die Etiketten folgen `AUTO_WRITTEN_KEY`, R851). */
 export const AUTO2_KEY = 'inselreich.save.auto2';
 export const AUTO_LAST_KEY = 'inselreich.save.auto.last';
 /** Zuletzt geschriebener Autosave-Platz (nur beim Schreiben gesetzt, nicht beim Laden): bestimmt die Etiketten «Autosave» und «Davor». */
@@ -60,7 +60,7 @@ function readSlot(storage: StorageLike, slot: Slot): LoadResult {
   return deserialize(json);
 }
 
-/** Zeiger auf den zuletzt geschriebenen Autosave-Platz; fehlend, ungültig oder unlesbar ergibt `null`. */
+/** Zeiger auf das Schreibziel (geladener oder zuletzt geschriebener Autosave-Platz); fehlend, ungültig oder unlesbar ergibt `null`. */
 function readPointer(storage: StorageLike): AutoSlot | null {
   try {
     const v = storage.getItem(AUTO_LAST_KEY);
@@ -101,7 +101,7 @@ export function otherAuto(storage: StorageLike): AutoSlot {
   return a < b ? 'auto' : 'auto2';
 }
 
-/** Ein geladener Autosave-Platz gilt als neuester: der Zeiger zeigt auf ihn; Schreibfehler bleiben stumm, `manual` ändert nichts. */
+/** Ein geladener Autosave-Platz wird Schreibziel: der Zeiger zeigt auf ihn (die Etiketten bleiben unverändert); Schreibfehler bleiben stumm, `manual` ändert nichts. */
 export function markAutoLoaded(slot: Slot): void {
   if (slot === 'manual') return;
   try {
