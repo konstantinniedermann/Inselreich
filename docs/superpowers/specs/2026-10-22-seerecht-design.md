@@ -175,8 +175,9 @@ Vitest gegen `src/sim/` (`tests/sim/council.test.ts`, erweitert):
 Vitest Szenario und Wächter (`tests/sim/seerecht.test.ts`, neu):
 
 7. **AK-7 B1 Szenario (Gewinnlage):** Route Heimat ⇄ Insel mit Seeweg d = 35 (Testwelt mit gesetzter Lage; Aufbau
-   wählt `lead-tech`), ein Schiff, Gewürz heimwärts, Insellager vor jeder Ankunft mit mindestens 50 Gewürz. Umlauf 700
-   Ticks ohne, 560 mit Seerecht. Über 5650 Ticks ab Ablegen in der Heimat kommen ohne Seerecht 8 × 50 = 400 Gewürz an
+   wählt `lead-tech`), ein Schiff, Gewürz heimwärts, Insellager vor jeder Ankunft mit mindestens 50 Gewürz über der
+   Routen-Reserve (`ROUTE_RESERVE`), Heimatlager vor jeder Ankunft höchstens `STORAGE_CAP` − 50 (z. B. geleert), damit
+   voll entladen wird; gezählt wird die in der Heimat entladene Menge. Umlauf 700 Ticks ohne, 560 mit Seerecht. Über 5650 Ticks ab Ablegen in der Heimat kommen ohne Seerecht 8 × 50 = 400 Gewürz an
    (7,08 je 100 Ticks, < 8), mit Seerecht 10 × 50 = 500 (8,85 je 100 Ticks, ≥ 8).
 8. **AK-8 B1 Wertewächter (rein über die Defs, zweiseitig):** Mit `SHIP.capacity`, `TIERS[4].needs.spice` und den
    wirksamen Ticks (Def und Hebel) gilt: `capacity × 100 / (2 × 8 × 35) ≥ spice × 80` (8,93 ≥ 8) und
