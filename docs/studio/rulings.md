@@ -1403,3 +1403,15 @@ Merge-Reihenfolge UI-G → P1, ORT-A → P2; `selectionPlan` liefert `rings: []`
 Regelbezug: R807, gates.md kombiniertes Gate Stufe leicht · Kosten bei Irrtum: Konflikt in `overlays.ts` oder `app.ts`, lokal lösbar.
 
 Entscheider: L0 · Anlass: Bericht lead-tech Plan UI-HAEPPCHEN-H · ADR: —
+
+## R809 · 2026-10-22 · Nutzerfrage «neue Agenten?»: Seerecht-Spec und Prozess-Aussensicht zur Last
+
+Ruling: Nutzerfrage nach weiteren Agenten = Auftrag, freie Plätze zu füllen, soweit sie die Last nicht erhöhen. Engpass ist die Rechnerlast (Messfenster ORT-A, `make check`
+UI-G), nicht die Zahl der Agenten; deshalb nur Arbeit ohne Testläufe: (1) **I-153 Seerecht Spec** an `lead-design` (opus) jetzt statt nach UI-G/Stadtplanung — R805 (1) wird
+für die Spec vorgezogen, Plan und Umsetzung bleiben nach UI-G und Stadtplanung; Budget **2**. (2) **Prozess-Aussensicht Last-Engpass** an `studio-process-coach` (sonnet,
+ad hoc): warum Messfenster, `make check` und Push-Gate sich gegenseitig blockieren, mit Daten aus `events.jsonl`, Ledgern, Scratchpad-Logs dieser und der Vorsession;
+Vorschläge als Retro-Bericht, keine Handbuch-Änderung. Budget **1**.
+
+Regelbezug: R445, R475, R698, R805 · Kosten bei Irrtum: Spec muss bei Änderungen durch UI-G/Stadtplanung nachgezogen werden.
+
+Entscheider: L0 · Anlass: Nutzerfrage · ADR: —
