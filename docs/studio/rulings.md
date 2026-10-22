@@ -1903,3 +1903,17 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: UI-BEIPACK-FE
 Regelbezug: R826, R831, R833 · Kosten bei Irrtum: UI-only.
 
 Entscheider: L0 · Anlass: Zwischenbericht lead-tech UI-HAEPPCHEN-I · ADR: —
+
+## R850 · 2026-10-22 · UI-HAEPPCHEN-H P1: Gegenmassnahme zum pagehide-Verlust vor dem Bündel
+
+Ruling: Bericht `lead-tech` (`feat/ui-haeppchen-h-p1` @ `51b4e7a2`, T01–T04, Final-Review opus OK, Playtest H11–H13 bestanden, Teilbeleg 49/49, `src/sim` ohne Diff). Entwurf «Regel 4 gilt,
+README nennt den Verlust» **nicht angenommen**: Ein Rettungs-Feature darf beim Neuladen nach «Davor laden» nicht den neueren Stand überschreiben. **Spec-Änderung per Ruling** (Regel 4/10):
+Beim Laden eines Autosave-Platzes setzt das Spiel den Zeiger `inselreich.save.auto.last` auf **diesen** Platz; `pagehide` und der nächste reguläre Autosave schreiben dann in den geladenen
+Platz bzw. wechseln wie gewohnt, der andere (neuere) Stand bleibt erhalten, bis der Spieler weiterspielt und der Wechsel ihn regulär erreicht. Umsetzung als Fix-Runde (Fortsetzung des
+Umsetzers, Test zuerst: «Davor laden → Neuladen → neuerer Stand noch ladbar»), Delta-Review, README-Satz. Danach Ergänzungsurteil `lead-qa` im Bündel REL-30. Risiko Mehrfach-Parsen bei
+`newestAuto`/`otherAuto` und Testlücke «defekter Zeiger» → im selben Fix mit abdecken, falls ≤ 1 Task, sonst Beobachtung.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: UI-HAEPPCHEN-H P2 (später, `renderer.ts`), keine Dateiüberschneidung mit Beipack/I
+Regelbezug: R807, R808, R817 · Kosten bei Irrtum: P1 verpasst das Bündel morgen; dann REL-31.
+
+Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-H P1 · ADR: —
