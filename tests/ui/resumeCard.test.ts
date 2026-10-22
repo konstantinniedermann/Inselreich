@@ -132,6 +132,10 @@ describe('AK-G14 zu spät', () => {
     const l = lines(late()).find((x) => x.startsWith('Fernauftrag'))!;
     expect(l.endsWith(' · zu spät')).toBe(true);
   });
+  it('BF5 «zu spät» genau einmal', () => {
+    const l = lines(late()).find((x) => x.startsWith('Fernauftrag'))!;
+    expect(l.split('zu spät').length - 1).toBe(1);
+  });
   it('Lager gefüllt: nicht', () => {
     const w = late();
     w.islands[w.order!.island!]!.stock[w.order!.good] = w.order!.amount;

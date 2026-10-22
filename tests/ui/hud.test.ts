@@ -709,9 +709,9 @@ describe('Meldungsstapel mit Fernkarte (Handel 2 T08)', () => {
     acceptFarOrder(w);
     updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
     expect(stack.querySelector('[data-field="far-card"]')!.hidden).toBe(true);
-    expect(stack.querySelector('[data-field="order-text"]')!.textContent).toBe(
-      farOrderText(w, w.order!),
-    );
+    // FakeElement fasst Kinder nicht zusammen (echtes DOM: textContent): Teile des Fernauftrags aneinanderhängen.
+    const orderText = stack.querySelector('[data-field="order-text"]')!;
+    expect(orderText.children.map((c) => c.textContent).join('')).toBe(farOrderText(w, w.order!));
     const btn = stack.querySelector('[data-field="order-deliver"]')!;
     expect(btn.textContent).toBe(deliverLabel(w, B));
     expect(btn.classList.contains('unaffordable')).toBe(true);
