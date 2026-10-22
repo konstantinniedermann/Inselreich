@@ -1820,3 +1820,17 @@ REL-30 (Ergänzungsurteil `lead-qa` beim Gate). Offene Befunde: (1) vier Module 
 Regelbezug: R841 · Kosten bei Irrtum: gering.
 
 Entscheider: L0 · Anlass: Bericht lead-production DOKU-AUDIT-1 · ADR: —
+
+## R844 · 2026-10-22 · Prozess-Retro REL-29: V1–V4 angenommen, V5 als Messauftrag
+
+Ruling: Retro `studio-process-coach` (`docs/studio/retros/2026-10-22-rel-29-prozess.md`, `4439a947`) → angenommen: **V1** Push-Sperre in `guard.py` (kein `git push … main` ohne
+`push_check` Exit 0 für genau den Hash, ausser L0-Freigabedatei) und **V2** `pushcheck.py` führt die Einzel-Wiederholung roter Zeit-/Timeout-Dateien selbst aus und weist sie im Event aus,
+dazu Pin `perf.test.ts` AK-E0-15a entschärfen → Werkzeugpaket **TOOL-PUSHSPERRE** (Plan jetzt an `lead-tech` sonnet, Budget 2; Umsetzung auf dem nächsten freien Test-Platz, Platz 3 der
+Warteschlange vor UI-HAEPPCHEN-I, damit es vor dem Push am 2026-10-23 greift, falls möglich). **V3** Ruling-Entwürfe sofort in `rulings.md`; `hook.py` meldet beim Start, wenn die
+Stand-Zeile von `state.md` hinter der letzten R-Nummer liegt (Hook-Teil ins Paket TOOL-PUSHSPERRE). **V4** Pflichtfelder «Verfassung berührt?» und «Überschneidung mit offenen
+Paketen» in Ruling- und Plan-Vorlage → `studio-coach` (Handbuch-Minor 1.69, Budget 1). **V5** L0-Kontextschnitt nach Bündelende als Messauftrag bis REL-31. Retro-Event-Trigger
+`meilenstein:REL-29` trägt der Coach nach.
+
+Regelbezug: R127, R316, R815, R826 · Kosten bei Irrtum: Push-Sperre blockiert einen legitimen Push; Freigabedatei als Ausweg.
+
+Entscheider: L0 · Anlass: Retro REL-29 · ADR: —
