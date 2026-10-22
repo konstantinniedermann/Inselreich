@@ -1613,3 +1613,16 @@ und **P3 PERSONA-SCOUT-PFLEGE** (XS, `lead-design`, inkl. I-154-Korrektur) auf d
 Regelbezug: R287, R288, R471, R823 · Kosten bei Irrtum: kleine Pakete warten länger.
 
 Entscheider: L0 · Anlass: Bericht lead-production BEOB-18 · ADR: —
+
+## R826 · 2026-10-22 · Dauerregel: Kapazität voll nutzen, gesteuert durch die Limit-Ampel
+
+Ruling: Nutzer: «hast du meinen letzten auftrag generell verstanden? auch in zukünftigen sessions? voraussetzung sind natürlich das ampelsystem mit den limits». **Dauerregel für
+jede Session:** L0 hält den Studio-Deckel von **10 Agenten** (R823) aktiv voll, solange die Limit-Ampel (`.studio/limits.json`, STUDIO.md «Limits und Sessiongrösse») es erlaubt:
+**grün** (5-h-Fenster < 60 % und Woche < 80 %) → Deckel ausschöpfen, nach jedem Bericht nachfüllen, jeden Strang mit eigenem Agenten bearbeiten (Umsetzung, Pläne, Specs, Gates,
+Pflege, Ideen); höchstens **3 Controller mit Testläufen**, ≤ 2 Browser-Läufe, Fensterregel R803. **gelb** (5-h 60–80 % oder Woche > 80 %) → keine neuen Wellen, Angefangenes abschliessen.
+**rot** (5-h > 80 %) → Ende-Routine. Engpass Rechnerlast → zusätzliche Plätze mit testfreier Arbeit füllen, nicht leer lassen. Ersetzt R698; ergänzt R475 und R445. Handbuch-Minor
+durch `studio-coach`.
+
+Regelbezug: Verfassung §5.8, R69, R424, R445, R475, R698, R823 · Kosten bei Irrtum: höherer Verbrauch im 5-h-Fenster; die Ampel bremst rechtzeitig.
+
+Entscheider: Nutzer (Auftrag), L0 (Auslegung) · Anlass: Nutzerfrage · ADR: —
