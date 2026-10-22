@@ -17,6 +17,56 @@ import {
 
 const t = (s: number): number => (s * 1000) / TICK_MS;
 
+describe('Startkarte: zweiter Autosave (I-147, AK-H7)', () => {
+  it('H7: Fortsetzen trägt Slot und Spielzeit des neuesten Platzes', () => {
+    const r = startChoices([{ slot: 'auto2', tick: t(300) }], 'none');
+    expect(r.choices[0]).toMatchObject({
+      kind: 'load',
+      slot: 'auto2',
+      label: 'Fortsetzen — Autosave (Spielzeit 5:00)',
+      primary: true,
+    });
+    expect(r.choices.filter((c) => c.kind === 'load')).toHaveLength(1);
+  });
+  it('H7: zwei Plätze ergeben die Nebenwahl «Davor laden» zwischen Fortsetzen und Gespeichert', () => {
+    const r = startChoices(
+      [
+        { slot: 'manual', tick: t(60) },
+        { slot: 'auto2', tick: t(300) },
+        { slot: 'auto', tick: t(240) },
+      ],
+      'none',
+    );
+    expect(r.choices).toEqual([
+      {
+        kind: 'load',
+        slot: 'auto2',
+        label: 'Fortsetzen — Autosave (Spielzeit 5:00)',
+        primary: true,
+      },
+      {
+        kind: 'load',
+        slot: 'auto',
+        label: 'Davor laden — Autosave (Spielzeit 4:00)',
+        primary: false,
+      },
+      {
+        kind: 'load',
+        slot: 'manual',
+        label: 'Gespeichertes Spiel laden (Spielzeit 1:00)',
+        primary: false,
+      },
+      { kind: 'new', label: 'Neue Insel', primary: false },
+    ]);
+  });
+  it('H7: ohne Autosave bleibt manual primär, ohne zweiten Platz keine Nebenwahl', () => {
+    const r = startChoices([{ slot: 'manual', tick: t(10) }], 'none');
+    expect(r.choices[0]).toMatchObject({ slot: 'manual', primary: true });
+    const one = startChoices([{ slot: 'auto', tick: t(10) }], 'none');
+    expect(one.choices.some((c) => c.label.startsWith('Davor'))).toBe(false);
+  });
+});
+
 describe('Startkarte (AK-UX-01)', () => {
   it('AK-UX-01 ohne Spielstand nur „Los geht\'s"', () => {
     expect(startChoices([], 'none')).toEqual({
