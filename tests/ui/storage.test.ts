@@ -11,6 +11,7 @@ import {
   autosaveOnHide,
   listSavesFrom,
   loadNotice,
+  loadSlot,
   newestAuto,
   otherAuto,
   saveAuto,
@@ -321,5 +322,63 @@ describe('Autosave-Plätze (I-147, AK-H1 bis H3, H5, H6, H8, H10)', () => {
     saveAuto(w);
     expect(m.data[AUTO_KEY]).toBe(serialize(w));
     expect(m.data[AUTO2_KEY]).toBe(serialize(w));
+  });
+});
+
+describe('Zeiger beim Laden eines Autosave-Platzes (R850)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const use = (m: ReturnType<typeof mem>): void => void vi.stubGlobal('localStorage', m);
+
+  it('Davor laden, dann pagehide: der neuere Stand bleibt ladbar', () => {
+    const newer = saveAtTick(900);
+    const m = mem({
+      [AUTO_KEY]: saveAtTick(300),
+      [AUTO2_KEY]: newer,
+      [AUTO_LAST_KEY]: 'auto2',
+    });
+    use(m);
+    const r = loadSlot('auto');
+    expect(r.ok).toBe(true);
+    expect(m.data[AUTO_LAST_KEY]).toBe('auto');
+    autosaveOnHide((r as { world: World }).world);
+    expect(m.data[AUTO2_KEY]).toBe(newer);
+    expect(m.data[AUTO_KEY]).toBe(serialize((r as { world: World }).world));
+    expect(listSavesFrom(m).map((i) => i.slot)).toEqual(['auto', 'auto2']);
+    // der nächste periodische Autosave wechselt in den anderen Platz
+    saveAuto(worldAt(950));
+    expect(m.data[AUTO_LAST_KEY]).toBe('auto2');
+  });
+
+  it('Laden des neuesten Platzes lässt den Zeiger stehen, manuell ändert ihn nie', () => {
+    const m = mem({
+      [SAVE_KEY]: saveAtTick(5),
+      [AUTO_KEY]: saveAtTick(300),
+      [AUTO_LAST_KEY]: 'auto',
+    });
+    use(m);
+    loadSlot('auto');
+    expect(m.data[AUTO_LAST_KEY]).toBe('auto');
+    loadSlot('auto2'); // fehlt: kein Erfolg, Zeiger unberührt
+    expect(m.data[AUTO_LAST_KEY]).toBe('auto');
+    m.data[AUTO_LAST_KEY] = 'auto2';
+    loadSlot('manual');
+    expect(m.data[AUTO_LAST_KEY]).toBe('auto2');
+  });
+
+  it('Zeiger-Schreibfehler beim Laden bleibt stumm', () => {
+    const m = mem({ [AUTO_KEY]: saveAtTick(300) }, [AUTO_LAST_KEY]);
+    use(m);
+    expect(loadSlot('auto').ok).toBe(true);
+  });
+
+  it('Zeiger auf beschädigten oder fehlenden Platz wird ignoriert', () => {
+    const ok1 = { [AUTO_KEY]: saveAtTick(100), [AUTO_LAST_KEY]: 'auto2' };
+    expect(newestAuto(fake(ok1))).toBe('auto');
+    expect(newestAuto(fake({ ...ok1, [AUTO2_KEY]: 'kaputt' }))).toBe('auto');
+    expect(otherAuto(fake(ok1))).toBe('auto2');
+    expect(otherAuto(fake({ ...ok1, [AUTO2_KEY]: 'kaputt' }))).toBe('auto2');
+    const ok2 = { [AUTO2_KEY]: saveAtTick(100), [AUTO_LAST_KEY]: 'auto' };
+    expect(newestAuto(fake(ok2))).toBe('auto2');
+    expect(otherAuto(fake(ok2))).toBe('auto');
   });
 });
