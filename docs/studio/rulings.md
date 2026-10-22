@@ -1564,3 +1564,15 @@ Klassifizierungsgrenzen (Klasse nur aus Befehlsstring; `unittest` gilt als eigen
 Regelbezug: R810 V5, R816, R817 · Kosten bei Irrtum: Fehlklassifizierung einzelner Prozesse, nur Messwerkzeug.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-LOADSNAP · ADR: —
+
+## R822 · 2026-10-22 · Gate Plan LEBEN-STRASSE: OK, Umsetzung T01–T05 sofort
+
+Ruling: Plan `lead-tech` (`plan/leben-strasse` @ `e4565d7c`, T01–T10, alle 22 AK zugeordnet) → **OK**; Entwürfe R821-E bis R823-E angenommen: zwei Stränge
+(`feat/leben-strasse` T01–T03, T05–T10; `feat/leben-strasse-look` T04, per `git merge` vor T05), T06/T07 erst nach ORT-A-Merge nach main mit `git merge main` (kein Rebase);
+Tempo über optionales `tickClock(world, timeMs, speed?)`, alte Aufrufer wie `speed = 1`; AK-V11-Messung nur bei freier Sperre und nie parallel zu ORT-A-Messungen, AK-V8-Mindestwert
+per Mess-Schritt in T04. Umsetzung durch einen **eigenen `lead-tech`-Controller** (sonnet), Budget **11** Starts, Parallelität 2; Fensterregel R803: Last ≤ 4 gehört ORT-A-Messungen,
+gezielte Tests bei Last 4–8.
+
+Regelbezug: R803, R820, Verfassung 1.3 §9.2 · Kosten bei Irrtum: Konflikt in `renderer.ts` beim ORT-A-Merge, mechanisch lösbar.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan LEBEN-STRASSE · ADR: —
