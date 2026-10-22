@@ -1,10 +1,12 @@
 // I-112 T02: Save-Feld `council`, SAVE_VERSION 17, Migration v16 → v17 (AK 9, Ruling R711 R-4).
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { decree } from '../../src/sim/council';
 import { SAVE_VERSION, deserialize, migrateV16ToV17, serialize } from '../../src/sim/save';
 import type { CouncilState, Tier, World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
-import { putBuilding } from './helpers';
+import { putBuilding, sortedJson } from './helpers';
+import { laneWorld, shipLiteral } from './seaHelpers';
 
 const json = (w: World): Record<string, unknown> => JSON.parse(serialize(w));
 
@@ -106,5 +108,69 @@ describe('AK-9 (R-4) Abweisen', () => {
     (bad.council as Record<string, unknown>)['3'] = 'X';
     expect(() => deserialize(JSON.stringify(bad))).not.toThrow();
     expect(deserialize(JSON.stringify(bad))).toEqual(damaged);
+  });
+});
+
+describe('I-153 Seerecht Save', () => {
+  const d = 30;
+  const BAD = { ok: false, reason: 'Beschädigter Spielstand' };
+
+  function sailing(left: number, c4: CouncilState = null) {
+    const { w, island } = laneWorld(d);
+    w.council[4] = c4;
+    shipLiteral(w, { to: island, left });
+    return w;
+  }
+
+  it('AK-SR-11 Runde: Beschluss C rechnet um, Stand lädt und bleibt gleich', () => {
+    const { w, island } = laneWorld(d);
+    w.council[4] = 'open';
+    shipLiteral(w, { to: island, left: 10 * d });
+    shipLiteral(w, { to: island, left: 10 * d - 1 });
+    expect(decree(w, 4, 'C').ok).toBe(true);
+    expect(w.ships[0]!.left).toBe(8 * d);
+    expect(w.ships[1]!.left).toBeLessThanOrEqual(8 * d);
+    const text = serialize(w);
+    const r = deserialize(text);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(sortedJson(r.world)).toBe(sortedJson(w));
+  });
+
+  it('AK-SR-13: C nur auf Stufe 4', () => {
+    for (const tier of [2, 3] as const) {
+      const w = createWorld(3);
+      w.council[tier] = 'C';
+      let r: ReturnType<typeof deserialize> | undefined;
+      expect(() => (r = deserialize(serialize(w)))).not.toThrow();
+      expect(r).toEqual(BAD);
+    }
+    const w = createWorld(3);
+    w.council[4] = 'C';
+    expect(deserialize(serialize(w)).ok).toBe(true);
+  });
+
+  it('AK-SR-14 streng: Fahrzeit nach wirksamem Feldwert', () => {
+    expect(deserialize(serialize(sailing(10 * d, 'C')))).toEqual(BAD);
+    expect(deserialize(serialize(sailing(8 * d, 'C'))).ok).toBe(true);
+    expect(deserialize(serialize(sailing(8 * d + 1, 'C')))).toEqual(BAD);
+    expect(deserialize(serialize(sailing(10 * d))).ok).toBe(true);
+  });
+
+  it('AK-SR-14 Reihenfolge: manipuliertes council weist ab, ohne Wurf', () => {
+    const bad: unknown[] = [
+      null,
+      [],
+      'C',
+      { 2: null, 3: null },
+      { 2: null, 3: null, 4: null, 5: null },
+      { 2: 'C', 3: null, 4: 'C' },
+    ];
+    for (const c of bad) {
+      const raw = json(sailing(10 * d));
+      raw.council = c;
+      let r: ReturnType<typeof deserialize> | undefined;
+      expect(() => (r = deserialize(JSON.stringify(raw)))).not.toThrow();
+      expect(r).toEqual(BAD);
+    }
   });
 });
