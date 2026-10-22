@@ -1576,3 +1576,17 @@ gezielte Tests bei Last 4–8.
 Regelbezug: R803, R820, Verfassung 1.3 §9.2 · Kosten bei Irrtum: Konflikt in `renderer.ts` beim ORT-A-Merge, mechanisch lösbar.
 
 Entscheider: L0 · Anlass: Bericht lead-tech Plan LEBEN-STRASSE · ADR: —
+
+## R823 · 2026-10-22 · Nutzerauftrag «mehr Agenten»: Deckel 10, fünf neue Pakete, ORT-A AK-31 Variante 1
+
+Ruling: Nutzer: «starte noch mehr agenten die an den einzelnen punkten arbeiten. wir haben ja kapazität». Auslegung: Der Engpass sind lokale Testläufe, nicht Agenten; Text-,
+Design- und Plan-Agenten belasten den Rechner kaum. (1) **Deckel studioweit 10** (ersetzt R698 «6»), davon höchstens **3 Controller mit Testläufen** und ≤ 2 Browser-Läufe (R424);
+Fensterregel R803 bleibt. (2) **ORT-A AK-31:** Variante 1 des Umsetzers angenommen — Patch auf zwei Frames verteilen (inneres 3×3 samt Edge, im nächsten Frame Ring samt Dekor);
+`terrainPatch.test.ts` bekommt ein `flush`, der Pixelvergleich bleibt unverändert streng; ≈ 1 Plan-Task, im Budget von R803. (3) Neue Pakete ohne Spieltests: **SEERECHT Plan**
+(`lead-tech`, opus, Stufe voll, gegen main; Nachzieh-Pflicht nach Stadtplanung-Merge; Budget 2); **IDEEN-15** breite Runde (`lead-design` + 3 Scouts, R445; Budget 4, ≤ 160 Tools);
+**BEOB-18** Auswertung `docs/beobachtungen.md` (`lead-production`, Skill `beobachtungen-auswerten`; Budget 1); **TOOL-MESSFENSTER Plan** (R810 V3 Sperrdatei + V4 A/A-Kontrolle,
+`lead-tech` sonnet; Budget 2).
+
+Regelbezug: Verfassung §5.8, R424, R445, R475, R698, R803, R810 · Kosten bei Irrtum: mehr Koordination; Plan-Arbeit, die nach Merges nachgezogen werden muss.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
