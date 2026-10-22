@@ -1344,3 +1344,14 @@ AK-31, Nachmessung AK-31/AK-32, Merge k1/k2 nach `feat/ort-a`, dann T18.
 Regelbezug: R329, R380, R708 V2, R793, R800, R801, R802 · Kosten bei Irrtum: ein Controller als Engpass; ein zweiter Lead kann jederzeit abgespalten werden.
 
 Entscheider: L0 · Anlass: Sichtung Vorsession · ADR: —
+
+## R804 · 2026-10-22 · HAUSHALT-02 abgenommen; Wirtschafts-Brainstorming auf freiem Platz
+
+Ruling: (1) Bericht `lead-production` HAUSHALT-02: 3498,6 MB über `aufraeumen.py --apply` gelöscht, `--check` ohne Befund, Repo unverändert → **abgenommen**. (2) Freie Plätze
+(R475, Umsetzung durch Last-Fenster gebremst): **WIRTSCHAFT-BS-1** an `lead-design` (opus, Brainstorming mit Dominanz-Rechnung laut R797) für die zurückgestellten I-154
+Rückfracht, I-151 Handelstreue und I-153 Seerecht; Ergebnis ist ein Designvorschlag mit Empfehlung (je Idee: bauen/ändern/verwerfen), keine Spec, kein Code, keine Testläufe.
+Save-Folgen gegen Stadtplanung (v19) und Erweiterung 1 benennen. Budget **3** Starts (Lead + bis 2 Helfer, z. B. `design-economy-designer`).
+
+Regelbezug: R445, R475, R797 · Kosten bei Irrtum: ein Designvorschlag, der liegen bleibt.
+
+Entscheider: L0 · Anlass: HAUSHALT-02-Bericht, freie Kapazität · ADR: —
