@@ -380,7 +380,7 @@ def start_context(port: str, sid: str = "") -> str:
     with contextlib.suppress(Exception):  # Stand-Warnung nie fatal (E-065)
         warning = stampcheck.stale_warning(docs_dir())
         if warning:
-            text = f"{text}\n{warning}"
+            text = f"{warning}\n{text}"
     with contextlib.suppress(
         Exception
     ):  # Schwellen für «Aufräumen fällig» (R685), nie fatal
