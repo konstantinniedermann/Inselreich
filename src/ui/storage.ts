@@ -136,7 +136,7 @@ export function listSavesFrom(storage: StorageLike): SaveInfo[] {
   const out: SaveInfo[] = [];
   const newest = newestAuto(storage);
   // Reihenfolge: manuell, neuester Autosave, «Davor»
-  const order = SLOTS.filter((s) => s !== 'auto2');
+  const order: Slot[] = SLOTS.filter((s) => s !== 'auto2');
   if (newest === 'auto2') order.splice(order.indexOf('auto'), 1, 'auto2', 'auto');
   else order.push('auto2');
   for (const slot of order) {
