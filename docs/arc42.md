@@ -899,7 +899,7 @@ läuft ungecacht je sichtbarem Haus und Frame; gemessen 2.5–3.1 ms Arbeit je F
 - **Ducking:** Ein Signal senkt Musik und Umgebung auf × 0,5 (Angriff 50 ms, Halten Figurdauer + 300 ms,
   Freigabe 600 ms); die Hüllkurve ist die reine Funktion `duckGain`.
 - **Effekte:** synthetische Figuren je `SoundEvent` mit Drossel über `ctx.currentTime`; Signal-Samples (Glocke,
-  Nebelhorn, Münzen) mit synthetischem Rückfall. Das Klangereignis `monumentDone` (Glocke, Wahlziel Denkmal erreicht) kommt aus `soundEvents.ts` beim Übergang `monumentDone` false → true, nie nach dem Laden.
+  Nebelhorn, Münzen) mit synthetischem Rückfall. Das Klangereignis `monumentDone` (Glocke, Wahlziel Denkmal erreicht) kommt aus `soundEvents.ts` beim Übergang `monumentDone` false → true, nie nach dem Laden. Das Klangereignis `shipDock` (leiser Anlegeton, synthetische Figur ohne Asset, Entprellung 4 s) meldet jedes Anlegen eines Schiffs; der Auslöser vergleicht `SoundSnapshot.ships` (id -> port) in `src/ui/soundEvents.ts`, höchstens einmal je Frame. Tick-Ablauf und Persistenz bleiben unverändert.
 - **Umgebung:** Die UI liefert höchstens alle 250 ms `setAmbience({ view: viewStats, phase, weather, reduced,
 fire })`; `src/audio/` erhält nur Zahlen und importiert nichts aus Sim, Render oder UI. `ambienceMix` bildet
   daraus neun Schichtpegel, die mit 1,5 s gleiten; Datei-Schichten laufen als nahtlose Schleife aus zwei
