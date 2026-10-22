@@ -10,6 +10,7 @@ import {
   councilEscapeHandled,
   councilOpenNext,
   councilOpened,
+  councilToggleAllowed,
 } from '../../src/ui/council';
 import { hotkeyAction, hotkeyList } from '../../src/ui/hotkeys';
 
@@ -111,5 +112,20 @@ describe('AK-14/15 Rats-Karte: Taste und Esc-Reihenfolge', () => {
   it('AK-15: Esc wird von der offenen Karte verbraucht, sonst weitergereicht', () => {
     expect(councilEscapeHandled(true)).toBe(true);
     expect(councilEscapeHandled(false)).toBe(false);
+  });
+});
+
+describe('UI-BEIPACK-FERN Umschalt+R nur mit Marke (AK-BF8)', () => {
+  it('BF8 Helfer: ohne Marke false, mit offenem oder gefasstem Beschluss true', () => {
+    const w = createWorld(1);
+    expect(councilToggleAllowed(w)).toBe(false);
+    w.council[2] = 'open';
+    expect(councilToggleAllowed(w)).toBe(true);
+    decree(w, 2, 'A');
+    expect(councilToggleAllowed(w)).toBe(true);
+  });
+  it('BF8 hotkeyAction bleibt rein und liefert weiter council', () => {
+    const mods = { shift: true, ctrl: false, alt: false, meta: false };
+    expect(hotkeyAction('R', mods, false)).toEqual({ kind: 'council' });
   });
 });

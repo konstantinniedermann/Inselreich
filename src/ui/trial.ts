@@ -81,7 +81,7 @@ export function trialChronicleLine(world: World): string | null {
   }
   const p = t.passed[0];
   if (p !== undefined) {
-    return `Meisterprüfung: ${TRIALS[p.id].name} bestanden (${formatClock(p.tick)})`;
+    return `Meisterprüfung: ${TRIALS[p.id].name} bestanden (bei Spielzeit ${formatClock(p.tick)})`;
   }
   return 'Meisterprüfung: offen';
 }
@@ -120,7 +120,7 @@ export function trialCardView(world: World, preview: readonly DeficitLine[]): Tr
     status = `Läuft: ${formatClock(t.ticks)} / ${DURATION} · Einwohner ${trialPopulation(world)} von ${t.e0}`;
     action = { kind: 'abort' };
   } else if (t.passed.length > 0) {
-    status = `Bestanden (${formatClock(t.passed[0]!.tick)})`;
+    status = `Bestanden (bei Spielzeit ${formatClock(t.passed[0]!.tick)})`;
     action = { kind: 'none' };
   } else {
     action = { kind: 'start', reason: trialStartReason(world) };

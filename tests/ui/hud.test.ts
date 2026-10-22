@@ -872,6 +872,31 @@ describe('I-132 Ziel-Chip als Knopf', () => {
     expect(el.textContent).toBe('Meisterprüfung');
     expect(el.title).toContain('Meisterprüfung: freiwillige Auflage');
   });
+  it('BF10 tabIndex -1, 0, -1; kein Schreibzugriff bei gleichem Wert', () => {
+    const w = createWorld(3);
+    const writes: number[] = [];
+    const el = new FakeElement('button');
+    let tab = 0;
+    Object.defineProperty(el, 'tabIndex', {
+      get: () => tab,
+      set: (v: number) => {
+        writes.push(v);
+        tab = v;
+      },
+    });
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(tab).toBe(-1);
+    w.wonSpice = true;
+    w.monumentDone = true;
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(tab).toBe(0);
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(writes).toEqual([-1, 0]);
+    w.monumentDone = false;
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(tab).toBe(-1);
+    expect(writes).toEqual([-1, 0, -1]);
+  });
   it('Quelltext: Ziel-Element ist ein Knopf mit goal-chip', () => {
     expect(readFileSync('src/ui/hud.ts', 'utf8')).toMatch(
       /<button type="button" class="chip goal-chip" data-field="goal">/,

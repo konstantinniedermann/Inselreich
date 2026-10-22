@@ -319,6 +319,9 @@ export function syncGoalChip(goalEl: HTMLElement, world: World): void {
   if (goalEl.textContent !== goal.chip) goalEl.textContent = goal.chip;
   if (goalEl.title !== goal.title) goalEl.title = goal.title;
   goalEl.classList.toggle('goal-chip--action', tc !== null);
+  // Ohne Meisterprüfung tut der Klick nichts: dann kein Tab-Stopp.
+  const tab = tc !== null ? 0 : -1;
+  if (goalEl.tabIndex !== tab) goalEl.tabIndex = tab;
 }
 
 export function bindGoalChip(goalEl: HTMLElement, actions: Pick<HudActions, 'toggleTrial'>): void {

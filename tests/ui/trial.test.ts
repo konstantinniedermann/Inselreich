@@ -204,7 +204,7 @@ describe('trialChronicleLine', () => {
       'Meisterprüfung: Eigenversorgung läuft (3:20 / 15:00)',
     );
     expect(trialChronicleLine(worldWith({ passed: [{ id: 'selfSupply', tick: 30000 }] }))).toBe(
-      'Meisterprüfung: Eigenversorgung bestanden (50:00)',
+      'Meisterprüfung: Eigenversorgung bestanden (bei Spielzeit 50:00)',
     );
   });
 });
@@ -255,7 +255,7 @@ describe('Meldungen und Karte', () => {
     expect(run.status).toBe('Läuft: 3:20 / 15:00 · Einwohner 0 von 75');
     const ok = trialCardView(worldWith({ passed: [{ id: 'selfSupply', tick: 30000 }] }), []);
     expect(ok.action).toEqual({ kind: 'none' });
-    expect(ok.status).toBe('Bestanden (50:00)');
+    expect(ok.status).toBe('Bestanden (bei Spielzeit 50:00)');
   });
   it('Literal-Scan', () => {
     expect(readFileSync('src/ui/trial.ts', 'utf8')).not.toMatch(/\b(9000|150|70|60)\b/);
