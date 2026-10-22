@@ -1518,3 +1518,14 @@ laut R808, Parallelität 1, solange ORT-A nicht auf main ist.
 Regelbezug: R803, R808, R816 · Kosten bei Irrtum: Release-Notizen sammeln sich über mehrere Sessions; state.md trägt sie.
 
 Entscheider: L0 · Anlass: Bericht studio-coach, Merge UI-G · ADR: —
+
+## R818 · 2026-10-22 · «mach weiter»: TOOL-LOADSNAP (V5) und state.md-Entwurf auf freien Plätzen
+
+Ruling: Nutzer «mach weiter» = Plan fortsetzen; ORT-A misst (AK-32), UI-H P1 wartet auf das Browser-Fenster. Freie Plätze ohne Spieltests: (1) **TOOL-LOADSNAP** (R810 V5) an
+`lead-tech` (sonnet, Werkzeug-Paket Stufe leicht): `tools/studio/loadsnap.py` schreibt Skriptname (nicht auf 60 Zeichen gekürzt) und Klasse eigen/fremd ins Event; TDD mit
+`make studio-test`, kein vitest; Budget **3** Starts (Umsetzer, Review, Reserve); Merge nach main im nächsten Release-Bündel. (2) **state.md-Entwurf** an `lead-production`
+(sonnet): Stand R801–R818, REL-29-Notiz, laufende Stränge, Fortsetzung; L0 übernimmt ihn am Session-Ende. Budget **1**.
+
+Regelbezug: R475, R810, STUDIO.md Session-Ende · Kosten bei Irrtum: gering, Werkzeug-only.
+
+Entscheider: L0 · Anlass: Nutzer «mach weiter» · ADR: —
