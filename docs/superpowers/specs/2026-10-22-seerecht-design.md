@@ -66,7 +66,7 @@ Einzige Ausnahme ist die Save-Prüfung (§5, F2). `travelTicks(d)` in `islands.t
 **Render-Cache:** `ticksCache` ist je `islands`-Array verschlüsselt; das Array ändert sich beim Beschluss nicht. Nach
 dem Beschluss darf der Cache keine 10er-Werte liefern. Zulässig: Schlüssel enthält die wirksamen Ticks, der Cache hält
 nur die Seeweg-Länge d und multipliziert mit dem Helfer, oder er wird beim Beschluss verworfen. Wahl `lead-tech`; Prüfung
-AK-15.
+AK-SR-15.
 
 ### 3.3 R3 Umrechnung beim Beschluss
 
@@ -106,14 +106,19 @@ Mit dem Beschluss einer Seite verfallen die übrigen Seiten der Stufe (auf Stufe
 **Kein neues Feld, Wertebereich wächst.** `CouncilSide` bekommt `'C'`; gültig nur unter Schlüssel 4.
 
 - `isValidCouncil` (`save.ts:931-937`) und `isSide` (`council.ts:69`) erlauben `'C'` nur für Stufe 4. Ein Stand mit
-  `'C'` auf 2 oder 3 wird mit dem bestehenden Hinweis abgewiesen, kein Absturz (Test, AK-13).
+  `'C'` auf 2 oder 3 wird mit dem bestehenden Hinweis abgewiesen, kein Absturz (Test, AK-SR-13).
 - Alte Stände (ohne `'C'`) laden unverändert.
 - **Versionsnummer (F3):** entscheidet `lead-tech` im Plan. Wenn eine Nummer, dann nie neben Stadtplanung v19
   (`feat/stadtplanung`), sondern main + 1 beim Merge nach Stadtplanung (oder gemeinsam mit Erweiterung 1); die Migration
   setzt nur das Versionsfeld.
-- **Schiffsprüfung (F2):** `isValidShip` (`save.ts:707-718`) prüft heute `1 ≤ left ≤ laneTicks` (10 × d). Empfehlung:
-  streng mit der wirksamen Fahrzeit aus `raw.council[4]` (8 × d bei `'C'`); setzt voraus, dass `council` vor den Schiffen
-  geprüft wird.
+- **Schiffsprüfung (F2 = streng):** `isValidShip` (`save.ts:707-718`) prüft heute `1 ≤ left ≤ laneTicks` (10 × d). Neu
+  streng mit der wirksamen Fahrzeit aus `raw.council[4]` (8 × d bei `'C'`).
+- **Plan-Hinweis Reihenfolge:** `isValidCouncil` (heute `save.ts:~984`) läuft derzeit nach den Schiffen
+  (`isValidV9Fields`, `:~727`) und `isValidShip` kennt `council` nicht. Der Plan ordnet `isValidCouncil` vor die
+  Schiffe oder übergibt `council` als Parameter; die Form von `raw.council` (Objekt, Länge) ist vor jedem Zugriff auf
+  `[4]` zu prüfen. Eigener Test dafür: AK-SR-14 (manipulierter `council`).
+- **Versionsprüfung älterer Build:** Ein Test sichert, dass ein älterer Build (Version main) einen Stand mit `'C'` über
+  die Versionsnummer abweist (F3); AK-SR-12 prüft, dass die Migration nur das Versionsfeld setzt.
 
 **Baseline:** `tests/sim/balance.test.ts` bleibt bitgleich: Der Controller beschliesst nie (`expectNoDecree`), und der
 Helfer liefert ohne `'C'` den Def-Wert 10, also dieselben Fahrzeiten wie heute.
@@ -137,120 +142,134 @@ gleich gut (1 bis 2 Hütten gespart). Seerecht gewinnt in drei Lagen, die keine 
    Schätzung des Vorschlags jetzt gerechnet bestätigt).
 
 Nulllagen: N ≤ 60, d 30 bei N 80 (schon ohne Seerecht ein Schiff genug, 8,33 ≥ 8). Damit kein Pflichtzug, nicht
-wirkungslos, Engpass nicht Geld. Prüfung: AK-7 (Szenario) und AK-8 (Wertewächter).
+wirkungslos, Engpass nicht Geld. Prüfung: AK-SR-7 (Szenario) und AK-SR-8 (Wertewächter).
 
 ### 6.2 B2 «Stufe 4 zeigt drei Karten statt zwei»
 
 **Gewollt:** Stufe 4 ist die Fernhandelsstufe; die Asymmetrie zeigt dem Spieler, dass hier eine neue Achse dazukommt.
-Prüfung: AK-19 (Helfer) und AK-22, AK-23 (Browser).
+Prüfung: AK-SR-19 (Helfer) und AK-SR-22, AK-SR-23 (Browser).
 
 ### 6.3 Erweiterung 1 (R805 (3))
 
 Mehr Inseln und längere Seewege stärken Seerecht: Bei d 40 und N 150 spart es schon heute ein Schiff je Route; der
 Deckel wird mit mehr Routen früher erreicht. Die Balancing-Prüfung von Erweiterung 1 rechnet Anhang-Tabelle b mit deren
-Seewegen neu. Stolperdraht ist der Wertewächter AK-8: Fällt er nach einer Änderung an Kapazität, Bedarf, Seerecht-Wert
-oder Seewegen, ist der Seerecht-Wert neu zu prüfen (Werte-Ruling). Doku-Vermerk: AK-25.
+Seewegen neu. Stolperdraht ist der Wertewächter AK-SR-8: Fällt er nach einer Änderung an Kapazität, Bedarf, Seerecht-Wert
+oder Seewegen, ist der Seerecht-Wert neu zu prüfen (Werte-Ruling). Doku-Vermerk: AK-SR-25.
+
+### 6.4 Risiko «Wert 8 nur per Rechnung und Wächter» (R553)
+
+Die Wertgrenze 8 beruht auf einer Rechnung (Anhang §2–§7) und dem Wächter AK-SR-8, nicht auf mehreren unabhängigen
+Läufen; ein Controller wählt Seerecht nie (`expectNoDecree`), ein Balancing-Lauf fehlt daher bewusst. **Rückfall:**
+Fällt AK-SR-8 oder die Balancing-Prüfung von Erweiterung 1, gibt es ein Werte-Ruling (L0, auf Vorschlag Design); Wert 9
+ist verworfen (V1), Wert 7 wird dann geprüft. Kein Blocker für Plan und Umsetzung.
 
 ## 7 Abnahmekriterien
 
 Vitest gegen `src/sim/` (`tests/sim/council.test.ts`, erweitert):
 
-1. **AK-1 Tabelle:** `COUNCIL[4]` hat drei Einträge A, B, C; `COUNCIL[2]` und `COUNCIL[3]` je zwei (A, B). C hat Name
+1. **AK-SR-1 Tabelle:** `COUNCIL[4]` hat drei Einträge A, B, C; `COUNCIL[2]` und `COUNCIL[3]` je zwei (A, B). C hat Name
    «Seerecht», den Kartentext aus §3.1 wörtlich, Hebel `seaTileTicks` mit Wert 8; `SHIP_TICKS_PER_SEA_TILE` ist 10.
-2. **AK-2 Beschluss:** Bei `council[4] === 'open'` liefert `decree(w, 4, 'C')` `ok`, danach `council[4] === 'C'`; ein
+2. **AK-SR-2 Beschluss:** Bei `council[4] === 'open'` liefert `decree(w, 4, 'C')` `ok`, danach `council[4] === 'C'`; ein
    zweites `decree(w, 4, 'A')` liefert `ok: false` «Schon beschlossen», Wert bleibt `'C'`. Bei `council[4] === null`
    liefert `decree(w, 4, 'C')` «Beschluss nicht offen».
-3. **AK-3 Abweisung:** `decree(w, 2, 'C')` und `decree(w, 3, 'C')` bei offener Stufe liefern `ok: false` «Ungültige
+3. **AK-SR-3 Abweisung:** `decree(w, 2, 'C')` und `decree(w, 3, 'C')` bei offener Stufe liefern `ok: false` «Ungültige
    Seite»; die Welt ist danach JSON-gleich zu vorher. `decree(w, 4, 'D')` und `decree(w, 4, null)` ebenso; kein Aufruf
    wirft.
-4. **AK-4 Helfer:** Ohne Beschluss, mit `council[4] === 'A'` oder `'B'` und mit beliebigen Stufe-2/3-Beschlüssen:
+4. **AK-SR-4 Helfer:** Ohne Beschluss, mit `council[4] === 'A'` oder `'B'` und mit beliebigen Stufe-2/3-Beschlüssen:
    10 Ticks je Seekachel, Fahrzeit 10 × d, Inselpaar = heutiges `laneTicks`. Mit `'C'`: 8, 8 × d, Inselpaar 8 × d;
    a = b liefert 0.
-5. **AK-5 Umrechnung:** Vier fahrende Schiffe mit `left` 350, 7, 2, 1 haben nach `decree(w, 4, 'C')` 280, 6, 2, 1; ein
-   liegendes Schiff bleibt unverändert (`to`, `left`); ein `homing`-Schiff mit `left` 100 hat 80. Hafen, Ziel, Ladung,
-   Route bleiben. Ein abgewiesenes `decree` (Stufe 4 schon beschlossen) ändert kein `left`.
-6. **AK-6 Abfahrt:** Ein nach dem Beschluss ablegendes Schiff auf einem Seeweg der Länge d hat `left = 8 × d` und liegt
+5. **AK-SR-5 Umrechnung:** Vier fahrende Schiffe mit `left` 350, 7, 2, 1 haben nach `decree(w, 4, 'C')` 280, 6, 2, 1; ein
+   liegendes Schiff bleibt unverändert (`to`, `left`); ein `homing`-Schiff mit `left` 100 hat 80; löst danach ein Rückruf aus (Schiff liegt im Hafen und legt über `depart`
+   ab), hat es `left = 8 × d`. Hafen, Ziel, Ladung, Route bleiben. Ein abgewiesenes `decree` (Stufe 4 schon beschlossen) ändert kein `left`.
+6. **AK-SR-6 Abfahrt:** Ein nach dem Beschluss ablegendes Schiff auf einem Seeweg der Länge d hat `left = 8 × d` und liegt
    nach genau 8 × d Ticks im Zielhafen; ohne Beschluss nach 10 × d.
 
 Vitest Szenario und Wächter (`tests/sim/seerecht.test.ts`, neu):
 
-7. **AK-7 B1 Szenario (Gewinnlage):** Route Heimat ⇄ Insel mit Seeweg d = 35 (Testwelt mit gesetzter Lage; Aufbau
+7. **AK-SR-7 B1 Szenario (Gewinnlage):** Route Heimat ⇄ Insel mit Seeweg d = 35 (Testwelt mit gesetzter Lage; Aufbau
    wählt `lead-tech`), ein Schiff, Gewürz heimwärts, Insellager vor jeder Ankunft mit mindestens 50 Gewürz über der
    Routen-Reserve (`ROUTE_RESERVE`), Heimatlager vor jeder Ankunft höchstens `STORAGE_CAP` − 50 (z. B. geleert), damit
-   voll entladen wird; gezählt wird die in der Heimat entladene Menge. Umlauf 700 Ticks ohne, 560 mit Seerecht. Über 5650 Ticks ab Ablegen in der Heimat kommen ohne Seerecht 8 × 50 = 400 Gewürz an
+   voll entladen wird; gezählt wird die in der Heimat entladene Menge. Umlauf 700 Ticks ohne, 560 mit Seerecht; der Test prüft den Umlauf direkt über die Ankunfts-Ticks (erste
+   Heimankunft bei Tick 700 bzw. 560, jede weitere im Abstand 700 bzw. 560; Ankunft im Zielhafen bei 350 bzw. 280),
+   nicht nur über Mengen. Über 5650 Ticks ab Ablegen in der Heimat kommen ohne Seerecht 8 × 50 = 400 Gewürz an
    (7,08 je 100 Ticks, < 8), mit Seerecht 10 × 50 = 500 (8,85 je 100 Ticks, ≥ 8).
-8. **AK-8 B1 Wertewächter (rein über die Defs, zweiseitig):** Mit `SHIP.capacity`, `TIERS[4].needs.spice` und den
+8. **AK-SR-8 B1 Wertewächter (rein über die Defs, zweiseitig):** Mit `SHIP.capacity`, `TIERS[4].needs.spice` und den
    wirksamen Ticks (Def und Hebel) gilt: `capacity × 100 / (2 × 8 × 35) ≥ spice × 80` (8,93 ≥ 8) und
    `capacity × 100 / (2 × 10 × 35) < spice × 80` (7,14 < 8); Nulllage `capacity × 100 / (2 × 10 × 30) ≥ spice × 80`
    (8,33 ≥ 8, Seerecht spart dort 0). Die Testbeschreibung nennt: «Fällt dieser Test, Seerecht-Wert neu prüfen (R805).»
 
 Vitest weitere Sim-Leser:
 
-9. **AK-9 Routen-Bilanz** (`tests/sim/routeBalance.test.ts`): Für eine Route mit d 35 rechnet die Bilanz mit Umlauf 560
+9. **AK-SR-9 Routen-Bilanz** (`tests/sim/routeBalance.test.ts`): Für eine Route mit d 35 rechnet die Bilanz mit Umlauf 560
    statt 700; der Wert der Gewürzrichtung steigt entsprechend (gleiche Rundung wie heute).
-10. **AK-10 Determinismus** (`tests/sim/council.test.ts`): Zwei Läufe mit gleichem Seed und gleicher Aktionsfolge,
+10. **AK-SR-10 Determinismus** (`tests/sim/council.test.ts`): Zwei Läufe mit gleichem Seed und gleicher Aktionsfolge,
     darin `decree(w, 4, 'C')` bei fahrenden Schiffen, liefern gleiche Welt-Hashes.
 
 Vitest Save (`tests/sim/council-save.test.ts`):
 
-11. **AK-11 Runde:** Welt mit `council[4] === 'C'` und einem nach der Umrechnung fahrenden Schiff: Speichern und Laden
+11. **AK-SR-11 Runde:** Welt mit `council[4] === 'C'` und einem nach der Umrechnung fahrenden Schiff: Speichern und Laden
     liefert eine gleiche Welt (inkl. `left`).
-12. **AK-12 Alter Stand:** Ein Stand ohne `'C'` (heutiger Inhalt) lädt; `council` und Schiffe sind unverändert (bei
+12. **AK-SR-12 Alter Stand:** Ein Stand ohne `'C'` (heutiger Inhalt) lädt; `council` und Schiffe sind unverändert (bei
     neuer Versionsnummer über die Migration, die nur das Versionsfeld setzt).
-13. **AK-13 Abweisung:** Ein Stand mit `council[2] === 'C'` oder `council[3] === 'C'` wird mit Hinweis abgewiesen, kein
+13. **AK-SR-13 Abweisung:** Ein Stand mit `council[2] === 'C'` oder `council[3] === 'C'` wird mit Hinweis abgewiesen, kein
     Absturz; `council[4] === 'C'` ist gültig.
-14. **AK-14 Schiffsprüfung (nach F2):** Streng (Empfehlung): mit `council[4] === 'C'` wird ein Schiff mit
-    `left = 10 × d` abgewiesen, `left = 8 × d` angenommen; ohne `'C'` ist `10 × d` gültig. Lose (Alternative):
-    `10 × d` wird auch mit `'C'` angenommen und die Pose ist auf [0, 1] geklemmt (bestehend, `shipLane.ts:99`).
+14. **AK-SR-14 Schiffsprüfung (F2 = streng):** Mit `council[4] === 'C'` wird ein Schiff mit `left = 10 × d`
+    abgewiesen, `left = 8 × d` angenommen; ohne `'C'` ist `10 × d` gültig. Ein Stand mit gültigem `'C'` und
+    Schiff `left` zwischen 8 × d und 10 × d wird abgewiesen (alter Stand ohne Umrechnung). Zusätzlich (eigener Test,
+    Reihenfolge): Ein Stand mit manipuliertem `council` (kein Objekt, falsche Länge, `'C'` auf 2/3) wird abgewiesen,
+    ohne dass die Schiffsprüfung auf `raw.council[4]` zugreift und abstürzt.
 
 Vitest Render (`tests/render/shipLane.test.ts`):
 
-15. **AK-15 Pose und Cache:** `shipPose` wird vor dem Beschluss aufgerufen (Cache gefüllt). Seeweg d = 30: Schiff mit
+15. **AK-SR-15 Pose und Cache:** `shipPose` wird vor dem Beschluss aufgerufen (Cache gefüllt). Seeweg d = 30: Schiff mit
     `left` 150 hat vorher t = 0,5 und nachher (left 120, Fahrzeit 240) t = 0,5; Schiff mit `left` 7 springt von
     0,97667 auf 0,975, Abstand ≤ 1/(8d) = 0,00417. Ein nach dem Beschluss abgelegtes Schiff (`left` 240) hat t = 0
     (mit veraltetem 10er-Cache wäre es 0,2).
 
 Vitest UI-Helfer:
 
-16. **AK-16 Inselkarte** (`tests/ui/islandCard.test.ts`): Für eine Insel mit d 30 zeigt die Karte «Fahrzeit 0:30» ohne
+16. **AK-SR-16 Inselkarte** (`tests/ui/islandCard.test.ts`): Für eine Insel mit d 30 zeigt die Karte «Fahrzeit 0:30» ohne
     und «Fahrzeit 0:24» mit Seerecht (`TICK_MS` 100).
-17. **AK-17 `homeTravelTicks`** (`tests/ui/homeTravel.test.ts`): 300 ohne, 240 mit Seerecht bei d 30.
-18. **AK-18 «Zu spät»** (`tests/ui/farOrder.test.ts`, nach UI-G): Fernauftrag auf eine Insel mit d 30, Rest 260 Ticks,
+17. **AK-SR-17 `homeTravelTicks`** (`tests/ui/homeTravel.test.ts`): 300 ohne, 240 mit Seerecht bei d 30.
+18. **AK-SR-18 «Zu spät»** (`tests/ui/farOrder.test.ts`, nach UI-G): Fernauftrag auf eine Insel mit d 30, Rest 260 Ticks,
     Lager und rechtzeitige Fracht decken die Menge nicht. Ohne Seerecht `farLate` wahr, `farMark`-Text endet auf
     «· zu spät»; mit Seerecht `farLate` falsch, Text ohne «zu spät», Tip nennt die Fahrzeit 240 Ticks im
     `formatGameTime`-Format. Das Fernangebot zeigt «≈ … Fahrt» mit 240 Ticks.
-19. **AK-19 Rats-Karten** (`tests/ui/council.test.ts`): `councilCards` liefert für offene Stufe 4 drei Karten in der
+19. **AK-SR-19 Rats-Karten** (`tests/ui/council.test.ts`): `councilCards` liefert für offene Stufe 4 drei Karten in der
     Reihenfolge Glasrecht, Hofrecht, Seerecht mit Text aus den Defs, für offene Stufe 2 oder 3 zwei; mit Stufe 3 und 4
     gleichzeitig offen beide Gruppen nach Stufe. Nach dem Beschluss steht «Stufe 4: Seerecht» in der Liste; `note`
     ist der neue Text aus §4.
 
 Baseline:
 
-20. **AK-20 Balancing:** `tests/sim/balance.test.ts` und die übrigen `balance-*.test.ts` laufen ohne Änderung an
+20. **AK-SR-20 Balancing:** `tests/sim/balance.test.ts` und die übrigen `balance-*.test.ts` laufen ohne Änderung an
     Erwartungen grün und bitgleich (gleicher Sieg-Tick); `expectNoDecree` gilt weiter.
-21. **AK-21 Defs:** Kein Spielwert in Sim, Render oder UI hart; 8 steht nur in `src/sim/defs/council.ts`, 10 nur in
-    `src/sim/defs/sea.ts` (Review per `rg` auf `\b8 \*` bzw. neue Zahl-Literale in den Lesern).
+21. **AK-SR-21 Defs (Wächter-Test, `tests/sim/seerecht.test.ts`):** Ein Grep-Test liest die Quelltexte unter `src/sim`,
+    `src/render`, `src/ui` (ohne `src/sim/defs/`) und weist ein Zahl-Literal 8 oder 10 als Faktor oder Divisor der
+    Fahrzeit-Rechnung ab (Muster etwa `\b(8|10) \*` und `\* (8|10)\b` in Zeilen mit `Ticks`, `travel`, `lane`); ausserdem
+    steht der Wert 8 in `src/sim/defs/council.ts` und 10 in `src/sim/defs/sea.ts` genau einmal. Muster und Ausnahmeliste
+    wählt `lead-tech`.
 
 Browser-Check bei 1280 px (qa-playtester, Screenshots `.studio/qa/SEERECHT/`):
 
-22. **AK-22 Drei Karten:** Stufe 4 offen: drei Karten nebeneinander, Namen und Texte voll lesbar, Zahl «25 %» und «80»
+22. **AK-SR-22 Drei Karten:** Stufe 4 offen: drei Karten nebeneinander, Namen und Texte voll lesbar, Zahl «25 %» und «80»
     sichtbar, kein horizontales Scrollen, Kopfzeile einzeilig. Ebenso mit Stufe 3 und 4 gleichzeitig offen (zwei plus
     drei Karten). Satz «… die übrigen Beschlüsse der Stufe verfallen.» sichtbar.
-23. **AK-23 Schmales Fenster:** Bei 800 px Breite öffnet die Rats-Karte ohne Absturz und Konsolenfehler (Layout darf
+23. **AK-SR-23 Schmales Fenster:** Bei 800 px Breite öffnet die Rats-Karte ohne Absturz und Konsolenfehler (Layout darf
     umbrechen).
-24. **AK-24 Wirkung sichtbar:** In der Pause mit einem fahrenden Schiff Seerecht beschliessen: Schiff springt nicht
+24. **AK-SR-24 Wirkung sichtbar:** In der Pause mit einem fahrenden Schiff Seerecht beschliessen: Schiff springt nicht
     sichtbar (Screenshot vorher/nachher), Inselkarte zeigt die kürzere Fahrzeit, Liste «Stufe 4: Seerecht»; nach dem
     Fortsetzen fährt das Schiff weiter und kommt an.
 
 Doku (Review, `make docs-check`):
 
-25. **AK-25 Doku:** README «Rat» nennt drei Karten auf Stufe 4 mit Seerecht und Kartentext; `docs/spielwerte.md` «Rat
+25. **AK-SR-25 Doku:** README «Rat» nennt drei Karten auf Stufe 4 mit Seerecht und Kartentext; `docs/spielwerte.md` «Rat
     (Ratsbeschluss)» hat die Zeile Seerecht (Hebel, 10 → 8, Def-Ort) mit «Prüfwert Erweiterung 1 (R805)».
 
 ## 8 Randfälle
 
-- **Beschluss im Ankunfts-Tick** (`left` 1): bleibt 1, Ankunft im nächsten Tick wie geplant (AK-5).
-- **In der Pause:** erlaubt wie bei I-112; Umrechnung sofort, Pose springt höchstens 1/(8d) (AK-15, AK-24).
+- **Beschluss im Ankunfts-Tick** (`left` 1): bleibt 1, Ankunft im nächsten Tick wie geplant (AK-SR-5).
+- **In der Pause:** erlaubt wie bei I-112; Umrechnung sofort, Pose springt höchstens 1/(8d) (AK-SR-15, AK-SR-24).
 - **Ohne Schiffe:** Beschluss wirkt formal (Helfer liefert 8), nichts umzurechnen; spätere Schiffe fahren 8 × d.
 - **Schiff legt im selben Tick ab:** Vor dem Tick beschlossen → `depart` liest schon 8 × d. Im vorigen Tick abgelegt
   (`left` 10 × d) → wird mit umgerechnet. Beides 8er-Fahrzeit, keine Doppelzählung.
@@ -259,7 +278,7 @@ Doku (Review, `make docs-check`):
 - **Zwei Stufen offen:** Stufe 3 zeigt zwei, Stufe 4 drei Karten; ein Beschluss auf Stufe 3 rechnet nichts um.
 - **Inselvorteil:** Seerecht und Inseleigenschaften sind unabhängig (kein Inselvorteil wirkt auf die Fahrzeit).
 - **`SHIP_MAX` 4:** unverändert; Seerecht hebt nur den Durchsatz je Schiff.
-- **Manipulierter Stand:** `'C'` auf 2/3 abgewiesen (AK-13); `left` über der Fahrzeit nach F2 (AK-14).
+- **Manipulierter Stand:** `'C'` auf 2/3 abgewiesen (AK-SR-13); `left` über der Fahrzeit nach F2 (AK-SR-14).
 
 ## 9 Nicht dazugehört
 
@@ -275,7 +294,7 @@ Stufe 2 oder 3; keine Controller-Wahl im Balancing-Test; keine neue Grafik oder 
 - **Stadtplanung** (`feat/stadtplanung` Save v19, `feat/stadtplanung-ui`): Plan und Umsetzung erst nach dem Merge; beide
   Zweige ändern `src/sim/save.ts` und `tests/sim/council.test.ts`. Save-Nummer nie parallel (§5).
 - **Erweiterung 1** (Nutzer-Session): Mergt sie zuerst, wird Anhang-Tabelle b mit ihren Seewegen neu gerechnet und der
-  Wächter AK-8 geprüft.
+  Wächter AK-SR-8 geprüft.
 - **UI-HAEPPCHEN-H** (`plan/ui-haeppchen-h`): keine gemeinsamen Sim- oder Helferdateien. Mögliche Textkonflikte nur in
   `src/style.css` (Rats-Karte `.council-card` um Zeile 1456, falls die drei Karten neue Regeln brauchen) und
   `src/ui/app.ts`, falls die Rats-Karte dort verdrahtet wird; lokal per `git merge main` lösbar.
@@ -284,9 +303,9 @@ Stufe 2 oder 3; keine Controller-Wahl im Balancing-Test; keine neue Grafik oder 
 
 ## 11 Offene Designfragen
 
-- **F1 Notiz-Text:** Empfehlung ein Text für alle Stufen («… die übrigen Beschlüsse der Stufe verfallen.»), nicht je Kartenzahl verschieden; einfacher, ein Def-Eintrag.
-- **F2 Schiffsprüfung im Save:** Empfehlung streng mit der wirksamen Fahrzeit aus `raw.council[4]`; fängt manipulierte Stände. Alternative: lose 10 × d plus Klemmen der Pose auf [0, 1].
-- **F3 Versionsnummer:** Empfehlung eine Nummer (main + 1 beim Merge nach Stadtplanung, Migration nur Versionsfeld), weil der Wertebereich wächst und ältere Builds einen Stand mit `'C'` dann über die Versionsprüfung statt über die Feldprüfung abweisen. Entscheid `lead-tech`.
+- **F1 Notiz-Text (entschieden: ja, R-Gate Spec):** Empfehlung ein Text für alle Stufen («… die übrigen Beschlüsse der Stufe verfallen.»), nicht je Kartenzahl verschieden; einfacher, ein Def-Eintrag.
+- **F2 Schiffsprüfung im Save (entschieden: streng):** streng mit der wirksamen Fahrzeit aus `raw.council[4]`; fängt manipulierte Stände. Die lose Variante ist gestrichen.
+- **F3 Versionsnummer (entschieden: ja, Feinwahl lead-tech im Plan; ein Test sichert, dass ein älterer Build einen Stand mit `'C'` über die Version abweist):** eine Nummer (main + 1 beim Merge nach Stadtplanung, Migration nur Versionsfeld), weil der Wertebereich wächst und ältere Builds einen Stand mit `'C'` dann über die Versionsprüfung statt über die Feldprüfung abweisen. Entscheid `lead-tech`.
 
 ## 12 Selbstprüfung Gate Brainstorming
 

@@ -96,14 +96,14 @@ Mit veraltetem Cache (Fahrzeit 300 statt 240) läge ein frisch abgelegtes Schiff
 | **8**              | 12,5 / 10,42 / 8,93 / 7,81 | **1 Schiff**  | 41,7 (5,0 Äq.)              | **gewählt**: Gewinn- und Nulllage               |
 | 6                  | 16,7 / 13,9 / 11,9 / 10,4  | 1 Schiff      | 55,6 (6,7 Äq.)              | dominant: spart in fast jeder Zelle ein Schiff  |
 
-## 8 Szenario und Wächter (Zahlen zu AK-7 und AK-8)
+## 8 Szenario und Wächter (Zahlen zu AK-SR-7 und AK-SR-8)
 
-**Szenario AK-7:** d 35, Ablegen in der Heimat bei Tick 0, Heimkehr alle 700 (ohne) bzw. 560 (mit) Ticks. Über 5650
+**Szenario AK-SR-7:** d 35, Ablegen in der Heimat bei Tick 0, Heimkehr alle 700 (ohne) bzw. 560 (mit) Ticks. Über 5650
 Ticks: `floor(5650 / 700)` = 8 Lieferungen = 400 Gewürz (7,08 je 100 Ticks), `floor(5650 / 560)` = 10 Lieferungen = 500
 (8,85 je 100 Ticks). Schwelle 8 je 100 Ticks (N 80). 5650 statt 5600 gibt einen Puffer von 50 Ticks für die
 Reihenfolge im Tick.
 
-**Wächter AK-8** (rein über Defs; `cap` = 50, `need` = 0,1, `N` = 80):
+**Wächter AK-SR-8** (rein über Defs; `cap` = 50, `need` = 0,1, `N` = 80):
 
 | Prüfung                  | Formel                      | Wert     | Erwartung |
 | ------------------------ | --------------------------- | -------- | --------- |
