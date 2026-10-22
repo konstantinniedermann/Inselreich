@@ -3,7 +3,7 @@
 // Belegt heisst: Load-Average (1 min) über der Schwelle oder fremde vitest-/vite-/Headless-Chrome-Prozesse laufen.
 // Eigener Prozess, seine Vorfahren (make/node/Shell) und seine Kinder zählen nicht. Nur Entwicklungswerkzeug (macOS).
 //
-// Aufruf:  node tools/render-qa/messfenster.mjs [--load 4] [--run -- <befehl ...>] [--selftest] [--help]
+// Aufruf:  node tools/render-qa/messfenster.mjs [--load 4] [--dauer 70] [--zweck <text>] [--run -- <befehl ...>] [--selftest] [--help]
 //   make messfenster ARGS="--run -- node tools/render-qa/perf.mjs --a . --b . --seed 3,14 ..."
 // Ausgabe: Kontextzeile (Load, Schwelle), eine JSON-Zeile (Protokoll je Serie), genau eine Ergebniszeile
 //   `Messfenster frei` (Exit 0) oder `belegt: <Gründe>` (Exit 1). `--run` startet den Befehl nur im Frei-Fall unter
@@ -13,8 +13,10 @@ import { spawn, spawnSync } from 'node:child_process';
 import { loadavg } from 'node:os';
 import { basename, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { holdMessfenster } from './messsperre.mjs';
 
 const DEFAULT_LOAD = 4;
+const RUN_DAUER_MIN = 70; // Block für --run (Plan P-6)
 const RUNNERS = new Set([
   'node',
   'npx',
@@ -171,35 +173,50 @@ function selftest() {
   return bad ? 1 : 0;
 }
 
-function main(argv) {
-  let threshold = Number(process.env.MESSFENSTER_LOAD ?? DEFAULT_LOAD);
-  let run = null;
+/** Argumente zerlegen (rein): { threshold, run, dauerMin, zweck } oder { fehler } / { selftest } / { help }. */
+export function parseArgs(argv, env = process.env) {
+  const r = {
+    threshold: Number(env.MESSFENSTER_LOAD ?? DEFAULT_LOAD),
+    run: null,
+    dauerMin: RUN_DAUER_MIN,
+    zweck: '',
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === '--selftest') return selftest();
-    if (a === '--help') {
-      console.log(
-        'Aufruf: messfenster.mjs [--load N] [--run -- <befehl ...>] [--selftest]\n' +
-          'Prüft Last und fremde vitest/vite/Headless-Chrome-Prozesse; mit --run startet der Befehl unter caffeinate -i.',
-      );
-      return 0;
-    } else if (a === '--load') threshold = Number(argv[++i]);
+    if (a === '--selftest') return { selftest: true };
+    if (a === '--help') return { help: true };
+    if (a === '--load') r.threshold = Number(argv[++i]);
+    else if (a === '--dauer') {
+      r.dauerMin = Number(argv[++i]);
+      if (!(r.dauerMin > 0)) return { fehler: '--dauer muss eine positive Zahl (Minuten) sein.' };
+    } else if (a === '--zweck') r.zweck = argv[++i] ?? '';
     else if (a === '--run') {
-      if (argv[i + 1] !== '--' || argv.length <= i + 2) {
-        console.error('--run braucht: --run -- <befehl ...>');
-        return 2;
-      }
-      run = argv.slice(i + 2);
+      if (argv[i + 1] !== '--' || argv.length <= i + 2)
+        return { fehler: '--run braucht: --run -- <befehl ...>' };
+      r.run = argv.slice(i + 2);
       break;
-    } else {
-      console.error(`Unbekannte Option: ${a}`);
-      return 2;
-    }
+    } else return { fehler: `Unbekannte Option: ${a}` };
   }
-  if (!(threshold > 0)) {
-    console.error('Ungültige Schwelle (--load N / MESSFENSTER_LOAD).');
+  if (!(r.threshold > 0)) return { fehler: 'Ungültige Schwelle (--load N / MESSFENSTER_LOAD).' };
+  return r;
+}
+
+function main(argv) {
+  const parsed = parseArgs(argv);
+  if (parsed.selftest) return selftest();
+  if (parsed.help) {
+    console.log(
+      'Aufruf: messfenster.mjs [--load N] [--dauer <min>] [--zweck <text>] [--run -- <befehl ...>] [--selftest]\n' +
+        'Prüft Last und fremde vitest/vite/Headless-Chrome-Prozesse; mit --run startet der Befehl unter caffeinate -i\n' +
+        `und unter der Messfenster-Sperre (--dauer Vorgabe ${RUN_DAUER_MIN} min; Kinder erhalten MESSFENSTER_HELD).`,
+    );
+    return 0;
+  }
+  if (parsed.fehler) {
+    console.error(parsed.fehler);
     return 2;
   }
+  const { threshold, run, dauerMin, zweck } = parsed;
 
   const load = loadavg()[0];
   const ps = spawnSync('ps', ['-axo', 'pid=,ppid=,etime=,command='], {
@@ -249,15 +266,22 @@ function main(argv) {
     );
     return 0;
   }
+  const sperre = holdMessfenster({
+    owner: 'messfenster',
+    dauerMin,
+    zweck: zweck || run.join(' ').slice(0, 80),
+    onSignal: (sig) => child.kill(sig),
+  });
   const child = spawn('caffeinate', ['-i', ...run], { stdio: 'inherit' });
-  for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(sig, () => child.kill(sig));
   child.on('error', (e) => {
     console.error(`Start fehlgeschlagen: ${e.message}`);
+    sperre.release();
     process.exit(1);
   });
-  child.on('exit', (code, sig) =>
-    process.exit(code ?? (sig === 'SIGINT' ? 130 : sig === 'SIGTERM' ? 143 : 1)),
-  );
+  child.on('exit', (code, sig) => {
+    sperre.release();
+    process.exit(code ?? (sig === 'SIGINT' ? 130 : sig === 'SIGTERM' ? 143 : 1));
+  });
   return null; // Exit-Code kommt vom Kind
 }
 

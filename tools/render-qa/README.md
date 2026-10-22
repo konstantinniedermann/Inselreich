@@ -37,6 +37,17 @@ Mess- und Ruckel-Skripte (`hitch`, `kalt`, `altwald`, `proben`, `perf-lauf`) ruf
 Meldung ab. `--help` läuft ohne Prüfung. Zum Belegen der Abbruchlogik: `LASTGATE_FAKE_LOAD=9 node tools/render-qa/lastgate.mjs`
 (simulierte Last, nur für Test und Probe). `uptime` vor und nach dem Lauf gehört in den Beleg (`perf-lauf.sh` schreibt es mit).
 
+## Messfenster-Sperre (TOOL-MESSFENSTER, Ruling-Entwurf R824-E5)
+
+Messungen und volle Testläufe schliessen sich über `.studio/messfenster` (Bibliothek `tools/messfenster/lock.ts`) aus.
+**Pflicht für neue Messwerkzeuge:** entweder `withMessfenster(fn, { owner, dauerMin, zweck })` aus `messsperre.mjs` nutzen
+oder per `make messfenster ARGS="--run -- <befehl>"` starten (`--dauer <min>`, Vorgabe 70; `--zweck <text>`). Belegt das
+Messfenster oder lebt die Testsperre, bricht der Start mit Exit 3 ab (kein Warten). Die Sperre fällt in `finally`, bei
+Exception und bei SIGTERM/SIGINT/SIGHUP. Kinder des Wrappers erben `MESSFENSTER_HELD=<pid>` und nehmen keine zweite Sperre.
+`sitzung.cli` (hitch, kalt, altwald, proben, seekarte, blindprobe) und `perf-lauf.sh` setzen sie selbst (20 min);
+`perf.mjs` und `smoke.mjs` laufen über `perf-lauf.sh` bzw. `make messfenster --run`. Befehl unter Sperre ohne Wächter-Prüfung:
+`node tools/render-qa/messsperre.mjs [--dauer <min>] [--zweck <text>] -- <befehl>`.
+
 ## Namensschema (E-039, R315)
 
 - Wurzeln per `--root` (Einzelstand) bzw. `--a`/`--b` (Verzeichnisse); Standard ist der Repo-Stamm (`git rev-parse --show-toplevel`).

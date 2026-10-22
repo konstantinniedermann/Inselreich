@@ -281,3 +281,17 @@ describe('T05 aagate (A/A-Kontrolle, Messgüte)', async () => {
     expect(s.stdout).toContain('ungueltig (A/A ausserhalb)');
   });
 });
+
+// --- T04 TOOL-MESSFENSTER: messfenster.mjs --dauer/--zweck (eigener Block) ---
+describe('T04 messfenster.mjs Argumente', async () => {
+  const mf = await load('messfenster.mjs');
+  it('--run übernimmt --dauer und --zweck, Vorgabe 70 min', () => {
+    expect(mf.parseArgs(['--run', '--', 'echo', 'x']).dauerMin).toBe(70);
+    const a = mf.parseArgs(['--dauer', '45', '--zweck', 'Perf A/A', '--run', '--', 'echo', 'x']);
+    expect(a).toMatchObject({ dauerMin: 45, zweck: 'Perf A/A', run: ['echo', 'x'] });
+  });
+  it('ungültige --dauer ist ein Aufruffehler', () => {
+    expect(mf.parseArgs(['--dauer', '0', '--run', '--', 'x']).fehler).toMatch(/dauer/);
+    expect(mf.parseArgs(['--dauer', 'abc', '--run', '--', 'x']).fehler).toMatch(/dauer/);
+  });
+});
