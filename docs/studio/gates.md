@@ -176,12 +176,12 @@ Fragen von `lead-qa` selbst anhand dieses Reviews und des Tech-Berichts. Ohne Fi
 stärksten Modell über alle Stränge gibt es kein Merge-Gate; diese Pflicht ist nicht abschwächbar
 ([Verfassung §9](VERFASSUNG.md#9-nicht-abschwächbare-qualitätssicherung)).
 
-**Kontext:** Diffs aller Strang-Branches gegen `main`, Final-Review-Bericht, Ausgabe von `make check`,
+**Kontext:** Diffs aller Strang-Branches gegen `main`, Final-Review-Bericht, Ausgabe des Teilbelegs (R810),
 `docs/CREDITS.md`, `docs/licenses/`, Doku-Änderungen (README, `docs/arc42.md`, ADRs).
 
 **Prüffragen `lead-qa`:**
 
-1. Ist `make check` grün (lint, Tests inkl. Balancing-Test, studio-test, build)?
+1. Liegt der Teilbeleg grün vor (gezielte Tests der berührten Dateien, `tsc`, `lint`, bei Werkzeug `studio-test`; R810)? Der volle Lauf (Tests inkl. Balancing-Test, build) folgt einmal je Release als `make push-check`.
 2. Hat das Final-Review keine offenen ZURÜCK-Punkte? Sind BEDENKEN behoben oder als Ruling bzw. in
    `docs/beobachtungen.md` festgehalten?
 3. Sind README (Bedienung, Spielwerte) und arc42 (Module, Tick-Ablauf, Persistenz) nachgeführt?
@@ -197,15 +197,15 @@ stärksten Modell über alle Stränge gibt es kein Merge-Gate; diese Pflicht ist
 3. Ist die Gesamtgrösse der Assets vertretbar?
 
 **Urteile:** OK / BEDENKEN [Liste] / ZURÜCK [Grund] → Entscheidung L0 + Ruling, danach Auftrag an
-`lead-production`: `production-integrator` merged die Stränge seriell, mit `make check` nach jedem
-Merge.
+`lead-production`: `production-integrator` merged die Stränge seriell, mit Teilbeleg nach jedem
+Merge (R810); der volle Lauf ist `make push-check` auf dem gebündelten Stand.
 
 ## Gate Merge Release
 
 Gilt für Häppchen der Stufe leicht (E-028, R208); Meilenstein-Merges bleiben beim Gate Merge oben.
 Prüfen: `lead-qa` (`opus`, Review über den Kandidaten, CI) · `lead-art` nur bei Assets.
 
-**Auslöser:** 3 Häppchen „release-reif“ (Review-OK, Abnahme durch den Lead, `make check` grün, `log.py
+**Auslöser:** 3 Häppchen „release-reif“ (Review-OK, Abnahme durch den Lead, Teilbeleg grün, `log.py
 result` mit Häppchen-ID), oder Session-Ende mit ≥ 1 release-reifem Häppchen, oder ein Meilenstein-Merge
 (fertige Häppchen fahren im selben Lauf mit). Höchstens 4 Häppchen je Release. **Hotfix** (CI auf main
 rot, Absturz, defekter Spielstand) geht einzeln.
@@ -215,7 +215,7 @@ rot, Absturz, defekter Spielstand) geht einzeln.
 1. Dateimatrix vor dem Start: gleiche Datei in zwei Häppchen → Stapel auf derselben Branch, nie
    parallel; fachliche Abhängigkeit → abhängiges Häppchen zweigt von der Branch des Vorgängers ab.
 2. `production-integrator` baut den Kandidaten im Worktree `.worktrees/integrate`: je Häppchen
-   `git merge --no-ff --no-commit`, `make check`, grün committen (Verfassung §9.2).
+   `git merge --no-ff --no-commit`, Teilbeleg (R810), grün committen; der volle Lauf `make push-check` folgt auf dem Kandidaten vor dem Push (Verfassung §9.2: siehe offener Widerspruch, Warteschlange).
 3. Ein Browser-Lauf `qa-playtester` am Kandidaten, je UI-Task eigener Abschnitt mit Screenshots (§9.3).
 4. Ein `opus`-Review über den Kandidaten-Diff (ersetzt den Schlussreview je Häppchen). Bei einem
    Ein-Paket-Release laufen Gate Merge und Release-Check in einem `lead-qa`-Start (R429).
@@ -234,7 +234,7 @@ Häppchen mit disjunkten Dateien laufen parallel in eigenen Worktrees (§5.8).
 
 **Prüfliste (Pflicht, L0 prüft sie im Gate):** jede Zeile ein UI-Task → Pfad des Screenshots
 (`.studio/qa/REL-nn/…`) und Playtest-Abschnitt. **Fehlt ein Eintrag, gibt es keinen Merge.** Zusätzlich
-`make check` grün auf dem Kandidaten, Review ohne offene ZURÜCK-Punkte, Doku und CREDITS nachgeführt, CI-Reserve aller Zeittests im Diff (lokal unter `CI=true` ≤ 50 % des Timeouts, auch Fix-Runden nach dem Final-Review, R270).
+Teilbeleg grün auf dem Kandidaten (voller Lauf: `make push-check` vor dem Push, R810), Review ohne offene ZURÜCK-Punkte, Doku und CREDITS nachgeführt, CI-Reserve aller Zeittests im Diff (lokal unter `CI=true` ≤ 50 % des Timeouts, auch Fix-Runden nach dem Final-Review, R270).
 
 **Release-Fenster (R588 V1):** Zwischen Gate Merge eines Releases und Push startet L0 höchstens 2 weitere Test-Arbeiter (Testlock-Abbrüche, Retro `retros/2026-10-13-adhoc-testlock.md`).
 

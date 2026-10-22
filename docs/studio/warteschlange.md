@@ -173,3 +173,13 @@ schliesst den Eintrag.
 - Blockiert: nichts hart; Messgüte ORT-A
 - Von: lead-tech
 - Antwort: –
+
+## N-103 · offen · 2026-10-22 · Verfassung §7/§9.2 vs. R810 (make check vor Merge/Push)
+
+- Frage: Verfassung §7.1, §7.2 und §9.2 verlangen make check vor jedem Merge bzw. Push; R810 ersetzt das durch Teilbeleg je Merge und make push-check (enthält make check-push) einmal je Release. Soll §9.2/§7 auf voller Lauf vor jedem Push bzw. Release, Teilbeleg je lokalem Merge gelockert werden?
+- Empfehlung: Klarstellung in §7/§9.2; bis dahin Handbuch 1.66 als Auslegung
+- Begründung: Verfassung steht über Handbuch und R810; §9 ist nicht abschwächbar
+- Kosten des Wartens: Auslegungsstreit bei jedem Merge ohne vollen Lauf
+- Blockiert: nichts
+- Von: studio-coach
+- Antwort: –
