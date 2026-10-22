@@ -1415,3 +1415,19 @@ Vorschläge als Retro-Bericht, keine Handbuch-Änderung. Budget **1**.
 Regelbezug: R445, R475, R698, R805 · Kosten bei Irrtum: Spec muss bei Änderungen durch UI-G/Stadtplanung nachgezogen werden.
 
 Entscheider: L0 · Anlass: Nutzerfrage · ADR: —
+
+## R810 · 2026-10-22 · Nutzerauftrag «Tests auf ein Minimum, Releases bündeln»: V1, V2, V5 angenommen
+
+Ruling: Nutzerauftrag (Tests reduzieren, Pakete bündeln und gemeinsam prüfen) zusammen mit der Prozess-Aussensicht `docs/studio/retros/2026-10-22-adhoc-last.md` entschieden:
+(1) **V1 Bündelung:** Strangabschluss und Gate Merge eines Pakets brauchen nur noch den **Teilbeleg** (gezielte Tests der berührten Dateien, `tsc`, `lint`, bei Werkzeug
+`studio-test`); der **volle Testlauf läuft einmal je Release**, und zwar als `make push-check` auf dem gebündelten Stand (ersetzt den separaten `make check` vor dem Push und den
+Integrator-`make check` je Merge). Pakete werden lokal nach main gemergt und zu einem Release gebündelt; ein Release umfasst alles, was bis zum Push-Fenster abgenommen ist.
+Rot im Push-Check → Behebung vor dem Push, Ursache dem Paket zuordnen. (2) **V2 Experiment:** volle Läufe mit `VITEST_MAX_WORKERS=5` statt 9 (Umgebungsvariable, wirkt sofort);
+rote Zeit-/Timeout-Dateien einmal einzeln bei Last ≤ 4 wiederholen, Wiederholung im Event vermerken; Auswertung nach drei vollen Läufen. (3) **V5:** `loadsnap.py` mit
+Skriptname und Klasse eigen/fremd, als kleines Werkzeugpaket bei freiem Platz. (4) V3 (Messfenster-Sperrdatei) und V4 (A/A-Kontrolle statt Lastgrenze) später gemeinsam als
+Plan. Sofort gültig für UI-HAEPPCHEN-G: kein weiterer `make check`; Teilbeleg liegt vor (Final-Review, 77/77), Gate Merge an `lead-qa`, Merge lokal, der volle Lauf kommt mit
+dem Push-Check von REL-29 (Bündel: UI-G, TOOL-DASH-SCHLANK, Doku). Handbuch-Minor durch `studio-coach` im selben Zug (R429).
+
+Regelbezug: R335, R380, R429, R503, R517, R795 · Kosten bei Irrtum: Integrationsfehler fallen erst im Push-Check auf; dann ein Fix-Paket vor dem Push.
+
+Entscheider: L0 · Anlass: Nutzerauftrag, Retro PROZESS-LAST · ADR: —
