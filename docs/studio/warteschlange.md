@@ -134,7 +134,7 @@ schliesst den Eintrag.
 - Von: l0
 - Antwort: Nutzer 2026-10-08: einschalten mit den drei Sparregeln (paths-ignore Doku, Pages nur manuell beim Release, CI cancel-in-progress); R334
 
-## N-99 · offen · 2026-10-10 · Kenntnis: zweiter Push im selben Claude-Gespräch (R434)
+## N-99 · umgesetzt · 2026-10-10 · Kenntnis: zweiter Push im selben Claude-Gespräch (R434)
 
 - Frage: Zur Kenntnis: Nach abgeschlossener Ende-Routine zählt 'mach weiter' im selben Claude-Gespräch als neue Studio-Session mit eigenem Push (R434). Einverstanden?
 - Empfehlung: Ja, belassen; künftig empfiehlt die Ende-Routine ein neues Claude-Gespräch (R438 V4 b)
@@ -142,7 +142,7 @@ schliesst den Eintrag.
 - Kosten des Wartens: keine; ohne Antwort gilt R434 weiter
 - Blockiert: nichts
 - Von: l0
-- Antwort: –
+- Antwort: gegenstandslos (R816: ein Push je Tag)
 
 ## N-100 · beantwortet · 2026-10-13 · Dropbox während des Push-Gates pausieren
 
@@ -174,7 +174,7 @@ schliesst den Eintrag.
 - Von: lead-tech
 - Antwort: –
 
-## N-103 · offen · 2026-10-22 · Verfassung §7/§9.2 vs. R810 (make check vor Merge/Push)
+## N-103 · beantwortet · 2026-10-22 · Verfassung §7/§9.2 vs. R810 (make check vor Merge/Push)
 
 - Frage: Verfassung §7.1, §7.2 und §9.2 verlangen make check vor jedem Merge bzw. Push; R810 ersetzt das durch Teilbeleg je Merge und make push-check (enthält make check-push) einmal je Release. Soll §9.2/§7 auf voller Lauf vor jedem Push bzw. Release, Teilbeleg je lokalem Merge gelockert werden?
 - Empfehlung: Klarstellung in §7/§9.2; bis dahin Handbuch 1.66 als Auslegung
@@ -182,4 +182,4 @@ schliesst den Eintrag.
 - Kosten des Wartens: Auslegungsstreit bei jedem Merge ohne vollen Lauf
 - Blockiert: nichts
 - Von: studio-coach
-- Antwort: –
+- Antwort: Nutzer 2026-10-22: ja (R816; Verfassung 1.3)

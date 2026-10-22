@@ -215,7 +215,7 @@ rot, Absturz, defekter Spielstand) geht einzeln.
 1. Dateimatrix vor dem Start: gleiche Datei in zwei Häppchen → Stapel auf derselben Branch, nie
    parallel; fachliche Abhängigkeit → abhängiges Häppchen zweigt von der Branch des Vorgängers ab.
 2. `production-integrator` baut den Kandidaten im Worktree `.worktrees/integrate`: je Häppchen
-   `git merge --no-ff --no-commit`, Teilbeleg (R810), grün committen; der volle Lauf `make push-check` folgt auf dem Kandidaten vor dem Push (Verfassung §9.2: siehe offener Widerspruch, Warteschlange).
+   `git merge --no-ff --no-commit`, Teilbeleg (R810), grün committen; der volle Lauf `make push-check` folgt auf dem Kandidaten vor dem Merge nach `main` und vor dem Push (Verfassung 1.3 §9.2, N-103, R816); Strang-interne Merges brauchen nur den Teilbeleg. Höchstens ein Push je Kalendertag.
 3. Ein Browser-Lauf `qa-playtester` am Kandidaten, je UI-Task eigener Abschnitt mit Screenshots (§9.3).
 4. Ein `opus`-Review über den Kandidaten-Diff (ersetzt den Schlussreview je Häppchen). Bei einem
    Ein-Paket-Release laufen Gate Merge und Release-Check in einem `lead-qa`-Start (R429).

@@ -1,7 +1,8 @@
 # Verfassung des Inselreich-Studios
 
-Version: 1.2 · Stand: 2026-10-05 · Status: in Kraft, bestätigt durch den Nutzer (Warteschlange
-N-001, mit den Änderungen aus Ruling R67; §3 Spielstände geändert durch den Nutzer, N-96, R261)
+Version: 1.3 · Stand: 2026-10-22 · Status: in Kraft, bestätigt durch den Nutzer (Warteschlange
+N-001, mit den Änderungen aus Ruling R67; §3 Spielstände geändert durch den Nutzer, N-96, R261;
+§7.1, §7.2 und §9.2 geändert durch den Nutzer, N-103, 2026-10-22, R816)
 
 Diese Verfassung enthält die Regeln des Nutzers. Das Team (Projektleiter, Leads, Stabsstellen,
 Arbeiter) wendet sie an, ändert sie aber nie. Alles andere regelt das veränderbare Handbuch
@@ -106,10 +107,12 @@ erkennt, gilt das Verbot trotzdem.
 ## §7 Commits und Pushes
 
 1. Commits auf Feature-Branches und Merges nach `main` sind erlaubt, sobald das Merge-Gate
-   entschieden ist und `make check` grün ist.
-2. Ein Push auf `main` ist erlaubt, wenn `make check` vor dem Push grün ist. Danach wird der
-   CI-Status geprüft. Ist die CI rot, hat die Behebung Vorrang; der Vorfall löst eine Ad-hoc-Retro
-   aus (§10).
+   entschieden ist und ein voller Testlauf (`make check` bzw. `make push-check`) grün ist;
+   Zwischen-Merges innerhalb eines Strangs brauchen gezielte Tests der berührten Dateien, Typ- und
+   Stilprüfung (§9.2).
+2. Ein Push auf `main` ist erlaubt, wenn ein voller Testlauf (`make check` bzw. `make push-check`)
+   vor dem Push grün ist. Danach wird der CI-Status geprüft. Ist die CI rot, hat die Behebung
+   Vorrang; der Vorfall löst eine Ad-hoc-Retro aus (§10).
 3. Commit-Präfixe laut `../CLAUDE.md`.
 
 ## §8 Transparenz und Logging
@@ -130,8 +133,9 @@ erkennt, gilt das Verbot trotzdem.
 Kein Handbuch, keine Persona, kein Experiment und kein Budget darf diese Punkte abschwächen:
 
 1. **Unabhängiges Review je Task.** Es prüft jemand, der die Arbeit nicht selbst gemacht hat.
-2. **Tests grün.** `make check` ist vor jedem Merge grün, und der Balancing-Test bleibt
-   Regressionsschutz.
+2. **Tests grün.** Ein voller Testlauf (`make check` bzw. `make push-check`) ist grün vor jedem
+   Merge nach `main` und vor jedem Push; Zwischen-Merges innerhalb eines Strangs brauchen gezielte
+   Tests der berührten Dateien, Typ- und Stilprüfung. Der Balancing-Test bleibt Regressionsschutz.
 3. **QA-Check je UI-Task.** Die Änderung wird im Browser geprüft, mit Screenshots.
 4. **Lizenzprüfung vor jedem Asset-Einbau** (§4).
 5. **Final-Review je Meilenstein** auf dem stärksten Modell, über alle Stränge.

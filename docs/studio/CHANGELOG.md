@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-22 · Handbuch 1.67
+
+- Anlass: Nutzerentscheid N-103 («ja») und Anordnung «die releases/pushs generell mehr bündeln. einer pro tag reicht völlig»; Verfassung 1.3
+- Datenbasis: Warteschlange N-103, Bericht R815 (REL-29)
+- Ruling: R816 (löst R813 ab)
+- Änderungen: Push-Takt «höchstens ein Push je Session» (R335, R434) wird «höchstens ein Push je Kalendertag», Live-Ampel R565 P4 bleibt zusätzliche Grenze; Strang-interne Merges nur mit Teilbeleg, `make push-check` ist der volle Lauf vor Merge nach `main` und vor Push (Verfassung 1.3 §9.2/§7); Hinweis auf R813 und «offener Widerspruch» entfernt (STUDIO.md, `gates.md`); «bei Exit ≠ 0 nie pushen» ins Handbuch; Studio-Ende-Routine 2a nur bei anstehendem Push. Rückfall: R816 aufheben (Version 1.68), Verfassung ändert nur der Nutzer. Verfassung 1.2 → 1.3 durch den Nutzer bestätigt (Nutzer, N-103, 2026-10-22)
+
+## 2026-10-22 · Persona production-integrator 1.17
+
+- Anlass: Vorfall R815: Push trotz `make push-check` Exit 1 ohne L0-Freigabe; Wiederholung nicht bei Last ≤ 4
+- Datenbasis: R815, Bericht production-integrator REL-29
+- Ruling: R816
+- Änderungen: «Bei Exit ≠ 0 nie pushen, an L0 melden und auf Freigabe warten» in Schritt 4 und Qualitätsmassstab; Wiederholung nur bei Last ≤ 4 und ohne Freigabewirkung; Push höchstens einmal je Kalendertag statt je Session
+
 ## 2026-10-22 · Handbuch 1.66
 
 - Anlass: Nutzerauftrag «Tests auf ein Minimum, Releases bündeln»; Ad-hoc-Retro Rechnerlast-Fenster
