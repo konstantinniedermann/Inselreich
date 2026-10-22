@@ -56,7 +56,7 @@ entscheidet `lead-tech`. Alle Leser laufen darüber:
 | Abfahrt `depart`                                        | `src/sim/ships.ts:142-145`                                   | `laneTicks(islands, …)`     |
 | Routen-Umlauf                                           | `src/sim/routeBalance.ts:59-60`                              | 2 × `laneTicks`             |
 | Schiffs-Pose, Fahrzeit-Cache                            | `src/render/shipLane.ts:20-28`, `:98`                        | Cache je `islands`-Array    |
-| Inselkarte «Fahrzeit»                                   | `src/ui/islandCard.ts:75`                                    | `travelTicks(d)`, ohne Welt |
+| Inselkarte «Fahrzeit»                                   | `src/ui/islandCard.ts:75` (Format `formatGameTime`, R835)    | `travelTicks(d)`, ohne Welt |
 | `homeTravelTicks`                                       | `src/ui/homeTravel.ts:35`                                    | `travelTicks(lane.d)`       |
 | Fernangebot «≈ … Fahrt», I-155 `farLate`, `farMark`-Tip | `src/ui/farOrder.ts` (nur UI-G): `:48`, `farLate`, `farMark` | über `homeTravelTicks`      |
 
@@ -228,8 +228,8 @@ Vitest Render (`tests/render/shipLane.test.ts`):
 
 Vitest UI-Helfer:
 
-16. **AK-SR-16 Inselkarte** (`tests/ui/islandCard.test.ts`): Für eine Insel mit d 30 zeigt die Karte «Fahrzeit 0:30» ohne
-    und «Fahrzeit 0:24» mit Seerecht (`TICK_MS` 100).
+16. **AK-SR-16 Inselkarte** (`tests/ui/islandCard.test.ts`): Für eine Insel mit d 30 zeigt die Karte «Fahrzeit 30 s» ohne
+    und «Fahrzeit 24 s» mit Seerecht (`TICK_MS` 100; Format `formatGameTime` nach UI-BEIPACK-FERN, R835).
 17. **AK-SR-17 `homeTravelTicks`** (`tests/ui/homeTravel.test.ts`): 300 ohne, 240 mit Seerecht bei d 30.
 18. **AK-SR-18 «Zu spät»** (`tests/ui/farOrder.test.ts`, nach UI-G): Fernauftrag auf eine Insel mit d 30, Rest 260 Ticks,
     Lager und rechtzeitige Fracht decken die Menge nicht. Ohne Seerecht `farLate` wahr, `farMark`-Text endet auf
