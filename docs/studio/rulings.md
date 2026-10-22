@@ -1808,3 +1808,15 @@ lösen; Auflagen-Kern-Nachträge nur in Anhängen). Der Bündel-Merge nach main 
 Regelbezug: R816, R817, Verfassung §7.1 · Kosten bei Irrtum: Pläne liegen bis morgen nur auf Branches.
 
 Entscheider: L0 · Anlass: Vorab-Urteil lead-qa REL-30 · ADR: —
+
+## R843 · 2026-10-22 · DOKU-AUDIT-1 abgenommen; Nachzug offener Befunde 1 und 4
+
+Ruling: Bericht `lead-production` (`docs/doku-audit-1` @ `5de6e00a`: Save-Version in README/arc42 auf 18, `tickTrial` im Tick-Diagramm, ADR-015 im Index) → **abgenommen**, ins Bündel
+REL-30 (Ergänzungsurteil `lead-qa` beim Gate). Offene Befunde: (1) vier Module ohne arc42-Zeile und (4) `docs/studio/releases.json` endet bei REL-26 → **DOKU-AUDIT-1b** an `lead-production`
+(sonnet, Budget **1**) auf demselben Branch: REL-27–REL-29 in `releases.json` aus `state.md`-Notizen nachtragen, README gegen die Pakete von REL-27–29 prüfen, je eine arc42-Zeile für
+`render/errands.ts`, `render/homeBuildings.ts`, `ui/cameraView.ts`, `audio/buildSounds.ts` aus dem Code ableiten. (2) Spec-/Plan-Listen in `docs/index.md` → nächster HAUSHALT.
+(3) ADR-011-Status → Beobachtung.
+
+Regelbezug: R841 · Kosten bei Irrtum: gering.
+
+Entscheider: L0 · Anlass: Bericht lead-production DOKU-AUDIT-1 · ADR: —
