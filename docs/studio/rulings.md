@@ -1306,3 +1306,17 @@ Antwort auf N-102 wiederholt. Messungen haben Vorrang: UI-HAEPPCHEN-G startet er
 Regelbezug: R329, R380, R708 V2, R793 · Kosten bei Irrtum: eine Messung mit leicht verfälschtem Wert, wiederholbar.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C11 · ADR: —
+
+## R801 · 2026-10-22 · Sessionplan: ORT-A-Messungen, UI-HAEPPCHEN-G, HAUSHALT-02; kein Push vor Release
+
+Ruling: Nutzerauftrag «mach weiter» = Plan aus `state.md` und R792–R800 fortsetzen (die Vorsession endete ohne Ende-Routine; L0 führt `state.md` am Ende nach). Parallel:
+(1) **ORT-A C11** an `lead-tech` (Controller, sonnet): T14 und T17 nacheinander bei 1-min-Last ≤ 4 mit Vermerk laut R800, danach T18; Budget **6** Starts neu. (2)
+**UI-HAEPPCHEN-G** Umsetzung an `lead-tech` (Controller, sonnet) nach Plan `plan/ui-haeppchen-g` @ `512f370f`, Worktree `.worktrees/ui-haeppchen-g-impl`, Budget **8**.
+Die 30-min-Frist aus R800 ist seit der Vorsession abgelaufen und die Last kommt nicht vom Studio (6,8 ohne Agenten); deshalb startet G sofort, nur gezielte Tests, `make check`
+nur über die Testsperre (R380). Hat ORT-A ein Messfenster, meldet `lead-tech` ORT-A das per Testsperre-Belegung; G pausiert Testläufe in der Zeit. (3) **HAUSHALT-02** an
+`lead-production` (Aufräumen fällig: `.studio/qa` 3,4 GB, R685/R687), nur `aufraeumen.py` (Trockenlauf, dann `--apply`), keine Worktrees. **Push:** Main ist lokal nur um
+Werkzeug/Doku voraus (TOOL-DASH-SCHLANK, R795); kein eigener Push dafür, der Stand geht mit dem Release von UI-HAEPPCHEN-G (R335, R464 greift erst dann). Deckel 6 (R698).
+
+Regelbezug: R335, R380, R464, R685, R698, R708 V2, R800 · Kosten bei Irrtum: Messfenster für ORT-A verschiebt sich; Dashboard-Fix bleibt länger lokal.
+
+Entscheider: L0 · Anlass: Session-Start · ADR: —
