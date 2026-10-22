@@ -1652,3 +1652,13 @@ Merge; R-SR-P3 Balancing-Lauf in T09 verbindlich. Budget **21** Starts. **Start*
 Regelbezug: R805, R814, R826, gates.md Gate Plan · Kosten bei Irrtum: Seed-Fixture blockiert T01; dann Fixture-Ruling.
 
 Entscheider: L0 · Anlass: Gate-Urteil lead-qa Plan SEERECHT · ADR: —
+
+## R829 · 2026-10-22 · Nachtrag I-119/I-121 und Persona-Scout 1.3 abgenommen; P2 TOOL-DASH-REST direkt
+
+Ruling: (1) Spec-Nachtrag I-119/I-121 (`design/i119-i121` @ `7c5638a0`: AK-A6, A8, A9, B3, B5 nachgezogen, neu AK-A10, AK-B8; setzt auf LEBEN-STRASSE auf; `RUN_TICKS` 60 prüft der
+Plan) → **abgenommen**; Plan erst nach Merge von LEBEN-STRASSE und ORT-A T20. (2) Persona `design-idea-scout` 1.3 (`f9865e84`) → **abgenommen** (P3 erledigt). (3) Frei gewordener
+Platz: **P2 TOOL-DASH-REST** (XS, R825) direkt an `tech-ui-engineer` (sonnet) ohne Lead, `refactor:`, Teilbeleg `make studio-test`, Branch `tool/dash-rest`; Budget **1**; Merge im Bündel.
+
+Regelbezug: R715, R825, R826, STUDIO.md «L0 briefet den Umsetzer direkt» · Kosten bei Irrtum: gering.
+
+Entscheider: L0 · Anlass: Bericht lead-design I119-NACHTRAG · ADR: —
