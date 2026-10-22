@@ -58,6 +58,25 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 | Aufwand (`richtwerte.md`) | S: ≤ 1 Häppchen                                                            | M: 2–4 Pakete                | L: Meilenstein                                                             |
 | Risiko                    | berührt weder Save, Baseline, Perf noch Lizenz                             | berührt eines davon          | berührt mehrere                                                            |
 
+## Rangliste IDEEN-14 (Vorschlag lead-design, Ruling L0 offen)
+
+Breite Runde mit 2 Scouts: A (Playtest- und Nutzerfeedback REL-26 bis REL-28, Spielfluss; 4 Ideen, I-150 nicht vergeben) und
+B (Genre-Mechaniken für Fernhandel, Stammkunde, Rat, Meisterprüfung; 5 Ideen): 9 Vorschläge I-146–I-149 und I-151–I-155. Keine
+Idee ändert Kernsäule, Genre oder Titel (§5.3). Bewertung lead-design: I-147 Risiko 3 → 2 (zweiter Browser-Speicherschlüssel,
+Summe 11). Sortiert nach Summe, bei Gleichstand nach Nutzen je Aufwand. Pool danach 25 von 40 offen.
+
+| Rang | ID    | Name                                         | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                | Empfehlung                                                                        |
+| ---- | ----- | -------------------------------------------- | ------ | ----- | --------------- | --------------------------------------------- | --------------------------------------------------------------------------------- |
+| 1    | I-146 | Wirkkreis bei ausgewählter Kapelle usw.      | S      | 13    | nein / nein     | Versorgungslücken lesbar, ≈ 40 Tools          | Häppchen, nach ORT-A-Render-Freigabe (Dateikonflikt `overlays.ts`)                |
+| 2    | I-155 | «Zu spät» an der Fern-Marke                  | S      | 12    | nein / nein     | verpasster Fernauftrag vermeidbar, ≈ 40 Tools | Häppchen, Fahrzeit-Formel aus I-136 wiederverwenden                               |
+| 3    | I-148 | «Wo war ich?»-Karte beim Fortsetzen          | S      | 12    | nein / nein     | Wiedereinstieg ohne Suchen, ≈ 60 Tools        | Beipack UI-Häppchen (mit I-106, I-138)                                            |
+| 4    | I-154 | Rückfracht auf der Route                     | M      | 12    | ja / ja         | Route wird Kreislauf, ≈ 3 Pakete              | Baustein Wirtschafts-Brainstorming; vorab prüfen, ob Routenmodell 2. Gut verträgt |
+| 5    | I-151 | Auflage «Handelstreue» (2. Meisterprüfung)   | S–M    | 12    | ja / nein       | zweite Auflage, ≈ 80 Tools                    | nach Reife von REL-27 (Auflagen-Karte steht); Save v19 bündeln                    |
+| 6    | I-147 | Zweiter Autosave-Platz «Davor»               | S      | 11    | Speicher / nein | Entscheide mutig statt vorsichtig, ≈ 50 Tools | Häppchen möglich; Speicherquote prüfen, kein Undo in der Sim                      |
+| 7    | I-153 | Rat: «Seerecht» als dritte Karte auf Stufe 4 | S      | 11    | nein / ja       | Fernhandel wird Ratsweg, ≈ 50 Tools           | Dominanz vorab rechnen (+25 % Tempo gegen Glas-/Hofrecht); sonst parken           |
+| 8    | I-152 | Vertragsgrösse zur Wahl (Stammkunde)         | S      | 11    | ja / ja         | schwache Wahl (Verhältnis gleich), ≈ 60 Tools | parken (keine echte Entscheidung, nur Pufferrisiko)                               |
+| 9    | I-149 | Liegeplätze am Kontor                        | M      | 11    | ja / ja         | Engpass ausser Geld, ungemessen, ≈ 2-4 Pakete | parken bis Erweiterung 1 «Stände und Segel» geklärt (Überlappung offen)           |
+
 ## Rangliste IDEEN-13 (Vorschlag lead-design, Ruling L0 offen)
 
 Breite Runde (R445), Scouts A (Rückmeldungen und Playtests REL-24 bis REL-27: Rat, Vorwarnung, Fernangebot, Funkeln) und
@@ -288,3 +307,84 @@ bleibt Beipack-Kandidat für das nächste UI-Häppchen (die Karte besteht weiter
 - Bewertung lead-design: Spass 2 → 1 (Scout-Summe richtig 11, nicht 9). Reine Geld-Senke; die eigentliche Frage ist die Dominanz unter den Edikten (I-064).
 - Nutzen/Aufwand: geringer Nutzen · S · ≈ 30 Tools
 - Entscheid: offen (IDEEN-13), Empfehlung verwerfen
+
+### I-146 · neu · Wirkkreis bei ausgewählter Kapelle, Schule und Feuerwache
+
+- Bereich: Grafik/Bedienung · Säule: Bevölkerung versorgen · Quelle: `docs/beobachtungen.md` (2026-10-16, I-112: kein Kreis bei stehender Kapelle); README «Radiusanzeige beim Platzieren»
+- Spielerwirkung: „Der Spieler klickt eine stehende Kapelle, Schule oder Feuerwache an und sieht sofort, welche Häuser sie noch versorgt." Mechanik: vorhandener Kreis-Plan (`overlayPlan`, `src/render/overlays.ts`) auch für die Auswahl; nur Darstellung.
+- Grösse: S · Risiko: Perf (Cache in `overlays.ts`); `src/render/` zurzeit ORT-A
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 3 = 13
+- Nutzen/Aufwand: Versorgungslücken ohne Neubau lesbar · S · ≈ 40 Tools
+- Entscheid: offen (IDEEN-14)
+
+### I-147 · neu · Zweiter Autosave-Platz «Davor»
+
+- Bereich: Technik/Bedienung · Säule: Bedienung (Spielfluss) · Quelle: `src/ui/storage.ts` (nur `manual`, `auto`); README «Speichern, Laden»
+- Spielerwirkung: „Der Spieler lädt nach einem Fehlklick einen Stand von vor etwa vier Minuten, statt dass der Autosave den Fehler überschreibt." Autosave wechselt zwischen zwei Plätzen; Ladeliste zeigt beide mit Spielzeit. Kein Undo in der Sim. Doppelung: I-071 (Undo, verworfen) ist anders.
+- Grösse: S · Risiko: Browser-Speicher (zweiter Schlüssel, Quote); Save-Format unberührt
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 2 = 11 (lead-design: Risiko 3 → 2)
+- Nutzen/Aufwand: Entscheide mutig statt vorsichtig · S · ≈ 50 Tools
+- Entscheid: offen (IDEEN-14)
+
+### I-148 · neu · «Wo war ich?»-Karte beim Fortsetzen
+
+- Bereich: Bedienung · Säule: Bedienung, Handel und Aufträge · Quelle: README «Ein geladenes Spiel pausiert»; laufende Fristen (Stammkunde, Fernauftrag 2:50, Auflage 15:00)
+- Spielerwirkung: „Der Spieler sieht beim Fortsetzen, welche Fristen laufen und wie viele Probleme offen sind, und weiss, wo er wieder einsteigt." Reine Lesefunktion (`src/ui/`), schliesst mit Esc oder Klick, Spiel bleibt pausiert. Doppelung: I-002, I-042 (live, springen nur), I-100, I-125 anders.
+- Grösse: S · Risiko: keins
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Nutzen/Aufwand: Wiedereinstieg ohne Suchen · S · ≈ 60 Tools
+- Entscheid: offen (IDEEN-14)
+
+### I-149 · neu · Liegeplätze am Kontor (Engpass ausser Geld)
+
+- Bereich: Inhalt · Säule: Insel besiedeln, Handel · Quelle: Leitbefund IDEEN-13 (Engpass ausser Geld); Genre-Mechanik begrenzte Hafenkapazität
+- Spielerwirkung: „Der Spieler plant, wie viele Schiffe gleichzeitig am Kontor laden können, und legt seine Küste danach an." Je Kontor n freie Küstenkacheln als Liegeplätze; weitere Schiffe warten. Werte in `src/sim/defs/`.
+- Grösse: M · Risiko: Save (Wartezustand), Baseline; Überlappung mit Erweiterung 1 «Stände und Segel» offen
+- Raster: Spass 3 · Passung 2 · Aufwand 2 · Risiko 1 = 11
+- Nutzen/Aufwand: neue Planungsfrage im Spätspiel, ungemessen · M · ≈ 2-4 Pakete
+- Entscheid: offen (IDEEN-14)
+
+### I-151 · neu · Auflage «Handelstreue» (zweite Meisterprüfung)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik (Handelsvertrag als Meisterstück); README «Meisterprüfung», I-091 Treue-Zähler
+- Spielerwirkung: „Der Spieler hält einen Stammkunden-Vertrag 8 Lieferungen in Folge ohne verbrauchte Kulanz und bekommt ein zweites Abzeichen in der Inselchronik." Lohn ehrenhalber (R670). Doppelung: I-132 nennt nur «Genügsam» und «Sturmjahr».
+- Grösse: S–M · Risiko: Save (Auflage-ID, Zähler, v18→v19)
+- Raster: Spass 3 · Passung 3 · Aufwand 2 · Risiko 1 = 12
+- Nutzen/Aufwand: zweite handelsnahe Wahl · S–M · ≈ 80 Tools
+- Entscheid: offen (IDEEN-14)
+
+### I-152 · neu · Vertragsgrösse zur Wahl (Stammkunde)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik Mengenkontrakt; `docs/spielwerte.md`
+- Spielerwirkung: „Der Spieler wählt Vertrag ×1 oder ×2 (doppelte Menge, Periode, Strafe)." Bewertung lead-design: Verhältnis gleich, kaum echte Wahl. Doppelung: I-114 live, I-104 geparkt, I-126 verworfen.
+- Grösse: S · Risiko: Save (Feld `size`), Balance
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 1 = 11
+- Nutzen/Aufwand: Pufferrisiko steuerbar · S · ≈ 60 Tools
+- Entscheid: offen (IDEEN-14)
+
+### I-153 · neu · Rat: «Seerecht» als dritte Karte auf Stufe 4
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik Handelsprivileg; README «Rat» (kein Beschluss betrifft Fernhandel)
+- Spielerwirkung: „Der Spieler wählt auf Stufe 4 zwischen Glasrecht, Hofrecht und Seerecht (Schiffe 25 % schneller)." Rats-Karte muss drei Karten zeigen. Doppelung: I-112 live, I-138, I-131 anders.
+- Grösse: S · Risiko: Balance (`balance.test.ts`), Save nein
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 2 = 11
+- Nutzen/Aufwand: Fernhandel bekommt eine Weiche · S · ≈ 50 Tools
+- Entscheid: offen (IDEEN-14)
+
+### I-154 · neu · Rückfracht auf der Route
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik Route lädt beide Richtungen; Routen-Bilanz (nur Hinfracht)
+- Spielerwirkung: „Der Spieler legt für die Rückfahrt ein zweites Gut fest und sieht in der Routen-Bilanz, dass die Route sich lohnt." Vorab prüfen, ob das Routenmodell ein zweites Gut verträgt. Doppelung: I-117, I-130, I-105 (geparkt) betreffen Hinfracht oder Rhythmus.
+- Grösse: M · Risiko: Save (Routenfeld), Baseline
+- Raster: Spass 3 · Passung 3 · Aufwand 2 · Risiko 1 = 12
+- Nutzen/Aufwand: Route wird Kreislauf · M · ≈ 3 Pakete
+- Entscheid: offen (IDEEN-14)
+
+### I-155 · neu · «Zu spät» an der Fern-Marke
+
+- Bereich: Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: Beobachtung: Fahrzeit (I-136) und Restzeit (I-101) stehen nie zusammen
+- Spielerwirkung: „Der Spieler sieht die Fern-Marke in Warnfarbe, sobald die Restzeit kleiner ist als die Fahrzeit (Tooltip «Fahrzeit ≈ 39 s, Rest 0:30»)." Reine Anzeige, Fahrzeit-Formel aus I-136. Doppelung: I-122 (Stammkunde), I-124 (klickbar, geparkt) anders.
+- Grösse: S · Risiko: keins
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Nutzen/Aufwand: verpasster Fernauftrag vermeidbar · S · ≈ 40 Tools
+- Entscheid: offen (IDEEN-14)
