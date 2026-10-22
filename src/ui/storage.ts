@@ -7,6 +7,8 @@ export const AUTO_KEY = 'inselreich.save.auto';
 /** Zweiter Autosave-Platz («Davor») und Zeiger auf den zuletzt geschriebenen Platz. */
 export const AUTO2_KEY = 'inselreich.save.auto2';
 export const AUTO_LAST_KEY = 'inselreich.save.auto.last';
+/** Zuletzt geschriebener Autosave-Platz (nur beim Schreiben gesetzt, nicht beim Laden): bestimmt die Etiketten «Autosave» und «Davor». */
+export const AUTO_WRITTEN_KEY = 'inselreich.save.auto.written';
 
 /** Meldung des Ladens (Übergangsbestand eines alten Standes) oder `null`; nichts davon wird gespeichert. */
 export function loadNotice(result: LoadResult): string | null {
@@ -109,14 +111,19 @@ export function markAutoLoaded(slot: Slot): void {
   }
 }
 
+function setMarker(key: string, value: AutoSlot): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Zeiger sind nur Komfort: ohne sie entscheidet die bisherige Regel
+  }
+}
+
 function writeAuto(world: World, target: AutoSlot, moveMarker: boolean): Result {
   const r = write(SLOT_KEYS[target], world, 'Autosave fehlgeschlagen');
-  if (r.ok && moveMarker) {
-    try {
-      localStorage.setItem(AUTO_LAST_KEY, target);
-    } catch {
-      // Zeiger ist nur Komfort: ohne ihn entscheidet die Spielzeit
-    }
+  if (r.ok) {
+    setMarker(AUTO_WRITTEN_KEY, target);
+    if (moveMarker) setMarker(AUTO_LAST_KEY, target);
   }
   return r;
 }
@@ -153,7 +160,16 @@ export function listSavesFrom(storage: StorageLike): SaveInfo[] {
   const auto = read('auto');
   const auto2 = read('auto2');
   // Reihenfolge: manuell, neuester Autosave, «Davor»
-  const newest = pickNewest(auto?.tick ?? null, auto2?.tick ?? null, readPointer(storage));
+  const valid = { auto: auto !== null, auto2: auto2 !== null };
+  let written: AutoSlot | null = null;
+  try {
+    const w = storage.getItem(AUTO_WRITTEN_KEY);
+    if ((w === 'auto' || w === 'auto2') && valid[w]) written = w;
+  } catch {
+    // Rückfall auf Zeiger und Spielzeit
+  }
+  const newest =
+    written ?? pickNewest(auto?.tick ?? null, auto2?.tick ?? null, readPointer(storage));
   const autos = newest === 'auto2' ? [auto2, auto] : [auto, auto2];
   return [manual, ...autos].filter((i): i is SaveInfo => i !== null);
 }
