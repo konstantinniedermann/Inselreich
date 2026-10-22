@@ -1391,3 +1391,15 @@ sonnet) jetzt, ohne Testläufe; Budget **2** Starts für den Plan, Umsetzung ers
 Regelbezug: R806, gates.md kombiniertes Gate Stufe leicht · Kosten bei Irrtum: UI-only, leicht rückbaubar.
 
 Entscheider: L0 · Anlass: Bericht lead-design UI-HAEPPCHEN-H · ADR: —
+
+## R808 · 2026-10-22 · Gate Plan UI-HAEPPCHEN-H: OK, zwei Stränge, Start nach UI-G bzw. ORT-A
+
+Ruling: Plan `lead-tech` (`plan/ui-haeppchen-h` @ `9ad323a1`, Index `docs/superpowers/plans/2026-10-22-ui-haeppchen-h.md`, T01–T07) → **OK**; Entwürfe R808-E bis R811-E in
+einem Ruling angenommen: zwei Stränge (`feat/ui-haeppchen-h-p1` T01–T04, `feat/ui-haeppchen-h-p2` T05–T07), Umsetzungsbudget **11** Starts (9 geplant + 2 Reserve),
+Parallelität 1 bis zum Merge von UI-G und ORT-A, danach 2; `saveAuto` schreibt in den Platz ausser dem Zeiger, `saveAutoNewest` (`pagehide`) in den neuesten ohne Zeigerwechsel;
+Merge-Reihenfolge UI-G → P1, ORT-A → P2; `selectionPlan` liefert `rings: []`, sobald Stadtplanung das Feld nach main bringt (Konfliktstelle `overlays.ts`, Auflösung per
+`git merge main`); Quote-Messung in T03, ein Stand über 1 MB geht vor dem Merge an L0. Budget wird beim Start von P1 geloggt.
+
+Regelbezug: R807, gates.md kombiniertes Gate Stufe leicht · Kosten bei Irrtum: Konflikt in `overlays.ts` oder `app.ts`, lokal lösbar.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan UI-HAEPPCHEN-H · ADR: —
