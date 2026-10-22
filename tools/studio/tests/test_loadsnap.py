@@ -46,6 +46,74 @@ class ParseTest(unittest.TestCase):
         self.assertNotIn("\n", line)
 
 
+class ScriptKlasseTest(unittest.TestCase):
+    def script(self, cmd):
+        return loadsnap.script_name(cmd)
+
+    def test_script_interpreter_und_optionen(self):
+        self.assertEqual(self.script("/usr/bin/python3.13 -u /a/b/pushcheck.py --x"), "pushcheck.py")
+        self.assertEqual(self.script("python3 -m unittest discover"), "unittest")
+        self.assertEqual(self.script("python3 -c print(1)"), "-c")
+        self.assertEqual(self.script("node /x/tools/perf.mjs --n 3"), "perf.mjs")
+        self.assertEqual(self.script("bash -e run.sh"), "run.sh")
+
+    def test_script_ohne_argument_oder_interpreter(self):
+        self.assertEqual(self.script("/x/Python.app/Contents/MacOS/Python a/b.py -v"), "b.py")
+        self.assertEqual(self.script("vim"), "vim")
+        self.assertEqual(self.script("python3"), "python3")
+        self.assertEqual(self.script("/usr/bin/vim file.txt"), "vim")
+        self.assertEqual(self.script("/Applications/Foo Bar.app/Contents/MacOS/Foo"), "Foo")
+        self.assertEqual(self.script(""), "")
+
+    def test_script_enthaelt_keine_argumente(self):
+        self.assertEqual(self.script("python3 tool.py --token=geheim"), "tool.py")
+
+    def test_klasse(self):
+        root = "/Users/KN/CAS/projekte/anno-clone"
+        k = lambda c: loadsnap.classify(c, root)  # noqa: E731
+        self.assertEqual(k(f"python3 {root}/.worktrees/x/a.py"), "eigen")
+        self.assertEqual(k("node /x/node_modules/vitest/dist/workers/forks.js"), "eigen")
+        self.assertEqual(k("make check"), "eigen")
+        self.assertEqual(k("/usr/bin/make studio-test"), "eigen")
+        self.assertEqual(k("python3 pushcheck.py"), "eigen")
+        self.assertEqual(k("Google Chrome --user-data-dir=/tmp/.studio/p"), "eigen")
+        self.assertEqual(k("Google Chrome --user-data-dir=/Users/x/Library/Chrome"), "fremd")
+        self.assertEqual(k("/Applications/Foo.app/Contents/MacOS/Foo"), "fremd")
+        self.assertEqual(k("python3 other.py"), "fremd")
+
+    def test_snapshot_summen_und_felder(self):
+        text = (
+            "  1 10.04 python3 /Users/KN/CAS/projekte/anno-clone/a.py\n"
+            "  2 20.0 node vitest run\n"
+            "  3 5.06 /Applications/Foo Bar.app/Contents/MacOS/Foo\n"
+            "  4 1.0 vim\n"
+            "  5 0.5 a\n  6 0.4 b\n  7 0.3 c\n"
+        )
+        snap = loadsnap.parse_snapshot(text, 1.0)
+        self.assertEqual(snap["cpu_eigen"], 30.0)
+        self.assertEqual(snap["cpu_fremd"], 7.3)
+        top = snap["top5"]
+        self.assertEqual(top[0]["pid"], 2)
+        self.assertEqual(top[0]["script"], "vitest")
+        self.assertEqual(top[0]["klasse"], "eigen")
+        self.assertEqual(top[1]["script"], "a.py")
+        self.assertEqual(top[2]["klasse"], "fremd")
+        line = loadsnap.format_line(snap)
+        self.assertIn("CPU eigen 30.0% / fremd 7.3%", line)
+        self.assertNotIn("\n", line)
+
+    def test_record_schreibt_neue_felder(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__("shutil").rmtree(d, True))
+        with mock.patch.dict(os.environ, {"STUDIO_HOME": d}):
+            loadsnap.record("load", "manual", loadsnap.parse_snapshot(PS, 1.0))
+        (ev,) = [json.loads(x) for x in (Path(d) / "events.jsonl").read_text().splitlines()]
+        self.assertIn("cpu_eigen", ev)
+        self.assertIn("cpu_fremd", ev)
+        self.assertIn("script", ev["top5"][0])
+        self.assertIn("klasse", ev["top5"][0])
+
+
 class FixtureTest(unittest.TestCase):
     def setUp(self):
         self.dir = Path(tempfile.mkdtemp())
