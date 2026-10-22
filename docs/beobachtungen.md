@@ -497,3 +497,5 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 - 2026-10-22 · `docs/studio/STUDIO.md:457` nennt die alte Stand-Warnschwelle 5; nach Merge von TOOL-PUSHSPERRE (Schwelle 2) durch `studio-coach` nachziehen. Ursprung: R848.
 - 2026-10-22 · `pushgate.py`-Selbstschutz sperrt Agenten schon, wenn `push-freigabe` nur im Befehl vorkommt (z. B. `rg`, Commit-Message); `cd` aus Subshell nicht nachgeführt; liest nur 4 MB von `events.jsonl` (≈ 6 Tage). Ursprung: TOOL-PUSHSPERRE (R848). Einschätzung: niedrig, Schutz gegen Versehen (Verfassung §1.3).
 - 2026-10-22 · Mittel `tests/sim/perf.test.ts` AK-E0-15a von 1,59 ms (2026-10-05) auf ≈ 2,3 ms gestiegen; echte Sim-Verlangsamung möglich. Ursprung: TOOL-PUSHSPERRE T04 (R848). Einschätzung: mittel → ZEITRESERVE-PFLEGE (Messreihe über Commits, Last ≤ 4).
+
+- 2026-10-22 · Beim schnellen Wechsel der Bau-Kategorien zeigt die Unterleiste kurz (≈ 600 ms) noch Einträge der vorigen Kategorie. Fundort: Playtest T09 (UI-HAEPPCHEN-I), nicht geprüft. Einschätzung: niedrig.
