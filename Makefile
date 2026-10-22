@@ -53,7 +53,7 @@ build: ## Typprüfung + Produktions-Build
 studio-test: ## Tests der Studio-Werkzeuge (Python unittest); rot → Event test_failed (R450 V1)
 	python3 tools/studio/testrun.py --suite studio -- python3 -m unittest discover -s tools/studio/tests -t tools/studio
 
-stampcheck: ## Warnung (kein Fehler), wenn state.md-Stand >5 Rulings hinter rulings.md liegt (E-065); Teil von check
+stampcheck: ## Warnung (kein Fehler), wenn state.md-Stand >2 Rulings hinter rulings.md liegt (E-065); Teil von check
 	@python3 tools/studio/stampcheck.py
 
 RUFF = uvx ruff@0.17.0
