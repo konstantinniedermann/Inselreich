@@ -492,3 +492,8 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 - 2026-10-22 · `make studio-test`, `make zeittests` und gezielte `npx vitest run` laufen ohne Bezug zum Messfenster (`.studio/messfenster`) und stören Messungen genauso wie `make check`. Ursprung: TOOL-MESSFENSTER (lead-tech, R847). Einschätzung: mittel; nach dem Merge prüfen, ob diese Ziele die Sperre ebenfalls respektieren sollen.
 - 2026-10-22 · `tools/render-qa/perf.mjs` hatte kein R329-Lastgate; in `tests/tools` braucht das Typ-Stripping dynamische Importe, weil `@types/node` fehlt. Ursprung: TOOL-MESSFENSTER (lead-tech, R847). Einschätzung: niedrig.
+
+- 2026-10-22 · `make studio-lint` auf main rot (`tools/studio/tests/test_modelguard.py:67`). Ursprung: TOOL-PUSHSPERRE (lead-tech, R848). Einschätzung: niedrig, Trivial-Fix im nächsten Werkzeug-Paket.
+- 2026-10-22 · `docs/studio/STUDIO.md:457` nennt die alte Stand-Warnschwelle 5; nach Merge von TOOL-PUSHSPERRE (Schwelle 2) durch `studio-coach` nachziehen. Ursprung: R848.
+- 2026-10-22 · `pushgate.py`-Selbstschutz sperrt Agenten schon, wenn `push-freigabe` nur im Befehl vorkommt (z. B. `rg`, Commit-Message); `cd` aus Subshell nicht nachgeführt; liest nur 4 MB von `events.jsonl` (≈ 6 Tage). Ursprung: TOOL-PUSHSPERRE (R848). Einschätzung: niedrig, Schutz gegen Versehen (Verfassung §1.3).
+- 2026-10-22 · Mittel `tests/sim/perf.test.ts` AK-E0-15a von 1,59 ms (2026-10-05) auf ≈ 2,3 ms gestiegen; echte Sim-Verlangsamung möglich. Ursprung: TOOL-PUSHSPERRE T04 (R848). Einschätzung: mittel → ZEITRESERVE-PFLEGE (Messreihe über Commits, Last ≤ 4).
