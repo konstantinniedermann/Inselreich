@@ -1529,3 +1529,16 @@ Ruling: Nutzer «mach weiter» = Plan fortsetzen; ORT-A misst (AK-32), UI-H P1 w
 Regelbezug: R475, R810, STUDIO.md Session-Ende · Kosten bei Irrtum: gering, Werkzeug-only.
 
 Entscheider: L0 · Anlass: Nutzer «mach weiter» · ADR: —
+
+## R819 · 2026-10-22 · Nutzerauftrag «Menschen auf der Strasse schöner, Tempo Transport/Spazieren annähern»: Kurzdesign LEBEN-STRASSE
+
+Ruling: Nutzerauftrag ausgelegt als Darstellungs-Paket **LEBEN-STRASSE** (nur `src/render/`, keine Spielregel, kein Save): (a) Figuren (Spaziergänger `life.ts`
+`drawWalker`, Träger/Botengänge `errands.ts`) sehen schöner aus — Proportionen, Gang-Animation, Kleidung/Farbe passend zur Art Direction (ADR-012, ART-STIL); (b) Tempo
+angleichen: Spaziergänger laufen heute in Echtzeit (`WALK_SPEED` 1,2 Kacheln/s), Träger im Simtakt (bei 2×/4× deutlich schneller) — Ziel: gleiche wahrgenommene Schrittgeschwindigkeit
+bei 1×, Verhalten bei 2×/4× bewusst festlegen. Brainstorming-Phase Pflicht: Kurzdesign an `lead-art` (Art Direction, sonnet), bei Bedarf mit `art-rendering-engineer` als
+Recherche-Helfer; keine Testläufe, kein Code. Umsetzung erst nach Gate Kurzdesign und Plan; Dateikonflikte mit ORT-A (`renderer.ts`) im Kurzdesign benennen, Start nach ORT-A-Merge,
+falls nicht disjunkt. Budget **2** Starts.
+
+Regelbezug: ADR-012, R797 (Render nach ORT-A), CLAUDE.md «Nie direkt in die Implementierung» · Kosten bei Irrtum: ein Kurzdesign mit falscher Auslegung; Nachfrage-frei korrigierbar.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
