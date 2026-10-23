@@ -214,3 +214,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 - 2026-10-22 · Pläne (z. B. `docs/superpowers/plans/2026-10-22-ui-haeppchen-i.md`, Zeile «Abschluss je Strang») verlangen noch `make check` je Strang, obwohl Verfassung 1.3 §9.2 nur den Teilbeleg fordert. Ursprung: UI-HAEPPCHEN-I (R849). Einschätzung: mittel; Plan-Vorlage und offene Pläne (Seerecht, LEBEN-_, TOOL-_) nachziehen, `studio-coach`.
 
 - 2026-10-22 · UI-BEIPACK-FERN Restpunkte: N2 doppelte Fall-Unterscheidung `setOrderText`/`orderCardText` (`src/ui/order.ts`), N3 Rats-Taste fällt in `app.ts` ≈ Z. 1123 bis `refresh()` durch, überflüssiges `as never` in `tests/ui/order.test.ts:769`. Ursprung: R855. Einschätzung: niedrig, nächstes UI-Paket in diesen Dateien.
+
+## 2026-10-22 · DOKU-AUDIT-1b: ADR-011 steht noch auf «vorgeschlagen» (niedrig)
+
+- Fundort: `docs/adr/` ADR-011 (Asset-Pipeline), Kopfzeile «Status: vorgeschlagen (angenommen mit dem Gate Plan M7)». Beobachtung: Die Pipeline ist seit M7 in Betrieb (Assets-Strang, `tests/assets/`, `docs/CREDITS.md`), der Status-Wortlaut ist aber ein Zwitter. Ursprung: DOKU-AUDIT-1. Einschätzung: Statuszeile auf «angenommen» setzen (Ruling-Bezug Gate Plan M7), reiner Doku-Fix; zusammen mit der Prüfung weiterer ADR-Statuszeilen in einer Doku-Runde erledigen.
