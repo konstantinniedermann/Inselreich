@@ -223,3 +223,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-22 · DOKU-AUDIT-1b: ADR-011 steht noch auf «vorgeschlagen» (niedrig)
 
 - Fundort: `docs/adr/` ADR-011 (Asset-Pipeline), Kopfzeile «Status: vorgeschlagen (angenommen mit dem Gate Plan M7)». Beobachtung: Die Pipeline ist seit M7 in Betrieb (Assets-Strang, `tests/assets/`, `docs/CREDITS.md`), der Status-Wortlaut ist aber ein Zwitter. Ursprung: DOKU-AUDIT-1. Einschätzung: Statuszeile auf «angenommen» setzen (Ruling-Bezug Gate Plan M7), reiner Doku-Fix; zusammen mit der Prüfung weiterer ADR-Statuszeilen in einer Doku-Runde erledigen.
+
+## 2026-10-22 · LEBEN-SEE: `hidden`-Prüfung uneinheitlich in `sound.ts` (niedrig)
+
+- Fundort: `src/audio/sound.ts` (`playBuild`, `playShortage`, `playWork`). Beobachtung: Seit LEBEN-SEE T05 prüft `play()` `hidden`; die drei Varianten prüfen es nicht und legen bei verborgenem Tab Knoten an. Ursprung: Final-Review Strang Klang. Einschätzung: hörbar folgenlos (Kontext suspendiert), nur uneinheitlich; Beipack-Kandidat.
