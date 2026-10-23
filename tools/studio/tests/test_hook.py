@@ -579,6 +579,10 @@ class FixRoundTest(unittest.TestCase):
             hook.stampcheck, "stale_warning", return_value="Warnung: X"
         ):
             self.assertIn("Warnung: X", hook.start_context("8765", ""))
+        with mock.patch.object(
+            hook.stampcheck, "stale_warning", return_value="PFLICHT: X"
+        ):
+            self.assertTrue(hook.start_context("8765", "").startswith("PFLICHT: X\n"))
         with mock.patch.object(hook.stampcheck, "stale_warning", side_effect=OSError):
             self.assertTrue(hook.start_context("8765", ""))
 
@@ -775,6 +779,7 @@ class SettingsTest(unittest.TestCase):
             "tools/studio/guard.py",
             "tools/studio/modelguard.py",
             "tools/studio/waitguard.py",
+            "tools/studio/pushgate.py",
         )
         for event, groups in hooks.items():
             commands = [h["command"] for group in groups for h in group["hooks"]]
