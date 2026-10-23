@@ -232,3 +232,9 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-22 · LEBEN-SEE: `hidden`-Prüfung uneinheitlich in `sound.ts` (niedrig)
 
 - Fundort: `src/audio/sound.ts` (`playBuild`, `playShortage`, `playWork`). Beobachtung: Seit LEBEN-SEE T05 prüft `play()` `hidden`; die drei Varianten prüfen es nicht und legen bei verborgenem Tab Knoten an. Ursprung: Final-Review Strang Klang. Einschätzung: hörbar folgenlos (Kontext suspendiert), nur uneinheitlich; Beipack-Kandidat.
+
+## 2026-10-23 · WIRTSCHAFT-TIEFE: Werkzeug ohne Verbrauch nach Endausbau (niedrig)
+
+- Fundort: `src/sim/defs/` (Werkzeug-Verbraucher). Beobachtung: Nach dem Endausbau wird Werkzeug nicht mehr verbraucht; die Kette läuft ins Leere. Ursprung: WIRTSCHAFT-TIEFE (R865). Einschätzung: Kandidat für «Wartung» (E1).
+- Fundort: `tests/sim/merchantsController.ts:20-21`. Beobachtung: Kommentar nennt Unterhalt ≈ 415, gerechnet ≈ 670. Ursprung: WIRTSCHAFT-TIEFE. Einschätzung: Kommentar veraltet, Trivial-Fix beim nächsten Sim-Paket.
+- Fundort: `README.md` Abschnitt «Speichern». Beobachtung: nennt eine alte Spielstand-Version (13), live ist v18. Ursprung: TIEFE-1. Einschätzung: Trivial-Fix im nächsten Doku-Bündel.

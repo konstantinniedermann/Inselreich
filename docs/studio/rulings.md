@@ -2055,3 +2055,87 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A (`docs/
 Regelbezug: R815, R816, R842, R856, R858 · Kosten bei Irrtum: ein Release mit zwei schwach belegten UI-Details; Revert vor dem nächsten Push möglich.
 
 Entscheider: L0 · Anlass: Gate-Urteil lead-qa, Bericht studio-coach · ADR: —
+
+## R861 · 2026-10-23 · Runden-Ruling IDEEN-16
+
+Ruling: Rangliste `lead-design` (`docs/ideen-16` @ `66c4df45`, Handoff `.studio/handoffs/2026-10-23-lead-design-IDEEN-16.md`, Pool 27/40) **angenommen**: eingeplant **UI-HAEPPCHEN-J**
+(I-176 Häppchen, I-139 und I-138 Beipack; Kurzdesign Stufe leicht, `sonnet`, nach UI-BEIPACK-FERN auf main, also nach dem Push REL-30). **I-183** Notration: Rechnung `design-economy-designer` (Handoff, `docs/ideen-16` @ `66c4df45`) → **geparkt** bis `BUY_RISE` > 0 (wie I-110, R722); feste Ration ist keine echte Wahl, ein Fischer schlägt beide. Nebenbefund für I-137: Dämpfer ab Siedlern spürbar machen. Geparkt: I-172, I-182, I-171, I-181,
+I-116 (wie Entwurf). Verworfen: I-106 (gelöst), I-173 (Widerspruch R839/R840), I-184. `docs/ideen-16` geht ins Bündel REL-31. Takt der Ideen-Runden und Playtest: siehe R862 (Nutzerauftrag).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: UI-BEIPACK-FERN (REL-30), Erweiterung 1 (Nutzer-Session, O8/K5)
+Regelbezug: R445, R599, R827, R839 · Kosten bei Irrtum: ein Kurzdesign mit geringem Spielwert.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-16 · ADR: —
+
+## R862 · 2026-10-23 · Dauerauftrag (Nutzer): Fokus Spieltiefe, Erweiterungen, neue Modi; keine Playtests; Schweigen = ok
+
+Ruling: Nutzer (Prompt 2026-10-23): «wenn du nichts hörst von mir ist alles gut. playtests brauchst du nicht tun. lass die kreativen köpfe im team nach neuen elementen suchen. vor allem
+spieltiefe, erweiterungen, neue modi … etwas was den spieler länger am ball hält. dazu darf gerne recherchiert werden». **Auslegung:** (1) Schweigen des Nutzers = Zustimmung, Plan läuft
+weiter. (2) Kein Playtest als Ideen-Input (Teil von R861-Entwurf gestrichen). (3) R445 geschärft: Freie Kapazität geht vorrangig an eine **Tiefen-Runde `TIEFE-1`** (`lead-design`, `opus`):
+Web-Recherche zu Langzeitmotivation im Genre (Recherche-Agenten `general-purpose`, `sonnet (Recherche)`), daraus Vorschläge für Spieltiefe, neue Spielmodi und Erweiterungs-Themen
+(Erweiterung 2 ff.; Erweiterung 1 bleibt Nutzer-Session R519 — lesen zum Abgleich, nicht ändern). Ergebnis: Recherchebericht, Ideen im Pool, Rangliste, Erweiterungs-Skizzen; Säulenwechsel
+oder Erweiterungswahl gehen als Empfehlung in die Warteschlange (§5.3). Komfort-Häppchen (UI-HAEPPCHEN-J) laufen nachrangig weiter. (4) «höchstens eine Runde je Session» gilt für
+klassische Ideen-Runden; TIEFE-1 ist ein Recherche-Paket und zählt nicht dagegen. Zweck der Anweisung: mehr Langzeitmotivation; Auslegung widerspricht ihm nicht, weil die Kapazität
+dorthin statt in Playtests und Kleinkram fliesst.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Erweiterung 1 (Nutzer-Session), IDEEN-16
+Regelbezug: R445, R519, R861, Verfassung §5.3 · Kosten bei Irrtum: Recherche-Aufwand ohne Umsetzung; nichts Irreversibles.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R863 · 2026-10-23 · Dauerauftrag (Nutzer): Nutzeranweisungen gelten über die Session hinaus
+
+Ruling: Nutzer (Prompt 2026-10-23): «nimm meine anweisungen in den sessions immer als generelle anweisungen wahr … auch in der nächsten session angewendet werden. ausser etwas hat
+explizit nur was mit der laufenden session zu tun.» **Entscheid:** Jede Nutzeranweisung ist ein **Dauerauftrag**, ausser sie ist ausdrücklich auf die laufende Session beschränkt; im
+Zweifel dauerhaft. L0 hält sie (1) als Ruling mit Vermerk «Dauerauftrag» fest, (2) trägt sie in `state.md` unter «Daueraufträge» ein, (3) lässt Regeln mit Dauerwirkung ins Handbuch
+übernehmen (`studio-coach`, Paket DAUERAUFTRAG, `docs/dauerauftrag` @ `b966c88f`, Handbuch 1.72, ins Bündel REL-31) und (4) sichert sie im Gedächtnis. Rückwirkend Daueraufträge: R862 (Fokus Spieltiefe/Erweiterungen/Modi, Recherche erlaubt, keine
+Playtests als Ideen-Input, Schweigen = Zustimmung) und R445. Zweck der Anweisung: Der Nutzer will nichts wiederholen müssen; Auslegung widerspricht ihm nicht.
+
+Verfassung berührt?: nein (Handbuch, Output-Style) · Überschneidung mit offenen Paketen: TOOL-RUECKKANAL (STUDIO.md, Handbuch 1.71)
+Regelbezug: R445, R862, Verfassung §5 · Kosten bei Irrtum: eine sessiongebundene Anweisung wirkt zu lange; Nutzer korrigiert per Wort.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R864 · 2026-10-23 · Runden-Ruling TIEFE-1: Ehrenbuch und Modus «Inselproben» starten; N-104
+
+Ruling: Rangliste `lead-design` (`docs/tiefe-1` @ `8c79bfb4`, Handoff `.studio/handoffs/2026-10-23-lead-design-TIEFE-1.md`, Pool 37/40) **angenommen**: (1) **Kurzdesign I-186 Ehrenbuch**
+(Meisterstücke über alle Partien, Lohn ehrenhalber) jetzt, `lead-design` `opus`. (2) **Brainstorming «Modus Inselproben»** (I-190 Inselprobe, I-191 Tagesinsel, I-192 Szenarien «Knappe
+Zeiten», ein Szenario als Prüfling, Lösbarkeitsrechnung je Szenario) jetzt, Stufe voll, parallel. Keine Meta-Boni über Partien (Spielwerte bleiben je Partie gleich). (3) **I-187 Inselruf**
+erst mit Erweiterung 1 O8/K5 (Nutzer-Session) und dem Ergebnis WIRTSCHAFT-TIEFE. (4) Baustein I-189 Expedition für I-194; geparkt I-193. (5) **N-104** (Reihenfolge der Erweiterungen nach
+Erweiterung 1, Empfehlung «Neue Ufer») in der Warteschlange; Entwurf B (Jahreszeiten als Standard) nicht angelegt — erst wenn I-195 eingeplant wird, Empfehlung dann Schalter «aus».
+(6) Recherche-Belege dünn (Seiten nicht abgerufen): die beiden Design-Pakete dürfen gezielt nachrecherchieren (WebFetch der genannten Quellen). (7) Beifund README «Spielstand-Version 13»
+(live v18): Trivial-Fix im nächsten Doku-Bündel.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Erweiterung 1 (Nutzer-Session), WIRTSCHAFT-TIEFE
+Regelbezug: R208, R445, R722, R839, R862 · Kosten bei Irrtum: ein Kurzdesign und ein Brainstorming, rückbaubar.
+
+Entscheider: L0 · Anlass: Bericht lead-design TIEFE-1 · ADR: —
+
+## R865 · 2026-10-23 · WIRTSCHAFT-TIEFE: Favorit «Stadtrecht» (V4) ins Kurzdesign; «Wartung» (E1) nach Stadtplanung
+
+Ruling: Bericht `lead-design` (`docs/wirtschaft-tiefe` @ `d63971a6`, Handoff `.studio/handoffs/2026-10-23-lead-design-WIRTSCHAFT-TIEFE.md`) **angenommen**. Befund: bis min 14 knapp, danach
++2500…+3200 Geld/min; Ursachen: Einwohner netto positiv (`tiers.ts:18-45`), keine laufende Senke ausser Unterhalt, feste Kaufpreise. Reine Bremsen (Aufschlag, Bedarf, Verwaltung, Verderb)
+verworfen (3–30 %, keine Wahl). (1) **V4 «Stadtrecht»** (käufliche weitere Rats-Sitzungen, 5000 × 1,6^k plus Stein/Glas, je Sitzung A/B-Wahl) → Kurzdesign Stufe voll jetzt (design-only,
+testfrei), Save v19 erwartet, Balancing-Läufe unverändert. (2) **E1 «Wartung»** nach Stadtplanung (R780), braucht neue Pins in drei Balancing-Läufen. (3) Geparkte I-110, I-111, I-130,
+I-134, I-183 erst nach E1. (4) Hinweis an die Nutzer-Session (Erweiterung 1 O8/K5): Stiftungen auf der Stadtrecht-Leiter aufsetzen — im Bericht an den Nutzer. (5) Beifunde
+(Werkzeug nach Endausbau ohne Verbrauch; veralteter Kommentar `tests/sim/merchantsController.ts:20-21`) nach `docs/beobachtungen.md`. Arbeiter liefen trotz Vorgabe im Hintergrund →
+Beleg für TOOL-RUECKKANAL/Retro.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Erweiterung 1, Inselproben (Szenario «Knappe Zeiten»), Stadtplanung C1
+Regelbezug: R722, R780, R862 · Kosten bei Irrtum: ein Kurzdesign.
+
+Entscheider: L0 · Anlass: Bericht lead-design WIRTSCHAFT-TIEFE · ADR: —
+
+## R866 · 2026-10-23 · REL-30 live; ORT-A wieder auf; TOOL-MERGE-APPEND; Seerecht nach ORT-A-Messung
+
+Ruling: Bericht `lead-production` (Handoff `.studio/handoffs/2026-10-23-lead-production-REL-30.md`): **REL-30 live**, Push `d2376904..bc9664d0` (Fast-Forward, geprüfter Hash), `make push-check`
+Exit 0 (Startlast 4,42), `check-ci-perf` Exit 0, CI 39936129287 grün, Pages 39937129992 grün; 23 Branches inkl. `docs/rueckkanal`. Zusätzliche Vorab-Auflösungen in vier weiteren Branches
+(`docs/beobachtungen.md`, Merge-Treiber versagt bei letzter Basiszeile im Konfliktblock) **nachträglich angenommen** — Zeilenverlust geprüft, keiner. (1) **TOOL-MERGE-APPEND** (lead-tech,
+Werkzeug, Stufe leicht): `tools/studio/merge_append.py` behandelt Blöcke mit letzter Basiszeile als Anhang; Integrator-Persona: `timeout` fehlt auf macOS → Ersatz. (2) **ORT-A** wieder auf
+(lead-tech): AK-30 Seed 14 auf `4db494e9` nachmessen (allein im Messfenster, Load ≤ 4), dann Abnahme k1/k2 (Teilbeleg), Merge nach `feat/ort-a`, T18. (3) **Seerecht T04** (UI-BEIPACK auf
+main) startet erst nach Ende der ORT-A-Messung, damit die Messung allein läuft (Lastregel R329). Nächster Push frühestens 2026-10-24 (R816).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A, SEERECHT, TOOL-PUSHSPERRE T05
+Regelbezug: R815, R816, R329, R838, R857 · Kosten bei Irrtum: Seerecht startet eine Stunde später.
+
+Entscheider: L0 · Anlass: Bericht lead-production REL-30 · ADR: —
