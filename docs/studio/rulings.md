@@ -2139,3 +2139,29 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A, SEEREC
 Regelbezug: R815, R816, R329, R838, R857 · Kosten bei Irrtum: Seerecht startet eine Stunde später.
 
 Entscheider: L0 · Anlass: Bericht lead-production REL-30 · ADR: —
+
+## R867 · 2026-10-23 · I-186 Ehrenbuch: D1–D3 angenommen; Gate Spec BEDENKEN → Nachtrag N1–N6
+
+Ruling: Kurzdesign `design/i186-ehrenbuch` @ `d993b5d9` (9 Meisterstücke, eigener Schlüssel `inselreich.ehrenbuch` v1, Save v18 und Baseline bitgleich). **D1** Partie-Merker im Buch,
+**D2** Schwellen 9000/18 000 Ticks (rückbaubar), **D3** Stückzahl wächst mit Auflagen — angenommen. Gate Spec `lead-qa` (Handoff `.studio/handoffs/2026-10-23-lead-qa-gate-I-186.md`):
+**BEDENKEN**, Nachtrag vor dem Plan: N1 Tracker für Vorher-Zustand bei Laden/Neue Insel (mit Browser-Check), N2 Auswertung je `step` bei mehreren Schritten je Frame, N3 Schwelle 18 000
+belegen oder als Risiko mit Rückfall; N4/N5 mit; N6 AK-Kennungen `AK-EB-01…` (R417); N7–N9 in den Plan. Wiedervorlage beim Gate. Browser-Checks zur Abnahme bleiben trotz R862 —
+R862 streicht Playtests als Ideen-Input, nicht den Nachweis.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Modus Inselproben (Andockstellen A1–A3)
+Regelbezug: R417, R553, R839, R862 · Kosten bei Irrtum: ein Nachtrag mehr.
+
+Entscheider: L0 · Anlass: Bericht lead-design, Gate lead-qa · ADR: —
+
+## R868 · 2026-10-23 · Prozess-Retro REL-30: V1 und V2 angenommen; Messaufträge bestätigt
+
+Ruling: Retro `studio-process-coach` (`docs/retro-rel-30` @ `40a27899`, `docs/studio/retros/2026-10-23-rel-30-prozess.md`) **abgenommen**. **V1:** `lead-qa` prüft im Trockenlauf Dateien mit
+Merge-Treiber per `git merge --no-commit` im Wegwerf-Worktree statt `merge-tree` (Messgrösse 0 Integrator-Stopps über 3 Releases). **V2:** Jeder Agent-Start gilt als asynchron (alle 9
+Lead-Starts mit `background: False` liefen `async_launched`); der Lead beendet nach dem Start seinen Zug und wartet auf Meldung (Rückkanal R856), höchstens ein Heartbeat je 5 min;
+«im Vordergrund» fällt aus Briefings und Vorlage; R854 Regel C (Waitguard) bleibt. Messgrösse ≤ 3 Status-Events je 10 min Wartezeit. Beide als Experiment, Umsetzung `studio-coach`.
+Messaufträge L0-Kontext und Flake-Verdacht bis 2026-10-30 bestätigt. R769 V2 (Rulings zurückhalten bis Integrator-Bericht) bleibt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MERGE-APPEND, DAUERAUFTRAG (STUDIO.md 1.72)
+Regelbezug: R769, R854, R856 · Kosten bei Irrtum: zwei Experimente, rückbaubar.
+
+Entscheider: L0 · Anlass: Prozess-Retro REL-30 · ADR: —
