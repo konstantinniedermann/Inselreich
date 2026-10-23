@@ -1518,3 +1518,75 @@ laut R808, Parallelität 1, solange ORT-A nicht auf main ist.
 Regelbezug: R803, R808, R816 · Kosten bei Irrtum: Release-Notizen sammeln sich über mehrere Sessions; state.md trägt sie.
 
 Entscheider: L0 · Anlass: Bericht studio-coach, Merge UI-G · ADR: —
+
+## R818 · 2026-10-22 · «mach weiter»: TOOL-LOADSNAP (V5) und state.md-Entwurf auf freien Plätzen
+
+Ruling: Nutzer «mach weiter» = Plan fortsetzen; ORT-A misst (AK-32), UI-H P1 wartet auf das Browser-Fenster. Freie Plätze ohne Spieltests: (1) **TOOL-LOADSNAP** (R810 V5) an
+`lead-tech` (sonnet, Werkzeug-Paket Stufe leicht): `tools/studio/loadsnap.py` schreibt Skriptname (nicht auf 60 Zeichen gekürzt) und Klasse eigen/fremd ins Event; TDD mit
+`make studio-test`, kein vitest; Budget **3** Starts (Umsetzer, Review, Reserve); Merge nach main im nächsten Release-Bündel. (2) **state.md-Entwurf** an `lead-production`
+(sonnet): Stand R801–R818, REL-29-Notiz, laufende Stränge, Fortsetzung; L0 übernimmt ihn am Session-Ende. Budget **1**.
+
+Regelbezug: R475, R810, STUDIO.md Session-Ende · Kosten bei Irrtum: gering, Werkzeug-only.
+
+Entscheider: L0 · Anlass: Nutzer «mach weiter» · ADR: —
+
+## R819 · 2026-10-22 · Nutzerauftrag «Menschen auf der Strasse schöner, Tempo Transport/Spazieren annähern»: Kurzdesign LEBEN-STRASSE
+
+Ruling: Nutzerauftrag ausgelegt als Darstellungs-Paket **LEBEN-STRASSE** (nur `src/render/`, keine Spielregel, kein Save): (a) Figuren (Spaziergänger `life.ts`
+`drawWalker`, Träger/Botengänge `errands.ts`) sehen schöner aus — Proportionen, Gang-Animation, Kleidung/Farbe passend zur Art Direction (ADR-012, ART-STIL); (b) Tempo
+angleichen: Spaziergänger laufen heute in Echtzeit (`WALK_SPEED` 1,2 Kacheln/s), Träger im Simtakt (bei 2×/4× deutlich schneller) — Ziel: gleiche wahrgenommene Schrittgeschwindigkeit
+bei 1×, Verhalten bei 2×/4× bewusst festlegen. Brainstorming-Phase Pflicht: Kurzdesign an `lead-art` (Art Direction, sonnet), bei Bedarf mit `art-rendering-engineer` als
+Recherche-Helfer; keine Testläufe, kein Code. Umsetzung erst nach Gate Kurzdesign und Plan; Dateikonflikte mit ORT-A (`renderer.ts`) im Kurzdesign benennen, Start nach ORT-A-Merge,
+falls nicht disjunkt. Budget **2** Starts.
+
+Regelbezug: ADR-012, R797 (Render nach ORT-A), CLAUDE.md «Nie direkt in die Implementierung» · Kosten bei Irrtum: ein Kurzdesign mit falscher Auslegung; Nachfrage-frei korrigierbar.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R820 · 2026-10-22 · Gate Kurzdesign LEBEN-STRASSE: OK, Plan sofort
+
+Ruling: Kurzdesign `lead-art` (`design/leben-strasse` @ `90c74b60`, 22 AK: AK-T1–T10 Tempo, AK-V1–V12 Optik; P1 Tempo S–M, P2 Optik M) → **OK**. Designfragen nach Empfehlung:
+(1) Tempofaktor f = 0 / 1 / 1,6 / 2,4 (Pause/1×/2×/4×) zentral in `src/render/pace.ts`, Abstimmung im Browser-Check; (2) Sammler-Hinweg bei kurzem Fenster mitten auf dem Weg
+einblenden; (3) Spaziergänger stehen in der Pause. Ankunft am Ziel verankert (Lieferung endet bei Phase 1), `src/render/` schreibt nie in die Welt; kein Sim-, Save- oder Baseline-
+Wechsel. **Kein Rebase** (Dauerregel): der Anbindungs-Task (`renderer.ts`, `app.ts`) holt nach dem ORT-A-Merge `main` per `git merge main` herein; P1/P2 in `life.ts`, `errands.ts`,
+`pace.ts` und Tests dürfen sofort starten. Plan `lead-tech` (Stufe leicht, sonnet), keine Testläufe; Budget **2** Starts. Luminanz-Mindestwert AK-V8 legt der Plan per Messung fest.
+
+Regelbezug: R819, gates.md kombiniertes Gate Stufe leicht, CLAUDE.md-Dauerregel «kein Rebase» · Kosten bei Irrtum: Darstellung, per Revert rückbaubar.
+
+Entscheider: L0 · Anlass: Bericht lead-art LEBEN-STRASSE · ADR: —
+
+## R821 · 2026-10-22 · TOOL-LOADSNAP fertig, wartet aufs nächste Release-Bündel
+
+Ruling: Bericht `lead-tech` TOOL-LOADSNAP (`tool/loadsnap` @ `3d52f696`, `make studio-test` 1017 OK, Review OK mit drei niedrigen Befunden, zwei behoben, Repo-Root fest
+hinnehmbar) → **Strang abgenommen**. Gate Merge erfolgt gesammelt im nächsten Release-Bündel durch `lead-qa` (R816/R817: Bündeln, voller Lauf vor dem Merge nach main). Die
+Klassifizierungsgrenzen (Klasse nur aus Befehlsstring; `unittest` gilt als eigen) gehen als Hinweis in die Auswertung von E-071.
+
+Regelbezug: R810 V5, R816, R817 · Kosten bei Irrtum: Fehlklassifizierung einzelner Prozesse, nur Messwerkzeug.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-LOADSNAP · ADR: —
+
+## R822 · 2026-10-22 · Gate Plan LEBEN-STRASSE: OK, Umsetzung T01–T05 sofort
+
+Ruling: Plan `lead-tech` (`plan/leben-strasse` @ `e4565d7c`, T01–T10, alle 22 AK zugeordnet) → **OK**; Entwürfe R821-E bis R823-E angenommen: zwei Stränge
+(`feat/leben-strasse` T01–T03, T05–T10; `feat/leben-strasse-look` T04, per `git merge` vor T05), T06/T07 erst nach ORT-A-Merge nach main mit `git merge main` (kein Rebase);
+Tempo über optionales `tickClock(world, timeMs, speed?)`, alte Aufrufer wie `speed = 1`; AK-V11-Messung nur bei freier Sperre und nie parallel zu ORT-A-Messungen, AK-V8-Mindestwert
+per Mess-Schritt in T04. Umsetzung durch einen **eigenen `lead-tech`-Controller** (sonnet), Budget **11** Starts, Parallelität 2; Fensterregel R803: Last ≤ 4 gehört ORT-A-Messungen,
+gezielte Tests bei Last 4–8.
+
+Regelbezug: R803, R820, Verfassung 1.3 §9.2 · Kosten bei Irrtum: Konflikt in `renderer.ts` beim ORT-A-Merge, mechanisch lösbar.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan LEBEN-STRASSE · ADR: —
+
+## R823 · 2026-10-22 · Nutzerauftrag «mehr Agenten»: Deckel 10, fünf neue Pakete, ORT-A AK-31 Variante 1
+
+Ruling: Nutzer: «starte noch mehr agenten die an den einzelnen punkten arbeiten. wir haben ja kapazität». Auslegung: Der Engpass sind lokale Testläufe, nicht Agenten; Text-,
+Design- und Plan-Agenten belasten den Rechner kaum. (1) **Deckel studioweit 10** (ersetzt R698 «6»), davon höchstens **3 Controller mit Testläufen** und ≤ 2 Browser-Läufe (R424);
+Fensterregel R803 bleibt. (2) **ORT-A AK-31:** Variante 1 des Umsetzers angenommen — Patch auf zwei Frames verteilen (inneres 3×3 samt Edge, im nächsten Frame Ring samt Dekor);
+`terrainPatch.test.ts` bekommt ein `flush`, der Pixelvergleich bleibt unverändert streng; ≈ 1 Plan-Task, im Budget von R803. (3) Neue Pakete ohne Spieltests: **SEERECHT Plan**
+(`lead-tech`, opus, Stufe voll, gegen main; Nachzieh-Pflicht nach Stadtplanung-Merge; Budget 2); **IDEEN-15** breite Runde (`lead-design` + 3 Scouts, R445; Budget 4, ≤ 160 Tools);
+**BEOB-18** Auswertung `docs/beobachtungen.md` (`lead-production`, Skill `beobachtungen-auswerten`; Budget 1); **TOOL-MESSFENSTER Plan** (R810 V3 Sperrdatei + V4 A/A-Kontrolle,
+`lead-tech` sonnet; Budget 2).
+
+Regelbezug: Verfassung §5.8, R424, R445, R475, R698, R803, R810 · Kosten bei Irrtum: mehr Koordination; Plan-Arbeit, die nach Merges nachgezogen werden muss.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
