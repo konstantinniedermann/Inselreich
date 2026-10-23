@@ -2193,3 +2193,19 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-186 Plan, E
 Regelbezug: R674, R722, R862, R865, R869 · Kosten bei Irrtum: Werte im Entwurf, vor dem Gate änderbar.
 
 Entscheider: L0 · Anlass: Berichte lead-design · ADR: —
+
+## R871 · 2026-10-23 · ORT-A k1/k2 abgenommen; Plan I-186 fertig; Bündel REL-31 vorbereitet
+
+Ruling: (1) **ORT-A** (Handoff `.studio/handoffs/2026-10-23-lead-tech-ORT-A.md`): AK-30 +0,047 ms, AK-32 Seed 14 +0,1 ms / Fixture 0,0 ms, AK-37 Δ −0,4 → **bestanden**; **Referenz AK-37 ist
+`de0a372a`** (Differenz zu `ort-a-basis` stammt vom U1-Hofsaum). k1/k2 in `feat/ort-a` @ `d52ad5b9` (mit main `7505fda6`), 4 veraltete Render-Tests angepasst (nur Tests), Teilbeleg Exit 0.
+Nächste Session: T18 (T14 erledigt), Worktree `ort-a-vor-k2` entfernen (ohne `--force`), Merge nach main mit REL-31. (2) **Plan I-186** `plan/i186-ehrenbuch` @ `42e016cb` (T00–T09, ≈ 445 Tools,
+16 Starts beantragt): ADR-016 für das Buchformat **ja**; AK-EB-06 per Diff-Lauf statt Versions-Pin **ja**; Gate Plan nächste Session. (3) **TOOL-MERGE-APPEND** `tool/merge-append` @ `6abfe75f`
+abgenommen (1068 Studio-Tests OK, Rot-Beleg, Echtlauf); Reviewer bei Ein-Modul-Diff entfallen — hingenommen. (4) **RETRO-REL-30-UMSETZUNG** `docs/retro-rel-30-umsetzung` @ `2bcd30ca`
+(Handbuch 1.73, E-072/E-073 passiv bis 2026-11-19) abgenommen; E-063 in der nächsten Session bewerten. ADR-007 braucht einen Nachtrag zu R868 (Beobachtung). (5) **Reihenfolge REL-31**
+(frühestens 2026-10-24): `docs/ideen-16` → `docs/tiefe-1` → `docs/wirtschaft-tiefe` → `design/*` (i186, modus-inselproben, stadtrecht) → `plan/i186-ehrenbuch` → `docs/retro-rel-30` →
+`docs/dauerauftrag` → `docs/retro-rel-30-umsetzung` → `tool/merge-append` → `feat/ort-a` (nach T18/Final-Review laut Plan) — Gate Merge Release vorab nach V1 (R868).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle REL-31-Stränge
+Regelbezug: R857, R866, R867, R868, R869 · Kosten bei Irrtum: Reihenfolge im Bündel neu ordnen.
+
+Entscheider: L0 · Anlass: Berichte lead-tech, studio-coach · ADR: —

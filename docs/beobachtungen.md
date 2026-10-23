@@ -237,3 +237,8 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 - Fundort: `src/sim/defs/` (Werkzeug-Verbraucher). Beobachtung: Nach dem Endausbau wird Werkzeug nicht mehr verbraucht; die Kette läuft ins Leere. Ursprung: WIRTSCHAFT-TIEFE (R865). Einschätzung: Kandidat für «Wartung» (E1).
 - Fundort: `tests/sim/merchantsController.ts:20-21`. Beobachtung: Kommentar nennt Unterhalt ≈ 415, gerechnet ≈ 670. Ursprung: WIRTSCHAFT-TIEFE. Einschätzung: Kommentar veraltet, Trivial-Fix beim nächsten Sim-Paket.
+
+## 2026-10-23 · ORT-A: Messskript ohne WebSocket-Close-Handler (niedrig)
+
+- Fundort: `tools/render-qa/lib.mjs`. Beobachtung: Kein `close`-Handler am WebSocket; stirbt Chrome mitten im Lauf, endet `perf.mjs` mit «unsettled top-level await» statt klarer Meldung (nachgestellt; Ursprung des Abbruchs vom 2026-10-22 nicht belegt). Ursprung: ORT-A (R871). Einschätzung: Handler mit Reject, Trivial-Fix beim nächsten render-qa-Paket.
+- Fundort: `docs/adr/` ADR-007 und Studio-Specs 2026-09-30. Beobachtung: beschreiben noch die Vordergrund-Regel, die R868 (V2) ersetzt. Ursprung: RETRO-REL-30-UMSETZUNG. Einschätzung: ADR-Nachtrag mit Verweis auf R868.
