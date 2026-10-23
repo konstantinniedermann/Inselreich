@@ -34,6 +34,8 @@ import {
   seaMapTip,
   seaMapUnavailable,
 } from './seaMapView';
+import { cashReach } from './cashReach';
+import { brakeLines, growthBrakes } from './growthBrake';
 import { iconChip } from './messages';
 import { formatGameTime, GOODS_BALANCE_TICKS, perMinute, signedNum } from './time';
 import { flowLabel, flowText, flowTitle } from './balanceFlow';
@@ -145,7 +147,13 @@ export function popChipView(world: World, tier: Tier): ChipView {
 }
 
 export function moneyView(world: World): ChipView {
-  return { icon: 'money', text: String(world.money), label: `Geld ${world.money}` };
+  const reach = cashReach(world.money, world.stats.taxes, world.stats.upkeep);
+  const label = `Geld ${world.money}`;
+  return {
+    icon: 'money',
+    text: String(world.money),
+    label: reach ? `${label}. ${reach.text}` : label,
+  };
 }
 
 /** Bilanz: Waage und Wert; `label` ist der bisherige Text. */
@@ -180,8 +188,19 @@ export function chipRole(tagName: string): 'img' | null {
 
 /** Kontostand; läuft je Frame (Spec 7), ohne Interpolation. */
 export function updateMoney(header: HTMLElement, world: World): void {
-  setChip(header, 'money', moneyView(world))?.classList.toggle('negative', world.money < 0);
+  const el = setChip(header, 'money', moneyView(world));
+  if (!el) return;
+  el.classList.toggle('negative', world.money < 0);
+  const reach = cashReach(world.money, world.stats.taxes, world.stats.upkeep);
+  el.classList.toggle('reach-warn', reach?.level === 'warn');
+  el.classList.toggle('reach-alarm', reach?.level === 'alarm');
+  const text = reach?.text ?? '';
+  if (moneyTipShown.get(el) === text) return;
+  moneyTipShown.set(el, text);
+  if (reach) el.title = text;
+  else el.removeAttribute('title');
 }
+const moneyTipShown = new WeakMap<HTMLElement, string>();
 
 /** Mindestabstand (ms) zwischen zwei Aktualisierungen der Bilanz-Anzeige. */
 export const BALANCE_REFRESH_MS = 500;
@@ -189,6 +208,12 @@ export const BALANCE_REFRESH_MS = 500;
 export const balanceDue = (nowMs: number, lastMs: number): boolean =>
   nowMs - lastMs >= BALANCE_REFRESH_MS;
 const balanceShownAt = new WeakMap<HTMLElement, number>();
+/** Mindestabstand (ms) zwischen zwei Berechnungen der Wachstumsbremse (Einwohner-Chip-Tooltips). */
+export const BRAKE_REFRESH_MS = 1000;
+/** Ist die Wachstumsbremse wieder fällig? */
+export const brakeRefreshDue = (nowMs: number, lastMs: number): boolean =>
+  nowMs - lastMs >= BRAKE_REFRESH_MS;
+const brakeShownAt = new WeakMap<HTMLElement, number>();
 
 /**
  * Setzt Symbol, Wert und `aria-label` eines `data-field`-Elements. Der Symbol-Chip entsteht einmal; danach
@@ -407,10 +432,20 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       balEl.classList.toggle('negative', world.stats.taxes - world.stats.upkeep < 0);
     }
   }
+  const brakeDue = brakeRefreshDue(nowMs, brakeShownAt.get(header) ?? -Infinity);
+  let brakes: ReturnType<typeof growthBrakes> | null = null;
   for (const tier of TIER_IDS) {
     const chip = setChip(header, `pop-${tier}`, popChipView(world, tier));
     const hide = popChipHidden(world, tier);
     if (chip && chip.hidden !== hide) chip.hidden = hide;
+    if (chip && !hide && brakeDue) {
+      if (brakes === null) {
+        brakes = growthBrakes(world, state.activeIsland);
+        brakeShownAt.set(header, nowMs);
+      }
+      const tip = [tierTooltip(tier), ...brakeLines(brakes[tier], false)].join('\n');
+      if (chip.title !== tip) chip.title = tip;
+    }
   }
   const goalEl = header.querySelector<HTMLElement>('[data-field="goal"]');
   if (goalEl) syncGoalChip(goalEl, world);
