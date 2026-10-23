@@ -33,15 +33,23 @@ export function startChoices(
   saves: SaveInfo[],
   problem: StorageProblem,
 ): { choices: StartChoice[]; note: string | null } {
-  const auto = saves.find((s) => s.slot === 'auto');
+  // `saves` führt den neuesten Autosave vor dem «Davor» (listSavesFrom)
+  const [auto, before] = saves.filter((s) => s.slot !== 'manual');
   const manual = saves.find((s) => s.slot === 'manual');
   const choices: StartChoice[] = [];
   if (auto)
     choices.push({
       kind: 'load',
-      slot: 'auto',
+      slot: auto.slot,
       label: `Fortsetzen — Autosave (Spielzeit ${formatClock(auto.tick)})`,
       primary: true,
+    });
+  if (before)
+    choices.push({
+      kind: 'load',
+      slot: before.slot,
+      label: `Davor laden — Autosave (Spielzeit ${formatClock(before.tick)})`,
+      primary: false,
     });
   if (manual)
     choices.push({

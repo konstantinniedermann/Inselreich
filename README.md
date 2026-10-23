@@ -41,7 +41,7 @@ Das Denkmal als Wahlziel steht in [`docs/spielwerte.md`](docs/spielwerte.md#denk
 - **Startkarte:** Beim Laden der Seite liegt über einer neuen, noch stehenden Insel («Pausiert») eine Karte
   mit dem Ziel und drei ersten Schritten: ein Wohnhaus nahe dem Kontor bauen, Fischerhütte am Wasser und
   Holzfäller am Wald bauen, die Betriebe mit einem Weg zum Kontor verbinden (oder im Info-Panel «Anbinden»; Wohnhäuser brauchen keinen Weg).
-  Knöpfe: «Fortsetzen — Autosave (Spielzeit m:ss)», «Gespeichertes Spiel laden (Spielzeit m:ss)» und «Neue
+  Knöpfe: «Fortsetzen — Autosave (Spielzeit m:ss)», bei zwei Autosave-Ständen «Davor laden — Autosave (Spielzeit m:ss)», «Gespeichertes Spiel laden (Spielzeit m:ss)» und «Neue
   Insel» bzw. «Los geht's», wenn es nichts zu laden gibt. `Esc` oder ein Klick daneben löst den hervorgehobenen
   Knopf aus. Gibt es einen Stand, fragt «Neue Insel» zuerst nach («Ja, neue Insel» / «Abbrechen»). Ist ein
   Spielstand beschädigt, stammt er aus einer neueren Version oder ist der Browser-Speicher gesperrt, steht darunter ein Hinweis. Nach dem Laden ist das
@@ -278,20 +278,24 @@ Ereignisse zeigt ungelesene Meldungen als (n neu), ab 10 (9+ neu); Aufklappen se
 - **Speichern:** Menü → «Speichern» legt den Spielstand im Browser ab (ein Speicherplatz, nur in diesem
   Browser). `Strg`/`Cmd` + `S` speichert auf demselben Weg in denselben Platz.
 - **Autosave:** Alle 2 Minuten laufenden Spiels (Pause zählt nicht) speichert das Spiel zusätzlich in
-  einen eigenen Autosave-Platz, und beim Verlassen oder Schliessen der Seite ein weiteres Mal (still, nur
-  wenn das Spiel schon begonnen hat). Scheitert das periodische Speichern, erscheint einmal eine Meldung;
+  zwei eigene Autosave-Plätze im Wechsel: Der neueste Stand ersetzt jeweils den älteren, der vorige bleibt
+  als «Autosave davor» erhalten (so lässt sich nach einem Fehlklick ein Stand von vor etwa zwei bis vier
+  Minuten laden). Beim Verlassen oder Schliessen der Seite überschreibt ein weiteres Speichern (still, nur
+  wenn das Spiel schon begonnen hat) nur den neuesten Platz; «Davor» bleibt unberührt. Welcher Stand «Autosave» und welcher «Autosave davor» heisst, richtet sich nach dem Zeitpunkt des letzten Schreibens, nicht nach der Spielzeit. Lädst du einen
+  Autosave-Stand, schreibt das nächste Speichern in diesen Platz: Das Verlassen der Seite überschreibt ihn, der andere Stand
+  (auch ein neuerer) bleibt bis zum nächsten Autosave erhalten. Scheitert das periodische Speichern, erscheint einmal eine Meldung;
   das Spiel läuft weiter.
-- **Laden:** Menü → «Laden» zeigt die vorhandenen Stände («Autosave — Spielzeit m:ss», «Gespeichert —
+- **Laden:** Menü → «Laden» zeigt die vorhandenen Stände («Autosave — Spielzeit m:ss», «Autosave davor — Spielzeit m:ss», «Gespeichert —
   Spielzeit m:ss»); ein Klick lädt. Ist ein Stand beschädigt oder fehlt er, erscheint eine Meldung und das
   laufende Spiel bleibt unverändert. Ungespeicherter Fortschritt geht verloren (Hinweis über der Liste).
   Ein geladenes Spiel **pausiert**; `P` oder `1×` setzt es fort. Die Kamera bleibt, wenn der Stand dieselbe
   Karte hat, sonst springt sie zum Kontor.
   Gibt es offene Fristen (Auftrag, Fernauftrag, Fernangebot, Stammkunde, Auflage) oder Probleme, öffnet sich beim Laden die Karte «Wo war ich?» mit Spielzeit, den Fristen nach Restzeit und der Problemzahl; `Esc` oder «Weiter» schliesst sie, das Spiel bleibt pausiert. Ohne Fristen und Probleme erscheint sie nicht.
-- **Beim Start:** Die Startkarte bietet den Autosave («Fortsetzen») und den gespeicherten Stand an.
+- **Beim Start:** Die Startkarte bietet den neuesten Autosave («Fortsetzen»), bei zwei Ständen auch «Davor laden», und den gespeicherten Stand an.
 - **Neue Insel:** Menü → «Neue Insel» fragt zuerst «Neue Insel beginnen?» (Ja / Abbrechen), dann entsteht
   eine neue Insel mit Tempo 1× und der gewählten Krisenstufe. Der Autosave bleibt, bis der nächste ihn
   überschreibt. Die Kartennummer steht im Menü («Karte …»).
-- **Spielstand-Version 13** (dritte Fremdinsel Weidenau): Ältere Stände laden weiter und werden über die Migrationskette ergänzt; die Fremdinsel «Weidenau» kommt beim Laden dazu (ohne Kontor). Ein Stand aus einer neueren Version wird mit Hinweis («Unbekannte Version») abgewiesen; das laufende Spiel bleibt unverändert.
+- **Spielstand-Version 18:** Ältere Stände laden weiter und werden über die Migrationskette ergänzt (ab Version 13 kommt dabei die dritte Fremdinsel «Weidenau» ohne Kontor dazu). Ein Stand aus einer neueren Version wird mit Hinweis («Unbekannte Version») abgewiesen; das laufende Spiel bleibt unverändert.
 - Spielstände vom Stand vor der Seefahrt (Version 8) lassen sich laden: Sie bekommen je Kaufmannshaus 10 Gewürz
   (höchstens 100) im Heimatlager als Übergang und eine einmalige Meldung.
 - Spielstände älterer Versionen (vor M5 bzw. vor M6) lassen sich laden und werden danach im neuen Format

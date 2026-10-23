@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.69 · Stand: 2026-10-22 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.70 · Stand: 2026-10-22 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -43,6 +43,9 @@ Ebene höher — mit Empfehlung. L0 fragt den Nutzer nicht zurück (Abschnitt [A
 
 - **Berichtsweg L2 → L1 → L0.** L0 sieht nur Lead- und Coach-Berichte, nie Arbeiter-Ausgaben direkt.
   Nur L0 spricht mit dem Nutzer (Verfassung §2).
+  Solange R856 gilt, leitet L0 Meldungen von Arbeitern an den zuständigen Lead weiter und prüft nach
+  jeder Meldung die Heartbeats (> 20 min ohne Lebenszeichen → nachfragen). Leads, die auf Arbeiter
+  warten, fragen spätestens nach 30 min nach.
 - **Vordergrund-Regel:** Leads starten Arbeiter immer mit `run_in_background: false` (parallel =
   mehrere Agent-Aufrufe in einer Nachricht); Arbeiter starten keine Agenten; L0 darf Leads im
   Hintergrund starten (ADR-007). Dieser Satz gilt vorbehaltlich der Probe R438 V1 (Messauftrag bei E-037 in
