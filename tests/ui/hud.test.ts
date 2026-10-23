@@ -598,7 +598,9 @@ describe('Meldungsstapel mit Fernkarte (Handel 2 T08)', () => {
     const stockEl = stack.querySelector('[data-field="far-stock"]')!;
     expect(text.children).toEqual([lead, stockEl]);
     expect(lead.textContent + stockEl.textContent).toBe(farOfferText(w));
-    expect(lead.title).toBe(FAR_TRAVEL_TIP);
+    expect(lead.title).toBe(
+      'Fahrzeit einer Einzelfahrt von der Heimat; ein Schiff muss erst bereitstehen.',
+    );
     expect(stack.querySelector('[data-field="far-accept"]')!.title).toBe(farAcceptTooltip(w));
   });
 
@@ -662,7 +664,9 @@ describe('Meldungsstapel mit Fernkarte (Handel 2 T08)', () => {
     const lead = stack.querySelector('[data-field="far-lead"]')!;
     expect(lead.textContent).toContain('≈ ');
     expect(lead.textContent).toContain('Fahrt');
-    expect(lead.title).toBe(FAR_TRAVEL_TIP);
+    expect(lead.title).toBe(
+      'Fahrzeit einer Einzelfahrt von der Heimat; ein Schiff muss erst bereitstehen.',
+    );
   });
 
   it('AK-F10: zweiter Durchlauf mit gleicher Welt schreibt nichts in far-stock und lead-Titel', () => {
@@ -709,9 +713,9 @@ describe('Meldungsstapel mit Fernkarte (Handel 2 T08)', () => {
     acceptFarOrder(w);
     updateNoticeStack(stack as unknown as HTMLElement, w, HOME);
     expect(stack.querySelector('[data-field="far-card"]')!.hidden).toBe(true);
-    expect(stack.querySelector('[data-field="order-text"]')!.textContent).toBe(
-      farOrderText(w, w.order!),
-    );
+    // FakeElement fasst Kinder nicht zusammen (echtes DOM: textContent): Teile des Fernauftrags aneinanderhängen.
+    const orderText = stack.querySelector('[data-field="order-text"]')!;
+    expect(orderText.children.map((c) => c.textContent).join('')).toBe(farOrderText(w, w.order!));
     const btn = stack.querySelector('[data-field="order-deliver"]')!;
     expect(btn.textContent).toBe(deliverLabel(w, B));
     expect(btn.classList.contains('unaffordable')).toBe(true);
@@ -833,6 +837,14 @@ describe('I-109 Reichweite am Lager-Chip (AK-UR-04 bis 06)', () => {
   });
 });
 
+describe('UI-BEIPACK-FERN FAR_TRAVEL_TIP (AK-BF7)', () => {
+  it('BF7 Konstante ist auf den Festtext gepinnt', () => {
+    expect(FAR_TRAVEL_TIP).toBe(
+      'Fahrzeit einer Einzelfahrt von der Heimat; ein Schiff muss erst bereitstehen.',
+    );
+  });
+});
+
 describe('I-132 Ziel-Chip als Knopf', () => {
   it('Meisterprüfung: Aktionsklasse, Text, Klick ruft toggleTrial einmal', () => {
     const w = createWorld(3);
@@ -859,6 +871,31 @@ describe('I-132 Ziel-Chip als Knopf', () => {
     expect(el.classList.contains('goal-chip--action')).toBe(true);
     expect(el.textContent).toBe('Meisterprüfung');
     expect(el.title).toContain('Meisterprüfung: freiwillige Auflage');
+  });
+  it('BF10 tabIndex -1, 0, -1; kein Schreibzugriff bei gleichem Wert', () => {
+    const w = createWorld(3);
+    const writes: number[] = [];
+    const el = new FakeElement('button');
+    let tab = 0;
+    Object.defineProperty(el, 'tabIndex', {
+      get: () => tab,
+      set: (v: number) => {
+        writes.push(v);
+        tab = v;
+      },
+    });
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(tab).toBe(-1);
+    w.wonSpice = true;
+    w.monumentDone = true;
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(tab).toBe(0);
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(writes).toEqual([-1, 0]);
+    w.monumentDone = false;
+    syncGoalChip(el as unknown as HTMLElement, w);
+    expect(tab).toBe(-1);
+    expect(writes).toEqual([-1, 0, -1]);
   });
   it('Quelltext: Ziel-Element ist ein Knopf mit goal-chip', () => {
     expect(readFileSync('src/ui/hud.ts', 'utf8')).toMatch(
