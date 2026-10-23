@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-23 · Persona production-integrator 1.19
+
+- Anlass: Auftrag TOOL-MERGE-APPEND (REL-30: `timeout` fehlt auf macOS)
+- Datenbasis: Handoff `.studio/handoffs/2026-10-23-lead-production-REL-30.md`
+- Ruling: R866
+- Änderungen: CI-Schleife nutzt `perl -e 'alarm 240; exec @ARGV' gh run watch <id>` statt `timeout 240 gh run watch`
+
 ## 2026-10-23 · Handbuch 1.71
 
 - Anlass: Auftrag TOOL-RUECKKANAL (Kurz-Retro session-3b332328-ende, B1 und B2)
