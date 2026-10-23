@@ -22,6 +22,90 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-23 · Handbuch 1.71
+
+- Anlass: Auftrag TOOL-RUECKKANAL (Kurz-Retro session-3b332328-ende, B1 und B2)
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856, R858
+- Änderungen: STUDIO.md Kommunikation: Rückkanal per Adresse (L0 nennt jedem Lead seine agentId, Leads geben sie in jedes Arbeiter-Briefing, L0 leitet Fehlläufer weiter, R853); Briefing-Standard Persona-Änderung: `make studio-test` statt `make check`; `templates/briefing.md`: DoD auf Teilbeleg (gezielte Tests, `tsc`, `lint`, bei Werkzeug `studio-test`; voller Lauf nur beim Integrator), Pflichtzeile Lead-Briefing Rückkanal, Beispiel angepasst
+
+## 2026-10-23 · Persona tech-sim-engineer 1.7
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona tech-ui-engineer 1.9
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona art-audio-engineer 1.3
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona art-license-checker 1.3
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona art-rendering-engineer 1.4
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona qa-code-reviewer 1.8
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona qa-playtester 1.9
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona design-spec-author 1.5
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona design-idea-scout 1.4
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona design-economy-designer 1.3
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona production-integrator 1.18
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
 ## 2026-10-22 · Handbuch 1.70
 
 - Anlass: Vorfall eingeschlafene Leads (Kurz-Retro session-3b332328-ende, B1)
