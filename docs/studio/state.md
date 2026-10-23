@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-23 (Session a5d45446 Ende, R871; live REL-30 `bc9664d0`, Save v18, Verfassung 1.3, Handbuch main 1.71, Branches 1.72/1.73; main lokal = live + Doku/Rulings)
+Stand: 2026-10-23 (Session a5d45446 Ende, R872; live REL-30 `bc9664d0`, Save v18, Verfassung 1.3, Handbuch main 1.71, Branches 1.72/1.73; main lokal = live + Doku/Rulings)
 
 ## Release-Notizen
 
@@ -199,7 +199,7 @@ Rückkanal: L0 nennt jedem Lead seine Adresse); **R868 V2** (Starts sind asynchr
    Stadtplanung C1 (danach Seerecht T08/T09, UI-I T05–T07, AUFLAGEN-KERN Plan).
 4. **SEERECHT T04** (UI-BEIPACK ist live), dann T06/T07 (R838; Plan-DoD vorher auf Teilbeleg umstellen, R860).
 5. **TOOL-MESSFENSTER T00** (70-min-A/A-Block, Messfenster frei seit ORT-A-Ende), danach **TOOL-PUSHSPERRE T05** (R848).
-6. **UI-HAEPPCHEN-J** Kurzdesign (I-176 + I-139 + I-138, Stufe leicht, R861). E-063 bewerten, Platz für E-073 (R871). ADR-007-Nachtrag zu R868 (Beobachtung).
+6. **R872** E1 (opus-Anteil nach Paketart) und E2 (Schätzfaktor 0,5) durch `studio-coach`. **UI-HAEPPCHEN-J** Kurzdesign (I-176 + I-139 + I-138, Stufe leicht, R861). E-063 bewerten, Platz für E-073 (R871). ADR-007-Nachtrag zu R868 (Beobachtung).
 7. Pool: ZEITRESERVE-PFLEGE; Wartung (E1) nach Stadtplanung (R865); Messfristen R769 V3 2026-10-24, R750/R755 2026-10-30, E-072/E-073 2026-11-19. Erweiterung 1 bleibt in der Nutzer-Session (R519).
 
 ## Aktuelles Projekt und Phase

@@ -2209,3 +2209,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle REL-31-S
 Regelbezug: R857, R866, R867, R868, R869 · Kosten bei Irrtum: Reihenfolge im Bündel neu ordnen.
 
 Entscheider: L0 · Anlass: Berichte lead-tech, studio-coach · ADR: —
+
+## R872 · 2026-10-23 · Kurz-Retro Session a5d45446 abgenommen; E1 Messauftrag, E2 Schätzfaktor
+
+Ruling: Kurz-Retro `studio-coach` (`docs/studio/retros/2026-10-23-session-a5d45446-ende.md`, `fd8023c6`) **abgenommen**. **E1:** `metrics.py` trennt den opus-Anteil nach Paketart (Messauftrag,
+Schwelle opus-Anteil ohne Design-Pakete ≤ 60 % über 2 Sessions). **E2:** Minuten-Schätzung für Lead-Pakete mit Faktor 0,5 auf «Tools ÷ 6» (fünfte Session > 50 % Überschätzung); Schwelle
+±30 % in 2 von 3 Sessions, Rückfall alte Regel. Beide setzt `studio-coach` in der nächsten Session um (`richtwerte.md`, `metrics.py`).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R750 V2, R826 · Kosten bei Irrtum: eine Messung mehr, Schätzungen kurzzeitig zu knapp.
+
+Entscheider: L0 · Anlass: Kurz-Retro Session-Ende · ADR: —
