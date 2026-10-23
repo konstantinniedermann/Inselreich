@@ -2178,3 +2178,18 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle laufende
 Regelbezug: R863, STUDIO.md «Session-Start und -Ende» · Kosten bei Irrtum: nächste Session startet neue Arbeit, die der Nutzer nicht wollte — korrigierbar per Wort.
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R870 · 2026-10-23 · Stadtrecht und Modus Inselproben: Entwürfe fertig, Vorentscheide; Gates nächste Session
+
+Ruling: (1) **Stadtrecht** (`design/stadtrecht` @ `3ff27d0a`, Handoff `.studio/handoffs/2026-10-23-lead-design-STADTRECHT.md`): 6 käufliche Sitzungen ab Ziel 1, 5000 × 1,7^(k−1) Geld plus
+Stein/Glas, Wahl A +2 % Steuer / B schnellere Kette, Feld `charter` mit Migration. R-1 (Baseline bitgleich) und R-2 (Werte, später per Werte-Ruling) angenommen; die Abweichung von der
+Rechnung des Wirtschaftsdesigners (§4.2) angenommen. (2) **Modus Inselproben** (`design/modus-inselproben` @ `3a1264ee`, Handoff `.studio/handoffs/2026-10-23-lead-design-INSELPROBEN.md`):
+5 Inselproben, Tagesinsel, Prüf-Szenario «Schuldbrief» (lösbar in 14,5–21,3 min je Strategie, robust in 9/9 Varianten). F1 (kein Warteschlangen-Eintrag zu N-101, Schuld ist Startlage,
+kein Angebot), F2–F6 und F7 (Schuldbrief-Werte, keine Erstattung bei Abriss mit offener Schuld, Bestehen nach aktuellem Stand) angenommen. (3) **Save-Reihenfolge (R-3, R674):** Ehrenbuch
+braucht keine Save-Version; Stadtrecht und Inselproben brauchen je eine — wer zuerst nach main merged, nimmt v19, der andere v20; Reihenfolge der Umsetzung: Ehrenbuch → Inselproben (F5)
+→ Stadtrecht, sofern das Gate nichts anderes ergibt. (4) **Gates Spec** für beide bei `lead-qa` in der nächsten Session (R869: heute keine neuen Starts).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-186 Plan, Erweiterung 1 (Save, K5)
+Regelbezug: R674, R722, R862, R865, R869 · Kosten bei Irrtum: Werte im Entwurf, vor dem Gate änderbar.
+
+Entscheider: L0 · Anlass: Berichte lead-design · ADR: —
