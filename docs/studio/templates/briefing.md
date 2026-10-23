@@ -25,6 +25,8 @@ Prozessstufe: <leicht|voll>
    jedes Paket mit Kontextdatei > 30 KB (README, `docs/ideen.md`, Specs, Plan-Index) „nur den genannten Abschnitt bzw. Zeilenbereich lesen (`offset`/`limit` oder `grep`), nie die ganze Datei (E-057)“ — die Kontextzeile nennt dafür Abschnitt oder Zeilen;
    jedes Paket „Volltextsuche mit dem Grep-Werkzeug oder `rg <muster> .` (immer mit Pfad), nicht `grep -r`; `grep <muster> <datei>` auf eine genannte Datei bleibt erlaubt (R683)“;
    jedes Paket mit Budget „Mehrbedarf vor dem Überschreiten melden (templates/budgetantrag.md), nie nachträglich“;
+   jedes Lead-Briefing mit Budget „Arbeiter-Starts sind asynchron: nach dem Start Zug beenden und auf die Meldung warten (Rückkanal R856); Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (R868 V2)“ — die Worte „im Vordergrund“ stehen in keinem Briefing;
+   Gate-Merge-Briefing an `lead-qa` „Dateien mit Merge-Treiber per Probe-Merge im Wegwerf-Worktree prüfen, nicht mit `merge-tree` (R868 V1, gates.md)“;
    Werkzeug-Paket „make studio-test grün; Echtlauf gegen jede externe API (gh, CI, Pages), Ausgabe im Bericht“;
    Änderung an Experimenten, Handbuch oder Personas „make studio-test grün (u. a. höchstens 3 Experimente laufend)“;
    Paket mit `src/`-Änderung (R392, E-052) „vor Task 1 die Zeiten der berührten bestehenden Tests auf main messen (`npx vitest related --run <geplante src-Dateien>`), Tests > 200 ms mit Zeit in den Plan; Abnahme: dieselben Dateien auf main und Branch unmittelbar nacheinander, kein bestehender Test > 500 ms oder > +50 %, Zeiten vorher/nachher im Bericht“;
