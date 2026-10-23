@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.70 · Stand: 2026-10-22 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.71 · Stand: 2026-10-23 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -46,6 +46,10 @@ Ebene höher — mit Empfehlung. L0 fragt den Nutzer nicht zurück (Abschnitt [A
   Solange R856 gilt, leitet L0 Meldungen von Arbeitern an den zuständigen Lead weiter und prüft nach
   jeder Meldung die Heartbeats (> 20 min ohne Lebenszeichen → nachfragen). Leads, die auf Arbeiter
   warten, fragen spätestens nach 30 min nach.
+- **Rückkanal per Adresse (R856):** L0 nennt jedem Lead nach dem Start seine agentId als Adresse
+  (`SendMessage`). Der Lead schreibt sie in jedes Arbeiter-Briefing: „Melde dein Ergebnis per
+  SendMessage an <Lead-Adresse>, nie an main“. Arbeiter senden nur an ihren Auftraggeber. Landet
+  trotzdem eine Arbeiter-Meldung bei L0, leitet L0 sie sofort an den Lead weiter (R853).
 - **Vordergrund-Regel:** Leads starten Arbeiter immer mit `run_in_background: false` (parallel =
   mehrere Agent-Aufrufe in einer Nachricht); Arbeiter starten keine Agenten; L0 darf Leads im
   Hintergrund starten (ADR-007). Dieser Satz gilt vorbehaltlich der Probe R438 V1 (Messauftrag bei E-037 in
@@ -110,7 +114,7 @@ Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davo
   ganze Spec; `rulings*.md` (beide Dateien) nur per `grep` (E-010, R167, R682).
 - **Umsetzer-Briefing (E-017):** nennt die D1-Dateien (README, arc42, ADR, Spec-Verweise) als erlaubt.
 - **Persona-Änderung (R233 (1)):** DoD nennt CHANGELOG-Eintrag (Version = neuester Eintrag) und
-  `make check` grün als Pflicht.
+  `make studio-test` grün als Pflicht (Teilbeleg, R858).
 - **Messauftrag (R233 (4)):** „Messproben nie im Hauptcheckout und nie als `*.test.ts` unter
   `tests/`, nur im Worktree oder Scratchpad“; dazu die Lastregel (Abschnitt
   [Tempo](#arbeitsprinzipien-und-tempo)).
