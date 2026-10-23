@@ -4,13 +4,19 @@ import { fail, ok, type Result, type World } from '../sim/types';
 /** Manueller Speicherplatz (Schlüssel bleibt v1, das Format ist v2 mit Migration). */
 export const SAVE_KEY = 'inselreich.save.v1';
 export const AUTO_KEY = 'inselreich.save.auto';
+/** Zweiter Autosave-Platz («Davor») und Zeiger auf das Schreibziel (R850; die Etiketten folgen `AUTO_WRITTEN_KEY`, R851). */
+export const AUTO2_KEY = 'inselreich.save.auto2';
+export const AUTO_LAST_KEY = 'inselreich.save.auto.last';
+/** Zuletzt geschriebener Autosave-Platz (nur beim Schreiben gesetzt, nicht beim Laden): bestimmt die Etiketten «Autosave» und «Davor». */
+export const AUTO_WRITTEN_KEY = 'inselreich.save.auto.written';
 
 /** Meldung des Ladens (Übergangsbestand eines alten Standes) oder `null`; nichts davon wird gespeichert. */
 export function loadNotice(result: LoadResult): string | null {
   return result.ok && result.notice !== undefined ? result.notice : null;
 }
 
-export type Slot = 'manual' | 'auto';
+export type AutoSlot = 'auto' | 'auto2';
+export type Slot = 'manual' | AutoSlot;
 export interface SaveInfo {
   slot: Slot;
   tick: number;
@@ -21,8 +27,12 @@ export interface StorageLike {
   getItem(key: string): string | null;
 }
 
-const SLOT_KEYS: Record<Slot, string> = { manual: SAVE_KEY, auto: AUTO_KEY };
-const SLOTS: Slot[] = ['manual', 'auto'];
+const SLOT_KEYS: Record<Slot, string> = {
+  manual: SAVE_KEY,
+  auto: AUTO_KEY,
+  auto2: AUTO2_KEY,
+};
+const SLOTS: Slot[] = ['manual', 'auto', 'auto2'];
 const NO_SAVE = 'Kein Spielstand vorhanden';
 
 function write(key: string, world: World, failReason: string): Result {
@@ -39,11 +49,6 @@ export function saveToStorage(world: World): Result {
   return write(SAVE_KEY, world, 'Speichern fehlgeschlagen');
 }
 
-/** Schreibt den Autosave-Slot. */
-export function saveAuto(world: World): Result {
-  return write(AUTO_KEY, world, 'Autosave fehlgeschlagen');
-}
-
 function readSlot(storage: StorageLike, slot: Slot): LoadResult {
   let json: string | null;
   try {
@@ -55,14 +60,118 @@ function readSlot(storage: StorageLike, slot: Slot): LoadResult {
   return deserialize(json);
 }
 
+/** Zeiger auf das Schreibziel (geladener oder zuletzt geschriebener Autosave-Platz); fehlend, ungültig oder unlesbar ergibt `null`. */
+function readPointer(storage: StorageLike): AutoSlot | null {
+  try {
+    const v = storage.getItem(AUTO_LAST_KEY);
+    return v === 'auto' || v === 'auto2' ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Spielzeit eines lesbaren Autosave-Platzes, sonst `null` (fehlt, beschädigt, fremd). */
+function autoTick(storage: StorageLike, slot: AutoSlot): number | null {
+  const r = readSlot(storage, slot);
+  return r.ok ? r.world.tick : null;
+}
+
+/** Neuester Platz aus den Spielzeiten (`null` = ungültig) und dem Zeiger: Zeiger auf gültigen Platz, sonst grössere Spielzeit (Gleichstand `auto`). */
+function pickNewest(a: number | null, b: number | null, p: AutoSlot | null): AutoSlot | null {
+  if (a === null && b === null) return null;
+  if (a === null) return 'auto2';
+  if (b === null) return 'auto';
+  if (p !== null) return p;
+  return b > a ? 'auto2' : 'auto';
+}
+
+/** Neuester gültiger Autosave-Platz: Zeiger, sonst grössere Spielzeit (Gleichstand `auto`); keiner gültig: `null`. */
+export function newestAuto(storage: StorageLike): AutoSlot | null {
+  return pickNewest(autoTick(storage, 'auto'), autoTick(storage, 'auto2'), readPointer(storage));
+}
+
+/** Ziel des nächsten periodischen Autosaves: der Platz ausser dem Zeiger; ohne Zeiger der fehlende oder beschädigte, sonst der ältere (Gleichstand `auto2`). */
+export function otherAuto(storage: StorageLike): AutoSlot {
+  const a = autoTick(storage, 'auto');
+  const b = autoTick(storage, 'auto2');
+  const p = readPointer(storage);
+  if (p !== null && (p === 'auto' ? a : b) !== null) return p === 'auto' ? 'auto2' : 'auto';
+  if (a === null) return 'auto';
+  if (b === null) return 'auto2';
+  return a < b ? 'auto' : 'auto2';
+}
+
+/** Ein geladener Autosave-Platz wird Schreibziel: der Zeiger zeigt auf ihn (die Etiketten bleiben unverändert); Schreibfehler bleiben stumm, `manual` ändert nichts. */
+export function markAutoLoaded(slot: Slot): void {
+  if (slot === 'manual') return;
+  try {
+    localStorage.setItem(AUTO_LAST_KEY, slot);
+  } catch {
+    // Zeiger ist nur Komfort
+  }
+}
+
+function setMarker(key: string, value: AutoSlot): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Zeiger sind nur Komfort: ohne sie entscheidet die bisherige Regel
+  }
+}
+
+function writeAuto(world: World, target: AutoSlot, moveMarker: boolean): Result {
+  const r = write(SLOT_KEYS[target], world, 'Autosave fehlgeschlagen');
+  if (r.ok) {
+    setMarker(AUTO_WRITTEN_KEY, target);
+    if (moveMarker) setMarker(AUTO_LAST_KEY, target);
+  }
+  return r;
+}
+
+/** Periodischer Autosave: schreibt den anderen Platz und setzt den Zeiger erst nach Erfolg. */
+export function saveAuto(world: World): Result {
+  let target: AutoSlot;
+  try {
+    target = otherAuto(localStorage);
+  } catch {
+    return fail('Autosave fehlgeschlagen');
+  }
+  return writeAuto(world, target, true);
+}
+
+/** Beim Verlassen: überschreibt den neuesten Platz, der Zeiger bleibt, der andere Platz bleibt als «Davor». */
+export function saveAutoNewest(world: World): Result {
+  let target: AutoSlot;
+  try {
+    target = newestAuto(localStorage) ?? 'auto';
+  } catch {
+    return fail('Autosave fehlgeschlagen');
+  }
+  return writeAuto(world, target, false);
+}
+
 /** Nur die Slots, die `deserialize` akzeptiert (kaputte oder fremde Stände fehlen); wirft nie. */
 export function listSavesFrom(storage: StorageLike): SaveInfo[] {
-  const out: SaveInfo[] = [];
-  for (const slot of SLOTS) {
+  const read = (slot: Slot): SaveInfo | null => {
     const r = readSlot(storage, slot);
-    if (r.ok) out.push({ slot, tick: r.world.tick });
+    return r.ok ? { slot, tick: r.world.tick } : null;
+  };
+  const manual = read('manual');
+  const auto = read('auto');
+  const auto2 = read('auto2');
+  // Reihenfolge: manuell, neuester Autosave, «Davor»
+  const valid = { auto: auto !== null, auto2: auto2 !== null };
+  let written: AutoSlot | null = null;
+  try {
+    const w = storage.getItem(AUTO_WRITTEN_KEY);
+    if ((w === 'auto' || w === 'auto2') && valid[w]) written = w;
+  } catch {
+    // Rückfall auf Zeiger und Spielzeit
   }
-  return out;
+  const newest =
+    written ?? pickNewest(auto?.tick ?? null, auto2?.tick ?? null, readPointer(storage));
+  const autos = newest === 'auto2' ? [auto2, auto] : [auto, auto2];
+  return [manual, ...autos].filter((i): i is SaveInfo => i !== null);
 }
 
 /** Wie `listSavesFrom` auf `localStorage`; ein gesperrter Speicher ergibt eine leere Liste. */
@@ -77,7 +186,9 @@ export function listSaves(): SaveInfo[] {
 /** Liest einen Slot; ein fehlender oder unlesbarer Speicher liefert einen Grund statt Fehler. */
 export function loadSlot(slot: Slot): LoadResult {
   try {
-    return readSlot(localStorage, slot);
+    const r = readSlot(localStorage, slot);
+    if (r.ok) markAutoLoaded(slot);
+    return r;
   } catch {
     return { ok: false, reason: 'Speicher nicht verfügbar' };
   }
@@ -123,7 +234,7 @@ export function currentStorageProblem(): StorageProblem {
 }
 
 /** `pagehide`: still den Autosave schreiben (nicht bei Tick 0); Fehler bleiben folgenlos (Spec L1, §9 Punkt 7). */
-export function autosaveOnHide(world: World, write: (w: World) => Result = saveAuto): void {
+export function autosaveOnHide(world: World, write: (w: World) => Result = saveAutoNewest): void {
   if (world.tick <= 0) return;
   try {
     write(world);

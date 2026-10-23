@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-22 (Session 3b332328, R833; live REL-29 `d9580844`, Save v18, Verfassung 1.3, Handbuch 1.68; main lokal = live + Doku)
+Stand: 2026-10-22 (Session 3b332328 Ende, R858; live REL-29 `d9580844`, Save v18, Verfassung 1.3, Handbuch 1.69/1.70; main lokal = live + Doku/Rulings)
 
 ## Release-Notizen
 
@@ -173,28 +173,30 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen ausser LEBEN-STRASSE (R819, läuft). Daueraufträge: **R826** (Deckel 10 bei grüner Limit-Ampel voll halten, ≤ 3 Test-Controller, ≤ 2 Browser,
-Fensterregel R803), R445, R475. **Push-Takt:** höchstens ein Push je Kalendertag (R816, R817), gebündelt; voller Lauf nur vor Merge nach main bzw. Push (Verfassung 1.3).
+Daueraufträge: **R826** (Deckel 10 bei grüner Limit-Ampel voll halten, ≤ 3 Test-Controller, ≤ 2 Browser, Fensterregel R803), **R853/R856** (Arbeiter-Meldungen landen bei L0 →
+sofort per `SendMessage` an den zuständigen Lead weiterleiten; nach jeder Meldung Heartbeats prüfen, > 20 min still → anschreiben), R445, R475. **Push-Takt:** höchstens ein Push je
+Kalendertag (R816, R817), gebündelt; voller Lauf nur vor Merge nach main bzw. Push (Verfassung 1.3).
 
-**Test-Controller (3 belegt, Stand R833):**
-
-1. **ORT-A C11 + UI-H P1** (R803, R817, R823): AK-31 Variante 1 (Patch auf zwei Frames, `flush` im Test) in Arbeit; AK-32/37/39 bestanden; danach Merge k1/k2 → `feat/ort-a`
-   (Teilbeleg), T18. UI-H P1: T01/T02 fertig, T03 Browser/Quote offen.
-2. **LEBEN-STRASSE** (R819–R822, Budget 11): T01–T05 in Arbeit (`feat/leben-strasse`, `feat/leben-strasse-look`); T06/T07 nach ORT-A-Merge.
-3. **TOOL-MESSFENSTER** (R824, Budget 11): Stränge A/B; **T00 (70-min-A/A-Block) erst nach Abschluss der ORT-A-Messungen** — L0 gibt frei.
-
-**Warteschlange für frei werdende Test-Plätze (R832):** 1. SEERECHT (R828, `plan/seerecht` @ `792d565d`, ein Controller, Parallelität 2, Budget 21; T09 nach Stadtplanung), 2. LEBEN-SEE (R832, `plan/leben-see` @ `b5425214`, Budget 11), 3. UI-HAEPPCHEN-I (R833, `plan/ui-haeppchen-i` @ `cc2dbddd`, Budget 16), 4. UI-BEIPACK-FERN (Kurzdesign läuft, nach UI-H P1).
-
-**Bereit fürs nächste Release-Bündel (Gate Merge durch `lead-qa`, ein `make push-check`):** TOOL-LOADSNAP (`tool/loadsnap` @ `3d52f696`, R821), TOOL-DASH-REST (`tool/dash-rest`,
-Review läuft, R829), Doku-Branches `docs/beob-18` (R825; Konflikt am Dateiende mit `feat/ort-a`: beide Abschnitte behalten), `docs/ideen-15` (R827), `design/seerecht`,
-`plan/seerecht`, `design/leben-strasse`, `plan/leben-strasse`, `design/leben-see`, `plan/leben-see`, `design/ui-haeppchen-i`, `plan/ui-haeppchen-i`, `design/i119-i121` (R829),
-`plan/tool-messfenster`, dazu UI-H P1, sobald fertig.
-
-**Wartet auf Merges:** UI-H P2 (nach ORT-A); Stadtplanung C1 (nach ORT-A; Konflikt `app.ts` laut R811; Save v19); I-119/I-121 Plan (nach LEBEN-STRASSE und ORT-A T20);
-AUFLAGEN-KERN Kurzdesign läuft (R827, opus).
-
-Pool: ZEITRESERVE-PFLEGE (H-1; `perf.test.ts`-Pin AK-E0-15a, drei langsame ORT-A-Tests). Erweiterung 1 bleibt in der Nutzer-Session (R519). Messfristen: R769 V3 2026-10-24;
-R750 V1/V3, R755 V1 2026-10-30; R769 V2 2026-11-15, V1 2026-11-30; E-071 nach drei vollen Läufen. Retro-Befunde: R697-Abweichung (R789), Testlast (R787), Push trotz Exit 1 (R815).
+1. **ZUERST: Release REL-30 bündeln und pushen** (heute 2026-10-22 schon REL-29 gepusht → frühestens 2026-10-23). Vorprüfung `lead-qa` OK (R842, Handoff
+   `2026-10-22-lead-qa-gate-REL-30-vorab.md`); **Ergänzungsurteil `lead-qa`** für die seither fertigen Spiel-/Werkzeug-Stränge, dann `production-integrator` im Worktree `integrate`:
+   seriell mergen, **ein** `make push-check` (`VITEST_MAX_WORKERS=5`), bei Exit 0 Push des geprüften Hashes (R815: bei Exit ≠ 0 nie pushen). Inhalt:
+   - Spiel: **UI-HAEPPCHEN-H P1** `feat/ui-haeppchen-h-p1` @ `d97c562d` (R852); **UI-BEIPACK-FERN** `feat/ui-beipack-fern` @ `9694e945` (R855, vor Seerecht T04);
+     **UI-HAEPPCHEN-I A/B** `feat/ui-haeppchen-i-a` @ `a83b8ee0`, `-b` @ `e085f342` (R849); **LEBEN-SEE Klang** `feat/leben-see-klang` @ `fe012787` (R846; Hörurteil «Bitte testen»).
+   - Werkzeug: TOOL-LOADSNAP `3d52f696` (R821), TOOL-DASH-REST `7a442f43` (R834), **TOOL-MESSFENSTER** `feat/tool-messfenster` @ `5c138f56` (R847, vor PUSHSPERRE T05),
+     **TOOL-PUSHSPERRE A/P** `tool/pushsperre` @ `d6efeb31`, `tool/perf-pin` @ `de7fbe33` (R848; neuer Hook in `.claude/settings.json`), **TOOL-VORDERGRUND** `tool/vordergrund` @ `32ffd8ba`
+     (R854, Review OK).
+   - Doku: `docs/beob-18`, `docs/ideen-15`, `docs/doku-audit-1` (R843), alle `design/*`/`plan/*` laut R842 (Plan-Branches enthalten ihre Design-Branches), `design/auflagen-kern` @ `6fe3caf3`,
+     `design/i119-i121` @ `7c5638a0`, `plan/tool-pushsperre`.
+   - Release-Notiz-Entwurf im Vorab-Handoff ergänzen («Bitte testen»: Davor laden/Neuladen, Kasse leer, Bestand im Tooltip, Fernauftrag rot/«zu spät», Anlege-Klang).
+2. **ORT-A C11** (R857): AK-31/37/39 bestanden; AK-32 Seed 14/Fixture und AK-30 auf `4db494e9` prüfen (Umsetzer-Bericht/Log `scratchpad/h10.log` der Session 3b332328), dann Abnahme
+   k1/k2 → `feat/ort-a` (Teilbeleg), T18, danach Merge-Weg ORT-A nach main. **ORT-A ist der Engpass** für: LEBEN-STRASSE T06–T10 (R837), LEBEN-SEE Kielwasser T03 (R846), UI-H P2,
+   Stadtplanung C1 (danach Seerecht T08/T09, UI-I T05–T07, AUFLAGEN-KERN Plan).
+3. **TOOL-MESSFENSTER T00** (70-min-A/A-Block) erst nach Ende der ORT-A-Messungen (R824, R847); T06 nur bei positivem T00.
+4. **TOOL-PUSHSPERRE T05** nach TOOL-MESSFENSTER auf main (R848).
+5. **SEERECHT** T04 nach UI-BEIPACK-FERN auf main, T06/T07 danach (R838; `feat/seerecht*`, Restbudget 13).
+6. **Briefing-Vorlage** `docs/studio/templates/briefing.md` auf Teilbeleg umstellen, offene Pläne mitprüfen (R858, `studio-coach`). **TOOL-RUECKKANAL** (R856): Arbeiter melden per `SendMessage` an ihren Lead (Adresse im Briefing, Werkzeug in Arbeiter-Personas). Feedback-Entwurf an Anthropic liegt bei `/feedback`.
+7. Pool: ZEITRESERVE-PFLEGE (Ursache Sim-Verlangsamung AK-E0-15a 1,59 → 2,3 ms, R848; drei langsame ORT-A-Tests). Messfristen: R769 V3 2026-10-24; R750 V1/V3, R755 V1 2026-10-30;
+   R769 V2 2026-11-15, V1 2026-11-30; E-071 nach drei vollen Läufen. Erweiterung 1 bleibt in der Nutzer-Session (R519).
 
 ## Aktuelles Projekt und Phase
 
@@ -219,7 +221,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- ORT-A C11 (Messungen, `ort-a`, `ort-a-k2`), UI-HAEPPCHEN-H P1 (wartet auf Browser-Fenster), TOOL-LOADSNAP; ein `lead-tech`-Controller führt ORT-A und UI-H (R803). Stadtplanung (`stadt-sim`, `stadt-ui`) pausiert.
+- Nichts aktiv ausser ggf. dem ORT-A-Umsetzer-Messlauf (AK-32/AK-30, Hintergrund, Worktree `ort-a-k1`; vor Neustart `git status` und Heartbeat prüfen, R329). Alle Controller pausiert mit Handoff.
 
 ## Parallele Sessions
 
@@ -232,7 +234,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 - **Vorsession e6dbb809 (R792–R801, 2026-10-21):** TOOL-DASH-SCHLANK gemergt (R795), Stadtplanung C1 bis T08 abgenommen (R796), IDEEN-14 (R797), UI-HAEPPCHEN-G Kurzdesign und Plan OK (R798, R799),
   ORT-A C11 k2 abgenommen, Fixes k1/k2 zur Messung (R800, R801); endete ohne Ende-Routine.
 - **Heute (R802–R818, 2026-10-22):** HAUSHALT-02 (3,5 GB gelöscht, R804); WIRTSCHAFT-BS-1: Seerecht bauen, I-154/I-151 verworfen (R805), Seerecht-Spec abgenommen (R814); UI-HAEPPCHEN-H Kurzdesign
-  und Plan OK (R807, R808); R810 Tests minimieren und Releases bündeln; UI-G Gate Merge, REL-29 live (R812, R815); Verfassung 1.3 und Handbuch 1.67, ein Push je Tag (R816, R817); UI-H P1 gestartet, TOOL-LOADSNAP (R818).
+  und Plan OK (R807, R808); R810 Tests minimieren und Releases bündeln; UI-G Gate Merge, REL-29 live (R812, R815); Verfassung 1.3 und Handbuch 1.67, ein Push je Tag (R816, R817); UI-H P1 gestartet, TOOL-LOADSNAP (R818); Deckel 10 (R823, R826); LEBEN-STRASSE Kurzdesign/Plan/T01–T05 (R819–R822, R837); IDEEN-15 (R827); Specs/Pläne Seerecht, LEBEN-SEE, UI-I, UI-BEIPACK, AUFLAGEN-KERN (R828–R840); BEOB-18, Doku-Audit, Retro REL-29, Handbuch 1.68/1.69 (R825, R841–R844); fertig fürs Bündel: UI-H P1, UI-I A/B, UI-BEIPACK, LEBEN-SEE Klang, TOOL-MESSFENSTER, TOOL-PUSHSPERRE A/P, TOOL-VORDERGRUND (R846–R855); Vorfall eingeschlafene Leads (R853, R854, R856); ORT-A AK-31/37 bestanden (R857).
 
 ## Pausierte Pakete
 
@@ -248,9 +250,9 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Budget
 
-Offen (Freigaben dieser Session): ORT-A C11 6 Starts (R802, im Controller-Budget 14 mit UI-G, R803; UI-G fertig), UI-HAEPPCHEN-H 11 (R808), TOOL-LOADSNAP 3 (R818). Verbrauch: Dashboard.
+Alle Freigaben dieser Session verfallen mit Session-Ende; Reste laut Handoffs (ORT-A, LEBEN-STRASSE 5, LEBEN-SEE 5, SEERECHT 13, UI-I 8, TOOL-MESSFENSTER 6, TOOL-PUSHSPERRE 3) neu erteilen.
 
 ## Offene Entscheide
 
-- Nutzer: **N-99 und N-103 erledigt** (R816, R817); N-101 (Darlehen verwerfen; ohne Antwort gilt Verwerfen); **N-102 offen** (Headless-Chrome des Projekts reflexionsinstrument beenden? Vermerk bei Messungen, R800).
+- Nutzer: **N-99 und N-103 erledigt** (R816, R817); N-101 (Darlehen verwerfen; ohne Antwort gilt Verwerfen); **N-102 offen** (Headless-Chrome des Projekts Munica beenden? Vermerk bei Messungen, R800).
 - L0: keine offenen.

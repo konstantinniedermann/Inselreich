@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as growthBrakeMod from '../../src/ui/growthBrake';
 import { deriveUnlocks } from '../../src/sim/unlocks';
 import { STORAGE_CAP } from '../../src/sim/defs/goods';
 import { goodsBalance } from '../../src/sim/queries';
@@ -19,6 +20,7 @@ import {
   houseConsumers,
   shouldBlurAfterClick,
   moneyView,
+  updateMoney,
   popChipView,
   balanceTooltip,
   taxButtonText,
@@ -36,7 +38,14 @@ import {
   syncGoalChip,
   bindGoalChip,
   FAR_TRAVEL_TIP,
+  BRAKE_REFRESH_MS,
+  updateHud,
+  type HudActions,
 } from '../../src/ui/hud';
+import type { GameState } from '../../src/ui/app';
+import { TIER_IDS } from '../../src/sim/defs/tiers';
+import { brakeLines, growthBrakes } from '../../src/ui/growthBrake';
+import { secToTicks } from '../../src/ui/reach';
 import { GOOD_IDS, GOODS } from '../../src/sim/defs/goods';
 import { HOME, home, createWorld } from '../../src/sim/world';
 import { UNLOCK_IDS } from '../../src/sim/defs/unlocks';
@@ -54,6 +63,12 @@ import { acceptFarOrder, farAlternative } from '../../src/sim/orders';
 import { dropKontor, farWorld, islandOf, periodStart, stepAt } from '../sim/farHelpers';
 import { deliverLabel, orderCardText, orderVisible } from '../../src/ui/order';
 import { farAcceptTooltip, farOfferText, farOrderText } from '../../src/ui/farOrder';
+
+vi.mock('../../src/ui/growthBrake', async (orig) => {
+  const m = await orig<typeof import('../../src/ui/growthBrake')>();
+  return { ...m, growthBrakes: vi.fn(m.growthBrakes) };
+});
+const brakeSpy = vi.mocked(growthBrakeMod.growthBrakes);
 
 describe('Kopfzeile, reine Texte (AK-UX-07)', () => {
   it('AK-UX-07 tierTooltip und tierPath aus TIERS', () => {
@@ -864,5 +879,150 @@ describe('I-132 Ziel-Chip als Knopf', () => {
     expect(readFileSync('src/ui/hud.ts', 'utf8')).toMatch(
       /<button type="button" class="chip goal-chip" data-field="goal">/,
     );
+  });
+});
+
+describe('Geld-Chip: Kasse-leer-Hinweis (I-168)', () => {
+  class Chip extends FakeElement {
+    removed = 0;
+    removeAttribute(name: string): void {
+      if (name === 'title') this.title = '';
+      this.removed += 1;
+    }
+  }
+  const setup = () => {
+    const header = new FakeElement('header');
+    const chip = new Chip('span');
+    chip.dataset.field = 'money';
+    header.append(chip);
+    vi.stubGlobal('document', fakeDocument);
+    return { header: header as unknown as HTMLElement, chip };
+  };
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('I4/I6: Klasse, Tooltip und aria-label nur bei Reichweite; Chip-Text bleibt', () => {
+    const { header, chip } = setup();
+    const w = createWorld(3);
+    w.money = (secToTicks(120) * 12) / 100;
+    w.stats = { taxes: 0, upkeep: 12 };
+    updateMoney(header, w);
+    expect(chip.classList.contains('reach-warn')).toBe(true);
+    expect(chip.title).toMatch(/^Kasse leer in ≈ /);
+    expect(chip.getAttribute('aria-label')).toContain(chip.title);
+    w.stats = { taxes: 12, upkeep: 0 };
+    updateMoney(header, w);
+    expect(chip.classList.contains('reach-warn')).toBe(false);
+    expect(chip.title).toBe('');
+    expect(chip.getAttribute('aria-label')).toBe(`Geld ${w.money}`);
+    expect(chip.querySelector('.chip-value')!.textContent).toBe(String(w.money));
+  });
+  it('I5: negatives Geld behält negative und zeigt die Zeile', () => {
+    const { header, chip } = setup();
+    const w = createWorld(3);
+    w.money = -4;
+    w.stats = { taxes: 0, upkeep: 12 };
+    updateMoney(header, w);
+    expect(chip.classList.contains('negative')).toBe(true);
+    expect(chip.title).toMatch(/^Kasse ist leer/);
+  });
+  it('I7: Welt bleibt unverändert, 1000 Aufrufe schreiben Tooltip und aria-label je höchstens einmal', () => {
+    const { header, chip } = setup();
+    const w = createWorld(3);
+    w.money = (secToTicks(120) * 12) / 100;
+    w.stats = { taxes: 0, upkeep: 12 };
+    const before = JSON.stringify(w);
+    const set = vi.spyOn(chip, 'setAttribute');
+    let titleWrites = 0;
+    let title = '';
+    Object.defineProperty(chip, 'title', {
+      get: () => title,
+      set: (v: string) => {
+        titleWrites += 1;
+        title = v;
+      },
+    });
+    for (let i = 0; i < 1000; i++) updateMoney(header, w);
+    expect(titleWrites).toBeLessThanOrEqual(1);
+    expect(set.mock.calls.filter(([n]) => n === 'aria-label').length).toBeLessThanOrEqual(1);
+    expect(JSON.stringify(w)).toBe(before);
+  });
+});
+
+class FakeHeader extends FakeElement {
+  querySelectorAll(): FakeElement[] {
+    return [];
+  }
+}
+
+describe('Wachstumsbremse am Einwohner-Chip (I-170)', () => {
+  const nowSpy = () => vi.spyOn(performance, 'now');
+  const fakeHeader = () => {
+    const header = new FakeHeader('header');
+    const row = new FakeElement('div');
+    row.className = 'hud-row';
+    header.append(row);
+    const chips = TIER_IDS.map((t) => {
+      const c = new FakeElement('span');
+      c.dataset.field = `pop-${t}`;
+      row.append(c);
+      return c;
+    });
+    vi.stubGlobal('document', fakeDocument);
+    return { header: header as unknown as HTMLElement, chips };
+  };
+  const actions = { focusedGood: () => null } as unknown as HudActions;
+  const stateOf = (world: ReturnType<typeof createWorld>) =>
+    ({ world, activeIsland: 0 }) as unknown as GameState;
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    brakeSpy.mockClear();
+  });
+
+  it('I25: eine Berechnung je Sekunde, Titel nur bei geändertem Text', () => {
+    const now = nowSpy().mockReturnValue(10_000);
+    const { header, chips } = fakeHeader();
+    const w = createWorld(3);
+    const st = stateOf(w);
+    for (let i = 0; i < 100; i++) updateHud(header, st, actions);
+    expect(brakeSpy).toHaveBeenCalledTimes(1);
+    expect(chips[0]!.title).toBe(tierTooltip(1));
+    now.mockReturnValue(10_000 + BRAKE_REFRESH_MS - 1);
+    updateHud(header, st, actions);
+    expect(brakeSpy).toHaveBeenCalledTimes(1);
+    now.mockReturnValue(10_000 + BRAKE_REFRESH_MS);
+    updateHud(header, st, actions);
+    expect(brakeSpy).toHaveBeenCalledTimes(2);
+  });
+  it('I25: verborgene Stufen-Chips bekommen keinen Brems-Text, ohne Chips keine Berechnung', () => {
+    nowSpy().mockReturnValue(10_000);
+    const { header, chips } = fakeHeader();
+    const w = createWorld(3);
+    expect(popChipHidden(w, 4)).toBe(true);
+    updateHud(header, stateOf(w), actions);
+    expect(chips[3]!.title).toBe('');
+    brakeSpy.mockClear();
+    const bare = new FakeHeader('header');
+    const row = new FakeElement('div');
+    row.className = 'hud-row';
+    bare.append(row);
+    updateHud(bare as unknown as HTMLElement, stateOf(w), actions);
+    expect(brakeSpy).not.toHaveBeenCalled();
+  });
+  it('I21/I26: Tooltip hängt die Zeile an den Stufentext, Chip-Text und aria-label bleiben', () => {
+    nowSpy().mockReturnValue(10_000);
+    const { header, chips } = fakeHeader();
+    const w = createWorld(3);
+    const k = w.buildings[home(w).kontorId]!;
+    const b = putBuilding(w, 0, 'house', k.x + 2, k.y - 2);
+    b.house!.satisfied.food = false;
+    updateHud(header, stateOf(w), actions);
+    const lines = brakeLines(growthBrakes(w, 0)[1], false);
+    expect(lines).toHaveLength(1);
+    expect(chips[0]!.title).toBe(`${tierTooltip(1)}\n${lines[0]}`);
+    const view = popChipView(w, 1);
+    expect(chips[0]!.getAttribute('aria-label')).toBe(view.label);
+    expect(chips[1]!.hidden).toBe(true);
+    expect(chips[1]!.title).toBe('');
   });
 });
