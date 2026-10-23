@@ -4,7 +4,7 @@ Aufbau je Eintrag: Datum · Fundort · Beobachtung · Ursprung · erste Einschä
 Auswertung mit dem Skill `beobachtungen-auswerten`. Ein Folgeissue entsteht nur auf
 ausdrückliche Zustimmung des Nutzers; im Studio gehen Paket-Kandidaten an L0.
 
-Letzte Auswertung: 2026-10-16
+Letzte Auswertung: 2026-10-22
 
 **Marke (R287, R288):** Die Zeile „Letzte Auswertung: JJJJ-MM-TT“ ist die Zählmarke des SessionStart-Hooks. Als
 Eintrag zählt jede Überschrift der Ebene 2 oder 3 unter der Marke, ausser „Offen …“ und „Ausgewertet …“. Neue
@@ -38,202 +38,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 **Stand 2026-10-16** (`lead-production`, Paket BEOB-16, gegen `e9626a27`): 35 Einträge gesichtet (20 Überschriften, 15 Stichpunkte). Bilanz in „Ausgewertet 2026-10-16“; ein Eintrag (Salzregister, Ortsrand) bleibt offen.
 
-## Ausgewertet 2026-10-11 (2)
-
-**Bilanz** (12 Einträge, `lead-production`, Paket BEOB-2026-10-11b, gegen `60144cdb`): 2 erledigt, 6 abgehakt (mit Trigger), 1 eingeplant
-(Board: UI-AUFRAEUM-2), 3 offen und laufenden Paketen zugeordnet (I-048 R555 dreimal), 0 Ideen, 0 verworfen.
-Die drei offenen Einträge (dazu der neue Eintrag zur Controller-Phase, probe-CONTROLLER-PHASE R558) stehen unten unter „Offen“ mit Zuordnung.
-
-| Eintrag                                          | Ausgang                 | Begründung · Trigger / Beleg                                                                                                                                      |
-| ------------------------------------------------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Verkaufssättigung erholt sich schnell            | zugeordnet I-048 (R555) | Abwägung, läuft in Schritt B; kein eigenes Paket                                                                                                                  |
-| Zahlen in I-031 weichen vom README ab            | abgehakt                | `docs/ideen.md` I-031 nennt −5 %/−10 %, README Edikt-Tabelle −7/−5 Punkte (belegt); Historie eines gelieferten Eintrags · wenn I-031 neu bewertet wird            |
-| Formatvorlage in `ideen.md` zählt im grep mit    | abgehakt                | Zeile `### I-001 · neu · <Kurzname>` im Codeblock belegt; Zählung mit `grep -v '<Kurz'` · nächste Ideen-Runde führt die Zählung so oder ohne `###` in der Vorlage |
-| `buyPct` fehlt in arc42                          | zugeordnet I-048 (R555) | 0 Treffer in `docs/arc42.md`; T08 deckt es                                                                                                                        |
-| Doppelter Test `edicts.test.ts:252-264`          | abgehakt                | belegt (`AK-ZK-09` in `buyPct.test.ts:113`, gleiche Erwartungen 7/30/37); niedrig, `tests/` nicht in diesem Scope · nächster Eingriff in `edicts.test.ts`         |
-| Budget-Hook `warning()` / `tablecheck` Randfälle | erledigt                | im Eintrag bereits entschieden (TOOL-BUENDEL-8 T04), kein Code offen                                                                                              |
-| Last-Flake `terrain.test.ts`                     | abgehakt                | Diagnose im Eintrag, kein Fix auf Verdacht · nächster roter Lauf mit Fehlermeldung (`test_failed.messages`): «timed out» → Timeout anheben                        |
-| `stateText` ohne Aufrufer                        | erledigt                | entfernt in UI-AUFRAEUM-2 (T03 b), `grep stateText src tests` = 0                                                                                                 |
-| Budget-Zuordnung Namenstreffer vs. Lead-Freigabe | abgehakt                | nur Altdaten mit Präfix-Phasen (R543 vergibt reine IDs) · zweiter E-060-Echtlauf zeigt Fehlzuordnung                                                              |
-| Sieg-Tick im Balancing sprunghaft                | zugeordnet I-048 (R555) | Robustheitsachse kommt aus TOOL-GATE-ENSEMBLE (R556)                                                                                                              |
-| Balancing-Controller: Seed wirkt nicht           | erledigt                | durch TOOL-GATE-ENSEMBLE (R558/R559): `make gate-ensemble` liefert die Robustheitsachse                                                                           |
-| Gesperrte Edikt-Knöpfe: Kontrast                 | abgehakt                | niedrig, ungemessen · nächste Kontrast-Runde in `tests/ui/contrast.test.ts` misst das Paar                                                                        |
-
-**Ruling-Entwurf (R471, nur Entwurf, schreibt L0):** UI-AUFRAEUM-2 um «`stateText` samt Re-Export in `inspect.ts` streichen» ergänzen
-(Owner `lead-tech`, Gr. S–M, blocked-by M13-Final-Review). Kein neues Paket, kein Issue.
-
-**Ideen:** keine.
-
----
-
-## Ausgewertet 2026-10-11
-
-**Bilanz** (29 Überschriften-Einträge, `lead-production`, Paket BEOB-AUSW-1011, gegen `22dcf081`): 1 erledigt, 15 abgehakt
-(mit Trigger), 12 belegt und offen als Paket-Kandidaten (4 Bündel/Entscheide, siehe unten), 1 Abwägung offen (Verkaufssättigung,
-läuft in I-048), 0 verworfen, 0 Ideen, 0 ungesichtet. Teilbefunde sind einzeln per grep am Code auf main geprüft (Fundstellen
-unten); Bildbefunde (Playtest-Screenshots) und Browser-Messungen sind nicht neu gemessen. Aus den Einträgen wurden die
-Teilpunkte als **erledigt** gestrichen, die nicht mehr zutreffen. Die Rohfassung der 29 Einträge steht unverändert im
-[Archiv](beobachtungen-archiv.md); der Abschnitt „Ausgewertet 2026-10-09 (2)“ ist dorthin verschoben.
-
-**Erledigt / überholt (ganze Einträge oder Teilpunkte)**
-
-| Eintrag                                                  | Beleg                                                                                          |
-| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Board-Titel durch `log.py package` überschrieben         | `tools/studio/log.py`: Titel nur bei neuem Paket oder `--retitle` (Zeile 98, 220)              |
-| Schild «Kein Bauland» über Gebirge wirkt falsch (Teil)   | REL-16 live (R463): `src/ui/hints.ts` `groundText` nennt das Gelände («Kein Bauland: Gebirge») |
-| `toggleStartsJump` toter Export (I-043 Branch-Review)    | 0 Treffer in `src/` und `tests/`                                                               |
-| `monumentNightLight` nicht eingehängt (M13-E2-ART)       | `src/render/renderer.ts:724` ruft es auf                                                       |
-| Handlerzustand nach Doppel-Ctrl-C ungetestet (`testrun`) | `tools/studio/tests/test_testrun.py:256-260` (`signal.getsignal` vorher/nachher)               |
-| `HOUSE_TITLES` Abhängigkeit (REL-17 (8))                 | in I-043 erledigt (`texts.ts`)                                                                 |
-| Playtest REL-18 (7) «Nächster Schritt» übersieht Mangel  | UI-NAECHSTER-SCHRITT gemergt (R518); Wortlaut nicht neu gemessen                               |
-
-**Abgehakt (mit Trigger)**
-
-| Eintrag                                                     | Begründung · Trigger                                                                                                                                                                        |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Bergfuss-Optik der Gebirgskachel (REL-16 Planung)           | Schild gelöst; Darstellung `lead-art` · Playtest oder Spieler meldet Gebirge am Rand nicht lesbar                                                                                           |
-| `hints.ts:73` `buildingId!`                                 | Typ-Nit, sachlich sicher (belegt) · nächster Eingriff in `hints.ts`                                                                                                                         |
-| REL-17 Randfälle (a)–(g)                                    | (b) `unconnectedIds` (`hints.ts:397`) gegen `needsConnection` (`problems.ts:36`), (e) `closeClosableToast` (`app.ts:992`) belegt · nächster Eingriff in `problems.ts`/`hints.ts`/`input.ts` |
-| REL-17 niedrige Befunde (1)–(7)                             | (3) `hints.ts:361` Text, (4) `renderer.ts` `HOVER_BAD` belegt · Nacharbeit der Abriss-Vorschau                                                                                              |
-| M13-E1 T13 Restpunkte                                       | alle niedrig; (3), (9) Spec/Balance-Hinweise an `lead-design` · nächster Eingriff Edikt-Abschnitt oder Spec M13-E1                                                                          |
-| Worktree-`start.sh` ohne `STUDIO_HOME`                      | so gewollt für Echtdaten · Test-Dashboard im Worktree immer mit `STUDIO_HOME=<tmp>`                                                                                                         |
-| I-043 Rechtsklick löscht Fokus                              | README nennt es; Spec ohne AK · nächste Spec-Änderung UI-GUT-CHIP                                                                                                                           |
-| I-043 Browser-Lauf T08                                      | vorbestehend (Tab-Reihenfolge), Rest nur im Vitest prüfbar · Tastatur-/Fokus-Paket oder U6 (Glas, Seefahrt) frei                                                                            |
-| I-043 Branch-Review (2), (3)                                | doppelte Fokus-Regel `focusList`/`drawFocusMarks` · nächster Eingriff `goodFocus.ts` oder `focusMarks.ts`                                                                                   |
-| CI-Dauer 7 statt 4 min                                      | Ursache ungemessen; `make push-check` (TOOL-BUENDEL-6) gemergt · CI dauert > 8 min oder Actions-Prognose rot (R488 V2)                                                                      |
-| AK-GC-08 Verdrahtung `app.ts` ungetestet                    | niedrig · nächster Eingriff in `app.ts` (Fokus/Problem-Cursor)                                                                                                                              |
-| `build_state` weiter beschleunigen                          | 1,3 s akzeptiert (R482) · Dashboard spürbar träge                                                                                                                                           |
-| Inspektor-Abhilfe «baue mehr» bei vollem Lager              | nur im pausierten Test gesehen, `guide.ts` `remedyText` nicht neu gemessen · Playtest sieht es im laufenden Spiel                                                                           |
-| M13-E2-ART Frame-Ereigniszahl schwankt (`renderer.test.ts`) | Flake-Kandidat · tritt im `make push-check`/CI auf                                                                                                                                          |
-| «Kein Kontor» beim Gut-Sperr-Fall (M13-E2-UI)               | Text ungenau, spec-konform · I-049-UI (Sperrbestand-Anzeige) prüft es mit                                                                                                                   |
-
-**Belegt und offen: Paket-Kandidaten** (Fundstellen am heutigen Stand geprüft)
-
-| Kandidat                                                                                                          | Gr. | Bereich | Owner (Vorschlag)                 | Inhalt · Beleg                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ----------------------------------------------------------------------------------------------------------------- | --- | ------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **UI-TEXTE-1** «Stillgelegt», Kontrast, Wortlaut (spürbar für Spieler)                                            | S–M | ui      | `lead-tech` (Texte `lead-design`) | «halber Unterhalt» (README) gegen 60 % Aufrundung (R467) und Ausstoss weiter 15/min; blasse «lohnt, wenn …»-Zeilen und Edikt-Knöpfe (`--parchment-muted`); Kontor-Spaltenkopf ohne Trenner («KAUFENEDIKT»); `guide.ts:130` «Handelsstadt erreicht — spiel frei weiter» ohne Denkmal-Hinweis; `buildMenu.ts:152` «Höchstens eine Denkmal»; «Bau pausieren» im Bauplatz-Stand; Tooltip «Entf» ohne Rücktaste (`inspect.ts:822`, Mac); Laden-Liste nach «Speichern» (`menu.ts`). Quellen: M13-E1 T14, REL-18, M13-E2 Browser-Lauf 1/Final-Review, UI-TASTEN. |
-| **UI-AUFRAEUM-2 (erledigt, Branch `refactor/ui-aufraeum-2`)** Kopplung über Anzeigetexte, doppelte Kostenstruktur | S–M | ui      | `lead-tech`                       | Abschluss-Banner am Text erkannt (`app.ts`), Pausenzustand aus Knopftext (`monumentSection.ts`), Kosten doppelt (`monumentView.ts`/`app.ts`), `stage`-Sprung ergibt einen Chronik-Eintrag, kein DOM-Test `rest-monument`; `RESERVE_TICKS = 1000` neben Sim-800 (`balance-monument.test.ts:48`); `isSaveChord` in `modal.ts` zieht `sim/defs` mit; «Abreissen» sechsmal als Literal (`inspect.ts` 4, `app.ts` 2). Nach M13.                                                                                                                                |
-| **TOOL-BUENDEL-7** `testrun`/`log`/`model`-Restpunkte                                                             | S–M | tool    | `lead-tech` (Regel vorher L0)     | `testrun.py` `parse_names` bei Sammelfehlern leer; zweites Ctrl-C vor `_ignore_interrupts()` (kein `pthread_sigmask`); `log.py` `_package_exists` sucht ID als Rohtext (nicht-ASCII); `model.py` `lead_phases`/`budget_key` hängen an der Reihenfolge in `result` (`claim_budgets()` nur in `result`-Pfad, Zeile 1214); Lead mit Paket `X-T01` bindet Freigabe `X` nicht (Präfix-Regel vorher L0); `make docs-check` erkennt zerrissene Markdown-Tabellen nicht (unmaskiertes `\|` im Code-Span).                                                         |
-| **Entscheid `lead-design`** Layout unter 900 px (AK-M13E2-48)                                                     | —   | ui      | `lead-design`                     | Bei 800×600 überlappen `#panel` und `#game` um 161 px, HUD 931 px breit. Empfehlung: AK-M13E2-48 auf «stürzt nicht ab» zurücknehmen (Desktop-first ab 1280 px, `CLAUDE.md`), kein Layout-Umbau. Dazu Spec-Nachträge: AK-M13E1-14 (Geld ≥ 600), AK-M13E1-36 gegen U-4, Rechtsklick in UI-GUT-CHIP-Spec.                                                                                                                                                                                                                                                    |
-| **Entscheid L0** `make push-check` D1/Lastwarten                                                                  | —   | tool    | L0 (R514 V2-Daten)                | Bei leerer Markierungsliste Exit 0 ohne Nachmessung (D1), `check-ci-perf` wartet nicht auf ruhige Last (`tools/studio/pushcheck.py`); falsches Rot möglich, kein falsches Grün. Empfehlung: nach den Load-Daten aus R514 V2 entscheiden, kein Paket vorher.                                                                                                                                                                                                                                                                                               |
-
-**Empfehlung nach M13:** UI-TEXTE-1 zuerst (einziges Bündel mit Spielerwirkung, gehört vor Folge-UI-Arbeit wie I-049-UI/I-048-UI);
-UI-AUFRAEUM-2 als Aufräum-Häppchen nach dem Final-Review; TOOL-BUENDEL-7 bei freier Werkzeug-Kapazität. Keine Issues angelegt
-(keine Schwelle der Verfassung erfüllt: kein Kunde, kein Produktivbetrieb).
-
-**Ideen:** keine. **Abwägung offen:** Verkaufssättigung (unten unter „Offen“), wird mit I-048 durch `design-economy-designer` nachgerechnet.
-
----
-
-## Ausgewertet 2026-10-10
-
-**Bilanz** (27 Überschriften-Einträge, `lead-production`, Paket BEOB-AUSW-04, gegen `c282def0`): 11 erledigt/überholt,
-9 abgehakt (mit Trigger), 7 belegt und offen (alle S; 2 ui, 5 tool), 0 verworfen, 0 Ideen, 0 ungesichtet. Verifiziert per
-grep und Lesen am Code auf main (Aufrufstellen gelesen, nicht nur Definitionen). Bildbefunde (Playtest-Screenshots) sind
-nicht neu gemessen. Die Rohfassung der 27 Einträge steht unverändert im [Archiv](beobachtungen-archiv.md).
-
-**Erledigt / überholt**
-
-| Eintrag                                                  | Beleg                                                                |
-| -------------------------------------------------------- | -------------------------------------------------------------------- |
-| Inspektor-Hilfszeile doppelt                             | REL-15 (R435), Commit `b1f26bc` (`src/ui/inspect.ts`)                |
-| Hover-Karte verdeckt Cursor-Hinweis                      | REL-15, `e9dfa65` (`cursorHintVisible`)                              |
-| Testtitel «ab 0,25»                                      | REL-15, `59025e9`                                                    |
-| `make studio-lint` rot                                   | TOOL-BUENDEL-2, `177f12e9` (Ruff 0.17.0 gepinnt)                     |
-| Testschalter in `paths.py`                               | `920539a1`                                                           |
-| `metrics.py --session latest` schreibt ins Hauptcheckout | `aebfc1ee` (`paths.worktree_docs_dir`)                               |
-| `zeitreserve-push` verwirft bei Last > 4                 | `aa7bbf3d`; Handbuch-Schritt strich Handbuch 1.40 (`de86dd92`)       |
-| Git-Hook ohne `python3`                                  | `b91db729`; `tools/githooks/pre-commit:7` prüft `command -v python3` |
-| Schein-Session «manual»                                  | `a57ca780` (`model.MANUAL_SESSION`)                                  |
-| Testlücke `ps`-Fehler                                    | `82f00bc8`                                                           |
-| haiku-Zeile per Kopfzeile nicht erfüllbar                | `9bd39b04` (`modelguard.py`)                                         |
-
-**Abgehakt (mit Trigger)**
-
-| Eintrag                                                   | Begründung · Trigger                                                                                                              |
-| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Meeresfels Ferngrösse (R423)                              | `lead-art` NEIN, massstabstreu · Fels bekommt Spielwirkung, Playtest vermisst Fels, Schiffsgrösse oder kleinster Zoom ändert sich |
-| Dienst-Mangel «fehlt in Reichweite» (zwei Einträge, R435) | `lead-design`: trägt „zu weit weg“-Information · Playtest zeigt, dass Spieler «fehlt» und «fehlt in Reichweite» verwechseln       |
-| Probe-Event `commit_rejected`                             | `.studio/events.jsonl` (1 Treffer), append-only · erledigt sich beim nächsten `make studio-archive`                               |
-| Ampelzeile bereinigter Steuerungsanteil                   | E-049 laufend (`experimente.md`) · E-049 übernommen                                                                               |
-| Ampelzeile «Persona-Starts» nur `general-purpose`         | `efficiency.py` (`persona_opus`); Definition braucht Ruling · nächste Retro (`studio-coach`)                                      |
-| dpr-Wechsel bei offener Seekarte                          | `hud.ts`: `mapDpr` wird nur beim Öffnen gesetzt · Spieler meldet unscharfe/zu kleine Karte nach Bildschirmwechsel                 |
-| Kontor-Marke 4 px bei 1280×720                            | `seaMap.ts` `MARK = 4` · Playtest übersieht die Marke (Urteil `lead-art`)                                                         |
-| Hook-Zeile Python < 3.11                                  | Python-Seite getestet (`tools/studio/tests/test_precommit.py:136`), nur die Shell-Zeile `pre-commit:8` nicht · Hook-Änderung      |
-
-**Belegt und offen: Paket-Kandidaten** (Fundstellen am heutigen Stand belegt)
-
-| Kandidat                                                                                      | Gr. | Bereich | Ursprung · Beleg                                                                                                                                                                                                       |
-| --------------------------------------------------------------------------------------------- | --- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **REL-16 (1)** Schild «Kein Bauland» über belegter Kachel präzisieren (z. B. «Kachel belegt») | S   | ui      | Playtest T06 REL-15 · `src/ui/hints.ts:58-59`, `src/sim/placement.ts:34` (Grund `Kein Bauland` auch bei Belegung gemeldet, Wortlaut irreführend)                                                                       |
-| **REL-16 (2)** `dispose` bricht Inselmenü-Listener ab (Leck der alten Welt nach Startfehler)  | S   | ui      | Final-Review REL-15 · `src/ui/app.ts` `dispose` (ab Zeile 1294) ruft nichts davon auf; `islandMenuAbort` ist modul-privat in `src/ui/hud.ts:336`, braucht Export oder Abbruch-Hook; Test analog `tests/ui/hud.test.ts` |
-| `ZEITTESTS` bereinigen: `seaMap.test.ts`                                                      | S   | tool    | REL-15 R437 B4 · `vite.config.ts:11`; die Datei enthält weder `performance.now(` noch `Date.now(` (0 Treffer)                                                                                                          |
-| `seekarte.mjs`: `12 * d` durch `SEA_MAP_PAD` ersetzen                                         | S   | tool    | Final-Review REL-15 · `tools/render-qa/seekarte.mjs:136`; `SEA_MAP_PAD` wird in `hud.ts:25` importiert                                                                                                                 |
-| QA-Namensschema und `willReadFrequently`                                                      | S   | tool    | Release-Check REL-15 · `b6-*.png` ohne Grösse (`a4-*` hat sie), `willReadFrequently` fehlt in `seekarte.mjs:140`                                                                                                       |
-| `efficiency.scan`: `tool_result` nach `since` zu `tool_use` davor                             | S   | tool    | TOOL-BUENDEL-2 T03 · `tools/studio/efficiency.py` `scan`: `_before(entry, since)` überspringt vor `_collect_tools`                                                                                                     |
-| `test_metrics.py`: `paths.repo_root` abschotten                                               | S   | tool    | TOOL-BUENDEL-2 T07 · `tools/studio/tests/test_metrics.py:183` entfernt `STUDIO_DOCS` ohne `repo_root` umzulenken                                                                                                       |
-
-**Empfehlung REL-16 (spürbar für den Spieler):** Kandidat (1) wirkt unmittelbar (Verwirrung beim Bauen über Häusern), (2) ist
-unsichtbar bis zum Startfehler, aber klein und gehört derselben UI-Schicht; beide zusammen sind ein S-Paket. Mehr
-Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`docs/ideen.md`) oder Playtest-Befunde.
-**Werkzeug-Kandidaten** (nicht für REL-16): die fünf `tool`-Zeilen als ein Bündel TOOL-BUENDEL-3 (`studio-coach` bzw. Tech), alle S.
-
-**Ideen:** keine.
-
----
-
-## Ausgewertet 2026-10-13
-
-12 Einträge und 2 Stichpunkt-Zeilen am Stand `ee83d2e6` geprüft (R580). Bilanz: 8 erledigt, 3 eingeplant bzw. als Board-Vorschlag, 3 abgehakt mit Trigger; 0 neue Ideen (Pool ≫ 40, `docs/ideen.md` nur per grep gelesen).
-
-| Eintrag (Datum · Titel)                                            | Ergebnis                                                                                              | Beleg                                                                                                                                                                                                                              |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-10 · Verkaufssättigung / Dauerverkauf Holz                 | abgehakt, Trigger: nächstes Handels-/Wirtschafts-Brainstorming (I-047 Stammkunde, Paket design-I-047) | I-048 Schritt B entschieden: Verzicht (R571), `BUY_RISE = 0` in `src/sim/defs/goods.ts`; `SELL_RECOVERY_INTERVAL = 10` in `src/sim/defs/timing.ts`; Dauerverkauf-Zahlen nicht neu gemessen                                         |
-| 2026-10-11 · `buyPct` fehlt in arc42                               | eingeplant (Trivial-Fix-Vorschlag an L0)                                                              | `grep buyPct docs/arc42.md`: 0 Treffer; `buyPct` lebt in `src/sim/{types,world,save,trade}.ts`; T08 von `feat/i048-b` wird nie gemergt (R571), also deckt es niemand                                                               |
-| 2026-10-11 · Sieg-Tick im Balancing sprunghaft                     | erledigt                                                                                              | `BUY_RISE = 0` (R571); Robustheit über Ensemble: `ENSEMBLE_WIN_TICK_LIMIT` in `tests/sim/ensemble.test.ts:9`, R558, R572                                                                                                           |
-| 2026-10-11 · Controller kippt bei verschobenen Zeitpunkten         | erledigt                                                                                              | Härtung TOOL-CONTROLLER-HAERTUNG (R568), Gate-Ensemble (R558)                                                                                                                                                                      |
-| 2026-10-11 · Controller-Stillstand Phase 50/70/90                  | erledigt                                                                                              | R568 (Stillstand), R572 (Streuung, `ENSEMBLE_WIN_TICK_LIMIT` 8250)                                                                                                                                                                 |
-| 2026-10-11 · L0-Commit fängt offenen Integrator-Merge ein          | erledigt                                                                                              | Integrator mergt nur in `.worktrees/integrate` (R565 P1, `docs/studio/STUDIO.md` Abschnitt Gate Merge), E-063                                                                                                                      |
-| 2026-10-12 · `README.md` und `docs/ideen.md` werden ganz gelesen   | eingeplant (Board-Vorschlag)                                                                          | `wc -c`: README 59461 B, ideen 79954 B (gewachsen); E-057 greift nur beim Teillesen. Vorschlag: Paket DOC-ARCHIV (S, `lead-production`): umgesetzte/verworfene Ideen und README-Spielwerte in Archivdateien                        |
-| 2026-10-12 · README nennt Spielstand-Version 11                    | erledigt                                                                                              | `README.md:629` «Spielstand-Version 13», `src/sim/save.ts:54` `SAVE_VERSION = 13`                                                                                                                                                  |
-| 2026-10-12 · Insel C verschiebt Meer-Deko                          | abgehakt, Trigger: Spieler- oder Playtest-Meldung über verschobene Sandbänke/Riffe                    | R574: Browser-Check T08 «Meer-Deko-Verschiebung nicht sichtbar»                                                                                                                                                                    |
-| 2026-10-12 · `make studio-lint` Exit 2                             | erledigt                                                                                              | `make studio-lint` in `main` am `ee83d2e6`: Exit 0; Fix `d3841a34`                                                                                                                                                                 |
-| 2026-10-12 · Befunde Browser-Check M14-E1 (a)–(e)                  | (b), (e) abgehakt; (a), (c), (d) eingeplant (Werkzeug-Bündel Szenarien)                               | (b) Desktop-first-Regel, Trigger: Mindestbreite wird angehoben; (e) natives `title`, Trigger: Tooltip-Überarbeitung. (d) belegt: `tests/sim/scenarios.ts:1115-1125` `m13e2-v13` trägt `SAVE_VERSION + 1` (= v14), Name irreführend |
-| 2026-10-12 · nacktes `git stash` / `stash pop`                     | eingeplant: TOOL-BUENDEL-10 (T02, E-064)                                                              | R579 V1 (Guard sperrt `git stash` ausser `list`/`show`); bisher `tools/studio/guard.py:318` sperrt nur `drop`/`clear`                                                                                                              |
-| Stichpunkt · `buildMenu.ts` Tooltip-Zeile am Text erkannt          | abgehakt, Trigger: nächstes UI-Aufräumpaket                                                           | `src/ui/buildMenu.ts:221` `startsWith('Erzeugt:')` besteht; `tests/ui/input.test.ts:385` unverändert; UI-HAEPPCHEN-A fasst `buildMenu.ts` nicht an (Plan Z. 61)                                                                    |
-| Stichpunkt · `make check` rot an `islands-c.test.ts` (Zeitreserve) | eingeplant: TOOL-BUENDEL-10 (T01)                                                                     | R579; Test ohne eigenen Timeout (`tests/sim/islands-c.test.ts:115`, Standard 5000 ms)                                                                                                                                              |
-
-**Vorschläge fürs Board (Entscheid L0):**
-
-1. `buyPct` in `docs/arc42.md` (Persistenz/`save.ts`) nachführen: Trivial-Fix, eine Zeile, am besten im nächsten Doku-Audit vor dem Release.
-2. Paket DOC-ARCHIV (Grösse S, Owner `lead-production`): `docs/ideen.md` (79,9 KB) und README-Spielwerte-Anhang auslagern, damit E-057 nicht mehr greifen muss.
-3. In das Werkzeug-Bündel Szenarien (nächstes TOOL-BUENDEL): Szenario `m13-vor-ziel` erreicht das Ziel nicht von selbst (c), AK-36-Szenario `m14e1-felsbucht` (a), Umbenennung `m13e2-v13` (d).
-
-## Ausgewertet 2026-10-14
-
-17 Einträge am Stand `ea1e14fc` geprüft (R620). Bilanz: 5 eingeplant (UI-AUFRAEUM-3 R617: 4, TOOL-BUENDEL: 1), 2 Doku-Beipack mit Trigger, 10 abgehakt mit Trigger, 0 neue Ideen. I-100 (R619) deckt keinen Eintrag ab (Neu-Zähler am Ereignis-Log, kein Bezug zu Karten oder Unterhalt). Nachtrag zu 2026-10-13: `buyPct` steht inzwischen in `docs/arc42.md` (Abschnitt Persistenz, `grep buyPct`), Board-Vorschlag 1 ist damit erledigt.
-
-| Eintrag (Datum · Titel)                                                  | Ergebnis                                                                                                                                                                                                                                                                                          | Beleg                                                                                                                                                 |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-13 · Stash-Sperre in `guard.py` umgehbar                         | abgehakt, Trigger: Sperre wird als Sicherheitsmerkmal gebraucht oder ein Stash-Verlust-Vorfall                                                                                                                                                                                                    | schützt gegen Versehen, nicht gegen Absicht (E-064)                                                                                                   |
-| 2026-10-13 · `test_malicious_session_id_skips` nicht isoliert            | eingeplant: nächstes TOOL-BUENDEL (Trivial-Fix, eigener temporärer Ordner)                                                                                                                                                                                                                        | `tools/studio/tests/test_hook.py` Test unverändert seit der Meldung; Ursache liegt im geteilten Systemtemp-Ordner                                     |
-| 2026-10-13 · `isValidContractFields` prüft Betrag/Preis nur grob         | abgehakt, Trigger: Cheat-/Missbrauchsmeldung oder Wertänderung der Mengen                                                                                                                                                                                                                         | `src/sim/save.ts` `isValidContractFields`; `docs/arc42.md` Save v14 beschreibt dieselbe Prüfung                                                       |
-| 2026-10-13 · Magic-Number-Indizes in `save.test.ts`                      | abgehakt, Trigger: nächster neuer Weltschlüssel; Titel «uses version 5» siehe REL-21-Kleinbefunde                                                                                                                                                                                                 | `tests/sim/save.test.ts` `slice(-17, -15)` (zwei Stellen) besteht                                                                                     |
-| 2026-10-13 · Unterhalt-Karte bei Pause: Fusszeile verschoben             | eingeplant: UI-AUFRAEUM-3 T03 (Unterhalt je Insel + Fusszeile, I-089)                                                                                                                                                                                                                             | Plan-Index UI-AUFRAEUM-3, Task T03; im Browser-Check der Fusszeile mitprüfen                                                                          |
-| 2026-10-13 · Heimat-Kontor fehlt in der Unterhalt-Rangliste              | eingeplant: UI-AUFRAEUM-3 T03/T07 (Ranglisten); abgehakt, falls T03 es als gewollt belässt                                                                                                                                                                                                        | Plan-Index UI-AUFRAEUM-3, T03 und T07; Verhalten nicht neu gemessen                                                                                   |
-| 2026-10-13 · Bilanz-Vorschau ohne Haus-Aufstieg/Stilllegen               | abgehakt, Trigger: Spielerfrage nach dem Aufstieg in der Vorschau                                                                                                                                                                                                                                 | `src/ui/balancePreview.ts` besteht, nicht im Plan UI-AUFRAEUM-3                                                                                       |
-| 2026-10-13 · Stammkunde: Karte ohne Kündigen, ungesicherter Inselzugriff | abgehakt, Trigger: nächstes Paket an `src/ui/order.ts` (dann `islandAt`, Karte bei `contract !== null`)                                                                                                                                                                                           | nur über manipulierten Stand erreichbar; weder UI-AUFRAEUM-3 noch I-100 fassen `order.ts` an                                                          |
-| 2026-10-13 · Spec M14-E1 AK-M14E1-36 «Holz 20»                           | abgehakt, Trigger: nächster Design-Durchgang an der M14-E1-Spec (R602)                                                                                                                                                                                                                            | Szenario `m14e1-felsbucht` nutzt Holz 10                                                                                                              |
-| 2026-10-13 · Linienzug: Esc und Rechtsklick verschieden                  | eingeplant: UI-AUFRAEUM-3 T01 (Rechtsklick staffelt wie Esc, I-098); README-Zeile in T07                                                                                                                                                                                                          | Plan-Index UI-AUFRAEUM-3, T01 und T07                                                                                                                 |
-| 2026-10-13 · Kleinbefunde REL-21                                         | Testname `'uses version 5'` (`tests/sim/save.test.ts:136`) und Präfix `g:` (`storageFull.ts:20`): eingeplant UI-AUFRAEUM-3 T06; 6 px Vertragskarte: T04 (I-099); `balanceAfterUpgrade` ohne Cache: bleibt offen im Plan, abgehakt, Trigger: Messung, dass das Panel-Refresh spürbar kostet (R392) | Plan-Index UI-AUFRAEUM-3, «Herausgenommen»; Testname per grep noch vorhanden                                                                          |
-| 2026-10-13 · UI-HAEPPCHEN-C Kleinbefunde (a)–(d)                         | (a) `goodsBalance` mehrfach je `refresh()`: abgehakt, Trigger: Messung auf grosser Insel (R392) oder nächstes UI-Perf-Paket; (b), (c): abgehakt, Trigger: Designrunde zur Karten-Bedienung; (d) abgehakt, kein Handlungsbedarf                                                                    | Plan UI-AUFRAEUM-3 «Herausgenommen» nennt (a)–(c) ausdrücklich als Beobachtung; `goodsBalance` in `src/ui/hud.ts` (drei Aufrufe) besteht              |
-| 2026-10-13 · Markterholung 60 Punkte/min                                 | abgehakt, Trigger: nächstes Wirtschafts-Design (Anhänge I-047 W.2/W.4, Spätspiel B.5 korrigieren)                                                                                                                                                                                                 | Wert aus dem Eintrag nicht neu gemessen (sichere Seite)                                                                                               |
-| 2026-10-13 · Schiffsunterhalt 90 Geld/min                                | abgehakt, Trigger: wie oben                                                                                                                                                                                                                                                                       | wie oben                                                                                                                                              |
-| 2026-10-13 · `docs/spielwerte.md` «Preise global» bei Kontor II          | Doku-Beipack: beim nächsten Doku-Audit vor dem Release                                                                                                                                                                                                                                            | `grep "Preise global" docs/spielwerte.md`: 0 Treffer                                                                                                  |
-| 2026-10-13 · I092: Marke `prefer-<good>` mit `badge--boom`               | eingeplant: UI-AUFRAEUM-3 T02 (Badge eigene Klasse)                                                                                                                                                                                                                                               | `grep badge--prefer src/style.css src/ui/trade.ts`: 0 Treffer                                                                                         |
-| 2026-10-13 · README verweist auf «Seefahrt und Gewürz»                   | Doku-Beipack: beim nächsten Doku-Audit vor dem Release                                                                                                                                                                                                                                            | `README.md` Zeile 74: Verweis besteht, keine Überschrift dieses Namens (`grep -n "^#.*Seefahrt" README.md`: 0 Treffer); Werte in `docs/spielwerte.md` |
-
-**Hinweis an L0:** UI-AUFRAEUM-3 deckt T03 (Heimat-Kontor) nur dem Titel nach; ob das Heimat-Kontor in die Rangliste kommt, entscheidet der Task (Beobachtung bleibt sonst abgehakt).
+**Stand 2026-10-22** (`lead-production`, Paket BEOB-18, gegen `9451237e`): 25 Überschriften und 1 Stichpunkt gesichtet. Bilanz und Paketvorschläge in „Ausgewertet 2026-10-22“; vier Zeilen bleiben offen (Salzregister, ORT-A, Stadtplanung). Die Abschnitte „Ausgewertet 2026-10-11 (2)“ bis „2026-10-14“ sind unverändert nach [beobachtungen-archiv.md](beobachtungen-archiv.md) verschoben (Dateigrösse: 84 KB auf unter 50 KB).
 
 **Stand 2026-10-16 (2)** (`lead-production`, Paket BEOB-17, gegen `f2f8fb12`): 17 Einträge gesichtet (16 Überschriften, 1 Stichpunkt). Bilanz in „Ausgewertet 2026-10-16 (2)“; ein Eintrag (Salzregister) bleibt offen.
 
@@ -321,174 +126,95 @@ Spielerthemen liefert der Posteingang nicht; Ausbau von REL-16 braucht Ideen (`d
 
 **Ideen:** keine.
 
+## Ausgewertet 2026-10-22
+
+26 Einträge (31 Teilbefunde, je eine Tabellenzeile) am Stand `9451237e` geprüft (BEOB-18; die Marke zählte 23, gezählt sind 25 Überschriften und 1 Stichpunkt). Bilanz nach Zeilen: 4 erledigt, 1 verworfen, 14 abgehakt mit Trigger, 8 eingeplant als Paketvorschlag an L0 (P1 sechs Zeilen, P2, P3), 4 eingeplant bei laufenden Strängen und offen (Salzregister, ORT-A-Fixture, zwei Stadtplanung), 0 Ideen. Browser- und Bildbefunde nicht neu gemessen. ORT-A und Stadtplanung sind nicht gemergt, ihre Einträge bleiben bis zum Merge stehen.
+
+| Eintrag (Titel)                                                      | Ergebnis      | Beleg · Trigger                                                                                                                                                                                                              |
+| -------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| I-114: Lagerzahl der Fernkarte ohne Rotfärbung                       | erledigt      | `c51af713` «I-136 Fernlager-Zahl in tone-bad»; `farOfferParts.short` steuert die Färbung. Der Fernauftrag ist separat eingeplant (P1)                                                                                        |
+| PERF-BILANZ-COV: Pause-/Ausfall-Wechsel im selben Tick               | abgehakt      | `routeBalance.ts`: Memo ist ein vom Aufrufer gereichtes `Map`, kein Zustand über Ticks · Trigger: ein Spieler meldet eine veraltete Bilanz                                                                                   |
+| PERF-BILANZ-COV: `\|island` im Memo-Schlüssel                        | verworfen     | `routeBalance.ts` `balanceOf`: Schlüssel ist die Inselnummer im `Map`; `rg '\|island' src/sim/routeBalance.ts` = 0 Treffer                                                                                                   |
+| PERF-BILANZ-COV: `focusLine`/`focusList`/`houseConsumers` ungemessen | abgehakt      | Funktionen in `src/ui/hud.ts` vorhanden, ungemessen · Trigger: Kopfzeile ruckelt auf grossen Inseln                                                                                                                          |
+| I-112: Umschalt+R ohne Marke öffnet leere Rats-Karte                 | eingeplant P1 | `hotkeys.ts` `k === 'r' && shift` → `app.ts` `toggle` ohne Marken-Prüfung; `councilCard.ts` «Kein Beschluss offen.»; README «nur wenn die Marke da ist»                                                                      |
+| I-112: `council.ts` sortiert jeden Tick alle Ids                     | abgehakt      | `council.ts:53` `.sort((a, b) => a - b)` belegt · Trigger: nächste Berührung von `council.ts` oder Tick-Profil zeigt es                                                                                                      |
+| I-112: kein Reichweitenkreis bei stehender Kapelle                   | abgehakt      | `overlays.ts` nur im Bau-Modus (nicht neu gemessen) · Trigger: Überarbeitung der Auswahl-Anzeige                                                                                                                             |
+| TOOL-GUARD: `_shown_command`/`COMMAND_LIMIT`                         | erledigt      | `rg 'COMMAND_LIMIT\|_shown_command' tools/` = 0 Treffer                                                                                                                                                                      |
+| TOOL-GUARD: Restlücken von `redact`                                  | abgehakt      | `redact` wird nur in `guard.py` für den Hash genutzt (`guard.py:676`) · Trigger: Wiederverwendung für andere Ausgaben                                                                                                        |
+| I-132: Controller ohne Nahrungsreserve                               | abgehakt      | Baseline, nur per Werte-Ruling · Trigger: Werte-Ruling zur Controller-Baseline                                                                                                                                               |
+| I-132: Controller baut keine Feuerwache                              | abgehakt      | `controller.ts` kennt `opts.fireStation`, der Standardlauf nutzt sie nicht · Trigger: Werte-Ruling oder Krisen-Balancing                                                                                                     |
+| I-132: Gewürzkauf nur für 100 Ticks                                  | abgehakt      | Baseline, nur per Werte-Ruling · Trigger: wie oben                                                                                                                                                                           |
+| I-122/I-123: Rot-vor-Beleg fehlt im Ledger                           | abgehakt      | Prozessthema, Plan und Merge sind durch · Trigger: die nächste Prozess-Retro nennt es                                                                                                                                        |
+| I-122/I-123: widersprüchliche Exit-Zeilen                            | erledigt      | der volle Lauf im `push-check` je Release (R810) deckt den Exit-Code ab; Artefakte unter `.studio/qa` sind Aufräumgut                                                                                                        |
+| I-122/I-123: Beobachtungen aus lead-tech (a bis d)                   | abgehakt      | nicht im Browser neu gemessen · Trigger: Playtest meldet Umbruch «Strafe / 135» oder verzögerten Klang                                                                                                                       |
+| Spec Stadtplanung: 55 statt 53 AK                                    | eingeplant    | Stadtplanung (Spec liegt nur auf `plan/stadtplanung`); bleibt offen                                                                                                                                                          |
+| Balancing-Controller nur auf Seed 3 tragfähig, Seed-5-Referenzaufbau | eingeplant    | Stadtplanung T11/T12; die beiden Einträge sind zusammengelegt (I-132 ist gemergt); bleibt offen                                                                                                                              |
+| Testhelfer `putBuilding`: `connected` ohne Weg                       | abgehakt      | `tests/sim/helpers.ts` `putBuilding` · Trigger: ein Lauf mit und ohne Speichern weicht ab                                                                                                                                    |
+| I-132 Final-Review: Chronik-Text, Tab-Fokus, Kopfkommentar           | eingeplant P1 | `trial.ts` (UI) zeigt `formatClock(p.tick)` unter «bestanden»; `hud.ts` Ziel-Chip ist `<button>` ohne `tabIndex`; `sim/trial.ts` Kopf «ändert die Welt nicht» trotz `startTrial`                                             |
+| I-132 Final-Review: Merge-Reihenfolge `feat/ort-a`/`feat/i132`       | erledigt      | `feat/i132` ist in main; der Konflikt bleibt für `feat/ort-a` (Merge-Hinweis an den Integrator)                                                                                                                              |
+| ORT-A T10: Fixture ohne Bauland in Versorgung                        | eingeplant    | ORT-A (`tools/render-qa/fixtures/` liegt nicht auf main); bleibt offen                                                                                                                                                       |
+| I-136: Fahrzeit in zwei Zeitformaten                                 | eingeplant P1 | `hud.ts` `formatGameTime` («27 s») gegen `islandCard.ts` `clock` («0:27»)                                                                                                                                                    |
+| I-136: `stash@{0}` verschiebt die Alt-Stashes                        | abgehakt      | `git stash list`: drei Einträge, `{0}` WIP auf `feat/i136` · Trigger: Stash-Aufräumen per Ruling                                                                                                                             |
+| I-136: `FAR_TRAVEL_TIP` ungesichert                                  | eingeplant P1 | `tests/ui/hud.test.ts` prüft `toBe(FAR_TRAVEL_TIP)` gegen die importierte Konstante                                                                                                                                          |
+| I-136: Fernauftrag-Karte ohne Rotfärbung                             | eingeplant P1 | `farOrder.ts` `farOrderText` liefert nur Text, kein `short`                                                                                                                                                                  |
+| TOOL-DASH-SCHLANK: tote Reste im Dashboard                           | eingeplant P2 | belegt: `data-agents` ohne Leser, `classify().level`, `views.js` Zweig `answer ? 'beantwortet'`, `effort.py` «Reiter Aufwand», `roster.md` «Organigramm». Erledigt: `.graph-body`-Höhe, Höhendeckel `#releases` (`5fecacfa`) |
+| UI-HAEPPCHEN-G: HUD-Text ohne «zu spät»                              | eingeplant P1 | `farOrderText` ohne `farLate`; nur `resumeCard.ts` hängt «zu spät» an                                                                                                                                                        |
+| UI-HAEPPCHEN-G: `farLate` zählt volle Schiffsfracht                  | abgehakt      | Näherung bewusst einfach · Trigger: Playtest meldet falsches «zu spät»                                                                                                                                                       |
+| WIRTSCHAFT-BS-1: Scout-Idee mit falscher Code-Annahme (I-154)        | eingeplant P3 | `docs/ideen.md` I-154 «nur Hinfracht»; Code: `Route.ab/ba`, `routeBalance.ts` summiert beide Richtungen                                                                                                                      |
+| Salzregister `groundDecor.ts` unvollständig                          | eingeplant    | ORT-A (`src/render/`); bleibt offen mit Verifiziert-Feld                                                                                                                                                                     |
+
+**Paketvorschläge an L0 (Entscheid L0, R471):**
+
+1. **P1 UI-BEIPACK-FERN** (S, ≈ 50 Tools, Owner `lead-tech`, Pool, kein Issue): `farOrderText` mit Teilung wie `farOfferParts` (Lagerzahl `tone-bad`) und «zu spät» im HUD-Text; Fahrzeit-Format von Fern- und Inselkarte angleichen; `FAR_TRAVEL_TIP` mit festem Text in `toBe`; `Umschalt+R` vor dem ersten Beschluss ignorieren (oder README anpassen); `ui/trial.ts` Text «Zeitpunkt», Ziel-Chip `tabIndex = -1` solange `trialChip` null, Kopfkommentar `sim/trial.ts`. Reihenfolge nach UI-HAEPPCHEN-H (gleiche Dateien `farOrder.ts`, `hud.ts`).
+2. **P2 TOOL-DASH-REST** (XS, ≈ 20 Tools, Owner `production-studio-ops` über `lead-production`): die oben genannten toten Reste im Dashboard, Kommentar in `effort.py`, Wort in `roster.md`; `refactor:`-Commit, kein Test nötig.
+3. **P3 PERSONA-SCOUT-PFLEGE** (XS, ≈ 15 Tools, Owner `lead-design`): `design-idea-scout` prüft «fehlt»-Annahmen mit einer `rg`-Suche und nennt die Fundstelle; I-154 in `docs/ideen.md` an den Stand anpassen (Rückfracht gibt es seit M12, offen ist höchstens ein drittes Gut oder die Anzeige).
+4. **ZEITRESERVE-PFLEGE (R815):** Der Pin `tests/sim/perf.test.ts` AK-E0-15a (`PERF_PIN = 2.5`, rot unter Last, Eintrag im Archiv) gehört auf die Liste des Pool-Pakets.
+
+**Ideen:** keine.
+
+**Befund zum Verfahren:** Die Hook-Marke zählte 23 Einträge, die Datei enthielt 25 Überschriften und 1 Stichpunkt (Überschriften der Ebene 3 unter «Offen» zählen mit). Gekippt in der Prüfung: Der Memo-Eintrag `|island` war zunächst als «erledigt» vorgemerkt; am Code gibt es den Schlüssel nicht, daher «verworfen».
+
 ## Offen (neue Einträge unten anhängen)
 
-- 2026-10-16 · Salzregister im Kopf von `src/render/groundDecor.ts` unvollständig: `sprites.ts:2486–2516` (`roadCenter`, Wegsteinchen) nutzt `hash2(seed + 61…65)`, `wildlife.ts:437–448` (Wal) `hash2(seed + 61…64)`; das Register nennt nur «61/62 in terrain.ts» (dort `rotNoise`). Keine sichtbare Kollision (andere Funktionen/Argumente), aber das Register taugt so nicht zur Salzwahl. Ursprung: design-ortsrand (lead-art). Einschätzung: niedrig; beim Reservieren des Ortsrand-Blocks 600–619 (ORT-1) mit nachführen. **Verifiziert:** 16.10.2026 gegen `f2f8fb12` — belegt (`src/render/sprites.ts` Zeilen mit `hash2(seed + 61…65)`; `src/render/groundDecor.ts` Registerkopf). Offen bis ORT-1 (`src/render/` gehört ORT-A).
-
-## 2026-10-16 · I-114: Lagerzahl der Fernkarte ohne Rotfärbung bei Mangel
-
-- Fundort: Browser-Check I-114 T03, `src/ui/farOrder.ts` (Fernkarte)
-- Beobachtung: Die Lagerzahl der Fernkarte färbt sich bei Mangel nicht rot; das war schon vor I-114 so. Plan T03 Punkt 3 nannte «rot/normal».
-- Ursprung: I-114
-- Erste Einschätzung: gering; bei nächster Berührung der Fernkarte mitnehmen.
-
-## 2026-10-16 · PERF-BILANZ-COV: Routen-Bilanz bei Pause-/Ausfall-Wechsel im selben Tick
-
-- Fundort: `src/sim/routeBalance.ts` (Memo der Routen-Bilanz), `src/ui/hud.ts`
-- Beobachtung: Wechselt eine Route im selben Tick zwischen Pause und Ausfall, bleibt die Bilanz bis zum nächsten Tick alt.
-- Ursprung: PERF-BILANZ-COV (R727)
-- Erste Einschätzung: niedrig; höchstens ein Tick Verzögerung.
-
-## 2026-10-16 · PERF-BILANZ-COV: `|island` im Memo-Schlüssel überflüssig
-
-- Fundort: `src/sim/routeBalance.ts` (Memo-Schlüssel)
-- Beobachtung: Der Zusatz `|island` im Memo-Schlüssel ist überflüssig.
-- Ursprung: PERF-BILANZ-COV (R727)
-- Erste Einschätzung: niedrig; bei nächster Berührung von `routeBalance.ts` streichen.
-
-## 2026-10-16 · PERF-BILANZ-COV: `focusLine`/`focusList`/`houseConsumers` je Chip ungemessen
-
-- Fundort: `src/ui/hud.ts` (`focusLine`, `focusList`, `houseConsumers`)
-- Beobachtung: Die Kosten dieser Funktionen je Chip wurden nicht gemessen.
-- Ursprung: PERF-BILANZ-COV (R727)
-- Erste Einschätzung: niedrig; messen, falls die Kopfzeile auf grossen Inseln weiter ruckelt.
-
-## 2026-10-16 · I-112: Umschalt+R ohne Marke öffnet leere Rats-Karte
-
-- Fundort: `src/ui/app.ts` (Aktion `council`), `src/ui/councilCard.ts`; README-Bedienung
-- Beobachtung: `Umschalt+R` ohne offene Rats-Marke öffnet eine leere Karte «Kein Beschluss offen.»; das README sagt «nur wenn die Marke da ist».
-- Ursprung: I-112
-- Erste Einschätzung: gering; entweder Taste vor dem ersten Beschluss ignorieren oder README anpassen.
-
-## 2026-10-16 · I-112: council.ts sortiert in jedem Tick alle Gebäude-Ids
-
-- Fundort: `src/sim/council.ts:~51–53`
-- Beobachtung: Solange Stufe 4 nicht offen ist, werden in jedem Tick alle Gebäude-Ids sortiert; für ein Maximum unnötig (einfaches Durchlaufen genügt).
-- Ursprung: I-112
-- Erste Einschätzung: gering (Leistung); bei nächster Berührung von `council.ts` mitnehmen.
-
-## 2026-10-16 · I-112: Kein Reichweitenkreis bei ausgewählter stehender Kapelle
-
-- Fundort: `src/render/overlays.ts` (`overlayPlan` nur im Bau-Modus)
-- Beobachtung: Wählt man eine stehende Kapelle (Dienstgebäude) aus, erscheint kein Reichweitenkreis. Vorbestehend auf main, nicht durch I-112 verursacht.
-- Ursprung: I-112
-- Erste Einschätzung: gering; Komfort, bei Überarbeitung der Auswahl-Anzeige prüfen.
-
-## 2026-10-16 · TOOL-GUARD: `_shown_command`/`COMMAND_LIMIT` nur noch von Tests genutzt
-
-- Fundort: `tools/studio/guard.py` (`COMMAND_LIMIT`, `_shown_command`)
-- Beobachtung: Beide werden nach dem Umbau nur noch von `tools/studio/tests/test_guard.py` verwendet, nicht mehr im Produktivpfad.
-- Ursprung: TOOL-GUARD-ALLOWLIST (R744)
-- Erste Einschätzung: gering; bei nächster Berührung von `guard.py` entfernen oder bewusst als Testhilfe kennzeichnen.
-
-## 2026-10-16 · TOOL-GUARD: Restlücken der Schwärzung `redact` für andere Ausgaben
-
-- Fundort: `tools/studio/guard.py` (`redact`), Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-GUARD-REDACT.md`
-- Beobachtung: Bewusste Lücken: `https://TOKEN@host` ohne Präfix, URL-Passwort mit `/` oder `@`, `Authorization:` ohne Schema, `?key=`, verkettete/escapte Quotes, Flag-Präfix >40, Namenssuffix >5 Segmente, Werte aus Dateien/Variablen, nacktes Positionsargument, `-u` ohne `:`. Über-Schwärzung: `-pattern`, `-pthread`, `mysql -p db`. `guard_block` selbst ist dicht.
-- Ursprung: TOOL-GUARD-REDACT
-- Erste Einschätzung: gering, solange `redact` nur für `guard_block` genutzt wird; relevant bei Wiederverwendung für andere Ausgaben.
-
-## 2026-10-16 · I-132: Controller-Endstand ohne Nahrungsreserve
-
-- Fundort: Balancing-Controller `tests/sim/controller.ts`
-- Beobachtung: Der Controller-Endstand hält keine Nahrungsreserve vor.
-- Ursprung: Kurzdesign I-132, Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-132.md`
-- Erste Einschätzung: niedrig; Baseline-Thema, nur per Werte-Ruling ändern.
-
-## 2026-10-16 · I-132: Controller baut keine Feuerwache
-
-- Fundort: Balancing-Controller `tests/sim/controller.ts`
-- Beobachtung: Ohne Feuerwache kostet ein Brand auf Kapelle/Schule/Bad 21 % der Einwohner.
-- Ursprung: Kurzdesign I-132, Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-132.md`
-- Erste Einschätzung: niedrig; Baseline-Thema, nur per Werte-Ruling ändern.
-
-## 2026-10-16 · I-132: Controller kauft Gewürze nur für die nächsten 100 Ticks
-
-- Fundort: Balancing-Controller `tests/sim/controller.ts`
-- Beobachtung: Der Gewürzkauf deckt nur die nächsten 100 Ticks.
-- Ursprung: Kurzdesign I-132, Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-132.md`
-- Erste Einschätzung: niedrig; Baseline-Thema, nur per Werte-Ruling ändern.
-
-## 2026-10-16 · I-122/I-123: Rot-vor-Beleg fehlt im Ledger
-
-- Fundort: Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-I-122-I-123.md`, BEDENKEN 1
-- Beobachtung: Das Ledger hat 4 Zeilen, der Plan verlangte Rot-vor-Beleg; Tests und Code liegen teils im selben Commit, der Rot-Stand ist nicht nachprüfbar.
-- Ursprung: Gate Merge I-122/I-123, R747
-- Erste Einschätzung: niedrig; Prozess-Thema für die Kurz-Retro.
-
-## 2026-10-16 · I-122/I-123: widersprüchliche Exit-Zeilen final.txt/check.log
-
-- Fundort: `.studio/qa/i122-i123/` (`final.txt` CHECK_EXIT=2 vor dem Fix, `check.log` ohne Exit-Zeile)
-- Beobachtung: Alle Stufen im neueren `check.log` grün, aber der Exit-Code ist nicht belegt.
-- Ursprung: Gate Merge I-122/I-123, R747
-- Erste Einschätzung: niedrig; der volle Lauf im `push-check` vor REL-26 deckt es ab.
-
-## 2026-10-16 · I-122/I-123: Beobachtungen aus lead-tech
-
-- Fundort: `src/ui/` (Vertragskarte, `app.ts`), Playtester-Lauf
-- Beobachtung: (a) Umbruch «Strafe / 135» bei 1280 px; (b) verzögerter Klang bei Pause-Annahme; (c) `querySelector` in `app.ts`; (d) hängender Playtester-Lauf (Skripthänger).
-- Ursprung: lead-tech, I-122/I-123, R747
-- Erste Einschätzung: niedrig; (a) und (b) vor der Auswertung im Browser prüfen.
-
-### 2026-10-17 · Spec Stadtplanung: 55 statt 53 Abnahmekriterien
-
-- Fundort: `docs/superpowers/specs/2026-10-17-stadtplanung-design.md` §9, R766 (Branch `plan/stadtplanung`)
-- Beobachtung: Spec und R766 nennen 55 AK (44 Vitest); gezählt sind 53 (42 Vitest). Die AK-Zuordnung im Plan deckt alle 53.
-- Ursprung: lead-tech, Plan Stadtplanung (Fund plan-stadtplanung), Gate Plan lead-production
-- Erste Einschätzung: niedrig; Zahl in der Spec durch lead-design korrigieren (T19 darf nur den Spec-Kopf ändern), Notiz im Gate-Plan-Ruling.
-
-### 2026-10-17 · Balancing-Controller nur auf Seed 3 tragfähig
-
-- Fundort: `tests/sim/controller.ts`, `forceTerrain` (Seed 3, Westküste), Referenzaufbau aus `balance-monument.test.ts`
-- Beobachtung: Die Controller sind auf Seed 3 gebaut; die Seeds 5, 6, 9, 12 tragen den Referenzaufbau nicht («kein freier Erweiterungsplatz für fisher»). Der I-132-Eintrag (b) vom selben Tag steht bisher nur auf Branch `feat/i132` (`docs/beobachtungen.md`, «Testhelfer `putBuilding` und Referenzaufbau Seed 5») und kommt mit dessen Merge; hier bewusst zusammengeführt. Stadtplanung T11/T12 braucht ≥ 3 Seeds für M3/M4 und meldet sonst einen Blocker an L0.
-- Ursprung: lead-tech, I-132 T02 (Fund I-132 C1) und Plan Stadtplanung (Fund plan-stadtplanung), Risiken «Weitere Seeds»
-- Erste Einschätzung: mittel für Stadtplanung (Messbarkeit), sonst niedrig; Seeds mit tragfähigem Aufbau früh in T11 bestimmen. Beim I-132-Merge die beiden Einträge zusammenlegen.
-
-### 2026-10-17 · Testhelfer `putBuilding` und Referenzaufbau Seed 5
-
-- Fundort: `tests/sim/helpers.ts` (`putBuilding`), `tests/sim/trial-run.test.ts` (Referenzaufbau K'-arm)
-- Beobachtung: (a) `putBuilding` setzt `connected: true` ohne Weg; nach `deserialize` wird neu berechnet, ein Lauf mit und ohne Speichern kann daher ohne `recomputeConnectivity` auseinanderlaufen. (b) Der Referenzaufbau aus `balance-monument.test.ts` scheitert auf den Seeds 5, 6, 9, 12 mit «kein freier Erweiterungsplatz für fisher»; Seeds 1, 2, 4, 7, 8, 11, 13 tragen ihn.
-- Ursprung: lead-tech, I-132 T02
-- Erste Einschätzung: niedrig; (a) Testhelfer, bei Bedarf `recomputeConnectivity` im Helfer; (b) nur relevant, falls der Referenzaufbau auf weitere Seeds ausgedehnt wird.
-
-## 2026-10-17 · I-132 Final-Review (niedrig)
-
-- `src/ui/trial.ts:84`: Chronik «bestanden (m:ss)» zeigt absolute Spielzeit (`p.tick`, z. B. «312:40»), Text sollte «Zeitpunkt» nennen. Ursprung: I-132 Final-Review. Einschätzung: kosmetisch.
-- `src/ui/hud.ts:336`: Ziel-Chip ist ein `<button>`, vor dem Denkmal per Tab erreichbar ohne Wirkung; `tabIndex = -1` oder `disabled`, solange `trialChip` null ist.
-- `src/sim/trial.ts:1`: Kopfkommentar «ändert die Welt nicht» stimmt für `startTrial`/`abortTrial`/`tickTrial` nicht.
-- Merge-Reihenfolge: `feat/ort-a` und `feat/i132` konfliktieren in `docs/beobachtungen.md` (beide hängen am Dateiende an); Zweiter löst von Hand. `app.ts` merged sauber.
+- 2026-10-16 · Salzregister im Kopf von `src/render/groundDecor.ts` unvollständig: `sprites.ts` (`roadCenter`, Wegsteinchen) nutzt `hash2(seed + 61…65)`, `wildlife.ts` (Wal) `hash2(seed + 61…64)`; das Register nennt nur «61/62 in terrain.ts» (dort `rotNoise`). Keine sichtbare Kollision, aber das Register taugt so nicht zur Salzwahl. Ursprung: design-ortsrand (lead-art). Einschätzung: niedrig; beim Reservieren des Ortsrand-Blocks 600–619 (ORT-1) mit nachführen. **Verifiziert:** 22.10.2026 gegen `9451237e` — belegt (`src/render/sprites.ts` `hash2(seed + 61…65)`, `src/render/groundDecor.ts` Registerkopf Zeile «61/62 in terrain.ts»). Offen bis ORT-1 (`src/render/` gehört ORT-A).
 
 ## 2026-10-17 · ORT-A T10: Fixture ohne Bauland in Versorgung
 
 - Fundort: tools/render-qa/fixtures/ort-a-siedlung.json (T10-Playtest, .studio/qa/ort-a/browser-ort1/)
 - Beobachtung: Einzelhof (breiter Saum) und Bau am Patch-Rand nicht prüfbar, jeder Bauplatz liegt ausserhalb der Versorgung; Saum in der Siedlung sehr dezent; Item-Zählung über home(world) liefert für die Fremdinsel 0.
 - Ursprung: ORT-A T10 · Einschätzung: Fixture mit Freiland im Versorgungsradius ergänzen (erzeuge.mjs), Saumstärke ggf. Design-Frage.
+- Verifiziert: 22.10.2026 gegen `9451237e` — `tools/render-qa/fixtures/` liegt nicht auf main (`ls`: kein Verzeichnis); der Strang ORT-A ist nicht gemergt. Offen bis dessen Merge.
 
-## 2026-10-17 · I-136 Playtest und Umsetzung (niedrig)
+## 2026-10-17 · Stadtplanung: 55 statt 53 Abnahmekriterien
 
-- Fundort: Fernkarte (`src/ui/hud.ts`, «≈ 27 s Fahrt») gegen Inselkarte (`src/ui/islandCard.ts`, «Fahrzeit 0:27»). Beobachtung: gleicher Wert, zwei Zeitformate. Ursprung: I-136 Browser-Check. Einschätzung: Spec verlangt «s»; Angleichen als Beipack prüfen.
-- Fundort: `git stash list`. Beobachtung: neuer `stash@{0}` (WIP auf `feat/i136`, versehentlich, Änderung wiederhergestellt) schiebt die in state.md genannten Alt-Stashes auf `stash@{1}`/`{2}`. Ursprung: I-136 Umsetzer. Einschätzung: state.md verweist künftig per Hash statt Index; Aufräumen nur per Ruling (Guard sperrt `stash drop`).
-- Fundort: `src/ui/hud.ts:647` `FAR_TRAVEL_TIP`. Beobachtung: Test importiert die Konstante, Wortlaut ungesichert (Kann-Punkt Delta-Review). Ursprung: I-136 Delta-Review. Einschätzung: eine `toBe`-Zeile mit festem Text bei nächster Berührung.
+- Fundort: `docs/superpowers/specs/2026-10-17-stadtplanung-design.md` §9, R766 (Branch `plan/stadtplanung`)
+- Beobachtung: Spec und R766 nennen 55 AK (44 Vitest); gezählt sind 53 (42 Vitest). Die AK-Zuordnung im Plan deckt alle 53.
+- Ursprung: lead-tech, Plan Stadtplanung, Gate Plan lead-production
+- Erste Einschätzung: niedrig; Zahl in der Spec durch lead-design korrigieren (T19 darf nur den Spec-Kopf ändern).
+- Verifiziert: 22.10.2026 gegen `9451237e` — die Spec liegt nicht auf main (`ls docs/superpowers/specs/2026-10-17-stadtplanung-design.md` fehlt), der Strang Stadtplanung ist nicht gemergt. Offen bis dessen Merge.
 
-## 2026-10-17 · I-136: Fernauftrag-Karte ohne Rotfärbung (niedrig)
+## 2026-10-17 · Stadtplanung: Balancing-Controller nur auf Seed 3 tragfähig
 
-- `src/ui/farOrder.ts` (`farOrderText`): Lagerzahl der Fernauftrag-Karte bleibt ungefärbt, obwohl die Fernangebot-Karte mit I-136 bei Mangel rot wird; gleiche Teilung (`farOfferParts`-Muster) möglich. Ursprung: lead-tech, Plan I-136 (Auflage Gate Spec R778). Einschätzung: Beipack-Kandidat, kein eigenes Paket.
+- Fundort: `tests/sim/controller.ts`, `forceTerrain` (Seed 3, Westküste), Referenzaufbau aus `balance-monument.test.ts`; `tests/sim/trial-run.test.ts`
+- Beobachtung: Die Controller sind auf Seed 3 gebaut; die Seeds 5, 6, 9, 12 tragen den Referenzaufbau nicht («kein freier Erweiterungsplatz für fisher»); Seeds 1, 2, 4, 7, 8, 11, 13 tragen ihn. Stadtplanung T11/T12 braucht ≥ 3 Seeds für M3/M4 und meldet sonst einen Blocker an L0.
+- Ursprung: lead-tech, I-132 T02 und Plan Stadtplanung (zusammengelegt mit dem Eintrag «Referenzaufbau Seed 5»)
+- Erste Einschätzung: mittel für Stadtplanung (Messbarkeit), sonst niedrig; Seeds mit tragfähigem Aufbau früh in T11 bestimmen.
+- Verifiziert: 22.10.2026 gegen `9451237e` — Fehlertext `kein freier Erweiterungsplatz` in `tests/sim/merchantsController.ts:123` belegt; Strang Stadtplanung nicht gemergt. Offen bis dessen Merge.
 
-## 2026-10-21 · TOOL-DASH-SCHLANK Final-Review (niedrig)
+- 2026-10-22 · `tools/studio/pushcheck.py` `LOAD_WAIT = 3.0` gegen Handbuch «Warten auf 1-min-Load ≤ 4» (STUDIO.md Push-Takt). Ursprung: Plan TOOL-PUSHSPERRE (lead-tech, R845). Einschätzung: niedrig; Code und Handbuch angleichen, wenn TOOL-PUSHSPERRE T05 `pushcheck.py` ohnehin berührt.
 
-- Fundort: `tools/studio/dashboard/graph.js:21,34,86,100,108,117` (`data-agents`, `agentKey` ungelesen), `style.css:1136` (`.graph-body .dim`), `style.css:1870` (`max-height: 60vh` wirkungslos neben `height: 60vh`), `views.js:93-99` (`classify`-Feld `level` tot), `views.js:215-228` (Zweig `answer ? 'beantwortet'` tot, weil Filter beantwortete ausschliesst), `tools/studio/effort.py:143` (Kommentar «Reiter Aufwand»), `docs/studio/roster.md:50` («im Organigramm»). Beobachtung: tote Reste nach Entfernen der Karten. Ursprung: Final-Review qa-code-reviewer (opus). Einschätzung: ein `refactor:`-Commit, je unter 5 Minuten, kein Test nötig; mit nächster Dashboard-Berührung.
-- Fundort: `#releases` (Stand-Karte, `releases.js`). Beobachtung: ohne Höhendeckel, ca. 2500 px (Seite gesamt 5750 statt 80000 px). Ursprung: Playtest und Final-Review TOOL-DASH-SCHLANK. Einschätzung: `max-height` plus `overflow-y: auto` oder Verdichten auf Live- und laufendes Release; Pfeil-Layer (Koordinaten relativ zur Box) danach im Browser prüfen.
+- 2026-10-22 · `make studio-test`, `make zeittests` und gezielte `npx vitest run` laufen ohne Bezug zum Messfenster (`.studio/messfenster`) und stören Messungen genauso wie `make check`. Ursprung: TOOL-MESSFENSTER (lead-tech, R847). Einschätzung: mittel; nach dem Merge prüfen, ob diese Ziele die Sperre ebenfalls respektieren sollen.
+- 2026-10-22 · `tools/render-qa/perf.mjs` hatte kein R329-Lastgate; in `tests/tools` braucht das Typ-Stripping dynamische Importe, weil `@types/node` fehlt. Ursprung: TOOL-MESSFENSTER (lead-tech, R847). Einschätzung: niedrig.
 
-## 2026-10-22 · UI-HAEPPCHEN-G: Fernauftrag-HUD-Text und Ladungszählung (niedrig)
+- 2026-10-22 · `make studio-lint` auf main rot (`tools/studio/tests/test_modelguard.py:67`). Ursprung: TOOL-PUSHSPERRE (lead-tech, R848). Einschätzung: niedrig, Trivial-Fix im nächsten Werkzeug-Paket.
+- 2026-10-22 · `docs/studio/STUDIO.md:457` nennt die alte Stand-Warnschwelle 5; nach Merge von TOOL-PUSHSPERRE (Schwelle 2) durch `studio-coach` nachziehen. Ursprung: R848.
+- 2026-10-22 · `pushgate.py`-Selbstschutz sperrt Agenten schon, wenn `push-freigabe` nur im Befehl vorkommt (z. B. `rg`, Commit-Message); `cd` aus Subshell nicht nachgeführt; liest nur 4 MB von `events.jsonl` (≈ 6 Tage). Ursprung: TOOL-PUSHSPERRE (R848). Einschätzung: niedrig, Schutz gegen Versehen (Verfassung §1.3).
+- 2026-10-22 · Mittel `tests/sim/perf.test.ts` AK-E0-15a von 1,59 ms (2026-10-05) auf ≈ 2,3 ms gestiegen; echte Sim-Verlangsamung möglich. Ursprung: TOOL-PUSHSPERRE T04 (R848). Einschätzung: mittel → ZEITRESERVE-PFLEGE (Messreihe über Commits, Last ≤ 4).
 
-- Fundort: `src/ui/farOrder.ts` (`farOrderText`). Beobachtung: Der HUD-Text des Fernauftrags trägt kein «zu spät»; nur Marke, Tooltip und «Wo war ich?»-Karte zeigen es. Ursprung: Spec UI-HAEPPCHEN-G (Ruling R-Kurzdesign). Einschätzung: Beipack-Kandidat, zusammen mit dem Eintrag zur Rotfärbung vom 2026-10-17.
-- Fundort: `src/ui/farOrder.ts` (`farLate`). Beobachtung: Zählt Fracht eines Schiffs voll mit, auch wenn das Fern-Lager beim Eintreffen voll wäre; die Ladung kann so überschätzt werden und «zu spät» fehlt. Ursprung: UI-HAEPPCHEN-G T01. Einschätzung: niedrig, Näherung bewusst einfach.
+- 2026-10-22 · Pläne (z. B. `docs/superpowers/plans/2026-10-22-ui-haeppchen-i.md`, Zeile «Abschluss je Strang») verlangen noch `make check` je Strang, obwohl Verfassung 1.3 §9.2 nur den Teilbeleg fordert. Ursprung: UI-HAEPPCHEN-I (R849). Einschätzung: mittel; Plan-Vorlage und offene Pläne (Seerecht, LEBEN-_, TOOL-_) nachziehen, `studio-coach`.
 
-## 2026-10-22 · WIRTSCHAFT-BS-1: Scout-Idee mit falscher Code-Annahme (niedrig)
+- 2026-10-22 · UI-BEIPACK-FERN Restpunkte: N2 doppelte Fall-Unterscheidung `setOrderText`/`orderCardText` (`src/ui/order.ts`), N3 Rats-Taste fällt in `app.ts` ≈ Z. 1123 bis `refresh()` durch, überflüssiges `as never` in `tests/ui/order.test.ts:769`. Ursprung: R855. Einschätzung: niedrig, nächstes UI-Paket in diesen Dateien.
 
-- Fundort: `docs/ideen.md` (Branch `docs/ideen-14`), I-154 «Rückfracht auf der Route». Beobachtung: Die Idee nimmt an, Routen führen nur Hinfracht und die Routen-Bilanz zähle nur sie; beides gibt es seit M12 (`Route.ab/ba`, `routeBalance.ts:61-63`, «Holen/Bringen» in `src/ui/ships.ts`). Ursprung: lead-design, Dominanz-Rechnung WIRTSCHAFT-BS-1. Einschätzung: Persona `design-idea-scout` sollte «fehlt»-Annahmen gegen Code prüfen (eine `rg`-Suche) und die Fundstelle nennen; Kandidat für die nächste Persona-Pflege.
+## 2026-10-22 · DOKU-AUDIT-1b: ADR-011 steht noch auf «vorgeschlagen» (niedrig)
 
-## 2026-10-22 · UI-HAEPPCHEN-H P1: Autosave «Davor» (niedrig)
-
-- Fundort: `src/ui/storage.ts` (`autosaveOnHide`, `saveAutoNewest`). Beobachtung: Lädt der Spieler «Davor» und lädt danach die Seite neu, schreibt `pagehide` den geladenen (älteren) Stand in den neuesten Platz; der neuere Stand geht verloren (Spec Regel 4, in der README vermerkt). Ursprung: Playtest T03 (Urteil BEDENKEN). Einschätzung: Designfrage. **Erledigt** durch R850: Laden eines Autosave-Platzes setzt den Zeiger auf ihn (`markAutoLoaded` in `loadSlot`), der neuere Stand im anderen Platz bleibt erhalten.
-- Fundort: `docs/superpowers/plans/2026-10-22-ui-haeppchen-h/T03-*.md`. Beobachtung: Die Task-Datei nennt etwa 2 Spielminuten Abstand der Plätze; bei Tempo 3 sind es etwa 8 Spielminuten (2 Echtminuten, Takt 120 s Echtzeit). Ursprung: Playtest T03. Einschätzung: Text in der Task-Datei beim nächsten Anfassen angleichen.
+- Fundort: `docs/adr/` ADR-011 (Asset-Pipeline), Kopfzeile «Status: vorgeschlagen (angenommen mit dem Gate Plan M7)». Beobachtung: Die Pipeline ist seit M7 in Betrieb (Assets-Strang, `tests/assets/`, `docs/CREDITS.md`), der Status-Wortlaut ist aber ein Zwitter. Ursprung: DOKU-AUDIT-1. Einschätzung: Statuszeile auf «angenommen» setzen (Ruling-Bezug Gate Plan M7), reiner Doku-Fix; zusammen mit der Prüfung weiterer ADR-Statuszeilen in einer Doku-Runde erledigen.

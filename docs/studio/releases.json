@@ -168,21 +168,21 @@
     },
     {
       "id": "REL-26",
-      "title": "Fernangebot zur Wahl und Aufräumen",
-      "status": "planned",
-      "hash": "",
-      "date": "",
-      "save": "",
-      "gate": "Plan-Gates R694, R701; Merge-Gate R707 (I-120, I-118)",
+      "title": "Rat, Vorwarnung, Klang",
+      "status": "live",
+      "hash": "6f14a354",
+      "date": "2026-10-16",
+      "save": "v17",
+      "gate": "Push OK (R753)",
       "items": [
         {
           "pkg": "UI-AUFRAEUM-4",
           "name": "UI-AUFRAEUM-4",
           "kind": "Sammelpaket",
           "startStage": 2,
-          "stage": 3,
-          "state": "active",
-          "note": "Umsetzung läuft (R698)",
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt, live in REL-26 (R753)",
           "goalStage": 4
         },
         {
@@ -190,9 +190,9 @@
           "name": "I-114 Fernangebot zur Wahl",
           "kind": "Ideen-Pool",
           "startStage": 2,
-          "stage": 3,
-          "state": "active",
-          "note": "Umsetzung läuft (R701), T02 ff. nach Merge UI-AUFRAEUM-4, kein Save",
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt, live in REL-26 (R753)",
           "goalStage": 4
         },
         {
@@ -202,7 +202,7 @@
           "startStage": 1,
           "stage": 4,
           "state": "done",
-          "note": "gemergt (R707), kein Save",
+          "note": "gemergt, live in REL-26 (R753)",
           "goalStage": 4
         },
         {
@@ -212,7 +212,100 @@
           "startStage": 1,
           "stage": 4,
           "state": "done",
-          "note": "gemergt (R707), kein Save",
+          "note": "gemergt, live in REL-26 (R753)",
+          "goalStage": 4
+        }
+      ]
+    },
+    {
+      "id": "REL-27",
+      "title": "Meisterprüfung",
+      "status": "live",
+      "hash": "add28350",
+      "date": "2026-10-17",
+      "save": "v18",
+      "gate": "Push OK (R779)",
+      "items": [
+        {
+          "pkg": "I-132",
+          "name": "I-132 Meisterprüfung",
+          "kind": "Ideen-Pool",
+          "startStage": 2,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt, live in REL-27 (R779), Save v18",
+          "goalStage": 4
+        },
+        {
+          "pkg": "TOOL-BUENDEL-15",
+          "name": "TOOL-BUENDEL-15",
+          "kind": "Werkzeug",
+          "startStage": 2,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt, live in REL-27",
+          "goalStage": 4
+        },
+        {
+          "pkg": "TOOL-BUENDEL-16",
+          "name": "TOOL-BUENDEL-16",
+          "kind": "Werkzeug",
+          "startStage": 2,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt, live in REL-27",
+          "goalStage": 4
+        }
+      ]
+    },
+    {
+      "id": "REL-28",
+      "title": "Fernkarte mit Fahrzeit",
+      "status": "live",
+      "hash": "e28c80c2",
+      "date": "2026-10-21",
+      "save": "v18",
+      "gate": "Push OK (R789)",
+      "items": [
+        {
+          "pkg": "I-136",
+          "name": "I-136 Fahrzeit auf der Fernkarte",
+          "kind": "Ideen-Pool",
+          "startStage": 2,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt, live in REL-28 (R789), kein Save",
+          "goalStage": 4
+        }
+      ]
+    },
+    {
+      "id": "REL-29",
+      "title": "Fern-Marke und Wo-war-ich",
+      "status": "live",
+      "hash": "d9580844",
+      "date": "2026-10-22",
+      "save": "v18",
+      "gate": "Push OK nachträglich (R815)",
+      "items": [
+        {
+          "pkg": "UI-HAEPPCHEN-G",
+          "name": "UI-HAEPPCHEN-G (I-155 «zu spät», I-148 «Wo war ich?»)",
+          "kind": "Sammelpaket",
+          "startStage": 2,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt, live in REL-29 (R815), kein Save",
+          "goalStage": 4
+        },
+        {
+          "pkg": "TOOL-DASH-SCHLANK",
+          "name": "TOOL-DASH-SCHLANK",
+          "kind": "Werkzeug",
+          "startStage": 2,
+          "stage": 4,
+          "state": "done",
+          "note": "gemergt, live in REL-29",
           "goalStage": 4
         }
       ]

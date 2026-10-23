@@ -9,6 +9,8 @@ Ruling: <Entscheid in 1–3 Sätzen> — <warum> — <Pfad zu Bericht, Plan oder
 
 Regelbezug: <Handbuchstelle (STUDIO.md, gates.md …), die das Ruling anwendet oder von der es abweicht; sonst „—"> · Kosten bei Irrtum: <was ein Rückgängigmachen kostet>
 
+Verfassung berührt?: <nein | ja, §…> · Überschneidung mit offenen Paketen: <Dateien und Branches | keine> (nur Plan-Gate und Plan-Index; sonst „—")
+
 Entscheider: <L0 | Nutzer> · Anlass: <Gate, Konflikt, Budget, Balancing …> · ADR: <Link oder „—">
 ```
 
@@ -16,6 +18,8 @@ Hinweise (R129, R429):
 
 - **Pflichtfelder „Regelbezug“ und „Kosten bei Irrtum“** (eigene Zeile). Weicht das Ruling vom Handbuch ab,
   folgt im selben Zug ein Handbuch-Minor (Auftrag an `studio-coach`).
+- **Ab R845 Pflichtfelder „Verfassung berührt?“ und, bei Plan-Gate und Plan-Index, „Überschneidung mit offenen Paketen“**
+  (R844 V4; ältere Rulings bleiben unverändert). **Entwurf sofort in `rulings.md`**, nicht im Scratchpad (R844 V3).
 - **Richtwert ≤ 60 Wörter.** Das Ruling entscheidet und verweist; es erzählt nicht nach.
 - „Entscheid" ist ohne Kontext verständlich. „Kosten bei Irrtum" beschreibt, was ein Rückgängigmachen
   kostet — das zeigt, wie sorgfältig die Entscheidung sein musste.
@@ -33,6 +37,8 @@ Ruling: Marktplatz-Radius 6 Kacheln — hält den Balancing-Test grün und deckt
 Häusern ab — Bericht lead-design M5-02.
 
 Regelbezug: — · Kosten bei Irrtum: ein Commit (Wert in `src/sim/defs/` und Balancing-Test zurück)
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: —
 
 Entscheider: L0 · Anlass: Entscheidungsbedarf aus Bericht M5-02 · ADR: —
 ```
