@@ -228,3 +228,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 - Fundort: `src/ui/storage.ts` (`autosaveOnHide`, `saveAutoNewest`). Beobachtung: Lädt der Spieler «Davor» und lädt danach die Seite neu, schreibt `pagehide` den geladenen (älteren) Stand in den neuesten Platz; der neuere Stand geht verloren (Spec Regel 4, in der README vermerkt). Ursprung: Playtest T03 (Urteil BEDENKEN). Einschätzung: Designfrage. **Erledigt** durch R850: Laden eines Autosave-Platzes setzt den Zeiger auf ihn (`markAutoLoaded` in `loadSlot`), der neuere Stand im anderen Platz bleibt erhalten.
 - Fundort: `docs/superpowers/plans/2026-10-22-ui-haeppchen-h/T03-*.md`. Beobachtung: Die Task-Datei nennt etwa 2 Spielminuten Abstand der Plätze; bei Tempo 3 sind es etwa 8 Spielminuten (2 Echtminuten, Takt 120 s Echtzeit). Ursprung: Playtest T03. Einschätzung: Text in der Task-Datei beim nächsten Anfassen angleichen.
+
+## 2026-10-22 · LEBEN-SEE: `hidden`-Prüfung uneinheitlich in `sound.ts` (niedrig)
+
+- Fundort: `src/audio/sound.ts` (`playBuild`, `playShortage`, `playWork`). Beobachtung: Seit LEBEN-SEE T05 prüft `play()` `hidden`; die drei Varianten prüfen es nicht und legen bei verborgenem Tab Knoten an. Ursprung: Final-Review Strang Klang. Einschätzung: hörbar folgenlos (Kontext suspendiert), nur uneinheitlich; Beipack-Kandidat.

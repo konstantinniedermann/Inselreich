@@ -23,6 +23,8 @@ export interface SoundSnapshot {
   monumentDone: boolean;
   /** Laufende Krise (M6 13.5); `burning` nur bei einem Brand mit Ausfall. */
   crisis: { period: number; kind: CrisisKind; burning: boolean } | null;
+  /** Schiffs-id -> Hafen (`port`); ein Wechsel bei gleicher id ist ein Anlegen (Ton `shipDock`). */
+  ships: Record<number, number>;
 }
 
 export function soundSnapshot(world: World): SoundSnapshot {
@@ -30,6 +32,8 @@ export function soundSnapshot(world: World): SoundSnapshot {
   for (const b of Object.values(world.buildings)) {
     if (b.house) upgrades += b.house.tier - 1;
   }
+  const ships: Record<number, number> = {};
+  for (const sh of world.ships) ships[sh.id] = sh.port;
   return {
     bucket: Math.floor(world.tick / UPKEEP_INTERVAL),
     orderPeriod: orderVisible(world) ? (world.order?.period ?? null) : null,
@@ -46,6 +50,7 @@ export function soundSnapshot(world: World): SoundSnapshot {
           burning: world.crisis.outcome === 'burning',
         }
       : null,
+    ships,
   };
 }
 
@@ -79,6 +84,13 @@ export function diffSoundEvents(prev: SoundSnapshot, cur: SoundSnapshot): SoundE
   else if (cur.unlocked > prev.unlocked) out.push('unlock');
   if (cur.monumentDone && !prev.monumentDone) out.push('monumentDone');
   out.push(...crisisSignals(prev.crisis, cur.crisis));
+  // Anlegen: id in beiden Frames, Hafen gewechselt; Kauf/Verkauf zählt nicht, höchstens einmal je Frame
+  if (
+    Object.entries(cur.ships).some(
+      ([id, port]) => prev.ships[Number(id)] !== undefined && prev.ships[Number(id)] !== port,
+    )
+  )
+    out.push('shipDock');
   return out;
 }
 

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createWorld } from '../../src/sim/world';
+import { serialize } from '../../src/sim/save';
+import { tickShips } from '../../src/sim/ships';
+import type { Ship, World } from '../../src/sim/types';
 import { UNLOCK_EVENTS, diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
 
 describe('diffSoundEvents (Spec 9.4)', () => {
@@ -197,5 +200,79 @@ describe('M13-E2 Ton monumentDone (AK-M13E2-33, U-12)', () => {
     // «Laden»: neue Basis mit true, danach gleicher Stand
     const loaded = soundSnapshot(w);
     expect(diffSoundEvents(loaded, soundSnapshot(w))).toEqual([]);
+  });
+});
+
+describe('shipDock (LEBEN-SEE T06, AK-K1..K4, K9)', () => {
+  const withShips = (ports: Record<number, number>) => ({
+    ...soundSnapshot(createWorld(1)),
+    ships: ports,
+  });
+  const ship = (id: number, over: Partial<Ship>): Ship => ({
+    id,
+    port: 0,
+    to: null,
+    left: 0,
+    cargo: {},
+    route: null,
+    homing: false,
+    ...over,
+  });
+
+  it('K1: Portwechsel einer id ergibt genau einmal shipDock, auch bei zwei Schiffen', () => {
+    expect(diffSoundEvents(withShips({ 1: 0 }), withShips({ 1: 2 }))).toEqual(['shipDock']);
+    expect(diffSoundEvents(withShips({ 1: 0, 2: 0 }), withShips({ 1: 2, 2: 3 }))).toEqual([
+      'shipDock',
+    ]);
+  });
+
+  it('K2: gleicher Port, neue oder fehlende id ergeben nichts', () => {
+    expect(diffSoundEvents(withShips({ 1: 2 }), withShips({ 1: 2 }))).toEqual([]);
+    expect(diffSoundEvents(withShips({}), withShips({ 5: 2 }))).toEqual([]);
+    expect(diffSoundEvents(withShips({ 5: 2 }), withShips({}))).toEqual([]);
+  });
+
+  it('K2/K3: Abfahrt (to ändert sich, port nicht) ergibt nichts', () => {
+    const w = createWorld(1);
+    w.ships.push(ship(1, { port: 0, to: null }));
+    const before = soundSnapshot(w);
+    w.ships[0]!.to = 1;
+    expect(diffSoundEvents(before, soundSnapshot(w))).toEqual([]);
+  });
+
+  const arrive = (w: World): ReturnType<typeof diffSoundEvents> => {
+    const before = soundSnapshot(w);
+    tickShips(w);
+    return diffSoundEvents(before, soundSnapshot(w));
+  };
+
+  it('K3: Ankunft auf Route ergibt shipDock, Ablegen im selben Tick ändert nichts', () => {
+    const w = createWorld(1);
+    const route = { a: 0, b: 1, ab: [], ba: [] };
+    w.ships.push(ship(1, { port: 0, to: 1, left: 2, route }));
+    expect(arrive(w)).toEqual([]);
+    expect(arrive(w)).toEqual(['shipDock']);
+    expect(w.ships[0]!.to).toBe(0);
+    expect(arrive(w)).toEqual([]);
+  });
+
+  it('K3: Heimkehr ohne Route (Port wird 0) ergibt shipDock', () => {
+    const w = createWorld(1);
+    w.ships.push(ship(1, { port: 1, to: 0, left: 1, homing: true }));
+    expect(arrive(w)).toEqual(['shipDock']);
+  });
+
+  it('K4: soundSnapshot verändert die Welt nicht', () => {
+    const w = createWorld(1);
+    w.ships.push(ship(1, { port: 1 }));
+    const before = serialize(w);
+    expect(soundSnapshot(w).ships).toEqual({ 1: 1 });
+    expect(serialize(w)).toBe(before);
+  });
+
+  it('K9: Snapshot einer geladenen Welt gegen sich selbst ist still (Priming)', () => {
+    const w = createWorld(1);
+    w.ships.push(ship(1, { port: 1 }), ship(2, { port: 0 }));
+    expect(diffSoundEvents(soundSnapshot(w), soundSnapshot(w))).toEqual([]);
   });
 });

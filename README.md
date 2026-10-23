@@ -236,7 +236,7 @@ die nächste Insel bleiben im Browser gespeichert und überstehen «Neue Insel»
 «Lautstärke» wird zum Regler «Gesamt».
 
 **Ton:** Er startet nach dem ersten Klick oder Tastendruck (Regel der Browser) und pausiert, solange der
-Tab verborgen ist.
+Tab verborgen ist. Ein leiser Anlegeton meldet jede Ankunft eines Schiffs, auch ausserhalb des Bildes.
 
 - **Effekte:** Klicks beim Bauen und Abreissen, Münzen bei Steuern und Verkauf, Signale für neue und
   gelieferte Aufträge, Aufstieg, Fehler und Sieg; bei Krisen Glocke (Brand), Nebelhorn (Sturmwarnung)

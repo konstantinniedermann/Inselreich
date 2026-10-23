@@ -50,7 +50,8 @@ export type SoundEvent =
   | 'boom'
   | 'unlock'
   | 'monumentDone'
-  | 'contractWarn';
+  | 'contractWarn'
+  | 'shipDock';
 
 export interface SoundOptions {
   muted: boolean;
@@ -124,6 +125,8 @@ export const THROTTLE_MS: Partial<Record<SoundEvent, number>> = {
   boom: 2000,
   // Länger als die Figur (FIGURE_S), damit ein zweites Ereignis die Schläge nicht doppelt spielt.
   monumentDone: 3000,
+  // Leiser Holzstoss beim Anlegen; in Echtzeit höchstens alle 4 s (auch bei Tempo 4×).
+  shipDock: 4000,
 };
 
 /**
@@ -349,6 +352,11 @@ export function createSound(
     },
     demolish: () => burst(0, 0.12, 0.2 * FX, 2400, 300),
     coin: () => coinFigure(0, 0.1 * FX),
+    // Dumpfer Holzstoss mit Tauknarren: tief, ohne Akkord, Spitzen unter coin/build (Spec P2).
+    shipDock: () => {
+      tone(150, 0, 0.09, 0.08 * FX, 'sine', 90);
+      burst(0.01, 0.07, 0.05 * FX, 500, 250);
+    },
     order: () => {
       knock(0, 0.3);
       tone(D5, 0, 0.16, 0.35, 'triangle');
@@ -514,7 +522,7 @@ export function createSound(
       }
     },
     play(e) {
-      if (!unlocked || disposed || muted || !ctx) return;
+      if (!unlocked || disposed || muted || hidden || !ctx) return;
       const now = ctx.currentTime;
       const gap = THROTTLE_MS[e];
       const last = lastPlayed.get(e);
