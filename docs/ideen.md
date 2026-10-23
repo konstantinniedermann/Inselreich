@@ -68,18 +68,18 @@ Bewertung lead-design: Geld ist nach Minute 15 kein Engpass (R722); jede Idee, d
 I-173 widerspricht der abgenommenen Spec AUFLAGEN-KERN («kein Geld- oder Spielwert-Lohn», R839/R840). Sortiert nach Summe, bei Gleichstand nach Nutzen je Aufwand.
 Pool-Pflege R599 in derselben Runde: I-158, I-160, I-161, I-164, I-166, I-169 und die Rangliste IDEEN-15 ins Archiv (Stand R827, R839). Pool danach 27 von 40 offen.
 
-| Rang | ID    | Name                                    | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                     | Empfehlung                                                                          |
-| ---- | ----- | --------------------------------------- | ------ | ----- | --------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| 1    | I-176 | Warn-Meldungen bleiben lange genug      | S      | 12    | nein / nein     | Krise bei 4× nicht verpasst, ≈ 25 Tools            | **Häppchen** UI-HAEPPCHEN-J (mit I-139, I-138); Kurzdesign Stufe leicht             |
-| 2    | I-183 | Notration (befristete Halbration)       | M      | 11    | ja / nein       | Hunger wird Wahl statt Schrumpfen, ≈ 2 Pakete      | Baustein Wirtschafts-Brainstorming; vorher Rechnung, ob Pleite plus Hunger vorkommt |
-| 3    | I-172 | Wandernde Vorliebe der Fern-Inseln      | S–M    | 10    | nein / ja       | Routen nie «gelöst», ≈ 2 Pakete                    | parken bis Balancing Erweiterung 1 (Sättigung I-115, Seerecht-Wert)                 |
-| 4    | I-182 | Erschliessung auf Fremdinseln           | M      | 10    | ja / ja         | Kolonie-Start als Planungsfrage, ≈ 3 Pakete        | parken bis Erweiterung 1 (Inseldorf) geklärt                                        |
-| 5    | I-139 | Ratsbeschluss und Kulanz in der Chronik | S      | 10    | nein / nein     | Geschichte der Insel, ≈ 30 Tools                   | Beipack UI-HAEPPCHEN-J (Chronik-Format aus UI-BEIPACK-FERN)                         |
-| 6    | I-106 | «Neu»-Karte schlank und schliessbar     | S      | 10    | nein / nein     | Kern gelöst (Meldung klebend, schliessbar)         | verwerfen (gelöst: `app.ts:991` klebend und schliessbar mit Hilfe-Knopf)            |
-| 7    | I-171 | Feuerschale will Gewürz                 | M      | 9     | ja / nein       | Dauer-Grund für die Gewürzroute, Lohn Geld, ≈ 2 P. | parken als Baustein für O8/K5 (Dauer-Senke, Erweiterung 1)                          |
-| 8    | I-173 | Meisterbrief zahlt                      | S      | 9     | nein / ja       | +10 % Fernauftrag nach Prüfung, Geld kein Engpass  | verwerfen (Spec AUFLAGEN-KERN: Lohn ehrenhalber, R839/R840)                         |
-| 9    | I-184 | Lagerverderb für Nahrung                | S      | 9     | nein / ja       | Senke ohne Wahl, ≈ 40 Tools                        | verwerfen (wie I-013: Senke ohne Entscheidung)                                      |
-| 10   | I-181 | Flaute (Gegenstück zum Boom)            | M      | 8     | ja / ja         | Halten dominiert, Geld kein Engpass, ≈ 2 Pakete    | parken mit I-034 bis zu einer Krisen-Überarbeitung (Begründung wie I-076)           |
+| Rang | ID    | Name                                    | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                     | Empfehlung                                                                   |
+| ---- | ----- | --------------------------------------- | ------ | ----- | --------------- | -------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 1    | I-176 | Warn-Meldungen bleiben lange genug      | S      | 12    | nein / nein     | Krise bei 4× nicht verpasst, ≈ 25 Tools            | **Häppchen** UI-HAEPPCHEN-J (mit I-139, I-138); Kurzdesign Stufe leicht      |
+| 2    | I-183 | Notration (befristete Halbration)       | M      | 11    | ja / nein       | Hunger wird Wahl statt Schrumpfen, ≈ 2 Pakete      | parken bis `BUY_RISE` > 0 oder Ration jederzeit beendbar (Rechnung IDEEN-16) |
+| 3    | I-172 | Wandernde Vorliebe der Fern-Inseln      | S–M    | 10    | nein / ja       | Routen nie «gelöst», ≈ 2 Pakete                    | parken bis Balancing Erweiterung 1 (Sättigung I-115, Seerecht-Wert)          |
+| 4    | I-182 | Erschliessung auf Fremdinseln           | M      | 10    | ja / ja         | Kolonie-Start als Planungsfrage, ≈ 3 Pakete        | parken bis Erweiterung 1 (Inseldorf) geklärt                                 |
+| 5    | I-139 | Ratsbeschluss und Kulanz in der Chronik | S      | 10    | nein / nein     | Geschichte der Insel, ≈ 30 Tools                   | Beipack UI-HAEPPCHEN-J (Chronik-Format aus UI-BEIPACK-FERN)                  |
+| 6    | I-106 | «Neu»-Karte schlank und schliessbar     | S      | 10    | nein / nein     | Kern gelöst (Meldung klebend, schliessbar)         | verwerfen (gelöst: `app.ts:991` klebend und schliessbar mit Hilfe-Knopf)     |
+| 7    | I-171 | Feuerschale will Gewürz                 | M      | 9     | ja / nein       | Dauer-Grund für die Gewürzroute, Lohn Geld, ≈ 2 P. | parken als Baustein für O8/K5 (Dauer-Senke, Erweiterung 1)                   |
+| 8    | I-173 | Meisterbrief zahlt                      | S      | 9     | nein / ja       | +10 % Fernauftrag nach Prüfung, Geld kein Engpass  | verwerfen (Spec AUFLAGEN-KERN: Lohn ehrenhalber, R839/R840)                  |
+| 9    | I-184 | Lagerverderb für Nahrung                | S      | 9     | nein / ja       | Senke ohne Wahl, ≈ 40 Tools                        | verwerfen (wie I-013: Senke ohne Entscheidung)                               |
+| 10   | I-181 | Flaute (Gegenstück zum Boom)            | M      | 8     | ja / ja         | Halten dominiert, Geld kein Engpass, ≈ 2 Pakete    | parken mit I-034 bis zu einer Krisen-Überarbeitung (Begründung wie I-076)    |
 
 Leitbefund: Der Pool ist abgegrast. Drei Scouts brachten 8 von 15 möglichen Ideen, nur zwei erreichen 11; Scout C fand von rund 20 Genre-Kandidaten fast alle im Archiv,
 Scout B fand keine Playtest-Berichte nach `rel-18` (Bedienreibung ist durch UI-HAEPPCHEN-D bis -I und UI-BEIPACK-FERN abgearbeitet). Das Spätspiel braucht einen Lohn, der
@@ -415,7 +415,8 @@ live», I-114 live mit REL-26); Empfehlung bleibt geparkt (Geldlohn, R722), mit 
 - Doppelung: I-137 (eingeplant, Abstiegs-Dämpfer: automatisch, Darstellung), I-031 (live, Edikte), I-109 (live, Reichweite am Gut-Chip).
 - Bewertung lead-design: Einzige neue Mechanik der Runde mit Entscheidung in der ersten Stunde. Vor dem Kurzdesign rechnen (`design-balancing-analyst`), ob die Lage «Kasse leer und Nahrung leer» im Frühspiel überhaupt vorkommt; sonst dominiert Zukauf und die Idee ist leer.
 - Nutzen/Aufwand: Hunger wird Wahl statt stilles Schrumpfen · M · ≈ 2 Pakete
-- Entscheid: offen (IDEEN-16), Empfehlung Baustein Wirtschafts-Brainstorming nach Rechnung
+- Rechnung IDEEN-16 (`design-economy-designer`): «Kasse leer und Nahrung leer» entsteht im Frühspiel nur bei einem Doppelfehler (Überbau plus zu wenig Fischer); im Referenzlauf nie (Controller baut Nahrung zuerst). Ein Fischer (100 Geld, 2,5 Nahrung je 100 Ticks, Unterhalt 5) beendet den Mangel in höchstens 100 Ticks und schlägt Zukauf (8 je Einheit, 4 je Einwohner) und Ration. Ration billiger als Zukauf erst ab Defizit > Steuer ÷ 16 (Pioniere 12,5 %, Siedler 44 %, Bürger nie); die feste 3-min-Ration kostet mehr als jede Überbrückung. Echte Wahl erst, wenn die Ration jederzeit beendbar ist (Steuer ×0,85) und Zukauf mit der Menge teurer wird (`BUY_RISE` > 0, wie I-110).
+- Entscheid: offen (IDEEN-16), Empfehlung parken bis `BUY_RISE` > 0 (kein Kurzdesign in dieser Form)
 
 ### I-184 · bewertet · Lagerverderb für Nahrung (kleine Fassung)
 
