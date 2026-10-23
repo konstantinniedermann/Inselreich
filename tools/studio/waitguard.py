@@ -2,7 +2,9 @@
 
 Regel A: `Agent`/`Task` durch einen Lead mit kurzem reinem Warte-Prompt (ohne Auftrag).
 Regel B: `Bash` mit `run_in_background`, dessen Segment mit `sleep <zahl>` beginnt.
-Nur Aufrufer mit `agent_type` «lead-*» sind betroffen; fehlt das Feld, wird zugelassen.
+Regel C (R854): `Agent`/`Task` mit `run_in_background: true` durch Lead oder anderen Subagenten.
+A und B betreffen nur Aufrufer mit `agent_type` «lead-*»; C jeden nicht leeren `agent_type`
+(die Hauptsession hat keinen). Fehlt das Feld, wird zugelassen.
 Eigenes Modul statt guard.py: guard.py ist verfassungsgeschützt (§1.3), die Regel ist Handbuch.
 Fehler lassen zu (Hooks werfen nie). Plan: docs/superpowers/plans/2026-10-14-tool-guard-warteagent.md
 """
@@ -31,6 +33,10 @@ HEADER_KEYS = {
 MAX_CHARS = 200
 MAX_WORDS = 30
 SUFFIX = " (waitguard, R646/R647)"
+BACKGROUND_REASON = (
+    "R854: Arbeiter im Vordergrund starten (run_in_background: false); parallel = "
+    "mehrere Agent-Aufrufe in einer Nachricht. Das Ergebnis kommt so direkt zum Auftraggeber."
+)
 
 HEADER = re.compile(r"^[-*#>\s]*\**\s*([^:*]{1,30}?)\s*\**\s*:")
 SENTENCE = re.compile(r"[.!?;\n]+")
@@ -105,6 +111,15 @@ def bash_reason(tool_input: Mapping) -> str | None:
     return None
 
 
+def background_reason(tool_input: Mapping) -> str | None:
+    """Regel C: Grund für den Block oder None (Aufrufer ist vorab als Subagent geprüft)."""
+    if tool_input.get("run_in_background") is not True:
+        return None
+    if str(tool_input.get("subagent_type") or "") in SKIP_TYPES:
+        return None
+    return BACKGROUND_REASON
+
+
 def main() -> int:
     try:
         from paths import append_event, now_iso
@@ -118,9 +133,13 @@ def main() -> int:
         data = payload.get("tool_input")
         tool = payload.get("tool_name")
         caller = str(payload.get("agent_type") or "")
-        if not caller.startswith("lead-") or not isinstance(data, dict):
+        if not caller or not isinstance(data, dict):
             return 0
-        if tool in AGENT_TOOLS:
+        if tool in AGENT_TOOLS and background_reason(data):
+            rule, found = "C", background_reason(data)
+        elif not caller.startswith("lead-"):
+            return 0
+        elif tool in AGENT_TOOLS:
             rule, found = "A", agent_reason(data)
         elif tool == "Bash":
             rule, found = "B", bash_reason(data)
