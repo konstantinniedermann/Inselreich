@@ -2165,3 +2165,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MERGE-AP
 Regelbezug: R769, R854, R856 · Kosten bei Irrtum: zwei Experimente, rückbaubar.
 
 Entscheider: L0 · Anlass: Prozess-Retro REL-30 · ADR: —
+
+## R869 · 2026-10-23 · Nutzer: keine neuen Projekte, Laufendes abschliessen → Ende-Routine
+
+Ruling: Nutzer: «starte keine neuen projekte mehr. schliesse noch vorhandene prozesse und themen ab». **Auslegung:** gilt für diese Session (Abschluss = Ende-Routine), nicht als
+Dauer-Stopp des Studios — Zweck: geordnet herunterfahren; Auslegung widerspricht ihm nicht, weil ein dauerhafter Stopp das Studio stilllegen würde, was der Wortlaut «noch vorhandene»
+nicht trägt (R863: im Zweifel dauerhaft; hier ist der Sessionbezug durch «abschliessen» gegeben). **Entscheid:** keine neuen Pakete und Arbeiter-Starts ausser zum Abschluss laufender
+Themen. Laufende Pakete liefern ihr aktuelles Deliverable und enden: ORT-A bis Abnahme k1/k2 (ohne T18), Inselproben-Spec, Stadtrecht-Kurzdesign, Plan I-186 (ohne Gate Plan, ohne
+Umsetzung), RETRO-REL-30-UMSETZUNG. Seerecht T04 startet nicht. Danach Ende-Routine (Metriken, Kurz-Retro, state.md, lernen.md).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle laufenden
+Regelbezug: R863, STUDIO.md «Session-Start und -Ende» · Kosten bei Irrtum: nächste Session startet neue Arbeit, die der Nutzer nicht wollte — korrigierbar per Wort.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
