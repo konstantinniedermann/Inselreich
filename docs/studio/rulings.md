@@ -2104,7 +2104,7 @@ Zeiten», ein Szenario als Prüfling, Lösbarkeitsrechnung je Szenario) jetzt, S
 erst mit Erweiterung 1 O8/K5 (Nutzer-Session) und dem Ergebnis WIRTSCHAFT-TIEFE. (4) Baustein I-189 Expedition für I-194; geparkt I-193. (5) **N-104** (Reihenfolge der Erweiterungen nach
 Erweiterung 1, Empfehlung «Neue Ufer») in der Warteschlange; Entwurf B (Jahreszeiten als Standard) nicht angelegt — erst wenn I-195 eingeplant wird, Empfehlung dann Schalter «aus».
 (6) Recherche-Belege dünn (Seiten nicht abgerufen): die beiden Design-Pakete dürfen gezielt nachrecherchieren (WebFetch der genannten Quellen). (7) Beifund README «Spielstand-Version 13»
-(live v18): Trivial-Fix im nächsten Doku-Bündel.
+geprüft: falsch, README nennt v18 (`README.md:299`).
 
 Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Erweiterung 1 (Nutzer-Session), WIRTSCHAFT-TIEFE
 Regelbezug: R208, R445, R722, R839, R862 · Kosten bei Irrtum: ein Kurzdesign und ein Brainstorming, rückbaubar.
