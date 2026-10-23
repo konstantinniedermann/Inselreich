@@ -5,7 +5,8 @@ Rangliste TIEFE-1 Rang 1. Grundlage: [I-186 in `docs/ideen.md`](../../ideen.md),
 [`docs/recherche/2026-10-23-tiefe-1.md`](../../recherche/2026-10-23-tiefe-1.md) R1 1.3–1.5 (Frostpunk: Erfolge je
 Schwierigkeit; Dorfromantik und Islanders: Freischaltung trägt das Wiederspiel, Kritik «ein Gesamtziel fehlt»; Q9–Q14).
 Keine Nachrecherche nötig. Übernommen ist nur die Mechanik «dauerhafte Liste von Prüfungen je Schwierigkeit», keine
-Namen oder Inhalte (ADR-006). Plan: offen (`lead-tech`).
+Namen oder Inhalte (ADR-006). Plan: offen (`lead-tech`). Gate Spec: BEDENKEN (`lead-qa`), Nachtrag N1–N6
+eingearbeitet, N7–N9 für den Plan (§11). L0 hat D1 a, D2 und D3 angenommen (§10).
 
 ## 1 Spielerzweck (ein Satz)
 
@@ -38,8 +39,18 @@ schon beim Start oder Laden galt, löst nichts aus. Das Muster entspricht den Zi
 
 - Ein Stück wird **einmal im Leben des Buchs** eingetragen. Der erste Eintrag bleibt. Ein späteres Erreichen in einer
   anderen Partie ändert nichts und zeigt keine Meldung.
-- Die Prüfung läuft **nach jedem Sim-Schritt** (`step`), nicht je Frame. So stimmt der Tick des Eintrags bei jedem
-  Tempo. Sie liest nur. Die Sim (`step`) ruft sie nicht auf. Welt, Save und Baseline bleiben bitgleich.
+- **Schnappschuss statt Weltkopie:** `honorMarks(world)` liest nur die auslösenden Merkmale: `won`, `wonMerchants`,
+  `wonSpice`, `monumentDone`, die Zahl der Inseln mit Kontor und die Kennungen in `trial.passed`. Die Prüfung
+  `newHonors(prev, world, run)` vergleicht diesen Schnappschuss mit der Welt. Kosten O(Inseln + Auflagen), keine Kopie.
+- **Tracker (N1):** Den Vorher-Zustand hält ein DOM-freier Tracker in `src/ui/` (ohne DOM, ohne `localStorage`; Name im
+  Plan). `reset(world)` setzt den Schnappschuss auf die Welt. `observe(world, run)` liefert die neuen Stücke und rückt den
+  Schnappschuss nach. `reset` läuft an drei Stellen: Seitenstart (neben `initialGoalShown`, `app.ts:345`), Laden eines
+  Speicherplatzes (`loadSlotPaused`, `app.ts:486`) und «Neue Insel». Ein geladener Stand mit erreichtem Ziel löst so
+  nichts aus. Ein Wechsel nach dem Laden löst genau einmal aus.
+- **Je Schritt, nicht je Frame (N2):** Bei höherem Tempo rechnet die Spielschleife mehrere Schritte je Frame
+  (`app.ts:1660`, `while (acc >= TICK_MS && ticks < MAX_TICKS_PER_FRAME) step(world)`). `observe` steht **in** dieser
+  Schleife direkt nach jedem `step`, nicht danach. So ist der Tick des Eintrags der Tick des Wechsels. Die Meldung darf
+  gesammelt nach der Schleife erscheinen. Die Sim ruft nichts davon auf. Welt, Save und Baseline bleiben bitgleich.
 - **Spielzeit** heisst `world.tick` (10 Ticks = 1 s bei 1×, `TICK_MS = 100`). Tempo und Pause ändern die Spielzeit nicht.
   Planen in der Pause ist erlaubt.
 
@@ -64,11 +75,19 @@ Krisenstufen im Spiel sind `off` «aus», `mild` und `normal`. «normal» ist di
   `export` «Ausfuhrmeister», entsteht ohne weitere Arbeit ein zehntes Stück. Die Zahl auf der Karte ist immer
   `8 + TRIAL_IDS.length`.
 - **Neue Spielwerte** (in `src/sim/defs/honors.ts`, Änderung nur per Ruling): `HONOR_SWIFT_CITIZEN_TICK = 9000` und
-  `HONOR_SWIFT_MERCHANT_TICK = 18000`. Herleitung: Der Balancing-Controller erreicht Ziel 1 bei Tick 6050 (AK-B1-01) bzw.
-  6750 (I-144-Rechnung §1.1). Der Kaufleute-Controller muss Ziel 2 bis Tick 12 000 schaffen (Spec 16.3,
-  `MERCHANT_TICK_LIMIT`). Die Schwellen liegen beim 1,3- bis 1,5-Fachen des Skripts. Das Skript plant ohne Fehler und kauft
-  zu. Ein Mensch braucht Planung und Verzicht, in der Pause bleibt er aber frei. Das soll ein Meisterstück sein, kein
-  Nebenbei. Prüfung der Erreichbarkeit: AK-H5.
+  `HONOR_SWIFT_MERCHANT_TICK = 18000`. Herleitung aus gepinnten Sieg-Ticks (Seed 3, stufenweise):
+  - Ziel 1: Tick 6050 (`M6:AK-B1-01`, Balancing-Controller) und 6750 (`M11:AK-BAS-02`, Kaufleute-Controller,
+    `tests/sim/balance-merchants.test.ts:81`).
+  - Ziel 2: Tick **11 500**, gemessen und gepinnt in `M11:AK-BAS-02`; die Grenze `MERCHANT_TICK_LIMIT` ist 12 000.
+  - Die Schwellen liegen beim 1,33-Fachen (9000 ÷ 6750) und 1,57-Fachen (18 000 ÷ 11 500) des Skripts. Das Skript plant
+    fehlerfrei und kauft zu. Ziel 2 bekommt mehr Spielraum, weil sich Fehler über die längere Strecke summieren. Das soll
+    ein Meisterstück sein, kein Nebenbei. Erreichbarkeit: AK-EB-05.
+  - **Risiko R-EB-1 (N3):** Beide Messungen stammen aus einem Seed und einem Skript je Ziel. Ein zweiter Seed fehlt,
+    eigene Läufe waren nicht beauftragt. Rückfallwerte: `HONOR_SWIFT_CITIZEN_TICK = 10800` (1,6 × 6750) und
+    `HONOR_SWIFT_MERCHANT_TICK = 21000` (≈ 1,8 × 11 500). **Nachjustier-Regel:** Nach mindestens drei beobachteten
+    Partien mit dem jeweiligen Ziel (Playtest, Beobachtung, kein Gate) gilt: Holt keine das Tempo-Stück, gilt per Ruling
+    der Rückfallwert. Holt eine Erstpartie es ohne Absicht, sinkt die Schwelle um 1500 Ticks, höchstens bis zum
+    1,2-Fachen des Skripts. Geändert wird nur in den Defs.
 - **Nicht aufgenommen** (geprüft, verworfen):
   - «Partie ohne jeden Zukauf»: Die Welt zählt keine Käufe. Das bräuchte einen Sim-Zähler und einen Save-Sprung. Die
     Meisterprüfung «Eigenversorgung» deckt die Wahl schon ab.
@@ -87,6 +106,14 @@ Tempo-Stücke. Darum gelten die beiden Tempo-Stücke nur für Partien mit stufen
   gelten. Ein geladener Stand einer anderen Partie, etwa aus dem zweiten Speicherplatz, kann Tempo-Stücke in dieser
   Sitzung nicht holen. Die Karte sagt dann «Tempo-Stücke zählen in dieser Partie nicht (Freischaltung unbekannt)». Alle
   anderen Stücke gelten in jedem Modus.
+- **Herkunft von `run` im Tracker:** «Neue Insel» setzt den neuen Merker im Speicher und im Tracker. Seitenstart und
+  Laden lesen ihn aus dem Speicher.
+- **Restlücke RL-1 (N4):** Der Seed ist `Date.now() % 100000` (`app.ts:331`). Ein alter Stand aus «alles frei» mit
+  zufällig gleichem Seed wie der Merker zählt als stufenweise. Das ist ≈ 1 : 100 000 je Paar und wird bewusst
+  hingenommen. AK-EB-04 hält dieses Verhalten fest.
+- **Zwei Fenster:** «Neue Insel» in Fenster B überschreibt `run` im Speicher. Fenster A behält seinen Merker im Tracker
+  und zählt weiter richtig. Erst nach Neuladen oder Laden gilt in A der Merker von B. Tempo-Stücke zählen dann nicht, und
+  der Hinweis «Freischaltung unbekannt» erscheint. Der Fehler geht also nur zur sicheren Seite.
 - Für «Krisen aus» braucht es keinen Merker: `crisisLevel` steht in der Welt und ist je Partie fest. Nur die Sturm-Stücke
   verlangen «normal».
 
@@ -95,15 +122,23 @@ Tempo-Stücke. Darum gelten die beiden Tempo-Stücke nur für Partien mit stufen
 - Eigener Schlüssel `inselreich.ehrenbuch` im `localStorage`, neben `inselreich.settings` und den zwei Speicherplätzen
   (`src/ui/storage.ts:5-6`). **Der Welt-Save bleibt v18.** Die Welt bleibt ein JSON-Objekt ohne Buchdaten (ADR-002).
 - Format v1:
-  `{ "v": 1, "earned": { "<id>": { "date": "JJJJ-MM-TT", "seed": <Zahl>, "tick": <Zahl>, "crisis": "off|mild|normal" } }, "run": { "seed": <Zahl>, "unlockMode": "stepwise|all" } | null }`.
-  Das Datum stammt aus der UI (`Date`), nie aus der Sim.
+  `{ "v": 1, "earned": { "<id>": { "at": "<ISO-8601 mit ms>", "seed": <Zahl>, "tick": <Zahl>, "crisis": "off|mild|normal" } }, "run": { "seed": <Zahl>, "unlockMode": "stepwise|all" } | null }`.
+  `at` stammt aus der UI (`new Date().toISOString()`), nie aus der Sim. Die Karte zeigt nur das Datum.
 - **Lesen nie mit Absturz:**
   - Fehlender Schlüssel ergibt ein leeres Buch.
-  - Kaputtes JSON oder ein unbekanntes Format ergibt ein leeres Buch. Die Karte zeigt dann «Ehrenbuch war unlesbar und
-    wurde neu begonnen». Erst der nächste Eintrag überschreibt den Inhalt.
+  - Kaputtes JSON, kein Objekt, fehlendes `v` oder `earned` kein einfaches Objekt (`null`, Array, Zahl) ergibt ein
+    leeres Buch. Der Hinweis lautet «Ehrenbuch war unlesbar und beginnt neu». Der **erste Schreibvorgang jeder Art**
+    ersetzt den Inhalt, also auch das Setzen von `run` bei «Neue Insel» (N5 d). Davor wird der unlesbare Text einmal
+    unter `inselreich.ehrenbuch.defekt` abgelegt (überschreibt eine ältere Kopie).
   - Eine **höhere Version** (`v > 1`, z. B. nach Rückkehr zu einem älteren Build) ergibt ein **schreibgeschütztes**
     Buch. Es wird gezeigt, so weit lesbar, und nie überschrieben. Die Meldung lautet «Ehrenbuch aus neuerer Fassung, wird
-    nicht verändert».
+    nicht verändert». Neue Stücke werden in der Sitzung trotzdem erkannt und gemeldet, mit dem Zusatz «nicht
+    gespeichert». Die Karte zeigt sie als «in dieser Sitzung». Geschrieben wird nie, auch nicht `run` (N5 c).
+  - Ungültiges `run` (kein Objekt, Seed keine ganze Zahl ≥ 0, Modus unbekannt) wird `null`. Das Buch bleibt sonst
+    gültig, ohne Hinweis (N5 a).
+  - Einträge werden in eine `Map` gelesen, nie per Zuweisung in ein Objekt. Eine Kennung gilt nur nach dem Muster
+    `^[a-z][A-Za-z]*(:[a-z][A-Za-z]*)?$` und nicht als `constructor` oder `prototype`. `__proto__` fällt schon durch das
+    Muster. Andere Kennungen werden verworfen (N5 b).
   - Ein ungültiger Einzeleintrag wird verworfen, der Rest bleibt.
   - Unbekannte Kennungen bleiben beim Schreiben erhalten. Sie werden nicht angezeigt und nicht gezählt, so bleibt das
     Format vorwärts verträglich.
@@ -117,8 +152,8 @@ Tempo-Stücke. Darum gelten die beiden Tempo-Stücke nur für Partien mit stufen
   Wachstumsmotor: Das Buch gibt nichts in die Welt zurück.
 - **Laden kurz vor dem Ziel** (Stück mehrfach holen): harmlos, das Stück ist einmalig. Das Laden eines Stands **nach** dem
   Ziel löst nichts aus, weil die Prüfung den Wechsel sucht (§2.1).
-- **Neue Insel mitten im Schritt, Laden, Menü:** Bei Start und Laden wird der Vorher-Zustand neu gesetzt. Es gibt keinen
-  Wechsel über Partiegrenzen.
+- **Neue Insel, Laden, Seitenstart:** Der Tracker setzt den Vorher-Zustand neu (`reset`, §2.1). Es gibt keinen Wechsel
+  über Partiegrenzen.
 - **Mehrere Stücke in einem Schritt** (z. B. `won` mit Tempo): Alle werden eingetragen, in Tabellenreihenfolge. Die
   Meldung fasst sie zusammen: «Meisterstücke: Bürgerstadt, Flinke Gründung».
 - **Fremdinsel ohne Kontor bleibt möglich:** «Inselreich» ist freiwillig. Abriss eines Kontors nach dem Eintrag löscht
@@ -126,7 +161,9 @@ Tempo-Stücke. Darum gelten die beiden Tempo-Stücke nur für Partien mit stufen
 - **Zielmerkmal schon beim Laden gesetzt, Auflage danach bestanden:** «Meister im Sturm» zählt, weil sein Ereignis die
   Auflage ist, nicht das Ziel.
 - **Zwei Browserfenster:** Der zuletzt geschriebene Stand gewinnt. Vor jedem Schreiben wird neu gelesen und
-  zusammengeführt (Vereinigung der Kennungen, je Kennung der ältere Eintrag). Ein Stück geht so nicht verloren.
+  zusammengeführt. Die Kennungen werden vereinigt, je Kennung gilt das kleinere `at`. Bei Gleichstand bleibt der Eintrag
+  aus dem Speicher (N5 e). `run` bleibt wie im Speicher, ausser die Aktion ist «Neue Insel». Ein Stück geht so nicht
+  verloren.
 - **Gerät wechseln, Browserdaten löschen:** Das Buch ist weg. Das ist bewusst so (Nicht-Ziel: kein Export, §6).
 
 ## 4 Anzeige
@@ -145,37 +182,53 @@ Tempo-Stücke. Darum gelten die beiden Tempo-Stücke nur für Partien mit stufen
 
 ## 5 Abnahmekriterien
 
-Vitest gegen die reinen Funktionen (Prüfung in `src/sim/`, Ablage-Parser als DOM-freier Helfer in `src/ui/`), dazu
-Browser-Checks.
+Vitest gegen die reinen Funktionen: Prüfung in `src/sim/`, Tracker und Ablage-Parser als DOM-freie Helfer in `src/ui/`.
+Dazu ein Browser-Check und ein Review-Kriterium. Die Kennungen `AK-EB-nn` sind eindeutig (N6, R417).
 
-1. **AK-H1 Defs:** `HONOR_IDS` enthält die 8 festen Kennungen in Tabellenreihenfolge (§2.2) und je `TRIAL_IDS`-Eintrag
-   `trial:<id>`. Heute ist die Länge 9. Die Schwellen 9000 und 18 000 stehen nur in `src/sim/defs/honors.ts`
-   (rg-Prüfung: keine Literale im Prüfcode).
-2. **AK-H2 Wechsel statt Zustand:** Für jedes Stück gilt: vorher «nein», jetzt «ja» ergibt das Stück. Vorher «ja», jetzt
-   «ja» ergibt es nicht. Vorher «nein», jetzt «nein» ergibt es nicht. Je Stück ein Testfall mit präparierter Welt.
-3. **AK-H3 Schwellen auf den Tick:** `won` wechselt bei Tick 9000 → `swiftFound`. Bei Tick 9001 → nicht. Gleich für
-   `swiftTrade` mit 18 000 und 18 001.
-4. **AK-H4 Rahmen:** Tempo-Stücke fehlen bei `run.unlockMode === 'all'`, bei `run === null` und bei
+1. **AK-EB-01 Defs:** `HONOR_IDS` enthält die 8 festen Kennungen in Tabellenreihenfolge (§2.2) und je `TRIAL_IDS`-Eintrag
+   `trial:<id>`. Heute ist die Länge 9. Die Schwellen 9000 und 18 000 stehen nur in `src/sim/defs/honors.ts`, keine
+   Literale im Prüfcode (Prüfweg: §11 N9).
+2. **AK-EB-02 Wechsel statt Zustand:** Je Stück: vorher «nein», jetzt «ja» ergibt das Stück. «ja»→«ja» und «nein»→«nein»
+   ergeben es nicht. Je Stück ein Testfall mit präparierter Welt.
+3. **AK-EB-03 Schwellen auf den Tick:** `won` wechselt bei Tick 9000 → `swiftFound`, bei Tick 9001 → nicht. Gleich für
+   `swiftTrade` mit 18 000 und 18 001 (Tick-Bezug: §11 N7).
+4. **AK-EB-04 Rahmen:** Tempo-Stücke fehlen bei `run.unlockMode === 'all'`, bei `run === null` und bei
    `run.seed !== world.seed`. Alle anderen Stücke sind davon unberührt. Sturm-Stücke fehlen bei `crisisLevel` `off` und
-   `mild`.
-5. **AK-H5 Erreichbarkeit:** Der Balancing-Controller (`createWorld(3)`, stufenweise) erreicht `won` bei Tick ≤ 9000. Der
-   Kaufleute-Controller erreicht `wonMerchants` bei Tick ≤ 18 000. Beide Belege stammen aus bestehenden Läufen. Schlägt
-   einer fehl, sind die Schwellen zu hart.
-6. **AK-H6 Bitgleich:** `tests/sim/balance.test.ts` und alle Baseline-Pins bleiben unverändert grün. `World.version`
-   bleibt 18. `serialize(world)` ist vor und nach einem Lauf mit Ehrenbuch-Prüfung gleich (die Prüfung schreibt nicht in
-   die Welt).
-7. **AK-H7 Ablage lesen:** Fehlend → leer. Kaputtes JSON → leer und Hinweis. `v: 2` → schreibgeschützt (Schreiben ist ein
-   No-op). Ungültiger Einzeleintrag → verworfen, Rest bleibt. Unbekannte Kennung → beim Schreiben erhalten, nicht
-   gezählt. Kein Fall wirft.
-8. **AK-H8 Einmalig und Zusammenführen:** Ein schon eingetragenes Stück ändert beim zweiten Erreichen nichts, auch das
-   Datum nicht. Das Zusammenführen zweier Stände ergibt die Vereinigung, je Kennung den älteren Eintrag.
-9. **AK-H9 Laden löst nicht aus:** Wird eine Welt mit `won`, `wonMerchants`, `wonSpice`, `monumentDone` und bestandener
-   Auflage geladen und ein Schritt gerechnet, kommt kein Stück und keine Meldung.
-10. **AK-H10 Browser-Check (`qa-playtester`):**
+   `mild`. RL-1: Eine Welt aus `createWorld(S, { unlockAll: true })` mit `run = { seed: S, unlockMode: 'stepwise' }`
+   ergibt `swiftFound`. Das ist dokumentiertes Verhalten.
+5. **AK-EB-05 Erreichbarkeit:** Im bestehenden Lauf `M11:AK-BAS-02` gilt `winTick ≤ HONOR_SWIFT_CITIZEN_TICK` und
+   `wonMerchantsTick ≤ HONOR_SWIFT_MERCHANT_TICK`. Das sind zwei zusätzliche Erwartungen, keine neue Simulation.
+6. **AK-EB-06 Bitgleich:** `tests/sim/balance.test.ts` und alle Baseline-Pins bleiben unverändert grün. `World.version`
+   bleibt 18. `serialize(world)` ist gleich, ob über 1000 Schritte `observe` mitläuft oder nicht.
+7. **AK-EB-07 Ablage lesen:** Keiner der folgenden Fälle wirft.
+   - Fehlend → leer.
+   - Kaputtes JSON, `earned: null` und `earned: []` → leer, Hinweis, Kopie unter `inselreich.ehrenbuch.defekt`.
+   - Danach ersetzt das Setzen von `run` den Inhalt.
+   - `v: 2` → schreibgeschützt: Schreiben und `run` sind No-ops, ein neues Stück wird gemeldet, aber nicht gespeichert.
+   - Ungültiges `run` → `null`, Einträge bleiben.
+   - Kennungen `__proto__`, `constructor` und `a b` → verworfen, `Object.prototype` unverändert.
+   - Ungültiger Einzeleintrag → verworfen, Rest bleibt.
+   - Unbekannte gültige Kennung → beim Schreiben erhalten, nicht gezählt.
+8. **AK-EB-08 Einmalig und Zusammenführen:**
+   - Ein schon eingetragenes Stück ändert beim zweiten Erreichen nichts, auch `at` nicht.
+   - Das Zusammenführen ergibt die Vereinigung, je Kennung das kleinere `at`. Bei gleichem `at` bleibt der Eintrag aus
+     dem Speicher.
+   - `run` bleibt beim Zusammenführen wie im Speicher, ausser bei «Neue Insel».
+9. **AK-EB-09 Tracker (N1):**
+   - `reset` auf eine Welt mit `won`, `wonMerchants`, `wonSpice`, `monumentDone`, allen Kontoren und bestandener Auflage,
+     dann ein Schritt und `observe` → keine Stücke.
+   - `reset` auf eine Welt kurz vor Ziel 1, dann Wechsel von `won` → genau einmal `citizenTown` (mit passendem `run` auch
+     `swiftFound`). Ein zweites `observe` ohne Wechsel → nichts.
+   - `reset` auf eine frische Welt nach «Neue Insel» → nichts.
+10. **AK-EB-10 Je Schritt (N2):** Ein Test bildet die Schleife nach: 8 Schritte in einem «Frame», je `step` gefolgt von
+    `observe`. `won` wechselt in Schritt 3, der Eintrag trägt den Tick nach Schritt 3, nicht den nach Schritt 8.
+    Review-Kriterium (`qa-code-reviewer`): `observe` steht in `app.ts` innerhalb der `while`-Schleife direkt nach `step`.
+11. **AK-EB-11 Browser-Check (`qa-playtester`):**
     - Neue Insel: Die Menüzeile zeigt «0 von 9».
-    - Mit einem Dev-Stand kurz vor Ziel 1 erscheint die Meldung «Meisterstück: Bürgerstadt».
+    - Mit einem Stand kurz vor Ziel 1 (Fixture: §11 N8) erscheint die Meldung «Meisterstück: Bürgerstadt».
     - Die Karte zeigt den Eintrag mit Datum, Karte und Spielzeit.
     - Nach Neuladen der Seite ist der Eintrag noch da.
+    - **Ein Stand nach Ziel 1 wird geladen und läuft 30 s auf 4×: keine Meldung, Zähler unverändert.**
     - Bei gesperrtem Speicher erscheint der Hinweis und kein Konsolenfehler.
     - Screenshots unter `.studio/qa/<paket>/`.
 
@@ -206,10 +259,11 @@ Wer was entscheidet: Das Inselproben-Brainstorming wählt A1, A2 und A3. Dieses 
 ## 8 Aufwand und Schnitt (Vorschlag für `lead-tech`)
 
 - **Häppchen 1 Sim, ≈ 40 Tools:** `src/sim/defs/honors.ts` (Kennungen, Namen, Texte, zwei Schwellen) und
-  `src/sim/honors.ts` (reine Prüfung `newHonors(prev, cur, run)`, DOM-frei). Tests AK-H1 bis AK-H6 und AK-H9.
-- **Häppchen 2 UI, ≈ 80 Tools:** Ablage-Helfer (Parser, Zusammenführen, Schreibschutz), Aufruf nach jedem `step` in
-  `app.ts`, Meldung, Menüzeile, Karte, Hilfe und README. Tests AK-H7 und AK-H8, Browser-Check AK-H10.
-- Gesamt ≈ 120 Tools, ein Worktree, zwei Häppchen hintereinander, je mit `qa-code-reviewer`, dazu ein `qa-playtester` und
+  `src/sim/honors.ts` (reine Prüfung `newHonors(prev, cur, run)`, DOM-frei). Tests AK-EB-01 bis AK-EB-06.
+- **Häppchen 2 UI, ≈ 90 Tools:** Tracker, Ablage-Helfer (Parser, Zusammenführen, Schreibschutz, Defekt-Kopie), Aufruf
+  je `step` in `app.ts`, Meldung, Menüzeile, Karte, Hilfe und README. Tests AK-EB-07 bis AK-EB-10, Browser-Check
+  AK-EB-11.
+- Gesamt ≈ 130 Tools, ein Worktree, zwei Häppchen hintereinander, je mit `qa-code-reviewer`, dazu ein `qa-playtester` und
   das Final-Review auf `opus`. Kein Save, kein Baseline-Pin. Neue Spielwerte gibt es nur als Schwellen, die nicht in die
   Sim wirken.
 
@@ -222,20 +276,26 @@ Wer was entscheidet: Das Inselproben-Brainstorming wählt A1, A2 und A3. Dieses 
 3. **Scope:** begrenzt (§6), zwei Häppchen, kein Save. Urteil OK.
 4. **Nur Mechanik:** Erfolge je Schwierigkeit sind Genre-Mechanik. Namen und Texte sind eigen. Urteil OK.
 5. **Echte Wahl, keine Dominanz:** Tempo gegen Sturm, Auflage gegen Komfort. Kein Stück schaltet ein anderes frei.
-   **BEDENKEN (klein):** Die Schwellen 9000 und 18 000 sind nur aus dem Skript hergeleitet, ohne menschlichen Playtest.
-   Das ist rückbaubar, weil es Werte in den Defs sind. Ein Playtest nach der Umsetzung (Beobachtung, kein Gate) prüft, ob
-   «Flinke Gründung» erreichbar, aber nicht nebenbei zu holen ist.
+   **BEDENKEN (klein):** Die Schwellen stützen sich auf einen Seed, ohne menschlichen Playtest. Das ist als Risiko
+   R-EB-1 mit Rückfallwert und Nachjustier-Regel festgehalten (§2.2) und über die Defs rückbaubar.
 6. **Einfachere Variante:** Ohne Partie-Merker gälten Tempo-Stücke auch bei «alles frei». Das wäre einfacher, aber
-   unfair. Die Alternative ist D1 b.
+   unfair; von L0 verworfen (D1 b).
 
 Gesamturteil: **OK mit einem kleinen BEDENKEN** (Schwellen ohne Playtest).
 
-## 10 Entscheidungsbedarf (Entwurf an L0)
+## 10 Entscheide (L0, Gate Spec)
 
-- **D1 Freischaltung erkennen.**
-  - a) Partie-Merker im Buch (§2.3). Empfehlung, weil es keinen Save-Sprung braucht.
-  - b) Tempo-Stücke gelten in jedem Modus. Das ist das Einfachste, «alles frei» wird aber zur Abkürzung.
-  - c) Weltfeld `setup.unlockMode` mit v19, gemeinsam mit den Inselproben. Das ist sauber, koppelt aber den Zeitplan.
-- **D2 Schwellen** 9000 und 18 000 Ticks: annehmen als Ruling, rückbaubar über die Defs. Empfehlung: annehmen.
-- **D3 Zahl der Stücke:** 9, wachsend mit `TRIAL_IDS`. Empfehlung: so. Bei «festen 9» bräuchte jede neue Auflage ein
-  Ruling.
+- **D1 a angenommen:** Partie-Merker im Buch (§2.3), kein Save-Sprung. Verworfen: b) Tempo-Stücke in jedem Modus, c)
+  Weltfeld `setup.unlockMode` mit v19.
+- **D2 angenommen:** Schwellen 9000 und 18 000 Ticks, rückbaubar über die Defs. Risiko und Regel: R-EB-1 (§2.2).
+- **D3 angenommen:** 9 Stücke, wachsend mit `TRIAL_IDS`.
+
+## 11 Für den Plan (Gate-Befunde N7–N9, `lead-tech`)
+
+- **N7 Tick-Bezug:** `observe` liest `world.tick` nach dem Schritt (`step` erhöht den Tick zuerst). Die Grenzfälle
+  9000/9001 in AK-EB-03 beziehen sich auf diesen Wert. Der Plan schreibt das fest.
+- **N8 Fixture und Ausgabe:** Der Browser-Check braucht einen benannten, reproduzierbaren Weg zu einem Stand kurz vor und
+  einem Stand nach Ziel 1, etwa einen Dev-Parameter oder einen Speicherplatz-Fixture. Die Karte gibt Datum, Seed und
+  Namen nur per `textContent` aus, nie per `innerHTML`.
+- **N9 Literale:** Die Prüfung «keine Schwellen-Literale im Prüfcode» läuft als Vitest, der den Quelltext von
+  `src/sim/honors.ts` liest, nicht als loser `rg`-Befehl.
