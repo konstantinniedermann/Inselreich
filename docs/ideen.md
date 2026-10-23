@@ -200,14 +200,14 @@ rechnet und höchstens eine baut. Beide erfüllen R805 (4) laut Überschlag (Bed
 - Nutzen/Aufwand: Versorgungslücken ohne Neubau lesbar · S · ≈ 40 Tools
 - Entscheid: R797/R806 eingeplant: UI-HAEPPCHEN-H P2 (Gate Kurzdesign R807), Umsetzung nach ORT-A-Merge
 
-### I-147 · eingeplant (R806, UI-HAEPPCHEN-H) · Zweiter Autosave-Platz «Davor»
+### I-147 · umgesetzt (UI-HAEPPCHEN-H P1) · Zweiter Autosave-Platz «Davor»
 
 - Bereich: Technik/Bedienung · Säule: Bedienung (Spielfluss) · Quelle: `src/ui/storage.ts` (nur `manual`, `auto`); README «Speichern, Laden»
 - Spielerwirkung: „Der Spieler lädt nach einem Fehlklick einen Stand von vor etwa vier Minuten, statt dass der Autosave den Fehler überschreibt." Autosave wechselt zwischen zwei Plätzen; Ladeliste zeigt beide mit Spielzeit. Kein Undo in der Sim. Doppelung: I-071 (Undo, verworfen) ist anders.
 - Grösse: S · Risiko: Browser-Speicher (zweiter Schlüssel, Quote); Save-Format unberührt
 - Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 2 = 11 (lead-design: Risiko 3 → 2)
 - Nutzen/Aufwand: Entscheide mutig statt vorsichtig · S · ≈ 50 Tools
-- Entscheid: R797/R806 eingeplant: UI-HAEPPCHEN-H P1 (Gate Kurzdesign R807)
+- Entscheid: R797/R806 eingeplant: UI-HAEPPCHEN-H P1 (Gate Kurzdesign R807). Umgesetzt in UI-HAEPPCHEN-H (Strang 1), Release folgt.
 
 ### I-153 · eingeplant (R805, SEERECHT) · Rat: «Seerecht» als dritte Karte auf Stufe 4
 

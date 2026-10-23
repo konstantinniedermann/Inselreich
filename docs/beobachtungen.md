@@ -218,3 +218,8 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-22 · DOKU-AUDIT-1b: ADR-011 steht noch auf «vorgeschlagen» (niedrig)
 
 - Fundort: `docs/adr/` ADR-011 (Asset-Pipeline), Kopfzeile «Status: vorgeschlagen (angenommen mit dem Gate Plan M7)». Beobachtung: Die Pipeline ist seit M7 in Betrieb (Assets-Strang, `tests/assets/`, `docs/CREDITS.md`), der Status-Wortlaut ist aber ein Zwitter. Ursprung: DOKU-AUDIT-1. Einschätzung: Statuszeile auf «angenommen» setzen (Ruling-Bezug Gate Plan M7), reiner Doku-Fix; zusammen mit der Prüfung weiterer ADR-Statuszeilen in einer Doku-Runde erledigen.
+
+## 2026-10-22 · UI-HAEPPCHEN-H P1: Autosave «Davor» (niedrig)
+
+- Fundort: `src/ui/storage.ts` (`autosaveOnHide`, `saveAutoNewest`). Beobachtung: Lädt der Spieler «Davor» und lädt danach die Seite neu, schreibt `pagehide` den geladenen (älteren) Stand in den neuesten Platz; der neuere Stand geht verloren (Spec Regel 4, in der README vermerkt). Ursprung: Playtest T03 (Urteil BEDENKEN). Einschätzung: Designfrage. **Erledigt** durch R850: Laden eines Autosave-Platzes setzt den Zeiger auf ihn (`markAutoLoaded` in `loadSlot`), der neuere Stand im anderen Platz bleibt erhalten.
+- Fundort: `docs/superpowers/plans/2026-10-22-ui-haeppchen-h/T03-*.md`. Beobachtung: Die Task-Datei nennt etwa 2 Spielminuten Abstand der Plätze; bei Tempo 3 sind es etwa 8 Spielminuten (2 Echtminuten, Takt 120 s Echtzeit). Ursprung: Playtest T03. Einschätzung: Text in der Task-Datei beim nächsten Anfassen angleichen.
