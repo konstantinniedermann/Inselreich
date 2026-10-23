@@ -2023,3 +2023,18 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle offenen 
 Regelbezug: R849, R856 · Kosten bei Irrtum: ein überflüssiger voller Lauf je Strang.
 
 Entscheider: L0 · Anlass: Kurz-Retro Session-Ende · ADR: —
+
+## R859 · 2026-10-23 · Session-Start: «mach weiter» = Plan aus state.md; REL-30 zuerst
+
+Ruling: Auslegung «mach weiter» als Fortsetzung des Plans aus `state.md` (Abschnitt «Fortsetzung») — Zweck der Anweisung: Arbeit ohne Rückfrage fortsetzen; Auslegung widerspricht ihm
+nicht, weil keine neue Richtung genannt ist. **Reihenfolge:** (1) REL-30: `lead-qa` Ergänzungsurteil für die seit R842 fertigen Stränge (UI-H P1, UI-BEIPACK-FERN, UI-I A/B,
+LEBEN-SEE Klang, TOOL-MESSFENSTER, TOOL-PUSHSPERRE A/P, TOOL-VORDERGRUND, Nachtrag `plan/seerecht` b7fd0a6a, `plan/tool-pushsperre`) mit merge-tree-Trockenlauf des ganzen Bündels; danach
+`production-integrator` (seriell mergen, ein `make push-check`, Push nur bei Exit 0). Bis Exit 0 keine Umsetzer und Controller (R464); Gates, Doku, Pläne ohne Testlauf parallel.
+(2) ORT-A: Log `h10.log` ausgewertet — AK-32 Seed 14 und Fixture Σover25 = 0 (bestanden), AK-30 Seed 7 Δ 0 % (bestanden), **AK-30 Seed 14 abgebrochen** (`unsettled top-level await`
+in `perf.mjs`); Nachmessung erst nach dem Push (Last, R329). (3) `studio-coach`: Briefing-Vorlage auf Teilbeleg (R858) und TOOL-RUECKKANAL Doku-/Persona-Teil (R856). Limit-Ampel grün
+(5 h 30 %, 7 Tage 33 %).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-30-Bündel, ORT-A
+Regelbezug: R826, R842, R857, R858, R464 · Kosten bei Irrtum: eine Session-Stunde in falscher Reihenfolge.
+
+Entscheider: L0 · Anlass: Session-Start a5d45446 · ADR: —
