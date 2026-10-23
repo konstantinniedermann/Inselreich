@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.68 · Stand: 2026-10-22 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.70 · Stand: 2026-10-22 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -43,6 +43,9 @@ Ebene höher — mit Empfehlung. L0 fragt den Nutzer nicht zurück (Abschnitt [A
 
 - **Berichtsweg L2 → L1 → L0.** L0 sieht nur Lead- und Coach-Berichte, nie Arbeiter-Ausgaben direkt.
   Nur L0 spricht mit dem Nutzer (Verfassung §2).
+  Solange R856 gilt, leitet L0 Meldungen von Arbeitern an den zuständigen Lead weiter und prüft nach
+  jeder Meldung die Heartbeats (> 20 min ohne Lebenszeichen → nachfragen). Leads, die auf Arbeiter
+  warten, fragen spätestens nach 30 min nach.
 - **Vordergrund-Regel:** Leads starten Arbeiter immer mit `run_in_background: false` (parallel =
   mehrere Agent-Aufrufe in einer Nachricht); Arbeiter starten keine Agenten; L0 darf Leads im
   Hintergrund starten (ADR-007). Dieser Satz gilt vorbehaltlich der Probe R438 V1 (Messauftrag bei E-037 in
@@ -256,6 +259,10 @@ Urteile: **OK / BEDENKEN [Liste] / ZURÜCK [Grund]**. L0 entscheidet und dokumen
   Alternative nur per `log.py result`, kein Ruling. Pflichtfelder „Regelbezug“ (betroffene Handbuchstelle
   oder „—“) und „Kosten bei Irrtum“ (R429). Weicht ein Ruling vom Handbuch ab, folgt im selben Zug ein
   Handbuch-Minor (Auftrag an `studio-coach`).
+  **Ab R845 (R844 V4)** zusätzlich Pflichtfeld „Verfassung berührt?“ (nein, oder ja mit Paragraf); Rulings zu
+  Plan-Gates und Plan-Index tragen „Überschneidung mit offenen Paketen“ (Dateien und Branches, sonst „keine“).
+  Nicht rückwirkend. **Entwürfe sofort in die Datei (R844 V3):** Ein von L0 angenommener Entscheid steht beim
+  Entscheid in `rulings.md` (bei Bedarf Zeilenkopf „Entwurf“), nie nur im Scratchpad oder Chat.
 - **Kandidaten desselben Fehlermechanismus (R224 (4)):** Meldet ein Lead mehrere Kandidaten
   desselben Fehlermechanismus, entscheidet L0 sie im selben Ruling: Zuschnitt (gemeinsames Paket)
   oder Beobachtung mit Frist.
@@ -562,7 +569,8 @@ Abnahme pushen (R107).
    2a. Steht heute ein Push an und wurde seit dem letzten Push Code gemergt: einmal `make push-check` im Ruhefenster vor Session-Ende; sonst sammelt sich der Stand lokal bis zum nächsten Pushtag (R816) (R514 V3, R518). Ein Blocker steht als Punkt in `state.md` „Fortsetzung“.
 3. Kurz-Retro durch den Coach (Befunde, ggf. ≤ 3 Experiment-Vorschläge; L0 entscheidet per
    Ruling).
-4. `docs/studio/state.md` nachführen (Projekt und Phase, **Seit letzter Session erledigt**,
+4. Vor dem Nachführen: alle von L0 angenommenen Ruling-Entwürfe stehen in `rulings.md` (R844 V3); `state.md`
+   wird nach jedem Bündelende nachgeführt, nicht erst hier. `docs/studio/state.md` nachführen (Projekt und Phase, **Seit letzter Session erledigt**,
    laufende/pausierte Pakete mit Worktree und nächstem Schritt, Budget, offene Entscheide, nächste
    Schritte, Stand-Datum) und `lernen.md` nachführen; Rulings in `rulings.md`, Befunde in
    `docs/beobachtungen.md` sind eingetragen. Committen (`docs: …`).

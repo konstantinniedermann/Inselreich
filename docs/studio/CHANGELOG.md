@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-22 · Handbuch 1.70
+
+- Anlass: Vorfall eingeschlafene Leads (Kurz-Retro session-3b332328-ende, B1)
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R853, R856
+- Änderungen: STUDIO.md Berichtsweg: L0 leitet Arbeiter-Meldungen an den zuständigen Lead weiter und prüft Heartbeats (> 20 min → nachfragen), solange R856 gilt; Leads fragen bei wartenden Arbeitern spätestens nach 30 min nach
+
+## 2026-10-22 · Handbuch 1.69
+
+- Anlass: Prozess-Retro REL-29, Vorschläge V3 (Prozessteil) und V4
+- Datenbasis: `docs/studio/retros/2026-10-22-rel-29-prozess.md`
+- Ruling: R844
+- Änderungen: Ruling-Entwürfe stehen sofort in `rulings.md` (STUDIO.md Ruling-Absatz und Session-Ende Punkt 4); Pflichtfelder „Verfassung berührt?“ und bei Plan-Gates „Überschneidung mit offenen Paketen“ ab R845 (`templates/ruling.md`, `gates.md`, STUDIO.md); keine Maschinenprüfung der Ruling-Felder vorhanden, daher keine Werkzeug-Änderung
+
 ## 2026-10-22 · Persona design-idea-scout 1.3
 
 - Anlass: Auftrag P3 PERSONA-SCOUT-PFLEGE (Behauptung «fehlt» ohne Codebeleg)
