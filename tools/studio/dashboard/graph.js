@@ -18,20 +18,15 @@ function laneX(col) {
   return LANE_PAD + GRAPH_COL_PX * col + GRAPH_COL_PX / 2;
 }
 
-function agentKey(graph, lane) {
-  return lane && lane.key !== null ? `${graph.session}:${lane.key}` : '';
-}
-
 function depClass(lane) {
   return `dep-${knownDepartment(lane ? lane.department : null)}`;
 }
 
-function arrowShape(graph, row, mid) {
+function arrowShape(row, mid) {
   const { from_col: from, to_col: to, style } = row.arrow;
   const x1 = laneX(from);
   const attrs = {
     class: `arrow ${style} ${depClass(row.lanes[from])}`,
-    'data-agents': [row.from, row.to].filter(Boolean).join(' '),
   };
   if (to === null) {
     // Stummel: Ziel ohne Spur; „?" nur bei unzuordenbarem Empfänger (G5, P23)
@@ -65,7 +60,7 @@ function arrowShape(graph, row, mid) {
   return svg('path', { ...attrs, d });
 }
 
-function drawRow(canvas, graph, row, r) {
+function drawRow(canvas, row, r) {
   const top = GRAPH_ROW_PX * r;
   const mid = top + GRAPH_ROW_PX / 2;
   row.lanes.forEach((lane, col) => {
@@ -83,12 +78,11 @@ function drawRow(canvas, graph, row, r) {
           y1,
           x2: x,
           y2,
-          'data-agents': agentKey(graph, lane),
         }),
       );
     }
   });
-  if (row.arrow) canvas.append(arrowShape(graph, row, mid));
+  if (row.arrow) canvas.append(arrowShape(row, mid));
   if (row.dot !== null) {
     const lane = row.lanes[row.dot];
     canvas.append(
@@ -97,7 +91,6 @@ function drawRow(canvas, graph, row, r) {
         cx: laneX(row.dot),
         cy: mid,
         r: 4,
-        'data-agents': agentKey(graph, lane),
       }),
     );
   }
@@ -105,7 +98,7 @@ function drawRow(canvas, graph, row, r) {
 
 function rowItem(row) {
   if (row.kind === 'pause') {
-    return el('li', { class: 'graph-row pause', 'data-id': row.id, 'data-agents': '' }, row.text);
+    return el('li', { class: 'graph-row pause', 'data-id': row.id }, row.text);
   }
   const known = row.kind === 'status' && Object.hasOwn(STATUS, row.status);
   const prefix = known ? `${STATUS[row.status].emoji} ${STATUS[row.status].label} · ` : '';
@@ -114,7 +107,6 @@ function rowItem(row) {
     {
       class: `graph-row kind-${row.kind}`,
       'data-id': row.id,
-      'data-agents': [row.from, row.to].filter(Boolean).join(' '),
     },
     el('time', { title: clock(row.t) }, row.time),
     el('span', { class: 'g-label' }, row.label),
@@ -153,7 +145,7 @@ function graphView(graph) {
       ),
     ),
   );
-  rows.forEach((row, r) => drawRow(canvas, graph, row, r));
+  rows.forEach((row, r) => drawRow(canvas, row, r));
   return el(
     'div',
     { class: 'graph-grid' },

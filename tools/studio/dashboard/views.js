@@ -89,14 +89,12 @@ function tone(cls, text) {
   return el('span', { class: `badge st-${cls}` }, text);
 }
 
-// Ebene und Bereich wie classify() in model.py.
+// Bereich wie classify() in model.py.
 function classify(name) {
-  if (name === 'main' || name === 'studio-director') return { level: 0, department: 'studio' };
-  if (name.startsWith('lead-')) {
-    return { level: 1, department: knownDepartment(name.slice('lead-'.length)) };
-  }
-  if (name.startsWith('studio-')) return { level: 1, department: 'studio' };
-  return { level: 2, department: knownDepartment(name.split('-')[0]) };
+  if (name === 'main' || name === 'studio-director') return { department: 'studio' };
+  if (name.startsWith('lead-')) return { department: knownDepartment(name.slice('lead-'.length)) };
+  if (name.startsWith('studio-')) return { department: 'studio' };
+  return { department: knownDepartment(name.split('-')[0]) };
 }
 
 function roleChip(role) {
@@ -212,9 +210,6 @@ export function renderQueue(state) {
       'ul',
       { class: 'list' },
       ...entries.map((q) => {
-        // Eine eingetragene Antwort zählt, auch wenn der Status noch «offen» ist.
-        const answer = field(q.fields, Q_ANSWER);
-        const status = answer ? 'beantwortet' : q.status;
         return el(
           'li',
           { class: 'decision' },
@@ -223,13 +218,12 @@ export function renderQueue(state) {
             { class: 'question' },
             el('span', { class: 'chip id' }, q.id),
             el('strong', {}, q.title),
-            tone(QUEUE_TONE[status], status),
+            tone(QUEUE_TONE[q.status], q.status),
           ),
           row('Frage', field(q.fields, Q_QUESTION)),
           row('Empfehlung', field(q.fields, Q_RECOMMENDATION)),
           row('Kosten des Wartens', field(q.fields, Q_COST)),
           row('Blockiert', field(q.fields, Q_BLOCKS)),
-          row('Antwort', answer),
         );
       }),
     ),
