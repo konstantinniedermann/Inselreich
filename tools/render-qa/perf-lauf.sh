@@ -1,11 +1,13 @@
 #!/bin/bash
 # perf-lauf.sh — Perf-Serie über Seeds und Fokus mit perf.mjs (REL-07 Nachprüfung, R313 d): 1920x1080, DPR 1, Zoom 1.
+# Messfenster-Sperre: setzt/löst messsperre.mjs für die ganze Serie (Exit 3, wenn belegt).
 # Lastabbruch (R329): vor jedem perf.mjs-Aufruf prüft lastgate.mjs; Load > 4 -> Abbruch mit Exit 1, kein Warten.
 # Ausgabe nach E-039: <out>/aa-<A>-perf-s<seed>-z1-<fokus>-1920.txt bzw. ab-<A>-vs-<B>-..., erste Zeile = Kopf
 # mit Vergleichsart und beiden Commit-Hashes, `uptime` vor und nach dem Lauf (R329).
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOP="$(git -C "$HERE" rev-parse --show-toplevel)"
+ORIG_ARGS=("$@")
 A="$TOP"; B=""; SEEDS="7,14"; FOCI="home,mountain"; RUNS=3; OUT=""
 usage() {
   cat <<'USAGE'
@@ -33,6 +35,10 @@ while [ $# -gt 0 ]; do
     *) echo "unbekannte Option: $1" >&2; usage >&2; exit 2 ;;
   esac
 done
+# Messfenster-Sperre (TOOL-MESSFENSTER): einmal neu starten unter messsperre.mjs; MESSFENSTER_HELD schützt vor einer zweiten Sperre.
+if [ "${PERF_LAUF_GESPERRT:-}" != 1 ]; then
+  PERF_LAUF_GESPERRT=1 exec node "$HERE/messsperre.mjs" --dauer "${MESSFENSTER_DAUER:-70}" --zweck "perf-lauf $SEEDS $FOCI" -- "${BASH_SOURCE[0]}" ${ORIG_ARGS[@]+"${ORIG_ARGS[@]}"}
+fi
 [ -n "$B" ] || B="$A"
 [ -n "$OUT" ] || OUT="$A/.studio/qa/perf"
 mkdir -p "$OUT"

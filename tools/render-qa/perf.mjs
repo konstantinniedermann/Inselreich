@@ -34,6 +34,7 @@
 import { readFileSync } from 'node:fs';
 import { cpus, release } from 'node:os';
 import { spawn } from 'node:child_process';
+import { BLOCK_DAUER_MIN, dauerAus, holdMessfenster } from './messsperre.mjs';
 
 const argv = process.argv.slice(2);
 const opt = {};
@@ -54,7 +55,16 @@ if (opt.help) {
   console.log(USAGE);
   process.exit(0);
 }
-if (typeof opt.seed === 'string' && opt.seed.includes(',')) {
+const seedListe = typeof opt.seed === 'string' && opt.seed.includes(',');
+// Messfenster-Sperre (TOOL-MESSFENSTER); bei Seedliste behandelt dieser Prozess die Signale selbst (Kinder erben HELD).
+if (opt.a && opt.b && (opt.seed || opt.save))
+  holdMessfenster({
+    owner: 'perf',
+    dauerMin: dauerAus(opt.dauer, process.env.MESSFENSTER_DAUER, seedListe ? BLOCK_DAUER_MIN : 20),
+    zweck: 'perf.mjs',
+    signale: !seedListe,
+  });
+if (seedListe) {
   // Seedliste: je Seed ein eigener Aufruf mit sonst identischen Argumenten, nacheinander.
   const seeds = opt.seed.split(',').map((x) => x.trim());
   if (seeds.some((x) => !/^\d+$/.test(x))) {
