@@ -2079,3 +2079,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK 
 Regelbezug: R236, R395, R885, R895, R896 · Kosten bei Irrtum: eine Messrunde mehr.
 
 Entscheider: L0 · Anlass: Entwurf lead-tech INSELPROBEN · ADR: —
+
+## R898 · 2026-10-25 · BUG-SCHIFF Diagnose abgenommen; HAFEN-Spec startet
+
+Ruling: Diagnose `.studio/handoffs/2026-10-25-lead-tech-BUG-SCHIFF.md` **abgenommen** (Beleg je Befund). (1) **Fix A1** Sub-Tick-Interpolation (`shipLane.ts`, `renderer.ts`, `app.ts`; S, ohne Save/Balance)
+**ja** — als nächstes Umsetzungspaket auf den ersten freien Test-Controller-Platz (Vorrang vor Stadtrecht/I-197, R896 (0)); Abnahme mit Frame-Zeit-Beleg im Browser (x1, x4, 30 s). (2) **(b) Anker ≠ Kontor II**,
+**(c) Auftragsschiff ohne Anfahrt** und **A2 Fahrzeit aus echter Routenlänge** gehören fachlich zur Anlegestelle → gemeinsame **Spec HAFEN** (`lead-design`, opus, mit Optik-Vorgaben an `lead-art`). Leitlinie
+nach R896 (0): Routen enden **am tatsächlich gebauten Kontor** (Anlegestelle), Schiffe fahren mit gleichmässiger, aus der Strecke erklärbarer Geschwindigkeit; Kontor II auf `kontorSite` zu zwingen nur, wenn die
+Spec zeigt, dass die Anker-Nachführung unverhältnismässig ist. Save-Wechsel und Balance-Änderung (A2) entscheidet L0 mit der Spec. Worktree `.worktrees/bug-schiff` bleibt bis zum Fix A1.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (Fahrzeit-Lesestellen in `islands.ts`), LEBEN-SEE (Kielwasser, Anlege-Klang I-156)
+Regelbezug: R236, R896 · Kosten bei Irrtum: Spec-Umplanung.
+
+Entscheider: L0 · Anlass: Bericht lead-tech BUG-SCHIFF · ADR: —
