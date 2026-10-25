@@ -2232,3 +2232,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK 
 Regelbezug: R883, R896, R907 · Kosten bei Irrtum: ein Gegenlese-Start.
 
 Entscheider: L0 · Anlass: Gate-Bericht lead-qa GEBAEUDE-VARIANZ · ADR: —
+
+## R910 · 2026-10-25 · INSELPROBEN: Probe 5 vorerst heraus (E-IP-1 Option A)
+
+Ruling: Probe 4 (Seed 345) grün und gepinnt. **Probe 5** (Seed 777, Krise normal) ist mit dem Mess-Controller nicht als lösbar belegt (wonMerchants nie bis Tick 12000, auch Nachbarseeds; Werkzeugmangel
+blockiert Aufstieg). Eine Probe, deren Lösbarkeit nicht belegt ist, geht nicht live (Spieler-Frust, R896 (0)). Entscheid **Option A**: Probe 5 aus `PROBES` (4 Zeilen), AK-IP-12a/-03 und Spec Anhang 02 D
+nachziehen, kleiner Nachzug-Task (1 Worker + Review, aus dem Budget); `it.todo` vor dem Merge-Gate entfernt. **Folgepaket PROBE-5** (nach Inselproben live): zuerst Controller-Erweiterung (B, eigener Händler-Zweig
+über 12000), danach — nur falls weiter unlösbar — Design-Ruling zur Krisenstufe (C) mit `lead-design`. Beobachtung: Seeds 783 (wirft) und 787 (unspielbar) als Kartengenerator-Befund in `docs/beobachtungen.md`.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Seegang (Härteleiter), Kartengenerator
+Regelbezug: R395, R896, R897 · Kosten bei Irrtum: Inselproben startet mit 4 statt 5 Proben.
+
+Entscheider: L0 · Anlass: Entwurf lead-tech INSELPROBEN E-IP-1 · ADR: —
