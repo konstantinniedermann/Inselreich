@@ -42,6 +42,7 @@ Umsetzer `tech-sim-engineer` · ≈ 45 Tools · AK-ST-02 (Kauf vor `won`), AK-ST
 - [ ] **Lauf rot:** `npx vitest run tests/sim/charter.test.ts; echo EXIT=$?` → ≠ 0.
 - [ ] **Umsetzen** nach Verhalten 1–3.
 - [ ] **Teilbeleg:** `npx vitest run tests/sim/charter.test.ts tests/sim/charter-save.test.ts tests/sim/monument.test.ts tests/sim/reserve.test.ts; echo EXIT=$?` (Monument-Datei per `ls tests/sim | rg monument` bestätigen), `npx tsc --noEmit; echo EXIT=$?`, `make lint; echo EXIT=$?`, `make zeittests; echo EXIT=$?`, `make conflicts; echo EXIT=$?` → je 0.
+- [ ] **Vorabprobe Fixture-Auslieferung (Gate-Plan B6):** Dev-Server im Worktree starten (`make help` → Start-Befehl, Hintergrund-Bash), `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:<port>/tests/sim/charterFixtures.ts; echo EXIT=$?` → `200`; Server beenden. Anderer Code: Befund an den Controller (dann entscheidet er vor T07 über den Weg, kein Handbau).
 - [ ] **Commit:** `feat: Stadtrecht-Kauf buyCharter (AK-ST-02 bis 05, 08, 09)`.
 
 ## Task-Review

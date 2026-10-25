@@ -21,7 +21,7 @@ Owner `lead-tech` · **Spec:** `docs/superpowers/specs/2026-10-23-stadtrecht-des
 
 ## Entscheide des Plans
 
-- **P-1 Startbedingung:** Der Strang startet, sobald **Seerecht auf main** ist (nach R874 4 liegen damit Stadtplanung und Inselproben schon dort). Grund: T04 ändert `activeLever` (Seerecht schreibt ihn um), T06 baut auf die dreiseitige Karte (R874 5), T02 nimmt die Save-Nummer nach allen Vorgängern. Option für L0 siehe E-2 (Frühstart T01).
+- **P-1 Startbedingung:** Der Strang startet, sobald **Seerecht auf main** ist (nach R874 4 liegen damit Stadtplanung und Inselproben schon dort). Grund: T04 ändert `activeLever` (Seerecht schreibt ihn um), T06 baut auf die dreiseitige Karte (R874 5), T02 nimmt die Save-Nummer nach allen Vorgängern. **Frühstart T01 ab main (L0, E-2):** T01 darf nach dem REL-31-Push ab main starten (nur neue Defs-Datei und Typen); T01 hat dann keine Zeitbasis (im Bericht vermerken). Vor T02 laufen T00 und `git merge main` (Gate-Plan B8). Save-Nummer folgt der Merge-Reihenfolge; Seerecht darf vor Inselproben mergen (L0, E-1).
 - **P-2 Charter im Hebel-Leser:** `activeLever(world: LeverWorld, kind, key?)` mit `type LeverWorld = Pick<World, 'council'> & { readonly charter?: readonly CharterSide[] }`. Zuerst die Ratsstufen wie heute, danach `world.charter ?? []`: Index i mit `'B'` liefert `CHARTER_SESSIONS[i].b.lever`, wenn Art und Schlüssel passen. Optional, damit die Seerecht-Helfer (`seaTileTicks(raw)` im Save, `Pick<World, 'council'>`) ihre Signatur behalten. Disjunktheit (AK-ST-01) macht die Reihenfolge wirkungslos.
 - **P-3 Save-Nummer (R874 4, R674):** T02 setzt `SAVE_VERSION` = Stand main beim Start von T02 + 1 (erwartet 22 nach Stadtplanung 19, Inselproben 20, Seerecht 21), Migration `migrateV<n−1>ToV<n>`. Tests versionsneutral (Fixture über `foldBackCharter` mit `SAVE_VERSION − 1`). Landet bis zum Merge-Gate ein weiterer Save-Sprung auf main, zieht T09 die Nummer nach.
 - **P-4 Faltketten:** Jede Testkette, die heute mit dem äussersten Faltschritt beginnt (`foldBackTrial` bzw. nach Stadtplanung `foldBackStadt`, nach Inselproben deren Schritt), bekommt `foldBackCharter` aussen (T02, per `rg -n "foldBack[A-Z][a-z]+\(" tests`). Exakte Versions-Pins früherer Stränge (z. B. Seerecht `PRE_SEERECHT_VERSION + 1`) werden auf `toBeGreaterThanOrEqual` umgestellt, nur diese Zeile.
@@ -30,7 +30,7 @@ Owner `lead-tech` · **Spec:** `docs/superpowers/specs/2026-10-23-stadtrecht-des
 - **P-7 Hinweis:** `charterBecameAffordable(prev: boolean | null, next: boolean)`; `app.ts` hält `prevCharterAffordable` in der Spiel-Closure (startet `null`, Laden und «Neue Insel» bauen die Closure neu, R-Muster `prevCouncil`).
 - **P-8 Steuer-Anzeige (B7):** `taxEffect(level, charterPts = 0)` in `guide.ts` (Standard 0 hält Bestandstests), `tierTaxTooltip` addiert `charterTaxPoints(world)`; Aufrufer mit Welt (`taxView.ts`, `inspect.ts:684`) reichen die Punkte durch. Prognose `tierTaxPerMinute` bleibt auf `effectiveTaxPct`.
 - **P-9 Fixtures Browser-Check (B8):** `tests/sim/charterFixtures.ts` (T03) baut die Stände «Glas 0», «alles leistbar», «Rang 6» aus `createWorld` plus Setzungen; der Playtester lädt sie im Seitenkontext (`await import('/tests/sim/charterFixtures.ts')`, `serialize`, Autosave, «Fortsetzen», Muster `tools/render-qa/sitzung.mjs`) und hat damit automatisch den `SAVE_VERSION` des Merge-Stands.
-- **P-10 Wächter R-1:** T04 ergänzt einen Grep-Test: in `src/sim/` liest nur `council.ts`, `charter.ts`, `save.ts`, `world.ts` das Feld `charter`; `src/ui/` liest es nur über `src/sim/charter.ts` bzw. `src/ui/charter.ts`.
+- **P-10 Wächter R-1:** T04 ergänzt einen Grep-Test: in `src/sim/` kommt `.charter` nur in `council.ts`, `charter.ts`, `save.ts`, `world.ts`, `types.ts` vor (gleiche Liste wie T04); in `src/ui/` nur in `src/ui/charter.ts`.
 
 ## Konflikte und Reihenfolge (Stand Plan, `git diff --name-only main...<branch>`)
 
@@ -62,15 +62,15 @@ Nicht angefasst: `src/sim/defs/council.ts`, `src/sim/defs/buildings.ts`, `src/si
 
 ## Worktree
 
-`feat/stadtrecht` in `.worktrees/stadtrecht` ab `plan/stadtrecht`, vor T00 `git merge main` (Merge, kein Rebase); vor T06 und T09 erneut `git merge main`. Ein Strang, **seriell** (T01–T04 teilen `types.ts`/Tests, T05/T06 brauchen T03/T04). Vor Anlage `git worktree list` prüfen (R329).
+`feat/stadtrecht` in `.worktrees/stadtrecht` ab `plan/stadtrecht`, vor T01 (Frühstart) `git merge main` (Merge, kein Rebase); vor T00/T02 (nach dem Seerecht-Merge), vor T06 und vor T09 erneut `git merge main`. Ein Strang, **seriell** (T01–T04 teilen `types.ts`/Tests, T05/T06 brauchen T03/T04). Vor Anlage `git worktree list` prüfen (R329).
 
 ## Tasks
 
 | Task | Titel                                                     | Datei              | AK-IDs                                | Strang | blocked-by                         | Modell | Tools | Persona                              |
 | ---- | --------------------------------------------------------- | ------------------ | ------------------------------------- | ------ | ---------------------------------- | ------ | ----- | ------------------------------------ |
 | T00  | Testzeiten der berührten Tests messen (Controller)        | `T00-messung.md`   | –                                     | sr     | Seerecht auf main, Testsperre frei | sonnet | 10    | Controller                           |
-| T01  | Defs und Typen                                            | `T01-defs.md`      | AK-ST-01                              | sr     | T00                                | sonnet | 30    | `tech-sim-engineer`                  |
-| T02  | Weltfeld, Save, Migration, Faltketten                     | `T02-save.md`      | AK-ST-11, AK-ST-02 (Feld)             | sr     | T01                                | sonnet | 50    | `tech-sim-engineer`                  |
+| T01  | Defs und Typen                                            | `T01-defs.md`      | AK-ST-01                              | sr     | REL-31-Push (Frühstart ab main)    | sonnet | 30    | `tech-sim-engineer`                  |
+| T02  | Weltfeld, Save, Migration, Faltketten                     | `T02-save.md`      | AK-ST-11, AK-ST-02 (Feld)             | sr     | T00, T01, `git merge main`         | sonnet | 50    | `tech-sim-engineer`                  |
 | T03  | `buyCharter` / `buyCharterReason`, Fixtures               | `T03-kauf.md`      | AK-ST-02 (Kauf), 03, 04, 05, 08, 09   | sr     | T02                                | sonnet | 45    | `tech-sim-engineer`                  |
 | T04  | Leser: Hebel, Steuer, Determinismus, Wächter              | `T04-leser.md`     | AK-ST-06 (Sim), 07, 10, 12            | sr     | T03                                | sonnet | 50    | `tech-sim-engineer`                  |
 | T05  | UI-Helfer: Ansicht, Marke, Hinweis, Steuer-Anzeige        | `T05-ui-helfer.md` | AK-ST-13, 14, 15, AK-ST-06 (Prognose) | sr     | T04                                | sonnet | 45    | `tech-ui-engineer`                   |
@@ -99,6 +99,10 @@ Summe ≈ 350 Tools.
 - **Balancing (R810):** `git diff main -- tests/sim/balance*.test.ts tests/sim/controller.ts tests/sim/merchantsController.ts src/sim/defs/council.ts src/sim/defs/buildings.ts; echo EXIT=$?` leer; der Balancing-Lauf selbst im Release-`make push-check`. Wertänderung nur per Ruling.
 - **Meldeweg (R856):** «Melde dein Ergebnis per SendMessage an <agentId des Controllers>, nie an main.»
 
+## Risiko «Werte nur per Rechnung» (R553, Gate-Plan B2)
+
+Kosten (5000 × 1,7^(k−1), Stein, Glas), A +2 Punkte und die B-Takte beruhen auf der Rechnung aus den Defs (Spec §4, Referenzen B/K/K+D/G, G geschätzt), nicht auf Balancing-Läufen; kein Controller kauft (R870 R-1). **Rückfall:** Playtest-Etappe 3 (Spec §11) und Werte-Ruling (R870 R-2) auf Vorschlag `lead-design`; die Werte stehen nur in `src/sim/defs/charter.ts`, Tests lesen sie von dort (ausser AK-ST-07), eine Änderung ist ein Defs-Diff ohne Plan-Nachtrag. Kein Blocker für die Umsetzung.
+
 ## Review Focus (nicht durch AK abgedeckt, Test im genannten Task)
 
 1. Abgewiesener Kauf ändert nichts, auch nicht `charter` bei Teilzahlung (Reihenfolge: erst prüfen, dann abziehen) → T03, tiefer Vergleich.
@@ -109,7 +113,7 @@ Summe ≈ 350 Tools.
 
 ## Budget (Antrag für das Gate Plan)
 
-Formel: 7 Umsetzer-Tasks mit eigenem Start (T01–T06, T09) × 2 + 1 QA-Check (T07) + 1 Final-Review (`lead-qa`, opus) + 3 Controller-Instanzen (R874 A2) = 19; × 1,3 = 24,7 → **25 Starts, Parallelität 1.**
+Formel: 7 Umsetzer-Tasks mit eigenem Start (T01–T06, T09) × 2 + 1 QA-Check (T07) + 1 Final-Review (`lead-qa`, Agent-Aufruf mit **`model: opus`**) + 3 Controller-Instanzen (R874 A2) = 19; × 1,3 = 24,7 → **25 Starts, Parallelität 1** (genehmigt durch L0; Start nach dem Seerecht-Merge, T01 nach dem REL-31-Push).
 Geplant **18**: Umsetzer 7, Reviews `qa-code-reviewer` T01–T06 (6), T07 `qa-playtester` (1), Final-Review (1), Controller (3). T09-Review per `SendMessage` an den T02-Reviewer, T08 per `SendMessage` an die T06-Instanz, Fix-Runden und Delta-Review (R553) per `SendMessage` (zählen nicht). Reserve 7 (Ersatzstarts, falls eine Fortsetzungs-Instanz nicht mehr vorliegt; Wiederholung T07).
 Controller (`sonnet`, ≤ 4 Tasks, ≤ 6 Arbeiter-Starts je Instanz, R167/R190): **I1** T00–T03 (6 Starts), **I2** T04–T06 (6 Starts), **I3** T07, T08, nach dem Final-Review T09 (2 Starts; Final-Review startet L0 bei `lead-qa`).
 
@@ -128,8 +132,10 @@ Controller (`sonnet`, ≤ 4 Tasks, ≤ 6 Arbeiter-Starts je Instanz, R167/R190):
 
 ## Ruling-Entwürfe (für L0, R471)
 
-- **ST-E1 (Gate Plan STADTRECHT):** Plan `plan/stadtrecht` freigegeben: T00–T09, ein Strang seriell, 25 Starts (18 geplant), Parallelität 1, drei Controller-Instanzen; kein ADR, keine Abhängigkeit.
-- **ST-E2 (Startbedingung, P-1):** Umsetzung startet, wenn Seerecht auf main ist; Frühstart von T01 nur nach E-2.
+Angenommen durch L0 nach Gate Plan (BEDENKEN, `.studio/handoffs/2026-10-25-lead-qa-gate-plan-STADTRECHT.md`, Auflagen B1–B8 eingearbeitet).
+
+- **ST-E1 (Gate Plan STADTRECHT):** Plan `plan/stadtrecht` freigegeben: T00–T09, ein Strang seriell, 25 Starts (18 geplant), Parallelität 1, drei Controller-Instanzen, Final-Review mit `model: opus`; kein ADR, keine Abhängigkeit.
+- **ST-E2 (Startbedingung, P-1):** Umsetzung startet, wenn Seerecht auf main ist; T01 darf nach dem REL-31-Push ab main starten, T00 und `git merge main` vor T02 (B8). Seerecht darf vor Inselproben mergen; die Save-Nummer folgt der Merge-Reihenfolge.
 - **ST-E3 (Leseort, P-2, P-10):** `activeLever` liest `world.charter` als optionales Feld nach den Ratsstufen, `charterTaxPoints` liegt in `council.ts`; Grep-Wächter sichert R870 R-1.
-- **ST-E4 (Save, P-3, P-4):** Version = main + 1 beim Start von T02, Nachzug in T09; `foldBackCharter` aussen, exakte Versions-Pins früherer Stränge werden zu `≥`.
+- **ST-E4 (Save, P-3, P-4):** Version = main + 1 beim Start von T02, Nachzug in T09; `foldBackCharter` aussen, exakte Versions-Pins früherer Stränge werden zu `≥` (nur diese Zeilen); die Migration jedes Vorgängers bleibt über ihren Faltschritt in der Kette getestet (Reviewer prüft das in T02, B5).
 - **ST-E5 (Texte, P-5):** Karten- und Listentexte laut P-5, Feinschliff durch `lead-design` im T01-Review.

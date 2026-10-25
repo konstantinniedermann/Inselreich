@@ -1,6 +1,6 @@
 # T00 · Testzeiten der berührten bestehenden Tests vorab messen (Controller)
 
-Ausführer: Controller `lead-tech` (I1, `sonnet`), kein Arbeiter-Start · ≈ 10 Tools · keine AK · blocked-by: Seerecht auf main (P-1), Testsperre frei (R380) · Worktree `.worktrees/stadtrecht` (`feat/stadtrecht` ab `plan/stadtrecht`)
+Ausführer: Controller `lead-tech` (I1, `sonnet`), kein Arbeiter-Start · ≈ 10 Tools · keine AK · blocked-by: Seerecht auf main (P-1), Testsperre frei (R380); muss vor T02 laufen (T01 darf per Frühstart vorher fertig sein, Gate-Plan B8) · Worktree `.worktrees/stadtrecht` (`feat/stadtrecht` ab `plan/stadtrecht`)
 
 Warum nicht schon im Plan: Beim Plan lag die 1-min-Load bei 5,2 (Testsperre R380 verlangt ≤ 4), und `vitest related` auf `world.ts`/`types.ts`/`save.ts` umfasst fast die ganze Suite. Vor allem wäre eine Messung auf main `ec144e82` wertlos: Stadtplanung, Inselproben und Seerecht ändern genau diese Dateien vorher.
 

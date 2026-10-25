@@ -1,6 +1,6 @@
 # T01 · Defs und Typen Stadtrecht
 
-Umsetzer `tech-sim-engineer` · ≈ 30 Tools · AK-ST-01 · blocked-by: T00 · Worktree `.worktrees/stadtrecht` (`feat/stadtrecht`) · Spec §3.1, §5, §8
+Umsetzer `tech-sim-engineer` · ≈ 30 Tools · AK-ST-01 · blocked-by: REL-31-Push (Frühstart ab main, L0 E-2) · Worktree `.worktrees/stadtrecht` (`feat/stadtrecht` ab `plan/stadtrecht`, vorher `git merge main`; legt bei Frühstart der Controller an, T00 folgt vor T02) · Spec §3.1, §5, §8
 
 ## Dateien
 
@@ -43,6 +43,8 @@ A je Sitzung: `name: 'Steuer +2 %'`, `text: '+2 % Steuer in allen Stufen.'`. Die
 - [ ] **Umsetzen:** Typen in `types.ts`, Werte in `defs/charter.ts`.
 - [ ] **Teilbeleg:** `npx vitest run tests/sim/charter.test.ts tests/sim/council.test.ts; echo EXIT=$?`, `npx tsc --noEmit; echo EXIT=$?`, `make lint; echo EXIT=$?`, `make zeittests; echo EXIT=$?`, `make conflicts; echo EXIT=$?` → je 0. Balancing-Diff leer (Index, Prüfpflichten).
 - [ ] **Commit:** `feat: Stadtrecht-Defs und Typen (AK-ST-01)`.
+
+Bei Frühstart: keine T00-Zeitbasis; der Bericht vermerkt das (Gate-Plan B8). Der Disjunktheitstest läuft vor dem Seerecht-Merge über A/B und nach `git merge main` vor T02 erneut über A/B/C (Teil des T02-Teilbelegs).
 
 ## Task-Review
 

@@ -1,6 +1,6 @@
 # T02 · Weltfeld `charter`, Save-Version, Migration, Faltketten
 
-Umsetzer `tech-sim-engineer` · ≈ 50 Tools · AK-ST-11, AK-ST-02 (Teil «neue Welt `[]`») · blocked-by: T01 · Worktree `.worktrees/stadtrecht` · Spec §6, §8 · Plan P-3, P-4
+Umsetzer `tech-sim-engineer` · ≈ 50 Tools · AK-ST-11, AK-ST-02 (Teil «neue Welt `[]`») · blocked-by: T00, T01, `git merge main` (Seerecht auf main) · Worktree `.worktrees/stadtrecht` · Spec §6, §8 · Plan P-3, P-4
 
 ## Dateien
 
@@ -31,9 +31,9 @@ Umsetzer `tech-sim-engineer` · ≈ 50 Tools · AK-ST-11, AK-ST-02 (Teil «neue 
   - Älterer Fixture-Stand: `tests/sim/fixtures/save-v14-contract.json` (oder der jüngste vorhandene) läuft die Kette bis `SAVE_VERSION` mit `charter` `[]` (Muster `council-save.test.ts:80`).
 - [ ] **Lauf rot:** `npx vitest run tests/sim/charter-save.test.ts; echo EXIT=$?` → ≠ 0.
 - [ ] **Umsetzen** nach Verhalten 1–4 und Step 0 (a)/(b).
-- [ ] **Teilbeleg:** `npx vitest run tests/sim/charter-save.test.ts tests/sim/council-save.test.ts tests/sim/farOrder-save.test.ts tests/sim/save-loyalty.test.ts tests/sim/helpers.test.ts tests/sim/save-v11.test.ts tests/sim/save-v12.test.ts tests/sim/inselmarkt.test.ts tests/sim/charter.test.ts <alle Dateien aus Step 0>; echo EXIT=$?`, dazu `rg -l "deserialize\(" tests/sim` vollständig: `npx vitest run $(rg -l "deserialize\(" tests/sim); echo EXIT=$?`; `npx tsc --noEmit; echo EXIT=$?`, `make lint; echo EXIT=$?`, `make zeittests; echo EXIT=$?`, `make conflicts; echo EXIT=$?` → je 0. Laufzeit mit T00 vergleichen.
+- [ ] **Teilbeleg:** `npx vitest run tests/sim/charter-save.test.ts tests/sim/council-save.test.ts tests/sim/farOrder-save.test.ts tests/sim/save-loyalty.test.ts tests/sim/helpers.test.ts tests/sim/save-v11.test.ts tests/sim/save-v12.test.ts tests/sim/inselmarkt.test.ts tests/sim/charter.test.ts tests/sim/council.test.ts <alle Dateien aus Step 0>; echo EXIT=$?`, dazu `rg -l "deserialize\(" tests/sim` vollständig: `npx vitest run $(rg -l "deserialize\(" tests/sim); echo EXIT=$?`; `npx tsc --noEmit; echo EXIT=$?`, `make lint; echo EXIT=$?`, `make zeittests; echo EXIT=$?`, `make conflicts; echo EXIT=$?` → je 0. Laufzeit mit T00 vergleichen.
 - [ ] **Commit:** `feat: Save-Feld charter mit Migration (AK-ST-11)`.
 
 ## Task-Review
 
-Version = Ledger-Wert + 1, keine Nummer in Tests; `isValidCharter` vor `isValidV9Fields`; Migration wirft nie; Faltketten vollständig (Reviewer wiederholt Step-0-`rg`); nur die genannten Pin-Zeilen geändert; `World.charter` ohne Optional-Markierung.
+Version = Ledger-Wert + 1, keine Nummer in Tests; `isValidCharter` vor `isValidV9Fields`; Migration wirft nie; Faltketten vollständig (Reviewer wiederholt Step-0-`rg`); nur die genannten Pin-Zeilen geändert, und je geänderter Pin-Zeile bleibt die Migration des Vorgängers über ihren Faltschritt in einer Kette getestet (Gate-Plan B5, ST-E4); `World.charter` ohne Optional-Markierung.
