@@ -86,6 +86,35 @@ Scout B fand keine Playtest-Berichte nach `rel-18` (Bedienreibung ist durch UI-H
 nicht Geld ist; diese Frage ist O8/K5 der Erweiterung 1 (Nutzer-Session, R519) und gehört nicht in eine Ideen-Runde. Wiedervorlage fällig: I-116 Inselgunst (geparkt «bis I-114
 live», I-114 live mit REL-26); Empfehlung bleibt geparkt (Geldlohn, R722), mit I-172 zusammen ins Balancing der Erweiterung 1.
 
+## Rangliste TIEFE-1 (Vorschlag lead-design, Ruling L0 offen)
+
+Nutzerauftrag R862: Spieltiefe, neue Spielmodi und Erweiterungen, die den Spieler länger halten. Recherche in drei Strängen:
+[`docs/recherche/2026-10-23-tiefe-1.md`](recherche/2026-10-23-tiefe-1.md). Skizzen für drei Erweiterungen und zwei Modi:
+[`2026-10-23-tiefe-1-skizzen.md`](superpowers/specs/2026-10-23-tiefe-1-skizzen.md). Neue Ideen I-186, I-187, I-189–I-196.
+I-188 ist nicht vergeben: Der Verwaltungsaufschlag mit der Grösse der Stadt ist ein Doppel zu I-143 (verworfen, R776).
+Sortiert nach Summe, bei Gleichstand nach Nutzen für die Langzeitmotivation je Aufwand. Massstab ist der Leitbefund R722:
+Ein Lohn nach dem Denkmal muss etwas anderes sein als Geld, oder das Spiel muss Geld wieder knapp machen. Die Rangliste IDEEN-16
+bleibt stehen, bis L0 sie entscheidet. Pool danach 37 von 40 offen.
+
+| Rang | ID    | Gruppe      | Name                                  | Grösse | Summe | Save / Baseline    | Nutzen/Aufwand                                         | Empfehlung                                                                                 |
+| ---- | ----- | ----------- | ------------------------------------- | ------ | ----- | ------------------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| 1    | I-186 | Spieltiefe  | Ehrenbuch (Meisterstücke)             | S–M    | 13    | nein / nein        | Grund für die nächste Partie, ≈ 120 Tools              | **Kurzdesign** (opus, neue Schwellen), als Erstes                                          |
+| 2    | I-187 | Spieltiefe  | Inselruf (zweite Währung)             | M      | 13    | ja / nein          | alle Handelsschleifen behalten einen Zweck, ≈ 3 Pakete | **Brainstorming mit Rechnung**; zusammen mit dem Ruling zu O8/K5 der Erweiterung 1         |
+| 3    | I-192 | Modus       | Knappe Zeiten (Szenarien)             | M      | 13    | ja / nein          | Geld wieder knapp, ohne das Grundspiel zu ändern       | **Brainstorming «Modus Inselproben»** mit I-190 und I-191                                  |
+| 4    | I-189 | Spieltiefe  | Expedition ins Unbekannte             | M      | 13    | ja / nein          | Flotte mit Ziel nach Ziel 3, ≈ 3 Pakete                | Baustein der Erweiterung «Neue Ufer» (I-194)                                               |
+| 5    | I-190 | Modus       | Inselprobe (Karte, Ziel, Bestzeit)    | M      | 12    | ja / nein          | Wiederspielwert mit Vergleich, ≈ 3 Pakete              | Rahmen für I-192 und I-191, gleiches Brainstorming                                         |
+| 6    | I-191 | Modus       | Tagesinsel                            | S      | 12    | nein / nein        | Rückkehrgrund, ≈ 40 Tools nach I-190                   | im Brainstorming «Modus Inselproben»                                                       |
+| 7    | I-194 | Erweiterung | «Neue Ufer» (Entdeckung, kalte Insel) | L      | 11    | ja / hinter Ziel 3 | neue Spielphase, ≈ 12–16 Pakete                        | **Nutzerentscheid** über die Reihenfolge der Erweiterungen; Empfehlung: nach Erweiterung 1 |
+| 8    | I-195 | Erweiterung | «Ernte und Frost» (Jahreszeiten)      | L      | 11    | ja / mit Schalter  | Rhythmus statt Plateau, ≈ 10–14 Pakete                 | Nutzerentscheid (Reihenfolge, Schalter «an» als Standard wäre Kernschleifen-Umbau)         |
+| 9    | I-196 | Erweiterung | «Gelehrte und Gilden» (Wissen)        | L      | 10    | ja / hinter Ziel 3 | Bauplan-Wahl im Spätspiel, ≈ 10–12 Pakete              | dritter Kandidat; nahe am Rat, Teile gehen in I-187 auf                                    |
+| 10   | I-193 | Modus       | Bewährung (Endlos mit steigender See) | M      | 10    | ja / nein          | Endlos-Ziel für Kenner, Druck ohne neue Wahl           | parken mit I-181 und I-034 bis zu einer Krisen-Überarbeitung                               |
+
+Leitbefund TIEFE-1: Die Recherche bestätigt zwei Lücken, ein messbares Ziel nach dem letzten Ziel (I-186, I-190) und einen Lohn ausser Geld
+(I-187, I-189). Modi sind bei uns billig, weil die Sim deterministisch ist und Krisenstufe und Freischaltung schon wählbar sind. Erweiterungen
+sollen eine neue Region oder einen neuen Zyklus bringen und keine weitere Stufe über den Reedern. Sie gehören hinter einen Schalter oder an eine
+Spätphase, damit kein Pflicht-Umbau entsteht (R3). Meta-Boni über Partien (Prestige, Vermächtnis I-134) bleiben ausgeschlossen: Sie ändern nach
+R722 nur das Restgeld und brechen die Vergleichbarkeit der Proben.
+
 ## Ideen
 
 ### I-061 · eingeplant (R529, Stadtplanung) · Marktplatz-Reichweite über Wege
@@ -430,3 +459,140 @@ live», I-114 live mit REL-26); Empfehlung bleibt geparkt (Geldlohn, R722), mit 
 - Bewertung lead-design: gleiche Lage wie I-013; die Schwelle wird zur Regel «nie mehr als 60», keine Entscheidung.
 - Nutzen/Aufwand: gering · S · ≈ 40 Tools
 - Entscheid: offen (IDEEN-16), Empfehlung verwerfen
+
+### I-186 · bewertet · Ehrenbuch (Meisterstücke über alle Partien)
+
+- Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen (Ziele) · Quelle: TIEFE-1 Recherche R1 1.3–1.5 (`docs/recherche/2026-10-23-tiefe-1.md`); Genre-Mechanik (Erfolge je Schwierigkeit) · Herkunft: vom Studio vorgeschlagen · Gruppe: **Spieltiefe**
+- Spielerwirkung: „Der Spieler öffnet im Menü das Ehrenbuch, sieht «Handelsstadt ohne einen Zukauf — offen» und spielt die nächste Insel bewusst anders, um das Meisterstück zu holen."
+- Mechanik: 16–20 Meisterstücke als Defs (`src/sim/defs/honors.ts`), je eine reine Prüffunktion über den Weltzustand (z. B. «Ziel 1 vor 25:00», «Gewürzstadt mit Krisen hoch», «Meisterprüfung bestanden», «fünf Stammkunden-Lieferungen ohne Bruch», «drei Fremdinseln mit Kontor»). Die Prüfung läuft beim Ziel-Ereignis und beim Speichern. Erreichte Stücke liegen getrennt vom Spielstand im Browser (`inselreich.ehrenbuch`, wie `inselreich.settings`, `src/ui/settings.ts:46`) und gelten für alle Partien. Lohn nur ehrenhalber: Eintrag, Datum, Kartennummer. Kein Spielwert, kein Startbonus.
+- Grösse: S–M · Risiko: keins für Welt-Save und Baseline (eigene Ablage, Prüfung nur lesend); eigene Ablage mit Versionsfeld und Abweisen bei Fremdformat
+- Raster: Spass 3 · Passung 2 · Aufwand 2 · Risiko 3 = 13
+- Fehlt heute: Erfolge leben nur in der Chronik der laufenden Partie (Meisterprüfung, `src/sim/trial.ts`); neben dem Spielstand liegen nur Einstellungen (`src/ui/settings.ts:46`) und die zwei Speicherplätze (`src/ui/storage.ts:5-6`).
+- Randfälle: «Alles frei» und «Krisen aus» nur für eigens markierte Stücke; geladener Fremd- oder Altstand darf Stücke nicht nachträglich auslösen, die er nicht im laufenden Spiel erreicht hat (Prüfung nur bei Ereignis). Entartung: Neuladen eines Stands kurz vor dem Ziel, um ein Zeit-Stück mehrfach zu holen. Das ist harmlos, weil das Stück einmalig ist.
+- Doppelung: I-111 (geparkt, Etappen mit Geld-/Baustofflohn innerhalb der Partie), I-134 (geparkt, Vermächtnis = Startbonus über Partien; R722: Startboni ohne Wirkung), I-069 (verworfen, Widmung), AUFLAGEN-KERN (Auflagen sind Prüfungen in der Partie; das Ehrenbuch verzeichnet sie). Beleg: `rg -n -i "Ehrenbuch|Errungenschaft|Erfolge|Ruhm|Prestige" docs/ideen.md docs/ideen-archiv.md` → 0 Treffer; Erweiterung 1 (`git show design/erweiterung-1:…brainstorming.md | grep -E "Ehre|Prestige"`) → 0 Treffer.
+- Bewertung lead-design: Der billigste Hebel gegen «kein Ziel nach dem Ziel» (R1 1.3, 1.4). Er braucht keinen Geldlohn und passt zu R839/R840 (Lohn ehrenhalber). Stücke wie «ohne Zukauf» oder «Krisen hoch» erzeugen echte Wahl in der ersten Stunde der nächsten Partie. Zugleich Träger für Bestzeiten aus I-190.
+- Nutzen/Aufwand: Grund für die zweite und dritte Partie, Ziele in jeder Phase · S–M · ≈ 2 Häppchen (Sim-Prüfer + Menükarte), ≈ 120 Tools
+- Entscheid: offen (TIEFE-1), Empfehlung Kurzdesign (opus, neue Schwellenwerte)
+
+### I-187 · bewertet · Inselruf (zweite Währung, die Geld nicht kauft)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: TIEFE-1 Recherche R1 1.6 (Tropico «drowning in money»), R3 «neue Entscheidung statt mehr Arbeit»; Leitbefund R722 · Herkunft: vom Studio vorgeschlagen · Gruppe: **Spieltiefe**
+- Spielerwirkung: „Der Spieler nimmt nach dem Denkmal wieder jeden Fernauftrag an, weil ihm noch 4 Ruf zum Privileg «Siebter Lagerplatz auf Weidenau» fehlen, und überlegt, ob er den Ruf lieber für einen zweiten Ratsbeschluss spart."
+- Mechanik: Ruf entsteht nur aus Verlässlichkeit, nie aus Geld: erfüllter Handelsauftrag +1, Fernangebot +2, Stammkunde je 5 Lieferungen +2, bestandene Auflage +5, Vertragsbruch −2. In der Amtsstube stehen 5–6 Privilegien, die kein Geld kauft (z. B. verfallenen Ratsbeschluss nachholen, Lagergrenze +20 auf einer Insel, Flottengrenze +1, Edikt-Sperrzeit halbiert). Jedes ist einmalig und kostet 6–15 Ruf. Erwartung bis Ziel 3 ≈ 15–20 Ruf, also 2 von 6 Privilegien: Wahl statt Sammeln. Werte in `src/sim/defs/`, Rechnung vorab (`design-economy-designer`).
+- Grösse: M · Risiko: Save (Ruf-Zähler, gekaufte Privilegien); Baseline bitgleich, solange der Controller keine Privilegien kauft (Ruf zählt nur mit)
+- Raster: Spass 3 · Passung 3 · Aufwand 2 · Risiko 2 = 13
+- Fehlt heute: Lohn aller Auftragsarten ist Geld (`src/sim/orders.ts`, Fernangebot I-114, Stammkunde I-047); Ratsbeschlüsse sind kostenlos und einmalig (`src/sim/defs/council.ts`); die Amtsstube kennt nur Edikte und Steuer (`src/sim/defs/edicts.ts`).
+- Randfälle: Ruf darf nicht unter 0 fallen; Abriss der Amtsstube sperrt den Kauf, der Ruf bleibt; Privileg «Flottengrenze» kollidiert mit der Werft der Erweiterung 1 (dort klären). Entartung: Aufträge nur noch für Ruf annehmen und mit Verlust erfüllen; das ist gewollt, weil Geld im Spätspiel reichlich ist (R722).
+- Doppelung: I-116 (geparkt, Inselgunst: Pünktlichkeit hebt die Vorliebe, Lohn Geld), I-131 (geparkt, zweiter Edikt-Platz gegen Geld), I-173 (verworfen, Meisterbrief zahlt Geld), Erweiterung 1 O8/K5 (Dauer-Senke für Geld nach Ziel 4). Beleg: `rg -n -i "Ruf |Ansehen|Prestige" docs/ideen.md docs/ideen-archiv.md` → 0 Treffer; Erweiterung 1 `grep -E "Ruf|Ansehen"` → 0 Treffer.
+- Bewertung lead-design: Antwortet direkt auf den Leitbefund. Die vorhandenen Schleifen (Aufträge, Fernangebot, Stammkunde, Auflagen) behalten nach Minute 15 einen Zweck, ohne neue Ketten. Kandidat, um O8/K5 der Erweiterung 1 anders zu beantworten («Lohn ist Ruf, nicht eine Geldsenke»).
+- Nutzen/Aufwand: alle Handelsschleifen bleiben im Spätspiel Entscheidungen · M · ≈ 3 Pakete (Sim, UI, Rechnung)
+- Entscheid: offen (TIEFE-1), Empfehlung Brainstorming mit Rechnung, zusammen mit dem Ruling zu Erweiterung 1 O8
+
+### I-189 · bewertet · Expedition ins Unbekannte
+
+- Bereich: Inhalt · Säule: Insel besiedeln (Archipel) · Quelle: TIEFE-1 Recherche R3 «Sammeln und Erkunden», «neue Region» · Herkunft: vom Studio vorgeschlagen · Gruppe: **Spieltiefe** (Baustein Erweiterung I-194)
+- Spielerwirkung: „Der Spieler schickt ein Schiff mit 20 Rum und 10 Werkzeug für vier Minuten hinter den Kartenrand und muss unterwegs zwischen zwei Wegen wählen; zurück kommt ein Fundstück, das eine Regel ändert."
+- Mechanik: Expedition = Schiff ausser Dienst für 3–5 min, Ladung als Einsatz. Unterwegs 2 Wahl-Karten aus einem eigenen seeded Strom (ADR-010), je mit Bedarf (Ware an Bord) und Risiko. Lohn ist ein Fundstück aus einer Sammlung von 8–10 mit kleiner Dauerwirkung (wie Ratsbeschlüsse, z. B. «Seekarte: Fahrzeit −10 %»). Kein Geldlohn. Höchstens eine Expedition zugleich.
+- Grösse: M · Risiko: Save (Expedition, Fundstücke), Baseline bitgleich (eigener Strom, Controller schickt keine)
+- Raster: Spass 3 · Passung 3 · Aufwand 2 · Risiko 2 = 13
+- Fehlt heute: Schiffe kennen nur Routen und Reserve (`src/sim/defs/sea.ts`); keine Wirkung ausser Fracht.
+- Randfälle: Ein Schiff auf Expedition fehlt der Route, die Gewürzstadt kann kippen; Speichern unterwegs; Sturm-Krise während der Fahrt (keine Wirkung, eigener Strom). Entartung: immer die sichere Karte; daher müssen die Fundstücke an den riskanten Weg gebunden sein.
+- Doppelung: I-038 (geparkt, Erkundungsfahrt deckt eine schon erzeugte Insel auf), I-036 (geparkt, Wrackbergung), Erweiterung 1 §10 (Erkundung und Nebel ausdrücklich nicht im Umfang). Beleg: `rg -n -i "Expedition" docs/ideen.md docs/ideen-archiv.md` → 0 Treffer; I-038 und I-036 über `rg -n "^### I-0(36|38)" docs/ideen-archiv.md`; Erweiterung 1 Z. 282.
+- Bewertung lead-design: Gibt der Flotte nach der Gewürzstadt einen Zweck und einen Lohn ausser Geld. Die Kritik «Zufallslohn, Klickarbeit» (R3) ist durch Wahl-Karten und die Grenze von einer Expedition zugleich begrenzt. Allein M, als Kern der Erweiterung «Neue Ufer» stärker.
+- Nutzen/Aufwand: Flotte und Spätspiel bekommen Ziel und Geschichte · M · ≈ 3 Pakete
+- Entscheid: offen (TIEFE-1), Empfehlung Baustein Erweiterung «Neue Ufer» (I-194); allein nur, falls die Erweiterung nicht kommt
+
+### I-190 · bewertet · Inselprobe (feste Karte, festes Ziel, Bestzeit)
+
+- Bereich: Inhalt · Säule: alle (Modus) · Quelle: TIEFE-1 Recherche R2 «Seed-Herausforderung mit Wertung», «Zeitlimit» · Herkunft: vom Studio vorgeschlagen · Gruppe: **Modus**
+- Spielerwirkung: „Der Spieler wählt im Startmenü «Probe 3: Handelsstadt, Krisen hoch», spielt 40 Minuten und sieht danach «Bestzeit 38:12 (vorher 41:50)» und einen Text zum Teilen."
+- Mechanik: 5–6 Proben als Defs: Kartennummer, Krisenstufe, Freischaltung, Ziel (vorhandene Ziele 1–3, Denkmal, Meisterprüfung) und Wertung (Spielzeit in Ticks bis zum Ziel). Die Welt trägt `probe: { id } | null`. Bestzeiten liegen lokal neben dem Spielstand (wie I-186). Teilen-Text ohne Spoiler: «Inselreich · Probe 3 · Handelsstadt 38:12 · Krisen hoch». Tempo und Pause zählen nicht, weil die Spielzeit in Ticks gemessen wird.
+- Grösse: M · Risiko: Save (Probe-Feld, Sprung v18 → v19), Baseline bitgleich (normales Spiel unverändert)
+- Raster: Spass 3 · Passung 2 · Aufwand 2 · Risiko 2 = 12
+- Fehlt heute: Neue Insel kennt Krisenstufe und Freischaltung (`src/ui/menu.ts:82-92`), aber keine wählbare Karte und keine Wertung; die Karte ist eine Zahl im Menü (`src/ui/menu.ts:116`), `createWorld` nimmt den Seed (`src/sim/world.ts:102-123`).
+- Randfälle: Kartennummer, die die Kartenerzeugung ersetzt (`seedUsed`): die Probe speichert die genutzte Nummer; Neuladen eines älteren Stands setzt die Uhr zurück (gewollt, die Zeit bleibt ehrlich); «Alles frei» nur in eigens markierten Proben. Entartung: keine, Bestzeit ist lokal.
+- Doppelung: I-132 (live, Meisterprüfung = Zeitprüfung in der Partie), AUFLAGEN-KERN (Auflagen), I-186 (Ablage der Bestzeiten). Beleg: `rg -n -i "Seed|Herausforderung|Bestzeit|Wertung" docs/ideen.md` → nur Teilwort «Bewertung», keine Modus-Idee; im Archiv nur Risiko-Zeilen zu seeded Strömen; Erweiterung 1 → nur Controller-Seed (Z. 99, 251).
+- Bewertung lead-design: Nutzt unseren grössten technischen Vorteil, die deterministische Sim. Messbares Ziel und Grund zum Neustart (R1 1.3, R2). Ohne Server keine globale Liste. Das ist nach R2 sogar fairer.
+- Nutzen/Aufwand: Wiederspielwert mit Vergleich, Lernkurve sichtbar · M · ≈ 3 Pakete (Sim, UI, Inhalt der Proben)
+- Entscheid: offen (TIEFE-1), Empfehlung Brainstorming «Modus Inselproben» mit I-191 und I-192
+
+### I-191 · bewertet · Tagesinsel (Datum als Karte)
+
+- Bereich: Inhalt · Säule: alle (Modus) · Quelle: TIEFE-1 Recherche R2 «Tages-Herausforderung» · Herkunft: vom Studio vorgeschlagen · Gruppe: **Modus**
+- Spielerwirkung: „Der Spieler startet am Morgen die Tagesinsel, die heute für alle gleich ist, und vergleicht abends mit einem Freund per Teilen-Text, wer schneller 50 Bürger hatte."
+- Mechanik: Aufbau auf I-190. Die Kartennummer ist das Datum (`JJJJMMTT`, Ortszeit), Ziel und Krisenstufe wechseln je Wochentag aus einer Def-Liste. Lokale Liste der letzten 14 Tage. Verpasste Tage bestrafen nicht.
+- Grösse: S (auf I-190) · Risiko: keins über I-190 hinaus
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
+- Fehlt heute: wie I-190.
+- Randfälle: Zeitzonen (Ortszeit, also für zwei Spieler nicht immer gleich, im Teilen-Text steht das Datum); Spiel über Mitternacht behält die Karte des Starts.
+- Doppelung: I-190 (Grundlage). Beleg: `rg -n -i "Tagesinsel|täglich|Datum als" docs/ideen.md docs/ideen-archiv.md` → 0 Treffer.
+- Bewertung lead-design: Klein und nur mit I-190 sinnvoll. Spass 2, weil der Reiz erst für Wiederkehrer wirkt.
+- Nutzen/Aufwand: Grund zur Rückkehr · S · ≈ 40 Tools nach I-190
+- Entscheid: offen (TIEFE-1), Empfehlung Teil des Brainstormings «Modus Inselproben»
+
+### I-192 · bewertet · Knappe Zeiten (Szenarien mit Startbedingung)
+
+- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: TIEFE-1 Recherche R1 1.6 (Missionen geben Struktur), R2 «Szenarien», R3 «Szenarien nur mit Wirtschaftsbezug» · Herkunft: vom Studio vorgeschlagen · Gruppe: **Modus**
+- Spielerwirkung: „Der Spieler beginnt «Schuldbrief» mit −3000 Geld und muss in 20 Minuten schuldenfrei sein; jede Münze zählt wieder, und der Zukauf am Kontor wird zur echten Abwägung."
+- Mechanik: Szenario = Probe (I-190) plus Startbedingung als Def: (a) «Schuldbrief»: Startgeld negativ, Zins je Minute, Ziel schuldenfrei vor Frist; (b) «Karge Heimat»: Heimatinsel ohne Gebirge, Stein nur von der Felsbucht oder per Zukauf; (c) «Sturmjahr»: Krisen hoch, Sturm doppelt, Feuerwache erst mit Siedlern. Jede Startbedingung ist ein Schalter in `src/sim/defs/`, die Regeln des Grundspiels bleiben unverändert.
+- Grösse: M (Rahmen + 1 Szenario), je weiteres Szenario S–M · Risiko: Save (Szenario-Feld), Baseline bitgleich (Grundspiel ohne Schalter)
+- Raster: Spass 3 · Passung 3 · Aufwand 2 · Risiko 2 = 13
+- Fehlt heute: Startbedingungen sind fest (`src/sim/world.ts:102-123`); Schulden gibt es nur als Kassenstand, ohne Zins und Frist (Darlehen I-094 verworfen, N-101).
+- Randfälle: «Schuldbrief» gegen Bankrott (gilt die bestehende Regel bei leerer Kasse?), «Karge Heimat» darf das Ziel nicht unmöglich machen (Rechnung je Szenario). Entartung: Szenario mit «Alles frei» umgehen, daher feste Freischaltung je Szenario.
+- Doppelung: I-094 (verworfen, Darlehen als Dauerangebot; hier nur Startlage), I-048 (Zukauf-Aufschlag), I-018 (geparkt, Story-Rahmen), I-017 (geparkt, Auftragsreihe Seefahrt). Beleg: `rg -n -i "Szenario" docs/ideen.md docs/ideen-archiv.md` → 1 Treffer (Archiv Z. 572, I-048, kein Modus); Erweiterung 1 → 0 Treffer.
+- Bewertung lead-design: Der einzige Weg, Geld wieder knapp zu machen, ohne die Grundpartie umzubauen (R722). Das Muster «Szenario ohne Wirtschaft» (R3) wird vermieden, weil jede Startbedingung eine Kette oder die Kasse trifft.
+- Nutzen/Aufwand: frühe, harte Entscheidungen bei jedem Neustart · M · ≈ 3 Pakete plus je Szenario eine Rechnung
+- Entscheid: offen (TIEFE-1), Empfehlung Teil des Brainstormings «Modus Inselproben»
+
+### I-193 · bewertet · Bewährung (Endlos mit steigender See)
+
+- Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: TIEFE-1 Recherche R1 1.4 und 1.8, R2 «Endlos» · Herkunft: vom Studio vorgeschlagen · Gruppe: **Modus**
+- Spielerwirkung: „Der Spieler schaltet nach der Gewürzstadt «Bewährung» ein; alle 8 Minuten wird die See rauer, und er hält so lange durch, wie seine Stadt über 80 % bleibt."
+- Mechanik: Freiwillig ab Ziel 3, Abbruch jederzeit. Je Welle steigt die Krisenhäufigkeit eine Stufe über «hoch» hinaus, und ein Gut wird an allen Kontoren für eine Welle teurer. Wertung: überstandene Wellen, Eintrag in Chronik und Ehrenbuch.
+- Grösse: M · Risiko: Save (Wellenzähler), Baseline bitgleich (nach Ziel 3, eigener Strom)
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 2 = 10
+- Fehlt heute: Krisenstufe fest je Partie (`src/sim/defs/crises.ts:4`).
+- Randfälle: Brand-Ketten bei hoher Stufe (Feuerwache-Reichweite); Speichern mitten in der Welle.
+- Doppelung: I-181 (geparkt, Flaute), I-034 (geparkt, Seuche), I-076 (verworfen, Missernte: Krise ohne Wahl), Meisterprüfung (Durchhalten). Beleg: `rg -n -i "Endlos|Welle" docs/ideen.md docs/ideen-archiv.md` → nur Teilwort «Schwelle», keine Modus-Idee.
+- Bewertung lead-design: Nach R1 1.8 hilft wiederkehrende Störung gegen das Plateau. Krisen ohne neue Gegenmittel sind aber Druck ohne Wahl (wie I-076). Erst nach einer Krisen-Überarbeitung sinnvoll.
+- Nutzen/Aufwand: Endlos-Ziel für Kenner · M · ≈ 2 Pakete
+- Entscheid: offen (TIEFE-1), Empfehlung parken mit I-181 und I-034 bis zu einer Krisen-Überarbeitung
+
+### I-194 · bewertet · Erweiterung «Neue Ufer» (Entdeckung und kalte Insel)
+
+- Bereich: Inhalt · Säule: Insel besiedeln (Archipel) · Quelle: TIEFE-1 Recherche R3 «neue Region mit eigener Kette» (meistgelobt), «Sammeln und Erkunden» · Herkunft: vom Studio vorgeschlagen · Gruppe: **Erweiterung**
+- Spielerwirkung: „Der Spieler deckt per Expedition den Nebel hinter dem Kartenrand auf, findet eine kalte Nordinsel, deren Siedler Wärme brauchen, und baut dort eine zweite kleine Stadt mit eigener Kette."
+- Mechanik: Skizze in `docs/superpowers/specs/2026-10-23-tiefe-1-skizzen.md` §2: Seekarte mit Nebel, Expeditionen (I-189), Nordinsel mit Klimaregel (Wärme als Grundbedürfnis), eigene Kette (Tran, Pelz), Fundstück-Sammlung, Ziel «Zwei Reiche».
+- Grösse: L (Erweiterung, 3–4 Meilensteine) · Risiko: Save, Baseline (nur hinter Ziel 3), Perf (Nebel, zweite Stadt), Art (Klima-Tönung, neue Sprites)
+- Raster: Spass 3 · Passung 3 · Aufwand 1 · Risiko 1 = 11
+- Fehlt heute: Inseln fest erzeugt (`src/sim/defs/sea.ts`, `src/sim/world.ts:87`), kein Klima, keine Erkundung.
+- Doppelung: I-038 (geparkt, Erkundungsfahrt), I-036 (geparkt, Wrack), I-189 (Baustein), Erweiterung 1 §10 (Erkundung, Nebel, neue Inseln ausdrücklich ausgeschlossen, also kein Doppel). Beleg: `rg -n -i "Expedition|Nebel|Klima" docs/ideen.md docs/ideen-archiv.md` → 0 Treffer; I-038 über «Erkund».
+- Bewertung lead-design: Das Thema, das Spieler an Erweiterungen am meisten loben. Es ruht auf Werft und Flotte der Erweiterung 1 und passt zum ruhigen Ton. Kandidat für die Erweiterung nach «Stände und Segel».
+- Nutzen/Aufwand: neue Spielphase mit neuer Frage («wie versorge ich ein anderes Klima?») · L · ≈ 12–16 Pakete
+- Entscheid: offen (TIEFE-1), Empfehlung Nutzerentscheid über die Reihenfolge der Erweiterungen (Warteschlangen-Entwurf im Handoff TIEFE-1)
+
+### I-195 · bewertet · Erweiterung «Ernte und Frost» (Jahreszeiten)
+
+- Bereich: Inhalt · Säule: Produktionsketten · Quelle: TIEFE-1 Recherche R1 1.8 (Gleichgewicht kippen), R3 «Wetter als Zustandswechsel, kein Dauerzustand» · Herkunft: vom Studio vorgeschlagen · Gruppe: **Erweiterung**
+- Spielerwirkung: „Der Spieler sieht den Herbst kommen, füllt Lager mit Fisch und Brennholz und stellt eine Route auf Weidenau um, weil im Winter die Felder daheim ruhen."
+- Mechanik: Skizze §3: Jahr aus vier Zeiten zu je 6 min, Winter mit ruhenden Feldern, Fang −50 % und neuem Bedarf Brennholz; Herbst mit Ernte ×1,5; Speicher als Bau; Fremdinseln mit eigenem Klima. Schalter «Jahreszeiten an/aus» bei Neuer Insel.
+- Grösse: L · Risiko: Save, Baseline (mit Schalter «an» alle Pins neu; «aus» bitgleich), Art (Tönung, Schnee)
+- Raster: Spass 3 · Passung 3 · Aufwand 1 · Risiko 1 = 11
+- Fehlt heute: Wetter nur als Darstellung (`src/render/weather.ts`), Erzeugung ohne Zeitbezug.
+- Doppelung: I-076 (verworfen, Missernte als Krise ohne Wahl; hier vorhersehbar und planbar), I-184 (verworfen, Lagerverderb), I-049 (live, Sperrbestand als Werkzeug für Vorrat). Beleg: `rg -n -i "Jahreszeit|Winter|Brennholz" docs/ideen.md docs/ideen-archiv.md` → 0 Treffer; Erweiterung 1 → 0 Treffer.
+- Bewertung lead-design: Macht das Lager und die Fremdinseln zum Werkzeug gegen einen bekannten Rhythmus statt gegen Zufall. Gefahr nach R3: Pflicht-Umbau des Bestehenden. Darum nur mit Schalter, Standard offen (Nutzerentscheid, falls «an»).
+- Nutzen/Aufwand: das Plateau verschwindet, weil der Rhythmus nie ruht · L · ≈ 10–14 Pakete
+- Entscheid: offen (TIEFE-1), Empfehlung Nutzerentscheid über die Reihenfolge der Erweiterungen
+
+### I-196 · bewertet · Erweiterung «Gelehrte und Gilden» (Wissen und Erfindungen)
+
+- Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: TIEFE-1 Recherche R3 «Regierung und Richtlinien», «neue Entscheidung statt mehr Arbeit»; R1 1.6 (Forschung erschöpft) · Herkunft: vom Studio vorgeschlagen · Gruppe: **Erweiterung**
+- Spielerwirkung: „Der Spieler baut die Schule zur Akademie aus, sammelt Wissen aus Bürgern und Kaufleuten und muss sich zwischen der Gilde der Seefahrer und der Gilde der Glasmacher entscheiden, weil jede eine andere Regel ändert."
+- Mechanik: Skizze §4: Wissen als dritte Grösse neben Geld und Ruf, Erfindungsbuch mit drei Ästen, je Ast eine Gilde mit exklusiver Regeländerung, Gelehrten-Haus als Seitenstand ohne Steuer.
+- Grösse: L · Risiko: Save, Baseline (nur nach Ziel 3), Balancing (Regeländerungen)
+- Raster: Spass 3 · Passung 2 · Aufwand 1 · Risiko 1 = 10
+- Fehlt heute: Schule nur als Dienst (`src/sim/defs/buildings.ts`, `school`), Rat wählt einmalig je Stufe (`src/sim/defs/council.ts`).
+- Doppelung: I-112 (live, Rat), I-153 (eingeplant, Seerecht), I-187 (Ruf als zweite Währung, Konkurrenz), Erweiterung 1 O8/K5. Beleg: `rg -n -i "Wissen|Forschung|Erfindung|Gelehrt|Gilde" docs/ideen.md docs/ideen-archiv.md` → 0 Treffer; `rg -n -i "Zunft"` → nur Ratsbeschluss-Entwurf «Zunftrecht» (I-112, I-138) und I-143 (Verwaltungsaufschlag); Erweiterung 1 → 0 Treffer.
+- Bewertung lead-design: Gute Wahl-Mechanik, liegt aber nah am Rat (einmalige Beschlüsse). Der Eigenwert ist kleiner als bei I-194 und I-195. Ein Teil (dritte Grösse) kann auch I-187 tragen.
+- Nutzen/Aufwand: Spätspiel mit Bauplan-Entscheidungen · L · ≈ 10–12 Pakete
+- Entscheid: offen (TIEFE-1), Empfehlung dritter Erweiterungs-Kandidat, nach I-194 und I-195
