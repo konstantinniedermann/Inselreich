@@ -2530,3 +2530,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201/I-210 (
 Regelbezug: R769, R816, R929, R932 · Kosten bei Irrtum: ein Release-Tag später.
 
 Entscheider: L0 · Anlass: Bericht lead-tech FIX-SCHIFF-A1-MERGE · ADR: —
+
+## R935 · 2026-10-25 · Plan AUSBAU-LOGIK fertig; Entwürfe; Gate Plan
+
+Ruling: `plan/ausbau-logik` @ `d4fc2b2b` (T00–T22, 46 AK, zwei Etappen) zum **Gate Plan** an `lead-qa` (Budget 1). Entwürfe: **E-P1** Wald-/Weidezahlen: Spec-Werte jetzt in die Defs, FL-2 ersetzt später die
+Stufenbedingung der fünf Flächentypen per Ruling (eine Zahl je Weide für den Spieler, R896) **ja**; **E-P2** Budget 38 Starts (≤ 3 Arbeiter, ≤ 2 Testläufe) nach Gate Plan; AL-6 steuert `lead-tech` mit
+`art-rendering-engineer` **ja**; **P-14** AK-AL-04 Satz 2 nicht herstellbar (Monotonie), Plan prüft die Absicht **ja**. `balance-upgrade.test.ts` zwischen T04 und T06 bewusst rot bis Pin per Ruling — zulässig nur im
+Feature-Branch, nie auf main.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, I-201 (`cycleOf`), FLAECHE (`placement.ts`), GEBAEUDE-VARIANZ S5/S6, Save-Kette
+Regelbezug: R896, R909, R918, R924 · Kosten bei Irrtum: Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-ausbau-logik · ADR: —
