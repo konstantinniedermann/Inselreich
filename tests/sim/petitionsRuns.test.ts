@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { answerPetition } from '../../src/sim/petitions';
 import { petitionRng } from '../../src/sim/petitionRng';
+import { houseCap } from '../../src/sim/population';
 import { serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { World } from '../../src/sim/types';
@@ -93,5 +94,26 @@ describe('AK-BS-03 Folge', () => {
     const off = crises(false);
     expect(off.length).toBeGreaterThan(0);
     expect(crises(true)).toEqual(off);
+  });
+});
+
+describe('AK-BS-10 60 000 T', () => {
+  it('Ja auf jede Bitte: nie ein Haus über cap plus 15 Prozent, Überbelegung kommt vor', () => {
+    const w = createWorld(3, { petitionsOn: true });
+    const base = recorder([], true);
+    let over = 0;
+    const see = (x: World): boolean => {
+      base(x);
+      for (const b of Object.values(x.buildings)) {
+        if (!b.house) continue;
+        const cap = houseCap(x, b.house);
+        const max = cap + Math.floor((cap * 15 + 50) / 100);
+        expect(b.house.inhabitants, `Tick ${x.tick} Haus ${b.id}`).toBeLessThanOrEqual(max);
+        if (b.house.inhabitants > cap) over++;
+      }
+      return false;
+    };
+    play(w, 60_000, see);
+    expect(over).toBeGreaterThan(0);
   });
 });

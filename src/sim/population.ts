@@ -21,6 +21,7 @@ import { buildCoverage, distance, serviceBuildings, type Coverage } from './cove
 import { inSupplyRange } from './supply';
 import { edictUpgradeWait, effectiveTaxPct, growthInterval } from './edicts';
 import { effectiveTaxLevel, goodLockActive, upgradeStopActive } from './townhall';
+import { needRate, overcrowdCap } from './petitionEffect';
 import { center, islandOf } from './world';
 
 export { GROWTH_INTERVAL, UPGRADE_WAIT } from './defs/timing';
@@ -86,7 +87,8 @@ export function allNeedsMet(house: HouseState, tier: TierDef): boolean {
  * sich der Wert nicht.
  */
 function consume(world: World, b: Building, house: HouseState, tier: TierDef): void {
-  for (const [good, rate] of Object.entries(tier.needs) as [GoodId, number][]) {
+  for (const [good, base] of Object.entries(tier.needs) as [GoodId, number][]) {
+    const rate = needRate(world, b.island, good, base);
     if (!house.supplied) {
       house.satisfied[good] = false;
       continue;
@@ -228,7 +230,7 @@ export function tickPopulation(world: World): void {
     const met = allNeedsMet(house, tier);
     if (!met) house.satisfiedSince = world.tick;
     if (growth) {
-      const cap = houseCap(world, house);
+      const cap = overcrowdCap(world, b.island, house.tier, houseCap(world, house));
       if (house.inhabitants > cap) house.inhabitants -= 1;
       else if (met) house.inhabitants = Math.min(cap, house.inhabitants + 1);
       else house.inhabitants = Math.max(1, house.inhabitants - 1);

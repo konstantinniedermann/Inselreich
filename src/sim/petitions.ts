@@ -14,6 +14,7 @@ import {
   type PetitionWhen,
 } from './defs/petitions';
 import { TIER_IDS } from './defs/tiers';
+import { storageCap } from './petitionEffect';
 import { petitionRng } from './petitionRng';
 import {
   fail,
@@ -190,6 +191,24 @@ function expireEffects(world: World, events: PetitionEvent[]): void {
     if (e.until <= world.tick && e.answer === 'yes')
       events.push({ kind: 'ended', id: e.id, drawnAt: e.until });
   p.effects = p.effects.filter((e) => e.until > world.tick);
+  trimStorage(world, events);
+}
+
+/** Nach dem Ablauf einer Lager-Wirkung verfällt der Bestand über der Grenze; die Menge steht im Ereignis `ended`. */
+function trimStorage(world: World, events: PetitionEvent[]): void {
+  const stock = stockOf(world);
+  for (const e of events) {
+    const r = PETITIONS[e.id].reward;
+    if (e.kind !== 'ended' || r.kind !== 'storage') continue;
+    const spoiled: Partial<Record<GoodId, number>> = {};
+    for (const g of r.goods) {
+      const cut = stock[g] - storageCap(world, HOME, g);
+      if (cut <= 0) continue;
+      stock[g] -= cut;
+      spoiled[g] = cut;
+    }
+    if (Object.keys(spoiled).length > 0) e.spoiled = spoiled;
+  }
 }
 
 function applyDeadlines(world: World, events: PetitionEvent[]): void {

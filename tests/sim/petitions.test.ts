@@ -19,12 +19,30 @@ import {
 import { needRate, overcrowdCap, petitionCycle, storageCap } from '../../src/sim/petitionEffect';
 import { petitionRng } from '../../src/sim/petitionRng';
 import { createRng } from '../../src/sim/rng';
-import type { PetitionEffectEntry, World } from '../../src/sim/types';
+import type { Building, GoodId, PetitionEffectEntry, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
 import { demolish } from '../../src/sim/build';
 import { answerPetition, PETITION_REASONS, tickPetitions } from '../../src/sim/petitions';
 import { step, type StepReport } from '../../src/sim/tick';
-import { houseNearKontor, placeService, setHouse, village } from './helpers';
+import {
+  houseNearKontor,
+  placeService,
+  putBuilding,
+  setHouse,
+  twoIslandWorld,
+  village,
+} from './helpers';
+import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { WIN_SPICE_HOLD } from '../../src/sim/defs/tiers';
+import { cycleOf } from '../../src/sim/levels';
+import { goodsBalance } from '../../src/sim/flow';
+import { addStock } from '../../src/sim/economy';
+import { buy } from '../../src/sim/trade';
+import { merchants } from '../../src/sim/population';
+import { spiceMerchants } from '../../src/sim/goal3';
+import { setRoute, tickShips } from '../../src/sim/ships';
+import { foundKontor2Literal, seaWorld, shipLiteral } from './seaHelpers';
+import { spiceGoalScenario } from './scenariosSea';
 
 describe('AK-BS-09 Wächter', () => {
   it('Zeitfenster passen in die Periode und in die 15 Minuten', () => {
@@ -473,5 +491,235 @@ describe('AK-BS-16 petitions.ts ohne Spielwerte', () => {
     expect(src).not.toMatch(/0xc2b2ae35|3266489909/i);
     for (const g of GOOD_IDS) expect(src).not.toContain(`'${g}'`);
     expect(src).toMatch(/from '\.\/defs\/petitions'/);
+  });
+});
+
+const FOREVER = 1_000_000;
+const forever = (id: PetitionId, answer: 'yes' | 'no' = 'yes'): PetitionEffectEntry => ({
+  id,
+  answer,
+  until: FOREVER,
+});
+/** Versorgtes Kaufmannshaus (Szenario Gewürzstadt mit einem Haus, Tick 0, alle Dienste in Reichweite). */
+function merchantHouse(): { w: World; house: Building } {
+  const w = spiceGoalScenario({ houses: 1 });
+  w.tick = 0;
+  const house = Object.values(w.buildings).find((x) => x.house !== undefined)!;
+  house.house!.satisfiedSince = 0;
+  return { w, house };
+}
+const feed = (w: World): void => {
+  for (const g of GOOD_IDS) home(w).stock[g] = Math.max(home(w).stock[g], 60);
+};
+const runFed = (w: World, n: number): void => {
+  for (let i = 0; i < n; i++) {
+    feed(w);
+    step(w);
+  }
+};
+
+describe('AK-BS-10 Stapeln und Frist', () => {
+  it('zwei B1 überlappend: Stufe 4 wächst bis 23, nicht 26', () => {
+    const { w, house } = merchantHouse();
+    w.petitions.effects = [forever('weavers'), forever('weavers')];
+    runFed(w, 600);
+    expect(house.house!.inhabitants).toBe(23);
+  });
+  it('B1 und B8 zugleich: 15 Prozent, also 23', () => {
+    const { w, house } = merchantHouse();
+    w.petitions.effects = [forever('weavers'), forever('returnees')];
+    runFed(w, 600);
+    expect(house.house!.inhabitants).toBe(23);
+  });
+  it('Zuwachs: versorgt 20 auf 23 in 3 Wachstumstakten, unversorgt wächst nicht', () => {
+    const { w, house } = merchantHouse();
+    w.petitions.effects = [forever('weavers')];
+    runFed(w, 150);
+    expect(house.house!.inhabitants).toBe(23);
+    const u = merchantHouse();
+    u.w.petitions.effects = [forever('weavers')];
+    for (let i = 0; i < 150; i++) {
+      feed(u.w);
+      u.w.islands[0]!.stock.cloth = 0;
+      step(u.w);
+    }
+    expect(u.house.house!.inhabitants).toBeLessThanOrEqual(20);
+  });
+  it('zwei Taktlöhne B7: cycleOf = floor(c * 80 / 100), nicht mal 64', () => {
+    const w = createWorld(3);
+    const b = putBuilding(w, 0, 'weaver', 0, 0);
+    const c = BUILDING_DEFS.weaver.cycle!;
+    expect(cycleOf(w, b)).toBe(c);
+    w.petitions.effects = [forever('woolMarket'), forever('woolMarket')];
+    expect(cycleOf(w, b)).toBe(Math.floor((c * 80) / 100));
+  });
+  it('nach until gilt wieder cap, das Haus gibt je Wachstumstakt 1 ab', () => {
+    const { w, house } = merchantHouse();
+    setHouse(house, 4, 23);
+    w.petitions.on = true;
+    w.petitions.effects = [{ id: 'weavers', answer: 'yes', until: 10 }];
+    runFed(w, 49);
+    expect(house.house!.inhabitants).toBe(23);
+    runFed(w, 1);
+    expect(house.house!.inhabitants).toBe(22);
+    runFed(w, 50);
+    expect(house.house!.inhabitants).toBe(21);
+  });
+  it('B9 Ablauf: Stoff 117 wird auf 100 gekappt, Ereignis ended meldet 17 verdorben', () => {
+    const w = createWorld(3, OPTS);
+    for (const g of GOOD_IDS) home(w).stock[g] = 50;
+    home(w).stock.cloth = 117;
+    w.petitions.effects = [{ id: 'granary', answer: 'yes', until: 5 }];
+    const events = run(w, 5).flatMap((r) => r.petitions);
+    expect(events).toEqual([{ kind: 'ended', id: 'granary', drawnAt: 5, spoiled: { cloth: 17 } }]);
+    expect(home(w).stock.cloth).toBe(100);
+  });
+});
+
+describe('Fremdinsel (Review Focus 1)', () => {
+  it('Haus auf Insel 1 bleibt bei cap, Genügsamkeit und Lager gelten dort nicht', () => {
+    const w = twoIslandWorld();
+    const k = w.buildings[w.islands[1]!.kontorId!]!;
+    const h = putBuilding(w, 1, 'house', k.x + 2, k.y);
+    setHouse(h, 2, 9);
+    w.petitions.effects = [forever('weavers'), forever('weavers', 'no'), forever('granary')];
+    for (let i = 0; i < 60; i++) step(w);
+    expect(h.house!.inhabitants).toBeLessThanOrEqual(8);
+    expect(storageCap(w, 1, 'cloth')).toBe(STORAGE_CAP);
+    expect(needRate(w, 1, 'cloth', 1)).toBe(1);
+  });
+  it('B6 (spicefarm, homeOnly false) wirkt auf Insel 1', () => {
+    const w = createWorld(3);
+    w.petitions.effects = [forever('spiceSeed')];
+    const b = putBuilding(w, 0, 'spicefarm', 0, 0);
+    b.island = 1;
+    expect(cycleOf(w, b)).toBeLessThan(BUILDING_DEFS.spicefarm.cycle!);
+  });
+});
+
+describe('Genügsamkeit (P-4)', () => {
+  const consumed = (w: World): number => {
+    home(w).stock.cloth = 100;
+    let used = 0;
+    for (let i = 0; i < 1800; i++) {
+      feed(w);
+      const before = home(w).stock.cloth;
+      step(w);
+      used += before - home(w).stock.cloth;
+    }
+    return used;
+  };
+  it('Nein auf Stoff: Verbrauch über 1800 T ist 90 Prozent der Referenz', () => {
+    const ref = merchantHouse();
+    const refUsed = consumed(ref.w);
+    const t = merchantHouse();
+    t.w.petitions.effects = [forever('weavers', 'no')];
+    const used = consumed(t.w);
+    expect(refUsed).toBeGreaterThan(50);
+    expect(Math.abs(used - refUsed * 0.9)).toBeLessThanOrEqual(1);
+  });
+  it('goodsBalance zeigt 90 Prozent Verbrauch', () => {
+    const ref = merchantHouse();
+    const base = goodsBalance(ref.w).cloth.consumed;
+    ref.w.petitions.effects = [forever('weavers', 'no')];
+    expect(goodsBalance(ref.w).cloth.consumed).toBeCloseTo(base * 0.9);
+  });
+});
+
+describe('Lager 120 (P-5)', () => {
+  it('Produktion: mit B9 über 100 bis 120, ohne bei 100', () => {
+    const make = (on: boolean): World => {
+      const w = createWorld(3);
+      w.petitions.effects = on ? [forever('granary')] : [];
+      putBuilding(w, 0, 'weaver', 0, 0);
+      home(w).stock.cloth = 100;
+      home(w).stock.wool = 100;
+      return w;
+    };
+    const a = make(true);
+    for (let i = 0; i < 50 * 40; i++) {
+      home(a).stock.wool = 100;
+      step(a);
+      home(a).stock.cloth = Math.max(home(a).stock.cloth, 0);
+    }
+    const b = make(false);
+    for (let i = 0; i < 50 * 40; i++) {
+      home(b).stock.wool = 100;
+      step(b);
+    }
+    expect(home(b).stock.cloth).toBeLessThanOrEqual(100);
+    expect(home(a).stock.cloth).toBeGreaterThan(100);
+    expect(home(a).stock.cloth).toBeLessThanOrEqual(120);
+  });
+  it('addStock mit eigener Grenze, Vorgabe bleibt STORAGE_CAP', () => {
+    const w = createWorld(3);
+    home(w).stock.cloth = 95;
+    expect(addStock(home(w), 'cloth', 50)).toBe(5);
+    home(w).stock.cloth = 95;
+    expect(addStock(home(w), 'cloth', 50, 120)).toBe(25);
+  });
+  it('Kauf: bei 110 mit B9 kein Lager voll, ohne schon', () => {
+    const w = createWorld(3, { unlockAll: true });
+    home(w).stock.cloth = 110;
+    expect(buy(w, 'cloth', 5)).toEqual({ ok: false, reason: 'Lager voll' });
+    w.petitions.effects = [forever('granary')];
+    expect(buy(w, 'cloth', 5)).toEqual({ ok: true });
+    expect(home(w).stock.cloth).toBe(115);
+    expect(buy(w, 'cloth', 6)).toEqual({ ok: false, reason: 'Lager voll' });
+  });
+  it('Entladen bis 120 mit B9, sonst 100', () => {
+    const unload = (on: boolean): number => {
+      const w = seaWorld();
+      foundKontor2Literal(w, 2);
+      for (const g of GOOD_IDS) home(w).stock[g] = 0;
+      home(w).stock.cloth = 100;
+      if (on) w.petitions.effects = [forever('granary')];
+      const s = shipLiteral(w, { cargo: { cloth: 30 } });
+      setRoute(w, s.id, { a: 0, b: 2, ab: [{ good: 'tools', reserve: 0 }], ba: [] });
+      tickShips(w);
+      return home(w).stock.cloth;
+    };
+    expect(unload(false)).toBe(100);
+    expect(unload(true)).toBe(120);
+  });
+});
+
+describe('AK-BS-11 Haus', () => {
+  it('überbelegtes Haus abgerissen: übrige Häuser unverändert, kein Wurf', () => {
+    const { w, houses } = village(2, { unlockAll: true });
+    setHouse(houses[0]!, 2, 9);
+    setHouse(houses[1]!, 2, 8);
+    w.petitions.effects = [forever('weavers')];
+    expect(() => demolish(w, houses[0]!.id)).not.toThrow();
+    expect(w.buildings[houses[0]!.id]).toBeUndefined();
+    expect(() => run(w, 60)).not.toThrow();
+    expect(houses[1]!.house!.inhabitants).toBeLessThanOrEqual(9);
+  });
+});
+
+describe('AK-BS-14 Siegziele', () => {
+  it('Stufe 4 mit 23 zählt 23 in merchants und spiceMerchants', () => {
+    const w = spiceGoalScenario({ houses: 1 });
+    const h = Object.values(w.buildings).find((b) => b.house)!;
+    h.house!.inhabitants = 23;
+    w.petitions.effects = [forever('weavers')];
+    for (let i = 0; i < WIN_SPICE_HOLD; i++) {
+      feed(w);
+      step(w);
+    }
+    expect(merchants(w)).toBe(23);
+    expect(spiceMerchants(w)).toBe(23);
+  });
+  it('3 x 23 + 11 = 80: wonSpice nach 600 T Haltezeit', () => {
+    const w = spiceGoalScenario({ houses: 4 });
+    const hs = Object.values(w.buildings).filter((b) => b.house);
+    [23, 23, 23, 11].forEach((n, i) => (hs[i]!.house!.inhabitants = n));
+    w.petitions.effects = [forever('weavers')];
+    for (let i = 0; i < WIN_SPICE_HOLD + 1; i++) {
+      if (w.tick % 100 === 0)
+        for (const g of Object.keys(home(w).stock) as GoodId[]) home(w).stock[g] = 100;
+      step(w);
+    }
+    expect(w.wonSpice).toBe(true);
   });
 });

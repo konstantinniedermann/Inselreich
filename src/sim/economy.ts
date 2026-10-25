@@ -8,9 +8,9 @@ import { fail, ok } from './types';
 
 export { UPKEEP_INTERVAL } from './defs/timing';
 
-/** Lagert ein und liefert die tatsächlich eingelagerte Menge (Kappung bei STORAGE_CAP). */
-export function addStock(isl: Island, good: GoodId, n: number): number {
-  const accepted = Math.max(0, Math.min(n, STORAGE_CAP - isl.stock[good]));
+/** Lagert ein und liefert die tatsächlich eingelagerte Menge (Kappung bei `cap`, Vorgabe STORAGE_CAP). */
+export function addStock(isl: Island, good: GoodId, n: number, cap: number = STORAGE_CAP): number {
+  const accepted = Math.max(0, Math.min(n, cap - isl.stock[good]));
   isl.stock[good] += accepted;
   return accepted;
 }

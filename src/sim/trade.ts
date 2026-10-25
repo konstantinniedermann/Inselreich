@@ -1,14 +1,6 @@
 import { BOOM_PCT } from './defs/crises';
 import { ISLANDS, PREFER_PCT } from './defs/sea';
-import {
-  BUY_CAP,
-  BUY_RISE,
-  GOODS,
-  GOOD_IDS,
-  SELL_DROP,
-  SELL_FLOOR,
-  STORAGE_CAP,
-} from './defs/goods';
+import { BUY_CAP, BUY_RISE, GOODS, GOOD_IDS, SELL_DROP, SELL_FLOOR } from './defs/goods';
 import { BUY_RECOVERY_INTERVAL, SELL_RECOVERY_INTERVAL } from './defs/timing';
 import { addStock, takeStock } from './economy';
 import { activeEdictDef } from './edicts';
@@ -18,6 +10,7 @@ import { fail, ok } from './types';
 import { islandName } from './islands';
 import { islandAt } from './placement';
 import { trialBuyBlock } from './trial';
+import { storageCap } from './petitionEffect';
 import { HOME } from './world';
 
 /** Ergebnis des Preiskerns: Gesamtpreis, gerundeter Mittelanteil und Anteil nach dem Kauf. */
@@ -124,7 +117,8 @@ export function buy(world: World, good: GoodId, n: number, island: number = HOME
   }
 
   // Lagergrenze prüfen
-  if (isl.stock[good] + n > STORAGE_CAP) {
+  const cap = storageCap(world, island, good);
+  if (isl.stock[good] + n > cap) {
     return fail('Lager voll');
   }
 
@@ -137,7 +131,7 @@ export function buy(world: World, good: GoodId, n: number, island: number = HOME
   world.money -= q.price;
   world.buyPct[good] = q.endPct;
   // Rückgabe bewusst ignoriert: nach der Lagergrenzen-Prüfung wird immer die volle Menge eingelagert
-  addStock(isl, good, n);
+  addStock(isl, good, n, cap);
   return ok;
 }
 
