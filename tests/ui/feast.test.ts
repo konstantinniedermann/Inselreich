@@ -1,9 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { createWorld, home } from '../../src/sim/world';
-import { houseNearKontor, placeService, placeTownhall, setAllTax } from '../sim/helpers';
+import { createWorld, home, HOME } from '../../src/sim/world';
+import {
+  houseNearKontor,
+  placeService,
+  placeTownhall,
+  putBuilding,
+  setAllTax,
+} from '../sim/helpers';
+import { holdFeast } from '../../src/sim/feast';
+import { upgradeGain } from '../../src/ui/panelView';
+import { marketDayTag, sellTexts } from '../../src/ui/trade';
 import { TAX_LEVELS } from '../../src/sim/defs/tiers';
 import { FEAST_COOLDOWN, FEAST_DURATION } from '../../src/sim/defs/timing';
-import { feastView, houseFeastLine } from '../../src/ui/feast';
+import { feastButtons, feastStatusLine, harvestLine, houseFeastLine } from '../../src/ui/feast';
 import { formatClock } from '../../src/ui/time';
 import type { Building, World } from '../../src/sim/types';
 
@@ -14,24 +23,84 @@ function setup(): { w: World; chapel: Building; house: Building } {
   return { w, chapel, house };
 }
 
-describe('feastView (AK-I007-11)', () => {
-  it('zeigt bereit: Knopf mit Rumpreis, aktiv', () => {
+function rich(w: World): void {
+  const st = home(w).stock;
+  st.rum = 100;
+  st.cloth = 100;
+  st.glass = 100;
+}
+
+describe('feastButtons (AK-FE17, AK-I007-11)', () => {
+  it('AK-FE17: bereit, drei Knöpfe mit Preis, alle frei', () => {
     const { w, chapel } = setup();
-    home(w).stock.rum = 30;
+    rich(w);
+    putBuilding(w, HOME, 'quarry', chapel.x, chapel.y + 3);
     chapel.connected = true;
-    const v = feastView(w, chapel)!;
-    expect(v.label).toBe('Fest feiern (10 Rum)');
-    expect(v.reason).toBeNull();
-    expect(v.disabled).toBe(false);
+    const v = feastButtons(w, chapel)!;
+    expect(v.map((x) => x.label)).toEqual([
+      'Aufstiegsfest · 10 Rum',
+      'Erntefest · 10 Rum, 15 Stoff',
+      'Markttag · 10 Rum, 5 Glas',
+    ]);
+    expect(v.map((x) => x.kind)).toEqual(['ascension', 'harvest', 'market']);
+    expect(v.every((x) => !x.disabled && x.reason === null && x.title === '')).toBe(true);
+  });
+
+  it('AK-FE17: eigener Sperrgrund je Knopf', () => {
+    const { w, chapel } = setup();
+    rich(w);
+    putBuilding(w, HOME, 'quarry', chapel.x, chapel.y + 3);
+    chapel.connected = true;
+    home(w).stock.cloth = 4;
+    const v = feastButtons(w, chapel)!;
+    expect(v[1]).toMatchObject({
+      disabled: true,
+      reason: 'Zu wenig Stoff (4 / 15)',
+      title: 'Zu wenig Stoff (4 / 15)',
+    });
+    expect(v[0]!.disabled).toBe(false);
+    expect(v[2]!.disabled).toBe(false);
+  });
+
+  it('AK-FE17: laufendes Fest sperrt alle, Statuszeile nennt Art und Restzeit', () => {
+    const { w, chapel } = setup();
+    rich(w);
+    putBuilding(w, HOME, 'quarry', chapel.x, chapel.y + 3);
+    chapel.connected = true;
+    expect(feastStatusLine(w, chapel)).toBeNull();
+    expect(holdFeast(w, chapel.id, 'harvest').ok).toBe(true);
+    expect(feastStatusLine(w, chapel)).toBe(`Erntefest läuft noch ${formatClock(FEAST_DURATION)}`);
+    const v = feastButtons(w, chapel)!;
+    expect(v.every((x) => x.disabled && x.title === 'Fest läuft' && x.reason === null)).toBe(true);
+  });
+
+  it('AK-FE17: Abklingzeit in der Statuszeile', () => {
+    const { w, chapel } = setup();
+    chapel.feastAt = w.tick;
+    w.tick += FEAST_DURATION + 50;
+    expect(feastStatusLine(w, chapel)).toBe(
+      `Nächstes Fest in ${formatClock(FEAST_COOLDOWN - FEAST_DURATION - 50)}`,
+    );
+    expect(feastButtons(w, chapel)!.every((x) => x.disabled)).toBe(true);
+  });
+
+  it('nach der Abklingzeit wieder bereit', () => {
+    const { w, chapel } = setup();
+    chapel.feastAt = w.tick;
+    w.tick += FEAST_COOLDOWN;
+    rich(w);
+    chapel.connected = true;
+    expect(feastButtons(w, chapel)![0]!.disabled).toBe(false);
+    expect(feastStatusLine(w, chapel)).toBeNull();
   });
 
   describe('Sperrgrund im Zustand bereit', () => {
-    const reasonOf = (w: World, c: Building): string | null => feastView(w, c)!.reason;
+    const reasonOf = (w: World, c: Building): string | null => feastButtons(w, c)![0]!.reason;
     it('zu wenig Rum', () => {
       const { w, chapel } = setup();
       chapel.connected = true;
       home(w).stock.rum = 3;
-      expect(feastView(w, chapel)).toMatchObject({
+      expect(feastButtons(w, chapel)![0]).toMatchObject({
         disabled: true,
         reason: 'Zu wenig Rum (3 / 10)',
       });
@@ -47,7 +116,6 @@ describe('feastView (AK-I007-11)', () => {
       home(w).stock.rum = 30;
       chapel.outageUntil = w.tick + 100;
       expect(reasonOf(w, chapel)).toBe('Kapelle brennt');
-      expect(feastView(w, chapel)!.disabled).toBe(true);
     });
     it.each(['low', 'high'] as const)('Steuer %s', (level) => {
       const { w, chapel } = setup();
@@ -55,48 +123,77 @@ describe('feastView (AK-I007-11)', () => {
       placeTownhall(w);
       chapel.connected = true;
       setAllTax(w, level);
-      const r = reasonOf(w, chapel);
-      expect(r).toContain(`«${TAX_LEVELS[level].name}»`);
-      expect(feastView(w, chapel)!.disabled).toBe(true);
+      expect(reasonOf(w, chapel)).toContain(`«${TAX_LEVELS[level].name}»`);
+      expect(feastButtons(w, chapel)![0]!.disabled).toBe(true);
     });
   });
 
   it('ist erst ab U4 (Rum) sichtbar', () => {
     const { w, chapel } = setup();
     w.unlocked = ['U0', 'U1', 'U2', 'U3'];
-    expect(feastView(w, chapel)).toBeNull();
+    expect(feastButtons(w, chapel)).toBeNull();
   });
 
   it('ist für andere Gebäude null', () => {
     const { w, house } = setup();
-    expect(feastView(w, house)).toBeNull();
+    expect(feastButtons(w, house)).toBeNull();
   });
 
-  it('zeigt laufendes Fest mit Restzeit m:ss, gesperrt', () => {
+  it('AK-FE20: zweite Kapelle: Erntefest Inselsperre, Markttag frei', () => {
     const { w, chapel } = setup();
-    chapel.feastAt = w.tick;
-    const v = feastView(w, chapel)!;
-    expect(v.disabled).toBe(true);
-    expect(v.label).toBe(`Fest läuft noch ${formatClock(FEAST_DURATION)}`);
-    expect(v.label).toMatch(/noch \d+:\d\d$/);
-  });
-
-  it('zeigt Abklingzeit nach dem Fest, gesperrt', () => {
-    const { w, chapel } = setup();
-    chapel.feastAt = w.tick;
-    w.tick += FEAST_DURATION + 50;
-    const v = feastView(w, chapel)!;
-    expect(v.disabled).toBe(true);
-    expect(v.label).toBe(`Nächstes Fest in ${formatClock(FEAST_COOLDOWN - FEAST_DURATION - 50)}`);
-  });
-
-  it('ist nach der Abklingzeit wieder bereit', () => {
-    const { w, chapel } = setup();
-    chapel.feastAt = w.tick;
-    w.tick += FEAST_COOLDOWN;
-    home(w).stock.rum = 30;
+    rich(w);
+    putBuilding(w, HOME, 'quarry', chapel.x, chapel.y + 3);
     chapel.connected = true;
-    expect(feastView(w, chapel)?.disabled).toBe(false);
+    const second = placeService(w, 'chapel', chapel.x, chapel.y + 6);
+    rich(w);
+    second.connected = true;
+    chapel.connected = true;
+    expect(holdFeast(w, chapel.id, 'harvest')).toEqual({ ok: true });
+    const v = feastButtons(w, second)!;
+    expect(v[1]!.reason).toBe('Erntefest auf der Insel: Abklingzeit');
+    expect(v[2]!.disabled).toBe(false);
+  });
+});
+
+describe('harvestLine (AK-FE18)', () => {
+  it('nennt den Zyklus im Radius, sonst null', () => {
+    const { w, chapel } = setup();
+    const near = putBuilding(w, HOME, 'quarry', chapel.x, chapel.y + 3);
+    const far = putBuilding(w, HOME, 'quarry', chapel.x + 60, chapel.y);
+    chapel.feastKind = 'harvest';
+    chapel.feastAt = w.tick;
+    expect(harvestLine(w, near)).toBe('Erntefest: Zyklus 75 %');
+    expect(harvestLine(w, far)).toBeNull();
+    w.tick += FEAST_DURATION;
+    expect(harvestLine(w, near)).toBeNull();
+  });
+});
+
+describe('marketDayTag (AK-FE19)', () => {
+  it('Marke nur während des Markttags, Preis steigt', () => {
+    const { w, chapel } = setup();
+    expect(marketDayTag(w, HOME)).toBe('');
+    const before = sellTexts(w, 'rum', 10).price;
+    chapel.feastKind = 'market';
+    chapel.feastAt = w.tick;
+    expect(marketDayTag(w, HOME)).toBe('Markttag 125 %');
+    expect(parseInt(sellTexts(w, 'rum', 10).price)).toBeGreaterThan(parseInt(before));
+    w.tick += FEAST_DURATION;
+    expect(marketDayTag(w, HOME)).toBe('');
+  });
+});
+
+describe('upgradeGain unter Erntefest (P-10)', () => {
+  it('after unverändert, before schneller', () => {
+    const { w, chapel } = setup();
+    const b = putBuilding(w, HOME, 'quarry', chapel.x, chapel.y + 3);
+    b.level = 2;
+    const calm = upgradeGain(w, b, 3)[0]!;
+    chapel.feastKind = 'harvest';
+    chapel.feastAt = w.tick;
+    const fest = upgradeGain(w, b, 3)[0]!;
+    expect(fest.after).toBe(calm.after);
+    expect(fest.before).toBeGreaterThan(calm.before);
   });
 });
 
