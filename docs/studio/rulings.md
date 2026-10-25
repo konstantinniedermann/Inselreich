@@ -2408,3 +2408,17 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (Sav
 Regelbezug: R395, R878, R880, R883 · Kosten bei Irrtum: Revert `6ae7c66f`; Spec-Nachtrag.
 
 Entscheider: L0 · Anlass: Bericht lead-tech INSELPROBEN · ADR: —
+
+## R886 · 2026-10-25 · ORT-A T18 abgenommen; Kurz-Retro 47d29586; Session-Ende
+
+Ruling: (1) **ORT-A T18** (`feat/ort-a` @ `7e2e8d12`) abgenommen: drittes frisches opus-Delta-Review OK, Schranke r ≤ 10 analytisch und empirisch belegt (dichter Haus-Test, Rot mit 7);
+Wegänderungs-Test 5163 ms mit explizitem Timeout hingenommen (ZEITRESERVE-PFLEGE). Offen T19–T26; `plan/ort-a` auf R884 nachführen. (2) **Kurz-Retro** `docs/retro-47d29586` @ `b7e9fb6e`
+(`docs/studio/retros/2026-10-25-session-47d29586-ende.md`) **abgenommen**. **V1** (gezielt stagen, `make conflicts` vor jedem Merge-Commit) ist mit DOKU-RUNDE (f) bereits umgesetzt; `.gitignore`-Muster
+für `*-e`-Backups prüft `studio-coach`. **V2** (Rückkanal-Adresse) ist mit DOKU-RUNDE (e) umgesetzt; Messgrösse 0 «not reachable» über 3 Sessions gilt. **V3** (Plan-/Gate-Leads lesen Rulings und
+Handoffs abschnittsweise, Schwelle Cache-Write-Wachstum ≤ 15 % in 2 von 3 Sessions) angenommen, Umsetzung `studio-coach` nächste Session. Messaufträge M1 (bis 2026-11-02), M2, M3 ohne Platz.
+(3) **Session-Ende** bei gelber Limit-Ampel (5 h 64 %): Metriken `docs/studio/metriken/S-2026-10-25-47d29586.md`, `state.md` nachgeführt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A T19–T26
+Regelbezug: R69, R316, R826, R877, R879, R884 · Kosten bei Irrtum: ein Messauftrag mehr.
+
+Entscheider: L0 · Anlass: Berichte lead-tech ORT-A, studio-coach · ADR: —

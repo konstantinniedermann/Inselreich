@@ -4,9 +4,14 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-23 (Session a5d45446 Ende, R872; live REL-30 `bc9664d0`, Save v18, Verfassung 1.3, Handbuch main 1.71, Branches 1.72/1.73; main lokal = live + Doku/Rulings)
+Stand: 2026-10-25 (Session 47d29586 Ende, R886; live REL-31 `ee51d4f1`, Save v18 live, Verfassung 1.3, Handbuch main 1.75; main lokal = live + REL-32a/b (Ehrenbuch, UI-HAEPPCHEN-J, Pläne, Werkzeug), noch nicht gepusht)
 
 ## Release-Notizen
+
+**REL-31 „Pläne und Werkzeug“ (live, R877)** — kein Save-Wechsel (v18), kein Spieleinfluss. Inhalt: Specs Ehrenbuch, Inselproben, Stadtrecht; Plan Ehrenbuch; Recherchen TIEFE-1, WIRTSCHAFT-TIEFE;
+IDEEN-16; Retro REL-30 und Umsetzung (Handbuch 1.73); TOOL-MERGE-APPEND. Push `bc9664d0..ee51d4f1`, CI-Lauf 40184385005, Pages-Lauf 40184943166 (grün). Quelle: `.studio/handoffs/2026-10-25-lead-production-REL-31.md`.
+
+- **Bitte testen:** nichts im Spiel.
 
 **REL-30 „Kasse, Bestand und Davor-Stand“ (live, R866)** — kein Save-Wechsel (v18). Inhalt: UI-HAEPPCHEN-H P1 (I-147), UI-HAEPPCHEN-I A/B, UI-BEIPACK-FERN, LEBEN-SEE Klang, Werkzeug
 (TOOL-LOADSNAP, -DASH-REST, -MESSFENSTER, -PUSHSPERRE A/P, -VORDERGRUND, -RUECKKANAL), Doku (BEOB-18, IDEEN-15, DOKU-AUDIT-1, Specs/Pläne Seerecht, LEBEN-STRASSE, LEBEN-SEE, UI-I, UI-BEIPACK,
@@ -184,23 +189,22 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 ## Fortsetzung beim nächsten Start
 
 **Daueraufträge des Nutzers (R863: jede Nutzeranweisung gilt dauerhaft, ausser ausdrücklich nur für die laufende Session; im Zweifel dauerhaft):** **R862** freie Kapazität vorrangig für
-Spieltiefe, neue Spielmodi und Erweiterungen (was den Spieler länger am Ball hält), Web-Recherche erwünscht, **keine Playtests als Ideen-Input** (Browser-Checks zur Abnahme bleiben, R867),
-Schweigen des Nutzers = Zustimmung; **R445**; **R826** (Deckel 10 bei grüner Limit-Ampel, ≤ 3 Test-Controller, ≤ 2 Browser); **R853/R856** (Arbeiter-Meldungen an den Lead weiterleiten;
-Rückkanal: L0 nennt jedem Lead seine Adresse); **R868 V2** (Starts sind asynchron, Lead wartet ruhig auf Meldung). R869 («keine neuen Projekte») galt nur für Session a5d45446.
-**Push-Takt:** höchstens ein Push je Kalendertag (R816), gebündelt; voller Lauf nur `make push-check` vor Merge nach main bzw. Push.
+Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine Playtests als Ideen-Input** (Browser-Checks zur Abnahme bleiben, R867), Schweigen des Nutzers = Zustimmung; **R445**;
+**R826** (Deckel 10 bei grüner Limit-Ampel, ≤ 3 Test-Controller, ≤ 2 Browser); **R853/R856** (Arbeiter-Meldungen an den Lead; **L0 sendet jedem Lead direkt nach dem Start seine agentId**, R879);
+**R868 V2** (Starts asynchron, Lead wartet ruhig). **Push-Takt:** höchstens ein Push je Kalendertag (R816); voller Lauf nur `make push-check`.
 
-1. **Release REL-31 bündeln** (frühestens 2026-10-24): Gate Merge Release vorab mit echtem Probe-Merge (R868 V1), dann `lead-production` + Integrator, ein `make push-check`, Push bei Exit 0.
-   Reihenfolge R871: `docs/ideen-16` @ 66c4df45 → `docs/tiefe-1` @ 8c79bfb4 → `docs/wirtschaft-tiefe` @ d63971a6 → `design/i186-ehrenbuch` @ 81d0be78, `design/modus-inselproben` @ 3a1264ee,
-   `design/stadtrecht` @ 3ff27d0a → `plan/i186-ehrenbuch` @ 42e016cb → `docs/retro-rel-30` @ 40a27899 → `docs/dauerauftrag` @ b966c88f → `docs/retro-rel-30-umsetzung` @ 2bcd30ca →
-   `tool/merge-append` @ 6abfe75f; `feat/ort-a` @ d52ad5b9 erst nach T18 und Final-Review (sonst REL-32).
-2. **Gates:** Gate Plan I-186 (`lead-qa`), danach Umsetzung Ehrenbuch (16 Starts beantragt, T00 zuerst); Gate Spec **Modus Inselproben** und **Stadtrecht** (`lead-qa`), dann Pläne.
-   Save-Reihenfolge R870: Ehrenbuch ohne Save; Inselproben vor Stadtrecht (v19/v20 je nach Merge).
-3. **ORT-A T18** (T14 erledigt), Worktree `ort-a-vor-k2` entfernen (ohne `--force`), danach Merge-Weg nach main. ORT-A gibt frei: LEBEN-STRASSE T06–T10, LEBEN-SEE Kielwasser T03, UI-H P2,
-   Stadtplanung C1 (danach Seerecht T08/T09, UI-I T05–T07, AUFLAGEN-KERN Plan).
-4. **SEERECHT T04** (UI-BEIPACK ist live), dann T06/T07 (R838; Plan-DoD vorher auf Teilbeleg umstellen, R860).
-5. **TOOL-MESSFENSTER T00** (70-min-A/A-Block, Messfenster frei seit ORT-A-Ende), danach **TOOL-PUSHSPERRE T05** (R848).
-6. **R872** E1 (opus-Anteil nach Paketart) und E2 (Schätzfaktor 0,5) durch `studio-coach`. **UI-HAEPPCHEN-J** Kurzdesign (I-176 + I-139 + I-138, Stufe leicht, R861). E-063 bewerten, Platz für E-073 (R871). ADR-007-Nachtrag zu R868 (Beobachtung).
-7. Pool: ZEITRESERVE-PFLEGE; Wartung (E1) nach Stadtplanung (R865); Messfristen R769 V3 2026-10-24, R750/R755 2026-10-30, E-072/E-073 2026-11-19. Erweiterung 1 bleibt in der Nutzer-Session (R519).
+1. **Push REL-32** (ab 2026-10-26): main lokal enthält REL-32a/b (I-186 Ehrenbuch, UI-HAEPPCHEN-J, alle Pläne/Specs, TOOL-REST-3, DOKU-RUNDE, COACH-R872). Vorher Merge-Gate für
+   `feat/seerecht` @ `8473afb0` (Save **v19**, R883) (`feat/ort-a` erst nach T19–T26), dazu `docs/retro-47d29586` @ `b7e9fb6e`, zuletzt `docs/haushalt-03` @ `0b839c29` (Rulings-Archiv R700–R739;
+   Konflikt rulings.md: Branch-Kopf + alle neuen Rulings von main). Dann `lead-production` + Integrator, ein `make push-check`, Push bei Exit 0. Release-Notiz-Entwurf: `.studio/handoffs/2026-10-25-lead-production-REL-32b.md`.
+2. **INSELPROBEN Etappe 2** (`feat/inselproben` @ `d6f6834f`, R885): Mess-Strang T05–T07 (Messfenster Load ≤ 4) und UI-Strang T08–T11; 31 Starts Rest von 43, Par 2 nur bei freiem Test-Platz;
+   T09 nach I-186 auf main (lokal erfüllt), T14 Save = main + 1 beim Merge (Seerecht belegt 19). Handoff `.studio/handoffs/2026-10-25-lead-tech-INSELPROBEN.md`.
+3. **Umsetzungen mit fertigem Plan:** I-201 Festanlass (`plan/i201-festanlass`, 15 Starts, ≤ 2 gleichzeitige Testläufe); Stadtrecht T01-Frühstart, Rest nach Seerecht auf main (25 Starts);
+   I-197 Kartennummer + Plan I-197b Partiebrief nach dem Inselproben-UI-Task (I-197-Controller stellt `newIsland` auf Start-Objekt um, R881).
+4. **ORT-A T19–T26** (Controller-Platz), danach frei: LEBEN-STRASSE T06–T10, LEBEN-SEE Kielwasser T03, UI-H P2, Stadtplanung C1 (Stadtplanung zieht Save auf main + 1 nach), AUFLAGEN-KERN Plan.
+5. **Retro-Vorschläge R886:** V3 (Plan-/Gate-Leads lesen Rulings/Handoffs abschnittsweise) und Messaufträge M1–M3 durch `studio-coach`; E-065 auf Ist-Stand.
+6. **Ideen-Runde IDEEN-18** mit TIEFE-2 K1 «Seegang» und K3 «Bittschrift» (R881); Scouts haben jetzt WebSearch (Persona 1.5).
+7. Pool: TOOL-MESSFENSTER T00, TOOL-PUSHSPERRE T05, ZEITRESERVE-PFLEGE (u. a. «L4 Deko-Culling» 4851 ms), Wartung (E1) nach Stadtplanung; Messfristen R750/R755 2026-10-30, M1 2026-11-02,
+   E-072/E-073 2026-11-19. Erweiterung 1 bleibt in der Nutzer-Session (R519).
 
 ## Aktuelles Projekt und Phase
 
@@ -225,7 +229,8 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts aktiv. Alle Pakete der Session a5d45446 mit Handoff abgeschlossen (R869).
+- Nichts aktiv. Alle Pakete der Session 47d29586 mit Handoff abgeschlossen oder pausiert.
+- **ORT-A** (`feat/ort-a` @ `7e2e8d12`, Worktree `.worktrees/ort-a`): T18 abgenommen (R886, drittes opus-Delta-Review OK, Schranke r ≤ 10). **Offen: T19 (AK-43), T20 (main nachmergen), T20b mit `lead-art` (R793 (4)), T21 (AK-49), T22–T26**; Plan-Nachtrag `plan/ort-a` @ `9766cbc8` auf R884 (r ≤ 10) anpassen. Budget-Rest 1 von 6. Worktree `ort-a-vor-k2` erst nach Abnahme entfernen (ohne `--force`). Handoff `.studio/handoffs/2026-10-25-lead-tech-ORT-A.md`.
 
 ## Parallele Sessions
 
@@ -235,9 +240,9 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Seit letzter Session erledigt
 
-- **Session a5d45446 (R859–R871, 2026-10-23):** REL-30 live (R860, R866); TOOL-RUECKKANAL im Release; Daueraufträge R862/R863 (Handbuch 1.72 auf `docs/dauerauftrag`); IDEEN-16
-  (R861), Tiefen-Recherche TIEFE-1 (R864), WIRTSCHAFT-TIEFE (R865); Kurzdesign Ehrenbuch mit Gate OK und Plan (R867, R871); Specs Modus Inselproben und Stadtrecht (R870); ORT-A AK-30/32/37
-  bestanden, k1/k2 in `feat/ort-a` (R871); TOOL-MERGE-APPEND; Prozess-Retro REL-30 und Umsetzung V1/V2 (R868, Handbuch 1.73); N-104 angelegt.
+- **Session 47d29586 (R873–R886, 2026-10-25):** REL-31 live (R877); REL-32a/b lokal (R880, R882): I-186 Ehrenbuch und UI-HAEPPCHEN-J fertig, SEERECHT fertig bis Merge-Gate (Save v19, R883),
+  INSELPROBEN Etappe 1 (R885); Specs/Pläne mit Gates: Inselproben, Stadtrecht, UI-HAEPPCHEN-J, I-197 Kartennummer, I-197b Partiebrief, I-201 Festanlass; IDEEN-17, TIEFE-2; HAUSHALT-03, BEOB-19,
+  DOKU-R868, DOKU-RUNDE (Handbuch 1.75), COACH-R872 (1.74), TOOL-REST-3; Kurz-Retro (R886).
 
 ## Pausierte Pakete
 
@@ -253,10 +258,9 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Budget
 
-Alle Freigaben dieser Session verfallen mit Session-Ende; Reste laut Handoffs (ORT-A 4, SEERECHT 13, LEBEN-STRASSE 5, LEBEN-SEE 5, UI-I 8, TOOL-MESSFENSTER 6, TOOL-PUSHSPERRE 3; Ehrenbuch-Umsetzung 16 beantragt) neu erteilen.
+Alle Freigaben dieser Session verfallen mit Session-Ende; Reste laut Handoffs (INSELPROBEN 31 von 43, SEERECHT 5, ORT-A siehe Handoff, I-201 15, Stadtrecht 25, I-197 4) neu erteilen.
 
 ## Offene Entscheide
 
-- Nutzer: **N-104 offen** (Welche Erweiterung nach Erweiterung 1? Empfehlung «Neue Ufer»); **N-102 offen** (Headless-Chrome des Projekts Munica beenden? Vermerk bei Messungen, R800);
-  N-101 (Darlehen verworfen; ohne Antwort gilt Verwerfen).
-- L0: E-063 bewerten (R871).
+- Nutzer: **N-104 offen** (Welche Erweiterung nach Erweiterung 1? Empfehlung «Neue Ufer»); **N-102 offen** (Headless-Chrome des Projekts Munica beenden?).
+- L0: keine.
