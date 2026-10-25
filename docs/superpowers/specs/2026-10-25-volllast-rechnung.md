@@ -4,6 +4,7 @@ Stand 2026-10-25 · Paket `RECHNUNG-VOLLLAST` · Prozessstufe leicht · `design-
 Rechenweg, Formeln, Kettentabelle und Wertebereich: [Anhang 01](2026-10-25-volllast-rechnung/anhang-01-rechenweg.md).
 `src/` und `tests/` unverändert. **Gerechnet, nicht gemessen:** Alle Zahlen kommen aus den Defs und aus Formeln. Es gab
 keinen Wrapper- und keinen Replay-Lauf.
+Umgesetzt in der Spec [`2026-10-25-volllast-design.md`](2026-10-25-volllast-design.md) (R937).
 
 ## 0 Kurzfassung und Empfehlung
 
