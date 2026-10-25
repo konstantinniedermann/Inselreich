@@ -2290,3 +2290,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, I-210,
 Regelbezug: R417, R553, R896, R908, R912 · Kosten bei Irrtum: ein Gegenlese-Start.
 
 Entscheider: L0 · Anlass: Gate-Bericht lead-qa AUSBAU-LOGIK · ADR: —
+
+## R915 · 2026-10-25 · Spec I-214 Gründungsbrief fertig; Gate in der Folgesession
+
+Ruling: `design/gruendungsbrief` @ `e168d5d2` (Spec Stufe voll, AK-GB-01 Messlauf Brief-Ensemble, AK-GB-02 Vorbedingung Ziel 3, Save relativ, «ohne Brief» bitgleich, §9 Nachvollziehbarkeit) fertig.
+Entwürfe: **D1** Briefe nur bei stufenweiser Freischaltung **ja**; **D2** Wahlkarte auch beim ersten Start **ja**; **D3** Partiebrief trägt `G<n>` **ja** (Schnittstelle I-197b); **D4** Abweisungstest
+`SAVE_VERSION − 1` als AK-GB-15 (b) **ja**. Neu gesetzte Werte (`CHARTER_SALT`, Tick-Limit 20 000, Gewürzpfad 76 %, Brieftexte) prüft das **Gate Spec in der Folgesession** (gelbe Ampel, R912).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-197b, INSELPROBEN (Startablauf), Regelbaukasten, Save-Kette
+Regelbezug: R894, R901, R912 · Kosten bei Irrtum: Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-design I-214 · ADR: —
