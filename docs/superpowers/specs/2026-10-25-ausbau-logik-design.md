@@ -3,7 +3,7 @@
 Datum 2026-10-25 · Paket design-ausbau-logik · Meilenstein M14 · Quelle: R896 (3), Dauerauftrag R896 (0)
 (Nachvollziehbarkeit). Grundlage: Designvorschlag lead-design mit Nachtrag (verbindlich) und Rechnung
 [`2026-10-25-ausbau-logik-rechnung.md`](2026-10-25-ausbau-logik-rechnung.md) (Werte, Standortzahlen, Herleitungen; hier
-übernommen, nicht neu gerechnet; Verweise «Rechnung (x)»). Neuer Save-Stand `SAVE_VERSION` 19 (Abschnitt «Save-Wirkung»).
+übernommen, nicht neu gerechnet; Verweise «Rechnung (x)»). Save: `SAVE_VERSION` = main + 1 beim Merge (R908 E4). **Nachtrag Gate Spec (R914): [Anhang 02](2026-10-25-ausbau-logik-design/anhang-02-nachtrag-gate.md) geht dieser Datei vor.**
 
 ## Spielerzweck
 
@@ -76,7 +76,7 @@ Glashütte und Werkzeugmacher brauchen eine Feuerwache.» (ersetzt «kostet Rum�
 Stufe n braucht ein Wohnhaus **derselben Insel** mit `tier ≥ workforceTier(n)` und `distance(Haus, Betrieb) ≤
 WORKFORCE_RADIUS` (8, Rechnung (d)). `workforceTier` = 2 / 3 / 4 für Stufe 2 / 3 / 4 (Siedler = Gesellen, Bürger =
 Meister, Kaufleute = Verleger). Keine Kapazität. Jedes stehende Wohnhaus zählt, auch brennend (die Leute wohnen dort);
-Kontor, Markt und andere Gebäude zählen nicht (Alternative für L0: E3). Arbeitsweg 8 > Lärm I-128 (3): Ring 3 < d ≤ 8 bleibt
+Kontor, Markt und andere Gebäude zählen nicht (R908 E3, strikt). Arbeitsweg 8 > Lärm I-128 (3): Ring 3 < d ≤ 8 bleibt
 für ruhige Fachkräfte-Häuser.
 
 ### R4 Standort (dauerhaft, je Typ und Stufe)
@@ -116,8 +116,10 @@ Werte aus Rechnung (c); jede Stufe prüft ihre eigene Regel. Die Bauregel der St
   (letzteres erfüllt N = 1); Bedingung: Laden eines Stands liefert im ersten Tick dasselbe k wie der durchgelaufene Lauf
   (AK-AL-15). Ein Zwischenspeicher liegt ausserhalb von `world` oder wird nicht serialisiert.
 - Abfrage für UI und Tests (Vorschlag `src/sim/levelRules.ts`): `runningLevel(world, b): number` und
-  `levelChecks(world, b, level): LevelCheck[]` mit `{ id: 'knowledge' | 'money' | 'wood' | 'tools' | 'stone' | 'extra' |
-'workforce' | 'site', ok, have, need, text }` in dieser festen Reihenfolge. UI rendert nur (DRY).
+  `levelChecks(world, b, level): LevelCheck[]` mit `{ id, ok, have, need, text }`, Zeilen in der Ordnung von R7 (Anhang 02
+  N3: Wissen, Brand, Fachkräfte, Standort, Geld, Holz, Werkzeug, Stein, Ware). UI rendert nur (DRY).
+- **k-Wechsel mitten im Zyklus:** `progress` bleibt; ist `progress ≥` neuer Zyklus, gibt der nächste Schritt genau 1 Einheit
+  und setzt `progress` 0, kein Übertrag (Anhang 02 N4, AK-AL-44).
 
 ### R6 Unterhalt
 
@@ -139,9 +141,9 @@ Prüfreihenfolge, erster Treffer gewinnt, bei `fail` bleibt die Welt unveränder
 3. «Höchste Stufe erreicht» (`g = 1 + LEVELS[defId].length`: Jagdhütte 3, sonst 4).
 4. Freischaltung der Zielstufe (`functionLock`, lockText).
 5. «Gebäude brennt».
-6. Erste verletzte Dauerbedingung der Zielstufe (Text wie Checkliste, z. B. «Kein Bürgerhaus im Arbeitsweg (nächstes 11
-   Felder, nötig ≤ 8)»).
-7. Geld/Baustoffe (`checkAfford`, Text wie heute).
+6. Erste verletzte Dauerbedingung der Zielstufe, Fachkräfte vor Standort (z. B. «Keine Meister im Umkreis 8 (Bürgerhaus
+   nötig, nächstes 11 Felder)»).
+7. Geld, Holz, Werkzeug, Stein («Zu wenig Stein (0 / 2)»; Schritte 4–8 liefern den ✗-Text aus `levelChecks`, Anhang 02 N3).
 8. Fachliche Ware «Zu wenig Stoff (1 / 2)».
 9. Erfolg: `pay` + `takeStock`, `b.level = g + 1`, `progress`/`eff`/`state` bleiben.
 
@@ -170,23 +172,25 @@ darunter).
 ```text
 Ausbau auf Stufe 3 — Fischerhütte
 ✓ Wissen: Ausbau Stufe 3 bekannt (erste Bürger)
+✓ Meister im Umkreis 8: Bürgerhaus, nächstes 6 Felder
+✗ Fischgrund überfischt: 2 andere Fischerhütten im Umkreis 3 (erlaubt 1)
 ✓ Geld 65 (Kasse 812)
-✓ Holz 4 (Lager 23) · ✓ Werkzeug 2 (Lager 5)
-✗ Stein 2 (Lager 0)
+✓ Holz 4 (Lager 23)
+✓ Werkzeug 2 (Lager 5)
+✗ Zu wenig Stein (0 / 2)
 ✓ Stoff 2 (Lager 14) — Segel
-✓ Fachkräfte: Bürgerhaus im Arbeitsweg, nächstes 6 Felder (nötig ≤ 8)
-✗ Fischgrund: 2 andere Fischer im Umkreis 3 (erlaubt 1)
 ```
 
-Weitere Beispiele: «✗ Fachkräfte: kein Siedlerhaus auf dieser Insel (nötig ≤ 8)»; «✗ Wald: 3 freie Waldfelder im Umkreis
-2 (nötig 4)»; «✗ Feuerwache: keine in Reichweite 8 (Brennofen)». Abstand angezeigt als `ceil(distance)`; damit gilt
-✓ ⇔ angezeigte Zahl ≤ 8. Knopf «Ausbauen» nur aktiv, wenn alle Zeilen ✓; der Tooltip des gesperrten Knopfs nennt den
-ersten ✗-Grund (gleich R7).
+Alle Zeilentexte: Anhang 02 N5 (z. B. «Keine Handwerker im Umkreis 8 (kein Siedlerhaus auf dieser Insel)», «Zu wenig
+Wald: 3 freie Waldfelder im Umkreis 2 (nötig 4)», «Keine Feuerwache in Reichweite 8 (Brennofen)»). Abstand angezeigt als
+`ceil(distance)`; damit gilt ✓ ⇔ angezeigte Zahl ≤ 8. Knopf «Ausbauen» nur aktiv, wenn alle Zeilen ✓; der Tooltip des
+gesperrten Knopfs ist der Text der ersten ✗-Zeile = `reason` von `upgradeBuilding` (AK-AL-37). Höchste Stufe: keine
+Checkliste, nur «Höchste Stufe erreicht».
 
-**Zustandschip** bei k < g: «Läuft wie Stufe k: <erster verletzter Grund der Stufe k + 1>», z. B. «Läuft wie Stufe 2: kein
-Bürgerhaus im Arbeitsweg (nächstes 11 Felder, nötig ≤ 8)», «Läuft wie Stufe 1: 2 andere Fischer im Umkreis 2 (erlaubt 1)».
+**Zustandschip** bei k < g: «Läuft wie Stufe k: <erster verletzter Grund der Stufe k + 1>», z. B. «Läuft wie Stufe 2: Keine
+Meister im Umkreis 8 (Bürgerhaus nötig, nächstes 11 Felder)», «Läuft wie Stufe 2: Keine Feuerwache in Reichweite 8 (Brennofen)».
 Tooltip des Chips: alle verletzten Bedingungen aller Stufen k + 1 … g und der Unterhalt «Unterhalt 7 statt 9 (gedrosselt)».
-Bei `paused` kein Chip (Stilllegung geht vor, R6).
+Bei `paused` oder brennend kein Chip (Stilllegung geht vor, R6).
 
 ## Tabellen je Gebäudetyp
 
@@ -237,32 +241,34 @@ export const LEVEL_RECHECK_TICKS = 10;
 ```
 
 `src/sim/defs/buildings.ts`: `THROTTLED_UPKEEP_PCT = 50`. `src/sim/defs/unlocks.ts`: Eintrag U7, Texte U3/U5, Label
-`upgrade4`. Keine Zahl dieser Spec steht im Code (AK-AL-33). Welt-Zustand: kein neues Feld; `b.level` erlaubt neu 4,
+`upgrade4`. Keine Zahl dieser Spec steht im Code (AK-AL-46). Welt-Zustand: kein neues Feld; `b.level` erlaubt neu 4,
 `world.unlocked` neu `'U7'`; das Werkzeug `Tool.level` ist UI-Zustand, nicht im Save.
 
 ## Randfälle
 
-| Fall                                              | Verhalten                                                           | AK       |
-| ------------------------------------------------- | ------------------------------------------------------------------- | -------- |
-| Abriss oder Abstieg des letzten Fachkräfte-Hauses | k sinkt spätestens nach `LEVEL_RECHECK_TICKS`; Chip nennt den Grund | AK-AL-16 |
-| neue Fischerhütte neben einer Stufe-3-Hütte       | Bau erlaubt (Stufe-1-Regel); die Stufe-3-Hütte prüft neu, k sinkt   | AK-AL-17 |
-| brennender Betrieb                                | kein Ausbau («Gebäude brennt»), k unverändert abgeleitet            | AK-AL-18 |
-| stillgelegter Betrieb                             | Unterhalt halb nach g, kein Drossel-Unterhalt, kein Chip            | AK-AL-13 |
-| alter Stand: Stufe 3 im Fischer-Cluster           | lädt, läuft wie k mit Grund, kein Fehler                            | AK-AL-22 |
-| Stufe 4 vor den ersten Kaufleuten                 | gesperrt mit lockText U7                                            | AK-AL-19 |
-| Insel ohne Wohnhäuser (Kolonie)                   | kein Ausbau, Grund «kein Siedlerhaus auf dieser Insel» (E3)         | AK-AL-21 |
-| Haus im Abstand ≤ 8 auf anderer Insel             | zählt nicht                                                         | AK-AL-06 |
-| Krisen aus                                        | Feuerwache-Bedingung entfällt (E8)                                  | AK-AL-09 |
-| Ausbau bei k < g                                  | erlaubt, wenn alle Bedingungen der Zielstufe stimmen                | AK-AL-04 |
-| Gleiches bauen am ungeeigneten Ort                | rote Vorschau mit Grund, kein Bau, kein Rückfall                    | AK-AL-26 |
-| Gleiches bauen: Geld da, Glas fehlt               | `fail`, nichts abgebucht                                            | AK-AL-27 |
-| Jagdhütte Stufe 3 ausbauen                        | «Höchste Stufe erreicht»                                            | AK-AL-19 |
+| Fall                                              | Verhalten                                                            | AK       |
+| ------------------------------------------------- | -------------------------------------------------------------------- | -------- |
+| Abriss oder Abstieg des letzten Fachkräfte-Hauses | k sinkt spätestens nach `LEVEL_RECHECK_TICKS`; Chip nennt den Grund  | AK-AL-16 |
+| neue Fischerhütte neben einer Stufe-3-Hütte       | Bau erlaubt (Stufe-1-Regel); die Stufe-3-Hütte prüft neu, k sinkt    | AK-AL-17 |
+| brennender Betrieb                                | kein Ausbau («Gebäude brennt»), k unverändert abgeleitet             | AK-AL-18 |
+| stillgelegter Betrieb                             | Unterhalt halb nach g, kein Drossel-Unterhalt, kein Chip             | AK-AL-13 |
+| alter Stand: Stufe 3 im Fischer-Cluster           | lädt, läuft wie k mit Grund, kein Fehler                             | AK-AL-35 |
+| Stufe 4 vor den ersten Kaufleuten                 | gesperrt mit lockText U7                                             | AK-AL-19 |
+| Insel ohne Wohnhäuser (Kolonie)                   | kein Ausbau, Grund «kein Siedlerhaus auf dieser Insel» (E3)          | AK-AL-21 |
+| Haus im Abstand ≤ 8 auf anderer Insel             | zählt nicht                                                          | AK-AL-06 |
+| Krisen aus                                        | Feuerwache-Bedingung entfällt (E8)                                   | AK-AL-09 |
+| Ausbau bei k < g                                  | erlaubt, wenn alle Bedingungen der Zielstufe stimmen                 | AK-AL-04 |
+| Gleiches bauen am ungeeigneten Ort                | rote Vorschau mit Grund, kein Bau, kein Rückfall                     | AK-AL-26 |
+| Gleiches bauen: Geld da, Glas fehlt               | `fail`, nichts abgebucht                                             | AK-AL-27 |
+| Jagdhütte Stufe 3 ausbauen                        | «Höchste Stufe erreicht»                                             | AK-AL-19 |
+| k wechselt mitten im Zyklus                       | `progress` bleibt, höchstens 1 Einheit, kein Übertrag (Anhang 02 N4) | AK-AL-44 |
+| `crisisLevel` wechselt im Lauf                    | Feuerwache-Bedingung neu, k folgt nach N Ticks                       | AK-AL-45 |
 
 ## Abnahmekriterien
 
 Vitest (DOM-frei), Aufbau, wo nicht anders genannt: feste Welt aus `createWorld(seed, { unlockAll: true, crisisLevel:
 'off' })` (für Feuerwache `'normal'`), Heimatinsel mit Kontor, Terrain und Wohnhäuser (`tier`) per Hand gesetzt, Geld und
-Lager ausreichend. Neue Dateien: `tests/sim/levelRules.test.ts`, `tests/sim/placeLevel.test.ts`,
+Lager ausreichend. Neue AK ab AK-AL-35 und Schnitt-Zuordnung: Anhang 02. Neue Dateien: `tests/sim/levelRules.test.ts`, `tests/sim/placeLevel.test.ts`,
 `tests/ui/levelChecklist.test.ts`; bestehend angepasst: `tests/sim/upgrade.test.ts`, `levels.test.ts`, `save.test.ts`,
 `unlock-timeline.test.ts`, `tests/ui/pipette.test.ts`, `tests/render/` (Aufsatz, `fakeCtx`).
 
@@ -279,7 +285,7 @@ Lager ausreichend. Neue Dateien: `tests/sim/levelRules.test.ts`, `tests/sim/plac
   `level` 3; `progress`, `eff`, `state` unverändert. Rum-Bestand bleibt bei jedem Ausbau jedes Typs gleich.
 - **AK-AL-06 Fachkräfte:** Fischer g = 2: Siedlerhaus im Abstand 8,0 → k 2; Abstand √65 ≈ 8,06 → k 1; Pionierhaus im
   Abstand 3 → k 1; Bürgerhaus im Abstand 5 → k 2; Siedlerhaus im Abstand 4 auf einer zweiten Insel (`twoIslandWorld`) → k 1;
-  brennendes Siedlerhaus im Abstand 5 → k 2.
+  brennendes Siedlerhaus im Abstand 5 → k 2. Ergänzt durch AK-AL-47 (2 × 2-Grundriss).
 - **AK-AL-07 Fischgrund:** gerade Küste: Hütte A g = 2 mit einer anderen Hütte im Abstand 2 → k 2, mit zwei → k 1;
   A g = 3 mit einer anderen in Abstand 3 → k 3, zweite in Abstand 3 → k 2 (Stufe-2-Regel d ≤ 2 hält, wenn beide in
   Abstand 3); A g = 4 mit einer anderen in Abstand 3 → k 3. Hütten anderer Insel zählen nicht; Stufe-1-Hütten und
@@ -305,7 +311,7 @@ Lager ausreichend. Neue Dateien: `tests/sim/levelRules.test.ts`, `tests/sim/plac
   `serialize` und in jedem Tick gleiches `runningLevel` je Betrieb wie der durchgelaufene Lauf. Der serialisierte Betrieb hat
   dieselben Schlüssel wie vor der Änderung (kein k-Feld).
 - **AK-AL-16 Letztes Fachkräfte-Haus:** Abriss und alternativ Abstieg (`tier` 3 → 2) des einzigen Bürgerhauses im
-  Arbeitsweg → k von 3 auf 2 (Regel AK-AL-14), Chiptext «Läuft wie Stufe 2: kein Bürgerhaus im Arbeitsweg …»; `level` 3.
+  Arbeitsweg → k von 3 auf 2 (Regel AK-AL-14), Chiptext «Läuft wie Stufe 2: Keine Meister im Umkreis 8 …»; `level` 3.
 - **AK-AL-17 Neuer Nachbar-Fischer:** neben Hütte A (g 3, k 3) wird Hütte B (Stufe 1) im Abstand 2 und C im Abstand 3
   gebaut → beide `ok`; A k 2 (zwei andere in d ≤ 3); B k 1 ohne Chip. Abriss von C → A k 3.
 - **AK-AL-18 Brand:** brennender Betrieb → `upgradeBuilding` «Gebäude brennt», Welt unverändert.
@@ -314,16 +320,13 @@ Lager ausreichend. Neue Dateien: `tests/sim/levelRules.test.ts`, `tests/sim/plac
 - **AK-AL-20 Freischaltung U7 und Texte** (`unlock-timeline.test.ts`): U7 wird nach U6 frei, sobald ein Haus `tier` 4
   steht, mit Meldung «die ersten Kaufleute sind da»; `UNLOCK_CHAIN` endet mit U7; `unlockAll` enthält U7. Tipps U3/U5
   enthalten weder «gegen Stoff» noch «kostet Rum».
-- **AK-AL-21 Insel ohne Häuser:** Steinbruch auf Kolonie ohne Wohnhaus → Ausbau `fail` «Kein Siedlerhaus auf dieser
-  Insel …»; ein Kontor auf der Insel ändert nichts (Fassung E3 «Pflicht überall»).
-- **AK-AL-22 Alter Spielstand** (`save.test.ts`): ein v18-Stand (Fixture) mit drei Fischerhütten Stufe 3 im Abstand 1 lädt
-  `ok`, `version` danach 19, `level` je 3, `runningLevel` je 1, `levelChecks` liefert den Fischgrund-Grund; kein Wurf.
-- **AK-AL-23 Abweisen inkompatibler Stände:** Rundlauf mit `level` 4 und `'U7'` erhalten. Abgewiesen mit `ok: false` und
-  Grund, nie ein Wurf: `hunter` mit `level` 4 und `level` 5 → «Beschädigter Spielstand»; `level` 4 an einem Wohnhaus →
-  dasselbe; `unlocked` mit `'U8'` → dasselbe; `version` 20 → «Unbekannte Version».
+- **AK-AL-21 Insel ohne Häuser:** Steinbruch auf Kolonie ohne Wohnhaus → Ausbau `fail` «Keine Handwerker im Umkreis 8
+  (kein Siedlerhaus auf dieser Insel)»; ein Kontor auf der Insel ändert nichts (R908 E3).
+- **AK-AL-22** — ersetzt durch AK-AL-35 (Anhang 02).
+- **AK-AL-23** — ersetzt durch AK-AL-36 (Anhang 02).
 - **AK-AL-24 Checkliste aus der Sim:** `levelChecks(world, b, 3)` am Fischer-Beispiel aus R9 liefert die Einträge in der
-  Reihenfolge von R5 mit `ok`, `have`, `need`; der Text der Fachkräfte-Zeile nennt `ceil(distance)`; für jede Zeile gilt
-  `ok` ⇔ Ausbau scheitert nicht an diesem Schritt (Vergleich mit `upgradeBuilding`).
+  Reihenfolge von R7 (Anhang 02 N3) mit `ok`, `have`, `need`; der Text der Fachkräfte-Zeile nennt `ceil(distance)`; für jede Zeile gilt
+  `ok` ⇔ Ausbau scheitert nicht an diesem Schritt (Vergleich mit `upgradeBuilding`); erster Grund: AK-AL-37.
 - **AK-AL-25 Gleiches bauen kostet die Summe** (`placeLevel.test.ts`): `placeBuilding(w, 'fisher', x, y, HOME, 3)` bucht
   Neubau + Stufe 2 + Stufe 3 (Geld, Holz, Wz, Stein) und Stoff 4 ab; `level` 3; Kasse, Lager und `paidCost` gleich wie
   nach Bau + zwei Ausbauten. Abriss erstattet die Hälfte von `paidCost`, keinen Stoff.
@@ -334,19 +337,17 @@ Lager ausreichend. Neue Dateien: `tests/sim/levelRules.test.ts`, `tests/sim/plac
 - **AK-AL-28 Pipette und Knopf** (`pipette.test.ts`): Quelle Fischer g 3 → `{ kind: 'build', defId: 'fisher', level: 3 }`,
   Werkzeugname «Fischerhütte · Stufe 3»; Quelle Stufe 1 → ohne `level`; Kontor → `PIPETTE_KONTOR_TEXT`; Quelle g 4 bei
   gesperrtem `upgrade4` → `ok: false` mit lockText U7. Bauleiste setzt immer Stufe 1.
-- **AK-AL-29 Browser-Check Panel:** Fischer Stufe 2 mit Nachbar im Abstand 2 und 3 öffnen: Karte «Ausbau auf Stufe 3» zeigt
+- **AK-AL-29 Browser-Check Panel** (Szene S1, ergänzt um S2/S3, Anhang 02 N7): Fischer Stufe 2 mit Nachbar im Abstand 2 und 3 öffnen: Karte «Ausbau auf Stufe 3» zeigt
   die Zeilen aus R9 mit ✓/✗ und Zahlen, Knopf gesperrt mit Fischgrund-Tooltip; nach Abriss des Nachbarn ✓ und Knopf aktiv.
-  Bürgerhaus abreissen: Chip «Läuft wie Stufe …» mit Grund, Tooltip «Unterhalt 7 statt 9 (gedrosselt)». Screenshot.
-- **AK-AL-30 Browser-Check Gleiches bauen:** Knopf «Gleiches bauen» an Fischer Stufe 3 → Werkzeug «Fischerhütte · Stufe
+  Bürgerhaus abreissen: Chip «Läuft wie Stufe …» mit Grund, Tooltip «Unterhalt 6 statt 7 (gedrosselt)» (g 2 → k 1). Screenshot.
+- **AK-AL-30 Browser-Check Gleiches bauen** (Szene S4): Knopf «Gleiches bauen» an Fischer Stufe 3 → Werkzeug «Fischerhütte · Stufe
   3»; Vorschau grün an geeigneter Küste, rot mit Grund neben zwei Fischern; Klick dort baut nichts. `Cmd/Strg`+Klick gleich.
 - **AK-AL-31 Merkmale** (`tests/render/`, `fakeCtx`): Aufsatz je Typ zeichnet für Stufe n alle Zeichenbefehle der Stufe
   n − 1 und weitere (Präfix-Eigenschaft); Stufe 3 enthält keine Fahne mehr; Stufe 1 zeichnet nichts. Browser-Check:
   11 Typen × Stufen 1 … 4 nebeneinander, je Stufe unterscheidbar, in jeder Drehung der GEBAEUDE-VARIANZ. Screenshot an lead-art.
-- **AK-AL-32 Balancing:** `tests/sim/balance.test.ts` und Baseline unverändert grün (Rechnung (g)). `balance-upgrade.test.ts`
+- **AK-AL-32 Balancing** (geteilt in 32a/32b, Anhang 02 N2): `tests/sim/balance.test.ts` und Baseline unverändert grün (Rechnung (g)). `balance-upgrade.test.ts`
   liest `extra` statt `fee`; der Pin M-15 wird nach AL-2 neu gemessen und nur per Ruling geändert (E9).
-- **AK-AL-33 Werte nur aus Defs:** Strukturtest auf den Quelltext ohne Kommentare von `src/sim/upgrade.ts`,
-  `src/sim/levels.ts` und `src/sim/levelRules.ts`: weder `8` noch `10` noch `50` als Zahlenliteral, keine Strings `'cloth'`,
-  `'glass'`, `'rum'`; `WORKFORCE_RADIUS`, `LEVEL_RECHECK_TICKS`, `THROTTLED_UPKEEP_PCT` werden aus den Defs importiert.
+- **AK-AL-33** — ersetzt durch AK-AL-46 (Anhang 02).
 - **AK-AL-34 Doku:** `rg -n "gegen Stoff|kostet Rum" README.md docs/spielwerte.md src/sim/defs/unlocks.ts` ohne Treffer;
   `docs/spielwerte.md` Abschnitt «Ausbau» nennt die vier Bedingungsarten und Stufe 4.
 
@@ -354,35 +355,29 @@ Lager ausreichend. Neue Dateien: `tests/sim/levelRules.test.ts`, `tests/sim/plac
 
 - Kein neues gespeichertes Feld; k ist abgeleitet. Neu gültig: `level` 4 bei Typen mit drei `LEVELS`-Einträgen
   (`save.ts:577` prüft `2 ≤ level ≤ 1 + LEVELS[defId].length`), `'U7'` in `world.unlocked`.
-- **Empfehlung (E4):** `SAVE_VERSION` 18 → 19. v18 bleibt ladbar ohne Datenmigration: der Schritt `if (raw.version === 18)
-raw.version = 19` in der Kette von `deserialize`; Inhalt unverändert. Ausgebaute Betriebe, die die neuen Dauerbedingungen
-  nicht erfüllen, laufen nach dem Laden wie k und erklären es im Panel (AK-AL-22). Steht in einem v18-Stand schon ein
-  Kaufmannshaus, wird U7 beim nächsten Freischalt-Check frei (einmal Meldung).
-- Neuere oder kaputte Stände werden abgewiesen, nie ein Absturz (AK-AL-23).
-- Alternativen für L0: (b) `SAVE_VERSION` bleibt 18 (nur Wertebereich erweitert) — nicht empfohlen, weil ein Stand mit
-  Stufe 4 sonst in einem älteren Build als «beschädigt» statt «unbekannte Version» scheitert; (c) v18 abweisen — nicht
-  nötig, kein Feld fehlt.
-- `docs/arc42.md` (Persistenz, Version 19) im Schnitt AL-4 mitführen.
+- **R908 E4:** `SAVE_VERSION` = Wert auf main + 1 beim Merge von AL-4, keine feste Zahl. Der Vorgängerstand
+  (`SAVE_VERSION − 1`) wird entweder über einen Schritt geladen, der nur `version` erhöht (Test belegt Laden und k mit
+  Grund), oder mit Hinweis abgewiesen (Test); der Plan wählt und legt die Merge-Reihenfolge der Save-Kette fest (Anhang 02
+  N1, AK-AL-35). Neuere und kaputte Stände: abgewiesen mit Hinweis, nie ein Absturz (AK-AL-36).
+- Steht in einem geladenen Vorgängerstand schon ein Kaufmannshaus, wird U7 beim nächsten Freischalt-Check frei (einmal
+  Meldung). `docs/arc42.md` (Persistenz) im Schnitt AL-4 mitführen.
 
 ## Balancing-Test
 
 Keine bewusste Änderung an `tests/sim/balance.test.ts` nötig. Beleg Rechnung (g): `balance.test.ts` und der Controller
 bauen nie aus; Stufe-1-Regeln und Grundwerte bleiben, die Fischer-Abstandsregel gilt erst ab Stufe 2. **Ergänzung zur
-Rechnung:** `tests/sim/balance-upgrade.test.ts` (AK-M11B-01) baut Fischer auf Stufe 2 aus und pinnt M-15 (`winTick` 8250,
+Rechnung:** `tests/sim/balance-upgrade.test.ts` (M11B AK-M11B-01) baut Fischer auf Stufe 2 aus und pinnt M-15 (`winTick` 8250,
 11 Fischer Stufe 2). Die Werte der Fischer-Stufe 2 bleiben gleich (AL-1 ändert dort nur `fee` → `extra`), aber ab AL-2
 gelten Fachkräfte und Fischgrund; liegen die Controller-Fischer dichter als erlaubt, sinkt die Zahl der Ausbauten. Neu
 messen, Pin per Ruling (E9).
 
 ## Schnitte (je ≤ 1 Session)
 
-| Schnitt | Inhalt                                                                                                                | Abhängig                           | AKs                                        |
-| ------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------ |
-| AL-1    | Sim, Defs, Doku: `fee` → `extra`, Kosten Stufe 2/3 laut Rechnung, Tipptexte U3/U5, README, `spielwerte.md`; ohne Save | —                                  | 01 (Stufe 2/3), 02, 05, 34                 |
-| AL-2    | Sim: `workforceTier`, `site`, `levelRules.ts`, k, Drossel-Unterhalt, Gründe, Ausbau verlangt Bedingungen              | AL-1                               | 03, 04, 06–18, 21, 22 (Teil k), 24, 32, 33 |
-| AL-3    | UI: Checkliste in der Ausbau-Karte, Zustandschip, Tooltip                                                             | AL-2                               | 29                                         |
-| AL-4    | Sim+UI+Save: Stufe 4 (dritte `LEVELS`-Einträge), U7, `SAVE_VERSION` 19, arc42                                         | AL-2                               | 01 (Stufe 4), 19, 20, 22 (Version), 23     |
-| AL-5    | UI+Sim: Gleiches bauen/Pipette mit Stufe, `placeBuilding` mit Zielstufe                                               | AL-2                               | 25–28, 30                                  |
-| AL-6    | Render (lead-art): Merkmale je Typ statt Fahne                                                                        | AL-1 (parallel), Stufe 4 nach AL-4 | 31                                         |
+Verbindlich ist die Schnitt-Tabelle in Anhang 02 N2 (R914): AL-1 → AL-2a (`levelRules` als reine Abfrage) → AL-2b (k wirkt,
+Ausbau verlangt Bedingungen, Messungen) → AL-3 (UI); AL-4 (Stufe 4, Save) nach AL-2b; AL-5 nach AL-4; AL-6a
+(Rohstoffbetriebe) und AL-6b (Werkstätten) parallel ab AL-1, Stufe 4 nach AL-4. Stufe-4-Teile eines AK liegen in AL-4.
+Voraussetzungen: I-201 auf main (I-201 AK-FE7, Erntefest-Teil von AK-AL-11), FLAECHE (Weidezahlen vor AL-2a),
+GEBAEUDE-VARIANZ (Drehung in AK-AL-31), Zukaufpreis (AK-AL-49), Save-Kette (AK-AL-35).
 
 ## Abgrenzung
 
@@ -392,11 +387,13 @@ messen, Pin per Ruling (E9).
 - **GEBAEUDE-VARIANZ (R896 (4)):** Formvarianten und Drehung. Stufenmerkmale sind Aufsätze mit festem Ankerpunkt und
   gelten auf jeder Variante.
 - **I-201 Festanlass:** Erntefest wirkt in `cycleOf` auf den Zyklus der laufenden Stufe k. Stufe-3-Zyklen unverändert,
-  AK-FE7 (c = 20 → 15) bleibt.
+  I-201 AK-FE7 (c = 20 → 15) bleibt.
 - **I-128 Lärm:** Arbeitsweg 8 > Lärm 3; der Ring 3 < d ≤ 8 bleibt.
 - **Rat R711:** anteiliger Stufentakt gilt auch für Stufe 4 und für k (über `effectiveCycle`).
 
 ## Entscheidungsbedarf L0 (Ruling-Entwürfe)
+
+Stand R908: E1–E3 und E5–E9 angenommen (E3 strikt, ohne Kontor-Ersatz); E4 geändert (main + 1, Abschnitt Save).
 
 - **E1** Gebühr → fachliche Ware, Rest kostenneutral ins Geld (W gleich). Empfehlung: annehmen — hält die Wahl Breite gegen
   Tiefe stabil (Rechnung (e)).
@@ -432,7 +429,13 @@ messen, Pin per Ruling (E9).
 
 Jede Zeile hat eine Zahl, die der Spieler auf der Karte nachzählen kann; kein Grund ohne sichtbare Ursache.
 
+## Risiken und Stellschrauben
+
+Spirale, Arbeitsweg und Dominanz beruhen auf Rechnung (d)–(f) (analytisch). Stellschrauben `WORKFORCE_RADIUS`,
+`THROTTLED_UPKEEP_PCT` und die E2-Aufschläge liegen in den Defs; Rückfall = Wertänderung per Ruling; Messung AK-AL-48 und
+AK-AL-49 (Anhang 02 N6).
+
 ## Offene Punkte
 
-- Weidezahlen nach FLAECHE nachjustieren (Rechnung, Annahmen).
+- Weidezahlen vor AL-2a mit FLAECHE fixieren (Handoff; Rechnung, Annahmen).
 - Laufzeit der k-Abfrage (Häuser und Kacheln je Betrieb): Tech wählt Takt/Ereignis/Lesen nach R5 und misst im Plan.
