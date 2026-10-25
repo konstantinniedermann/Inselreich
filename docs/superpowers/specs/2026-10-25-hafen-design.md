@@ -75,7 +75,8 @@ Spielwerte stehen in `src/sim/defs/`; Darstellungswerte stehen in `src/render/` 
   statt d. Neue Felder in `ISLANDS` (`src/sim/defs/sea.ts`): `lMin`/`lMax` A 76/93, C 97/110, B 110/128 Kacheln (Anhang
   01 B). `dMin`/`dMax` bleiben als Streuung der Kandidatenerzeugung (`originFor`, `searchFar`); ob ihre Spanne für genug
   Treffer erweitert werden muss, zeigt AK-HF-12 (offen O-3).
-- **R8 Generator-Anker:** Der Generator setzt den Anker neuer Welten mit `dockFor(kontorSite)` statt `homeAnchor`, damit
+- **R8 Generator-Anker:** Der Generator setzt den Anker jeder **Fremdinsel** neuer Welten mit `dockFor(kontorSite)` statt
+  `homeAnchor` (der Heimatanker bleibt `homeAnchor(kontorSite)`, R6), damit
   das L-Band für den Anker gilt, den ein Kontor II am vorgesehenen Platz bekommt (Folge aus R1/R3, AK-HF-14).
 - **R9 Ersatzlagen** (`searchFar`, Stufe 3) bleiben ohne Bandprüfung wie heute.
 - K2 betrifft nur neue Welten; gespeicherte Welten tragen ihre Inseln.
@@ -88,7 +89,8 @@ Spielwerte stehen in `src/sim/defs/`; Darstellungswerte stehen in `src/render/` 
   Darstellung, beeinflusst … Fahrzeit nicht») ändern. Notanker Gerade bleibt (L = Länge der Geraden, `T ≥ 1`).
 - **R11 Gleichmässige Geschwindigkeit:** Auf jeder Lane gilt `|L/T − 1/k| < 1/(k · T)` (nur `ceil` bedingt).
 - **R12 Seerecht:** `COUNCIL[4].C.lever` (`src/sim/defs/council.ts`, `kind: 'seaTileTicks'`) 8 → **2,32** (= 2,9 × 0,8,
-  Fahrt +25 %). Kartentext bleibt. Umrechnung beim Beschluss (`rescaleVoyages`, `ceil`) gilt unverändert mit `T`.
+  Fahrt +25 %). Kartentext bleibt. Der Rückfallwert von `seaTileTicks(world)` (`council.ts`, heute
+  `SHIP_TICKS_PER_SEA_TILE`) wird `SHIP_TICKS_PER_ROUTE_TILE`. Umrechnung beim Beschluss (`rescaleVoyages`, `ceil`) gilt unverändert mit `T`.
 - **R13 Frist-Invariante Fernauftrag:** `600 + 2 · (ceil(k · L_max) + D) ≤ FAR_ORDER_DURATION` (1700); hält bis L ≤ 179
   (gemessen max 171,6), mit K2 und B ≤ 128: 1404 (Anhang 01 H). Die Prüfung nimmt eine L-Grenze statt `dMax`.
 - **R14 Eine Quelle:** Inselkarte (`islandCard.ts:74`), `homeTravelTicks` (`homeTravel.ts:35`), Seekarte (`seaMap.ts`),
@@ -392,12 +394,14 @@ Je Schnitt ≤ 1 Session (Schätzung). Reihenfolge S1 → S2 → S3 → S4; S5/S
 | E3  | Migration statt Abweisen bei S3/S4                                | ja                                   |
 | E4  | Gepinnte Fahrzeit-Tests bewusst neu pinnen, Balancing-Test bleibt | ja (Liste AK-HF-22)                  |
 
-Kleinpunkte für lead-design bzw. Tech (keine L0-Entscheide):
+Kleinpunkte, von lead-design entschieden (keine L0-Entscheide):
 
-- **O-1** Lager voll: zweiter Entladeversuch beim Ablegen? Empfehlung nein (ein Versuch je Anlegen wie heute, KISS).
-- **O-2** Schiff ohne Route an Fremdinsel springt bei Neubau Kontor II zum neuen Anker. Empfehlung: hinnehmen (selten,
+- **O-1** Lager voll: kein zweiter Entladeversuch beim Ablegen (ein Versuch je Anlegen wie heute, KISS).
+- **O-2** Schiff ohne Route an einer Fremdinsel springt beim Neubau des Kontors II zum neuen Anker: hingenommen (selten,
   keine Spielwirkung).
-- **O-3** `dMin`/`dMax` der Kandidatenerzeugung erweitern, falls AK-HF-12 verfehlt wird; Wert offen, S2 misst.
-- **O-4** Anfahrt des Auftragsschiffs mit Seerecht: fest 35 Ticks (Empfehlung, fremdes Schiff) oder 28 Ticks mit 2,32
-  (Anhang 01 F).
-- **O-5** Ein- und Ausblenden des Auftragsschiffs am Wegende: Dauer offen, Vorschlag lead-art (Anhang 02 §H).
+- **O-3** `dMin`/`dMax` der Kandidatenerzeugung erweitert S2 nur, falls AK-HF-12 verfehlt wird; der Wert folgt aus der
+  Messung und kommt als Spielwert-Änderung an lead-design zurück.
+- **O-4** Anfahrt des Auftragsschiffs fest 35 Ticks, auch mit Seerecht: Es ist ein fremdes Schiff, der Ratsbeschluss gilt
+  für die eigene Flotte.
+- **O-5** Ein- und Ausblenden des Auftragsschiffs am Wegende: Dauer legt lead-art fest (Anhang 02 §H), Darstellungswert
+  in `src/render/`.
