@@ -1495,6 +1495,10 @@ button.hud-balance:focus-visible {
   border-color: var(--gold);
   box-shadow: 0 0 0 2px var(--gold);
 }
+.council-preview {
+  font-size: 12px;
+  opacity: 0.75;
+}
 .council-note {
   font-size: 13px;
 }
