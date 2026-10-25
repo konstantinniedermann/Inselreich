@@ -2266,3 +2266,17 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: COACH-R872 (l
 Regelbezug: R464, R769 V2, R810, R816, R868 V1, R871 · Kosten bei Irrtum: Merge-Kette im Integrate neu aufsetzen; Push einen Tag später.
 
 Entscheider: L0 · Anlass: Gate-Bericht lead-qa, Bericht lead-tech · ADR: ADR-007 Nachtrag
+
+## R876 · 2026-10-25 · HAUSHALT-03, BEOB-19, Kurzdesign UI-HAEPPCHEN-J abgenommen
+
+Ruling: (1) **HAUSHALT-03** abgenommen: `.studio/qa` 1439 → 624 MB; Rulings-Archiv R700–R739 auf `docs/haushalt-03` @ `0b839c29` (inkl. Verweiszeile STUDIO.md 13, hingenommen); Merge mit
+REL-32 **nach** allen Ruling-Commits dieser Session, `rulings.md`-Konflikt: Branch-Kopf plus alle neuen Rulings von main behalten. Worktrees > 150: nächste Aufräumrunde misst sie
+(`aufraeumen.json`, Beobachtung). (2) **BEOB-19** abgenommen (`docs/beob-19` @ `a59bf87b`, Marke 2026-10-25). **P1 DOKU-RUNDE** angenommen ohne den ADR-007-Teil (erledigt mit DOKU-R868) und ohne
+Seerecht-Plan (erledigt); Start an `studio-coach` nach COACH-R872 (STUDIO.md-Überschneidung). **P2 TOOL-REST-3** angenommen (ruff-Fix `loadsnap.py`, `LOAD_WAIT` gegen Handbuch abgleichen,
+`pushgate`-Selbstschutz nur auf echte Push-Befehle); Start an `lead-tech` **nach** dem REL-31-Push (berührt `pushgate`). (3) **Kurzdesign UI-HAEPPCHEN-J** (`design/ui-haeppchen-j` @ `0d0daf84`)
+abgenommen, F1 (keine Hover-Pause), F2 (nur Gebäudeanzahl), F3 (I-138/I-139 im Pool kürzen — mit IDEEN-17 nachführen), F4 (Chronik ohne Minute) **ja**; Gate Spec an `lead-qa`.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-31 (pushgate), COACH-R872 (STUDIO.md)
+Regelbezug: R287, R464, R685, R861 · Kosten bei Irrtum: Merge-Reihenfolge neu ordnen.
+
+Entscheider: L0 · Anlass: Berichte lead-production, lead-design · ADR: —
