@@ -2193,3 +2193,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN (Schiff
 Regelbezug: R329, R803, R826, R898, R901 · Kosten bei Irrtum: Stadtrecht/I-197 starten eine Welle später.
 
 Entscheider: L0 · Anlass: Bericht lead-tech FIX-SCHIFF-A1 · ADR: —
+
+## R907 · 2026-10-25 · Kurzdesign GEBAEUDE-VARIANZ: Drehung beim Bau fest; Gate Spec
+
+Ruling: `design/gebaeude-varianz` @ `12671a4f` (Baupläne aus Bausteinen, 22 Typen, AK-GV-01–19, Schnitte S1–S6, Referenzszene 55 % von 64 MiB, keine Assets) geht ans **Gate Spec**. Entwürfe: **E1 nein** — ein
+Gebäude, das sich nachträglich dreht, wenn daneben eine Strasse entsteht, ist im Spielbild nicht erklärbar (R896 (0)). Stattdessen: **Drehung wird beim Bau festgelegt** (Regel Wasser → Strasse → Hash zum
+Bauzeitpunkt) und als kleines Gebäudefeld gespeichert; Save = main + 1 beim Merge mit Migration (Bestand: Drehung einmalig nach derselben Regel aus dem geladenen Stand). Spec-Nachtrag durch `lead-art`
+(Rest 1 Start) parallel zum Gate. **E2 ja** (Identität = Kennzeichen + Dachfamilie + Höhe, ersetzt H-R7 «Silhouette»), **E3 ja** (Farbe fest an der Form), **E4 ja** (S6 öffentliche Bauten optional).
+Gate prüft zusätzlich Cache-Hebel AK-GV-14 und die Hüllen-Verletzungen (Schule, Denkmal, Plantagen).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK (Stufenmerkmale), FLAECHE (Parzellen), ORT-A, Save-Kette (Seerecht 19, Inselproben, I-210, I-214)
+Regelbezug: R896, H-R7 · Kosten bei Irrtum: ein Save-Feld mehr.
+
+Entscheider: L0 · Anlass: Bericht lead-art GEBAEUDE-VARIANZ · ADR: —
