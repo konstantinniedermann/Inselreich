@@ -2045,3 +2045,22 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-197/I-197b 
 Regelbezug: R236, R329, R885 · Kosten bei Irrtum: ein Diagnose-Start mehr.
 
 Entscheider: L0 · Anlass: Zwischenbericht lead-tech INSELPROBEN · ADR: —
+
+## R896 · 2026-10-25 · Nutzer-Playtest: Input in fünf Pakete; Dauerauftrag Nachvollziehbarkeit
+
+Ruling: Nutzer meldet Playtest-Befunde «nur als Inputs, Entscheidungen bei L0, mit Fokus auf Nachvollziehbarkeit und Logik». Auslegung: (0) **Dauerauftrag (R863):** Spielregeln und Ausbau-Bedingungen
+müssen **fachlich erklärbar** sein (Ursache → Wirkung im Spielbild nachvollziehbar); Gate-Specs prüfen das als Kriterium. R862 «keine Playtests als Ideen-Input» meint Studio-Playtests; **Nutzer-Playtests sind
+Input erster Ordnung** und gehen vor dem Pool. Pakete:
+(1) **BUG-SCHIFF** (`lead-tech`, Diagnose nach systematic-debugging, ohne Fix): Handelsschiff ruckelt; Route fährt nicht Kontor ↔ Kontor, sondern «irgendwo an die Insel»; Auftragsschiff erscheint
+plötzlich statt anzulegen. Ergebnis Ursachen mit Beleg und Fix-Vorschlag; Fix-Start nach freiem Test-Controller-Platz. (2) **HAFEN** (`lead-art` mit `lead-design`, Kurzdesign nach BUG-SCHIFF): Anlegestelle am
+Kontor, Schiffe legen dort an, Schiffsoptik aufwerten. (3) **AUSBAU-LOGIK** (`lead-design`, Spec voll): Ausbau-Bedingungen nach Logik (Baustoffe Stoff/Ziegel/Holz, Fachkräfte/Gelehrte/Wissensstand,
+Standortregeln wie «Fischer: höchstens 1 anderer im Radius 2») statt sachfremder Waren (z. B. Rum für die Weberei); zusätzliche Produktionsstufe; Stufenmerkmale **funktional sichtbar** (grösseres Netz/Boot beim
+Fischer, grösserer Kessel/Schornstein bei der Brennerei) statt Fahne; QoL «gleiches Gebäude dieser Stufe bauen» (Pipette) als Teil-AK. (4) **GEBAEUDE-VARIANZ** (`lead-art`, Kurzdesign): echte Formvarianten
+je Gebäudetyp (prozedural aus Bausteinen, nicht nur Dachfarbe), Drehung 90°, deterministisch aus Position. (5) **FLAECHE** (`lead-design` mit `lead-art`, Kurzdesign): Grössenverhältnisse — Wohnhaus wächst
+mit Aufstieg über 1×1 hinaus; Flächenbedarf sichtbar und genau so gross wie für 100 % Effizienz nötig (Schäferei: umzäunte Weide, Schafe darauf). Überschneidung Stadtplanung/ORT-A prüfen.
+Reihenfolge: (1) und (3) sofort (testfrei), (4) und (5) beim nächsten freien Platz, (2) nach (1). Save-Wirkungen entscheidet L0 je Spec.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (Seewege), LEBEN-SEE, ORT-A, Stadtplanung, I-201 (Ausbau), Gründungsbrief
+Regelbezug: R862, R863, R445 · Kosten bei Irrtum: Design-Arbeit, die vor der Umsetzung umgeplant wird.
+
+Entscheider: L0 · Anlass: Nutzer-Playtest 2026-10-25 · ADR: —
