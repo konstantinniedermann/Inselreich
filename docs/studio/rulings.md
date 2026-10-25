@@ -2809,3 +2809,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Erweiterung 1
 Regelbezug: R862, R927, R933 · Kosten bei Irrtum: —
 
 Entscheider: Nutzer · Anlass: Antwort N-104 · ADR: —
+
+## R959 · 2026-10-25 · Nutzerauftrag: 5-h-Fenster ausschöpfen (Dauerauftrag)
+
+Ruling: Auslegung „nutze das vorhandene 5h limit für weitere Entwicklungen“ als **Dauerauftrag** (R863): Die gelbe Limit-Ampel (5 h 60–80 %) stoppt keine neuen Wellen mehr; L0 füllt den Deckel (R826)
+weiter. **Neue Starts bis 85 %**, ab 85 % nur Angefangenes abschliessen und sichern, **ab 90 % Ende-Routine** (Puffer für Übergabe, R66). Wochenfenster > 80 % reduziert weiter die Parallelität (R69).
+Session 8361ff82 startet bei 68 % mit Welle 1: ZEITPIN-D1, I-210, AUSBAU-LOGIK (≤ 3 Test-Controller, Messungen zuerst), Gate Spec I-215, Gegenlesen HAFEN, Retro-Umsetzung R957, Design «Neue Ufer» (R958).
+Zweck der Anweisung: verfügbares Nutzungsfenster in Fortschritt verwandeln; Auslegung widerspricht ihm nicht, weil nur die Startgrenze verschoben wird und die Übergabe gesichert bleibt.
+
+Verfassung berührt?: nein (Handbuch-Richtwerte R69/R826, Nutzeranweisung geht vor) · Überschneidung mit offenen Paketen: alle
+Regelbezug: R66, R69, R826, R863 · Kosten bei Irrtum: Session endet knapp am Limit, Übergabe kleiner.
+
+Entscheider: L0 · Anlass: Nutzerauftrag Session 8361ff82 · ADR: —
