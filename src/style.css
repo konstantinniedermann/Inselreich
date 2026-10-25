@@ -1614,7 +1614,7 @@ button.goal-chip.goal-chip--action {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 .honor-row--open {
-  color: var(--parchment-muted);
+  color: var(--ink-muted);
 }
 .honor-meta {
   font-size: 0.9em;
