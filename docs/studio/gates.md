@@ -231,6 +231,18 @@ auf origin/main), nie zurückgesetzt. `docs/beobachtungen.md` hat kein `merge=un
 einen Konflikt dort löst der Eigentümer des späteren Branches per Merge von main, gestrichene Zeilen
 bleiben gestrichen.
 
+**Trockenlauf mit Merge-Treiber (R868 V1, E-072):** `git merge-tree` führt keine Merge-Treiber aus
+(REL-30: Urteil «Treiber löst», Integrator stoppte trotzdem; Retro `retros/2026-10-23-rel-30-prozess.md` B1).
+Berührt ein Branch des Bündels eine Datei mit Treiber in `.gitattributes` (heute `docs/beobachtungen.md`,
+`beob-append`), prüft `lead-qa` diese Datei mit einem echten Probe-Merge statt mit `merge-tree`:
+`git worktree add --detach .worktrees/probe-REL-nn main`, dort die Branches in der Integrations-Reihenfolge
+je `git merge --no-ff --no-commit <branch>`; Exit 0 → `git commit --no-edit` (nur im Wegwerf-Worktree,
+nie gepusht, nie nach main), Konflikt → Stelle im Urteil als «Integrator-Stopp, vorab lösen» mit Branch
+und Datei, dann `git merge --abort`. Zum Schluss `git worktree remove --force .worktrees/probe-REL-nn`.
+«Treiber löst» steht im Urteil nur, wenn dieser Probe-Merge Exit 0 hatte. Andere Dateien bleiben bei
+`merge-tree`. Der Treiber muss gesetzt sein (`merge.beob-append.driver` in `.git/config`, gilt für alle
+Worktrees); fehlt er, ist das Urteil BEDENKEN.
+
 **Pipelining:** Das nächste Häppchen startet nach Review-OK des vorigen, nicht nach dem Merge;
 Häppchen mit disjunkten Dateien laufen parallel in eigenen Worktrees (§5.8).
 

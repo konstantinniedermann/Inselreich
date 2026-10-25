@@ -22,6 +22,48 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-23 · Handbuch 1.73
+
+- Anlass: Prozess-Retro REL-30, Vorschläge V1 und V2 (Experimente E-072, E-073); setzt 1.72 voraus (Branch `docs/dauerauftrag`)
+- Datenbasis: Retro `docs/studio/retros/2026-10-23-rel-30-prozess.md` (Branch `docs/retro-rel-30` @ `40a27899`), B1/B2; `.studio/events.jsonl` 2026-10-23 09:37–10:14 UTC
+- Ruling: R868
+- Änderungen: STUDIO.md „Kommunikation“: Start-Regel ersetzt Vordergrund-Regel: `run_in_background: false` bleibt (R854 Regel C), jeder Start gilt als asynchron, nach dem Start Zug beenden und auf Meldung warten (Rückkanal R856), Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (E-073); Satz zu langen Bash-Läufen verweist auf die Start-Regel; „Merge“-Konflikt-Probe: Dateien mit Merge-Treiber prüft `lead-qa` per Probe-Merge im Wegwerf-Worktree (E-072); `gates.md` „Gate Merge Release“: Absatz „Trockenlauf mit Merge-Treiber“; `templates/briefing.md`: Pflichtzeilen Lead-Briefing (asynchron, ohne „im Vordergrund“) und Gate-Merge-Briefing (Probe-Merge); `templates/persona.md`: Start-Regel statt Vordergrund-Regel; `experimente.md`: E-072, E-073; `lernen.md`: Zeile zu asynchronen Starts
+
+## 2026-10-23 · Persona lead-qa 1.13
+
+- Anlass: Prozess-Retro REL-30, V1 und V2
+- Datenbasis: Retro `docs/studio/retros/2026-10-23-rel-30-prozess.md` (Branch `docs/retro-rel-30` @ `40a27899`), B1/B2; `.studio/events.jsonl` 2026-10-23 09:37–10:14 UTC
+- Ruling: R868
+- Änderungen: Arbeitsweise Punkt 6 neu „Konflikt-Trockenlauf“: Dateien mit Merge-Treiber per Probe-Merge im Wegwerf-Worktree, „Treiber löst“ nur nach Exit 0 (E-072); Start-Regel ersetzt Vordergrund-Regel: `run_in_background: false` bleibt (R854 Regel C), jeder Start gilt als asynchron, nach dem Start Zug beenden und auf Meldung warten (Rückkanal R856), Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (E-073); Satz zu langen Bash-Läufen verweist auf die Start-Regel
+
+## 2026-10-23 · Persona lead-tech 1.18
+
+- Anlass: Prozess-Retro REL-30, V2
+- Datenbasis: Retro `docs/studio/retros/2026-10-23-rel-30-prozess.md` (Branch `docs/retro-rel-30` @ `40a27899`), B1/B2; `.studio/events.jsonl` 2026-10-23 09:37–10:14 UTC
+- Ruling: R868
+- Änderungen: Start-Regel ersetzt Vordergrund-Regel: `run_in_background: false` bleibt (R854 Regel C), jeder Start gilt als asynchron, nach dem Start Zug beenden und auf Meldung warten (Rückkanal R856), Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (E-073); Satz zu langen Bash-Läufen verweist auf die Start-Regel
+
+## 2026-10-23 · Persona lead-design 1.14
+
+- Anlass: Prozess-Retro REL-30, V2
+- Datenbasis: Retro `docs/studio/retros/2026-10-23-rel-30-prozess.md` (Branch `docs/retro-rel-30` @ `40a27899`), B1/B2; `.studio/events.jsonl` 2026-10-23 09:37–10:14 UTC
+- Ruling: R868
+- Änderungen: Start-Regel ersetzt Vordergrund-Regel: `run_in_background: false` bleibt (R854 Regel C), jeder Start gilt als asynchron, nach dem Start Zug beenden und auf Meldung warten (Rückkanal R856), Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (E-073); Satz zu langen Bash-Läufen verweist auf die Start-Regel
+
+## 2026-10-23 · Persona lead-production 1.14
+
+- Anlass: Prozess-Retro REL-30, V2
+- Datenbasis: Retro `docs/studio/retros/2026-10-23-rel-30-prozess.md` (Branch `docs/retro-rel-30` @ `40a27899`), B1/B2; `.studio/events.jsonl` 2026-10-23 09:37–10:14 UTC
+- Ruling: R868
+- Änderungen: Start-Regel ersetzt Vordergrund-Regel: `run_in_background: false` bleibt (R854 Regel C), jeder Start gilt als asynchron, nach dem Start Zug beenden und auf Meldung warten (Rückkanal R856), Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (E-073); Satz zu langen Bash-Läufen verweist auf die Start-Regel
+
+## 2026-10-23 · Persona lead-art 1.10
+
+- Anlass: Prozess-Retro REL-30, V2
+- Datenbasis: Retro `docs/studio/retros/2026-10-23-rel-30-prozess.md` (Branch `docs/retro-rel-30` @ `40a27899`), B1/B2; `.studio/events.jsonl` 2026-10-23 09:37–10:14 UTC
+- Ruling: R868
+- Änderungen: Start-Regel ersetzt Vordergrund-Regel: `run_in_background: false` bleibt (R854 Regel C), jeder Start gilt als asynchron, nach dem Start Zug beenden und auf Meldung warten (Rückkanal R856), Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (E-073); Satz zu langen Bash-Läufen verweist auf die Start-Regel
+
 ## 2026-10-23 · Handbuch 1.72
 
 - Anlass: Nutzerauftrag (Dauerauftrag, Fokus kreativer Kapazität); setzt 1.71 voraus (Branch `docs/rueckkanal`, Release REL-30)

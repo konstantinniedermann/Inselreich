@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R689 2026-10-16): E-063, E-066, E-068; E-064 Bewertung `behalten` als Entwurf, bis L0 bestätigt; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R689 2026-10-16): E-063, E-066, E-068; E-064 Bewertung `behalten` als Entwurf, bis L0 bestätigt; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz. E-072 und E-073 (R868, Handbuch 1.73) wirken sofort und laufen passiv ohne Platz wie E-059/E-071; Vorschlag an L0: E-063 bewerten und den Platz an E-073 geben.
 
 ---
 
@@ -728,4 +728,28 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Gate-Merge-Absatz), Umgebungsvariable beim Aufruf, kein Code
 - Ruling: R810
 - Start: Handbuch 1.66 (Variable wirkt sofort, Zählung `laufend` erst bei freiem Platz; 3 laufen: E-063, E-066, E-068)
+- Bewertung: –
+
+## E-072 · umgesetzt (R868 V1, läuft passiv ohne Platz wie E-059) · Gate-Trockenlauf mit echtem Merge für Dateien mit Merge-Treiber
+
+- Hypothese: Wenn `lead-qa` im Gate Merge Release Dateien mit Merge-Treiber (`docs/beobachtungen.md`, `beob-append`) per `git merge --no-ff --no-commit` im Wegwerf-Worktree `.worktrees/probe-REL-nn` statt mit `git merge-tree` prüft, dann sieht das Urteil jeden Fall, den der Treiber nicht löst, und der Integrator stoppt nicht mehr an Konflikten, die das Gate als «Treiber löst» eingestuft hat (Retro `retros/2026-10-23-rel-30-prozess.md` B1: REL-30 stoppte 09:46:54 «Treiber loest nicht», 5 min Stopp, zweiter Integrator-Zug).
+- Messgrösse: 0 Integrator-Stopps wegen Konflikten über die nächsten 3 Releases (Events `lead-production`/`production-integrator` mit Status `blocked` oder «Treiber loest nicht» in `.studio/events.jsonl`, Ausgang REL-30: 1); Gegenprobe: Gate-Merge-Instanz `lead-qa` höchstens +10 Tools je Release gegen REL-30, 0 Probe-Worktrees nach dem Gate (`git worktree list`).
+- Messbarkeit: unverändert; Integrator-Events, Gate-Handoffs und `git worktree list` bleiben lesbar, das Urteil nennt den Probe-Merge je Datei.
+- Zeitraum: 3 Releases, höchstens bis 2026-11-19.
+- Rückfall: Integrator löst reine Anhang-Konflikte in `docs/beobachtungen.md` selbst, mit Zeilenzähl-Prüfung (Retro V1); Absatz «Trockenlauf mit Merge-Treiber» aus `gates.md` streichen, Persona `lead-qa` 1.12, Handbuch 1.72 (`git show b966c88f:docs/studio/STUDIO.md`).
+- Dateien: `docs/studio/gates.md` (Gate Merge Release), `.claude/agents/lead-qa.md` (1.13), `docs/studio/STUDIO.md` (Merge, Konflikt-Probe), `docs/studio/templates/briefing.md` (Gate-Merge-Zeile), `docs/studio/CHANGELOG.md`
+- Ruling: R868
+- Start: 2026-10-23 (Handbuch 1.73, Persona lead-qa 1.13); Zählung `laufend` bei freiem Platz
+- Bewertung: –
+
+## E-073 · umgesetzt (R868 V2, läuft passiv ohne Platz wie E-059) · Agent-Starts asynchron, Warten heisst Zug beenden
+
+- Hypothese: Wenn Handbuch, Lead-Personas und Briefing-Vorlage jeden Agent-Start als asynchron behandeln (Zug beenden, auf Meldung warten über Rückkanal R856, Status-Event nur bei Zustandswechsel, höchstens eines je 5 min) und «im Vordergrund» aus Vorlage und Briefings fällt, dann verschwinden Status-Schleifen wartender Leads (Retro `retros/2026-10-23-rel-30-prozess.md` B2: alle 9 Lead-Starts `async_launched` trotz `background: False`; `lead-design` IDEEN-16 33 Status-Events in 3,7 min, ≈ 2M Cache-Read ohne Ergebnis).
+- Messgrösse: ≤ 3 Status-Events je Lead-Instanz und 10 min Wartezeit (Wartezeit = Abstand Arbeiter-Start bis Arbeiter-Meldung, aus `.studio/events.jsonl`), über 2 Sessions (Ausgang REL-30: 33 in 3,7 min); 0 neue Briefings mit «im Vordergrund» (`rg -i vordergrund .studio/archiv/briefings/`, ab Start); Gegenprobe: Leads ohne Lebenszeichen > 30 min nach Arbeiter-Meldung (R853-Muster) nicht über Ausgang (0 in REL-30).
+- Messbarkeit: unverändert; Status-Events und Briefing-Archiv bleiben, die Regel entfernt kein Event.
+- Zeitraum: 2 Sessions, höchstens bis 2026-11-19.
+- Rückfall: Vordergrund-Regel aus Handbuch 1.72 (`git show b966c88f:docs/studio/STUDIO.md`, Abschnitt Kommunikation) und Personas `lead-tech` 1.17, `lead-qa` 1.12, `lead-design` 1.13, `lead-production` 1.13, `lead-art` 1.9; Briefing-Zeile streichen. R854 Regel C (Waitguard) bleibt in beiden Zuständen.
+- Dateien: `docs/studio/STUDIO.md` (Kommunikation), `.claude/agents/lead-{tech,qa,design,production,art}.md`, `docs/studio/templates/briefing.md`, `docs/studio/templates/persona.md`, `docs/studio/lernen.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R868
+- Start: 2026-10-23 (Handbuch 1.73); Zählung `laufend` bei freiem Platz
 - Bewertung: –
