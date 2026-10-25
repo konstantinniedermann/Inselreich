@@ -4,9 +4,17 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-25 (Session 47d29586 Ende, R886; live REL-31 `ee51d4f1`, Save v18 live, Verfassung 1.3, Handbuch main 1.75; main lokal = live + REL-32a/b (Ehrenbuch, UI-HAEPPCHEN-J, Pläne, Werkzeug), noch nicht gepusht)
+Stand: 2026-10-25 (Session 84d62878, R889; live REL-32 `38b9f9a0`, Save v18 live, Verfassung 1.3, Handbuch 1.75; main = live + Doku-Commits)
 
 ## Release-Notizen
+
+**REL-32 „Ehrenbuch und Ratsvorschau“ (live, R889, Zusatz-Release auf Nutzerauftrag R887)** — kein Save-Wechsel (v18). Inhalt: REL-32a/b (I-186 Ehrenbuch, UI-HAEPPCHEN-J, Pläne/Specs Inselproben,
+I-201, I-197b, TIEFE-2, TOOL-REST-3, DOKU-RUNDE, COACH-R872), HAUSHALT-03, Retro 47d29586, HOTFIX-REL32. Push `ee51d4f1..38b9f9a0`, push-check Exit 0 (Startlast 8,8, Zeit-Pins nicht belastbar), CI-Lauf
+40192693804, Pages-Lauf 40193070787 (grün). Quelle: `.studio/handoffs/2026-10-25-lead-production-REL-32.md`.
+
+- **Neu:** Ehrenbuch mit Meisterstücken, bleibt über Partien (vom Studio vorgeschlagen, I-186); Warnmeldungen bleiben 7 s sichtbar; Ratsbeschlüsse in Chronik und Log; Ratskarte zeigt die Wirkung vorab.
+- **Bitte testen:** (1) Ehrenbuch öffnen, Marke erreichen, «Neue Insel»: Buch bleibt; (2) Krisenwarnung bei 4× lesbar; (3) Ratsbeschluss fassen, Chronik; (4) Wirkungsvorschau mit vorhandenem Gebäude =
+  tatsächlicher Effekt (im Browser nur «Wirkt noch nicht» geprüft); (5) alten Spielstand laden.
 
 **REL-31 „Pläne und Werkzeug“ (live, R877)** — kein Save-Wechsel (v18), kein Spieleinfluss. Inhalt: Specs Ehrenbuch, Inselproben, Stadtrecht; Plan Ehrenbuch; Recherchen TIEFE-1, WIRTSCHAFT-TIEFE;
 IDEEN-16; Retro REL-30 und Umsetzung (Handbuch 1.73); TOOL-MERGE-APPEND. Push `bc9664d0..ee51d4f1`, CI-Lauf 40184385005, Pages-Lauf 40184943166 (grün). Quelle: `.studio/handoffs/2026-10-25-lead-production-REL-31.md`.
@@ -193,9 +201,9 @@ Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine 
 **R826** (Deckel 10 bei grüner Limit-Ampel, ≤ 3 Test-Controller, ≤ 2 Browser); **R853/R856** (Arbeiter-Meldungen an den Lead; **L0 sendet jedem Lead direkt nach dem Start seine agentId**, R879);
 **R868 V2** (Starts asynchron, Lead wartet ruhig). **Push-Takt:** höchstens ein Push je Kalendertag (R816); voller Lauf nur `make push-check`.
 
-1. **Push REL-32** (ab 2026-10-26): main lokal enthält REL-32a/b (I-186 Ehrenbuch, UI-HAEPPCHEN-J, alle Pläne/Specs, TOOL-REST-3, DOKU-RUNDE, COACH-R872). Vorher Merge-Gate für
-   `feat/seerecht` @ `8473afb0` (Save **v19**, R883) (`feat/ort-a` erst nach T19–T26), dazu `docs/retro-47d29586` @ `b7e9fb6e`, zuletzt `docs/haushalt-03` @ `0b839c29` (Rulings-Archiv R700–R739;
-   Konflikt rulings.md: Branch-Kopf + alle neuen Rulings von main). Dann `lead-production` + Integrator, ein `make push-check`, Push bei Exit 0. Release-Notiz-Entwurf: `.studio/handoffs/2026-10-25-lead-production-REL-32b.md`.
+1. **SEERECHT neu ans Gate** (`feat/seerecht` @ `8473afb0`, Save v19): Fix `tests/sim/imports.test.ts` (PLAN-NAHT: `src/sim/council.ts` importiert `./islands`) im Strang, voller Lauf der Struktur-Tests
+   (`imports`, `leverReads`, `contrast`, R888 (4)), dann Gate Merge. Offen aus UI-HAEPPCHEN-J: Plural «1 Häuser» `src/ui/council.ts:50`. Aufräumbar (per Ruling): `.worktrees/integrate` auf `int/rel-32`,
+   `.worktrees/hotfix-rel32`, Branches `int/rel-32*`, `docs/haushalt-03`, `docs/retro-47d29586`, `fix/hotfix-rel32`.
 2. **INSELPROBEN Etappe 2** (`feat/inselproben` @ `d6f6834f`, R885): Mess-Strang T05–T07 (Messfenster Load ≤ 4) und UI-Strang T08–T11; 31 Starts Rest von 43, Par 2 nur bei freiem Test-Platz;
    T09 nach I-186 auf main (lokal erfüllt), T14 Save = main + 1 beim Merge (Seerecht belegt 19). Handoff `.studio/handoffs/2026-10-25-lead-tech-INSELPROBEN.md`.
 3. **Umsetzungen mit fertigem Plan:** I-201 Festanlass (`plan/i201-festanlass`, 15 Starts, ≤ 2 gleichzeitige Testläufe); Stadtrecht T01-Frühstart, Rest nach Seerecht auf main (25 Starts);
@@ -229,7 +237,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts aktiv. Alle Pakete der Session 47d29586 mit Handoff abgeschlossen oder pausiert.
+- Nichts aktiv. Session 84d62878: nur Zusatz-Release REL-32 (Nutzerauftrag, keine neue Entwicklung).
 - **ORT-A** (`feat/ort-a` @ `7e2e8d12`, Worktree `.worktrees/ort-a`): T18 abgenommen (R886, drittes opus-Delta-Review OK, Schranke r ≤ 10). **Offen: T19 (AK-43), T20 (main nachmergen), T20b mit `lead-art` (R793 (4)), T21 (AK-49), T22–T26**; Plan-Nachtrag `plan/ort-a` @ `9766cbc8` auf R884 (r ≤ 10) anpassen. Budget-Rest 1 von 6. Worktree `ort-a-vor-k2` erst nach Abnahme entfernen (ohne `--force`). Handoff `.studio/handoffs/2026-10-25-lead-tech-ORT-A.md`.
 
 ## Parallele Sessions

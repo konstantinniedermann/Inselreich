@@ -1956,3 +1956,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (`co
 Regelbezug: R810, R887, Verfassung §7.2 · Kosten bei Irrtum: ein kleiner Fix-Commit mehr; Push verschiebt sich auf morgen.
 
 Entscheider: L0 · Anlass: Bericht lead-qa Gate REL-32 · ADR: —
+
+## R889 · 2026-10-25 · REL-32 live
+
+Ruling: REL-32 abgenommen und live: Push `ee51d4f1..38b9f9a0` (main lokal REL-32a/b, `docs/haushalt-03`, `docs/retro-47d29586`, `fix/hotfix-rel32` @ `d66efb2b`; ohne Seerecht, R888). `make push-check`
+Exit 0 auf `38b9f9a0` (Startlast 8,8, Zeitreserve «nicht belastbar», Zeit-Pins nicht belastbar gemessen), CI-Lauf 40192693804 und Pages-Lauf 40193070787 grün; Ladeprobe `qa-playtester` OK (`.studio/qa/REL-32/`,
+Kontrast Vorschau und offene Ehrenbuch-Zeile 6,70:1). HOTFIX-REL32 hat im selben Kontrast-Test zusätzlich `.honor-row--open` behoben (gleicher Test, im Umfang). Auf Nutzerauftrag keine weitere Arbeit in dieser
+Session; nächster Push nach R816 frühestens 2026-10-26.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (neues Gate)
+Regelbezug: R816, R887, R888 · Kosten bei Irrtum: Hotfix-Release.
+
+Entscheider: L0 · Anlass: Bericht lead-production REL-32 · ADR: —
