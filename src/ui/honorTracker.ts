@@ -28,3 +28,14 @@ export function createHonorTracker(world: World): HonorTracker {
     },
   };
 }
+
+/** Welcher Partie-Merker gilt beim Start einer Partie (P-2); rein, schreibt nichts. */
+export function launchRun(
+  o: { loaded: boolean; intro: boolean },
+  stored: HonorRun | null,
+  seed: number,
+  unlockMode: 'stepwise' | 'all',
+): { run: HonorRun | null; write: boolean } {
+  if (!o.loaded && !o.intro) return { run: { seed, unlockMode }, write: true };
+  return { run: stored, write: false };
+}

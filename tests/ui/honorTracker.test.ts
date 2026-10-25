@@ -6,7 +6,7 @@ import { serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
-import { createHonorTracker } from '../../src/ui/honorTracker';
+import { createHonorTracker, launchRun } from '../../src/ui/honorTracker';
 import { SCENARIOS } from '../sim/scenarios';
 
 const S = 3;
@@ -147,5 +147,33 @@ describe('AK-EB-06 Beobachten ändert die Welt nicht', () => {
     }
     expect(got).toContain('citizenTown');
     expect(serialize(a)).toBe(serialize(b));
+  });
+});
+
+describe('AK-EB-04 launchRun', () => {
+  const stored: HonorRun = { seed: 5, unlockMode: 'all' };
+  it('Menü «Neue Insel» schreibt einen neuen Merker', () => {
+    expect(launchRun({ loaded: false, intro: false }, stored, 9, 'stepwise')).toEqual({
+      run: { seed: 9, unlockMode: 'stepwise' },
+      write: true,
+    });
+  });
+  it('Laden behält den gespeicherten Merker, ohne Schreiben', () => {
+    expect(launchRun({ loaded: true, intro: false }, stored, 9, 'stepwise')).toEqual({
+      run: stored,
+      write: false,
+    });
+  });
+  it('Seitenstart nimmt den gespeicherten Merker, ohne Schreiben', () => {
+    expect(launchRun({ loaded: false, intro: true }, stored, 9, 'stepwise')).toEqual({
+      run: stored,
+      write: false,
+    });
+  });
+  it('Seitenstart ohne gespeicherten Merker liefert null', () => {
+    expect(launchRun({ loaded: false, intro: true }, null, 9, 'stepwise')).toEqual({
+      run: null,
+      write: false,
+    });
   });
 });

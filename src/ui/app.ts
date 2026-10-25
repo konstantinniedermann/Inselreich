@@ -189,7 +189,9 @@ import { loadSettings, resolveReduceMotion, saveSettings } from './settings';
 import { openSettings } from './settingsPanel';
 import { openHonorBook } from './honorBook';
 import { openHonorCard } from './honorCard';
-import { honorCount, honorHints, honorRows, menuLine } from './honorView';
+import { honorCount, honorHints, honorMessage, honorRows, menuLine } from './honorView';
+import { createHonorTracker, launchRun } from './honorTracker';
+import type { HonorHit } from './honorBook';
 import { openMenu, type MenuActions } from './menu';
 import { closeAllModals, isModalOpen } from './modal';
 import {
@@ -342,6 +344,16 @@ function launch(
       crisisLevel: settings.crisisLevel,
       unlockAll: settings.unlockMode === 'all',
     });
+  // Ehrenbuch (I-186): ein Tracker je Spiel (P-1); der Partie-Merker wird nur bei «Neue Insel» geschrieben (P-2)
+  const tracker = createHonorTracker(world);
+  const launched = launchRun(
+    { loaded: loaded !== undefined, intro: opts?.intro === true },
+    honorBook.data().run,
+    world.seed,
+    settings.unlockMode,
+  );
+  let run = launched.run;
+  if (launched.write && run !== null) honorBook.setRun(run);
   const state: GameState = {
     world,
     cam: opts?.camera ? { ...opts.camera } : createCamera(),
@@ -541,13 +553,13 @@ function launch(
       note:
         honorBook.status() === 'ok'
           ? null
-          : (honorHints(honorBook.status(), honorBook.data().run, world.seed)[0] ?? null),
+          : (honorHints(honorBook.status(), run, world.seed)[0] ?? null),
     }),
     openHonors: (opener) =>
       openHonorCard(gameEl, {
         rows: honorRows(honorBook.data(), honorBook.session()),
         count: honorCount(honorBook.data(), honorBook.session()),
-        hints: honorHints(honorBook.status(), honorBook.data().run, world.seed),
+        hints: honorHints(honorBook.status(), run, world.seed),
         opener,
       }),
   };
@@ -1560,6 +1572,9 @@ function launch(
       onChoice: (c) => {
         if (c.kind === 'load') loadSlotPaused(c.slot);
         else {
+          run = { seed: world.seed, unlockMode: settings.unlockMode };
+          honorBook.setRun(run);
+          tracker.reset(world);
           closeStart?.();
           setSpeed(1);
           refresh();
@@ -1682,13 +1697,23 @@ function launch(
       const dt = Math.min(now - last, 1000);
       last = now;
       const reports: StepReport[] = [];
+      const honorHits: HonorHit[] = [];
       if (state.speed > 0) {
         acc += dt * state.speed;
         let ticks = 0;
         while (acc >= TICK_MS && ticks < MAX_TICKS_PER_FRAME) {
           reports.push(step(world));
+          for (const id of tracker.observe(world, run))
+            honorHits.push({ id, seed: world.seed, tick: world.tick, crisis: world.crisisLevel });
           acc -= TICK_MS;
           ticks += 1;
+        }
+        if (honorHits.length > 0) {
+          const added = honorBook.record(honorHits, new Date().toISOString());
+          if (added.length > 0) {
+            const saved = honorBook.status() === 'ok' || honorBook.status() === 'damaged';
+            showMessage(honorMessage(added, saved), 'info');
+          }
         }
         for (const text of lossMessages(reports)) showMessage(text, 'warn');
         announceContract(
