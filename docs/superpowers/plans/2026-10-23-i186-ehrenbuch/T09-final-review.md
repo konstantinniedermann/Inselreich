@@ -9,7 +9,7 @@
 ## Prüffragen
 
 1. Jede AK-EB belegt (Test grün oder Browser-Screenshot), Rot-Belege vorhanden.
-2. Determinismus und Trennung: `src/sim/honors.ts` rein; Sim ruft keinen UI-Code; `git diff main -- src/sim/types.ts src/sim/save.ts src/sim/tick.ts src/sim/world.ts` leer; `serialize`-Test (AK-EB-06) grün; Balancing-Tests grün.
+2. Determinismus und Trennung: `src/sim/honors.ts` rein; Sim ruft keinen UI-Code; `git diff main...feat/i186-ehrenbuch -- src/sim/types.ts src/sim/save.ts src/sim/tick.ts src/sim/world.ts` leer; `serialize`-Test (AK-EB-06) grün; Balancing-Tests grün.
 3. `observe` je `step` in der `while`-Schleife (AK-EB-10), Tracker einmal je `launch` (P-1), Merker-Wege (P-2).
 4. Ablage: kein Wurf bei kaputtem, neuerem oder gesperrtem Speicher; `Map` statt Objektzuweisung; Schreibschutz bei `v > 1`; Zusammenführen.
 5. Ausgabe nur per `textContent`; keine Schwellen-Literale ausserhalb `defs/honors.ts`.

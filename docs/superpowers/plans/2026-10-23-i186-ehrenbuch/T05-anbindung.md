@@ -21,7 +21,7 @@ Umsetzer `tech-ui-engineer` · ≈ 45 Tools · AK-EB-10 (Review-Kriterium), AK-E
 ## Testfälle (rot zuerst), `tests/ui/honorTracker.test.ts` (Ende)
 
 - `launchRun`: Menü-«Neue Insel» → neuer Merker mit `write: true`; Laden mit gespeichertem Merker → derselbe, `write: false`; Seitenstart (`intro`) → gespeicherter, `write: false`; Seitenstart ohne gespeicherten → `null`.
-- Kein eigener Test für die Verdrahtung in `app.ts`; Beleg sind Review (unten) und T07.
+- Kein eigener Test für die Verdrahtung in `app.ts`; Beleg sind Review (unten) und T07 Schritt 9a–9d (Browser-Auslesen von `localStorage['inselreich.ehrenbuch']`, R874 A1).
 
 ## Review-Kriterien für `qa-code-reviewer` (wörtlich ins Review-Briefing)
 
