@@ -2786,3 +2786,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, I-210
 Regelbezug: R392, R920 V1, R946, R951 · Kosten bei Irrtum: —
 
 Entscheider: L0 · Anlass: Bericht lead-tech AUSBAU-LOGIK · ADR: —
+
+## R957 · 2026-10-25 · Kurz-Retro 48c8580f abgenommen; Session-Ende
+
+Ruling: Retro `docs/retro-48c8580f` @ `4110463d` (`docs/studio/retros/2026-10-25-session-48c8580f-ende.md`) **abgenommen**. **V1** R553-Wortlaut in `.claude/agents/lead-tech.md` (Z. 113) und STUDIO.md (Z. 404) auf
+«Delta-Review = frischer opus-Start (R673/R774)» **angenommen** (Messgrösse 0 solche Befunde in den nächsten 4 Gate-Plan-Berichten); **V2** Gate-Vorprüfliste (fünf Klassen) im Plan-Auftrag **angenommen** (Messgrösse
+≤ 2 hoch/mittel-Befunde je Gate Plan über 4 Pläne); **V3** Plan-Nachträge auf sonnet **angenommen zusammen mit V2** (opus-Anteil, E-075 widerlegt 78,1 %). Umsetzung durch `studio-coach` in der Folgesession
+(Handbuch-Minor auf Basis `docs/coach-r920`). Session-Ende bei gelber Ampel (5 h ≈ 65 %): Metriken `docs/studio/metriken/S-2026-10-25-48c8580f.md`; kein Push (REL-33 push-check Exit 1 am Zeit-Pin, R954); state.md nachgeführt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle Plan-Pakete
+Regelbezug: R553, R673, R774, R826, R954 · Kosten bei Irrtum: drei passive Messgrössen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —
