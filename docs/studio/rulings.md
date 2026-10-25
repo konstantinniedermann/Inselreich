@@ -2180,3 +2180,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-197/I-197b
 Regelbezug: R392, R395, R897, R900 · Kosten bei Irrtum: zwei langsamere Tests.
 
 Entscheider: L0 · Anlass: Zwischenbericht lead-tech INSELPROBEN · ADR: —
+
+## R906 · 2026-10-25 · FIX-SCHIFF-A1 abgenommen unter Browser-Vorbehalt; Messfenster schaffen
+
+Ruling: (1) `fix/schiff-a1` @ `6290d513` (Sub-Tick-Interpolation `shipPose(frac)`, `tickFrac` aus `app.ts`, 5 Tests mit Rot-Beleg, Sim-Diff leer, Review OK) **abgenommen unter Vorbehalt**: der Browser-Beleg
+(Frame-Zeiten/Schiffsposition 30 s, x1 und x4) ist **Pflicht vor dem Release-Bündel**; ohne ihn bleibt der Branch draussen. Picking/`seaMap` mit `frac` 0 (≤ 1 Tick daneben) als Beobachtung hingenommen.
+`.worktrees/bug-schiff` bleibt (untracked Proben, kein `--force`). (2) **Messfenster (R803):** Die Last liegt dauerhaft > 4, weil drei Test-Controller laufen; ORT-A (T19, T23), INSELPROBEN T07, T20b und der
+A1-Browser-Beleg warten darauf. Der frei gewordene Test-Controller-Platz bleibt deshalb **bis auf Weiteres leer**; freie Plätze gehen an testfreie Arbeit. Sobald Load ≤ 4: ORT-A wecken, A1-Browser-Beleg
+und T20b-Playtest (≤ 2 Browser). (3) Testfreier Platz: **Spec I-214 Gründungsbrief** (`lead-design`, R901, Budget 2).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN (Schiffe), SEERECHT
+Regelbezug: R329, R803, R826, R898, R901 · Kosten bei Irrtum: Stadtrecht/I-197 starten eine Welle später.
+
+Entscheider: L0 · Anlass: Bericht lead-tech FIX-SCHIFF-A1 · ADR: —
