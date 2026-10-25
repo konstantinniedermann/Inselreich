@@ -13,7 +13,12 @@ import { forceRect, putBuilding, setHouse } from './helpers';
 
 export type FeastLage = 'A' | 'B' | 'C' | 'C2';
 export type FeastRun = 'none' | FeastKind;
-/** Feste Seeds (R553); ein Ersatz wäre eine feste Konstante, nie eine Suche zur Laufzeit. */
+/**
+ * Feste Seeds (R553); ein Ersatz wäre eine feste Konstante, nie eine Suche zur Laufzeit.
+ * Hinweis: Die Seeds variieren nur die Kontorlage; das Gelände wird per `forceRect` überschrieben und alle
+ * Gebäude stehen relativ zum Kontor. Sie sind kein statistisch unabhängiger Lauf (P-6). Der C2-Abstand
+ * zu 0 ist knapp (40) und fängt damit Drift der Festwerte in den Defs.
+ */
 export const FEAST_SEEDS = [3, 7] as const;
 export const FEAST_RUNS: readonly FeastRun[] = ['none', ...FEAST_KIND_IDS];
 
@@ -221,7 +226,7 @@ export function runFeast(lage: FeastLage, seed: number, run: FeastRun): RunLog {
     for (const g of made) if (s[g] >= STORAGE_CAP) cap.add(g);
     for (const g of used) if (s[g] < 1) zero.add(g);
     producers.forEach((p, i) => {
-      if (progress[i]! > 0 && p.progress === 0) log.workshopUnits += 1;
+      if (p.progress < progress[i]!) log.workshopUnits += 1; // Zyklusende: Fortschritt fällt auf 0
       progress[i] = p.progress;
     });
     if (hasIncident(w)) log.incident = true;
