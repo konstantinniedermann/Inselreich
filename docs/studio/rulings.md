@@ -2446,3 +2446,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-197b (AK-PB
 Regelbezug: R722, R862, R915, R924 · Kosten bei Irrtum: eine Rechnung ohne Verwendung.
 
 Entscheider: L0 · Anlass: Berichte lead-design TIEFE-4, lead-qa Gegenlesen I-214 · ADR: —
+
+## R928 · 2026-10-25 · Runden-Ruling IDEEN-19
+
+Ruling: `design/ideen-19` @ `2f5a1858` abgenommen (I-215–I-219, Pool-Pflege im Archiv nach R599 bestätigt). **I-215 «Volllast»** Pitch **ja**: zuerst Rechnung «Volllast gegen Zukauf und gegen Normalbetrieb»
+(`lead-design`, Budget 2, testfrei), danach Spec Stufe voll als Häppchen. **I-219 «Stetigkeit»** als vierte Achse der Proben-Wertung (R894 E3), Kurzdesign mit T3-3/T3-5, sobald INSELPROBEN live ist. **I-216 «Brache»**
+geparkt als Baustein für I-195; **I-218 «Landgewinnung»** geparkt bis Platzmangel belegt; **I-217 «Baugrund»** verworfen (Sperre ohne echte Wahl). Merge-Konflikte in `docs/ideen.md` mit `design/i210-bittschrift` und
+`design/gruendungsbrief` löst der Merge-Treiber bzw. das Gate Merge (R868 V1).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: INSELPROBEN (I-219), I-195, Release-Bündel (ideen.md)
+Regelbezug: R599, R862, R894 · Kosten bei Irrtum: eine Rechnung ohne Verwendung.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-19 · ADR: —
