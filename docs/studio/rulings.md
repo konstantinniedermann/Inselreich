@@ -2843,3 +2843,17 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: FLAECHE (Seed
 Regelbezug: R826, R945, R953 · Kosten bei Irrtum: Timeout-Fehler in T05/T06.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-HAFEN-nachtrag · ADR: —
+
+## R962 · 2026-10-25 · «Neue Ufer» Brainstorming F1–F6
+
+Ruling: Empfehlungen von `lead-design` zu I-194 «Neue Ufer» **alle angenommen**: **F1** Freischaltung mit Ziel 3, rechnet mit Flotte 4, unabhängig von Werft/Ziel 4; kommt Erweiterung 1 zuerst, regelt die
+spätere Spec nur die Koexistenz. **F2** vier Etappen, jede allein releasebar: NU-1 Kartenrand, NU-2 Nordinsel, NU-3 Lebensader, NU-4 Zwei Reiche. **F3** drei Seegebiete mit zwei besiedelbaren Küsten (Nordinsel,
+Holzschären) und einem Fundort ohne Land (Wrackfeld); Landnahme-Leiter zweistufig (R927 E1 inhaltlich erfüllt). **F4** Expedition ohne Schiffs- oder Ladungsverlust, eigener seeded Zufallsstrom nur für die
+Wahl-Karten, Proviant aus = Umkehr ohne Lohn, höchstens eine Expedition zugleich, Ende nach dem dritten Gebiet. **F5** acht Fundstücke als kleine Def-Modifikatoren, nie auf Steuer, Zielschwellen oder Heimat-Bilanz
+vor Ziel 3; ohne Expedition bleiben Baseline und `balance.test.ts` bitgleich. **F6** NU-1 rechnet Expeditionsdauer in festen Ticks je Gebiet; Seeweg und Parzellen der Nordinsel erst in der NU-2-Spec nach
+HAFEN-/FLAECHE-Merge. Spec jetzt nur für NU-1.
+
+Verfassung berührt?: nein (Nutzer-Vorbehalt N-104 erledigt) · Überschneidung mit offenen Paketen: HAFEN (Fahrzeit), FLAECHE (Parzellen), Erweiterung 1 (Nutzer-Session R519)
+Regelbezug: R862, R896, R927, R933, R958 · Kosten bei Irrtum: Spec-Nachtrag NU-1.
+
+Entscheider: L0 · Anlass: Brainstorming lead-design design-NEUE-UFER · ADR: —
