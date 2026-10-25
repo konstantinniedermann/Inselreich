@@ -339,9 +339,9 @@ gibt keine sachfremde Kopplung (R896 (3)).
   nachzuziehen (nur in den Defs) und der Dominanztest erneut zu prüfen.
 - **R-BS-1 «stabile Stadt hergeleitet, nicht gemessen»** (Rechnung §2 P3b): abgesichert durch AK-BS-05 (Messlauf) mit
   Toleranz, Fehlerrichtung und Rückfall.
-- **R-BS-2 Widerspruch in der Rechnung:** §3 (Z-über, P3b) nennt eine Lücke von 0,6 Stoff und 1,5 Nahrung je 100 T, §4 (H3)
-  1,2 und 3,0. Nachgerechnet: +18 Kaufleute × 0,2 = 3,6 Stoff Mehrbedarf gegen 2,4 Überkapazität → 1,2; Nahrung
-  18 × 0,5 = 9 gegen 6 → 3,0. Diese Spec übernimmt §4. AK-BS-05 misst es.
+- **R-BS-2 Zwei Lückenwerte in der Rechnung (kein Widerspruch):** §3 rechnet die Ideenform mit festen 15 Einwohnern
+  (15 × 0,2 − 2,4 = 0,6 Stoff; 15 × 0,5 − 6 = 1,5 Nahrung je 100 T), §4 H3 mit +15 % = 18 Kaufleuten (1,2 und 3,0).
+  Massgeblich ist §4 (R899). AK-BS-05 misst es.
 - **R-BS-3 Testlaufzeit:** AK-BS-04 rechnet 18 Lagen × 2 Antworten über bis zu ≈ 12 000 T. Der Plan prüft das gegen das
   Zeitbudget (`make zeittests`) und teilt die Lagen bei Bedarf auf mehrere Dateien.
 
