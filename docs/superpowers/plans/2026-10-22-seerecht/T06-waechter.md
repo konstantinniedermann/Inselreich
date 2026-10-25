@@ -31,8 +31,8 @@ Fehlermeldung nennt Datei, Zeilennummer und Zeile.
 - [ ] **Rot-Beleg getrennt nach Muster (R828 B2):** (a) **Faktor-Muster:** Selbsttest `factorHit` zuerst gegen eine Funktion `() => false` laufen lassen → rot, dann Muster einsetzen → grün; der Datei-Scan mit Faktor-Muster ist auf dem Stand nach T02/T05 schon grün (sonst Befund). (b) **Leser-Muster:** Der Controller merged `feat/seerecht-ui` als **letzten** Zweig; den Test vorher laufen lassen: `npx vitest run tests/sim/seerecht.test.ts; echo EXIT=$?` → ≠ 0 nur wegen `travelTicks(` in `src/ui/islandCard.ts`/`homeTravel.ts` (Ausgabe in den Bericht). Dann Merge `feat/seerecht-ui`.
 - [ ] **Lauf grün** nach allen drei Merges: `npx vitest run tests/sim/seerecht.test.ts; echo EXIT=$?` → 0.
 - [ ] **Abgleich `rg`:** `rg -n "travelTicks|laneTicks|SHIP_TICKS_PER_SEA_TILE|homeTravelTicks|ticksCache" src tools` — Liste mit der Tabelle «Fahrzeit-Lesestellen» im Plan-Index vergleichen, Abweichung im Bericht.
-- [ ] **Balancing (AK-SR-20):** `npx vitest run tests/sim/balance.test.ts; echo EXIT=$?` und übrige `tests/sim/balance-*.test.ts` → 0; `git diff main -- tests/sim/balance*.test.ts` leer.
-- [ ] **`tsc`, eslint/prettier** → 0.
+- [ ] **Balancing (AK-SR-20), Teilbeleg:** `git diff main -- tests/sim/balance*.test.ts src/sim/defs/sea.ts` leer; der gezielte Balancing-Lauf folgt in T09, der volle Lauf (`make push-check`) beim Integrator (R858, R860).
+- [ ] **Teilbeleg:** `npx tsc --noEmit; echo EXIT=$?` → 0 und `make lint; echo EXIT=$?` → 0 (statt `make check`).
 - [ ] **Commit:** `test: Wächter für die Fahrzeit-Lesestellen (I-153 T06)`.
 
 ## Task-Review (per `SendMessage` an den T02-Reviewer)
