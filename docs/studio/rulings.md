@@ -2395,3 +2395,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Stadtplanung 
 Regelbezug: R673, R708, R826, R882 · Kosten bei Irrtum: sichtbares Umspringen; Umbau der Ortsnähe-Prüfung als eigenes Paket.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ORT-A · ADR: —
+
+## R885 · 2026-10-25 · INSELPROBEN Etappe 1 abgenommen
+
+Ruling: `feat/inselproben` @ `d6f6834f` (T00–T04, Task-Reviews nach Delta OK, Grundspiel bitgleich per Hash-Pins und Spiegel-Test) abgenommen. Entwürfe: (a) Reihenfolge-Pins in
+`tests/sim/unlocks.test.ts`/`monument.test.ts` auf `slice(-3)` mit `tickChallenge` (Commit `6ae7c66f`) **bestätigt**; (b) Bestandstest AK-IP-02 mit ungültigem Datum 20260231 **bestätigt**; (c)
+Tagesinsel-Karten: 62/730 Tage nutzen `seed + i`, Tage können dieselbe Karte teilen (Ziel und Krise unterscheiden sich) — **gewollt** (deterministisch, für alle gleich), Spec §5.3 beim nächsten Eingriff
+vermerken. `SAVE_V_CHALLENGE` ist Platzhalter: Seerecht belegt 19 (R883), Inselproben nimmt beim Merge main + 1 (T14). Schwache Rot-Belege (Ladefehler) hingenommen, Mutationen belegen die Fixes.
+Nächste Etappe (Mess-Strang T05–T07, UI-Strang T08–T11; 31 Starts Rest) in der Folgesession.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (Save 19), I-197/I-197b (`menu.ts`/`app.ts`)
+Regelbezug: R395, R878, R880, R883 · Kosten bei Irrtum: Revert `6ae7c66f`; Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech INSELPROBEN · ADR: —
