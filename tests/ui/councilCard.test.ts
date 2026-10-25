@@ -43,3 +43,28 @@ describe('I-112 Rats-Karte: dispose', () => {
     expect(host.children).toHaveLength(0);
   });
 });
+
+describe('I-138 Rats-Karte: Vorschau', () => {
+  beforeEach(() => {
+    vi.stubGlobal('document', { createElement: (t: string) => new Node(t) });
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('AK-J13: Vorschau steht als eigenes Element direkt nach dem Kartentext', () => {
+    const host = new Node('div');
+    const card = createCouncilCard(
+      host as unknown as HTMLElement,
+      () => {},
+      () => {},
+    );
+    const w = createWorld(1);
+    w.council[2] = 'open';
+    card.update(w);
+    card.setOpen(true);
+    const root = host.children[0] as Node;
+    const option = root.descendants().find((n) => n.className === 'council-option')!;
+    const classes = option.children.map((c) => c.className);
+    expect(classes).toEqual(['council-name', 'council-text', 'council-preview']);
+    expect(option.children[2]!.textContent).toContain('Wirkt noch nicht');
+  });
+});

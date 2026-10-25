@@ -1,4 +1,6 @@
 import { openCouncilTiers } from '../sim/council';
+import { BUILDING_DEFS } from '../sim/defs/buildings';
+import { TIERS } from '../sim/defs/tiers';
 import { COUNCIL, COUNCIL_NOTE, COUNCIL_TIERS } from '../sim/defs/council';
 import type { LogEntry } from './crisisLog';
 import type { CouncilSide, CouncilTier, World } from '../sim/types';
@@ -12,6 +14,8 @@ export interface CouncilCard {
   side: CouncilSide;
   name: string;
   text: string;
+  /** Wirkung auf den aktuellen Bestand (I-138). */
+  preview: string;
 }
 
 export interface CouncilView {
@@ -33,6 +37,24 @@ export const councilToggleAllowed = (world: World): boolean => councilBadge(worl
 /** Marke hervorheben, solange ein Beschluss ansteht. */
 export const councilBadgeActive = (world: World): boolean => openCouncilTiers(world).length > 0;
 
+/**
+ * Wirkung eines Beschlusses auf den heutigen Bestand (I-138): zählt alle Gebäude der Art auf allen
+ * Inseln (die Sim kennt keine Baustellen; ein Gebäude in `world.buildings` steht).
+ */
+export function councilPreview(world: World, tier: CouncilTier, side: CouncilSide): string {
+  const lever = COUNCIL[tier][side].lever;
+  const all = Object.values(world.buildings);
+  if (lever.kind === 'maxInhabitants') {
+    const n = all.filter((b) => b.house?.tier === lever.tier).length;
+    if (n === 0) return `Wirkt noch nicht: Haus (${TIERS[lever.tier].name}) fehlt`;
+    const plus = n * (lever.value - TIERS[lever.tier].maxInhabitants);
+    return `Betrifft jetzt: ${n} Häuser (+${plus} Plätze)`;
+  }
+  const name = BUILDING_DEFS[lever.defId].name;
+  const n = all.filter((b) => b.defId === lever.defId).length;
+  return n === 0 ? `Wirkt noch nicht: ${name} fehlt` : `Betrifft jetzt: ${n} × ${name}`;
+}
+
 /** Inhalt des Rats-Fensters: offene Stufen mit zwei Karten, gefasste Beschlüsse als Zeilen. */
 export function councilCards(world: World): CouncilView {
   const sides: CouncilSide[] = ['A', 'B'];
@@ -42,6 +64,7 @@ export function councilCards(world: World): CouncilView {
       side,
       name: COUNCIL[tier][side].name,
       text: COUNCIL[tier][side].text,
+      preview: councilPreview(world, tier, side),
     })),
   }));
   const decided: string[] = [];
