@@ -272,3 +272,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 - Fundort: Dialog «Wo war ich?» beim Fortsetzen. Beobachtung: verdeckt die Szene. Ursprung: `lead-art` T20b-Playtest (R917). Einschätzung: UI-Häppchen-Kandidat.
 - Fundort: Rechnerlast. Beobachtung: Headless-Chrome-Läufe des Projekts Munica drücken die 1-min-Last wiederholt über 4; Messfenster für ORT-A, INSELPROBEN und Browser-Belege fehlen. Ursprung: T20b, R906. Einschätzung: hängt an N-102 (Nutzerentscheid).
+
+## 2026-10-25 · Anlass für I-183 (niedrig)
+
+- Fundort: INSELPROBEN Schuldbrief-Probe. Beobachtung: erzeugt planmässig «Kasse leer, Nahrung leer» und wäre der natürliche Anlass für I-183. Ursprung: Rechnung Zukaufpreis (R918). Einschätzung: bei der nächsten Ideen-Runde prüfen.

@@ -2325,3 +2325,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A, Save-K
 Regelbezug: R793, R826, R905, R910, R912 · Kosten bei Irrtum: ein Task mehr in ORT-A.
 
 Entscheider: L0 · Anlass: Berichte lead-art T20b, lead-tech INSELPROBEN · ADR: —
+
+## R918 · 2026-10-25 · Rechnung Zukaufpreis: kein Modell; AUSBAU-LOGIK-Nachtrag abgenommen
+
+Ruling: (1) Rechnung `design/zukauf` @ `528ac9f5` **abgenommen** (gerechnet, nicht gemessen; Urteil hängt nicht an Messungen): Warenforderungen laufen über Lager und Betriebe, nicht über den Händler; kein
+steigendes Zukaufmodell löst I-210 B-4, I-110 oder I-183. Entwürfe: **1** kein Modell umsetzen **ja**; **2** I-110 verwerfen **ja**; **3** I-183 neu parken (Anlass Schuldbrief-Probe, Beobachtung) **ja**; **4** B-4 bleibt
+Restrisiko von I-210, Hebel auf der Lohnseite **ja**; **5** M2w (sichtbarer Händlervorrat) **nein**. (2) **AUSBAU-LOGIK-Nachtrag** `design/ausbau-logik` @ `3856e396` (B1–B12, AK-AL-35–49, Schnitte 2a/2b/6a/6b, Anhang 02
+geht der Spec vor) **abgenommen**; Annahme «Fachkräfte nur auf derselben Insel» **bestätigt** (erklärbar). Gegenlesen `lead-qa` in der Folgesession, dann Plan.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, AUSBAU-LOGIK (AK-49 hing am Zukaufpreis → entfällt bzw. ohne Zukaufmodell neu fassen)
+Regelbezug: R896, R904, R914 · Kosten bei Irrtum: Idee I-110 später neu aufnehmen.
+
+Entscheider: L0 · Anlass: Berichte lead-design Zukauf und AUSBAU-LOGIK · ADR: —
