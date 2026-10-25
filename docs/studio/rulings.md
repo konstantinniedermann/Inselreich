@@ -2423,3 +2423,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette, I
 Regelbezug: R909, R913, R924 · Kosten bei Irrtum: eine Save-Migration mehr.
 
 Entscheider: L0 · Anlass: Gegenlese-Bericht lead-qa HAFEN · ADR: —
+
+## R926 · 2026-10-25 · FLAECHE-Nachtrag «Plan frei»; Plan FLAECHE startet
+
+Ruling: `design/flaeche` @ `ac32cf88` nach Gegenlesen (`.studio/handoffs/2026-10-25-lead-qa-gegenlesen-flaeche.md`) **Plan frei**. **Plan FLAECHE** an `lead-tech` (opus, Budget 3) mit Gate-Auflagen 4–7 und den
+Hinweisen aus dem Gegenlesen (AK-FL-33 Testweg über Fixture-Abweisung, AK-FL-44 Farbwerte benennen); Umsetzung FL-1 erst nach ORT-A T26 (R919).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A, AUSBAU-LOGIK, GEBAEUDE-VARIANZ, HAFEN (Seed-Pins), Save-Kette
+Regelbezug: R919, R924 · Kosten bei Irrtum: Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Gegenlese-Bericht lead-qa FLAECHE · ADR: —
