@@ -248,3 +248,8 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 - Fundort: `tools/render-qa/lib.mjs`. Beobachtung: Kein `close`-Handler am WebSocket; stirbt Chrome mitten im Lauf, endet `perf.mjs` mit «unsettled top-level await» statt klarer Meldung (nachgestellt; Ursprung des Abbruchs vom 2026-10-22 nicht belegt). Ursprung: ORT-A (R871). Einschätzung: Handler mit Reject, Trivial-Fix beim nächsten render-qa-Paket.
 - Fundort: `docs/adr/` ADR-007 und Studio-Specs 2026-09-30. Beobachtung: beschreiben noch die Vordergrund-Regel, die R868 (V2) ersetzt. Ursprung: RETRO-REL-30-UMSETZUNG. Einschätzung: ADR-Nachtrag mit Verweis auf R868.
 - Verifiziert: 25.10.2026 gegen `e9e00701` — Fehlertext `kein freier Erweiterungsplatz` in `tests/sim/merchantsController.ts:123` belegt (`git log --since=2026-10-22 main -- tests/sim/controller.ts tests/sim/merchantsController.ts` leer); `feat/stadtplanung` nicht gemergt. Offen bis dessen Merge.
+
+## 2026-10-25 · UI-HAEPPCHEN-J: Textreste (niedrig)
+
+- Fundort: `src/ui/council.ts:50`. Beobachtung: bei n = 1 «1 Häuser (+1 Plätze)» statt Singular. Ursprung: UI-HAEPPCHEN-J Final-Review. Einschätzung: Trivial-Fix im nächsten UI-Paket an der Datei.
+- Fundort: Karte «Wo war ich?». Beobachtung: Text «N Probleme offen — . springt hin», vermutlich fehlt die Tastenbezeichnung. Ursprung: Playtest UI-HAEPPCHEN-J. Einschätzung: niedrig, Beipack.
