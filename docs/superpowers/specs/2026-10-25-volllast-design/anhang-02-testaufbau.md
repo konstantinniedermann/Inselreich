@@ -35,15 +35,16 @@ Rechnung [Anhang 01](../2026-10-25-volllast-rechnung/anhang-01-rechenweg.md) (A.
   1786 (= 47 × 38) → 47; `progress` nach `j` = 1799: 13; Ruhe friert ein; `j` = 3000: `progress` 14 → keine weitere
   Einheit. Summe **47** (78 % von 60; Rechnung A.1 `a` = 0,79).
 - **AK-VL-19 (Unterhalt):** Normal 3000 × 15 / 100 = 450. Volllast (1799 × 23 + 1200 × 8 + 1 × 15) / 100 = 509,92.
-  Wegen des ganzzahligen Übertrags (`tickEconomy`) ist die Differenz der Kassen 59 oder 60 (Rechnung A.2 `ΔU` 60).
+  Der ganzzahlige Übertrag (`tickEconomy`, `upkeepCarry` 0 zu Beginn, Weberei einziger Posten) zahlt ⌊509,92⌋ = 509 gegen
+  450: Differenz der Kassen exakt **59** (Rechnung A.2 `ΔU` 60 ist die ungerundete Näherung).
 - **AK-VL-08:** Folgt aus derselben Zählung: `progress` 13 bei Ruhebeginn, 14 nach dem ersten normalen Schritt.
 - **AK-VL-09:** `progress` 40 mit `c` 50 (normal, ohne Einheit). Start der Volllast, nächster Schritt: `progress` 41
   ≥ 38 → Einheit, `progress` 0. Entnahme nur bei `progress` 0 zu Schrittbeginn, also keine.
 - **AK-VL-12:** Weberei St. 2: `c` 30 → `ceil(22,5)` = 23; `u` 20 → `ceil(30)` = 30; Ruhe `ceil(10)` = 10
   (`src/sim/defs/levels.ts:32`).
 - **AK-VL-14:** Fischer St. 1 `c` 40 → `c'` 30. Im Sturm wächst `progress` nur bei geradem Tick
-  (`STORM_TICK_DIVISOR` 2): 30 Fortschritt in 60 Schritten, normal 40 in 80. Je nach Parität des Starts ± 1 Schritt;
-  der Test startet bei geradem Tick und prüft exakt 60 bzw. 80.
+  (`STORM_TICK_DIVISOR` 2): 30 Fortschritt in 60 Schritten, normal 40 in 80. Schritt `j` läuft mit `world.tick` = T + j (Inkrement vor der Produktion); bei geradem T wächst `progress` nach `j`
+  Schritten um `⌊j / 2⌋`. Der Test startet bei geradem T und prüft exakt `j` = 60 bzw. 80.
 - **Upkeep in der Anzeige:** `perMinute(u, 100)` = `u × 6`: 15 → 90, 23 → 138, 8 → 48; Zusatz +48 bzw. −42.
 
 ## C Browser-Check (AK-VL-22, -23)
@@ -60,5 +61,6 @@ Rechnung [Anhang 01](../2026-10-25-volllast-rechnung/anhang-01-rechenweg.md) (A.
    Brand per Testkarte oder abwarten (falls im Lauf nicht auslösbar: Vitest AK-VL-10 genügt, im Bericht vermerken).
 6. Wolle auf 0: Tooltip mit «Eingang fehlt: Volllast verpufft».
 7. AK-VL-23: Volllast starten, speichern, Seite neu laden, laden → Restzeit ± 1 s gleich, Uhr läuft. Danach einen
-   Spielstand der Vorgängerversion laden (aus dem Speicher eines main-Builds vor dem Merge): Hinweis erscheint, kein
-   Absturz, Konsole ohne Fehler.
+   Spielstand der Vorgängerversion laden (aus dem Speicher eines main-Builds vor dem Merge): lädt, Volllast steht auf
+   Normal. Dann einen Stand mit `SAVE_VERSION + 1` laden (Version im Speicher von Hand anheben): Hinweis «Unbekannte
+   Version», kein Absturz, Konsole ohne Fehler.

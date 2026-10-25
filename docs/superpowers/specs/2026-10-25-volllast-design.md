@@ -153,14 +153,13 @@ Reihenfolge, unabhängig von der Merge-Reihenfolge:
 - `'resting'` ist ein gültiger Zustand in `BUILDING_STATES`.
 - **Version:** `SAVE_VERSION` = Wert des Merge-Stands auf main **+ 1** (R909, R937). Spec, Plan und Tests nennen keine
   feste Nummer; Tests lesen nur `SAVE_VERSION`.
-- **Vorgängerstand** (`version: SAVE_VERSION − 1`), Regel nach R937: **mit Hinweis abgewiesen**, nicht migriert:
-  `deserialize` liefert `{ ok: false, reason: 'Unbekannte Version' }` (bestehender Text, `save.ts:1031`; die UI zeigt
-  ihn als Hinweis), nie ein Wurf. Folge: Auch alle älteren Stände, die über die Kette auf `SAVE_VERSION − 1` kommen,
-  werden abgewiesen. Bestehende Tests, die ältere Stände laden und `ok` erwarten (mindestens `tests/sim/trial-save.test.ts`
-  AK-12, `council-save.test.ts`, `save-v11/12/13.test.ts`, `save.test.ts`, `save-loyalty.test.ts`,
-  `scenario-saves.test.ts`, `tests/ui/storage.test.ts`), stellt der Plan auf Abweisen um. **Entscheidungsbedarf E1**
-  (Offene Punkte): Empfehlung Migration ohne Datenänderung.
-- `SAVE_VERSION + 1` → «Unbekannte Version» wie heute.
+- **Vorgängerstand** (`version: SAVE_VERSION − 1`), Regel nach R952: **migriert**, nicht abgewiesen. Die Save-Kette
+  erhält einen Schritt `SAVE_VERSION − 1 → SAVE_VERSION`, der nur `version` erhöht (das Feld `overtimeAt` ist optional,
+  sein Fehlen bedeutet Normalbetrieb; keine Datenänderung). Auch ältere Stände laden weiter über die Kette. Bestehende
+  Tests, die ältere Stände laden und `ok` erwarten, bleiben unverändert; geändert werden nur Tests, die ein
+  Versionsliteral prüfen (Plan nennt sie).
+- `SAVE_VERSION + 1` → `{ ok: false, reason: 'Unbekannte Version' }` wie heute (bestehender Text, `save.ts:1031`; die UI
+  zeigt ihn als Hinweis), nie ein Wurf; ebenso beschädigtes `overtimeAt` (`Beschädigter Spielstand`).
 - arc42 (Kapitel Persistenz und Tick-Ablauf: neues Feld, Löschung im Produktionsschritt) und README (Spielanleitung:
   Knopf Volllast) führt der Plan mit.
 
@@ -202,9 +201,10 @@ die hier genannten Werte prüfen, wenn die Defs unverändert sind (`OVERTIME_*` 
 - **AK-VL-02 Zyklus je Phase** (`overtime.test.ts`): Weberei St. 1 auf der Heimatinsel: `cycleOf` = 50 normal,
   38 in Volllast, 50 in der Ruhe und nach dem Löschen. Rinderfarm St. 3: 8 → 6.
 - **AK-VL-03 Letzter Faktor** (`overtime.test.ts`): Glashütte St. 3 auf einer Insel mit `mountainRich`: `cycleOf` =
-  10 normal, **8** in Volllast (nicht 7). Schäferei St. 1 auf `fertile`: 25 → 19. Ist I-201 oder I-210 bereits auf
-  main, ergänzt der Plan einen Fall mit Erntefest bzw. Taktlohn: Weberei St. 3 (20) mit Erntefest → 15 → Volllast 12
-  (nicht 11).
+  10 normal, **8** in Volllast (nicht 7). Schäferei St. 1 auf `fertile`: 25 → 19. Ist I-201 oder I-210 zum
+  Merge-Stand auf main, ist ein Fall mit Erntefest bzw. Taktlohn **verbindlich**: Weberei St. 3 (20) mit Erntefest →
+  15 → Volllast 12 (nicht 11). Der Plan legt den Merge-Stand fest; das Gate Merge prüft die Reihenfolge der Faktoren in
+  `cycleOf` gegen AUSBAU-LOGIK, I-201 und I-210 (Konfliktpunkt `levels.ts`).
 - **AK-VL-04 Unterhalt** (`overtime.test.ts`): `buildingUpkeep` Weberei St. 1 = 15 / 23 / 8 (normal / Volllast /
   Ruhe), Rinderfarm St. 3 = 17 / 26 / 9. Mit Edikt «Sparen» (80 %) ist `totalUpkeep` = ⌊(S + 23) × 80 / 100⌋, wobei S
   der Unterhalt aller anderen Gebäude und Schiffe ist.
@@ -218,7 +218,9 @@ die hier genannten Werte prüfen, wenn die Defs unverändert sind (`OVERTIME_*` 
 - **AK-VL-07 Uhr unabhängig vom Zustand** (`overtime.test.ts`): Weberei St. 1 ohne Wolle (`waitingInput` während der
   ganzen Volllast): Phasenwechsel bei denselben Schritten wie AK-VL-06, keine Wolle entnommen, kein Stoff erzeugt, Feld
   nach 3000 Schritten gelöscht. Dasselbe mit Brand während der Volllast (`outageUntil` gesetzt) und mit
-  `notConnected` nach dem Start (Strasse abgerissen).
+  `notConnected` nach dem Start (Strasse abgerissen). Zusätzlich stillgelegt (`paused`) und brennend (`burning`) bei
+  abgelaufener Phase (`d ≥ OT + RT`): Das Feld ist nach dem nächsten `step` gelöscht, der Test belegt, dass Regel 9 in
+  `tickProduction` vor dem Übersprung stillgelegter bzw. brennender Betriebe erreicht wird.
 - **AK-VL-08 Ruhe ohne Fortschritt** (`overtime.test.ts`): Betrieb mit `progress` 13 bei Ruhe-Beginn: über alle 1200
   Ruhe-Schritte `progress` 13, Lager Eingang und Ausstoss unverändert, Zustand `'resting'`, `eff` fällt in jedem Schritt
   (Ziel 0). Nach der Ruhe läuft der Betrieb mit `progress` 14 weiter.
@@ -238,8 +240,10 @@ die hier genannten Werte prüfen, wenn die Defs unverändert sind (`OVERTIME_*` 
   Lagerzugang identisch zum Abriss derselben Weberei ohne Volllast in einer Vergleichswelt; das Gebäude fehlt danach in
   `world.buildings`.
 - **AK-VL-14 Sturm** (`overtime.test.ts`): Fischer St. 1 (`stormAffected`, `c` 40) in Volllast während eines wirkenden
-  Sturms, Start bei geradem Tick: eine Einheit nach genau 60 Schritten (30 Fortschritt, nur jeder zweite Tick), ohne
-  Volllast nach 80.
+  Sturms. Start (`startOvertime`) zwischen zwei Schritten bei geradem `world.tick` = T; Schritt `j` läuft mit
+  `world.tick` = T + j (Inkrement vor `tickProduction`, `tick.ts:40`), `progress` wächst nur bei geradem `world.tick`,
+  also nach `j` Schritten um `⌊j / 2⌋`: die Einheit entsteht bei `j` = 60 (`progress` 30 ≥ `c'` 30), ohne Volllast bei
+  `j` = 80. Exakt 60 bzw. 80, keine Toleranz.
 - **AK-VL-15 Save-Rundreise** (`overtime-save.test.ts`): Welten mit Betrieb in Volllast (`d` = 500) und in der Ruhe
   (`d` = 2000) → `serialize`/`deserialize` → `ok`, `overtimeAt` gleich, Zustand `'resting'` erhalten; danach 3000
   Schritte geladene und ungeladene Welt: `serialize` gleich (bitgleich).
@@ -247,11 +251,13 @@ die hier genannten Werte prüfen, wenn die Defs unverändert sind (`OVERTIME_*` 
   einem Haus, am Markt → «Beschädigter Spielstand», kein Wurf. Abgelaufen (`d` = 5000) → `ok`, `overtimeState` =
   `normal`, Feld nach dem nächsten `step` gelöscht. Zustand `'resting'` ohne Feld ist gültig (Zustand wird im nächsten
   Schritt neu gesetzt).
-- **AK-VL-17 Version** (`overtime-save.test.ts`): `serialize` schreibt `version: SAVE_VERSION`. Ein Stand mit
-  `version: SAVE_VERSION − 1` (aus `createWorld`, Feld `version` ersetzt, ohne `overtimeAt` und ohne `'resting'`) →
-  nach R937 `{ ok: false, reason: 'Unbekannte Version' }`, kein Wurf (bei E1 = Migration: `ok`, `version ===
-SAVE_VERSION`, Inhalt sonst gleich, Weiterspielen bitgleich). `version: SAVE_VERSION + 1` → «Unbekannte Version».
-  Kein Literal einer Versionsnummer im Test.
+- **AK-VL-17 Version** (`overtime-save.test.ts`): `serialize` schreibt `version: SAVE_VERSION`. (a) Ein Stand mit
+  `version: SAVE_VERSION − 1` (aus `createWorld`, Feld `version` ersetzt, ohne `overtimeAt` und ohne `'resting'`) lädt
+  `ok`, `version === SAVE_VERSION`, Inhalt sonst gleich (`serialize` der geladenen Welt gleich der nativ erzeugten Welt);
+  nach N = 3000 Schritten beider Welten ist `serialize` gleich
+  (bitgleich). (b) Ein Stand mit `version: SAVE_VERSION − 2` lädt `ok` über die Kette (Regression: die Kette bricht
+  nicht). (c) `version: SAVE_VERSION + 1` → `{ ok: false, reason: 'Unbekannte Version' }`, kein Wurf. Kein Literal einer
+  Versionsnummer im Test.
 - **AK-VL-18 Baseline bitgleich** (`overtime.test.ts` und bestehende Tests): Ohne `overtimeAt` liefern `cycleOf` und
   `buildingUpkeep` für alle Betriebe mit Zyklus, Stufen 1–3, normal und stillgelegt, dieselben Werte wie
   `effectiveCycle(…)` bzw. `upkeepOf`/`PAUSED_UPKEEP_PCT` (Tabelle im Test aus den Defs). `tests/sim/balance.test.ts`
@@ -259,16 +265,20 @@ SAVE_VERSION`, Inhalt sonst gleich, Weiterspielen bitgleich). `version: SAVE_VER
   grün, Anpassungen nur an Versionsfällen (Abschnitt Save).
 - **AK-VL-19 Dauer-Volllast** (`overtime.test.ts`): Weberei St. 1, Wolle 100, Stoff 0, keine Verbraucher, `progress` 0.
   Lauf A: 3000 Schritte normal → **60** Stoff. Lauf B: `startOvertime` bei T, 3000 Schritte, danach sofort wieder
-  möglich → **47** Stoff (≤ 80 % von 60). Mehr-Unterhalt B gegen A über die 3000 Schritte: 59 oder 60 Geld (Rechnung
-  A.2 `ΔU` 60). Anzeige-Grösse: `formatGameTime(OVERTIME_TICKS)` = «3:00», `formatGameTime(OVERTIME_REST_TICKS)` = «2:00».
+  möglich → **47** Stoff (≤ 80 % von 60). Mehr-Unterhalt B gegen A über die 3000 Schritte: exakt **59** Geld (Start mit `upkeepCarry` 0, Weberei
+  als einziger Unterhaltsposten: ⌊509,92⌋ − 450; Rechnung A.2 `ΔU` 60 ist die ungerundete Näherung). Der Plan bestätigt
+  den Wert in Rot/Grün. Anzeige-Grösse: `formatGameTime(OVERTIME_TICKS)` = «3:00», `formatGameTime(OVERTIME_REST_TICKS)` = «2:00».
 - **AK-VL-20 Texte und Warnungen** (`tests/ui/overtime.test.ts`): `overtimeTooltip` für Weberei St. 1 liefert exakt die
   Zeilen aus Anhang 01 B; `overtimeLockText` liefert «Volllast läuft noch 2:13» bei `remaining` 1330 und «Ruht noch
   1:05» bei 650; `overtimeWarnings` liefert je eine Zeile für `waitingInput`, `storageFull`, eine Vertragsabrechnung
   des Stoffs im Ruhefenster («Ruhe überdeckt die Vertragsabrechnung in …») und eine Auftragsfrist im Ruhefenster; keine
   Warnung ohne Vertrag und Auftrag, keine für einen Vertrag eines anderen Guts oder einer anderen Insel.
-- **AK-VL-21 Werte nur in den Defs** (Prüfung im Gate per `rg`): `src/sim/overtime.ts`, `src/sim/levels.ts`,
-  `src/sim/production.ts` und `src/ui/overtime.ts` enthalten keine Literale 75, 150, 1800, 1200 für Volllast; sie lesen
-  `OVERTIME_*` und `PAUSED_UPKEEP_PCT`. `overtime.ts` importiert weder `levels` noch `production` noch `economy`.
+- **AK-VL-21 Werte nur in den Defs** (Vitest-Quellscan `overtime-source.test.ts`, liest die Quelldateien als Text):
+  `src/sim/overtime.ts`, `src/sim/levels.ts`, `src/sim/production.ts` und `src/ui/overtime.ts` verwenden die Konstanten
+  `OVERTIME_*` bzw. `PAUSED_UPKEEP_PCT` (Import aus `defs/` vorhanden) und enthalten in den Volllast-Ausdrücken
+  (`overtimeCycle`, Unterhaltsfaktor, Phasenlängen) keine Zahlenliteral-Rechnung; der Scan prüft die Konstantennutzung,
+  nicht eine Literalliste. `overtime.ts` importiert weder `levels` noch `production` noch `economy` (Import-Scan im
+  selben Test).
 - **AK-VL-22 Browser-Check Panel** (`npm run dev`, 1280 px, Screenshot je Schritt; Ablauf Anhang 02 C): Weberei St. 1
   mit Wolle wählen → Knopf «Volllast» neben «Stilllegen», Tooltip zeigt Zyklus, Unterhalt, Eingang, Ruhe und Dauer wie
   Anhang 01 B. Klick → Zustandszeile «Volllast 3:00», zählt herunter; Unterhaltszeile 138 / min mit Zusatz «+48 / min
@@ -276,8 +286,9 @@ SAVE_VERSION`, Inhalt sonst gleich, Weiterspielen bitgleich). `version: SAVE_VER
   Unterhalt 48 / min mit «−42 / min in der Ruhe», Knopf «Ruht noch …». Danach Normal, Knopf frei. Stillgelegt, brennend
   und ohne Strasse je einmal: Sperrtext sichtbar. Weberei ohne Wolle: Warnung «Eingang fehlt: Volllast verpufft».
 - **AK-VL-23 Browser-Check Spielstand**: Volllast starten, speichern, neu laden → Zustand und Restzeit stimmen (± 1 s),
-  die Uhr läuft weiter. Ein Spielstand der Vorgängerversion zeigt beim Laden den Hinweis aus AK-VL-17, die Seite stürzt
-  nicht ab.
+  die Uhr läuft weiter. Ein Spielstand der Vorgängerversion lädt, die Volllast steht auf Normal, Knopf frei. Ein Stand
+  mit `SAVE_VERSION + 1` (im Speicher von Hand angehoben) zeigt den Hinweis «Unbekannte Version», die Seite stürzt nicht
+  ab, die Konsole bleibt ohne Fehler.
 
 ## Nicht im Scope
 
@@ -291,15 +302,13 @@ SAVE_VERSION`, Inhalt sonst gleich, Weiterspielen bitgleich). `version: SAVE_VER
 
 ## Offene Punkte
 
-1. **E1 Vorgängerstand (Entscheidungsbedarf L0, R471).** R937 legt «Altstand mit Hinweis abgewiesen» fest. Die
-   Save-Kette migriert heute jede Version bis zur aktuellen (`save.ts:1013-1031`), und die offenen Pakete SEERECHT,
-   I-210 und AUSBAU-LOGIK migrieren bzw. laden ihren Vorgänger. Abweisen beendet die ganze Kette: Jeder alte Spielstand
-   wird unladbar, und mindestens acht Testdateien müssen von «lädt» auf «abgewiesen» umgestellt werden. Das Feld ist
-   optional, sein Fehlen bedeutet Normalbetrieb; eine Migration `SAVE_VERSION − 1 → SAVE_VERSION`, die nur `version`
-   erhöht, ist ein Einzeiler. **Empfehlung: Migration ohne Datenänderung** (AK-VL-17 Variante in Klammern), Abweisen
-   bleibt für `SAVE_VERSION + 1` und beschädigte Felder. Bis zu einem Ruling gilt R937.
+1. **E1 Vorgängerstand: entschieden (R952).** Migration `SAVE_VERSION − 1 → SAVE_VERSION` ohne Datenänderung; abgewiesen
+   werden `SAVE_VERSION + 1` und beschädigtes `overtimeAt`. Kein offener Punkt mehr (Abschnitt Save, AK-VL-17).
 2. **Signatur `buildingUpkeep`** (Regel 5): Der Plan wählt zwischen `buildingUpkeep(world, b)` und einem Tick-Parameter
    und stimmt sie mit AUSBAU-LOGIK (Drossel in `upkeepOf`, AK-AL-12) ab.
 3. **Kartensymbol** für Volllast und Ruhe (Rechnung §9): eigener Eintrag im Render-Strang nach dem Merge; bis dahin
    tragen Panel und Hover die Erklärbarkeit.
 4. **Leistung:** `overtimeState` ist O(1) je Betrieb und Schritt (ein Feld, eine Subtraktion); kein Cache nötig.
+5. **Plan-Risiko Wertgrenzen (Gate-Auflage 9).** Die Werte der vier `OVERTIME_*` beruhen auf Rechnung (gerechnet, nicht
+   gemessen, 34 Kombinationen, R937, Rechnung §11). Der Plan führt das als Risiko; Rückfall: Stellhebel Regel 1 in den
+   Defs, Bestätigung im Playtest.
