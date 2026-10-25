@@ -2764,3 +2764,25 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201 (REL-34
 Regelbezug: R392, R598 V3, R810, R815, R816, R848 · Kosten bei Irrtum: ein Release-Tag später.
 
 Entscheider: L0 · Anlass: Bericht lead-production REL-33 · ADR: —
+
+## R955 · 2026-10-25 · I-210 T01: Lade-Default vorziehen; helpers.ts
+
+Ruling: (1) Minimaler Lade-Default für `petitions` in `save.ts` (`deserialize` ergänzt das Feld bei Vorgängerständen) wird **in T01 vorgezogen**, damit T01 grün und reviewbar ist; die Versionsanhebung bleibt in T16.
+Der Controller committet den T01-Stand jetzt auf `feat/i210` (Teilbeleg: betroffene Save-Tests, `petitions`, `imports`, `tsc`, `lint`), Review T01 in der Folgesession. (2) Änderung an `tests/sim/helpers.ts` (Faltketten
+V11–V13) **bestätigt** — war schon Auflage 3 aus R931 (Dateimatrix). `perf.test.ts` D1 ist auf main rot (R954), kein I-210-Befund.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette, ZEITPIN-D1
+Regelbezug: R909, R931, R954 · Kosten bei Irrtum: ein Default zu früh.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-210 · ADR: —
+
+## R956 · 2026-10-25 · AUSBAU-LOGIK T01 gesichert
+
+Ruling: `feat/ausbau-logik` @ `ff7bc2aa` (T01, Rot-Beleg, Teilbeleg Exit 0) gesichert; Review T01 ist der erste Schritt der Folgesession. `src/ui/buildMenu.ts` (zwei Non-Null-Assertions für `tsc`) in die Dateimatrix
+**nachführen ja**; angepasste Testwerte (`Ware 2 Stoff`) prüft das T01-Review. T00-Zeitmessung im freien Messfenster wiederholen (Last bis 47 durch parallele Test-Controller — Retro-Punkt). Konflikt `cycleOf` mit
+`feat/i201`: wer zweit merged, löst nach Symbol; I-201 merged zuerst (R951).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, I-210
+Regelbezug: R392, R920 V1, R946, R951 · Kosten bei Irrtum: —
+
+Entscheider: L0 · Anlass: Bericht lead-tech AUSBAU-LOGIK · ADR: —
