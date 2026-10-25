@@ -7,6 +7,9 @@ Owner `lead-tech` · **Spec:** `docs/superpowers/specs/2026-10-23-modus-inselpro
 Gate Spec R874 (BEDENKEN, Auflagen 1–4 eingearbeitet), F1–F7 wie empfohlen · Plan gegen main `ec144e82` (SAVE_VERSION 18). Task-Dateien in
 [`2026-10-25-inselproben/`](2026-10-25-inselproben/).
 
+**Gate Plan:** BEDENKEN angenommen (Handoff `.studio/handoffs/2026-10-25-lead-qa-gate-plan-INSELPROBEN.md`); Auflagen H1–H3 und N1–N5 eingearbeitet
+ohne Zweitprüfung. Budget **43 Starts / Parallelität 2** genehmigt; Umsetzungsstart erst nach dem L0-Start-Briefing, T09 nach I-186 auf main, T14 nach Stadtplanung.
+
 **Goal:** Ein Probe-Rahmen startet feste Inseln mit festem Ziel und misst Spielzeit in Ticks; darauf fünf Proben, die Tagesinsel und das Szenario
 «Schuldbrief» (Zins, Tilgen, Frist, keine Abriss-Erstattung bei offener Schuld); Bestzeiten lokal in `inselreich.proben`; Grundspiel bitgleich.
 
@@ -32,7 +35,8 @@ Gate Spec R874 (BEDENKEN, Auflagen 1–4 eingearbeitet), F1–F7 wie empfohlen �
   per Ruling» geschrieben und **sofort an L0 gemeldet** (Entwurf im Controller-Bericht). F7-Werte und Tickgrenzen Proben 2–5 gelten erst nach diesem Ruling.
 - **P-3 `formatClock` global:** Uhr ab 60 min «1:00:00» auch in Autosave-Zeilen und Log (heute «60:00»); ein Format für alle Spielzeiten (DRY).
 - **P-4 Dev-Spielstand AK-IP-21:** als Szenario `ip-probe1-kurz-vor-ziel` in `tests/sim/scenarios.ts` (bestehende Dev-Save-Strecke), nicht in `devProbes.ts`
-  (die Sonde liest nur); kein Produktivcode, nie in der Startkarte.
+  (die Sonde liest nur); kein Produktivcode, nie in der Startkarte. **Vermerk (N3):** Spec Anhang 02 AK-IP-21 nennt noch `devProbes.ts`; massgeblich ist
+  P-4 mit E-IP-2 (L0 angenommen). Der Spec-Wortlaut wird nicht nachgezogen.
 - **P-5 Controller-Mittel (AK-IP-24):** erlaubt sind Sim-Aktionen und `forceTerrain`/`prepareLayout` wie in den bestehenden Controllern; verboten sind direkte
   Schreibzugriffe auf `money`, `stock`, Einwohner, Ziel-Flaggen oder `challenge`. Ein Lauf startet immer über `startChallenge`.
 - **P-6 Ein Browser-Check (T12)** für T09–T11 statt drei: alle drei Tasks teilen den Ablauf Start → Uhr → Ergebnis; Begründung nach R270.
@@ -43,26 +47,27 @@ Gate Spec R874 (BEDENKEN, Auflagen 1–4 eingearbeitet), F1–F7 wie empfohlen �
 
 `feat/inselproben` in `.worktrees/inselproben` ab `plan/inselproben` (T01–T04, Integration, T13, T14). Nach T03 ab `feat/inselproben`:
 `feat/inselproben-mess` (`.worktrees/inselproben-mess`, T05–T07) und `feat/inselproben-ui` (`.worktrees/inselproben-ui`, T08–T11). Vor T12 merged der
-Controller beide per `git merge` in `feat/inselproben` (disjunkt, kein Rebase). Vor jedem Worktree `git worktree list` (R329); `node_modules` als Symlink.
+Controller beide per `git merge` in `feat/inselproben` (disjunkt, kein Rebase). **Vor T09 (H1):** `git merge feat/inselproben` in `feat/inselproben-ui`
+(nach T04, damit `dailyDef` und der `daily`-Start da sind). Vor jedem Worktree `git worktree list` (R329); `node_modules` als Symlink.
 
 | Dateien                                                                                                                                                                                          | Strang | Tasks                   |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ----------------------- |
 | `src/sim/defs/challenges.ts`                                                                                                                                                                     | sim    | T01, T02                |
-| `src/sim/defs/challenges.ts` (nur Karten-Nummer/Krisenstufe als Fallback, nach T04)                                                                                                              | mess   | T06, T07                |
+| `src/sim/defs/challenges.ts` (nur Karten-Nummer als Fallback oder Probe-Zeile nach Ruling E-IP-1), dazu `tests/sim/challenge.test.ts` **nur** AK-IP-12 a und -03 (H3), zeitlich nach T04         | mess   | T06, T07                |
 | `src/sim/calendar.ts`, `src/sim/types.ts`, `src/sim/world.ts`, `src/sim/save.ts`, `tests/sim/helpers.ts`, `tests/sim/challengePins.ts`, `tests/sim/{helpers,farOrder-save,save-loyalty}.test.ts` | sim    | T01, T14                |
 | `src/sim/challenge.ts`, `src/sim/tick.ts`, `tests/sim/challenge.test.ts`, `tests/sim/challenge-mirror.test.ts`                                                                                   | sim    | T02, T03, T04           |
-| `src/sim/economy.ts`, `src/sim/build.ts`, `src/sim/queries.ts`                                                                                                                                   | sim    | T03                     |
+| `src/sim/economy.ts`, `src/sim/build.ts`, `src/sim/queries.ts`; `tests/sim/{goal3,monument}.test.ts`, `tests/sim/monumentHelpers.ts` (T02: Helfer verschieben, N2)                               | sim    | T02, T03                |
 | `tests/sim/challenge-daily.test.ts`                                                                                                                                                              | sim    | T04                     |
 | `tests/sim/challengeControllers.ts`, `tests/sim/challenge-solvable.test.ts` (neu)                                                                                                                | mess   | T05–T07                 |
 | `src/ui/time.ts`, `src/ui/challengeStore.ts`, `src/ui/challengeView.ts`, `tests/ui/challenge.test.ts`, `tests/ui/time.test.ts`                                                                   | ui     | T08 (+T09–T11 ergänzen) |
 | `src/ui/challengeCard.ts`, `src/ui/startCard.ts`, `src/ui/menu.ts`, `tests/ui/{startCard,menu}.test.ts`                                                                                          | ui     | T09                     |
 | `src/ui/app.ts`, `src/style.css`                                                                                                                                                                 | ui     | T09, T10, T11 (seriell) |
-| `src/ui/challengeResult.ts`, `src/ui/hud.ts`, `tests/ui/hud.test.ts`, `tests/sim/scenarios.ts` (T11 ergänzt `hud.ts`)                                                                            | ui     | T10, T11                |
+| `src/ui/challengeResult.ts`, `src/ui/hud.ts`, `tests/ui/hud.test.ts`, `tests/sim/scenarios.ts`, `tests/sim/scenario-saves.test.ts` (Namensliste, H2; T11 ergänzt `hud.ts`)                       | ui     | T10, T11                |
 | `src/ui/debtCard.ts`, `src/ui/balanceFlow.ts`, `src/ui/hints.ts`, `src/ui/texts.ts`, `src/ui/inspect.ts`, `tests/ui/{balanceFlow,hints,texts,inspect}.test.ts`                                   | ui     | T11                     |
 | `README.md`, `docs/arc42.md`, `docs/spielwerte.md`, `docs/adr/ADR-017-inselproben.md` (Nummer prüfen), Spec-Kopfzeile «Plan», `docs/beobachtungen.md` (D1, E-017)                                | doku   | T13                     |
 
 Nicht angefasst: `tests/sim/balance*.test.ts`, `tests/sim/controller.ts`, `tests/sim/merchantsController.ts`, übrige `src/sim/defs/*`, `src/render/`, `src/audio/`,
-`src/ui/storage.ts`, `src/ui/devProbes.ts`, `docs/studio/`. Konfliktrisiko: Stadtplanung (`save.ts` Version/Kette, `types.ts`, `world.ts`, Hilfen) → T14;
+`src/ui/storage.ts`, `src/ui/devProbes.ts`, `docs/studio/`. Konfliktrisiko: Stadtplanung (`save.ts` Version/Kette, `types.ts`, `world.ts`, Hilfen; prüfen auch `build.ts`/`economy.ts` aus T03, N2) → T14;
 I-186 (`app.ts`, `menu.ts`, `startCard.ts`) → P-7; Seerecht nach uns (R874), Stadtrecht `charter` nach uns (Rückfalt-Helfer kommutativ, AK-IP-11 e).
 
 ## Tasks
@@ -78,14 +83,14 @@ I-186 (`app.ts`, `menu.ts`, `startCard.ts`) → P-7; Seerecht nach uns (R874), S
 | T06  | Messlauf Proben 2 und 3                                     | `T06-mess-proben-2-3.md`  | 24 (Probe 2, 3)                      | mess   | T05                        | sonnet | 40    | `tech-sim-engineer` |
 | T07  | Messlauf Proben 4 und 5 (Gewürz-, Denkmal-Phase)            | `T07-mess-proben-4-5.md`  | 24 (Probe 4, 5)                      | mess   | T06                        | sonnet | 70    | `tech-sim-engineer` |
 | T08  | UI-Helfer: Uhr, Ablage, Wache, Texte, Datum                 | `T08-ui-helfer.md`        | 15, 16, 17, 18, 25, 26, 27, 28, 29   | ui     | T03                        | sonnet | 55    | `tech-ui-engineer`  |
-| T09  | Proben-Karte, Startkarte, Menü, Start-Ablauf                | `T09-ui-karte-start.md`   | 19, 28 (Anbindung), 26 (Anbindung)   | ui     | T08, I-186 auf main (P-7)  | sonnet | 50    | `tech-ui-engineer`  |
+| T09  | Proben-Karte, Startkarte, Menü, Start-Ablauf                | `T09-ui-karte-start.md`   | 19, 28 (`daily`, Anbindung), 26      | ui     | T08, T04, I-186 (P-7)      | sonnet | 50    | `tech-ui-engineer`  |
 | T10  | Uhr-Chip, Ergebnis-Karte, Ablage-Anbindung, Dev-Spielstand  | `T10-ui-chip-ergebnis.md` | 20, 21, 23, 29 (Anbindung)           | ui     | T09                        | sonnet | 55    | `tech-ui-engineer`  |
 | T11  | Schuldbrief-UI: Schuld-Chip, Tilgen, Zins-Zeile, Erstattung | `T11-ui-schuldbrief.md`   | 22, 05 d (Anzeige)                   | ui     | T10                        | sonnet | 45    | `tech-ui-engineer`  |
 | T12  | Browser-Check 1280 px                                       | `T12-playtest.md`         | 19, 20, 21, 22, 23                   | ui     | T04, T07, T11, Integration | sonnet | 35    | `qa-playtester`     |
 | T13  | Doku, ADR-017 (D1, E-017)                                   | `T13-doku.md`             | Spec §12 Doku                        | doku   | T12                        | sonnet | 20    | `tech-sim-engineer` |
 | T14  | Nachzug Stadtplanung: `git merge main`, Save-Nummer         | `T14-nachzug-save.md`     | 11, 13 (Lauf), 01 (Pin)              | sim    | Stadtplanung auf main, T13 | sonnet | 35    | `tech-sim-engineer` |
 
-Jeder Umsetzer-Task: Review durch `qa-code-reviewer` (sonnet, Urteil OK/BEDENKEN/ZURÜCK), Fix-Runde per `SendMessage`. Final-Review: `lead-qa` auf `opus` über
+Jeder Umsetzer-Task: Review durch `qa-code-reviewer` (sonnet, Urteil OK/BEDENKEN/ZURÜCK), Fix-Runde per `SendMessage`. Final-Review: `qa-code-reviewer` auf `opus`, gesteuert von `lead-qa` (1 Start), über
 `git diff main...feat/inselproben` nach T14; ZURÜCK → Fix, dann Delta-Review desselben Reviewers per `SendMessage` (R553).
 
 ## Global Constraints (gelten in jedem Task)
@@ -114,6 +119,8 @@ Jeder Umsetzer-Task: Review durch `qa-code-reviewer` (sonnet, Urteil OK/BEDENKEN
 - **Proben 4/5 ohne End-zu-End-Controller:** Heute erreicht kein Controller `wonSpice` oder `monumentDone` ab Spielstart (Gewürz- und Denkmal-Tests bauen den
   Stand per Helfer). T07 baut die Phasen auf `runMerchants` auf; Zeitkasten 70 Tools. Ohne grünen Lauf gilt Spec Anhang 02 D: Probe bleibt nicht in der
   Liste → Entscheid L0 (E-IP-1). Die Controller erzwingen Gelände östlich des Kontors; ob das auf Seeds 21/58/345/777 im Rahmen liegt, prüft T06/T07 (Fallback Seed).
+- **Tickgrenzen Proben 2–5 (N1):** je ein deterministischer Controller-Lauf, Grenze = Messwert × 1,25 auf 250. Das ist Regressionsschutz, keine
+  Balancing-Aussage über Spieler-Zeiten; Rückfall bei Bruch: Ruling (neue Messung oder Grenze), nie stilles Anheben.
 - **F7 auf einem Modell:** Rang Ref < G1 < G2 kann im Controller kippen (Klumpenkäufe). Rückfall per Ruling S0 3750 (Anhang 01 §g); keine stille Anpassung.
 - **Save-Reihenfolge:** Merge vor Stadtplanung ist ausgeschlossen (P-1); hängt Stadtplanung, wartet T14 (`blocked`).
 

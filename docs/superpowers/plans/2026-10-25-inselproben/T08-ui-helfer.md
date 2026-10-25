@@ -115,7 +115,7 @@ export function createResultWatch(w: World): ResultWatch;
   - `AK-IP-26`: `noteLaunch(store, 'load', c, today)` gleich `store` für Ladeliste, «Fortsetzen» und Autosave (alle `'load'`); Wache nach `reset` auf Stand mit `result` meldet nie.
   - `AK-IP-27`: `rerun` mit `today` = `date`, `date + 1`, 13 Tage, 14 Tage später → `book` true, true, true, false; `start.date === c.date`; `recordResult`
     ausserhalb des Fensters → unverändert, kein Wurf.
-  - `AK-IP-28`: Einstellungen `unlockMode: 'all'` → `launchChallenge` liefert `unlocked` `['U0']` für `p1`, `daily` 20261023, `debt`; `UNLOCK_NOTE` enthält «stufenweise».
+  - `AK-IP-28`: Einstellungen `unlockMode: 'all'` → `launchChallenge` liefert `unlocked` `['U0']` für `p1` und `debt` (der `daily`-Fall folgt in T09 nach T04, H1); `UNLOCK_NOTE` enthält «stufenweise».
   - `AK-IP-29`: `noteLaunch('start')`, dann Wache `reset` auf neue Welt (andere Probe) → `observe` `null`, Ablage ausser `tries` unverändert.
   - **Review Focus 3:** Lauf mit `launchDay = c.date`, Ergebnis bei `today = c.date + 1` → gebucht auf `c.date`, `first` gesetzt.
   - **Review Focus 4:** Welt kurz vor dem Ziel, drei `step` hintereinander, `observe` nach jedem Schritt → genau ein Treffer.

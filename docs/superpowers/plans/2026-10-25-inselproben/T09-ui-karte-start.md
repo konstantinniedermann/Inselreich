@@ -1,7 +1,7 @@
 # T09 · Proben-Karte, Startkarte, Menü, Start-Ablauf
 
-Umsetzer `tech-ui-engineer` · ≈ 50 Tools · AK-IP-19 (Teil), AK-IP-28 und -26 (Anbindung), Review Focus 1 und 5 · blocked-by: T08, **I-186 auf main** (P-7) ·
-Worktree `.worktrees/inselproben-ui` (`feat/inselproben-ui`; vorher `git merge main`) · Spec §4.1, §5.3, §11
+Umsetzer `tech-ui-engineer` · ≈ 50 Tools · AK-IP-19 (Teil), AK-IP-28 und -26 (Anbindung), Review Focus 1 und 5 · blocked-by: T08, **T04**, **I-186 auf main** (P-7) ·
+Worktree `.worktrees/inselproben-ui` (`feat/inselproben-ui`; vorher `git merge feat/inselproben` (T04, H1) und `git merge main`) · Spec §4.1, §5.3, §11
 
 ## Dateien
 
@@ -42,9 +42,10 @@ start: ChallengeStart }[]; scenarios: { id: string; line: string; story: string;
 ## Steps
 
 - [ ] **Tests rot:**
-  - `tests/ui/challenge.test.ts`: `dailyLine` leer/mit Bestzeit/ungültig; `cardModel` (5 Proben-Zeilen wörtlich für leere Ablage, Ränge sortiert, Tagesliste
+  - `tests/ui/challenge.test.ts`: `dailyLine` leer/mit Bestzeit/ungültig; `cardModel` (Anzahl und Zeilen aus `PROBES` abgeleitet, H3 a; wörtlich nur Probe 1 «Probe 1 «Erste Ernte» · Karte 3 · 50 Bürger · Krisen aus · Bestzeit –»; Ränge sortiert, Tagesliste
     14 Einträge, Szenario «offen · Versuche 0» bzw. «bestanden 24:10»); **Review Focus 1** `challengeStartPrompt(true|false)` wörtlich und ein
     Ablauf-Helfer `shouldStart(hasProgress, confirmed)` → `false` bei Fortschritt ohne Bestätigung.
+  - `AK-IP-28 daily` (aus T08 verlegt, H1): Einstellung `unlockMode: 'all'` → `launchChallenge({ kind: 'daily', date: 20261023 }, settings)` → `unlocked` `['U0']`.
   - `tests/ui/startCard.test.ts`: `startChoices` enthält `challenges` nach «Neue Insel», bestehende Reihenfolge unverändert.
   - `tests/ui/menu.test.ts`: Knopf «Inselproben …» unter «Neue Insel» ruft `openChallenges`; **Review Focus 5** Menüzeile «Karte 20261023» bei `seed()` 20261023.
 - [ ] **Lauf rot:** `npx vitest run tests/ui/challenge.test.ts tests/ui/startCard.test.ts tests/ui/menu.test.ts; echo EXIT=$?` → ≠ 0.

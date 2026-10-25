@@ -6,6 +6,9 @@ Umsetzer `tech-sim-engineer` · ≈ 40 Tools · AK-IP-24 (Probe 2, 3), AK-IP-03 
 ## Dateien
 
 - ändern: `tests/sim/challengeControllers.ts`, `tests/sim/challenge-solvable.test.ts`; `src/sim/defs/challenges.ts` **nur** Fallback Karten-Nummer (Zeile der Probe)
+- Nachzug bei Seed-Wechsel oder Probe-Entfernung (H3 b, Besitzer dieser Task): `tests/sim/challenge.test.ts` **nur** die Erwartungen AK-IP-12 a (Seeds,
+  Zeilenzahl) und AK-IP-03 (`Set.size`); `it.each(PROBES)` (T02) und die UI-Tests (T09, aus `PROBES` abgeleitet) brauchen keinen Nachzug. Lauf danach
+  `npx vitest run tests/sim/challenge.test.ts tests/ui/challenge.test.ts; echo EXIT=$?` → 0 (UI-Datei nur, wenn T09 schon integriert ist).
 - nicht ändern: `tests/sim/controller.ts`, `tests/sim/merchantsController.ts`, übriges `src/`
 
 ## Interfaces

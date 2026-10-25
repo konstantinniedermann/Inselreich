@@ -70,7 +70,7 @@ wirft «foldBackChallenge: Probe nicht rückfaltbar», wenn `challenge !== null`
 
 ## Steps
 
-- [ ] **Step 0 Pin vor jeder Änderung (AK-IP-01):** Auf unverändertem Code im Scratchpad (nicht unter `tests/`) messen:
+- [ ] **Step 0 Pin vor jeder Änderung (AK-IP-01):** Auf unverändertem Code im Scratchpad (nicht unter `tests/`) messen; **Ausführweg (N5, keine neue Abhängigkeit):** Datei `<Scratchpad>/pin.mess.ts` (Importe mit absolutem Pfad auf `<Worktree>/src/…`, `<Worktree>/tests/sim/helpers.ts`), Konfiguration `<Scratchpad>/mess.config.mjs` mit `export default { test: { dir: '<Scratchpad>', include: ['**/*.mess.ts'] } }`, Lauf `npx vitest run --root <Worktree> --config <Scratchpad>/mess.config.mjs; echo EXIT=$?`; Ausgabe per `console.info`. Messen:
       `fnv1a32(sortedJson({ ...JSON.parse(serialize(createWorld(3))), version: 0 }))` und dasselbe nach `buildColony(createWorld(3))` (Basis-Controller,
       Sieg 6750). Beide Hex-Werte als `PRE_HASH_WORLD`, `PRE_HASH_RUN` in `tests/sim/challenge.test.ts` mit Vermerk «Messwert vor T01, main ec144e82, Version
       neutralisiert» in `tests/sim/challengePins.ts` ablegen (T02 nutzt sie im Spiegel-Test).

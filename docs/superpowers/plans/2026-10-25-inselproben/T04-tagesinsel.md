@@ -36,7 +36,7 @@ export function dailyDef(
 
 ## Steps
 
-- [ ] **Step 0 Messprobe (Scratchpad, nicht unter `tests/`):** Laufzeit von `generateMap(n)` für alle 31 Tage im Oktober 2026 messen (bei 1-min-Load ≤ 4);
+- [ ] **Step 0 Messprobe (Scratchpad, nicht unter `tests/`):** Laufzeit von `generateMap(n)` für alle 31 Tage im Oktober 2026 messen (bei 1-min-Load ≤ 4; Ausführweg wie T01 Step 0, Uhr `performance.now()` nur in der `.mess.ts`-Datei);
       hochgerechnet auf 730 Tage. Über 60 s → Teststichprobe (Verhalten unten, Variante B); Wert im Bericht.
 - [ ] **Tests rot** in `tests/sim/challenge.test.ts`:
   - `AK-IP-09`: `dailyDef(20261023)` → `{ ok: true, def: { seed: 20261023, weekday: 4, goal: 'citizens', crisisLevel: 'mild' } }`; 20261024 → `merchants`,

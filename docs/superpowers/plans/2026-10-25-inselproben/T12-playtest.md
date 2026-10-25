@@ -1,6 +1,6 @@
 # T12 · Browser-Check bei 1280 px (AK-IP-19 … -23)
 
-`qa-playtester` (Controller-Start) · ≈ 35 Tools · AK-IP-19, -20, -21, -22, -23, Review Focus 5 · blocked-by: T04, T07, T11 und Integration (Controller merged
+`qa-playtester` (Controller-Start) · ≈ 35 Tools · AK-IP-19, -20, -21, -22, -23, -26/-29 (Anbindung, N4), Review Focus 5 · blocked-by: T04, T07, T11 und Integration (Controller merged
 `feat/inselproben-mess` und `feat/inselproben-ui` per `git merge` in `feat/inselproben`, danach `make check; echo EXIT=$?` = 0) · Worktree `.worktrees/inselproben` ·
 Screenshots `.studio/qa/INSELPROBEN/` · ein Check für T09–T11 (P-6, R270)
 
@@ -24,8 +24,10 @@ Screenshots `.studio/qa/INSELPROBEN/` · ein Check für T09–T11 (P-6, R270)
    → Klick, Schuld 2500 und Kasse −500; (4) ab Tick 100 enthält der Bilanz-Tooltip «Zins −… / min» mit Wert ≠ 0. Abriss eines Hauses: Hinweis und Meldung zeigen
    keine Erstattung.
 5. **AK-IP-23:** `localStorage['inselreich.proben'] = 'x'`, neu laden → einmaliger Hinweis «Bestzeiten zurückgesetzt», kein Absturz, Proben-Karte öffnet.
-6. **Review Focus 5:** Tagesinsel starten → Menüzeile «Karte {Zahl}» und Chip bei 1280 px ohne Umbruch oder Überlauf.
-7. 800 px Breite: Proben-Karte und Ergebnis-Karte öffnen → stürzt nicht ab.
+6. **AK-IP-26/-29 in `app.ts` (N4):** Probe 1 starten, `localStorage['inselreich.proben']` notieren; Menü → «Speichern», dann «Laden» des Stands und
+   «Fortsetzen» nach Seitenneustart → Ablage unverändert (Versuchszähler, Zeiten), keine Ergebnis-Karte. Danach «Neue Insel» → Ablage unverändert.
+7. **Review Focus 5:** Tagesinsel starten → Menüzeile «Karte {Zahl}» und Chip bei 1280 px ohne Umbruch oder Überlauf.
+8. 800 px Breite: Proben-Karte und Ergebnis-Karte öffnen → stürzt nicht ab.
 
 ## Bericht
 

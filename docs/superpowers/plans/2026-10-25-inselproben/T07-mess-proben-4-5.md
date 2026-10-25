@@ -13,6 +13,9 @@ Steuer/Edikt) und `startColony`/`prepareLayout`; keine Literale wie `foundKontor
 ## Dateien
 
 - ändern: `tests/sim/challengeControllers.ts`, `tests/sim/challenge-solvable.test.ts`; `src/sim/defs/challenges.ts` nur Fallback Karten-Nummer
+- Nachzug bei Seed-Wechsel oder Probe-Entfernung (H3 b, Besitzer dieser Task): `tests/sim/challenge.test.ts` **nur** die Erwartungen AK-IP-12 a (Seeds,
+  Zeilenzahl) und AK-IP-03 (`Set.size`); `it.each(PROBES)` (T02) und die UI-Tests (T09, aus `PROBES` abgeleitet) brauchen keinen Nachzug. Lauf danach
+  `npx vitest run tests/sim/challenge.test.ts tests/ui/challenge.test.ts; echo EXIT=$?` → 0 (UI-Datei nur, wenn T09 schon integriert ist).
 - nicht ändern: `tests/sim/controller.ts`, `tests/sim/merchantsController.ts`, `tests/sim/scenariosSea.ts`, `src/`
 
 ## Interfaces
@@ -45,7 +48,7 @@ Steuer/Edikt) und `startColony`/`prepareLayout`; keine Literale wie `foundKontor
 
 **Schlägt eine Probe fehl** (nach Fallback): Commit nur mit der grünen Probe; für die rote ein `it.todo('AK-IP-24 Probe n: offen, E-IP-1')`, kein
 `it.skip` mit Assert. Die Probe bleibt bis zum Ruling in `PROBES`; nach dem Ruling «aus der Liste» entfernt ein Fix-Schritt dieses Tasks die Def-Zeile
-(Tests über `PROBES` passen sich an, AK-IP-12 a nennt dann vier Zeilen). Merge-Gate erst, wenn kein `it.todo` mehr offen ist.
+(Nachzug nach H3 b oben; AK-IP-12 a nennt dann vier Zeilen). Merge-Gate erst, wenn kein `it.todo` mehr offen ist.
 
 ## Meldung an L0 (Controller)
 

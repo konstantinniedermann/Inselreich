@@ -7,7 +7,7 @@ Spec §4.2, §4.3, §6.2, §6.3; Anhang 02 F
 
 - neu: `src/ui/challengeResult.ts`
 - ändern: `src/ui/hud.ts` (Chip), `src/ui/app.ts` (Wache in der Schleife, Ergebnis, «Nochmal»), `src/ui/challengeView.ts` (Modelle), `src/style.css`,
-  `tests/ui/challenge.test.ts`, `tests/ui/hud.test.ts`, `tests/sim/scenarios.ts` (Dev-Spielstand, P-4)
+  `tests/ui/challenge.test.ts`, `tests/ui/hud.test.ts`, `tests/sim/scenarios.ts` (Dev-Spielstand, P-4), `tests/sim/scenario-saves.test.ts` (Namensliste AK-S5-01, H2)
 - nicht ändern: `src/sim/`, `src/ui/devProbes.ts`, `src/ui/challengeStore.ts` (nur nutzen)
 
 ## Interfaces
@@ -42,7 +42,9 @@ Spec §4.2, §4.3, §6.2, §6.3; Anhang 02 F
     Zeit, Verbesserung, keine Verbesserung (Rang fehlt), Tagesinsel, Schuldbrief bestanden/verloren — Texte wörtlich; **AK-IP-29 Anbindung:** Ablauf-Helfer
     `onWorldSwitch(watch, w)` (Laden/anderer Start) → nachfolgendes `observe` `null`.
   - `tests/ui/hud.test.ts`: Chip fehlt ohne Probe, erscheint mit Probe, Text gleich `chipText`; nach `world.tick += 600` (ohne Echtzeit) «… · 1:00».
-  - `tests/sim/scenario-saves.test.ts` (bestehend): neues Szenario lädt (läuft automatisch über `SCENARIOS`).
+  - `tests/sim/scenario-saves.test.ts` (H2): `ip-probe1-kurz-vor-ziel` in die Namensliste von «AK-S5-01 die Szenario-Namen sind genau die vereinbarten»
+    einfügen (alphabetisch, rot ohne Szenario); AK-S5-01 «ladbar» läuft über `SCENARIOS`; `AK-B2-02` bleibt unverändert (`won` nach dem ersten Tick `false`,
+    nicht in `WON_AFTER_FIRST_TICK`).
 - [ ] **Lauf rot:** `npx vitest run tests/ui/challenge.test.ts tests/ui/hud.test.ts tests/sim/scenario-saves.test.ts; echo EXIT=$?` → ≠ 0.
 - [ ] **Umsetzen** nach Verhalten 1–6.
 - [ ] **Lauf grün:** dieselben Dateien plus `tests/ui/startCard.test.ts tests/ui/menu.test.ts`; `echo EXIT=$?` → 0.
