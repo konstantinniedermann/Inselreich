@@ -9,8 +9,9 @@ import {
   type IslandDef,
 } from '../sim/defs/sea';
 import { effectiveCycle, traitOf } from '../sim/levels';
+import { travelTicksOf } from '../sim/council';
 import { HOME } from '../sim/world';
-import { islandName, travelTicks } from '../sim/islands';
+import { islandName } from '../sim/islands';
 import { homeLane } from './homeTravel';
 import { GOODS } from '../sim/defs/goods';
 import { formatGameTime, perMinute } from './time';
@@ -61,18 +62,19 @@ export function traitBuildLine(
   return `Auf ${islandName(world, island)}: ${TRAIT_LABELS[t]} ${factorText()} — ${rate} ${GOODS[def.produces].name} / min`;
 }
 
-/** `"Möweninsel · 24 × 24 · Gewürz · Fahrzeit 27 s"`; `d` ist die Seeweg-Länge in Kacheln. */
-export function formatIslandCard(def: IslandDef, width: number, height: number, d: number): string {
+/** `"Möweninsel · 24 × 24 · Gewürz · Fahrzeit 27 s"`; `ticks` ist die Fahrzeit in Ticks. */
+export function formatIslandCard(
+  def: IslandDef,
+  width: number,
+  height: number,
+  ticks: number,
+): string {
   const plain = def.traits
     .filter((t) => TRAIT_BUILDINGS[t] === undefined)
     .map((t) => TRAIT_LABELS[t]);
   const parts = [def.name, `${width} × ${height}`];
   if (plain.length > 0) parts.push(plain.join(', '));
-  parts.push(
-    ...traitEffectTexts(def),
-    ...marketTexts(def),
-    `Fahrzeit ${formatGameTime(travelTicks(d))}`,
-  );
+  parts.push(...traitEffectTexts(def), ...marketTexts(def), `Fahrzeit ${formatGameTime(ticks)}`);
   return parts.join(' · ');
 }
 
@@ -83,5 +85,5 @@ export function islandCard(world: World, i: number): string | null {
   const def = ISLANDS.find((d) => d.kind === isl.kind);
   const lane = homeLane(world, i);
   if (!def || !lane) return null;
-  return formatIslandCard(def, isl.width, isl.height, lane.d);
+  return formatIslandCard(def, isl.width, isl.height, travelTicksOf(world, lane.d));
 }

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { mapLayout, tileToMap } from '../../src/render/seaMap';
 import { acceptFarOrder } from '../../src/sim/orders';
 import type { GoodId, Ship, World } from '../../src/sim/types';
-import { farLate, farMark, farOfferDue } from '../../src/ui/farOrder';
+import { farLate, farMark, farOfferDue, farOfferParts } from '../../src/ui/farOrder';
 import { createLaneCache, homeTravelTicks, type Lanes } from '../../src/ui/homeTravel';
 import { SEA_MAP_H, SEA_MAP_PAD, SEA_MAP_W, seaMapKey, seaMapTip } from '../../src/ui/seaMapView';
 import { formatGameTime } from '../../src/ui/time';
@@ -181,5 +181,31 @@ describe('AK-G8 Lane-Cache', () => {
     farMark(w, lanes);
     farMark(w, lanes);
     expect(count).toBe(1);
+  });
+});
+
+describe('AK-SR-18 Fernauftrag mit Seerecht (P-6)', () => {
+  it('zu spät nur ohne Seerecht; Tip und Fernangebot mit Ratswert', () => {
+    const w = orderWorld();
+    const x = target(w);
+    w.islands[x.island]!.stock[x.good] = 0;
+    w.order!.due = w.tick + 260;
+    const lanes: Lanes = () => [{ a: 0, b: x.island, d: 30, points: [] }];
+    expect(farLate(w, x, 260, lanes)).toBe(true);
+    expect(farMark(w, lanes)!.text.endsWith(' · zu spät')).toBe(true);
+    w.council[4] = 'C';
+    expect(farLate(w, x, 260, lanes)).toBe(false);
+    const m = farMark(w, lanes)!;
+    expect(m.text).not.toContain('zu spät');
+    expect(m.tip!.startsWith(`Fahrzeit ≈ ${formatGameTime(240)}`)).toBe(true);
+  });
+  it('Fernangebot zeigt die Ratsfahrzeit', () => {
+    const w = farWorld(3, ['B']);
+    stepAt(w, periodStart(1));
+    expect(w.farOffer).not.toBeNull();
+    const i = w.farOffer!.island;
+    const lanes: Lanes = () => [{ a: 0, b: i, d: 30, points: [] }];
+    w.council[4] = 'C';
+    expect(farOfferParts(w, 0, lanes)!.travel).toBe(`≈ ${formatGameTime(240)} Fahrt`);
   });
 });
