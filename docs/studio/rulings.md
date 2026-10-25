@@ -2902,3 +2902,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN, FLAECH
 Regelbezug: R862, R896, R958, R962 · Kosten bei Irrtum: Spec-Nachtrag.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-NEUE-UFER · ADR: —
+
+## R967 · 2026-10-25 · IDEEN-20 Runden-Ruling
+
+Ruling: IDEEN-20 (`design/ideen-20` @ `327cde3c`, enthält IDEEN-18/19 und R928-Nachführung) **abgenommen**. Entscheide wie in der Rangliste: **I-222** Erbstadt → Pitch als Baustein Inselproben Schnitt 2
+(nach Inselproben, I-061, I-128); **I-221** Konzessions-Auktion → Kosten-Rechnung (Kasse neben Stadtrecht), dann Baustein Rivalen; **I-223** Zehnt → Rechnung, dann Kurzdesign; **I-220** geparkt (erster
+Rivalen-Baustein, nach «Neue Ufer»); **I-224** geparkt (Baustein I-195); **I-225** geparkt bis Tagesinsel live (mit I-209); **I-226** verworfen (dominante Wahl im Frühspiel). «Wette» nicht eingetragen (bestraft
+den besseren Lauf, Inselproben §13). Nur `design/ideen-20` wird gemergt (mit REL-33, R964); `design/ideen-18`/`-19` gelten damit als mitgemergt. Konflikte in `docs/ideen.md` mit `design/i210-bittschrift`
+und `design/gruendungsbrief` löst der Zweitmergende nach Abschnitt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Rivalen (Erweiterung 1, K5 Ratsbank), Inselproben
+Regelbezug: R862, R928, R965 · Kosten bei Irrtum: Pool-Einträge.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-20 · ADR: —
