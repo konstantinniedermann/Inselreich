@@ -2020,3 +2020,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201 und SEE
 Regelbezug: R599, R722, R816, R862, R883 · Kosten bei Irrtum: Seerecht-Revert; eine Rechnung ohne Spec.
 
 Entscheider: L0 · Anlass: Berichte lead-qa gate-seerecht, lead-design IDEEN-18 · ADR: —
+
+## R894 · 2026-10-25 · TIEFE-3 abgenommen; Gründungsbrief-Rechnung
+
+Ruling: `docs/tiefe-3` @ `1ab3968a` (`docs/recherche/2026-10-25-tiefe-3.md`) **abgenommen**; Entwürfe: **E1** gemeinsamer Regelbaukasten (Regel-Schalter als Def in `src/sim/defs/`) — ja, beim ersten
+Paket der Gruppe Seegang/Gründungsbrief/Monatsprobe mitbauen, Architektur im jeweiligen Plan; **E2** T3-2 «Gründungsbrief» (1 aus 3 Briefen vor der Partie, Vorteil mit Haken, Seed-gebunden) — ja, Dominanz-Rechnung
+sofort (`lead-design` mit `design-economy-designer`, Budget 2), Eintrag in IDEEN-19; **E3** T3-3 + T3-5 als Kurzdesign «Proben-Wertung» nach Inselproben live vormerken; **E4** T3-1, T3-4 geparkt. Belege
+schwach (Suchtreffer) hingenommen, da nur Mechanik übernommen wird. Merge mit dem nächsten Release-Bündel.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-209 Seegang (Regelbaukasten), INSELPROBEN (Schnitt 2)
+Regelbezug: R862, R893 · Kosten bei Irrtum: eine Rechnung ohne Spec.
+
+Entscheider: L0 · Anlass: Bericht lead-design TIEFE-3 · ADR: —
