@@ -63,6 +63,8 @@ describe('UI-TASTEN Tooltip am Menü-Knopf «Speichern» (AK-UT-12)', () => {
       hotkeys: () => [],
       seed: () => 1,
       openGuide: () => {},
+      honors: () => ({ line: 'Ehrenbuch: 0 von 9 Meisterstücken', note: null }),
+      openHonors: () => {},
     } as unknown as MenuActions;
     openMenu(host as unknown as HTMLElement, a, fakeEl('button') as unknown as HTMLElement);
     const buttons = flat(lastCard.card!).filter((e) => e.tag === 'button');
@@ -91,6 +93,8 @@ describe('AK-UT-10 Menü: Überschrift «Speichern»', () => {
       hotkeys: () => [],
       seed: () => 1,
       openGuide: () => {},
+      honors: () => ({ line: 'Ehrenbuch: 0 von 9 Meisterstücken', note: null }),
+      openHonors: () => {},
     } as unknown as MenuActions;
     openMenu(
       fakeEl('div') as unknown as HTMLElement,
@@ -157,6 +161,8 @@ describe('UI-AUFRAEUM-4 AK-5 Menü: Krisen-Beschriftung', () => {
       hotkeys: () => [],
       seed: () => 1,
       openGuide: () => {},
+      honors: () => ({ line: 'Ehrenbuch: 0 von 9 Meisterstücken', note: null }),
+      openHonors: () => {},
     } as unknown as MenuActions;
     openMenu(
       fakeEl('div') as unknown as HTMLElement,
@@ -185,6 +191,8 @@ describe('Zweiter Autosave im Menü (I-147, AK-H4, H9)', () => {
       hotkeys: () => [],
       seed: () => 1,
       openGuide: () => {},
+      honors: () => ({ line: 'Ehrenbuch: 0 von 9 Meisterstücken', note: null }),
+      openHonors: () => {},
     }) as unknown as MenuActions;
   const labels = (saves: SaveInfo[]): (string | undefined)[] => {
     vi.stubGlobal('document', { createElement: fakeEl });
@@ -230,5 +238,51 @@ describe('Zweiter Autosave im Menü (I-147, AK-H4, H9)', () => {
     expect(hasAutosave([{ slot: 'auto', tick: 1 }])).toBe(true);
     expect(hasAutosave([{ slot: 'manual', tick: 1 }])).toBe(false);
     expect(hasAutosave([])).toBe(false);
+  });
+});
+
+describe('Ehrenbuch im Menü (I-186, AK-EB-01)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  it('zeigt Zeile und Hinweis, Knopf «Ehrenbuch» ruft openHonors mit dem Knopf', () => {
+    vi.stubGlobal('document', {
+      createElement: (tag: string) => {
+        const e = fakeEl(tag);
+        if (tag === 'button')
+          e.addEventListener = (_t: string, f: () => void) => void (e.onClick = f);
+        return e;
+      },
+    });
+    vi.stubGlobal('Option', function Option() {});
+    const opened: unknown[] = [];
+    const a = {
+      save: () => {},
+      listSaves: () => [],
+      storageNote: () => null,
+      hasProgress: () => false,
+      load: () => {},
+      crisisLevel: () => 'normal',
+      unlockMode: () => 'stepwise',
+      newIsland: () => {},
+      hotkeys: () => [],
+      seed: () => 1,
+      openGuide: () => {},
+      honors: () => ({
+        line: 'Ehrenbuch: 2 von 9 Meisterstücken',
+        note: 'Ehrenbuch wird nicht gespeichert',
+      }),
+      openHonors: (o: unknown) => void opened.push(o),
+    } as unknown as MenuActions;
+    openMenu(
+      fakeEl('div') as unknown as HTMLElement,
+      a,
+      fakeEl('button') as unknown as HTMLElement,
+    );
+    const all = flat(lastCard.card!);
+    const texts = all.map((e) => e.textContent);
+    expect(texts).toContain('Ehrenbuch: 2 von 9 Meisterstücken');
+    expect(texts).toContain('Ehrenbuch wird nicht gespeichert');
+    const btn = all.find((e) => e.tag === 'button' && e.textContent === 'Ehrenbuch')!;
+    (btn.onClick as () => void)();
+    expect(opened).toEqual([btn]);
   });
 });

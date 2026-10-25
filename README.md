@@ -222,6 +222,22 @@ Ist das Denkmal fertig, wird der Ziel-Chip in der Kopfzeile zum Knopf «Meisterp
 - **Abbruch:** jederzeit über «Abbrechen» (zweiter Klick bestätigt), ohne Folgen.
 - **Lohn:** Bei Erfolg trägt die Inselchronik «Meisterprüfung: Eigenversorgung bestanden». Wer scheitert, kann es später neu versuchen.
 
+### Ehrenbuch
+
+Das Ehrenbuch hält Meisterstücke über Partien hinweg fest. Es gibt keinen Spielvorteil und gilt nur auf diesem Gerät (Browser-Speicher, kein Export). Das Menü zeigt die Zeile «Ehrenbuch: n von 9 Meisterstücken»; der Knopf «Ehrenbuch» öffnet die Karte mit erreichten und offenen Stücken samt Bedingung. Ein neues Stück trägt sich mit einer Meldung ein; der erste Eintrag bleibt. «Neue Insel» setzt das Buch nicht zurück.
+
+- **Bürgerstadt:** Erstes Ziel erreichen
+- **Flinke Gründung:** Erstes Ziel bis Spielzeit 15:00
+- **Kaufmannseile:** Handelsstadt bis Spielzeit 30:00
+- **Sturmfest:** Handelsstadt mit Krisen «normal»
+- **Gewürzstadt:** Drittes Ziel erreichen
+- **Inselreich:** Auf jeder Fremdinsel ein Kontor
+- **Denkmal:** Das Denkmal vollenden
+- **Meister im Sturm:** Eine Meisterprüfung mit Krisen «normal» bestehen
+- **Meisterprüfung «Eigenversorgung»:** Die Auflage «Eigenversorgung» bestehen
+
+Die beiden Tempo-Stücke zählen nur in einer Partie mit stufenweiser Freischaltung, die über «Neue Insel» begonnen wurde.
+
 ### Einstellungen, Ton und Anzeige
 
 In der Kopfzeile stehen rechts **Steuer**, Tempo, **Stumm**, **Einstellungen** und **Menü**. «Einstellungen» öffnet eine Karte mit:

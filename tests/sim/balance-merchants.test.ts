@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { HONOR_SWIFT_CITIZEN_TICK, HONOR_SWIFT_MERCHANT_TICK } from '../../src/sim/defs/honors';
 import { merchants } from '../../src/sim/population';
 import { deserialize, serialize } from '../../src/sim/save';
 import type { World } from '../../src/sim/types';
@@ -40,6 +41,10 @@ describe('M8 B1 Szenario-Lauf bis zum zweiten Ziel', () => {
     expect(w.wonMerchants).toBe(true);
     expect(t.wonMerchantsTick).not.toBeNull();
     expect(t.wonMerchantsTick!).toBeLessThanOrEqual(MERCHANT_TICK_LIMIT);
+    // P-9 / R-EB-1 (I-186): Die Tempo-Meisterstücke müssen mit den Pins erreichbar bleiben. Abstand: 6750 gegen 9000,
+    // 11 500 gegen 18 000. Ändern sich die Pins, die Schwellen in defs/honors.ts mitprüfen.
+    expect(t.winTick!).toBeLessThanOrEqual(HONOR_SWIFT_CITIZEN_TICK);
+    expect(t.wonMerchantsTick!).toBeLessThanOrEqual(HONOR_SWIFT_MERCHANT_TICK);
     expect(w.money).toBeGreaterThan(0);
   });
 

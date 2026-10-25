@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TICK_MS } from '../../src/sim/defs/timing';
+import { HONORS, HONOR_IDS } from '../../src/sim/defs/honors';
 import { UNLOCKS } from '../../src/sim/defs/unlocks';
 import type { CrisisLevel } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
@@ -131,6 +132,7 @@ describe('M10 Hilfe-Karte (Spec 12.1)', () => {
       'help-tips',
       'help-signs',
       'help-steps',
+      'help-honors',
     ]);
     expect(s[0]!.lines).toEqual([nextStep(w)]);
     expect(s[1]!.lines).toEqual([
@@ -174,5 +176,18 @@ describe('M10 Symbole im Einbau (Spec 14)', () => {
   it('AK-U4-01 Teilwörter bekommen kein Symbol; Text ohne Namen bleibt ein Stück', () => {
     expect(nameSegments('Holzweg Steine')).toEqual([{ text: 'Holzweg Steine' }]);
     expect(nameSegments('')).toEqual([]);
+  });
+});
+
+describe('Hilfe: Ehrenbuch (I-186, AK-EB-01)', () => {
+  it('help-honors nennt den Satz und alle Namen in HONOR_IDS-Reihenfolge', () => {
+    const sec = helpSections(createWorld(3, { unlockAll: true })).find(
+      (x) => x.field === 'help-honors',
+    )!;
+    expect(sec.title).toBe('Ehrenbuch');
+    expect(sec.lines[0]).toBe(
+      'Meisterstücke über alle Partien, kein Spielvorteil, nur auf diesem Gerät',
+    );
+    expect(sec.lines.slice(1)).toEqual(HONOR_IDS.map((id) => HONORS[id].name));
   });
 });

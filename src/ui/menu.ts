@@ -4,6 +4,7 @@ import type { CrisisLevel } from '../sim/types';
 import { openModal, renderConfirm } from './modal';
 import { CRISIS_LEVEL_IDS, UNLOCK_MODE_IDS, type UnlockMode } from './settings';
 import type { SaveInfo, Slot } from './storage';
+import type { HonorSummary } from './honorView';
 import { formatClock } from './time';
 
 export const NO_SAVE_TEXT = 'Noch kein Spielstand gespeichert';
@@ -46,6 +47,9 @@ export interface MenuActions {
   hotkeys(): { key: string; label: string }[];
   seed(): number;
   openGuide(opener: HTMLElement): void;
+  /** Ehrenbuch-Zeile und Status-Hinweis für den Bereich «Neue Insel». */
+  honors(): HonorSummary;
+  openHonors(opener: HTMLElement): void;
 }
 
 export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement): () => void {
@@ -120,7 +124,18 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
   const unlockLabel = document.createElement('label');
   unlockLabel.className = 'menu-field';
   unlockLabel.append('Freischaltung: ', unlockSelect);
-  newBox.append(crisisLabel, unlockLabel, newRow);
+  const honors = a.honors();
+  const honorBox = document.createElement('div');
+  honorBox.className = 'menu-honors';
+  honorBox.append(
+    Object.assign(document.createElement('p'), { className: 'note', textContent: honors.line }),
+  );
+  if (honors.note)
+    honorBox.append(
+      Object.assign(document.createElement('p'), { className: 'note', textContent: honors.note }),
+    );
+  honorBox.append(btn('Ehrenbuch', (b) => a.openHonors(b)));
+  newBox.append(crisisLabel, unlockLabel, newRow, honorBox);
   // Karte, Hilfe, Tastenkürzel, Schliessen
   const seed = Object.assign(document.createElement('p'), { textContent: `Karte ${a.seed()}` });
   const guide = btn('Hilfe', (b) => a.openGuide(b));
