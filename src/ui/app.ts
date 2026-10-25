@@ -1847,6 +1847,7 @@ function launch(
       const t0 = performance.now();
       const fx: RenderFx = {
         timeMs: t0,
+        tickFrac: state.speed > 0 ? Math.min(1, acc / TICK_MS) : 0,
         dayNight: settings.dayNight,
         weather,
         reduceMotion: reduce,

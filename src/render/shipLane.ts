@@ -86,8 +86,11 @@ function islandAt(world: World, x: number, y: number): number | null {
   return null;
 }
 
-/** Pose des Schiffs: liegend (`to` null) am Anker von `port`, sonst `t = 1 − left / laneTicks` auf der Lane. */
-export function shipPose(world: World, ship: Ship): ShipPose {
+/**
+ * Pose des Schiffs: liegend (`to` null) am Anker von `port`, sonst `t = 1 − (left − frac) / laneTicks` auf der Lane.
+ * `frac` in [0, 1) ist der Bruchteil des laufenden Ticks (Sub-Tick-Interpolation, nur Darstellung).
+ */
+export function shipPose(world: World, ship: Ship, frac = 0): ShipPose {
   let p: Pt;
   const port = world.islands[ship.port];
   if (ship.to === null || !port) {
@@ -96,7 +99,7 @@ export function shipPose(world: World, ship: Ship): ShipPose {
       : { x: 0, y: 0 };
   } else {
     const total = cachedTicks(world, ship.port, ship.to);
-    const t = total > 0 ? Math.min(1, Math.max(0, 1 - ship.left / total)) : 1;
+    const t = total > 0 ? Math.min(1, Math.max(0, 1 - (ship.left - frac) / total)) : 1;
     p = pointAt(lanePoints(world, ship.port, ship.to), t);
   }
   return { x: p.x, y: p.y, island: islandAt(world, p.x, p.y) };
