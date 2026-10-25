@@ -58,33 +58,26 @@ Je 1 bis 3 Punkte. Summe = 2 × Spielspass + Passung + Aufwand + Risiko, höchst
 | Aufwand (`richtwerte.md`) | S: ≤ 1 Häppchen                                                            | M: 2–4 Pakete                | L: Meilenstein                                                             |
 | Risiko                    | berührt weder Save, Baseline, Perf noch Lizenz                             | berührt eines davon          | berührt mehrere                                                            |
 
-## Rangliste IDEEN-17 (Vorschlag lead-design, Ruling L0 offen)
+## Rangliste IDEEN-19 (Vorschlag lead-design, Ruling L0 offen)
 
-Breite Runde (R445, R862) mit 3 Scouts: A neue Spielmodi und Partieziele (I-197–I-200), B Spätspiel-Tiefe (I-201–I-203, I-204 nicht vergeben),
-C Erweiterungs-Bausteine unabhängig von N-104 (I-205–I-207, I-208 nicht vergeben; Nachrunde: erste Fassungen von I-206 «Fischgründe» = I-055 und
-I-207 «Dienstgebäude ausbauen» ≈ I-127 zurückgezogen). I-202 «Planmarke» ist ein Doppel zu I-070 (verworfen) und steht als `zusammengefasst` im Archiv.
-Keine Playtests als Quelle (R862). Keine Idee ändert Kernsäule, Genre oder Titel (§5.3). Alle «fehlt heute»-Annahmen haben eine Code-Fundstelle;
-lead-design hat die Doppelungen per Volltext im Archiv und gegen die Specs Ehrenbuch und Inselproben (Branches) nachgeprüft. Massstab R722: ein Lohn aus
-Geld oder ein Rabatt ohne Gegenpreis ist keine Wahl. Sortiert nach Summe, bei Gleichstand nach Nutzen je Aufwand. Pool-Pflege R599 in derselben Runde:
-R861/R864 entschiedene Ideen (I-106, I-147, I-171–I-173, I-181–I-184, I-193) und die Ranglisten IDEEN-16 und TIEFE-1 ins Archiv. Pool danach 36 von 40 offen.
+Runde mit einem Scout (Spieltiefe, Modi, Erweiterungs-Bausteine, WebSearch) mit I-215–I-219. Keine Playtests als Quelle (R862). Gesättigte Felder (Härte, Ereigniskarten,
+Start-Boni, Szenarien, Feste, Brand, Nachbarn, Wege) waren im Briefing ausgeschlossen. Keine Idee ändert Kernsäule, Genre oder Titel (§5.3). Massstab R722: ein Bonus ohne
+Gegenpreis oder eine Strafe ohne Ausweg ist keine Wahl. Die Scout-Summen waren ohne den Faktor 2 auf Spass gerechnet; lead-design hat alle Summen neu gerechnet. Die Web-Quellen
+sind Zeiger ohne geprüften Inhalt; übernommen wird nur Mechanik. I-214 «Gründungsbrief» steht auf `design/gruendungsbrief` (R894 E2) und gehört nicht zu dieser Runde.
+Pool-Pflege R599: R893-Entscheide zu IDEEN-18 (I-211, I-212 geparkt, I-213 verworfen) und die Rangliste IDEEN-18 ins Archiv, I-209 und I-210 auf `eingeplant` nachgeführt.
+Pool danach 32 von 40 offen.
 
-| Rang | ID    | Gruppe    | Name                            | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                              | Empfehlung                                                                   |
-| ---- | ----- | --------- | ------------------------------- | ------ | ----- | --------------- | ------------------------------------------- | ---------------------------------------------------------------------------- |
-| 1    | I-197 | Modus     | Kartennummer wählen             | S      | 12    | nein / nein     | Wiederspiel derselben Karte, ≈ 40 Tools     | **Häppchen**, Kurzdesign Stufe leicht, nach Inselproben-UI (`menu.ts`)       |
-| 2    | I-201 | Spätspiel | Festanlass (drei Arten Fest)    | S      | 11    | ja / nein       | wiederkehrende Wahl mit Warenpreis, ≈ 60 T. | **Rechnung** `design-economy-designer` (Dominanz), danach Kurzdesign         |
-| 3    | I-203 | Spätspiel | Amtszeit der Edikte             | S      | 10    | ja / ja         | Edikt wird Haltung, ≈ 70 Tools              | parken als Baustein Edikt-Überarbeitung (mit I-131, I-064)                   |
-| 4    | I-198 | Modus     | Gelübde (Verzicht von Minute 0) | M      | 10    | ja / nein       | Härte nach Wahl, ≈ 2–3 Pakete               | parken bis Ehrenbuch und Inselproben live (Siegel), dann Lösbarkeitsrechnung |
-| 5    | I-206 | Baustein  | Hauptgewerbe der Fremdinsel     | M      | 10    | ja / ja         | Routen mit Zweck, ≈ 3 Pakete                | parken mit I-182 bis Erweiterung 1 (Inseldorf) geklärt                       |
-| 6    | I-205 | Baustein  | Abwechslungsreiche Kost         | S      | 10    | nein / ja       | Rabatt ohne Gegenpreis                      | verwerfen (wie I-141: Pflicht ohne Preis)                                    |
-| 7    | I-199 | Modus     | Zweiter Weg zu Ziel 3           | M      | 9     | ja / nein       | zweite Partie anders, ≈ 3–4 Pakete          | parken mit I-164 bis Erweiterung 1 geklärt (Inseldorf, Seestadt)             |
-| 8    | I-200 | Modus     | Kleine Insel (Kurzpartie)       | M      | 9     | ja / ja         | Kurzpartie, ≈ 3 Pakete                      | parken als Baustein Inselproben Schnitt 2                                    |
-| 9    | I-207 | Baustein  | Nachtlichter auf der Seekarte   | S      | 9     | nein / nein     | Stimmung, ≈ 15 Tools                        | parken als Beipack-Kandidat (Seekarte)                                       |
+| Rang | ID    | Gruppe   | Name                       | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                | Empfehlung                                                                      |
+| ---- | ----- | -------- | -------------------------- | ------ | ----- | --------------- | --------------------------------------------- | ------------------------------------------------------------------------------- |
+| 1    | I-215 | Tiefe    | Volllast (Stoss mit Pause) | S      | 12    | ja / nein       | Notgriff mit Preis für Engpässe, ≈ 1 Häppchen | **Pitch:** Rechnung «Volllast gegen Zukauf», dann Spec Stufe voll als Häppchen  |
+| 2    | I-219 | Modus    | Stetigkeit (ohne Mangel)   | S–M    | 11    | ja / nein       | Ruhe statt Menge, ≈ 1 Paket als Proben-Achse  | **Pitch:** Achse der Proben-Wertung (R894 E3), Kurzdesign nach Inselproben live |
+| 3    | I-216 | Baustein | Brache (Felder ermüden)    | M      | 10    | ja / ja         | allein Abzug mit Klick-Pflicht                | parken als Baustein «Ernte und Frost» (I-195)                                   |
+| 4    | I-218 | Tiefe    | Landgewinnung              | M      | 9     | ja / nein       | Nutzen nur bei Platzmangel, ≈ 2–3 Pakete      | parken bis I-200 oder eine Proben-Karte Platzmangel zeigt                       |
+| 5    | I-217 | Tiefe    | Baugrund (Zonen kaufen)    | M      | 9     | ja / ja         | Tor statt Wahl, Kartenpech                    | verwerfen                                                                       |
 
-Leitbefund IDEEN-17: Der Pool bleibt abgegrast. Drei Scouts lieferten 11 Ideen, davon zwei Doppel (I-202 = I-070, erste I-206 = I-055) und eine tote
-Option (erste I-207 ≈ I-127); nur zwei erreichen 11. Die Scouts haben kein Web-Werkzeug (Persona-Tools ohne WebSearch/WebFetch), die Recherche kam nur aus
-TIEFE-1 und zwei Suchen von lead-design. Was die Partie im Spätspiel trägt, sind Rhythmus-Entscheide mit Warenpreis (I-201) oder Zeitpreis (I-203), nicht
-neue Boni. Die stärkeren Spätspiel-Hebel liegen schon in Stadtrecht, Wartung, Ehrenbuch und Inselproben; eine weitere klassische Runde lohnt erst, wenn
-eines davon live ist und neue Reibung zeigt.
+Leitbefund IDEEN-19: Der Scout fand vier neue Felder (Zeit-Stoss, Bodenzustand, Fläche, Siegziel). Zwei tragen die Abwägung selbst: I-215 verschiebt Ausstoss in der Zeit,
+I-219 stellt Wachstum gegen Ruhe. Die Fläche-Ideen setzen einen Platzmangel voraus, den die Heimatinsel heute nicht belegt. I-219 gewinnt als Achse im Proben-Rahmen, weil dort die
+laufende Uhr den Wartetrick bestraft.
 
 ## Ideen
 
@@ -149,32 +142,6 @@ eines davon live ist und neue Reibung zeigt.
 - Bewertung lead-design: Passung 3 → 2 (Rückmeldung, keine neue Entscheidung), Risiko 2 → 3 (gedeckelt wie I-118, das als keins galt). Symmetrie zum Funkeln macht Verlust so lesbar wie Gewinn; Render-Dateien sind während ORT-A T09/T10 belegt, darum nach I-136.
 - Nutzen/Aufwand: Mangel im Moment des Schadens sichtbar · S · ≈ 50 Tools
 - Entscheid: R776 eingeplant: Häppchen nach ORT-A (Render-Dateien); noch nicht gestartet
-
-### I-138 · eingeplant (R776, Beipack) · Rats-Karte nennt die Wirkung vorab
-
-- Bereich: Bedienung · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: IDEEN-13 Scout A; `src/ui/council.ts` `councilCards` (nur statischer Text aus `COUNCIL`); `docs/beobachtungen.md` «10-16 · I-112: Umschalt+R ohne Marke öffnet leere Rats-Karte» · Herkunft: vom Studio vorgeschlagen
-- Spielerwirkung: „Der Spieler liest unter «Marktrecht» «wirkt auf 3 Marktplätze, 41 Häuser» und unter «Zunftrecht» «12 Häuser warten auf Stein», bevor er die einmalige Wahl trifft."
-- Mechanik: Je Beschluss eine Vorschau-Zeile aus Weltzustand und `COUNCIL` (reine Lesefunktion in `src/ui/`); dazu Umschalt+R ohne Marke ignoriert (Beobachtung). Die vom Scout vorgeschlagenen temporären Reichweitenkreise entfallen (Versorgungsebene gehört zur Stadtplanung).
-- Grösse: S · Risiko: keins (reine Anzeige)
-- Raster (Scout): Spass 2 · Passung 3 · Aufwand 2 · Risiko 3 = 12 (Zeile allein 13) · Raster (lead-design, nur Zeile): Spass 1 · Passung 3 · Aufwand 3 · Risiko 3 = 11
-- Randfälle: kein Marktplatz → «wirkt noch nicht», Beschluss bleibt wählbar; kein Aufstiegskandidat → nur der Preis; Rat schon entschieden → Zeile entfällt. Entartung: die Zahlen machen eine Seite offensichtlich besser und entlarven eine Scheinwahl — dann ist das ein Balancing-Befund zu I-112 (Anhang-Rechnung), kein Fehler der Anzeige.
-- Doppelung: I-112 (live, Karte ohne Vorschau); I-045 und I-051 (Stadtplanung) für die Kreise.
-- Bewertung lead-design: Spass 2 → 1: Der Kartentext nennt die Wirkung schon, die Zeile macht sie konkret, erzeugt aber keine neue Entscheidung; die Wahl kommt nur dreimal je Partie. Als Beipack mit dem Umschalt+R-Befund günstig.
-- Nutzen/Aufwand: Weichenstellung informiert statt geraten · S · ≈ 40 Tools als Beipack
-- Entscheid: R776 eingeplant: Beipack zum nächsten UI-Häppchen (nur Textzeile, mit Umschalt+R-Befund)
-
-### I-139 · eingeplant (R861, UI-HAEPPCHEN-J) · Ratsbeschluss und Kulanz in der Inselchronik
-
-- Bereich: Inhalt · Säule: Insel besiedeln (Rückblick) · Quelle: IDEEN-13 Scout A; `src/ui/monumentView.ts`, `src/ui/inspect.ts` (Chronik führt Denkmalziele), `src/ui/council.ts` (Beschluss nur im Rats-Fenster sichtbar); I-132 legt Abzeichen in die Chronik · Herkunft: vom Studio vorgeschlagen
-- Spielerwirkung: „Der Spieler liest in der Inselchronik «Minute 7: Marktrecht gewählt» und «Minute 22: Kulanz verbraucht» und erkennt den Weg seiner Insel."
-- Mechanik: Zwei weitere Chronik-Übergänge in der vorhandenen UI-Funktion (Rat von `null` auf A/B, Kulanz von bereit auf verbraucht); vor dem Paket prüfen, ob die Chronik abgeleitet oder gespeichert ist.
-- Grösse: S · Risiko: keins, falls abgeleitet; sonst Save
-- Raster (Scout): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 10 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 10
-- Randfälle: Laden erzeugt keine Doppeleinträge; «Neue Insel» setzt zurück; Minute nur, wenn der Zeitpunkt ableitbar ist, sonst ohne Zeitangabe. Entartung: Chronik wird Ereignisflut → höchstens drei Eintragsarten.
-- Doppelung: I-125 (verworfen, Log im Spielstand), I-100 (Trennung Log/Chronik), I-132 (Abzeichen).
-- Bewertung lead-design: bestätigt (10). Kosmetik ohne Entscheidung; sinnvoll erst, wenn I-132 die Chronik als Ort für Abzeichen etabliert hat.
-- Nutzen/Aufwand: Geschichte der Insel · S · ≈ 30 Tools
-- Entscheid: R861 eingeplant: Beipack UI-HAEPPCHEN-J (Chronik-Format aus UI-BEIPACK-FERN)
 
 ### I-146 · eingeplant (R806, UI-HAEPPCHEN-H) · Wirkkreis bei ausgewählter Kapelle, Schule und Feuerwache
 
@@ -301,34 +268,6 @@ eines davon live ist und neue Reibung zeigt.
 - Korrektur (R831): Lärm senkt nur die Belegung und ist kein Aufstiegsgrund; Lärm steht als eigene Zeile, Park als Hinweis (F3), eine Ursache je Haus (F2), kein Klick-Sprung (F1).
 - Entscheid: R827/R831 eingeplant: UI-HAEPPCHEN-I P3, nach Stadtplanung-Merge
 
-### I-176 · eingeplant (R861, UI-HAEPPCHEN-J) · Warn-Meldungen bleiben lange genug stehen
-
-- Bereich: Bedienung · Säule: Bedienung (Krisen lesbar) · Quelle: IDEEN-16 Scout B; Playtest `.studio/qa/rel-18/report.md` (Ärgernis 1: Sturmmeldung bei 4× nur kurz sichtbar, erst im Rückblick bemerkt) · Herkunft: vom Studio vorgeschlagen
-- Spielerwirkung: „Der Spieler sieht eine Krisen- oder Warnmeldung (Sturm, Brand) auch bei 4× noch lange genug, um zu reagieren, statt sie erst im Rückblick zu bemerken."
-- Mechanik: Anzeigedauer je Meldungsart statt einheitlich 3 s: `warn` 7 s, `info` 3 s, `error` 3 s (Werte als Konstante in `src/ui/`, keine Sim-Werte); beim Zeiger über der Meldung hält der Ablauf an.
-- Grösse: S · Risiko: keins (UI, kein Save, keine Baseline)
-- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12 (lead-design bestätigt)
-- Fehlt heute: `src/ui/messages.ts:138` `if (!sticky) setTimeout(() => toast.remove(), 3000)` gilt für jede Art gleich; Krisen-Toasts laufen ohne `sticky` (`src/ui/app.ts:1716`).
-- Randfälle: `MAX_TOASTS = 3` (`messages.ts:10`) verdrängt weiter die älteste nicht klebende Meldung; viele Warnungen hintereinander dürfen Karten nicht zustellen; `DEDUPE_MS` bleibt; Pause hält den Ablauf nicht an (Echtzeit).
-- Doppelung: I-058 (geparkt, «Pause bei Krise»; I-176 ist die billige Fassung ohne Tempo-Eingriff); I-169 (geparkt, Randmarken). Ereignis-Log mit Ungelesen-Zähler (REL-24) bleibt der Rückblick.
-- Bewertung lead-design: Beleg alt (rel-18), seither Ereignis-Log und Krisen-Effekte; trotzdem der billigste Gewinn der Runde für Spieler auf 4×. Kein eigenes Paket, Häppchen mit I-139 und I-138.
-- Nutzen/Aufwand: Krise bei hohem Tempo nicht verpasst · S · ≈ 25 Tools
-- Entscheid: R861 eingeplant: Häppchen UI-HAEPPCHEN-J (mit I-139, I-138); Kurzdesign Stufe leicht
-
-### I-186 · eingeplant (R864, Kurzdesign) · Ehrenbuch (Meisterstücke über alle Partien)
-
-- Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen (Ziele) · Quelle: TIEFE-1 Recherche R1 1.3–1.5 (`docs/recherche/2026-10-23-tiefe-1.md`); Genre-Mechanik (Erfolge je Schwierigkeit) · Herkunft: vom Studio vorgeschlagen · Gruppe: **Spieltiefe**
-- Spielerwirkung: „Der Spieler öffnet im Menü das Ehrenbuch, sieht «Handelsstadt ohne einen Zukauf — offen» und spielt die nächste Insel bewusst anders, um das Meisterstück zu holen."
-- Mechanik: 16–20 Meisterstücke als Defs (`src/sim/defs/honors.ts`), je eine reine Prüffunktion über den Weltzustand (z. B. «Ziel 1 vor 25:00», «Gewürzstadt mit Krisen hoch», «Meisterprüfung bestanden», «fünf Stammkunden-Lieferungen ohne Bruch», «drei Fremdinseln mit Kontor»). Die Prüfung läuft beim Ziel-Ereignis und beim Speichern. Erreichte Stücke liegen getrennt vom Spielstand im Browser (`inselreich.ehrenbuch`, wie `inselreich.settings`, `src/ui/settings.ts:46`) und gelten für alle Partien. Lohn nur ehrenhalber: Eintrag, Datum, Kartennummer. Kein Spielwert, kein Startbonus.
-- Grösse: S–M · Risiko: keins für Welt-Save und Baseline (eigene Ablage, Prüfung nur lesend); eigene Ablage mit Versionsfeld und Abweisen bei Fremdformat
-- Raster: Spass 3 · Passung 2 · Aufwand 2 · Risiko 3 = 13
-- Fehlt heute: Erfolge leben nur in der Chronik der laufenden Partie (Meisterprüfung, `src/sim/trial.ts`); neben dem Spielstand liegen nur Einstellungen (`src/ui/settings.ts:46`) und die zwei Speicherplätze (`src/ui/storage.ts:5-6`).
-- Randfälle: «Alles frei» und «Krisen aus» nur für eigens markierte Stücke; geladener Fremd- oder Altstand darf Stücke nicht nachträglich auslösen, die er nicht im laufenden Spiel erreicht hat (Prüfung nur bei Ereignis). Entartung: Neuladen eines Stands kurz vor dem Ziel, um ein Zeit-Stück mehrfach zu holen. Das ist harmlos, weil das Stück einmalig ist.
-- Doppelung: I-111 (geparkt, Etappen mit Geld-/Baustofflohn innerhalb der Partie), I-134 (geparkt, Vermächtnis = Startbonus über Partien; R722: Startboni ohne Wirkung), I-069 (verworfen, Widmung), AUFLAGEN-KERN (Auflagen sind Prüfungen in der Partie; das Ehrenbuch verzeichnet sie). Beleg: `rg -n -i "Ehrenbuch|Errungenschaft|Erfolge|Ruhm|Prestige" docs/ideen.md docs/ideen-archiv.md` → 0 Treffer; Erweiterung 1 (`git show design/erweiterung-1:…brainstorming.md | grep -E "Ehre|Prestige"`) → 0 Treffer.
-- Bewertung lead-design: Der billigste Hebel gegen «kein Ziel nach dem Ziel» (R1 1.3, 1.4). Er braucht keinen Geldlohn und passt zu R839/R840 (Lohn ehrenhalber). Stücke wie «ohne Zukauf» oder «Krisen hoch» erzeugen echte Wahl in der ersten Stunde der nächsten Partie. Zugleich Träger für Bestzeiten aus I-190.
-- Nutzen/Aufwand: Grund für die zweite und dritte Partie, Ziele in jeder Phase · S–M · ≈ 2 Häppchen (Sim-Prüfer + Menükarte), ≈ 120 Tools
-- Entscheid: R864 eingeplant: Kurzdesign Ehrenbuch (`design/i186-ehrenbuch`), Plan `plan/i186-ehrenbuch`
-
 ### I-187 · eingeplant (R864, Baustein O8/K5) · Inselruf (zweite Währung, die Geld nicht kauft)
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: TIEFE-1 Recherche R1 1.6 (Tropico «drowning in money»), R3 «neue Entscheidung statt mehr Arbeit»; Leitbefund R722 · Herkunft: vom Studio vorgeschlagen · Gruppe: **Spieltiefe**
@@ -438,7 +377,7 @@ eines davon live ist und neue Reibung zeigt.
 - Nutzen/Aufwand: Spätspiel mit Bauplan-Entscheidungen · L · ≈ 10–12 Pakete
 - Entscheid: R864 offen: Nutzerentscheid N-104, dritter Kandidat
 
-### I-197 · bewertet · Kartennummer wählen (Karte eintippen)
+### I-197 · eingeplant (R878, Plan R878) · Kartennummer wählen (Karte eintippen)
 
 - Bereich: Bedienung · Säule: Insel besiedeln · Quelle: IDEEN-17 Scout A; Genre-Mechanik «Karte teilen» (Recherche TIEFE-1 §3, [Q26–Q28]); `src/ui/menu.ts:125` zeigt nur `Karte ${a.seed()}`, keine Eingabe; `rg -n -i "karte.*eingeb|Seed eingeben" docs/ideen.md docs/ideen-archiv.md README.md src/ui/` kein Treffer
 - Spielerwirkung: „Der Spieler tippt bei «Neue Insel» eine Kartennummer ein und spielt dieselbe Insel wie ein Freund oder wie in der letzten Partie, nur mit anderem Ziel oder anderer Krisenstufe." Leer heisst Zufall wie bisher.
@@ -448,45 +387,9 @@ eines davon live ist und neue Reibung zeigt.
 - Doppelung: I-190/I-191 setzen feste Nummern bzw. das Datum; die Spec Inselproben schliesst Änderungen an «Neue Insel» ausdrücklich aus (§13, `design/modus-inselproben`). Keine freie Eingabe im Pool oder Archiv.
 - Bewertung lead-design: kleinster Weg zu Wiederspielwert mit Vergleich, auch ohne die Proben nützlich. Dateinähe zu den Inselproben (`menu.ts`, `app.ts`): nach deren UI-Task bauen.
 - Nutzen/Aufwand: dieselbe Karte mit anderem Ziel, Teilen unter Spielern · S · ≈ 40 Tools
-- Entscheid: offen (IDEEN-17), Empfehlung Häppchen, Kurzdesign Stufe leicht (kein Save, kein Spielwert), nach Inselproben-UI
+- Entscheid: R878 eingeplant: Kurzdesign `design/i197-i201` (Gate Spec BEDENKEN eingearbeitet), Plan `plan/i197-kartennummer` Gate Plan OK; K4 «Partiebrief» als I-197b (R881)
 
-### I-198 · bewertet · Gelübde (freiwilliger Verzicht von Minute 0)
-
-- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-17 Scout A; Genre-Mechanik selbst gewählte Härte (Recherche TIEFE-1 §2, 1.4 und 1.6); Zukauf-Sperre der Auflage «Eigenversorgung» (`src/sim/trial.ts:44` `trialBuyBlock`) gilt nur nach dem Wahlziel (`trial.ts:16`); `rg -n -i "Gelübde|Verzicht|conduct" src/ docs/ideen.md` kein Treffer
-- Spielerwirkung: „Der Spieler legt vor dem Start ein Gelübde ab, zum Beispiel «Kein Zukauf am Kontor bis Ziel 3», und plant die ganze Partie um die Sperre; das Siegel steht danach im Ziel-Ereignis und in der Chronik."
-- Mechanik: vorhandene Zukauf-Sperre schon in der Aufbauphase; weitere Gelübde je eine Def-Zeile. Kein Spielwert-Bonus (R864), nur Siegel und Text. Bruch hebt das Gelübde ohne Strafe auf.
-- Grösse: M · Risiko: Save (Feld `vow`), Baseline unberührt (Controller spielt kein Gelübde)
-- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 2 = 10 (lead-design: Spass 3 → 2, Anfänger wählen es nicht; spürbar für Kenner)
-- Doppelung: I-132 Eigenversorgung (live, nach dem Denkmal, 9000 Ticks), I-192 Knappe Zeiten (feste Startbedingung). Die Spec Ehrenbuch hat «Partie ohne jeden Zukauf» wegen Sim-Zähler und Save-Sprung verworfen; ein Gelübde wäre genau dieser Zähler.
-- Bewertung lead-design: echte Entscheidung, aber Lösbarkeit «ohne Zukauf bis Ziel 3» ungerechnet (Stein-Engpass früh, `goods.ts:15`). Passt als Siegel ins Ehrenbuch, sobald es und die Inselproben (Save v19) live sind.
-- Nutzen/Aufwand: Härte nach Wahl ohne Meta-Bonus · M · ≈ 2–3 Pakete
-- Entscheid: offen (IDEEN-17), Empfehlung parken bis Ehrenbuch und Inselproben live, dann mit Lösbarkeitsrechnung
-
-### I-199 · bewertet · Zweiter Weg zu Ziel 3
-
-- Bereich: Inhalt · Säule: Bevölkerung (Ziele), Insel besiedeln · Quelle: IDEEN-17 Scout A; Genre-Mechanik mehrere Siegpfade (Recherche TIEFE-1 §2, 1.2); Zielkette fest in `src/sim/tick.ts:17-24` (`won` → `wonMerchants` → `wonSpice`); `rg -n -i "Siegpfad|alternatives Ziel" src/ docs/ideen.md` kein Treffer
-- Spielerwirkung: „Der Spieler wählt nach Ziel 2 zwischen dem Gewürzhandel und einem zweiten Weg über den Archipel (zwei Fremdinseln versorgen) und plant danach anders."
-- Mechanik: zweiter Prüfweg in `src/sim/goal3.ts`, Wahl als Def, Default Gewürz (bitgleich). Werte und Lösbarkeit per Controller-Lauf.
-- Grösse: M · Risiko: Save (Wahlfeld), Baseline (Default bitgleich, zweiter Weg ohne Pins)
-- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9 (lead-design: Spass 3 → 2, Wahl erst nach Ziel 2)
-- Doppelung: I-164 Fern-Wahlziel (geparkt R827 bis Erweiterung 1 geklärt), I-182 (geparkt), Erweiterung 1 Inseldorf und Ziel 4 «Seestadt» (Fremdinseln versorgen ist dort schon Thema).
-- Bewertung lead-design: gute Wiederspiel-Idee, liegt aber auf derselben Stelle wie Inseldorf/Seestadt der Erweiterung 1 (Nutzer-Session). Wie I-164 parken.
-- Nutzen/Aufwand: zweite Partie spielt sich anders · M · ≈ 3–4 Pakete
-- Entscheid: offen (IDEEN-17), Empfehlung parken mit I-164 bis Erweiterung 1 geklärt
-
-### I-200 · bewertet · Kleine Insel (Kurzpartie)
-
-- Bereich: Inhalt · Säule: Insel besiedeln · Quelle: IDEEN-17 Scout A; Genre-Mechanik Zeitlimit und Knappheit (Recherche TIEFE-1 §3, [Q34]); feste Masse `MAP_W`/`MAP_H` (`src/sim/mapgen.ts`, benutzt in `src/sim/world.ts:108-112`, `src/sim/save.ts`, `src/render/limits.ts:83`, `src/ui/hud.ts`, `src/ui/seaMapView.ts`), `Island.width/height` schon Felder (`src/sim/types.ts:394`)
-- Spielerwirkung: „Der Spieler wählt eine kleine Heimatinsel und erreicht die Ziele 1 bis 3 in einer halben Stunde, weil jede Kachel zählt."
-- Mechanik: zweite Kartengrösse als Option; `generateMap` bekommt Breite und Höhe. Ziele unverändert, Lösbarkeit per Controller-Lauf.
-- Grösse: M · Risiko: Save, Perf (Rendergrenzen), Baseline
-- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9 (lead-design: bestätigt)
-- Doppelung: I-192 «Karge Heimat» sperrt nur den Steinbruch; I-190 ohne Grössenwahl.
-- Bewertung lead-design: Variante für einen zweiten Schnitt der Inselproben (Probe auf kleiner Karte), nicht fürs Grundspiel; der Umbau der Kartenmasse über fünf Dateien ist das Hauptrisiko.
-- Nutzen/Aufwand: Kurzpartie mit anderen Platzentscheidungen · M · ≈ 3 Pakete
-- Entscheid: offen (IDEEN-17), Empfehlung parken als Baustein für Inselproben Schnitt 2
-
-### I-201 · bewertet · Festanlass (drei Arten Fest, zweite Zutat)
+### I-201 · eingeplant (R878, Plan R881) · Festanlass (drei Arten Fest, zweite Zutat)
 
 - Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: IDEEN-17 Scout B; Genre-Mechanik Wahl mit Zweitkosten; TIEFE-1 Tabelle 1.8 (Plateau braucht wiederkehrende Entscheidung); Fest hat genau eine Wirkung (`src/sim/feast.ts:69-80`, `src/sim/population.ts:152`, Werte `src/sim/defs/timing.ts:60-64`: 10 Rum, 600 Ticks, Abklingzeit 1800); `rg -n -i "Anlass|Erntefest|Festart" docs/ideen.md docs/ideen-archiv.md` kein Treffer
 - Spielerwirkung: „Der Spieler wählt beim Fest in der Kapelle zwischen «Aufstiegsfest» (wie heute), «Erntefest» (Betriebe im Wirkkreis schneller, kostet zusätzlich Tuch) und «Hafenfest» (Schiffe im Wirkkreis laden schneller) und wägt im Spätspiel alle drei Minuten ab, welches er feiert."
@@ -496,52 +399,95 @@ eines davon live ist und neue Reibung zeigt.
 - Doppelung: I-007 (live, Fest), I-146 (Wirkkreis sichtbar), I-141 (verworfen R776: Festbetrieb gegen Geld; hier Warenpreis statt Geld, also nicht derselbe Einwand).
 - Bewertung lead-design: einzige Idee der Runde mit wiederkehrender Spätspiel-Wahl und Warenpreis statt Geld (R722). Offen ist, ob eine Art dominiert (Erntefest immer, wenn Tuch reicht); 10 Rum ist im Spätspiel kein Preis. Vor dem Kurzdesign rechnen.
 - Nutzen/Aufwand: wiederkehrende Entscheidung mit Güterpreis · S · ≈ 60 Tools plus Rechnung
-- Entscheid: offen (IDEEN-17), Empfehlung Rechnung `design-economy-designer` (Dominanz, Warenpreis), danach Kurzdesign; neue Spielwerte, also nicht Stufe leicht
+- Entscheid: R878 Rechnung, danach Spec I-201 (R880 nachgebessert); Plan `plan/i201-festanlass` abgenommen (R881)
 
-### I-203 · bewertet · Amtszeit der Edikte (Wirkung wächst im Amt)
+### I-209 · eingeplant (R893, Rechnung nach Inselproben) · Seegang (Härteleiter, im Sieg freigespielt)
 
-- Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: IDEEN-17 Scout B; TIEFE-1 Tabelle 1.6 ([Q15]–[Q17]); Wechsel kostet nur `EDICT_COST` 600 (`src/sim/defs/edicts.ts:36`, `src/sim/edicts.ts:52-60`) gegen +2500…+3200 je Minute (R865); `rg -n -i "Amtszeit|Anlauf" src/sim/` kein Treffer
-- Spielerwirkung: „Der Spieler wechselt das Edikt nicht mehr beliebig: Die Wirkung steigt im Amt von 70 % auf 130 %, ein Wechsel beginnt wieder bei 70 %; er entscheidet, ob er hält oder zur Krise auf «Wohlfahrt» umschaltet."
-- Mechanik: `world.edictSince`; Faktor als reine Funktion der Amtsdauer auf `taxPoints`, `upkeepPct`, `growthInterval`; Rampe in `src/sim/defs/edicts.ts`.
-- Grösse: S · Risiko: Save, Baseline (Pins mit Edikt ändern sich, Ruling nötig)
-- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 1 = 10 (lead-design: bestätigt)
-- Doppelung: I-145 (verworfen R776, Geldgebühr), I-131 (geparkt, zweiter Edikt-Platz, «gehört zu einer Edikt-Überarbeitung»), I-064 (geparkt, viertes Edikt). Neu: Zeitpreis statt Geldpreis.
-- Bewertung lead-design: löst den Einwand gegen I-145 (Geld bindet nicht) mit Zeit; trägt am besten in einer Edikt-Überarbeitung mit I-131 und I-064, nicht allein.
-- Nutzen/Aufwand: Edikt wird Haltung statt Schalter · S · ≈ 70 Tools plus Balancing-Ruling
-- Entscheid: offen (IDEEN-17), Empfehlung parken als Baustein Edikt-Überarbeitung (mit I-131, I-064)
+- Bereich: Inhalt, Bedienung · Säule: Wirtschaft, Steuern und Handel · Quelle: TIEFE-2 K1 (`docs/superpowers/specs/2026-10-25-tiefe-2-recherche.md` §3, Belege A-2, A-3, A-6, Quellen [S2]–[S5]); Genre-Mechanik «gestufte Härte, Stufe n+1 erst nach Sieg auf Stufe n»; nimmt I-198 Gelübde auf (R881, T2-2); `rg -n -i "seegang|difficulty|hardness" src/` kein Treffer, Krisenstufen nur `off`/`mild`/`normal` (`src/sim/defs/crises.ts:4-8`)
+- Spielerwirkung: „Der Spieler hat die Gewürzstadt auf Seegang 2 geschafft und will jetzt wissen, ob er auf Seegang 3 ohne Zukauf bis Ziel 2 durchkommt."
+- Mechanik: Fünf Stufen bei «Neue Insel», jede legt **eine** lesbare Regel auf die vorige (Vorschlag, Werte als Def-Tabelle `src/sim/defs/`): 1 Zukauf am Kontor ×1,5 · 2 Lager −25 % (`STORAGE_CAP` 100 → 75, `goods.ts:84`) · 3 kein Zukauf bis Ziel 2 (Inhalt I-198) · 4 Startgeld halb · 5 Unterhalt +20 %. Stufe n+1 öffnet sich mit Ziel 3 auf Stufe n; «Frei» (eigene Regler) bleibt offen und wertet nicht. Die höchste bestandene Stufe steht im Ehrenbuch (live REL-32) und im Teilen-Text (I-197b). Keine Stufe gibt einen Vorteil (R864, T2-1).
+- Grösse: M · Risiko: Save (Weltfeld `seegang: 0–5`, +1, Migration auf 0); Baseline unberührt (Stufe 0 bitgleich)
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11 (lead-design; TIEFE-2 Rang 1)
+- Randfälle: Lösbarkeit je Stufe ungerechnet (Stein-Engpass früh, siehe I-198); eine Stufe «Krisen hoch» fällt weg, weil I-133 «stürmisch» gerechnet trivial war (3 Feuerwachen halten ≥ 93 %, R745). Entartung: Spieler wählt nur «Frei» → wertet nicht, kein Schaden. Höchste Stufe liegt neben dem Spielstand wie die Ehrenbuch-Ablage, nicht im Save.
+- Doppelung: I-198 (zusammengefasst hierher), I-192 Knappe Zeiten (feste Szenario-Startlage, eingeplant Inselproben; Seegang ist frei kombinierbar mit jeder Karte), I-133 (verworfen), I-193 Bewährung (geparkt, Endlos, bleibt getrennt), Krisenstufe (live, bleibt eigener Regler).
+- Bewertung lead-design: stärkster Wiederspiel-Hebel ohne neuen Inhalt: alle Regeln sind Faktoren auf vorhandene Werte. Vor dem Kurzdesign eine Lösbarkeitsrechnung je Stufe (`design-economy-designer`), Wiederverwendung der Startbedingungs-Schalter aus Inselproben.
+- Nutzen/Aufwand: zweite bis fünfte Partie mit eigenem Ziel · M · ≈ 3 Pakete (Defs und Sim-Schalter, Neue-Insel-UI, Ablage und Ehrenbuch-Anschluss) plus Rechnung
+- Entscheid: R893 eingeplant: Lösbarkeitsrechnung je Stufe nach Inselproben-Merge, dann Spec (Stufe voll)
 
-### I-205 · bewertet · Abwechslungsreiche Kost
+### I-210 · eingeplant (R893, Plan R923) · Bittschrift (Bitte mit zwei Antworten und spätem Nachspiel)
 
-- Bereich: Inhalt · Säule: Produktionsketten, Bevölkerung versorgen · Quelle: IDEEN-17 Scout C; Genre-Mechanik Nahrungsvielfalt; Fischer, Jagd und Rinderfarm erzeugen dasselbe Gut (`src/sim/defs/buildings.ts:53,66,80`); `rg -i "vielfalt|abwechslung|variety|diversit" src/sim docs/ideen.md docs/ideen-archiv.md` kein Treffer
-- Spielerwirkung: „Der Spieler baut neben dem Fischer auch Jagd und Rinderfarm, weil zwei verschiedene Nahrungsquellen den Bedarf der Häuser um 10 % senken (drei: 15 %)."
-- Mechanik: aktive Nahrungs-Betriebstypen je Insel zählen, Bedarfsfaktor aus `src/sim/defs/`; kein Save-Feld (abgeleitet).
-- Grösse: S · Risiko: Baseline (Bedarfsrechnung)
-- Raster: Spass 1 · Passung 3 · Aufwand 3 · Risiko 2 = 10 (lead-design: Spass 2 → 1)
-- Doppelung: I-076 (verworfen, Missernte), I-077 (geparkt, Spezialisierung je Betrieb).
-- Bewertung lead-design: ein Rabatt ohne Gegenpreis: Sobald die drei Betriebe billig sind (ab Minute 15, R722), baut man sie immer, vorher spart der Bonus weniger als ein zusätzlicher Fischer. Gleicher Einwand wie I-141.
-- Nutzen/Aufwand: geringer Nutzen (Pflicht ohne Preis) · S · ≈ 1 Häppchen
-- Entscheid: offen (IDEEN-17), Empfehlung verwerfen (Rabatt ohne Wahl)
+- Bereich: Inhalt, Bedienung · Säule: Bevölkerung versorgen und aufsteigen lassen; Wirtschaft · Quelle: TIEFE-2 K3 (`docs/superpowers/specs/2026-10-25-tiefe-2-recherche.md` §3, Beleg B-1, Quellen [S12]–[S15]); Genre-Mechanik «Ereigniskarte mit zwei Antworten, Folge sichtbar, Nachspiel verzögert»; `rg -n -i "petition|bittschrift" src/` kein Treffer
+- Spielerwirkung: „Der Spieler überlegt, ob er jetzt 20 Stoff hergibt, damit in acht Minuten 15 Bürger zuziehen, obwohl sein Lager knapp ist."
+- Mechanik: Ab Ziel 1 etwa alle 10 min (seeded eigener Strom, ADR-010) eine Karte mit «Ja»/«Nein»; beide Folgen stehen auf der Karte (zum Beispiel «Ja: −20 Stoff jetzt · in ≈ 8 min Zuzug +15 Bürger», «Nein: nichts · Kapellen-Fest −1 für 10 min»). Die Antwort setzt eine Marke, ein Folgeereignis löst sie ein (Dank oder Klage, Eintrag in der Chronik). Ohne Antwort nach 2 min gilt «Nein». Lohn ist Wachstum, Zeit oder Fest, **nie Geld** (R722). 8–12 Bitten als Def-Tabelle. Schalter wie bei der Krisenstufe: Welt-Standard aus (Baseline bitgleich), neue Partie an.
+- Grösse: M · Risiko: Save (Weltfeld offene Marken, +1); Baseline unberührt über den Welt-Standard «aus»
+- Raster: Spass 3 · Passung 2 · Aufwand 2 · Risiko 2 = 12 (lead-design; TIEFE-2 Rang 3)
+- Randfälle: Ware fehlt beim «Ja» → Antwort gesperrt mit Grund (`{ ok, reason }`), nicht teilweise; Abriss des betroffenen Gebäudes vor dem Nachspiel → Marke verfällt ohne Folge; zwei offene Marken höchstens, sonst kommt keine neue Bitte; Pause hält die 2-min-Frist an. Entartung: «Ja» dominiert immer → je Bitte eine Dominanz-Prüfung vor dem Kurzdesign; «Nein» darf nie eine Krise auslösen (Ton).
+- Doppelung: Rat und Stadtrecht (einmalige Sofort-Wahl, live/geplant), Auflagen (I-162/I-163, «wie viel», befristet), I-201 Festanlass (Fest als Lohn, verträglich), I-018 Story-Rahmen (geparkt, §5.3; Bittschrift bleibt Wirtschaftsentscheid mit Kurztext), B-4 Interessengruppen (TIEFE-2 ausgeschieden, Ton).
+- Bewertung lead-design: einzige neue Spätspiel-Achse ohne harte Abhängigkeit; macht die stabile Stadt wieder zur Abwägung zwischen Lager und Wachstum. Kartenformat mit «Neue Ufer» N4 teilen, Inhalt trennen.
+- Nutzen/Aufwand: stabile Stadt entscheidet wieder · M · ≈ 3 Pakete (Sim-Strom und Marken, Karte und Chronik, Inhalt mit Rechnung)
+- Entscheid: R893 eingeplant: Dominanz-Rechnung, Spec (Stufe voll), Plan R923
 
-### I-206 · bewertet · Hauptgewerbe der Fremdinsel
+### I-215 · bewertet · Volllast (Betrieb auf Überstunden, danach Pause)
 
-- Bereich: Inhalt, Bedienung · Säule: Wirtschaft, Steuern und Handel; Insel besiedeln · Quelle: IDEEN-17 Scout C (Nachrunde); Genre-Mechanik «Hauptgewerbe wählen, ausführen, den Rest einführen» (Hinweis lead-design aus Web-Recherche); `src/sim/types.ts:395` (`Island` ohne Ausrichtung), `rg -n -i "focus|hauptgewerbe|specialis" src/` kein Treffer
-- Spielerwirkung: „Der Spieler legt je Fremdinsel ein Hauptgewerbe fest (Landwirtschaft, Handwerk oder Rohstoffe): Passende Betriebe arbeiten dort 25 % schneller, alle anderen 25 % langsamer, und die Insel wird zum Ausfuhrort."
-- Mechanik: `focus` je Fremdinsel, Zuordnung als Tabelle in `src/sim/defs/sea.ts`, Faktor wie `TRAIT_CYCLE_PCT`; Wechsel gegen Stein und Werkzeug; Heimat ohne Hauptgewerbe.
-- Grösse: M · Risiko: Save, Baseline
-- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 1 = 10 (lead-design: bestätigt)
-- Doppelung: I-055 (verworfen, reiner Bonus), I-077 (geparkt, je Betrieb), I-172 (geparkt, Preise), I-182 (geparkt, Bauradius Fremdinseln), Erweiterung 1 Inseldorf.
-- Bewertung lead-design: die Kehrseite macht es zur Wahl, aber nur bei knappen Bauplätzen (Inseln 24 und 36 Kacheln); sonst baut man nur Passendes und der Malus ist leer. Gehört auf die Fremdinseln wie I-182 und damit hinter die Klärung des Inseldorfs (Erweiterung 1).
-- Nutzen/Aufwand: Routen bekommen einen Zweck · M · ≈ 3 Pakete plus Rechnung
-- Entscheid: offen (IDEEN-17), Empfehlung parken mit I-182 bis Erweiterung 1 (Inseldorf) geklärt
+- Bereich: Inhalt · Säule: Produktionsketten · Quelle: IDEEN-19 Scout; Genre-Mechanik Übertakten mit Abkühlzeit (Fabrikspiele, Mechanik allgemein bekannt, keine Einzelquelle geprüft); `src/sim/levels.ts:40` (`cycleOf` liefert nur Zyklus je Stufe), `rg -n -i "overtime|volllast|shift" src/` kein Treffer
+- Spielerwirkung: „Der Spieler schaltet einen Engpassbetrieb für 3 Minuten auf Volllast und holt die fehlende Ware sofort, obwohl der Betrieb danach 2 Minuten steht und die Pause nicht abbrechbar ist."
+- Mechanik: Knopf am Betrieb: Zyklus −25 % und Unterhalt +50 % für 1800 Ticks; danach Pause 1200 Ticks ohne Ausstoss (Unterhalt läuft), erst dann wieder wählbar. Werte als Defs `OVERTIME_CYCLE_PCT`, `OVERTIME_UPKEEP_PCT`, `OVERTIME_TICKS`, `OVERTIME_REST_TICKS` in `src/sim/defs/`. Brandrisiko und Edikte unberührt.
+- Grösse: S · Risiko: Save (zwei Zähler je Betrieb, Version +1); Baseline bitgleich, solange der Controller den Knopf nicht drückt; Balancing-Test bleibt grün
+- Raster: Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12 (lead-design: Werte bestätigt, Summe mit Faktor 2 auf Spass neu gerechnet)
+- Randfälle: Im Schnitt 3 min × 1,33 + 2 min × 0 = 4 gegen 5 min Normalbetrieb → Dauer-Volllast ist **schlechter** als Normalbetrieb (entartete Strategie «immer Volllast» verliert Ausstoss und zahlt Mehr-Unterhalt), lohnt nur als Stoss gegen eine Lücke; Abriss in der Pause setzt nichts zurück; Stilllegen (I-035, live) und Pause zählen gleich.
+- Doppelung: geprüft `rg -n -i "überstund|schicht|volllast|übertakt" docs/ideen.md docs/ideen-archiv.md` und im Branch `design/gruendungsbrief`: nur Treffer in Fremdkontext; I-077 Spezialisierung (geparkt, Dauerausrichtung statt Stoss), Edikte (global, nicht je Betrieb).
+- Bewertung lead-design: echte Zeitverschiebung statt Bonus: Dauer-Volllast liefert 4 statt 5 Normalminuten, lohnt also nur als Stoss. Kein Edikt beschleunigt Zyklen (`src/sim/defs/edicts.ts` ändert nur Unterhalt und Zukauf), keine Doppelung. Gegenspieler ist der Zukauf am Kontor (Geld gegen spätere Pause); die Rechnung muss zeigen, dass keiner der beiden immer gewinnt. Volllast zieht Eingangsware schneller ab, der Engpass wandert eine Stufe nach vorn: gewollt, im Panel zeigen. Klick-Pflicht gering, weil die Pause die nächste Nutzung sperrt.
+- Nutzen/Aufwand: Engpassketten bekommen einen Notgriff mit Preis · S · ≈ 1 Häppchen plus Rechnung
+- Entscheid: offen (IDEEN-19), Empfehlung Pitch: Rechnung «Volllast gegen Zukauf» (`design-economy-designer`), dann Spec Stufe voll (Save-Feld, neue Werte) als Häppchen
 
-### I-207 · bewertet · Nachtlichter auf der Seekarte
+### I-216 · bewertet · Brache (Felder ermüden, Fruchtfolge)
 
-- Bereich: Grafik · Säule: Insel besiedeln (Archipel sichtbar) · Quelle: IDEEN-17 Scout C (Nachrunde); Genre-Mechanik; Fensterlicht nur in der Inselansicht (`src/render/daynight.ts:38`), Seekarte kennt nur «Kontor ja/nein» (`src/render/seaMap.ts:250`); `rg -n -i "nacht|night|licht|dusk" src/render/seaMap.ts` kein Treffer
-- Spielerwirkung: „Der Spieler sieht nachts auf der Seekarte warme Lichtpunkte auf besiedelten Inseln, deren Zahl mit den Häusern wächst."
-- Mechanik: Fensterlicht-Phase aus `daynight.ts` auf die Häuserzahl je Insel, höchstens 12 Punkte; reiner Render, Cache-Schlüssel mit höchstens 3 Lichtstufen; kein Flackern bei «Bewegung reduzieren».
-- Grösse: S · Risiko: Perf (Seekarten-Cache)
-- Raster: Spass 1 · Passung 2 · Aufwand 3 · Risiko 2 = 9 (lead-design: bestätigt)
-- Doppelung: I-135 (verworfen, Nachtglanz nur am Denkmal), I-074 (verworfen, Tooltip).
-- Bewertung lead-design: Stimmung ohne Entscheidung; nur als Beipack zu einem Seekarten- oder LEBEN-Häppchen.
-- Nutzen/Aufwand: Stimmung, Lesehinweis auf den Inselzustand · S · ≈ 15 Tools
-- Entscheid: offen (IDEEN-17), Empfehlung parken als Beipack-Kandidat (Seekarte)
+- Bereich: Inhalt · Säule: Produktionsketten; Insel besiedeln · Quelle: IDEEN-19 Scout; Genre-Mechanik Bodenermüdung und Fruchtfolge (Zeiger, Inhalt nicht geprüft: https://pcgamer.com/farthest-frontier-crop-rotation-guide; Banished-Rezension https://www.indieretronews.com/2013/03/banished-city-building.html); `src/sim/defs/sea.ts:17,79` kennt nur das feste Merkmal «Fruchtbar» einer Fremdinsel, `rg -n -i "fertil|brache|ermüd" src/sim/` kein Treffer ausser `sea.ts`
+- Spielerwirkung: „Der Spieler lässt seine Rinderfarm zeitweise ruhen oder stellt eine zweite daneben, damit der Ertrag nicht fällt, obwohl jede Brache Platz und Unterhalt kostet."
+- Mechanik: Landwirtschaftsbetriebe (Rinder, Schaf, Zuckerrohr) führen `Ermüdung` 0–100: +2 je Zyklus, ab 50 Ausstoss −1 % je Punkt (höchstens −50 %). «Brache» (Knopf, 900 Ticks ohne Ausstoss, Unterhalt halb) setzt auf 0. Defs `FATIGUE_PER_CYCLE`, `FATIGUE_START`, `FALLOW_TICKS`. Fruchtbare Fremdinsel: Ermüdung +1 statt +2.
+- Grösse: M · Risiko: Save (Zähler je Betrieb), Baseline und Balancing (Nahrungsrechnung ändert sich, Neumessung nötig), Perf keins
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 1 = 10 (lead-design: Spass 3 → 2)
+- Randfälle: Zwei Betriebe im Wechsel liefern 100 % bei 2× Fläche und Unterhalt → echte Wahl gegen einen einzelnen ermüdeten Betrieb; Entartung «Brache nie» fällt auf 50 % Ertrag, also kein Zwang, aber ohne Ausweg wäre die Strafe unfair: Brache ist jederzeit wählbar, nie automatisch. I-013 (verworfen, «Pflegen dominiert immer») gilt hier nicht, weil die Brache Ausstoss kostet statt Ware, nicht gratis nebenbei erledigt werden kann; ob sie dennoch dominiert, ist per Rechnung zu klären.
+- Doppelung: geprüft `rg -n -i "fruchtbar|brache|fruchtfolge|ackerbau|ermüd" docs/ideen.md docs/ideen-archiv.md` kein Treffer; I-012 (geparkt, endliche Steinvorkommen, kein Erholen), I-013 (verworfen, Werkzeug-Senke), I-195 Jahreszeiten (Takt statt Bodenzustand).
+- Bewertung lead-design: allein ein Abzug mit Klick-Pflicht: Ignorieren kostet dauerhaft bis 50 %, Pflegen heisst je Farm alle ≈ 25 Zyklen klicken, der Zwei-Farmen-Wechsel kostet doppelt Platz und Unterhalt plus Klicks. Die Genre-Vorlage trägt, weil verschiedene Feldfrüchte den Boden unterschiedlich nutzen; hier hat jede Farm genau eine Ware. Die Nähe zu I-013 (verworfen, Pflege dominiert) bleibt. Echte Wahl entsteht erst mit Jahreszeiten (I-195: Winterruhe als natürliche Brache, Wahl der Aussaat).
+- Nutzen/Aufwand: Farmen werden Planung über Zeit statt Hinstellen · M · ≈ 2–3 Pakete plus Neumessung
+- Entscheid: offen (IDEEN-19), Empfehlung parken als Baustein der Erweiterung «Ernte und Frost» (I-195)
+
+### I-217 · bewertet · Baugrund (Heimatinsel in Parzellen, Land wird gekauft)
+
+- Bereich: Inhalt · Säule: Insel besiedeln; Wirtschaft, Steuern und Handel · Quelle: IDEEN-19 Scout; Genre-Mechanik Flächenkauf in Stufen (Städtebauspiele, Mechanik allgemein bekannt, keine Einzelquelle geprüft); `rg -n -i "parzelle|bauland|grundstück|landrecht" docs/ideen.md docs/ideen-archiv.md src/` kein Treffer; Bauplatz heute nur durch Terrain und Wegnähe begrenzt (`src/sim/placement.ts`)
+- Spielerwirkung: „Der Spieler kauft die nächste Parzelle der Heimatinsel für 300 Geld und baut dort die Glashütte, statt das Geld in einen Ausbau zu stecken, obwohl die Küste im Norden schon die bessere Lage bietet."
+- Mechanik: Heimatinsel in 4 Zonen (Start frei, die Kontorzone). Weitere Zone kostet 300 / 600 / 1000 Geld, nur Bau darauf gesperrt bis gekauft (Wege und Sichtbarkeit frei). Wirkt auf Heimat, Fremdinseln unberührt (dort gilt das Kontor). Defs `ZONE_PRICES`. Weder Verkauf noch Rückerstattung.
+- Grösse: M · Risiko: Save (gekaufte Zonen), Baseline (Controller muss kaufen, Siegzeit ändert sich), UI (Zonenraster in der Karte)
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9 (lead-design: bestätigt)
+- Randfälle: Zone mit Rohstoffen (Gebirge) im teuren Viertel → Kartenpech statt Planung (gleiche Kritik wie I-213), Abhilfe: Zonen nach Rohstoffmix zuschneiden; Bauen ausserhalb der Zone gesperrt, Bestand im Spielstand bleibt; entartet nicht zu Pflicht, solange der Preis vor dem Mittelspiel gegen die Einnahmen < 3 min Überschuss bleibt (nachzurechnen).
+- Doppelung: geprüft `rg -n -i "parzelle|land kaufen|grundstück|bauland|landrecht" docs/ideen.md docs/ideen-archiv.md` kein Treffer; I-061 Marktplatz-Reichweite (Wegenetz, nicht Fläche), I-213 Fuhrweg (bewertet, Strafe für Lage), Erweiterungen I-194 (Entdeckung neuer Inseln, Land dort durch Kontor).
+- Bewertung lead-design: Zonenkauf ist ein Tor, kein Gegenpreis: jede Partie kauft dieselben Zonen in derselben Reihenfolge, sobald das Geld reicht. Liegen die Rohstoffe in der teuren Zone, wird daraus Kartenpech wie bei I-213. Jede Kartenvorlage braucht Zonen, dazu eine Neumessung. Die Achse «Fläche ist knapp» trägt I-218 mit sichtbarem Preis besser.
+- Nutzen/Aufwand: Frühspiel bekommt eine Geld-Entscheidung neben Ausbau und Bau · M · ≈ 3 Pakete plus Neumessung
+- Entscheid: offen (IDEEN-19), Empfehlung verwerfen (Tor statt Wahl, Kartenpech)
+
+### I-218 · bewertet · Landgewinnung (Küstenwasser aufschütten)
+
+- Bereich: Inhalt · Säule: Insel besiedeln; Produktionsketten · Quelle: IDEEN-19 Scout; Genre-Mechanik Aufschüttung gegen Küstenanlage (Aufbauspiele mit Landformung, Mechanik allgemein bekannt, keine Einzelquelle geprüft); Küstenregel `src/sim/placement.ts:75` (`coast`: mindestens 1 Wasserkachel angrenzend), Wald roden `src/sim/forest.ts:55`, `rg -n -i "landgewinn|aufschütt|deich|trockenleg" src/ docs/ideen.md docs/ideen-archiv.md` kein Treffer
+- Spielerwirkung: „Der Spieler schüttet eine Wasserkachel am Strand für 4 Stein und 1 Werkzeug auf und gewinnt Bauplatz, obwohl der Fischer neben der Kachel seine Küste verliert."
+- Mechanik: Aktion «Aufschütten» auf Wasserkachel mit Landnachbar (nicht tiefer als 1 Kachel vom Ufer, nicht unter Schiffsroute): wird `sand`. Kosten Defs `RECLAIM_COST` (4 Stein, 1 Werkzeug); Küstenbetriebe (Fischer, Werft, Kontor) mit **keiner** Wasserkachel mehr im Umkreis laufen nicht; höchstens 12 Kacheln je Insel. Kein Abtragen.
+- Grösse: M · Risiko: Save (Terrain ist Teil der Welt: Kachel ändert sich, vermutlich schon abgebildet wie `clearForest`), Perf (Routenraster, `seaRoute.ts`, Neuberechnung), Baseline keins
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9 (lead-design: Passung 3 → 2, wirkt indirekt über Bauplatz; Risiko 2 → 1: Save für geänderte Kacheln, Perf der Routen-Neuberechnung, Terrain-Cache im Renderer)
+- Randfälle: Aufschütten blockiert Schiffsweg oder schliesst Hafenbucht → Aktion ablehnen mit Grund (Sim-Aktion liefert `{ ok, reason }`); Entartung «Insel ausdehnen statt Fremdinsel besiedeln» durch die Höchstzahl 12 und Steinpreis begrenzt; Stein ist ohnehin Mangelgut im Frühspiel → echte Abwägung gegen Ausbau.
+- Doppelung: geprüft `rg -n -i "landgewinn|rodung|deich|aufschütt|trockenleg|urbar" docs/ideen.md docs/ideen-archiv.md` kein Treffer; `clearForest` (live, Wald→Gras, Gegenstück an Land), I-217 Baugrund (Fläche kaufen statt schaffen, beide nicht zusammen sinnvoll → lead-design wählt).
+- Bewertung lead-design: Der Preis ist echt (Stein im Frühspiel knapp, Küste geht verloren), der Nutzen setzt aber Platzmangel voraus, den die Heimatinsel heute nicht belegt. Passt zu kleinen Karten (I-200, geparkt als Baustein Inselproben Schnitt 2).
+- Nutzen/Aufwand: Karte wird formbar, Steinbedarf bekommt Zweck · M · ≈ 2–3 Pakete
+- Entscheid: offen (IDEEN-19), Empfehlung parken bis I-200 oder eine Proben-Karte Platzmangel zeigt
+
+### I-219 · bewertet · Stetigkeit (Siegziel «ruhige Stadt» statt Grösse)
+
+- Bereich: Inhalt · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: IDEEN-19 Scout; Genre-Mechanik Siegziel Stabilität statt Wachstum (Banished-artige Überlebensziele, Zeiger https://www.indieretronews.com/2013/03/banished-city-building.html, Inhalt nicht geprüft); heutige Ziele in `src/sim/tick.ts:17-29` (`won`, `wonMerchants`, `wonSpice`: alle Mengenziele), `rg -n -i "stetig|mangelfrei|ruhige" src/ docs/ideen.md docs/ideen-archiv.md` kein Treffer
+- Spielerwirkung: „Der Spieler hält 20 Minuten lang jedes Haus der Stufen 2 und 3 ohne Mangel, statt weiter zu wachsen, obwohl ein Aufstieg mehr Steuern brächte und neue Mängel riskiert."
+- Mechanik: Wählbares Siegziel beim Neustart (Modus, nicht Standard): mindestens 40 Häuser, davon 10 ab Stufe 3, und 12000 Ticks in Folge **kein** Haus mit `satisfied === false` bei einer Pflichtware (`src/sim/population.ts:76-97`); ein Mangel setzt den Zähler auf 0. Defs `STEADY_HOUSES`, `STEADY_TIER3`, `STEADY_TICKS`. Zukauf und Edikte erlaubt (kein Verzicht), Krisen zählen mit.
+- Grösse: M · Risiko: Save (Modus, Zähler), Baseline (Standardziel bitgleich, Controller spielt nur Standard); Anbindung an Neustart-Dialog
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11 (lead-design: Spass 3 → 2, bis die Entartung gelöst ist)
+- Randfälle: Nach Erreichen der Hauszahl nicht mehr bauen und warten ist erlaubt, aber ein einziger Brand oder Sturm kann den Zähler zerstören → Vorrat und Puffer sind die Entscheidung; Entartung «wenige Häuser, hoch über Pflicht versorgt» durch Mindestzahl 40 und 10 Stufe-3-Häuser begrenzt; Ausweg für Pech: Zähler setzt zurück, die Partie läuft weiter.
+- Doppelung: geprüft `rg -n -i "siegziel|sieg|bewährung|endlos|seegang" docs/ideen.md` und Archiv: I-193 Bewährung (geparkt, Endlos mit steigender See, anderes Ziel), I-209 Seegang (Härte, gleiches Ziel), I-190–I-192 (feste Karte/Zeit/Startbedingung, gleiches Mengenziel); I-198 Gelübde (zusammengefasst, Verzicht). Nähe zu I-190–I-192 ist ein Rahmen, kein Duplikat: hier ändert sich das Siegziel selbst.
+- Bewertung lead-design: einziger neuer Spielstil der Runde (Ruhe statt Menge), in dieser Form aber entartet: Mindesthäuser erreichen, Bau stoppen, 20 min Zeitraffer. Ohne Krisen (Welt-Standard `off`) gibt es dabei nichts zu entscheiden, mit Krisen halten Wachen ≥ 93 % (I-133, R745). Abhilfe: Stetigkeit als Achse der Proben-Wertung (T3-3 «Dreierwertung», R894 E3: «mangelfreie Minuten bis zum Bestehen»); dort läuft die Uhr der Probe, Warten kostet Zeitwertung, und Modus und Neustart-UI entfallen.
+- Nutzen/Aufwand: zweiter Spielstil neben «mehr Menge» · S als Proben-Achse (≈ 1 Paket) statt M als eigener Modus (≈ 3 Pakete)
+- Entscheid: offen (IDEEN-19), Empfehlung Pitch als vierte Achse der Proben-Wertung, Kurzdesign zusammen mit T3-3/T3-5 nach Inselproben live
