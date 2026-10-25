@@ -1948,3 +1948,65 @@ Kandidat fürs Stadtplanung-Folgebrainstorming. I-211 steht trotz Summe 12 hinte
 - Bewertung lead-design: reine Strafe für Kartenpech, solange Rohstoffbetriebe ortsgebunden sind; die Wegenetz-Achse besetzt I-061 schon. Kein Spielerlebnis, das nicht Stadtplanung zuerst liefert.
 - Nutzen/Aufwand: Wegnetz bekommt Gewicht · M · ≈ 3 Pakete plus Neumessung
 - Entscheid: R893 verworfen (Strafe ohne Ausweg, Achse durch I-061 besetzt)
+
+## Archiviert IDEEN-20 (Pool-Pflege R599)
+
+## Rangliste IDEEN-19 (Ruling L0: R928; archiviert IDEEN-20)
+
+Runde mit einem Scout (Spieltiefe, Modi, Erweiterungs-Bausteine, WebSearch) mit I-215–I-219. Keine Playtests als Quelle (R862). Gesättigte Felder (Härte, Ereigniskarten,
+Start-Boni, Szenarien, Feste, Brand, Nachbarn, Wege) waren im Briefing ausgeschlossen. Keine Idee ändert Kernsäule, Genre oder Titel (§5.3). Massstab R722: ein Bonus ohne
+Gegenpreis oder eine Strafe ohne Ausweg ist keine Wahl. Die Scout-Summen waren ohne den Faktor 2 auf Spass gerechnet; lead-design hat alle Summen neu gerechnet. Die Web-Quellen
+sind Zeiger ohne geprüften Inhalt; übernommen wird nur Mechanik. I-214 «Gründungsbrief» steht auf `design/gruendungsbrief` (R894 E2) und gehört nicht zu dieser Runde.
+Pool-Pflege R599: R893-Entscheide zu IDEEN-18 (I-211, I-212 geparkt, I-213 verworfen) und die Rangliste IDEEN-18 ins Archiv, I-209 und I-210 auf `eingeplant` nachgeführt.
+Pool danach 32 von 40 offen.
+
+| Rang | ID    | Gruppe   | Name                       | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                | Empfehlung                                                                      |
+| ---- | ----- | -------- | -------------------------- | ------ | ----- | --------------- | --------------------------------------------- | ------------------------------------------------------------------------------- |
+| 1    | I-215 | Tiefe    | Volllast (Stoss mit Pause) | S      | 12    | ja / nein       | Notgriff mit Preis für Engpässe, ≈ 1 Häppchen | **Pitch:** Rechnung «Volllast gegen Zukauf», dann Spec Stufe voll als Häppchen  |
+| 2    | I-219 | Modus    | Stetigkeit (ohne Mangel)   | S–M    | 11    | ja / nein       | Ruhe statt Menge, ≈ 1 Paket als Proben-Achse  | **Pitch:** Achse der Proben-Wertung (R894 E3), Kurzdesign nach Inselproben live |
+| 3    | I-216 | Baustein | Brache (Felder ermüden)    | M      | 10    | ja / ja         | allein Abzug mit Klick-Pflicht                | parken als Baustein «Ernte und Frost» (I-195)                                   |
+| 4    | I-218 | Tiefe    | Landgewinnung              | M      | 9     | ja / nein       | Nutzen nur bei Platzmangel, ≈ 2–3 Pakete      | parken bis I-200 oder eine Proben-Karte Platzmangel zeigt                       |
+| 5    | I-217 | Tiefe    | Baugrund (Zonen kaufen)    | M      | 9     | ja / ja         | Tor statt Wahl, Kartenpech                    | verwerfen                                                                       |
+
+Leitbefund IDEEN-19: Der Scout fand vier neue Felder (Zeit-Stoss, Bodenzustand, Fläche, Siegziel). Zwei tragen die Abwägung selbst: I-215 verschiebt Ausstoss in der Zeit,
+I-219 stellt Wachstum gegen Ruhe. Die Fläche-Ideen setzen einen Platzmangel voraus, den die Heimatinsel heute nicht belegt. I-219 gewinnt als Achse im Proben-Rahmen, weil dort die
+laufende Uhr den Wartetrick bestraft.
+
+### I-216 · geparkt · Brache (Felder ermüden, Fruchtfolge)
+
+- Bereich: Inhalt · Säule: Produktionsketten; Insel besiedeln · Quelle: IDEEN-19 Scout; Genre-Mechanik Bodenermüdung und Fruchtfolge (Zeiger, Inhalt nicht geprüft: https://pcgamer.com/farthest-frontier-crop-rotation-guide; Banished-Rezension https://www.indieretronews.com/2013/03/banished-city-building.html); `src/sim/defs/sea.ts:17,79` kennt nur das feste Merkmal «Fruchtbar» einer Fremdinsel, `rg -n -i "fertil|brache|ermüd" src/sim/` kein Treffer ausser `sea.ts`
+- Spielerwirkung: „Der Spieler lässt seine Rinderfarm zeitweise ruhen oder stellt eine zweite daneben, damit der Ertrag nicht fällt, obwohl jede Brache Platz und Unterhalt kostet."
+- Mechanik: Landwirtschaftsbetriebe (Rinder, Schaf, Zuckerrohr) führen `Ermüdung` 0–100: +2 je Zyklus, ab 50 Ausstoss −1 % je Punkt (höchstens −50 %). «Brache» (Knopf, 900 Ticks ohne Ausstoss, Unterhalt halb) setzt auf 0. Defs `FATIGUE_PER_CYCLE`, `FATIGUE_START`, `FALLOW_TICKS`. Fruchtbare Fremdinsel: Ermüdung +1 statt +2.
+- Grösse: M · Risiko: Save (Zähler je Betrieb), Baseline und Balancing (Nahrungsrechnung ändert sich, Neumessung nötig), Perf keins
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 1 = 10 (lead-design: Spass 3 → 2)
+- Randfälle: Zwei Betriebe im Wechsel liefern 100 % bei 2× Fläche und Unterhalt → echte Wahl gegen einen einzelnen ermüdeten Betrieb; Entartung «Brache nie» fällt auf 50 % Ertrag, also kein Zwang, aber ohne Ausweg wäre die Strafe unfair: Brache ist jederzeit wählbar, nie automatisch. I-013 (verworfen, «Pflegen dominiert immer») gilt hier nicht, weil die Brache Ausstoss kostet statt Ware, nicht gratis nebenbei erledigt werden kann; ob sie dennoch dominiert, ist per Rechnung zu klären.
+- Doppelung: geprüft `rg -n -i "fruchtbar|brache|fruchtfolge|ackerbau|ermüd" docs/ideen.md docs/ideen-archiv.md` kein Treffer; I-012 (geparkt, endliche Steinvorkommen, kein Erholen), I-013 (verworfen, Werkzeug-Senke), I-195 Jahreszeiten (Takt statt Bodenzustand).
+- Bewertung lead-design: allein ein Abzug mit Klick-Pflicht: Ignorieren kostet dauerhaft bis 50 %, Pflegen heisst je Farm alle ≈ 25 Zyklen klicken, der Zwei-Farmen-Wechsel kostet doppelt Platz und Unterhalt plus Klicks. Die Genre-Vorlage trägt, weil verschiedene Feldfrüchte den Boden unterschiedlich nutzen; hier hat jede Farm genau eine Ware. Die Nähe zu I-013 (verworfen, Pflege dominiert) bleibt. Echte Wahl entsteht erst mit Jahreszeiten (I-195: Winterruhe als natürliche Brache, Wahl der Aussaat).
+- Nutzen/Aufwand: Farmen werden Planung über Zeit statt Hinstellen · M · ≈ 2–3 Pakete plus Neumessung
+- Entscheid: R928 geparkt als Baustein der Erweiterung «Ernte und Frost» (I-195)
+
+### I-217 · verworfen · Baugrund (Heimatinsel in Parzellen, Land wird gekauft)
+
+- Bereich: Inhalt · Säule: Insel besiedeln; Wirtschaft, Steuern und Handel · Quelle: IDEEN-19 Scout; Genre-Mechanik Flächenkauf in Stufen (Städtebauspiele, Mechanik allgemein bekannt, keine Einzelquelle geprüft); `rg -n -i "parzelle|bauland|grundstück|landrecht" docs/ideen.md docs/ideen-archiv.md src/` kein Treffer; Bauplatz heute nur durch Terrain und Wegnähe begrenzt (`src/sim/placement.ts`)
+- Spielerwirkung: „Der Spieler kauft die nächste Parzelle der Heimatinsel für 300 Geld und baut dort die Glashütte, statt das Geld in einen Ausbau zu stecken, obwohl die Küste im Norden schon die bessere Lage bietet."
+- Mechanik: Heimatinsel in 4 Zonen (Start frei, die Kontorzone). Weitere Zone kostet 300 / 600 / 1000 Geld, nur Bau darauf gesperrt bis gekauft (Wege und Sichtbarkeit frei). Wirkt auf Heimat, Fremdinseln unberührt (dort gilt das Kontor). Defs `ZONE_PRICES`. Weder Verkauf noch Rückerstattung.
+- Grösse: M · Risiko: Save (gekaufte Zonen), Baseline (Controller muss kaufen, Siegzeit ändert sich), UI (Zonenraster in der Karte)
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9 (lead-design: bestätigt)
+- Randfälle: Zone mit Rohstoffen (Gebirge) im teuren Viertel → Kartenpech statt Planung (gleiche Kritik wie I-213), Abhilfe: Zonen nach Rohstoffmix zuschneiden; Bauen ausserhalb der Zone gesperrt, Bestand im Spielstand bleibt; entartet nicht zu Pflicht, solange der Preis vor dem Mittelspiel gegen die Einnahmen < 3 min Überschuss bleibt (nachzurechnen).
+- Doppelung: geprüft `rg -n -i "parzelle|land kaufen|grundstück|bauland|landrecht" docs/ideen.md docs/ideen-archiv.md` kein Treffer; I-061 Marktplatz-Reichweite (Wegenetz, nicht Fläche), I-213 Fuhrweg (bewertet, Strafe für Lage), Erweiterungen I-194 (Entdeckung neuer Inseln, Land dort durch Kontor).
+- Bewertung lead-design: Zonenkauf ist ein Tor, kein Gegenpreis: jede Partie kauft dieselben Zonen in derselben Reihenfolge, sobald das Geld reicht. Liegen die Rohstoffe in der teuren Zone, wird daraus Kartenpech wie bei I-213. Jede Kartenvorlage braucht Zonen, dazu eine Neumessung. Die Achse «Fläche ist knapp» trägt I-218 mit sichtbarem Preis besser.
+- Nutzen/Aufwand: Frühspiel bekommt eine Geld-Entscheidung neben Ausbau und Bau · M · ≈ 3 Pakete plus Neumessung
+- Entscheid: R928 verworfen (Sperre ohne echte Wahl, Kartenpech)
+
+### I-218 · geparkt · Landgewinnung (Küstenwasser aufschütten)
+
+- Bereich: Inhalt · Säule: Insel besiedeln; Produktionsketten · Quelle: IDEEN-19 Scout; Genre-Mechanik Aufschüttung gegen Küstenanlage (Aufbauspiele mit Landformung, Mechanik allgemein bekannt, keine Einzelquelle geprüft); Küstenregel `src/sim/placement.ts:75` (`coast`: mindestens 1 Wasserkachel angrenzend), Wald roden `src/sim/forest.ts:55`, `rg -n -i "landgewinn|aufschütt|deich|trockenleg" src/ docs/ideen.md docs/ideen-archiv.md` kein Treffer
+- Spielerwirkung: „Der Spieler schüttet eine Wasserkachel am Strand für 4 Stein und 1 Werkzeug auf und gewinnt Bauplatz, obwohl der Fischer neben der Kachel seine Küste verliert."
+- Mechanik: Aktion «Aufschütten» auf Wasserkachel mit Landnachbar (nicht tiefer als 1 Kachel vom Ufer, nicht unter Schiffsroute): wird `sand`. Kosten Defs `RECLAIM_COST` (4 Stein, 1 Werkzeug); Küstenbetriebe (Fischer, Werft, Kontor) mit **keiner** Wasserkachel mehr im Umkreis laufen nicht; höchstens 12 Kacheln je Insel. Kein Abtragen.
+- Grösse: M · Risiko: Save (Terrain ist Teil der Welt: Kachel ändert sich, vermutlich schon abgebildet wie `clearForest`), Perf (Routenraster, `seaRoute.ts`, Neuberechnung), Baseline keins
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9 (lead-design: Passung 3 → 2, wirkt indirekt über Bauplatz; Risiko 2 → 1: Save für geänderte Kacheln, Perf der Routen-Neuberechnung, Terrain-Cache im Renderer)
+- Randfälle: Aufschütten blockiert Schiffsweg oder schliesst Hafenbucht → Aktion ablehnen mit Grund (Sim-Aktion liefert `{ ok, reason }`); Entartung «Insel ausdehnen statt Fremdinsel besiedeln» durch die Höchstzahl 12 und Steinpreis begrenzt; Stein ist ohnehin Mangelgut im Frühspiel → echte Abwägung gegen Ausbau.
+- Doppelung: geprüft `rg -n -i "landgewinn|rodung|deich|aufschütt|trockenleg|urbar" docs/ideen.md docs/ideen-archiv.md` kein Treffer; `clearForest` (live, Wald→Gras, Gegenstück an Land), I-217 Baugrund (Fläche kaufen statt schaffen, beide nicht zusammen sinnvoll → lead-design wählt).
+- Bewertung lead-design: Der Preis ist echt (Stein im Frühspiel knapp, Küste geht verloren), der Nutzen setzt aber Platzmangel voraus, den die Heimatinsel heute nicht belegt. Passt zu kleinen Karten (I-200, geparkt als Baustein Inselproben Schnitt 2).
+- Nutzen/Aufwand: Karte wird formbar, Steinbedarf bekommt Zweck · M · ≈ 2–3 Pakete
+- Entscheid: R928 geparkt bis Platzmangel belegt (I-200 oder Proben-Karte)
