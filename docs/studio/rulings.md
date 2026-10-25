@@ -2372,3 +2372,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Stadtplanung 
 Regelbezug: R329, R673, R708, R793, R816, R871 · Kosten bei Irrtum: sichtbares Umspringen von Weg-Objekten bis 7 Kacheln weit; Rückkehr zu r ≤ 3 per Ruling.
 
 Entscheider: L0 · Anlass: Berichte lead-production, lead-tech · ADR: —
+
+## R883 · 2026-10-25 · SEERECHT bereit fürs Merge-Gate; Limit-Ampel gelb
+
+Ruling: (1) **SEERECHT** `feat/seerecht` @ `8473afb0` abgenommen bis Merge-Gate: T04, T06, T07, T08 mit Reviews und Playtest OK; T09 nach R878 (3) vorgezogen: `SAVE_VERSION` 19, `migrateV18ToV19`,
+Abweise-Test `SAVE_VERSION + 1`, Kurz-Review OK. Stadtplanung zieht beim späteren Merge auf main + 1 nach. Merge-Gate zusammen mit dem REL-32-Push am 2026-10-26 (ein `make push-check`).
+(2) **Limit-Ampel gelb** (5-h-Fenster 60 %): keine neuen Wellen (STUDIO.md «Studio-Deckel»); ORT-A (Fix AK-41) und INSELPROBEN Etappe 1 schliessen den laufenden Task ab und berichten, danach
+Ende-Routine.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Stadtplanung (Save-Nummer), Stadtrecht (wartet auf Seerecht)
+Regelbezug: R69, R826, R878 · Kosten bei Irrtum: Save-Nummern beim Merge tauschen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech SEERECHT, Limit-Ampel · ADR: —
