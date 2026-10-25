@@ -1,4 +1,4 @@
-import { councilSides, openCouncilTiers } from '../sim/council';
+import { councilSides, maxInhabitantsOf, openCouncilTiers } from '../sim/council';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { TIERS } from '../sim/defs/tiers';
 import { COUNCIL, COUNCIL_NOTE, COUNCIL_TIERS } from '../sim/defs/council';
@@ -47,7 +47,7 @@ export function councilPreview(world: World, tier: CouncilTier, side: CouncilSid
   if (lever.kind === 'maxInhabitants') {
     const n = all.filter((b) => b.house?.tier === lever.tier).length;
     if (n === 0) return `Wirkt noch nicht: Haus (${TIERS[lever.tier].name}) fehlt`;
-    const plus = n * (lever.value - TIERS[lever.tier].maxInhabitants);
+    const plus = n * (lever.value - maxInhabitantsOf(world, lever.tier));
     return `Betrifft jetzt: ${n} Häuser (+${plus} Plätze)`;
   }
   if (lever.kind === 'seaTileTicks') {

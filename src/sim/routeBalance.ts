@@ -2,7 +2,7 @@ import type { Coverage } from './coverage';
 import { GOODS } from './defs/goods';
 import { SHIP } from './defs/sea';
 import { goodsBalance } from './flow';
-import { laneTicksOf } from './council';
+import { laneTicksOf } from './islands';
 import type { Route, RouteGood, World } from './types';
 
 /** Einheit von `goodsBalance` (Ticks); Umrechnung Netto je 100 Ticks auf die Umlaufzeit. */

@@ -1498,7 +1498,7 @@ button.hud-balance:focus-visible {
 }
 .council-preview {
   font-size: 12px;
-  opacity: 0.75;
+  color: var(--ink-muted);
 }
 .council-note {
   font-size: 13px;
@@ -1615,7 +1615,7 @@ button.goal-chip.goal-chip--action {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 .honor-row--open {
-  opacity: 0.6;
+  color: var(--ink-muted);
 }
 .honor-meta {
   font-size: 0.9em;

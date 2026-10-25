@@ -1,7 +1,6 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { COUNCIL, COUNCIL_TIERS } from './defs/council';
 import { TIERS } from './defs/tiers';
-import { laneTicks, travelTicks } from './islands';
 import { SHIP_TICKS_PER_SEA_TILE } from './defs/sea';
 import { fail, ok } from './types';
 import type {
@@ -51,17 +50,6 @@ export function councilCycle(world: World, defId: BuildingDefId, cycle: number):
 /** Ticks je Seefeld; mit Seerecht der Ratswert, sonst der Def-Wert. */
 export const seaTileTicks = (world: Pick<World, 'council'>): number =>
   activeLever(world, 'seaTileTicks') ?? SHIP_TICKS_PER_SEA_TILE;
-
-/** Fahrzeit über `d` Seefelder in Ticks unter dem Ratsbeschluss. */
-export const travelTicksOf = (world: Pick<World, 'council'>, d: number): number =>
-  travelTicks(d, seaTileTicks(world));
-
-/** Fahrzeit zwischen zwei Inseln in Ticks unter dem Ratsbeschluss. */
-export const laneTicksOf = (
-  world: Pick<World, 'islands' | 'council'>,
-  a: number,
-  b: number,
-): number => laneTicks(world.islands, a, b, seaTileTicks(world));
 
 /** Höchste Hausstufe über alle Inseln (0 ohne Haus). */
 function highestHouseTier(world: World): number {

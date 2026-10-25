@@ -1,4 +1,5 @@
 import { createRng } from './rng';
+import { seaTileTicks } from './council';
 import { BUILDING_DEFS } from './defs/buildings';
 import {
   ARCHIPEL_SPAN_MAX,
@@ -86,6 +87,17 @@ export function laneTicks(
   const lane = seaLanes(islands).find((l) => l.a === lo && l.b === hi);
   return lane === undefined ? 0 : travelTicks(lane.d, perTile);
 }
+
+/** Fahrzeit über `d` Seefelder in Ticks unter dem Ratsbeschluss. */
+export const travelTicksOf = (world: Pick<World, 'council'>, d: number): number =>
+  travelTicks(d, seaTileTicks(world));
+
+/** Fahrzeit zwischen zwei Inseln in Ticks unter dem Ratsbeschluss. */
+export const laneTicksOf = (
+  world: Pick<World, 'islands' | 'council'>,
+  a: number,
+  b: number,
+): number => laneTicks(world.islands, a, b, seaTileTicks(world));
 
 // ---------- Anker ----------
 

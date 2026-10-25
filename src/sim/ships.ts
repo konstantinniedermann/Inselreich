@@ -1,8 +1,7 @@
 import { ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
 import { GOOD_IDS, STORAGE_CAP } from './defs/goods';
 import { checkAfford, pay } from './economy';
-import { laneTicksOf } from './council';
-import { islandName } from './islands';
+import { islandName, laneTicksOf } from './islands';
 import { fail, ok } from './types';
 import type { GoodId, Result, Route, RouteGood, Ship, World } from './types';
 import { functionLock, goodLock } from './unlocks';

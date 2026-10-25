@@ -9,9 +9,8 @@ import {
   type IslandDef,
 } from '../sim/defs/sea';
 import { effectiveCycle, traitOf } from '../sim/levels';
-import { travelTicksOf } from '../sim/council';
 import { HOME } from '../sim/world';
-import { islandName } from '../sim/islands';
+import { islandName, travelTicksOf } from '../sim/islands';
 import { homeLane } from './homeTravel';
 import { GOODS } from '../sim/defs/goods';
 import { formatGameTime, perMinute } from './time';

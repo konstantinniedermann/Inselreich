@@ -13,9 +13,7 @@ import {
   councilCycle,
   councilSides,
   decree,
-  laneTicksOf,
   seaTileTicks,
-  travelTicksOf,
   maxInhabitantsOf,
   openCouncilTiers,
   serviceRadiusOf,
@@ -29,7 +27,7 @@ import { serviceAvailable, tickPopulation, tierCap, upgradeStatus } from '../../
 import { coverageMask, placementZone } from '../../src/sim/queries';
 import { serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
-import { laneTicks } from '../../src/sim/islands';
+import { laneTicks, laneTicksOf, travelTicksOf } from '../../src/sim/islands';
 import { SHIP_TICKS_PER_SEA_TILE } from '../../src/sim/defs/sea';
 import { laneWorld, shipLiteral } from './seaHelpers';
 import type { BuildingDefId, CouncilTier, World } from '../../src/sim/types';

@@ -1,7 +1,7 @@
 // shipLane.ts — Handelsschiffe auf der Fahrlinie (M12 E4, T11): Pose, Tiefe, Mindestgrösse, Treffer.
 // Rein und nur lesend: schreibt nie in `world.ships` (render schreibt nie in die Welt).
-import { laneTicksOf, seaTileTicks } from '../sim/council';
-import type { Pt } from '../sim/islands';
+import { seaTileTicks } from '../sim/council';
+import { laneTicksOf, type Pt } from '../sim/islands';
 import { seaRoute } from '../sim/seaRoute';
 import type { Island, Ship, World } from '../sim/types';
 import { worldToScreen, type Camera } from './camera';

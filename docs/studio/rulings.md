@@ -18,501 +18,7 @@ Einträge werden nicht gelöscht; ein überholter Entscheid bekommt ein neues Ru
 
 ---
 
-R1–R699 stehen wörtlich in [rulings-archiv.md](rulings-archiv.md) (R129, R682); für Suchen immer `rulings*.md` verwenden.
-
-## R700 · 2026-10-16 · Kurzdesign I-120 + I-118 «Wohlstandsklang und Aufstiegs-Funkeln»: angenommen, Kurve B; Plan jetzt
-
-Ruling: `design/i120-i118` @ `e90a8887` (Handoff `.studio/handoffs/2026-10-16-lead-art-design-I-120-I-118.md`) → angenommen: Teil A Klang über die bestehende
-Brücke `viewStats` → `setAmbience` (`src/audio/` importiert weiter nichts aus `sim/`/`ui/`), Mix-Kurve **B** stetig, 10-s-Glättung; Teil B Funkeln (`aufstieg.ts`,
-`drawRiseGlow`, Deckel 6, reduzierte Bewegung nur Kranz), Funkel-Uhr nur bei `speed > 0`. Die Zahlen (10 s, 1500 ms, Deckel 6, Wind +0,15) sind
-Darstellungskonstanten in `src/render/`/`src/audio/`, keine Spielwerte. Kein Save, keine Sim-Regel; «voll versorgt» kommt aus vorhandenem Sim-Code (lesend).
-Keine Assets. Plan jetzt (lead-tech sonnet, Stufe leicht, zwei Pakete Audio/Render); Merge-Reihenfolge `renderer.ts` gegen ORT-A im Plan festlegen. REL-26/27
-nach Kapazität.
-
-Regelbezug: gates.md Gate Spec (Kurzdesign Stufe leicht), R692, R698, ADR-011 · Kosten bei Irrtum: ein Stadtklang, der nachgestimmt wird.
-
-Entscheider: L0 · Anlass: Bericht lead-art design-I-120-I-118 · ADR: —
-
-## R701 · 2026-10-16 · Gate Plan I-114: OK; T01 (Sim) startet jetzt, T02 ff. nach Merge UI-AUFRAEUM-4
-
-Ruling: `plan/i114` @ `bb0dee6b` (Handoff `.studio/handoffs/2026-10-16-lead-tech-plan-I-114.md`, T00–T04, Stufe leicht, kein Save) → **Gate Plan OK**. Ruling-
-Entwürfe angenommen: `acceptFarOrder(world, 1)` rechnet die Zweitkarte im Klickmoment neu (Drift-Hinnahme R699); `farAlternative` liefert `null` ohne laufenden
-Auftrag. Budget **7 Starts**, Parallelität 1, ein Reviewer am Ende (E-068) plus Final-Review opus. Weil T01 nur `src/sim/farOrder.ts` und Tests berührt
-(disjunkt zu UI-AUFRAEUM-4), startet die Umsetzung **jetzt mit T00/T01**; T02–T04 erst nach dem Merge von UI-AUFRAEUM-4 (Controller holt main per Merge).
-Bis dahin meldet der Controller «wartet» und endet, Fortsetzung per Nachricht.
-
-Regelbezug: gates.md Gate Plan, R698, R699 · Kosten bei Irrtum: ein Sim-Task, der nach dem UI-Merge einen kleinen Merge braucht.
-
-Entscheider: L0 · Anlass: Bericht lead-tech plan-I-114 · ADR: —
-
-## R702 · 2026-10-16 · REL-24 + REL-25 live; Gate Plan I-120 + I-118: OK, Umsetzung jetzt
-
-Ruling: (1) **REL-24 + REL-25 live**: Push `2e7a269f..8fe744df` (Fast-forward), CI 38887719217 grün, Pages 38888562306 grün; lead-production setzt
-`releases.json`/state.md nach (Paket REL-24-25-NACH). (2) `plan/i120-i118` @ `a234b215` (Handoff `.studio/handoffs/2026-10-16-lead-tech-plan-I-120-I-118.md`,
-T00–T08; «voll versorgt» = `allNeedsMet` lesend; keine neue Audio-Importkante) → **Gate Plan OK**. Budget **7 Starts**, Parallelität 2 (Stränge `feat/i120`
-Audio und `feat/i118` Render ohne gemeinsame Datei); je Strang ein Reviewer am Ende (E-068: Render opus wegen Diff > 300, Audio sonnet) plus Browser-Check.
-Merge-Reihenfolge: I-120 frei; I-118 nach ORT-A, wenn ORT-A vorher landet, sonst ORT-A holt I-118 (kleine Textkonflikte `limits.ts`/`renderer.ts`); vor
-jedem Merge-Gate main einmergen.
-
-Regelbezug: gates.md Gate Plan, R698, R700 · Kosten bei Irrtum: ein Funkeln, das im Browser-Check nachjustiert wird.
-
-Entscheider: L0 · Anlass: Berichte production-integrator REL-24-25-PUSH, lead-tech plan-I-120-I-118 · ADR: —
-
-## R703 · 2026-10-16 · I-114 T01 abgenommen; `farAlternative` null bei Vertrag/Sperre; Platz bleibt frei wegen Last
-
-Ruling: (1) `feat/i114` @ `5cef8359` (T01, 17 neue Tests mit Rot-Beleg, `tests/sim` 1535 grün, Balancing ohne Diff, kein Save/`defs`-Diff): Ergänzung
-«`farAlternative` liefert auch bei laufendem Vertrag oder aktiver Sperre `null`» bestätigt (deckt AK-2); AK-6 «Kein zweites Angebot» statt Kontor-Fehler
-angenommen (Zweitkarte wählt nur Inseln mit Kontor). T02 ff. nach Merge UI-AUFRAEUM-4 (R701). (2) Last 6–22 während der Messung: der sechste Platz bleibt
-vorerst leer (R698-Deckel nicht ausgeschöpft), damit Testlauf und Testlock der laufenden Umsetzungen nicht abbrechen; neue Starts erst bei Last < 8.
-
-Regelbezug: R375, R380, R698, R701 · Kosten bei Irrtum: ein Agentenplatz, der eine halbe Stunde leer bleibt.
-
-Entscheider: L0 · Anlass: Zwischenbericht lead-tech I-114 · ADR: —
-
-## R704 · 2026-10-16 · Gate Merge TOOL-BUENDEL-13: OK
-
-Ruling: `tool/buendel-13` (Commits `cb2f6521` Timeouts, `12890a82` Guard-Ereignis; Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-BUENDEL-13.md`): 7 Timeouts nur
-als Argument auf 10000 ms (E-043), `guard_block` je Abweisung mit Echtlauf belegt, Deny bleibt bei Schreibfehler, `make check` 4175, `studio-test` 931,
-`zeitreserve-gate` Exit 0, Review OK (E-068, ein Reviewer bei 166 Zeilen) → **Gate Merge OK**; Merge `--no-ff` durch lead-production. Nachträge: Handbuch-Zeile
-`guard_block` (STUDIO.md ≈ Z. 428) und Flake-Zeile (R695) setzt studio-coach in der Session-Ende-Retro; Beobachtungen: `rule_of` ordnet per Stichwort zu
-(neue Guard-Texte → «other»), `command` im Ereignis kann Tokens enthalten (Datei lokal und ignoriert; Schwärzung prüfen). E-064-Messlücke damit geschlossen.
-
-Regelbezug: gates.md Gate Merge, R693, R697, R698 · Kosten bei Irrtum: ein Guard-Ereignis mit unklarer Regel-Zuordnung.
-
-Entscheider: L0 · Anlass: Bericht lead-tech TOOL-BUENDEL-13 · ADR: —
-
-## R705 · 2026-10-16 · Gate Plan ORT-A: OK mit RE-1–RE-3; Budget 57 Starts; Umsetzung in der Folgesession; N-102 Fremdprozesse
-
-Ruling: `plan/ort-a` @ `39d3cdd1` (Index + T00–T26, T05b, T20b; Handoff `.studio/handoffs/2026-10-16-lead-tech-plan-ORT-A.md`; Testbarkeit lead-qa «testbar mit
-Auflagen», 16 Befunde eingearbeitet; Rechenprüfung R565 P3 belegt) → **Gate Plan OK**. Angenommen: **RE-1** Patch-Zeit je Bau über
-`renderStats.terrainPatchMs`; **RE-2** Fremdinsel-Vergleich mit dem Seed der Fremdinsel-Ansicht; **RE-3** additive Messhaken in `src/ui/devProbes.ts`
-und Übergabe in `src/ui/app.ts`, nur Entwicklungsbuild (Ownership-Ausnahme). Wegkante als feste Sinuswelle (Amplitude 0,03, Wellenlänge 0,7) statt
-Spec-Amplitude 0,02 angenommen (AK-19 sonst nicht sicher). Budget **57 Starts** (49 Arbeiter + 8 Controller), Parallelität 2. ORT-1 liegt mit ≈ 480 Tools
-weit über der Spec-Schätzung: der Controller meldet nach T09 (Patch-Zeit-Frühmessung, E6) Stand und Restschätzung an L0, bevor K1/K2 starten.
-Umsetzung in der Folgesession (Limit 79 %, Ampel gelb; Last bis 56). Die Headless-Chrome-Prozesse eines fremden Projekts (0,1 % CPU) liegen ausserhalb der
-Studio-Befugnis → Warteschlange **N-102**; bis zur Antwort tragen ORT-A-Leistungsmessungen den Vermerk «Messfenster belegt».
-
-Regelbezug: gates.md Gate Plan, R565 P3, R696, R698 · Kosten bei Irrtum: ein grosses Paket, das nach T09 neu zugeschnitten wird.
-
-Entscheider: L0 · Anlass: Bericht lead-tech plan-ORT-A · ADR: ADR-015
-
-## R706 · 2026-10-16 · Kurzdesign I-112 «Ratsbeschluss»: V3 angenommen mit R-1/R-2; Testbarkeit im Plan-Gate; Plan in der Folgesession
-
-Ruling: `design/i112` @ `37bfbe29` (Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-112.md`, Rechnung im Anhang) → **V3** angenommen: Seite A
-schnellerer Takt des Kettenendes (Weberei 50→40, Brennerei 50→40, Glashütte 50→30), Seite B Form der Stadt (Kapellen-Reichweite 10→13, Bürgerhaus 16 statt 15,
-Kaufmannshaus 22 statt 20); einmalig, kostenlos, partieweit, Wahl über Kopfzeilen-Marke «Rat» ohne Modal. **R-1**: der Balancing-Controller beschliesst nie,
-Baseline bitgleich, je Beschluss ein Szenariotest. **R-2**: die sechs Werte als Vorgabe für `src/sim/defs/`; Glockenrecht +4 erst per Werte-Ruling nach dem
-Playtest, wenn Stufe 2 fast immer A ergibt. Save: neues Feld `council`, `SAVE_VERSION` = main + 1 beim Merge (R674), ältere Stände abgewiesen mit Test. Auflage:
-lead-qa prüft die Testbarkeit der 17 AKs im Gate Plan; lead-tech prüft, dass alle Leser von `maxInhabitants` und `serviceRadius` über Lese-Helfer laufen.
-Rückfall V4 (nur Stufe 3) bleibt Option, falls der Plan zu gross wird. Plan in der Folgesession.
-
-Regelbezug: gates.md Gate Spec, R674, R692, R698 · Kosten bei Irrtum: ein Beschluss, der nach dem Playtest per Werte-Ruling nachgestimmt wird.
-
-Entscheider: L0 · Anlass: Bericht lead-design design-I-112 · ADR: —
-
-## R707 · 2026-10-16 · Gate Merge I-120 + I-118: OK; Ampel rot → Session-Ende
-
-Ruling: `feat/i120` @ `13dc9bfd` und `feat/i118` @ `f69d8b49` (Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-I-120-I-118.md`): frisches Delta-Review opus
-OK (R673 nachgeholt), Importgrenzen eingehalten, kein `src/sim`-Diff, `SAVE_VERSION` 16, Prüfläufe Exit 0, Merge-Proben sauber, README/arc42 nachgeführt →
-**Gate Merge OK**; Abweichung `sound.ts` statt `ambience.ts` genehmigt. lead-production merged I-120, dann I-118 (`--no-ff`, lokal), trägt die vier niedrigen
-Hinweise in `docs/beobachtungen.md` ein und nimmt beide in REL-26 auf. Limit-Ampel rot (86 %): keine neuen Pakete; UI-AUFRAEUM-4 läuft bis zum nächsten
-Haltepunkt und setzt in der Folgesession fort; Session-Ende-Routine jetzt (Metriken, Kurz-Retro mit den Handbuch-Nachträgen R695/R704, state.md).
-
-Regelbezug: gates.md Gate Merge, R69, R673, R698, R702 · Kosten bei Irrtum: ein Stadtklang, der nach dem Hörtest nachgestimmt wird.
-
-Entscheider: L0 · Anlass: Bericht lead-qa gate-I-120-I-118, Ampel rot · ADR: —
-
-## R708 · 2026-10-16 · Kurz-Retro 66d37b15: V1 und V2 angenommen; Handbuch 1.59 angenommen
-
-Ruling: Bericht `docs/studio/retros/2026-10-16-session-66d37b15-ende.md` (Commit `89b10f2d`, Handbuch 1.59 mit Flake-Zeile und `guard_block`) → angenommen.
-**V1**: Pflichtzeile in `templates/briefing.md` (Controller-Briefing): Delta-Review nach ZURÜCK/BEDENKEN immer frischer Start (opus), nie Fortsetzung (R673);
-Messgrösse 0 Fortsetzungs-Delta-Reviews in den nächsten 5 Controller-Paketen. **V2**: bei 1-min-Last ≥ 8 startet L0 keine dritte gleichzeitige Umsetzung
-mit Testlauf (ergänzt R703); Messgrösse `davon Last ≥ 8` ≤ 50 % über 3 Sessions. E-064 bleibt «behalten» (R693). Messaufträge: V3 (Frist 2026-10-23),
-«grösste gelesene Datei 66,7 KB» identifizieren (studio-coach, Frist 2026-10-23), L0-Zwischenstand in state.md ab 250k Kontext (nächste Session).
-
-Regelbezug: R316, R673, R693, R703 · Kosten bei Irrtum: eine Umsetzung, die eine halbe Stunde später startet.
-
-Entscheider: L0 · Anlass: Kurz-Retro 66d37b15 · ADR: —
-
-## R709 · 2026-10-16 · Session-Start ca9d40c8: UI-AUFRAEUM-4 per Fortsetzung; Plan I-112 jetzt; ORT-A ab Last < 8
-
-Ruling: (1) Der Controller `lead-tech` UI-AUFRAEUM-4 (Agent `a7b1c43c`, Session 66d37b15) lebt nach `/clear` weiter und wartet auf seinen eigenen `make check`
-(`feat/ui-aufraeum-4` @ `150f98f8`); kein Neustart, L0 setzt ihn nach Ende des Laufs per `SendMessage` fort (Stand, Restbudget aus R694, Ziel Gate Merge).
-(2) **Plan I-112** (`lead-tech`, opus, Paket `plan-I-112`) startet jetzt: ohne Testlauf, daher auch bei Last > 8 zulässig (R464, R703, R708 V2);
-Budget 1 Start. (3) **ORT-A** startet erst bei 1-min-Last < 8 als zweite Umsetzung mit Testlauf (R703, R708 V2); I-114 T02 ff. weiter nach Merge
-UI-AUFRAEUM-4 (R701). (4) Beobachtungen 12 < 30: keine Pflicht-Auswertung.
-
-Regelbezug: R464, R694, R701, R703, R705, R706, R708 · Kosten bei Irrtum: ein Controller, der doppelt läuft, oder ein Plan, der eine halbe Stunde später startet.
-
-Entscheider: L0 · Anlass: Session-Start ca9d40c8 · ADR: —
-
-## R710 · 2026-10-16 · Gate Merge UI-AUFRAEUM-4: OK nach arc42-Satz (B-1); D-1 und D-2 bestätigt; Prozess-Retro REL-21–REL-25
-
-Ruling: (1) `feat/ui-aufraeum-4` @ `150f98f8` (Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-UI-AUFRAEUM-4.md`): **Gate Merge OK unter Auflage B-1** — lead-tech
-korrigiert in `docs/arc42.md` (Zeile zu `input.ts`) den Rechtsklick auf die Staffelung D-2 (erster Rechtsklick beendet den Zug, zweiter legt das Werkzeug ab),
-Trivial-Fix mit `make docs-check` Exit 0, kein erneutes Gate; danach merged lead-production lokal (`--no-ff`) und nimmt das Paket in REL-26 auf. **D-1**
-(Cache-Schlüssel mit `nextBuildingId` und Stufensumme, reiner UI-Zustand) und **D-2** bestätigt. Beobachtungen: Rechtsklick über `pointerdown` Button 2 erst
-bei Bericht aus einem Nicht-Chrome-Browser; Schwenk-Test und Menü-Abstand bei der nächsten Menü-Arbeit. Danach I-114 T02 ff. (R701). (2) Seit REL-20 fehlt
-die Prozess-Aussensicht (R127) für REL-21 bis REL-25 → `studio-process-coach` (opus) jetzt, ein Bericht über alle fünf Releases.
-
-Regelbezug: gates.md Gate Merge, R127, R694, R701, R707 · Kosten bei Irrtum: ein Doku-Satz, der eine Stunde länger veraltet ist.
-
-Entscheider: L0 · Anlass: Bericht lead-qa gate-UI-AUFRAEUM-4 · ADR: —
-
-## R711 · 2026-10-16 · Plan I-112: R-3 anteiliger Stufentakt, R-4 Migration v16→v17, R-5 UI-Leser in T01; Testbarkeits-Check jetzt
-
-Ruling: Plan `plan/i112` @ `cb41264e` (10 Tasks T00–T09, Handoff `.studio/handoffs/2026-10-16-lead-tech-plan-I-112.md`). **R-3:** Der neue Takt gilt anteilig für
-Ausbaustufen: `floor(Stufentakt × neuer Grundtakt ÷ 50)` (Weberei Stufe 30 → 24); kein Gegenzeichnen durch lead-design nötig, weil es die naheliegende Lesart von
-R706 R-2 ist und die Baseline bitgleich bleibt (Controller beschliesst nie). **R-4:** Statt Abweisen eine Migration v16→v17 (offene Stufen aus vorhandenen Häusern
-abgeleitet), wie die bestehende Kette v1→v16; Verfassung §3 erlaubt Laden, verlangt es nicht; Test für die Migration statt für das Abweisen; `SAVE_VERSION` = main + 1
-beim Merge (R674) bleibt. Budget daher 25 Arbeiter-Starts + 4 Controller. **R-5:** T01 darf die Leser-Zeilen in den 7 Dateien unter `src/ui/` ändern (wie R674 (2)).
-Taste `Umschalt+R` angenommen. Gate Plan: Testbarkeits-Check der 17 AKs durch lead-qa (Auflage R706) jetzt; Budgetfreigabe mit dem Gate-Urteil.
-
-Regelbezug: VERFASSUNG §3, R674, R706 · Kosten bei Irrtum: ein Stufentakt, der nach dem Playtest per Werte-Ruling nachgestimmt wird.
-
-Entscheider: L0 · Anlass: Bericht lead-tech plan-I-112 · ADR: —
-
-## R712 · 2026-10-16 · Prozess-Retro REL-21–REL-25: V1–V4 angenommen; Actions rot → REL-26 frühestens 2026-10-17
-
-Ruling: Bericht `docs/studio/retros/2026-10-16-prozess-rel21-25.md` (`e64df507`) → angenommen. **V1** `push-check` misst bei Exit 1 immer nach (Bedingung
-`start > RETRY_LOAD` in `pushcheck.py` entfällt; R598 V3 zurückgenommen); Messgrösse 0 Ausnahme-Rulings über 3 Pushes. **V2** Release-Check nur in der Session, die
-pusht; Vorab- und Delta-Check entfallen; Messgrösse ≤ 2 lead-qa- und ≤ 1 Integrator-Start je Release. **V3** TOOL-TIMEOUT-7 auf alle Tests mit lokaler Zeit × 4
-
-> 40 % des Timeouts ausweiten, CI-Laufzeit festhalten; Messgrösse ≤ 1 Zeitreserve-Paket über 3 Releases. **V4** Pre-Commit-Hook formatiert vollständig gestagte
-> Dateien selbst mit Prettier und stagt sie neu (teilweise gestagte Dateien weiter abweisen, nie fremde Änderungen mitstagen); Messgrösse ≤ 1 Abweisung je Session.
-> Umsetzung: V1, V3, V4 und die Ein-Ereignis-je-Lauf-Zählung von `load_abort` als **TOOL-BUENDEL-14** (lead-tech, Werkzeug-Paket, Plan-Instanz sonnet, Budget 6);
-> V2 als Handbuch-Minor durch studio-coach. Messauftrag R708 «grösste Datei» erledigt (`docs/beobachtungen.md` 57,5 KB, zweiter Fall in Folge → Auswertungen lesen
-> die Datei abschnittsweise; studio-coach nimmt das in lernen.md auf). **Actions-Prognose rot (2575/2000):** R488 V2 gilt — höchstens ein Push je Tag; heute
-> gepusht (`8fe744df`), daher **REL-26 frühestens 2026-10-17**; bis dahin sammeln sich gemergte Pakete lokal.
-
-Regelbezug: R127, R316, R335, R488 V2, R598 V3, R708 · Kosten bei Irrtum: ein Werkzeug-Paket, das eine Regel lockert, die wieder verschärft werden muss.
-
-Entscheider: L0 · Anlass: Prozess-Retro REL-21–REL-25 · ADR: —
-
-## R713 · 2026-10-16 · Gate Plan I-112: OK mit Auflagen B-1–B-5; Budget 25 + 4; Umsetzung jetzt
-
-Ruling: `plan/i112` @ `cb41264e` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-plan-I-112.md`) → **Gate Plan OK mit Auflagen**: B-1 R711 in Index, T02, T04
-nachziehen (Varianten und Blocker R-3/R-4 streichen, Satz «Spec §4/AK 9 durch R711 R-4 ersetzt»); B-2 Stufentakt-Test je Kette (Weberei, Brennerei, Glashütte),
-Reihenfolge Beschluss vor Inselvorteil, Untergrenze 1; B-3 Migrationstest v16→v17 mit Fällen ohne Haus, Stufe 4 und älteren Fixtures durch die Kette, Save-Tests
-`buyPct`, `farOrder`, `reserve`, `inselmarkt`, `toolmaker` mitlaufen; B-5 Sollwert `council` in T05 aus der höchsten Hausstufe am Laufende. B-6–B-9 als Hinweise.
-Budget **25 Arbeiter-Starts + 4 Controller, Parallelität 2**. Erste Controller-Instanz arbeitet B-1–B-5 in den Plan ein (auf `feat/i112`), dann T00, T01.
-Last 6 < 8: dritte Umsetzung mit Testlauf zulässig (R708 V2).
-
-Regelbezug: gates.md Gate Plan, R706, R708 V2, R711 · Kosten bei Irrtum: eine Plan-Korrektur.
-
-Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-I-112 · ADR: —
-
-## R714 · 2026-10-16 · Freier Platz → Kurzdesign I-119 + I-121 «Bewohner reagieren» (Stufe leicht)
-
-Ruling: Ein Agentenplatz ist frei (Deckel 6, R698); aus dem Pool R692 startet **I-119 + I-121** als ein Paket «Bewohner reagieren» (Eimerkette bei Brand,
-Heimgehen bei Sturmwarnung, Wartende vor Häusern mit Mangel). Kurzdesign Stufe leicht durch lead-design (sonnet, E-061), Branch `design/i119-i121`; kein Save,
-nur `src/render/` (Leben/Figuren). Auflage: Abgleich mit ORT-A (Wege- und Kantenänderungen in `src/render/`), Figurenobergrenze und «Bewegung reduzieren»;
-Plan erst nach Gate Spec und nicht vor ORT-A T20 (Zusammenführung), um Merge-Fläche in `src/render/` klein zu halten. Handbuch 1.60 (`612fe2bb`) mit
-CHANGELOG-Eintrag angenommen.
-
-Regelbezug: R445, R692, R698, E-061 · Kosten bei Irrtum: ein Kurzdesign, das bis nach ORT-A liegen bleibt.
-
-Entscheider: L0 · Anlass: freier Platz · ADR: —
-
-## R715 · 2026-10-16 · Gate Spec I-119 + I-121: Variante 3 (gestaffelt); Kurzdesign I-110 «Startpaket zur Wahl» jetzt
-
-Ruling: (1) `design/i119-i121` @ `da85c492` (Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-119-I-121.md`) → **Gate Spec OK, Variante 3**: Paket A
-(Wartende vor der Tür mit Zeitstaffel, Sturm-Heimgehen, Boom-Winken, ohne Pfadlogik) vor Paket B (Brand-Eimerkette mit Breitensuche, streichbar). Konstanten
-(30/150/600 Ticks, Läufertempo 1,8 Kacheln/s, `waiters` [12, 4], `firefighters` [8, 0], `wavers` [12, 0]) sind Darstellungswerte in `src/render/reaktion.ts` bzw.
-`CAPS` in `limits.ts`, nicht in `src/sim/defs/` — Balancing unberührt. Reagierende zählen gegen `CAPS.walkers` und ersetzen Spaziergänger. Kürzung «voll versorgte
-Häuser schicken öfter Spaziergänger» angenommen. Plan erst nach ORT-A T20, ab dem dann aktuellen `main` (R714). (2) Freier Platz → **Kurzdesign I-110
-«Startpaket zur Wahl»** (Pool R692), Stufe voll (neue Spielwerte): lead-design (opus) mit design-economy-designer für die Rechnung (Vorteile je Paket in einem
-Engpass der ersten 15 min, keine Dominanz); «Standard» bleibt Vorgabe, Balancing-Baseline startet mit Standard.
-
-Regelbezug: gates.md Gate Spec, R445, R692, R698, R714 · Kosten bei Irrtum: ein Paket B, das nach dem Playtest von A gestrichen wird.
-
-Entscheider: L0 · Anlass: Bericht lead-design design-I-119-I-121 · ADR: —
-
-## R716 · 2026-10-16 · I-112 C1 abgenommen (T01 `07de72c4`); `imports.test.ts`-Lockerung angenommen; C2 erst nach I-114 oder bei Last < 8
-
-Ruling: `feat/i112` @ `07de72c4` in `.worktrees/i112` (Plan-Nachtrag `3e7b3a1a` mit B-1–B-9; Handoff `.studio/handoffs/2026-10-16-lead-tech-I-112.md`): T01 Leser-Umbau
-abgenommen (Wächter-Rot-Beleg 26 Treffer, Baseline bitgleich, Diff `defs`/`save.ts`/`types.ts` leer). Die Lockerung in `tests/sim/imports.test.ts` (`levels.ts` darf
-aus `./council` importieren, `council` bleibt Blatt) angenommen, nachträglich in die Dateimatrix. T00-Messung (R392) ersatzweise auf `07de72c4` nachholen, sobald
-Last ≤ 4 (T01 verhaltensneutral). Merge-Reihenfolge I-114 vor I-112, danach `git merge main` in `feat/i112`. **Instanz C2 (T02–T05) startet erst, wenn I-114
-übergeben ist oder die 1-min-Last < 8 liegt** — derzeit laufen drei Umsetzungen mit Testlauf (ORT-A, I-114, TOOL-BUENDEL-14), Last 7–13 (R708 V2).
-
-Regelbezug: R392, R708 V2, R711, R713 · Kosten bei Irrtum: eine Umsetzung, die eine halbe Stunde später weiterläuft.
-
-Entscheider: L0 · Anlass: Bericht lead-tech I-112 C1 · ADR: —
-
-## R717 · 2026-10-16 · ORT-A C2: T07 abgenommen; +3 Starts aus dem Planpuffer für T08; `buildMsNachLaden` angenommen
-
-Ruling: `feat/ort-a-mess` @ `e8a3bdfd` (Basis A `72ee9610`, Messbasis `mess/ort-a-basis` @ `660f3160`; Handoff `.studio/handoffs/2026-10-16-lead-tech-ORT-A-C2.md`):
-T07 nach drei Review-Runden abgenommen; DEV-Haken nicht im Produktionsbuild. Budgetantrag D-ORT-A-C2-1 **+3 Starts für T08 aus dem Puffer (12) des Gesamtbudgets 57**
-(R705) freigegeben, Puffer danach 9; C2 setzt per Fortsetzung fort. Planabweichung: `hitch.mjs` `buildMs` → `buildMsNachLaden` (meist `null`), vollen Aufbau liefert
-`perf.mjs` (`buildMsA/B`), `patchMs` je Bau bleibt — angenommen. T08 pausiert die Sim beim Einfrieren (⏸ wie `perf.mjs`). Browser-Probeläufe und A/A-Kontrolle mit
-Vermerk «Messfenster belegt», solange N-102 offen ist; gewertete A/B-Messungen (T09) erst bei freiem Messfenster.
-
-Regelbezug: R553, R705, N-102 · Kosten bei Irrtum: drei Starts aus dem Puffer.
-
-Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
-
-## R718 · 2026-10-16 · Gate Merge TOOL-BUENDEL-14: OK ohne Auflagen; Merge jetzt
-
-Ruling: `tool/buendel-14` @ `69230eb9` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-TOOL-BUENDEL-14.md`) → **Gate Merge OK**. V1, V3, V4 (R712) und die
-Isolation des `testlock`-Tests (Ursache der vervielfachten `load_abort`-Ereignisse) belegt; merge-tree konfliktfrei gegen Handbuch 1.60. lead-production merged lokal
-(`--no-ff`) und trägt H-1 (Nachmessung beim nächsten `push-check`), H-2 (alte `load_abort`-Test-Ereignisse, Bereinigung bei der nächsten Aufräum-Runde) und H-3
-in `docs/beobachtungen.md` ein. 7 Tests mit bestehendem Timeout bleiben unverändert.
-
-Regelbezug: gates.md Gate Merge, R712 · Kosten bei Irrtum: ein Pre-Commit-Hook, der eine Datei formatiert, die der Autor anders wollte.
-
-Entscheider: L0 · Anlass: Bericht lead-qa gate-TOOL-BUENDEL-14 · ADR: —
-
-## R719 · 2026-10-16 · Freier Platz → Beobachtungen-Auswertung BEOB-17
-
-Ruling: Ein Platz frei (Deckel 6, R698); Kurzdesigns/Pläne aus dem Pool sind belegt oder warten auf ORT-A T20 (R714). Daher **BEOB-17**: lead-production wertet die
-Einträge unter der Marke «Letzte Auswertung: 2026-10-16» aus (Skill `beobachtungen-auswerten`), Datei nur ab der Marke lesen (57 KB, R712). Jeder Eintrag endet als
-erledigt, abgehakt, eingeplant oder Idee; Trivial-Fixes ≤ 15 min im selben Branch `docs/beob-17`; kein `src/sim/defs`-Diff.
-
-Regelbezug: R287, R445, R698, R712 · Kosten bei Irrtum: eine Auswertung, die eine Woche früher als nötig läuft.
-
-Entscheider: L0 · Anlass: freier Platz · ADR: —
-
-## R720 · 2026-10-16 · Gate Merge I-114: OK; Merge jetzt, dann I-112 holt main
-
-Ruling: `feat/i114` @ `f26e64af` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-I-114.md`) → **Gate Merge OK**. R703 bestätigt; Lagerzahl der Fernkarte
-ohne Rotfärbung wie vorher (Beobachtung eingetragen). lead-production merged lokal (`--no-ff`), pflegt Rangliste und Entscheid-Status von I-114 in `docs/ideen.md`
-und nimmt I-114 in REL-26 auf. Danach holt der I-112-Controller `main` per Merge in `feat/i112` (Reihenfolge I-114 vor I-112, R716).
-
-Regelbezug: gates.md Gate Merge, R701, R703, R716 · Kosten bei Irrtum: eine Fernkarte, die nach dem Playtest nachgebessert wird.
-
-Entscheider: L0 · Anlass: Bericht lead-qa gate-I-114 · ADR: —
-
-## R721 · 2026-10-16 · BEOB-17: Merge OK (L0-Gate, Trivial-Fix); PERF-BILANZ-COV jetzt; TOOL-GUARD-REDACT und ZEITRESERVE-PFLEGE in den Pool
-
-Ruling: `docs/beob-17` (`27304033`, `1d23b6e9`; Handoff `.studio/handoffs/2026-10-16-lead-production-BEOB-17.md`): 17 Einträge ausgewertet (2 erledigt, 4 eingeplant,
-10 abgehakt, 1 offen bis ORT-1). Diff ausserhalb der Doku nur Klasse `menu-field` (2 Zeilen `menu.ts`, 5 Zeilen CSS), Prüfungen Exit 0 → **Merge OK durch L0**
-(Trivial-Fix, kein lead-qa-Gate nötig); lead-production merged lokal und nimmt den Menü-Abstand in REL-26 auf. Paketvorschläge: (1) **PERF-BILANZ-COV** (S) jetzt —
-I-114 ist gemergt (R720), Last 5,7 < 8, dritte Umsetzung zulässig (R708 V2); lead-tech, Stufe leicht, Budget 4. (2) **TOOL-GUARD-REDACT** (S) und (3)
-**ZEITRESERVE-PFLEGE** mit H-1 in den Pool; Start beim nächsten freien Platz bzw. nächsten Werkzeug-Bündel.
-
-Regelbezug: R287, R445, R698, R708 V2, R719 · Kosten bei Irrtum: ein Menü-Abstand, der nachjustiert wird.
-
-Entscheider: L0 · Anlass: Bericht lead-production BEOB-17 · ADR: —
-
-## R722 · 2026-10-16 · Kurzdesign I-110: geparkt bis `BUY_RISE` > 0; TOOL-GUARD-REDACT jetzt
-
-Ruling: `design/i110` @ `2473b2da` (Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-110.md`): Die Messung zeigt, dass bei festen, unbegrenzten Kaufpreisen
-Geld der einzige Engpass der ersten 15 min ist; alle Pakete erreichen U1–U3 gleich schnell, sie unterscheiden sich nur im Restgeld. Eine Wahl ohne strategische
-Wirkung erfüllt das Ziel von I-110 nicht → **E1: geparkt**, bis der Zukauf mit der Menge teurer wird (`BUY_RISE` > 0, Mechanik aus I-048 Schritt A, derzeit
-inaktiv). Spec und Rechnung bleiben auf dem Branch als Ausgangspunkt (Kassenwart 5800, Kalibrierregel E3 als Vorlage). lead-production setzt I-110 in `docs/ideen.md`
-beim nächsten Merge auf «geparkt (R722)». Freier Platz → **TOOL-GUARD-REDACT** (Pool R721): `command` im Ereignis `guard_block` schwärzen (Token-Muster), lead-tech,
-Werkzeug-Paket, Budget 3.
-
-Regelbezug: R445, R692, R721 · Kosten bei Irrtum: ein Startpaket, das später als Stil-Wahl doch gebaut wird (≈ 60 Tools).
-
-Entscheider: L0 · Anlass: Bericht lead-design design-I-110 · ADR: —
-
-## R723 · 2026-10-16 · ORT-A C2: +1 Start für frisches Delta-Review T08; AK-50 einseitiges Kernfenster prüft der Reviewer
-
-Ruling: Budgetantrag D-ORT-A-C2-2 (`feat/ort-a-mess` @ `aafbc36e`, dritte Fix-Runde T08 nur `tools/render-qa/`) → **+1 Start aus dem Puffer** (danach 8) für ein frisches
-Delta-Review opus (R673, R708). Die Abweichung AK-50 (Kernfenster einseitig statt ±0,1 Kachel) bewertet der Delta-Reviewer ausdrücklich; ohne Begründung im Review
-gilt der Plan. Erwartete Unterschreitung «< 20 Querschnitte je Art» auf der Fixture: C2 vermerkt sie im Handoff als Risiko für T09, keine Fixture-Erweiterung in T08.
-`ortsrand.mjs` als Parallelquelle → Eintrag in `docs/beobachtungen.md` auf dem Strang. Danach Stopp C2; T09 (Messung ORT-1) startet erst bei freiem Messfenster.
-
-Regelbezug: R673, R705, R708, R717 · Kosten bei Irrtum: ein Start aus dem Puffer.
-
-Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
-
-## R724 · 2026-10-16 · I-112 C2: T02–T04 abgenommen; drei Planabweichungen bestätigt; C3 (T05–T07) mit 6 Starts
-
-Ruling: `feat/i112` (T02 `90f209d2`, T03 `3361223d`, T04 `93c95f94`, main-Merge `4e244cc8`, Lockerung `967d8f9a`; Handoff `.studio/handoffs/2026-10-16-lead-tech-I-112-C2.md`)
-→ abgenommen; Baseline unverändert. Ownership-Erweiterung auf `tests/sim/helpers.ts`, `helpers.test.ts`, `farOrder-save`, `save-loyalty` und die Lockerung des
-I-114-Tests auf `SAVE_VERSION >= 16` angenommen. Planabweichungen bestätigt: (a) Reihenfolge-Test «Beschluss vor Inselvorteil» mit der Glashütte auf Insel B
-(18 → 9), weil die Weberei keinen Inselvorteil hat; (b) Stufe 4 ohne `tierWish`, Wohnordnung wirkt nur über `maxInhabitantsOf`, Test «`unlocks.ts` Stufe 4 verlangt
-16» entfällt; (c) Abstände 12,5/13,5 im Glockenrecht-Test. Merge-Auflage: Literal 17 in `tests/sim/council-save.test.ts:84` beim Merge auf main + 1 ziehen (R674),
-besser jetzt auf `SAVE_VERSION`-Bezug umstellen. Konsistenztest «jeder `cycle`-Hebel zeigt auf ein Gebäude mit Takt» in T05 aufnehmen. **Instanz C3: T05–T07, 6 Starts**
-aus dem Restbudget (8 von 25 verbraucht), Parallelität 2; T00-Ersatzmessung weiter bei Last ≤ 4.
-
-Regelbezug: R674, R711, R713, R716 · Kosten bei Irrtum: ein Szenariotest, der im Final-Review nachgeschärft wird.
-
-Entscheider: L0 · Anlass: Bericht lead-tech I-112 C2 · ADR: —
-
-## R725 · 2026-10-16 · TOOL-GUARD-REDACT: Unter-Schwärzungen vor dem Gate schliessen; +1 Start
-
-Ruling: `tool/guard-redact` @ `de380351` (Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-GUARD-REDACT.md`): Vor Gate Merge schliesst lead-tech die gemeldeten
-Unter-Schwärzungen (`curl -u`, `Authorization`-Header, `token=`/`api_key=`/`secret=`/`password=`, `*_TOKEN=`/`*_KEY=`/`*_SECRET=`/`*_PASSWORD=`, Werte in
-Anführungszeichen) und setzt eine Wortgrenze vor `sk-`/`gh*_`. Über-Schwärzung (`-pattern`) ist hinnehmbar, Unter-Schwärzung nicht (OWASP). +1 Start für ein
-frisches Review. Verbleibende bewusste Lücken trägt L0 nach dem Bericht in `docs/beobachtungen.md` ein.
-
-Regelbezug: R721, OWASP (../CLAUDE.md Review-Besonderheit) · Kosten bei Irrtum: ein Start mehr für ein lokales Werkzeug.
-
-Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-REDACT · ADR: —
-
-## R726 · 2026-10-16 · ORT-A C1: T00–T03 abgenommen; C3 (T04–T06) startet; P-9 mit Vermerk
-
-Ruling: `feat/ort-a` (T01 `8ee15e72`, T02 `052d2a04`, T03 `050a4b60`; Basis A `72ee9610`; Handoff `.studio/handoffs/2026-10-16-lead-tech-ORT-A-C1.md`) → abgenommen.
-Neutralitätsbeweis T02 auf nachgebautem A (17/17) angenommen. **C3: T04, T05, (T05b), T06, 6 (+2) Starts** aus R705. P-9-Frühmessung der Patch-Zeit nach T05:
-solange N-102 offen ist, als Richtwert mit Vermerk «Messfenster belegt»; liegt schon der Richtwert ≥ +20 % über A, Frühwarnung an L0 vor T06 (E6), sonst T06 weiter
-und gewertete Messung in T09. C3 trägt die `inPoly`-Beobachtung (abweichende Argumentreihenfolge in sechs Testdateien) in `docs/beobachtungen.md` auf `feat/ort-a` ein.
-
-Regelbezug: R705, R717, N-102 · Kosten bei Irrtum: eine Patch-Zeit-Warnung, die erst in T09 auffällt.
-
-Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C1 · ADR: —
-
-## R727 · 2026-10-16 · Gate Merge PERF-BILANZ-COV: OK; Merge jetzt
-
-Ruling: `perf/bilanz-cov` @ `ad57e259` (Gate-Handoff `.studio/handoffs/2026-10-16-lead-qa-gate-PERF-BILANZ-COV.md`) → **Gate Merge OK**, Auflage: voller Lauf im
-`push-check` vor REL-26 (R712 V2). lead-production merged lokal (`--no-ff`), nimmt das Paket in REL-26 auf und trägt drei niedrige Beobachtungen ein (Routen-Bilanz bei
-Pause-/Ausfall-Wechsel im selben Tick bis zum nächsten Tick alt; `|island` im Memo-Schlüssel überflüssig; `focusLine`/`focusList`/`houseConsumers` je Chip ungemessen).
-
-Regelbezug: gates.md Gate Merge, R712 V2, R721 · Kosten bei Irrtum: eine Bilanz, die einen Tick zu spät aktualisiert.
-
-Entscheider: L0 · Anlass: Bericht lead-qa gate-PERF-BILANZ-COV · ADR: —
-
-## R728 · 2026-10-16 · ORT-A C2 +1 Delta-Review; Hof-Fixture für T09; I-112 C3 abgenommen, `Umschalt+R` = Rat, C4 mit 6 Starts
-
-Ruling: (1) ORT-A C2 (`feat/ort-a-mess` @ `1d1324d4`, Fix-Runde 3 T08): **+1 Start** aus dem Puffer (danach 7) für ein frisches Delta-Review opus (R673, R708). Hof
-liefert auf `ort-a-siedlung.json` 0 Querschnitte (nur Rückseiten frei) → eine Fixture mit freien Vorderseiten ist Teil der T09-Vorbereitung durch C4 (aus dem Puffer),
-nicht von T08. (2) I-112 C3 (`feat/i112` @ `1d201bf1`; T05 `bb60938e`, T06 `b48b181e`, T07 `a841388b`) → abgenommen. **`Umschalt+R` öffnet den Rat** (statt Weg)
-bestätigt; `r` bleibt Weg, `tests/ui/hotkeys.test.ts` AK-TK-16 nimmt `r` aus; README/Tastenkürzel-Menü nennen es (T09). BEDENKEN T05 (`importsDecree` ohne
-`require`/`import()`, Import-Reihenfolge `council.test.ts:26`) behebt C4 vor dem Final-Review; das Final-Review (opus, frisch, ganzer Branch) deckt R673 für T05 ab.
-**C4: T08 Browser, T09 Doku, T05-Kleinfix, Final-Review; 6 Starts** (14 von 25 verbraucht). C4 holt zuerst `main` (PERF-BILANZ-COV berührt `hud.ts`, R727).
-
-Regelbezug: R673, R705, R708, R713, R724, R727 · Kosten bei Irrtum: eine Tastenbelegung, die nach dem Playtest getauscht wird.
-
-Entscheider: L0 · Anlass: Berichte lead-tech ORT-A C2 und I-112 C3 · ADR: —
-
-## R729 · 2026-10-16 · ORT-A C2: Fix-Runde 4 T08 (Schatten-Versatz ½ Kachel) und +1 Delta-Review; Retro-Vormerkung
-
-Ruling: Delta-Review 3 (opus) ZURÜCK mit einem blockierenden Befund (Schatten-Querschnitt in `kantenprofil.mjs` um ½ Kachel versetzt: `buildingShadow` Rohkoordinaten
-vs. `tileCenter`), sonst alles bestätigt → **Fix-Runde 4 per Fortsetzung** (−0,5 in `liesSchattenMasse` plus Selbsttest ab Rohmassen) und **+1 Start** Delta-Review opus
-(Puffer danach 6). Bei erneutem ZURÜCK: Stopp, L0 entscheidet über Zuschnitt (T08 ohne Schatten-Teil, Schatten nach T16). Retro-Vormerkung: T08 hat 5 Starts über Plan
-verbraucht, weil Messwerkzeug-Code ohne Browser-Läufe (N-102) nur per Review geprüft werden konnte — für die ORT-A-Retro.
-
-Regelbezug: R673, R705, R708, R723, R728, N-102 · Kosten bei Irrtum: ein weiterer Start aus dem Puffer.
-
-Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
-
-## R730 · 2026-10-16 · ORT-A T08 mit BEDENKEN angenommen; Fixture und zwei Schwellen an C4 vor T09; C2 beendet
-
-Ruling: `feat/ort-a-mess` @ `96fbd674` (Delta-Review 4 opus BEDENKEN, Koordinaten bestätigt) → **T08 angenommen**. Vor T09 erledigt C4 im Strang `mess`: (a) Fixture
-mit freien Vorderseiten (Hof) und freiem Gras östlich der Häuser (Schatten, AK-37), (b) die zwei niedrigen Punkte in `kantenprofil.mjs` (Z. 200 Schwelle `x1 > xe + 0,05`
-zu klein für das 0,2-Kernfenster; Z. 205 Prüfstart erst ab `x1 + 0,5`), weil die neue Fixture diese Gebäudetypen enthalten kann; je ein Selbsttest. Kein weiterer
-Start für C2. Puffer jetzt 6. Browser-Läufe und A/A-Kontrolle weiter offen (N-102).
-
-Regelbezug: R705, R729, N-102 · Kosten bei Irrtum: eine Messlinie, die in T09 noch einmal angepasst wird.
-
-Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C2 · ADR: —
-
-## R731 · 2026-10-16 · Freie Plätze → Ideen-Runde IDEEN-12 (3 Scouts, Parallelität 2)
-
-Ruling: Drei Plätze frei, Pool bis auf I-111 abgearbeitet (I-110 geparkt R722, I-119/I-121 warten auf ORT-A T20) → **IDEEN-12** nach R445: lead-design (opus) mit 3
-`design-idea-scout` (sonnet), Parallelität 2 (Deckel 6 inkl. laufender ORT-A C3, I-112 C4, TOOL-GUARD-REDACT). Schwerpunkte: Scout A Spieler-Rückmeldungen und
-Playtest-Befunde seit REL-20; Scout B Genre-Mechaniken, die im Spiel noch fehlen; Scout C Spätspiel und Langzeitmotivation nach dem Denkmal. Ausgeschlossen:
-Themen der Erweiterung 1 «Stände und Segel» (Nutzer-Session, R519) und Doppelungen mit Pool/Archiv. Je Scout höchstens 5 Ideen; lead-design bewertet nach Raster und
-schlägt eine Rangliste vor; Gate Ideen-Runde durch L0. Pool-Pflege aus dem IDEEN-11-Handoff (Fragen 3, 4) nimmt lead-design mit, sofern noch offen.
-
-Regelbezug: R445, R475, R519, R692, R698 · Kosten bei Irrtum: eine Ideen-Runde, deren Ergebnis eine Woche im Pool liegt.
-
-Entscheider: L0 · Anlass: freie Kapazität · ADR: —
-
-## R732 · 2026-10-16 · TOOL-GUARD-REDACT: +1 frisches Review auf `74c3d966`; Allowlist statt Muster-Jagd ins nächste Werkzeug-Bündel
-
-Ruling: `tool/guard-redact` @ `74c3d966` (vier Commits, Rot-Belege, `studio-test` 974 grün; Handoff `.studio/handoffs/2026-10-16-lead-tech-TOOL-GUARD-REDACT.md`) → **+1 Start**
-für ein frisches Review opus auf diesem Stand (R673), dann Gate Merge durch lead-qa. Die gemeldeten Restlücken zeigen, dass Muster-Schwärzung nie vollständig wird:
-Folgepaket im nächsten Werkzeug-Bündel (KISS): `guard_block` speichert statt des Befehls nur Programmname + Unterbefehl (nur `[a-z0-9-]+`), Regel und einen
-Hash des Befehls (Allowlist); die Schwärzung bleibt als zweite Linie. Restlücken und Über-Schwärzungen trägt lead-production beim Merge in `docs/beobachtungen.md` ein.
-
-Regelbezug: R673, R721, R725, OWASP · Kosten bei Irrtum: ein Werkzeug-Paket mehr für eine lokale Datei.
-
-Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-REDACT · ADR: —
-
-## R733 · 2026-10-16 · TOOL-GUARD-REDACT: Muster-Jagd beendet → TOOL-GUARD-ALLOWLIST jetzt; Ad-hoc-Retro Budgetüberschreitungen
-
-Ruling: Das frische Review auf `tool/guard-redact` @ `74c3d966` ergab ZURÜCK (neue Unter-Schwärzung bei angehängten Namen wie `PGPASSWORD=`, `accessToken=`; `passphrase`
-fehlt). Vier Runden Muster-Schwärzung haben je neue Lücken erzeugt → **kein Merge von `tool/guard-redact` als Endstand**. Stattdessen **TOOL-GUARD-ALLOWLIST** (lead-tech,
-sonnet, Budget 3) auf diesem Branch: `guard_block` speichert im Feld `command` nur Programmname + Unterbefehl (je Token nur `[a-z0-9._-]+`, sonst `?`), dazu Regel
-und SHA-256-Präfix (12 Zeichen) des vollen Befehls; nie Argumente. Die Schwärzung bleibt für andere Ausgaben als zweite Linie mit den Vorschlägen des Reviews
-(`token`/`secret`/`password`/`passwd`/`credential`/`passphrase` ohne Zeichensperre, CamelCase). Tests: kein Secret aus der bisherigen Testsammlung erscheint im Ereignis.
-**Ad-hoc-Retro** (studio-coach, sonnet, Hook-Pflicht): Budgetüberschreitung lead-tech 5 von 3 (TOOL-GUARD-REDACT, R725/R732) und ORT-A T08 +5 Starts (R717–R730) —
-Ursache, Hebel, Messgrösse.
-
-Regelbezug: R673, R725, R732, OWASP, Handbuch Verbesserungsschleife · Kosten bei Irrtum: ein Diagnosefeld mit weniger Inhalt (Hash statt Klartext).
-
-Entscheider: L0 · Anlass: Bericht lead-tech TOOL-GUARD-REDACT, Hook «Ad-hoc-Retro fällig» · ADR: —
-
-## R734 · 2026-10-16 · I-112 Final-Review BEDENKEN: Befunde 1–4 vor dem Merge; +2 Starts (im Gesamtbudget 25)
-
-Ruling: `feat/i112` @ `b7e65e55` (Handoff `.studio/handoffs/2026-10-16-lead-tech-I-112.md`; T05-Kleinfix `3ba35318`, Tooltip-Fix `867d1f0d`, T09 `5eb22120`): Final-Review opus
-BEDENKEN → vor dem Merge beheben: **(1, hoch)** Rats-Karte wird bei Laden/«Neue Insel» entfernt (`dispose` in `src/ui/app.ts`), Test belegt, dass kein `decree` auf der
-verworfenen Welt möglich ist; (2) Tooltip-Zeilen «Erzeugt»/«Ausstoss je Stufe»/«Braucht» mit beschlossenem Takt; (3) `council` im Cache-Schlüssel des Glauben-Umrisses;
-(4) Rats-Karte über den Auftragskarten (`z-index`). `Umschalt+R` ohne Marke und das Sortieren je Tick: Beobachtung. Fehlender Reichweitenkreis bei stehender Kapelle
-(schon auf main): Beobachtung. Naht-Wächter nimmt `council` wie `levels` als erlaubten `cycle`-Leser aus — angenommen. **+2 Starts** (UI-Umsetzer sonnet, Delta-Review
-opus frisch), Verbrauch dann 22 von 25. Danach voller `make check` bei Last ≤ 8 und Zeitmessung bei Last ≤ 4 (sonst Vermerk), dann Gate Merge.
-
-Regelbezug: R673, R708, R713, R728 · Kosten bei Irrtum: zwei Starts für Befunde, die auch nach dem Merge behebbar wären.
-
-Entscheider: L0 · Anlass: Bericht lead-tech I-112 C4 · ADR: —
-
-## R735 · 2026-10-16 · Ad-hoc-Retro Budget: V1, V2 angenommen (Handbuch 1.61), V3 sofort für L0
-
-Ruling: Bericht `docs/studio/retros/2026-10-16-adhoc-budget.md` (`1e053c13`) → angenommen. Ursache: L0 bewilligte Zusatzstarts einzeln, ohne die Befundklasse der Vorrunde
-zu vergleichen; Umschnitt kam je eine Runde zu spät (R725 statt R733; R728 statt R729). **V1:** Ein Budgetantrag nach dem zweiten ZURÜCK/BEDENKEN derselben Befundklasse
-nennt die Klasse je Runde und eine Ansatz-Alternative; L0 bewilligt dann keinen weiteren Fix-Start ohne Ansatzprüfung (Messgrösse ≤ 1 Start über Budget je Paket über
-5 Pakete, Frist 2026-11-30). **V2:** Messwerkzeug-Tasks bei belegtem Messfenster höchstens 2 Review-Runden, Rest ins Paket mit freiem Fenster (≤ 2 Starts über Plan über
-3 Tasks, Frist 2026-12-15). Umsetzung V1/V2 als Handbuch 1.61 und Vorlage `templates/budgetantrag.md` durch studio-coach. **V3** gilt ab sofort für L0: jedes
-Budget-Ruling nennt den kumulierten Stand («n von m»); Messgrösse 10/10 bis 2026-11-15. Stand heute: TOOL-GUARD-REDACT/ALLOWLIST 5 von 3 + 3; ORT-A Puffer 6 von 12;
-I-112 22 von 25.
-
-Regelbezug: R316, R673, R708, Handbuch Verbesserungsschleife · Kosten bei Irrtum: ein Umschnitt, der eine Runde zu früh kommt.
-
-Entscheider: L0 · Anlass: Ad-hoc-Retro Budget · ADR: —
-
-## R736 · 2026-10-16 · ORT-A E6: T05b Zwei-Zonen-Patch vor T06; Budget C3 «8 von 8», ORT-A-Puffer «8 von 12» verbraucht
-
-Ruling: ORT-A C3 (`feat/ort-a`; T04 `d83f40a7`, T05 `c12563f0`, Beobachtungen `ebcc15ad`; Handoff `.studio/handoffs/2026-10-16-lead-tech-ORT-A-C3.md`) → T04, T05 abgenommen;
-T04-BEDENKEN durch T05-Review gedeckt. P-9-Frühwarnung (Richtwert unter Last, CPU-Mikromessung `paintPixels`): B/A = 2,50–2,54 (≈ +150 %), überwiegend Fläche von
-Rand 2; ≈ 37 ms liegt an der Ruckelgrenze 25 ms (R313). **E6 → Option 1: T05b Zwei-Zonen-Patch** (Ring rechnet nur den Saum, mischt auf gespeicherten Grundpuffer),
-danach T06; Abbruchkriterium: liegt der Richtwert nach T05b noch > +50 % über A, Stopp und L0 entscheidet zwischen Rand 1 und Zuschnitt (V1 R735). Budget (V3):
-C3 4 von 6 verbraucht + 2 aus dem Puffer für T05b → **C3 8 von 8**; ORT-A-Puffer **8 von 12** verbraucht (T08 +5, T05b +2, R723 +1). Gewertete Messung bleibt T09.
-
-Regelbezug: R313, R705, R726, R735 · Kosten bei Irrtum: zwei Starts für einen Patch, der in T09 doch nicht reicht.
-
-Entscheider: L0 · Anlass: Frühwarnung lead-tech ORT-A C3 (E6) · ADR: —
-
-## R737 · 2026-10-16 · Gate Ideen-Runde IDEEN-12: Rangliste angenommen; Kurzdesign I-122 + I-123 jetzt, I-132 + I-133 danach
-
-Ruling: `docs/ideen-12` @ `8dae3333` (I-122–I-135, Pool-Pflege; Handoff `.studio/handoffs/2026-10-16-lead-design-IDEEN-12.md`) → angenommen, Merge durch lead-production.
-Leitbefund «Geld ist nur in den ersten 15 min knapp» (R722) als Bewertungsmassstab bestätigt. Priorität: (1) **I-122 Vorwarnung vor der Stammkunden-Lieferung + I-123
-Reichweite mit Vertrag** → Kurzdesign Stufe leicht jetzt (lead-design sonnet; `CONTRACT_WARN_S` in `src/sim/defs/`, Audio nur Signal, kein Save); (2) **I-132 Meisterprüfung
-
-- I-133 «Sturmjahr»** → Kurzdesign Stufe voll mit Rechnung beim nächsten freien Platz; (3) I-128 Lärm und Rauch → Baustein Stadtplanungs-Brainstorming. Geparkt: I-124
-  (bis Playtest-Trigger und ORT-A-Merge), I-130, I-134 (bis `BUY_RISE` > 0), I-131 (bis I-112 live). Verworfen: I-125, I-126, I-127, I-129, I-135. Budget (V3): IDEEN-12
-  3 von 3.
-
-Regelbezug: R445, R692, R722, R731 · Kosten bei Irrtum: ein Häppchen, das nach dem Playtest leiser gestellt wird.
-
-Entscheider: L0 · Anlass: Bericht lead-design IDEEN-12 · ADR: —
-
-## R738 · 2026-10-16 · Gate Spec I-122 + I-123: OK; Warnfenster 300 Ticks; Plan jetzt, Umsetzung nach I-112-Merge
-
-Ruling: `design/i122-i123` @ `50698d85` (Handoff `.studio/handoffs/2026-10-16-lead-design-design-I-122-I-123.md`) → **Gate Spec OK**. Warnung als UI-Ableitung auf der
-Sim-Lesefunktion `contractWarning` (kein Save, Baseline unberührt), Audio-Signal `'contractWarn'` ohne Import aus `src/sim/`/`src/ui/`. **`CONTRACT_WARN_TICKS = 300`**
-(30 s Spielzeit) statt 20 s; nach dem Laden still bis zur nächsten Periode. Einmaliges Aufleuchten im Fenster statt der heutigen Dauerfärbung. Der Verdacht
-«`nextOrderTick` mit `farSkip` zeigt nach Fernauftrag + Vertrag eine Periode zu spät» prüft lead-tech im Plan per Test (bestätigt → Beipack-Task, sonst Beobachtung).
-Plan Stufe leicht jetzt (lead-tech, sonnet, Budget 1); Umsetzung erst nach dem Merge von I-112 (Konfliktfläche `app.ts`, `hud.ts`).
-
-Regelbezug: gates.md Gate Spec, R737, E-061 · Kosten bei Irrtum: ein Warnfenster, das nach dem Playtest gekürzt wird.
-
-Entscheider: L0 · Anlass: Bericht lead-design design-I-122-I-123 · ADR: —
-
-## R739 · 2026-10-16 · ORT-A nach T05b: U1-Zuschnitt (Vorrechnung je Kachel) einmal, dann T06; keine weitere Perf-Runde vor T09
-
-Ruling: T05b `ee319849` (Ausgabe bytegleich, Ring malt nur geänderte Läufe) → Mikromessung unter Last 24–44 B/A ≈ 1,9 (Spanne 1,65–2,63; vorher 2,5), Restkosten in U1 je Pixel
-(`hofsaumAt`) und `buildGroundEdge`. **Option 1 einmal:** `hofsaumAt` rechnet Abstände je Kachel vor und steigt früh aus (Umsetzer); **ein gemeinsamer Review für T05b + U1**
-(statt zweier); danach T06 (Umsetzer + Review). Nach V1 (R735, zweite Runde derselben Befundklasse «Patch-Zeit zu hoch») gibt es **keine weitere Perf-Runde vor T09**: die
-gewertete Messung im freien Messfenster entscheidet; liegt sie dort > +20 %, entscheidet L0 zwischen Rand 1 und Zuschnitt (E6). Budget (V3): C3 5 von 8 verbraucht + 4
-geplant = **9 von 8, +1 aus dem Puffer**; ORT-A-Puffer **9 von 12**.
-
-Regelbezug: R313, R705, R735, R736 · Kosten bei Irrtum: ein Start für eine Optimierung, die die Messung im ruhigen Fenster nicht gebraucht hätte.
-
-Entscheider: L0 · Anlass: Bericht lead-tech ORT-A C3 nach T05b · ADR: —
+R1–R739 stehen wörtlich in [rulings-archiv.md](rulings-archiv.md) (R129, R682); für Suchen immer `rulings*.md` verwenden.
 
 ## R740 · 2026-10-16 · I-112 Delta-Review BEDENKEN (Perf-Regression aus Befund-2-Fix): +2 Starts, Ansatz «nur sichtbarer Tooltip»
 
@@ -2372,3 +1878,93 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Stadtplanung 
 Regelbezug: R329, R673, R708, R793, R816, R871 · Kosten bei Irrtum: sichtbares Umspringen von Weg-Objekten bis 7 Kacheln weit; Rückkehr zu r ≤ 3 per Ruling.
 
 Entscheider: L0 · Anlass: Berichte lead-production, lead-tech · ADR: —
+
+## R883 · 2026-10-25 · SEERECHT bereit fürs Merge-Gate; Limit-Ampel gelb
+
+Ruling: (1) **SEERECHT** `feat/seerecht` @ `8473afb0` abgenommen bis Merge-Gate: T04, T06, T07, T08 mit Reviews und Playtest OK; T09 nach R878 (3) vorgezogen: `SAVE_VERSION` 19, `migrateV18ToV19`,
+Abweise-Test `SAVE_VERSION + 1`, Kurz-Review OK. Stadtplanung zieht beim späteren Merge auf main + 1 nach. Merge-Gate zusammen mit dem REL-32-Push am 2026-10-26 (ein `make push-check`).
+(2) **Limit-Ampel gelb** (5-h-Fenster 60 %): keine neuen Wellen (STUDIO.md «Studio-Deckel»); ORT-A (Fix AK-41) und INSELPROBEN Etappe 1 schliessen den laufenden Task ab und berichten, danach
+Ende-Routine.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Stadtplanung (Save-Nummer), Stadtrecht (wartet auf Seerecht)
+Regelbezug: R69, R826, R878 · Kosten bei Irrtum: Save-Nummern beim Merge tauschen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech SEERECHT, Limit-Ampel · ADR: —
+
+## R884 · 2026-10-25 · ORT-A: Schranke Weg-Objekte r ≤ 10
+
+Ruling: Zweites Delta-Review ORT-A ZURÜCK: r ≤ 7 (R882) hält bei Hausänderungen nicht (analytisch 9–10, Probe 4 Fälle r = 8 in 102 644 Änderungen). AK-41 und AK-07 gelten für die Weg-Objekte mit
+**r ≤ 10** (Kontext 4 + Konflikt 6), ersetzt R882 (2) in diesem Punkt; kein Umbau der Ortsnähe-Prüfung. Abschluss mit dichtem Haus-Test (Seeds 1–20), korrigierten Kommentaren und Spec-Wortlaut und
+drittem frischem opus-Delta-Review (letzter freier Start). Rein kosmetische Wirkung: Weg-Objekte können bei Bau/Abriss bis 10 Kacheln weit umspringen.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Stadtplanung C1, LEBEN-STRASSE
+Regelbezug: R673, R708, R826, R882 · Kosten bei Irrtum: sichtbares Umspringen; Umbau der Ortsnähe-Prüfung als eigenes Paket.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A · ADR: —
+
+## R885 · 2026-10-25 · INSELPROBEN Etappe 1 abgenommen
+
+Ruling: `feat/inselproben` @ `d6f6834f` (T00–T04, Task-Reviews nach Delta OK, Grundspiel bitgleich per Hash-Pins und Spiegel-Test) abgenommen. Entwürfe: (a) Reihenfolge-Pins in
+`tests/sim/unlocks.test.ts`/`monument.test.ts` auf `slice(-3)` mit `tickChallenge` (Commit `6ae7c66f`) **bestätigt**; (b) Bestandstest AK-IP-02 mit ungültigem Datum 20260231 **bestätigt**; (c)
+Tagesinsel-Karten: 62/730 Tage nutzen `seed + i`, Tage können dieselbe Karte teilen (Ziel und Krise unterscheiden sich) — **gewollt** (deterministisch, für alle gleich), Spec §5.3 beim nächsten Eingriff
+vermerken. `SAVE_V_CHALLENGE` ist Platzhalter: Seerecht belegt 19 (R883), Inselproben nimmt beim Merge main + 1 (T14). Schwache Rot-Belege (Ladefehler) hingenommen, Mutationen belegen die Fixes.
+Nächste Etappe (Mess-Strang T05–T07, UI-Strang T08–T11; 31 Starts Rest) in der Folgesession.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (Save 19), I-197/I-197b (`menu.ts`/`app.ts`)
+Regelbezug: R395, R878, R880, R883 · Kosten bei Irrtum: Revert `6ae7c66f`; Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech INSELPROBEN · ADR: —
+
+## R886 · 2026-10-25 · ORT-A T18 abgenommen; Kurz-Retro 47d29586; Session-Ende
+
+Ruling: (1) **ORT-A T18** (`feat/ort-a` @ `7e2e8d12`) abgenommen: drittes frisches opus-Delta-Review OK, Schranke r ≤ 10 analytisch und empirisch belegt (dichter Haus-Test, Rot mit 7);
+Wegänderungs-Test 5163 ms mit explizitem Timeout hingenommen (ZEITRESERVE-PFLEGE). Offen T19–T26; `plan/ort-a` auf R884 nachführen. (2) **Kurz-Retro** `docs/retro-47d29586` @ `b7e9fb6e`
+(`docs/studio/retros/2026-10-25-session-47d29586-ende.md`) **abgenommen**. **V1** (gezielt stagen, `make conflicts` vor jedem Merge-Commit) ist mit DOKU-RUNDE (f) bereits umgesetzt; `.gitignore`-Muster
+für `*-e`-Backups prüft `studio-coach`. **V2** (Rückkanal-Adresse) ist mit DOKU-RUNDE (e) umgesetzt; Messgrösse 0 «not reachable» über 3 Sessions gilt. **V3** (Plan-/Gate-Leads lesen Rulings und
+Handoffs abschnittsweise, Schwelle Cache-Write-Wachstum ≤ 15 % in 2 von 3 Sessions) angenommen, Umsetzung `studio-coach` nächste Session. Messaufträge M1 (bis 2026-11-02), M2, M3 ohne Platz.
+(3) **Session-Ende** bei gelber Limit-Ampel (5 h 64 %): Metriken `docs/studio/metriken/S-2026-10-25-47d29586.md`, `state.md` nachgeführt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A T19–T26
+Regelbezug: R69, R316, R826, R877, R879, R884 · Kosten bei Irrtum: ein Messauftrag mehr.
+
+Entscheider: L0 · Anlass: Berichte lead-tech ORT-A, studio-coach · ADR: —
+
+## R887 · 2026-10-25 · Zusatz-Release REL-32 auf Nutzerauftrag, keine neue Entwicklung
+
+Ruling: Nutzerauftrag «zusätzliches Release mit den fertigen Schritten, nur das, keine neuen Entwicklungen». Auslegung: (1) **Umfang REL-32** = main lokal (REL-32a/b, `c4d50a8d`) plus die
+Branches, die laut state.md nur noch auf das Merge-Gate warten: `feat/seerecht` @ `8473afb0` (Save **v19**, R883), `docs/retro-47d29586` @ `b7e9fb6e`, `docs/haushalt-03` @ `0b839c29`. Nicht dabei:
+ORT-A, INSELPROBEN, I-201, Stadtrecht, I-197 (nicht fertig). (2) Findet das Gate Mängel, bleibt der Branch draussen; **keine Nacharbeit, keine neuen Umsetzungs-, Plan- oder Ideen-Starts** in dieser
+Session. (3) Der Push-Takt R816 (höchstens ein Push je Kalendertag; REL-31 heute live) wird auf ausdrücklichen Nutzerauftrag **einmalig für heute** aufgehoben; R816 gilt sonst unverändert (Auftrag
+ist seiner Natur nach einmalig, R863 greift nicht). Volles `make push-check` Exit 0 auf genau dem Push-Hash bleibt Pflicht (Verfassung §7.2). (4) Ablauf: `lead-qa` Gate Merge (Urteil, kein Fix) →
+`lead-production` mit `production-integrator` in `.worktrees/integrate` → `make push-check` → Browser-Ladeprobe → Push, CI, Pages.
+
+Verfassung berührt?: nein (R816 ist Handbuch-Regel) · Überschneidung mit offenen Paketen: Stadtplanung, INSELPROBEN (Save main + 1 = 20 beim späteren Merge)
+Regelbezug: R816, R817, R863, R883, R886 · Kosten bei Irrtum: zweiter Pages-Lauf heute; Seerecht-Revert per Hotfix.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R888 · 2026-10-25 · Gate Merge REL-32: Seerecht draussen, Hotfix für zwei rote Tests auf main
+
+Ruling: Gate-Bericht `lead-qa` (`.studio/handoffs/2026-10-25-lead-qa-gate-REL-32.md`): (1) `docs/haushalt-03` @ `0b839c29` und `docs/retro-47d29586` @ `b7e9fb6e` **OK**, Merge in dieser Reihenfolge.
+(2) `feat/seerecht` @ `8473afb0` **draussen** (R887 (2)): `tests/sim/imports.test.ts` rot (`src/sim/council.ts` importiert `./islands`); Fix im Strang in einer Folgesession, danach neues Gate.
+(3) **main selbst rot** (`tests/sim/leverReads.test.ts` wegen `src/ui/council.ts:50`, `tests/ui/contrast.test.ts` wegen `.council-preview`; Herkunft UI-HAEPPCHEN-J, REL-32b). Auslegung von R887 (2):
+Die Behebung eines Regressionsfehlers in bereits abgenommenem Release-Code ist **Release-Arbeit, keine neue Entwicklung** (Verfassung §7.2: ohne grünen vollen Lauf kein Push). Paket
+**HOTFIX-REL32** an `lead-tech`, Umfang strikt auf die zwei Tests, eigener Branch von main, Task-Review, Teilbeleg. Kein weiterer Umbau. (4) Lehre für die Retro: Gate REL-32b lief nur mit
+gezieltem Teilbeleg; die Struktur-Tests (`imports`, `leverReads`, `contrast`) prüfen Querschnittsregeln und gehören in jeden Teilbeleg mit `src/`-Änderungen.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (`council.ts` sim), UI-HAEPPCHEN-J-Nacharbeiten (Plural `council.ts:50`)
+Regelbezug: R810, R887, Verfassung §7.2 · Kosten bei Irrtum: ein kleiner Fix-Commit mehr; Push verschiebt sich auf morgen.
+
+Entscheider: L0 · Anlass: Bericht lead-qa Gate REL-32 · ADR: —
+
+## R889 · 2026-10-25 · REL-32 live
+
+Ruling: REL-32 abgenommen und live: Push `ee51d4f1..38b9f9a0` (main lokal REL-32a/b, `docs/haushalt-03`, `docs/retro-47d29586`, `fix/hotfix-rel32` @ `d66efb2b`; ohne Seerecht, R888). `make push-check`
+Exit 0 auf `38b9f9a0` (Startlast 8,8, Zeitreserve «nicht belastbar», Zeit-Pins nicht belastbar gemessen), CI-Lauf 40192693804 und Pages-Lauf 40193070787 grün; Ladeprobe `qa-playtester` OK (`.studio/qa/REL-32/`,
+Kontrast Vorschau und offene Ehrenbuch-Zeile 6,70:1). HOTFIX-REL32 hat im selben Kontrast-Test zusätzlich `.honor-row--open` behoben (gleicher Test, im Umfang). Auf Nutzerauftrag keine weitere Arbeit in dieser
+Session; nächster Push nach R816 frühestens 2026-10-26.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (neues Gate)
+Regelbezug: R816, R887, R888 · Kosten bei Irrtum: Hotfix-Release.
+
+Entscheider: L0 · Anlass: Bericht lead-production REL-32 · ADR: —

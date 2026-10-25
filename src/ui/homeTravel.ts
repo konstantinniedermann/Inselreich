@@ -1,7 +1,6 @@
 // homeTravel.ts — Fahrzeit Heimat–Insel (I-136), geteilt von Inselkarte und Fernkarte. DOM-frei, liest nur die Welt.
 import { HOME } from '../sim/world';
-import { seaLanes, type Lane } from '../sim/islands';
-import { travelTicksOf } from '../sim/council';
+import { seaLanes, travelTicksOf, type Lane } from '../sim/islands';
 import type { World } from '../sim/types';
 
 /** Lane-Provider; injizierbar, damit Tests die Berechnungen zählen können. */
