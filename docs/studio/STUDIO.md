@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.73 · Stand: 2026-10-23 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.75 · Stand: 2026-10-25 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -47,7 +47,8 @@ Ebene höher — mit Empfehlung. L0 fragt den Nutzer nicht zurück (Abschnitt [A
   jeder Meldung die Heartbeats (> 20 min ohne Lebenszeichen → nachfragen). Leads, die auf Arbeiter
   warten, fragen spätestens nach 30 min nach.
 - **Rückkanal per Adresse (R856):** L0 nennt jedem Lead nach dem Start seine agentId als Adresse
-  (`SendMessage`). Der Lead schreibt sie in jedes Arbeiter-Briefing: „Melde dein Ergebnis per
+  (`SendMessage`). **Lead-Adresse (R879 (3)):** L0 sendet die agentId unmittelbar nach dem
+  Lead-Start; der Lead startet Arbeiter erst danach; nie den Rollennamen als Adresse. Der Lead schreibt sie in jedes Arbeiter-Briefing: „Melde dein Ergebnis per
   SendMessage an <Lead-Adresse>, nie an main“. Arbeiter senden nur an ihren Auftraggeber. Landet
   trotzdem eine Arbeiter-Meldung bei L0, leitet L0 sie sofort an den Lead weiter (R853).
 - **Start-Regel (asynchron, R868 V2, E-073):** Leads starten Arbeiter mit `run_in_background: false`
@@ -108,7 +109,7 @@ Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <S
   Messwert gegenüber. Hauptgrösse sind Werkzeugaufrufe aus
   [metriken/richtwerte.md](metriken/richtwerte.md) (Median je Rolle, Modell, Plan-Art, summiert über
   Starts inkl. Review und Fix-Runden). **Briefings schätzen nur in Tools** (R750 V2): die Minutenangabe der Kopfzeile
-  rechnet das Werkzeug als Tools ÷ 6, niemand schätzt sie frei (E-001, R433); Messgrösse |Minuten-Abweichung| ≤ 30 % in 2 Session-Retros.
+  rechnet L0 als Tools ÷ 6, bei Lead-Paketen (Persona `lead-*`) mit Faktor 0,5 als Tools ÷ 12 (E-074, R872), niemand schätzt sie frei (E-001, R433); Messgrösse |Minuten-Abweichung| ≤ 30 % in 2 Session-Retros.
 - Die Kopfzeile nennt die **Tabellenzeile** in Klammern (z. B. `(Tabellenzeile: lead-tech opus
 Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davor (die Telemetrie
   liest die erste Angabe mit „Tools“ bzw. „min“).
@@ -473,7 +474,7 @@ und Scratchpad-Ordner erlaubt); Edit/Write auf `VERFASSUNG.md` oder `guard.py`; 
 `general-purpose` ohne `model` (R167).
 
 - **Bewusst erlaubt:** Verwerfen ungesicherter Änderungen im Arbeitsbaum (`git checkout -- <pfad>`,
-  `git restore`, `git switch --discard-changes`); `git stash` sperrt der Guard seit R579 ausser `list`/`show` (E-064), zum Zwischenparken dient ein temporärer WIP-Commit. Eine Warnung beim Session-Start meldet, wenn der Stand in `state.md` mehr als 5 Rulings hinter `rulings.md` liegt (E-065).
+  `git restore`, `git switch --discard-changes`); `git stash` sperrt der Guard seit R579 ausser `list`/`show` (E-064), zum Zwischenparken dient ein temporärer WIP-Commit. Eine Warnung beim Session-Start meldet, wenn der Stand in `state.md` mehr als 2 Rulings hinter `rulings.md` liegt (E-065, R844 V3; Schwelle `THRESHOLD` in `tools/studio/stampcheck.py`).
 - **Bekannte Grenzen** ([verbesserung.md](verbesserung.md#guard-bekannte-grenzen)): Er schützt
   gegen Versehen, nicht gegen Absicht; das Verbot gilt auch dort, wo er nichts erkennt.
 - **Warte-Guard** (`tools/studio/waitguard.py`, eigener PreToolUse-Hook, R646/R647): weist bei Leads einen Agent-Start mit kurzem reinem Warte-Prompt ohne Auftrag (Regel A) und ein `sleep` im Hintergrund-Bash (Regel B) ab; Arbeiter und L0 sind von A und B nie betroffen, `until`-Schleifen bleiben frei. Regel C (R854) weist bei Leads und anderen Subagenten `Agent`/`Task` mit `run_in_background: true` ab (Arbeiter im Vordergrund starten, parallel = mehrere Aufrufe in einer Nachricht); die Hauptsession und `fork` bleiben frei. Warten heisst Monitor oder Hintergrund-Bash, nicht Agent. Ereignis `wait_guard`, Rückfall `MODE = "warn"`. Jede Abweisung des Haupt-Guards (`guard.py`) schreibt zusätzlich das Ereignis `guard_block` (Regel, tool, command_hash; kein Befehl; Deny bleibt bei Schreibfehler, R704); die Abweisungen sind damit zählbar (E-064).
