@@ -15,10 +15,12 @@ import { activeEdictDef } from './edicts';
 import { goodLock } from './unlocks';
 import type { GoodId, MonumentGood, Result, World } from './types';
 import { fail, ok } from './types';
-import { islandName } from './islands';
+import { noKontorTrade } from './islands';
 import { islandAt } from './placement';
 import { trialBuyBlock } from './trial';
 import { HOME } from './world';
+
+export { noKontorTrade } from './islands';
 
 /** Ergebnis des Preiskerns: Gesamtpreis, gerundeter Mittelanteil und Anteil nach dem Kauf. */
 export interface BuyQuote {
@@ -93,14 +95,6 @@ export function sellPrice(world: World, good: GoodId, n: number, island: number 
     pct = Math.max(SELL_FLOOR, pct - SELL_DROP);
   }
   return Math.floor(acc / 10000);
-}
-
-/** Grund „Kein Kontor auf <Name>“ oder `null`: Handel läuft nur über ein Kontor der Insel. */
-export function noKontorTrade(world: World, island: number): string | null {
-  const isl = islandAt(world, island);
-  return isl !== null && isl.kontorId === null
-    ? `Kein Kontor auf ${islandName(world, island)}`
-    : null;
 }
 
 export function buy(world: World, good: GoodId, n: number, island: number = HOME): Result {

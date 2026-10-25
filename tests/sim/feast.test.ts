@@ -293,8 +293,9 @@ describe('Aufbau von feast.ts', () => {
   it('importiert weder unlocks noch population', () => {
     expect(src).not.toMatch(/from '\.\/(unlocks|population)'/);
   });
-  it('greift nur an einer Stelle auf Rum zu', () => {
-    expect(src.match(/'rum'/g)).toHaveLength(1);
+  it('bucht mit genau einem takeStock-Aufruf', () => {
+    const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    expect(code.match(/takeStock\(/g)).toHaveLength(1);
   });
 });
 
