@@ -2939,3 +2939,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: `levels.ts` (
 Regelbezug: R392, R909, R959, R963 · Kosten bei Irrtum: Merge-Nacharbeit in `levels.ts`.
 
 Entscheider: L0 · Anlass: Berichte lead-tech I-210, AUSBAU-LOGIK, plan-I-215 · ADR: —
+
+## R970 · 2026-10-25 · «Neue Ufer» NU-1 Zwischenstand; Spec-Entscheide E1–E5
+
+Ruling: `design/neue-ufer` gesichert (Designvorschlag `464a6ef5`, Pool `27279b2a`, Anhang 01 Werte NU-1 `d9747112` Zwischenstand «trägt», Spec NU-1 `e2f2e727` Zwischenstand, 33 AK). **E1 ja**
+(Routenschiff wartet bis zum nächsten Heimat-Anlegen); **E2: Migration**, nicht Abweisen — gegen die Empfehlung, weil das Studio jeden Save-Wechsel seit v9 migriert (zuletzt R952) und der neue Zustand
+leer startet (Nebel zu, keine Expedition), also billig; Abweisen nur für `SAVE_VERSION + 1` und beschädigte Felder. **E3 ja** (Namen), **E4 ja** (Routenladung nach Heimkehr-Regel, Überlauf verfällt mit
+Meldung), **E5 ja** (Aufdecken erst bei Rückkehr). Anhang 01 E-01–E-14 sichtet `lead-design` in der Folgesession vor dem Spec-Nachtrag (sonnet, E-061: einsetzen, kürzen auf ≤ 40 KB bzw. Anhang ≤ 25 KB,
+Anhang 02 für Zahlen); dann Selbstabnahme und Gate Spec. Gate-Hinweise: ADR-010-Nachtrag (Zähler und gezogene Kartenfolge im Save), Kartenhaus nicht brennbar.
+
+Verfassung berührt?: nein (§3: ältere Stände dürfen ladbar bleiben) · Überschneidung mit offenen Paketen: Save-Kette (R909), HAFEN
+Regelbezug: R909, R952, R962, R966, E-061 · Kosten bei Irrtum: eine Migration mehr.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-NEUE-UFER · ADR: —
