@@ -253,3 +253,8 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 - Fundort: `src/ui/council.ts:50`. Beobachtung: bei n = 1 «1 Häuser (+1 Plätze)» statt Singular. Ursprung: UI-HAEPPCHEN-J Final-Review. Einschätzung: Trivial-Fix im nächsten UI-Paket an der Datei.
 - Fundort: Karte «Wo war ich?». Beobachtung: Text «N Probleme offen — . springt hin», vermutlich fehlt die Tastenbezeichnung. Ursprung: Playtest UI-HAEPPCHEN-J. Einschätzung: niedrig, Beipack.
+
+## 2026-10-25 · Import-Zyklen und Merge-Rückstand (niedrig)
+
+- Fundort: `src/sim/`. Beobachtung: keine Lint-Regel gegen Importzyklen; nur handgeschriebene Strukturtests (I-201 P-11) fangen sie. Ursprung: Gate Plan I-201. Einschätzung: Kandidat für ein Werkzeug-Paket (ESLint `import/no-cycle` wäre neue Abhängigkeit → ADR; Alternative: kleiner eigener Prüfer in `tools/`).
+- Fundort: `plan/inselproben` Merge `35728832`. Beobachtung: Der Merge von main in einen Plan-Branch setzte `docs/ideen.md` auf einen älteren Stand zurück (Konfliktlösung «ours» falsch herum). Ursprung: Gate Merge REL-32. Einschätzung: in Plan-/Lead-Persona «bei Doku-Konflikten in fremden Dateien immer main-Stand nehmen» prüfen.
