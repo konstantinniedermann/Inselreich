@@ -11,7 +11,7 @@ und wird unverändert kopiert.
 Persona: <rolle>
 Paket: <id>
 Meilenstein: <id> (oder „ohne")
-Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <Starts>)   (ganzer Auftrag inkl. aller Unteraufträge; Tools aus docs/studio/metriken/richtwerte.md, nur Tools schätzen; die Minuten rechnet das Werkzeug als Tools ÷ 6, nicht Menschenzeit, R750 V2)
+Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <Starts>)   (ganzer Auftrag inkl. aller Unteraufträge; Tools aus docs/studio/metriken/richtwerte.md, nur Tools schätzen; die Minuten rechnet L0 als Tools ÷ 6, bei Lead-Paketen (Persona `lead-*`) als Tools ÷ 12 (R872 E2, E-074), nicht Menschenzeit, R750 V2)
 Modell: <alias> (<Einsatz>)   (Pflicht bei stärkerem Modell als die Persona, dann auch im Agent-Aufruf; Einsatz aus der Modelltabelle, STUDIO.md „Modellwahl“, z. B. `opus (Tech-Lead beim Plan)`, `opus (Final-Review)`, `opus (Delta-Review frisch nach ZURÜCK)`, `sonnet (Controller in der Umsetzung)`, `sonnet (lead-qa-Gate-Urteile)`, `sonnet (Kurz-Retro)`)
 Budget: <n Starts / Parallelität k> (nur für Leads; Arbeiter: „keins, keine Agenten starten"; Plan-, Kurzdesign- und Gate-Leads: `Paket:` gleich der Freigabephase `plan-<paket>`, `design-<paket>`, `gate-<paket>`, R471)
 Prozessstufe: <leicht|voll>
@@ -24,7 +24,7 @@ Prozessstufe: <leicht|voll>
    Teilbeleg statt vollem Lauf (Verfassung §9.2, R858): gezielte Tests der berührten Dateien (`npx vitest run <dateien>`), `npx tsc --noEmit`, `make lint`; bei Werkzeug-Änderung `make studio-test`. Den vollen Lauf (`make push-check`) fährt nur der Integrator vor Merge und Push.
    Pflichtzeilen je Paketart (R375): jedes Paket „Rulings schreibt nur L0: `docs/studio/rulings.md` nicht ändern, Entscheidungsbedarf als Entwurf an L0 im Bericht (R471)“;
    jedes Paket mit Kontextdatei > 30 KB (README, `docs/ideen.md`, Specs, Plan-Index) „nur den genannten Abschnitt bzw. Zeilenbereich lesen (`offset`/`limit` oder `grep`), nie die ganze Datei (E-057)“ — die Kontextzeile nennt dafür Abschnitt oder Zeilen;
-   Lead-Briefing „Arbeiter im Vordergrund starten; jedes Arbeiter-Briefing nennt ‹Melde dein Ergebnis per SendMessage an <Lead-Adresse>, nie an main›“ — die Adresse ist die agentId, die L0 dem Lead nach dem Start nennt (R856);
+   Lead-Briefing „Arbeiter im Vordergrund starten; jedes Arbeiter-Briefing nennt ‹Melde dein Ergebnis per SendMessage an <Lead-Adresse>, nie an main›“ — die Adresse ist die agentId, die L0 dem Lead unmittelbar nach dem Start nennt, nie der Rollenname (R856, R879 (3));
    jedes Paket „Volltextsuche mit dem Grep-Werkzeug oder `rg <muster> .` (immer mit Pfad), nicht `grep -r`; `grep <muster> <datei>` auf eine genannte Datei bleibt erlaubt (R683)“;
    jedes Paket mit Budget „Mehrbedarf vor dem Überschreiten melden (templates/budgetantrag.md), nie nachträglich“;
    jedes Lead-Briefing mit Budget „Arbeiter-Starts sind asynchron: nach dem Start Zug beenden und auf die Meldung warten (Rückkanal R856); Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (R868 V2)“ — die Worte „im Vordergrund“ stehen in keinem Briefing;
