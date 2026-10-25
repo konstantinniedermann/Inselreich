@@ -1887,3 +1887,64 @@ eines davon live ist und neue Reibung zeigt.
 - Bewertung lead-design: Stimmung ohne Entscheidung; nur als Beipack zu einem Seekarten- oder LEBEN-Häppchen.
 - Nutzen/Aufwand: Stimmung, Lesehinweis auf den Inselzustand · S · ≈ 15 Tools
 - Entscheid: R878 geparkt als Beipack-Kandidat (Seekarte)
+
+## Archiviert IDEEN-19 (Pool-Pflege R599)
+
+## Rangliste IDEEN-18 (Ruling L0: R893; archiviert IDEEN-19)
+
+Runde mit Schwerpunkt TIEFE-2 (R881, T2-2): K1 «Seegang» = I-209 und K3 «Bittschrift» = I-210 von lead-design aus dem Recherchebericht eingetragen, dazu ein Scout
+(Spieltiefe, Modi, Erweiterungs-Bausteine, mit WebSearch) mit I-211–I-213. Keine Playtests als Quelle (R862). Keine Idee ändert Kernsäule, Genre oder Titel (§5.3).
+Massstab R722: Lohn aus Geld oder Rabatt ohne Gegenpreis ist keine Wahl. Pool-Pflege R599 in derselben Runde: R878-Entscheide zu IDEEN-17 (I-199, I-200, I-203,
+I-206, I-207 geparkt, I-205 verworfen), I-198 in I-209 aufgegangen (R881), mit REL-32 live gegangene Ideen (I-138, I-139, I-176 gekürzt nach F1–F4, I-186) und die
+Rangliste IDEEN-17 ins Archiv; I-197 und I-201 auf `eingeplant` nachgeführt. Pool danach 30 von 40 offen.
+
+| Rang | ID    | Gruppe    | Name                  | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                  | Empfehlung                                                                  |
+| ---- | ----- | --------- | --------------------- | ------ | ----- | --------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
+| 1    | I-210 | Spätspiel | Bittschrift           | M      | 12    | ja / nein       | stabile Stadt entscheidet wieder, ≈ 3 Pakete    | **Pitch:** Dominanz-Rechnung `design-economy-designer`, dann Spec (voll)    |
+| 2    | I-209 | Modus     | Seegang (Härteleiter) | M      | 11    | ja / nein       | Partien 2–5 mit eigenem Ziel, ≈ 3 Pakete        | **Pitch:** Lösbarkeitsrechnung je Stufe, dann Spec (voll), nach Inselproben |
+| 3    | I-211 | Tiefe     | Funkenflug            | S      | 12    | nein / nein     | Brand als Planungsfrage, ≈ 40 Tools; keine Wahl | parken als Baustein Krisen-Überarbeitung, Paar mit I-212                    |
+| 4    | I-212 | Tiefe     | Werkstattreihe        | M      | 10    | nein / ja       | Platzierungsrätsel, allein Rabatt ohne Preis    | parken als Paar mit I-211 bis I-128 Lärm live                               |
+| 5    | I-213 | Tiefe     | Fuhrweg               | M      | 9     | nein / ja       | Strafe ohne Ausweg                              | verwerfen (Achse durch I-061 besetzt)                                       |
+
+Leitbefund IDEEN-18: Die Recherche-Kandidaten aus TIEFE-2 tragen die Runde; der Scout fand mit Web-Werkzeug neue Felder (Dichte, Nachbarschaft, Wege), aber
+jede davon ist allein ein Bonus oder eine Strafe ohne Gegenzug. Als Trio «dicht und schnell gegen sicher und ruhig» (I-211, I-212 mit I-128) wäre es ein
+Kandidat fürs Stadtplanung-Folgebrainstorming. I-211 steht trotz Summe 12 hinter I-209: Die Wache dominiert (I-133), das Raster sieht das nicht.
+
+### I-211 · geparkt · Funkenflug (Brand springt auf dichte Nachbarn)
+
+- Bereich: Inhalt · Säule: Insel besiedeln (Stadtplanung); Bevölkerung versorgen · Quelle: IDEEN-18 Scout; Genre-Mechanik Brandausbreitung nach Abstand und Trennstreifen (Hintergrund Brandschutz-Forschung, nur Mechanik: https://firedoc.nist.gov/article/gngzXYQBWEcjUZEYgDd7); heute trifft ein Brand genau ein Gebäude (`src/sim/crises.ts:153` `fireTarget`, Schutz `crises.ts:176` `isProtected`); `rg -n -i "spread|ausbreit" src/sim/` kein Treffer
+- Spielerwirkung: „Der Spieler lässt zwischen brennbaren Betrieben Lücken oder baut früher eine Wache, weil ein Brand sonst auf die Nachbarn überspringt."
+- Mechanik: Je brennbarem, ungeschütztem Nachbarn mit Chebyshev-Abstand 1 zur Grundfläche des Ziels springt der Brand mit 50 % (seeded RNG) über, höchstens 2 Zusatztreffer je Brand; Ausfall wie bisher (`FIRE_OUTAGE`). Panel-Hinweis «2 Nachbarn gefährdet». Werte als Defs in `src/sim/defs/crises.ts`.
+- Grösse: S · Risiko: keins für Save (Ausfall liegt schon im Gebäude); Baseline unberührt, weil `createWorld` ohne Krisen startet (`DEFAULT_WORLD_CRISIS_LEVEL` `off`, `crises.ts:10`)
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12 (Scout 13; lead-design: Passung 3 → 2, Risiko 2 → 3 wegen Welt-Standard ohne Krisen)
+- Randfälle: Kettenreaktion ausgeschlossen (Zusatztreffer springen nicht weiter); Wache in Reichweite schützt auch Nachbarn; Abriss während Brand wie heute.
+- Doppelung: I-080 (verworfen, Brunnen als Teilschutz), I-133 (verworfen, R745: drei Wachen halten ≥ 93 %), I-181/I-034 (geparkt bis Krisen-Überarbeitung, R864), I-128 Lärm (andere Wirkung).
+- Bewertung lead-design: billig und sauber, aber **keine echte Wahl**: Die Wache löst Brände heute schon fast vollständig (I-133), Funkenflug macht sie nur früher Pflicht. Dicht bauen wird erst eine Abwägung, wenn Dichte einen Lohn hat (I-212) oder Wachen knapp sind.
+- Nutzen/Aufwand: Brand wird Planungsfrage statt Zufall · S · ≈ 40 Tools
+- Entscheid: R893 geparkt (Paar mit I-212, Baustein der Krisen-Überarbeitung mit I-181, I-034)
+
+### I-212 · geparkt · Werkstattreihe (gleiche Betriebe Seite an Seite)
+
+- Bereich: Inhalt · Säule: Produktionsketten; Insel besiedeln · Quelle: IDEEN-18 Scout; Genre-Mechanik Nachbarbonus und Platzierungsrätsel (https://www.balancingmonkeygames.com/articles/grass-and-adjacency, nur Mechanik); `cycleOf` kennt keine Nachbarn (`src/sim/levels.ts:40`), `adjacent` nur als Standortregel (`src/sim/placement.ts:79`)
+- Spielerwirkung: „Der Spieler setzt drei Webereien in eine Reihe, weil jede Nachbarin den Zyklus verkürzt, und nimmt dafür Lärm im Wohnviertel und Brandgefahr in Kauf."
+- Mechanik: Je Betrieb gleichen Typs, der Seite an Seite angrenzt: Zyklus −5 %, höchstens −15 % (3 Nachbarn); nur Betriebe mit `produces`; abgeleitet bei Bau und Abriss, kein Save-Feld. Panel «Reihe 2 · Zyklus −10 %».
+- Grösse: M · Risiko: Baseline und Balancing (Controller-Platzierungen ändern Zyklen, Neumessung per Ruling)
+- Raster: Spass 2 · Passung 3 · Aufwand 2 · Risiko 1 = 10 (Scout 13; lead-design: Spass 3 → 2, Risiko 2 → 1)
+- Randfälle: Abriss eines Mittelstücks senkt beide Nachbarn sofort; Rohstoffbindung (Küste, Wald, Berg) begrenzt die Reihe von selbst; ohne Gegenpreis ist der Bonus Pflicht.
+- Doppelung: I-008 Standortgüte (geparkt, Bonus sinkt mit Nachbarbebauung, Gegenrichtung), I-077 Spezialisierung (geparkt), I-128 Lärm (Gegengewicht, eingeplant Stadtplanung).
+- Bewertung lead-design: Allein ein Rabatt ohne Gegenpreis (R722-Massstab). Erst mit I-128 Lärm und I-211 Funkenflug entsteht die Abwägung «dicht und schnell gegen sicher und ruhig». Gehört in ein Stadtplanung-Folgebrainstorming, nicht als Einzelpaket.
+- Nutzen/Aufwand: Platzierung wird Rätsel · M · ≈ 2–3 Pakete plus Neumessung
+- Entscheid: R893 geparkt (Paar mit I-211, bis I-128 Lärm live ist)
+
+### I-213 · verworfen · Fuhrweg (Weg zum Kontor kostet Zeit)
+
+- Bereich: Inhalt · Säule: Produktionsketten; Insel besiedeln · Quelle: IDEEN-18 Scout; Genre-Mechanik Transportdistanz (Community-Berichte, unsicher: https://settlers2.net/guides/roads/); `src/sim/connect.ts:50-97` liefert nur Anbindung ja/nein, `rg -n -i "distance|dist" src/sim/production.ts` kein Treffer
+- Spielerwirkung: „Der Spieler setzt Kontor und Marktplatz in die Mitte seiner Betriebe, weil weit entfernte Betriebe spürbar langsamer liefern."
+- Mechanik: Strassenweg vom Betrieb zum Kontor in Kacheln: Zyklus +5 % je 8 Kacheln, höchstens +20 %; Panel «Weg 24 · +15 %»; zweites Kontor oder Marktplatz rückt die Mitte.
+- Grösse: M · Risiko: Baseline und Balancing (Zyklen länger), Perf (Wegsuche bei Bau/Abriss)
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 1 = 9 (Scout 10; lead-design: Passung 3 → 2)
+- Randfälle: Inseln mit Kontor am Rand bestrafen die Karte statt die Planung; Rohstoffbetriebe sind ortsgebunden und können nicht näher rücken → Strafe ohne Ausweg.
+- Doppelung: I-061 Marktplatz-Reichweite über Wege (eingeplant, Stadtplanung; Wegenetz für Versorgung), I-004 Lagerhaus (geparkt), I-050 Arbeitskräfte (geparkt).
+- Bewertung lead-design: reine Strafe für Kartenpech, solange Rohstoffbetriebe ortsgebunden sind; die Wegenetz-Achse besetzt I-061 schon. Kein Spielerlebnis, das nicht Stadtplanung zuerst liefert.
+- Nutzen/Aufwand: Wegnetz bekommt Gewicht · M · ≈ 3 Pakete plus Neumessung
+- Entscheid: R893 verworfen (Strafe ohne Ausweg, Achse durch I-061 besetzt)
