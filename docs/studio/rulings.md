@@ -2265,3 +2265,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle laufende
 Regelbezug: R69, R826, R911 · Kosten bei Irrtum: Plan I-210 eine Session später.
 
 Entscheider: L0 · Anlass: Limit-Ampel gelb · ADR: —
+
+## R913 · 2026-10-25 · Spec HAFEN: Entwürfe E1–E4; Gate in der Folgesession
+
+Ruling: `design/hafen` @ `9c4f8bac` (AK-HF-01–52, R1–R32, S1–S7, Optik-Anhang an `lead-art`) fertig. Entwürfe: **E1** K2 (Generator prüft Fahrlinienlänge) zusammen mit A2 **ja** — ohne K2 dominiert die
+Felsbucht, das wäre eine versteckte Falle; **E2** «Kontor II nur am Meer» **ja** (erklärbar: ein Hafen braucht Wasser), Bauvorschau mit Fahrzeit Pflicht; **E3** migrieren statt abweisen **ja**, Save-Nummer
+= main + 1 beim Merge (nicht fest v20, R909); **E4** gepinnte Fahrzeit-Tests bewusst neu pinnen (Liste AK-HF-22), Balancing-Test unverändert **ja**. Reihenfolge S3 nach SEERECHT-Merge, S5/S6 nach Fix A1.
+Gate Spec wegen gelber Ampel (R912) **in der Folgesession**.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT, FIX-SCHIFF-A1, Inselgenerator (alle Seed-Pins), INSELPROBEN-Pins
+Regelbezug: R896, R898, R909, R912 · Kosten bei Irrtum: Neu-Pinnen aller Seed-Welten.
+
+Entscheider: L0 · Anlass: Bericht lead-design HAFEN · ADR: —
