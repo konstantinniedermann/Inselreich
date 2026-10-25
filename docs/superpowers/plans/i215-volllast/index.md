@@ -1,6 +1,4 @@
-# Plan I-215 · Volllast (Stufe voll) — Entwurf
-
-> **Status: Entwurf (gesichert auf L0-Anweisung R959).** Offen vor «Plan fertig»: Zeitmessung [`zeiten.md`](zeiten.md) (Last ≤ 4), Gate-Vorprüfliste, Kurzdurchsicht der Task-Dateien gegen den Index.
+# Plan I-215 · Volllast (Stufe voll)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: superpowers:subagent-driven-development (Controller `lead-tech` auf `sonnet`). Schritte mit `- [ ]`. Arbeiter bekommen nur ihre Task-Datei und die AK-IDs.
 
@@ -119,7 +117,7 @@ Pakete mit eigenem Review T01–T05 = 5 → × 2 = 10 · QA-Checks 1 (T06) · Fi
 
 ## Zeit-Tests (R392/R905, vorab gemessen)
 
-Siehe [`zeiten.md`](zeiten.md): Messung auf main, Liste der Tests > 200 ms in den berührten Dateien. Regel R905: neu > 500 ms verboten; schon auf main > 500 ms höchstens + 50 %. T08 misst nachher (Last ≤ 4) und trägt die Werte nach.
+Siehe [`zeiten.md`](zeiten.md): Messung auf main `1de17074` (Last 3,44 beim Start, 9,71 am Ende: Orientierung), `tests/sim/` und `tests/ui/` 120 Tests > 200 ms, davon 50 > 500 ms mit Zeit in der Tabelle; einziger roter Test AK-E0-15a D1 (bekannt, R954). Regel R905: neu > 500 ms verboten; schon auf main > 500 ms höchstens + 50 %. T08 misst nachher (Last ≤ 4) und trägt die Werte nach.
 
 ## Risiken
 
