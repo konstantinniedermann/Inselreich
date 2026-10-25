@@ -199,7 +199,7 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 **Daueraufträge des Nutzers (R863: jede Nutzeranweisung gilt dauerhaft, ausser ausdrücklich nur für die laufende Session; im Zweifel dauerhaft):** **R862** freie Kapazität vorrangig für
 Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine Playtests als Ideen-Input** (Browser-Checks zur Abnahme bleiben, R867), Schweigen des Nutzers = Zustimmung; **R445**;
 **R826** (Deckel 10 bei grüner Limit-Ampel, ≤ 3 Test-Controller, ≤ 2 Browser); **R853/R856** (Arbeiter-Meldungen an den Lead; **L0 sendet jedem Lead direkt nach dem Start seine agentId**, R879);
-**R868 V2** (Starts asynchron, Lead wartet ruhig). **R896** Spielregeln und Ausbau-Bedingungen fachlich erklärbar (Nachvollziehbarkeit und Logik, Gate-Kriterium); Nutzer-Playtests sind Input erster Ordnung, vor dem Pool. **Push-Takt:** höchstens ein Push je Kalendertag (R816); voller Lauf nur `make push-check`.
+**R868 V2** (Starts asynchron, Lead wartet ruhig). **R896** Spielregeln und Ausbau-Bedingungen fachlich erklärbar (Nachvollziehbarkeit und Logik, Gate-Kriterium); Nutzer-Playtests sind Input erster Ordnung, vor dem Pool. **R922** liegengebliebene Headless-Chrome (auch fremder Projekte) bei Störung selbst per `kill <PID>` beenden, nie das sichtbare Chrome, nie laufende eigene Browser-Läufe. **Push-Takt:** höchstens ein Push je Kalendertag (R816); voller Lauf nur `make push-check`.
 
 1. **Release-Bündel (Push frühestens 2026-10-26, R816):** `feat/seerecht` @ `3167969e` (Gate OK, R893, Save 19), `fix/schiff-a1` @ `6290d513` (**nur mit Browser-Beleg** Frame-Zeiten x1/x4, R906),
    Doku-Branches `docs/coach-r886` @ `1c460542`, `design/ideen-18` @ `6f7d0818`, `docs/tiefe-3` @ `1ab3968a`, `docs/retro-f8716d75` @ `750d30ea`. Ablauf: `lead-qa` Gate Merge → `lead-production` + Integrator → `make push-check`.
@@ -211,7 +211,7 @@ Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine 
    Gegenlesen GEBAEUDE-VARIANZ (`a703f8ee`, R916) und AUSBAU-LOGIK (`3856e396`, R918). Danach Pläne: I-210 (R911, Auflagen Anhang 02), AUSBAU-LOGIK, GEBAEUDE-VARIANZ, HAFEN, FLAECHE (FL-1 nach ORT-A T26).
 6. **Reihenfolge-Abhängigkeiten:** HAFEN K2 und FLAECHE ändern Seed-Welten → nach INSELPROBEN-Merge (Pins); HAFEN S3 nach Seerecht, S5/S6 nach Fix A1; GEBAEUDE-VARIANZ S5/S6 nach AUSBAU-LOGIK; Save-Nummern nur per
    Merge-Reihenfolge (R909).
-7. **Retro-Umsetzung R920** (V1 Messfenster, V2 Rulings-Abgleich, V3 Design-Kontext) durch `studio-coach`; Stadtrecht, I-197/I-197b warten auf Test-Controller-Platz; Pool wie zuvor (TOOL-MESSFENSTER T00 u. a.).
+7. **Retro-Umsetzung R920** (V1 Messfenster, V2 Rulings-Abgleich, V3 Design-Kontext; dazu Handbuch-Zeile R922 und Hinweis in `qa-playtester`) durch `studio-coach`; Stadtrecht, I-197/I-197b warten auf Test-Controller-Platz; Pool wie zuvor (TOOL-MESSFENSTER T00 u. a.).
    Messfristen R750/R755 2026-10-30, M1 2026-11-02, E-072/E-073 2026-11-19.
 
 ## Aktuelles Projekt und Phase
@@ -269,5 +269,5 @@ Alle Freigaben dieser Session verfallen mit Session-Ende; Reste laut Handoffs (I
 
 ## Offene Entscheide
 
-- Nutzer: **N-104 offen** (Welche Erweiterung nach Erweiterung 1? Empfehlung «Neue Ufer»); **N-102 offen** (Headless-Chrome des Projekts Munica beenden?).
+- Nutzer: **N-104 offen** (Welche Erweiterung nach Erweiterung 1? Empfehlung «Neue Ufer»). N-102 beantwortet (R922).
 - L0: keine.

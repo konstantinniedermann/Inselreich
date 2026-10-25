@@ -2373,3 +2373,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (`is
 Regelbezug: R392, R673, R893 · Kosten bei Irrtum: ein ADR und ein Index mehr.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I-201 · ADR: folgt (Festindex)
+
+## R922 · 2026-10-25 · Fremde Headless-Chrome beenden (Dauerauftrag)
+
+Ruling: Nutzerantwort auf N-102 («beende die sessions einfach wenn sie dich stören») gilt als **Dauerauftrag** (R863). Liegengebliebene Headless-Chrome-Prozesse — auch aus anderen Projekten
+(z. B. Munica) oder früheren Sessions — beendet L0 bzw. der zuständige Lead selbst per `kill <PID>`, sobald sie stören (Messfenster belegt, Port belegt, Rechnerlast); keine Warteschlange, keine
+Rückfrage. Grenzen: nur Prozesse mit `--headless`, nie das sichtbare Chrome des Nutzers; Chrome laufender eigener Browser-Läufe (Heartbeat < 10 min) bleibt; `pkill -f` bleibt gesperrt, gezielt je PID.
+Vollzug: PIDs 85475 (3 Tage) und 91387 (6 Tage), beide Munica, Port 9333, beendet; Port frei. N-102 beantwortet.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A (Messungen T19/T23 nicht mehr mit Vermerk «Messfenster belegt»)
+Regelbezug: R863, R329, N-102 · Kosten bei Irrtum: ein abgebrochener Screenshot-Lauf einer anderen Session, neu startbar.
+
+Entscheider: Nutzer (Auslegung L0) · Anlass: Nutzeranweisung Session-Start · Handbuch: Zeile durch `studio-coach` mit der R920-Umsetzung

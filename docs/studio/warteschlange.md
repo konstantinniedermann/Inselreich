@@ -164,7 +164,7 @@ schliesst den Eintrag.
 - Von: L0
 - Antwort: Nutzer 2026-10-17: einverstanden, verwerfen
 
-## N-102 · offen · 2026-10-16 · Headless-Chrome aus Projekt Munica beenden?
+## N-102 · beantwortet · 2026-10-16 · Headless-Chrome aus Projekt Munica beenden?
 
 - Frage: Seit gut 2 Tagen läuft ein Headless-Chrome (PID 91387, Port 9333) aus einer Claude-Session des Projekts Munica (Nachtrag 2026-10-21, vorher als reflexionsinstrument gemeldet). Er lässt die ORT-A-Leistungsmessung das Messfenster als belegt werten. Beendest du ihn (z. B. `kill 91387`)?
 - Empfehlung: Du beendest sie selbst (fremdes Projekt, ausserhalb des Studios); sonst laufen die ORT-A-Messungen mit Vermerk.
@@ -172,7 +172,7 @@ schliesst den Eintrag.
 - Kosten des Wartens: Gering: ORT-A-Leistungsmessungen tragen den Vermerk «Messfenster belegt» bis zur Antwort.
 - Blockiert: nichts hart; Messgüte ORT-A
 - Von: lead-tech
-- Antwort: –
+- Antwort: Nutzer 2026-10-25: «beende die sessions einfach wenn sie dich stören» — PIDs 85475 und 91387 beendet (R922, Dauerauftrag)
 
 ## N-103 · beantwortet · 2026-10-22 · Verfassung §7/§9.2 vs. R810 (make check vor Merge/Push)
 
