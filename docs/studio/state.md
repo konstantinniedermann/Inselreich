@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-25 (Session 84d62878, R889; live REL-32 `38b9f9a0`, Save v18 live, Verfassung 1.3, Handbuch 1.75; main = live + Doku-Commits)
+Stand: 2026-10-25 (Session f8716d75, R890–R920; live REL-32 `38b9f9a0`, Save v18 live, Verfassung 1.3, Handbuch 1.75 auf main, 1.76 auf `docs/coach-r886`; main = live + Doku-Commits)
 
 ## Release-Notizen
 
@@ -201,18 +201,18 @@ Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine 
 **R826** (Deckel 10 bei grüner Limit-Ampel, ≤ 3 Test-Controller, ≤ 2 Browser); **R853/R856** (Arbeiter-Meldungen an den Lead; **L0 sendet jedem Lead direkt nach dem Start seine agentId**, R879);
 **R868 V2** (Starts asynchron, Lead wartet ruhig). **R896** Spielregeln und Ausbau-Bedingungen fachlich erklärbar (Nachvollziehbarkeit und Logik, Gate-Kriterium); Nutzer-Playtests sind Input erster Ordnung, vor dem Pool. **Push-Takt:** höchstens ein Push je Kalendertag (R816); voller Lauf nur `make push-check`.
 
-1. **SEERECHT neu ans Gate** (`feat/seerecht` @ `8473afb0`, Save v19): Fix `tests/sim/imports.test.ts` (PLAN-NAHT: `src/sim/council.ts` importiert `./islands`) im Strang, voller Lauf der Struktur-Tests
-   (`imports`, `leverReads`, `contrast`, R888 (4)), dann Gate Merge. Offen aus UI-HAEPPCHEN-J: Plural «1 Häuser» `src/ui/council.ts:50`. Aufräumbar (per Ruling): `.worktrees/integrate` auf `int/rel-32`,
-   `.worktrees/hotfix-rel32`, Branches `int/rel-32*`, `docs/haushalt-03`, `docs/retro-47d29586`, `fix/hotfix-rel32`.
-2. **INSELPROBEN Etappe 2** (`feat/inselproben` @ `d6f6834f`, R885): Mess-Strang T05–T07 (Messfenster Load ≤ 4) und UI-Strang T08–T11; 31 Starts Rest von 43, Par 2 nur bei freiem Test-Platz;
-   T09 nach I-186 auf main (lokal erfüllt), T14 Save = main + 1 beim Merge (Seerecht belegt 19). Handoff `.studio/handoffs/2026-10-25-lead-tech-INSELPROBEN.md`.
-3. **Umsetzungen mit fertigem Plan:** I-201 Festanlass (`plan/i201-festanlass`, 15 Starts, ≤ 2 gleichzeitige Testläufe); Stadtrecht T01-Frühstart, Rest nach Seerecht auf main (25 Starts);
-   I-197 Kartennummer + Plan I-197b Partiebrief nach dem Inselproben-UI-Task (I-197-Controller stellt `newIsland` auf Start-Objekt um, R881).
-4. **ORT-A T19–T26** (Controller-Platz), danach frei: LEBEN-STRASSE T06–T10, LEBEN-SEE Kielwasser T03, UI-H P2, Stadtplanung C1 (Stadtplanung zieht Save auf main + 1 nach), AUFLAGEN-KERN Plan.
-5. **Retro-Vorschläge R886:** V3 (Plan-/Gate-Leads lesen Rulings/Handoffs abschnittsweise) und Messaufträge M1–M3 durch `studio-coach`; E-065 auf Ist-Stand.
-6. **Ideen-Runde IDEEN-18** mit TIEFE-2 K1 «Seegang» und K3 «Bittschrift» (R881); Scouts haben jetzt WebSearch (Persona 1.5).
-7. Pool: TOOL-MESSFENSTER T00, TOOL-PUSHSPERRE T05, ZEITRESERVE-PFLEGE (u. a. «L4 Deko-Culling» 4851 ms), Wartung (E1) nach Stadtplanung; Messfristen R750/R755 2026-10-30, M1 2026-11-02,
-   E-072/E-073 2026-11-19. Erweiterung 1 bleibt in der Nutzer-Session (R519).
+1. **Release-Bündel (Push frühestens 2026-10-26, R816):** `feat/seerecht` @ `3167969e` (Gate OK, R893, Save 19), `fix/schiff-a1` @ `6290d513` (**nur mit Browser-Beleg** Frame-Zeiten x1/x4, R906),
+   Doku-Branches `docs/coach-r886` @ `1c460542`, `design/ideen-18` @ `6f7d0818`, `docs/tiefe-3` @ `1ab3968a`, `docs/retro-f8716d75` @ `750d30ea`. Ablauf: `lead-qa` Gate Merge → `lead-production` + Integrator → `make push-check`.
+2. **I-201 Festanlass** (`lead-tech`, 15 Starts, R893): beim Ende **noch laufend** (Worktrees `.worktrees/i201` @ `e309a76b` mit ungecommitteten Änderungen in `feastEffect.ts`/`feastKinds.test.ts` = Eigentum des
+   I-201-Controllers, `i201-fe1` @ `c2492b1e` T05, `i201-ui` @ `63cdf688` T06). Vor Neustart Handoff `.studio/handoffs/2026-10-25-lead-tech-I-201.md` und Worktree-Status prüfen (R329).
+3. **INSELPROBEN** (`feat/inselproben` @ `429eb13a`, Etappe 2 abgenommen R917): T12–T14 + Final-Review opus, Mehrbedarf ≈ 5 Starts; T14 Save = main + 1 nach Seerecht-Merge; Folgepaket PROBE-5 (R910).
+4. **ORT-A** (`feat/ort-a` @ `7cb15a5f`, pausiert R902, Rest 6 Starts): T20c (Lappen, Grasloch, R917), T19/T23 Messungen bei Load ≤ 4, T20b-2 Playtest, T24–T26.
+5. **Gates/Gegenlesen (testfrei, zuerst):** Gate Spec HAFEN (`design/hafen` @ `9c4f8bac`, R913), Gate Spec I-214 (`design/gruendungsbrief` @ `e168d5d2`, R915), Gate Spec FLAECHE (`design/flaeche` @ `d55abcd4`, R919),
+   Gegenlesen GEBAEUDE-VARIANZ (`a703f8ee`, R916) und AUSBAU-LOGIK (`3856e396`, R918). Danach Pläne: I-210 (R911, Auflagen Anhang 02), AUSBAU-LOGIK, GEBAEUDE-VARIANZ, HAFEN, FLAECHE (FL-1 nach ORT-A T26).
+6. **Reihenfolge-Abhängigkeiten:** HAFEN K2 und FLAECHE ändern Seed-Welten → nach INSELPROBEN-Merge (Pins); HAFEN S3 nach Seerecht, S5/S6 nach Fix A1; GEBAEUDE-VARIANZ S5/S6 nach AUSBAU-LOGIK; Save-Nummern nur per
+   Merge-Reihenfolge (R909).
+7. **Retro-Umsetzung R920** (V1 Messfenster, V2 Rulings-Abgleich, V3 Design-Kontext) durch `studio-coach`; Stadtrecht, I-197/I-197b warten auf Test-Controller-Platz; Pool wie zuvor (TOOL-MESSFENSTER T00 u. a.).
+   Messfristen R750/R755 2026-10-30, M1 2026-11-02, E-072/E-073 2026-11-19.
 
 ## Aktuelles Projekt und Phase
 
@@ -237,15 +237,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-Session f8716d75 (R890–R901, Ampel grün): **laufende Leads** (Handoffs unter `.studio/handoffs/2026-10-25-*`):
-
-- **INSELPROBEN** Etappe 2 (`lead-tech`, Budget 26): UI T08–T10 OK, T11/T11b (Bilanz-Hinweis, R900) laufen; T05 grün über R897-Rückfall; T06/T07 offen.
-- **ORT-A** T19–T26 (`lead-tech`, Budget 12): Plan-Nachtrag `plan/ort-a` @ `8c5728e9`, T20 gemergt, T21 läuft; T20b-Urteil `lead-art` wartet auf Load ≤ 4.
-- **I-201** Festanlass (`lead-tech`, Budget 15, R893).
-- **Specs/Kurzdesigns:** I-210 Bittschrift (H3+H4, R899), AUSBAU-LOGIK (R896 (3)), HAFEN (R898), GEBAEUDE-VARIANZ (R901).
-- **Fertig, wartet auf Release-Bündel:** `feat/seerecht` @ `3167969e` (Gate OK, R893), `docs/coach-r886` @ `1c460542` (R892), `design/ideen-18` @ `6f7d0818`, `docs/tiefe-3` @ `1ab3968a`,
-  `design/gruendungsbrief` @ `a5f6918c`, Rechnung `design/i210-bittschrift` @ `d4f935b7`.
-- **Wartet auf Platz:** Fix A1 Schiff-Interpolation (erster freier Test-Controller-Platz, R898), FLAECHE (R896 (5)), Rechnung «Zukaufpreis steigt» (R899), Spec I-214 Gründungsbrief (R901), Stadtrecht, I-197.
+- Beim Session-Ende f8716d75 (rote Ampel) **kann weiterlaufen:** I-201-Controller (siehe Fortsetzung 2). Alle anderen Leads haben übergeben (Handoffs `.studio/handoffs/2026-10-25-*`).
 
 ## Parallele Sessions
 
@@ -255,9 +247,9 @@ Session f8716d75 (R890–R901, Ampel grün): **laufende Leads** (Handoffs unter 
 
 ## Seit letzter Session erledigt
 
-- **Session 47d29586 (R873–R886, 2026-10-25):** REL-31 live (R877); REL-32a/b lokal (R880, R882): I-186 Ehrenbuch und UI-HAEPPCHEN-J fertig, SEERECHT fertig bis Merge-Gate (Save v19, R883),
-  INSELPROBEN Etappe 1 (R885); Specs/Pläne mit Gates: Inselproben, Stadtrecht, UI-HAEPPCHEN-J, I-197 Kartennummer, I-197b Partiebrief, I-201 Festanlass; IDEEN-17, TIEFE-2; HAUSHALT-03, BEOB-19,
-  DOKU-R868, DOKU-RUNDE (Handbuch 1.75), COACH-R872 (1.74), TOOL-REST-3; Kurz-Retro (R886).
+- **Session f8716d75 (R890–R920, 2026-10-25):** Nutzer-Playtest in 5 Pakete (R896, Dauerauftrag Nachvollziehbarkeit); SEERECHT Gate OK; FIX-SCHIFF-A1 (unter Browser-Vorbehalt); BUG-SCHIFF-Diagnose;
+  INSELPROBEN Etappe 2 (4 Proben, Probe 5 heraus); ORT-A T20–T22 + T20b-Urteil; Specs I-210 Bittschrift (abgenommen), AUSBAU-LOGIK, GEBAEUDE-VARIANZ, HAFEN, FLAECHE, I-214 Gründungsbrief; Rechnungen
+  Gründungsbrief, Bittschrift, Zukaufpreis (kein Modell); IDEEN-18, TIEFE-3, COACH-R886, HAUSHALT-04 (34 Worktrees weg); Kurz-Retro.
 
 ## Pausierte Pakete
 
