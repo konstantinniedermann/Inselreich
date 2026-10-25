@@ -2301,3 +2301,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-197b, INSEL
 Regelbezug: R894, R901, R912 · Kosten bei Irrtum: Spec-Nachtrag.
 
 Entscheider: L0 · Anlass: Bericht lead-design I-214 · ADR: —
+
+## R916 · 2026-10-25 · GEBAEUDE-VARIANZ-Nachtrag abgenommen; Gegenlesen in der Folgesession
+
+Ruling: `design/gebaeude-varianz` @ `a703f8ee` (R907 + alle R909-Auflagen, `facingAt` in `src/sim/facing.ts`, `FACINGS`-Einschränkung vor dem Speichern, AK-GV-22–26, S1 Sim-Feld/Save, Rastermessung vor S3)
+**abgenommen**. Auslegung **bestätigt**: Vorversion wird migriert; abgewiesen werden beschädigte Vorversion, ungültiges `facing` in der aktuellen Version und `SAVE_VERSION + 1` (AK-GV-21); ungültige Werte
+nie klemmen. Gegenlesen durch `lead-qa` in der Folgesession (gelbe Ampel, R912); Plan danach.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK (S5/S6 danach), FLAECHE, Save-Kette
+Regelbezug: R907, R909, R912 · Kosten bei Irrtum: ein Gegenlese-Start.
+
+Entscheider: L0 · Anlass: Bericht lead-art GEBAEUDE-VARIANZ · ADR: —
