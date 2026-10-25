@@ -2890,3 +2890,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: «Neue Ufer»
 Regelbezug: R862, R896, R962 · Kosten bei Irrtum: zwei Pool-Einträge.
 
 Entscheider: L0 · Anlass: Bericht TIEFE-5 · ADR: —
+
+## R966 · 2026-10-25 · Gate Brainstorming «Neue Ufer» OK
+
+Ruling: Designvorschlag I-194 «Neue Ufer» (`design/neue-ufer` @ `464a6ef5`, `docs/superpowers/specs/2026-10-25-neue-ufer-design.md`) **freigegeben** (Gate Brainstorming). Etappen NU-1 Kartenrand, NU-2
+Nordinsel, NU-3 Lebensader, NU-4 Zwei Reiche (≈ 12–15 Pakete, je Etappe Save main + 1 nach R909). Recherche-Zusatz angenommen: jedes Fundstück wirkt schon in NU-1, 2–3 Wahl-Karten je Fahrt. **NU-a ja**
+(Namen «Kartenhaus», «Hüttenleute», «Nordbürger», «Holzschären», «Wrackfeld»); **NU-b ja** (Nordküste nach NU-1 sichtbar als «vereist, noch keine Landung möglich»); **NU-c ja** (Controller-Lauf «Zwei
+Reiche» erst mit NU-4). Spec NU-1 und Werte-Rechnung (Anhang 01) laufen; danach Gate Spec.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN, FLAECHE (NU-2), Erweiterung 1 (Nutzer-Session R519)
+Regelbezug: R862, R896, R958, R962 · Kosten bei Irrtum: Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-NEUE-UFER · ADR: —
