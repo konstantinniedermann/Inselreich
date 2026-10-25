@@ -49,6 +49,8 @@ export const SHIP_DOCK_TICKS = 30; // R15; wirkt ab S4 (T10), hier nur für die 
   - `tests/sim/seaGolden.test.ts` Seeds 7/13/42 (Ticks-Teil); `tests/sim/routeBalance.test.ts` (Fälle mit `cycleTicks`, falls rot);
   - `tests/sim/ships-rng.test.ts`, `tests/sim/seerecht.test.ts` AK-SR-7/-8, `tests/sim/council*.test.ts` (Seerecht-Fälle).
     UI-Pins (`homeTravel` «d = 25 ergibt 250», `islandCard` 3 Fälle) erst in T08. Commit je Gruppe mit Name, alt → neu, «A2 R10, E4 R913».
+- [ ] **Mess- und Zählregel:** Pin-Zählungen (6-Fall AK-H2-27, Probe «Ticks») und `600 + 2 · (T + 30)` sind Zählungen ohne Lastgrenze; Laufzeitangaben (A/B der
+      berührten Dateien gegen T00) nur bei **Last ≤ 4 nötig**, sonst im Bericht «offen, Last x».
 - [ ] Kandidatenliste grün bis auf T08-Dateien (benennen); Teilbeleg laut Index; `git diff main -- tests/sim/balance.test.ts` leer; `balance*` grün.
 - [ ] **Commit:** `feat: Fahrzeit aus der Fahrlinie, Seerecht 2,32 (HAFEN S3, AK-HF-15..20)`.
 

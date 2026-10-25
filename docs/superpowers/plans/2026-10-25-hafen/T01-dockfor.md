@@ -32,6 +32,11 @@ export type SiteRule = BisherigeRegeln | { kind: 'seaCoast' }; // ≥1 Kantennac
 
 ## Steps
 
+- [ ] **Schritt 0 Zeitmessung «Ausgang» (R392 V6, R905, Gate-Auflage 5) — Last ≤ 4 nötig, sonst `waiting` und nicht messen:** vor jedem Code-Schritt, 1-min-Last
+      ≤ 4 unmittelbar vor dem Lauf und kein fremder `vitest`/`make check` (`ps`). Dateien: 81 aus T00 §Kandidatenliste plus K2-Zeitliste (N-Datei §3);
+      Aufruf `npx vitest run <Dateien> --maxWorkers=3 --reporter=json --outputFile=.probe/ausgang.json; echo EXIT=$?`. Werte in `T00-ausgang.md` nachtragen
+      (Wand, Last vorher/nachher, Dateien > 2 s, Tests > 500 ms je Name) und in §3 der N-Datei die Spalte «Ausgang gemessen» füllen; ersetzt die nicht belastbare
+      Tabelle vom Plan (Last 7,3 → 4,3). Commit `docs: HAFEN T00 Ausgang gemessen (R392)`. Ohne diese Zahlen ist das A/B im Abschluss je Lieferung wertlos.
 - [ ] **Tests rot** in `tests/sim/dock.test.ts`, `describe('HAFEN S1 dockFor')`:
   - AK-HF-01: synthetisches Terrain 8 × 8 (Rand Wasser, Land innen, ein Binnensee-Feld im Ring), Kontor (3, 3): Ergebnis = nächste Meer-Ringkachel; Variante mit zwei
     gleich nahen Ringkacheln → kleineres y, dann x; Binnenwasser nie.
@@ -49,4 +54,4 @@ export type SiteRule = BisherigeRegeln | { kind: 'seaCoast' }; // ≥1 Kantennac
 
 ## Bericht
 
-Exit-Codes; Rot-Ausgabe; Anzahl Binnenplätze Seed 1 Insel A (erwartet 12); ob `kontorSite` je Insel `seaCoast` erfüllt (Seeds 1–40, Zahl).
+**Schritt-0-Werte zitieren** (Wand, Last vor dem Lauf, Tests > 500 ms mit ms) oder «Schritt 0 offen, Last > 4» mit Uhrzeit und Lastwert; Exit-Codes; Rot-Ausgabe; Anzahl Binnenplätze Seed 1 Insel A (erwartet 12); ob `kontorSite` je Insel `seaCoast` erfüllt (Seeds 1–40, Zahl).

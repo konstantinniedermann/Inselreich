@@ -1,7 +1,8 @@
 # T00 · Testzeit-Ausgang und Proben (R392, beim Plan gemessen)
 
 Controller · kein Agent-Start · gemessen 2026-10-25 21:15–21:22 auf `plan/hafen` (= main `8fb2a1e0` + Spec-Merge, kein `src/`-Diff) · **1-min-Last 7,3 → 4,3:
-Zeiten nicht belastbar für A/B (R803).** Der Controller I1 wiederholt den Lauf «Ausgang» vor T01 im Messfenster (Last ≤ 4, ≈ 1 min) und trägt die Werte hier nach.
+Zeiten nicht belastbar für A/B (R803).** **T01 Schritt 0** (Nachtrag R945) wiederholt den Lauf «Ausgang» vor dem ersten Code-Schritt, **Last ≤ 4 nötig**, sonst
+`waiting`, und trägt die Werte hier nach. K2-Testzeit (R392/R905, E-HF-6): Liste der betroffenen Tests mit Messwert in `N-nachtrag-r945.md` §3.
 
 ## Kandidatenliste (81 Dateien)
 

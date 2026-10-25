@@ -51,4 +51,4 @@ export function kontorPreviewText(p: KontorPreview): string; // «Fahrzeit zur H
 
 ## Bericht
 
-Exit-Codes; Rot-Ausgabe; Rechenzeit einer ungecachten Vorschau (ms, Last).
+Exit-Codes; Rot-Ausgabe; Rechenzeit einer ungecachten Vorschau (ms, **Last ≤ 4 nötig**, sonst «offen, Last x»; Messung nur unter `.probe/`, kein Zeittest im Repo).

@@ -48,4 +48,4 @@ In `deserialize`: `if (raw.version === SAVE_V_ROUTE - 1 && !migrateToRoute(raw))
 
 ## Bericht
 
-Exit-Codes; Rot-Ausgabe; gewählte Nummer auf dem Branch (main + 1 zum Zeitpunkt); Ladezeit eines Stands mit 4 Schiffen (ms, Last). Danach D2 per `SendMessage`.
+Exit-Codes; Rot-Ausgabe; gewählte Nummer auf dem Branch (main + 1 zum Zeitpunkt); Ladezeit eines Stands mit 4 Schiffen (ms, **Last ≤ 4 nötig**, sonst «offen, Last x»; Richtwert ≤ 300 ms, da `migrateToRoute` je Schiff ≤ ≈ 75 ms rechnet). Danach D2 per `SendMessage`.

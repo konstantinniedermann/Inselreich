@@ -1,6 +1,6 @@
 # T15 · Auftragsschiff: Anfahrt, Liegen, Abfahrt (S6, R26–R30)
 
-Umsetzer `art-rendering-engineer` · ≈ 55 Tools · AK-HF-41, -42, -43, -44, -45 · blocked-by: T14 · Worktree `.worktrees/hafen-render` · Spec §3.6, §4, O-4, O-5, Anhang 02 §H
+Umsetzer `art-rendering-engineer` · ≈ 55 Tools · AK-HF-41, -42, -43, -44, -45 · blocked-by: T14 · Worktree `.worktrees/hafen-render` · Spec §3.6, §4, O-4, O-5, Anhang 02 §H, **Art-Brief §7** (R943)
 
 ## Dateien
 
@@ -14,7 +14,7 @@ Umsetzer `art-rendering-engineer` · ≈ 55 Tools · AK-HF-41, -42, -43, -44, -4
 ```ts
 export const ORDER_SHIP_TILES = 12; // Darstellungswert (Spec §3.9)
 export const ORDER_SHIP_TICKS = Math.ceil(ORDER_SHIP_TILES * SHIP_TICKS_PER_ROUTE_TILE); // 35, fest, auch mit Seerecht (O-4)
-export const ORDER_FADE_TICKS: number; // Ein-/Ausblenden am Wegende, Wert aus T03-Bericht (O-5, lead-art)
+export const ORDER_SHIP_FADE_TICKS = 5; // Ein-/Ausblenden (O-5, Art-Brief §7): 0,5 s bei x1, ≈ 1,7 Kacheln Weg
 /** Render-Zustand ausserhalb der Welt: beobachtete Annahme eines Fernauftrags, Ende (Tick, Anteil f). Nie gespeichert. */
 export interface OrderShipMemo {
   seenFar: { island: number; tick: number } | null;
@@ -49,7 +49,11 @@ export function approachPath(world: World, island: number): Pt[];
   denselben Weg, Dauer `ceil(f · 35)` Ticks, dann weg. Nach dem Laden eines Stands ist der Memo leer → keine Abfahrt nachgespielt.
 - **Fernauftrag (R29):** Wechsel `order.island` null → i beobachtet: Heimat-Schiff fährt ab (wie Ende), ein Schiff fährt den Anker von i an (Start = beobachteter Tick).
   Frisch geladener Stand mit laufendem Fernauftrag: liegt sofort an i, keines an der Heimat.
-- Pause: gleicher `tick` und `frac` → gleiche Pose (rein). Nicht anklickbar (nicht in `world.ships`). Zeichnen mit `look.foreign = true`.
+- **Ein-/Ausblenden (Brief §7):** `alpha` linear 0 → 1 über die ersten `ORDER_SHIP_FADE_TICKS` der 35 Anfahrtsticks und 1 → 0 über die letzten
+  `min(ORDER_SHIP_FADE_TICKS, Abfahrtsdauer)` Ticks der Abfahrt, aus `tick + frac`; nach dem Laden liegt das Schiff ohne Einblenden (`alpha` 1, R29). Der Renderer setzt
+  `ctx.globalAlpha` um den `drawShip`-Aufruf; `drawShip` braucht dafür nichts.
+- Pause: gleicher `tick` und `frac` → gleiche Pose (rein). Nicht anklickbar (nicht in `world.ships`). Zeichnen mit `look = { heading, furled, livery: 'auftrag' }`;
+  `heading` fahrend nach der Sehnenregel aus T14, liegend nach `dockedHeading` (längsseits, R943).
 
 ## Steps
 
@@ -60,6 +64,8 @@ export function approachPath(world: World, island: number): Pt[];
   - AK-HF-43: Lieferung bei f = 0,4 → Abfahrt ab aktueller Pose, nach `ceil(0,4 · 35)` = 14 Ticks weg.
   - AK-HF-44: Annahme beobachtet → Heimat-Schiff legt ab, Schiff am Ziel nach 35 Ticks am Anker; neuer Memo mit laufendem Fernauftrag → liegt sofort am Ziel.
   - AK-HF-45: Stand bei `t_A + 10` per `deserialize(serialize(w))`, neuer Memo → Pose gleich der ohne Laden.
+  - Ausblenden (Brief §7): `alpha` bei `t_A` = 0, `t_A + 2,5` = 0,5, `t_A + 5` = 1; letzter Abfahrtstick → `alpha` ≤ 0,2; neuer Memo mit liegendem Schiff → `alpha` 1;
+    Farbsatz im Fake-Kontext `roofTerracotta` (Segel).
 - [ ] **Lauf rot → Umsetzen → Lauf grün** plus `tests/render/{renderer,ship,shipLane}.test.ts`, `tests/ui/hover.test.ts`; Pins per Name.
 - [ ] Teilbeleg laut Index.
 - [ ] **Commit:** `feat: Auftragsschiff fährt an und ab (HAFEN S6, AK-HF-41..45)`.

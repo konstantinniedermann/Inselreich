@@ -26,7 +26,8 @@ Umsetzer `tech-sim-engineer` · ≈ 50 Tools · AK-HF-04, -05, -06, -07, -08; Ga
 - [ ] **Tests rot** in `tests/sim/dock.test.ts`, `describe('HAFEN S1 Anker folgt Kontor')`:
   - AK-HF-04: Seeds 1, 2, 3, 37, jede Fremdinsel, jeder `seaCoast`-gültige 2×2-Platz (`canPlace` ok; Geld per `w.money` hoch genug setzen ist erlaubt, nur im Test):
     nach `placeBuilding` gilt `anchor` = `dockFor(...)` und `hypot(anchor + 0,5 − (x + 1), anchor + 0,5 − (y + 1)) ≤ 2,2`. Laufzeit beachten: Welt je Seed einmal, Bau auf
-    `structuredClone` (Zeit im Bericht; > 3 s → Plätze je Insel auf jeden dritten ausdünnen und begründen).
+    `structuredClone` (Zeit im Bericht, **Messung Last ≤ 4 nötig**, sonst «offen, Last x» melden; > 3 s → Plätze je Insel auf jeden dritten ausdünnen und begründen;
+    neuer Test ≤ 500 ms nach R905, sonst ausdünnen; ab L2 kommen 4 × K2-Weltaufbau dazu, dafür steht der Test in der K2-Zeitliste, N-Datei §3).
   - AK-HF-05: Platz P bauen, abreissen → Anker unverändert; Platz Q ≠ P bauen → Anker = `dockFor(Q)`; ein gekauftes Schiff ohne Route mit `port = i`: `shipPose`
     (`src/render/shipLane.ts`, nur lesen) liegt danach am neuen Anker + 0,5.
   - AK-HF-06: `seaRoute(w.islands, 0, i)`, `lanePoints(w, 0, i)`, `laneTicks(w.islands, 0, i)` aufrufen (Caches gefüllt), Kontor II an einem Platz ≠ `kontorSite` bauen:
@@ -45,4 +46,4 @@ Umsetzer `tech-sim-engineer` · ≈ 50 Tools · AK-HF-04, -05, -06, -07, -08; Ga
 
 ## Bericht
 
-Exit-Codes; Rot-Ausgaben; Liste der Neu-Pins (Name, alt → neu); Laufzeit `dock.test.ts`; Seeds mit `shipTile`-Wechsel. Danach D1 per `SendMessage` (Datei `D-doku.md`).
+Exit-Codes; Rot-Ausgaben; Liste der Neu-Pins (Name, alt → neu); Laufzeit `dock.test.ts` (ms je Test, **Last ≤ 4 nötig**, Lastwert dazu); Seeds mit `shipTile`-Wechsel. Danach D1 per `SendMessage` (Datei `D-doku.md`).

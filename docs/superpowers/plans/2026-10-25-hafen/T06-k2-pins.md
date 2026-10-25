@@ -44,8 +44,10 @@ nur durchreicht (dann ändert T07 sie nicht noch einmal); echte Goldwerte (AK-E4
 - [ ] Kandidatenliste laufen, Ist-Liste der Rotstellen mit der Tabelle abgleichen (Abweichungen melden).
 - [ ] Je Datei: Pin neu bzw. Seed-Suche; eigener Commit je Datei `test: <Datei> neu gepinnt nach K2 (HAFEN S2, E4 R913)` mit Namen und alt → neu im Text.
 - [ ] **Referenztabellen** (AK-M14E1-12) mit dem vorhandenen Erzeugungsweg im Test neu schreiben; Spanne unverändert lassen.
-- [ ] **Laufzeit (Last ≤ 4):** `islands-seeds-a/-b`, `islands-gen`, `islands-c`, `archipel` je dreimal, Median gegen T00. Über 2 × Ausgang → Bericht mit Werten,
-      Controller holt **E-HF-2** ein (Spannen kürzen nur per Ruling).
+- [ ] **Laufzeit (Last ≤ 4 nötig, sonst «offen, Last x» und Controller melden):** alle Dateien der K2-Zeitliste (`N-nachtrag-r945.md` §3) je dreimal, Median je
+      Test; Spalte «nach K2 gemessen» dort füllen. **R943 E-HF-2 anwenden** (ist «ja»): über 2 × Ausgang → AK-M14E1-12 auf Seeds 1–200, Stufe-3-Spanne `islands-c` auf
+      1–100 kürzen, Werte melden. Jeder Test über der R905-Grenze (bestehend > 500 ms: +50 %; neu: 500 ms), der **nicht** in §3 steht, ist ein Befund an den Controller
+      (keine stille Ausnahme); die Liste bestätigt L0 im Sammel-Ruling beim Merge-Gate L2 (R945).
 - [ ] Teilbeleg laut Index und volle Kandidatenliste grün; `git diff main -- tests/sim/balance.test.ts` leer.
 
 ## Bericht
