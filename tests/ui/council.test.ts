@@ -138,6 +138,35 @@ describe('UI-BEIPACK-FERN Umschalt+R nur mit Marke (AK-BF8)', () => {
   });
 });
 
+describe('AK-SR-19 Rats-Karte mit drei Karten', () => {
+  it('Stufe 4: Glasrecht, Hofrecht, Seerecht; Stufe 2 und 3 zwei Karten', () => {
+    const w = createWorld(1);
+    w.council[4] = 'open';
+    const cards = councilCards(w).open[0]!.cards;
+    expect(cards.map((c) => c.name)).toEqual(['Glasrecht', 'Hofrecht', 'Seerecht']);
+    expect(cards.map((c) => c.text)).toEqual(
+      (['A', 'B', 'C'] as const).map((s) => COUNCIL[4][s]!.text),
+    );
+    for (const t of [2, 3] as const) {
+      const v = createWorld(1);
+      v.council[t] = 'open';
+      expect(councilCards(v).open[0]!.cards).toHaveLength(2);
+    }
+  });
+  it('Stufe 3 und 4 offen; Beschluss C in der Liste; Hinweis', () => {
+    const w = createWorld(1);
+    w.council[3] = 'open';
+    w.council[4] = 'open';
+    const v = councilCards(w);
+    expect(v.open.map((o) => o.tier)).toEqual([3, 4]);
+    expect(v.open.map((o) => o.cards.length)).toEqual([2, 3]);
+    decree(w, 4, 'C');
+    const d = councilCards(w);
+    expect(d.decided).toContain('Stufe 4: Seerecht');
+    expect(d.note).toBe('Gilt für die ganze Partie, die übrigen Beschlüsse der Stufe verfallen.');
+  });
+});
+
 describe('I-139 Rat in Chronik und Log', () => {
   it('AK-J4: Chronik-Zeile in allen Zuständen', () => {
     const w = createWorld(1);
@@ -264,6 +293,14 @@ describe('I-138 Wirkung vorab', () => {
     expect(t).toContain(`+${m}`);
   });
 
+  it('Plural: 1 Haus, 2 Häuser', () => {
+    const w = createWorld(1);
+    addB(w, 'house', 0, 3);
+    expect(councilPreview(w, 3, 'B')).toMatch(/^Betrifft jetzt: 1 Haus \(/);
+    addB(w, 'house', 0, 3);
+    expect(councilPreview(w, 3, 'B')).toMatch(/^Betrifft jetzt: 2 Häuser \(/);
+  });
+
   it('AK-J12: beide Karten jeder offenen Stufe haben eine Vorschau, gefasste keine Karte', () => {
     const w = createWorld(1);
     w.council[2] = 'open';
@@ -285,5 +322,33 @@ describe('I-138 Wirkung vorab', () => {
     councilPreview(w, 2, 'A');
     councilCards(w);
     expect(serialize(w)).toBe(before);
+  });
+});
+
+describe('AK-SR-19 Vorschau Seerecht', () => {
+  it('ohne Schiff: Wirkt noch nicht, mit Schiffen: Zahl', () => {
+    const w = createWorld(1);
+    expect(councilPreview(w, 4, 'C')).toBe('Wirkt noch nicht: kein Schiff');
+    const ship = { id: 1, port: 0, to: null, left: 0, cargo: {}, route: null, homing: false };
+    w.ships.push(ship, { ...ship, id: 2 });
+    expect(councilPreview(w, 4, 'C')).toBe('Betrifft jetzt: 2 Schiffe');
+    w.ships.pop();
+    expect(councilPreview(w, 4, 'C')).toBe('Betrifft jetzt: 1 Schiff');
+  });
+  it('Stufe 4: alle drei Karten mit nicht-leerer Vorschau', () => {
+    const w = createWorld(1);
+    w.council[4] = 'open';
+    const cards = councilCards(w).open[0]!.cards;
+    expect(cards).toHaveLength(3);
+    for (const c of cards) expect(c.preview.length).toBeGreaterThan(0);
+  });
+  it('Beschluss C erscheint in Chronik und Log', () => {
+    const w = createWorld(1);
+    w.council[4] = 'open';
+    const prev = { ...w.council };
+    decree(w, 4, 'C');
+    expect(councilChronicleLine(w)).toBe('Rat: Seerecht');
+    expect(councilDecided(prev, w.council)).toEqual([4]);
+    expect(councilDecidedEntries(prev, w.council, 5)[0]!.text).toBe('Rat beschliesst: Seerecht');
   });
 });

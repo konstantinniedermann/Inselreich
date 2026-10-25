@@ -7,7 +7,7 @@ import type { LoadResult } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
-import { foldBackCouncil, foldBackTrial, foldBackDeliveries } from './helpers';
+import { foldBackSeerecht, foldBackCouncil, foldBackTrial, foldBackDeliveries } from './helpers';
 
 const P = (k: number): number => ORDER_FIRST_TICK + k * ORDER_PERIOD;
 const isl = (w: World, kind: 'A' | 'B' | 'C'): number =>
@@ -54,7 +54,9 @@ describe('AK-H2-21 Version und Migration', () => {
 
   it('Vorversion ohne Felder lädt verlustfrei und läuft 10 Perioden bitgleich', () => {
     const w = createWorld(3, { unlockAll: true });
-    const raw = foldBackDeliveries(foldBackCouncil(foldBackTrial(JSON.parse(serialize(w)))));
+    const raw = foldBackDeliveries(
+      foldBackCouncil(foldBackTrial(foldBackSeerecht(JSON.parse(serialize(w))))),
+    );
     delete raw.farOffer;
     delete raw.farSkip;
     raw.version = (raw.version as number) - 1;

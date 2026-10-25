@@ -119,7 +119,7 @@ export function createWorld(
     reserve: { wood: 0, stone: 0 },
   };
   const world: World = {
-    version: 18,
+    version: 19,
     seed: seedUsed,
     islands: [homeIsland, ...foreignIslands(seedUsed, homeIsland)],
     tick: 0,

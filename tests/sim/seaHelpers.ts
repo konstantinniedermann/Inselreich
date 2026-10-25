@@ -1,10 +1,11 @@
 // Gemeinsame Testwelt für die Seefahrt-Stränge (M12 T02, P-10). Nur Tests, schreibt keine Saves.
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { generateForeignIslands, type Pt } from '../../src/sim/islands';
+import { generateForeignIslands, laneTicks, type Pt } from '../../src/sim/islands';
+import { SHIP_TICKS_PER_SEA_TILE } from '../../src/sim/defs/sea';
 import { recomputeConnectivity } from '../../src/sim/roads';
 import type { Building, Ship, World } from '../../src/sim/types';
 import { createWorld, footprint, home, tileAt } from '../../src/sim/world';
-import { SEED_D37 } from './seePins';
+import { ISLAND_D30, ISLAND_D35, SEED_D30, SEED_D35, SEED_D37 } from './seePins';
 
 /** Welt mit allen Freischaltungen; Standard-Seed mit bekanntem Seeweg (T00). */
 export function seaWorld(seed: number = SEED_D37): World {
@@ -58,4 +59,25 @@ export function shipLiteral(w: World, part: Partial<Ship> = {}): Ship {
 /** Plantagenplätze der Insel aus dem Generator (für T05, T06). */
 export function plantationSites(w: World, island: number): Pt[] {
   return placedIsland(w, island).plantationSites;
+}
+
+/** Gepinnte (Seed, Insel) je Seeweg-Länge d; Pins aus tests/sim/seePins.ts (keine Suche zur Laufzeit). */
+const LANE_PINS: Readonly<Record<number, readonly [number, number]>> = {
+  30: [SEED_D30, ISLAND_D30],
+  35: [SEED_D35, ISLAND_D35],
+};
+
+/** Welt mit Kontor auf der Insel `island` (≥ 1), deren Seeweg von der Heimat genau `d` Felder lang ist. */
+export function laneWorld(d: number): { w: World; island: number } {
+  const pin = LANE_PINS[d];
+  if (pin === undefined) throw new Error(`laneWorld: kein Pin für d ${d}`);
+  const [seed, island] = pin;
+  const w = seaWorld(seed);
+  const got = laneTicks(w.islands, 0, island);
+  if (got !== SHIP_TICKS_PER_SEA_TILE * d)
+    throw new Error(
+      `laneWorld: Pin passt nicht mehr, d ${d} erwartet, ${got / SHIP_TICKS_PER_SEA_TILE} gemessen`,
+    );
+  foundKontor2Literal(w, island);
+  return { w, island };
 }
