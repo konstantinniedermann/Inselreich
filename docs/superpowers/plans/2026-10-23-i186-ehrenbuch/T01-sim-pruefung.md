@@ -28,12 +28,12 @@ Umsetzer `tech-sim-engineer` · ≈ 45 Tools · AK-EB-01, AK-EB-02, AK-EB-03, AK
 - **EB-03:** `won` wechselt mit `world.tick = HONOR_SWIFT_CITIZEN_TICK` → enthält `swiftFound`; mit `+ 1` → nicht (`citizenTown` in beiden). Gleich für `swiftTrade` mit `HONOR_SWIFT_MERCHANT_TICK`. Ticks über die Konstanten, nicht als Literal.
 - **EB-04:** Tempo-Stücke fehlen bei `run.unlockMode === 'all'`, `run === null`, `run.seed !== world.seed`; die übrigen Stücke sind gleich. Sturm-Stücke fehlen bei `off` und `mild`. RL-1: `createWorld(S, { unlockAll: true })` mit `run = { seed: S, unlockMode: 'stepwise' }` ergibt `swiftFound` (Kommentar: dokumentiertes Verhalten, Spec RL-1).
 - Mehrere Stücke in einem Schritt: Reihenfolge wie `HONOR_IDS`.
-- **EB-05:** in `balance-merchants.test.ts`, Test `AK-BAS-02`, ohne neue Simulation: `expect(t.winTick!).toBeLessThanOrEqual(HONOR_SWIFT_CITIZEN_TICK)` und `expect(t.wonMerchantsTick!).toBeLessThanOrEqual(HONOR_SWIFT_MERCHANT_TICK)`, Kommentar P-9 (Pins ändern → Schwellen mitprüfen, R-EB-1). Rot-Beleg hier: kurz mit absichtlich zu kleiner Schwelle im Test zeigen oder Begründung «Erwartung neu, gilt sofort» im Bericht (die Erwartung ist ein Wächter, kein neues Verhalten).
+- **EB-05:** in `balance-merchants.test.ts`, Test `AK-BAS-02`, ohne neue Simulation: `expect(t.winTick!).toBeLessThanOrEqual(HONOR_SWIFT_CITIZEN_TICK)` und `expect(t.wonMerchantsTick!).toBeLessThanOrEqual(HONOR_SWIFT_MERCHANT_TICK)`, Kommentar P-9 (Pins ändern → Schwellen mitprüfen, R-EB-1). Rot-Beleg (R874 B5, Pflicht): Die Erwartungen importieren die Konstanten, die vor der Umsetzung fehlen; der Umsetzer zeigt den roten Lauf (`npx vitest run tests/sim/balance-merchants.test.ts; echo EXIT=$?`) im Bericht, eine Begründung allein genügt nicht. Im Test-Kommentar den Abstand Pin/Schwelle nennen: 6750 gegen 9000, 11 500 gegen 18 000.
 
 ## Prüfungen (Teilbeleg)
 
 - `npx vitest run tests/sim/honors.test.ts tests/sim/balance-merchants.test.ts; echo EXIT=$?` (rot vorher, grün nachher)
 - `npx tsc --noEmit; echo EXIT=$?` · `make lint; echo EXIT=$?` · `make zeittests; echo EXIT=$?` · `make conflicts; echo EXIT=$?`
-- `git diff main -- src/sim/types.ts src/sim/save.ts src/sim/tick.ts src/sim/world.ts` leer
+- `git diff main...feat/i186-ehrenbuch -- src/sim/types.ts src/sim/save.ts src/sim/tick.ts src/sim/world.ts` leer
 
 Commit: `feat: Meisterstücke als Defs und reine Prüfung (I-186)`

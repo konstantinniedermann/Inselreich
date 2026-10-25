@@ -21,7 +21,7 @@ Umsetzer `tech-ui-engineer` · ≈ 35 Tools · AK-EB-09, AK-EB-10, AK-EB-06, AK-
 - **EB-09 c:** frische Welt `createWorld(S)` (wie «Neue Insel»), `observe` → `[]`.
 - **EB-10:** 8 Schritte in einem «Frame» wie die Spielschleife (`for` 8 × `step(w); hits.push(...observe(w, run).map((id) => ({ id, tick: w.tick })))`), Welt so gewählt, dass `won` in Schritt 3 wechselt (Szenario-Tick passend setzen, z. B. `GROWTH_INTERVAL`-Takt minus 3); der Eintrag trägt den Tick nach Schritt 3, nicht den nach Schritt 8.
 - **EB-03 (N7):** `won` wechselt im Schritt, nach dem `w.tick === HONOR_SWIFT_CITIZEN_TICK` gilt → `swiftFound`; eine Welt, deren Wechsel bei `+ 1` liegt → nicht. Ticks über Konstanten, nie Literal.
-- **EB-06:** zwei Welten `createWorld(S)`, je 1000 `step`, eine mit `observe` nach jedem Schritt → `serialize(a) === serialize(b)`. Laufzeit messen und im Bericht nennen; über 500 ms lokal: Schrittzahl nicht senken, sondern Controller melden.
+- **EB-06:** zwei Welten `createWorld(S)`, je 1000 `step`, eine mit `observe` nach jedem Schritt → `serialize(a) === serialize(b)`. Dazu (R874 B3) ein zweiter Lauf mit `SCENARIOS['m8-kurz-vor-sieg']!()`: beide Welten bis über den Treffer (`won`) schrittweise, eine mit `observe` je Schritt, `observe` liefert dort `citizenTown`, danach `serialize(a) === serialize(b)`. Laufzeit messen und im Bericht nennen; über 500 ms lokal: Schrittzahl nicht senken, sondern Controller melden.
 
 ## Prüfungen (Teilbeleg)
 
