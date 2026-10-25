@@ -60,8 +60,9 @@ Begriffe (ADR-006).
    `{ ok: false, reason: 'Erst nach dem ersten Ziel' }`.
 2. **Kaufen und beschliessen in einem Schritt:** Die Sim-Aktion `buyCharter(world, side)` mit `side ∈ {'A','B'}` bezahlt
    die **nächste** Sitzung k = `charter.length + 1` und hängt die Seite an `world.charter` an. Es gibt keinen Zustand
-   «bezahlt, aber unentschieden». Ergebnis `{ ok, reason }`, wirft nie. Gründe in dieser Reihenfolge: «Erst nach dem
+   «bezahlt, aber unentschieden». Ergebnis `{ ok, reason }`, wirft nie. Gründe in dieser Reihenfolge, der erste zutreffende gilt: «Erst nach dem
    ersten Ziel», «Ungültige Seite», «Stadtrecht vollständig» (k > 6), «Zu wenig Geld», «Zu wenig Stein», «Zu wenig Glas».
+   Die Seite hat einen eigenen Typ `CharterSide = 'A' | 'B'`; `CouncilSide` (Rat, mit Seerecht auch 'C') wird nicht wiederverwendet.
    Ein abgewiesener Kauf ändert die Welt nicht.
 3. **Bezahlen:** Geld aus der Kasse (`world.money`, nie unter 0), Stein und Glas aus dem Lager der Heimatinsel (`HOME`,
    wie das Denkmal, `src/sim/monument.ts:113`). Der Sperrbestand (I-049) gilt nicht: Er schützt vor Betrieben, nicht vor
@@ -78,13 +79,20 @@ Begriffe (ADR-006).
 
 - **Ort:** die bestehende Rats-Karte (`src/ui/councilCard.ts`, Taste Umschalt + R), unter den Ratsbeschlüssen ein
   Abschnitt **«Stadtrecht · Rang k von 6»**. Keine neue Karte, kein Gebäude-Dialog (Amtsstube bleibt für Edikte).
-- **Inhalt:** Name der nächsten Sitzung, Kostenzeile «8000 Geld · 20 Stein · 20 Glas» (fehlende Posten hervorgehoben),
+- **Inhalt:** Name der nächsten Sitzung, Kostenzeile aus den Defs der nächsten Sitzung (Beispiel Sitzung 2: «8500 Geld · 20 Stein · 20 Glas»; fehlende Posten hervorgehoben),
   zwei Karten A und B mit Name und Text aus den Defs (Zahl sichtbar), darunter «Gilt für die ganze Partie.» Auswahl
   markiert eine Seite; erst **«Sitzung einberufen»** kauft (Schutz vor Fehlklick). Ist der Knopf gesperrt, steht der
   Grund aus `buyCharterReason` daneben.
 - **Liste:** Gekaufte Rechte erscheinen in der bestehenden Liste der Beschlüsse («Marktrecht: Steuer +2 %»).
 - **Marke:** «Rat · n» zählt wie bisher nur offene Ratsbeschlüsse. Ist keiner offen und die nächste Sitzung leistbar,
   lautet die Marke «Rat · Stadtrecht» (hervorgehoben). Nach Rang 6 bleibt «Rat» neutral.
+- **Steuer-Anzeige (B7):** Die Satzspalte in `taxView` (`src/ui/taxView.ts:30`) und im Spielführer (`src/ui/guide.ts:224`)
+  zeigt künftig `taxPct + charterTaxPoints(world)` (Stadtrecht-Punkte eingerechnet, Edikt wie heute nicht); die Prognose
+  (`taxView:42`) liest unverändert `effectiveTaxPct`, in die `charterTaxPoints` fliesst. Satzspalte und Prognose bleiben so
+  zueinander stimmig; ein Zusatz «(+n % Stadtrecht)» ist nicht nötig.
+- **UI-Reihenfolge (R874 5):** Die Stadtrecht-UI folgt der Seerecht-UI (gleiche Dateien `src/ui/councilCard.ts`,
+  `councilBadge`; Seerecht macht aus der Karte Stufe 4 drei Seiten). Der Stadtrecht-Abschnitt entsteht erst nach deren Merge
+  und liest die dann gültige Kartenstruktur; Konfliktstelle sind `councilCard.ts` und `councilBadge`, Plan von `lead-tech`.
 - **Hinweis:** einmal im Meldungsweg, wenn die nächste Sitzung leistbar wird («Der Rat kann tagen: Stadtrecht
   leistbar»), abgeleitet aus vorher/nachher wie `councilOpened` (`src/ui/council.ts:52-58`); Laden meldet nichts.
 
@@ -144,17 +152,16 @@ fortgeschrieben: +7,5 Werkzeug/min × 40 ≈ 300, nur solange Werkzeug gebraucht
 ## 5 Technische Grenze
 
 `activeLever` nimmt je Art und Schlüssel den **ersten** Treffer (`src/sim/council.ts:18-31`): Ein B-Hebel auf ein vom Rat
-gehebeltes Gebäude wäre ein bezahlter, wirkungsloser Kauf. Daher B-Hebel disjunkt zu `COUNCIL` (Kriterium 1; gilt auch
-für K5).
+gehebeltes Gebäude wäre ein bezahlter, wirkungsloser Kauf. Daher B-Hebel disjunkt zu **allen Seiten** von `COUNCIL` (A, B und die Seite C, die Seerecht ergänzt) und paarweise untereinander
+(AK-ST-01; gilt auch für K5).
 
 ## 6 Save-Folgen
 
 - **Neues Weltfeld** `charter: ('A' | 'B')[]`, Länge 0 bis 6, Reihenfolge = Sitzung 1 … k. Neue Welt und «Neue Insel»:
   `[]`.
-- **Version:** `SAVE_VERSION` heute 18 (`src/sim/save.ts:55`). Stadtrecht nimmt **Stand auf main beim Merge + 1** (R674).
-  Auch «Modus Inselproben» plant v18 → v19 (Feld `probe`, Skizze `2026-10-23-tiefe-1-skizzen.md` §6.3); wer zuerst
-  merged, nimmt v19, der andere v20.
-- **Migration** `migrateV18ToV19`: setzt `charter = []`, wirft nie (Muster `migrateV16ToV17`, `src/sim/save.ts:920-929`).
+- **Version (R874 4):** Stadtrecht nimmt **`SAVE_VERSION` auf main beim Merge + 1** (R674); keine feste Nummer in Spec, AK oder
+  Tests. Merge-Reihenfolge der Save-Sprünge: Stadtplanung → Inselproben → Seerecht → Stadtrecht (Stadtrecht zuletzt).
+- **Migration** `Vorgänger → SAVE_VERSION` (Name und Zahl legt der Plan nach Stand main fest): setzt `charter = []`, wirft nie (Muster `migrateV16ToV17`, `src/sim/save.ts:920-929`).
   Prüfung `isValidCharter`: Array, Länge ≤ Anzahl Sitzungen in den Defs, jedes Element `'A'` oder `'B'`; sonst wird der
   Stand mit dem bestehenden Hinweis abgewiesen, kein Absturz.
 - Eine künftige Verlängerung der Leiter (K5, §11) ändert nur die Defs; ein alter Stand mit kürzerer Liste bleibt gültig.
@@ -170,43 +177,62 @@ für K5).
 
 ## 8 Abnahmekriterien
 
+Kennungen **AK-ST-nn** (R874). Tests lesen Kosten, Punkte und Takte aus den Defs, Ausnahme AK-ST-07 (Zielwerte aus §3.1).
+
 Vitest gegen `src/sim/` (`tests/sim/charter.test.ts`, neu):
 
-1. Defs: `CHARTER_SESSIONS` hat 6 Einträge mit Name, Geld, Stein, Glas, Seite A (Punkte, Text), Seite B (Hebel, Text);
-   Geld steigt streng; kein B-Hebel trifft ein Gebäude, das `COUNCIL` schon hebelt (Disjunktheit als Test).
-2. Neue Welt: `charter` ist `[]`; `buyCharter` vor `won` liefert `ok: false` («Erst nach dem ersten Ziel»), Welt
-   unverändert (tiefer Vergleich).
-3. Nach `won` mit genug Mitteln: `buyCharter(w, 'A')` liefert `ok`; Geld, Stein und Glas der Heimatinsel sinken genau um
-   die Kosten der Sitzung 1; `charter` ist `['A']`.
-4. Je fehlendem Posten (Geld, Stein, Glas) ein Fall mit genau 1 zu wenig: `ok: false` mit dem Grund aus §3.2.2, Welt
-   unverändert. Ungültige Seite (`'C'`, `undefined`) liefert `ok: false`, wirft nie.
-5. Nach sechs Käufen liefert ein siebter `ok: false` («Stadtrecht vollständig»).
-6. Steuer: Nach k gekauften A-Seiten ist `effectiveTaxPct` jeder Stufe um die Summe ihrer Punkte höher; mit Edikt Sparen
-   gilt `taxPct − 7 + Summe`; ohne Amtsstube wirkt Stadtrecht weiter, das Edikt nicht.
-7. Je B-Seite ein Szenariotest auf den wirksamen Takt (Wert aus §3.1) für ein bestehendes und ein danach gebautes
-   Gebäude auf einer zweiten Insel; ohne Kauf bzw. mit Seite A gilt der Def-Takt.
-8. `buyCharter` prüft keinen Pausenzustand (die Pause lebt in der UI); Sperrbestand Stein 60 auf der Heimatinsel
-   hindert den Kauf nicht.
-9. Determinismus: Zwei Läufe mit gleichem Seed und gleicher Aktionsfolge inkl. `buyCharter` liefern gleiche Welt-Hashes.
-10. Save: Speichern und Laden erhält `charter` für `[]`, `['A']`, `['B','A','B']` und volle Länge; Migration v18 → v19
-    setzt `[]`; ein Stand mit `charter` der Länge 7 oder mit `'X'` wird mit Hinweis abgewiesen, kein Absturz.
-11. Alle `balance*`-Tests unverändert grün; am Ende jedes Controller-Laufs gilt `charter = []`.
+- **AK-ST-01** Defs: `CHARTER_SESSIONS` hat 6 Einträge mit Name, Geld, Stein, Glas, Seite A (Punkte, Text), Seite B (Hebel,
+  Text); Geld steigt streng. Der Test läuft über **alle Seiten von `COUNCIL`** (A, B und C, falls vorhanden): kein B-Hebel
+  trifft ein dort gehebeltes Gebäude, und die B-Hebel sind paarweise disjunkt.
+- **AK-ST-02** Neue Welt: `charter` ist `[]`; `buyCharter` vor `won` liefert `ok: false` («Erst nach dem ersten Ziel»), Welt
+  unverändert (tiefer Vergleich).
+- **AK-ST-03** Nach `won` mit genug Mitteln: `buyCharter(w, 'A')` liefert `ok`; Geld, Stein und Glas der Heimatinsel sinken
+  genau um die Kosten der Sitzung 1; `charter` ist `['A']`.
+- **AK-ST-04** Je fehlendem Posten (Geld, Stein, Glas) ein Fall mit genau 1 zu wenig: `ok: false` mit dem Grund aus §3.2.2,
+  Welt unverändert. Ungültige Seite (`'C'`, `undefined`) liefert `ok: false`, wirft nie. **Reihenfolge der Gründe:** (a) Geld
+  und Glas fehlen zugleich → «Zu wenig Geld»; (b) `won = false` und ungültige Seite → «Erst nach dem ersten Ziel»;
+  (c) Rang 6 erreicht und ungültige Seite → «Ungültige Seite».
+- **AK-ST-05** Nach sechs Käufen liefert ein siebter `ok: false` («Stadtrecht vollständig»).
+- **AK-ST-06** Steuer: Nach k gekauften A-Seiten ist `effectiveTaxPct` jeder Stufe um die Summe ihrer Punkte höher; mit Edikt
+  Sparen gilt `taxPct − 7 + Summe`; in einer Welt ohne Amtsstube mit gesetztem Edikt wirkt das Edikt nicht, Stadtrecht
+  weiter. **Ertrag:** der Steuerertrag im Tick (`population.ts`) und die Prognose (`taxView`) steigen um die erwarteten
+  Punkte (Einkommens-Test, nicht nur Helfer).
+- **AK-ST-07** Je B-Seite ein Szenariotest auf den wirksamen Takt (Wert aus §3.1) für ein bestehendes und ein danach gebautes
+  Gebäude auf einer zweiten Insel; ohne Kauf bzw. mit Seite A gilt der Def-Takt. Erwartung `max(1, ⌊cycle × v / def⌋)`,
+  inklusive der Wirkung von `levels.ts`-Ausbaustufen, falls sie greifen.
+- **AK-ST-08** Der Sperrbestand Stein 60 auf der Heimatinsel hindert den Kauf nicht.
+- **AK-ST-09** Nur die Heimatinsel zahlt: Heimatinsel arm an Stein/Glas, zweite Insel reich → `ok: false`; umgekehrt
+  (Heimatinsel reich) → `ok`, Lager der zweiten Insel unverändert. Der Kauf zieht dasselbe Lager wie das Denkmal
+  (`monument.ts`).
+- **AK-ST-10** Determinismus: Zwei Läufe mit gleichem Seed und gleicher fester Aktionsfolge inkl. `buyCharter` liefern gleiche
+  Welt-Hashes (mehrere Seeds).
+- **AK-ST-11** Save, versionsneutral: Speichern und Laden erhält `charter` für `[]`, `['A']`, `['B','A','B']` und volle Länge;
+  die Migration vom Vorgänger (Fixture `SAVE_VERSION − 1`, kein Literal) setzt `[]`; abgewiesen werden mit Hinweis, ohne
+  Absturz: Länge 7, Element `'X'` oder `'a'`, Nicht-Array, `null`.
+- **AK-ST-12** Regression: Alle `balance*`-Tests unverändert grün (Beleg im Release-`push-check`, R810); zwei Direkttests:
+  `charterTaxPoints(w) === 0` und `councilCycle` unverändert bei `charter = []`.
 
-Reine UI-Helfer (`tests/ui/council.test.ts`, erweitert):
+Reine UI-Helfer (`tests/ui/council.test.ts`, erweitert; nach dem Merge der Seerecht-UI gegen die dreiseitige Karte):
 
-12. `charterView(world)` liefert vor `won` nichts; danach Rang, Name, Kostenzeile, zwei Karten mit Defs-Text, Sperrgrund
-    oder `null`; nach Rang 6 nur die Liste.
-13. `councilBadge` liefert «Rat · Stadtrecht», wenn kein Beschluss offen und die nächste Sitzung leistbar ist; «Rat · n»
-    hat Vorrang.
-14. `charterBecameAffordable(prev, next)` meldet den Wechsel von nicht leistbar auf leistbar genau einmal; `prev === null`
-    meldet nichts.
+- **AK-ST-13** `charterView(world)` liefert vor `won` nichts; danach Rang, Name, Kostenzeile (gegen Defs-Werte geprüft, kein
+  Literal), zwei Karten mit Defs-Text, Sperrgrund oder `null`; nach Rang 6 nur die Liste. Die Satzanzeige in `taxView`/`guide`
+  enthält die Stadtrecht-Punkte (§3.3).
+- **AK-ST-14** `councilBadge` liefert «Rat · Stadtrecht», wenn kein Beschluss offen und die nächste Sitzung leistbar ist;
+  «Rat · n» hat Vorrang.
+- **AK-ST-15** `charterBecameAffordable(prev, next)` meldet den Wechsel von nicht leistbar auf leistbar genau einmal; bleibt es
+  leistbar, keine Wiederholung; sinkt es, steigt wieder, meldet es erneut; `prev === null` meldet nichts.
 
-Browser-Check bei 1280 px (qa-playtester, Screenshots unter `.studio/qa/<paket>/`, Spielstand nach Ziel 1):
+Browser-Check bei 1280 px (qa-playtester, Screenshots unter `.studio/qa/<paket>/`):
 
-15. Rats-Karte zeigt «Stadtrecht · Rang 0 von 6», Kostenzeile und zwei Karten; Auswahl ohne «Sitzung einberufen» ändert
-    nichts; bei fehlendem Glas ist der Knopf gesperrt und der Grund sichtbar.
-16. Nach dem Kauf: Kasse sinkt um den Betrag, Rang 1, Liste zeigt das Recht, Kopfzeile bleibt einzeilig, auch mit
-    «Rat · Stadtrecht».
+- **AK-ST-16** Rats-Karte zeigt «Stadtrecht · Rang 0 von 6», Kostenzeile und zwei Karten; Auswahl ohne «Sitzung einberufen»
+  ändert nichts; bei fehlendem Glas ist der Knopf gesperrt und der Grund sichtbar; ab Rang 6 nur Liste, keine Kaufflächen.
+- **AK-ST-17** Nach dem Kauf: Kasse sinkt um den Betrag, Rang 1, Liste zeigt das Recht, Kopfzeile bleibt einzeilig (Höhe,
+  kein Umbruch), auch mit «Rat · Stadtrecht»; Kauf in der Pause möglich (ersetzt das nicht beobachtbare «prüft keinen
+  Pausenzustand»).
+
+**Spielstand-Fixtures (Browser-Checks):** Erzeugung per Sim-Skript mit dem `SAVE_VERSION` des Merge-Stands, nicht von Hand. Drei
+Stände nach Ziel 1: «Glas 0» (Sitzung 1 leistbar, Sitzung 2 gesperrt wegen Glas), «alles leistbar» (Sitzungen 1 bis 6) und
+«Rang 6» (volle Liste). Das Playtester-Briefing nennt diese Namen.
 
 ## 9 Randfälle
 
@@ -239,7 +265,7 @@ Ratsbeschlüsse, keine Senkung der Rate (E1 «Wartung»).
 - **I-186 Ehrenbuch:** Andockstelle «Rang 6 erreicht» bzw. «alle sechs Rechte einer Seite» als Eintrag; liest nur
   `charter`, kein eigenes Feld hier.
 - **Inselproben / «Knappe Zeiten»:** Proben nutzen die Grundregeln samt Stadtrecht; ein Szenario kann die Leiter per
-  Def-Schalter sperren oder verbilligen. Save-Nummer siehe §6.
+  Def-Schalter sperren oder verbilligen. Save-Folgen siehe §6; ein solcher Schalter bekäme ein eigenes AK.
 
 ## 12 Selbstprüfung Gate Brainstorming
 
@@ -250,7 +276,7 @@ Ratsbeschlüsse, keine Senkung der Rate (E1 «Wartung»).
 3. **Rückkopplung:** Wachstumsmotor mit fallendem Grenzertrag (Kosten × 1,7, Punkte flach); Zinseszins harmlos. Bremse
    ist die Leiter selbst; nach k6 kehrt die Schwemme zurück — gewollt als erster Schritt, Dauer-Senke ist E1. **OK**
 4. **Randfälle:** leere Kasse, fehlendes Glas, Denkmal-Konkurrenz ums Lager, Abriss der Amtsstube, Edikt plus Recht,
-   Doppel-Hebel mit dem Rat (§5), Save mit voller Liste (§9, Kriterien 2–10). **OK**
+   Doppel-Hebel mit dem Rat (§5), Save mit voller Liste (§9, AK-ST-02 bis AK-ST-11). **OK**
 5. **Einfacher:** S1 hat keine Wahl; S2 nutzt Karte, Leser und Save-Muster des Rats, eine neue Aktion, A flach +2. **OK**
 
 Gesamt: **OK mit Bedenken** (Frage 2: Gewicht der späten Paare, k2).
@@ -261,6 +287,6 @@ Gesamt: **OK mit Bedenken** (Frage 2: Gewicht der späten Paare, k2).
   `balance*`-Tests bleiben ohne Neupin. Empfehlung: so festhalten.
 - **R-2 Werte:** Leiter 5000 × 1,7^(k−1), A flach +2, B-Takte laut §3.1; Änderungen nur per Werte-Ruling nach Playtest.
   Empfehlung: annehmen (Abweichung vom Arbeiter in §4.2 begründet).
-- **R-3 Save:** Feld `charter`, Version = main beim Merge + 1, Migration setzt `[]`; Kollision mit Inselproben (v19)
-  wird beim Merge aufgelöst. Empfehlung: annehmen.
+- **R-3 Save:** Feld `charter`, Version = main beim Merge + 1 (versionsneutral), Migration setzt `[]`; Reihenfolge laut R874 4
+  (Stadtplanung → Inselproben → Seerecht → Stadtrecht). Angenommen mit R874.
 - **Nutzer-Vorbehalt:** keiner (Kernsäule, Genre, Titel unverändert); K5-Hinweis für die Nutzer-Session (R519).
