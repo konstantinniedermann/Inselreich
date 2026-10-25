@@ -141,6 +141,7 @@ import { COUNCIL, COUNCIL_OPEN_MESSAGE } from '../sim/defs/council';
 import {
   councilEscapeHandled,
   councilOpenNext,
+  councilDecidedEntries,
   councilOpened,
   councilToggleAllowed,
 } from './council';
@@ -1000,6 +1001,11 @@ function launch(
     syncContractCursor();
     updateHud(hudEl, state, actions);
     if (councilOpened(prevCouncil, world.council).length > 0) showMessage(COUNCIL_OPEN_MESSAGE);
+    const councilLogged = councilDecidedEntries(prevCouncil, world.council, world.tick);
+    if (councilLogged.length > 0) {
+      state.eventLog = pushLog(state.eventLog, councilLogged);
+      state.logUnread = nextUnread(state.logUnread, councilLogged, isEventLogExpanded(logBox));
+    }
     prevCouncil = { ...world.council };
     councilCard.update(world);
     const trialMsg = trialTransition(prevTrial, world.trial);

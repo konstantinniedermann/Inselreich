@@ -1,5 +1,6 @@
 import { openCouncilTiers } from '../sim/council';
 import { COUNCIL, COUNCIL_NOTE, COUNCIL_TIERS } from '../sim/defs/council';
+import type { LogEntry } from './crisisLog';
 import type { CouncilSide, CouncilTier, World } from '../sim/types';
 
 /* DOM-freie Helfer für den Ratsbeschluss (I-112): Marke, Karten, Hinweis, Taste. Keine Spielwerte hier. */
@@ -58,6 +59,42 @@ export function councilOpened(
 ): CouncilTier[] {
   if (prev === null) return [];
   return COUNCIL_TIERS.filter((t) => prev[t] === null && next[t] === 'open');
+}
+
+/** Stufen, die von `'open'` auf `'A'`/`'B'` wechselten; `prev === null` (Laden) meldet nichts. */
+export function councilDecided(
+  prev: World['council'] | null,
+  next: World['council'],
+): CouncilTier[] {
+  if (prev === null) return [];
+  return COUNCIL_TIERS.filter((t) => prev[t] === 'open' && (next[t] === 'A' || next[t] === 'B'));
+}
+
+/** Ereignis-Log-Einträge für frisch gefasste Beschlüsse, in Stufenfolge; ohne Toast und Ziel. */
+export function councilDecidedEntries(
+  prev: World['council'] | null,
+  next: World['council'],
+  tick: number,
+): LogEntry[] {
+  return councilDecided(prev, next).map((t) => {
+    const side = next[t] as CouncilSide;
+    return { text: `Rat beschliesst: ${COUNCIL[t][side].name}`, toast: null, tick };
+  });
+}
+
+/** Chronik-Zeile der Ruhe-Ansicht; `null`, solange kein Beschluss je offen war. */
+export function councilChronicleLine(world: World): string | null {
+  if (councilBadge(world) === null) return null;
+  const open = openCouncilTiers(world).length;
+  const names: string[] = [];
+  for (const t of COUNCIL_TIERS) {
+    const s = world.council[t];
+    if (s === 'A' || s === 'B') names.push(COUNCIL[t][s].name);
+  }
+  if (names.length === 0)
+    return open === 1 ? 'Rat: 1 Beschluss offen' : `Rat: ${open} Beschlüsse offen`;
+  const base = `Rat: ${names.join(' · ')}`;
+  return open > 0 ? `${base} — ${open} offen` : base;
 }
 
 /** Offen-Zustand der Rats-Karte: Umschalt+R und Marke schalten um, Esc schliesst. */
