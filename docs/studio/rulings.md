@@ -2518,3 +2518,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: N-104, I-189/
 Regelbezug: R722, R826, R913, R927 · Kosten bei Irrtum: Neurechnung nach Spec N2.
 
 Entscheider: L0 · Anlass: Bericht lead-design RECHNUNG-RUECKFRACHT · ADR: —
+
+## R934 · 2026-10-25 · A1-Konfliktmerge OK; Bündeln REL-33
+
+Ruling: `fix/schiff-a1` @ `5d43663d` (Merge `feat/seerecht`, Delta-Review frisch opus OK, Teilbeleg tsc/lint/zeittests/conflicts Exit 0) **angenommen**. **Bündeln REL-33** an `lead-production` (Budget 3: Integrator,
+`qa-playtester`, Reserve) im Worktree `.worktrees/integrate`: Basis lokales main @ `84280408` (Doku-Commits R922–R933), Reihenfolge `feat/seerecht` @ `3167969e`, `fix/schiff-a1` @ `5d43663d`, `docs/coach-r920` @ `ea7a4ea4`,
+`design/ideen-19` @ `2f5a1858`, `docs/tiefe-3` @ `1ab3968a`, `docs/tiefe-4` @ `3e03683d`, `docs/retro-f8716d75` @ `750d30ea`; Kandidatenlauf `qa-playtester` nach `.studio/qa/REL-33/`; `make push-check` auf dem
+Kandidaten-Hash; bei Exit 0 lokaler Merge nach main, **Push erst 2026-10-26** auf genau diesem Hash (R816). `design/rueckfracht` geht ins nächste Bündel. L0 committet bis zum Merge-Bericht nichts auf main (R769 V2).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201/I-210 (Test-Controller, Last), HAFEN S3/S5/S6
+Regelbezug: R769, R816, R929, R932 · Kosten bei Irrtum: ein Release-Tag später.
+
+Entscheider: L0 · Anlass: Bericht lead-tech FIX-SCHIFF-A1-MERGE · ADR: —
