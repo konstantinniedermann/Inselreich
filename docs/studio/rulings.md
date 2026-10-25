@@ -2458,3 +2458,87 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: INSELPROBEN (
 Regelbezug: R599, R862, R894 · Kosten bei Irrtum: eine Rechnung ohne Verwendung.
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-19 · ADR: —
+
+## R929 · 2026-10-25 · FIX-SCHIFF-A1 Browser-Beleg erfüllt; Gate Merge REL-33
+
+Ruling: Browser-Beleg (`.studio/handoffs/2026-10-25-lead-tech-FIX-SCHIFF-A1-beleg.md`) **erfüllt**: Branch gleitet (0,77 bzw. 3,07 px/Frame konstant, 1,4 % bzw. 0,6 % Frames ohne Bewegung gegen 83,6 % bzw.
+33,7 % auf main), Frame-Zeit unverändert 16,7 ms. Vorbehalt aus R906 aufgehoben. **Release-Bündel REL-33** zum **Gate Merge** an `lead-qa` (Budget 1): `feat/seerecht` @ `3167969e` (Save 19), `fix/schiff-a1` @
+`6290d513`, `docs/coach-r920` @ `ea7a4ea4` (enthält `docs/coach-r886`), `design/ideen-19` @ `2f5a1858` (enthält `design/ideen-18`), `docs/tiefe-3` @ `1ab3968a`, `docs/tiefe-4` @ `3e03683d`,
+`docs/retro-f8716d75` @ `750d30ea`. Danach `lead-production` + Integrator, `make push-check` auf dem gebündelten Hash; Push frühestens 2026-10-26 (R816). I-201-Benchmark ab jetzt bei Last ≤ 4.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN (S3 nach SEERECHT, S5/S6 nach A1), INSELPROBEN T14 (Save main + 1), Save-Kette
+Regelbezug: R816, R893, R906, R909 · Kosten bei Irrtum: ein Release-Bündel neu zusammenstellen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech FIX-SCHIFF-A1 · ADR: —
+
+## R930 · 2026-10-25 · Plan I-210 fertig; Entwürfe 1–3; Gate Plan
+
+Ruling: `plan/i210-bittschrift` @ `d2535b56` (T00–T16, 25 AK-BS zugeordnet) zum **Gate Plan** an `lead-qa` (Budget 1). Entwürfe: **1** Überbelegung wirkt im Wachstumsschritt, `houseCap` behält die Signatur
+**ja**; **2** Genügsamkeit wirkt auch in `goodsBalance` (Karte und Bilanz stimmen überein, R896) **ja**; **3** Lager 120 auch beim Entladen und in `queries.ts` **ja**; **4** Umsetzungsbudget 28 Starts (3 Arbeiter,
+≤ 2 Testläufe gleichzeitig) wird nach Gate Plan erteilt. B4/B5 erst nach I-201-Merge; Seed-Zusage hängt an T00 (Messfenster).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, AUSBAU-LOGIK (Defs), Save-Kette
+Regelbezug: R896, R909, R911, R553 · Kosten bei Irrtum: Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-i210 · ADR: —
+
+## R931 · 2026-10-25 · Gate Plan I-210 BEDENKEN angenommen; Umsetzung startet
+
+Ruling: Gate-Bericht `.studio/handoffs/2026-10-25-lead-qa-gate-plan-i210.md` **BEDENKEN angenommen**; Auflagen 1–3 ins Controller-Briefing: (1) Delta-Review nach ZURÜCK/BEDENKEN immer **frischer** opus-Start
+(R673/R905), nie Fortsetzung; (2) T00-`related`-Liste um `src/sim/feast.ts` und `src/ui/feast.ts` ergänzen, T11 «Dauer ins Ledger» mit «Last ≤ 4 nötig»; (3) Dateimatrix um `tests/sim/helpers.ts` (T05) nachführen.
+Index 21,9 KB vereinbar (R496). **Umsetzung I-210** an `lead-tech` als Controller, Budget **28 Starts** (≤ 3 Arbeiter, ≤ 2 Testläufe gleichzeitig), zweiter Test-Controller der Session; Messungen nur über
+`make messfenster`, Vorrang hat der laufende I-201-Benchmark. Phase 2 (T11, T12, T14) erst nach I-201-Merge.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, AUSBAU-LOGIK, Save-Kette
+Regelbezug: R392, R496, R673, R826, R905, R930 · Kosten bei Irrtum: ein Start aus dem Puffer.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa Plan I-210 · ADR: —
+
+## R932 · 2026-10-25 · Gate Merge REL-33 BEDENKEN: Konfliktmerge A1 nach Seerecht
+
+Ruling: Gate-Bericht `.studio/handoffs/2026-10-25-lead-qa-gate-REL-33.md` **BEDENKEN angenommen**. `lead-tech` (Budget 2) holt `feat/seerecht` per Merge in `fix/schiff-a1` (Lösung laut Bericht: `shipPose(world, ship,
+frac = 0)`, Seerecht-Cache behalten, beide `describe`-Blöcke) mit Teilbeleg und frischem Delta-Review `qa-code-reviewer` (R673). Danach `lead-production` mit Integrator: Bündel in der Reihenfolge des Berichts,
+**Kandidatenlauf `qa-playtester`** nach `.studio/qa/REL-33/` (Schiffsgleiten x1/x4, Seerecht-Beschluss während der Fahrt) und `make push-check` auf dem Kandidaten-Hash; Push frühestens 2026-10-26 (R816).
+Release-Notiz-Entwurf aus dem Bericht für state.md.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN S5/S6, I-210 (docs/ideen.md)
+Regelbezug: R673, R816, R868 V1, R929 · Kosten bei Irrtum: ein Release-Tag später.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa REL-33 · ADR: —
+
+## R933 · 2026-10-25 · Rechnung Rückfracht: Entwürfe E1–E5; Optik HAFEN an lead-art
+
+Ruling: (1) Rechnung `design/rueckfracht` @ `86097053` (gerechnet, nicht gemessen) **abgenommen**, mit E1 aus R927 (Auflage TIEFE-4 bei I-189/I-194). Entwürfe, **wirksam erst mit N-104 «Neue Ufer»**: **E1**
+Nordhändler führt kein Werkzeug **ja**; **E2** Lampenöl nicht beim Händler kaufbar **ja**; **E3** Lampenöl ist Zusatz, halbiert keine Steuer, Ziel zählt Einwohner («60 Kaufleute mit Licht») **ja**; **E4** Werkzeug
+Bedarf 0,1 als Heimatgut, Nahrung verworfen, Seeweg 45–80 **ja**; **E5** «Abstieg langsam» in Spec N2 korrigieren, Warnung bei Nordlager < 2 min **ja**. Branch geht ins nächste Doku-Bündel. (2) Testfreier
+Platz (drei Test-Controller belegt, R826): **Optik HAFEN** an `lead-art` (Budget 1) — Art-Direction-Urteil zu Anhang 02 (`docs/superpowers/specs/2026-10-25-hafen-design/anhang-02-optik.md`) als Vorgabe für
+den HAFEN-Plan.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: N-104, I-189/I-194, Plan HAFEN (`src/render/ship.ts`)
+Regelbezug: R722, R826, R913, R927 · Kosten bei Irrtum: Neurechnung nach Spec N2.
+
+Entscheider: L0 · Anlass: Bericht lead-design RECHNUNG-RUECKFRACHT · ADR: —
+
+## R934 · 2026-10-25 · A1-Konfliktmerge OK; Bündeln REL-33
+
+Ruling: `fix/schiff-a1` @ `5d43663d` (Merge `feat/seerecht`, Delta-Review frisch opus OK, Teilbeleg tsc/lint/zeittests/conflicts Exit 0) **angenommen**. **Bündeln REL-33** an `lead-production` (Budget 3: Integrator,
+`qa-playtester`, Reserve) im Worktree `.worktrees/integrate`: Basis lokales main @ `84280408` (Doku-Commits R922–R933), Reihenfolge `feat/seerecht` @ `3167969e`, `fix/schiff-a1` @ `5d43663d`, `docs/coach-r920` @ `ea7a4ea4`,
+`design/ideen-19` @ `2f5a1858`, `docs/tiefe-3` @ `1ab3968a`, `docs/tiefe-4` @ `3e03683d`, `docs/retro-f8716d75` @ `750d30ea`; Kandidatenlauf `qa-playtester` nach `.studio/qa/REL-33/`; `make push-check` auf dem
+Kandidaten-Hash; bei Exit 0 lokaler Merge nach main, **Push erst 2026-10-26** auf genau diesem Hash (R816). `design/rueckfracht` geht ins nächste Bündel. L0 committet bis zum Merge-Bericht nichts auf main (R769 V2).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201/I-210 (Test-Controller, Last), HAFEN S3/S5/S6
+Regelbezug: R769, R816, R929, R932 · Kosten bei Irrtum: ein Release-Tag später.
+
+Entscheider: L0 · Anlass: Bericht lead-tech FIX-SCHIFF-A1-MERGE · ADR: —
+
+## R935 · 2026-10-25 · Plan AUSBAU-LOGIK fertig; Entwürfe; Gate Plan
+
+Ruling: `plan/ausbau-logik` @ `d4fc2b2b` (T00–T22, 46 AK, zwei Etappen) zum **Gate Plan** an `lead-qa` (Budget 1). Entwürfe: **E-P1** Wald-/Weidezahlen: Spec-Werte jetzt in die Defs, FL-2 ersetzt später die
+Stufenbedingung der fünf Flächentypen per Ruling (eine Zahl je Weide für den Spieler, R896) **ja**; **E-P2** Budget 38 Starts (≤ 3 Arbeiter, ≤ 2 Testläufe) nach Gate Plan; AL-6 steuert `lead-tech` mit
+`art-rendering-engineer` **ja**; **P-14** AK-AL-04 Satz 2 nicht herstellbar (Monotonie), Plan prüft die Absicht **ja**. `balance-upgrade.test.ts` zwischen T04 und T06 bewusst rot bis Pin per Ruling — zulässig nur im
+Feature-Branch, nie auf main.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, I-201 (`cycleOf`), FLAECHE (`placement.ts`), GEBAEUDE-VARIANZ S5/S6, Save-Kette
+Regelbezug: R896, R909, R918, R924 · Kosten bei Irrtum: Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-ausbau-logik · ADR: —
