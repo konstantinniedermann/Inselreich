@@ -2337,3 +2337,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, AUSBAU
 Regelbezug: R896, R904, R914 · Kosten bei Irrtum: Idee I-110 später neu aufnehmen.
 
 Entscheider: L0 · Anlass: Berichte lead-design Zukauf und AUSBAU-LOGIK · ADR: —
+
+## R919 · 2026-10-25 · Spec FLAECHE: Entwürfe 1–7; Gate in der Folgesession
+
+Ruling: `design/flaeche` @ `d55abcd4` (R1–R13, AK-FL-01–42, Schnitte FL-1 Fläche sichtbar / FL-2 Leistung an Fläche / FL-3 Wohnparzellen) fertig. Entwürfe: **1** `PLANTATION_SITE` rechnet mit exklusiver Belegung
+**ja**; **2** Controller-Fixture mit Lücken und 2-Spalten-Waldstreifen, `balance.test.ts`-Erwartungen bleiben **ja**; **3** FL-3 hebt Save (main + 1), alte Stände **mit Hinweis abgewiesen** **ja** (Bestandsstädte
+lassen sich nicht sinnvoll auf grössere Parzellen umrechnen; Verfassung §3); **4** Flächenbedarf über Stufen konstant **ja**; **5** KS6/KS7 entfallen aus ORT-5 **ja**; **6** FL-1 nach ORT-A T26 **ja**; **7** Weidenau
+auf 5 Plantagen nur bei > 10 % Ersatzform in FL-2 **ja**. Platzhinweis in der Aufstiegskarte ist Pflicht (R896 (0)). Gate Spec in der Folgesession (Ampel).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A, AUSBAU-LOGIK (Weide), GEBAEUDE-VARIANZ (Footprint-Wächter), HAFEN (Generator, Seed-Pins), Save-Kette
+Regelbezug: R896, R912, Verfassung §3 · Kosten bei Irrtum: Neu-Pinnen der Fremdinseln.
+
+Entscheider: L0 · Anlass: Bericht lead-design FLAECHE · ADR: —
