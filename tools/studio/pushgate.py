@@ -4,6 +4,8 @@ Ein Bash-Segment `git [Optionen] push …` mit Ziel `main` wird abgewiesen, wenn
 Ereignis `push_check` für den aufgelösten Commit-Hash nicht `exit == 0` hat (D1 schreibt Exit 0).
 Force- und Löschformen bleiben Sache von guard.py (verfassungsgeschützt, §1.3), daher eigenes Modul
 wie waitguard/modelguard. Fehler lassen zu (Hooks werfen nie).
+Bekannte Grenzen (R876): `cd` in einer Subshell `( … )` wirkt nicht auf das Push-Verzeichnis; das
+Ereignisfenster liest nur die letzten 4 MB (TAIL_BYTES). Selbstschutz: Wortfund nur an Befehlsposition.
 Plan: docs/superpowers/plans/tool-pushsperre/T01-pushgate.md
 """
 
@@ -27,6 +29,22 @@ APPROVAL_FILE = "push-freigabe"
 MIN_PREFIX = 7
 MAIN_REFS = {"main", "refs/heads/main"}
 GLOBAL_VALUE_OPTIONS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace"}
+# Lesende Befehle: ein Wortfund als Argument (Suchmuster, Commit-Text) ist kein Anlegen der Datei.
+READ_COMMANDS = {
+    "rg",
+    "grep",
+    "egrep",
+    "fgrep",
+    "ls",
+    "cat",
+    "head",
+    "tail",
+    "wc",
+    "stat",
+    "echo",
+    "printf",
+}
+READ_GIT = {"commit", "log", "show", "diff", "grep", "status"}
 PUSH_VALUE_OPTIONS = {"--repo", "-o", "--push-option", "--receive-pack", "--exec"}
 
 
@@ -192,6 +210,33 @@ def check_source(source: str, cwd: str, payload: Mapping) -> str | None:
     return deny_text(head, code)
 
 
+def _is_read_only(words: list[str]) -> bool:
+    name = os.path.basename(words[0]) if words else ""
+    if name == "git":
+        rest = [w for w in words[1:] if not w.startswith("-")]
+        return bool(rest) and rest[0] in READ_GIT
+    return name in READ_COMMANDS
+
+
+def _command_touches_approval(command: str) -> bool:
+    """Wortfund nur an Befehlsposition: Argument eines lesenden Befehls zählt nicht."""
+    if APPROVAL_FILE not in command:
+        return False
+    try:
+        import guard
+
+        for words, _raw, writes, _assigns in guard.segments(command):
+            if any(APPROVAL_FILE in target for target in writes):
+                return True
+            if any(APPROVAL_FILE in word for word in words) and not _is_read_only(
+                words
+            ):
+                return True
+    except Exception:  # noqa: BLE001 - im Zweifel blocken
+        return True
+    return False
+
+
 def protect_reason(payload: Mapping) -> str | None:
     """Selbstschutz: Agenten (mit agent_id) legen die Freigabedatei nicht an. Best effort."""
     if not payload.get("agent_id"):
@@ -199,8 +244,9 @@ def protect_reason(payload: Mapping) -> str | None:
     data = payload.get("tool_input")
     if not isinstance(data, dict):
         return None
-    text = f"{data.get('command') or ''} {data.get('file_path') or ''}"
-    if APPROVAL_FILE not in text:
+    path = str(data.get("file_path") or "")
+    command = str(data.get("command") or "")
+    if APPROVAL_FILE not in path and not _command_touches_approval(command):
         return None
     return (
         "Freigabe legt nur L0 an: Agenten schreiben `push-freigabe` nicht. Das ist Schutz "

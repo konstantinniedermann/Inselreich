@@ -22,7 +22,7 @@ from pathlib import Path
 import loadsnap
 import paths
 
-LOAD_WAIT = 3.0
+LOAD_WAIT = 4.0
 WAIT_MAX_S = 600
 POLL_S = 15
 MARKED = Path(".studio/zeitreserve-marked.json")

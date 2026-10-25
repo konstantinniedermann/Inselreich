@@ -238,6 +238,33 @@ class SelfProtectionTest(GateCase):
                 data = {"file_path": "/x/.studio/push-freigabe"}
                 self.assertIsNotNone(self.protect(tool, data, agent_id="a1"))
 
+    def test_read_only_mentions_pass(self):
+        for command in (
+            "rg -n push-freigabe docs/",
+            "grep push-freigabe README.md | head",
+            'git commit -m "fix push-freigabe" && ls',
+            "cat .studio/push-freigabe",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNone(
+                    self.protect("Bash", {"command": command}, agent_id="a1")
+                )
+
+    def test_real_creation_forms_stay_denied(self):
+        for command in (
+            "echo x > .studio/push-freigabe",
+            "cat a >> .studio/push-freigabe",
+            "tee .studio/push-freigabe",
+            "cp a .studio/push-freigabe",
+            "rg x | tee push-freigabe",
+            "python3 -c \"open('push-freigabe','w')\"",
+            "cd /x; printf abc > push-freigabe",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(
+                    self.protect("Bash", {"command": command}, agent_id="a1")
+                )
+
     def test_l0_without_agent_id_may_write(self):
         data = {"command": "echo x > .studio/push-freigabe"}
         self.assertIsNone(self.protect("Bash", data))
