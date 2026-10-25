@@ -1968,3 +1968,18 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (neu
 Regelbezug: R816, R887, R888 · Kosten bei Irrtum: Hotfix-Release.
 
 Entscheider: L0 · Anlass: Bericht lead-production REL-32 · ADR: —
+
+## R890 · 2026-10-25 · Session-Start f8716d75: Plan aus state.md fortsetzen, Welle 1
+
+Ruling: Nutzerauftrag «leg los» = Plan aus `state.md` „Fortsetzung“ fortsetzen (R863-Daueraufträge gelten). Limit-Ampel grün (5 h 1 %), Deckel 10 (R826), ≤ 3 Test-Controller. **Welle 1:**
+(1) **SEERECHT** an `lead-tech` (Test-Controller 1): Fix `tests/sim/imports.test.ts`-Verstoss im Strang, Struktur-Tests (`imports`, `leverReads`, `contrast`) im Teilbeleg (R888 (4)), Plural «1 Häuser»
+`src/ui/council.ts:50` als Trivial-Fix mit, dann Bericht für Gate Merge; Budget 4 Starts, Par 1. (2) **INSELPROBEN Etappe 2** an `lead-tech` (Test-Controller 2): T05–T11, Mess-Strang nur bei Load ≤ 4;
+Budget 16 von 31 Rest, Par 2. (3) **ORT-A T19–T26** an `lead-tech` (Test-Controller 3): zuerst `plan/ort-a` auf R884 nachführen, T20b mit `lead-art` per Bericht an L0; Budget 12, Par 1.
+(4) **COACH-R886** an `studio-coach`: V3 umsetzen, Messaufträge M1–M3, E-065 auf Ist-Stand, `.gitignore`-Muster `*-e` prüfen (testfrei). (5) **IDEEN-18** an `lead-design` mit TIEFE-2 K1 «Seegang» und K3
+«Bittschrift» (R881, R862); Budget 2. (6) **HAUSHALT-04** an `lead-production`: Aufräumen der in state.md als aufräumbar genannten Worktrees/Branches (R888-Liste und „Pausierte Pakete“, nur gemergte, `git worktree
+remove` ohne `--force`, `git branch -d` ohne `-D`), Bericht der Liste; Budget 0. I-201, Stadtrecht, I-197 warten auf einen freien Test-Controller-Platz.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Seerecht/Inselproben/Stadtrecht teilen Save-Nummern (Seerecht 19, Rest main + 1 beim Merge)
+Regelbezug: R826, R862, R863, R879, R884, R885, R888 · Kosten bei Irrtum: ein Paket wartet eine Welle länger.
+
+Entscheider: L0 · Anlass: Nutzerauftrag «leg los» · ADR: —
