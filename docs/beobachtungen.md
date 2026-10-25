@@ -267,3 +267,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 - Fundort: `src/render/ortsrand.ts` ↔ `src/render/roadside.ts`. Beobachtung: gegenseitiger Import, funktioniert in beiden Reihenfolgen, fragil. Ursprung: ORT-A Final-Review (R882). Einschätzung: beim nächsten Render-Paket auflösen.
 - Fundort: Renderer-Test «L4 Deko-Culling». Beobachtung: 4851 ms bei Timeout 5000 ms. Ursprung: ORT-A. Einschätzung: ZEITRESERVE-PFLEGE-Kandidat.
+
+## 2026-10-25 · FIX-SCHIFF-A1: Picking und Karte ohne Sub-Tick-Bruchteil (niedrig)
+
+- Fundort: `shipAt` (`src/render/shipLane.ts`, genutzt von `src/ui/input.ts`, `src/ui/app.ts`) und `src/render/seaMap.ts`. Beobachtung: rufen `shipPose` mit `frac` 0; die gezeichnete Pose läuft bis zu einen Tick (kleiner als 1/Lane-Ticks) voraus. Ursprung: FIX-SCHIFF-A1. Einschätzung: kaum sichtbar, nur bei Treffer-Toleranz knapp; bei Bedarf `tickFrac` durchreichen.
