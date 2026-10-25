@@ -55,6 +55,28 @@ describe('AK-EB-09 Tracker ohne Fehlalarm', () => {
   });
 });
 
+describe('AK-EB-09 reset', () => {
+  function nachSieg(): World {
+    const w = kurz();
+    for (let i = 0; i < 200 && !w.won; i++) step(w);
+    return w;
+  }
+  it('reset übernimmt den Stand der neuen Welt als bekannt', () => {
+    const won = nachSieg();
+    expect(won.won).toBe(true);
+    const t = createHonorTracker(createWorld(S));
+    t.reset(won);
+    step(won);
+    expect(t.observe(won, runOf(won))).toEqual([]);
+  });
+  it('Gegenprobe: ohne reset meldet derselbe Ablauf citizenTown', () => {
+    const won = nachSieg();
+    const t = createHonorTracker(createWorld(S));
+    step(won);
+    expect(t.observe(won, runOf(won))).toContain('citizenTown');
+  });
+});
+
 describe('AK-EB-10 Tick je Schritt', () => {
   it('Eintrag trägt den Tick nach dem Wechsel-Schritt, nicht nach dem Frame', () => {
     const w = kurz();
