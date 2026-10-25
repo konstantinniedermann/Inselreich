@@ -267,3 +267,8 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 - Fundort: `src/render/ortsrand.ts` ↔ `src/render/roadside.ts`. Beobachtung: gegenseitiger Import, funktioniert in beiden Reihenfolgen, fragil. Ursprung: ORT-A Final-Review (R882). Einschätzung: beim nächsten Render-Paket auflösen.
 - Fundort: Renderer-Test «L4 Deko-Culling». Beobachtung: 4851 ms bei Timeout 5000 ms. Ursprung: ORT-A. Einschätzung: ZEITRESERVE-PFLEGE-Kandidat.
+
+## 2026-10-25 · I-201: Spielwerte-Doku und Menü-Karte (niedrig)
+
+- Fundort: `docs/spielwerte.md`. Beobachtung: Festwerte (Kosten, Dauer, 75 %, 125 %) fehlen, Lücke bestand vor I-201. Ursprung: Final-Review I-201. Einschätzung: bei nächster Spielwerte-Runde ergänzen.
+- Fundort: Menü-Karte (`src/ui/`). Beobachtung: nach «Speichern» zeigt sie im selben Öffnen noch «Noch kein Spielstand gespeichert», Laden-Liste erst nach erneutem Öffnen aktuell. Ursprung: Playtest T07 (I-201). Einschätzung: kleiner UI-Fix.
