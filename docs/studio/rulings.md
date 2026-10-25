@@ -2326,3 +2326,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: `app.ts` (UI-
 Regelbezug: R464, R826, R856, R862, R868 V2 · Kosten bei Irrtum: ein Controller wartet.
 
 Entscheider: L0 · Anlass: REL-31 live · ADR: —
+
+## R880 · 2026-10-25 · REL-32a lokal; Plan Inselproben und Spec I-201 nachgebessert; TIEFE-2
+
+Ruling: (1) **REL-32a** (`.studio/handoffs/2026-10-25-lead-production-REL-32a.md`) abgenommen: 11 Doku-/Plan-/Werkzeug-Branches lokal nach main, Ergebnis `97f1ef4a`, Teilbeleg (docs-check,
+conflicts, studio-test 1072, tsc, lint) je Exit 0; kein Push (nächster frühestens 2026-10-26, R816). (2) **Gate Plan Inselproben** BEDENKEN angenommen, H1–H3 und N1–N5 eingearbeitet
+(`plan/inselproben` @ `55309d8a`); **43 Starts / Par 2** genehmigt; Start bei freiem Controller-Platz vor Stadtrecht T01, T09 nach I-186 auf main, T14 nach Stadtplanung. (3) **Spec I-201**
+Nachtrag `design/i197-i201` @ `a8c8fdfb` abgenommen (AK-FE1…FE21, Blattmodul `feastEffect`, C2-Band 0–800, Rohstoffmass `GOODS[g].sell`, Markttag bewusst Nische; Rückfall `cyclePct` 67–85,
+`sellPct` 115–<130 nur per Ruling); Plan an `lead-tech` (opus). (4) **TIEFE-2** (Web-Recherche neue Achsen für Spätspiel/Wiederspielwert, R862) an `lead-design`.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette, `menu.ts`/`app.ts`
+Regelbezug: R553, R816, R826, R862, R878 · Kosten bei Irrtum: Plan-Nachtrag; lokaler Revert vor dem Push.
+
+Entscheider: L0 · Anlass: Berichte lead-production, lead-tech, lead-design · ADR: —
