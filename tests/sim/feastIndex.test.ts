@@ -132,6 +132,6 @@ describe('Festindex (I-201 T03b)', () => {
     expect(JSON.stringify(w)).not.toMatch(/chapels|feastIndex/);
     const back = deserialize(serialize(w));
     expect(back.ok).toBe(true);
-    expect(JSON.stringify(serialize(w))).not.toMatch(/chapels|feastIndex/);
+    expect(serialize(w)).not.toMatch(/chapels|feastIndex/);
   });
 });

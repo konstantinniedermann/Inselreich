@@ -8,7 +8,7 @@ Status: angenommen · Paket: I-201 · Grundlage: Ruling R921, Plan P-7 · Betrif
 
 ## Entscheid
 
-`feastEffect.ts` hält eine `WeakMap<World, { tick, chapels }>`. `chapels` sind alle Gebäude mit `service === 'faith'` in Id-Reihenfolge, einmal je Tick bei der ersten Abfrage gebaut. Die drei Abfragen iterieren nur diese Liste und prüfen jeden Treffer live (Festart, `feastAt`, Anbindung, Brand, Phase und `world.buildings[c.id] === c`). Die Semantik bleibt unverändert (AK-FE7). Der Index steht weder im Save noch im `World`-Typ; `SAVE_VERSION` bleibt.
+`feastEffect.ts` hält eine `WeakMap<World, { tick, buildings, chapels }>`. `chapels` sind alle Gebäude mit `service === 'faith'` in Id-Reihenfolge, einmal je Tick bei der ersten Abfrage gebaut. Die drei Abfragen iterieren nur diese Liste und prüfen jeden Treffer live (Festart, `feastAt`, Anbindung, Brand, Phase und `world.buildings[c.id] === c`). Die Semantik bleibt unverändert (AK-FE7). Der Index steht weder im Save noch im `World`-Typ; `SAVE_VERSION` bleibt.
 
 ## Invalidierung
 
