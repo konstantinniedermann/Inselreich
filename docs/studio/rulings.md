@@ -2064,3 +2064,18 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (See
 Regelbezug: R862, R863, R445 · Kosten bei Irrtum: Design-Arbeit, die vor der Umsetzung umgeplant wird.
 
 Entscheider: L0 · Anlass: Nutzer-Playtest 2026-10-25 · ADR: —
+
+## R897 · 2026-10-25 · INSELPROBEN T05: Messdefinition statt Kurvenanpassung
+
+Ruling: Diagnose zu R895 (Beleg): kein Werkzeugfehler in Tilgung/Zins; Ursache ist, dass die Sim in Paketen baut und Einkommen erst mit fertigem Paket fliesst, das Anhang-01-Modell aber stetiges Einkommen
+annimmt; K_end-Widerspruch steckt in der Spec (Anhang 02 C). Entscheid: (1) **kein S0-Wechsel** (Entwurf 1 ja). (2) **K_end** = «Geldanteil der Gebäude beim Sieg» in Anhang 02 C festschreiben, Spec
+bereinigen (Entwurf 4 ja; §5.3-Vermerk aus R885 im selben Spec-Commit). (3) Statt Ref-`kSwitch` auf 0,80 zu schieben (Kurvenanpassung): **Mess-Controller schaltet erst nach Fertigstellung des
+angefangenen Pakets auf Tilgen um** — das ist die nachvollziehbare Spielerstrategie (R896 (0)). Mit dieser Definition Ref/G1/G2/G3/M53/M70 neu messen. Halten Rang und flache Mitte, ist T05 fertig;
+sonst Rückfall auf Entwurf 2+3 (Punkte 0,80/0,90), **keine Lockerung** des Tests. (4) Zu Entwurf 5: Eine Falle «halbes Paket, Unterhalt + Zins > Ertrag, Kasse negativ, Bauen gesperrt» ist nur
+zulässig, wenn der Spieler sie im Spiel sieht. Auftrag: Eintrag in `docs/beobachtungen.md` (Fundort Inselproben/Bilanz-Anzeige) zur Prüfung, ob Krisen-/Bilanzwarnung dies schon zeigt; Design-Folge
+nur bei Lücke.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK (Bilanz je Stufe)
+Regelbezug: R236, R395, R885, R895, R896 · Kosten bei Irrtum: eine Messrunde mehr.
+
+Entscheider: L0 · Anlass: Entwurf lead-tech INSELPROBEN · ADR: —
