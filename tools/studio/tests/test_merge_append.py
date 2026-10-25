@@ -48,6 +48,17 @@ class ResolveTest(unittest.TestCase):
         text = block("x\r\n", "", "y\r\n", eol="\r\n")
         self.assertEqual(merge_append.resolve(text, 7), ("x\r\ny\r\n", 0))
 
+    def test_last_base_line_in_block_both_append(self):
+        # REL-30: letzte Basiszeile ohne Zeilenende liegt im Konfliktblock
+        text = block("z\n## A\na\n", "z\n", "z\n## C\nc\n")
+        self.assertEqual(
+            merge_append.resolve(text, 7), ("z\n## A\na\n## C\nc\n", 0)
+        )
+
+    def test_base_prefix_but_theirs_changed_base_stays_open(self):
+        text = block("z\n## A\n", "z\n", "y\n## C\n")
+        self.assertEqual(merge_append.resolve(text, 7)[1], 1)
+
     def test_text_without_block_unchanged(self):
         self.assertEqual(merge_append.resolve(HEAD, 7), (HEAD, 0))
 
@@ -80,6 +91,14 @@ class MainTest(unittest.TestCase):
         o, a, b = self.files(HEAD, HEAD + "## B\n", HEAD + "## C\n")
         self.assertEqual(merge_append.main([o, a, b, "7", "f"]), 0)
         self.assertEqual((self.dir / "A").read_text(), HEAD + "## B\n## C\n")
+
+    def test_base_without_trailing_newline_both_append(self):
+        base = HEAD + "## Z\nz"
+        o, a, b = self.files(base, base + "\n## B\nb\n", base + "\n## C\nc\n")
+        self.assertEqual(merge_append.main([o, a, b, "7", "f"]), 0)
+        self.assertEqual(
+            (self.dir / "A").read_text(), base + "\n## B\nb\n## C\nc\n"
+        )
 
     def test_identical_appends_once(self):
         o, a, b = self.files(HEAD, HEAD + "## B\n", HEAD + "## B\n")
