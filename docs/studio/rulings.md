@@ -2422,3 +2422,17 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A T19–T
 Regelbezug: R69, R316, R826, R877, R879, R884 · Kosten bei Irrtum: ein Messauftrag mehr.
 
 Entscheider: L0 · Anlass: Berichte lead-tech ORT-A, studio-coach · ADR: —
+
+## R887 · 2026-10-25 · Zusatz-Release REL-32 auf Nutzerauftrag, keine neue Entwicklung
+
+Ruling: Nutzerauftrag «zusätzliches Release mit den fertigen Schritten, nur das, keine neuen Entwicklungen». Auslegung: (1) **Umfang REL-32** = main lokal (REL-32a/b, `c4d50a8d`) plus die
+Branches, die laut state.md nur noch auf das Merge-Gate warten: `feat/seerecht` @ `8473afb0` (Save **v19**, R883), `docs/retro-47d29586` @ `b7e9fb6e`, `docs/haushalt-03` @ `0b839c29`. Nicht dabei:
+ORT-A, INSELPROBEN, I-201, Stadtrecht, I-197 (nicht fertig). (2) Findet das Gate Mängel, bleibt der Branch draussen; **keine Nacharbeit, keine neuen Umsetzungs-, Plan- oder Ideen-Starts** in dieser
+Session. (3) Der Push-Takt R816 (höchstens ein Push je Kalendertag; REL-31 heute live) wird auf ausdrücklichen Nutzerauftrag **einmalig für heute** aufgehoben; R816 gilt sonst unverändert (Auftrag
+ist seiner Natur nach einmalig, R863 greift nicht). Volles `make push-check` Exit 0 auf genau dem Push-Hash bleibt Pflicht (Verfassung §7.2). (4) Ablauf: `lead-qa` Gate Merge (Urteil, kein Fix) →
+`lead-production` mit `production-integrator` in `.worktrees/integrate` → `make push-check` → Browser-Ladeprobe → Push, CI, Pages.
+
+Verfassung berührt?: nein (R816 ist Handbuch-Regel) · Überschneidung mit offenen Paketen: Stadtplanung, INSELPROBEN (Save main + 1 = 20 beim späteren Merge)
+Regelbezug: R816, R817, R863, R883, R886 · Kosten bei Irrtum: zweiter Pages-Lauf heute; Seerecht-Revert per Hotfix.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
