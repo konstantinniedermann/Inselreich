@@ -1,5 +1,6 @@
 // Startkarte (Spec L1): Ziel, erste Schritte, Fortsetzen oder Neu; im Modus `help` nur Nachlesen. Keine Regeln.
 import { BUILDING_DEFS, BUILDING_IDS } from '../sim/defs/buildings';
+import { HONORS, HONOR_IDS } from '../sim/defs/honors';
 import { UNLOCKS } from '../sim/defs/unlocks';
 import { goalView } from '../sim/queries';
 import { buildingShown, nextUnlocks } from '../sim/unlocks';
@@ -80,7 +81,13 @@ export function startSteps(): string[] {
 }
 
 export type HelpField =
-  'help-now' | 'help-next' | 'help-goal' | 'help-tips' | 'help-signs' | 'help-steps';
+  | 'help-now'
+  | 'help-next'
+  | 'help-goal'
+  | 'help-tips'
+  | 'help-signs'
+  | 'help-steps'
+  | 'help-honors';
 
 export interface HelpSection {
   field: HelpField;
@@ -137,6 +144,14 @@ export function helpSections(world: World): HelpSection[] {
   );
   if (!settlers)
     sections.push({ field: 'help-steps', title: 'Erste Schritte', lines: startSteps() });
+  sections.push({
+    field: 'help-honors',
+    title: 'Ehrenbuch',
+    lines: [
+      'Meisterstücke über alle Partien, kein Spielvorteil, nur auf diesem Gerät',
+      ...HONOR_IDS.map((id) => HONORS[id].name),
+    ],
+  });
   return sections;
 }
 

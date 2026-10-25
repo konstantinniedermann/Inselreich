@@ -187,6 +187,9 @@ import { parseDevParams } from './devParams';
 import { createPerfProbe, exposeDevProbe, startAudioProbe } from './devProbes';
 import { loadSettings, resolveReduceMotion, saveSettings } from './settings';
 import { openSettings } from './settingsPanel';
+import { openHonorBook } from './honorBook';
+import { openHonorCard } from './honorCard';
+import { honorCount, honorHints, honorRows, menuLine } from './honorView';
 import { openMenu, type MenuActions } from './menu';
 import { closeAllModals, isModalOpen } from './modal';
 import {
@@ -326,6 +329,13 @@ function launch(
   if (!ctx) throw new Error('Canvas 2D nicht verfügbar');
 
   let settings = loadSettings();
+  const honorBook = openHonorBook(() => {
+    try {
+      return window.localStorage;
+    } catch {
+      return null;
+    }
+  });
   const world =
     loaded ??
     createWorld(Date.now() % 100000, {
@@ -526,6 +536,20 @@ function launch(
     },
     seed: () => world.seed,
     openGuide: (opener) => openHelp(opener),
+    honors: () => ({
+      line: menuLine(honorCount(honorBook.data(), honorBook.session())),
+      note:
+        honorBook.status() === 'ok'
+          ? null
+          : (honorHints(honorBook.status(), honorBook.data().run, world.seed)[0] ?? null),
+    }),
+    openHonors: (opener) =>
+      openHonorCard(gameEl, {
+        rows: honorRows(honorBook.data(), honorBook.session()),
+        count: honorCount(honorBook.data(), honorBook.session()),
+        hints: honorHints(honorBook.status(), honorBook.data().run, world.seed),
+        opener,
+      }),
   };
   /** Hilfe-Karte (Spec 12.1): HUD-Knopf, Taste `?`, Menü und Freischalt-Meldung; Esc schliesst, Fokus zurück zum Öffner. */
   const openHelp = (opener?: HTMLElement): void => {
