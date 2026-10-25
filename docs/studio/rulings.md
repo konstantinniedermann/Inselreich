@@ -2436,3 +2436,17 @@ Verfassung berührt?: nein (R816 ist Handbuch-Regel) · Überschneidung mit offe
 Regelbezug: R816, R817, R863, R883, R886 · Kosten bei Irrtum: zweiter Pages-Lauf heute; Seerecht-Revert per Hotfix.
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R888 · 2026-10-25 · Gate Merge REL-32: Seerecht draussen, Hotfix für zwei rote Tests auf main
+
+Ruling: Gate-Bericht `lead-qa` (`.studio/handoffs/2026-10-25-lead-qa-gate-REL-32.md`): (1) `docs/haushalt-03` @ `0b839c29` und `docs/retro-47d29586` @ `b7e9fb6e` **OK**, Merge in dieser Reihenfolge.
+(2) `feat/seerecht` @ `8473afb0` **draussen** (R887 (2)): `tests/sim/imports.test.ts` rot (`src/sim/council.ts` importiert `./islands`); Fix im Strang in einer Folgesession, danach neues Gate.
+(3) **main selbst rot** (`tests/sim/leverReads.test.ts` wegen `src/ui/council.ts:50`, `tests/ui/contrast.test.ts` wegen `.council-preview`; Herkunft UI-HAEPPCHEN-J, REL-32b). Auslegung von R887 (2):
+Die Behebung eines Regressionsfehlers in bereits abgenommenem Release-Code ist **Release-Arbeit, keine neue Entwicklung** (Verfassung §7.2: ohne grünen vollen Lauf kein Push). Paket
+**HOTFIX-REL32** an `lead-tech`, Umfang strikt auf die zwei Tests, eigener Branch von main, Task-Review, Teilbeleg. Kein weiterer Umbau. (4) Lehre für die Retro: Gate REL-32b lief nur mit
+gezieltem Teilbeleg; die Struktur-Tests (`imports`, `leverReads`, `contrast`) prüfen Querschnittsregeln und gehören in jeden Teilbeleg mit `src/`-Änderungen.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (`council.ts` sim), UI-HAEPPCHEN-J-Nacharbeiten (Plural `council.ts:50`)
+Regelbezug: R810, R887, Verfassung §7.2 · Kosten bei Irrtum: ein kleiner Fix-Commit mehr; Push verschiebt sich auf morgen.
+
+Entscheider: L0 · Anlass: Bericht lead-qa Gate REL-32 · ADR: —
