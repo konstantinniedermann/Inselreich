@@ -3,6 +3,8 @@
 Datum 2026-10-25 · Paket design-I-201 · Meilenstein M14 · Quelle: `docs/ideen.md` I-201, Rechnung
 [`2026-10-25-i201-festanlass-rechnung.md`](2026-10-25-i201-festanlass-rechnung.md) (Zahlen, Lagen A–E, Randfälle; hier
 übernommen, nicht neu gerechnet). Entscheide R-A, R-B, R-C (Rechnung §8). Kein neuer Save-Stand (`SAVE_VERSION` bleibt).
+Nachtrag Gate Spec (lead-qa BEDENKEN B1–B4, `.studio/handoffs/2026-10-25-lead-qa-gate-I-201.md`): Blattmodul
+`feastEffect.ts`, Kennungen `AK-FE*` (AK-F* belegt I-136), zwei Seeds, Rangfolge, Lage C2, Rohstoffmass, Randfälle.
 
 ## Spielerzweck
 
@@ -50,8 +52,26 @@ Knöpfe mit Preis und eigenem Sperrgrund statt einem Pflichtknopf.
    gilt in `sellPrice(world, good, n, X)` der Faktor m = max(boom, prefer, `sellPct`). Stapelt nicht (zwei Markttage = 125 %).
    Die Sättigung (`world.sellPct`) bleibt unverändert. Ohne Markttag bitgleich. Der Radius spielt keine Rolle (Kontor der
    Insel). `sell` ist der einzige Abnehmer in `src/sim`; UI-Preise (`src/ui/trade.ts`, `order.ts`) zeigen den Faktor mit.
-8. **Abriss** beendet die Wirkung sofort und löscht damit die Inselsperre dieser Kapelle. **Brand** pausiert die Wirkung
+8. **Blattmodul (Gate B1).** Die Wirkungsabfragen stehen in einem neuen Modul `src/sim/feastEffect.ts`: `feastState`,
+   `chapelWorks`, der Radiustest (`inChapelRadius`, für Häuser und Betriebe), `feastActive` (Haus, nur `ascension`),
+   `harvestActive(world, b)` und `marketActive(world, island)`. Es importiert nur `council` (`serviceRadiusOf`), `defs/*`,
+   `types` und `world`, nie `economy`, `levels`, `trade`, `feast` oder `townhall`; sonst entstünde der Zyklus
+   `levels → feast → economy → levels`. `levels.ts` (`cycleOf`) und `trade.ts` (`sellPrice`) importieren `feastEffect`;
+   `feast.ts` behält Aktion und Sperren (`holdFeast`, `feastBlockReason`) und re-exportiert die Abfragen (DRY, bestehende
+   Importe bleiben gültig).
+9. **Abriss** beendet die Wirkung sofort und löscht damit die Inselsperre dieser Kapelle. **Brand** pausiert die Wirkung
    (`chapelWorks` false), die Uhr läuft weiter (wie heute); die Inselsperre läuft dabei auch weiter.
+
+## Wahl und Nische des Markttags (Gate B4)
+
+- **Gewollt:** Der Markttag ist bewusst eine Nische, das Ventil der vollen oder eingangsknappen Kette. Die Ernte ist das
+  Werkzeug, wenn die Kette Luft hat; der Aufstieg, wenn Häuser steigen. Im Spätspiel ist die Lage «Werkstätten warten auf
+  Rohstoffe, Lager voll» häufig (Rohstoffe sind der Engpass), daher ist die Nische real und kein toter Knopf. Mit zwei
+  Kapellen auf einer Insel laufen Ernte und Markttag nebeneinander; die Wahl je Kapelle bleibt.
+- **Mass für Waren (alle, auch Rohstoffe):** Bewertung zum Grundpreis Verkauf `GOODS[g].sell`, ohne Sättigung.
+  Begründung: Eigene Rohstoffe sind Opportunitätskosten (was ihr Verkauf brächte); der Einkaufspreis gilt nur, wenn man
+  zukauft, und das tun die Szenarien nicht. Eine Formel für alle Waren hält den Test einfach. Folge gegenüber Rechnung §2
+  (Eingänge zum Einkaufspreis, 378): Die Ernte liegt im Test höher als +347, die Rangfolge ändert sich nicht.
 
 ## Werte (`src/sim/defs/feast.ts`)
 
@@ -70,8 +90,13 @@ Knöpfe mit Preis und eigenem Sperrgrund statt einem Pflichtknopf.
 | `market.scope`     | `'island'`               | –                        | wie Ernte                                   |
 
 Auswirkung Balancing-Test: keine. Der Controller hält nie ein Fest; ohne Fest sind `cycleOf` und `sellPrice` bitgleich,
-`tests/sim/balance.test.ts` bleibt unverändert grün, kein Ruling (Rechnung §5). Der Dominanztest AK-F1 ist der
+`tests/sim/balance.test.ts` bleibt unverändert grün, kein Ruling (Rechnung §5). Der Dominanztest AK-FE1 ist der
 Schutz bei jeder Wertänderung in `defs/feast.ts`.
+
+**Risiko (R553, Gate B3):** Die Rangfolge stützt sich auf die Rechnung und zwei Seeds je Lage. Sie kann bei Änderungen an
+Kartenerzeugung, Zyklen, Preisen oder Steuern kippen. Auslöser: AK-FE1 rot. Rückfall: `cyclePct` innerhalb 67 … 85 und
+`sellPct` innerhalb 115 … < 130 verstellen, bis AK-FE1 grün ist; jede Verstellung als Ruling durch L0. Reicht die
+Spannweite nicht, geht die Frage als Design-Befund an lead-design.
 
 ## Save (R-B)
 
@@ -107,14 +132,18 @@ Schutz bei jeder Wertänderung in `defs/feast.ts`.
 - **Abriss und Neubau zum Dauer-Erntefest:** möglich (Abriss löscht die Inselsperre), aber unrentabel: Neubau der
   Kapelle 300 Geld plus Baustoffe gegen netto +347 je Erntefest (Rechnung §4). Kein eigener Schutz.
 - **Alter Spielstand** mit `feastAt` ohne `feastKind`: lädt als laufendes Aufstiegsfest.
+- **Abriss während des Erntefests:** Wirkung endet im selben Tick, Betriebe laufen gegen c weiter und behalten `progress`;
+  die Inselsperre fällt mit der Kapelle (AK-FE6, AK-FE7).
+- **Laden mit laufendem Erntefest oder Markttag:** Die Wirkung gilt ab dem ersten Tick nach dem Laden weiter, abgeleitet aus
+  `feastAt` und `feastKind`; kein Zusatzfeld (AK-FE14).
 
 ## Abnahmekriterien
 
 Vitest (DOM-frei): `tests/sim/feastKinds.test.ts` (neu), `tests/sim/feastDominance.test.ts` (neu), bestehend
 `tests/sim/feast.test.ts`.
 
-- **AK-F1 Nicht-Dominanz** (`feastDominance.test.ts`, Pflicht). Drei feste Welten aus `createWorld(seed, { unlockAll: true,
-crisisLevel: 'off' })` mit festem Seed, Heimatinsel mit Kontor, eine Kapelle, Festbeginn T0, Fenster T0 … T0 + `FEAST_DURATION`:
+- **AK-FE1 Nicht-Dominanz** (`feastDominance.test.ts`, Pflicht). Vier feste Welten (A, B, C, C2) aus `createWorld(seed,
+{ unlockAll: true, crisisLevel: 'off' })`, je Welt **zwei feste Seeds** (Parametrisierung, R553), Heimatinsel mit Kontor, eine Kapelle, Festbeginn T0, Fenster T0 … T0 + `FEAST_DURATION`:
   - **A Wachstum:** ≥ 5 Häuser im Radius erfüllt und aufstiegsbereit innerhalb des Wirkfensters (Kosten, Dienste, neue
     Güter da), Steuer «normal»; ein Betrieb mit Zyklus im Radius ohne Eingänge (damit `harvest` gehalten wird). Verkauf: keiner.
   - **B Plateau:** alle Häuser im Radius Stufe 4; Lager Rum, Stoff, Glas je ≈ 50; Eingänge vorrätig; 2 Webereien,
@@ -123,58 +152,79 @@ crisisLevel: 'off' })` mit festem Seed, Heimatinsel mit Kontor, eine Kapelle, Fe
     Rohstoffbetrieb im Radius (Werkstätten auf `waitingInput`). Verkauf: 60 Rum, 60 Stoff, 40 Glas (Rechnung §2). Grund: Der
     Verkauf läuft in allen Läufen und schafft Lagerplatz; mit Eingängen gewönne dann die Ernte auch in C. Der Markttag
     gewinnt nur, wo die Ernte keinen Ausstoss bringt (Lager voll oder Eingänge knapp); genau das ist die Wahl.
-    Je Welt vier Läufe: kein Fest, `ascension`, `harvest`, `market`. In **allen vier** Läufen geschieht der Verkauf derselben
+  - **Läufe und Mass (alle Welten):** je Welt vier Läufe: kein Fest, `ascension`, `harvest`, `market`. In **allen vier** Läufen geschieht der Verkauf derselben
     Menge im Tick T0 nach dem Festaufruf, damit nur der Faktor zählt. Mass: Nettowert = ΔGeld + Σ_g ΔLager_g ×
     `GOODS[g].sell` gegen den Lauf ohne Fest am Tick T0 + `FEAST_DURATION` (Festpreis enthalten; der Aufstiegsvorsprung von 150 Ticks liegt
     darin, weil beide Läufe bis dahin aufgestiegen sind). Erwartung: A → `ascension` höchster
-    Nettowert, B → `harvest`, C → `market`; jede Art ist in genau einer Lage beste. Der Test prüft seine Vorbedingungen mit
+    Nettowert, B → `harvest`, C → `market`; unter A, B, C ist jede Art in genau einer Lage beste. Der Test prüft seine Vorbedingungen mit
     (alle `holdFeast` und `sell` liefern `ok`; in B erreicht im Ernte-Lauf kein Fertiggut die Lagergrenze; in C fertigt im
     Ernte-Lauf keine Werkstatt; in A sind die Häuser im Lauf ohne Fest bis T0 + `FEAST_DURATION` aufgestiegen; kein Brand,
     keine Krise im Fenster). Referenz der Erwartung: Rechnung §4, Tabelle Lagen A–C.
-- **AK-F2 Bitgleich ohne Art:** `holdFeast(w, id)` und `holdFeast(w, id, 'ascension')` ergeben dasselbe `serialize` wie der
+  - **C2 Plateau voll mit Eingängen (dokumentierte Nische):** wie C, aber Eingänge vorrätig wie in B; Verkauf 60/60/40.
+    Keine volle Rangfolge verlangt, nur `harvest` > `market` und das Band 0 < Netto(`harvest`) − Netto(`market`) ≤ 800. Das Band macht die Nische sichtbar:
+    Fällt der Abstand ≤ 0, verliert die Ernte ihren Platz; steigt er über 800, wird der Markttag zum toten Knopf. Beides ist
+    ein Drift-Befund mit Rückfall wie unter «Risiko».
+  - **Form der Erwartung:** nur Rangfolgen (beste Art je Lage, in C2 das Band), keine Beträge. Mass: siehe «Wahl und
+    Nische», alle Waren zu `GOODS[g].sell`. Gilt für beide Seeds.
+- **AK-FE2 Bitgleich ohne Art:** `holdFeast(w, id)` und `holdFeast(w, id, 'ascension')` ergeben dasselbe `serialize` wie der
   heutige Aufruf; das Ergebnis enthält kein `feastKind`. Alle bestehenden AK-I007-xx bleiben grün.
-- **AK-F3 Unbekannte Art:** `holdFeast(w, id, 'harbor')` → `{ ok: false, reason: 'Unbekannte Festart' }`, `JSON.stringify(w)`
-  unverändert.
-- **AK-F4 Waren vorab geprüft:** Rum 30, Stoff 7: Erntefest → «Zu wenig Stoff (7 / 15)», Rum bleibt 30; Rum 3, Stoff 0 →
+- **AK-FE3 Unbekannte Art:** `holdFeast(w, id, 'harbor')` → `{ ok: false, reason: 'Unbekannte Festart' }`, `JSON.stringify(w)`
+  unverändert; auch bei laufendem Fest an der Kapelle lautet der Grund «Unbekannte Festart» (Prüfreihenfolge Regel 2).
+- **AK-FE4 Waren vorab geprüft:** Rum 30, Stoff 7: Erntefest → «Zu wenig Stoff (7 / 15)», Rum bleibt 30; Rum 3, Stoff 0 →
   «Zu wenig Rum (3 / 10)». Markttag mit Glas 2 → «Zu wenig Glas (2 / 5)». Erfolg bucht genau `cost` ab.
-- **AK-F5 Sperren je Art:** Steuer «hoch» für alle Häuser im Radius sperrt nur `ascension`; Kapelle ohne Betrieb im Radius →
+- **AK-FE5 Sperren je Art:** Steuer «hoch» für alle Häuser im Radius sperrt nur `ascension`; Kapelle ohne Betrieb im Radius →
   `harvest` «Kein Betrieb im Umkreis»; Insel ohne Kontor → `market` mit dem Grund von `noKontorTrade`. `feastBlockReason(w,
 c, kind)` liefert für jede Art denselben Grund wie `holdFeast` und ändert die Welt nicht.
-- **AK-F6 Inselsperre:** zwei Kapellen K1, K2 auf einer Insel: nach Erntefest an K1 liefert K2 für `harvest` «Erntefest auf
+- **AK-FE6 Inselsperre:** zwei Kapellen K1, K2 auf einer Insel: nach Erntefest an K1 liefert K2 für `harvest` «Erntefest auf
   der Insel: Abklingzeit» bis Tick `feastAt + 1799`, ab `feastAt + 1800` ok; `market` und `ascension` an K2 sofort ok. Analog
-  Markttag. Auf einer zweiten Insel (`twoIslandWorld`) keine Sperre. Nach Abriss von K1 ist `harvest` an K2 sofort frei.
-- **AK-F7 Ernte wirkt und endet:** Betrieb Stufe 3 (c = 20) im Radius: `cycleOf` = 15 während `active`, 20 danach und
+  Markttag. Auf einer zweiten Insel (`twoIslandWorld`) keine Sperre. Nach Abriss von K1 ist `harvest` an K2 sofort frei. Brennt K1 während ihres Erntefests, bleibt die Sperre an K2
+  bestehen (Uhr läuft weiter).
+- **AK-FE7 Ernte wirkt und endet:** Betrieb Stufe 3 (c = 20) im Radius: `cycleOf` = 15 während `active`, 20 danach und
   ausserhalb des Radius bzw. auf anderer Insel; `max(1, …)`-Grenze mit c = 1 → 1. Mit Inselvorteil oder Ratsbeschluss wird
-  auf das Ergebnis von `effectiveCycle` abgerundet. Brand der Kapelle → c, nach Brandende wieder c'.
-- **AK-F8 Ernte stapelt nicht:** Über `holdFeast` verhindert die Inselsperre zwei Erntefeste; der Test setzt darum
+  auf das Ergebnis von `effectiveCycle` abgerundet. Brand der Kapelle → c, nach Brandende wieder c'. Abriss der Kapelle während des Erntefests: `cycleOf` im selben Tick c,
+  der Betrieb behält seinen `progress` (keine Einheit verloren, keine zusätzlich). Die Panel-Vorschau der nächsten Stufe
+  (`panelView.ts`, `effectiveCycle` mit `next.cycle`) zeigt bewusst kein Erntefest; nur `cycleOf` wirkt (Test oder Hinweis
+  im Plan).
+- **AK-FE8 Ernte stapelt nicht:** Über `holdFeast` verhindert die Inselsperre zwei Erntefeste; der Test setzt darum
   `feastAt = tick` und `feastKind = 'harvest'` direkt an zwei Kapellen mit überlappendem Radius (z. B. aus einem geladenen
   Stand) → `cycleOf` = 15, nicht 11.
-- **AK-F9 Fest während Produktion:** Betrieb mit `progress` = 17 (> c' = 15), Erntefest beginnt: im nächsten Schritt genau
-  eine Einheit, danach normaler Lauf; Summe über 600 Ticks = ⌊600/15⌋ ± 1 (Phase), keine Doppelung.
-- **AK-F10 Markttag-Faktor:** `sellPrice(w, 'rum', 10, X)` mit Markttag = Wert mit m = 125 (nachgerechnet); mit Boom 150 % →
+- **AK-FE9 Fest während Produktion:** Betrieb mit `progress` = 17 (> c' = 15), Erntefest beginnt: im nächsten Schritt genau
+  eine Einheit, danach normaler Lauf; Summe über 600 Ticks = ⌊600/15⌋ ± 1 (Phase), keine Doppelung. Der Überstand des
+  Fortschritts (hier 17 + 1 − 15) verfällt, weil `progress` bei Fertigung auf 0 springt (`production.ts`); «ohne Verlust»
+  heisst nur: keine Einheit geht verloren.
+- **AK-FE10 Markttag-Faktor:** `sellPrice(w, 'rum', 10, X)` mit Markttag = Wert mit m = 125 (nachgerechnet); mit Boom 150 % →
   Boom-Wert; auf einer Vorliebe-Insel mit 130 % für das Gut → gleicher Wert wie ohne Markttag; zwei Markttage = einmal 125;
   `world.sellPct` nach `sell` gleich wie ohne Markttag; ohne Markttag bitgleich.
-- **AK-F11 Arten nebeneinander:** Aufstiegsfest an K1 und Erntefest an K2 mit überlappendem Radius: Haus hat
+- **AK-FE11 Arten nebeneinander:** Aufstiegsfest an K1 und Erntefest an K2 mit überlappendem Radius: Haus hat
   `feastActive` true, Betrieb hat c'; ein Haus nur im Radius von K2 hat `feastActive` false.
-- **AK-F12 Art-Wechsel:** nach Erntefest und `tick ≥ feastAt + 1800` an derselben Kapelle `ascension` → kein `feastKind`,
+- **AK-FE12 Art-Wechsel:** nach Erntefest und `tick ≥ feastAt + 1800` an derselben Kapelle `ascension` → kein `feastKind`,
   Betriebe im Radius wieder c.
-- **AK-F13 Save:** Rundlauf erhält `feastKind` für `harvest` und `market`; alter Stand ohne `feastKind` lädt als
+- **AK-FE13 Save:** Rundlauf erhält `feastKind` für `harvest` und `market`; alter Stand ohne `feastKind` lädt als
   Aufstiegsfest. Abgewiesen (`ok: false`, kein Wurf): `feastKind` ohne `feastAt`, an einer Nicht-Kapelle, `'harbor'`, `5`.
   `SAVE_VERSION` unverändert.
-- **AK-F14 Determinismus:** je Art zweimal dieselbe Welt (Seed, Aktionen, 1800 Ticks) → gleiches `serialize`.
-- **AK-F15 Werte nur aus Defs:** Strukturtest wie «Aufbau von feast.ts»: `src/sim/feast.ts`, `src/sim/levels.ts`,
-  `src/sim/trade.ts` enthalten weder `75` noch `125` als Zahlenliteral, `feast.ts` zusätzlich weder `15` noch `'cloth'`,
+- **AK-FE14 Determinismus:** je Art zweimal dieselbe Welt (Seed, Aktionen, 1800 Ticks) → gleiches `serialize`. Zusätzlich je
+  Art: Fest halten, 300 Ticks, `serialize` → `deserialize`, weitere 900 Ticks; gleiches `serialize` wie der durchgelaufene
+  Lauf. Darin enthalten: ein geladener Stand mit laufendem Erntefest hat im ersten Tick nach dem Laden c' (`cycleOf`), ein
+  laufender Markttag den Faktor 125.
+- **AK-FE15 Werte nur aus Defs:** Strukturtest wie «Aufbau von feast.ts», auf dem Quelltext **ohne Kommentare** (Zeilen- und
+  Blockkommentare vorher entfernt): `src/sim/feast.ts`, `src/sim/feastEffect.ts`, `src/sim/levels.ts`, `src/sim/trade.ts`
+  enthalten weder `75` noch `125` als Zahlenliteral, `feast.ts` zusätzlich weder `15` noch `'cloth'`,
   `'glass'` oder `'rum'` (Kosten nur über `FEAST_KINDS[kind].cost`); `src/sim/defs/feast.ts` exportiert `FEAST_KINDS` und
-  `FEAST_KIND_IDS` mit den Werten oben (Test liest die Werte gegen die Tabelle).
-- **AK-F16 Regression:** `tests/sim/balance.test.ts` und die Baseline unverändert grün.
+  `FEAST_KIND_IDS` mit den Werten oben (Test liest die Werte gegen die Tabelle). Der bisherige Strukturtest «nur eine
+  Stelle Rum» (`feast.test.ts:295`) wird ersetzt durch «genau ein `takeStock`-Aufruf in `feast.ts`» (Abbuchung in einer
+  Schleife über `cost`).
+- **AK-FE16 Regression:** `tests/sim/balance.test.ts` und die Baseline unverändert grün.
+- **AK-FE21 Importstruktur (Gate B1):** Strukturtest auf die Importzeilen: `src/sim/levels.ts` und `src/sim/trade.ts`
+  importieren aus `./feastEffect`; `src/sim/feastEffect.ts` importiert weder `./economy`, `./levels`, `./trade`, `./feast`
+  noch `./townhall`; `src/sim/feast.ts` wird von `levels.ts` und `trade.ts` nicht importiert.
 
 Browser-Check (`qa-playtester`, Headless):
 
-- **AK-F17** Kapelle wählen: drei Knöpfe mit Preisen wie oben; ohne Stoff ist «Erntefest» gesperrt mit «Zu wenig Stoff
+- **AK-FE17** Kapelle wählen: drei Knöpfe mit Preisen wie oben; ohne Stoff ist «Erntefest» gesperrt mit «Zu wenig Stoff
   (x / 15)»; nach Klick auf «Erntefest» Restzeit und Art sichtbar, die beiden anderen Knöpfe zeigen «Fest läuft».
-- **AK-F18** Werkstatt im Radius zeigt «Erntefest: Zyklus 75 %», ausserhalb nicht; nach Festende (`FEAST_DURATION`) Zeile weg.
-- **AK-F19** Markttag halten, Handelsfenster der Insel: «Markttag 125 %» und höherer Verkaufspreis; nach Festende weg.
-- **AK-F20** Zweite Kapelle auf derselben Insel: «Erntefest» gesperrt mit «Erntefest auf der Insel: Abklingzeit».
+- **AK-FE18** Werkstatt im Radius zeigt «Erntefest: Zyklus 75 %», ausserhalb nicht; nach Festende (`FEAST_DURATION`) Zeile weg.
+- **AK-FE19** Markttag halten, Handelsfenster der Insel: «Markttag 125 %» und höherer Verkaufspreis; nach Festende weg.
+- **AK-FE20** Zweite Kapelle auf derselben Insel: «Erntefest» gesperrt mit «Erntefest auf der Insel: Abklingzeit».
 
 ## Nicht im Scope
 
@@ -188,18 +238,16 @@ Browser-Check (`qa-playtester`, Headless):
 
 ## Offene Punkte für Tech
 
-1. **Zirkulärer Import:** `cycleOf` (`levels.ts`) und `sellPrice` (`trade.ts`) brauchen die Abfrage «Erntefest über Betrieb»
-   bzw. «Markttag auf Insel». Empfehlung: zwei reine Funktionen `harvestActive(world, b)` und `marketActive(world, island)`
-   in `feast.ts`, sofern deren Importe (`council`, `economy`, `townhall`) keinen Zyklus mit `levels.ts`/`trade.ts` bilden;
-   sonst in ein kleines Modul ohne diese Importe auslagern.
+1. **Importzyklus:** entschieden (Regel 8, AK-FE21): Blattmodul `feastEffect.ts`. Offen für den Plan nur, ob weitere
+   Importeure von `feastState` (z. B. `src/ui/feast.ts`) direkt auf `feastEffect` umgestellt werden.
 2. **Leistung:** `cycleOf` läuft je Betrieb und Tick. Empfehlung: Kapellen je Insel filtern (`b.island`), nicht ganz
    `world.buildings`; kein Cache im Welt-Zustand (nicht JSON-pflichtig, abgeleitet).
 3. **`inChapelRadius`** heisst heute für Häuser; für Betriebe gleich verwenden (Parameter umbenennen).
-4. **`FEAST_RUM`:** wird durch `FEAST_KINDS.ascension.cost.rum` ersetzt. `tests/sim/feast.test.ts` und `src/ui/feast.ts`
-   importieren es; Empfehlung: Test-Importe auf `FEAST_KINDS` umstellen (Werte unverändert).
-5. **Strukturtest «greift nur an einer Stelle auf Rum zu»** (`feast.test.ts:295`) passt nicht mehr, wenn die Kosten generisch
-   iteriert werden (0 Treffer). Empfehlung: ersetzen durch «genau ein `takeStock`-Aufruf» (gleicher Schutzzweck).
-6. **AK-F1 Kalibrierung:** Lage A verlangt aufstiegsbereite Häuser, deren Aufstieg ohne Fest erst nach 300 Ticks käme; die
+4. **`FEAST_RUM`:** wird durch `FEAST_KINDS.ascension.cost.rum` ersetzt (L0 angenommen). `tests/sim/feast.test.ts:7` und
+   `src/ui/feast.ts` im selben Task umstellen, sonst bricht `tsc`.
+5. **Strukturtest Rum:** ersetzt durch «genau ein `takeStock`-Aufruf» (L0 angenommen, AK-FE15).
+6. **AK-FE1 Kalibrierung:** Lage A verlangt aufstiegsbereite Häuser, deren Aufstieg ohne Fest erst nach 300 Ticks käme; die
    Welten baut der Test mit `tests/sim/helpers.ts`. Die Verkaufsmengen in B weichen von 60/60/40 ab (Lager ≈ 50 erlaubt das
    nicht). Lage C ist bewusst inputknapp (lead-design-Abnahme): Rechnung §4 setzt in C einen vollen Ausgang voraus, der Verkauf
-   in allen Läufen würde ihn leeren.
+   in allen Läufen würde ihn leeren. Eigener Plan-Task mit Test-Helfer (`tests/sim/helpers.ts`) und Rot-Phase für die vier
+   Welten × zwei Seeds.
