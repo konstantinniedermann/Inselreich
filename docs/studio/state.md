@@ -203,8 +203,8 @@ Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine 
 
 1. **Release-Bündel (Push frühestens 2026-10-26, R816):** `feat/seerecht` @ `3167969e` (Gate OK, R893, Save 19), `fix/schiff-a1` @ `6290d513` (**nur mit Browser-Beleg** Frame-Zeiten x1/x4, R906),
    Doku-Branches `docs/coach-r886` @ `1c460542`, `design/ideen-18` @ `6f7d0818`, `docs/tiefe-3` @ `1ab3968a`, `docs/retro-f8716d75` @ `750d30ea`. Ablauf: `lead-qa` Gate Merge → `lead-production` + Integrator → `make push-check`.
-2. **I-201 Festanlass** (`lead-tech`, 15 Starts, R893): beim Ende **noch laufend** (Worktrees `.worktrees/i201` @ `e309a76b` mit ungecommitteten Änderungen in `feastEffect.ts`/`feastKinds.test.ts` = Eigentum des
-   I-201-Controllers, `i201-fe1` @ `c2492b1e` T05, `i201-ui` @ `63cdf688` T06). Vor Neustart Handoff `.studio/handoffs/2026-10-25-lead-tech-I-201.md` und Worktree-Status prüfen (R329).
+2. **I-201 Festanlass** (pausiert, R921; Budget-Rest 8): `feat/i201` @ `f4069522` (T01–T04), `feat/i201-fe1` @ `c2492b1e` (T05), `feat/i201-ui` @ `63cdf688` (T06). Zuerst Festindex (P-7, ADR, realistischer
+   Benchmark ≤ +50 %), dann Reviews T04/T06, Merges B/C → A, T07 Playtest, T08, Final-Review opus. Handoff `.studio/handoffs/2026-10-25-lead-tech-I-201.md`.
 3. **INSELPROBEN** (`feat/inselproben` @ `429eb13a`, Etappe 2 abgenommen R917): T12–T14 + Final-Review opus, Mehrbedarf ≈ 5 Starts; T14 Save = main + 1 nach Seerecht-Merge; Folgepaket PROBE-5 (R910).
 4. **ORT-A** (`feat/ort-a` @ `7cb15a5f`, pausiert R902, Rest 6 Starts): T20c (Lappen, Grasloch, R917), T19/T23 Messungen bei Load ≤ 4, T20b-2 Playtest, T24–T26.
 5. **Gates/Gegenlesen (testfrei, zuerst):** Gate Spec HAFEN (`design/hafen` @ `9c4f8bac`, R913), Gate Spec I-214 (`design/gruendungsbrief` @ `e168d5d2`, R915), Gate Spec FLAECHE (`design/flaeche` @ `d55abcd4`, R919),
@@ -237,7 +237,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Beim Session-Ende f8716d75 (rote Ampel) **kann weiterlaufen:** I-201-Controller (siehe Fortsetzung 2). Alle anderen Leads haben übergeben (Handoffs `.studio/handoffs/2026-10-25-*`).
+- Nichts aktiv. Session f8716d75 bei roter Ampel beendet; alle Leads haben übergeben (Handoffs `.studio/handoffs/2026-10-25-*`).
 
 ## Parallele Sessions
 

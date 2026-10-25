@@ -2361,3 +2361,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle Design-S
 Regelbezug: R803, R826, R886, R912 · Kosten bei Irrtum: drei passive Messgrössen.
 
 Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —
+
+## R921 · 2026-10-25 · I-201 pausiert; Festindex vor Abnahme
+
+Ruling: I-201 pausiert sauber (`feat/i201` @ `f4069522` T01–T04, `feat/i201-fe1` @ `c2492b1e` T05, `feat/i201-ui` @ `63cdf688` T06; Budget-Rest 8). `cycleOf` im Stress-Test 6,8× langsamer (lineare
+Gebäudesuche). Entscheid: **Festindex je Tick in `feastEffect.ts` (Plan P-7) ja**, mit ADR; Invalidierung bei `holdFeast`/`demolish`; Abnahme mit einem **realistischen Benchmark** (≈ 60 Betriebe, 300 Gebäude)
+plus Stress-Test, Ziel ≤ +50 % gegen main (R392-Logik). Wächter-Lockerung `imports.test.ts` um `feastEffect` (Präzedenz I-112) **bestätigt**; Plan-Nachzug T02 und Baseline-Liste 9 Dateien **ja**. Fortsetzung in der
+Folgesession: Festindex, Reviews T04/T06, Merges B/C nach A, T07, T08, Final-Review opus.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (`islands.ts`), I-210 (B4/B5), AUSBAU-LOGIK
+Regelbezug: R392, R673, R893 · Kosten bei Irrtum: ein ADR und ein Index mehr.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-201 · ADR: folgt (Festindex)
