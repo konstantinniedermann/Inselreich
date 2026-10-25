@@ -25,8 +25,12 @@ import paths
 CMD_MAX = 60
 TOP_N = 5
 REPO_ROOT = "/Users/KN/CAS/projekte/anno-clone"
-_INTERPRETER = re.compile(r"^(python[\d.]*|node|bash|sh|zsh|ruby|perl|deno|bun|tsx)$", re.I)
-_TOOL = re.compile(r"(?<![\w-])(vitest|vite|render-qa|testlock|pushcheck|loadsnap|unittest|testrun)(?![\w-])")
+_INTERPRETER = re.compile(
+    r"^(python[\d.]*|node|bash|sh|zsh|ruby|perl|deno|bun|tsx)$", re.IGNORECASE
+)
+_TOOL = re.compile(
+    r"(?<![\w-])(vitest|vite|render-qa|testlock|pushcheck|loadsnap|unittest|testrun)(?![\w-])"
+)
 _LINE = re.compile(r"^\s*(\d+)\s+(\d+(?:[.,]\d+)?)\s+(.*\S)\s*$")
 
 
@@ -51,7 +55,9 @@ def script_name(cmd: str) -> str:
             return rest[i + 1].rsplit("/", 1)[-1] if i + 1 < len(rest) else "-m"
         if not token.startswith("-") and (token.endswith(_SCRIPT_EXT) or "/" in token):
             return token.rsplit("/", 1)[-1]
-    if rest and not rest[0].startswith("-"):  # direkt nach dem Interpreter: Skript ohne Endung
+    if rest and not rest[0].startswith(
+        "-"
+    ):  # direkt nach dem Interpreter: Skript ohne Endung
         return rest[0].rsplit("/", 1)[-1]
     return program
 
@@ -105,7 +111,10 @@ def parse_snapshot(ps_text: str, load: float | None) -> dict:
 def format_line(snap: dict) -> str:
     load = snap["load"]
     shown = "unbekannt" if load is None else f"{load:.2f}"
-    top = "; ".join(f"{p['pid']} {p['cpu']:.1f}% {p['script']} [{p['klasse']}]" for p in snap["top5"])
+    top = "; ".join(
+        f"{p['pid']} {p['cpu']:.1f}% {p['script']} [{p['klasse']}]"
+        for p in snap["top5"]
+    )
     return (
         f"Lastprotokoll: Load {shown} · Top {TOP_N} CPU: {top or 'keine Daten'}"
         f" · Vitest-Worker: {snap['vitest_workers']}"
