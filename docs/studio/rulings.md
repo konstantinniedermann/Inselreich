@@ -2105,3 +2105,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (Sav
 Regelbezug: R722, R862, R896 · Kosten bei Irrtum: Spec-Umbau vor Plan.
 
 Entscheider: L0 · Anlass: Bericht lead-design I-210 · ADR: —
+
+## R900 · 2026-10-25 · INSELPROBEN: Budget +10, Bilanz-Hinweis T11b
+
+Ruling: (1) Budgetantrag vor Überschreiten (14 von 16) **genehmigt mit +10** (gesamt 26 von 31 Rest): +8 laut Antrag (T05-Delta, T11-Review, T06, T07, Final opus, Puffer 3) und +2 für (2). T05 grün über den
+R897-Rückfall (Ref-`kSwitch` 0,80, Punkte 0,80/0,90, keine Testlockerung) zur Kenntnis; die Paket-Grenzen-Definition hielt nicht — Beleg gehört in die Übergabe. (2) **T11b** (UI-Strang, Worker + Review): sichtbarer
+Bilanz-Hinweis, wenn Kasse < 0 das Bauen sperrt und Unterhalt + Zins den Ertrag übersteigen («Bauen gesperrt: Schulden — erst tilgen oder Paket fertigstellen»), mit AK und Kontrast-Test. Begründung R896 (0):
+die Todeszone darf nicht unsichtbar bleiben; kein Sim-Wechsel. (3) Ehrenbuch-Gutschrift bei Probenziel (Toast Meisterstück aus `run` der alten Partie): Klärung mit I-197/I-197b, Eintrag in
+`docs/beobachtungen.md` genügt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-197/I-197b, AUSBAU-LOGIK (Bilanz)
+Regelbezug: R896, R897 · Kosten bei Irrtum: zwei Starts.
+
+Entscheider: L0 · Anlass: Budgetantrag lead-tech INSELPROBEN · ADR: —
