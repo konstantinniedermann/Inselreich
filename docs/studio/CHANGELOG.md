@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-25 · Handbuch 1.77
+
+- Anlass: Kurz-Retro f8716d75 (V1–V3) und Dauerauftrag N-102; Auftrag COACH-R920
+- Datenbasis: `docs/studio/retros/2026-10-25-session-f8716d75-ende.md`, `docs/studio/metriken/S-2026-10-25-f8716d75.md`
+- Ruling: R920, R922
+- Änderungen: STUDIO.md Briefing-Standard: Zeilen «Messfenster einfordern» (V1), «Spec-Berichte» mit Pflichtzeile Rulings-Abgleich (V2), «Design-Instanzen» (V3, ab 150k Folgeinstanz), «Dauerauftrag Headless-Chrome» (R922). `templates/briefing.md` Pflichtzeilen dazu. Alle drei Vorschläge passiv ohne Experiment-Platz. Basis `docs/coach-r886` (1.76)
+
+## 2026-10-25 · Persona qa-playtester 1.10
+
+- Anlass: Dauerauftrag R922 (liegengebliebene Headless-Chrome); Auftrag COACH-R920
+- Datenbasis: Ruling R922, N-102
+- Ruling: R922
+- Änderungen: Schritt «Alle gestarteten Prozesse beenden» um Hinweis auf fremde Headless-Chrome (`kill <PID>`, Grenzen) ergänzt
+
 ## 2026-10-25 · Handbuch 1.76
 
 - Anlass: Kurz-Retro session-47d29586-ende, V3 (Ampel Cache-Write 5 min Historie rot, dritte Retro in Folge); Auftrag COACH-R886
