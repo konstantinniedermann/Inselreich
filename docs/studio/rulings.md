@@ -2277,3 +2277,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT, FIX
 Regelbezug: R896, R898, R909, R912 · Kosten bei Irrtum: Neu-Pinnen aller Seed-Welten.
 
 Entscheider: L0 · Anlass: Bericht lead-design HAFEN · ADR: —
+
+## R914 · 2026-10-25 · Gate Spec AUSBAU-LOGIK BEDENKEN angenommen
+
+Ruling: Gate-Bericht `.studio/handoffs/2026-10-25-lead-qa-gate-spec-ausbau-logik.md` **BEDENKEN angenommen**. Spec-Nachtrag vor dem Plan durch die laufende `lead-design`-Instanz (Rest 1 Start, Fortsetzung
+nach R912 zulässig), verbindlich **B1–B6**: B1 Save main + 1 mit Migration/Abweisung und Test (AK-AL-22/-23 neu fassen, R908 E4); B2 Schnitte neu ordnen — Stufe 4 vor AL-2 oder AK aufteilen, AL-2 und AL-6
+teilen (auch B8); B3 eine Prüfreihenfolge für Checkliste, Tooltip und `upgradeBuilding` mit AK; B4 Sperrgrund-AK je Bedingungsart (Wald/Gras/Gebirge, Feuerwache, Kolonie ohne Haus, Chip bei Nicht-Fischern,
+`levelChecklist.test.ts`) — R896 (0); B5 k-Wechsel mitten im Zyklus mit AK (kein doppelter/verlorener Ertrag); B6 Mess-AK für Abwärtsspirale und Wertgrenzen (R553). B7/B9 klärt der Plan, B10–B12 im
+Nachtrag soweit klein. **Neue AK-Nummern** fortlaufend ab AK-AL-35 (R417, L0-Vorgabe). `lead-qa` liest den Nachtrag in der Folgesession einmal gegen.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, I-210, Zukaufpreis, GEBAEUDE-VARIANZ, FLAECHE, Save-Kette
+Regelbezug: R417, R553, R896, R908, R912 · Kosten bei Irrtum: ein Gegenlese-Start.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa AUSBAU-LOGIK · ADR: —
