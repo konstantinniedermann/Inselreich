@@ -2398,3 +2398,17 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette (H
 Regelbezug: R803, R826, R862, R906, R911, R916, R918, R920 · Kosten bei Irrtum: ein Test-Controller-Platz eine Welle später belegt.
 
 Entscheider: L0 · Anlass: Nutzer «mach weiter mit dem plan» · ADR: —
+
+## R924 · 2026-10-25 · Gates Spec HAFEN, FLAECHE, I-214 BEDENKEN; GV und AL «Plan frei»
+
+Ruling: (1) **HAFEN** BEDENKEN angenommen (`.studio/handoffs/2026-10-25-lead-qa-gate-spec-hafen.md`): Nachtrag Auflagen 1–2 (Save relativ main + 1, Alt-AK mit Meilenstein) durch `lead-design`; Plan-Auflagen
+(AK-HF-12 Messung zuerst in S2, AK-HF-11, Randfälle, AK-HF-22 per Name, Seed-Suche) gehen in den Plan; Reihenfolge laut Bericht. (2) **FLAECHE** BEDENKEN angenommen: Nachtrag Auflagen 1–3 (Save relativ,
+Vitest-AK Platzhinweis und Kontrast, AK Neu-Pins nur per Ruling); neue AK-Nummern ab **AK-FL-43** fortlaufend; Auflagen 4–7 in den Plan. (3) **I-214** BEDENKEN angenommen: Nachtrag A1–A7; A6 **ja**: neue
+G0-Codes als `IR2`, Golden AK-PB2 wird bewusst neu gesetzt, Decoder lehnt `F1` mit `G≠0` ab; A4 versionsneutrale Konstante (`SAVE_V_CHARTER`). Je Nachtrag einmal Gegenlesen `lead-qa`, kein neues Gate.
+(4) **GEBAEUDE-VARIANZ** und **AUSBAU-LOGIK** «Plan frei»; AK-AL-49 neu fassen ohne Zukauf-Voraussetzung (Wächter gegen Preisänderung); Plan-Notizen aus beiden Gegenlese-Berichten gehen in die Pläne;
+Spec-Korrekturen (GV Abschnitt 1, AL Z. 405) im Plan-Worktree mitziehen. Plan AUSBAU-LOGIK jetzt (`lead-tech` opus, Budget 3), Plan GV beim nächsten freien Platz.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette (Nummern nur per Merge-Reihenfolge, R909), INSELPROBEN-Pins, I-197b
+Regelbezug: R896, R909, R913, R915, R916, R918, R919 · Kosten bei Irrtum: je ein Nachtrag mehr.
+
+Entscheider: L0 · Anlass: Gate-Berichte lead-qa (HAFEN, FLAECHE, I-214, Gegenlesen GV/AL) · ADR: —
