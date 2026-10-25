@@ -8,11 +8,11 @@ Stufe 1 = heutiger Bau, ohne Dauerbedingung. Kosten, c und u: Rechnung (a); Stan
 
 ### Fischerhütte (`fisher`)
 
-| Stufe          | Bedingung                                                                    | Begründung im Spielbild                                               | Merkmal                                 |
-| -------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------- |
-| 2 (c 24, u 7)  | 50 Geld, 3 Holz, 1 Wz, Stoff 2 │ Siedler ≤ 8 │ ≤ 1 andere F. d ≤ 2           | Netz aus Tuch, Gesellen flicken es; zwei Hütten teilen den Fischgrund | grosses Netz am Trockengestell          |
-| 3 (c 16, u 9)  | 65 Geld, 4 Holz, 2 Wz, 2 Stein, Stoff 2 │ Bürger ≤ 8 │ ≤ 1 andere F. d ≤ 3   | Boot mit Segel fährt weiter hinaus, braucht Steg und Meister          | Ruderboot am Steinsteg                  |
-| 4 (c 12, u 11) | 120 Geld, 6 Holz, 3 Wz, 4 Stein, Stoff 3 │ Kaufleute ≤ 8 │ 0 andere F. d ≤ 3 | grosses Segelboot braucht den Fanggrund allein, Kai und Räucherei     | Segelboot am Kai, Räucherkate mit Rauch |
+| Stufe          | Bedingung                                                                    | Begründung im Spielbild                                               | Merkmal                               |
+| -------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------- |
+| 2 (c 24, u 7)  | 50 Geld, 3 Holz, 1 Wz, Stoff 2 │ Siedler ≤ 8 │ ≤ 1 andere F. d ≤ 2           | Netz aus Tuch, Gesellen flicken es; zwei Hütten teilen den Fischgrund | grosses Netz am Trockengestell        |
+| 3 (c 16, u 9)  | 65 Geld, 4 Holz, 2 Wz, 2 Stein, Stoff 2 │ Bürger ≤ 8 │ ≤ 1 andere F. d ≤ 3   | Boot mit Segel fährt weiter hinaus, braucht Steg und Meister          | kleines Segelboot am Steinsteg        |
+| 4 (c 12, u 11) | 120 Geld, 6 Holz, 3 Wz, 4 Stein, Stoff 3 │ Kaufleute ≤ 8 │ 0 andere F. d ≤ 3 | grosses Segelboot braucht den Fanggrund allein, Kai und Räucherei     | grosses Segelboot am Kai, Räucherkate |
 
 ### Jagdhütte (`hunter`, Höchststufe 3)
 

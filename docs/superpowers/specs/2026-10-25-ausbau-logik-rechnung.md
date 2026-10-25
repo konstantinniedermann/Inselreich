@@ -315,6 +315,8 @@ davon 3 bzw. 2 Fischer; Ø Gebühr heute 2,6 Stück.
   kein Treffer; `rg -n "upgradeBuilding|level" tests/sim/controller.ts` → kein Treffer. Der Controller (`buildColony`)
   baut nie aus; Stufe-1-Standortregeln und alle Grundwerte bleiben unverändert. Der Test bleibt grün, sofern die
   Umsetzung Stufe 1 nicht berührt (Fischer: Abstandsregel nur ab Stufe 2).
+- **Korrektur lead-design:** `tests/sim/balance-upgrade.test.ts` (AK-M11B-01, Pin M-15) baut Fischer auf Stufe 2 aus und
+  liest `fee`; ab AL-2 neu messen und per Ruling setzen (Spec E9).
 - Sonst betroffen (Umsetzung, nicht Balancing): `upgrade.test.ts`, `unlock-timeline.test.ts` (`upgrade4`),
   `save.test.ts`, Tipp U3 «gegen Stoff ausbauen» (`unlocks.ts`), `docs/spielwerte.md` «Ausbau».
 - **Spielstand:** `level ∈ {2,3}` → `{2,3,4}` (`save.ts:577`), Jagdhütte nur bis 3. Kein neues gespeichertes Feld (k

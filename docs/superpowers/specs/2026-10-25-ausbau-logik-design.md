@@ -134,11 +134,16 @@ Reihenfolge in `buildingUpkeep`, erster Treffer gilt, **nicht gestapelt**:
 
 Prüfreihenfolge, erster Treffer gewinnt, bei `fail` bleibt die Welt unverändert (`JSON.stringify` gleich):
 
-1. «Gebäude nicht gefunden»; 2. «Kann nicht ausgebaut werden» (kein `LEVELS`-Eintrag); 3. «Höchste Stufe erreicht»
-   (`g = 1 + LEVELS[defId].length`: Jagdhütte 3, sonst 4); 4. Freischaltung der Zielstufe (`functionLock`, lockText);
-2. «Gebäude brennt»; 6. erste verletzte Dauerbedingung der Zielstufe (Text wie Checkliste, z. B. «Kein Bürgerhaus im
-   Arbeitsweg (nächstes 11 Felder, nötig ≤ 8)»); 7. Geld/Baustoffe (`checkAfford`, Text wie heute); 8. fachliche Ware «Zu
-   wenig Stoff (1 / 2)»; 9. Erfolg: `pay` + `takeStock`, `b.level = g + 1`, `progress`/`eff`/`state` bleiben.
+1. «Gebäude nicht gefunden».
+2. «Kann nicht ausgebaut werden» (kein `LEVELS`-Eintrag).
+3. «Höchste Stufe erreicht» (`g = 1 + LEVELS[defId].length`: Jagdhütte 3, sonst 4).
+4. Freischaltung der Zielstufe (`functionLock`, lockText).
+5. «Gebäude brennt».
+6. Erste verletzte Dauerbedingung der Zielstufe (Text wie Checkliste, z. B. «Kein Bürgerhaus im Arbeitsweg (nächstes 11
+   Felder, nötig ≤ 8)»).
+7. Geld/Baustoffe (`checkAfford`, Text wie heute).
+8. Fachliche Ware «Zu wenig Stoff (1 / 2)».
+9. Erfolg: `pay` + `takeStock`, `b.level = g + 1`, `progress`/`eff`/`state` bleiben.
 
 Ein Betrieb mit k < g kann weiter ausbauen, sobald die Bedingungen der Zielstufe stimmen (Monotonie: dann auch alle
 darunter).
@@ -189,7 +194,7 @@ Je Gebäudetyp (11) eine Tabelle «Stufe → Bedingung (Baustoff │ Fachkräfte
 sichtbares Merkmal»: [Anhang 01](2026-10-25-ausbau-logik-design/anhang-01-typtabellen.md). Der Anhang ist verbindlicher
 Teil der Spec; Kosten, c und u aus Rechnung (a), Standort aus R4, Merkmal aus dem Nachtrag lead-design. Beispiel
 Fischerhütte Stufe 3: 65 Geld, 4 Holz, 2 Werkzeug, 2 Stein, Stoff 2 │ Bürgerhaus ≤ 8 │ ≤ 1 andere Fischerhütte mit d ≤ 3 →
-«Boot mit Segel fährt weiter hinaus, braucht Steg und Meister» → Ruderboot am Steinsteg.
+«Boot mit Segel fährt weiter hinaus, braucht Steg und Meister» → kleines Segelboot am Steinsteg.
 
 ## Vorgabe an lead-art
 
@@ -200,8 +205,9 @@ Ersetzt `drawLevelTopper` (Anbau vorn links, Steinsockel, Fahne) in `src/render/
    Elemente). Keine Fahne.
 2. Stufe 3 zeigt zusätzlich Stein (Sockel, Kai, Schornstein), weil Stufe 3 Steinbau ist; Stufe 4 der Werkstätten zeigt
    Glasfenster, weil Glas verbaut ist.
-3. Merkmale je Typ und Stufe: Spalte «Merkmal» der Typ-Tabellen (Anhang 01; 11 Typen, 32 Merkmale). Offener Punkt für lead-art:
-   Fischer Stufe 3 «Ruderboot» bei Ware «Segel» — Empfehlung: Ruderboot mit kleinem Hilfssegel.
+3. Merkmale je Typ und Stufe: Spalte «Merkmal» der Typ-Tabellen (Anhang 01; 11 Typen, 32 Merkmale). Fischer: Stufe 3
+   kleines Segelboot am Steinsteg (Segel = verbauter Stoff), Stufe 4 grosses Segelboot am Kai; Bootgrösse unterscheidet
+   die Stufen.
 4. Aufsätze mit festem Ankerpunkt je Typ, innerhalb der Gebäudehülle; drehen mit dem Gebäude (GEBAEUDE-VARIANZ, 90°) und
    gelten auf jeder Formvariante.
 5. «Läuft wie Stufe k»: Merkmal bleibt sichtbar (gebaut ist gebaut); kein eigener Render-Effekt im MVP.
@@ -428,6 +434,5 @@ Jede Zeile hat eine Zahl, die der Spieler auf der Karte nachzählen kann; kein G
 
 ## Offene Punkte
 
-- Fischer Stufe 3 Merkmal «Ruderboot» bei Ware «Segel»: Empfehlung Hilfssegel (lead-art, Vorgabe Punkt 3).
 - Weidezahlen nach FLAECHE nachjustieren (Rechnung, Annahmen).
 - Laufzeit der k-Abfrage (Häuser und Kacheln je Betrieb): Tech wählt Takt/Ereignis/Lesen nach R5 und misst im Plan.
