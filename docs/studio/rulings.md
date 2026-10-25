@@ -2458,3 +2458,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: INSELPROBEN (
 Regelbezug: R599, R862, R894 · Kosten bei Irrtum: eine Rechnung ohne Verwendung.
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-19 · ADR: —
+
+## R929 · 2026-10-25 · FIX-SCHIFF-A1 Browser-Beleg erfüllt; Gate Merge REL-33
+
+Ruling: Browser-Beleg (`.studio/handoffs/2026-10-25-lead-tech-FIX-SCHIFF-A1-beleg.md`) **erfüllt**: Branch gleitet (0,77 bzw. 3,07 px/Frame konstant, 1,4 % bzw. 0,6 % Frames ohne Bewegung gegen 83,6 % bzw.
+33,7 % auf main), Frame-Zeit unverändert 16,7 ms. Vorbehalt aus R906 aufgehoben. **Release-Bündel REL-33** zum **Gate Merge** an `lead-qa` (Budget 1): `feat/seerecht` @ `3167969e` (Save 19), `fix/schiff-a1` @
+`6290d513`, `docs/coach-r920` @ `ea7a4ea4` (enthält `docs/coach-r886`), `design/ideen-19` @ `2f5a1858` (enthält `design/ideen-18`), `docs/tiefe-3` @ `1ab3968a`, `docs/tiefe-4` @ `3e03683d`,
+`docs/retro-f8716d75` @ `750d30ea`. Danach `lead-production` + Integrator, `make push-check` auf dem gebündelten Hash; Push frühestens 2026-10-26 (R816). I-201-Benchmark ab jetzt bei Last ≤ 4.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN (S3 nach SEERECHT, S5/S6 nach A1), INSELPROBEN T14 (Save main + 1), Save-Kette
+Regelbezug: R816, R893, R906, R909 · Kosten bei Irrtum: ein Release-Bündel neu zusammenstellen.
+
+Entscheider: L0 · Anlass: Bericht lead-tech FIX-SCHIFF-A1 · ADR: —
