@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-23 · Handbuch 1.72
+
+- Anlass: Nutzerauftrag (Dauerauftrag, Fokus kreativer Kapazität); setzt 1.71 voraus (Branch `docs/rueckkanal`, Release REL-30)
+- Datenbasis: Nutzerauftrag, Briefing DAUERAUFTRAG
+- Ruling: R862, R863
+- Änderungen: STUDIO.md „Autonomie“ Punkt 5: Nutzeranweisungen gelten als Dauerauftrag (Ruling mit Vermerk, state.md „Daueraufträge“, Regeln mit Dauerwirkung ins Handbuch); „Discovery-Strang“: Fokus freier Kapazität auf Spieltiefe, Spielmodi, Erweiterungen, Web-Recherche `TIEFE-nn` ausserhalb der Ideen-Runden-Grenze, keine Playtests als Ideen-Input, Schweigen = Zustimmung (schärft R445); Output-Style `projektleiter.md` je eine Zeile
+
 ## 2026-10-23 · Handbuch 1.71
 
 - Anlass: Auftrag TOOL-RUECKKANAL (Kurz-Retro session-3b332328-ende, B1 und B2)

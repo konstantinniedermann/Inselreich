@@ -234,8 +234,6 @@ R722 nur das Restgeld und brechen die Vergleichbarkeit der Proben.
 - Nutzen/Aufwand: Entscheide mutig statt vorsichtig · S · ≈ 50 Tools
 - Entscheid: R797/R806 eingeplant: UI-HAEPPCHEN-H P1 (Gate Kurzdesign R807); P1 fertig fürs Bündel REL-30 (R852)
 
-> > > > > > > 66c4df45
-
 ### I-153 · eingeplant (R805, SEERECHT) · Rat: «Seerecht» als dritte Karte auf Stufe 4
 
 - Bereich: Inhalt · Säule: Wirtschaft, Steuern und Handel · Quelle: Genre-Mechanik Handelsprivileg; README «Rat» (kein Beschluss betrifft Fernhandel)

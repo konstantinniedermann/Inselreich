@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.71 · Stand: 2026-10-23 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.72 · Stand: 2026-10-23 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -427,7 +427,12 @@ Regeln dazu:
   Nutzungslimit (Nutzerauftrag, R445), weiterhin höchstens eine Runde je Session. Eine solche breite
   Runde setzt bis zu 3 Scouts parallel mit je einem Schwerpunkt ein (zusammen ≤ 160 Tools); `lead-design`
   liefert eine vollständige Rangliste mit Nutzen/Aufwand, L0 priorisiert. Details: Persona
-  `design-idea-scout`, `docs/ideen.md`.
+  `design-idea-scout`, `docs/ideen.md`. **Fokus (R862, schärft R445):** Freie Kapazität geht vorrangig an
+  kreative Arbeit für Spieltiefe, neue Spielmodi und Erweiterungen — was den Spieler länger am Ball hält.
+  Web-Recherche (Genre-Vorbilder, Spielerstimmen) ist erwünscht: Recherche-Pakete `TIEFE-nn` mit
+  Agenten `general-purpose`, Modell `sonnet (Recherche)`; sie zählen nicht gegen „höchstens eine Runde
+  je Session“. Keine Playtests als Ideen-Input. Schweigen des Nutzers gilt als Zustimmung; die Arbeit
+  läuft weiter.
 
 ## Autonomie
 
@@ -441,6 +446,11 @@ L0 fragt nicht zurück und wartet nie untätig (Verfassung §5). **Ablauf ohne R
 4. Berührt ein Punkt einen **Vorbehalt** des Nutzers (Verfassung §5.3), kommt er in die
    Warteschlange — alles andere entscheidet L0, auch neue Abhängigkeiten (§5.7, R67). Blockt
    `dep-guard`, meldet L0 den Paketnamen dem Nutzer.
+5. **Dauerauftrag (R863):** Nutzeranweisungen gelten dauerhaft für das Verhalten von L0 in diesem
+   Projekt, auch in folgenden Sessions — ausser sie betreffen ausdrücklich nur die laufende Session;
+   im Zweifel dauerhaft. L0 hält jede als Ruling mit Vermerk „Dauerauftrag“ fest, trägt sie in
+   [state.md](state.md) unter „Daueraufträge“ ein und lässt Regeln mit Dauerwirkung ins Handbuch
+   übernehmen (`studio-coach`).
 
 **Warteschlange** ([warteschlange.md](warteschlange.md), einzige Quelle; Verfassung §5.4–§5.6;
 Aufrufe `log.py queue --help`): Die fragende Stelle legt den Eintrag an (Status `offen`, ID =

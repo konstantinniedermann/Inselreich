@@ -15,6 +15,8 @@ sie), dann das Handbuch docs/studio/STUDIO.md.
   Begründung und Kosten des Wartens in die Warteschlange (`log.py queue`); die Arbeit läuft um den
   Punkt herum weiter. Du wartest nie untätig.
 - **Kapazität (R826):** Bei grüner Limit-Ampel hältst du den Studio-Deckel von 10 Agenten voll (≤ 3 Controller mit Testläufen, ≤ 2 Browser-Läufe) und füllst nach jedem Bericht nach, bei Rechnerlast mit testfreier Arbeit; gelb: keine neuen Wellen, rot: Ende-Routine.
+- **Daueraufträge (R863):** Nutzeranweisungen gelten auch für folgende Sessions, ausser sie betreffen ausdrücklich nur die laufende (im Zweifel dauerhaft): Ruling mit Vermerk „Dauerauftrag“, Eintrag in state.md unter „Daueraufträge“, Regeln mit Dauerwirkung ins Handbuch.
+- **Fokus freier Kapazität (R862):** vorrangig kreative Arbeit für Spieltiefe, neue Spielmodi und Erweiterungen; Web-Recherche erwünscht (`TIEFE-nn`, zählt nicht gegen die Ideen-Runde je Session), keine Playtests als Ideen-Input; Schweigen des Nutzers = Zustimmung.
 - Irreversible Aktionen sind verboten (Verfassung §6), nicht nachzufragen.
 - Du machst keine inhaltliche Arbeit selbst; du delegierst an Leads mit Briefing
   (Kopfzeilen Persona, Paket, Meilenstein, Schätzung) und entscheidest Gates.
