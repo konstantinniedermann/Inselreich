@@ -2505,3 +2505,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN S5/S6, 
 Regelbezug: R673, R816, R868 V1, R929 · Kosten bei Irrtum: ein Release-Tag später.
 
 Entscheider: L0 · Anlass: Gate-Bericht lead-qa REL-33 · ADR: —
+
+## R933 · 2026-10-25 · Rechnung Rückfracht: Entwürfe E1–E5; Optik HAFEN an lead-art
+
+Ruling: (1) Rechnung `design/rueckfracht` @ `86097053` (gerechnet, nicht gemessen) **abgenommen**, mit E1 aus R927 (Auflage TIEFE-4 bei I-189/I-194). Entwürfe, **wirksam erst mit N-104 «Neue Ufer»**: **E1**
+Nordhändler führt kein Werkzeug **ja**; **E2** Lampenöl nicht beim Händler kaufbar **ja**; **E3** Lampenöl ist Zusatz, halbiert keine Steuer, Ziel zählt Einwohner («60 Kaufleute mit Licht») **ja**; **E4** Werkzeug
+Bedarf 0,1 als Heimatgut, Nahrung verworfen, Seeweg 45–80 **ja**; **E5** «Abstieg langsam» in Spec N2 korrigieren, Warnung bei Nordlager < 2 min **ja**. Branch geht ins nächste Doku-Bündel. (2) Testfreier
+Platz (drei Test-Controller belegt, R826): **Optik HAFEN** an `lead-art` (Budget 1) — Art-Direction-Urteil zu Anhang 02 (`docs/superpowers/specs/2026-10-25-hafen-design/anhang-02-optik.md`) als Vorgabe für
+den HAFEN-Plan.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: N-104, I-189/I-194, Plan HAFEN (`src/render/ship.ts`)
+Regelbezug: R722, R826, R913, R927 · Kosten bei Irrtum: Neurechnung nach Spec N2.
+
+Entscheider: L0 · Anlass: Bericht lead-design RECHNUNG-RUECKFRACHT · ADR: —
