@@ -101,8 +101,8 @@ direkt und braucht nur zwei neue Regeln (Zins, Tilgen). «Karge Heimat» macht S
   Szenario-Startwerte (Kasse, Schuld) setzt dieselbe Startfunktion; `createWorld` ohne Probe bleibt unverändert.
 - **Bestanden:** im ersten Tick, nach dem die Ziel-Bedingung gilt. Probe und Tagesinsel lesen die einmaligen Flaggen. Das
   Szenario prüft **den aktuellen Stand**: jetzt ≥ 50 Bürger und Schuld = 0 (sonst reicht Abriss nach Ziel 1, §5.4).
-  Ergebnis `result = { outcome: 'passed', tick: world.tick }`. Die Prüfung läuft im Tick nach den Ziel-Flaggen
-  (`tick.ts:21-29`) in einem eigenen Schritt `tickChallenge` am Ende von `step`.
+  Ergebnis `result = { outcome: 'passed', tick: world.tick }` (Tickwert nach `step`, §10). Die Prüfung läuft in einem eigenen Schritt `tickChallenge` als letzter Aufruf von `step`, hinter `checkWin`
+  (`tick.ts:21-29`) und `tickUnlocks`.
 - **Verloren:** nur mit Frist (Szenario). Reihenfolge im selben Tick: erst Bestehen prüfen, dann Frist. Gilt nach der
   Bestehen-Prüfung `world.tick >= deadlineTicks` ohne `result`, folgt `result = { outcome: 'failed', tick: world.tick }`.
   Wer genau im Frist-Tick besteht, hat bestanden.
@@ -120,7 +120,7 @@ direkt und braucht nur zwei neue Regeln (Zins, Tilgen). «Karge Heimat» macht S
 | 4   | «Gewürzstadt»    | 345   | `spice`     | mild   | Ziel 3, Schiffe und Fremdinseln               |
 | 5   | «Feuerschale»    | 777   | `monument`  | normal | lange Probe, Denkmal                          |
 
-- **Karten-Nummern sind Vorschläge.** Abnahme (§10, AK 3): `generateMap(seed).seedUsed === seed` und eine Prüfung im
+- **Karten-Nummern sind Vorschläge.** Abnahme (§10, AK-IP-03): `generateMap(seed).seedUsed === seed` und eine Prüfung im
   Browser, dass die Karte spielbar wirkt. Fällt eine Nummer durch, nimmt die Umsetzung die nächste Zahl, für die beides gilt,
   und trägt sie in die Def ein (Entscheid der Umsetzung, im Bericht nennen).
 - Krisen folgen dem Seed (`rollCrisis`, `src/sim/crises.ts:46-52`): gleiche Probe, gleiche Krisenzeitpunkte und -arten für
@@ -148,12 +148,14 @@ direkt und braucht nur zwei neue Regeln (Zins, Tilgen). «Karge Heimat» macht S
   Die Ablage zählt Starts je Tag (beim Start, nicht beim Laden). Der Teilen-Text nennt den Tageswert. Verpasste Tage
   bestrafen nicht (keine Serie mit Verlust).
 - **Grosse Zahlen:** Heute liegen Kartennummern bei 0 … 99 999 (`src/ui/app.ts:326`). Die Tageszahl ist achtstellig; die
-  Kartenerzeugung muss dafür gültig bleiben (AK 9). Weicht `seedUsed` ab (`src/sim/mapgen.ts:186`, `seed + i`), ist das
+  Kartenerzeugung muss dafür gültig bleiben (AK-IP-09). Weicht `seedUsed` ab (`src/sim/mapgen.ts:186`, `seed + i`), ist das
   gewollt: Es ist für alle gleich. Das Menü zeigt `world.seed` (die genutzte Nummer), der Teilen-Text das Datum.
 - **«Nochmal»** bei der Tagesinsel startet die Karte von `challenge.date`, auch nach Mitternacht; die Zeit zählt als Übung
   jenes Tages, solange er in der 14-Tage-Liste steht, sonst wird sie nicht gebucht.
 
 ### 5.4 Szenario «Schuldbrief» (I-192, Prüfling)
+
+_Werte sind Vorschlag bis AK-IP-14 grün ist (F7)._
 
 **Lage:** «Die Krone hat dir die Insel auf Pfand überlassen. Begleiche die Schuld und bau eine Stadt mit 50 Bürgern, bevor
 die Frist abläuft.»
@@ -252,7 +254,8 @@ die Frist abläuft.»
 
 ## 7 Save-Folgen
 
-- **Ja, Sprung v18 → v19** (vorläufig; beim Merge `main` + 1, R674). Neues letztes Weltfeld:
+- **Ja, ein Save-Sprung, versionsneutral:** Version «`main` beim Merge + 1» (R674, R874 E-A; Reihenfolge Stadtplanung →
+  Inselproben → Seerecht → Stadtrecht), Konstante `SAVE_V_CHALLENGE`. Neues letztes Weltfeld:
 
 ```text
 challenge: null | {
@@ -268,11 +271,11 @@ challenge: null | {
 
 - `goal` wird gespeichert, obwohl es bei Probe und Tagesinsel aus Def bzw. Datum ableitbar ist: Ein geänderter Wochenplan
   ändert so keinen laufenden Stand.
-- **Migration** `migrateV18ToV19` wirft nie, setzt `challenge: null` (R711 R-4).
+- **Migration** (Vorgängerversion → `SAVE_V_CHALLENGE`) wirft nie, setzt `challenge: null` (R711 R-4).
 - **Ladeprüfung:** `kind` bekannt; `id` in der Def-Tabelle (bei `daily` genau `'daily'`); `date` gültig genau bei `daily`;
   `debt`, `interestPaid` ganzzahlig ≥ 0, `debt > 0` nur bei `scenario`; `result.tick` ganzzahlig 0 … `world.tick`. Sonst
-  «Beschädigter Spielstand». Version > 19: «Unbekannte Version». Nie ein Absturz.
-- **Hash-Pins** älterer Läufe bleiben gültig über einen Rückfalt-Helfer wie `foldBackToV11` … (arc42 Persistenz, v12–v18).
+  «Beschädigter Spielstand». `SAVE_VERSION + 1`: «Unbekannte Version». Nie ein Absturz.
+- **Hash-Pins** älterer Läufe bleiben gültig über einen Rückfalt-Helfer (`foldBackChallenge`, entfernt nur `challenge`; wie `foldBackToV11`, arc42 Persistenz), der mit den Helfern anderer Specs in beliebiger Reihenfolge zusammenarbeitet (AK-IP-11).
 - **Autosave und Laden:** Eine Probe-Partie speichert und lädt wie jede Partie; der Chip läuft nach dem Laden weiter. Ein
   älterer Stand setzt die Uhr ehrlich zurück.
 
@@ -301,59 +304,31 @@ challenge: null | {
 
 ## 10 Abnahmekriterien
 
-Vitest gegen `src/sim/` (neu `tests/sim/challenge.test.ts`):
+Kennungen **`AK-IP-nn`** (R874; `AK-IP-01 … -23` = bisherige Nummern 1–23, `AK-IP-24 …` neu). Wortlaut, Strategien und
+Rückverfolgung zu den Gate-Auflagen: [anhang-02-abnahmekriterien.md](2026-10-23-modus-inselproben-design/anhang-02-abnahmekriterien.md).
 
-1. `createWorld(seed)` ohne Probe: `challenge === null`; Welt-Hash gleich dem heutigen nach Rückfalten (§7).
-2. `startChallenge` (Name der Umsetzung) für jede Probe-Def: Seed, Krisenstufe, Freischaltung `['U0']`, `challenge` mit
-   `kind`, `id`, `goal`, `debt` = 0 (Schuldbrief: `S0`), Kasse `START_MONEY` (Schuldbrief: `K0`). Unbekannte Id → `ok: false`.
-3. Für jede Probe-Def gilt `generateMap(seed).seedUsed === seed`; die Karten-Nummern der fünf Proben sind verschieden.
-4. Bestanden: Je Ziel-Art eine Welt, in der die Flagge im Tick `t` kippt → `result = { passed, t }`; davor `null`. Nach
-   `result` ändert sich `challenge` in weiteren Ticks nicht.
-5. Schuldbrief: Ziel erreicht, Schuld > 0 → kein Bestehen; nach Tilgen des Rests besteht das Szenario im nächsten Tick.
-   `won` gesetzt, aber jetzt < 50 Bürger und Schuld 0 → kein Bestehen. Abriss bei Schuld > 0 erstattet 0, bei Schuld 0
-   die Grundregel; ohne Probe ist die Erstattung unverändert. Erstattung 0 gilt für Geld und Güter, Gebäude und Strassen;
-   `effectiveRefund` liefert dann 0.
-6. Frist: Schuldbrief ohne Bestehen bis Tick `T` → `result = { failed, T }`; Bestehen genau im Tick `T` → `passed`;
-   danach kein Zins mehr, Kasse ändert sich nicht durch Zins.
-7. Zins: bei Schuld `S` sinkt die Kasse in den Ticks 100, 200, … (nicht in Tick 0) um `ceil(S × z / 1000)` zusätzlich zum Unterhalt; `interestPaid` wächst
-   gleich; bei Schuld 0 kein Zins; Kasse darf negativ werden.
-8. `repayDebt`: 500 bei Kasse ≥ 500 → Schuld und Kasse je −500; Rest < 500 → genau der Rest; Kasse < Betrag, Schuld 0,
-   keine Probe, Betrag ≠ 500 und ≠ Rest, nach `result` → `ok: false` mit Grund, Welt unverändert; wirft nie (auch `undefined`).
-9. Tagesinsel: `dailyDef(20261023)` → Freitag, `citizens`, `mild`, Seed 20261023; je ein Datum je Wochentag gegen die Tabelle
-   §5.3; ungültige Zahlen (Monat 13, 31.02.) → `ok: false`. Für alle Tage 2026-01-01 … 2027-12-31 wirft `generateMap` nicht.
-10. Determinismus: zwei Läufe je Art mit gleicher Aktionsfolge (inkl. `repayDebt`) → gleiche Welt-Hashes.
-11. Save: Speichern und Laden erhält `challenge` (null, laufend, bestanden, verloren, Schuldbrief mit Schuld); Migration v18
-    setzt `null`; ungültige Strukturen (unbekanntes `kind`, `debt` < 0, `debt` > 0 bei `probe`, `date` bei `probe`,
-    `result.tick` > `world.tick`) → «Beschädigter Spielstand»; Version 20 → «Unbekannte Version».
-12. Werte nur in `src/sim/defs/challenges.ts`; ein Test liest Probe-Tabelle, Wochenplan, Szenario-Werte und `CHALLENGE_REV`.
-13. Balancing-Tests unverändert grün; Controller ohne Probe.
-14. **Lösbarkeit Schuldbrief:** ein Controller-Lauf (eigene Testdatei, nicht Teil des Balancing-Tests) mit der
-    Referenzstrategie aus Anhang 01 besteht vor Tick 14 400 (0,8 × `T`); Erwartung aus der Rechnung ≈ 8700 ± 600 (14:30). Liegt der Lauf über
-    14 400, werden die Werte neu gerechnet (Ruling), nicht still angepasst.
+**Tick-Konvention (verbindlich):** Jeder Tickwert ist `world.tick` **nach** `step` (das Inkrement läuft zuerst,
+`tick.ts:40`). `tickChallenge` ist der **letzte** Aufruf in `step`, hinter `checkWin` und `tickUnlocks`; ohne Probe kehrt
+er sofort zurück (Bitgleichheit). Reihenfolge darin: Zins → Bestehen → Frist. Grenzen werden als `t − 1 / t / t + 1`
+geprüft (Frist `T`, Zins Tick 99/100/101).
 
-Reine UI-Helfer (`tests/ui/challenge.test.ts`, neu):
+| Prüfweg                                       | Kennungen                                                                                                                                                                                                                                                                                                                       |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vitest sim `tests/sim/challenge.test.ts`      | 01 Grundspiel bitgleich · 02 Start · 03 Karten · 04 Bestanden je Ziel · 05 Schuldbrief-Regeln · 06 Frist · 07 Zins · 08 `repayDebt` · 09 Tagesinsel und Kalender · 10 Determinismus · 11 Save (versionsneutral) · 12 Werte nur in Defs · 13 Balancing grün · 30 Speichern/Laden im Schuldbrief · 31 Reihenfolge `tickChallenge` |
+| Vitest sim, Controller-Läufe (eigene Dateien) | 14 Lösbarkeit und Wahl Schuldbrief (Referenz Ref, Gegenstrategien G1–G3) · 24 Lösbarkeit Proben 2–5 (Seeds 21, 58, 345, 777)                                                                                                                                                                                                    |
+| Vitest ui `tests/ui/challenge.test.ts`        | 15 `formatClock` · 16 Ablage · 17 `shareText` · 18 `todayNumber` · 25 gesperrtes `localStorage` · 26 Laden zählt nicht · 27 «Nochmal» nach Mitternacht · 28 «Alles frei» ignoriert · 29 Abbruch                                                                                                                                 |
+| Browser 1280 px (`qa-playtester`)             | 19 Startkarte · 20 Uhr · 21 Ergebnis-Karte (Dev-Spielstand) · 22 Schuldbrief-Bedienung · 23 kaputte Ablage                                                                                                                                                                                                                      |
 
-15. `formatClock(ticks)`: 0 → «0:00», 7230 → «12:03», 36 000 → «1:00:00».
-16. Ablage: Lesen leerer, gültiger, kaputter, fremder (`v` 2) und `rev`-fremder Ablage; Einfügen sortiert, kappt auf 5 bzw. 14;
-    Versuchszähler steigt beim Start; Gleichstand behält die ältere Zeit; Tagesinsel: `first` wird nur einmal gesetzt, `best`
-    folgt jeder besseren Zeit. Ergebnis-Erkennung (`resultTransition(prev, cur)`): schreibt nur bei null → gesetzt, nie nach
-    dem Laden eines Stands mit gesetztem `result`.
-17. `shareText` je Art gleich den Mustern in §6.3; keine Zeilenumbrüche.
-18. `todayNumber(date)` aus einem festen `Date` in Ortszeit (23:59 und 00:01 als Grenzfälle).
-
-Browser-Check bei 1280 px (`qa-playtester`, Screenshots `.studio/qa/<paket>/`):
-
-19. Startkarte zeigt «Inselproben» und die Tageszeile; Proben-Karte öffnet aus Startkarte und Menü, `Esc` schliesst.
-20. Probe 1 starten: Chip zeigt die Uhr; bei Tempo 4× und Pause misst die Uhr Spielzeit (Pause hält sie an).
-21. Ergebnis-Karte nach dem Ziel (Stand kurz vor 50 Bürgern per Dev-Spielstand): Zeit, Bestzeit, «Ergebnis kopieren» legt den
-    Text in die Zwischenablage, «Nochmal» startet dieselbe Karte (gleiche Kartennummer im Menü).
-22. Schuldbrief: Schuld-Chip, Tilgen-Knöpfe (blass bei zu wenig Geld, Grund im Tooltip), Bilanzzeile «Zins».
-23. Kaputte Ablage (`inselreich.proben` = `"x"`): einmaliger Hinweis, kein Absturz.
+- **AK-IP-11 (Save):** gegen `SAVE_VERSION + 1` («Unbekannte Version»); die Migration läuft von der Vorgängerversion zur
+  Version «`main` beim Merge + 1» und setzt `challenge: null`. Keine feste Nummer in AK oder Tests.
+- **AK-IP-14:** Referenz Ref (tilgen ab 63 % Endausbau) besteht vor Tick 14 400; Rang Ref < G1 (erst Endausbau) < G2
+  (sofort tilgen); G3 (Abriss) nicht schneller. **Die Werte F7 gelten erst nach grünem Lauf als Ruling.**
+- **AK-IP-24:** je Probe 2–5 ein Controller-Lauf erreicht das Ziel; sonst Fallback Seed-Wechsel (§5.2), dann Krisenstufe tiefer.
 
 ## 11 Randfälle
 
 - **Start kurz vor Mitternacht:** Karte und Ablage-Datum des Starts (§5.3).
-- **Laden eines Probe-Stands aus der Ladeliste:** Probe läuft weiter; Versuchszähler steigt nicht.
+- **Laden eines Probe-Stands aus der Ladeliste:** Probe läuft weiter; Versuchszähler steigt nicht (AK-IP-26).
 - **Laden eines älteren Stands derselben Probe nach dem Bestehen:** neues Ergebnis möglich; es zählt wie ein weiterer Lauf.
   Spielzeit bleibt ehrlich, weil sie `world.tick` ist (Routenwissen ist gewollt, wie bei Bestzeit-Läufen üblich).
 - **Ziel vor der ersten Minute** (unmöglich nach Defs): keine Sonderregel nötig.
@@ -369,12 +344,12 @@ Browser-Check bei 1280 px (`qa-playtester`, Screenshots `.studio/qa/<paket>/`):
 
 ## 12 Etappen (Paketzuschnitt, Plan durch `lead-tech`)
 
-| Etappe | Inhalt                                                                                                                                                                     | AK               | Grösse |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------ |
-| P1     | Rahmen: Defs `challenges.ts` (5 Proben, Wochenplan, Schuldbrief-Werte, `CHALLENGE_REV`), Weltfeld vollständig inkl. `debt`/`interestPaid`, Save v19, Start, Ziel-Erkennung | 1–4, 10–13       | M      |
-| P2     | UI Proben: Startkarte, Proben-Karte, Chip mit Uhr, Ergebnis-Karte, Ablage, Teilen-Text, «Nochmal»                                                                          | 15–17, 19–21, 23 | M      |
-| P3     | Tagesinsel: `dailyDef`, `todayNumber`, Tagesliste                                                                                                                          | 9, 18            | S      |
-| P4     | Szenario Schuldbrief: Zins, `repayDebt`, Frist, Chip, Bilanzzeile, Lösbarkeits-Lauf                                                                                        | 5–8, 14, 22      | M      |
+| Etappe | Inhalt                                                                                                                                                                                          | AK                      | Grösse |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ------ |
+| P1     | Rahmen: Defs `challenges.ts` (5 Proben, Wochenplan, Schuldbrief-Werte, `CHALLENGE_REV`), Weltfeld vollständig inkl. `debt`/`interestPaid`, Save-Sprung (versionsneutral), Start, Ziel-Erkennung | 01–04, 10–13, 24, 30–31 | M      |
+| P2     | UI Proben: Startkarte, Proben-Karte, Chip mit Uhr, Ergebnis-Karte, Ablage, Teilen-Text, «Nochmal»                                                                                               | 15–17, 19–21, 23, 25–29 | M      |
+| P3     | Tagesinsel: `dailyDef`, `todayNumber`, Tagesliste                                                                                                                                               | 09, 18                  | S      |
+| P4     | Szenario Schuldbrief: Zins, `repayDebt`, Frist, Chip, Bilanzzeile, Lösbarkeits-Lauf                                                                                                             | 05–08, 14, 22           | M      |
 
 - Reihenfolge P1 → P2 → (P3 ∥ P4). Ein Save-Sprung für alles, weil P1 das ganze Feld anlegt. Kommen P3/P4 in ein späteres
   Release, braucht es keinen weiteren Sprung.
@@ -390,15 +365,15 @@ kein «Geist»-Vergleich; keine Medaillen oder Richtzeiten; keine Serie (Streak)
 
 ## 14 Offene Fragen an L0 (mit Empfehlung)
 
-| Nr. | Frage                                                                                                                                       | Empfehlung                                                               | Entscheider |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ----------- |
-| F1  | Berührt der Schuldbrief N-101 (Nutzer verwarf Darlehen)?                                                                                    | nein; Kenntnis-Zeile im Ruling genügt, kein Vorbehalt (A7, §5.4)         | L0          |
-| F2  | Startkarte mit viertem Knopf «Inselproben» oder nur Menü?                                                                                   | Startkarte: die Tageszeile ist der Rückkehrgrund                         | L0          |
-| F3  | Versuche je Tag beliebig oder nur einer?                                                                                                    | beliebig; der erste bestandene Lauf ist der Tageswert, Rest Übung (§5.3) | L0          |
-| F7  | Schuldbrief-Werte K0 5000, S0 3000, z 5 ‰, T 18 000, Schritt 500, keine Pflichtrate, Erstattung 0 bei Schuld, Bestehen nach aktuellem Stand | als Ruling festhalten; nach dem Lauf AK 14 nachjustieren                 | L0          |
-| F6  | Richtzeit je Probe (Studio-Zeit aus einem Controller-Lauf, wie eine «Autorenzeit»)?                                                         | später; heute gibt es nur für Probe 1 einen Lauf (11:15). Nach Playtest  | L0          |
-| F4  | `CHALLENGE_REV` von Hand pflegen?                                                                                                           | ja, Anlass: gebrochener Balancing-Pin (§6.2)                             | L0          |
-| F5  | Reihenfolge zu Ehrenbuch und WIRTSCHAFT-TIEFE                                                                                               | Modus nach dem Ehrenbuch; Schuldbrief-Werte nach WIRTSCHAFT-TIEFE prüfen | L0          |
+| Nr. | Frage                                                                                                                                       | Empfehlung                                                                      | Entscheider |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------- |
+| F1  | Berührt der Schuldbrief N-101 (Nutzer verwarf Darlehen)?                                                                                    | nein; Kenntnis-Zeile im Ruling genügt, kein Vorbehalt (A7, §5.4)                | L0          |
+| F2  | Startkarte mit viertem Knopf «Inselproben» oder nur Menü?                                                                                   | Startkarte: die Tageszeile ist der Rückkehrgrund                                | L0          |
+| F3  | Versuche je Tag beliebig oder nur einer?                                                                                                    | beliebig; der erste bestandene Lauf ist der Tageswert, Rest Übung (§5.3)        | L0          |
+| F7  | Schuldbrief-Werte K0 5000, S0 3000, z 5 ‰, T 18 000, Schritt 500, keine Pflichtrate, Erstattung 0 bei Schuld, Bestehen nach aktuellem Stand | Ruling erst **nach grünem AK-IP-14**; bis dahin Vorschlag, danach nachjustieren | L0          |
+| F6  | Richtzeit je Probe (Studio-Zeit aus einem Controller-Lauf, wie eine «Autorenzeit»)?                                                         | später; heute gibt es nur für Probe 1 einen Lauf (11:15). Nach Playtest         | L0          |
+| F4  | `CHALLENGE_REV` von Hand pflegen?                                                                                                           | ja, Anlass: gebrochener Balancing-Pin (§6.2)                                    | L0          |
+| F5  | Reihenfolge zu Ehrenbuch und WIRTSCHAFT-TIEFE                                                                                               | Modus nach dem Ehrenbuch; Schuldbrief-Werte nach WIRTSCHAFT-TIEFE prüfen        | L0          |
 
 Kein Nutzer-Vorbehalt nach Verfassung §5.3: Kernsäule, Genre und Titel bleiben.
 
@@ -414,7 +389,7 @@ Kein Nutzer-Vorbehalt nach Verfassung §5.3: Kernsäule, Genre und Titel bleiben
 
 Urteil: **OK** als Grundlage für das Gate Spec. **BEDENKEN** nur zum Schuldbrief: Das Modell glättet Klumpenkäufe
 (absolute Zeiten ± 1 min, Anhang 01 §0), und die Wahl ist mit ≈ 2 min Spreizung schmal. Beides prüft der Lösbarkeits-Lauf
-(AK 14) und ein Playtest; Stellschraube S0 3750 ist gerechnet.
+(AK-IP-14) und ein Playtest; Stellschraube S0 3750 ist gerechnet.
 
 ## 16 Nachrecherche (Mechaniken, keine Inhalte; (S) = nur Suchtreffer)
 
