@@ -1468,3 +1468,119 @@ bleibt Beipack-Kandidat für das nächste UI-Häppchen (die Karte besteht weiter
 - Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12
 - Nutzen/Aufwand: verpasster Fernauftrag vermeidbar · S · ≈ 40 Tools
 - Entscheid: R811: eingeplant als UI-Häppchen G. Umgesetzt in UI-HAEPPCHEN-G (REL-29).
+
+## Archiviert IDEEN-16 (Pool-Pflege R599)
+
+## Rangliste IDEEN-15 (Ruling L0: R827, R839; archiviert IDEEN-16)
+
+Breite Runde (R445, R823) mit 3 Scouts: A Leben auf der Insel (I-156–I-160), B Mittel- und Spätspiel-Ziele (I-161–I-164, I-165 nicht vergeben),
+C Bedienung und Übersicht ab 1280 px (I-166–I-170). 14 Vorschläge, keine ändert Kernsäule, Genre oder Titel (§5.3; I-164 geprüft: Wahlziel ohne
+neue Säule). Alle «fehlt heute»-Annahmen haben eine Code-Fundstelle (Lehre aus Beobachtung 2026-10-22 WIRTSCHAFT-BS-1); lead-design hat sie
+stichprobenartig nachgeprüft (`ship.ts`, `sound.ts`, `hud.ts`, `buildMenu.ts`, `sprites.ts:922`). Bewertung lead-design: Spätspiel-Ideen Spass 3 → 2
+(erst nach dem Denkmal, Massstab I-132/R737); reine Klang- und Zierideen Spass 2 → 1 (Kosmetik ohne Entscheidung). Datei-Konflikte gegen laufende
+Branches geprüft (`git diff --name-only main...<branch>`): `hud.ts`, `buildMenu.ts`, `ship.ts`, `sound.ts`, `trial.ts` frei; `sprites.ts` belegt von
+ORT-A und Stadtplanung. Sortiert nach Summe, bei Gleichstand nach Nutzen je Aufwand. Pool-Pflege R599 in derselben Runde: 14 Ideen und die
+Ranglisten IDEEN-13 und IDEEN-14 ins Archiv (Stand R776, R780, R797, R805, REL-27 bis REL-29). Pool danach 25 von 40 offen.
+
+| Rang | ID    | Name                                     | Grösse | Summe | Save / Baseline | Nutzen/Aufwand                                     | Empfehlung                                                                  |
+| ---- | ----- | ---------------------------------------- | ------ | ----- | --------------- | -------------------------------------------------- | --------------------------------------------------------------------------- |
+| 1    | I-170 | Wachstumsbremse im Einwohner-Chip        | S–M    | 12    | nein / nein     | «warum steigt nichts auf?» in einem Blick, ≈ 60 T. | **Häppchen 1** (UI-HAEPPCHEN-I mit I-168, I-167); nach Stadtplanung-Merge   |
+| 2    | I-168 | Kassen-Reichweite «Kasse leer in ≈ 4:10» | S      | 12    | nein / nein     | Frühspiel-Pleite vorhersehbar, ≈ 30 Tools          | **Häppchen 1** (gleiche Datei `hud.ts`)                                     |
+| 3    | I-167 | Bestand im Bau-Tooltip                   | S      | 12    | nein / nein     | Kettenverhältnis ohne Abzählen, ≈ 30 Tools         | Beipack Häppchen 1                                                          |
+| 4    | I-157 | Kielwasser der Schiffe                   | S      | 11    | nein / nein     | Fahrt und Richtung lesbar, ≈ 40 Tools              | **Häppchen 2** «Leben auf See» mit I-156; `ship.ts` frei                    |
+| 5    | I-159 | Kistenstapel am Kontor zeigt Füllstand   | S–M    | 11    | nein / Hashes   | Lager ohne Text lesbar, ≈ 60 Tools                 | nach ORT-A- und Stadtplanung-Merge (`sprites.ts`); Kennzahl neu fassen      |
+| 6    | I-163 | Auflage «Ausfuhrmeister»                 | M      | 11    | ja / nein       | Ketten über Eigenbedarf werden Ziel, ≈ 3 Pakete    | Baustein: Kurzdesign «Auflagen-Kern» mit Rechnung (mit I-161, I-162)        |
+| 7    | I-161 | Auflage «Eigenwuchs»                     | S–M    | 11    | ja / nein       | zweite Prüfung, nah an I-132, ≈ 2 Pakete           | im Auflagen-Kern als Alternative zu I-163; Zielgrösse Stufe ≥ 3             |
+| 8    | I-169 | Randmarken für Brände ausser Bild        | M      | 11    | nein / nein     | Brand ausser Sicht nicht verpasst, ≈ 2 Pakete      | parken bis Playtest-Beleg (Log-Sprung und Alarm bestehen)                   |
+| 9    | I-156 | Anlege-Klang am Kontor                   | S      | 10    | nein / nein     | Route hörbar, Ermüdungsgefahr, ≈ 20 Tools          | Beipack Häppchen 2                                                          |
+| 10   | I-162 | Abbruchpuffer in der laufenden Auflage   | S      | 10    | nein / nein     | Scheitern vorhersehbar, ≈ 30 Tools                 | Beipack zum Auflagen-Kern (oder nächstes UI-Häppchen)                       |
+| 11   | I-160 | Morgenläuten der Kapelle                 | S      | 10    | nein / nein     | Stimmung ohne Entscheidung, ≈ 15 Tools             | parken (Beipack-Kandidat für ein Ton-Paket)                                 |
+| 12   | I-166 | Zoom mit `Bild↑`/`Bild↓`                 | S      | 10    | nein / nein     | Tastaturweg für bestehende Aktion, ≈ 15 Tools      | Beipack Häppchen 1, falls Platz                                             |
+| 13   | I-164 | Fern-Wahlziel Leuchtfeuer oder Festhalle | M      | 10    | ja / nein       | Inselvorteil bekommt ein Ziel, ≈ 3 Pakete          | parken bis Erweiterung 1 geklärt (Ziel 4 «Seestadt», Inseldorf)             |
+| 14   | I-158 | Wäscheleine ab Haus-Stufe 2              | S      | 9     | nein / Hashes   | Stufe lesbar, aber Häuser unterscheiden sich schon | verwerfen (Stufen sind im Sprite schon unterscheidbar; `sprites.ts` belegt) |
+
+Leitbefund Spätspiel (Scout B, bestätigt): Der Auflagen-Kern ist heute auf eine Auflage festgelegt (`src/ui/trial.ts:17` `ID = 'selfSupply'`,
+`src/sim/defs/trials.ts:7`, Karte und Chronik lesen nur `passed[0]`); jede weitere Auflage zahlt zuerst diese Verallgemeinerung. Darum keine
+Auflage als Häppchen, sondern ein Kurzdesign «Auflagen-Kern» (Stufe voll, Save), das I-163 und I-161 mit `design-economy-designer` gegeneinander
+rechnet und höchstens eine baut. Beide erfüllen R805 (4) laut Überschlag (Bedarf 4,5- bzw. 8,3-mal `STORAGE_CAP`, Zukauf gesperrt).
+
+### I-158 · verworfen (R827) · Wäscheleine ab Haus-Stufe 2
+
+- Bereich: Grafik · Säule: Bevölkerung versorgen und aufsteigen lassen · Quelle: IDEEN-15 Scout A; `src/render/sprites.ts:724`, `:820`, `:2044` (Stufe über `b.house?.tier`, keine Wäsche) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler erkennt an bunter Wäsche am Haus beim Vorbeischwenken, welche Viertel aufgestiegen sind."
+- Mechanik: im Haus-Sprite ab Stufe 2 eine Leine mit 2 Tüchern, ab Stufe 3 mit 4 in zwei Farben; optional ±1 px Wehen im Luft-Durchgang (`drawAir`), bei Regen nur hängend, «Bewegung reduzieren» still. Prozedural.
+- Grösse: S · Risiko: Baseline der Sprite-Hashes (Neuaufnahme per Ruling); `sprites.ts` belegt von ORT-A und Stadtplanung
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 3 · Risiko 2 = 12 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 2 = 9
+- Randfälle: Silhouette darf nicht wachsen (`spriteCache.ts:20`); Abstieg nimmt die Wäsche mit der Stufe. Entartung: keine.
+- Doppelung: I-118 Funkeln (Moment des Aufstiegs), I-137 Abstieg; die Stufen sind im Sprite heute schon unterscheidbar.
+- Bewertung lead-design: Spass 2 → 1, Passung 3 → 2: Die Haus-Sprites unterscheiden die Stufen bereits; die Wäsche ist Zier ohne neue Information und kostet eine Sprite-Hash-Neuaufnahme in einer belegten Datei.
+- Nutzen/Aufwand: gering · S · ≈ 30 Tools plus Hash-Neuaufnahme
+- Entscheid: R827 verworfen (Stufen im Sprite schon unterscheidbar; `sprites.ts` belegt)
+
+### I-160 · geparkt (R827) · Morgenläuten der Kapelle
+
+- Bereich: Ton · Säule: Bevölkerung (Stimmung) · Quelle: IDEEN-15 Scout A; `src/audio/ambience.ts:83-104` (Tageszeit nur als Pegel der Schichten), `phaseAt` (`src/render/daynight.ts:25`) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler hört zum Tagesbeginn einen Glockenschlag und erlebt die Kapelle als Teil des Viertels."
+- Mechanik: beim Wechsel Nacht → Morgen ein Schlag (`BELL`, Pegel ≤ 0,05), nur wenn eine angebundene Kapelle steht; ein Schlag je Wechsel unabhängig von der Zahl der Kapellen; kein Nachholen nach dem Laden; Krisen-Klänge haben Vorrang.
+- Grösse: S · Risiko: keins
+- Raster (Scout): Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12 · Raster (lead-design): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 10
+- Randfälle: Stumm, Pause; bei 4× Tempo häufiger, aber höchstens ein Schlag je Wechsel. Entartung: keine.
+- Doppelung: I-007 Fest in der Kapelle, I-120 Wohlstandsklang (live).
+- Bewertung lead-design: Spass 2 → 1 (Stimmung ohne Entscheidung). Parken als Beipack für ein späteres Ton-Paket.
+- Nutzen/Aufwand: Stimmung · S · ≈ 15 Tools
+- Entscheid: R827 geparkt (Beipack-Kandidat für ein Ton-Paket)
+
+### I-161 · verworfen (R839) · Auflage «Eigenwuchs» (zweite Meisterprüfung)
+
+- Bereich: Inhalt · Säule: Produktionsketten, Bevölkerung · Quelle: IDEEN-15 Scout B; `src/sim/defs/trials.ts:7` (nur `selfSupply`), `src/sim/trial.ts:20,44,57` (`e0`, `trialBuyBlock`, `trialPopulation`) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler startet «Eigenwuchs» und muss seine Stadt in 15 Minuten ohne Zukauf um 15 % vergrössern, also die Ketten über den heutigen Bedarf hinaus ausbauen."
+- Mechanik: Auflage `growth` mit den Regeln von `selfSupply` (Zukauf gesperrt, Abbruch unter 70 % von `e0`); bestanden bei ≥ 115 % (`TRIAL_GROWTH_PCT` in `defs/trials.ts`). **Zielgrösse (lead-design):** nicht alle Einwohner, sondern Einwohner der Stufen ≥ 3, sonst reichen Siedlerhäuser mit Fisch (Entartung). Lohn ehrenhalber (Chronik).
+- Rechnung R805 (4) (Scout, ungemessen): bei 80 Kaufleuten Glas und Gewürz je ≈ 55/min nach +15 % → ≈ 825 in 15 min = 8,3 × `STORAGE_CAP`; Zukauf gesperrt.
+- Dominanz: ehrenhalber, keine Spielwert-Wirkung; Wahl liegt in Zeitpunkt und Ausbau davor.
+- Grösse: S–M (Sim S; Verallgemeinerung Auflagen-Kern in `src/ui/trial.ts`: `ID`, `passed[0]`) · Risiko: Save (`isTrialId`, `save.ts:946`), Baseline bitgleich (Controller startet keine Auflage)
+- Raster (Scout): Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11 · Raster (lead-design): Spass 2 · Passung 3 · Aufwand 2 · Risiko 2 = 11
+- Randfälle: kein Bauland im Radius → Start nennt Grund; Abriss zählt gegen das Ziel; Auflagen schliessen sich aus. Entartung: Häuser erst kurz vor Ende bauen → mit Stufen-≥-3-Zielgrösse braucht das 30 s Aufstiegszeit je Stufe und die Ketten.
+- Doppelung: I-132 (live, Rahmen), I-151 (verworfen R805, Bedarf unter der Lagergrenze).
+- Bewertung lead-design: bestätigt (11), Zielgrösse verschärft. Nah an «Eigenversorgung» (gleiche Ketten, +15 %); als Alternative zu I-163 im Kurzdesign «Auflagen-Kern» rechnen, nicht beide bauen.
+- Nutzen/Aufwand: zweite Prüfung, wenig neu gegen I-132 · S–M · ≈ 2 Pakete mit dem Kern
+- Entscheid: R827 Kurzdesign AUFLAGEN-KERN gegen I-163; R839 verworfen (I-163 wird gebaut)
+
+### I-164 · geparkt (R827) · Fern-Wahlziel «Leuchtfeuer» oder «Festhalle»
+
+- Bereich: Inhalt · Säule: Produktionsketten, Insel besiedeln · Quelle: IDEEN-15 Scout B; `src/sim/types.ts:351` (`monument` einmalig), `src/sim/monument.ts:77,113` (nur Heimat); `docs/spielwerte.md` «Seefahrt und Gewürz» (Inselvorteil ×2) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler baut nach dem Denkmal auf einer Fremdinsel ein zweites Wahlziel nur aus deren Inselvorrat, und der Inselvorteil ×2 lohnt sich erstmals für ein Ziel."
+- Mechanik: zweites Wahlziel nach `monumentDone`, 3×3, 2 Abschnitte, Ablauf wie das Denkmal, Zielgüter-Zukauf gesperrt; Leuchtfeuer (Felsbucht: Stein 300, Glas 150, Werkzeug 40) oder Festhalle (Weidenau: Stoff 110, Rum 110, Werkzeug 40); Lohn ehrenhalber.
+- Rechnung R805 (4) (Scout, ungemessen): Leuchtfeuer ≈ 450 Stein-Äquivalent = 4,5 × `STORAGE_CAP`; beide Varianten ≈ 28 Betriebsminuten; Insel-Produktion schlägt Schiffszufuhr (3–4 gegen 7 Betriebe).
+- Grösse: M (Sim, Panel, 2 Sprites, Save, Messlauf) · Risiko: Save, Sprites (`sprites.ts` belegt), Überlappung Erweiterung 1
+- Raster (Scout): Spass 3 · Passung 3 · Aufwand 2 · Risiko 1 = 12 · Raster (lead-design): Spass 2 · Passung 3 · Aufwand 2 · Risiko 1 = 10
+- Randfälle: Kontor fehlt oder zerstört → Bau hält; Abriss wie beim Denkmal. Entartung: beide nacheinander bauen (gewollt, ohne Lohn).
+- Doppelung: Erweiterung 1 (Ziel 4 «Seestadt», Inseldorf), I-149 (geparkt, Liegeplätze); kein §5.3-Fall (Wahlziel ohne neue Säule).
+- Bewertung lead-design: Spass 3 → 2 (nach dem Denkmal). Guter Gedanke für die Fremdinseln, aber dieselbe Stelle wie Erweiterung 1; parken wie I-149.
+- Nutzen/Aufwand: Fremdinseln bekommen ein Ziel · M · ≈ 3 Pakete
+- Entscheid: R827 geparkt bis Erweiterung 1 geklärt (Ziel 4 «Seestadt», Inseldorf)
+
+### I-166 · geparkt (R827) · Zoom mit `Bild↑`/`Bild↓`
+
+- Bereich: Bedienung · Säule: Bedienung · Quelle: IDEEN-15 Scout C; `src/ui/hotkeys.ts:166` (nur «Mausrad: Zoomen»), kein `PageUp`/`PageDown` in `src/` (von lead-design per `rg` bestätigt) · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler zoomt mit `Bild↑`/`Bild↓` stufenweise, ohne die Hand von der Tastatur zu nehmen."
+- Mechanik: eine Stufe aus `ZOOM_STEPS` um die Bildmitte (`zoomAt`, `src/render/camera.ts:124`), `preventDefault`; stumm bei offener Karte und in Eingabefeldern; Eintrag in Kürzelliste und README.
+- Grösse: S · Risiko: keins
+- Raster (Scout): Spass 1 · Passung 2 · Aufwand 3 · Risiko 3 = 10 · Raster (lead-design): bestätigt 10
+- Randfälle: Laptops ohne Mausrad profitieren. Entartung: keine.
+- Doppelung: I-107 (geparkt, Tempo `+`/`−`) belegt andere Tasten.
+- Bewertung lead-design: bestätigt (10). Beipack, falls im UI-Häppchen Platz bleibt.
+- Nutzen/Aufwand: zweiter Weg zu bestehender Aktion · S · ≈ 15 Tools
+- Entscheid: R827 geparkt (Beipack-Kandidat)
+
+### I-169 · geparkt (R827) · Randmarken für Brände ausser Bild
+
+- Bereich: Bedienung, Grafik · Säule: Insel besiedeln (Krisen) · Quelle: IDEEN-15 Scout C; Brand-Sprung nur über das Log (`src/ui/crisisLog.ts:64`, `logTarget.ts`), keine Randmarke in `src/ui` · Herkunft: vom Studio vorgeschlagen
+- Spielerwirkung: „Der Spieler sieht am Bildrand einen Pfeil zu jedem Brand ausser Sicht, klickt und springt hin."
+- Mechanik: DOM-Overlay in `src/ui/` aus der Kamera-Projektion, höchstens 4 Marken, nahe Brände zusammengefasst, Klick → `centerOn` (`src/render/camera.ts:139`); ruht bei offener Karte, «Bewegung reduzieren» ohne Pulsieren; entfällt bei Krisenstufe «aus».
+- Grösse: M · Risiko: keins (Perf bei vielen Bränden gedeckelt)
+- Raster (Scout): Spass 2 · Passung 2 · Aufwand 2 · Risiko 3 = 11 · Raster (lead-design): bestätigt 11
+- Randfälle: Brand auf anderer Insel → Marke Richtung Insel. Entartung: Pfeilsalat → Deckel 4.
+- Doppelung: I-042 Problem-Sprung (live), Krisen-Log mit Sprung, Brand-Alarmklang; I-124 (geparkt, Seekarte).
+- Bewertung lead-design: bestätigt (11), aber ohne Playtest-Beleg, dass Brände verpasst werden; Log, Alarm und `.`-Sprung decken den Fall heute. Parken bis ein Playtest es meldet.
+- Nutzen/Aufwand: Brand ausser Sicht nicht verpasst · M · ≈ 2 Pakete
+- Entscheid: R827 geparkt bis Playtest-Beleg (Log-Sprung und Alarm bestehen)
