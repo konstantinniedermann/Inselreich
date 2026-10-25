@@ -421,8 +421,12 @@ describe('M11 Freischaltung Jagdhütte, Rinderfarm, Ausbau (Spec 4)', () => {
       'Die Jagdhütte liefert Nahrung aus dem Wald; sie braucht 10 freie Waldfelder im Umkreis.',
     );
     expect(row('U3').tip).toContain('Die Rinderfarm braucht viel freie Weide.');
-    expect(row('U3').tip).toContain('Betriebe lassen sich jetzt gegen Stoff ausbauen.');
-    expect(row('U5').tip).toContain('Ausbau Stufe 3 kostet Rum.');
+    expect(row('U3').tip).toContain(
+      'Betriebe lassen sich jetzt ausbauen: Geld, Holz und Werkzeug, dazu Siedler im Arbeitsweg.',
+    );
+    expect(row('U5').tip).toContain(
+      'Ausbau Stufe 3 ist Steinbau: Stein und Bürger im Arbeitsweg; Brennerei, Glashütte und Werkzeugmacher brauchen eine Feuerwache.',
+    );
     for (const u of UNLOCKS)
       for (const k of ['tip', 'lockText', 'whenText', 'notice'] as const)
         expect(u[k]).not.toMatch(/Tick/);
