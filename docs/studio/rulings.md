@@ -2821,3 +2821,25 @@ Verfassung berührt?: nein (Handbuch-Richtwerte R69/R826, Nutzeranweisung geht v
 Regelbezug: R66, R69, R826, R863 · Kosten bei Irrtum: Session endet knapp am Limit, Übergabe kleiner.
 
 Entscheider: L0 · Anlass: Nutzerauftrag Session 8361ff82 · ADR: —
+
+## R960 · 2026-10-25 · Gate Spec I-215 BEDENKEN; Spec-Nachtrag läuft
+
+Ruling: Gate Spec I-215 «Volllast» (`design/volllast` @ `db9da014`) **BEDENKEN angenommen**, Auflagen 1–9 laut `.studio/handoffs/2026-10-25-lead-qa-gate-spec-I-215.md`. AK-VL-01–23 bestätigt, Balancing-Test
+unverändert, kein Wert-Ruling. Spec-Nachtrag `design-spec-author` (sonnet) setzt R952 durchgängig um (Auflagen 1–3 hoch) und schärft AK-VL-07/-14/-19/-21; danach Lese-Kurzprüfung Auflagen 1–3 (`lead-qa`), dann Plan
+(`lead-tech`, opus). Konfliktpunkt `levels.ts` (`cycleOf`, `buildingUpkeep`) als Plan-Risiko.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK, I-201, I-210 (`levels.ts`)
+Regelbezug: R417, R937, R952 · Kosten bei Irrtum: eine Nachtragsrunde.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-215 · ADR: —
+
+## R961 · 2026-10-25 · Gegenlesen Plan HAFEN OK; L1 frei
+
+Ruling: Gegenlesen Plan-Nachtrag HAFEN (`plan/hafen` @ `07bbb731`) **OK**, Auflagen 1–8 erfüllt; **L1 frei**, Start sobald ein Test-Controller-Platz frei ist (≤ 3, R826; zurzeit ZEITPIN-D1, I-210, AUSBAU-LOGIK).
+L2 bleibt nach INSELPROBEN/SEERECHT-Merge. Hinweise in die Controller-Briefings T05/T06: Vitest-Timeouts der K2-Zeilen 8 und 9 prüfen (oder Seeds kürzen nach E-HF-8), expliziter Hook-Timeout für `beforeAll` der
+neuen `islandGen`-Tests. E-HF-6 (B6 createWorld) bestätigt L0 erst nach den Messwerten aus T01/T06.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: FLAECHE (Seed-Welten), push-check-Laufzeit
+Regelbezug: R826, R945, R953 · Kosten bei Irrtum: Timeout-Fehler in T05/T06.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-HAFEN-nachtrag · ADR: —
