@@ -2142,3 +2142,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (Sav
 Regelbezug: R329, R793, R803, R826, R898 · Kosten bei Irrtum: ORT-A eine Welle später.
 
 Entscheider: L0 · Anlass: Zwischenbericht lead-tech ORT-A · ADR: —
+
+## R903 · 2026-10-25 · Spec I-210 Bittschrift fertig; Gate Spec
+
+Ruling: Spec `design/i210-bittschrift` @ `d277d9bd` (9 Bitten, 22 AK-BS, §8 Nachvollziehbarkeit je Bitte, AK-BS-05 Messlauf stabile Stadt) geht ans **Gate Spec** (`lead-qa`, Budget 1). Entwürfe: **F-3**
+`PETITION_FIRST` = 600 als neuer Spielwert in `src/sim/defs/` **ja** (AK: erste Karte vor Tick 9000); **F-2** Bittschriften in Inselproben fest aus **ja** (Vergleichbarkeit; Umsetzung im Paket INSELPROBEN bzw.
+beim I-210-Plan, wer zuerst merged); **F-1** Kostenware B3 fest Glas in Schnitt 1 **ja**, Engpass-Ware später. Gate prüft zusätzlich das Dauerkriterium R896 (0) und die Laufzeit von AK-BS-04 (36 Läufe).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201 (B4/B5), AUSBAU-LOGIK (Kostenwaren), INSELPROBEN
+Regelbezug: R896, R899 · Kosten bei Irrtum: Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-design I-210 · ADR: —
