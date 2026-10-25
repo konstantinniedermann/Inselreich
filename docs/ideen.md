@@ -355,7 +355,7 @@ eines davon live ist und neue Reibung zeigt.
 - Doppelung: I-038 (geparkt, Erkundungsfahrt deckt eine schon erzeugte Insel auf), I-036 (geparkt, Wrackbergung), Erweiterung 1 §10 (Erkundung und Nebel ausdrücklich nicht im Umfang). Beleg: `rg -n -i "Expedition" docs/ideen.md docs/ideen-archiv.md` → 0 Treffer; I-038 und I-036 über `rg -n "^### I-0(36|38)" docs/ideen-archiv.md`; Erweiterung 1 Z. 282.
 - Bewertung lead-design: Gibt der Flotte nach der Gewürzstadt einen Zweck und einen Lohn ausser Geld. Die Kritik «Zufallslohn, Klickarbeit» (R3) ist durch Wahl-Karten und die Grenze von einer Expedition zugleich begrenzt. Allein M, als Kern der Erweiterung «Neue Ufer» stärker.
 - Nutzen/Aufwand: Flotte und Spätspiel bekommen Ziel und Geschichte · M · ≈ 3 Pakete
-- Entscheid: R864 Baustein der Erweiterung «Neue Ufer» (I-194, N-104)
+- Entscheid: R864 Baustein der Erweiterung «Neue Ufer» (I-194, N-104); R962 Kern der Etappe NU-1 «Kartenrand» (Expedition ohne Verlust, Ladeliste T4-1)
 
 ### I-190 · eingeplant (R864, Inselproben) · Inselprobe (feste Karte, festes Ziel, Bestzeit)
 
@@ -399,7 +399,7 @@ eines davon live ist und neue Reibung zeigt.
 - Nutzen/Aufwand: frühe, harte Entscheidungen bei jedem Neustart · M · ≈ 3 Pakete plus je Szenario eine Rechnung
 - Entscheid: R864 eingeplant: Teil «Modus Inselproben» (ein Szenario als Prüfling)
 
-### I-194 · bewertet (N-104) · Erweiterung «Neue Ufer» (Entdeckung und kalte Insel)
+### I-194 · eingeplant (R958, R966) · Erweiterung «Neue Ufer» (Entdeckung und kalte Insel)
 
 - Bereich: Inhalt · Säule: Insel besiedeln (Archipel) · Quelle: TIEFE-1 Recherche R3 «neue Region mit eigener Kette» (meistgelobt), «Sammeln und Erkunden» · Herkunft: vom Studio vorgeschlagen · Gruppe: **Erweiterung**
 - Spielerwirkung: „Der Spieler deckt per Expedition den Nebel hinter dem Kartenrand auf, findet eine kalte Nordinsel, deren Siedler Wärme brauchen, und baut dort eine zweite kleine Stadt mit eigener Kette."
@@ -410,7 +410,7 @@ eines davon live ist und neue Reibung zeigt.
 - Doppelung: I-038 (geparkt, Erkundungsfahrt), I-036 (geparkt, Wrack), I-189 (Baustein), Erweiterung 1 §10 (Erkundung, Nebel, neue Inseln ausdrücklich ausgeschlossen, also kein Doppel). Beleg: `rg -n -i "Expedition|Nebel|Klima" docs/ideen.md docs/ideen-archiv.md` → 0 Treffer; I-038 über «Erkund».
 - Bewertung lead-design: Das Thema, das Spieler an Erweiterungen am meisten loben. Es ruht auf Werft und Flotte der Erweiterung 1 und passt zum ruhigen Ton. Kandidat für die Erweiterung nach «Stände und Segel».
 - Nutzen/Aufwand: neue Spielphase mit neuer Frage («wie versorge ich ein anderes Klima?») · L · ≈ 12–16 Pakete
-- Entscheid: R864 offen: Nutzerentscheid N-104 (Reihenfolge der Erweiterungen), Empfehlung Erweiterung 2
+- Entscheid: R958 Erweiterung 2 (Nutzerentscheid N-104); R966 Designvorschlag `docs/superpowers/specs/2026-10-25-neue-ufer-design.md` (NU-1 bis NU-4) freigegeben, Spec NU-1 «Kartenrand»
 
 ### I-195 · bewertet (N-104) · Erweiterung «Ernte und Frost» (Jahreszeiten)
 
