@@ -1,5 +1,8 @@
 // UI-HAEPPCHEN-G T01: «zu spät» an der Fern-Marke (I-155, AK-G1 bis G8).
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { decree } from '../../src/sim/council';
+import { renderNoticeStack, updateNoticeStack } from '../../src/ui/hud';
+import { FakeElement, fakeDocument } from './fakeDom';
 import { mapLayout, tileToMap } from '../../src/render/seaMap';
 import { acceptFarOrder } from '../../src/sim/orders';
 import type { GoodId, Ship, World } from '../../src/sim/types';
@@ -207,5 +210,37 @@ describe('AK-SR-18 Fernauftrag mit Seerecht (P-6)', () => {
     const lanes: Lanes = () => [{ a: 0, b: i, d: 30, points: [] }];
     w.council[4] = 'C';
     expect(farOfferParts(w, 0, lanes)!.travel).toBe(`≈ ${formatGameTime(240)} Fahrt`);
+  });
+});
+
+describe('AK-SR-18 Fernkarte baut den Fahrzeit-Text ohne Tick neu (Review Focus 1)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  it('nach decree(4, C) zeigt updateNoticeStack die Ratsfahrzeit', () => {
+    vi.stubGlobal('document', fakeDocument);
+    const w = farWorld(4, ['B']);
+    stepAt(w, periodStart(1));
+    const noop = () => {};
+    const actions = {
+      deliver: noop,
+      accept: noop,
+      decline: noop,
+      toProducer: noop,
+      cancel: noop,
+      acceptFar: noop,
+    };
+    const stack = renderNoticeStack(
+      new FakeElement('div') as unknown as HTMLElement,
+      w,
+      actions,
+    ) as unknown as FakeElement;
+    const lead = () => stack.querySelector('[data-field="far-lead"]')!.textContent;
+    const before = farOfferParts(w)!.travel!;
+    expect(lead()).toContain(before);
+    expect(decree(w, 4, 'C').ok).toBe(true);
+    updateNoticeStack(stack as unknown as HTMLElement, w);
+    const after = farOfferParts(w)!.travel!;
+    expect(after).not.toBe(before);
+    expect(lead()).toContain(after);
+    expect(lead()).not.toContain(before);
   });
 });

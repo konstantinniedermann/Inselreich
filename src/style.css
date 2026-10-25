@@ -1506,7 +1506,7 @@ button.hud-balance:focus-visible {
   top: 48px;
   right: 8px;
   z-index: 10; /* über .notice-stack (9), unter Hover und Modal */
-  width: min(560px, 60%);
+  width: min(420px, 60%);
   max-height: calc(100% - 64px);
   overflow-y: auto;
 }
