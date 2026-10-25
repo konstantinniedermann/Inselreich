@@ -40,27 +40,42 @@ export function feastKindOf(chapel: Building): FeastKind {
   return chapel.feastKind ?? 'ascension';
 }
 
-/** Läuft an dieser Kapelle ein Fest der Art `kind`, und wirkt die Kapelle? */
+/** Kapellenliste je Welt und Tick (Id-Reihenfolge); nicht im Save, nicht im World-Typ. */
+const chapelIndex = new WeakMap<World, { tick: number; chapels: Building[] }>();
+
+function chapelsOf(world: World): Building[] {
+  const hit = chapelIndex.get(world);
+  if (hit !== undefined && hit.tick === world.tick) return hit.chapels;
+  const chapels = Object.values(world.buildings).filter(
+    (b) => BUILDING_DEFS[b.defId].service === 'faith',
+  );
+  chapelIndex.set(world, { tick: world.tick, chapels });
+  return chapels;
+}
+
+/** Verwirft die Kapellenliste der Welt; nötig, wenn im selben Tick Gebäude entstehen oder verschwinden. */
+export function invalidateFeastIndex(world: World): void {
+  chapelIndex.delete(world);
+}
+
+/** Läuft an dieser Kapelle ein Fest der Art `kind`, und wirkt die Kapelle? Live geprüft, nur die Liste ist gepuffert. */
 function runs(world: World, c: Building, kind: FeastKind): boolean {
+  if (world.buildings[c.id] !== c) return false;
   if (feastKindOf(c) !== kind || c.feastAt === undefined || !chapelWorks(c)) return false;
   return feastState(world, c).phase === 'active';
 }
 
 /** Wirkt ein Aufstiegsfest auf das Haus (Id-Reihenfolge, einmal). */
 export function feastActive(world: World, house: Building): boolean {
-  return Object.values(world.buildings).some(
+  return chapelsOf(world).some(
     (c) => runs(world, c, 'ascension') && inChapelRadius(world, c, house),
   );
 }
 
 /** Wirkt ein Erntefest auf das Gebäude: gleiche Insel, Kapelle im Radius. */
 export function harvestActive(world: World, b: Building): boolean {
-  return Object.values(world.buildings).some(
-    (c) =>
-      c.feastKind === 'harvest' &&
-      c.island === b.island &&
-      runs(world, c, 'harvest') &&
-      inChapelRadius(world, c, b),
+  return chapelsOf(world).some(
+    (c) => c.island === b.island && runs(world, c, 'harvest') && inChapelRadius(world, c, b),
   );
 }
 
@@ -71,7 +86,5 @@ export function harvestCycle(cycle: number): number {
 
 /** Läuft auf der Insel ein Markttag. */
 export function marketActive(world: World, island: number): boolean {
-  return Object.values(world.buildings).some(
-    (c) => c.feastKind === 'market' && c.island === island && runs(world, c, 'market'),
-  );
+  return chapelsOf(world).some((c) => c.island === island && runs(world, c, 'market'));
 }

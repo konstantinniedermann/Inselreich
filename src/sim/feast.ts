@@ -4,7 +4,14 @@ import { TAX_LEVELS } from './defs/tiers';
 import { FEAST_KINDS, type FeastKind } from './defs/feast';
 import { FEAST_COOLDOWN } from './defs/timing';
 import { takeStock } from './economy';
-import { chapelWorks, feastKindOf, feastState, inChapelRadius, isFeastKind } from './feastEffect';
+import {
+  chapelWorks,
+  feastKindOf,
+  feastState,
+  inChapelRadius,
+  invalidateFeastIndex,
+  isFeastKind,
+} from './feastEffect';
 import { noKontorTrade } from './islands';
 import { cycleOf } from './levels';
 import { effectiveTaxLevel } from './townhall';
@@ -101,6 +108,7 @@ export function holdFeast(world: World, id: number, kind: string = 'ascension'):
   const done = kind as FeastKind;
   payGoods(world, chapel, done);
   chapel.feastAt = world.tick;
+  invalidateFeastIndex(world);
   if (done === 'ascension') delete chapel.feastKind;
   else chapel.feastKind = done;
   return ok;
