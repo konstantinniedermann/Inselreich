@@ -62,3 +62,7 @@ Personas, Briefing-Standard und Telemetrie bleiben dabei unverändert; nur der S
   Kontext eines einzelnen Agenten nachlesbar bleiben.
 - Das Verhalten hängt an Claude-Code-Interna (Hintergrund-Standard, Tiefenlimit). Nach Updates den
   Berichtsweg im Dashboard prüfen; bei Bruch greift Rückfall B.
+
+## Nachtrag 2026-10-23 (R868 V2): Arbeiter-Starts laufen asynchron
+
+Die Entscheidung oben bleibt unverändert: Leads starten Arbeiter mit `run_in_background: false`, damit der Bericht beim Lead statt bei L0 landet. Die Probe (R868 V2, Prozess-Retro REL-30) zeigt zusätzlich: Aus einem Lead meldet das Werkzeug trotz `false` «Async agent launched» (alle 9 Lead-Starts). Ein Lead kann daher nicht im selben Zug auf den Arbeiter warten. Er beendet nach dem Start seinen Zug und wartet auf die Meldung des Arbeiters (Rückkanal R856); Polling auf Ausgabedateien entfällt, höchstens ein Heartbeat je 5 min. «Im Vordergrund» ist damit eine Wirkung (Bericht an den Lead), keine Blockade des Leads; die Konsequenz «ein Lead blockiert, bis alle seine Arbeiter fertig sind» gilt als «ein Lead wartet auf alle Meldungen». Regelbezug: R124 (3), R438 V1, R854, R856, R868.
