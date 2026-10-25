@@ -2927,3 +2927,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-33, alle 
 Regelbezug: R392, R815, R848, R954 · Kosten bei Irrtum: Regression bis +25 % unbemerkt.
 
 Entscheider: L0 · Anlass: Bericht lead-tech ZEITPIN-D1 · ADR: —
+
+## R969 · 2026-10-25 · Sicherung I-210, AUSBAU-LOGIK, Plan I-215
+
+Ruling: (1) **I-210** `feat/i210` @ `af16ee3a` gesichert; offen Review T03 und Wand-an-Wand-Messung (Folge-Lead nach Handoff). (2) **AUSBAU-LOGIK** `feat/ausbau-logik` @ `38279658`, T01/T02 abgenommen;
+`workforceTier` 2/3 (Stufe 4 = 4 in T11) gemäss Spec R3/AK-AL-03 **bestätigt**; neu erzeugte Fixtures `save-v6.json`/`save-v7.json` (nur `money`, `stock.cloth`) **prüft das Final-Review**; T00-Messung im
+nächsten freien Messfenster. (3) **Plan I-215** `plan/i215-volllast` @ `f61d2013` als **Entwurf** gesichert; offen Gate-Vorprüfliste (3) Messung und (4) Index-Abgleich, dann Gate Plan. **E-VL-1 ja**: wer
+nach Volllast merged (I-210, AUSBAU-LOGIK), setzt seinen Faktor vor die Volllast-Zeile und ergänzt den Kombifall (Auflage im jeweiligen Gate Merge). P-1–P-9 entscheidet L0 mit dem Gate Plan.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: `levels.ts` (`cycleOf`, `buildingUpkeep`) I-201/I-210/AUSBAU-LOGIK/I-215
+Regelbezug: R392, R909, R959, R963 · Kosten bei Irrtum: Merge-Nacharbeit in `levels.ts`.
+
+Entscheider: L0 · Anlass: Berichte lead-tech I-210, AUSBAU-LOGIK, plan-I-215 · ADR: —
