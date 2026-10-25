@@ -2219,3 +2219,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201 (Ausbau
 Regelbezug: R896, Verfassung §3 · Kosten bei Irrtum: Spec-Nachtrag.
 
 Entscheider: L0 · Anlass: Bericht lead-design AUSBAU-LOGIK · ADR: —
+
+## R909 · 2026-10-25 · Gate Spec GEBAEUDE-VARIANZ BEDENKEN angenommen
+
+Ruling: Gate-Bericht `.studio/handoffs/2026-10-25-lead-qa-gate-spec-gebaeude-varianz.md` **BEDENKEN angenommen**. Nachtrag durch `lead-art` (läuft, R907) nach allen Auflagen der Gate-Datei: Drehung zum
+Bauzeitpunkt in `src/sim` (alle Erzeugungswege: Bauaktion, Start-Kontor, Kolonien, Test-Helfer), Renderer-Rückfall r = 0, AK für Roundtrip, idempotente Migration, Abweisen ungültiger Felder, relativer
+Versionstest; S1 enthält Sim-Feld und Save; AK-GV-06 Messverfahren, -11 ≥ 5 Seeds, -14 zusätzlich Zoom 1 Vollfenster, -10 nie r ∈ {2,3} für eingeschränkte Typen (auch aus Save/Migration), Wächtertest zu
+FLAECHE; **Blindtest AK-GV-18 durch `qa-playtester`**, nicht den Autor. Plan-Auflage: Messschritt Rasterzeit vor S2 mit Rückfall «Füllen über mehrere Frames». `lead-qa` liest den Nachtrag einmal gegen,
+kein volles neues Gate. **Save-Kette:** Nummern vergibt die Merge-Reihenfolge (jeweils main + 1, R883-Prinzip); Specs nennen keine festen Nummern.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK (AK-GV-17), FLAECHE, Save-Kette
+Regelbezug: R883, R896, R907 · Kosten bei Irrtum: ein Gegenlese-Start.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa GEBAEUDE-VARIANZ · ADR: —
