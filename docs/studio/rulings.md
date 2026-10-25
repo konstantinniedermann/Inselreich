@@ -2493,3 +2493,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, AUSBAU
 Regelbezug: R392, R496, R673, R826, R905, R930 · Kosten bei Irrtum: ein Start aus dem Puffer.
 
 Entscheider: L0 · Anlass: Gate-Bericht lead-qa Plan I-210 · ADR: —
+
+## R932 · 2026-10-25 · Gate Merge REL-33 BEDENKEN: Konfliktmerge A1 nach Seerecht
+
+Ruling: Gate-Bericht `.studio/handoffs/2026-10-25-lead-qa-gate-REL-33.md` **BEDENKEN angenommen**. `lead-tech` (Budget 2) holt `feat/seerecht` per Merge in `fix/schiff-a1` (Lösung laut Bericht: `shipPose(world, ship,
+frac = 0)`, Seerecht-Cache behalten, beide `describe`-Blöcke) mit Teilbeleg und frischem Delta-Review `qa-code-reviewer` (R673). Danach `lead-production` mit Integrator: Bündel in der Reihenfolge des Berichts,
+**Kandidatenlauf `qa-playtester`** nach `.studio/qa/REL-33/` (Schiffsgleiten x1/x4, Seerecht-Beschluss während der Fahrt) und `make push-check` auf dem Kandidaten-Hash; Push frühestens 2026-10-26 (R816).
+Release-Notiz-Entwurf aus dem Bericht für state.md.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN S5/S6, I-210 (docs/ideen.md)
+Regelbezug: R673, R816, R868 V1, R929 · Kosten bei Irrtum: ein Release-Tag später.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa REL-33 · ADR: —
