@@ -2251,3 +2251,18 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT, Sta
 Regelbezug: R417, R464, R553, R870, R871 · Kosten bei Irrtum: Spec-/Plan-Nachtrag erneut, Save-Nummern beim Merge anpassen.
 
 Entscheider: L0 · Anlass: Gate-Berichte lead-qa · ADR: —
+
+## R875 · 2026-10-25 · Gate Merge REL-31 BEDENKEN angenommen; Konfliktlösung und lernen.md; DOKU-R868 abgenommen
+
+Ruling: (1) **Gate Merge REL-31** (`.studio/handoffs/2026-10-25-lead-qa-gate-REL-31.md`, Probe `f30b89d3`): BEDENKEN angenommen. `lead-production` führt die serielle Merge-Kette in
+`.worktrees/integrate` von main @ HEAD (enthält R873–R875) in der Reihenfolge R871 durch und löst die 5 Konflikte **genau nach den Lösungen des Gate-Handoffs** (ideen.md: Branch-Zeile;
+CHANGELOG: beide Einträge, 1.72 über 1.71, ggf. 1.73 oben; STUDIO.md: R856-Rückkanal von main behalten, Vordergrund- durch Start-Regel ersetzen; lernen.md: Branch-Zeile). Abweichender Konflikt →
+stoppen und melden (§6). (2) **lernen.md 41 > 40 Zeilen:** ein `studio-coach`-Arbeiter (Start aus dem lead-production-Budget) kürzt im Integrate-Stand um mindestens eine Inhaltszeile (Veraltetes
+streichen, nichts Neues), Commit «docs: lernen.md gekürzt (REL-31)». (3) Danach `production-integrator`: `make push-check; echo EXIT=$?`, Push nur bei Exit 0 per `git push origin <geprüfter
+Hash>:main` (R816: erster Push am 2026-10-25), CI und Pages prüfen. `feat/ort-a` und `docs/doku-r868` gehen in REL-32. (4) **DOKU-R868** (`docs/doku-r868`) abgenommen: ADR-007-Nachtrag zu R868 V2
+erfüllt den Vermerk aus R871; Merge mit REL-32 vor SEERECHT T06.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: COACH-R872 (lernen.md nicht, nur metrics/richtwerte), HAUSHALT-03 (rulings auf eigenem Branch)
+Regelbezug: R464, R769 V2, R810, R816, R868 V1, R871 · Kosten bei Irrtum: Merge-Kette im Integrate neu aufsetzen; Push einen Tag später.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa, Bericht lead-tech · ADR: ADR-007 Nachtrag
