@@ -12,10 +12,13 @@ import type { GoodId } from '../../src/sim/types';
 import { feastBlockReason, holdFeast } from '../../src/sim/feast';
 import { noKontorTrade } from '../../src/sim/islands';
 import { demolish } from '../../src/sim/build';
-import { serialize } from '../../src/sim/save';
+import { deserialize, serialize } from '../../src/sim/save';
 import { HOME, createWorld, home, islandOf } from '../../src/sim/world';
 import type { Building, World } from '../../src/sim/types';
+import { placeBuilding, placeRoad } from '../../src/sim/build';
 import {
+  forceGrass,
+  forceRect,
   houseNearKontor,
   placeService,
   placeTownhall,
@@ -625,5 +628,152 @@ describe('AK-FE15 und AK-FE21 Rest', () => {
       expect(importsOf(`${SIM}/${f}`)).toContain('./feastEffect');
       expect(importsOf(`${SIM}/${f}`)).not.toContain('./feast');
     }
+  });
+});
+
+describe('AK-FE13 Spielstand mit feastKind', () => {
+  const edit = (mutate: (b: Record<string, unknown>) => void, target: Building = chapel) => {
+    const raw = JSON.parse(serialize(w)) as { buildings: Record<string, Record<string, unknown>> };
+    mutate(raw.buildings[target.id]!);
+    return deserialize(JSON.stringify(raw));
+  };
+  const loaded = (r: ReturnType<typeof deserialize>): World => {
+    if (!r.ok) throw new Error(r.reason);
+    return r.world;
+  };
+
+  it('Rundlauf erhält feastAt und feastKind', () => {
+    for (const kind of ['harvest', 'market'] as const) {
+      const t = createWorld(3, { unlockAll: true });
+      const h = houseNearKontor(t);
+      const c = placeService(t, 'chapel', h.x + 5, h.y);
+      putBuilding(t, 0, 'weaver', c.x + 3, c.y);
+      c.connected = true;
+      t.tick = 1000;
+      fill(t, c);
+      expect(holdFeast(t, c.id, kind).ok).toBe(true);
+      const back = loaded(deserialize(serialize(t)));
+      expect(back.buildings[c.id]!.feastAt).toBe(1000);
+      expect(back.buildings[c.id]!.feastKind).toBe(kind);
+    }
+  });
+  it('alter Stand ohne feastKind: Aufstiegsfest, Zyklus ungekürzt', () => {
+    shop.level = 3;
+    const house = houseNearKontor(w);
+    const back = loaded(edit((b) => (b.feastAt = 1000)));
+    const c = back.buildings[chapel.id]!;
+    c.connected = true;
+    expect(feastActive(back, back.buildings[house.id]!)).toBe(true);
+    expect(cycleOf(back, back.buildings[shop.id]!)).toBe(20);
+  });
+  it('lehnt ungültige feastKind-Stände ab, ohne zu werfen', () => {
+    const bad: [string, (b: Record<string, unknown>) => void, Building?][] = [
+      ['ohne feastAt', (b) => (b.feastKind = 'harvest')],
+      [
+        'an einem Haus',
+        (b) => {
+          b.feastAt = 1000;
+          b.feastKind = 'harvest';
+        },
+        w.buildings[
+          Object.keys(w.buildings)
+            .map(Number)
+            .find((i) => w.buildings[i]!.house !== undefined)!
+        ]!,
+      ],
+      [
+        'unbekannte Art',
+        (b) => {
+          b.feastAt = 1000;
+          b.feastKind = 'harbor';
+        },
+      ],
+      [
+        'Zahl',
+        (b) => {
+          b.feastAt = 1000;
+          b.feastKind = 5;
+        },
+      ],
+    ];
+    for (const [name, mutate, target] of bad) {
+      expect(() => edit(mutate, target), name).not.toThrow();
+      expect(edit(mutate, target).ok, name).toBe(false);
+    }
+  });
+  it('Review Focus 1: ausdrückliches feastKind ascension', () => {
+    shop.level = 3;
+    const house = houseNearKontor(w);
+    const back = loaded(
+      edit((b) => {
+        b.feastAt = 1000;
+        b.feastKind = 'ascension';
+      }),
+    );
+    const c = back.buildings[chapel.id]!;
+    c.connected = true;
+    expect(c.feastKind).toBe('ascension');
+    expect(feastActive(back, back.buildings[house.id]!)).toBe(true);
+    expect(cycleOf(back, back.buildings[shop.id]!)).toBe(20);
+    const k2 = placeService(back, 'chapel', c.x, c.y + 3);
+    c.connected = true;
+    Object.assign(stockOf(back, k2), { rum: 30, cloth: 30 });
+    putBuilding(back, 0, 'weaver', k2.x + 3, k2.y);
+    expect(feastBlockReason(back, k2, 'harvest')).toBeNull();
+  });
+});
+
+function placeWorkshop(t: World, x: number, y: number): Building {
+  forceRect(t, x, y, 2, 2, 'grass');
+  const r = placeBuilding(t, 'weaver', x, y);
+  if (!r.ok || r.id === undefined) throw new Error('weaver not placed');
+  return t.buildings[r.id]!;
+}
+
+describe('AK-FE14 Determinismus je Festart', () => {
+  /** Szene mit echter Wegverbindung, damit Laden (Neuberechnung der Anbindung) nichts ändert. */
+  const scene = (kind: Kind): { w: World; c: Building; shop: Building } => {
+    const t = createWorld(3, { unlockAll: true, crisisLevel: 'off' });
+    const k = t.buildings[home(t).kontorId]!;
+    houseNearKontor(t);
+    for (let x = k.x + 2; x <= k.x + 12; x++) {
+      forceGrass(t, x, k.y + 1);
+      if (!placeRoad(t, x, k.y + 1).ok) throw new Error('Weg');
+    }
+    const c = placeService(t, 'chapel', k.x + 5, k.y + 2);
+    const s1 = placeWorkshop(t, k.x + 8, k.y + 2);
+    const s2 = placeWorkshop(t, k.x + 3, k.y + 2);
+    s1.level = 3;
+    s2.level = 3;
+    t.tick = 1000;
+    Object.assign(stockOf(t, c), { wool: 90, rum: 90, cloth: 90, glass: 90 });
+    expect(holdFeast(t, c.id, kind).ok).toBe(true);
+    return { w: t, c, shop: s1 };
+  };
+  const run = (t: World, n: number): void => {
+    for (let i = 0; i < n; i++) step(t);
+  };
+  it.each([...FEAST_KIND_IDS])('%s: gleicher Seed, gleicher Zustand', (kind) => {
+    const a = scene(kind).w;
+    const b = scene(kind).w;
+    run(a, 1800);
+    run(b, 1800);
+    expect(serialize(a)).toBe(serialize(b));
+  });
+  it.each([...FEAST_KIND_IDS])('%s: Speichern und Laden mitten im Fest ist bitgleich', (kind) => {
+    const l1 = scene(kind).w;
+    run(l1, 1200);
+    const l2 = scene(kind).w;
+    run(l2, 300);
+    const r = deserialize(serialize(l2));
+    if (!r.ok) throw new Error(r.reason);
+    const w2 = r.world;
+    if (kind === 'harvest') {
+      const sh = Object.values(w2.buildings).find((b) => b.defId === 'weaver')!;
+      expect(cycleOf(w2, sh)).toBe(15);
+    }
+    if (kind === 'market') expect(sellPrice(w2, 'rum', 1, HOME)).toBe(ref(w2, 'rum', 1, 125));
+    run(w2, 900);
+    expect(serialize(l1)).toBe(serialize(w2));
   });
 });
