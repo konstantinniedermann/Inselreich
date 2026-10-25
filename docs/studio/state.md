@@ -219,7 +219,8 @@ Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine 
    - INSELPROBEN T12–T14 + Final-Review, ORT-A T20c/T19/T23/T20b-2/T24–T26 (unverändert aus Vorsession), Stadtrecht, I-197/I-197b.
 3. **Testfrei:** Retro-Umsetzung R957 (V1–V3, `studio-coach`) vor neuen Plänen; Gate Spec **I-215 Volllast** (`design/volllast` @ `db9da014`, Save migrieren R952, Spec-Nachtrag AK-VL-17), danach Plan; Retro-Vorschläge 48c8580f annehmen/umsetzen; Pool-Eintrag PERF-FEST-STRESS (R950).
 4. **Save-Kette:** Nummern nur per Merge-Reihenfolge (R909): SEERECHT 19 (REL-33), danach je main + 1 (I-210 T16, I-214, GV, HAFEN S3/S4, FLAECHE FL-3, AL Etappe 2, Volllast).
-5. Messfristen R750/R755 2026-10-30, M1 2026-11-02, E-072/E-073 2026-11-19.
+5. **Erweiterung 2 «Neue Ufer»** (R958): Design-Paket I-194/I-195/I-196 mit TIEFE-4- und Rückfracht-Auflagen (R927, R933), nach den Umsetzungs-Strängen.
+6. Messfristen R750/R755 2026-10-30, M1 2026-11-02, E-072/E-073 2026-11-19.
 
 ## Aktuelles Projekt und Phase
 
@@ -276,5 +277,5 @@ Alle Freigaben dieser Session verfallen mit Session-Ende; Reste neu erteilen: I-
 
 ## Offene Entscheide
 
-- Nutzer: **N-104 offen** (Welche Erweiterung nach Erweiterung 1? Empfehlung «Neue Ufer»). N-102 beantwortet (R922).
+- Nutzer: keine offen. N-104 beantwortet: Erweiterung 2 = «Neue Ufer» (R958); N-102 beantwortet (R922).
 - L0: keine.

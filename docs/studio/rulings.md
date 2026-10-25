@@ -2798,3 +2798,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle Plan-Pak
 Regelbezug: R553, R673, R774, R826, R954 · Kosten bei Irrtum: drei passive Messgrössen.
 
 Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —
+
+## R958 · 2026-10-25 · N-104: Erweiterung 2 = «Neue Ufer»
+
+Ruling: Nutzerentscheid N-104: **Erweiterung 2 ist «Neue Ufer»** (Entdeckung, kalte Nordinsel mit eigener Kette). Damit werden wirksam: TIEFE-4-Auflagen an I-189/I-194 (R927 E1/E2), Rückfracht-Entwürfe E1–E5
+(R933). Spec-Arbeit an I-194/I-195/I-196 ist freigegeben; Start als Design-Paket (`lead-design`, Brainstorming mit L0) in der Folgesession nach den Umsetzungs-Strängen, Reihenfolge gegenüber Erweiterung 1 laut
+deren Stand. «Ernte und Frost» bleibt Kandidat für Erweiterung 3.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Erweiterung 1 (`.worktrees/erweiterung-1`, Nutzer-Session R519), HAFEN (Schiffe, Fahrzeiten)
+Regelbezug: R862, R927, R933 · Kosten bei Irrtum: —
+
+Entscheider: Nutzer · Anlass: Antwort N-104 · ADR: —
