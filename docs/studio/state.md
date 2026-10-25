@@ -199,7 +199,7 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 **Daueraufträge des Nutzers (R863: jede Nutzeranweisung gilt dauerhaft, ausser ausdrücklich nur für die laufende Session; im Zweifel dauerhaft):** **R862** freie Kapazität vorrangig für
 Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine Playtests als Ideen-Input** (Browser-Checks zur Abnahme bleiben, R867), Schweigen des Nutzers = Zustimmung; **R445**;
 **R826** (Deckel 10 bei grüner Limit-Ampel, ≤ 3 Test-Controller, ≤ 2 Browser); **R853/R856** (Arbeiter-Meldungen an den Lead; **L0 sendet jedem Lead direkt nach dem Start seine agentId**, R879);
-**R868 V2** (Starts asynchron, Lead wartet ruhig). **Push-Takt:** höchstens ein Push je Kalendertag (R816); voller Lauf nur `make push-check`.
+**R868 V2** (Starts asynchron, Lead wartet ruhig). **R896** Spielregeln und Ausbau-Bedingungen fachlich erklärbar (Nachvollziehbarkeit und Logik, Gate-Kriterium); Nutzer-Playtests sind Input erster Ordnung, vor dem Pool. **Push-Takt:** höchstens ein Push je Kalendertag (R816); voller Lauf nur `make push-check`.
 
 1. **SEERECHT neu ans Gate** (`feat/seerecht` @ `8473afb0`, Save v19): Fix `tests/sim/imports.test.ts` (PLAN-NAHT: `src/sim/council.ts` importiert `./islands`) im Strang, voller Lauf der Struktur-Tests
    (`imports`, `leverReads`, `contrast`, R888 (4)), dann Gate Merge. Offen aus UI-HAEPPCHEN-J: Plural «1 Häuser» `src/ui/council.ts:50`. Aufräumbar (per Ruling): `.worktrees/integrate` auf `int/rel-32`,
