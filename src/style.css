@@ -1497,7 +1497,7 @@ button.hud-balance:focus-visible {
 }
 .council-preview {
   font-size: 12px;
-  opacity: 0.75;
+  color: var(--ink-muted);
 }
 .council-note {
   font-size: 13px;
