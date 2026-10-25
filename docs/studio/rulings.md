@@ -2384,3 +2384,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Stadtplanung 
 Regelbezug: R69, R826, R878 · Kosten bei Irrtum: Save-Nummern beim Merge tauschen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech SEERECHT, Limit-Ampel · ADR: —
+
+## R884 · 2026-10-25 · ORT-A: Schranke Weg-Objekte r ≤ 10
+
+Ruling: Zweites Delta-Review ORT-A ZURÜCK: r ≤ 7 (R882) hält bei Hausänderungen nicht (analytisch 9–10, Probe 4 Fälle r = 8 in 102 644 Änderungen). AK-41 und AK-07 gelten für die Weg-Objekte mit
+**r ≤ 10** (Kontext 4 + Konflikt 6), ersetzt R882 (2) in diesem Punkt; kein Umbau der Ortsnähe-Prüfung. Abschluss mit dichtem Haus-Test (Seeds 1–20), korrigierten Kommentaren und Spec-Wortlaut und
+drittem frischem opus-Delta-Review (letzter freier Start). Rein kosmetische Wirkung: Weg-Objekte können bei Bau/Abriss bis 10 Kacheln weit umspringen.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Stadtplanung C1, LEBEN-STRASSE
+Regelbezug: R673, R708, R826, R882 · Kosten bei Irrtum: sichtbares Umspringen; Umbau der Ortsnähe-Prüfung als eigenes Paket.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ORT-A · ADR: —
