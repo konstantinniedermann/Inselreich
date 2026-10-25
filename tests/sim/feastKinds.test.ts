@@ -1,12 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { FEAST_KINDS, FEAST_KIND_IDS } from '../../src/sim/defs/feast';
-import { feastKindOf, harvestCycle, isFeastKind } from '../../src/sim/feastEffect';
+import { feastActive, feastKindOf, harvestCycle, isFeastKind } from '../../src/sim/feastEffect';
+import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
+import { cycleOf, effectiveCycle, traitOf } from '../../src/sim/levels';
+import { sell, sellPrice } from '../../src/sim/trade';
+import { step } from '../../src/sim/tick';
+import { GOODS, SELL_DROP, SELL_FLOOR } from '../../src/sim/defs/goods';
+import { FEAST_COOLDOWN, FEAST_DURATION } from '../../src/sim/defs/timing';
+import type { GoodId } from '../../src/sim/types';
 import { feastBlockReason, holdFeast } from '../../src/sim/feast';
 import { noKontorTrade } from '../../src/sim/islands';
 import { demolish } from '../../src/sim/build';
 import { serialize } from '../../src/sim/save';
-import { createWorld, home, islandOf } from '../../src/sim/world';
+import { HOME, createWorld, home, islandOf } from '../../src/sim/world';
 import type { Building, World } from '../../src/sim/types';
 import {
   houseNearKontor,
@@ -371,5 +378,252 @@ describe('AK-FE21 Importstruktur (P-11)', () => {
     const closure = [...importClosure(`${SIM}/islands.ts`)].map((p) => p.slice(SIM.length + 1));
     expect(closure).not.toContain('feast.ts');
     expect(closure).not.toContain('population.ts');
+  });
+});
+
+describe('Reviewer T02: Kapelle brennt und nicht angebunden, je Art', () => {
+  for (const kind of ['ascension', 'harvest', 'market'] as const) {
+    it(`${kind}: brennt`, () => {
+      chapel.outageUntil = w.tick + 100;
+      expect(reasonOf(holdFeast(w, chapel.id, kind))).toBe('Kapelle brennt');
+      expect(feastBlockReason(w, chapel, kind)).toBe('Kapelle brennt');
+    });
+    it(`${kind}: nicht angebunden`, () => {
+      chapel.connected = false;
+      expect(reasonOf(holdFeast(w, chapel.id, kind))).toBe('Kapelle nicht angebunden');
+      expect(feastBlockReason(w, chapel, kind)).toBe('Kapelle nicht angebunden');
+    });
+  }
+});
+
+/** Direkt gesetztes Fest (ohne Lager und Sperren). */
+function startFeast(c: Building, kind: Kind): void {
+  c.feastAt = w.tick;
+  if (kind === 'ascension') delete c.feastKind;
+  else c.feastKind = kind;
+}
+
+describe('AK-FE7 Erntefest verkürzt cycleOf', () => {
+  beforeEach(() => {
+    shop.level = 3;
+  });
+  it('15 während active, 20 danach, 20 ausserhalb des Radius', () => {
+    expect(cycleOf(w, shop)).toBe(20);
+    const far = putBuilding(w, 0, 'weaver', chapel.x, chapel.y + 14);
+    far.level = 3;
+    expect(holdFeast(w, chapel.id, 'harvest').ok).toBe(true);
+    expect(cycleOf(w, shop)).toBe(15);
+    expect(cycleOf(w, far)).toBe(20);
+    w.tick = chapel.feastAt! + FEAST_DURATION;
+    expect(cycleOf(w, shop)).toBe(20);
+  });
+  it('Inselvorteil und Ratsbeschluss bleiben, dann Erntefest', () => {
+    w.council[2] = 'A';
+    const c = cycleOf(w, shop)!;
+    expect(c).toBeLessThan(20);
+    expect(holdFeast(w, chapel.id, 'harvest').ok).toBe(true);
+    expect(cycleOf(w, shop)).toBe(harvestCycle(c));
+  });
+  it('Inselvorteil einer Fremdinsel', () => {
+    const t = twoIslandWorld();
+    t.islands[1]!.kind = 'B';
+    const c = putBuilding(t, 1, 'chapel', 5, 5);
+    const q = putBuilding(t, 1, 'quarry', 8, 5);
+    t.tick = 1000;
+    fill(t, c);
+    const base = cycleOf(t, q)!;
+    expect(traitOf(t, 1, 'quarry')).toBeDefined();
+    expect(base).toBe(effectiveCycle(t, 1, 'quarry', BUILDING_DEFS.quarry.cycle!));
+    expect(holdFeast(t, c.id, 'harvest').ok).toBe(true);
+    expect(cycleOf(t, q)).toBe(harvestCycle(base));
+  });
+  it('Brand der Kapelle hebt die Wirkung auf, Brandende stellt sie wieder her', () => {
+    expect(holdFeast(w, chapel.id, 'harvest').ok).toBe(true);
+    chapel.outageUntil = w.tick + 100;
+    expect(cycleOf(w, shop)).toBe(20);
+    delete chapel.outageUntil;
+    expect(cycleOf(w, shop)).toBe(15);
+  });
+  it('Abriss der Kapelle beendet die Wirkung im selben Tick, progress bleibt', () => {
+    expect(holdFeast(w, chapel.id, 'harvest').ok).toBe(true);
+    shop.progress = 7;
+    expect(demolish(w, chapel.id).ok).toBe(true);
+    shop.connected = true;
+    expect(cycleOf(w, shop)).toBe(20);
+    expect(shop.progress).toBe(7);
+  });
+});
+
+describe('AK-FE8 überlappende Erntefeste', () => {
+  it('wirken nicht doppelt', () => {
+    shop.level = 3;
+    const k2 = placeService(w, 'chapel', chapel.x, chapel.y + 3);
+    chapel.connected = true;
+    startFeast(chapel, 'harvest');
+    startFeast(k2, 'harvest');
+    expect(cycleOf(w, shop)).toBe(15);
+  });
+});
+
+describe('AK-FE9 Produktion im Erntefest', () => {
+  it('fertigt nach dem verkürzten Zyklus', () => {
+    w.crisisLevel = 'off';
+    shop.level = 3;
+    shop.progress = 17;
+    Object.assign(stockOf(w, chapel), { wool: 90, cloth: 0 });
+    startFeast(chapel, 'harvest');
+    step(w);
+    expect(stockOf(w, chapel).cloth).toBe(1);
+    expect(shop.progress).toBe(0);
+  });
+  it('Ausstoss über 600 Ticks etwa 40 (gezählt an den Zyklusenden, Verbrauch der Häuser egal)', () => {
+    w.crisisLevel = 'off';
+    shop.level = 3;
+    startFeast(chapel, 'harvest');
+    let made = 0;
+    for (let i = 0; i < FEAST_DURATION; i++) {
+      stockOf(w, chapel).wool = 90;
+      const before = shop.progress;
+      step(w);
+      if (shop.progress < before) made += 1;
+    }
+    expect(made).toBeGreaterThanOrEqual(39);
+    expect(made).toBeLessThanOrEqual(41);
+  });
+});
+
+/** Referenz der Spec: Erlös mit Prozentfaktor `m`. */
+function ref(world: World, good: GoodId, n: number, m: number): number {
+  let acc = 0;
+  let pct = world.sellPct[good];
+  for (let i = 0; i < n; i++) {
+    acc += GOODS[good].sell * pct * m;
+    pct = Math.max(SELL_FLOOR, pct - SELL_DROP);
+  }
+  return Math.floor(acc / 10000);
+}
+
+describe('AK-FE10 Markttag in sellPrice', () => {
+  it('ohne Markttag Faktor 100, mit Markttag 125', () => {
+    expect(sellPrice(w, 'rum', 10, HOME)).toBe(ref(w, 'rum', 10, 100));
+    expect(sellPrice(w, 'rum', 10, HOME)).toBe(171);
+    startFeast(chapel, 'market');
+    expect(sellPrice(w, 'rum', 10, HOME)).toBe(ref(w, 'rum', 10, 125));
+  });
+  it('Boom (150) gewinnt gegen den Markttag', () => {
+    w.crisis = { period: 0, kind: 'boom', from: w.tick, until: w.tick + 100, good: 'rum' };
+    const boomOnly = sellPrice(w, 'rum', 10, HOME);
+    expect(boomOnly).toBe(ref(w, 'rum', 10, 150));
+    startFeast(chapel, 'market');
+    expect(sellPrice(w, 'rum', 10, HOME)).toBe(boomOnly);
+  });
+  it('Vorliebe (130) gewinnt gegen den Markttag', () => {
+    const t = twoIslandWorld();
+    const c = putBuilding(t, 1, 'chapel', 5, 5);
+    const without = sellPrice(t, 'cloth', 10, 1);
+    expect(without).toBe(ref(t, 'cloth', 10, 130));
+    c.feastAt = t.tick;
+    c.feastKind = 'market';
+    expect(sellPrice(t, 'cloth', 10, 1)).toBe(without);
+  });
+  it('zwei Markttage zählen einmal', () => {
+    const k2 = placeService(w, 'chapel', chapel.x, chapel.y + 3);
+    chapel.connected = true;
+    startFeast(chapel, 'market');
+    startFeast(k2, 'market');
+    expect(sellPrice(w, 'rum', 10, HOME)).toBe(ref(w, 'rum', 10, 125));
+  });
+  it('Sättigung sellPct nach sell unabhängig vom Markttag', () => {
+    const w2 = createWorld(3, { unlockAll: true });
+    const h2 = houseNearKontor(w2);
+    const c2 = placeService(w2, 'chapel', h2.x + 5, h2.y);
+    w2.tick = 1000;
+    stockOf(w, chapel).rum = 10;
+    stockOf(w2, c2).rum = 10;
+    startFeast(c2, 'market');
+    expect(sell(w, 'rum', 10).ok).toBe(true);
+    expect(sell(w2, 'rum', 10).ok).toBe(true);
+    expect(w2.sellPct).toEqual(w.sellPct);
+  });
+});
+
+describe('AK-FE11 Aufstiegs- und Erntefest nebeneinander', () => {
+  it('Haus im Radius von K1 und Betrieb im Radius von K2', () => {
+    shop.level = 3;
+    const house =
+      w.buildings[
+        Object.keys(w.buildings)
+          .map(Number)
+          .find((i) => w.buildings[i]!.house !== undefined)!
+      ]!;
+    const k2 = putBuilding(w, 0, 'chapel', chapel.x, chapel.y + 8);
+    startFeast(chapel, 'ascension');
+    startFeast(k2, 'harvest');
+    expect(feastActive(w, house)).toBe(true);
+    expect(cycleOf(w, shop)).toBe(15);
+    const near2 = putBuilding(w, 0, 'house', chapel.x, chapel.y + 16);
+    expect(feastActive(w, near2)).toBe(false);
+  });
+});
+
+describe('AK-FE12 Aufstiegsfest nach Erntefest', () => {
+  it('löscht feastKind, Betrieb wieder 20', () => {
+    shop.level = 3;
+    startFeast(chapel, 'harvest');
+    w.tick = chapel.feastAt! + FEAST_COOLDOWN;
+    expect(holdFeast(w, chapel.id, 'ascension').ok).toBe(true);
+    expect('feastKind' in chapel).toBe(false);
+    expect(cycleOf(w, shop)).toBe(20);
+  });
+});
+
+describe('Review Focus 2 bis 4 Inselgrenzen und Kapellenzustand', () => {
+  it('Heimat-Erntefest wirkt nicht auf Insel 1 an gleichen Koordinaten', () => {
+    const t = twoIslandWorld();
+    const c = putBuilding(t, 0, 'chapel', 5, 5);
+    const a = putBuilding(t, 0, 'weaver', 8, 5);
+    const b = putBuilding(t, 1, 'weaver', 8, 5);
+    a.level = 3;
+    b.level = 3;
+    c.feastAt = t.tick;
+    c.feastKind = 'harvest';
+    expect(cycleOf(t, a)).toBe(15);
+    expect(cycleOf(t, b)).toBe(20);
+  });
+  it('Markttag-Kapelle: Brand 100, Brandende 125, Abriss 100', () => {
+    startFeast(chapel, 'market');
+    const plain = ref(w, 'rum', 10, 100);
+    chapel.outageUntil = w.tick + 100;
+    expect(sellPrice(w, 'rum', 10, HOME)).toBe(plain);
+    delete chapel.outageUntil;
+    expect(sellPrice(w, 'rum', 10, HOME)).toBe(ref(w, 'rum', 10, 125));
+    expect(demolish(w, chapel.id).ok).toBe(true);
+    expect(sellPrice(w, 'rum', 10, HOME)).toBe(plain);
+  });
+  it('Markttag auf Insel 1 lässt den Heimatpreis unverändert', () => {
+    const t = twoIslandWorld();
+    const c = putBuilding(t, 1, 'chapel', 5, 5);
+    const before = sellPrice(t, 'rum', 10, HOME);
+    c.feastAt = t.tick;
+    c.feastKind = 'market';
+    expect(sellPrice(t, 'rum', 10, HOME)).toBe(before);
+    expect(sellPrice(t, 'rum', 10, 1)).toBe(ref(t, 'rum', 10, 125));
+  });
+});
+
+describe('AK-FE15 und AK-FE21 Rest', () => {
+  const strip = (f: string): string =>
+    readFileSync(`${SIM}/${f}`, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/.*$/gm, '');
+  it('keine 75 oder 125 in feastEffect, levels, trade', () => {
+    for (const f of ['feastEffect.ts', 'levels.ts', 'trade.ts'])
+      expect(strip(f), f).not.toMatch(/\b(75|125)\b/);
+  });
+  it('levels und trade importieren feastEffect, nicht feast', () => {
+    for (const f of ['levels.ts', 'trade.ts']) {
+      expect(importsOf(`${SIM}/${f}`)).toContain('./feastEffect');
+      expect(importsOf(`${SIM}/${f}`)).not.toContain('./feast');
+    }
   });
 });

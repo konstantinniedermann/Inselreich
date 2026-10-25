@@ -1,4 +1,5 @@
 import { BOOM_PCT } from './defs/crises';
+import { FEAST_KINDS } from './defs/feast';
 import { ISLANDS, PREFER_PCT } from './defs/sea';
 import {
   BUY_CAP,
@@ -11,6 +12,7 @@ import {
 } from './defs/goods';
 import { BUY_RECOVERY_INTERVAL, SELL_RECOVERY_INTERVAL } from './defs/timing';
 import { addStock, takeStock } from './economy';
+import { marketActive } from './feastEffect';
 import { activeEdictDef } from './edicts';
 import { goodLock } from './unlocks';
 import type { GoodId, MonumentGood, Result, World } from './types';
@@ -80,14 +82,15 @@ export function prefersGood(world: World, island: number, good: GoodId): boolean
 }
 
 /**
- * Erlös für `n` Einheiten auf `island`: Sättigung je Einheit (global), Faktor in %. Boom und Vorliebe stapeln
- * nicht, es gilt der höhere. Ohne Boom und Vorliebe bitgleich zu M5. Rein.
+ * Erlös für `n` Einheiten auf `island`: Sättigung je Einheit (global), Faktor in %. Boom, Vorliebe und Markttag
+ * stapeln nicht, es gilt der höchste. Ohne Boom und Vorliebe bitgleich zu M5. Rein.
  */
 export function sellPrice(world: World, good: GoodId, n: number, island: number = HOME): number {
   const c = world.crisis;
   const boom = c !== null && c.kind === 'boom' && c.good === good ? BOOM_PCT : 100;
   const prefer = prefersGood(world, island, good) ? PREFER_PCT : 100;
-  const m = Math.max(boom, prefer);
+  const market = marketActive(world, island) ? FEAST_KINDS.market.sellPct : 100;
+  const m = Math.max(boom, prefer, market);
   let acc = 0;
   let pct = world.sellPct[good];
   for (let i = 0; i < n; i++) {
