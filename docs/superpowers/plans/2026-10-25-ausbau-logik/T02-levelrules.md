@@ -1,6 +1,6 @@
 # T02 AL-2a Blattmodule und `runningLevel` (reine Abfrage, ohne Wirkung)
 
-Persona `tech-sim-engineer` · Strang A · Tools ≈ 70 · AK-AL-03, 06, 07, 08, 09 (je ohne Teil 4), 46 (Radius-Teil und Strukturtest), 47, Review Focus 2 und 3 · blocked-by T01; **Wald/Gras-Teil** von AK-08 erst nach L0-Entscheid E-P1 (Plan-Index). Bis dahin Fischer, Gebirge, Feuerwache, Fachkräfte zuerst umsetzen; ist E-P1 bei Taskende offen, Wald/Gras mit Spec-Werten umsetzen und im Bericht markieren.
+Persona `tech-sim-engineer` · Strang A · Tools ≈ 70 · AK-AL-03, 06, 07, 08, 09 (je ohne Teil 4), 46 (Radius-Teil und Strukturtest), 47, Review Focus 2 und 3 · blocked-by T01. **Wald/Gras-Teil** von AK-08 mit den Spec-Werten umsetzen (E-P1 durch R935 entschieden; FL-2 ersetzt die Stufenbedingung der fünf Flächentypen später per Ruling).
 
 Spec: Begriffe, R3, R4, R5 (erste vier Punkte), Anhang 02 N2/N5, AK-AL-03/06–09/46/47.
 

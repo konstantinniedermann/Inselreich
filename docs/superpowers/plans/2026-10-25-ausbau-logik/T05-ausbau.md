@@ -26,7 +26,8 @@ export function upgradeBuilding(world: World, id: number): Result;
   - **AK-AL-24 (Vergleich)** in `levelChecks.test.ts`: je Zeile der R9-Welt: Welt so ändern, dass nur diese Zeile ✗ ist → `upgradeBuilding` scheitert mit genau diesem Text; alle ✓ → `ok`.
 - [ ] **Rot-Lauf:** `npx vitest run tests/sim/upgrade.test.ts tests/sim/levelChecks.test.ts; echo EXIT=$?` → Exit ≠ 0.
 - [ ] **Umsetzen** in `upgrade.ts`; Bestandstests mit alten Texten (`Zu wenig Stein` ohne Zahlen, `Zu wenig Stoff`) anpassen — nur Text, Ledger-Liste der geänderten Erwartungen.
-- [ ] **Grün:** gleicher Lauf → 0; `npx vitest related --run src/sim/upgrade.ts src/sim/levelChecks.ts; echo EXIT=$?` → 0 bis auf `balance-upgrade.test.ts` (P-9, Ledger).
+- [ ] **Grün:** gleicher Lauf → 0; `npx vitest related --run src/sim/upgrade.ts src/sim/levelChecks.ts --reporter=json --outputFile=.studio/qa/ausbau-logik/rot-T05.json; echo EXIT=$?` → 0 bis auf `balance-upgrade.test.ts` (P-9, Ledger).
+- [ ] **Rot-Menge belegen (P-9, R942):** `node -e "const r=require('./.studio/qa/ausbau-logik/rot-T05.json');console.log(r.testResults.filter(t=>t.status==='failed').map(t=>t.name).join('\n')||'(keine)')"; echo EXIT=$?` → genau eine Zeile `…/tests/sim/balance-upgrade.test.ts` (oder `(keine)`). Liste und Messwert (gemessene Ausbauzahl) ins Ledger. Mehr als diese Datei rot → **Stopp**, an den Controller.
 - [ ] **Balancing:** `npx vitest run tests/sim/balance.test.ts <Baseline-Liste T00>; echo EXIT=$?` → 0.
 - [ ] **Teilbeleg:** `npx tsc --noEmit`, `make lint`, `make zeittests`, `make conflicts`, je `; echo EXIT=$?`.
 - [ ] **Commit:** `feat: Ausbau prüft Fachkräfte, Standort und Baustoff in einer Reihenfolge (AUSBAU-LOGIK T05)`. Hash an den Controller (Abzweig B und C).
