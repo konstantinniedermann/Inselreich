@@ -2244,3 +2244,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Seegang (Här
 Regelbezug: R395, R896, R897 · Kosten bei Irrtum: Inselproben startet mit 4 statt 5 Proben.
 
 Entscheider: L0 · Anlass: Entwurf lead-tech INSELPROBEN E-IP-1 · ADR: —
+
+## R911 · 2026-10-25 · Spec I-210 nach Nachtrag abgenommen; Plan startet
+
+Ruling: `design/i210-bittschrift` @ `74f3b181` (25 AK-BS, Anhänge 02–05, B-1–B-10 eingearbeitet, keine neuen Spielwerte) **abgenommen**, kein neues Gate (R904). **Plan I-210** an `lead-tech` (opus, Tech-Lead
+beim Plan, Budget 3) mit den Auflagen aus Anhang 02 (Tickrate-Messung vor Zusage, 72 Läufe < 30 s je Datei). Abhängigkeit B4/B5 → I-201 im Plan als Reihenfolge, Zukaufpreis-Rechnung als möglicher Nachzug.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, AUSBAU-LOGIK, Zukaufpreis, INSELPROBEN (AK-BS-23)
+Regelbezug: R896, R904 · Kosten bei Irrtum: Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-design I-210 · ADR: —
