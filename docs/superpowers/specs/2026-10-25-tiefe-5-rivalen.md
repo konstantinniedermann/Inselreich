@@ -26,7 +26,7 @@ Stand 2026-10-25 · Autor: design-researcher · Paket TIEFE-5 · Prozessstufe le
 - **Mechanik:** Wettbewerber haben Schwierigkeitsstufen und Persönlichkeiten. Leichte KI fragt vor einer Inselbesiedlung um Erlaubnis, mittlere und schwere nicht [Q6]. Ein Friedensschalter existiert; die Entwickler begründen Krieg als Abschreckung («Die Möglichkeit eines Krieges schreckt viele Spieler und KI ab») und Frieden als aktiven Prozess [Q9].
 - **Spielerurteil:**
   - Die mittlere KI gilt als passiv: «sie erweitern nur sehr passiv ihre eigenen Inseln», selbst Piraten seien wenig aktiv [Q7]. Harte Gegner machen die Welt «lebendiger» [Q7].
-  - Andere Seite: Nach Entdeckung der Neuen Welt seien alle Inseln sofort von der KI belegt gewesen, was den Durchgang ruiniere [Q11]. Wer ohne KI spielt, langweile sich nach etwa 25 bis 35 Stunden, weil Verluste und Inselkampf fehlen [Q10-Suche, siehe Q11].
+  - Andere Seite: Nach Entdeckung der Neuen Welt seien alle Inseln sofort von der KI belegt gewesen, was den Durchgang ruiniere [Q11]. Wer ohne KI spielt, langweile sich nach etwa 25 bis 35 Stunden, weil Verluste und Inselkampf fehlen [Q11].
   - KI-Handel gilt als «meh» und «sehr episodisch» [Q8]. Cheat-Vorwürfe bei höheren Stufen kehren wieder [Q7, Q11].
   - Eine Stimme: Die KI sei ein Puffer zwischen Spieler und Piraten, Wert für das Tempo statt für den Kampf [Q11].
   - Land-Kampf lehnen viele ab: «Anno is not a combat game» [Q10].
@@ -155,7 +155,7 @@ Gemeinsame Regel für alle Kandidaten (Determinismus): Rivalen-Entscheidungen si
 
 ## Quellenliste
 
-Hinweis: [Q10]-Aussagen zu «Spielzeit ohne KI» stammen aus Suchzusammenfassungen zu Anno-1800-Foren; Primärtext nur für den Land-Kampf-Teil abgerufen.
+Hinweis: Aussagen zu «Spielzeit ohne KI» (Q11) stammen aus Suchzusammenfassungen zu Anno-1800-Foren; Primärtext nur für den Land-Kampf-Teil abgerufen.
 
 | Nr. | Quelle                                                                                                                               | Verwendet für                                                         |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
