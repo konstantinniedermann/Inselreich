@@ -2857,3 +2857,13 @@ Verfassung berührt?: nein (Nutzer-Vorbehalt N-104 erledigt) · Überschneidung 
 Regelbezug: R862, R896, R927, R933, R958 · Kosten bei Irrtum: Spec-Nachtrag NU-1.
 
 Entscheider: L0 · Anlass: Brainstorming lead-design design-NEUE-UFER · ADR: —
+
+## R963 · 2026-10-25 · I-215 Spec freigegeben; Plan startet
+
+Ruling: Nachtrag `add15171` auf `design/volllast` erfüllt die Auflagen 1–9 (Kurzprüfung `lead-qa` OK). **Spec I-215 freigegeben**, Plan startet (`lead-tech`, opus, Phase `plan-I-215`). Der Plan führt die
+Wertgrenzen als Risiko, bestätigt AK-VL-19 = 59 und AK-VL-14 in Rot/Grün und legt den Merge-Stand für AK-VL-03 fest (Reihenfolge `cycleOf`). Balancing-Test unverändert, kein Wert-Ruling. Save-Nummer nach R909.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK, I-201, I-210 (`levels.ts`)
+Regelbezug: R909, R952, R960 · Kosten bei Irrtum: —
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-215-kurz · ADR: —
