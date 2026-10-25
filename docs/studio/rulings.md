@@ -2867,3 +2867,26 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK,
 Regelbezug: R909, R952, R960 · Kosten bei Irrtum: —
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-I-215-kurz · ADR: —
+
+## R964 · 2026-10-25 · COACH-R957 abgenommen; E-075 abgeschlossen; Doku-Branches in REL-33
+
+Ruling: `docs/coach-r957` @ `fdb4ba63` (Handbuch 1.78, lead-tech 1.19, Briefing-Vorlage V2/V3, Output-Style R959, E-077–E-079 passiv; `make studio-test` grün) **abgenommen**. **E-075** abgeschlossen als
+«Messauftrag erledigt, Hypothese nicht bestätigt» (78,1 % gegen ≤ 60 %). Die Ampel-Datei bleibt unverändert; die 85-/90-%-Grenzen aus R959 prüft L0 selbst (keine Werkzeugänderung). Merge-Reihenfolge
+`docs/coach-r886` → `docs/coach-r920` → `docs/coach-r957`, dazu `docs/retro-48c8580f` und `design/tiefe-5`: alle gehen mit dem ZEITPIN-Fix in den REL-33-Kandidaten (`integrate/rel-33`), ein
+`make push-check` für alles (R810).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-33, ZEITPIN-D1
+Regelbezug: R810, R816, R957, R959 · Kosten bei Irrtum: Doku-Merge einen Tag später.
+
+Entscheider: L0 · Anlass: Bericht studio-coach COACH-R957 · ADR: —
+
+## R965 · 2026-10-25 · TIEFE-5 Rivalen: Empfehlungen
+
+Ruling: Recherche TIEFE-5 (`design/tiefe-5` @ `9da59778`, 22 Quellen) **abgenommen**. **E-1 ja:** R-D Handelshaus-Wertung (S) und R-C Konzessions-Auktion mit sichtbarem Rivalen-Gebot (S–M) als Ideen in
+den Pool (Eintrag durch `lead-design` bei der nächsten Pool-Pflege), R-E, R-A, R-B als Rivalen-Bausteine vermerkt. **E-2 ja:** jede Rivalen-Spec hat den Schalter «Rivalen aus/leicht/stark». **E-3 ja:**
+eigener seeded Strom für Rivalen (analog ADR-010), Ziele 1–3 ohne Rivalen bitgleich. **E-4:** R-F (Gegenantrag im Rat) geparkt. Rivalen bleiben Kandidat für eine spätere Erweiterung (nach «Neue Ufer»).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: «Neue Ufer» (eigener Strom für Expeditionen, R962 F4)
+Regelbezug: R862, R896, R962 · Kosten bei Irrtum: zwei Pool-Einträge.
+
+Entscheider: L0 · Anlass: Bericht TIEFE-5 · ADR: —
