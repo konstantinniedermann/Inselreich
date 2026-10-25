@@ -2130,3 +2130,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-197b (Parti
 Regelbezug: R894, R896 · Kosten bei Irrtum: Spec später.
 
 Entscheider: L0 · Anlass: Bericht lead-design Gründungsbrief · ADR: —
+
+## R902 · 2026-10-25 · ORT-A pausiert bis Messfenster; Fix A1 übernimmt den Controller-Platz
+
+Ruling: (1) ORT-A Zwischenbericht: T20–T22 abgenommen (`feat/ort-a` @ `e7199f15`, `plan/ort-a` @ `ce7f3ec9`, ADR-017 Ortsrand-Schicht). Entwurf **Pins**: drei Referenz-Hashes `schatten-ks.json` Abschnitt `auszug`
+(hover-build, hover-select, ohne-hover) durch `5d397b8b` (AK-38-Fix Auslauf-Bogen) **angenommen** nach Präzedenz R793 (2), Kommentar «Abweichung durch T21» Pflicht. AK-49-Test mit fest 18 nach Seerecht-Merge
+nachziehen. (2) Restliche ORT-A-Tasks (T19, T23–T25) brauchen Load ≤ 4; der Strang **pausiert** und gibt seinen Test-Controller-Platz frei (Budget-Rest 6 bleibt). Wiederaufnahme, sobald ein Platz frei ist und
+das Messfenster passt; T20b-Urteil `lead-art` läuft unabhängig. (3) Freier Platz an **FIX-SCHIFF-A1** (Sub-Tick-Interpolation, R898 (1)), `lead-tech`, Budget 4.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (Save 19), HAFEN (Schiffe)
+Regelbezug: R329, R793, R803, R826, R898 · Kosten bei Irrtum: ORT-A eine Welle später.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech ORT-A · ADR: —
