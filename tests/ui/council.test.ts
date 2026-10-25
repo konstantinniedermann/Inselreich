@@ -293,6 +293,14 @@ describe('I-138 Wirkung vorab', () => {
     expect(t).toContain(`+${m}`);
   });
 
+  it('Plural: 1 Haus, 2 Häuser', () => {
+    const w = createWorld(1);
+    addB(w, 'house', 0, 3);
+    expect(councilPreview(w, 3, 'B')).toMatch(/^Betrifft jetzt: 1 Haus \(/);
+    addB(w, 'house', 0, 3);
+    expect(councilPreview(w, 3, 'B')).toMatch(/^Betrifft jetzt: 2 Häuser \(/);
+  });
+
   it('AK-J12: beide Karten jeder offenen Stufe haben eine Vorschau, gefasste keine Karte', () => {
     const w = createWorld(1);
     w.council[2] = 'open';

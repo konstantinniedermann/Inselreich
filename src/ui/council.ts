@@ -48,7 +48,7 @@ export function councilPreview(world: World, tier: CouncilTier, side: CouncilSid
     const n = all.filter((b) => b.house?.tier === lever.tier).length;
     if (n === 0) return `Wirkt noch nicht: Haus (${TIERS[lever.tier].name}) fehlt`;
     const plus = n * (lever.value - maxInhabitantsOf(world, lever.tier));
-    return `Betrifft jetzt: ${n} Häuser (+${plus} Plätze)`;
+    return `Betrifft jetzt: ${n} ${n === 1 ? 'Haus' : 'Häuser'} (+${plus} Plätze)`;
   }
   if (lever.kind === 'seaTileTicks') {
     const n = world.ships.length;
