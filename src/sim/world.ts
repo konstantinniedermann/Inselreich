@@ -1,6 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { DEFAULT_WORLD_CRISIS_LEVEL } from './defs/crises';
 import { GOOD_IDS, START_MONEY, START_STOCK } from './defs/goods';
+import { DEFAULT_WORLD_PETITIONS_ON } from './defs/petitions';
 import { DEFAULT_TAX_LEVEL, TIER_IDS } from './defs/tiers';
 import { UNLOCK_IDS } from './defs/unlocks';
 import { generateForeignIslands, homeAnchor } from './islands';
@@ -101,7 +102,7 @@ function foreignIslands(seed: number, homeIsland: Island): Island[] {
 
 export function createWorld(
   seed: number,
-  opts: { crisisLevel?: CrisisLevel; unlockAll?: boolean } = {},
+  opts: { crisisLevel?: CrisisLevel; unlockAll?: boolean; petitionsOn?: boolean } = {},
 ): World {
   const { terrain, kontor, seedUsed } = generateMap(seed);
   const tiles: Tile[] = terrain.map((t) => ({ terrain: t, buildingId: null, road: false }));
@@ -150,6 +151,12 @@ export function createWorld(
     edictLockedUntil: 0,
     monument: null,
     monumentDone: false,
+    petitions: {
+      on: opts.petitionsOn ?? DEFAULT_WORLD_PETITIONS_ON,
+      next: null,
+      open: [],
+      effects: [],
+    },
     buyPct: Object.fromEntries(GOOD_IDS.map((g) => [g, 100])) as Record<GoodId, number>,
     contract: null,
     contractOffer: null,

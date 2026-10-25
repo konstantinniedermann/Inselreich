@@ -25,6 +25,7 @@ import { MONUMENT_GOODS, MONUMENT_STAGES } from './defs/monument';
 import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
 import { EDICTS } from './defs/edicts';
 import { UNLOCK_IDS } from './defs/unlocks';
+import { DEFAULT_WORLD_PETITIONS_ON } from './defs/petitions';
 import { TRIAL_DURATION_TICKS, TRIAL_IDS } from './defs/trials';
 import { ISLANDS, ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
 import {
@@ -1001,6 +1002,26 @@ function isWellFormedSafe(raw: Record<string, unknown>): boolean {
   }
 }
 
+/**
+ * I-210 (vorgezogen, Migration folgt in T05): Stände ohne `petitions` laden mit ausgeschalteten Bittschriften.
+ * Der Schlüssel steht wie in `createWorld` vor `buyPct`, damit die Schlüsselfolge (und damit `serialize`) gleich bleibt.
+ */
+function fillPetitionsDefault(raw: Record<string, unknown>): void {
+  if ('petitions' in raw) return;
+  const petitions = { on: DEFAULT_WORLD_PETITIONS_ON, next: null, open: [], effects: [] };
+  const keys = Object.keys(raw);
+  const at = keys.indexOf('buyPct');
+  if (at < 0) {
+    raw.petitions = petitions;
+    return;
+  }
+  const tail = keys.slice(at);
+  const saved = tail.map((k) => raw[k]);
+  for (const k of tail) delete raw[k];
+  raw.petitions = petitions;
+  tail.forEach((k, i) => (raw[k] = saved[i]));
+}
+
 /** Liest einen Spielstand; wirft nie, sondern meldet den Grund. */
 export function deserialize(json: string): LoadResult {
   let raw: unknown;
@@ -1010,6 +1031,7 @@ export function deserialize(json: string): LoadResult {
     return { ok: false, reason: 'Ungültiges Format' };
   }
   if (!isObject(raw)) return { ok: false, reason: 'Ungültiges Format' };
+  fillPetitionsDefault(raw);
   if (raw.version === 1) migrateV1ToV2(raw);
   if (raw.version === 2) migrateV2ToV3(raw);
   if (raw.version === 3) migrateV3ToV4(raw);

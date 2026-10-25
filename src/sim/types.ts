@@ -1,5 +1,6 @@
 import type { IslandKind, IslandTrait } from './defs/sea';
 import type { ReserveGood, ReserveStep } from './defs/reserve';
+import type { PetitionId } from './defs/petitions';
 
 export type GoodId =
   'wood' | 'tools' | 'stone' | 'food' | 'wool' | 'cloth' | 'cane' | 'rum' | 'glass' | 'spice';
@@ -365,6 +366,33 @@ export interface World {
   council: Record<CouncilTier, CouncilState>;
   /** Freiwillige Auflage (I-132, Meisterprüfung). */
   trial: TrialState;
+  /** Bittschriften (I-210): Schalter, nächster Zugtick, offene Karten und laufende Wirkungen. */
+  petitions: PetitionsState;
+}
+
+/** Offene Bittschrift-Karte (I-210); `amount` gilt für die erste `div`-Kostenware. */
+export interface PetitionMark {
+  id: PetitionId;
+  drawnAt: number;
+  amount: number;
+  anchor?: number;
+  answer?: 'yes' | 'no';
+  dueTick?: number;
+}
+
+/** Laufende Wirkung einer beantworteten Bittschrift (I-210). */
+export interface PetitionEffectEntry {
+  id: PetitionId;
+  answer: 'yes' | 'no';
+  until: number;
+  anchor?: number;
+}
+
+export interface PetitionsState {
+  on: boolean;
+  next: number | null;
+  open: PetitionMark[];
+  effects: PetitionEffectEntry[];
 }
 
 /** Kennung einer Auflage (I-132). */
