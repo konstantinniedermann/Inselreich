@@ -2349,3 +2349,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A, AUSBAU
 Regelbezug: R896, R912, Verfassung §3 · Kosten bei Irrtum: Neu-Pinnen der Fremdinseln.
 
 Entscheider: L0 · Anlass: Bericht lead-design FLAECHE · ADR: —
+
+## R920 · 2026-10-25 · Kurz-Retro f8716d75 abgenommen; Session-Ende
+
+Ruling: Retro `docs/retro-f8716d75` @ `750d30ea` (`docs/studio/retros/2026-10-25-session-f8716d75-ende.md`) **abgenommen**. **V1** Messfenster einfordern (Briefing nennt «Last ≤ 4 nötig», L0 staffelt Test-Controller
+nach Load; Messgrösse ≤ 60 min bis Messstart, 0 Pakete wegen Last über die Session-Grenze, 2 Sessions) **angenommen**; **V2** Pflichtzeile «Rulings-Abgleich: R<von>–R<bis>» in Spec-Berichten **angenommen**;
+**V3** Design-Instanzen lesen abschnittsweise, ab 150k Kontext Folgeinstanz **angenommen**. Alle drei passiv ohne Experiment-Platz (E-063/E-066/E-068 belegt); Handbuch-Umsetzung durch `studio-coach` in der
+Folgesession. Session-Ende bei 5 h ≈ 80 % (R826): Metriken `docs/studio/metriken/S-2026-10-25-f8716d75.md`; kein Push (nichts Push-fähiges gebündelt, R816); state.md nachgeführt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle Design-Stränge
+Regelbezug: R803, R826, R886, R912 · Kosten bei Irrtum: drei passive Messgrössen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —
