@@ -12,7 +12,7 @@ Status: angenommen · Paket: I-201 · Grundlage: Ruling R921, Plan P-7 · Betrif
 
 ## Invalidierung
 
-Der Schlüssel enthält `world.tick`. `invalidateFeastIndex(world)` läuft in `holdFeast`, beim Platzieren und beim Abriss, damit Änderungen im selben Tick sichtbar werden. Brand und direkt gesetztes `feastAt` wirken ohne Invalidierung, weil die Treffer live geprüft werden.
+Der Schlüssel enthält `world.tick` und die Identität von `world.buildings`: Die Inselansicht (`render/archipel.ts`) ersetzt `buildings` je Frame durch frische Kopien, dann baut sich die Liste neu auf. `invalidateFeastIndex(world)` läuft in `holdFeast`, beim Platzieren und beim Abriss, damit Änderungen im selben Tick sichtbar werden. Brand und direkt gesetztes `feastAt` wirken ohne Invalidierung, weil die Treffer live geprüft werden.
 
 ## Alternativen
 
@@ -21,5 +21,6 @@ Der Schlüssel enthält `world.tick`. `invalidateFeastIndex(world)` läuft in `h
 
 ## Folgen
 
+- Ersetzt Code `world.buildings` im selben Tick, erkennt der Index das an der Identität des Objekts; Änderungen innerhalb desselben Objekts brauchen `invalidateFeastIndex`.
 - Gebäude, die ein Test oder Code direkt in `world.buildings` einfügt, sieht der Index erst nach `invalidateFeastIndex` oder im nächsten Tick.
 - Neue Wege, Gebäude zu erzeugen oder zu entfernen, müssen `invalidateFeastIndex` aufrufen.

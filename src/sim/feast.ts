@@ -76,7 +76,7 @@ function hasWorkshopNearby(world: World, chapel: Building): boolean {
 
 /** Sperre, die nur für die Festart gilt, sonst null. */
 function kindBlock(world: World, chapel: Building, kind: FeastKind): string | null {
-  if (kind === 'ascension') return taxBlock(world, chapel);
+  if (FEAST_KINDS[kind].scope !== 'island') return taxBlock(world, chapel);
   if (islandCooldown(world, chapel, kind))
     return `${FEAST_KINDS[kind].name} auf der Insel: Abklingzeit`;
   if (kind === 'harvest')

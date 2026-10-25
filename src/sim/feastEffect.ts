@@ -40,16 +40,20 @@ export function feastKindOf(chapel: Building): FeastKind {
   return chapel.feastKind ?? 'ascension';
 }
 
-/** Kapellenliste je Welt und Tick (Id-Reihenfolge); nicht im Save, nicht im World-Typ. */
-const chapelIndex = new WeakMap<World, { tick: number; chapels: Building[] }>();
+/** Kapellenliste je Welt, Tick und `buildings`-Objekt (Id-Reihenfolge); nicht im Save, nicht im World-Typ. */
+const chapelIndex = new WeakMap<
+  World,
+  { tick: number; buildings: World['buildings']; chapels: Building[] }
+>();
 
 function chapelsOf(world: World): Building[] {
   const hit = chapelIndex.get(world);
-  if (hit !== undefined && hit.tick === world.tick) return hit.chapels;
+  if (hit !== undefined && hit.tick === world.tick && hit.buildings === world.buildings)
+    return hit.chapels;
   const chapels = Object.values(world.buildings).filter(
     (b) => BUILDING_DEFS[b.defId].service === 'faith',
   );
-  chapelIndex.set(world, { tick: world.tick, chapels });
+  chapelIndex.set(world, { tick: world.tick, buildings: world.buildings, chapels });
   return chapels;
 }
 

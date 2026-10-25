@@ -8,7 +8,7 @@ export interface FeastKindDef {
   name: string;
   /** Schlüsselreihenfolge = Prüf- und Abbuchreihenfolge, Rum zuerst. */
   cost: Partial<Record<GoodId, number>>;
-  /** Wirkt auf Häuser im Kapellenradius oder auf die ganze Insel der Kapelle. */
+  /** 'island': Abklingzeit zusätzlich je Insel und Art; das Erntefest wirkt trotzdem nur im Kapellenradius derselben Insel. */
   scope: 'chapel' | 'island';
   /** Erntefest: Produktionszyklus in Prozent. */
   cyclePct?: number;

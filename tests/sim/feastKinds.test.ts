@@ -716,7 +716,7 @@ describe('AK-FE13 Spielstand mit feastKind', () => {
     expect(feastActive(back, back.buildings[house.id]!)).toBe(true);
     expect(cycleOf(back, back.buildings[shop.id]!)).toBe(20);
     const k2 = placeService(back, 'chapel', c.x, c.y + 3);
-    c.connected = true;
+    k2.connected = true;
     Object.assign(stockOf(back, k2), { rum: 30, cloth: 30 });
     putBuilding(back, 0, 'weaver', k2.x + 3, k2.y);
     expect(feastBlockReason(back, k2, 'harvest')).toBeNull();

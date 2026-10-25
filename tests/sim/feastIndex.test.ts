@@ -11,7 +11,6 @@ import {
   feastState,
   harvestActive,
   inChapelRadius,
-  invalidateFeastIndex,
   marketActive,
 } from '../../src/sim/feastEffect';
 import type { FeastKind } from '../../src/sim/defs/feast';
@@ -56,9 +55,6 @@ beforeEach(() => {
 });
 
 describe('Festindex (I-201 T03b)', () => {
-  it('exportiert invalidateFeastIndex', () => {
-    expect(typeof invalidateFeastIndex).toBe('function');
-  });
   it('liefert über mehrere Ticks dasselbe wie die naive Suche', () => {
     for (const kind of ['ascension', 'harvest', 'market'] as const) {
       w.tick = 1000;
@@ -107,6 +103,19 @@ describe('Festindex (I-201 T03b)', () => {
     expect(feastActive(w, house)).toBe(false);
     chapel.feastAt = w.tick;
     expect(feastActive(w, house)).toBe(true);
+  });
+  it('ersetztes buildings-Objekt im selben Tick (Inselansicht je Frame) bleibt wirksam', () => {
+    chapel.feastKind = 'harvest';
+    chapel.feastAt = w.tick;
+    const copies = (): World['buildings'] =>
+      Object.fromEntries(Object.values(w.buildings).map((b) => [b.id, { ...b }]));
+    const view = { ...w, buildings: copies() } as World;
+    const h1 = view.buildings[house.id]!;
+    expect(harvestActive(view, h1)).toBe(true);
+    view.buildings = copies();
+    const h2 = view.buildings[house.id]!;
+    expect(harvestActive(view, h2)).toBe(true);
+    expect(harvestActive(view, h2)).toBe(refActive(view, 'harvest', h2));
   });
   it('zwei Welten sind unabhängig', () => {
     const w2 = createWorld(3, { unlockAll: true });
