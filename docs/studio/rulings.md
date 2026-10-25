@@ -2118,3 +2118,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-197/I-197b,
 Regelbezug: R896, R897 · Kosten bei Irrtum: zwei Starts.
 
 Entscheider: L0 · Anlass: Budgetantrag lead-tech INSELPROBEN · ADR: —
+
+## R901 · 2026-10-25 · Gründungsbrief-Rechnung abgenommen; GEBAEUDE-VARIANZ startet
+
+Ruling: (1) `design/gruendungsbrief` @ `a5f6918c` abgenommen (7 Briefe, Erstschnitt 6, bis Ziel 2 im Band −5,9 … +4,2 %, keine Dominanz; «Frühe Händler» zurückgestellt). Entwürfe §9: Zielband ±10 % mit 1 %
+Toleranz **ja**; Kartenfilter statt wirkungsloser Briefe **ja**; Save-Sprung **ja, aber als main + 1 beim Merge** (nicht fest 19). Brieftext nennt die Betriebszahl-Wirkung (R896 (0)). (a) Spec I-214 Stufe voll
+**ja**, Start beim nächsten freien Design-Platz nach den Nutzer-Paketen; erstes AK Messlauf «Brief-Ensemble» Seeds 1–10, Vorbedingung «Controller erreicht Ziel 3» als eigene AK. (2) Freier Platz an
+**GEBAEUDE-VARIANZ** (`lead-art`, Kurzdesign, R896 (4)), Budget 2. Nutzer-Pakete gehen vor dem Pool (R896 (0)).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-197b (Partiebrief-Feld), Regelbaukasten (R894 E1), Seegang
+Regelbezug: R894, R896 · Kosten bei Irrtum: Spec später.
+
+Entscheider: L0 · Anlass: Bericht lead-design Gründungsbrief · ADR: —
