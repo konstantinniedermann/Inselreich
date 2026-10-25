@@ -170,6 +170,58 @@ describe('SEE-F1 Schiffspose folgt der Wasserroute', () => {
   });
 });
 
+describe('FIX-SCHIFF-A1 Sub-Tick-Interpolation', () => {
+  const setup = () => {
+    const w = seaWorld();
+    const total = laneTicks(w.islands, 0, 1);
+    const at = (left: number, frac?: number) =>
+      shipPose(w, shipLiteral(w, { port: 0, to: 1, left }), frac);
+    return { w, total, at };
+  };
+  it('frac 0,5 liegt echt zwischen Pose(left) und Pose(left-1) auf der Polylinie', () => {
+    const { total, at } = setup();
+    const left = Math.floor(total / 2);
+    const a = at(left),
+      b = at(left - 1),
+      m = at(left, 0.5);
+    expect(Math.hypot(m.x - a.x, m.y - a.y)).toBeGreaterThan(0);
+    expect(Math.hypot(m.x - b.x, m.y - b.y)).toBeGreaterThan(0);
+    expect(Math.hypot(m.x - a.x, m.y - a.y) + Math.hypot(m.x - b.x, m.y - b.y)).toBeCloseTo(
+      Math.hypot(a.x - b.x, a.y - b.y),
+      6,
+    );
+  });
+  it('Stetigkeit: Pose(left, frac→1) ≈ Pose(left-1, 0)', () => {
+    const { total, at } = setup();
+    const left = Math.floor(total / 2);
+    const a = at(left, 0.999999),
+      b = at(left - 1, 0);
+    expect(a.x).toBeCloseTo(b.x, 3);
+    expect(a.y).toBeCloseTo(b.y, 3);
+  });
+  it('Klemmung: left 0 mit frac 0,9 bleibt am Ziel; left = total mit frac 0 am Start', () => {
+    const { w, total, at } = setup();
+    expect(at(0, 0.9)).toEqual(at(0));
+    expect(at(total, 0)).toMatchObject({
+      x: w.islands[0]!.ox + w.islands[0]!.anchor.x + 0.5,
+      y: w.islands[0]!.oy + w.islands[0]!.anchor.y + 0.5,
+    });
+  });
+  it('frac 0 (Standard) entspricht dem bisherigen Verhalten', () => {
+    const { total, at } = setup();
+    for (let l = 0; l <= total; l++) expect(at(l, 0)).toEqual(at(l));
+  });
+  it('liegende Schiffe ignorieren frac; Welt wird nicht mutiert', () => {
+    const { w, total } = setup();
+    const idle = shipLiteral(w, { port: 1, to: null });
+    expect(shipPose(w, idle, 0.7)).toEqual(shipPose(w, idle));
+    const s = shipLiteral(w, { port: 0, to: 1, left: total - 1 });
+    const before = JSON.stringify(w);
+    shipPose(w, s, 0.5);
+    expect(JSON.stringify(w)).toBe(before);
+  });
+});
+
 describe('I-153 Seerecht Pose und Cache', () => {
   const near = (a: { x: number; y: number }, b: { x: number; y: number }) => {
     expect(a.x).toBeCloseTo(b.x, 9);

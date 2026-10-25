@@ -280,3 +280,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-25 · Anlass für I-183 (niedrig)
 
 - Fundort: INSELPROBEN Schuldbrief-Probe. Beobachtung: erzeugt planmässig «Kasse leer, Nahrung leer» und wäre der natürliche Anlass für I-183. Ursprung: Rechnung Zukaufpreis (R918). Einschätzung: bei der nächsten Ideen-Runde prüfen.
+
+## 2026-10-25 · FIX-SCHIFF-A1: Picking und Karte ohne Sub-Tick-Bruchteil (niedrig)
+
+- Fundort: `shipAt` (`src/render/shipLane.ts`, genutzt von `src/ui/input.ts`, `src/ui/app.ts`) und `src/render/seaMap.ts`. Beobachtung: rufen `shipPose` mit `frac` 0; die gezeichnete Pose läuft bis zu einen Tick (kleiner als 1/Lane-Ticks) voraus. Ursprung: FIX-SCHIFF-A1. Einschätzung: kaum sichtbar, nur bei Treffer-Toleranz knapp; bei Bedarf `tickFrac` durchreichen.
