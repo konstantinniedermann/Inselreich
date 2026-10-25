@@ -267,3 +267,8 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 - Fundort: `src/render/ortsrand.ts` ↔ `src/render/roadside.ts`. Beobachtung: gegenseitiger Import, funktioniert in beiden Reihenfolgen, fragil. Ursprung: ORT-A Final-Review (R882). Einschätzung: beim nächsten Render-Paket auflösen.
 - Fundort: Renderer-Test «L4 Deko-Culling». Beobachtung: 4851 ms bei Timeout 5000 ms. Ursprung: ORT-A. Einschätzung: ZEITRESERVE-PFLEGE-Kandidat.
+
+## 2026-10-25 · Fortsetzen-Dialog und fremde Last (niedrig)
+
+- Fundort: Dialog «Wo war ich?» beim Fortsetzen. Beobachtung: verdeckt die Szene. Ursprung: `lead-art` T20b-Playtest (R917). Einschätzung: UI-Häppchen-Kandidat.
+- Fundort: Rechnerlast. Beobachtung: Headless-Chrome-Läufe des Projekts Munica drücken die 1-min-Last wiederholt über 4; Messfenster für ORT-A, INSELPROBEN und Browser-Belege fehlen. Ursprung: T20b, R906. Einschätzung: hängt an N-102 (Nutzerentscheid).

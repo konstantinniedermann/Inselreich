@@ -2312,3 +2312,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK 
 Regelbezug: R907, R909, R912 · Kosten bei Irrtum: ein Gegenlese-Start.
 
 Entscheider: L0 · Anlass: Bericht lead-art GEBAEUDE-VARIANZ · ADR: —
+
+## R917 · 2026-10-25 · ORT-A T20b-Urteil; INSELPROBEN Etappe 2 fertig; Pausen wegen Ampel
+
+Ruling: (1) **T20b** (`lead-art`, `.studio/handoffs/2026-10-25-lead-art-ORT-A-T20b.md`): Sackgassen-Lappen und 2×2-Grasloch werden geändert — neuer Task **T20c** im ORT-A-Strang vor T23 (Lappen als erste Ebene,
+durchscheinend im Erdton, sonst streichen; Eckpunkt-Füllung bei vier Wegkacheln und inneren Randring streichen), ein Render-Umsetzer + Task-Review, Pins bewusst nachziehen; danach **ein** Folgelauf T20b-2
+(`qa-playtester`) für die offenen Punkte und beide Fixes. Teil-Abnahme (Wege, Kreuzung, Kurve, Ziehen/Abreissen, Hover, Konsole) gilt. (2) **INSELPROBEN Etappe 2** (`feat/inselproben` @ `429eb13a`, beide
+Stränge gemergt, Teilbeleg Exit 0) **abgenommen**; offen T12–T14 und Final-Review opus, Mehrbedarf ≈ 5 Starts in der Folgesession; T14 nach Seerecht-Merge. (3) Ampel 77 %: laufende Leads (I-201, FLAECHE,
+Zukauf, AUSBAU-Nachtrag) sichern Stand und übergeben; Ende-Routine folgt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A, Save-Kette
+Regelbezug: R793, R826, R905, R910, R912 · Kosten bei Irrtum: ein Task mehr in ORT-A.
+
+Entscheider: L0 · Anlass: Berichte lead-art T20b, lead-tech INSELPROBEN · ADR: —
