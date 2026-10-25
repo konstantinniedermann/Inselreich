@@ -2254,3 +2254,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, AUSBAU
 Regelbezug: R896, R904 · Kosten bei Irrtum: Plan-Nachtrag.
 
 Entscheider: L0 · Anlass: Bericht lead-design I-210 · ADR: —
+
+## R912 · 2026-10-25 · Limit-Ampel gelb: keine neuen Starts, Laufendes abschliessen
+
+Ruling: `.studio/limits.json` meldet 5 h = 66 % (gelb, R826). Damit **keine neuen Wellen**: der in R911 beschlossene Plan I-210 startet **nicht** in dieser Session (Budgetfreigabe verfällt, in state.md
+«Fortsetzung»). Laufende Leads (INSELPROBEN, I-201, ORT-A pausiert, HAFEN, FLAECHE, Zukaufpreis, I-214, GEBAEUDE-VARIANZ-Nachtrag, Gate AUSBAU-LOGIK, lead-art T20b) schliessen ab oder melden Zwischenstand mit
+Übergabe; Fortsetzungen per SendMessage nur für bereits laufende Pakete. Bei rot (> 80 %) sofort Ende-Routine. Kontext L0 bei 30 % → state.md nach jedem Abschluss nachführen.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle laufenden
+Regelbezug: R69, R826, R911 · Kosten bei Irrtum: Plan I-210 eine Session später.
+
+Entscheider: L0 · Anlass: Limit-Ampel gelb · ADR: —
