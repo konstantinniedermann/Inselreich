@@ -2220,3 +2220,17 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
 Regelbezug: R750 V2, R826 · Kosten bei Irrtum: eine Messung mehr, Schätzungen kurzzeitig zu knapp.
 
 Entscheider: L0 · Anlass: Kurz-Retro Session-Ende · ADR: —
+
+## R873 · 2026-10-25 · Session-Start 47d29586: «mach weiter» = Plan state.md; Welle 1
+
+Ruling: (1) **Auslegung:** «mach weiter» ist der Auftrag, den Plan aus `state.md` («Fortsetzung beim nächsten Start») fortzusetzen; R862/R863/R826 gelten. Limit-Ampel grün (5 h 0 %, Woche 38 %).
+(2) **REL-31 steht an** (frühestens 2026-10-24 erreicht): Gate Merge Release mit echtem Probe-Merge (R868 V1) an `lead-qa`, Reihenfolge R871 **ohne** `feat/ort-a` (T18 offen → REL-32). Bis
+`make push-check` Exit 0 startet L0 keine Umsetzer und Controller (R464); ORT-A T18, SEERECHT T04, TOOL-MESSFENSTER T00 und die Ehrenbuch-Umsetzung folgen nach dem Push. (3) **Welle 1 testfrei**
+(Deckel 10): Gate Plan I-186, Gate Spec Modus Inselproben, Gate Spec Stadtrecht (je `lead-qa`); HAUSHALT-03 (`lead-production`: `.studio/qa` laut Trockenlauf, Rulings-Archiv auf eigenem Branch,
+Merge nach REL-31); R872 E1/E2 und E-063-Bewertung (`studio-coach`); Kurzdesign UI-HAEPPCHEN-J (`lead-design`, Stufe leicht); IDEEN-17 mit Schwerpunkt Spieltiefe/Modi (`lead-design`, R862);
+ADR-007-Nachtrag R868 und Seerecht-Plan-DoD auf Teilbeleg (`lead-tech`, Doku); BEOB-19 (`lead-production`, 8 Einträge). Neue Branches gehen in REL-32.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-31-Stränge (nur lesend für Gates); HAUSHALT-03 mit `rulings.md` (eigener Branch, `tool/merge-append`)
+Regelbezug: R464, R826, R862, R863, R868 V1, R871 · Kosten bei Irrtum: ein verschobener Start, Gate erneut.
+
+Entscheider: L0 · Anlass: Nutzer «mach weiter» · ADR: —
