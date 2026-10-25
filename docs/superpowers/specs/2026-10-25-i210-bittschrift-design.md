@@ -1,18 +1,17 @@
 # I-210 · Bittschrift (Bitte mit zwei Antworten und spätem Nachspiel) (Spec, Stufe voll)
 
-Stand 2026-10-25 · Paket `design-i210` · Prozessstufe voll (neue Spielwerte, neues Weltfeld) · Grundlage:
-[I-210 in `docs/ideen.md`](../../ideen.md), Rechnung
-[`2026-10-25-i210-bittschrift-rechnung.md`](2026-10-25-i210-bittschrift-rechnung.md) (im Folgenden «Rechnung §n»; Zahlen
-dort hergeleitet und hier übernommen, nicht neu gerechnet) · Ruling R899 (R-A H3 + H4, B10 gestrichen; F1 ja; R-B ja) ·
-Dauerauftrag R896 (0) Nachvollziehbarkeit · Anhang [anhang-01-lagen.md](2026-10-25-i210-bittschrift-design/anhang-01-lagen.md)
-(Ja- und Nein-Lage je Bitte für den Dominanztest). Übernommen ist nur die Genre-Mechanik «Ereigniskarte mit zwei
-Antworten, Folge sichtbar, Nachspiel verzögert», keine fremden Namen oder Inhalte (ADR-006).
+Stand 2026-10-25 · Paket `design-i210` · Stufe voll · Grundlage: [I-210](../../ideen.md), Rechnung
+[`2026-10-25-i210-bittschrift-rechnung.md`](2026-10-25-i210-bittschrift-rechnung.md) («Rechnung §n», Zahlen übernommen,
+nicht neu gerechnet) · R899 (H3 + H4, B10 gestrichen; F1 ja; R-B ja) · R896 (0) · Nachtrag Gate Spec R904 · Anhänge
+[01 Lagen](2026-10-25-i210-bittschrift-design/anhang-01-lagen.md), [02 Plan-Auflagen](2026-10-25-i210-bittschrift-design/anhang-02-plan-auflagen.md),
+[03 Messlauf](2026-10-25-i210-bittschrift-design/anhang-03-messlauf.md), [04 Save](2026-10-25-i210-bittschrift-design/anhang-04-save.md), [05 Anzeige](2026-10-25-i210-bittschrift-design/anhang-05-anzeige.md).
+Übernommen ist nur die Genre-Mechanik «Ereigniskarte mit zwei Antworten, Nachspiel verzögert» (ADR-006).
 
 ## 1 Spielerzweck (ein Satz)
 
 Kurz nach dem ersten Ziel und danach alle 10 Minuten bitten Bürger um Waren: Wer Vorrat in den Ketten hat, sagt «Ja» und
 gewinnt befristet Einwohner, Takt oder Lagerraum; wer schlank wirtschaftet, sagt «Nein» und spart eine Zeit lang an der
-erbetenen Ware.
+Ware, die die Bitte betrifft.
 
 - **Säulen:** Bevölkerung versorgen und aufsteigen lassen; Wirtschaft (Überkapazität gegen Unterhalt).
 - **Spürbar in den ersten 15 Minuten:** Ziel 1 fällt bei Tick 6050 bis 6750 (Rechnung §2 P1; `M6:AK-B1-01`,
@@ -31,8 +30,7 @@ erbetenen Ware.
 Bitten B1–B9, Wirkungsarten Überbelegung, Genügsamkeit, Aufstiegs-Wartezeit, Fest-Gutschein, Takt und Lagergrenze,
 Chronik-Einträge, Welt-Schalter `petitionsOn`, neues Weltfeld `petitions` mit neuer Save-Version.
 
-**Nicht im Scope** (ausdrücklich, §11): Sandkasten nach Ziel 3 mit Krisen aus; Geld als Lohn; Zukaufpreis `BUY_RISE`;
-Story-Rahmen I-018; Interessengruppen; H2 (Kostenware nach Engpass); neue Grafik.
+**Nicht im Scope:** §11.
 
 ## 3 Regeln
 
@@ -196,36 +194,23 @@ Neue reine Abfrage `petitionPreview(world, drawnAt)` in `src/sim/petitions.ts` (
   max(0, Mehrbedarf − max(0, netto)); Reichweite = Lager ÷ Lücke × 100 T, «kein Engpass» bei Lücke 0. Die Zusatzplätze
   sind die Summe aus §3.5 über die passenden Häuser beim Ziehen (Anzeige «bis +n», weil nur versorgte Häuser zuziehen).
 - **Reserve bei Takt und Lager** (B6, B7, B9): Zahl der Betriebe, Eingangsware mit Lager und netto (B7: Wolle; B6: Gewürz
-  auf der Plantageninsel), bei B9 die drei Lagerbestände.
+  auf der Plantageninsel), bei B9 die drei Lagerbestände. **B6 zusätzlich** die Zeile «Wirkung hängt am Schiffsraum»
+  mit Gewürz im Fremdlager und Zahl der Schiffe mit Gewürzroute.
 - **«Nein»-Spalte:** «für 3 min −10 % Stoffbedarf (spart ≈ 18 Stoff)»; Ersparnis = Rate der Ware auf HOME ×
   `FRUGAL_PCT`/100 × `FRUGAL_TICKS`/100 (P1: 10 × 0,1 × 18 = 18, Rechnung §4 H4). Bei Lager ≥ 90 Zusatz «Lager fast
-  voll: Ersparnis verfällt teilweise». Darunter «Keine weitere Folge».
+  voll: Ersparnis verfällt teilweise». Eigene Zeile **«Warum ‹Ware›»** mit dem Grund der Nein-Ware (Feld `noReason` in
+  `PETITIONS`, Text aus §8, kein Spielwert). Darunter «Keine weitere Folge».
 
 Die Karte erscheint als Meldung und bleibt über einen Chip «Bittschrift 1:43» in der Kopfleiste offen erreichbar; ohne
 Antwort schliesst sie nach der Frist mit dem Hinweis «Keine Antwort: abgelehnt». Das Spiel pausiert nicht von selbst.
 Kartenformat (Rahmen, zwei Spalten, Knöpfe) wird mit «Neue Ufer» N4 geteilt, der Inhalt nicht (§10).
 
-### 5.2 Auf der Insel (Panels)
+### 5.2 Insel und Chronik
 
-- Haus in Überbelegung: Belegung «23 / 20 (Weberfamilien bis 31:40)».
-- Haus unter Genügsamkeit: Zeile «Genügsam: Stoffbedarf −10 % bis 14:20».
-- Haus im Radius einer geweihten Glocke: Aufstiegsuhr wie beim Aufstiegsfest, Zeile «Glockenweihe bis …».
-- Kapelle mit Gutschein: Festknöpfe zeigen «Festtrunk: ohne Rum, ohne Abklingzeit».
-- Betrieb mit Taktlohn: «Bittschrift: Zyklus 80 % bis …».
-- Lagerzeile auf HOME bei Speicherbau: «Lager 120 (Speicher bis …)».
-- Kopfleiste: Chip der laufenden Wirkungen mit Restzeit (Tooltip mit allen Einträgen).
-
-### 5.3 Chronik (Ereignis-Log und Inselchronik)
-
-Aus `StepReport.petitions` (Muster `ui/crisisLog.ts`, kein Teil des Spielstands):
-
-- «Bittschrift: Weberfamilien bitten um 10 Stoff» (gezogen),
-- **Dank** (Nachspiel «Ja»): `thanks`-Text plus Wirkung, z. B. «Die Weberfamilien ziehen ein und danken: Häuser ab Stufe 2
-  nehmen bis 31:40 mehr Bewohner auf»,
-- **Klage** (Nachspiel «Nein»): nur `lament`-Text, z. B. «Die Weberfamilien ziehen weiter. In der Stadt wird sparsamer
-  mit Stoff umgegangen.»,
-- **Verfallen**: «Die Kapelle steht nicht mehr: die Glockenweihe fällt aus, die Gabe ist verloren»,
-- **Vorbei**: «Die Weberfamilien ziehen weiter» bzw. «Der Speicher ist abgebaut, 12 Stoff verdorben».
+Panels zeigen jede laufende Wirkung am betroffenen Haus, Betrieb, Lager oder an der Kapelle mit Restzeit (z. B. «23 / 20
+(Weberfamilien bis 31:40)», «Genügsam: Stoffbedarf −10 % bis 14:20»); die Chronik bekommt aus `StepReport.petitions`
+(Muster `ui/crisisLog.ts`, kein Teil des Spielstands) die Einträge «gezogen», **Dank**, **Klage** (reiner Text),
+«Verfallen» und «Vorbei». Alle Zeilen und Beispieltexte: [Anhang 05](2026-10-25-i210-bittschrift-design/anhang-05-anzeige.md).
 
 ## 6 Baseline und Save (R899 R-B)
 
@@ -249,15 +234,9 @@ petitions: {
 - **Migration** vorige Version → neue (Muster `migrateV17ToV18`, `save.ts:940`): setzt
   `petitions = { on: false, next: null, open: [], effects: [] }`. Alte Partien laden ohne Bittschriften und spielen bitgleich
   weiter. Noch ältere Stände laufen durch die bestehende Kette.
-- **Prüfregeln** (`isValidPetitions`, sonst `{ ok: false, reason: 'Beschädigter Spielstand' }`, nie ein Wurf):
-  - `on` boolean; `next` null oder ganze Zahl > `tick`; bei `on: false` sind `open` und `effects` leer und `next` null;
-  - `open.length ≤ PETITION_MAX_OPEN`; je Marke `id ∈ PETITION_IDS`, keine Id doppelt, `drawnAt` ganz und
-    `tick − PETITION_ANSWER − max(delay) ≤ drawnAt ≤ tick`, `amount` ganz ≥ 0;
-  - ohne `answer` gilt `drawnAt + PETITION_ANSWER > tick` und kein `dueTick`; mit `answer ∈ {'yes','no'}` gilt
-    `tick < dueTick ≤ tick + max(delay)`;
-  - `anchor` nur bei Bitten mit Anker, ganze Zahl (ein inzwischen abgerissener Anker ist gültig, §3.4);
-  - `effects.length ≤ 2 × PETITION_IDS.length`; je Eintrag `id` gültig, `answer` gültig, `tick < until ≤ tick + Dauer`
-    (Dauer = `duration` bei «Ja», `FRUGAL_TICKS` bei «Nein»).
+- **Prüfregeln** (`isValidPetitions`, sonst `{ ok: false, reason: 'Beschädigter Spielstand' }`, nie ein Wurf): vollständig in
+  [Anhang 04](2026-10-25-i210-bittschrift-design/anhang-04-save.md); Kern: `open.length ≤ PETITION_MAX_OPEN`, Ids aus
+  `PETITION_IDS`, Zeiten im Fenster der Fristen, bei `on: false` alles leer.
 - **Unbekannte Version** (neuer als der Build) → «Unbekannte Version» (`save.ts:1031`).
 
 ## 7 Siegziele und Ehrenbuch (R899 F1)
@@ -290,7 +269,9 @@ neuer Eintrag.**
 
 Grundregel für alle Bitten: **«Ja»** heisst, die Stadt gibt Waren her und bekommt dafür etwas, das selbst Waren braucht
 oder Waren schafft. **«Nein»** heisst, die Stadt hat entschieden, mit dem Vorhandenen auszukommen, und spart darum eine
-Zeit lang genau an der erbetenen Ware. Beides steht als Zahl auf der Karte; das Nachspiel kommt als Dank oder Klage in die
+Zeit lang an der **Ware, die die Bitte betrifft**: an der erbetenen Ware selbst (B1–B4, B6) oder an der Ware, der der Lohn
+gedient hätte (B5 Rum aus dem Rohr, B7 Stoff aus der Wolle, B8 Nahrung für die Heimkehrer, B9 Nahrung als grösster Posten
+des Speichers). Beides steht als Zahl auf der Karte; das Nachspiel kommt als Dank oder Klage in die
 Chronik.
 
 - **B1** «Weberfamilien möchten zuziehen und bitten um Stoff als Hausrat.» — **Ja:** Nach 8 min zeigen versorgte Häuser ab Stufe 2 «23 / 20»; Steuer steigt; die Bedarfszeilen aller Waren der Stufe steigen. **Nein:** Häuser zeigen «Genügsam: Stoff −10 %»; Klage «ziehen weiter». **Fachlich:** Wer zuzieht, braucht Hausrat und danach wie alle Nahrung und Stoff: der Lohn bringt die Folgelast selbst mit.
@@ -300,30 +281,29 @@ Chronik.
 - **B5** «Die Kapelle bittet um Zuckerrohr und brennt den Festtrunk selbst.» — **Ja:** Kapelle zeigt «Festtrunk»: nächstes Fest ohne Rum und ohne Abklingzeit. **Nein:** Rum −10 %. **Fachlich:** Aus Rohr wird Rum; wer das Rohr gibt, spart den Rum des nächsten Fests.
 - **B6** «Die Pflanzer bitten um Gewürz als Saat.» — **Ja:** Nach 2 min zeigen alle Gewürzplantagen «Zyklus 80 %» für 10 min; mehr Gewürz kommt per Schiff, wenn das Schiff Platz hat. **Nein:** Gewürz −10 %: die Kaufleute würzen sparsamer. **Fachlich:** Saat bringt Ernte, aber nur, wenn die Ernte auch heimkommt (Schiff, Lager der Fremdinsel).
 - **B7** «Die Weber bitten um Wolle für einen Wollmarkt.» — **Ja:** Nach 1 min alle Webereien auf HOME «Zyklus 80 %» für 5 min; der Stoff-Ausstoss steigt, solange Wolle da ist. **Nein:** Stoff −10 %. **Fachlich:** Ein Markt bringt den Webern Aufträge; ohne Wolle stehen auch schnelle Webstühle still.
-- **B8** «Ausgewanderte kehren heim und bitten um Aufnahme bei Verwandten.» — **Ja:** Nach 4 min alle versorgten Häuser +10 % für 10 min; vor allem der Nahrungsbedarf steigt. **Nein:** Nahrung −10 %: man kocht sparsamer. **Fachlich:** Heimkehrer kosten nichts beim Einzug, essen aber mit: die ganze Last liegt in der Reserve.
-- **B9** «Die Händler wollen einen Speicher bauen: Holz und Stein.» — **Ja:** Lagerzeile «120» für Stoff, Rum, Nahrung für 10 min; bei Ablauf verdirbt, was darüber liegt. **Nein:** Nahrung −10 %: ohne Speicher wird sparsamer gekocht. **Fachlich:** Ein Speicher hilft nur, wenn etwas gelagert wird, das sonst verfällt, oder vor einem Sturm.
+- **B8** «Ausgewanderte kehren heim und bitten um Aufnahme bei Verwandten.» — **Ja:** Nach 4 min alle versorgten Häuser +10 % für 10 min; vor allem der Nahrungsbedarf steigt. **Nein:** Nahrung −10 %: «Wir weisen sie ab, weil die Vorräte knapp sind, und teilen die Nahrung sparsamer zu.» **Fachlich:** Heimkehrer kosten nichts beim Einzug, essen aber mit: die ganze Last liegt in der Nahrungsreserve; wer ablehnt, tut es wegen eben dieser Reserve und rationiert sie.
+- **B9** «Die Händler wollen einen Speicher bauen: Holz und Stein.» — **Ja:** Lagerzeile «120» für Stoff, Rum, Nahrung für 10 min; bei Ablauf verdirbt, was darüber liegt. **Nein:** Nahrung −10 %: «Ohne neuen Speicher wird der Vorrat geschont; die Nahrung, der grösste Posten, wird sparsamer zugeteilt.» **Fachlich:** Ein Speicher hilft nur, wenn etwas gelagert wird, das sonst verfällt, oder vor einem Sturm; wer auf ihn verzichtet, muss mit dem heutigen Lager durch den nächsten Engpass und spart am grössten Verbrauch (Nahrung 0,5 je Einwohner gegen 0,2 Stoff oder Rum, Rechnung §1).
 
 **Prüfstein:** Jede Zeile beantwortet «Warum passiert das?» aus dem Spielbild heraus: Die Ware auf der Karte ist die Ware,
-die die Bittsteller selbst brauchen (B1–B3, B8), die Ware, aus der ihr Werk entsteht (B4–B7), oder Baustoff (B4, B9). Es
-gibt keine sachfremde Kopplung (R896 (3)).
+die die Bittsteller selbst brauchen (B1–B3, B8), die Ware, aus der ihr Werk entsteht (B4–B7), oder Baustoff (B4, B9). Die
+Nein-Ware folgt der Grundregel oben und steht mit Grund auf der Karte (§5.1, AK-BS-24). Es gibt keine sachfremde Kopplung
+(R896 (3)).
 
 ## 9 Randfälle
 
-- **Ware fehlt beim «Ja»:** `{ ok: false, reason: 'Zu wenig Rum (0 / 10)' }`, Prüfung aller Waren vor jeder Abbuchung; «Nein» und Frist bleiben (AK-BS-06).
-- **Lager reicht beim Ziehen nicht:** Bitte ist kein Kandidat (P1: Rum 0 → B2 nicht ziehbar, Rechnung §8) (AK-BS-07).
-- **Lager fällt während der Frist:** Sperrgrund wie oben, nach 1200 T gilt «Nein» (AK-BS-06).
-- **Zwei offene Marken:** kein Ziehen, `next += PETITION_PERIOD` (AK-BS-08).
-- **Regelfall eine Marke:** Wächter `max(delay) + PETITION_ANSWER ≤ PETITION_PERIOD` (AK-BS-09).
-- **Gleiche Lohnart doppelt:** Maximum, nie Summe (höchstens +15 % Überbelegung, nicht +30 %, Rechnung §8) (AK-BS-10).
-- **Abriss des Ankers vor dem Nachspiel:** Marke verfällt ohne Folge, keine Erstattung, Ereignis «Verfallen» (AK-BS-11).
-- **Abriss des Ankers vor der Antwort:** «Ja» → «Kapelle steht nicht mehr»; «Nein» möglich (AK-BS-11).
-- **Abriss eines überbelegten Hauses:** Haus zählt nicht mehr; andere unberührt (AK-BS-11).
-- **Pause:** Frist, Nachspiel und Wirkungen rechnen in Ticks; in der Pause steht alles (AK-BS-12).
-- **«Nein» oder Frist:** nur `frugal` und Text; keine Krise, kein Mangel, kein Abzug (AK-BS-13).
-- **Endlos-Überschuss:** jede Wirkung hat `until`; Überbelegung höchstens `OVERCROWD_PCT` über cap, auch bei «Ja» auf jede Bitte (AK-BS-10).
-- **Ablauf von Speicherbau:** Bestand über 100 wird abgeschnitten (verfällt wie heute, `production.ts:67-69`) (AK-BS-10).
-- **Ziel 3 erreicht:** B1 und B8 werden nicht mehr gezogen; übrige Bitten bleiben (Sandkasten nicht im Scope) (AK-BS-07).
-- **Alter Spielstand:** Migration: Bittschriften aus, bitgleich (AK-BS-15).
+Regel jeweils in §3, Zahlen aus Rechnung §8:
+
+- **Ware fehlt beim «Ja»** oder fällt während der Frist: `{ ok: false, reason: 'Zu wenig Rum (0 / 10)' }`, nichts teilweise;
+  «Nein» und Frist bleiben (AK-BS-06).
+- **Nicht bezahlbar beim Ziehen:** kein Kandidat (P1: Rum 0 → nie B2); nach Ziel 3 nie B1, B8 (AK-BS-07).
+- **Zwei offene Marken:** kein Ziehen, `next += PETITION_PERIOD`; Regelfall eine Marke (AK-BS-08, AK-BS-09).
+- **Gleiche Lohnart doppelt / Endlos-Überschuss:** Maximum, nie Summe; jede Wirkung hat `until`; Speicherbau-Ablauf schneidet
+  auf 100 (AK-BS-10).
+- **Abriss:** Anker vor dem Nachspiel → verfällt ohne Folge und Erstattung; vor der Antwort → «Ja» gesperrt; überbelegtes
+  Haus → zählt nicht mehr (AK-BS-11).
+- **Pause:** alles rechnet in Ticks und steht (AK-BS-12).
+- **«Nein» oder Frist:** nur `frugal` und Text, keine Krise, kein Mangel (AK-BS-13).
+- **Alter Spielstand:** Migration, Bittschriften aus, bitgleich (AK-BS-15).
 
 ## 10 Abhängigkeiten und Risiken
 
@@ -334,16 +314,21 @@ gibt keine sachfremde Kopplung (R896 (3)).
 - **«Neue Ufer» N4** (Wahl-Karten, `2026-10-23-tiefe-1-skizzen.md` §2): Kartenrahmen und Knopf-Modell teilen, Inhalte,
   Strom und Weltfeld getrennt halten.
 - **SEERECHT, INSELPROBEN:** beide berühren den Save; die Version wird beim Merge vergeben (§6). INSELPROBEN: offene Frage
-  F-2 (§12).
+  F-2 (§13, entschieden: Proben ohne Bittschriften).
 - **AUSBAU-LOGIK (R896 (3)):** kann Waren der Ketten und Ausbauten ändern. Dann sind Kostenwaren und `when` der Bitten
   nachzuziehen (nur in den Defs) und der Dominanztest erneut zu prüfen.
-- **R-BS-1 «stabile Stadt hergeleitet, nicht gemessen»** (Rechnung §2 P3b): abgesichert durch AK-BS-05 (Messlauf) mit
-  Toleranz, Fehlerrichtung und Rückfall.
+- **R-BS-1 «stabile Stadt hergeleitet, nicht gemessen»** (Rechnung §2 P3b): AK-BS-05, Anhang 03.
 - **R-BS-2 Zwei Lückenwerte in der Rechnung (kein Widerspruch):** §3 rechnet die Ideenform mit festen 15 Einwohnern
   (15 × 0,2 − 2,4 = 0,6 Stoff; 15 × 0,5 − 6 = 1,5 Nahrung je 100 T), §4 H3 mit +15 % = 18 Kaufleuten (1,2 und 3,0).
   Massgeblich ist §4 (R899). AK-BS-05 misst es.
-- **R-BS-3 Testlaufzeit:** AK-BS-04 rechnet 18 Lagen × 2 Antworten über bis zu ≈ 12 000 T. Der Plan prüft das gegen das
-  Zeitbudget (`make zeittests`) und teilt die Lagen bei Bedarf auf mehrere Dateien.
+- **R-BS-3 Testlaufzeit:** AK-BS-04 rechnet 18 Lagen × 2 Seeds × 2 Antworten = **72 Läufe** über bis zu ≈ 12 000 T.
+  Messung vor Zusage, Soll und Aufteilung: Anhang 02, B-5.
+- **R-BS-4 Vorbereitetes «Ja» dominiert in der stabilen Stadt mit Krisen aus** (Gate B-4): Wer gezielt ≥ 15 % Puffer baut
+  oder die Lücke zukauft (`BUY_RISE = 0`, Rechnung §4 Punkt 2, §9), gewinnt mit «Ja» (AK-BS-05: ΔGeld ≈ 23 760 gegen
+  ≈ 0). Die Wahl liegt dann in der Vorbereitung, nicht in der Karte. Mit R899 so beschlossen. **Beobachtung:** Playtest-
+  Frage nach Release («Sagt eine vorbereitete Stadt noch je Nein?»). **Rückfall:** `OVERCROWD_PCT` löst es nicht (höherer
+  Zuzug macht vorbereitetes «Ja» noch stärker); nur ein steigender Zukaufpreis macht den Puffer selbst knapp. Anschluss an
+  die laufende L0-Rechnung «Zukaufpreis steigt» (`BUY_RISE`, R899). Kein neuer Wert in dieser Spec.
 
 ## 11 Nicht im Scope
 
@@ -366,8 +351,11 @@ Vitest (DOM-frei): `tests/sim/petitions.test.ts` (neu, Regeln, Save, Randfälle)
   über 20 000 T mit Balancing-Controller ändert sich `JSON.stringify(world.petitions)` nie, und `createRng` wird mit
   `PETITION_SALT` nie aufgerufen (Spion auf den Strom-Helfer in `petitions.ts`; Mittel wählt der Plan). `tests/sim/balance.test.ts` und die gepinnten Sieg-Ticks
   (6050, 6750, 11 500) unverändert grün.
-- **AK-BS-02 Start:** mit `petitionsOn: true` vor Ziel 1 kein Zug, `next` null; im ersten Tick mit `won` →
-  `next = tick + 600`; die erste Marke entsteht genau bei diesem Tick; der zweite Termin liegt 6000 T später.
+- **AK-BS-02 Start:** mit `petitionsOn: true` vor Ziel 1 kein Zug, `next` null; im ersten Tick mit `won` (wonTick) →
+  `next = wonTick + 600`; die erste Marke entsteht bei `tick === wonTick + 600` (§3.2.1), keine früher; der zweite
+  Termin liegt bei `wonTick + 6600`. **Kein Kandidat beim ersten Termin** (Welt mit `won` und `wonSpice` gesetzt, Rum,
+  Glas, Wolle, Gewürz 0, keine Kapelle, kein Lager ≥ 90): nach §3.2.3 fällt der Termin aus, keine Marke, `next =
+wonTick + 6600` (wie AK-BS-07); ist dort ein Kandidat bezahlbar, entsteht die Marke dann.
 - **AK-BS-03 Determinismus:** zwei Welten mit gleichem Seed und gleichen Aktionen über 30 000 T → gleiche Folge
   `(drawnAt, id, amount, anchor)` und gleiches `serialize`. Speichern und Laden mitten in einer Frist ergibt dasselbe
   `serialize` wie der durchgelaufene Lauf. Eigener Strom: Ein Lauf mit Krisen «normal» und Bittschriften an hat dieselbe
@@ -378,22 +366,13 @@ Vitest (DOM-frei): `tests/sim/petitions.test.ts` (neu, Regeln, Save, Randfälle)
   B4 und B5 zählt der Steuerzuwachs aus Aufstiegen darin mit. Erwartung: in der Ja-Lage Ja > Nein, in der Nein-Lage
   Nein > Ja; nur Rangfolgen, keine Beträge. Der Test prüft seine Vorbedingungen (alle Antworten `ok`, kein Brand, Krise nur
   wo die Lage sie setzt). Fällt er nach einer Def-Änderung, gilt der Rückfall aus AK-BS-05.
-- **AK-BS-05 Messlauf stabile Stadt (R-BS-1)** (`petitionsStable.test.ts`): Aufbau per Test-Helfer: 6 Kaufmannshäuser
-  auf HOME mit allen Diensten, Betriebe je Bedarfskette auf 110 % des Bedarfs (Bedarf je 100 T 24/24/12/12/60, Rechnung §2
-  P3b), Lager 100 je Ware, Krisen aus; 2000 T Einschwingen ohne Bitte, Vorbedingung 120 Kaufleute, alle versorgt,
-  Lager ≥ 90. Dann B1 gesetzt (`amount` 24), zwei Zweige «Ja» und «Nein» aus demselben `serialize`, je bis Nachspiel +
-  6000 T. Gemessen und geprüft (Toleranz je ±25 %):
-  - Zusatzplätze +18 (genau);
-  - Nahrung: erster Tick mit einem unversorgten Haus im Ja-Zweig ≈ 3333 T nach Vollbelegung (Lücke 3 je 100 T, Lager 100;
-    Rechnung §4 H3), Band 2500–4170;
-  - Stoff am Ende der Überbelegung ≈ 28 (100 − 72), Band 10–46;
-  - Zweig «Ja» mit +2 Fischern: kein Mangel im Fenster, ΔGeld(Ja − Nein) ≥ 15 000 (Rechnung §3: 18 × 22 × 60 = 23 760
-    abzüglich Zuzug und Abzug);
-  - Zweig «Nein»: Stoffersparnis ≤ 43 und Lager bleibt bei ≥ 95 (verfällt, Rechnung §4 H4).
-  - **Fehlerrichtung und Rückfall:** Tritt im 10-%-Fall kein Nahrungsmangel ein, dominiert «Ja» in der stabilen Stadt;
-    dann `OVERCROWD_PCT` per Ruling auf 20 (Spanne 15–20) und Befund an `lead-design`. Kommt der Mangel vor 2500 T, ist
-    «Ja» nur mit grossem Puffer spielbar; das ist die gewollte Richtung, Prüfung nur, ob AK-BS-04 grün bleibt, sonst
-    `OVERCROWD_PCT` 12. Jede Verstellung nur in den Defs.
+- **AK-BS-05 Messlauf stabile Stadt (R-BS-1)** (`petitionsStable.test.ts`): 6 Kaufmannshäuser, Betriebe je Kette mit
+  ü ≈ 10 % (Machbarkeit 5–14 % prüft der Plan vor Zusage), Lager 100, Krisen aus; B1 mit `amount` 24; Zweige J, J+F (+2
+  Fischer, Machbarkeit wie oben), N+F, N. Bänder (für ü = 10 %; im Test als Formel von ü, Herleitung je Band und
+  Fehlerrichtung in Anhang 03): Zusatzplätze genau 18; J erstes unversorgtes Haus 3133–3483 T nach der Zuzugsrampe
+  (Erwartung 3333, Rechnung §4 H3); J+F Stoff am Ende 22–31 (28) und kein Mangel; ΔGeld(J+F − N+F) 21 000–24 500
+  (23 760, Rechnung §1, §5); N gesparter Stoff 37–44 (43,2, Rechnung §4 H4), Stoff gegen Referenz +0 bis +6 (Ersparnis
+  verfällt). Rückfall bei Abweichung: Anhang 03 §4 (`OVERCROWD_PCT` 20 oder 12, nur per Ruling in den Defs).
 - **AK-BS-06 Ware fehlt:** Rum 0, offene B2 (gesetzt) → «Zu wenig Rum (0 / 10)», Welt JSON-gleich; B4 mit Rum 30, Stein 4 →
   «Zu wenig Stein (4 / 10)», Rum bleibt 30; danach «Nein» ok. Lager fällt nach dem Ziehen unter `amount`: «Ja» gesperrt, bei
   `drawnAt + 1200` gilt «Nein».
@@ -412,26 +391,35 @@ Vitest (DOM-frei): `tests/sim/petitions.test.ts` (neu, Regeln, Save, Randfälle)
   übrige Häuser unverändert, kein Wurf.
 - **AK-BS-12 Pause:** Welt mit offener Marke, kein `step` über beliebige Wanduhrzeit → Restfrist unverändert; nach 1199
   Schritten noch offen, nach 1200 «Nein».
-- **AK-BS-13 Nein ist harmlos:** feste Welt ohne Controller nach Ziel 1, über 60 000 T mit Bittschriften an und nie einer
-  Antwort: Häuser, Geld, Lager und Krisenfolge
-  sind je Tick mindestens so gut wie im gleichen Lauf ohne Bittschriften (nur Verbrauch kleiner); kein Ereignis ausser
-  «gezogen», «Klage», «Vorbei».
+- **AK-BS-13 Nein ist harmlos:** feste Welten ohne Controller, Bittschriften an und nie eine Antwort, gegen die Referenz
+  ohne Bittschriften, 60 000 T, je Fenster 6000 T: (a) versorgte Welt: Einwohner je Tick gleich, Geld ≥ Referenz,
+  Krisenfolge gleich; (b) knappe Welt: Einwohner-Ticks und Geld je Fenster ≥ 99 %, gesamt ≥ Referenz. Volles Lager mit
+  stehendem Betrieb ist kein Fehler; Geld unter Referenz ist ein Fehler im Leseort. Mass und Fehlerrichtung: Anhang 03 §5.
 - **AK-BS-14 Siegziele:** Haus Stufe 4 mit 23 Bewohnern unter Überbelegung zählt 23 in `merchants` und `spiceMerchants`;
   konstruierte Welt mit 3 × 23 + 11 = 80 versorgten Kaufleuten setzt nach 600 T Haltezeit `wonSpice`.
 - **AK-BS-15 Save:** Rundlauf mit offener Marke (beantwortet und unbeantwortet) und laufenden Wirkungen aller Arten
-  erhält alles; Migration eines Stands der vorigen Version → `on: false`, Weiterspielen bitgleich zum ungeladenen Lauf.
+  erhält alles; Migration eines Stands mit `SAVE_VERSION - 1` → `on: false`, Weiterspielen bitgleich zum ungeladenen Lauf.
   Abgewiesen mit Hinweis, ohne Wurf: drei offene Marken, Id `'guild'`, doppelte Id, `answer: 'maybe'`, `dueTick` ohne
-  `answer`, `until` über der Höchstdauer, `on: false` mit Wirkung, `next` als Text; Stand mit höherer Version →
+  `answer`, `until` über der Höchstdauer, `on: false` mit Wirkung, `next` als Text; Stand mit `SAVE_VERSION + 1` →
   «Unbekannte Version».
-- **AK-BS-16 Werte nur aus Defs:** Strukturtest auf `src/sim/petitions.ts` ohne Kommentare: keine Literale 6000, 1200,
-  4800, 600, 15, 10, 1800 und keine Waren-Ids als Text; `defs/petitions.ts` exportiert die Werte aus §4 (Test liest sie
+- **AK-BS-16 Werte nur aus Defs:** Strukturtest auf `src/sim/petitions.ts` ohne Kommentare: keine Literale der Zeitwerte
+  6000, 4800, 3000, 2400, 1800, 1200 und kein `PETITION_SALT`-Wert, keine Waren-Ids als Text; Formelkonstanten (z. B.
+  `+ 50) / 100`) und kleine Zahlen sind ausgenommen (Anhang 02, B-9); `defs/petitions.ts` exportiert die Werte aus §4 (Test liest sie
   gegen die Tabelle).
-- **AK-BS-17 Controller (Zusatztest, kein Gate):** Balancing-Controller mit `petitionsOn: true` erreicht Ziel 1 bis
+- **AK-BS-17 Controller (echter Test oder gestrichen, Plan entscheidet, Anhang 02 B-10):** Balancing-Controller mit `petitionsOn: true` erreicht Ziel 1 bis
   `WIN_TICK_LIMIT`; Kaufleute-Controller erreicht Ziel 2 bis `MERCHANT_TICK_LIMIT` (beide antworten nie, also nur
   Genügsamkeit).
 - **AK-BS-18 Karte (UI-Helfer):** `petitionPreview` für B1 in P1-Lage (4 Bürgerhäuser, Stoff 31, netto 0): Kosten 10,
   Zusatzplätze 8, Mehrbedarf Stoff 1,6, Nahrung 4,0, Rum 1,6; Reichweite Stoff 31 ÷ 1,6 × 100 ≈ 1938 T; Ersparnis «Nein» 18.
   Die Abfrage ändert die Welt nicht.
+- **AK-BS-23 Inselproben (F-2, R904):** Eine Welt aus dem Proben-Start hat `petitions.on === false`, auch wenn das Kästchen
+  «Bittschriften» an ist (Anhang 02, B-8).
+- **AK-BS-24 Nein-Begründung auf der Karte (R896 (0)):** Für jede der 9 Bitten enthält das Kartenmodell der «Nein»-Spalte
+  den Namen der Nein-Ware (`GOODS[no].name`) und einen nicht leeren Grund aus `PETITIONS[id].noReason`; bei B5, B7, B8, B9
+  nennt der Grund zusätzlich, warum es nicht die erbetene Ware ist (Text enthält den Namen der erbetenen bzw. der
+  Lohn-Ware, B8: «Nahrung»).
+- **AK-BS-25 B6-Hinweis:** Das Kartenmodell von B6 enthält in der «Ja»-Spalte die Zeile «Wirkung hängt am Schiffsraum»
+  mit Fremdlager-Gewürz und Zahl der Schiffe mit Gewürzroute; bei anderen Bitten fehlt die Zeile.
 
 Browser-Check (`qa-playtester`, Headless):
 
@@ -442,13 +430,12 @@ Browser-Check (`qa-playtester`, Headless):
 - **AK-BS-21** «Nein»: Hauspanel «Genügsam …» für 3 min, nach `delay` Chronik «Klage», sonst keine Änderung.
 - **AK-BS-22** Lager zu klein: «Ja» zeigt den Sperrgrund statt des Knopfs; «Nein» klickbar.
 
-## 13 Offene Punkte und Entscheidungsbedarf
+## 13 Entschieden (R904) und Auflagen für den Plan
 
-- **F-1 H2 für B3** (Rechnung §4 empfiehlt sie): Empfehlung **nicht** in diesem Schnitt (§11), Glas fest; nach dem
-  Playtest prüfen.
-- **F-2 Inselproben:** Sollen Proben (I-190) Bittschriften fest aus- oder einschalten? Empfehlung: fest **aus**, sonst sind
-  Proben-Ergebnisse nicht vergleichbar; Entscheid bei INSELPROBEN.
-- **F-3 `PETITION_FIRST` 600** ist neu (nicht aus der Rechnung): trägt Spec §1 «erste Karte im 15-min-Spiel». Empfehlung:
-  annehmen; Wächter AK-BS-09.
-- **Für den Plan (`lead-tech`):** README-Spielanleitung, arc42 (Modul `petitions`, Tick-Ablauf, Persistenz) und ADR-005-
-  Nachtrag mitführen; `storageCap` ersetzt `STORAGE_CAP` in `economy.ts:13` und `trade.ts:127` bitgleich ohne Wirkung.
+- **F-1 H2 für B3:** entschieden, Glas fest (§11); nach dem Playtest prüfen.
+- **F-2 Inselproben:** entschieden, Proben fest **ohne** Bittschriften (AK-BS-23).
+- **F-3 `PETITION_FIRST` 600:** angenommen; Wächter AK-BS-09.
+- **Auflagen für den Plan** (`lead-tech`, Gate B-5, B-7 bis B-10): [Anhang 02](2026-10-25-i210-bittschrift-design/anhang-02-plan-auflagen.md)
+  (Laufzeit und Aufteilung AK-BS-04, Ersatzmass B6/B9, `SAVE_VERSION - 1`, Proben-AK, Strukturtest-Wortlaut,
+  Controller-Test). Dazu: README-Spielanleitung, arc42 (Modul `petitions`, Tick-Ablauf, Persistenz) und ADR-005-Nachtrag
+  mitführen; `storageCap` ersetzt `STORAGE_CAP` in `economy.ts:13` und `trade.ts:127` bitgleich.
