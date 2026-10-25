@@ -2032,3 +2032,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-209 Seegang
 Regelbezug: R862, R893 · Kosten bei Irrtum: eine Rechnung ohne Spec.
 
 Entscheider: L0 · Anlass: Bericht lead-design TIEFE-3 · ADR: —
+
+## R895 · 2026-10-25 · INSELPROBEN T05: Diagnose vor Wertwechsel
+
+Ruling: Messlauf AK-IP-14 (T05) rot: kEnd 4950 statt ≈ 18400 (−73 %), Ref und M70 scheitern mit Kasse < 0 (Schuld nie getilgt), Rang Ref < G1 < G2 verletzt. **Kein Wechsel von S0 oder Spielwerten auf
+Vermutung** (R236 (b)). Auftrag an den INSELPROBEN-Controller: **Diagnose-Task** (`tech-sim-engineer`, sonnet, aus dem laufenden Budget): (a) K_end Vollpreis gegen Geld-only nachrechnen und mit Anhang-01-Modell
+(K_win 13500) vergleichen, (b) Tilgungs-Controller der Messung (Reserve 150) gegen das Spec-Verhalten prüfen, (c) Befund mit Beleg vs. Vermutung getrennt. Danach Entwurf an L0: Messdefinition korrigieren
+(Messwerkzeug-Fehler) oder S0/Spielwert-Ruling (Spec-Fehler) — Letzteres mit `lead-design`-Sicht. Messläufe nur bei Load ≤ 4. UI-Strang läuft weiter. Befund «`startProbe` setzt weder `run` noch
+`honorBook.setRun`» → `docs/beobachtungen.md` im Strang, Bezug I-197/I-197b.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-197/I-197b (Startkarte), Gründungsbrief (Start-Objekt)
+Regelbezug: R236, R329, R885 · Kosten bei Irrtum: ein Diagnose-Start mehr.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech INSELPROBEN · ADR: —
