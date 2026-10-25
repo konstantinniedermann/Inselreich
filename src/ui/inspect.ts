@@ -31,6 +31,7 @@ import type {
   Tier,
   World,
 } from '../sim/types';
+import { councilChronicleLine } from './council';
 import { costLine, setField } from './dom';
 import { DEMOLISH_VERB, deficitText, diagnosisText, refundText } from './texts';
 import { mapSigns, nextStep, remedyText, taxEffect } from './guide';
@@ -1127,6 +1128,7 @@ export function renderRest(panel: HTMLElement, world: World): void {
   addLine(panel, '', 'goal-next');
   addLine(panel, '', 'rest-monument');
   addLine(panel, '', 'rest-trial');
+  addLine(panel, '', 'rest-council');
   addLine(panel, tierPath());
 
   addHeading(panel, 'Nächster Schritt');
@@ -1187,6 +1189,10 @@ export function updateRest(panel: HTMLElement, world: World): void {
   const trialText = trialChronicleLine(world);
   const trialEl = setField(panel, 'rest-trial', trialText ?? '');
   if (trialEl && trialEl.hidden !== (trialText === null)) trialEl.hidden = trialText === null;
+  const councilText = councilChronicleLine(world);
+  const councilEl = setField(panel, 'rest-council', councilText ?? '');
+  if (councilEl && councilEl.hidden !== (councilText === null))
+    councilEl.hidden = councilText === null;
   setField(panel, 'next-step', nextStep(world));
   setField(panel, 'rest-tax', v.tax);
   fillMapSigns(panel, world);

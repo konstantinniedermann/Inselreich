@@ -2339,3 +2339,36 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette, `
 Regelbezug: R553, R816, R826, R862, R878 · Kosten bei Irrtum: Plan-Nachtrag; lokaler Revert vor dem Push.
 
 Entscheider: L0 · Anlass: Berichte lead-production, lead-tech, lead-design · ADR: —
+
+## R881 · 2026-10-25 · Abnahmen Welle 2 und Gate Merge REL-32 (Teil 1)
+
+Ruling: (1) **Abgenommen:** DOKU-RUNDE `docs/doku-runde` @ `afd223fa` (Handbuch 1.75; Personas `design-idea-scout` 1.5 mit WebSearch/WebFetch, `production-integrator` 1.20, `lead-production` 1.15 —
+Teil (f) bestätigt mit Regelbezug R877; E-065 beim nächsten Experiment-Eingriff auf Ist-Stand); TIEFE-2 `docs/tiefe-2` @ `d764745d` (T2-1: Härte-Freischaltung vereinbar mit R864; T2-2: K1 «Seegang»
+und K3 «Bittschrift» in die nächste Ideen-Runde, K4 als I-197b, I-198 in K1; T2-3: K2/K5 parken); TOOL-REST-3 `tool/rest-3` @ `99d221aa` (`LOAD_WAIT` 4.0, `pushgate` nur bei schreibenden Befehlen,
+kein Handbuch-Minor); **UI-HAEPPCHEN-J** `feat/ui-haeppchen-j` @ `a9265f85` (alle AK, Review und Playtest OK, sim-Diff leer; Auflage «Baustelle zählt nicht» entfällt, `councilPreview` zählt alle
+Gebäude); **I-186 Ehrenbuch** `feat/i186-ehrenbuch` @ `0fa49aa0` (alle AK-EB, Final-Review nach Delta OK, kein Save-Wechsel; serielle Reihenfolge ohne A/B-Merges hingenommen; EB-03-Negativfall
+Schwelle + `GROWTH_INTERVAL` − 1). (2) **Plan I-201** `plan/i201-festanlass` @ `b3f7958f` nach Gate Plan BEDENKEN abgenommen; R-I201-P: P-2/P-3/P-4/P-9/P-11 ja, 15 Starts, 3 Arbeiter, höchstens 2
+gleichzeitige Testläufe. (3) **I-197b Partiebrief** `design/i197b-partiebrief` @ `34ae988d` nach Gate Spec BEDENKEN abgenommen: PB-1 kein Save-Feld, PB-2 ein Feld, PB-3 Start-Objekt
+`{ seed?, crisisLevel, unlockMode }` stellt der I-197-Controller beim Umsetzungsstart um; Brief nimmt Karten bis 99 999 999 an, reine Zahleneingabe bleibt 0–99 999 949; Golden `IR1-4711-K2F0-1N`. Plan
+I-197b als Folgetask beim I-197-Start. (4) **SEERECHT** T04–T08 gestartet (13 Starts Rest); **INSELPROBEN** Etappe 1 (Sim-Strang T00–T04, 12 von 43 Starts, Par 1). (5) **Gate Merge REL-32 Teil 1**
+(`.studio/handoffs/2026-10-25-lead-qa-gate-REL-32.md`, Probe `c4948233`) BEDENKEN angenommen: lokaler Merge durch `lead-production` in der Gate-Reihenfolge, Konflikte genau nach Gate-Vorgabe
+(STUDIO.md/CHANGELOG: doku-runde-Fassung, 1.75 oben; `docs/ideen.md` bei `plan/inselproben`: main-Stand). Push frühestens 2026-10-26 nach `make push-check`. Beobachtung: Plan-Branch setzte
+`docs/ideen.md` per Merge auf alten Stand zurück (Retro).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: INSELPROBEN (ideen.md-Rückstand auf feat/inselproben gemeldet), SEERECHT/ORT-A (nicht im Bündel)
+Regelbezug: R553, R816, R826, R856, R862, R864, R868 V1, R877, R880 · Kosten bei Irrtum: lokaler Revert vor dem Push.
+
+Entscheider: L0 · Anlass: Berichte lead-tech, lead-design, lead-qa, studio-coach · ADR: ADR-016 (I-186)
+
+## R882 · 2026-10-25 · REL-32b lokal; ORT-A AK-41/AK-07 für Weg-Objekte gelockert
+
+Ruling: (1) **REL-32b** (`.studio/handoffs/2026-10-25-lead-production-REL-32b.md`) abgenommen: 8 Branches (doku-runde, rest-3, tiefe-2, plan-inselproben, plan-i201, design-i197b, UI-HAEPPCHEN-J,
+I-186) lokal auf main `7c7ab4d2`, Konflikte nach Gate, Teilbeleg je Exit 0 (186 Vitest-Tests der Paketdateien). Push frühestens 2026-10-26 nach `make push-check` (R816). (2) **ORT-A** (`feat/ort-a` @
+`1435bd0a`, Delta-Review ZURÜCK wegen AK-41): AK-41 und AK-07 werden **für die Weg-Objekte** auf Radius **r ≤ 7** gelockert, Bedingung ist die lokale Annahmeregel (Los-Maximum unter kollidierenden
+Kandidaten) mit Test über die Probe (Seeds 1–20); Item-Kachel = freie Seitenkachel, Dichte lokal per 5×5-Fenster: ja. Budget +2 Starts; frischer opus-Delta-Review Pflicht; Spec-/Plan-Wortlaut im Branch
+nachführen. Beobachtungen: Zyklus `ortsrand.ts` ↔ `roadside.ts`; Renderer-Test «L4 Deko-Culling» 4851 ms nahe 5000-ms-Timeout.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Stadtplanung C1, LEBEN-STRASSE (warten auf ORT-A)
+Regelbezug: R329, R673, R708, R793, R816, R871 · Kosten bei Irrtum: sichtbares Umspringen von Weg-Objekten bis 7 Kacheln weit; Rückkehr zu r ≤ 3 per Ruling.
+
+Entscheider: L0 · Anlass: Berichte lead-production, lead-tech · ADR: —

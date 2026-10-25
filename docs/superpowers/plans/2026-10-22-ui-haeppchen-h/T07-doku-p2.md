@@ -8,4 +8,4 @@ Umsetzer-Instanz von T05, per `SendMessage` fortgesetzt · ≈ 10 Tools · block
 
 ## Prüfschritte
 
-`npx prettier --check` der Dateien, Exit 0; Abschluss durch den Controller: `make check; echo EXIT=$?` bei freier Sperre.
+`npx prettier --check` der Dateien, Exit 0; Abschluss durch den Controller: Teilbeleg nach Plan-Index «Abschluss je Strang» (R858), kein `make check`.

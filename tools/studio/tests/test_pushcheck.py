@@ -120,7 +120,7 @@ class PushCheckTest(unittest.TestCase):
 
     def test_load_warten(self):
         h = Harness(
-            self, loads=(*[1.0] * len(pushcheck.PRECHECKS), 5, 4, 2.9)
+            self, loads=(*[1.0] * len(pushcheck.PRECHECKS), 5, 4.5, 3.9)
         )  # Stufen lesen den Load vorab
         h.check_ts(0, marked="[]")
         self.assertEqual(h.go(), 0)

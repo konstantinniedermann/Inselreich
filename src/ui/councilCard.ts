@@ -68,7 +68,11 @@ export function createCouncilCard(
         const b = el('button', 'council-option');
         b.type = 'button';
         b.dataset.side = c.side;
-        b.append(el('strong', 'council-name', c.name), el('span', 'council-text', c.text));
+        b.append(
+          el('strong', 'council-name', c.name),
+          el('span', 'council-text', c.text),
+          el('span', 'council-preview', c.preview),
+        );
         b.addEventListener('click', () => {
           picked.set(tier, c.side);
           sync();

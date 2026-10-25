@@ -51,7 +51,9 @@ class ScriptKlasseTest(unittest.TestCase):
         return loadsnap.script_name(cmd)
 
     def test_script_interpreter_und_optionen(self):
-        self.assertEqual(self.script("/usr/bin/python3.13 -u /a/b/pushcheck.py --x"), "pushcheck.py")
+        self.assertEqual(
+            self.script("/usr/bin/python3.13 -u /a/b/pushcheck.py --x"), "pushcheck.py"
+        )
         self.assertEqual(self.script("python3 -m unittest discover"), "unittest")
         self.assertEqual(self.script("python3 -c print(1)"), "-c")
         self.assertEqual(self.script("node /x/tools/perf.mjs --n 3"), "perf.mjs")
@@ -68,11 +70,15 @@ class ScriptKlasseTest(unittest.TestCase):
         self.assertEqual(self.script(cmd), "Google Chrome")
 
     def test_script_ohne_argument_oder_interpreter(self):
-        self.assertEqual(self.script("/x/Python.app/Contents/MacOS/Python a/b.py -v"), "b.py")
+        self.assertEqual(
+            self.script("/x/Python.app/Contents/MacOS/Python a/b.py -v"), "b.py"
+        )
         self.assertEqual(self.script("vim"), "vim")
         self.assertEqual(self.script("python3"), "python3")
         self.assertEqual(self.script("/usr/bin/vim file.txt"), "vim")
-        self.assertEqual(self.script("/Applications/Foo Bar.app/Contents/MacOS/Foo"), "Foo")
+        self.assertEqual(
+            self.script("/Applications/Foo Bar.app/Contents/MacOS/Foo"), "Foo"
+        )
         self.assertEqual(self.script(""), "")
 
     def test_script_enthaelt_keine_argumente(self):
@@ -80,14 +86,18 @@ class ScriptKlasseTest(unittest.TestCase):
 
     def test_klasse(self):
         root = "/Users/KN/CAS/projekte/anno-clone"
-        k = lambda c: loadsnap.classify(c, root)  # noqa: E731
+        k = lambda c: loadsnap.classify(c, root)
         self.assertEqual(k(f"python3 {root}/.worktrees/x/a.py"), "eigen")
-        self.assertEqual(k("node /x/node_modules/vitest/dist/workers/forks.js"), "eigen")
+        self.assertEqual(
+            k("node /x/node_modules/vitest/dist/workers/forks.js"), "eigen"
+        )
         self.assertEqual(k("make check"), "eigen")
         self.assertEqual(k("/usr/bin/make studio-test"), "eigen")
         self.assertEqual(k("python3 pushcheck.py"), "eigen")
         self.assertEqual(k("Google Chrome --user-data-dir=/tmp/.studio/p"), "eigen")
-        self.assertEqual(k("Google Chrome --user-data-dir=/Users/x/Library/Chrome"), "fremd")
+        self.assertEqual(
+            k("Google Chrome --user-data-dir=/Users/x/Library/Chrome"), "fremd"
+        )
         self.assertEqual(k("/Applications/Foo.app/Contents/MacOS/Foo"), "fremd")
         self.assertEqual(k("python3 other.py"), "fremd")
         self.assertEqual(k("python3 -m unittest discover"), "eigen")
@@ -119,7 +129,9 @@ class ScriptKlasseTest(unittest.TestCase):
         self.addCleanup(lambda: __import__("shutil").rmtree(d, True))
         with mock.patch.dict(os.environ, {"STUDIO_HOME": d}):
             loadsnap.record("load", "manual", loadsnap.parse_snapshot(PS, 1.0))
-        (ev,) = [json.loads(x) for x in (Path(d) / "events.jsonl").read_text().splitlines()]
+        (ev,) = [
+            json.loads(x) for x in (Path(d) / "events.jsonl").read_text().splitlines()
+        ]
         self.assertIn("cpu_eigen", ev)
         self.assertIn("cpu_fremd", ev)
         self.assertIn("script", ev["top5"][0])

@@ -64,7 +64,9 @@ class ReasonTest(unittest.TestCase):
 
     def test_delta_review_frisch_is_allowed_for_qa_code_reviewer(self):
         for anlass in ("", " nach ZURÜCK", " nach BEDENKEN, Paket X"):
-            prompt = f"Persona: qa-code-reviewer\nModell: opus (Delta-Review frisch{anlass})"
+            prompt = (
+                f"Persona: qa-code-reviewer\nModell: opus (Delta-Review frisch{anlass})"
+            )
             self.assertIsNone(call("qa-code-reviewer", prompt, "opus"), anlass)
         self.assertIsNotNone(
             call("qa-code-reviewer", "Modell: opus (Delta-Review)", "opus")

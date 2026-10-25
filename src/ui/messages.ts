@@ -82,6 +82,16 @@ export function bindMessages(container: HTMLElement): () => void {
   };
 }
 
+/** Art einer Meldung (aus der Signatur von `showMessage`). */
+export type ToastKind = 'info' | 'error' | 'warn';
+
+/** Lebensdauer nicht-klebender Toasts je Art in ms; Warnungen bleiben länger (I-176). */
+export const TOAST_MS: Record<ToastKind, number> = { warn: 7000, info: 3000, error: 3000 };
+
+export function toastLifetimeMs(kind: ToastKind): number {
+  return TOAST_MS[kind];
+}
+
 /**
  * Zeigt eine Meldung. Höchstens MAX_TOASTS sichtbar: beim vierten fällt die älteste nicht-sticky
  * Meldung raus. Sticky Meldungen zählen mit, werden aber nie verdrängt; sind alle sticky, bleibt
@@ -89,7 +99,7 @@ export function bindMessages(container: HTMLElement): () => void {
  */
 export function showMessage(
   text: string,
-  kind: 'info' | 'error' | 'warn' = 'info',
+  kind: ToastKind = 'info',
   sticky = false,
   closable = false,
   action?: { label: string; onClick: () => void },
@@ -106,7 +116,7 @@ export function showMessage(
 function appendToast(
   parent: HTMLElement,
   text: string,
-  kind: 'info' | 'error' | 'warn',
+  kind: ToastKind,
   sticky: boolean,
   closable: boolean,
   action?: { label: string; onClick: () => void },
@@ -135,7 +145,7 @@ function appendToast(
   }
   if (slot !== undefined) toast.dataset.slot = slot;
   parent.appendChild(toast);
-  if (!sticky) setTimeout(() => toast.remove(), 3000);
+  if (!sticky) setTimeout(() => toast.remove(), toastLifetimeMs(kind));
   if (parent.children.length > MAX_TOASTS) {
     const oldest = Array.from(parent.children).find(
       (c) => c !== toast && !(c as HTMLElement).dataset.sticky,
@@ -145,11 +155,7 @@ function appendToast(
 }
 
 /** Meldung mit festem Platz: ersetzt den Toast desselben `slot` (kein Dedupe; R449, I-042). */
-export function replaceMessage(
-  slot: string,
-  text: string,
-  kind: 'info' | 'error' | 'warn' = 'info',
-): void {
+export function replaceMessage(slot: string, text: string, kind: ToastKind = 'info'): void {
   if (!box) return;
   box.querySelector(`[data-slot="${slot}"]`)?.remove();
   appendToast(box, text, kind, false, false, undefined, slot);

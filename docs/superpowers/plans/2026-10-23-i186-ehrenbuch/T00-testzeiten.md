@@ -16,4 +16,11 @@ Zeiten der bestehenden Tests, die der Plan berührt, **vor** Task 1 auf main fes
 
 ## Ausgang
 
-(füllt der Controller; leer lassen, falls kein Test > 200 ms, mit Vermerk «keiner > 200 ms»)
+Stand main @ 9d0bbf6b, Load ca. 2,6. Lauf 1 (`vitest related` auf app/menu/startCard): 3 Dateien, 56 Tests grün, keiner > 200 ms. Lauf 2 (balance-merchants, menu, startCard): 3 Dateien, 25 Tests grün. Tests > 200 ms, alle `tests/sim/balance-merchants.test.ts`:
+
+- AK-B1-01 Sieg 6750 ...: 321 ms
+- AK-B1-02 Messwerte vollständig ...: 259 ms
+- AK-B1-04 Laden beim ersten Kaufmann ...: 548 ms
+- AK-BAS-02 Kaufleute: Sieg 6750 ...: 292 ms
+
+A/B-Liste: `src/ui/app.ts src/ui/menu.ts src/ui/startCard.ts` (related) und `tests/sim/balance-merchants.test.ts tests/ui/menu.test.ts tests/ui/startCard.test.ts`.

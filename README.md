@@ -210,6 +210,7 @@ Sobald ein Haus zum ersten Mal die Stufe 2 (Siedler), 3 (Bürger) oder 4 (Kaufle
 
 - **Bedienung:** Klick auf die Marke oder `Umschalt` + `R` öffnet die Rats-Karte, `Esc` schliesst sie ohne Wahl. Je offene Stufe stehen die Karten nebeneinander (Stufe 2 und 3 zwei, Stufe 4 drei). Eine Karte anklicken markiert sie; erst **«Beschluss fassen»** gilt (Schutz vor Fehlklick).
 - **Wirkung:** Der Beschluss gilt für die ganze Partie und alle Inseln, kostet nichts, lässt sich nicht ändern; die übrigen Beschlüsse der Stufe verfallen. Gefasste Beschlüsse stehen als Liste in derselben Karte («Stufe 2: Webordnung»), die Marke bleibt als neutrales «Rat» sichtbar. Ein offener Beschluss kann beliebig lange warten.
+- **Vorschau und Nachlesen:** Jede Karte nennt unter ihrem Text die Wirkung auf den heutigen Bestand: «Betrifft jetzt: 3 × Weberei» (alle Inseln), beim Seerecht «Betrifft jetzt: n Schiffe» (ohne Schiff «Wirkt noch nicht: kein Schiff»), bei den Haus-Beschlüssen «Betrifft jetzt: n Häuser (+m Plätze)», ohne passendes Gebäude «Wirkt noch nicht: … fehlt». Die Chronik der Ruhe-Ansicht führt eine Zeile «Rat: …» («Rat: 1 Beschluss offen», «Rat: Webordnung · Wohnordnung», «Rat: Webordnung — 1 offen»), und im Ereignis-Log steht jeder gefasste Beschluss als «Rat beschliesst: Glockenrecht».
 - **Die sieben Beschlüsse:** Stufe 2 Webordnung (Webereien +25 % schneller) oder Glockenrecht (Kapellen reichen 3 Felder weiter); Stufe 3 Brennrecht (Brennereien +25 % schneller) oder Wohnordnung (Bürgerhäuser fassen 16 statt 15); Stufe 4 Glasrecht (Glashütten +67 % schneller), Hofrecht (Kaufmannshäuser fassen 22 statt 20) oder Seerecht (Schiffe fahren 25 % schneller. Spart ab etwa 80 Kaufleuten ein Schiff auf langen Gewürzrouten). Gilt für die ganze Partie, die übrigen Beschlüsse der Stufe verfallen. Alle Zahlen: [`docs/spielwerte.md`](docs/spielwerte.md#rat-ratsbeschluss).
 
 ### Meisterprüfung
@@ -220,6 +221,22 @@ Ist das Denkmal fertig, wird der Ziel-Chip in der Kopfzeile zum Knopf «Meisterp
 - **Start:** mit 60 bis 150 Kaufleuten und ohne Schulden. Die Karte zeigt, welche Güter ohne Zukauf fehlen; ist der Start gesperrt, steht der Grund im Knopf.
 - **Abbruch:** jederzeit über «Abbrechen» (zweiter Klick bestätigt), ohne Folgen.
 - **Lohn:** Bei Erfolg trägt die Inselchronik «Meisterprüfung: Eigenversorgung bestanden». Wer scheitert, kann es später neu versuchen.
+
+### Ehrenbuch
+
+Das Ehrenbuch hält Meisterstücke über Partien hinweg fest. Es gibt keinen Spielvorteil und gilt nur auf diesem Gerät (Browser-Speicher, kein Export). Das Menü zeigt die Zeile «Ehrenbuch: n von 9 Meisterstücken»; der Knopf «Ehrenbuch» öffnet die Karte mit erreichten und offenen Stücken samt Bedingung. Ein neues Stück trägt sich mit einer Meldung ein; der erste Eintrag bleibt. «Neue Insel» setzt das Buch nicht zurück.
+
+- **Bürgerstadt:** Erstes Ziel erreichen
+- **Flinke Gründung:** Erstes Ziel bis Spielzeit 15:00
+- **Kaufmannseile:** Handelsstadt bis Spielzeit 30:00
+- **Sturmfest:** Handelsstadt mit Krisen «normal»
+- **Gewürzstadt:** Drittes Ziel erreichen
+- **Inselreich:** Auf jeder Fremdinsel ein Kontor
+- **Denkmal:** Das Denkmal vollenden
+- **Meister im Sturm:** Eine Meisterprüfung mit Krisen «normal» bestehen
+- **Meisterprüfung «Eigenversorgung»:** Die Auflage «Eigenversorgung» bestehen
+
+Die beiden Tempo-Stücke zählen nur in einer Partie mit stufenweiser Freischaltung, die über «Neue Insel» begonnen wurde.
 
 ### Einstellungen, Ton und Anzeige
 
@@ -272,6 +289,7 @@ Die Regeln mit allen Zahlen stehen in [`docs/spielwerte.md`](docs/spielwerte.md)
 Ereignisse zeigt ungelesene Meldungen als (n neu), ab 10 (9+ neu); Aufklappen setzt den Zähler zurück.
 
 - **Ereignis-Log:** Die Box unten links erscheint, sobald ein Eintrag da ist, auch bei «Krisen: aus». Sie hält die letzten 20 Einträge. Neben Krisen und Monument stehen darin ein verfallener Zufallsauftrag («Auftrag verfallen: …»), ein verfallenes Stammkunden-Angebot («Stammkunden-Angebot verfallen: …») sowie jede Vertragslieferung und jeder Vertragsbruch. Diese Einträge zählen nur bei Lieferung und Bruch als «neu»; die Meldung oben rechts erscheint wie bisher nur einmal.
+- **Warnmeldungen:** Meldungen oben rechts verschwinden nach 3 s, Warnungen bleiben 7 s stehen, damit sie nicht überlesen werden. Klebende Meldungen bleiben, bis du sie schliesst.
 - **Reichweite am Lager-Chip:** Fällt oder steigt ein Gut so, dass das Lager bald leer oder voll ist, trägt der Chip eine Zeit, z. B. «↓ 2:00» oder «↓ 40 s» (Zeit in Spielzeit bei 1×). Leer wird bei höchstens 3 Minuten gelb, bei höchstens 1 Minute rot, ein leeres Lager mit Verbrauch zeigt «0 ↓ leer». Voll wird bei höchstens 1 Minute gedämpft markiert, nie rot. Der Tooltip nennt die Zeit und die Rate je Minute immer, auch ausserhalb der Schwelle. Die Reichweite rechnet mit der Erzeugung und dem Verbrauch der Insel; läuft ein Stammkunde für dieses Gut auf dieser Insel, zieht sie seine Lieferung je Periode ab (Tooltip: «mit Stammkunde, ohne Handel und Aufträge»). Handel und Zufallsaufträge bleiben draussen.
 
 ## Speichern, Laden, Neue Insel

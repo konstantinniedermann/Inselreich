@@ -48,6 +48,7 @@ Lokal, nicht Teil des Spiels.
 - [ADR-013 Inselmodell im Weltzustand](adr/ADR-013-inselmodell-im-weltzustand.md) — angenommen
 - [ADR-014 Studio-Riegel ausserhalb des Verfassungs-Guards](adr/ADR-014-studio-riegel.md) — angenommen
 - [ADR-015 Kern und Anbauten](adr/ADR-015-kern-und-anbauten.md) — angenommen (R688)
+- [ADR-016 Ehrenbuch ausserhalb des Welt-Saves](adr/ADR-016-ehrenbuch.md) — angenommen
 
 ## Specs
 

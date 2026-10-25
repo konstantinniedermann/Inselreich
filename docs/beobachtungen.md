@@ -257,3 +257,17 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-25 · Playtest SEERECHT T07: Seite bei 800 px Fensterbreite zu breit (niedrig)
 
 - Fundort: Playtest SEERECHT T07. Beobachtung: bei 800 px Fensterbreite ist die Seite global 868 px breit, das HUD wird abgeschnitten, der Schliessen-Knopf der Rats-Karte liegt bei 0 px Scroll knapp ausserhalb. Ursprung: nicht Seerecht-spezifisch. Einschätzung: niedrig, Desktop-first (ab 1280 px).
+
+## 2026-10-25 · Import-Zyklen und Merge-Rückstand (niedrig)
+
+- Fundort: `src/sim/`. Beobachtung: keine Lint-Regel gegen Importzyklen; nur handgeschriebene Strukturtests (I-201 P-11) fangen sie. Ursprung: Gate Plan I-201. Einschätzung: Kandidat für ein Werkzeug-Paket (ESLint `import/no-cycle` wäre neue Abhängigkeit → ADR; Alternative: kleiner eigener Prüfer in `tools/`).
+- Fundort: `plan/inselproben` Merge `35728832`. Beobachtung: Der Merge von main in einen Plan-Branch setzte `docs/ideen.md` auf einen älteren Stand zurück (Konfliktlösung «ours» falsch herum). Ursprung: Gate Merge REL-32. Einschätzung: in Plan-/Lead-Persona «bei Doku-Konflikten in fremden Dateien immer main-Stand nehmen» prüfen.
+
+## 2026-10-25 · I-186 Ehrenbuch: zwei niedrige Review-Notizen (niedrig)
+
+- Fundort: `tests/ui/honorCard.test.ts`, `src/ui/app.ts` (`honors()`). Beobachtung: Der Karten-Test mockt `openModal`, Esc und Fokus sind nicht eigens getestet. `honors()` nutzt `honorHints(...)[0]` und hängt an der Reihenfolge Status- vor Tempo-Hinweis. Ursprung: Reviews T05/T07 (I-186). Einschätzung: niedrig, bei Änderung der Hinweisreihenfolge einen Test ergänzen.
+
+## 2026-10-25 · ORT-A: Importzyklus und knapper Test-Timeout (niedrig)
+
+- Fundort: `src/render/ortsrand.ts` ↔ `src/render/roadside.ts`. Beobachtung: gegenseitiger Import, funktioniert in beiden Reihenfolgen, fragil. Ursprung: ORT-A Final-Review (R882). Einschätzung: beim nächsten Render-Paket auflösen.
+- Fundort: Renderer-Test «L4 Deko-Culling». Beobachtung: 4851 ms bei Timeout 5000 ms. Ursprung: ORT-A. Einschätzung: ZEITRESERVE-PFLEGE-Kandidat.
