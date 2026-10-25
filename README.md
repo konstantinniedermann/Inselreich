@@ -223,7 +223,7 @@ Ist das Denkmal fertig, wird der Ziel-Chip in der Kopfzeile zum Knopf «Meisterp
 
 ### Ehrenbuch
 
-Das Ehrenbuch hält Meisterstücke über Partien hinweg fest. Es gibt keinen Spielvorteil und gilt nur auf diesem Gerät (Browser-Speicher, kein Export). Menü → «Ehrenbuch» zeigt «Ehrenbuch: n von 9» und die Karte mit erreichten und offenen Stücken samt Bedingung. Ein neues Stück trägt sich mit einer Meldung ein; der erste Eintrag bleibt. «Neue Insel» setzt das Buch nicht zurück.
+Das Ehrenbuch hält Meisterstücke über Partien hinweg fest. Es gibt keinen Spielvorteil und gilt nur auf diesem Gerät (Browser-Speicher, kein Export). Das Menü zeigt die Zeile «Ehrenbuch: n von 9 Meisterstücken»; der Knopf «Ehrenbuch» öffnet die Karte mit erreichten und offenen Stücken samt Bedingung. Ein neues Stück trägt sich mit einer Meldung ein; der erste Eintrag bleibt. «Neue Insel» setzt das Buch nicht zurück.
 
 - **Bürgerstadt:** Erstes Ziel erreichen
 - **Flinke Gründung:** Erstes Ziel bis Spielzeit 15:00
