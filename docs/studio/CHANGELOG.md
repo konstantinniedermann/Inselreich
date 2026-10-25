@@ -22,6 +22,27 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-25 · Handbuch 1.77
+
+- Anlass: Kurz-Retro f8716d75 (V1–V3) und Dauerauftrag N-102; Auftrag COACH-R920
+- Datenbasis: `docs/studio/retros/2026-10-25-session-f8716d75-ende.md`, `docs/studio/metriken/S-2026-10-25-f8716d75.md`
+- Ruling: R920, R922
+- Änderungen: STUDIO.md Briefing-Standard: Zeilen «Messfenster einfordern» (V1), «Spec-Berichte» mit Pflichtzeile Rulings-Abgleich (V2), «Design-Instanzen» (V3, ab 150k Folgeinstanz), «Dauerauftrag Headless-Chrome» (R922). `templates/briefing.md` Pflichtzeilen dazu. Alle drei Vorschläge passiv ohne Experiment-Platz. Basis `docs/coach-r886` (1.76)
+
+## 2026-10-25 · Persona qa-playtester 1.10
+
+- Anlass: Dauerauftrag R922 (liegengebliebene Headless-Chrome); Auftrag COACH-R920
+- Datenbasis: Ruling R922, N-102
+- Ruling: R922
+- Änderungen: Schritt «Alle gestarteten Prozesse beenden» um Hinweis auf fremde Headless-Chrome (`kill <PID>`, Grenzen) ergänzt
+
+## 2026-10-25 · Handbuch 1.76
+
+- Anlass: Kurz-Retro session-47d29586-ende, V3 (Ampel Cache-Write 5 min Historie rot, dritte Retro in Folge); Auftrag COACH-R886
+- Datenbasis: `docs/studio/retros/2026-10-25-session-47d29586-ende.md`, `docs/studio/metriken/S-2026-10-25-47d29586.md` (übriges Wachstum 20,5 %, `lead-tech` 5,4 %)
+- Ruling: R886 (2)
+- Änderungen: STUDIO.md Briefing-Standard: Punkt «Plan- und Gate-Leads lesen abschnittsweise» (`rulings*.md`, Handoffs, Specs nur per `rg -n` und Zeilenbereich; Messgrösse übriges Wachstum ≤ 15 % in 2 von 3 Sessions). `templates/briefing.md` Pflichtzeile für Plan- und Gate-Lead-Briefings; Lead-Rückkanal-Zeile ohne «im Vordergrund» (an R868 V2 angeglichen). `experimente.md`: E-076 neu (passiv), E-063 abgeschlossen und E-073 laufend (R878 (9)), E-065 auf Ist-Stand, Messaufträge M1–M3. `.gitignore` Muster `*-e` für BSD-`sed -i`-Backups (R886 (2), V1)
+
 ## 2026-10-25 · Handbuch 1.75
 
 - Anlass: Auftrag DOKU-RUNDE (R876 (2), R879 (2) und (3), R878 (9))

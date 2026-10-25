@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.75 · Stand: 2026-10-25 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.77 · Stand: 2026-10-25 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -115,6 +115,15 @@ Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davo
   liest die erste Angabe mit „Tools“ bzw. „min“).
 - **Kontext nennt nur die Task-Datei und die betroffenen AK-IDs**, nie einen ganzen Plan oder eine
   ganze Spec; `rulings*.md` (beide Dateien) nur per `grep` (E-010, R167, R682).
+- **Plan- und Gate-Leads lesen abschnittsweise (R886 V3):** `rulings*.md`, Handoffs unter
+  `.studio/handoffs/` und Specs nur per `rg -n <R-Nr. oder AK-ID> <datei>` und danach den
+  Zeilenbereich (`offset`/`limit`), nie die ganze Datei; die Kontextzeile nennt Ruling-Nummern,
+  Abschnitte oder Zeilen. Messgrösse: Cache-Write 5 min «übriges Wachstum» ≤ 15 % in 2 von 3
+  Sessions, `lead-tech`-Anteil ≤ 4 % (Ausgang 20,5 % bzw. 5,4 %, Retro 47d29586).
+- **Messfenster einfordern (R920 V1):** Briefing eines Pakets mit Perf- oder Browser-Messung nennt «Last ≤ 4 nötig»; L0 staffelt die Test-Controller nach 1-min-Load (Fensterregel R803, Lastgrenze R329), damit Messungen das Fenster bekommen. Messgrösse: ≤ 60 min bis Messstart, 0 Pakete wegen Last über die Session-Grenze, in 2 Sessions.
+- **Spec-Berichte (R920 V2):** Pflichtzeile «Rulings-Abgleich: R<von>–R<bis>» (die geprüfte Ruling-Spanne, per `rg -n`); fehlt sie, gilt der Bericht als unvollständig.
+- **Design-Instanzen (R920 V3):** lesen Kontextdateien abschnittsweise (`rg -n`, dann `offset`/`limit`); ab 150k Kontext übernimmt eine Folgeinstanz mit Übergabe, die laufende wird nicht weiter ausgedehnt.
+- **Dauerauftrag Headless-Chrome (R922, R863):** Liegengebliebene Headless-Chrome-Prozesse, auch aus anderen Projekten oder früheren Sessions, beendet L0 bzw. der zuständige Lead selbst per `kill <PID>`, sobald sie stören (Messfenster, Port, Last); keine Warteschlange, keine Rückfrage. Grenzen: nur Prozesse mit `--headless`, nie das sichtbare Chrome des Nutzers, nie Chrome eigener laufender Browser-Läufe (Heartbeat < 10 min), kein `pkill -f`, gezielt je PID.
 - **Umsetzer-Briefing (E-017):** nennt die D1-Dateien (README, arc42, ADR, Spec-Verweise) als erlaubt.
 - **Persona-Änderung (R233 (1)):** DoD nennt CHANGELOG-Eintrag (Version = neuester Eintrag) und
   `make studio-test` grün als Pflicht (Teilbeleg, R858).

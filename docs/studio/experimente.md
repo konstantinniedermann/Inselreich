@@ -15,7 +15,13 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R689 2026-10-16): E-063, E-066, E-068; E-064 Bewertung `behalten` als Entwurf, bis L0 bestätigt; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz. E-072 und E-073 (R868, Handbuch 1.73) wirken sofort und laufen passiv ohne Platz wie E-059/E-071; Vorschlag an L0: E-063 bewerten und den Platz an E-073 geben.
+Laufend (R878 (9), 2026-10-25): E-066, E-068, E-073; E-063 `behalten`, abgeschlossen (R878 (9)); E-064 Bewertung `behalten` als Entwurf, bis L0 bestätigt. Passiv ohne Platz (wirken sofort, Muster E-059): E-071, E-072, E-074, E-076. Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056; E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+
+Offene Messaufträge ohne Platz (R886 (2), Retro [session-47d29586-ende](retros/2026-10-25-session-47d29586-ende.md)), Verantwortlich `studio-coach`:
+
+- **M1** (Frist 2026-11-02): Cache-Write-Wachstum und L0-Kontext je Rolle aufschlüsseln, mit Lesevolumen aus `rulings*.md` und `.studio/handoffs/`; Ergebnis in die nächste Session-Retro. Ausgangswerte und Bezug: E-076.
+- **M2** (Frist nächste Session-Retro): Gates mit Urteil BEDENKEN zählen, je Gate Auflagenzeilen und Folgestarts; prüfen, ob die Qualitätsmetrik Auflagen getrennt ausweisen soll (Werkzeugänderung nur nach L0-Ruling). Ausgang 47d29586: 6 BEDENKEN-Gates (R874 3×, R875, R881 2×), Nacharbeit laut Metrik 0 %.
+- **M3** (Frist nächste Session-Retro): E-074 Session 2 von 3 auswerten; Abweichung ≥ ±30 % → Faktor in `metriken/richtwerte.md` neu bestimmen (Vorschlag an L0). Ausgang Session 1: −63,8 %.
 
 ---
 
@@ -624,7 +630,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: 2026-10-12 (R565 V1, Platz von E-057; Beginn mit dem nächsten Plan-Briefing)
 - Bewertung: Entwurf 2026-10-14 (Studio-Coach, Retro [session-b54ed3bd-ende](retros/2026-10-14-session-b54ed3bd-ende.md) B1): **zurückgenommen, nie angewendet** (Ruling R646) — kein Plan-Briefing seit dem Start nennt die Kappe (`.studio/archiv/briefings/*lead-tech*`), `lead-tech.md`, `STUDIO.md` und Briefing-Vorlage enthalten sie nicht; Messwerte `plan-handel-2` 61 Turns / 1,54 M, `plan-ui-aufraeum-3` 0,28 M, `plan-i-100` 0,08 M, `plan-I-047` 70 / 1,48 M sind ohne Anwendung nicht zuzuschreiben. Rückfall = heutiger Zustand. L0-Ruling R646 bestätigt.
 
-## E-063 · laufend (R565, angepasst R646) · Integrator nur im Worktree `integrate`, Briefing nennt ihn
+## E-063 · behalten (R878 (9)), abgeschlossen (R565, angepasst R646) · Integrator nur im Worktree `integrate`, Briefing nennt ihn
 
 - Hypothese: Wenn Merge und `make push-check` immer in `.worktrees/integrate` (detached auf dem Kandidaten) laufen, die Integrator-Pflichtzeile der Briefing-Vorlage diesen Arbeitsort nennt und die Persona bei einem Briefing mit Hauptcheckout „Schritt 1 gilt, melden“ vorschreibt, dann treffen L0-Commits auf `main` keinen laufenden Integrator mehr (Prozess-Retro [M13](retros/2026-10-12-m13-prozess.md) B1/P1; [Retro M13](retros/2026-10-12-m13.md) B1/V2: beide Vorfälle R562 und REL-M13 kamen aus Briefings mit Hauptcheckout, 2 bzw. 3 von 27 Briefings).
 - Messgrösse: in den nächsten 10 Integrator-Läufen 0 Briefings mit Hauptcheckout als Arbeitsort (Grep `.studio/archiv/briefings/*production-integrator*`), 0 × push-check Exit 1 „Arbeitsbaum verändert“ (Ereignis `push_check`) und 0 Merge-Commits mit fremder Nachricht (`git log --merges`); Gegenprobe: Integrator-Dauer je Lauf nicht über Ausgang, gepushter Hash = Ruling-Hash oder vor dem Push gemeldet.
@@ -637,6 +643,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Bewertung: Entwurf 2026-10-14 (Studio-Coach, Retro session-b54ed3bd-ende B2): **angepasst** — 18 Integrator-Briefings seit dem Start, 15 mit Worktree, 3 mit Hauptcheckout per Ruling (R627, R636, R644, Doku-/Werkzeug-Merges), in R616–R645 kein Vorfall genannt. Neue Messgrösse (R646): Integrator-Briefings mit Hauptcheckout ohne Ruling-Nummer, Soll 0 über weitere 10 Läufe, höchstens bis 2026-11-19; Ruling-Ausnahmen werden gezählt. L0-Ruling R646 bestätigt.
 - Datenpunkt (Retro [session-dbac5fc4-ende](retros/2026-10-14-session-dbac5fc4-ende.md)): Briefings ab 12:00 in dbac5fc4: 3 mit `.worktrees/integrate`, 2 mit Hauptcheckout-Bezug und Ruling-Nummer (R631/R630, R644), 0 ohne Ruling-Nummer. Weiter beobachten; Status bis zum Ruling unverändert.
 - Bewertung: Entwurf 2026-10-25 (Studio-Coach, Auftrag COACH-R872, R871 (4)): **behalten**, abschliessen. Beobachtung: seit dem Datenpunkt dbac5fc4 13 weitere Integrator-Briefings (`.studio/archiv/briefings/*production-integrator*`, 2026-10-14 14:10 bis 2026-10-23), mit dbac5fc4 18 Läufe seit R646 (Soll 10 erreicht): 9 mit `.worktrees/integrate`, 1 Vorprüfung im Feature-Worktree (HANDEL-2), 3 mit Hauptcheckout (TOOL-BUENDEL-15 R757, REL-28 R784, TOOL-BUENDEL-16 gemischt), alle mit Ruling-Nummer, also 0 ohne Ruling-Nummer; die letzten 5 Briefings (ab 2026-10-17 18:33) alle im Worktree. `push_check`-Ereignisse seit 2026-10-14: 11, die 3 mit Exit 1 sind Testläufe mit vollen Prüfungen, keiner bricht wegen eines veränderten Arbeitsbaums ab. Merge-Commits mit fremder Nachricht nicht nachgezählt. Deutung: Schwelle erfüllt, Regel wirkt seit 2026-10-17 ohne Ausnahme; die Messgrösse „Ruling-Nummer“ ist schwach, weil jedes Integrator-Briefing die Merge-Ruling nennt (die beiden Hauptcheckout-Briefings vom 2026-10-17 nannten keine Ausnahme-Ruling). Regel bleibt (Vorlagenzeile, Persona, Handbuch); der Platz geht laut R871 (4) an E-073.
+- Ruling Bewertung: R878 (9) «E-063 behalten, abgeschlossen, Platz an E-073».
 
 ## E-064 · behalten (Entwurf 2026-10-16, wartet auf Ruling; R579, nachgerückt für E-060) · Guard sperrt `git stash` ausser Lesezugriffen
 
@@ -650,15 +657,17 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: 2026-10-13 (Guard in TOOL-BUENDEL-10 gemergt; Handbuch 1.54 nennt die Sperre)
 - Bewertung: Entwurf 2026-10-16 (Studio-Coach, Auftrag R689 (2)): **behalten**, mit Einschränkung bei der Messbarkeit. Beobachtung: (a) Zahl Umsetzer-Pakete seit 2026-10-13 12:00: 15 Pakete mit Status `active`/`review` (`.studio/events.jsonl`, Ereignis `package`) und 65 Spawns von Umsetzer-Rollen (tech-ui 34, tech-sim 23, general-purpose 8), Soll 10 erreicht; (b) Stash-Anwendungen: keine in `docs/studio/rulings.md` (R580 bis R689 ohne Stash-Vorfall) und `docs/beobachtungen.md` (nur Eintrag 2026-10-12 und der Hinweis „Sperre umgehbar“, abgehakt); (c) Rückmeldungen „Stash nötig, Guard im Weg“: keine; (d) `guard_block`-Ereignisse: 0, aber es gibt dieses Ereignis nicht (Ereignisarten in `.studio/events.jsonl` enthalten kein `guard_block`; `guard.py` schreibt die Abweisung nur als Hook-Ausgabe). Deutung: 0 Anwendungen und 0 Rückmeldungen erfüllen die Messgrösse, aber die Zahl der abgewiesenen Versuche ist nicht belegt; die Annahme „zusätzlich ein zählbares Ereignis“ aus der Messbarkeit traf nicht zu. Die Regel kostet nichts und steht schon im Handbuch 1.54 (Stash-Sperre) und im Guard: keine weitere Handbuch-Änderung nötig. Offen: Guard-Abweisung als Ereignis loggen (Werkzeug-Vorschlag an L0, kein Platz nötig).
 
-## E-065 · vorgeschlagen (wartet auf Platz) · Warnung bei veraltetem `state.md`
+## E-065 · übernommen als Werkzeug (R844 V3, Messung ohne Platz wie E-043) · Warnung bei veraltetem `state.md`
 
-- Hypothese: Wenn der Session-Start (oder `make check`) warnt, sobald die höchste R-Nr. in `rulings.md` die im `Stand`-Satz von `state.md` genannte um mehr als 5 übersteigt, fehlt am Session-Start keine Nachführung mehr (Retro [session-1a73e6c1-ende](retros/2026-10-12-session-1a73e6c1-ende.md) B3: R553–R563 fehlten).
-- Messgrösse: Differenz höchste R-Nr. minus Stand-R-Nr. beim Session-Start ≤ 5 in den nächsten 3 Session-Starts; Gegenprobe: 0 Fehlalarme (Warnung bei aktuell nachgeführtem Stand).
-- Messbarkeit: Differenz aus `rulings.md` und `state.md` jederzeit rechenbar, unabhängig vom Werkzeug.
-- Zeitraum: 3 Session-Starts, höchstens bis 2026-11-19.
-- Rückfall: Prüfung entfernen; Textregel (R66) bleibt.
-- Dateien: `tools/studio/` (Session-Start-Skript oder `check`), `tools/studio/tests/`; kein Eingriff in Handbuch.
-- Ruling: –
+- Hypothese: Wenn der Session-Start (und `make check`) warnt, sobald die höchste R-Nr. in `rulings.md` die im `Stand`-Satz von `state.md` genannte übersteigt, fehlt am Session-Start keine Nachführung mehr (Retro [session-1a73e6c1-ende](retros/2026-10-12-session-1a73e6c1-ende.md) B3: R553–R563 fehlten).
+- Messgrösse: Differenz höchste `## R…`-Überschrift minus Stand-R-Nr. beim Session-Start ≤ 2 in den nächsten 3 Session-Starts ab Schwelle 2; Gegenprobe: 0 Fehlalarme (Warnung bei aktuell nachgeführtem Stand).
+- Messbarkeit: Differenz aus `rulings.md` und `state.md` jederzeit rechenbar (`python3 tools/studio/stampcheck.py`), unabhängig vom Hook.
+- Zeitraum: 3 Session-Starts ab 2026-10-22, höchstens bis 2026-11-19.
+- Rückfall: Aufruf in `tools/studio/hook.py` (`start_context`) und Make-Ziel `stampcheck` entfernen, `tools/studio/stampcheck.py` löschen; Textregel (R66) bleibt; Handbuch-Satz zu Guard-Fakten (STUDIO.md, Abschnitt Autonomie) streichen.
+- Dateien: `tools/studio/stampcheck.py`, `tools/studio/hook.py`, `Makefile` (`stampcheck`, Teil von `check`), `tools/studio/tests/`; Handbuch-Satz in STUDIO.md seit 1.54, Schwelle angeglichen in 1.75.
+- Ruling: R579 (Werkzeug), R844 V3 (Schärfung)
+- Start: 2026-10-13 (`0d383d1b`, Schwelle 5, höchste R-Nennung im Text); geschärft 2026-10-22 (`3b47e6de`, R844 V3: letzte `## R…`-Überschrift, Schwelle 2 als `THRESHOLD`, Meldung als PFLICHT am Kontextanfang); Handbuch 1.75 nennt Schwelle 2.
+- Datenpunkt (Ist-Stand 2026-10-25, Auftrag COACH-R886): Anlass der Schärfung war R841 mit Differenz 8 ohne Warnung (`docs/superpowers/plans/tool-pushsperre/index.md`, Lücke «jede R-Nennung zählt»). Heute `stampcheck.py` ohne Meldung, Stand-Satz R889 gleich letzter Überschrift R889 (Differenz 0). In den Retros seit 2026-10-22 kein Befund «state.md hinkt hinterher» (`rg` über `docs/studio/retros/`). Session-Starts seit der Schärfung nicht einzeln aus `.studio/events.jsonl` gezählt (der Hook schreibt die Warnung nicht als Ereignis) → Messgrösse nur indirekt belegt; Bewertung in der nächsten Session-Retro.
 - Bewertung: –
 
 ## E-066 · laufend (R646) · Folgeinstanz statt Fortsetzung bei lead-tech
@@ -743,7 +752,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: 2026-10-23 (Handbuch 1.73, Persona lead-qa 1.13); Zählung `laufend` bei freiem Platz
 - Bewertung: –
 
-## E-073 · umgesetzt (R868 V2, läuft passiv ohne Platz wie E-059) · Agent-Starts asynchron, Warten heisst Zug beenden
+## E-073 · laufend (R868 V2, Platz R878 (9)) · Agent-Starts asynchron, Warten heisst Zug beenden
 
 - Hypothese: Wenn Handbuch, Lead-Personas und Briefing-Vorlage jeden Agent-Start als asynchron behandeln (Zug beenden, auf Meldung warten über Rückkanal R856, Status-Event nur bei Zustandswechsel, höchstens eines je 5 min) und «im Vordergrund» aus Vorlage und Briefings fällt, dann verschwinden Status-Schleifen wartender Leads (Retro `retros/2026-10-23-rel-30-prozess.md` B2: alle 9 Lead-Starts `async_launched` trotz `background: False`; `lead-design` IDEEN-16 33 Status-Events in 3,7 min, ≈ 2M Cache-Read ohne Ergebnis).
 - Messgrösse: ≤ 3 Status-Events je Lead-Instanz und 10 min Wartezeit (Wartezeit = Abstand Arbeiter-Start bis Arbeiter-Meldung, aus `.studio/events.jsonl`), über 2 Sessions (Ausgang REL-30: 33 in 3,7 min); 0 neue Briefings mit «im Vordergrund» (`rg -i vordergrund .studio/archiv/briefings/`, ab Start); Gegenprobe: Leads ohne Lebenszeichen > 30 min nach Arbeiter-Meldung (R853-Muster) nicht über Ausgang (0 in REL-30).
@@ -752,7 +761,8 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Rückfall: Vordergrund-Regel aus Handbuch 1.72 (`git show b966c88f:docs/studio/STUDIO.md`, Abschnitt Kommunikation) und Personas `lead-tech` 1.17, `lead-qa` 1.12, `lead-design` 1.13, `lead-production` 1.13, `lead-art` 1.9; Briefing-Zeile streichen. R854 Regel C (Waitguard) bleibt in beiden Zuständen.
 - Dateien: `docs/studio/STUDIO.md` (Kommunikation), `.claude/agents/lead-{tech,qa,design,production,art}.md`, `docs/studio/templates/briefing.md`, `docs/studio/templates/persona.md`, `docs/studio/lernen.md`, `docs/studio/CHANGELOG.md`
 - Ruling: R868
-- Start: 2026-10-23 (Handbuch 1.73); Zählung `laufend` bei freiem Platz
+- Start: 2026-10-23 (Handbuch 1.73); Zählung `laufend` ab R878 (9) (2026-10-25, Platz von E-063)
+- Bewertung: –
 
 ## E-074 · umgesetzt (R872 E2, läuft passiv ohne Platz wie E-071) · Minuten-Schätzung für Lead-Pakete mit Faktor 0,5
 
@@ -765,6 +775,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Ruling: R872 (E2)
 - Start: 2026-10-25 (Handbuch 1.74; wirkt sofort, Zählung `laufend` erst bei freiem Platz)
 - Bewertung: –
+- Datenpunkt 1 von 3, S-2026-10-25-47d29586 (Retro [session-47d29586-ende](retros/2026-10-25-session-47d29586-ende.md) B5): Minuten −63,8 % (42 Agenten, geschätzt 540 min, Ist 195,7 min), Tools −41 %; die meisten Briefings noch mit Tools ÷ 6 oder aus dem Plan kopiert → keine Wirkungsaussage. Messauftrag M3 (Kopf der Datei) wertet Session 2 aus.
 
 ## E-075 · übernommen als Werkzeug (R872 E1, Messauftrag ohne Platz wie E-036) · opus-Anteil je Paketart
 
@@ -776,4 +787,16 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `tools/studio/efficiency.py` (`package_kind`, `_opus_by_kind`, `_opus_kind_lines`), `tools/studio/tests/test_efficiency.py` (`OpusByKindTest`)
 - Ruling: R872 (E1)
 - Start: 2026-10-25 (Branch `tool/coach-r872`, Merge mit REL-32)
+- Bewertung: –
+
+## E-076 · umgesetzt (R886 V3, läuft passiv ohne Platz wie E-072) · Plan- und Gate-Leads lesen Rulings und Handoffs abschnittsweise
+
+- Hypothese: Wenn Plan- und Gate-Leads `rulings*.md`, Handoffs und Specs nur per `rg -n <R-Nr./AK-ID> <datei>` und Zeilenbereich lesen und die Kontextzeile des Briefings Ruling-Nummern, Abschnitte oder Zeilen nennt, sinkt das «übrige Wachstum» im Cache-Write 5 min (Retro [session-47d29586-ende](retros/2026-10-25-session-47d29586-ende.md) V3; Ampel Cache-Write Historie rot, dritte Retro in Folge).
+- Messgrösse: Cache-Write 5 min «übriges Wachstum» der Session ≤ 15 % in 2 von 3 Sessions (Ausgang 20,5 % in 47d29586, 15,8 % Historie); `lead-tech`-Anteil am Wachstum ≤ 4 % (Ausgang 5,4 %). Gegenprobe: Gate- und Plan-Befunde wegen übersehener Ruling-Auflagen nicht häufiger als Ausgang (Zählung in den Gate-Rulings).
+- Messbarkeit: unverändert; die Aufteilung Wachstum/Pause je Rolle in den Metrik-Dateien (`metrics.py --efficiency`) bleibt, die Regel entfernt keine Messquelle. M1 (Kopf der Datei) liefert zusätzlich das Lesevolumen je Rolle.
+- Zeitraum: die nächsten 3 Sessions mit Session-Retro, höchstens bis 2026-11-19.
+- Rückfall: Handbuch 1.75 (`git show 5e51f8e1:docs/studio/STUDIO.md`, Abschnitt Briefing-Standard ohne den Punkt «Plan- und Gate-Leads lesen abschnittsweise»); Pflichtzeile «Plan- und Gate-Lead-Briefing» aus `templates/briefing.md` streichen.
+- Dateien: `docs/studio/STUDIO.md` (Briefing-Standard), `docs/studio/templates/briefing.md` (Pflichtzeilen je Paketart), `docs/studio/CHANGELOG.md`
+- Ruling: R886 (2)
+- Start: 2026-10-25 (Handbuch 1.76; wirkt sofort, Zählung `laufend` erst bei freiem Platz; 3 laufen: E-066, E-068, E-073)
 - Bewertung: –
