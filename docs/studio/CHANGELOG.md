@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-25 · Handbuch 1.74
+
+- Anlass: Kurz-Retro Session a5d45446 (B2 Schätzung, B3 opus-Anteil), Auftrag COACH-R872
+- Datenbasis: `docs/studio/retros/2026-10-23-session-a5d45446-ende.md`, `docs/studio/metriken/S-2026-10-23-a5d45446.md`
+- Ruling: R872
+- Änderungen: STUDIO.md Briefing-Standard: Minuten der Kopfzeile bei Lead-Paketen Tools ÷ 12 (Faktor 0,5 auf Tools ÷ 6, E-074); `metriken/richtwerte.md` Regel 3 und neue Regel 5 dazu; `metrics.py --efficiency` zeigt den opus-Anteil je Paketart und ohne Design-Pakete (Messauftrag E-075). Version 1.74, weil 1.72 und 1.73 auf `docs/dauerauftrag` und `docs/retro-rel-30-umsetzung` im Bündel REL-31 liegen
+
 ## 2026-10-23 · Handbuch 1.71
 
 - Anlass: Auftrag TOOL-RUECKKANAL (Kurz-Retro session-3b332328-ende, B1 und B2)
