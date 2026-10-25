@@ -67,7 +67,7 @@ Nur Lauf (kein eigener Test): AK-T10 (`git diff main -- src/sim` leer, `SAVE_VER
 - **Gezielt, nie `make check` je Task:** `npx vitest run tests/render/<datei>.test.ts …; echo EXIT=$?` (T01 `pace`; T02 `life`; T03 `errands errandsGraph`; T04 `walkerLook`; T05 `life errands walkerLook pace`; T06 `tests/render/renderer*.test.ts` nach `ls tests/render`). Je Task `npx tsc --noEmit; echo EXIT=$?` und `npx eslint <Dateien> && npx prettier --check <Dateien>; echo EXIT=$?`.
 - **Rot zuerst:** Test vor der Umsetzung laufen lassen, rote Ausgabe (Exit ≠ 0) im Bericht.
 - **Zeittests (R270):** neue Tests nutzen keine Uhr; `timeMs` ist Eingabe, nie `Date.now()`. Keine `Contract`-Literale (R679-2).
-- **Abschluss (Controller, einmal):** `make check; echo EXIT=$?` bei freier Sperre, `balance.test.ts` grün, `git diff main -- src/sim` leer.
+- **Abschluss (Controller, einmal):** **Teilbeleg** statt vollem Lauf (Verfassung §9.2, R858): gezielte Tests aller im Strang berührten Testdateien, `npx tsc --noEmit`, `make lint`, `make zeittests`, `make conflicts`, je `; echo EXIT=$?`, bei freier Sperre; `balance.test.ts` grün, `git diff main -- src/sim` leer. Kein `make check` — den vollen Lauf (`make push-check`) fährt nur der Integrator vor dem Push (R810).
 
 ## Budget (Vorschlag für das Gate Plan)
 

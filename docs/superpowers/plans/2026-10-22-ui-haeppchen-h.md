@@ -63,7 +63,7 @@ Rechnung Strang 1: 6; Strang 2: 3; 9 × 1,3 aufgerundet = 11.
 - **Gezielt, nie `make check` je Task:** T01 `npx vitest run tests/ui/storage.test.ts; echo EXIT=$?`. T02 `npx vitest run tests/ui/storage.test.ts tests/ui/menu.test.ts tests/ui/startCard.test.ts; echo EXIT=$?`. T05 `npx vitest run tests/render/overlays.test.ts tests/render/renderer*.test.ts; echo EXIT=$?` (Dateinamen vorher mit `ls tests/render` prüfen). Je Task `npx tsc --noEmit; echo EXIT=$?` (R398) und `npx eslint <Dateien> && npx prettier --check <Dateien>; echo EXIT=$?`.
 - **Rot zuerst:** Test vor der Umsetzung laufen lassen, rote Ausgabe (Exit ≠ 0) im Bericht.
 - **Zeittests (R270):** keine berührte Datei steht in `ZEITTESTS`; neue Tests nutzen keine Uhr. Spielzeiten in Erwartungen über `formatGameTime`/die vorhandene Formatierung, nie als Literal geraten.
-- **Abschluss je Strang (Controller, einmal):** `make check; echo EXIT=$?` bei freier Sperre, `tests/sim/balance.test.ts` grün, `git diff main -- src/sim` leer.
+- **Abschluss je Strang (Controller, einmal):** **Teilbeleg** statt vollem Lauf (Verfassung §9.2, R858): gezielte Tests aller im Strang berührten Testdateien, `npx tsc --noEmit`, `make lint`, `make zeittests`, `make conflicts`, je `; echo EXIT=$?`, bei freier Sperre; `tests/sim/balance.test.ts` grün, `git diff main -- src/sim` leer. Kein `make check` — den vollen Lauf (`make push-check`) fährt nur der Integrator vor dem Push (R810).
 - **Keine `Contract`-Literale** in neuen Tests (R679-2); Fake-`StorageLike` mit `getItem`/`setItem`/`removeItem` nach Vorbild der Bestandstests in `tests/ui/storage.test.ts`.
 
 ## AK-Zuordnung (24 AK)

@@ -1,8 +1,8 @@
 # ADR-011: Asset-Pipeline — Ablage, Formate, Laden und Nachweis fremder Assets
 
-Status: vorgeschlagen (angenommen mit dem Gate Plan M7) · Datum: 2026-09-30 · Spec:
+Status: angenommen (Gate Plan M7, R98) · Datum: 2026-09-30 · Spec:
 [M7 Stimmung](../superpowers/specs/2026-09-30-m7-stimmung-design.md) (Abschnitte 2.3, 7.6, 8) · Rulings R77, R83,
-R84 · Plan: [M7 Stimmung](../superpowers/plans/2026-09-30-m7-stimmung.md)
+R84, R98 · Plan: [M7 Stimmung](../superpowers/plans/2026-09-30-m7-stimmung.md)
 
 ## Kontext
 
