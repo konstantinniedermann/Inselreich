@@ -273,10 +273,12 @@ body {
   color: var(--negative);
 }
 /* Reichweite am Lager-Chip (I-109): Farbe nie allein, Text und Pfeil bleiben; voll nie rot */
-.chip.reach-warn {
+.chip.reach-warn,
+.hud-money.reach-warn {
   color: #ffd27a;
 }
-.chip.reach-alarm {
+.chip.reach-alarm,
+.hud-money.reach-alarm {
   color: var(--negative);
   font-weight: 700;
 }
@@ -966,7 +968,8 @@ button.chip {
   flex: 1 1 100%;
   min-width: 0;
 }
-.notice-stack .far-card .far-stock--low {
+.notice-stack .far-card .far-stock--low,
+.notice-stack .order-card .far-stock--low {
   color: var(--tone-bad);
 }
 .notice-stack .order-card.order-card--warn {

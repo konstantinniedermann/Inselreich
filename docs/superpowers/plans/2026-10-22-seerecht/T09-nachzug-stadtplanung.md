@@ -33,7 +33,7 @@ Umsetzer `tech-sim-engineer` · ≈ 35 Tools · AK-SR-12, F3-Test, AK-SR-20 (Lau
 - [ ] **Lauf grün:** `npx vitest run tests/sim/council-save.test.ts tests/sim/stadt-save.test.ts tests/sim/save.test.ts tests/sim/trial-save.test.ts tests/sim/council.test.ts tests/sim/seerecht.test.ts; echo EXIT=$?` → 0.
 - [ ] **Lesestellen erneut:** `rg -n "travelTicks|laneTicks|SHIP_TICKS_PER_SEA_TILE" src tools` und `npx vitest run tests/sim/seerecht.test.ts` (Wächter fängt neue direkte Leser aus Stadtplanung); Befund im Bericht.
 - [ ] **Balancing (AK-SR-20):** `npx vitest run tests/sim/balance.test.ts; echo EXIT=$?` und `tests/sim/balance-*.test.ts` → 0, ohne Diff an den Erwartungen.
-- [ ] **`tsc`, eslint/prettier** → 0; danach Controller: `make check; echo EXIT=$?` bei freier Sperre.
+- [ ] **Teilbeleg (R858, R860):** `npx tsc --noEmit; echo EXIT=$?` → 0 und `make lint; echo EXIT=$?` → 0; kein `make check` im Paket, den vollen Lauf (`make push-check`) fährt der Integrator.
 - [ ] **Commit:** `feat: Save v20 für Seerecht nach Stadtplanung (I-153 T09)`.
 
 ## Task-Review (per `SendMessage` an den T05-Reviewer)

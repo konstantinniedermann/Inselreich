@@ -29,6 +29,7 @@ import type { IconId } from './icons';
 import { iconChip, showMessage } from './messages';
 import { perMinute } from './time';
 import { traitBuildLine } from './islandCard';
+import { standLine } from './buildStand';
 import { balanceAfterBuild, balanceLine } from './balancePreview';
 
 export const CATEGORIES: { id: Category; label: string }[] = [
@@ -246,9 +247,20 @@ function fillBalance(
   }
 }
 
-/** Aktualisiert die Bilanz-Zeile der gerade sichtbaren Tooltips; ohne sichtbaren Tooltip wird nichts gerechnet. */
+/** Setzt die Bestandszeile(n) (I-167) der Elemente unter `selector`; leer, wenn die Art keine Zeile hat. */
+function fillStand(root: ParentNode, world: World, island: number, selector = '.tt-stand'): void {
+  for (const el of root.querySelectorAll<HTMLElement>(selector)) {
+    const id = el.dataset.defId as BuildingDefId | undefined;
+    if (id === undefined) continue;
+    const line = standLine(world, id, island) ?? '';
+    if (el.textContent !== line) el.textContent = line;
+  }
+}
+
+/** Aktualisiert Bilanz- und Bestandszeile der gerade sichtbaren Tooltips; ohne sichtbaren Tooltip wird nichts gerechnet. */
 export function refreshShownBalance(nav: ParentNode, world: World, island: number): void {
   fillBalance(nav, world, island, '.tooltip.show .tt-balance');
+  fillStand(nav, world, island, '.tooltip.show .tt-stand');
 }
 
 /** Setzt die Takt-Zeilen unter `selector`; nur sichtbare Tooltips (kein Rechnen für verborgene). */
@@ -305,6 +317,10 @@ function attachTooltip(
       balance.className = 'tt-line tt-balance';
       balance.dataset.defId = tool.defId;
       tip.appendChild(balance);
+      const stand = document.createElement('span');
+      stand.className = 'tt-line tt-stand';
+      stand.dataset.defId = tool.defId;
+      tip.appendChild(stand);
     }
     if (text.startsWith('Erzeugt:')) {
       // Inselvorteil der aktiven Insel: `updateBuildMenu` füllt Text und Sichtbarkeit
@@ -330,6 +346,7 @@ function attachTooltip(
   const open = (): void => {
     if (liveView !== null) {
       fillBalance(tip, liveView.world, liveView.island);
+      fillStand(tip, liveView.world, liveView.island);
       fillCycle(tip, liveView.world, '.tt-cycle');
     }
     showTooltip(btn, tip, anchorOf());

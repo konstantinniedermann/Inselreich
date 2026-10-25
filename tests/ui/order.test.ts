@@ -25,6 +25,10 @@ import {
 } from '../../src/ui/order';
 import * as production from '../../src/ui/production';
 import { seaWorld } from '../sim/seaHelpers';
+import { farWorld, periodStart, stepAt } from '../sim/farHelpers';
+import { acceptContract, acceptFarOrder } from '../../src/sim/orders';
+import { farOrderText } from '../../src/ui/farOrder';
+import { homeTravelTicks } from '../../src/ui/homeTravel';
 import { diffSoundEvents, soundSnapshot } from '../../src/ui/soundEvents';
 import { HOME, home, createWorld } from '../../src/sim/world';
 import { sellPrice } from '../../src/sim/trade';
@@ -684,5 +688,88 @@ describe('I-102 Auftragskarte zeigt die Vorschau (AK-6, AK-7b)', () => {
     const before = JSON.stringify(w);
     expect(orderCardText(w)).toBe(orderCardText(w));
     expect(JSON.stringify(w)).toBe(before);
+  });
+});
+
+describe('UI-BEIPACK-FERN Auftragskarte Fernauftrag (AK-BF3, BF4)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const noop = () => undefined;
+  const actions = {
+    deliver: noop,
+    accept: noop,
+    decline: noop,
+    cancel: noop,
+    toProducer: noop,
+    acceptFar: noop,
+  };
+  const textOf = (e: FakeElement): string =>
+    e.children.length > 0 ? e.children.map(textOf).join('') : e.textContent;
+
+  function setup() {
+    vi.stubGlobal('document', fakeDocument);
+    const w = farWorld(3, ['B']);
+    stepAt(w, periodStart(1));
+    acceptFarOrder(w);
+    const el = new FakeElement('span');
+    renderOrder(el as unknown as HTMLElement, w, actions);
+    const text = el.querySelector('[data-field="order-text"]')!;
+    return { w, el, text };
+  }
+
+  it('BF3 Lager-Span rot mit title, nach Auffüllen ohne beides; Text = farOrderText', () => {
+    const { w, el, text } = setup();
+    const stock = () => el.querySelector('[data-field="order-stock"]')!;
+    expect(stock().classList.contains('far-stock--low')).toBe(true);
+    expect(stock().title).toBe('Fehlt 15 Rum');
+    w.islands[w.order!.island!]!.stock.rum = 7;
+    updateOrder(el as unknown as HTMLElement, w);
+    expect(stock().title).toBe('Fehlt 8 Rum');
+    expect(textOf(text)).toBe(farOrderText(w, w.order!));
+    w.islands[w.order!.island!]!.stock.rum = 15;
+    updateOrder(el as unknown as HTMLElement, w);
+    expect(stock().classList.contains('far-stock--low')).toBe(false);
+    expect(stock().title).toBe('');
+    expect(textOf(text)).toBe(farOrderText(w, w.order!));
+  });
+
+  it('BF3 «zu spät» als Anhang hinter dem Lager', () => {
+    const { w, el, text } = setup();
+    const o = w.order!;
+    w.islands[o.island!]!.stock[o.good] = 0;
+    w.ships = [];
+    o.due = w.tick + homeTravelTicks(w, o.island!)! - 1;
+    updateOrder(el as unknown as HTMLElement, w);
+    expect(textOf(text).endsWith(' · zu spät')).toBe(true);
+    expect(textOf(text)).toBe(farOrderText(w, o));
+  });
+
+  it('BF3 Heimatauftrag ohne order-stock, Klartext', () => {
+    vi.stubGlobal('document', fakeDocument);
+    const w = createWorld(3, { unlockAll: true });
+    w.tick = 750;
+    const el = new FakeElement('span');
+    renderOrder(el as unknown as HTMLElement, w, actions);
+    expect(el.querySelector('[data-field="order-stock"]')).toBeNull();
+    expect(el.querySelector('[data-field="order-text"]')!.textContent).toBe(orderCardText(w));
+  });
+
+  it('BF3 Stammkunde ohne order-stock', () => {
+    const { w, el, text } = setup();
+    w.order = null;
+    w.contractOffer = { good: 'rum', island: HOME };
+    acceptContract(w);
+    updateOrder(el as unknown as HTMLElement, w);
+    expect(el.querySelector('[data-field="order-stock"]')).toBeNull();
+    expect(text.textContent).toBe(orderCardText(w));
+  });
+
+  it('BF4 Wechsel Fern- zu Heimatauftrag lässt keinen Span zurück', () => {
+    const { w, el, text } = setup();
+    expect(el.querySelector('[data-field="order-stock"]')).not.toBeNull();
+    w.order = { ...w.order!, island: undefined } as never;
+    updateOrder(el as unknown as HTMLElement, w);
+    expect(el.querySelector('[data-field="order-stock"]')).toBeNull();
+    expect(text.children.length).toBe(0);
+    expect(text.textContent).toBe(orderCardText(w));
   });
 });

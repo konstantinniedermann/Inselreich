@@ -15,9 +15,15 @@ export const UNLOCK_MODE_LABELS: Readonly<Record<UnlockMode, string>> = {
 
 export const UNSAVED_WARNING = 'Ungespeicherter Fortschritt geht verloren';
 
-/** Beschriftung eines Speicherplatzes in der Laden-Liste. */
-export function slotLabel(info: SaveInfo): string {
-  return `${info.slot === 'auto' ? 'Autosave' : 'Gespeichert'} — Spielzeit ${formatClock(info.tick)}`;
+/** Beschriftung eines Speicherplatzes; `before` kennzeichnet den älteren zweiten Autosave («Davor»). */
+export function slotLabel(info: SaveInfo, before = false): string {
+  const name = info.slot === 'manual' ? 'Gespeichert' : before ? 'Autosave davor' : 'Autosave';
+  return `${name} — Spielzeit ${formatClock(info.tick)}`;
+}
+
+/** Gibt es irgendeinen Autosave-Platz (`auto` oder `auto2`)? */
+export function hasAutosave(saves: SaveInfo[]): boolean {
+  return saves.some((s) => s.slot !== 'manual');
 }
 
 /** Bestätigungstext für „Neue Insel" (P-3): ohne Autosave der Hinweis auf die laufende Insel. */
@@ -73,7 +79,10 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
     loadBox.append(Object.assign(document.createElement('p'), { textContent: UNSAVED_WARNING }));
   if (saves.length === 0)
     loadBox.append(Object.assign(document.createElement('p'), { textContent: NO_SAVE_TEXT }));
-  for (const s of saves) loadBox.append(btn(slotLabel(s), () => a.load(s.slot)));
+  // `listSaves` führt den neuesten Autosave vor dem «Davor»; angezeigt: Autosaves zuerst, dann manuell
+  const autos = saves.filter((s) => s.slot !== 'manual');
+  const shown = [...autos, ...saves.filter((s) => s.slot === 'manual')];
+  for (const s of shown) loadBox.append(btn(slotLabel(s, s === autos[1]), () => a.load(s.slot)));
   const note = a.storageNote();
   if (note)
     loadBox.append(
@@ -94,7 +103,7 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
     const start = btn('Neue Insel', () =>
       renderConfirm(
         newRow,
-        newIslandPrompt(a.listSaves().some((s) => s.slot === 'auto')),
+        newIslandPrompt(hasAutosave(a.listSaves())),
         () => a.newIsland(select.value as CrisisLevel, unlockSelect.value as UnlockMode),
         () => {
           showNew();

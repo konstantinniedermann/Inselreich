@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R689 2026-10-16): E-063, E-066, E-068; E-064 Bewertung `behalten` als Entwurf, bis L0 bestätigt; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R689 2026-10-16): E-063, E-066, E-068; E-064 Bewertung `behalten` als Entwurf, bis L0 bestätigt; E-059 läuft passiv ohne Platz (Muster E-058). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056 E-058 (V2) ist eine Vorlagenzeile ohne Platz. E-072 und E-073 (R868, Handbuch 1.73) wirken sofort und laufen passiv ohne Platz wie E-059/E-071; Vorschlag an L0: E-063 bewerten und den Platz an E-073 geben.
 
 ---
 
@@ -636,6 +636,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: 2026-10-12 (Handbuch 1.52: Merge und Push nur in `.worktrees/integrate`; Briefing-Vorlagenzeile; Persona production-integrator 1.13)
 - Bewertung: Entwurf 2026-10-14 (Studio-Coach, Retro session-b54ed3bd-ende B2): **angepasst** — 18 Integrator-Briefings seit dem Start, 15 mit Worktree, 3 mit Hauptcheckout per Ruling (R627, R636, R644, Doku-/Werkzeug-Merges), in R616–R645 kein Vorfall genannt. Neue Messgrösse (R646): Integrator-Briefings mit Hauptcheckout ohne Ruling-Nummer, Soll 0 über weitere 10 Läufe, höchstens bis 2026-11-19; Ruling-Ausnahmen werden gezählt. L0-Ruling R646 bestätigt.
 - Datenpunkt (Retro [session-dbac5fc4-ende](retros/2026-10-14-session-dbac5fc4-ende.md)): Briefings ab 12:00 in dbac5fc4: 3 mit `.worktrees/integrate`, 2 mit Hauptcheckout-Bezug und Ruling-Nummer (R631/R630, R644), 0 ohne Ruling-Nummer. Weiter beobachten; Status bis zum Ruling unverändert.
+- Bewertung: Entwurf 2026-10-25 (Studio-Coach, Auftrag COACH-R872, R871 (4)): **behalten**, abschliessen. Beobachtung: seit dem Datenpunkt dbac5fc4 13 weitere Integrator-Briefings (`.studio/archiv/briefings/*production-integrator*`, 2026-10-14 14:10 bis 2026-10-23), mit dbac5fc4 18 Läufe seit R646 (Soll 10 erreicht): 9 mit `.worktrees/integrate`, 1 Vorprüfung im Feature-Worktree (HANDEL-2), 3 mit Hauptcheckout (TOOL-BUENDEL-15 R757, REL-28 R784, TOOL-BUENDEL-16 gemischt), alle mit Ruling-Nummer, also 0 ohne Ruling-Nummer; die letzten 5 Briefings (ab 2026-10-17 18:33) alle im Worktree. `push_check`-Ereignisse seit 2026-10-14: 11, die 3 mit Exit 1 sind Testläufe mit vollen Prüfungen, keiner bricht wegen eines veränderten Arbeitsbaums ab. Merge-Commits mit fremder Nachricht nicht nachgezählt. Deutung: Schwelle erfüllt, Regel wirkt seit 2026-10-17 ohne Ausnahme; die Messgrösse „Ruling-Nummer“ ist schwach, weil jedes Integrator-Briefing die Merge-Ruling nennt (die beiden Hauptcheckout-Briefings vom 2026-10-17 nannten keine Ausnahme-Ruling). Regel bleibt (Vorlagenzeile, Persona, Handbuch); der Platz geht laut R871 (4) an E-073.
 
 ## E-064 · behalten (Entwurf 2026-10-16, wartet auf Ruling; R579, nachgerückt für E-060) · Guard sperrt `git stash` ausser Lesezugriffen
 
@@ -728,4 +729,51 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Gate-Merge-Absatz), Umgebungsvariable beim Aufruf, kein Code
 - Ruling: R810
 - Start: Handbuch 1.66 (Variable wirkt sofort, Zählung `laufend` erst bei freiem Platz; 3 laufen: E-063, E-066, E-068)
+- Bewertung: –
+
+## E-072 · umgesetzt (R868 V1, läuft passiv ohne Platz wie E-059) · Gate-Trockenlauf mit echtem Merge für Dateien mit Merge-Treiber
+
+- Hypothese: Wenn `lead-qa` im Gate Merge Release Dateien mit Merge-Treiber (`docs/beobachtungen.md`, `beob-append`) per `git merge --no-ff --no-commit` im Wegwerf-Worktree `.worktrees/probe-REL-nn` statt mit `git merge-tree` prüft, dann sieht das Urteil jeden Fall, den der Treiber nicht löst, und der Integrator stoppt nicht mehr an Konflikten, die das Gate als «Treiber löst» eingestuft hat (Retro `retros/2026-10-23-rel-30-prozess.md` B1: REL-30 stoppte 09:46:54 «Treiber loest nicht», 5 min Stopp, zweiter Integrator-Zug).
+- Messgrösse: 0 Integrator-Stopps wegen Konflikten über die nächsten 3 Releases (Events `lead-production`/`production-integrator` mit Status `blocked` oder «Treiber loest nicht» in `.studio/events.jsonl`, Ausgang REL-30: 1); Gegenprobe: Gate-Merge-Instanz `lead-qa` höchstens +10 Tools je Release gegen REL-30, 0 Probe-Worktrees nach dem Gate (`git worktree list`).
+- Messbarkeit: unverändert; Integrator-Events, Gate-Handoffs und `git worktree list` bleiben lesbar, das Urteil nennt den Probe-Merge je Datei.
+- Zeitraum: 3 Releases, höchstens bis 2026-11-19.
+- Rückfall: Integrator löst reine Anhang-Konflikte in `docs/beobachtungen.md` selbst, mit Zeilenzähl-Prüfung (Retro V1); Absatz «Trockenlauf mit Merge-Treiber» aus `gates.md` streichen, Persona `lead-qa` 1.12, Handbuch 1.72 (`git show b966c88f:docs/studio/STUDIO.md`).
+- Dateien: `docs/studio/gates.md` (Gate Merge Release), `.claude/agents/lead-qa.md` (1.13), `docs/studio/STUDIO.md` (Merge, Konflikt-Probe), `docs/studio/templates/briefing.md` (Gate-Merge-Zeile), `docs/studio/CHANGELOG.md`
+- Ruling: R868
+- Start: 2026-10-23 (Handbuch 1.73, Persona lead-qa 1.13); Zählung `laufend` bei freiem Platz
+- Bewertung: –
+
+## E-073 · umgesetzt (R868 V2, läuft passiv ohne Platz wie E-059) · Agent-Starts asynchron, Warten heisst Zug beenden
+
+- Hypothese: Wenn Handbuch, Lead-Personas und Briefing-Vorlage jeden Agent-Start als asynchron behandeln (Zug beenden, auf Meldung warten über Rückkanal R856, Status-Event nur bei Zustandswechsel, höchstens eines je 5 min) und «im Vordergrund» aus Vorlage und Briefings fällt, dann verschwinden Status-Schleifen wartender Leads (Retro `retros/2026-10-23-rel-30-prozess.md` B2: alle 9 Lead-Starts `async_launched` trotz `background: False`; `lead-design` IDEEN-16 33 Status-Events in 3,7 min, ≈ 2M Cache-Read ohne Ergebnis).
+- Messgrösse: ≤ 3 Status-Events je Lead-Instanz und 10 min Wartezeit (Wartezeit = Abstand Arbeiter-Start bis Arbeiter-Meldung, aus `.studio/events.jsonl`), über 2 Sessions (Ausgang REL-30: 33 in 3,7 min); 0 neue Briefings mit «im Vordergrund» (`rg -i vordergrund .studio/archiv/briefings/`, ab Start); Gegenprobe: Leads ohne Lebenszeichen > 30 min nach Arbeiter-Meldung (R853-Muster) nicht über Ausgang (0 in REL-30).
+- Messbarkeit: unverändert; Status-Events und Briefing-Archiv bleiben, die Regel entfernt kein Event.
+- Zeitraum: 2 Sessions, höchstens bis 2026-11-19.
+- Rückfall: Vordergrund-Regel aus Handbuch 1.72 (`git show b966c88f:docs/studio/STUDIO.md`, Abschnitt Kommunikation) und Personas `lead-tech` 1.17, `lead-qa` 1.12, `lead-design` 1.13, `lead-production` 1.13, `lead-art` 1.9; Briefing-Zeile streichen. R854 Regel C (Waitguard) bleibt in beiden Zuständen.
+- Dateien: `docs/studio/STUDIO.md` (Kommunikation), `.claude/agents/lead-{tech,qa,design,production,art}.md`, `docs/studio/templates/briefing.md`, `docs/studio/templates/persona.md`, `docs/studio/lernen.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R868
+- Start: 2026-10-23 (Handbuch 1.73); Zählung `laufend` bei freiem Platz
+
+## E-074 · umgesetzt (R872 E2, läuft passiv ohne Platz wie E-071) · Minuten-Schätzung für Lead-Pakete mit Faktor 0,5
+
+- Hypothese: Wenn die Minuten der Kopfzeile bei Lead-Paketen als Tools ÷ 12 statt Tools ÷ 6 gerechnet werden, liegt die Minuten-Abweichung der Session innerhalb ±30 % (Retro [session-a5d45446-ende](retros/2026-10-23-session-a5d45446-ende.md) B2: −51 %, fünfte Session in Folge mit Überschätzung ≥ 50 %).
+- Messgrösse: Abweichung Minuten (Metrik, Abschnitt „Schätzung gegen Ist“) innerhalb ±30 % in 2 von 3 Sessions; Gegenprobe Werkzeugaufrufe unverändert gemessen (Ausgang −37 %).
+- Messbarkeit: unverändert; die Metrik vergleicht weiter Kopfzeile gegen Ist, die Tools-Schätzung bleibt unberührt.
+- Zeitraum: die nächsten 3 Sessions mit Session-Retro, höchstens bis 2026-11-19.
+- Rückfall: Tools ÷ 6 auch für Lead-Pakete; `metriken/richtwerte.md` Regel 5 und STUDIO.md Briefing-Standard auf Handbuch 1.71/1.73 zurück (`git show e9e00701:docs/studio/STUDIO.md`).
+- Dateien: `docs/studio/metriken/richtwerte.md`, `docs/studio/STUDIO.md` (Briefing-Standard), `docs/studio/CHANGELOG.md`; offen: `docs/studio/templates/briefing.md` Zeile `Schätzung:` nennt nur Tools ÷ 6 (nur nach Ruling)
+- Ruling: R872 (E2)
+- Start: 2026-10-25 (Handbuch 1.74; wirkt sofort, Zählung `laufend` erst bei freiem Platz)
+- Bewertung: –
+
+## E-075 · übernommen als Werkzeug (R872 E1, Messauftrag ohne Platz wie E-036) · opus-Anteil je Paketart
+
+- Hypothese: Der rote opus-Anteil (a5d45446: 83,7 %) ist Folge design-lastiger Sessions; ohne Design-Pakete liegt er im gelben Bereich oder darunter (Retro [session-a5d45446-ende](retros/2026-10-23-session-a5d45446-ende.md) B3).
+- Messgrösse: Info-Zeile „opus-Anteil ohne Design-Pakete“ in `metrics.py --efficiency` ≤ 60 % über 2 Sessions; Paketarten L0, Design, Plan, Gate, Umsetzung, Sonstige (Design und Plan gelten für das ganze Paket, also auch für Reviewer darin). Ausgang: 69,1 % über die letzten 2 Sessions (a5d45446 und laufende Session, Echtlauf 2026-10-25).
+- Messbarkeit: Ampelzeile „opus-Anteil“ unverändert; die neue Zeile ist nur Info, sie ändert keine Ampelfarbe.
+- Zeitraum: die nächsten 2 Sessions.
+- Rückfall: keiner nötig (nur Messung); die Info-Zeilen lassen sich ohne Folgen streichen.
+- Dateien: `tools/studio/efficiency.py` (`package_kind`, `_opus_by_kind`, `_opus_kind_lines`), `tools/studio/tests/test_efficiency.py` (`OpusByKindTest`)
+- Ruling: R872 (E1)
+- Start: 2026-10-25 (Branch `tool/coach-r872`, Merge mit REL-32)
 - Bewertung: –

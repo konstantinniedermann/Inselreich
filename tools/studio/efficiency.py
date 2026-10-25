@@ -113,6 +113,77 @@ def _exempt_reason(item: dict) -> str | None:
     return "budget_keins" if item["budget_none"] else None
 
 
+# E1 (R872): Paketart für den opus-Anteil; Design und Plan gelten für das ganze Paket
+PACKAGE_KINDS = ("L0", "Design", "Plan", "Gate", "Umsetzung", "Sonstige")
+OPUS_NO_DESIGN_MAX = 0.60  # Messauftrag E1: opus-Anteil ohne Design-Pakete
+BUILD_LEADS = {"lead-tech", "lead-art"}
+
+
+def _own_kind(item: dict) -> str | None:
+    """Paketart aus Rolle oder Freigabephase einer Instanz; None = ohne Merkmal."""
+    role = item["role"]
+    phase = (item.get("phase") or "").lower()
+    if (
+        phase.startswith("design-")
+        or role == "lead-design"
+        or role.startswith("design-")
+    ):
+        return "Design"
+    if phase.startswith("plan-") or role.startswith("tech-plan"):
+        return "Plan"
+    if phase.startswith("gate-") or role == "lead-qa":
+        return "Gate"
+    return None
+
+
+def package_kind(item: dict, by_package: dict[str, str]) -> str:
+    """Paketart je Instanz: L0, Design, Plan, Gate, Umsetzung oder Sonstige (E1)."""
+    if item["role"] == "L0":
+        return "L0"
+    inherited = by_package.get(item.get("package") or "")
+    own = _own_kind(item)
+    if "Design" in (own, inherited):
+        return "Design"
+    if "Plan" in (own, inherited):
+        return "Plan"
+    if own:
+        return own
+    if role_class(item["role"]) in ("Umsetzer", "Review/QA/Merge") or (
+        item["role"] in BUILD_LEADS
+    ):
+        return "Umsetzung"
+    return "Sonstige"
+
+
+def _opus_by_kind(instances: list[dict], total: float) -> tuple[dict, float | None]:
+    """opus-Anteil je Paketart und ohne Design-Pakete (Messauftrag E1, R872)."""
+    by_package: dict[str, str] = {}
+    for item in instances:
+        own, pkg = _own_kind(item), item.get("package")
+        if pkg and own in ("Design", "Plan") and by_package.get(pkg) != "Design":
+            by_package[pkg] = own
+    cost = dict.fromkeys(PACKAGE_KINDS, 0.0)
+    opus = dict.fromkeys(PACKAGE_KINDS, 0.0)
+    count = dict.fromkeys(PACKAGE_KINDS, 0)
+    for item in instances:
+        kind = package_kind(item, by_package)
+        cost[kind] += item["cost"]
+        count[kind] += 1
+        if "opus" in (item["model"] or ""):
+            opus[kind] += item["cost"]
+    kinds = {
+        k: {
+            "share": _ratio(opus[k], cost[k]) if count[k] else None,
+            "cost_share": _ratio(cost[k], total),
+            "instances": count[k],
+        }
+        for k in PACKAGE_KINDS
+    }
+    rest = total - cost["Design"]
+    rest_opus = sum(opus.values()) - opus["Design"]
+    return kinds, (_ratio(rest_opus, rest) if rest else None)
+
+
 def _budget_none(prompt: str | None) -> bool:
     head = "\n".join((prompt or "").splitlines()[:BUDGET_LINES])
     return bool(BUDGET_NONE.search(head))
@@ -536,6 +607,7 @@ def _summary(
             grund[reason] += _ratio(item["cost"], total)
     heraus = sum(grund.values())
     split = _persona_split(instances, persona_models)
+    opus_kinds, opus_rest = _opus_by_kind(instances, total)
     leads = [
         _mean(i["contexts"]) for i in instances if role_class(i["role"]) == "Leads"
     ]
@@ -556,6 +628,8 @@ def _summary(
         "class_share": share,
         "kind_share": {k: _ratio(kinds[k], total) for k in KIND_LABEL},
         "opus_share": _ratio(opus, total),
+        "opus_by_kind": opus_kinds,
+        "opus_ohne_design": opus_rest,
         "steuerung": share["L0"] + share["Leads"],
         "steuerung_bereinigt": share["L0"] + share["Leads"] - heraus,
         "steuerung_heraus": heraus,
@@ -1041,6 +1115,25 @@ def _adjusted_line(data: dict) -> str:
     )
 
 
+def _opus_kind_lines(data: dict) -> list[str]:
+    """Info-Zeilen zum Messauftrag E1 (R872); fehlen die Daten, keine Zeile."""
+    kinds = data.get("opus_by_kind")
+    if not kinds:
+        return []
+    parts = [
+        f"{k} {_pct(v['share'])} ({v['instances']})"
+        for k, v in kinds.items()
+        if v["instances"]
+    ]
+    return [
+        "- opus-Anteil je Paketart (Instanzen): " + ", ".join(parts),
+        (
+            f"- opus-Anteil ohne Design-Pakete: {_pct(data.get('opus_ohne_design'))} "
+            f"(Messauftrag E1, R872: ≤ {OPUS_NO_DESIGN_MAX * 100:.0f} %, nur Info)"
+        ),
+    ]
+
+
 def render_section(data: dict | None) -> str:
     out = ["## Effizienz", ""]
     if data is None:
@@ -1072,6 +1165,7 @@ def render_section(data: dict | None) -> str:
         ),
         "",
         f"- opus-Anteil: {_pct(data['opus_share'])}",
+        *_opus_kind_lines(data),
         f"- Persona-Starts als general-purpose auf opus (Instanzen): {data['persona_opus']}",
         *_split_lines(data.get("persona_split")),
         "",

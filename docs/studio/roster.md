@@ -48,8 +48,7 @@ flowchart TD
 
 **Namensregel (Anzeigenamen):** Alliteration, das Präfix ist direkt das Arbeitswort der Rolle
 (Planungs-Paula, Merge-Moritz). Name, Titel und Emoji stehen im Frontmatter der Persona-Datei
-(`studio-name`, `studio-title`, `studio-emoji`); das Dashboard zeigt sie im Organigramm und im
-Prozess-Graph.
+(`studio-name`, `studio-title`, `studio-emoji`); das Dashboard zeigt sie im Prozess-Graph.
 
 Das Dashboard leitet Ebene und Bereich allein aus dem Namen ab. Ein Name ausserhalb des Schemas
 erscheint als L2 im Bereich „extern". Umbenennen = Persona-Datei und dieses Roster ändern.

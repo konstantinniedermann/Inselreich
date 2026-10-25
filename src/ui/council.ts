@@ -26,6 +26,9 @@ export function councilBadge(world: World): string | null {
   return COUNCIL_TIERS.some((t) => world.council[t] !== null) ? 'Rat' : null;
 }
 
+/** Umschalt+R wirkt nur mit Marke: ohne je offenen Beschluss bliebe die Rats-Karte leer. */
+export const councilToggleAllowed = (world: World): boolean => councilBadge(world) !== null;
+
 /** Marke hervorheben, solange ein Beschluss ansteht. */
 export const councilBadgeActive = (world: World): boolean => openCouncilTiers(world).length > 0;
 

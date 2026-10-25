@@ -5,7 +5,7 @@ import { acceptFarOrder, deliverOrder, farAlternative, previewOrder } from '../.
 import { GOODS } from '../../src/sim/defs/goods';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
-import type { World } from '../../src/sim/types';
+import type { Ship, World } from '../../src/sim/types';
 import { HOME } from '../../src/sim/world';
 import {
   deliverTarget,
@@ -16,11 +16,13 @@ import {
   farOfferLead,
   farOfferParts,
   farOfferText,
+  farOrderParts,
   farOrderText,
   farOrderWarn,
   farSnap,
 } from '../../src/ui/farOrder';
 import { orderCardText, orderMessage } from '../../src/ui/order';
+import { homeTravelTicks } from '../../src/ui/homeTravel';
 import { formatGameTime } from '../../src/ui/time';
 import { dropKontor, farWorld, islandOf, periodStart, stepAt } from '../sim/farHelpers';
 
@@ -315,5 +317,78 @@ describe('I-136 Fernangebot-Teile', () => {
 
   it('ohne Angebot: null', () => {
     expect(farOfferParts(farWorld(3, ['B']))).toBeNull();
+  });
+});
+
+describe('UI-BEIPACK-FERN farOrderParts (AK-BF1, BF2)', () => {
+  function orderWorld(): World {
+    const w = offerWorld();
+    acceptFarOrder(w);
+    return w;
+  }
+  function lateWorld(): World {
+    const w = orderWorld();
+    const o = w.order!;
+    w.islands[o.island!]!.stock[o.good] = 0;
+    w.ships = [];
+    o.due = w.tick + homeTravelTicks(w, o.island!)! - 1;
+    return w;
+  }
+
+  it('BF1 short bei Lager 7/15, nicht bei 15 und 20; lead + stock wie bisher', () => {
+    const w = orderWorld();
+    const o = w.order!;
+    const far = o.island!;
+    w.islands[far]!.stock.rum = 7;
+    const p = farOrderParts(w, o);
+    expect(p.short).toBe(true);
+    expect(p.stock).toBe('Lager 7/15');
+    expect(p.tip).toBe('Fehlt 8 Rum');
+    expect(p.lead + p.stock).toBe(
+      `Fernauftrag Felsbucht: 15 Rum · 450 · noch ${formatGameTime(1700)} · Lager 7/15`,
+    );
+    w.islands[far]!.stock.rum = 15;
+    expect(farOrderParts(w, o).short).toBe(false);
+    expect(farOrderParts(w, o).tip).toBe('');
+    w.islands[far]!.stock.rum = 20;
+    expect(farOrderParts(w, o).short).toBe(false);
+  });
+
+  it('BF2 ohne late byte-gleich, mit late endet auf «· zu spät»', () => {
+    const w = orderWorld();
+    const o = w.order!;
+    const p = farOrderParts(w, o);
+    expect(p.late).toBe(false);
+    expect(farOrderText(w, o)).toBe(p.lead + p.stock);
+    expect(farOrderText(w, o).endsWith('zu spät')).toBe(false);
+    const l = lateWorld();
+    expect(farOrderParts(l, l.order!).late).toBe(true);
+    expect(farOrderText(l, l.order!).endsWith(' · zu spät')).toBe(true);
+  });
+
+  it('BF2 rechtzeitige Fracht: kein «zu spät», verspätete schon', () => {
+    const w = lateWorld();
+    const o = w.order!;
+    const rest = o.due - w.tick;
+    const ship = (left: number): Ship => ({
+      id: 90,
+      port: 0,
+      to: o.island!,
+      left,
+      cargo: { [o.good]: o.amount },
+      route: null,
+      homing: false,
+    });
+    w.ships = [ship(rest)];
+    expect(farOrderText(w, o).endsWith('zu spät')).toBe(false);
+    w.ships = [ship(rest + 1)];
+    expect(farOrderText(w, o).endsWith(' · zu spät')).toBe(true);
+  });
+
+  it('BF2 Lager deckt die Menge: kein «zu spät»', () => {
+    const w = lateWorld();
+    const o = w.order!;
+    w.islands[o.island!]!.stock[o.good] = o.amount;
+    expect(farOrderText(w, o).endsWith('zu spät')).toBe(false);
   });
 });

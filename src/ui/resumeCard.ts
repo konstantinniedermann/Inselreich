@@ -5,7 +5,7 @@ import { islandName } from '../sim/islands';
 import { nextSettleTick } from '../sim/orders';
 import type { World } from '../sim/types';
 import { HOME } from '../sim/world';
-import { farLate, farOfferDue, farOrderText } from './farOrder';
+import { farOfferDue, farOrderText } from './farOrder';
 import { closeAllModals, openModal, type ModalHandle } from './modal';
 import { NO_PROBLEM_TEXT, problemList } from './problems';
 import { formatClock, formatGameTime } from './time';
@@ -41,11 +41,10 @@ function deadlineLines(world: World): ResumeLine[] {
         text: `Auftrag ${o.amount} ${GOODS[o.good].name} · ${o.reward} · noch ${formatGameTime(rest)}`,
       });
     } else {
-      const late = farLate(world, { island: o.island, amount: o.amount, good: o.good }, rest);
       out.push({
         rest,
         order: 1,
-        text: farOrderText(world, o) + (late ? ' · zu spät' : ''),
+        text: farOrderText(world, o),
       });
     }
   }

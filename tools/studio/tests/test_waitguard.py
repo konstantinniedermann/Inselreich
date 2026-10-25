@@ -168,6 +168,46 @@ class HookTest(unittest.TestCase):
         fork = self.payload(prompt="warte", subagent_type="fork")
         self.assertEqual(self.run_hook(fork)[1:], ("", []))
 
+    def test_rule_c_denies_background_workers_of_leads_and_workers(self):
+        for who in ("lead-tech", "tech-tools"):
+            for tool in ("Agent", "Task"):
+                with self.subTest(who=who, tool=tool):
+                    payload = self.payload(
+                        tool, who=who, prompt=LONG, run_in_background=True
+                    )
+                    _, out, events = self.run_hook(payload)
+                    hook = json.loads(out)["hookSpecificOutput"]
+                    self.assertEqual(hook["permissionDecision"], "deny")
+                    self.assertTrue(
+                        hook["permissionDecisionReason"].startswith("R854: Arbeiter")
+                    )
+                    self.assertEqual(events[0]["rule"], "C")
+
+    def test_rule_c_allows_foreground_main_session_and_fork(self):
+        cases = (
+            self.payload(prompt=LONG, run_in_background=False),
+            self.payload(prompt=LONG),
+            self.payload(who=None, prompt=LONG, run_in_background=True),
+            self.payload(who="", prompt=LONG, run_in_background=True),
+            self.payload(prompt=LONG, run_in_background=True, subagent_type="fork"),
+        )
+        for case in cases:
+            with self.subTest(case=case):
+                self.assertEqual(self.run_hook(case)[1:], ("", []))
+
+    def test_rule_c_bad_input_allows(self):
+        bad = self.payload(prompt=LONG, run_in_background=True) | {"tool_input": "x"}
+        self.assertEqual(self.run_hook(bad)[1:], ("", []))
+        bad = self.payload(prompt=LONG, run_in_background=True) | {"tool_input": None}
+        self.assertEqual(self.run_hook(bad)[1:], ("", []))
+
+    def test_rule_c_warn_mode_gives_hint(self):
+        payload = self.payload(prompt=LONG, run_in_background=True)
+        _, out, events = self.run_hook(payload, "warn")
+        data = json.loads(out)
+        self.assertNotIn("permissionDecision", data["hookSpecificOutput"])
+        self.assertFalse(events[0]["blocked"])
+
     def test_other_events_and_bad_shapes_are_silent(self):
         self.assertEqual(self.run_hook([1, 2])[1:], ("", []))
         bad = self.payload(prompt="warte") | {"tool_input": "kein dict"}

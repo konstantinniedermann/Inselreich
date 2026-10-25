@@ -28,6 +28,8 @@ POLL_S = 15
 MARKED = Path(".studio/zeitreserve-marked.json")
 RETRY_OUT = Path(".studio/zeitreserve-retry.json")
 MEASUREMENT = Path(".studio/zeitreserve.json")
+MESSFENSTER_STATUS = ["node", "tools/messfenster/lock.ts", "status"]
+MESSFENSTER_PREFIX = "Messfenster belegt: "
 CHECK_TS = ["node", "tools/zeitreserve/check.ts", "--push"]
 PRECHECKS = [
     ("conflicts", ["make", "conflicts"]),
@@ -121,6 +123,7 @@ class Gate:
         self.d1 = False
         self.main_load_start: float | None = None
         self.gate_note = ""
+        self.messfenster = False
         self.started = time.monotonic()
 
     def step(
@@ -147,16 +150,39 @@ class Gate:
             return None
 
     @staticmethod
-    def _load_protocol(current: float | None) -> None:
+    def _load_protocol(
+        current: float | None, reason: str = "kein_ruhiges_fenster"
+    ) -> None:
         """Lastprotokoll (R588 V3): Ausgabezeile und Event; Fehler werden geschluckt."""
         try:
             snap = loadsnap.real_snapshot(current)
             _say(f"push-check: {loadsnap.format_line(snap)}")
-            loadsnap.record("kein_ruhiges_fenster", "pushcheck", snap)
+            loadsnap.record(reason, "pushcheck", snap)
         except Exception as error:  # noqa: BLE001 - nie wegen des Protokolls abbrechen
             print(
                 f"push-check: Lastprotokoll fehlgeschlagen ({error})", file=sys.stderr
             )
+
+    def messfenster_blocked(self) -> bool:
+        """Fragt die Sperr-CLI (Exit 3 = belegt); bei Fehlern gilt das Messfenster als frei."""
+        try:
+            code, output = self.run(MESSFENSTER_STATUS, None)
+        except Exception as error:  # noqa: BLE001 - fehlendes node o. ä. blockiert nie
+            code, output = -1, str(error)
+        if code != 3:
+            if code != 0:
+                print(
+                    f"push-check: Messfenster-Prüfung fehlgeschlagen (Exit {code}), "
+                    "gilt als frei",
+                    file=sys.stderr,
+                )
+            return False
+        detail = output.strip().splitlines()[0] if output.strip() else "belegt"
+        detail = detail.removeprefix(MESSFENSTER_PREFIX)
+        _say(f"testlock: ABBRUCH, Messfenster ({detail})")
+        self._load_protocol(self._load_now(), "messfenster")
+        self.messfenster = True
+        return True
 
     def wait_quiet(self) -> bool:
         waited = 0
@@ -224,6 +250,8 @@ class Gate:
         # Liste immer aus der aktuellen Messung neu berechnen: eine Datei aus einem
         # früheren Lauf passt sonst nicht zu `.studio/zeitreserve.json` (Exit 2 in REL-21).
         # check.ts schreibt die Liste vor jeder Bewertung und löscht sie bei unbrauchbarer Messung.
+        if self.messfenster_blocked():
+            return 3
         self.step("zeitreserve-mark", [*CHECK_TS, "--marked", str(self.marked)])
         files = _read_list(self.marked)
         if files is None:
@@ -235,6 +263,8 @@ class Gate:
         return self.retry(files)
 
     def sequence(self) -> int:
+        if self.messfenster_blocked():
+            return 3
         for name, cmd in PRECHECKS:
             if self.step(name, cmd)[0] != 0:
                 return 1
@@ -328,7 +358,8 @@ def main_gate(
             "Nachmessung bei ruhiger Last bestätigt die Verletzung)"
         )
     elif code == 3:
-        _say("zeitreserve-gate: Testsperre belegt (Exit 3), später erneut starten")
+        what = "Messfenster" if gate.messfenster else "Testsperre"
+        _say(f"zeitreserve-gate: {what} belegt (Exit 3), später erneut starten")
     else:
         if gate.gate_note:
             reason = gate.gate_note
