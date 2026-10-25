@@ -2952,3 +2952,15 @@ Verfassung berührt?: nein (§3: ältere Stände dürfen ladbar bleiben) · Übe
 Regelbezug: R909, R952, R962, R966, E-061 · Kosten bei Irrtum: eine Migration mehr.
 
 Entscheider: L0 · Anlass: Bericht lead-design design-NEUE-UFER · ADR: —
+
+## R971 · 2026-10-25 · Kurz-Retro 8361ff82 abgenommen; Session-Ende
+
+Ruling: Retro `docs/retro-8361ff82` @ `5f8d0ac3` **abgenommen**. **E-080 ja:** vor jedem Messpaket setzt L0 die Messfenster-Sperre (`make messfenster-sperre`) statt nur «Messvorrang» ins Briefing zu
+schreiben (Schwelle: Läuferzahl in 2 von 2 Messpaketen, Frist 2026-11-19). **E-081 ja, vorläufig:** neue Starts nur, solange Stand + Agenten × 1,8 ≤ 88 % (ergänzt R959; Schwelle ≤ 1 Zwischenstand je Session
+über 3 Sessions, Rückfall R959 unverändert). **M2** (Sperre bei ZEITPIN-D1 gesetzt?) in der nächsten Retro. Einträge E-080/E-081 in `experimente.md` und die `lernen.md`-Ersetzung macht `studio-coach` nach
+dem REL-33-Merge. `docs/retro-8361ff82` geht mit in REL-33. Session-Ende bei 5 h ≈ 88 %: Metriken `docs/studio/metriken/S-2026-10-25-8361ff82.md`; kein Push heute (R816).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-33, alle Messpakete
+Regelbezug: R816, R826, R959, R968 · Kosten bei Irrtum: zwei passive Messgrössen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —

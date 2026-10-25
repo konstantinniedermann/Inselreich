@@ -207,7 +207,7 @@ Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine 
 **R868 V2** (Starts asynchron, Lead wartet ruhig). **R896** Spielregeln und Ausbau-Bedingungen fachlich erklärbar (Nachvollziehbarkeit und Logik, Gate-Kriterium); Nutzer-Playtests sind Input erster Ordnung, vor dem Pool. **R922** liegengebliebene Headless-Chrome (auch fremder Projekte) bei Störung selbst per `kill <PID>` beenden, nie das sichtbare Chrome, nie laufende eigene Browser-Läufe. **Push-Takt:** höchstens ein Push je Kalendertag (R816); voller Lauf nur `make push-check`. **R959** gelbe Ampel stoppt keine Wellen: neue Starts bis 5 h 85 %, ab 90 % Ende-Routine.
 
 1. **REL-33 pushen zuerst** (Integrator, R968): in `integrate/rel-33` @ `be94bffe` mergen: `fix/zeitpin-d1` @ `eeb98d88` (Pin 3,5 ms), `docs/coach-r886` → `docs/coach-r920` → `docs/coach-r957`, `docs/retro-48c8580f`,
-   `design/tiefe-5`, `design/ideen-20`, danach main (Doku-Commits R959–R970) und ggf. `docs/retro-8361ff82`; `make push-check` auf dem neuen Hash, bei Exit 0 main vorspulen und **pushen (2026-10-26, R816)**.
+   `design/tiefe-5`, `design/ideen-20`, danach main (Doku-Commits R959–R970) und `docs/retro-8361ff82` (R971); `make push-check` auf dem neuen Hash, bei Exit 0 main vorspulen und **pushen (2026-10-26, R816)**.
    Danach **REL-34**: `feat/i201` @ `569602ab` (Gate BEDENKEN R951), `design/rueckfracht` @ `86097053`, `design/volllast` @ `add15171` (Spec frei R963).
 2. **Umsetzung, ≤ 3 Test-Controller, Messungen nur bei Last ≤ 4, Controller staffeln (R920 V1; Messvorrang reicht nicht per Absprache, Beobachtung 2026-10-25):**
    - **I-210** (`feat/i210` @ `af16ee3a`, Budget 27 frei): Review T03, Wand-an-Wand-Messung, dann weiter; Phase 2 nach I-201-Merge. Handoff `.studio/handoffs/2026-10-25-lead-tech-I-210.md`.
@@ -215,7 +215,7 @@ Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine 
    - **HAFEN L1** frei (R961) — erster freier Controller-Platz; Hinweise T05/T06 (Timeouts) ins Briefing.
    - **I-214** (Plan `plan/i214-gruendungsbrief` @ `a101aac3`, Budget 34) — startbereit. **GEBAEUDE-VARIANZ**, **FLAECHE**, INSELPROBEN T12–T14, ORT-A, Stadtrecht, I-197/I-197b unverändert.
 3. **Testfrei:** **Gate Plan I-215** (`plan/i215-volllast` @ `ce3f742d`, fertig, Vorprüfliste 1–5 erfüllt; P-1–P-9 entscheiden, E-VL-1 ja R969; Umsetzung beantragt 16 Starts).
-   **«Neue Ufer» NU-1** (`design/neue-ufer`, R966/R970): lead-design sichtet Anhang 01 E-01–E-14, dann Spec-Nachtrag sonnet (Zahlen einsetzen, ≤ 40 KB, Anhang 02), Selbstabnahme, Gate Spec (ADR-010-Nachtrag). IDEEN-20-Folgen: Pitch I-222, Rechnungen I-221/I-223 (R967). Retro-Vorschläge 8361ff82 entscheiden.
+   **«Neue Ufer» NU-1** (`design/neue-ufer`, R966/R970): lead-design sichtet Anhang 01 E-01–E-14, dann Spec-Nachtrag sonnet (Zahlen einsetzen, ≤ 40 KB, Anhang 02), Selbstabnahme, Gate Spec (ADR-010-Nachtrag). IDEEN-20-Folgen: Pitch I-222, Rechnungen I-221/I-223 (R967). E-080/E-081 (R971) nach REL-33-Merge in experimente.md eintragen (studio-coach); E-080: vor jedem Messpaket `make messfenster-sperre`.
 4. **Save-Kette:** Nummern nur per Merge-Reihenfolge (R909): SEERECHT 19 (REL-33), danach je main + 1 (I-210 T16, I-214, GV, HAFEN S3/S4, FLAECHE FL-3, AL Etappe 2, Volllast).
 5. **Erweiterung 2 «Neue Ufer»** (I-194): Designvorschlag frei (R966), Etappen NU-1…NU-4; NU-2 erst nach HAFEN/FLAECHE-Merge.
 6. Messfristen R750/R755 2026-10-30, M1 2026-11-02, E-072/E-073 2026-11-19.
