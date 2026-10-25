@@ -2167,3 +2167,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, AUSBAU
 Regelbezug: R896, R899, R903 · Kosten bei Irrtum: Spec-Nachtrag.
 
 Entscheider: L0 · Anlass: Gate-Bericht lead-qa I-210 · ADR: —
+
+## R905 · 2026-10-25 · INSELPROBEN UI-Strang abgenommen; R392-Auslegung; Pins P-2
+
+Ruling: (1) `feat/inselproben-ui` @ `d4909a7c` (T08–T11, T11b Bilanz-Hinweis) **abgenommen** (Reviews OK, T11b nach frischem opus-Delta). (2) **Auslegung R392**: «kein bestehender Test > 500 ms» gilt für
+Tests, die **neu** über 500 ms laufen; Tests, die schon auf main > 500 ms liegen, dürfen höchstens +50 % zulegen (wie Gate SEERECHT (d)). AK-S5-01 +16 %, AK-S5-02 +28 % damit zulässig; beide in
+ZEITRESERVE-PFLEGE. (3) Entwürfe: Dev-Szenario `ip-probe1-kurz-vor-ziel` stoppt bei Tick ≥ 6600 **ja** (T12/T13-Doku); Ehrenbuch-Gutschrift/`startProbe` ohne `run` → Beobachtung, Klärung bei I-197/I-197b
+**ja**; resultModel «nicht gewertet» in T13-Doku **ja**. (4) **Pins P-2 angenommen**: K_END 4950; Ref(0,80) 8850/1069, G1 9450/1194, G2 12850/15, G3 9450/1194, M90 9150/1152, T63/T70 failed; p2 Seed 21
+Tick 8900 Grenze 11250; p3 Seed 61 Tick 11900. G3 = G1 (Abriss nie ausgelöst) ist ein schwacher Messpunkt → Beobachtung. T06 BEDENKEN niedrig (tote Konstante 15000 > Controller-Limit, Pin schützt) hingenommen.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-197/I-197b
+Regelbezug: R392, R395, R897, R900 · Kosten bei Irrtum: zwei langsamere Tests.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech INSELPROBEN · ADR: —
