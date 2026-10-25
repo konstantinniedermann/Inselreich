@@ -51,7 +51,7 @@ const L2 = (cycle: number, upkeep: number, c: Cost, site?: LevelSite): LevelDef 
   cycle,
   upkeep,
   cost: c,
-  workforceTier: 1,
+  workforceTier: 2,
   ...(site ? { site } : {}),
 });
 const L3 = (
@@ -64,7 +64,7 @@ const L3 = (
   cycle,
   upkeep,
   cost: c,
-  workforceTier: 2,
+  workforceTier: 3,
   ...(extra ? { extra } : {}),
   ...(site ? { site } : {}),
 });
@@ -109,3 +109,11 @@ export const LEVELS: Readonly<Partial<Record<BuildingDefId, readonly LevelDef[]>
   distillery: [L2(30, 26, cost(265, 8, 2, 3)), L3(20, 34, cost(278, 12, 3, 6), FIRE_STATION)],
   glassworks: [L2(30, 33, cost(340, 10, 3, 5)), L3(20, 43, cost(315, 15, 5, 10), FIRE_STATION)],
 };
+
+/** Arbeitsweg: grösster Mittenabstand zwischen Betrieb und Fachkräfte-Haus (Spec R3). */
+export const WORKFORCE_RADIUS = 8;
+/**
+ * Vertragliche Obergrenze in Ticks, bis eine Änderung der laufenden Stufe wirkt; die Umsetzung liest bei
+ * jedem Zugriff (Plan P-4), der Wert ist die Zusage nach aussen.
+ */
+export const LEVEL_RECHECK_TICKS = 10;

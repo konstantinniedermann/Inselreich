@@ -44,3 +44,20 @@ describe('M11 Naht Zyklus und Unterhalt (Prüfhilfe AK-P1-14)', () => {
     );
   });
 });
+
+describe('AL-2a Blattmodule der laufenden Stufe (AUSBAU-LOGIK T02)', () => {
+  const only = (m: string, allowed: string[]): boolean =>
+    importsOf(m).every((x) => x.startsWith('defs/') || allowed.includes(x));
+  it('terrainCount, fireCover und levelRules importieren nur erlaubte Module', () => {
+    expect(only('terrainCount', ['world', 'types'])).toBe(true);
+    expect(only('fireCover', ['council', 'world', 'types'])).toBe(true);
+    expect(
+      only('levelRules', ['types', 'world', 'coverage', 'council', 'terrainCount', 'fireCover']),
+    ).toBe(true);
+  });
+  it('crises re-exportiert isProtected aus fireCover', () => {
+    expect(readFileSync(`${SIM}/crises.ts`, 'utf8')).toMatch(
+      /export \{ isProtected \} from '\.\/fireCover'/,
+    );
+  });
+});
