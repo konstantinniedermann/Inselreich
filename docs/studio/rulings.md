@@ -2412,3 +2412,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette (N
 Regelbezug: R896, R909, R913, R915, R916, R918, R919 · Kosten bei Irrtum: je ein Nachtrag mehr.
 
 Entscheider: L0 · Anlass: Gate-Berichte lead-qa (HAFEN, FLAECHE, I-214, Gegenlesen GV/AL) · ADR: —
+
+## R925 · 2026-10-25 · HAFEN-Nachtrag «Plan frei»; S3/S4 je eigene Save-Version
+
+Ruling: `design/hafen` @ `9918884b` nach Gegenlesen (`.studio/handoffs/2026-10-25-lead-qa-gegenlesen-hafen.md`) **Plan frei**. S3 und S4 bekommen **je eine eigene Save-Version** (main + 1 beim jeweiligen Merge),
+Tests relativ zu `SAVE_VERSION`, nie mit Zahlenliteral. Meilenstein-Zuordnung M14:AK-SR-* plausibel (laufender Meilenstein), hingenommen. **Plan HAFEN** an `lead-tech` (opus, Budget 3) mit den Plan-Auflagen
+aus dem Gate-Bericht und der Reihenfolge S2 nach INSELPROBEN-Merge, S3 nach SEERECHT, S5/S6 nach FIX-SCHIFF-A1, S1 vor der Optik.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette, INSELPROBEN-Pins, SEERECHT, FIX-SCHIFF-A1
+Regelbezug: R909, R913, R924 · Kosten bei Irrtum: eine Save-Migration mehr.
+
+Entscheider: L0 · Anlass: Gegenlese-Bericht lead-qa HAFEN · ADR: —
