@@ -2481,3 +2481,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, AUSBAU
 Regelbezug: R896, R909, R911, R553 · Kosten bei Irrtum: Plan-Nachtrag.
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-i210 · ADR: —
+
+## R931 · 2026-10-25 · Gate Plan I-210 BEDENKEN angenommen; Umsetzung startet
+
+Ruling: Gate-Bericht `.studio/handoffs/2026-10-25-lead-qa-gate-plan-i210.md` **BEDENKEN angenommen**; Auflagen 1–3 ins Controller-Briefing: (1) Delta-Review nach ZURÜCK/BEDENKEN immer **frischer** opus-Start
+(R673/R905), nie Fortsetzung; (2) T00-`related`-Liste um `src/sim/feast.ts` und `src/ui/feast.ts` ergänzen, T11 «Dauer ins Ledger» mit «Last ≤ 4 nötig»; (3) Dateimatrix um `tests/sim/helpers.ts` (T05) nachführen.
+Index 21,9 KB vereinbar (R496). **Umsetzung I-210** an `lead-tech` als Controller, Budget **28 Starts** (≤ 3 Arbeiter, ≤ 2 Testläufe gleichzeitig), zweiter Test-Controller der Session; Messungen nur über
+`make messfenster`, Vorrang hat der laufende I-201-Benchmark. Phase 2 (T11, T12, T14) erst nach I-201-Merge.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, AUSBAU-LOGIK, Save-Kette
+Regelbezug: R392, R496, R673, R826, R905, R930 · Kosten bei Irrtum: ein Start aus dem Puffer.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa Plan I-210 · ADR: —
