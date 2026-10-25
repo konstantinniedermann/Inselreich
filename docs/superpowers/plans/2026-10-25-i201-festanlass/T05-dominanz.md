@@ -14,7 +14,7 @@ Persona `tech-sim-engineer` · Strang B · Tools ≈ 80 · AK-FE1 · blocked-by 
 ```ts
 export type FeastLage = 'A' | 'B' | 'C' | 'C2';
 export type FeastRun = 'none' | FeastKind;
-export const FEAST_SEEDS = [3, 7] as const; // P-6
+export const FEAST_SEEDS = [3, 7] as const; // P-6: Ersatz nur als feste Konstante, nie Laufzeitsuche
 export interface FeastScene {
   w: World;
   chapel: Building;
@@ -54,7 +54,7 @@ Kalibriert werden nur Hauszahl, Einwohner je Haus (`setHouse`) und Startlager in
 - **Vorbedingungen (Pflicht, eigene `expect` vor der Rangfolge):** in jedem Lauf `holdOk` und `sellOk`; `incident === false`; A: im Lauf `none` `housesRisen === houses.length` (≥ 5); B: im `harvest`-Lauf `capHit` leer; C: im `harvest`-Lauf `workshopUnits === 0`; B, C, C2 (P-5): im Lauf `none` `zeroHit` leer. Fällt ein Gut nur in einem Festlauf auf 0, ist das Teil des Festpreises; im Bericht nennen.
 - **Rangfolge:** `best(lage) = argmax_kind net(kind)` über `FEAST_KIND_IDS`: A → `ascension`, B → `harvest`, C → `market`; daraus folgt: jede Art in genau einer der Lagen A, B, C beste (zusätzlich als `expect` über die Menge `{best(A), best(B), best(C)}` mit Grösse 3).
 - **C2-Band:** `0 < net(harvest) − net(market) ≤ 800`.
-- Keine Beträge als Erwartung. Die Nettowerte je Lage, Seed und Art gehen als Tabelle in den Bericht (nicht in `console`), Risiko R553.
+- Keine Beträge als Erwartung. **Bericht (Pflicht, Gate Plan B2):** Tabelle je Lage und Seed mit den Nettowerten aller drei Arten und dem **Abstand zur Kippgrenze** = Netto(beste) − Netto(zweitbeste); in C2 der Abstand zu 0 und zu 800. Nicht in `console`, Risiko R553. Baut Seed 7 nicht, ersetzt ihn eine feste Konstante in `FEAST_SEEDS` (nie eine Suche zur Laufzeit), im Bericht genannt.
 
 ## Schritte
 

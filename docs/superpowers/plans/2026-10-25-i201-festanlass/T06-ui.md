@@ -4,7 +4,7 @@ Persona `tech-ui-engineer` · Strang C · Tools ≈ 60 · AK-FE17 bis FE20 (Vite
 
 **Worktree:** `.worktrees/i201-ui`, Branch `feat/i201-ui` vom T03-Hash auf `feat/i201` (`git worktree list` zuerst). Kein `src/sim/`-Diff (Sim-Fehler → Meldung an den Controller).
 
-**Files:** Modify `src/ui/feast.ts`, `src/ui/inspect.ts` (`renderBetrieb`, Kapellen-Knöpfe, `updateFeast`, `InspectActions.holdFeast`), `src/ui/app.ts` (Aktion `holdFeast`), `src/ui/trade.ts` (`renderTrade`, `updateTrade`), `src/style.css` (nur falls nötig), `tests/ui/feast.test.ts`, ein Test für `marketDayTag` (bestehende `tests/ui/trade*.test.ts` per `ls tests/ui | rg trade`), ein Test für P-10 (bestehende `panelView`-Tests per `rg -ln "upgradeGain" tests/ui`). Vorher `rg -n "feastView|data-field=\"feast\"|Fest feiern" tests src` und alle Treffer mitziehen.
+**Files:** Modify `src/ui/feast.ts`, `src/ui/inspect.ts` (`renderBetrieb`, Kapellen-Knöpfe, `updateFeast`, `InspectActions.holdFeast`), `src/ui/app.ts` (Aktion `holdFeast`), `src/ui/trade.ts` (`renderTrade`, `updateTrade`), `src/style.css` (nur falls nötig), `tests/ui/feast.test.ts`, `tests/ui/trade.test.ts` (Test für `marketDayTag`; `sellTexts` wird heute in `tests/ui/inselmarkt.test.ts` geprüft), `tests/ui/panelView.test.ts` (P-10, dort liegen die `upgradeGain`-Tests). Vorher `rg -n "feastView|data-field=\"feast\"|Fest feiern" tests src` und alle Treffer mitziehen.
 
 **Interfaces:**
 
@@ -46,7 +46,7 @@ export function marketDayTag(world: World, island: number): string; // marketAct
   - **AK-FE19:** `marketDayTag(w, HOME)` «Markttag 125 %» während, `''` davor und danach; `sellTexts(w, 'rum', 10).price` während grösser als davor.
   - **AK-FE20:** zweite Kapelle derselben Insel nach Erntefest an der ersten: ihr Erntefest-Knopf `reason` «Erntefest auf der Insel: Abklingzeit»; Markttag-Knopf frei.
   - **P-10:** Werkstatt Stufe 2 im Radius, `upgradeGain(w, b, 3)`: Zeile `output` hat mit laufendem Erntefest denselben `after`-Wert wie ohne; `before` ist grösser (schnellerer Zyklus).
-- [ ] **Rot-Lauf:** `npx vitest run tests/ui/feast.test.ts <trade-Test> <panelView-Test>; echo EXIT=$?` → Exit ≠ 0.
+- [ ] **Rot-Lauf:** `npx vitest run tests/ui/feast.test.ts tests/ui/trade.test.ts tests/ui/panelView.test.ts; echo EXIT=$?` → Exit ≠ 0.
 - [ ] **Umsetzen** und verdrahten.
 - [ ] **Grün:** derselbe Lauf → 0; dazu `npx vitest related --run src/ui/feast.ts src/ui/inspect.ts src/ui/trade.ts src/ui/app.ts; echo EXIT=$?` → 0.
 - [ ] **Sichtprüfung lokal:** `make help` für den Dev-Server; Kapelle wählen, drei Knöpfe sichtbar, Panel bei 1280 px ohne Umbruchfehler (Screenshot nur für den Bericht, Abnahme macht T07).

@@ -9,6 +9,8 @@ Persona `tech-sim-engineer` · Strang A · Tools ≈ 12 · blocked-by: Gate Plan
   - `npx vitest related --run src/ui/feast.ts src/ui/inspect.ts src/ui/trade.ts src/ui/panelView.ts`
   - `npx vitest run tests/sim/balance.test.ts` (**Dauer als Basis für P-7**; dreimal, Median notieren)
 - [ ] **Basis:** `rg -n "SAVE_VERSION =" src/sim/save.ts` (Wert notieren, P-9); `rg -n "FEAST_RUM" src tests` (erwartet: `defs/timing.ts`, `feast.ts`, `src/ui/feast.ts`, `tests/sim/feast.test.ts`); `rg -n "\b(75|125)\b" src/sim/feast.ts src/sim/levels.ts src/sim/trade.ts` (erwartet leer).
+- [ ] **Baseline-Liste festschreiben** (für T03 und T07): `ls tests/sim | rg "^balance|baseline|bitgleich"`; erwartet `tests/sim/balance.test.ts`, `tests/sim/balance-crises.test.ts`, `tests/sim/farOrder-baseline.test.ts`, `tests/sim/reserve-bitgleich.test.ts`. Abweichung ins Ledger, T03 nutzt genau diese Liste (nie ein leeres `$(rg …)`, das den ganzen Bestand liefe).
+- [ ] **Hinweis P-7:** Die Dauer von `balance.test.ts` hier ist nur Orientierung; massgeblich ist der Wand-an-Wand-Vergleich nach T03.
 - [ ] **Drift seit Spec:** `git log --oneline a8c8fdfb..main -- src/sim/save.ts src/sim/trade.ts src/sim/levels.ts src/sim/feast.ts src/ui/feast.ts src/ui/inspect.ts`. Geändert → Symbole (`isValidFeast`, `sellPrice`, `cycleOf`, `effectiveCycle`, `updateFeast`) statt Zeilen nutzen; berührt eine Änderung die Formel von `sellPrice` oder `cycleOf`, an den Controller melden.
 
 Beleg: Zeiten, Basiswerte und Drift im Bericht. Kein Commit.
