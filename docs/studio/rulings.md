@@ -2006,3 +2006,17 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
 Regelbezug: R429, R868, R886 · Kosten bei Irrtum: Doku-Revert.
 
 Entscheider: L0 · Anlass: Bericht studio-coach COACH-R886 · ADR: —
+
+## R893 · 2026-10-25 · Gate Merge SEERECHT OK; IDEEN-18 entschieden; I-201 und I-210 gestartet
+
+Ruling: (1) **SEERECHT** `feat/seerecht` @ `3167969e` Gate Merge **OK** (`.studio/handoffs/2026-10-25-lead-qa-gate-SEERECHT.md`: Struktur-Tests grün, Save v19 mit Migration und Abweisung,
+Balancing-Diff leer, Probe-Merge sauber). Merge im nächsten Release-Bündel; `make push-check` auf dem Push-Hash Pflicht (R816: Push frühestens 2026-10-26). Schwache Tests AK-SR-12/-14 bleiben als Restrisiko.
+(2) **IDEEN-18** `design/ideen-18` @ `6f7d0818` abgenommen: I-210 «Bittschrift» → Rechnung `design-economy-designer` (Dominiert «Ja» immer?), dann Spec voll (opus); I-209 «Seegang» (nimmt I-198 auf) →
+Lösbarkeitsrechnung je Stufe nach Inselproben-Merge, dann Spec; I-211/I-212 **geparkt** (Paar, nach Krisen-Überarbeitung bzw. I-128); I-213 **verworfen**. Abweichung «auch `docs/ideen-archiv.md`
+geändert» **bestätigt** (Persona R599 vor Briefing). Merge mit dem nächsten Release-Bündel. (3) Freie Plätze: **I-201** Controller (`lead-tech`, 15 Starts, ≤ 2 Testläufe, R-I201-P) und
+**DESIGN-I210** Rechnung (`lead-design`, Budget 3).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201 und SEERECHT beide in `src/sim/islands.ts`; I-209 nach INSELPROBEN
+Regelbezug: R599, R722, R816, R862, R883 · Kosten bei Irrtum: Seerecht-Revert; eine Rechnung ohne Spec.
+
+Entscheider: L0 · Anlass: Berichte lead-qa gate-seerecht, lead-design IDEEN-18 · ADR: —
