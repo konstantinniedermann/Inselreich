@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.73 · Stand: 2026-10-23 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.74 · Stand: 2026-10-25 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -108,7 +108,7 @@ Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <S
   Messwert gegenüber. Hauptgrösse sind Werkzeugaufrufe aus
   [metriken/richtwerte.md](metriken/richtwerte.md) (Median je Rolle, Modell, Plan-Art, summiert über
   Starts inkl. Review und Fix-Runden). **Briefings schätzen nur in Tools** (R750 V2): die Minutenangabe der Kopfzeile
-  rechnet das Werkzeug als Tools ÷ 6, niemand schätzt sie frei (E-001, R433); Messgrösse |Minuten-Abweichung| ≤ 30 % in 2 Session-Retros.
+  rechnet das Werkzeug als Tools ÷ 6, bei Lead-Paketen (Persona `lead-*`) mit Faktor 0,5 als Tools ÷ 12 (E-074, R872), niemand schätzt sie frei (E-001, R433); Messgrösse |Minuten-Abweichung| ≤ 30 % in 2 Session-Retros.
 - Die Kopfzeile nennt die **Tabellenzeile** in Klammern (z. B. `(Tabellenzeile: lead-tech opus
 Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davor (die Telemetrie
   liest die erste Angabe mit „Tools“ bzw. „min“).

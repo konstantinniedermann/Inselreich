@@ -636,6 +636,7 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Start: 2026-10-12 (Handbuch 1.52: Merge und Push nur in `.worktrees/integrate`; Briefing-Vorlagenzeile; Persona production-integrator 1.13)
 - Bewertung: Entwurf 2026-10-14 (Studio-Coach, Retro session-b54ed3bd-ende B2): **angepasst** — 18 Integrator-Briefings seit dem Start, 15 mit Worktree, 3 mit Hauptcheckout per Ruling (R627, R636, R644, Doku-/Werkzeug-Merges), in R616–R645 kein Vorfall genannt. Neue Messgrösse (R646): Integrator-Briefings mit Hauptcheckout ohne Ruling-Nummer, Soll 0 über weitere 10 Läufe, höchstens bis 2026-11-19; Ruling-Ausnahmen werden gezählt. L0-Ruling R646 bestätigt.
 - Datenpunkt (Retro [session-dbac5fc4-ende](retros/2026-10-14-session-dbac5fc4-ende.md)): Briefings ab 12:00 in dbac5fc4: 3 mit `.worktrees/integrate`, 2 mit Hauptcheckout-Bezug und Ruling-Nummer (R631/R630, R644), 0 ohne Ruling-Nummer. Weiter beobachten; Status bis zum Ruling unverändert.
+- Bewertung: Entwurf 2026-10-25 (Studio-Coach, Auftrag COACH-R872, R871 (4)): **behalten**, abschliessen. Beobachtung: seit dem Datenpunkt dbac5fc4 13 weitere Integrator-Briefings (`.studio/archiv/briefings/*production-integrator*`, 2026-10-14 14:10 bis 2026-10-23), mit dbac5fc4 18 Läufe seit R646 (Soll 10 erreicht): 9 mit `.worktrees/integrate`, 1 Vorprüfung im Feature-Worktree (HANDEL-2), 3 mit Hauptcheckout (TOOL-BUENDEL-15 R757, REL-28 R784, TOOL-BUENDEL-16 gemischt), alle mit Ruling-Nummer, also 0 ohne Ruling-Nummer; die letzten 5 Briefings (ab 2026-10-17 18:33) alle im Worktree. `push_check`-Ereignisse seit 2026-10-14: 11, die 3 mit Exit 1 sind Testläufe mit vollen Prüfungen, keiner bricht wegen eines veränderten Arbeitsbaums ab. Merge-Commits mit fremder Nachricht nicht nachgezählt. Deutung: Schwelle erfüllt, Regel wirkt seit 2026-10-17 ohne Ausnahme; die Messgrösse „Ruling-Nummer“ ist schwach, weil jedes Integrator-Briefing die Merge-Ruling nennt (die beiden Hauptcheckout-Briefings vom 2026-10-17 nannten keine Ausnahme-Ruling). Regel bleibt (Vorlagenzeile, Persona, Handbuch); der Platz geht laut R871 (4) an E-073.
 
 ## E-064 · behalten (Entwurf 2026-10-16, wartet auf Ruling; R579, nachgerückt für E-060) · Guard sperrt `git stash` ausser Lesezugriffen
 
@@ -752,4 +753,27 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Kommunikation), `.claude/agents/lead-{tech,qa,design,production,art}.md`, `docs/studio/templates/briefing.md`, `docs/studio/templates/persona.md`, `docs/studio/lernen.md`, `docs/studio/CHANGELOG.md`
 - Ruling: R868
 - Start: 2026-10-23 (Handbuch 1.73); Zählung `laufend` bei freiem Platz
+
+## E-074 · umgesetzt (R872 E2, läuft passiv ohne Platz wie E-071) · Minuten-Schätzung für Lead-Pakete mit Faktor 0,5
+
+- Hypothese: Wenn die Minuten der Kopfzeile bei Lead-Paketen als Tools ÷ 12 statt Tools ÷ 6 gerechnet werden, liegt die Minuten-Abweichung der Session innerhalb ±30 % (Retro [session-a5d45446-ende](retros/2026-10-23-session-a5d45446-ende.md) B2: −51 %, fünfte Session in Folge mit Überschätzung ≥ 50 %).
+- Messgrösse: Abweichung Minuten (Metrik, Abschnitt „Schätzung gegen Ist“) innerhalb ±30 % in 2 von 3 Sessions; Gegenprobe Werkzeugaufrufe unverändert gemessen (Ausgang −37 %).
+- Messbarkeit: unverändert; die Metrik vergleicht weiter Kopfzeile gegen Ist, die Tools-Schätzung bleibt unberührt.
+- Zeitraum: die nächsten 3 Sessions mit Session-Retro, höchstens bis 2026-11-19.
+- Rückfall: Tools ÷ 6 auch für Lead-Pakete; `metriken/richtwerte.md` Regel 5 und STUDIO.md Briefing-Standard auf Handbuch 1.71/1.73 zurück (`git show e9e00701:docs/studio/STUDIO.md`).
+- Dateien: `docs/studio/metriken/richtwerte.md`, `docs/studio/STUDIO.md` (Briefing-Standard), `docs/studio/CHANGELOG.md`; offen: `docs/studio/templates/briefing.md` Zeile `Schätzung:` nennt nur Tools ÷ 6 (nur nach Ruling)
+- Ruling: R872 (E2)
+- Start: 2026-10-25 (Handbuch 1.74; wirkt sofort, Zählung `laufend` erst bei freiem Platz)
+- Bewertung: –
+
+## E-075 · übernommen als Werkzeug (R872 E1, Messauftrag ohne Platz wie E-036) · opus-Anteil je Paketart
+
+- Hypothese: Der rote opus-Anteil (a5d45446: 83,7 %) ist Folge design-lastiger Sessions; ohne Design-Pakete liegt er im gelben Bereich oder darunter (Retro [session-a5d45446-ende](retros/2026-10-23-session-a5d45446-ende.md) B3).
+- Messgrösse: Info-Zeile „opus-Anteil ohne Design-Pakete“ in `metrics.py --efficiency` ≤ 60 % über 2 Sessions; Paketarten L0, Design, Plan, Gate, Umsetzung, Sonstige (Design und Plan gelten für das ganze Paket, also auch für Reviewer darin). Ausgang: 69,1 % über die letzten 2 Sessions (a5d45446 und laufende Session, Echtlauf 2026-10-25).
+- Messbarkeit: Ampelzeile „opus-Anteil“ unverändert; die neue Zeile ist nur Info, sie ändert keine Ampelfarbe.
+- Zeitraum: die nächsten 2 Sessions.
+- Rückfall: keiner nötig (nur Messung); die Info-Zeilen lassen sich ohne Folgen streichen.
+- Dateien: `tools/studio/efficiency.py` (`package_kind`, `_opus_by_kind`, `_opus_kind_lines`), `tools/studio/tests/test_efficiency.py` (`OpusByKindTest`)
+- Ruling: R872 (E1)
+- Start: 2026-10-25 (Branch `tool/coach-r872`, Merge mit REL-32)
 - Bewertung: –

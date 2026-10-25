@@ -6,7 +6,7 @@ sie nach jedem Meilenstein nach. Die Werte sind gemessene Ist-Mediane je Start, 
 Die Datei hat bewusst keinen Abschnitt „Rohwerte“, damit der Dashboard-Verlauf sie nicht als
 Metrik liest.
 
-Stand: 2026-10-01 (Nacheichung M7, unten) · Datenbasis bis M5/Studio-Graph: `metriken/Studio-Graph.md` und Nachzählung aus
+Stand: 2026-10-25 (Minutenregel 5, R872; Tabellen: Nacheichung M7, unten) · Datenbasis bis M5/Studio-Graph: `metriken/Studio-Graph.md` und Nachzählung aus
 `.studio/events.jsonl` (Records mit Kopfzeile `Schätzung:`, je Start; bei Leads der ganze
 Teilbaum), siehe Retro [2026-09-30-meilenstein-studio-graph.md](../retros/2026-09-30-meilenstein-studio-graph.md).
 
@@ -15,10 +15,14 @@ Teilbaum), siehe Retro [2026-09-30-meilenstein-studio-graph.md](../retros/2026-0
 1. Starts planen: je Task Umsetzung + Review, dazu eine Fix-Runde bei jedem dritten bis sechsten Task
    (Nacharbeit Studio-Graph 4 von 12, M7 6 von 38), Playtests und Final-Review.
 2. Je Start den Median aus der Tabelle nehmen, passend zu Rolle, Messmodell und Plan-Art, und summieren. Das Einsatzmodell bestimmt die Modelltabelle in `STUDIO.md` (Abschnitt Modelle), nicht die Spalte „gemessen auf“.
-3. Ohne passende Zeile: erst die Werkzeugaufrufe schätzen, dann Minuten ≈ Tools ÷ 4 (gemessen
-   8,5 Tools/min in Studio-Graph, 4,1 in M5, 3,9 in M7; mit ÷ 6 lagen die Minuten in M7 um +33 %
-   zu tief).
+3. Ohne passende Zeile: erst die Werkzeugaufrufe schätzen; die Minuten folgen aus Regel 5
+   (früher Tools ÷ 4 nach M7, abgelöst durch R750 V2).
 4. Nicht in Menschenzeit schätzen. Menschenzeit lag 5- bis 20-fach über dem Ist.
+5. Minuten der Kopfzeile = Tools ÷ 6; bei **Lead-Paketen** (Persona `lead-*`, ganzer Teilbaum)
+   mit Faktor 0,5, also Tools ÷ 12 (E-074, R872). Ausgang: fünfte Session in Folge mit
+   Minuten-Überschätzung ≥ 50 % (a5d45446: 240 min geschätzt gegen 117,4 min Ist, −51 %).
+   Messgrösse: |Minuten-Abweichung| ≤ 30 % in 2 von 3 Sessions (Metrik, „Schätzung gegen Ist“);
+   Rückfall: Tools ÷ 6 auch für Lead-Pakete.
 
 Plan-Art: **Code im Plan** = der Plan enthält den fertigen Code, der Arbeiter übernimmt und testet
 (Studio-Graph). **Spec/offen** = der Arbeiter entwirft selbst, oder die Plan-Art ist nicht erfasst
