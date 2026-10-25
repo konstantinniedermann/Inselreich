@@ -242,3 +242,15 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 - Fundort: `tools/render-qa/lib.mjs`. Beobachtung: Kein `close`-Handler am WebSocket; stirbt Chrome mitten im Lauf, endet `perf.mjs` mit «unsettled top-level await» statt klarer Meldung (nachgestellt; Ursprung des Abbruchs vom 2026-10-22 nicht belegt). Ursprung: ORT-A (R871). Einschätzung: Handler mit Reject, Trivial-Fix beim nächsten render-qa-Paket.
 - Fundort: `docs/adr/` ADR-007 und Studio-Specs 2026-09-30. Beobachtung: beschreiben noch die Vordergrund-Regel, die R868 (V2) ersetzt. Ursprung: RETRO-REL-30-UMSETZUNG. Einschätzung: ADR-Nachtrag mit Verweis auf R868.
+
+## 2026-10-25 · REL-31: sed-Backups beim Konfliktlösen (mittel)
+
+- Fundort: `.worktrees/integrate`, Merge-Kette REL-31. Beobachtung: BSD-`sed -i` ohne leeres Suffix legte `docs/ideen.md-e` mit Konfliktmarkern an, `git add -A` committete sie; `make push-check` brach bei `conflicts` ab. Ursprung: R877. Einschätzung: in Integrator-/Production-Persona «gezielt stagen, `make conflicts` vor jedem Merge-Commit» aufnehmen; `.gitignore` für `*-e` prüfen.
+
+## 2026-10-25 · Rückkanal: Arbeiter-SendMessage an Rollennamen kommt nicht an (mittel)
+
+- Fundort: Briefings von `lead-production`, `lead-design` (IDEEN-17). Beobachtung: Arbeiter schickten an «lead-production»/«lead-design» → «not reachable»; Berichte kamen nur als Benachrichtigung. Ursache: L0 hatte den Leads ihre agentId nicht genannt (R856). Ursprung: R879. Einschätzung: Start-Routine/Persona L0 um festen Schritt «Adresse senden» ergänzen.
+
+## 2026-10-25 · HAUSHALT-03: über 150 Worktrees ungemessen (niedrig)
+
+- Fundort: `.worktrees/`. Beobachtung: > 150 Worktrees, viele gemergt; `aufraeumen.json` misst sie nicht. Ursprung: HAUSHALT-03 (R876). Einschätzung: Schwelle und Trockenlauf «gemergte Worktrees» in `aufraeumen.py`, Entfernen nur ohne `--force` per Ruling.

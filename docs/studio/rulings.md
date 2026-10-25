@@ -2280,3 +2280,49 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-31 (pushg
 Regelbezug: R287, R464, R685, R861 · Kosten bei Irrtum: Merge-Reihenfolge neu ordnen.
 
 Entscheider: L0 · Anlass: Berichte lead-production, lead-design · ADR: —
+
+## R877 · 2026-10-25 · REL-31 live; Hash ee51d4f1 freigegeben
+
+Ruling: Erster Kandidat `468caf38` rot (`make conflicts`: BSD-`sed -i`-Backup `docs/ideen.md-e` mit Konfliktmarkern eingecheckt); Fix `ee51d4f1` von L0 vor dem Lauf geprüft (keine Backup-Dateien im Diff)
+und per Nachricht freigegeben (R565 V2). **REL-31 live:** `make push-check` Exit 0 (13:22 min), Push `bc9664d0..ee51d4f1`, CI-Lauf 40184385005 grün, Pages-Lauf 40184943166 grün, `ci.py` Exit 0;
+Hauptcheckout per ff-only nachgezogen. Reine Doku und Werkzeug, Save v18. Einzel-Exitcodes `make check`/`check-ci-perf` fehlen im Bericht (R459/E-058) — hingenommen, da in `push-check` enthalten.
+Zwei Beobachtungen eingetragen (sed-Backups beim Konfliktlösen; Arbeiter-SendMessage an Lead-Namen kommt nicht an).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R565 V2, R769 V2, R810, R815, R816 · Kosten bei Irrtum: Revert-Push am Folgetag.
+
+Entscheider: L0 · Anlass: Bericht lead-production REL-31 · ADR: —
+
+## R878 · 2026-10-25 · Nachträge, Pläne und Gates der Welle 1 abgenommen
+
+Ruling: (1) **Plan I-186** `plan/i186-ehrenbuch` @ `c366c783` mit A1/A2/B3–B6 abgenommen; Umsetzung 19 Starts. (2) **Spec Stadtrecht** `design/stadtrecht` @ `6d77e150` (AK-ST-01…17; B7: `taxView`/`guide`
+zeigen `taxPct + charterTaxPoints`, Prognose `effectiveTaxPct`) und **Plan Stadtrecht** `plan/stadtrecht` @ `c92cfff1` (Gate Plan BEDENKEN, B1–B8 eingearbeitet) abgenommen; ST-E1…E5 ja (ST-E4:
+Vorgänger-Migrationen über die Faltkette getestet); 25 Starts / Par 1; T01-Frühstart ab main ja, Rest nach Seerecht-Merge. (3) **Save-Reihenfolge (ändert R874 (4)):** Die Save-Nummer folgt der
+Merge-Reihenfolge (versionsneutral, Stadtplanung zuerst); Seerecht darf vor Inselproben mergen. (4) **Spec Inselproben** `design/modus-inselproben` @ `a7e5fff2` (AK-IP-01…31, Anhang 02) abgenommen;
+Tickgrenzen Proben 2–5 und Strategie-Parameter erst nach erstem grünem Lauf festschreiben. **Plan Inselproben** `plan/inselproben` @ `8790f322`: E-IP-1 (P-5, Probe ohne grünen T07-Lauf vorerst
+aus der Liste), E-IP-2, E-IP-3 (Pins mit Vermerk «Messwert» bis Ruling) ja; Gate Plan läuft. (5) **UI-HAEPPCHEN-J:** Gate Spec BEDENKEN (Auflagen 1–5 im Plan), Plan `plan/ui-haeppchen-j` @
+`4483c575` Gate Plan **OK**; R-J-E (4 Starts / Par 1) übernommen; Playtest mit drei verschiedenen Warntexten, AK-J3 Pause per Leertaste belegen. (6) **IDEEN-17** `docs/ideen-17` @ `933964fa`
+abgenommen: I-197 Kurzdesign, I-201 Rechnung, Rest parken, I-205 verwerfen; F3 aus UI-J (I-138/I-139 kürzen) beim nächsten Pool-Eingriff. (7) **I-197** `design/i197-i201` @ `8a1191f8`: Gate Spec
+BEDENKEN, B1 (echter Charakterisierungstest AK-K3), B2 (Eingabegrenze **0–99 999 949**), B3; Kennungen AK-K1…K13; Plan `plan/i197-kartennummer` @ `928535c7` Gate Plan **OK**, 4 Starts, Umsetzung
+nach dem Inselproben-UI-Task. (8) **I-201 Festanlass:** R-A (Aufstieg, Ernte, Markttag; Hafenfest entfällt), R-B (`feastKind` optional, kein Save-Sprung, unbekannte Art abgewiesen, Muster R260),
+R-C (Abklingzeit je Insel und Art); Kurzdesign @ `a58f0b48`, Entwürfe 1–3 ja; Gate Spec BEDENKEN: Blattmodul `feastEffect`, Kennungen **AK-FE1…**, R553 zwei Seeds je Welt mit Rückfall,
+Rangfolge mit Lage C2 — Nachtrag läuft. (9) **COACH-R872** `tool/coach-r872` @ `42813dbd` abgenommen (Handbuch 1.74, E-074 passiv, E-075 Messauftrag, Ausgang 69,1 %); **E-063 behalten,
+abgeschlossen**, Platz an E-073; Briefing-Vorlage Lead-Fall «Tools ÷ 12» und Wortlaut «L0 rechnet» nachziehen (DOKU-RUNDE).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette Stadtplanung/Inselproben/Seerecht/Stadtrecht; `menu.ts`/`app.ts` (Inselproben, I-197)
+Regelbezug: R417, R553, R860, R862, R870, R874 · Kosten bei Irrtum: Plan-Nachtrag, Save-Nummer beim Merge anpassen.
+
+Entscheider: L0 · Anlass: Berichte lead-tech, lead-design, lead-qa, studio-coach · ADR: —
+
+## R879 · 2026-10-25 · Welle 2: Umsetzung nach dem REL-31-Push; Rückkanal-Versäumnis
+
+Ruling: (1) **Controller (≤ 3, R826):** I-186 Ehrenbuch (19 Starts, T00 zuerst), UI-HAEPPCHEN-J (4 Starts), ORT-A T18 mit Final-Review und Merge-Weg (4 Starts Rest). SEERECHT T04 und Stadtrecht T01
+folgen auf den ersten freien Controller-Platz. (2) **Testfrei:** DOKU-RUNDE (`studio-coach`: ADR-011 Status, Stand-Warnschwelle STUDIO.md vs. `stampcheck.py`, Briefing-Vorlage nach R878 (9),
+`design-idea-scout` erhält WebSearch/WebFetch für die erwünschte Recherche, R862); REL-32-Zwischenbündel lokal (`lead-production`: Doku-/Plan-Branches nach main per Teilbeleg, kein Push vor
+2026-10-26). (3) **Rückkanal:** L0 hat in Welle 1 den Leads ihre agentId nicht genannt (R856); nachgeholt, sobald bemerkt. Ab sofort nennt L0 die Adresse unmittelbar nach jedem Lead-Start;
+Arbeiter-Briefings benutzen nie den Rollennamen als Adresse. Für die Session-Retro.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: `app.ts` (UI-J, I-186), Seerecht-Plan (DOKU-R868)
+Regelbezug: R464, R826, R856, R862, R868 V2 · Kosten bei Irrtum: ein Controller wartet.
+
+Entscheider: L0 · Anlass: REL-31 live · ADR: —
