@@ -2470,3 +2470,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN (S3 nac
 Regelbezug: R816, R893, R906, R909 · Kosten bei Irrtum: ein Release-Bündel neu zusammenstellen.
 
 Entscheider: L0 · Anlass: Bericht lead-tech FIX-SCHIFF-A1 · ADR: —
+
+## R930 · 2026-10-25 · Plan I-210 fertig; Entwürfe 1–3; Gate Plan
+
+Ruling: `plan/i210-bittschrift` @ `d2535b56` (T00–T16, 25 AK-BS zugeordnet) zum **Gate Plan** an `lead-qa` (Budget 1). Entwürfe: **1** Überbelegung wirkt im Wachstumsschritt, `houseCap` behält die Signatur
+**ja**; **2** Genügsamkeit wirkt auch in `goodsBalance` (Karte und Bilanz stimmen überein, R896) **ja**; **3** Lager 120 auch beim Entladen und in `queries.ts` **ja**; **4** Umsetzungsbudget 28 Starts (3 Arbeiter,
+≤ 2 Testläufe gleichzeitig) wird nach Gate Plan erteilt. B4/B5 erst nach I-201-Merge; Seed-Zusage hängt an T00 (Messfenster).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, AUSBAU-LOGIK (Defs), Save-Kette
+Regelbezug: R896, R909, R911, R553 · Kosten bei Irrtum: Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-i210 · ADR: —
