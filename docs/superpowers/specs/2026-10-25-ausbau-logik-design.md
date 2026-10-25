@@ -402,7 +402,8 @@ Stand R908: E1–E3 und E5–E9 angenommen (E3 strikt, ohne Kontor-Ersatz); E4 g
 - **E3** Fachkräfte auch auf fernen Inseln Pflicht (Kolonie ohne Häuser baut nicht aus). Empfehlung: «Pflicht überall» —
   eine Regel für alle Inseln, fachlich «keine Meister vor Ort». Alternative: Kontor im Arbeitsweg zählt als
   Stufe-2-Fachkraft (Stufe 3/4 weiter mit Häusern).
-- **E4** `SAVE_VERSION` 19, v18 ladbar ohne Datenmigration. Empfehlung: annehmen (Abschnitt Save).
+- **E4** (geändert durch R908, Errata Plan R924) `SAVE_VERSION` = main + 1 beim Merge von AL-4, keine feste Zahl;
+  Vorgängerstand ladbar über einen reinen Versionsschritt (Plan: Variante A, Anhang 02 N1, AK-AL-35).
 - **E5** Unterhalt bei «läuft wie k» = Option B mit `THROTTLED_UPKEEP_PCT = 50`. Empfehlung: annehmen — Option A verstärkt
   die Rum-Spirale.
 - **E6** «Gleiches bauen» kostet genau Neubau + Summe der Stufenkosten inkl. Ware, kein Rabatt, kein Aufschlag, kein Rückfall
