@@ -2915,3 +2915,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Rivalen (Erwe
 Regelbezug: R862, R928, R965 · Kosten bei Irrtum: Pool-Einträge.
 
 Entscheider: L0 · Anlass: Bericht lead-design IDEEN-20 · ADR: —
+
+## R968 · 2026-10-25 · ZEITPIN-D1: Pin 3,5 ms
+
+Ruling: Zeit-Pin `tests/sim/perf.test.ts` AK-E0-15a D1 von 2,5 auf **3,5 ms** (`fix/zeitpin-d1` @ `eeb98d88`) **angenommen**: main 2,76 ms, Kandidat 2,53 ms (je 2 saubere Läufe bei Last ≤ 4; 5 Läufe
+nicht erreicht wegen paralleler Controller, Befund trotzdem eindeutig); naiver Code 18,6 ms bleibt rot. 4,5 ms (R392 1,5-fach) verworfen, weil kleinere Regressionen später auffielen. Folgesession zuerst
+Integrator: `fix/zeitpin-d1` und die Doku-Branches aus R964/R967 in `integrate/rel-33`, main hineinmergen, `make push-check`, bei Exit 0 main vorspulen und REL-33 pushen (2026-10-26, R816). Befund
+«Messvorrang nur per Absprache» → `docs/beobachtungen.md`.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-33, alle Branches mit Zeit-Pins
+Regelbezug: R392, R815, R848, R954 · Kosten bei Irrtum: Regression bis +25 % unbemerkt.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ZEITPIN-D1 · ADR: —

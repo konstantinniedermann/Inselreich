@@ -276,3 +276,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-25 · Anlass für I-183 (niedrig)
 
 - Fundort: INSELPROBEN Schuldbrief-Probe. Beobachtung: erzeugt planmässig «Kasse leer, Nahrung leer» und wäre der natürliche Anlass für I-183. Ursprung: Rechnung Zukaufpreis (R918). Einschätzung: bei der nächsten Ideen-Runde prüfen.
+
+## 2026-10-25 · Messvorrang nur per Absprache (mittel)
+
+- Fundort: Studio-Werkzeug (`make messfenster`, TOOL-TESTLOCK). Beobachtung: ZEITPIN-D1 erreichte statt 5 nur 2 saubere Läufe je Stand, weil parallele Test-Controller (I-210, AUSBAU-LOGIK, plan-I-215) die Last auf 10–50 trieben, obwohl das Briefing Messvorrang nannte. Ursprung: ZEITPIN-D1 (R968). Einschätzung: Werkzeug-Kandidat `make messfenster-sperre` (Messpaket belegt eine Sperre, gezielte Tests warten), sonst Retro-Punkt Controller-Staffelung (R920 V1).
