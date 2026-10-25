@@ -172,3 +172,138 @@ describe('TB4 T06 render-qa Helfer', () => {
     expect(f.zaehler()).toBe(3);
   });
 });
+
+// --- T05 TOOL-MESSFENSTER: A/A-Gate (aagate.mjs), eigener Block ---
+describe('T05 aagate (A/A-Kontrolle, Messgüte)', async () => {
+  const ag = await load('aagate.mjs');
+  const grenzen = JSON.parse(
+    (await import('node:fs')).readFileSync(new URL('aa-grenzen.json', dir).pathname, 'utf8'),
+  );
+  const hz = (seed: number, over: number[], max: number[], base = 16.7) =>
+    `A aa-abc seed=${seed} lauf=1 ` +
+    JSON.stringify({
+      baseMedian: base,
+      res: over.map((o, i) => ({ x: i, y: i, max: max[i], over25: o, n: 54 })),
+    });
+  const sauber = [
+    hz(7, [0, 0, 0, 0, 0, 0], [20, 22, 21, 19, 23, 20]),
+    hz(14, [0, 0, 0, 0, 0, 0], [21, 20, 22, 20, 19, 24]),
+  ];
+  const gestoert = [
+    hz(7, [0, 21, 0, 25, 0, 0], [20, 50, 21, 67, 23, 20]),
+    hz(14, [0, 24, 0, 22, 0, 0], [21, 55, 22, 60, 19, 24]),
+  ];
+  const perf = (medianA: number, deltaMs: number, deltaPct: number, seed = 7) =>
+    JSON.stringify({
+      dpr: 1,
+      view: '1280x720',
+      seed,
+      zoom: 1,
+      focus: 'mountain',
+      medianA,
+      medianB: medianA + deltaMs,
+      deltaPct,
+      deltaMs,
+    });
+
+  it('Grenzen: vorläufig, mit Quelle und Werten aus dem Plan', () => {
+    expect(grenzen.vorlaeufig).toBe(true);
+    expect(grenzen.quelle).toMatch(/\S/);
+    expect(grenzen.hitch).toEqual({ summeOver25Max: 2, fensterMaxMs: 40 });
+    expect(grenzen.render).toEqual({ deltaMsMax: 0.4, deltaPctMax: 3 });
+  });
+  it('Parser: hitch-Ausgabe (Kopfzeilen ignoriert) liefert Fenster', () => {
+    const f = ag.parseHitch(['# Kopf', ...sauber].join('\n'));
+    expect(f).toHaveLength(12);
+    expect(f[0]).toMatchObject({ seed: 7, baseMedian: 16.7, over25: 0, max: 20 });
+  });
+  it('Parser: perf-JSON-Zeile liefert deltaPct, deltaMs, Profil', () => {
+    const p = ag.parsePerf(`Kopf\n${perf(10, 0.2, 2)}\n`);
+    expect(p).toHaveLength(1);
+    expect(p[0]).toMatchObject({ deltaMs: 0.2, deltaPct: 2, profil: '1280x720 seed=7 mountain' });
+  });
+  it('Hitch: sauberer Block gültig', () => {
+    expect(ag.bewerteHitch(ag.parseHitch(sauber.join('\n')), grenzen).ok).toBe(true);
+  });
+  it('Hitch: gestörter Block ungültig, Gründe nennen Summe und max', () => {
+    const r = ag.bewerteHitch(ag.parseHitch(gestoert.join('\n')), grenzen);
+    expect(r.ok).toBe(false);
+    expect(r.gruende.join(' ')).toMatch(/over25/);
+    expect(r.gruende.join(' ')).toMatch(/67/);
+  });
+  it('Hitch: Σover25 = 2 und max = 40 genau auf der Grenze gültig; 3 bzw. 40,1 ungültig', () => {
+    const auf = ag.parseHitch(hz(7, [1, 1, 0], [40, 20, 20]));
+    expect(ag.bewerteHitch(auf, grenzen).ok).toBe(true);
+    expect(ag.bewerteHitch(ag.parseHitch(hz(7, [1, 1, 1], [20, 20, 20])), grenzen).ok).toBe(false);
+    expect(ag.bewerteHitch(ag.parseHitch(hz(7, [0], [40.1])), grenzen).ok).toBe(false);
+  });
+  it('Render: kleine Abweichungen (0,4 ms, 2,2 %) gültig', () => {
+    const p = ag.parsePerf(
+      [perf(10, 0.3, 3.0), perf(100, 0.4, 0.4, 14), perf(20, 0.44, 2.2, 3)].join('\n'),
+    );
+    expect(ag.bewerteRender(p, grenzen).ok).toBe(true);
+  });
+  it('Render: Grenze exakt (3 % bei grossem Median, 0,4 ms bei kleinem) gültig', () => {
+    expect(ag.bewerteRender(ag.parsePerf(perf(50, 1.5, 3)), grenzen).ok).toBe(true);
+    expect(ag.bewerteRender(ag.parsePerf(perf(2, 0.4, 20)), grenzen).ok).toBe(true);
+  });
+  it('Render: Δ −41,9 % ungültig, Grund nennt Profil', () => {
+    const r = ag.bewerteRender(ag.parsePerf(perf(10, -4.19, -41.9)), grenzen);
+    expect(r.ok).toBe(false);
+    expect(r.gruende[0]).toContain('seed=7');
+  });
+  it('urteil: gültig / ungültig (A/A ausserhalb) mit Gründen', () => {
+    const gut = ag.urteil(
+      { hitch: ag.parseHitch(sauber.join('\n')), render: ag.parsePerf(perf(10, 0.1, 1)) },
+      grenzen,
+    );
+    expect(gut).toEqual({ urteil: 'gueltig', gruende: [] });
+    const schlecht = ag.urteil({ hitch: ag.parseHitch(gestoert.join('\n')), render: [] }, grenzen);
+    expect(schlecht.urteil).toBe('ungueltig (A/A ausserhalb)');
+    expect(schlecht.gruende.length).toBeGreaterThan(0);
+  });
+  it('urteil: ohne Daten ungültig (nichts belegt)', () => {
+    expect(ag.urteil({ hitch: [], render: [] }, grenzen).urteil).toBe('ungueltig (A/A ausserhalb)');
+  });
+  it('unvollständige oder nicht numerische Werte sind ungültig mit Grund «Daten unvollständig»', () => {
+    const ohneOver = `A aa-abc seed=7 lauf=1 ${JSON.stringify({ baseMedian: 16.7, res: [{ x: 1, y: 1, max: 20 }] })}`;
+    const ohneMax = `A aa-abc seed=7 lauf=1 ${JSON.stringify({ baseMedian: 16.7, res: [{ x: 1, y: 1, over25: 0 }] })}`;
+    const text = `A aa-abc seed=7 lauf=1 ${JSON.stringify({ baseMedian: 16.7, res: [{ over25: 'x', max: null }] })}`;
+    for (const z of [ohneOver, ohneMax, text]) {
+      const r = ag.urteil({ hitch: ag.parseHitch(z), render: [] }, grenzen);
+      expect(r.urteil).toBe('ungueltig (A/A ausserhalb)');
+      expect(r.gruende.join(' ')).toContain('Daten unvollständig');
+    }
+    const p = ag.parsePerf(JSON.stringify({ view: 'v', seed: 1, deltaMs: 'a', deltaPct: 1 }));
+    expect(ag.urteil({ hitch: [], render: p }, grenzen).urteil).toBe('ungueltig (A/A ausserhalb)');
+  });
+  it('CLI: Exit 0 gültig, Exit 1 ungültig, deutscher Text', async () => {
+    const fs = await import('node:fs');
+    const os = await import('node:os');
+    const d = fs.mkdtempSync(`${os.tmpdir()}/aagate-`);
+    fs.writeFileSync(`${d}/gut.txt`, sauber.join('\n'));
+    fs.writeFileSync(`${d}/schlecht.txt`, gestoert.join('\n'));
+    const run = (f: string) =>
+      spawnSync('node', [new URL('aagate.mjs', dir).pathname, `${d}/${f}`], { encoding: 'utf8' });
+    const g = run('gut.txt');
+    expect(g.status).toBe(0);
+    expect(g.stdout).toContain('gueltig');
+    const s = run('schlecht.txt');
+    expect(s.status).toBe(1);
+    expect(s.stdout).toContain('ungueltig (A/A ausserhalb)');
+  });
+});
+
+// --- T04 TOOL-MESSFENSTER: messfenster.mjs --dauer/--zweck (eigener Block) ---
+describe('T04 messfenster.mjs Argumente', async () => {
+  const mf = await load('messfenster.mjs');
+  it('--run übernimmt --dauer und --zweck, Vorgabe 70 min', () => {
+    expect(mf.parseArgs(['--run', '--', 'echo', 'x']).dauerMin).toBe(70);
+    const a = mf.parseArgs(['--dauer', '45', '--zweck', 'Perf A/A', '--run', '--', 'echo', 'x']);
+    expect(a).toMatchObject({ dauerMin: 45, zweck: 'Perf A/A', run: ['echo', 'x'] });
+  });
+  it('ungültige --dauer ist ein Aufruffehler', () => {
+    expect(mf.parseArgs(['--dauer', '0', '--run', '--', 'x']).fehler).toMatch(/dauer/);
+    expect(mf.parseArgs(['--dauer', 'abc', '--run', '--', 'x']).fehler).toMatch(/dauer/);
+  });
+});

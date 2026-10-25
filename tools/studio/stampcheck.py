@@ -10,13 +10,20 @@ import re
 import sys
 from pathlib import Path
 
-THRESHOLD = 5
+THRESHOLD = 2
 R_RE = re.compile(r"\bR(\d+)")
+HEADING_RE = re.compile(r"^## R(\d+)\b", re.MULTILINE)
 
 
 def _highest(text: str) -> int | None:
     numbers = [int(n) for n in R_RE.findall(text)]
     return max(numbers) if numbers else None
+
+
+def _latest(rulings: str) -> int | None:
+    """Höchste Nummer aus «## R…»-Überschriften; ohne Überschrift jede Nennung."""
+    numbers = [int(n) for n in HEADING_RE.findall(rulings)]
+    return max(numbers) if numbers else _highest(rulings)
 
 
 def stale_warning(docs: Path, threshold: int = THRESHOLD) -> str:
@@ -27,12 +34,13 @@ def stale_warning(docs: Path, threshold: int = THRESHOLD) -> str:
     except OSError:
         return ""
     stand = next((ln for ln in state.splitlines() if ln.startswith("Stand:")), "")
-    seen, latest = _highest(stand), _highest(rulings)
+    seen, latest = _highest(stand), _latest(rulings)
     if seen is None or latest is None or latest - seen <= threshold:
         return ""
     return (
-        f"Warnung: state.md nennt im Stand nur bis R{seen}, rulings.md hat R{latest} "
-        f"(Differenz {latest - seen} > {threshold}); state.md nachziehen."
+        f"PFLICHT: state.md hinkt {latest - seen} Rulings hinterher "
+        f"(Stand R{seen}, rulings.md R{latest}). Erste Handlung: state.md nachführen "
+        "lassen (Platzfüller, R818), bevor Aufträge starten."
     )
 
 

@@ -22,6 +22,167 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-25 · Handbuch 1.74
+
+- Anlass: Kurz-Retro Session a5d45446 (B2 Schätzung, B3 opus-Anteil), Auftrag COACH-R872
+- Datenbasis: `docs/studio/retros/2026-10-23-session-a5d45446-ende.md`, `docs/studio/metriken/S-2026-10-23-a5d45446.md`
+- Ruling: R872
+- Änderungen: STUDIO.md Briefing-Standard: Minuten der Kopfzeile bei Lead-Paketen Tools ÷ 12 (Faktor 0,5 auf Tools ÷ 6, E-074); `metriken/richtwerte.md` Regel 3 und neue Regel 5 dazu; `metrics.py --efficiency` zeigt den opus-Anteil je Paketart und ohne Design-Pakete (Messauftrag E-075). Version 1.74, weil 1.72 und 1.73 auf `docs/dauerauftrag` und `docs/retro-rel-30-umsetzung` im Bündel REL-31 liegen
+
+## 2026-10-23 · Persona production-integrator 1.19
+
+- Anlass: Auftrag TOOL-MERGE-APPEND (REL-30: `timeout` fehlt auf macOS)
+- Datenbasis: Handoff `.studio/handoffs/2026-10-23-lead-production-REL-30.md`
+- Ruling: R866
+- Änderungen: CI-Schleife nutzt `perl -e 'alarm 240; exec @ARGV' gh run watch <id>` statt `timeout 240 gh run watch`
+
+## 2026-10-23 · Handbuch 1.73
+
+- Anlass: Prozess-Retro REL-30, Vorschläge V1 und V2 (Experimente E-072, E-073); setzt 1.72 voraus (Branch `docs/dauerauftrag`)
+- Datenbasis: Retro `docs/studio/retros/2026-10-23-rel-30-prozess.md` (Branch `docs/retro-rel-30` @ `40a27899`), B1/B2; `.studio/events.jsonl` 2026-10-23 09:37–10:14 UTC
+- Ruling: R868
+- Änderungen: STUDIO.md „Kommunikation“: Start-Regel ersetzt Vordergrund-Regel: `run_in_background: false` bleibt (R854 Regel C), jeder Start gilt als asynchron, nach dem Start Zug beenden und auf Meldung warten (Rückkanal R856), Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (E-073); Satz zu langen Bash-Läufen verweist auf die Start-Regel; „Merge“-Konflikt-Probe: Dateien mit Merge-Treiber prüft `lead-qa` per Probe-Merge im Wegwerf-Worktree (E-072); `gates.md` „Gate Merge Release“: Absatz „Trockenlauf mit Merge-Treiber“; `templates/briefing.md`: Pflichtzeilen Lead-Briefing (asynchron, ohne „im Vordergrund“) und Gate-Merge-Briefing (Probe-Merge); `templates/persona.md`: Start-Regel statt Vordergrund-Regel; `experimente.md`: E-072, E-073; `lernen.md`: Zeile zu asynchronen Starts
+
+## 2026-10-23 · Persona lead-qa 1.13
+
+- Anlass: Prozess-Retro REL-30, V1 und V2
+- Datenbasis: Retro `docs/studio/retros/2026-10-23-rel-30-prozess.md` (Branch `docs/retro-rel-30` @ `40a27899`), B1/B2; `.studio/events.jsonl` 2026-10-23 09:37–10:14 UTC
+- Ruling: R868
+- Änderungen: Arbeitsweise Punkt 6 neu „Konflikt-Trockenlauf“: Dateien mit Merge-Treiber per Probe-Merge im Wegwerf-Worktree, „Treiber löst“ nur nach Exit 0 (E-072); Start-Regel ersetzt Vordergrund-Regel: `run_in_background: false` bleibt (R854 Regel C), jeder Start gilt als asynchron, nach dem Start Zug beenden und auf Meldung warten (Rückkanal R856), Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (E-073); Satz zu langen Bash-Läufen verweist auf die Start-Regel
+
+## 2026-10-23 · Persona lead-tech 1.18
+
+- Anlass: Prozess-Retro REL-30, V2
+- Datenbasis: Retro `docs/studio/retros/2026-10-23-rel-30-prozess.md` (Branch `docs/retro-rel-30` @ `40a27899`), B1/B2; `.studio/events.jsonl` 2026-10-23 09:37–10:14 UTC
+- Ruling: R868
+- Änderungen: Start-Regel ersetzt Vordergrund-Regel: `run_in_background: false` bleibt (R854 Regel C), jeder Start gilt als asynchron, nach dem Start Zug beenden und auf Meldung warten (Rückkanal R856), Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (E-073); Satz zu langen Bash-Läufen verweist auf die Start-Regel
+
+## 2026-10-23 · Persona lead-design 1.14
+
+- Anlass: Prozess-Retro REL-30, V2
+- Datenbasis: Retro `docs/studio/retros/2026-10-23-rel-30-prozess.md` (Branch `docs/retro-rel-30` @ `40a27899`), B1/B2; `.studio/events.jsonl` 2026-10-23 09:37–10:14 UTC
+- Ruling: R868
+- Änderungen: Start-Regel ersetzt Vordergrund-Regel: `run_in_background: false` bleibt (R854 Regel C), jeder Start gilt als asynchron, nach dem Start Zug beenden und auf Meldung warten (Rückkanal R856), Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (E-073); Satz zu langen Bash-Läufen verweist auf die Start-Regel
+
+## 2026-10-23 · Persona lead-production 1.14
+
+- Anlass: Prozess-Retro REL-30, V2
+- Datenbasis: Retro `docs/studio/retros/2026-10-23-rel-30-prozess.md` (Branch `docs/retro-rel-30` @ `40a27899`), B1/B2; `.studio/events.jsonl` 2026-10-23 09:37–10:14 UTC
+- Ruling: R868
+- Änderungen: Start-Regel ersetzt Vordergrund-Regel: `run_in_background: false` bleibt (R854 Regel C), jeder Start gilt als asynchron, nach dem Start Zug beenden und auf Meldung warten (Rückkanal R856), Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (E-073); Satz zu langen Bash-Läufen verweist auf die Start-Regel
+
+## 2026-10-23 · Persona lead-art 1.10
+
+- Anlass: Prozess-Retro REL-30, V2
+- Datenbasis: Retro `docs/studio/retros/2026-10-23-rel-30-prozess.md` (Branch `docs/retro-rel-30` @ `40a27899`), B1/B2; `.studio/events.jsonl` 2026-10-23 09:37–10:14 UTC
+- Ruling: R868
+- Änderungen: Start-Regel ersetzt Vordergrund-Regel: `run_in_background: false` bleibt (R854 Regel C), jeder Start gilt als asynchron, nach dem Start Zug beenden und auf Meldung warten (Rückkanal R856), Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (E-073); Satz zu langen Bash-Läufen verweist auf die Start-Regel
+
+## 2026-10-23 · Handbuch 1.72
+
+- Anlass: Nutzerauftrag (Dauerauftrag, Fokus kreativer Kapazität); setzt 1.71 voraus (Branch `docs/rueckkanal`, Release REL-30)
+- Datenbasis: Nutzerauftrag, Briefing DAUERAUFTRAG
+- Ruling: R862, R863
+- Änderungen: STUDIO.md „Autonomie“ Punkt 5: Nutzeranweisungen gelten als Dauerauftrag (Ruling mit Vermerk, state.md „Daueraufträge“, Regeln mit Dauerwirkung ins Handbuch); „Discovery-Strang“: Fokus freier Kapazität auf Spieltiefe, Spielmodi, Erweiterungen, Web-Recherche `TIEFE-nn` ausserhalb der Ideen-Runden-Grenze, keine Playtests als Ideen-Input, Schweigen = Zustimmung (schärft R445); Output-Style `projektleiter.md` je eine Zeile
+
+## 2026-10-23 · Handbuch 1.71
+
+- Anlass: Auftrag TOOL-RUECKKANAL (Kurz-Retro session-3b332328-ende, B1 und B2)
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856, R858
+- Änderungen: STUDIO.md Kommunikation: Rückkanal per Adresse (L0 nennt jedem Lead seine agentId, Leads geben sie in jedes Arbeiter-Briefing, L0 leitet Fehlläufer weiter, R853); Briefing-Standard Persona-Änderung: `make studio-test` statt `make check`; `templates/briefing.md`: DoD auf Teilbeleg (gezielte Tests, `tsc`, `lint`, bei Werkzeug `studio-test`; voller Lauf nur beim Integrator), Pflichtzeile Lead-Briefing Rückkanal, Beispiel angepasst
+
+## 2026-10-23 · Persona tech-sim-engineer 1.7
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona tech-ui-engineer 1.9
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona art-audio-engineer 1.3
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona art-license-checker 1.3
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona art-rendering-engineer 1.4
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona qa-code-reviewer 1.8
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona qa-playtester 1.9
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona design-spec-author 1.5
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona design-idea-scout 1.4
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona design-economy-designer 1.3
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-23 · Persona production-integrator 1.18
+
+- Anlass: Auftrag TOOL-RUECKKANAL
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R856
+- Änderungen: Werkzeug `SendMessage` in `tools:`; Abschnitt Bericht: `SendMessage` nur an den Auftraggeber (Adresse im Briefing), nie an `main`
+
+## 2026-10-22 · Handbuch 1.70
+
+- Anlass: Vorfall eingeschlafene Leads (Kurz-Retro session-3b332328-ende, B1)
+- Datenbasis: `docs/studio/retros/2026-10-22-session-3b332328-ende.md`
+- Ruling: R853, R856
+- Änderungen: STUDIO.md Berichtsweg: L0 leitet Arbeiter-Meldungen an den zuständigen Lead weiter und prüft Heartbeats (> 20 min → nachfragen), solange R856 gilt; Leads fragen bei wartenden Arbeitern spätestens nach 30 min nach
+
+## 2026-10-22 · Handbuch 1.69
+
+- Anlass: Prozess-Retro REL-29, Vorschläge V3 (Prozessteil) und V4
+- Datenbasis: `docs/studio/retros/2026-10-22-rel-29-prozess.md`
+- Ruling: R844
+- Änderungen: Ruling-Entwürfe stehen sofort in `rulings.md` (STUDIO.md Ruling-Absatz und Session-Ende Punkt 4); Pflichtfelder „Verfassung berührt?“ und bei Plan-Gates „Überschneidung mit offenen Paketen“ ab R845 (`templates/ruling.md`, `gates.md`, STUDIO.md); keine Maschinenprüfung der Ruling-Felder vorhanden, daher keine Werkzeug-Änderung
+
 ## 2026-10-22 · Persona design-idea-scout 1.3
 
 - Anlass: Auftrag P3 PERSONA-SCOUT-PFLEGE (Behauptung «fehlt» ohne Codebeleg)

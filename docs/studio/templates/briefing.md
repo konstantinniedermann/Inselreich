@@ -20,11 +20,15 @@ Prozessstufe: <leicht|voll>
 2. Ziel: <ein Satz> — Warum fürs Spielerlebnis: <ein Satz>
 3. Kontext (nur diese Dateien lesen): <pfad>, <pfad>
 4. Deliverable: <was> unter <ablageort>   (Final-Review und Playtests: kein Report-Dateipfad, der Schlussbericht ist der Report)
-5. Definition of Done: <prüfbare Punkte, z. B. Test grün, make check grün>
+5. Definition of Done: <prüfbare Punkte, z. B. Test grün, Teilbeleg grün>
+   Teilbeleg statt vollem Lauf (Verfassung §9.2, R858): gezielte Tests der berührten Dateien (`npx vitest run <dateien>`), `npx tsc --noEmit`, `make lint`; bei Werkzeug-Änderung `make studio-test`. Den vollen Lauf (`make push-check`) fährt nur der Integrator vor Merge und Push.
    Pflichtzeilen je Paketart (R375): jedes Paket „Rulings schreibt nur L0: `docs/studio/rulings.md` nicht ändern, Entscheidungsbedarf als Entwurf an L0 im Bericht (R471)“;
    jedes Paket mit Kontextdatei > 30 KB (README, `docs/ideen.md`, Specs, Plan-Index) „nur den genannten Abschnitt bzw. Zeilenbereich lesen (`offset`/`limit` oder `grep`), nie die ganze Datei (E-057)“ — die Kontextzeile nennt dafür Abschnitt oder Zeilen;
+   Lead-Briefing „Arbeiter im Vordergrund starten; jedes Arbeiter-Briefing nennt ‹Melde dein Ergebnis per SendMessage an <Lead-Adresse>, nie an main›“ — die Adresse ist die agentId, die L0 dem Lead nach dem Start nennt (R856);
    jedes Paket „Volltextsuche mit dem Grep-Werkzeug oder `rg <muster> .` (immer mit Pfad), nicht `grep -r`; `grep <muster> <datei>` auf eine genannte Datei bleibt erlaubt (R683)“;
    jedes Paket mit Budget „Mehrbedarf vor dem Überschreiten melden (templates/budgetantrag.md), nie nachträglich“;
+   jedes Lead-Briefing mit Budget „Arbeiter-Starts sind asynchron: nach dem Start Zug beenden und auf die Meldung warten (Rückkanal R856); Status-Event nur bei Zustandswechsel, höchstens eines je 5 min (R868 V2)“ — die Worte „im Vordergrund“ stehen in keinem Briefing;
+   Gate-Merge-Briefing an `lead-qa` „Dateien mit Merge-Treiber per Probe-Merge im Wegwerf-Worktree prüfen, nicht mit `merge-tree` (R868 V1, gates.md)“;
    Werkzeug-Paket „make studio-test grün; Echtlauf gegen jede externe API (gh, CI, Pages), Ausgabe im Bericht“;
    Änderung an Experimenten, Handbuch oder Personas „make studio-test grün (u. a. höchstens 3 Experimente laufend)“;
    Paket mit `src/`-Änderung (R392, E-052) „vor Task 1 die Zeiten der berührten bestehenden Tests auf main messen (`npx vitest related --run <geplante src-Dateien>`), Tests > 200 ms mit Zeit in den Plan; Abnahme: dieselben Dateien auf main und Branch unmittelbar nacheinander, kein bestehender Test > 500 ms oder > +50 %, Zeiten vorher/nachher im Bericht“;
@@ -78,9 +82,9 @@ Prozessstufe: voll
 2. Ziel: Marktplatz verteilt Waren an Häuser im Radius. — Warum fürs Spielerlebnis: Versorgung wird sichtbar räumlich.
 3. Kontext: docs/superpowers/plans/<plan>.md (Task 2), src/sim/supply.ts, src/sim/defs/buildings.ts, tests/sim/supply.test.ts
 4. Deliverable: Code in src/sim/supply.ts, Tests in tests/sim/supply.test.ts, Commit im Worktree
-5. Definition of Done: neuer Test zuerst rot, dann grün; make check grün; Commit „feat: …"
+5. Definition of Done: neuer Test zuerst rot, dann grün; Teilbeleg grün (`npx vitest run tests/sim/supply.test.ts`, `npx tsc --noEmit`, `make lint`); Commit „feat: …"
 6. Grenzen: nur src/sim/supply.ts und tests/sim/supply.test.ts; Worktree .worktrees/m5-sim
-7. Schnittstellen: tech-ui-engineer liest das neue Feld `supplied` (Paket M5-03)
+7. Schnittstellen: tech-ui-engineer liest das neue Feld `supplied` (Paket M5-03); melde dein Ergebnis per SendMessage an <Lead-Adresse>, nie an main
 8. Logging: siehe unten
 
 Feste Regeln (unverändert, gelten immer):

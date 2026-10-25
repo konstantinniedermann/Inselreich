@@ -1751,3 +1751,591 @@ T04 erst nach UI-BEIPACK-FERN auf main, T08/T09 nach Stadtplanung.
 Regelbezug: R803, R822, R826, R828, R832, R835 · Kosten bei Irrtum: Farbe/Tempo im Browser-Check nachziehen.
 
 Entscheider: L0 · Anlass: Zwischenbericht lead-tech LEBEN-STRASSE · ADR: —
+
+## R838 · 2026-10-22 · SEERECHT T01/T02/T03/T05 abgenommen, Stopp vor T04; LEBEN-SEE startet
+
+Ruling: Zwischenbericht `lead-tech` SEERECHT (Handoff `.studio/handoffs/2026-10-22-lead-tech-SEERECHT.md`): T01 `7221c731` (Seed-Pins `SEED_D30`/`SEED_D35` = Seed 1), T02 `7e2065b5`,
+T03 `f3ec2633` (`feat/seerecht-render`), T05 `e7144698` (`feat/seerecht-save`), Reviews OK, Teilbeleg, `SAVE_VERSION` 18, Balancing ohne Diff → **abgenommen bis zu diesen Commits**.
+Strang ruht bis UI-BEIPACK-FERN auf main (T04) bzw. Stadtplanung (T08/T09); Restbudget 13. Risiko Seed-Pins auf Seed 1 zur Kenntnis. **Frei gewordener Test-Platz → LEBEN-SEE**
+(R832) an einen `lead-tech`-Controller (sonnet), Budget **11**; T03 (`renderer.ts`) erst nach ORT-A-Merge.
+
+Regelbezug: R828, R832, R835 · Kosten bei Irrtum: Nachzug der Seed-Pins bei Generator-Änderung.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech SEERECHT · ADR: —
+
+## R839 · 2026-10-22 · Gate Spec AUFLAGEN-KERN: BEDENKEN angenommen, Nachtrag sofort, Plan nach Stadtplanung und Seerecht
+
+Ruling: Gate-Urteil `lead-qa` BEDENKEN (Handoff `.studio/handoffs/2026-10-22-lead-qa-gate-spec-AUFLAGEN-KERN.md`) → Entwürfe R-1 bis R-7 **angenommen**: I-163 «Ausfuhrmeister»
+wird gebaut, I-161 verworfen, G1/G2/G3' gelten; Rückfall «Vorprodukte ohne Baustoffe» als Defs-Änderung; Zielmengen vorläufig (Messlauf T5 mit ≥ 2 Seeds); R-6 nennt alle
+Literal-Stellen (`balance.test.ts:32`, `balance-monument.test.ts:164`, `trial.test.ts`, `trial-save.test.ts`, `tests/ui/trial.test.ts:42`, `world.ts:159`). **Nachtrag jetzt** durch
+`lead-design` (sonnet, Spec-Nachtrag): Präfix `AUF-` für alle 22 AK; `c0` als Summe der abgerundeten Hausgrenzen inkl. Lärmfaktor (Stadtplanung) plus drei neue AK (Gleichgewicht
+mit/ohne Lärmhaus, Lärmquelle während der Auflage, Steuer «niedrig»); AK-U2 ganzzahlig (`e0` = 10/20/100); AK-K12 gegen bestehende Pins plus Determinismus-AK mit Speichern/Laden;
+tiefe Kopie in `cloneTrial`; Randfälle K3/K5/K7/K10/B3; Rückfall R553 benannt; Nachträge in Anhang 03 «Testmatrix» (Grösse). Danach Wiedervorlage `lead-qa` nur zu Befunden 1–3.
+**Plan** erst nach den Merges von Stadtplanung und Seerecht; Save v21. Budget Nachtrag **1**, Wiedervorlage **1**.
+
+Regelbezug: R136, R553, R670, R805, R827, gates.md Gate Spec · Kosten bei Irrtum: Zählung ruht dauerhaft (G3') — durch die neuen AK abgefangen.
+
+Entscheider: L0 · Anlass: Gate-Urteil lead-qa AUFLAGEN-KERN · ADR: —
+
+## R840 · 2026-10-22 · AUFLAGEN-KERN Spec abgenommen
+
+Ruling: Wiedervorlage `lead-qa` OK (Nachtrag `design/auflagen-kern` @ `6fe3caf3`, 26 AK `AK-AUF-*`, Befunde 1–3 erledigt) → **Spec abgenommen**. Befunde 6–8 (`cloneTrial`, Randfälle,
+R553-Rückfall) prüft der Plan bzw. das Review T3. Plan erst nach den Merges von Stadtplanung und Seerecht nach main (Save v21). `design/auflagen-kern` geht ins nächste Release-Bündel.
+
+Regelbezug: R839 · Kosten bei Irrtum: Nachtrag beim Plan.
+
+Entscheider: L0 · Anlass: Wiedervorlage lead-qa · ADR: —
+
+## R841 · 2026-10-22 · Freie Plätze (Ampel grün, 5-h 40 %): Bündel-Vorprüfung REL-30, Prozess-Retro REL-29, Doku-Audit
+
+Ruling: Text-Plätze leer, Test-Plätze belegt (R826). Starten: (1) **Gate Merge REL-30 vorab** an `lead-qa` (sonnet): Teilbelege und Merge-Trockenlauf aller bündelfertigen Branches
+(TOOL-LOADSNAP, TOOL-DASH-REST, `docs/beob-18`, `docs/ideen-15`, Design-/Plan-Branches), Merge-Reihenfolge und Konfliktauflösungen, Release-Notiz-Entwurf; keine Testläufe; Budget **1**.
+(2) **Prozess-Aussensicht REL-29** an `studio-process-coach` (sonnet, R127/R316 nach jedem Release; inkl. Vorfall R815, Kapazitätswechsel R823/R826); Budget **1**. (3) **DOKU-AUDIT**
+an `lead-production` (sonnet, Skill `doku-audit`) vor dem nächsten Release: README, arc42, `docs/index.md`, STUDIO-Querverweise gegen main; Befunde als Bericht, Trivial-Fixes auf
+Branch `docs/doku-audit-1`; Budget **1**.
+
+Regelbezug: R127, R316, R826 · Kosten bei Irrtum: gering, alles testfrei.
+
+Entscheider: L0 · Anlass: freie Kapazität · ADR: —
+
+## R842 · 2026-10-22 · Vorprüfung REL-30: OK, Bündel-Merge morgen mit dem Push
+
+Ruling: Vorab-Urteil `lead-qa` OK (Handoff `.studio/handoffs/2026-10-22-lead-qa-gate-REL-30-vorab.md`; 12 Merges konfliktfrei, nur `tools/studio/` und `docs/`) → **angenommen**,
+Auflagen A1–A4 übernommen (Nachtrag `b7fd0a6a` auf `plan/seerecht` prüft das finale Gate Merge; loadsnap-Grenzen in E-071; Konflikt `docs/beobachtungen.md` beim ORT-A-Merge bewusst
+lösen; Auflagen-Kern-Nachträge nur in Anhängen). Der Bündel-Merge nach main erfolgt **mit dem Push am 2026-10-23** in einem Integrator-Lauf (ein `make push-check`, Verfassung 1.3
+§7.1), weil ein Merge nach main heute einen eigenen vollen Lauf bräuchte; kommen UI-H P1, UI-BEIPACK-FERN oder TOOL-MESSFENSTER-Teile hinzu, gibt `lead-qa` ein Ergänzungsurteil.
+
+Regelbezug: R816, R817, Verfassung §7.1 · Kosten bei Irrtum: Pläne liegen bis morgen nur auf Branches.
+
+Entscheider: L0 · Anlass: Vorab-Urteil lead-qa REL-30 · ADR: —
+
+## R843 · 2026-10-22 · DOKU-AUDIT-1 abgenommen; Nachzug offener Befunde 1 und 4
+
+Ruling: Bericht `lead-production` (`docs/doku-audit-1` @ `5de6e00a`: Save-Version in README/arc42 auf 18, `tickTrial` im Tick-Diagramm, ADR-015 im Index) → **abgenommen**, ins Bündel
+REL-30 (Ergänzungsurteil `lead-qa` beim Gate). Offene Befunde: (1) vier Module ohne arc42-Zeile und (4) `docs/studio/releases.json` endet bei REL-26 → **DOKU-AUDIT-1b** an `lead-production`
+(sonnet, Budget **1**) auf demselben Branch: REL-27–REL-29 in `releases.json` aus `state.md`-Notizen nachtragen, README gegen die Pakete von REL-27–29 prüfen, je eine arc42-Zeile für
+`render/errands.ts`, `render/homeBuildings.ts`, `ui/cameraView.ts`, `audio/buildSounds.ts` aus dem Code ableiten. (2) Spec-/Plan-Listen in `docs/index.md` → nächster HAUSHALT.
+(3) ADR-011-Status → Beobachtung.
+
+Regelbezug: R841 · Kosten bei Irrtum: gering.
+
+Entscheider: L0 · Anlass: Bericht lead-production DOKU-AUDIT-1 · ADR: —
+
+## R844 · 2026-10-22 · Prozess-Retro REL-29: V1–V4 angenommen, V5 als Messauftrag
+
+Ruling: Retro `studio-process-coach` (`docs/studio/retros/2026-10-22-rel-29-prozess.md`, `4439a947`) → angenommen: **V1** Push-Sperre in `guard.py` (kein `git push … main` ohne
+`push_check` Exit 0 für genau den Hash, ausser L0-Freigabedatei) und **V2** `pushcheck.py` führt die Einzel-Wiederholung roter Zeit-/Timeout-Dateien selbst aus und weist sie im Event aus,
+dazu Pin `perf.test.ts` AK-E0-15a entschärfen → Werkzeugpaket **TOOL-PUSHSPERRE** (Plan jetzt an `lead-tech` sonnet, Budget 2; Umsetzung auf dem nächsten freien Test-Platz, Platz 3 der
+Warteschlange vor UI-HAEPPCHEN-I, damit es vor dem Push am 2026-10-23 greift, falls möglich). **V3** Ruling-Entwürfe sofort in `rulings.md`; `hook.py` meldet beim Start, wenn die
+Stand-Zeile von `state.md` hinter der letzten R-Nummer liegt (Hook-Teil ins Paket TOOL-PUSHSPERRE). **V4** Pflichtfelder «Verfassung berührt?» und «Überschneidung mit offenen
+Paketen» in Ruling- und Plan-Vorlage → `studio-coach` (Handbuch-Minor 1.69, Budget 1). **V5** L0-Kontextschnitt nach Bündelende als Messauftrag bis REL-31. Retro-Event-Trigger
+`meilenstein:REL-29` trägt der Coach nach.
+
+Regelbezug: R127, R316, R815, R826 · Kosten bei Irrtum: Push-Sperre blockiert einen legitimen Push; Freigabedatei als Ausweg.
+
+Entscheider: L0 · Anlass: Retro REL-29 · ADR: —
+
+## R845 · 2026-10-22 · Gate Plan TOOL-PUSHSPERRE: OK, eigener Hook statt Guard-Änderung
+
+Ruling: Plan `lead-tech` (`plan/tool-pushsperre` @ `f4affcdb`, T01–T05) → **OK**, Entwürfe angenommen: (1) `guard.py` bleibt unberührt (Verfassung §1.3); V1 als **eigener PreToolUse-Hook**
+`tools/studio/pushgate.py` (Muster `waitguard.py`/`modelguard.py`) mit zusätzlichem Eintrag in `.claude/settings.json`, der keinen bestehenden Guard schwächt; Freigabedatei
+`.studio/push-freigabe` (Hash + Grund, einmal gültig) nur durch L0. (2) V3-Hook: `stampcheck.py` schärfen (letzte `## R…`-Überschrift, Schwelle 2, Meldung «PFLICHT» am Kontextanfang).
+(3) Pin `perf.test.ts` AK-E0-15a erst nach Messprotokoll (T04; Vorschlag Best-of-3), Annahme: unter Last 5,4 ≤ 1/10 rot, 11-fach langsamer Schritt bleibt rot. (4) T05
+(`pushcheck.py`-Wiederholung inkl. Nachholen von `studio-test build pages-limit`) erst nach TOOL-MESSFENSTER auf main; Stränge A und P davor. Budget **10**, Parallelität 2. Start auf dem
+nächsten freien Test-Platz (Warteschlange: TOOL-PUSHSPERRE, UI-BEIPACK-FERN, UI-HAEPPCHEN-I). Beobachtung: `LOAD_WAIT = 3.0` im Code gegen «Last ≤ 4» im Handbuch.
+
+Verfassung berührt?: ja, §1.3 (geschützte Guard-Datei bleibt unverändert; neuer Hook ergänzt nur) · Überschneidung mit offenen Paketen: `pushcheck.py`, `tests/test_pushcheck.py` mit
+TOOL-MESSFENSTER (`feat/tool-messfenster`), Reihenfolge Messfenster → T05.
+Regelbezug: R815, R844 · Kosten bei Irrtum: Hook blockiert legitimen Push; Freigabedatei oder Entfernen des Eintrags.
+
+Entscheider: L0 · Anlass: Bericht lead-tech Plan TOOL-PUSHSPERRE · ADR: —
+
+## R846 · 2026-10-22 · LEBEN-SEE: Strang B Klang abgenommen fürs Bündel, Strang A ruht; TOOL-PUSHSPERRE startet
+
+Ruling: Zwischenbericht `lead-tech` LEBEN-SEE (Handoff `.studio/handoffs/2026-10-22-lead-tech-LEBEN-SEE.md`): **Strang B Klang** (`feat/leben-see-klang` @ `4e1e23e8`, Final-Review opus OK,
+Browser-Check OK, K9 ohne `app.ts`-Diff, `src/sim` ohne Diff) → **abgenommen**; T08-Doku (README-Zeile Klang) holt der Controller vor dem Bündel per Fortsetzung nach; geht mit Ergänzungsurteil
+`lead-qa` in REL-30, Hörurteil `shipDock` als «Bitte testen». `play()` prüft `hidden` für alle Ereignisse → angenommen. **Strang A Kielwasser** (`bf9502af`, T01/T02 OK) ruht bis zum
+ORT-A-Merge (T03); AK-W4 nach SEERECHT-Merge nachprüfen; AK-W10 Kontrast 4,063 → bestanden. **Frei gewordener Test-Platz → TOOL-PUSHSPERRE** (R845) an einen `lead-tech`-Controller
+(sonnet), Budget **10**; Stränge A (T01–T03) und P (T04) sofort, T05 nach TOOL-MESSFENSTER.
+
+Verfassung berührt?: nein · Regelbezug: R830, R832, R845 · Kosten bei Irrtum: Klang stört; Abschalten per Revert vor dem Push.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech LEBEN-SEE · ADR: —
+
+## R847 · 2026-10-22 · TOOL-MESSFENSTER A/B abgenommen fürs Bündel; T00 bleibt gesperrt; UI-BEIPACK-FERN startet
+
+Ruling: Bericht `lead-tech` (`feat/tool-messfenster` @ `5c138f56`, Final-Review opus nach zwei Fix-Runden OK, Teilbeleg 99/99 + `test_pushcheck` 37 + `studio-test` 1014;
+Handoff `.studio/handoffs/2026-10-22-lead-tech-TOOL-MESSFENSTER.md`) → **Stränge A/B abgenommen**, gehen mit Ergänzungsurteil `lead-qa` in REL-30 (vor TOOL-PUSHSPERRE T05).
+Entwurf 2 (`smoke.mjs` ohne Sperre, später Warnung) angenommen. **T00** startet erst, wenn L0 das Ende der ORT-A-Messungen meldet; T06 nur bei positivem T00; Restbudget 6.
+Befunde ausserhalb Scope → `docs/beobachtungen.md` (L0 trägt ein). **Frei gewordener Test-Platz → UI-BEIPACK-FERN** (R836) an einen `lead-tech`-Controller (sonnet), Budget **4**,
+mit dem Ziel, noch ins Bündel REL-30 zu kommen (Voraussetzung für Seerecht T04).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: `pushcheck.py`/`tests/test_pushcheck.py` mit TOOL-PUSHSPERRE T05 (Reihenfolge Messfenster → T05)
+Regelbezug: R824, R835, R836 · Kosten bei Irrtum: Sperre blockiert Testläufe; `make messfenster-frei` bzw. Revert.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-MESSFENSTER · ADR: —
+
+## R848 · 2026-10-22 · TOOL-PUSHSPERRE A und P abgenommen fürs Bündel; Pin 15a bleibt 2,5 ms; UI-HAEPPCHEN-I startet
+
+Ruling: Zwischenbericht `lead-tech` (Handoff `.studio/handoffs/2026-10-22-lead-tech-TOOL-PUSHSPERRE.md`): **Strang A** `tool/pushsperre` @ `d6efeb31` (`pushgate.py`, Freigabedatei,
+Stand-Warnung; Opus-Review BEDENKEN mit zwei Umgehungen behoben, Delta-Review opus OK, `studio-test` 1047) und **Strang P** `tool/perf-pin` @ `de7fbe33` (Best-of-3, Messprotokoll)
+→ **abgenommen**, gehen mit Ergänzungsurteil `lead-qa` in REL-30. **Pin AK-E0-15a bleibt 2,5 ms** (Best-of-3, unter Last 0/10 rot); die Empfehlung 3,5 ms wird **nicht** angenommen,
+weil der Anstieg des Mittels von 1,59 ms (2026-10-05) auf ≈ 2,3 ms eine echte Sim-Verlangsamung sein kann, die ein höherer Pin verdecken würde → Ursachenklärung als Auftrag im
+Pool-Paket ZEITRESERVE-PFLEGE (Vergleich per `git bisect`-Messreihe, Last ≤ 4). Freigabe wird nur bei tatsächlicher Freigabe verbraucht; «PFLICHT»-Text in `stale_warning()` →
+angenommen. T05 nach TOOL-MESSFENSTER auf main; Restbudget 3. Befunde ausserhalb Scope → `docs/beobachtungen.md`. **Freier Test-Platz → UI-HAEPPCHEN-I** (R833) an einen
+`lead-tech`-Controller (sonnet), Budget **16**; T05 (Lärm-Zeile) nach Stadtplanung.
+
+Verfassung berührt?: ja, §1.3 (`guard.py` unverändert, zusätzlicher Hook-Eintrag in `.claude/settings.json`) · Überschneidung mit offenen Paketen: T05 mit TOOL-MESSFENSTER
+(`pushcheck.py`); UI-HAEPPCHEN-I mit UI-BEIPACK-FERN (`hud.ts`, disjunkt)
+Regelbezug: R815, R844, R845 · Kosten bei Irrtum: Pin bleibt knapp; Flake-Verdacht hält an, bis die Ursache geklärt ist.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech TOOL-PUSHSPERRE · ADR: —
+
+## R849 · 2026-10-22 · UI-HAEPPCHEN-I A und B abgenommen fürs Bündel; Limit-Ampel gelb
+
+Ruling: Zwischenbericht `lead-tech` UI-HAEPPCHEN-I (Handoff `.studio/handoffs/2026-10-22-lead-tech-UI-HAEPPCHEN-I.md`): **Strang A** `feat/ui-haeppchen-i-a` @ `a83b8ee0` (Kasse leer,
+Wachstumsbremse ohne Lärm; Final-Review opus BEDENKEN niedrig) und **Strang B** `feat/ui-haeppchen-i-b` @ `e085f342` (Bestand im Tooltip; Final-Review OK) → **abgenommen**,
+Ergänzungsurteil `lead-qa` beim Bündel REL-30. R-E1 bis R-E3 angenommen (AK-I27 0,1 ms bei 423 Häusern; Vorab-Zeittest entfällt). Fehlende Tests AK-I22/AK-I25 kommen mit T05 nach
+dem Stadtplanung-Merge (Branch `feat/ui-haeppchen-i-a2`); Restbudget 8. Der Plan schrieb `make check` je Strang vor → Plan-Vorlage und offene Pläne auf Teilbeleg prüfen (Beobachtung,
+`studio-coach` beim nächsten Handbuch-Minor). **Limit-Ampel gelb** (5-h-Fenster 60 %, R826): keine neuen Wellen; laufende Arbeit abschliessen, Bündel REL-30 für morgen vorbereiten.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: UI-BEIPACK-FERN (`hud.ts`, disjunkt, `merge-tree` sauber); Stadtplanung für T05
+Regelbezug: R826, R831, R833 · Kosten bei Irrtum: UI-only.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech UI-HAEPPCHEN-I · ADR: —
+
+## R850 · 2026-10-22 · UI-HAEPPCHEN-H P1: Gegenmassnahme zum pagehide-Verlust vor dem Bündel
+
+Ruling: Bericht `lead-tech` (`feat/ui-haeppchen-h-p1` @ `51b4e7a2`, T01–T04, Final-Review opus OK, Playtest H11–H13 bestanden, Teilbeleg 49/49, `src/sim` ohne Diff). Entwurf «Regel 4 gilt,
+README nennt den Verlust» **nicht angenommen**: Ein Rettungs-Feature darf beim Neuladen nach «Davor laden» nicht den neueren Stand überschreiben. **Spec-Änderung per Ruling** (Regel 4/10):
+Beim Laden eines Autosave-Platzes setzt das Spiel den Zeiger `inselreich.save.auto.last` auf **diesen** Platz; `pagehide` und der nächste reguläre Autosave schreiben dann in den geladenen
+Platz bzw. wechseln wie gewohnt, der andere (neuere) Stand bleibt erhalten, bis der Spieler weiterspielt und der Wechsel ihn regulär erreicht. Umsetzung als Fix-Runde (Fortsetzung des
+Umsetzers, Test zuerst: «Davor laden → Neuladen → neuerer Stand noch ladbar»), Delta-Review, README-Satz. Danach Ergänzungsurteil `lead-qa` im Bündel REL-30. Risiko Mehrfach-Parsen bei
+`newestAuto`/`otherAuto` und Testlücke «defekter Zeiger» → im selben Fix mit abdecken, falls ≤ 1 Task, sonst Beobachtung.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: UI-HAEPPCHEN-H P2 (später, `renderer.ts`), keine Dateiüberschneidung mit Beipack/I
+Regelbezug: R807, R808, R817 · Kosten bei Irrtum: P1 verpasst das Bündel morgen; dann REL-31.
+
+Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-H P1 · ADR: —
+
+## R851 · 2026-10-22 · UI-HAEPPCHEN-H P1: Fix R850 angenommen; Beschriftung nach Speicherzeit
+
+Ruling: Fix-Runde `lead-tech` (`feat/ui-haeppchen-h-p1` @ `027be9dc`: `markAutoLoaded(slot)` in `storage.ts`, Rot-Beleg, defekter Zeiger abgedeckt, Mehrfach-Parsen behoben, Spec-Regeln 4/10
+mit Vermerk, Teilbeleg 53/53, Delta-Review opus BEDENKEN niedrig) → **angenommen**. Letzte kleine Runde: Beschriftung in Ladeliste und Startkarte nach **Speicherzeitpunkt** (zuletzt
+geschrieben = «Autosave», der andere = «Autosave davor»), unabhängig vom Zeiger; der Zeiger bestimmt nur das Schreibziel. Ist das mehr als eine kleine Runde, geht es als Beobachtung und
+«Bitte testen» ins Bündel. Danach Ergänzungsurteil `lead-qa` im Bündel REL-30.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R850 · Kosten bei Irrtum: verwirrende Beschriftung, UI-only.
+
+Entscheider: L0 · Anlass: Fix-Runde lead-tech UI-HAEPPCHEN-H P1 · ADR: —
+
+## R852 · 2026-10-22 · UI-HAEPPCHEN-H P1 abgenommen fürs Bündel REL-30
+
+Ruling: Runde R851 (`feat/ui-haeppchen-h-p1` @ `d97c562d`: Schlüssel `inselreich.save.auto.written` für die Beschriftung, Zeiger bleibt Schreibziel, Rückfall ohne Migration; Delta-Review opus OK,
+Teilbeleg 56/56, `src/sim` ohne Diff) → **Strang P1 abgenommen**, geht mit Ergänzungsurteil `lead-qa` in REL-30. Alte Formulierung Spec Regel 2/6 → Beobachtung beim nächsten Spec-Kontakt.
+«Bitte testen»: «Davor laden», Seite neu laden, beide Stände in der Liste richtig benannt und ladbar.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R850, R851 · Kosten bei Irrtum: UI-only, Revert vor dem Push.
+
+Entscheider: L0 · Anlass: Bericht lead-tech UI-HAEPPCHEN-H P1 · ADR: —
+
+## R853 · 2026-10-22 · Vorfall: Controller schliefen nach Arbeiter-Ende ein; L0 leitet Arbeiter-Meldungen weiter
+
+Ruling: Nutzerhinweis («ich habe die agenten nicht mehr arbeiten gesehen»). Befund: Zwei Controller standen still, bis L0 sie anschrieb. (a) UI-BEIPACK-FERN: Der Controller wartete auf
+seinen Opus-Reviewer; dessen Abschlussmeldung kam bei L0 an statt beim Controller (≈ 11:10Z), L0 wertete sie als Info («lead-tech steuert selbst») und weckte niemanden → ≈ 2 h Stillstand
+bis 13:10Z. (b) ORT-A: Der Umsetzer meldete sich nach einem Hintergrund-Messlauf nicht mehr; der Zwei-Frame-Fix (R823) blieb ≈ 2 h liegen, bis L0 um 12:01Z nachfragte. **Ab sofort:**
+(1) Kommt bei L0 eine Abschluss- oder Zwischenmeldung eines Arbeiters an, der zu einem Lead gehört, leitet L0 sie im selben Zug per `SendMessage` an diesen Lead weiter («Ergebnis da,
+bitte fortsetzen»). (2) Nach jeder Meldung prüft L0 die letzten Heartbeats der aktiven Agenten; ein aktiver oder wartender Agent ohne Heartbeat seit > 20 min ohne bekannte Wartebedingung
+wird angeschrieben. (3) Leads warten auf Arbeiter nie nur passiv: Beim Warten nennen sie im Status, worauf, und fragen nach spätestens 30 min nach. Handbuch-Minor durch `studio-coach`
+in der Ende-Routine; Vorfall in die Kurz-Retro.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: Verfassung §8.1, R803, R826, Handbuch 1.39 (Warten per Benachrichtigung) · Kosten bei Irrtum: einige zusätzliche Nachfragen.
+
+Entscheider: L0 · Anlass: Nutzerhinweis · ADR: —
+
+## R854 · 2026-10-22 · Nutzerauftrag Berichtshierarchie: Vordergrund-Regel technisch erzwingen
+
+Ruling: Nutzer: «es würde doch mehr sinn machen wenn es eine klare hierarchie der delegationen und rückmeldungen gibt. die worker sollten sich nicht bei dir melden … sondern bei ihrem
+auftraggeber/chef.» Befund: Die Hierarchie steht bereits im Handbuch (STUDIO.md «Berichtsweg L2 → L1 → L0», «Vordergrund-Regel»: Leads starten Arbeiter mit `run_in_background: false`,
+das Ergebnis kommt als Rückgabewert direkt zum Lead). Heute haben Leads Arbeiter trotzdem **im Hintergrund** gestartet; dadurch landeten Arbeiter-Meldungen bei L0 und die Leads
+schliefen ein (R853). Die Regel war nur Text. **Entscheid:** (1) **TOOL-VORDERGRUND**: `tools/studio/waitguard.py` bekommt Regel C — ein `Agent`/`Task`-Aufruf mit
+`run_in_background: true` durch einen Aufrufer mit `agent_type` «lead-*» (und durch jeden Arbeiter) wird mit `deny` und Hinweis «Arbeiter im Vordergrund starten, parallel = mehrere
+Aufrufe in einer Nachricht» abgelehnt; L0 (Hauptsession) bleibt frei, Leads im Hintergrund zu starten (ADR-007). TDD mit `make studio-test`, Umsetzer `tech-ui-engineer` direkt, Review
+`qa-code-reviewer`; Budget **2**; wirkt nach dem Merge im Bündel REL-30. (2) Bis dahin weist L0 laufende Leads auf die Regel hin. (3) R853 (1) bleibt als Rückfall: landet doch eine
+Arbeiter-Meldung bei L0, leitet L0 sie weiter. (4) Arbeiter senden nie per `SendMessage` an `main`; das ergänzt `studio-coach` in den Arbeiter-Personas.
+
+Verfassung berührt?: nein (`guard.py` unberührt, eigenes Hook-Modul) · Überschneidung mit offenen Paketen: `waitguard.py` in keinem offenen Branch
+Regelbezug: Verfassung §2, §8.1; ADR-007; R646/R647; R853 · Kosten bei Irrtum: ein Lead wird bei einem legitimen Hintergrundstart blockiert; Rückfall `MODE = "warn"`.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R855 · 2026-10-22 · UI-BEIPACK-FERN abgenommen fürs Bündel REL-30
+
+Ruling: Bericht `lead-tech` (`feat/ui-beipack-fern` @ `9694e945`, Opus-Review BEDENKEN → H1/N1 behoben, Delta-Review opus OK, Playtest BF13–BF17 bestanden, Teilbeleg, `src/sim` nur
+Kopfkommentar; Handoff `.studio/handoffs/2026-10-22-lead-tech-UI-BEIPACK-FERN.md`) → **abgenommen**, Ergänzungsurteil `lead-qa` im Bündel REL-30; Merge **vor** Seerecht T04.
+R837-E/R838-E/R840-E (Entwurfsnummern) angenommen. N2, N3 und das überflüssige `as never` in `order.test.ts:769` → Beobachtung. Der volle Lauf kommt im Push-Check des Bündels.
+Befund des Controllers: Arbeiter-Starts mit `run_in_background: false` liefen trotzdem asynchron → Prüfauftrag zur Benachrichtigungs-Zustellung (R854 wird ggf. nachgeschärft).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: UI-HAEPPCHEN-I (`hud.ts`), Stadtplanung (`app.ts`), Seerecht (`islandCard.ts`); Auflösung per `git merge main`
+Regelbezug: R835, R836, R854 · Kosten bei Irrtum: UI-only.
+
+Entscheider: L0 · Anlass: Bericht lead-tech UI-BEIPACK-FERN · ADR: —
+
+## R856 · 2026-10-22 · Ursache der eingeschlafenen Leads: Claude-Code-Verhalten; Rückkanal per Adresse; Ende-Routine
+
+Ruling: Befund `claude-code-guide` (Doku sub-agents, tools-reference, agent-teams; CLI 2.1.308): `run_in_background` ist am Agent-Werkzeug nicht dokumentiert; Subagent-Starts laufen
+standardmässig im Hintergrund (seit v2.1.198); laut Doku sollte ein Lead auf seine Kinder warten, beobachtet ist das Gegenteil (Meldungen der Enkel landen in der Hauptsession, der Lead wird
+nicht geweckt) — passt zu einem gemeldeten Fehlerbild («nested background subagent never re-woken», inoffiziell). **Folgerung:** Die Ursache liegt nicht (nur) in der Disziplin der Leads;
+R854 Regel C (TOOL-VORDERGRUND, Review OK) bleibt als Schutz gegen ausdrückliche Hintergrund-Starts, löst die Zustellung aber nicht. **Entscheid:** (1) Standard bis zur Behebung: L0
+leitet jede Arbeiter-Meldung sofort an den zuständigen Lead weiter (R853) — L0 ist dabei nur Poststelle, Empfänger bleibt der Lead. (2) Rückkanal-Muster als Paket für die nächste Session
+(**TOOL-RUECKKANAL**, `studio-coach` + Werkzeug): L0 nennt jedem Lead nach dem Start seine Adresse (agentId); Leads schreiben sie in jedes Arbeiter-Briefing («Melde dein Ergebnis per
+SendMessage an …»); Arbeiter-Personas bekommen das Werkzeug `SendMessage` (nur an den Auftraggeber, nie an `main`). (3) Fehlerbericht an Anthropic als Entwurf (`/feedback`, Freigabe
+durch den Nutzer). (4) **Limit-Ampel 79 %**: Ende-Routine jetzt; ORT-A beendet den laufenden Messblock und übergibt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-VORDERGRUND (`waitguard.py`), Arbeiter-Personas
+Regelbezug: R826, R853, R854, Verfassung §2 · Kosten bei Irrtum: L0 bleibt Poststelle, bis das Muster greift.
+
+Entscheider: L0 · Anlass: Bericht claude-code-guide, Limit-Ampel · ADR: —
+
+## R857 · 2026-10-22 · ORT-A C11 pausiert; AK-31 bestanden; AK-37 Referenz `de0a372a`
+
+Ruling: Pausenbericht `lead-tech` (Handoff `.studio/handoffs/2026-10-22-lead-tech-ORT-A-C11.md`): Zwei-Frame-Patch `4db494e9` → **AK-31 bestanden** (Σover25 = 0 bei Seed 7, Seed 14, Fixture;
+A/A 0). **AK-37:** Vergleichsreferenz ist `de0a372a` (Stand vor k2), nicht `ort-a-basis`; der dunklere Kern gegen die Basis stammt vom Hofsaum-Boden, nicht von T16 → mit n = 17/20 (Δ −0,4)
+**bestanden**. AK-32 Seed 14/Fixture und AK-30 auf `4db494e9` laufen noch im Hintergrund (Umsetzer berichtet; Log `scratchpad/h10.log`); bestehen sie, folgt in der nächsten Session die
+Abnahme k1/k2, Merge nach `feat/ort-a` (Teilbeleg, Verfassung 1.3), T18. Danach geben ORT-A-Messungen das Fenster für TOOL-MESSFENSTER T00 frei.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: LEBEN-STRASSE, LEBEN-SEE, UI-H P2, Stadtplanung warten auf den ORT-A-Merge
+Regelbezug: R793, R800, R823 · Kosten bei Irrtum: AK-37 falsch referenziert; Nachmessung gegen die Basis jederzeit möglich.
+
+Entscheider: L0 · Anlass: Pausenbericht lead-tech ORT-A · ADR: —
+
+## R858 · 2026-10-22 · Kurz-Retro abgenommen; Briefing-Vorlage auf Teilbeleg
+
+Ruling: Kurz-Retro `studio-coach` (`docs/studio/retros/2026-10-22-session-3b332328-ende.md`, Handbuch 1.70, `cbc9d360`) → **abgenommen**. Empfehlung angenommen:
+`docs/studio/templates/briefing.md` (Z. 23, 81) verlangt noch «make check grün» → auf Teilbeleg (Verfassung 1.3 §9.2) umstellen und offene Pläne (Seerecht, LEBEN-_, UI-I, TOOL-_)
+mitprüfen; erstes Paket der nächsten Session neben dem Bündel REL-30 (`studio-coach`, Budget 1). Rote Effizienz-Ampel (Steuerung 60,7 %, Cache-Write 29,3 %, L0-Kontext 516k) →
+Messaufträge laut Retro; Hebel ist TOOL-RUECKKANAL (R856).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle offenen Pläne (nur DoD-Zeile)
+Regelbezug: R849, R856 · Kosten bei Irrtum: ein überflüssiger voller Lauf je Strang.
+
+Entscheider: L0 · Anlass: Kurz-Retro Session-Ende · ADR: —
+
+## R859 · 2026-10-23 · Session-Start: «mach weiter» = Plan aus state.md; REL-30 zuerst
+
+Ruling: Auslegung «mach weiter» als Fortsetzung des Plans aus `state.md` (Abschnitt «Fortsetzung») — Zweck der Anweisung: Arbeit ohne Rückfrage fortsetzen; Auslegung widerspricht ihm
+nicht, weil keine neue Richtung genannt ist. **Reihenfolge:** (1) REL-30: `lead-qa` Ergänzungsurteil für die seit R842 fertigen Stränge (UI-H P1, UI-BEIPACK-FERN, UI-I A/B,
+LEBEN-SEE Klang, TOOL-MESSFENSTER, TOOL-PUSHSPERRE A/P, TOOL-VORDERGRUND, Nachtrag `plan/seerecht` b7fd0a6a, `plan/tool-pushsperre`) mit merge-tree-Trockenlauf des ganzen Bündels; danach
+`production-integrator` (seriell mergen, ein `make push-check`, Push nur bei Exit 0). Bis Exit 0 keine Umsetzer und Controller (R464); Gates, Doku, Pläne ohne Testlauf parallel.
+(2) ORT-A: Log `h10.log` ausgewertet — AK-32 Seed 14 und Fixture Σover25 = 0 (bestanden), AK-30 Seed 7 Δ 0 % (bestanden), **AK-30 Seed 14 abgebrochen** (`unsettled top-level await`
+in `perf.mjs`); Nachmessung erst nach dem Push (Last, R329). (3) `studio-coach`: Briefing-Vorlage auf Teilbeleg (R858) und TOOL-RUECKKANAL Doku-/Persona-Teil (R856). Limit-Ampel grün
+(5 h 30 %, 7 Tage 33 %).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-30-Bündel, ORT-A
+Regelbezug: R826, R842, R857, R858, R464 · Kosten bei Irrtum: eine Session-Stunde in falscher Reihenfolge.
+
+Entscheider: L0 · Anlass: Session-Start a5d45446 · ADR: —
+
+## R860 · 2026-10-23 · REL-30 Gate Merge OK; Doku-Konflikte vorab; TOOL-RUECKKANAL abgenommen und ins Bündel
+
+Ruling: (1) **Gate Merge REL-30: OK mit BEDENKEN niedrig** (`lead-qa`, Handoff `.studio/handoffs/2026-10-23-lead-qa-gate-REL-30.md`): UI-I A ohne Test für AK-I22/AK-I25 bis T05 (R849),
+H P1 «Davor laden/Neuladen» nur per Unit-Test (Browser-Prüfung in «Bitte testen»), UI-BEIPACK ohne Abschlusslauf (deckt `make push-check`). Kein Save-Wechsel (v18). Reihenfolge laut
+Handoff Abschnitt 2 (22 Branches, `--no-ff`). (2) **Konflikte vorab** durch `lead-production` (Integrator löst keine): `main` in `docs/beob-18` mergen (BEOB-18-Fassung plus die seither
+angehängten Einträge), `docs/ideen-15` in `feat/ui-haeppchen-h-p1` mergen (ideen-15-Fassung, I-147 «umgesetzt»); reine Anhänge über `make merge-driver`. Neue Spitzen ersetzen die Hashes
+der Liste. (3) **TOOL-RUECKKANAL** `docs/rueckkanal` @ `42626dd7` abgenommen (`studio-test` 1009 OK), als Branch 23 ins Bündel, wenn der merge-tree-Trockenlauf sauber ist, sonst
+REL-31. Die Zusatzänderung im Handbuch (Persona-Änderung → `make studio-test`) wird angenommen. Plan-Fundstellen mit «make check» (`plan/seerecht`, `plan/leben-strasse`,
+`plan/leben-see`, `plan/ui-haeppchen-i`) stellt der Plan-Lead vor dem nächsten Umsetzungsstart auf den Teilbeleg um. Probe-Meldung per `SendMessage` beim ersten Lead-Paket nach dem
+Merge; bis dahin bleibt L0 Poststelle (R853). (4) **Push:** ein `make push-check` (`VITEST_MAX_WORKERS=5`) auf dem gebündelten Stand; bei Exit 0 Push genau des dort genannten
+geprüften Hashes (`git push origin <hash>:main`); bei Exit ≠ 0 nie pushen, an L0 melden (R815). Danach CI und Pages prüfen.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A (`docs/beobachtungen.md`), IDEEN-16 (zweigt von `docs/ideen-15` ab)
+Regelbezug: R815, R816, R842, R856, R858 · Kosten bei Irrtum: ein Release mit zwei schwach belegten UI-Details; Revert vor dem nächsten Push möglich.
+
+Entscheider: L0 · Anlass: Gate-Urteil lead-qa, Bericht studio-coach · ADR: —
+
+## R861 · 2026-10-23 · Runden-Ruling IDEEN-16
+
+Ruling: Rangliste `lead-design` (`docs/ideen-16` @ `66c4df45`, Handoff `.studio/handoffs/2026-10-23-lead-design-IDEEN-16.md`, Pool 27/40) **angenommen**: eingeplant **UI-HAEPPCHEN-J**
+(I-176 Häppchen, I-139 und I-138 Beipack; Kurzdesign Stufe leicht, `sonnet`, nach UI-BEIPACK-FERN auf main, also nach dem Push REL-30). **I-183** Notration: Rechnung `design-economy-designer` (Handoff, `docs/ideen-16` @ `66c4df45`) → **geparkt** bis `BUY_RISE` > 0 (wie I-110, R722); feste Ration ist keine echte Wahl, ein Fischer schlägt beide. Nebenbefund für I-137: Dämpfer ab Siedlern spürbar machen. Geparkt: I-172, I-182, I-171, I-181,
+I-116 (wie Entwurf). Verworfen: I-106 (gelöst), I-173 (Widerspruch R839/R840), I-184. `docs/ideen-16` geht ins Bündel REL-31. Takt der Ideen-Runden und Playtest: siehe R862 (Nutzerauftrag).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: UI-BEIPACK-FERN (REL-30), Erweiterung 1 (Nutzer-Session, O8/K5)
+Regelbezug: R445, R599, R827, R839 · Kosten bei Irrtum: ein Kurzdesign mit geringem Spielwert.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-16 · ADR: —
+
+## R862 · 2026-10-23 · Dauerauftrag (Nutzer): Fokus Spieltiefe, Erweiterungen, neue Modi; keine Playtests; Schweigen = ok
+
+Ruling: Nutzer (Prompt 2026-10-23): «wenn du nichts hörst von mir ist alles gut. playtests brauchst du nicht tun. lass die kreativen köpfe im team nach neuen elementen suchen. vor allem
+spieltiefe, erweiterungen, neue modi … etwas was den spieler länger am ball hält. dazu darf gerne recherchiert werden». **Auslegung:** (1) Schweigen des Nutzers = Zustimmung, Plan läuft
+weiter. (2) Kein Playtest als Ideen-Input (Teil von R861-Entwurf gestrichen). (3) R445 geschärft: Freie Kapazität geht vorrangig an eine **Tiefen-Runde `TIEFE-1`** (`lead-design`, `opus`):
+Web-Recherche zu Langzeitmotivation im Genre (Recherche-Agenten `general-purpose`, `sonnet (Recherche)`), daraus Vorschläge für Spieltiefe, neue Spielmodi und Erweiterungs-Themen
+(Erweiterung 2 ff.; Erweiterung 1 bleibt Nutzer-Session R519 — lesen zum Abgleich, nicht ändern). Ergebnis: Recherchebericht, Ideen im Pool, Rangliste, Erweiterungs-Skizzen; Säulenwechsel
+oder Erweiterungswahl gehen als Empfehlung in die Warteschlange (§5.3). Komfort-Häppchen (UI-HAEPPCHEN-J) laufen nachrangig weiter. (4) «höchstens eine Runde je Session» gilt für
+klassische Ideen-Runden; TIEFE-1 ist ein Recherche-Paket und zählt nicht dagegen. Zweck der Anweisung: mehr Langzeitmotivation; Auslegung widerspricht ihm nicht, weil die Kapazität
+dorthin statt in Playtests und Kleinkram fliesst.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Erweiterung 1 (Nutzer-Session), IDEEN-16
+Regelbezug: R445, R519, R861, Verfassung §5.3 · Kosten bei Irrtum: Recherche-Aufwand ohne Umsetzung; nichts Irreversibles.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R863 · 2026-10-23 · Dauerauftrag (Nutzer): Nutzeranweisungen gelten über die Session hinaus
+
+Ruling: Nutzer (Prompt 2026-10-23): «nimm meine anweisungen in den sessions immer als generelle anweisungen wahr … auch in der nächsten session angewendet werden. ausser etwas hat
+explizit nur was mit der laufenden session zu tun.» **Entscheid:** Jede Nutzeranweisung ist ein **Dauerauftrag**, ausser sie ist ausdrücklich auf die laufende Session beschränkt; im
+Zweifel dauerhaft. L0 hält sie (1) als Ruling mit Vermerk «Dauerauftrag» fest, (2) trägt sie in `state.md` unter «Daueraufträge» ein, (3) lässt Regeln mit Dauerwirkung ins Handbuch
+übernehmen (`studio-coach`, Paket DAUERAUFTRAG, `docs/dauerauftrag` @ `b966c88f`, Handbuch 1.72, ins Bündel REL-31) und (4) sichert sie im Gedächtnis. Rückwirkend Daueraufträge: R862 (Fokus Spieltiefe/Erweiterungen/Modi, Recherche erlaubt, keine
+Playtests als Ideen-Input, Schweigen = Zustimmung) und R445. Zweck der Anweisung: Der Nutzer will nichts wiederholen müssen; Auslegung widerspricht ihm nicht.
+
+Verfassung berührt?: nein (Handbuch, Output-Style) · Überschneidung mit offenen Paketen: TOOL-RUECKKANAL (STUDIO.md, Handbuch 1.71)
+Regelbezug: R445, R862, Verfassung §5 · Kosten bei Irrtum: eine sessiongebundene Anweisung wirkt zu lange; Nutzer korrigiert per Wort.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R864 · 2026-10-23 · Runden-Ruling TIEFE-1: Ehrenbuch und Modus «Inselproben» starten; N-104
+
+Ruling: Rangliste `lead-design` (`docs/tiefe-1` @ `8c79bfb4`, Handoff `.studio/handoffs/2026-10-23-lead-design-TIEFE-1.md`, Pool 37/40) **angenommen**: (1) **Kurzdesign I-186 Ehrenbuch**
+(Meisterstücke über alle Partien, Lohn ehrenhalber) jetzt, `lead-design` `opus`. (2) **Brainstorming «Modus Inselproben»** (I-190 Inselprobe, I-191 Tagesinsel, I-192 Szenarien «Knappe
+Zeiten», ein Szenario als Prüfling, Lösbarkeitsrechnung je Szenario) jetzt, Stufe voll, parallel. Keine Meta-Boni über Partien (Spielwerte bleiben je Partie gleich). (3) **I-187 Inselruf**
+erst mit Erweiterung 1 O8/K5 (Nutzer-Session) und dem Ergebnis WIRTSCHAFT-TIEFE. (4) Baustein I-189 Expedition für I-194; geparkt I-193. (5) **N-104** (Reihenfolge der Erweiterungen nach
+Erweiterung 1, Empfehlung «Neue Ufer») in der Warteschlange; Entwurf B (Jahreszeiten als Standard) nicht angelegt — erst wenn I-195 eingeplant wird, Empfehlung dann Schalter «aus».
+(6) Recherche-Belege dünn (Seiten nicht abgerufen): die beiden Design-Pakete dürfen gezielt nachrecherchieren (WebFetch der genannten Quellen). (7) Beifund README «Spielstand-Version 13»
+geprüft: falsch, README nennt v18 (`README.md:299`).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Erweiterung 1 (Nutzer-Session), WIRTSCHAFT-TIEFE
+Regelbezug: R208, R445, R722, R839, R862 · Kosten bei Irrtum: ein Kurzdesign und ein Brainstorming, rückbaubar.
+
+Entscheider: L0 · Anlass: Bericht lead-design TIEFE-1 · ADR: —
+
+## R865 · 2026-10-23 · WIRTSCHAFT-TIEFE: Favorit «Stadtrecht» (V4) ins Kurzdesign; «Wartung» (E1) nach Stadtplanung
+
+Ruling: Bericht `lead-design` (`docs/wirtschaft-tiefe` @ `d63971a6`, Handoff `.studio/handoffs/2026-10-23-lead-design-WIRTSCHAFT-TIEFE.md`) **angenommen**. Befund: bis min 14 knapp, danach
++2500…+3200 Geld/min; Ursachen: Einwohner netto positiv (`tiers.ts:18-45`), keine laufende Senke ausser Unterhalt, feste Kaufpreise. Reine Bremsen (Aufschlag, Bedarf, Verwaltung, Verderb)
+verworfen (3–30 %, keine Wahl). (1) **V4 «Stadtrecht»** (käufliche weitere Rats-Sitzungen, 5000 × 1,6^k plus Stein/Glas, je Sitzung A/B-Wahl) → Kurzdesign Stufe voll jetzt (design-only,
+testfrei), Save v19 erwartet, Balancing-Läufe unverändert. (2) **E1 «Wartung»** nach Stadtplanung (R780), braucht neue Pins in drei Balancing-Läufen. (3) Geparkte I-110, I-111, I-130,
+I-134, I-183 erst nach E1. (4) Hinweis an die Nutzer-Session (Erweiterung 1 O8/K5): Stiftungen auf der Stadtrecht-Leiter aufsetzen — im Bericht an den Nutzer. (5) Beifunde
+(Werkzeug nach Endausbau ohne Verbrauch; veralteter Kommentar `tests/sim/merchantsController.ts:20-21`) nach `docs/beobachtungen.md`. Arbeiter liefen trotz Vorgabe im Hintergrund →
+Beleg für TOOL-RUECKKANAL/Retro.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Erweiterung 1, Inselproben (Szenario «Knappe Zeiten»), Stadtplanung C1
+Regelbezug: R722, R780, R862 · Kosten bei Irrtum: ein Kurzdesign.
+
+Entscheider: L0 · Anlass: Bericht lead-design WIRTSCHAFT-TIEFE · ADR: —
+
+## R866 · 2026-10-23 · REL-30 live; ORT-A wieder auf; TOOL-MERGE-APPEND; Seerecht nach ORT-A-Messung
+
+Ruling: Bericht `lead-production` (Handoff `.studio/handoffs/2026-10-23-lead-production-REL-30.md`): **REL-30 live**, Push `d2376904..bc9664d0` (Fast-Forward, geprüfter Hash), `make push-check`
+Exit 0 (Startlast 4,42), `check-ci-perf` Exit 0, CI 39936129287 grün, Pages 39937129992 grün; 23 Branches inkl. `docs/rueckkanal`. Zusätzliche Vorab-Auflösungen in vier weiteren Branches
+(`docs/beobachtungen.md`, Merge-Treiber versagt bei letzter Basiszeile im Konfliktblock) **nachträglich angenommen** — Zeilenverlust geprüft, keiner. (1) **TOOL-MERGE-APPEND** (lead-tech,
+Werkzeug, Stufe leicht): `tools/studio/merge_append.py` behandelt Blöcke mit letzter Basiszeile als Anhang; Integrator-Persona: `timeout` fehlt auf macOS → Ersatz. (2) **ORT-A** wieder auf
+(lead-tech): AK-30 Seed 14 auf `4db494e9` nachmessen (allein im Messfenster, Load ≤ 4), dann Abnahme k1/k2 (Teilbeleg), Merge nach `feat/ort-a`, T18. (3) **Seerecht T04** (UI-BEIPACK auf
+main) startet erst nach Ende der ORT-A-Messung, damit die Messung allein läuft (Lastregel R329). Nächster Push frühestens 2026-10-24 (R816).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A, SEERECHT, TOOL-PUSHSPERRE T05
+Regelbezug: R815, R816, R329, R838, R857 · Kosten bei Irrtum: Seerecht startet eine Stunde später.
+
+Entscheider: L0 · Anlass: Bericht lead-production REL-30 · ADR: —
+
+## R867 · 2026-10-23 · I-186 Ehrenbuch: D1–D3 angenommen; Gate Spec BEDENKEN → Nachtrag N1–N6
+
+Ruling: Kurzdesign `design/i186-ehrenbuch` @ `d993b5d9` (9 Meisterstücke, eigener Schlüssel `inselreich.ehrenbuch` v1, Save v18 und Baseline bitgleich). **D1** Partie-Merker im Buch,
+**D2** Schwellen 9000/18 000 Ticks (rückbaubar), **D3** Stückzahl wächst mit Auflagen — angenommen. Gate Spec `lead-qa` (Handoff `.studio/handoffs/2026-10-23-lead-qa-gate-I-186.md`):
+**BEDENKEN**, Nachtrag vor dem Plan: N1 Tracker für Vorher-Zustand bei Laden/Neue Insel (mit Browser-Check), N2 Auswertung je `step` bei mehreren Schritten je Frame, N3 Schwelle 18 000
+belegen oder als Risiko mit Rückfall; N4/N5 mit; N6 AK-Kennungen `AK-EB-01…` (R417); N7–N9 in den Plan. Wiedervorlage beim Gate. Browser-Checks zur Abnahme bleiben trotz R862 —
+R862 streicht Playtests als Ideen-Input, nicht den Nachweis.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Modus Inselproben (Andockstellen A1–A3)
+Regelbezug: R417, R553, R839, R862 · Kosten bei Irrtum: ein Nachtrag mehr.
+
+Entscheider: L0 · Anlass: Bericht lead-design, Gate lead-qa · ADR: —
+
+## R868 · 2026-10-23 · Prozess-Retro REL-30: V1 und V2 angenommen; Messaufträge bestätigt
+
+Ruling: Retro `studio-process-coach` (`docs/retro-rel-30` @ `40a27899`, `docs/studio/retros/2026-10-23-rel-30-prozess.md`) **abgenommen**. **V1:** `lead-qa` prüft im Trockenlauf Dateien mit
+Merge-Treiber per `git merge --no-commit` im Wegwerf-Worktree statt `merge-tree` (Messgrösse 0 Integrator-Stopps über 3 Releases). **V2:** Jeder Agent-Start gilt als asynchron (alle 9
+Lead-Starts mit `background: False` liefen `async_launched`); der Lead beendet nach dem Start seinen Zug und wartet auf Meldung (Rückkanal R856), höchstens ein Heartbeat je 5 min;
+«im Vordergrund» fällt aus Briefings und Vorlage; R854 Regel C (Waitguard) bleibt. Messgrösse ≤ 3 Status-Events je 10 min Wartezeit. Beide als Experiment, Umsetzung `studio-coach`.
+Messaufträge L0-Kontext und Flake-Verdacht bis 2026-10-30 bestätigt. R769 V2 (Rulings zurückhalten bis Integrator-Bericht) bleibt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MERGE-APPEND, DAUERAUFTRAG (STUDIO.md 1.72)
+Regelbezug: R769, R854, R856 · Kosten bei Irrtum: zwei Experimente, rückbaubar.
+
+Entscheider: L0 · Anlass: Prozess-Retro REL-30 · ADR: —
+
+## R869 · 2026-10-23 · Nutzer: keine neuen Projekte, Laufendes abschliessen → Ende-Routine
+
+Ruling: Nutzer: «starte keine neuen projekte mehr. schliesse noch vorhandene prozesse und themen ab». **Auslegung:** gilt für diese Session (Abschluss = Ende-Routine), nicht als
+Dauer-Stopp des Studios — Zweck: geordnet herunterfahren; Auslegung widerspricht ihm nicht, weil ein dauerhafter Stopp das Studio stilllegen würde, was der Wortlaut «noch vorhandene»
+nicht trägt (R863: im Zweifel dauerhaft; hier ist der Sessionbezug durch «abschliessen» gegeben). **Entscheid:** keine neuen Pakete und Arbeiter-Starts ausser zum Abschluss laufender
+Themen. Laufende Pakete liefern ihr aktuelles Deliverable und enden: ORT-A bis Abnahme k1/k2 (ohne T18), Inselproben-Spec, Stadtrecht-Kurzdesign, Plan I-186 (ohne Gate Plan, ohne
+Umsetzung), RETRO-REL-30-UMSETZUNG. Seerecht T04 startet nicht. Danach Ende-Routine (Metriken, Kurz-Retro, state.md, lernen.md).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle laufenden
+Regelbezug: R863, STUDIO.md «Session-Start und -Ende» · Kosten bei Irrtum: nächste Session startet neue Arbeit, die der Nutzer nicht wollte — korrigierbar per Wort.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R870 · 2026-10-23 · Stadtrecht und Modus Inselproben: Entwürfe fertig, Vorentscheide; Gates nächste Session
+
+Ruling: (1) **Stadtrecht** (`design/stadtrecht` @ `3ff27d0a`, Handoff `.studio/handoffs/2026-10-23-lead-design-STADTRECHT.md`): 6 käufliche Sitzungen ab Ziel 1, 5000 × 1,7^(k−1) Geld plus
+Stein/Glas, Wahl A +2 % Steuer / B schnellere Kette, Feld `charter` mit Migration. R-1 (Baseline bitgleich) und R-2 (Werte, später per Werte-Ruling) angenommen; die Abweichung von der
+Rechnung des Wirtschaftsdesigners (§4.2) angenommen. (2) **Modus Inselproben** (`design/modus-inselproben` @ `3a1264ee`, Handoff `.studio/handoffs/2026-10-23-lead-design-INSELPROBEN.md`):
+5 Inselproben, Tagesinsel, Prüf-Szenario «Schuldbrief» (lösbar in 14,5–21,3 min je Strategie, robust in 9/9 Varianten). F1 (kein Warteschlangen-Eintrag zu N-101, Schuld ist Startlage,
+kein Angebot), F2–F6 und F7 (Schuldbrief-Werte, keine Erstattung bei Abriss mit offener Schuld, Bestehen nach aktuellem Stand) angenommen. (3) **Save-Reihenfolge (R-3, R674):** Ehrenbuch
+braucht keine Save-Version; Stadtrecht und Inselproben brauchen je eine — wer zuerst nach main merged, nimmt v19, der andere v20; Reihenfolge der Umsetzung: Ehrenbuch → Inselproben (F5)
+→ Stadtrecht, sofern das Gate nichts anderes ergibt. (4) **Gates Spec** für beide bei `lead-qa` in der nächsten Session (R869: heute keine neuen Starts).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-186 Plan, Erweiterung 1 (Save, K5)
+Regelbezug: R674, R722, R862, R865, R869 · Kosten bei Irrtum: Werte im Entwurf, vor dem Gate änderbar.
+
+Entscheider: L0 · Anlass: Berichte lead-design · ADR: —
+
+## R871 · 2026-10-23 · ORT-A k1/k2 abgenommen; Plan I-186 fertig; Bündel REL-31 vorbereitet
+
+Ruling: (1) **ORT-A** (Handoff `.studio/handoffs/2026-10-23-lead-tech-ORT-A.md`): AK-30 +0,047 ms, AK-32 Seed 14 +0,1 ms / Fixture 0,0 ms, AK-37 Δ −0,4 → **bestanden**; **Referenz AK-37 ist
+`de0a372a`** (Differenz zu `ort-a-basis` stammt vom U1-Hofsaum). k1/k2 in `feat/ort-a` @ `d52ad5b9` (mit main `7505fda6`), 4 veraltete Render-Tests angepasst (nur Tests), Teilbeleg Exit 0.
+Nächste Session: T18 (T14 erledigt), Worktree `ort-a-vor-k2` entfernen (ohne `--force`), Merge nach main mit REL-31. (2) **Plan I-186** `plan/i186-ehrenbuch` @ `42e016cb` (T00–T09, ≈ 445 Tools,
+16 Starts beantragt): ADR-016 für das Buchformat **ja**; AK-EB-06 per Diff-Lauf statt Versions-Pin **ja**; Gate Plan nächste Session. (3) **TOOL-MERGE-APPEND** `tool/merge-append` @ `6abfe75f`
+abgenommen (1068 Studio-Tests OK, Rot-Beleg, Echtlauf); Reviewer bei Ein-Modul-Diff entfallen — hingenommen. (4) **RETRO-REL-30-UMSETZUNG** `docs/retro-rel-30-umsetzung` @ `2bcd30ca`
+(Handbuch 1.73, E-072/E-073 passiv bis 2026-11-19) abgenommen; E-063 in der nächsten Session bewerten. ADR-007 braucht einen Nachtrag zu R868 (Beobachtung). (5) **Reihenfolge REL-31**
+(frühestens 2026-10-24): `docs/ideen-16` → `docs/tiefe-1` → `docs/wirtschaft-tiefe` → `design/*` (i186, modus-inselproben, stadtrecht) → `plan/i186-ehrenbuch` → `docs/retro-rel-30` →
+`docs/dauerauftrag` → `docs/retro-rel-30-umsetzung` → `tool/merge-append` → `feat/ort-a` (nach T18/Final-Review laut Plan) — Gate Merge Release vorab nach V1 (R868).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle REL-31-Stränge
+Regelbezug: R857, R866, R867, R868, R869 · Kosten bei Irrtum: Reihenfolge im Bündel neu ordnen.
+
+Entscheider: L0 · Anlass: Berichte lead-tech, studio-coach · ADR: —
+
+## R872 · 2026-10-23 · Kurz-Retro Session a5d45446 abgenommen; E1 Messauftrag, E2 Schätzfaktor
+
+Ruling: Kurz-Retro `studio-coach` (`docs/studio/retros/2026-10-23-session-a5d45446-ende.md`, `fd8023c6`) **abgenommen**. **E1:** `metrics.py` trennt den opus-Anteil nach Paketart (Messauftrag,
+Schwelle opus-Anteil ohne Design-Pakete ≤ 60 % über 2 Sessions). **E2:** Minuten-Schätzung für Lead-Pakete mit Faktor 0,5 auf «Tools ÷ 6» (fünfte Session > 50 % Überschätzung); Schwelle
+±30 % in 2 von 3 Sessions, Rückfall alte Regel. Beide setzt `studio-coach` in der nächsten Session um (`richtwerte.md`, `metrics.py`).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R750 V2, R826 · Kosten bei Irrtum: eine Messung mehr, Schätzungen kurzzeitig zu knapp.
+
+Entscheider: L0 · Anlass: Kurz-Retro Session-Ende · ADR: —
+
+## R873 · 2026-10-25 · Session-Start 47d29586: «mach weiter» = Plan state.md; Welle 1
+
+Ruling: (1) **Auslegung:** «mach weiter» ist der Auftrag, den Plan aus `state.md` («Fortsetzung beim nächsten Start») fortzusetzen; R862/R863/R826 gelten. Limit-Ampel grün (5 h 0 %, Woche 38 %).
+(2) **REL-31 steht an** (frühestens 2026-10-24 erreicht): Gate Merge Release mit echtem Probe-Merge (R868 V1) an `lead-qa`, Reihenfolge R871 **ohne** `feat/ort-a` (T18 offen → REL-32). Bis
+`make push-check` Exit 0 startet L0 keine Umsetzer und Controller (R464); ORT-A T18, SEERECHT T04, TOOL-MESSFENSTER T00 und die Ehrenbuch-Umsetzung folgen nach dem Push. (3) **Welle 1 testfrei**
+(Deckel 10): Gate Plan I-186, Gate Spec Modus Inselproben, Gate Spec Stadtrecht (je `lead-qa`); HAUSHALT-03 (`lead-production`: `.studio/qa` laut Trockenlauf, Rulings-Archiv auf eigenem Branch,
+Merge nach REL-31); R872 E1/E2 und E-063-Bewertung (`studio-coach`); Kurzdesign UI-HAEPPCHEN-J (`lead-design`, Stufe leicht); IDEEN-17 mit Schwerpunkt Spieltiefe/Modi (`lead-design`, R862);
+ADR-007-Nachtrag R868 und Seerecht-Plan-DoD auf Teilbeleg (`lead-tech`, Doku); BEOB-19 (`lead-production`, 8 Einträge). Neue Branches gehen in REL-32.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-31-Stränge (nur lesend für Gates); HAUSHALT-03 mit `rulings.md` (eigener Branch, `tool/merge-append`)
+Regelbezug: R464, R826, R862, R863, R868 V1, R871 · Kosten bei Irrtum: ein verschobener Start, Gate erneut.
+
+Entscheider: L0 · Anlass: Nutzer «mach weiter» · ADR: —
+
+## R874 · 2026-10-25 · Gates Plan I-186, Spec Inselproben, Spec Stadtrecht: BEDENKEN mit Auflagen; Save-Reihenfolge
+
+Ruling: (1) **Gate Plan I-186** (`.studio/handoffs/2026-10-25-lead-qa-gate-I-186.md`): BEDENKEN angenommen. Auflagen **A1** (T07: vier Browser-Schritte lesen `localStorage['inselreich.ehrenbuch']`
+nach Seitenstart, «Los geht's», «Neue Insel», Fortsetzen) und **A2** (Controller-Starts ins Budget; Antrag **19 Starts** genehmigt) vor dem Umsetzungsstart; B3–B6 in den Task-Dateien mitnehmen
+(B4: Diff-Beleg als `git diff main...feat/i186-ehrenbuch -- <Dateien>`), B7 entfällt. Nachtrag durch `lead-tech` ohne Zweitprüfung; Umsetzung nach dem REL-31-Push (R464). (2) **Gate Spec Modus
+Inselproben** (`…-gate-INSELPROBEN.md`): BEDENKEN angenommen, Auflagen 1–4 (Lösbarkeits-AK je Probe 2–5; AK 14 mit definierter Referenz- und mindestens einer Gegenstrategie, Schuldbrief-Werte F7
+gelten erst nach grünem Lauf als Ruling; Tick-Konvention und Reihenfolge `tickChallenge` im Wortlaut; AK 11 gegen `SAVE_VERSION + 1`), niedrige Befunde mitnehmen; Kennungen **AK-IP-nn**; F1–F7 wie
+von `lead-design` empfohlen. Nacharbeit `lead-design` ohne Zweitprüfung, Spec-Grösse ≤ 40 KB (Anhang nutzen). (3) **Gate Spec Stadtrecht** (`…-gate-STADTRECHT.md`): BEDENKEN angenommen; B1–B9
+nacharbeiten (E-C); Kennungen **AK-ST-nn** (E-B). (4) **Save-Reihenfolge (E-A, ersetzt die Nummern aus R870):** Stadtplanung → Inselproben → Seerecht → Stadtrecht; jede Spec formuliert ihre
+Migration **versionsneutral** («main beim Merge + 1»), keine feste Versionsnummer in AK oder Tests. (5) **UI-Reihenfolge (E-D):** Seerecht-UI vor Stadtrecht-UI; `CouncilSide` wird für `charter`
+nicht wiederverwendet.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT, Stadtplanung (Save), `src/ui/councilCard.ts`
+Regelbezug: R417, R464, R553, R870, R871 · Kosten bei Irrtum: Spec-/Plan-Nachtrag erneut, Save-Nummern beim Merge anpassen.
+
+Entscheider: L0 · Anlass: Gate-Berichte lead-qa · ADR: —
+
+## R875 · 2026-10-25 · Gate Merge REL-31 BEDENKEN angenommen; Konfliktlösung und lernen.md; DOKU-R868 abgenommen
+
+Ruling: (1) **Gate Merge REL-31** (`.studio/handoffs/2026-10-25-lead-qa-gate-REL-31.md`, Probe `f30b89d3`): BEDENKEN angenommen. `lead-production` führt die serielle Merge-Kette in
+`.worktrees/integrate` von main @ HEAD (enthält R873–R875) in der Reihenfolge R871 durch und löst die 5 Konflikte **genau nach den Lösungen des Gate-Handoffs** (ideen.md: Branch-Zeile;
+CHANGELOG: beide Einträge, 1.72 über 1.71, ggf. 1.73 oben; STUDIO.md: R856-Rückkanal von main behalten, Vordergrund- durch Start-Regel ersetzen; lernen.md: Branch-Zeile). Abweichender Konflikt →
+stoppen und melden (§6). (2) **lernen.md 41 > 40 Zeilen:** ein `studio-coach`-Arbeiter (Start aus dem lead-production-Budget) kürzt im Integrate-Stand um mindestens eine Inhaltszeile (Veraltetes
+streichen, nichts Neues), Commit «docs: lernen.md gekürzt (REL-31)». (3) Danach `production-integrator`: `make push-check; echo EXIT=$?`, Push nur bei Exit 0 per `git push origin <geprüfter
+Hash>:main` (R816: erster Push am 2026-10-25), CI und Pages prüfen. `feat/ort-a` und `docs/doku-r868` gehen in REL-32. (4) **DOKU-R868** (`docs/doku-r868`) abgenommen: ADR-007-Nachtrag zu R868 V2
+erfüllt den Vermerk aus R871; Merge mit REL-32 vor SEERECHT T06.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: COACH-R872 (lernen.md nicht, nur metrics/richtwerte), HAUSHALT-03 (rulings auf eigenem Branch)
+Regelbezug: R464, R769 V2, R810, R816, R868 V1, R871 · Kosten bei Irrtum: Merge-Kette im Integrate neu aufsetzen; Push einen Tag später.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa, Bericht lead-tech · ADR: ADR-007 Nachtrag
+
+## R876 · 2026-10-25 · HAUSHALT-03, BEOB-19, Kurzdesign UI-HAEPPCHEN-J abgenommen
+
+Ruling: (1) **HAUSHALT-03** abgenommen: `.studio/qa` 1439 → 624 MB; Rulings-Archiv R700–R739 auf `docs/haushalt-03` @ `0b839c29` (inkl. Verweiszeile STUDIO.md 13, hingenommen); Merge mit
+REL-32 **nach** allen Ruling-Commits dieser Session, `rulings.md`-Konflikt: Branch-Kopf plus alle neuen Rulings von main behalten. Worktrees > 150: nächste Aufräumrunde misst sie
+(`aufraeumen.json`, Beobachtung). (2) **BEOB-19** abgenommen (`docs/beob-19` @ `a59bf87b`, Marke 2026-10-25). **P1 DOKU-RUNDE** angenommen ohne den ADR-007-Teil (erledigt mit DOKU-R868) und ohne
+Seerecht-Plan (erledigt); Start an `studio-coach` nach COACH-R872 (STUDIO.md-Überschneidung). **P2 TOOL-REST-3** angenommen (ruff-Fix `loadsnap.py`, `LOAD_WAIT` gegen Handbuch abgleichen,
+`pushgate`-Selbstschutz nur auf echte Push-Befehle); Start an `lead-tech` **nach** dem REL-31-Push (berührt `pushgate`). (3) **Kurzdesign UI-HAEPPCHEN-J** (`design/ui-haeppchen-j` @ `0d0daf84`)
+abgenommen, F1 (keine Hover-Pause), F2 (nur Gebäudeanzahl), F3 (I-138/I-139 im Pool kürzen — mit IDEEN-17 nachführen), F4 (Chronik ohne Minute) **ja**; Gate Spec an `lead-qa`.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-31 (pushgate), COACH-R872 (STUDIO.md)
+Regelbezug: R287, R464, R685, R861 · Kosten bei Irrtum: Merge-Reihenfolge neu ordnen.
+
+Entscheider: L0 · Anlass: Berichte lead-production, lead-design · ADR: —
+
+## R877 · 2026-10-25 · REL-31 live; Hash ee51d4f1 freigegeben
+
+Ruling: Erster Kandidat `468caf38` rot (`make conflicts`: BSD-`sed -i`-Backup `docs/ideen.md-e` mit Konfliktmarkern eingecheckt); Fix `ee51d4f1` von L0 vor dem Lauf geprüft (keine Backup-Dateien im Diff)
+und per Nachricht freigegeben (R565 V2). **REL-31 live:** `make push-check` Exit 0 (13:22 min), Push `bc9664d0..ee51d4f1`, CI-Lauf 40184385005 grün, Pages-Lauf 40184943166 grün, `ci.py` Exit 0;
+Hauptcheckout per ff-only nachgezogen. Reine Doku und Werkzeug, Save v18. Einzel-Exitcodes `make check`/`check-ci-perf` fehlen im Bericht (R459/E-058) — hingenommen, da in `push-check` enthalten.
+Zwei Beobachtungen eingetragen (sed-Backups beim Konfliktlösen; Arbeiter-SendMessage an Lead-Namen kommt nicht an).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R565 V2, R769 V2, R810, R815, R816 · Kosten bei Irrtum: Revert-Push am Folgetag.
+
+Entscheider: L0 · Anlass: Bericht lead-production REL-31 · ADR: —
+
+## R878 · 2026-10-25 · Nachträge, Pläne und Gates der Welle 1 abgenommen
+
+Ruling: (1) **Plan I-186** `plan/i186-ehrenbuch` @ `c366c783` mit A1/A2/B3–B6 abgenommen; Umsetzung 19 Starts. (2) **Spec Stadtrecht** `design/stadtrecht` @ `6d77e150` (AK-ST-01…17; B7: `taxView`/`guide`
+zeigen `taxPct + charterTaxPoints`, Prognose `effectiveTaxPct`) und **Plan Stadtrecht** `plan/stadtrecht` @ `c92cfff1` (Gate Plan BEDENKEN, B1–B8 eingearbeitet) abgenommen; ST-E1…E5 ja (ST-E4:
+Vorgänger-Migrationen über die Faltkette getestet); 25 Starts / Par 1; T01-Frühstart ab main ja, Rest nach Seerecht-Merge. (3) **Save-Reihenfolge (ändert R874 (4)):** Die Save-Nummer folgt der
+Merge-Reihenfolge (versionsneutral, Stadtplanung zuerst); Seerecht darf vor Inselproben mergen. (4) **Spec Inselproben** `design/modus-inselproben` @ `a7e5fff2` (AK-IP-01…31, Anhang 02) abgenommen;
+Tickgrenzen Proben 2–5 und Strategie-Parameter erst nach erstem grünem Lauf festschreiben. **Plan Inselproben** `plan/inselproben` @ `8790f322`: E-IP-1 (P-5, Probe ohne grünen T07-Lauf vorerst
+aus der Liste), E-IP-2, E-IP-3 (Pins mit Vermerk «Messwert» bis Ruling) ja; Gate Plan läuft. (5) **UI-HAEPPCHEN-J:** Gate Spec BEDENKEN (Auflagen 1–5 im Plan), Plan `plan/ui-haeppchen-j` @
+`4483c575` Gate Plan **OK**; R-J-E (4 Starts / Par 1) übernommen; Playtest mit drei verschiedenen Warntexten, AK-J3 Pause per Leertaste belegen. (6) **IDEEN-17** `docs/ideen-17` @ `933964fa`
+abgenommen: I-197 Kurzdesign, I-201 Rechnung, Rest parken, I-205 verwerfen; F3 aus UI-J (I-138/I-139 kürzen) beim nächsten Pool-Eingriff. (7) **I-197** `design/i197-i201` @ `8a1191f8`: Gate Spec
+BEDENKEN, B1 (echter Charakterisierungstest AK-K3), B2 (Eingabegrenze **0–99 999 949**), B3; Kennungen AK-K1…K13; Plan `plan/i197-kartennummer` @ `928535c7` Gate Plan **OK**, 4 Starts, Umsetzung
+nach dem Inselproben-UI-Task. (8) **I-201 Festanlass:** R-A (Aufstieg, Ernte, Markttag; Hafenfest entfällt), R-B (`feastKind` optional, kein Save-Sprung, unbekannte Art abgewiesen, Muster R260),
+R-C (Abklingzeit je Insel und Art); Kurzdesign @ `a58f0b48`, Entwürfe 1–3 ja; Gate Spec BEDENKEN: Blattmodul `feastEffect`, Kennungen **AK-FE1…**, R553 zwei Seeds je Welt mit Rückfall,
+Rangfolge mit Lage C2 — Nachtrag läuft. (9) **COACH-R872** `tool/coach-r872` @ `42813dbd` abgenommen (Handbuch 1.74, E-074 passiv, E-075 Messauftrag, Ausgang 69,1 %); **E-063 behalten,
+abgeschlossen**, Platz an E-073; Briefing-Vorlage Lead-Fall «Tools ÷ 12» und Wortlaut «L0 rechnet» nachziehen (DOKU-RUNDE).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette Stadtplanung/Inselproben/Seerecht/Stadtrecht; `menu.ts`/`app.ts` (Inselproben, I-197)
+Regelbezug: R417, R553, R860, R862, R870, R874 · Kosten bei Irrtum: Plan-Nachtrag, Save-Nummer beim Merge anpassen.
+
+Entscheider: L0 · Anlass: Berichte lead-tech, lead-design, lead-qa, studio-coach · ADR: —
+
+## R879 · 2026-10-25 · Welle 2: Umsetzung nach dem REL-31-Push; Rückkanal-Versäumnis
+
+Ruling: (1) **Controller (≤ 3, R826):** I-186 Ehrenbuch (19 Starts, T00 zuerst), UI-HAEPPCHEN-J (4 Starts), ORT-A T18 mit Final-Review und Merge-Weg (4 Starts Rest). SEERECHT T04 und Stadtrecht T01
+folgen auf den ersten freien Controller-Platz. (2) **Testfrei:** DOKU-RUNDE (`studio-coach`: ADR-011 Status, Stand-Warnschwelle STUDIO.md vs. `stampcheck.py`, Briefing-Vorlage nach R878 (9),
+`design-idea-scout` erhält WebSearch/WebFetch für die erwünschte Recherche, R862); REL-32-Zwischenbündel lokal (`lead-production`: Doku-/Plan-Branches nach main per Teilbeleg, kein Push vor
+2026-10-26). (3) **Rückkanal:** L0 hat in Welle 1 den Leads ihre agentId nicht genannt (R856); nachgeholt, sobald bemerkt. Ab sofort nennt L0 die Adresse unmittelbar nach jedem Lead-Start;
+Arbeiter-Briefings benutzen nie den Rollennamen als Adresse. Für die Session-Retro.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: `app.ts` (UI-J, I-186), Seerecht-Plan (DOKU-R868)
+Regelbezug: R464, R826, R856, R862, R868 V2 · Kosten bei Irrtum: ein Controller wartet.
+
+Entscheider: L0 · Anlass: REL-31 live · ADR: —
+
+## R880 · 2026-10-25 · REL-32a lokal; Plan Inselproben und Spec I-201 nachgebessert; TIEFE-2
+
+Ruling: (1) **REL-32a** (`.studio/handoffs/2026-10-25-lead-production-REL-32a.md`) abgenommen: 11 Doku-/Plan-/Werkzeug-Branches lokal nach main, Ergebnis `97f1ef4a`, Teilbeleg (docs-check,
+conflicts, studio-test 1072, tsc, lint) je Exit 0; kein Push (nächster frühestens 2026-10-26, R816). (2) **Gate Plan Inselproben** BEDENKEN angenommen, H1–H3 und N1–N5 eingearbeitet
+(`plan/inselproben` @ `55309d8a`); **43 Starts / Par 2** genehmigt; Start bei freiem Controller-Platz vor Stadtrecht T01, T09 nach I-186 auf main, T14 nach Stadtplanung. (3) **Spec I-201**
+Nachtrag `design/i197-i201` @ `a8c8fdfb` abgenommen (AK-FE1…FE21, Blattmodul `feastEffect`, C2-Band 0–800, Rohstoffmass `GOODS[g].sell`, Markttag bewusst Nische; Rückfall `cyclePct` 67–85,
+`sellPct` 115–<130 nur per Ruling); Plan an `lead-tech` (opus). (4) **TIEFE-2** (Web-Recherche neue Achsen für Spätspiel/Wiederspielwert, R862) an `lead-design`.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette, `menu.ts`/`app.ts`
+Regelbezug: R553, R816, R826, R862, R878 · Kosten bei Irrtum: Plan-Nachtrag; lokaler Revert vor dem Push.
+
+Entscheider: L0 · Anlass: Berichte lead-production, lead-tech, lead-design · ADR: —

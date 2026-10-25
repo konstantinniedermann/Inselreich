@@ -1133,10 +1133,6 @@ time {
   background: color-mix(in srgb, var(--dep-studio) 16%, transparent);
 }
 
-.graph-body .dim {
-  opacity: 0.3;
-}
-
 .graph-new {
   font-size: 0.8rem;
 }
@@ -1865,10 +1861,6 @@ time {
 
 #feed {
   max-height: 32rem;
-}
-
-.graph-body {
-  max-height: 60vh;
 }
 
 .budget-sum {

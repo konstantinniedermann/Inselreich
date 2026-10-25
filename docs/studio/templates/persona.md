@@ -45,7 +45,7 @@ Verbindlich ist `docs/studio/STUDIO.md`; bei Widerspruch gilt das Handbuch.
 ```
 
 Leads ergänzen die Abschnitte `## Deine Arbeiter` (Tabelle Persona · wofür · Modell, Briefing nach
-`templates/briefing.md`, Vordergrund-Regel, Budget) und `## Arbeitsweise`.
+`templates/briefing.md`, Start-Regel (asynchron, R868 V2), Budget) und `## Arbeitsweise`.
 
 ## Beispiel
 

@@ -1,4 +1,4 @@
-import { openCouncilTiers } from '../sim/council';
+import { councilSides, openCouncilTiers } from '../sim/council';
 import { COUNCIL, COUNCIL_NOTE, COUNCIL_TIERS } from '../sim/defs/council';
 import type { CouncilSide, CouncilTier, World } from '../sim/types';
 
@@ -26,24 +26,26 @@ export function councilBadge(world: World): string | null {
   return COUNCIL_TIERS.some((t) => world.council[t] !== null) ? 'Rat' : null;
 }
 
+/** Umschalt+R wirkt nur mit Marke: ohne je offenen Beschluss bliebe die Rats-Karte leer. */
+export const councilToggleAllowed = (world: World): boolean => councilBadge(world) !== null;
+
 /** Marke hervorheben, solange ein Beschluss ansteht. */
 export const councilBadgeActive = (world: World): boolean => openCouncilTiers(world).length > 0;
 
 /** Inhalt des Rats-Fensters: offene Stufen mit zwei Karten, gefasste Beschlüsse als Zeilen. */
 export function councilCards(world: World): CouncilView {
-  const sides = ['A', 'B'] as const;
   const open = openCouncilTiers(world).map((tier) => ({
     tier,
-    cards: sides.map((side) => ({
+    cards: councilSides(tier).map((side) => ({
       side,
-      name: COUNCIL[tier][side].name,
-      text: COUNCIL[tier][side].text,
+      name: COUNCIL[tier][side]!.name,
+      text: COUNCIL[tier][side]!.text,
     })),
   }));
   const decided: string[] = [];
   for (const t of COUNCIL_TIERS) {
     const s = world.council[t];
-    if (s === 'A' || s === 'B') decided.push(`Stufe ${t}: ${COUNCIL[t][s].name}`);
+    if (s !== null && s !== 'open') decided.push(`Stufe ${t}: ${COUNCIL[t][s]!.name}`);
   }
   return { open, decided, note: COUNCIL_NOTE };
 }

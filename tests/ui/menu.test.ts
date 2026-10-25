@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { newIslandPrompt, openMenu, slotLabel, type MenuActions } from '../../src/ui/menu';
+import {
+  hasAutosave,
+  newIslandPrompt,
+  openMenu,
+  slotLabel,
+  type MenuActions,
+} from '../../src/ui/menu';
+import type { SaveInfo } from '../../src/ui/storage';
+import { formatClock } from '../../src/ui/time';
 import { TICK_MS } from '../../src/sim/defs/timing';
 
 vi.mock('../../src/ui/modal', () => ({
@@ -158,5 +166,69 @@ describe('UI-AUFRAEUM-4 AK-5 Menü: Krisen-Beschriftung', () => {
     expect(texts).toContain('Krisen (neue Insel): ');
     expect(texts).toContain('Freischaltung: ');
     expect(texts).not.toContain('Krisen: ');
+  });
+});
+
+describe('Zweiter Autosave im Menü (I-147, AK-H4, H9)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const tick = (sec: number): number => (sec * 1000) / TICK_MS;
+  const actions = (saves: SaveInfo[]): MenuActions =>
+    ({
+      save: () => {},
+      listSaves: () => saves,
+      storageNote: () => null,
+      hasProgress: () => false,
+      load: () => {},
+      crisisLevel: () => 'normal',
+      unlockMode: () => 'stepwise',
+      newIsland: () => {},
+      hotkeys: () => [],
+      seed: () => 1,
+      openGuide: () => {},
+    }) as unknown as MenuActions;
+  const labels = (saves: SaveInfo[]): (string | undefined)[] => {
+    vi.stubGlobal('document', { createElement: fakeEl });
+    vi.stubGlobal('Option', function Option() {});
+    openMenu(
+      fakeEl('div') as unknown as HTMLElement,
+      actions(saves),
+      fakeEl('button') as unknown as HTMLElement,
+    );
+    return flat(lastCard.card!)
+      .filter((e) => e.tag === 'button' && /Spielzeit/.test(e.textContent ?? ''))
+      .map((e) => e.textContent);
+  };
+
+  it('H4: slotLabel nennt den älteren Platz «Autosave davor», Zeit über formatClock', () => {
+    const info: SaveInfo = { slot: 'auto2', tick: tick(125) };
+    expect(slotLabel(info, true)).toBe(`Autosave davor — Spielzeit ${formatClock(info.tick)}`);
+    expect(slotLabel(info)).toBe(`Autosave — Spielzeit ${formatClock(info.tick)}`);
+    const manual: SaveInfo = { slot: 'manual', tick: tick(30) };
+    expect(slotLabel(manual, true)).toBe(`Gespeichert — Spielzeit ${formatClock(manual.tick)}`);
+  });
+
+  it('H4: Liste Autosave, Autosave davor, Gespeichert', () => {
+    const saves: SaveInfo[] = [
+      { slot: 'manual', tick: tick(10) },
+      { slot: 'auto2', tick: tick(300) },
+      { slot: 'auto', tick: tick(200) },
+    ];
+    expect(labels(saves)).toEqual([
+      `Autosave — Spielzeit ${formatClock(tick(300))}`,
+      `Autosave davor — Spielzeit ${formatClock(tick(200))}`,
+      `Gespeichert — Spielzeit ${formatClock(tick(10))}`,
+    ]);
+  });
+
+  it('H4: mit einem Autosave nur «Autosave — …»', () => {
+    const l = labels([{ slot: 'auto2', tick: tick(40) }]);
+    expect(l).toEqual([`Autosave — Spielzeit ${formatClock(tick(40))}`]);
+  });
+
+  it('H9: hasAutosave gilt auch, wenn nur auto2 besteht', () => {
+    expect(hasAutosave([{ slot: 'auto2', tick: 1 }])).toBe(true);
+    expect(hasAutosave([{ slot: 'auto', tick: 1 }])).toBe(true);
+    expect(hasAutosave([{ slot: 'manual', tick: 1 }])).toBe(false);
+    expect(hasAutosave([])).toBe(false);
   });
 });

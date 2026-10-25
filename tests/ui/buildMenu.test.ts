@@ -13,7 +13,17 @@ import {
   updateBuildMenu,
 } from '../../src/ui/buildMenu';
 
-const spy = vi.hoisted(() => ({ n: 0 }));
+const spy = vi.hoisted(() => ({ n: 0, stand: 0 }));
+vi.mock('../../src/ui/buildStand', async (orig) => {
+  const m = await orig<typeof import('../../src/ui/buildStand')>();
+  return {
+    ...m,
+    standLine: (...a: Parameters<typeof m.standLine>) => {
+      spy.stand++;
+      return m.standLine(...a);
+    },
+  };
+});
 vi.mock('../../src/ui/balancePreview', async (orig) => {
   const m = await orig<typeof import('../../src/ui/balancePreview')>();
   return {
@@ -263,5 +273,37 @@ describe('I-112 Takt-Zeilen folgen dem Ratsbeschluss', () => {
     expect(els[0]!.textContent).toBe(after.find((l) => l.startsWith('Erzeugt:')));
     expect(els[1]!.textContent).toBe(after.find((l) => l.startsWith('Ausstoss je Stufe:')));
     expect(els[0]!.textContent).not.toBe(erzeugt);
+  });
+});
+
+describe('I-167 Bestandszeile im Tooltip (AK-I13, AK-I14)', () => {
+  const fakeEl = (defId: string) => ({ dataset: { defId }, textContent: '' });
+  const hidden = Array.from({ length: 20 }, () => fakeEl('weaver'));
+  // verborgene Tooltips hängen unter dem Selektor ohne `.show` im DOM
+  const navWith = (shown: ReturnType<typeof fakeEl>[]) =>
+    ({
+      querySelector: () => null,
+      querySelectorAll: (sel: string) =>
+        sel === '.tooltip.show .tt-stand' ? shown : sel === '.tt-stand' ? hidden : [],
+    }) as unknown as HTMLElement;
+
+  it('AK-I13 sichtbare Zeile wird gefüllt, Kontor bleibt leer', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const fisher = fakeEl('fisher');
+    const kontor = fakeEl('kontor');
+    refreshShownBalance(navWith([fisher, kontor]), w, 0);
+    expect(fisher.textContent).toBe('Steht: noch keins');
+    expect(kontor.textContent).toBe('');
+  });
+
+  it('AK-I14 ein offener Tooltip: genau ein standLine-Aufruf je Auffrischung', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const open = fakeEl('fisher');
+    spy.stand = 0;
+    updateBuildMenu(navWith([open]), w, 0);
+    expect(spy.stand).toBe(1);
+    expect(hidden.every((h) => h.textContent === '')).toBe(true);
+    updateBuildMenu(navWith([]), w, 0);
+    expect(spy.stand).toBe(1);
   });
 });

@@ -1,4 +1,4 @@
-// Leser der Meisterprüfung (I-132): Sperrgründe, ohne die Welt zu ändern.
+// Meisterprüfung (I-132): Sperrgründe (nur Lesen) sowie Start, Abbruch und Tick der Auflage (ändern `world.trial`).
 import { TIERS } from './defs/tiers';
 import {
   TRIALS,

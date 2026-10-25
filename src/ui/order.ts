@@ -14,8 +14,13 @@ import type { StepReport } from '../sim/tick';
 import type { SoundEvent } from '../audio/sound';
 import { functionLock } from '../sim/unlocks';
 import type { Contract, ContractEvent, GoodId, Order, Result, World } from '../sim/types';
-import { setField } from './dom';
-import { deliverTarget, farOrderText, farOrderWarn } from './farOrder';
+import {
+  FAR_LATE_SUFFIX,
+  deliverTarget,
+  farOrderParts,
+  farOrderText,
+  farOrderWarn,
+} from './farOrder';
 import { sellPrice } from '../sim/trade';
 import { goodProductionPer100 } from './production';
 import { GOODS_BALANCE_TICKS, formatGameTime, perMinute } from './time';
@@ -347,11 +352,53 @@ export function renderOrder(
   updateOrder(el, world, island);
 }
 
+/** Setzt `el.textContent` nur bei Änderung. */
+function setText(el: HTMLElement, text: string): void {
+  if (el.textContent !== text) el.textContent = text;
+}
+
+/**
+ * Text der Auftragskarte: bei einem Fernauftrag in drei Teilen (Lead, Lager mit Warnklasse, «zu spät»),
+ * sonst Klartext ohne Rest-Spans. `textContent` bleibt gleich `orderCardText`.
+ */
+function setOrderText(card: HTMLElement, world: World, island: number): void {
+  const el = card.querySelector<HTMLElement>('[data-field="order-text"]');
+  if (!el) return;
+  const o = world.order;
+  const far = world.contract === null && world.contractOffer === null && o?.island !== undefined;
+  if (!far) {
+    if (el.children.length > 0) el.replaceChildren();
+    setText(el, orderCardText(world, island));
+    return;
+  }
+  let lead = el.querySelector<HTMLElement>('[data-field="order-lead"]');
+  let stock = el.querySelector<HTMLElement>('[data-field="order-stock"]');
+  let late = el.querySelector<HTMLElement>('[data-field="order-late"]');
+  if (!lead || !stock || !late) {
+    const part = (field: string): HTMLElement => {
+      const s = document.createElement('span');
+      s.dataset.field = field;
+      return s;
+    };
+    lead = part('order-lead');
+    stock = part('order-stock');
+    late = part('order-late');
+    el.replaceChildren(lead, stock, late);
+  }
+  const p = farOrderParts(world, o!);
+  setText(lead, p.lead);
+  setText(stock, p.stock);
+  if (stock.title !== p.tip) stock.title = p.tip;
+  if (stock.classList.contains('far-stock--low') !== p.short)
+    stock.classList.toggle('far-stock--low', p.short);
+  setText(late, p.late ? FAR_LATE_SUFFIX : '');
+}
+
 /** Aktualisiert Text und Sichtbarkeit des Buttons. */
 export function updateOrder(el: HTMLElement, world: World, island: number = HOME): void {
   const visible = orderVisible(world);
   if (el.hidden === visible) el.hidden = !visible;
-  setField(el, 'order-text', orderCardText(world, island));
+  setOrderText(el, world, island);
   const offer = world.contractOffer !== null;
   const setHidden = (field: string, hidden: boolean): void => {
     const b = el.querySelector<HTMLElement>(`[data-field="${field}"]`);

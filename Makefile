@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 TESTLOCK := tools/testlock/testlock.ts
-.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint stampcheck studio studio-stop studio-archive studio-aufraeumen studio-metrics pages-limit zeittests zeitreserve zeitreserve-push zeitreserve-gate gate-ensemble conflicts check-ci-perf messfenster check-run check-push push-check
+.PHONY: help merge-driver install hooks dev test docs-check lint format build check studio-test studio-lint stampcheck studio studio-stop studio-archive studio-aufraeumen studio-metrics pages-limit zeittests zeitreserve zeitreserve-push zeitreserve-gate gate-ensemble conflicts check-ci-perf messfenster messguete messfenster-sperre messfenster-frei check-run check-push push-check
 
 help: ## Alle verfügbaren Befehle anzeigen
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -53,7 +53,7 @@ build: ## Typprüfung + Produktions-Build
 studio-test: ## Tests der Studio-Werkzeuge (Python unittest); rot → Event test_failed (R450 V1)
 	python3 tools/studio/testrun.py --suite studio -- python3 -m unittest discover -s tools/studio/tests -t tools/studio
 
-stampcheck: ## Warnung (kein Fehler), wenn state.md-Stand >5 Rulings hinter rulings.md liegt (E-065); Teil von check
+stampcheck: ## Warnung (kein Fehler), wenn state.md-Stand >2 Rulings hinter rulings.md liegt (E-065); Teil von check
 	@python3 tools/studio/stampcheck.py
 
 RUFF = uvx ruff@0.17.0
@@ -84,6 +84,15 @@ pages-limit: ## Plattformgrenze GitHub Pages prüfen (dist/ nach build, Schwelle
 
 messfenster: ## Messfenster prüfen (Last, fremde vitest/vite/Chrome); Serie: ARGS="--run -- node tools/render-qa/perf.mjs ..."
 	node tools/render-qa/messfenster.mjs $(ARGS)
+
+messguete: ## A/A-Gate der Messgüte (Hitch/Render-Ausgabe aus Datei oder stdin); ARGS="<datei> ..."
+	node tools/render-qa/aagate.mjs $(ARGS)
+
+messfenster-sperre: ## Messfenster-Sperre setzen (L0-Block von Hand, 70 min): ARGS='--owner l0 --dauer 70 --zweck "Perf"'; belegt/Testsperre => Exit 3
+	node tools/messfenster/lock.ts set $(or $(ARGS),--owner l0 --dauer 70 --zweck "L0-Block")
+
+messfenster-frei: ## Messfenster-Sperre lösen (nur die eigene): ARGS='--owner l0'
+	node tools/messfenster/lock.ts clear $(or $(ARGS),--owner l0)
 
 check: ## Gleich wie CI: conflicts, lint, zeittests, test, zeitreserve, studio-test, build, pages-limit; mit Testsperre (R375)
 	@python3 tools/studio/stampcheck.py

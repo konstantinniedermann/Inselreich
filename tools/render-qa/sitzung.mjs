@@ -10,6 +10,7 @@ import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { pathToFileURL } from 'node:url';
 import { gateOrExit } from './lastgate.mjs';
+import { holdMessfenster } from './messsperre.mjs';
 import { describeStands, headerLine, outName } from './vergleich.mjs';
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -26,9 +27,9 @@ export const defaultRoot = () =>
 
 /**
  * Liest benannte Argumente. `opts` im Format von util.parseArgs; `--help` gibt `help` aus (Exit 0), unbekannte
- * Optionen brechen mit Exit 2 ab. Der Lastabbruch (R329) läuft erst danach (also nicht bei --help).
+ * Optionen brechen mit Exit 2 ab. Der Lastabbruch (R329) und die Messfenster-Sperre (Exit 3 bei belegt, TOOL-MESSFENSTER) laufen erst danach (also nicht bei --help).
  */
-export function cli(opts, help, { gate = true } = {}) {
+export function cli(opts, help, { gate = true, dauerMin = 20 } = {}) {
   let values;
   try {
     ({ values } = parseArgs({ options: { help: { type: 'boolean' }, ...opts }, strict: true }));
@@ -40,7 +41,10 @@ export function cli(opts, help, { gate = true } = {}) {
     console.log(help);
     process.exit(0);
   }
-  if (gate) gateOrExit();
+  if (gate) {
+    gateOrExit();
+    holdMessfenster({ owner: 'sitzung', dauerMin, zweck: process.argv[1] ?? 'Messung' });
+  }
   return values;
 }
 

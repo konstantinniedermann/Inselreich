@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.68 · Stand: 2026-10-22 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.74 · Stand: 2026-10-25 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -43,16 +43,25 @@ Ebene höher — mit Empfehlung. L0 fragt den Nutzer nicht zurück (Abschnitt [A
 
 - **Berichtsweg L2 → L1 → L0.** L0 sieht nur Lead- und Coach-Berichte, nie Arbeiter-Ausgaben direkt.
   Nur L0 spricht mit dem Nutzer (Verfassung §2).
-- **Vordergrund-Regel:** Leads starten Arbeiter immer mit `run_in_background: false` (parallel =
-  mehrere Agent-Aufrufe in einer Nachricht); Arbeiter starten keine Agenten; L0 darf Leads im
-  Hintergrund starten (ADR-007). Dieser Satz gilt vorbehaltlich der Probe R438 V1 (Messauftrag bei E-037 in
-  [experimente.md](experimente.md)). Leads warten auf Arbeiter nur per Benachrichtigung bzw. Rückgabewert, nie
-  per Polling auf `tasks/*.output` (`stat`, `sleep`-Schleifen); `run_in_background` ist ein Boolean
-  (`false`), kein String (R438 V1).
+  Solange R856 gilt, leitet L0 Meldungen von Arbeitern an den zuständigen Lead weiter und prüft nach
+  jeder Meldung die Heartbeats (> 20 min ohne Lebenszeichen → nachfragen). Leads, die auf Arbeiter
+  warten, fragen spätestens nach 30 min nach.
+- **Rückkanal per Adresse (R856):** L0 nennt jedem Lead nach dem Start seine agentId als Adresse
+  (`SendMessage`). Der Lead schreibt sie in jedes Arbeiter-Briefing: „Melde dein Ergebnis per
+  SendMessage an <Lead-Adresse>, nie an main“. Arbeiter senden nur an ihren Auftraggeber. Landet
+  trotzdem eine Arbeiter-Meldung bei L0, leitet L0 sie sofort an den Lead weiter (R853).
+- **Start-Regel (asynchron, R868 V2, E-073):** Leads starten Arbeiter mit `run_in_background: false`
+  (Boolean, kein String; parallel = mehrere Agent-Aufrufe in einer Nachricht; R854 Regel C im Waitguard
+  sperrt `true`). Jeder Agent-Start gilt trotzdem als **asynchron** (alle 9 Lead-Starts in REL-30 liefen
+  `async_launched`, Retro `retros/2026-10-23-rel-30-prozess.md` B2): Nach dem Start beendet
+  der Lead seinen Zug und wartet auf die Meldung (Benachrichtigung bzw. Rückkanal R856). Kein Polling auf
+  `tasks/*.output` (`stat`, `sleep`-Schleifen) und keine Status-Schleifen: ein Status-Event nur bei
+  Zustandswechsel, höchstens eines je 5 min. Arbeiter starten keine Agenten; L0 darf Leads im Hintergrund
+  starten (ADR-007).
 - **Lange Bash-Läufe (E-037):** Leads und Umsetzer starten Bash-Läufe, die voraussichtlich > 4 min dauern
   (Tests, Browser, Perf-Messung), mit `run_in_background: true` und fragen sie spätestens alle 4 min ab
-  (Cache-Frist 5 min). Das betrifft nur das Bash-Werkzeug. Arbeiter-Starts über das Agent-Werkzeug bleiben
-  im Vordergrund (Vordergrund-Regel oben, ADR-007).
+  (Cache-Frist 5 min). Das betrifft nur das Bash-Werkzeug. Arbeiter-Starts über das Agent-Werkzeug folgen
+  der Start-Regel oben.
 - **Ein-Umsetzer-Pakete (E-037):** Hat ein Paket genau einen Umsetzer, läuft der Lead auf `sonnet`, oder L0
   briefet den Umsetzer direkt ohne Lead. L0 entscheidet das im Briefing (Kopfzeile `Modell:`).
 - **Querabstimmung** zwischen Leads: Übergabedokument nach
@@ -99,7 +108,7 @@ Schätzung: <m> Tools, <n> min (Tabellenzeile: <Rolle> <Modell> <Plan-Art> × <S
   Messwert gegenüber. Hauptgrösse sind Werkzeugaufrufe aus
   [metriken/richtwerte.md](metriken/richtwerte.md) (Median je Rolle, Modell, Plan-Art, summiert über
   Starts inkl. Review und Fix-Runden). **Briefings schätzen nur in Tools** (R750 V2): die Minutenangabe der Kopfzeile
-  rechnet das Werkzeug als Tools ÷ 6, niemand schätzt sie frei (E-001, R433); Messgrösse |Minuten-Abweichung| ≤ 30 % in 2 Session-Retros.
+  rechnet das Werkzeug als Tools ÷ 6, bei Lead-Paketen (Persona `lead-*`) mit Faktor 0,5 als Tools ÷ 12 (E-074, R872), niemand schätzt sie frei (E-001, R433); Messgrösse |Minuten-Abweichung| ≤ 30 % in 2 Session-Retros.
 - Die Kopfzeile nennt die **Tabellenzeile** in Klammern (z. B. `(Tabellenzeile: lead-tech opus
 Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davor (die Telemetrie
   liest die erste Angabe mit „Tools“ bzw. „min“).
@@ -107,7 +116,7 @@ Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davo
   ganze Spec; `rulings*.md` (beide Dateien) nur per `grep` (E-010, R167, R682).
 - **Umsetzer-Briefing (E-017):** nennt die D1-Dateien (README, arc42, ADR, Spec-Verweise) als erlaubt.
 - **Persona-Änderung (R233 (1)):** DoD nennt CHANGELOG-Eintrag (Version = neuester Eintrag) und
-  `make check` grün als Pflicht.
+  `make studio-test` grün als Pflicht (Teilbeleg, R858).
 - **Messauftrag (R233 (4)):** „Messproben nie im Hauptcheckout und nie als `*.test.ts` unter
   `tests/`, nur im Worktree oder Scratchpad“; dazu die Lastregel (Abschnitt
   [Tempo](#arbeitsprinzipien-und-tempo)).
@@ -256,6 +265,10 @@ Urteile: **OK / BEDENKEN [Liste] / ZURÜCK [Grund]**. L0 entscheidet und dokumen
   Alternative nur per `log.py result`, kein Ruling. Pflichtfelder „Regelbezug“ (betroffene Handbuchstelle
   oder „—“) und „Kosten bei Irrtum“ (R429). Weicht ein Ruling vom Handbuch ab, folgt im selben Zug ein
   Handbuch-Minor (Auftrag an `studio-coach`).
+  **Ab R845 (R844 V4)** zusätzlich Pflichtfeld „Verfassung berührt?“ (nein, oder ja mit Paragraf); Rulings zu
+  Plan-Gates und Plan-Index tragen „Überschneidung mit offenen Paketen“ (Dateien und Branches, sonst „keine“).
+  Nicht rückwirkend. **Entwürfe sofort in die Datei (R844 V3):** Ein von L0 angenommener Entscheid steht beim
+  Entscheid in `rulings.md` (bei Bedarf Zeilenkopf „Entwurf“), nie nur im Scratchpad oder Chat.
 - **Kandidaten desselben Fehlermechanismus (R224 (4)):** Meldet ein Lead mehrere Kandidaten
   desselben Fehlermechanismus, entscheidet L0 sie im selben Ruling: Zuschnitt (gemeinsames Paket)
   oder Beobachtung mit Frist.
@@ -323,7 +336,7 @@ Ablauf eines Meilensteins (Stufe voll):
 5. QA-Lead: Final-Review (`opus`) über alle Strang-Branches + Determinismus/Regression → Bericht.
 6. **Gate Merge** (L0, eines je Meilenstein; R464 gilt auch hier auf seriellem Pfad: vor dem Gate startet L0 keine Umsetzer und Controller, solange `make check`/`make push-check` im Hauptbaum oder in `.worktrees/integrate` läuft, R565 P2) → Production-Lead lässt `production-integrator` die
    Stränge seriell mergen, CI und Pages prüfen.
-   **Teilbeleg und Release-Bündel (R810):** Strangabschluss und Gate Merge brauchen nur den Teilbeleg (gezielte Tests der berührten Dateien, `npx tsc --noEmit`, `make lint`, bei Werkzeug `make studio-test`). Der volle Testlauf läuft **einmal je Release** als `make push-check` auf dem gebündelten Stand; er ist der grüne volle Lauf vor dem Merge nach `main` und vor dem Push (Verfassung 1.3 §9.2/§7, N-103, R816); main wird erst danach auf diesen geprüften Hash gebracht (Fast-Forward oder ein Merge ohne weitere Änderung). Ein separater `make check` vor dem Push und ein Integrator-`make check` je Merge entfallen. **Strang-interne Merges** (z. B. k1/k2 → Strang-Branch) brauchen nur den Teilbeleg. Pakete werden lokal nach main gemergt und sammeln sich dort; ein Release umfasst alles, was bis zum Push-Fenster abgenommen ist, und geht höchstens einmal je Kalendertag live (R816). Rot im Push-Check: Behebung vor dem Push, Ursache dem Paket zuordnen. **Volle Läufe mit `VITEST_MAX_WORKERS=5`** (Experiment E-071, `experimente.md`): rote Zeit-/Timeout-Dateien einmal einzeln bei Last ≤ 4 wiederholen, die Wiederholung im Event vermerken. **Offen, nicht umgesetzt:** V5 (`loadsnap.py` mit Skriptname und Klasse eigen/fremd, kleines Werkzeugpaket bei freiem Platz), V3/V4 (Messfenster-Sperrdatei, A/A-Kontrolle statt Lastgrenze; später gemeinsam als Plan).
+   **Teilbeleg und Release-Bündel (R810):** Strangabschluss und Gate Merge brauchen nur den Teilbeleg (gezielte Tests der berührten Dateien, `npx tsc --noEmit`, `make lint`, bei Werkzeug `make studio-test`). Der volle Testlauf läuft **einmal je Release** als `make push-check` auf dem gebündelten Stand; er ist der grüne volle Lauf vor dem Merge nach `main` und vor dem Push (Verfassung 1.3 §9.2/§7, N-103, R816); main wird erst danach auf diesen geprüften Hash gebracht (Fast-Forward oder ein Merge ohne weitere Änderung). Ein separater `make check` vor dem Push und ein Integrator-`make check` je Merge entfallen. **Strang-interne Merges** (z. B. k1/k2 → Strang-Branch) brauchen nur den Teilbeleg. Pakete werden lokal nach main gemergt und sammeln sich dort; ein Release umfasst alles, was bis zum Push-Fenster abgenommen ist, und geht höchstens einmal je Kalendertag live (R816). Rot im Push-Check: Behebung vor dem Push, Ursache dem Paket zuordnen. **Volle Läufe mit `VITEST_MAX_WORKERS=5`** (Experiment E-071, `experimente.md`): rote Zeit-/Timeout-Dateien einmal einzeln bei Last ≤ 4 wiederholen, die Wiederholung im Event vermerken. **Offen, nicht umgesetzt:** V5 (`loadsnap.py` mit Skriptname und Klasse eigen/fremd, kleines Werkzeugpaket bei freiem Platz), V4 (A/A-Kontrolle statt Lastgrenze; V3, die Messfenster-Sperre, ist umgesetzt, siehe Lastregel).
 7. L0 beendet den Meilenstein (`log.py milestone --id M5 --status done`), lässt die Metriken
    verdichten (`python3 tools/studio/metrics.py --milestone M5`) und startet die Pflicht-Retro
    ([Verbesserungsschleife](verbesserung.md#verbesserungsschleife)).
@@ -403,7 +416,7 @@ Regeln dazu:
   Release); sonst main zuerst. Geprüft wird bei der Auswahl, nicht erst im Plan.
 - **Merge** (Meilenstein oder Release): nur nach dem L0-Gate, davor Konflikt-Probe (R330 (5)): L0 oder
   Production-Lead prüft vor dem Integrator-Start je Branch `git merge-tree --write-tree main <branch>` (ändert
-  weder Index noch Arbeitsbaum, kein Push); Konflikte gehen vor dem Start an den Production-Lead (§6), seriell durch `production-integrator` ausschliesslich im
+  weder Index noch Arbeitsbaum, kein Push); Dateien mit Merge-Treiber prüft `lead-qa` mit echtem Probe-Merge im Wegwerf-Worktree, weil `merge-tree` keine Treiber ausführt (R868 V1, E-072, [gates.md](gates.md#gate-merge-release)); Konflikte gehen vor dem Start an den Production-Lead (§6), seriell durch `production-integrator` ausschliesslich im
   Worktree `.worktrees/integrate` (Merge, `make push-check` und Push laufen nur dort, nie im Hauptcheckout, R565 P1; von Beginn des Gate-Merge-Rulings bis zum Merge-Bericht, solange Integrator oder `push-check` laufen, committet L0 nichts auf `main` (R697, R769 V2); „push-bereit“ ist die `LOAD_WAIT`-Schwelle von `push-check`, ein Exit 1 bei ruhiger Startlast ist Substanz und kein Grund für einen erneuten Lauf, „höchstens n Läufe“ gilt nur für Exit 2 (R598 V2/V3); zwischen Gate Merge Release und Push höchstens 2 weitere Test-Arbeiter (R588 V1, `gates.md`); die Zwischenregel R562 entfällt damit. **Render-Pläne (R769 V1):** enthalten eine Browser-Ladeprobe (Spiel lädt, keine Konsolenfehler) als eigenen Task nach höchstens 3 Render-Tasks und vor jeder Messung (Prüffrage 4 Gate Plan, `gates.md`). **Briefing (R565 V2, E-063):** die Integrator-Pflichtzeile nennt `.worktrees/integrate` als Arbeitsort; widerspricht das Briefing der Persona, gilt die Persona und der Integrator meldet; ein anderer Hash als im Ruling wird nur nach Meldung an L0 gepusht) (Merges bleiben lokal; der gebündelte Push erfolgt von dort, Hauptcheckout danach `git pull --ff-only`, E-022):
   je Branch `git merge --no-ff --no-commit`, Teilbeleg (R810) — grün: committen, rot: `git merge --abort` und
   melden. Kein Push je Merge (N-98, R335): der Push-Takt richtet sich nach der Live-Ampel (`python3 tools/studio/metrics.py --efficiency`, Abschnitt „Actions-Minuten (Monat)“, Zeile Konto-Prognose; R565 P4): **höchstens ein Push je Kalendertag** (R816, ersetzt „höchstens ein Push je Session“, R335/R434; Hotfix für einen Live-Fehler nur per Ruling); die Live-Ampel gilt als zusätzliche Grenze: bei ROT bleibt es bei höchstens einem Push je Tag (R488 V2, gilt nur, solange Minuten abgerechnet werden; Inselreich ist öffentlich, die Prognose zählt diese Minuten nicht, R747); **Bei Exit ≠ 0 von `make push-check` nie pushen, an L0 melden** (R815); je Push nach Abschluss des zu pushenden Stands (nicht zwingend am Session-Ende, R421; siehe „Session-Start und -Ende“), immer gezielt per `git push origin <geprüfter Hash>:main`, und erst nach grünem **`make push-check`** (R517/R518, R810: der einzige volle Lauf je Release, ersetzt auch den separaten `make check` vor dem Push und den Integrator-`make check` je Merge; ersetzt die Einzelkette `tsc`/`lint`/`zeittests`/`conflicts`/`check`/`zeitreserve-push`/`check-ci-perf`; `pushcheck.py`). Ablauf (R503): Vorprüfungen (`make conflicts`, `npx tsc --noEmit`, `make lint`, `make zeittests`, Abbruch beim ersten Fehler), Warten auf 1-min-Load ≤ 4, genau ein `make check-push` (= `make check` ohne lockeres `zeitreserve`), strenge Zeitreserve-Bewertung, `make check-ci-perf`. Exit 0 = pushbar, 1 = rot, 2 = nicht belastbar (Last), 3 = Testsperre belegt. **D1:** Exit 2 wegen Last gilt als Exit 0, wenn die Markierungsliste existiert, gültig und leer ist (sichtbar in Schlusszeile und Ereignis `push_check`); fehlt die Datei oder ist sie ungültig, bleibt es Exit 2. **D2:** Nachmessung der markierten Dateien höchstens einmal, bei Exit 2 (Last) und bei Exit 1 immer, unabhängig von `loadStart`. Die Schlusszeile `push-check: EXIT=… · geprüfter Hash …` nennt den geprüften Hash; gepusht wird genau dieser (`git push origin <geprüfter Hash>:main`); verändert sich HEAD oder der getrackte Arbeitsbaum während des Laufs, ist es Exit 1. Aufruf immer als `make push-check; echo EXIT=$?`, nie in eine Pipe. Die Einzelschritte bleiben für die Fehlersuche nutzbar. Steht ein Push an, startet L0 keine Umsetzer und Controller, bis `make push-check` Exit 0 meldet; Gates, Kurzdesigns und Pläne ohne Testläufe dürfen parallel laufen (R464). Ausnahme (R514 V1): Fixes eines benannten Push-Blockers dürfen vor dem Push laufen, wenn ein Ruling Test und Paket nennt; es laufen nur gezielte Tests der berührten Dateien, der volle Lauf nur als `make push-check` durch den Integrator. Danach CI (`gh run list --branch main --limit 3`; läuft bei jedem Push, R747); Pages startet automatisch nach grüner CI auf main, der Handstart `gh workflow run Pages --ref main` entfällt und bleibt nur für Reruns und die R450-Ausnahme (bei roter CI nur, wenn ausschliesslich Studio-Werkzeuge (`tools/studio`) rot sind und alle Spiel-Tests grün), dann den Deploy-Lauf prüfen, und
@@ -416,7 +429,12 @@ Regeln dazu:
   Nutzungslimit (Nutzerauftrag, R445), weiterhin höchstens eine Runde je Session. Eine solche breite
   Runde setzt bis zu 3 Scouts parallel mit je einem Schwerpunkt ein (zusammen ≤ 160 Tools); `lead-design`
   liefert eine vollständige Rangliste mit Nutzen/Aufwand, L0 priorisiert. Details: Persona
-  `design-idea-scout`, `docs/ideen.md`.
+  `design-idea-scout`, `docs/ideen.md`. **Fokus (R862, schärft R445):** Freie Kapazität geht vorrangig an
+  kreative Arbeit für Spieltiefe, neue Spielmodi und Erweiterungen — was den Spieler länger am Ball hält.
+  Web-Recherche (Genre-Vorbilder, Spielerstimmen) ist erwünscht: Recherche-Pakete `TIEFE-nn` mit
+  Agenten `general-purpose`, Modell `sonnet (Recherche)`; sie zählen nicht gegen „höchstens eine Runde
+  je Session“. Keine Playtests als Ideen-Input. Schweigen des Nutzers gilt als Zustimmung; die Arbeit
+  läuft weiter.
 
 ## Autonomie
 
@@ -430,6 +448,11 @@ L0 fragt nicht zurück und wartet nie untätig (Verfassung §5). **Ablauf ohne R
 4. Berührt ein Punkt einen **Vorbehalt** des Nutzers (Verfassung §5.3), kommt er in die
    Warteschlange — alles andere entscheidet L0, auch neue Abhängigkeiten (§5.7, R67). Blockt
    `dep-guard`, meldet L0 den Paketnamen dem Nutzer.
+5. **Dauerauftrag (R863):** Nutzeranweisungen gelten dauerhaft für das Verhalten von L0 in diesem
+   Projekt, auch in folgenden Sessions — ausser sie betreffen ausdrücklich nur die laufende Session;
+   im Zweifel dauerhaft. L0 hält jede als Ruling mit Vermerk „Dauerauftrag“ fest, trägt sie in
+   [state.md](state.md) unter „Daueraufträge“ ein und lässt Regeln mit Dauerwirkung ins Handbuch
+   übernehmen (`studio-coach`).
 
 **Warteschlange** ([warteschlange.md](warteschlange.md), einzige Quelle; Verfassung §5.4–§5.6;
 Aufrufe `log.py queue --help`): Die fragende Stelle legt den Eintrag an (Status `offen`, ID =
@@ -453,7 +476,7 @@ und Scratchpad-Ordner erlaubt); Edit/Write auf `VERFASSUNG.md` oder `guard.py`; 
   `git restore`, `git switch --discard-changes`); `git stash` sperrt der Guard seit R579 ausser `list`/`show` (E-064), zum Zwischenparken dient ein temporärer WIP-Commit. Eine Warnung beim Session-Start meldet, wenn der Stand in `state.md` mehr als 5 Rulings hinter `rulings.md` liegt (E-065).
 - **Bekannte Grenzen** ([verbesserung.md](verbesserung.md#guard-bekannte-grenzen)): Er schützt
   gegen Versehen, nicht gegen Absicht; das Verbot gilt auch dort, wo er nichts erkennt.
-- **Warte-Guard** (`tools/studio/waitguard.py`, eigener PreToolUse-Hook, R646/R647): weist bei Leads einen Agent-Start mit kurzem reinem Warte-Prompt ohne Auftrag (Regel A) und ein `sleep` im Hintergrund-Bash (Regel B) ab; Arbeiter und L0 sind nie betroffen, `until`-Schleifen bleiben frei. Warten heisst Monitor oder Hintergrund-Bash, nicht Agent. Ereignis `wait_guard`, Rückfall `MODE = "warn"`. Jede Abweisung des Haupt-Guards (`guard.py`) schreibt zusätzlich das Ereignis `guard_block` (Regel, tool, command_hash; kein Befehl; Deny bleibt bei Schreibfehler, R704); die Abweisungen sind damit zählbar (E-064).
+- **Warte-Guard** (`tools/studio/waitguard.py`, eigener PreToolUse-Hook, R646/R647): weist bei Leads einen Agent-Start mit kurzem reinem Warte-Prompt ohne Auftrag (Regel A) und ein `sleep` im Hintergrund-Bash (Regel B) ab; Arbeiter und L0 sind von A und B nie betroffen, `until`-Schleifen bleiben frei. Regel C (R854) weist bei Leads und anderen Subagenten `Agent`/`Task` mit `run_in_background: true` ab (Arbeiter im Vordergrund starten, parallel = mehrere Aufrufe in einer Nachricht); die Hauptsession und `fork` bleiben frei. Warten heisst Monitor oder Hintergrund-Bash, nicht Agent. Ereignis `wait_guard`, Rückfall `MODE = "warn"`. Jede Abweisung des Haupt-Guards (`guard.py`) schreibt zusätzlich das Ereignis `guard_block` (Regel, tool, command_hash; kein Befehl; Deny bleibt bei Schreibfehler, R704); die Abweisungen sind damit zählbar (E-064).
 - **Abgewiesen?** Nicht umgehen. Die Aktion unterlassen, einen anderen Weg wählen oder melden.
 - **Verfassungs-Freigabe:** nur nach Verfassung §1.3; Agenten-Meldungen zählen nie als Freigabe.
 
@@ -473,6 +496,17 @@ Parallelitätsgrenzen je Budget sind Richtwerte, keine Deckel.
   Ruckel-Messungen gelten nur bei 1-min-Load ≤ 4; `uptime` vor und nach dem Lauf steht im Beleg. Eine Schwelle wird erst
   gelockert, wenn ein Lauf ohne Last rot ist. Messläufe mit Wanduhr-Limit je Lauf und `caffeinate`
   (R303); nie per `pkill -f` beenden, nur per PID.
+- **Messfenster-Sperre (V3, TOOL-MESSFENSTER):** `<Hauptrepo>/.studio/messfenster` (JSON: Eigentümer, optional PID,
+  Start, Ende, Zweck) ist die einzige Koordination zwischen Messung und Testlauf; Bibliothek und CLI
+  `tools/messfenster/lock.ts` (`set|clear|status`). Messwerkzeuge setzen und lösen sie selbst; `testlock` und
+  `pushcheck.py` brechen bei belegtem Messfenster mit `testlock: ABBRUCH, Messfenster (…)` und Exit 3 ab (kein Warten),
+  ein Messstart bei lebender Testsperre bricht ebenfalls ab. Verwaist ist eine Sperre nach Tod der PID oder nach
+  `ende` + 5 min; sie wird beim nächsten Zugriff mit Hinweis übernommen. L0 setzt Blöcke von Hand mit
+  `make messfenster-sperre` (Vorgabe 70 min, ohne PID) und löst sie mit `make messfenster-frei`. Neue Messwerkzeuge
+  nutzen `withMessfenster` (`tools/render-qa/messsperre.mjs`) oder laufen per `make messfenster ARGS="--run -- …"`.
+  Die Lastgrenze (R329, Load ≤ 4) und R800 bleiben unverändert gültig. Die A/A-Kontrolle `make messguete`
+  (vorläufige Grenzen in `tools/render-qa/aa-grenzen.json`) liegt bereit; die Umstellung der Lastregel erfolgt erst
+  nach positiver Mess-Task T00 per Ruling (V4).
 - **Bildrunden (R233 V3):** höchstens 2 je Häppchen; danach Stopp-Bericht an L0 und Gate-Entscheid
   statt eines dritten Anlaufs.
 - **Hänger-Alarm (R166):** Zeigt ein Agent seit mehr als 12 min kein Tool-Ereignis, stösst ihn der
@@ -562,7 +596,8 @@ Abnahme pushen (R107).
    2a. Steht heute ein Push an und wurde seit dem letzten Push Code gemergt: einmal `make push-check` im Ruhefenster vor Session-Ende; sonst sammelt sich der Stand lokal bis zum nächsten Pushtag (R816) (R514 V3, R518). Ein Blocker steht als Punkt in `state.md` „Fortsetzung“.
 3. Kurz-Retro durch den Coach (Befunde, ggf. ≤ 3 Experiment-Vorschläge; L0 entscheidet per
    Ruling).
-4. `docs/studio/state.md` nachführen (Projekt und Phase, **Seit letzter Session erledigt**,
+4. Vor dem Nachführen: alle von L0 angenommenen Ruling-Entwürfe stehen in `rulings.md` (R844 V3); `state.md`
+   wird nach jedem Bündelende nachgeführt, nicht erst hier. `docs/studio/state.md` nachführen (Projekt und Phase, **Seit letzter Session erledigt**,
    laufende/pausierte Pakete mit Worktree und nächstem Schritt, Budget, offene Entscheide, nächste
    Schritte, Stand-Datum) und `lernen.md` nachführen; Rulings in `rulings.md`, Befunde in
    `docs/beobachtungen.md` sind eingetragen. Committen (`docs: …`).

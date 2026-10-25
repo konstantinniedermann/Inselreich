@@ -4,9 +4,19 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-22 (Session 3b332328, R833; live REL-29 `d9580844`, Save v18, Verfassung 1.3, Handbuch 1.68; main lokal = live + Doku)
+Stand: 2026-10-23 (Session a5d45446 Ende, R872; live REL-30 `bc9664d0`, Save v18, Verfassung 1.3, Handbuch main 1.71, Branches 1.72/1.73; main lokal = live + Doku/Rulings)
 
 ## Release-Notizen
+
+**REL-30 „Kasse, Bestand und Davor-Stand“ (live, R866)** — kein Save-Wechsel (v18). Inhalt: UI-HAEPPCHEN-H P1 (I-147), UI-HAEPPCHEN-I A/B, UI-BEIPACK-FERN, LEBEN-SEE Klang, Werkzeug
+(TOOL-LOADSNAP, -DASH-REST, -MESSFENSTER, -PUSHSPERRE A/P, -VORDERGRUND, -RUECKKANAL), Doku (BEOB-18, IDEEN-15, DOKU-AUDIT-1, Specs/Pläne Seerecht, LEBEN-STRASSE, LEBEN-SEE, UI-I, UI-BEIPACK,
+AUFLAGEN-KERN, I-119/I-121). Push `d2376904..bc9664d0`, CI-Lauf 39936129287, Pages-Lauf 39937129992 (grün). Quelle: `.studio/handoffs/2026-10-23-lead-production-REL-30.md`.
+
+- **Neu:** Zweiter Autosave-Platz «Davor laden» (vom Studio vorgeschlagen, I-147); Kasse-leer-Hinweis im Geld-Chip-Tooltip; Wachstumsbremse im Einwohner-Chip-Tooltip; Bestand im
+  Bau-Tooltip; Fernauftrag-Feinschliff; leiser Anlegeton bei Schiffsankunft.
+- **Bitte testen:** (1) «Davor laden», dann Seite neu laden: beide Stände richtig benannt und ladbar; (2) negative Bilanz herstellen, Tooltip Geld-Chip; (3) Bestand im Bau-Tooltip mit
+  stillgelegtem Gebäude und anderer Insel; (4) Einwohner-Chip Wachstumsbremse; (5) Anlege-Klang (Hörurteil; bei Störung Revert vor dem nächsten Push).
+- **Hinweis:** Pin-Reserve AK-E0-15a klein (R848). Push-Sperre (`pushgate`) blockt jeden Push ohne `push-check` Exit 0 auf genau diesem Hash.
 
 **REL-29 „Fern-Marke und Wo-war-ich“ (live, R815)** — kein Save-Wechsel (v18). Inhalt: UI-HAEPPCHEN-G (I-155, I-148), Doku-Bündel (IDEEN-14, Specs/Pläne UI-HAEPPCHEN-G und -H,
 WIRTSCHAFT-BS-1), TOOL-DASH-SCHLANK (Werkzeug ohne Spieleinfluss). Push `705af797..d9580844`, CI-Lauf 39747149002, Pages-Lauf 39748155515 (grün). Quelle:
@@ -173,28 +183,24 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 
 ## Fortsetzung beim nächsten Start
 
-Keine Nutzer-Aufträge offen ausser LEBEN-STRASSE (R819, läuft). Daueraufträge: **R826** (Deckel 10 bei grüner Limit-Ampel voll halten, ≤ 3 Test-Controller, ≤ 2 Browser,
-Fensterregel R803), R445, R475. **Push-Takt:** höchstens ein Push je Kalendertag (R816, R817), gebündelt; voller Lauf nur vor Merge nach main bzw. Push (Verfassung 1.3).
+**Daueraufträge des Nutzers (R863: jede Nutzeranweisung gilt dauerhaft, ausser ausdrücklich nur für die laufende Session; im Zweifel dauerhaft):** **R862** freie Kapazität vorrangig für
+Spieltiefe, neue Spielmodi und Erweiterungen (was den Spieler länger am Ball hält), Web-Recherche erwünscht, **keine Playtests als Ideen-Input** (Browser-Checks zur Abnahme bleiben, R867),
+Schweigen des Nutzers = Zustimmung; **R445**; **R826** (Deckel 10 bei grüner Limit-Ampel, ≤ 3 Test-Controller, ≤ 2 Browser); **R853/R856** (Arbeiter-Meldungen an den Lead weiterleiten;
+Rückkanal: L0 nennt jedem Lead seine Adresse); **R868 V2** (Starts sind asynchron, Lead wartet ruhig auf Meldung). R869 («keine neuen Projekte») galt nur für Session a5d45446.
+**Push-Takt:** höchstens ein Push je Kalendertag (R816), gebündelt; voller Lauf nur `make push-check` vor Merge nach main bzw. Push.
 
-**Test-Controller (3 belegt, Stand R833):**
-
-1. **ORT-A C11 + UI-H P1** (R803, R817, R823): AK-31 Variante 1 (Patch auf zwei Frames, `flush` im Test) in Arbeit; AK-32/37/39 bestanden; danach Merge k1/k2 → `feat/ort-a`
-   (Teilbeleg), T18. UI-H P1: T01/T02 fertig, T03 Browser/Quote offen.
-2. **LEBEN-STRASSE** (R819–R822, Budget 11): T01–T05 in Arbeit (`feat/leben-strasse`, `feat/leben-strasse-look`); T06/T07 nach ORT-A-Merge.
-3. **TOOL-MESSFENSTER** (R824, Budget 11): Stränge A/B; **T00 (70-min-A/A-Block) erst nach Abschluss der ORT-A-Messungen** — L0 gibt frei.
-
-**Warteschlange für frei werdende Test-Plätze (R832):** 1. SEERECHT (R828, `plan/seerecht` @ `792d565d`, ein Controller, Parallelität 2, Budget 21; T09 nach Stadtplanung), 2. LEBEN-SEE (R832, `plan/leben-see` @ `b5425214`, Budget 11), 3. UI-HAEPPCHEN-I (R833, `plan/ui-haeppchen-i` @ `cc2dbddd`, Budget 16), 4. UI-BEIPACK-FERN (Kurzdesign läuft, nach UI-H P1).
-
-**Bereit fürs nächste Release-Bündel (Gate Merge durch `lead-qa`, ein `make push-check`):** TOOL-LOADSNAP (`tool/loadsnap` @ `3d52f696`, R821), TOOL-DASH-REST (`tool/dash-rest`,
-Review läuft, R829), Doku-Branches `docs/beob-18` (R825; Konflikt am Dateiende mit `feat/ort-a`: beide Abschnitte behalten), `docs/ideen-15` (R827), `design/seerecht`,
-`plan/seerecht`, `design/leben-strasse`, `plan/leben-strasse`, `design/leben-see`, `plan/leben-see`, `design/ui-haeppchen-i`, `plan/ui-haeppchen-i`, `design/i119-i121` (R829),
-`plan/tool-messfenster`, dazu UI-H P1, sobald fertig.
-
-**Wartet auf Merges:** UI-H P2 (nach ORT-A); Stadtplanung C1 (nach ORT-A; Konflikt `app.ts` laut R811; Save v19); I-119/I-121 Plan (nach LEBEN-STRASSE und ORT-A T20);
-AUFLAGEN-KERN Kurzdesign läuft (R827, opus).
-
-Pool: ZEITRESERVE-PFLEGE (H-1; `perf.test.ts`-Pin AK-E0-15a, drei langsame ORT-A-Tests). Erweiterung 1 bleibt in der Nutzer-Session (R519). Messfristen: R769 V3 2026-10-24;
-R750 V1/V3, R755 V1 2026-10-30; R769 V2 2026-11-15, V1 2026-11-30; E-071 nach drei vollen Läufen. Retro-Befunde: R697-Abweichung (R789), Testlast (R787), Push trotz Exit 1 (R815).
+1. **Release REL-31 bündeln** (frühestens 2026-10-24): Gate Merge Release vorab mit echtem Probe-Merge (R868 V1), dann `lead-production` + Integrator, ein `make push-check`, Push bei Exit 0.
+   Reihenfolge R871: `docs/ideen-16` @ 66c4df45 → `docs/tiefe-1` @ 8c79bfb4 → `docs/wirtschaft-tiefe` @ d63971a6 → `design/i186-ehrenbuch` @ 81d0be78, `design/modus-inselproben` @ 3a1264ee,
+   `design/stadtrecht` @ 3ff27d0a → `plan/i186-ehrenbuch` @ 42e016cb → `docs/retro-rel-30` @ 40a27899 → `docs/dauerauftrag` @ b966c88f → `docs/retro-rel-30-umsetzung` @ 2bcd30ca →
+   `tool/merge-append` @ 6abfe75f; `feat/ort-a` @ d52ad5b9 erst nach T18 und Final-Review (sonst REL-32).
+2. **Gates:** Gate Plan I-186 (`lead-qa`), danach Umsetzung Ehrenbuch (16 Starts beantragt, T00 zuerst); Gate Spec **Modus Inselproben** und **Stadtrecht** (`lead-qa`), dann Pläne.
+   Save-Reihenfolge R870: Ehrenbuch ohne Save; Inselproben vor Stadtrecht (v19/v20 je nach Merge).
+3. **ORT-A T18** (T14 erledigt), Worktree `ort-a-vor-k2` entfernen (ohne `--force`), danach Merge-Weg nach main. ORT-A gibt frei: LEBEN-STRASSE T06–T10, LEBEN-SEE Kielwasser T03, UI-H P2,
+   Stadtplanung C1 (danach Seerecht T08/T09, UI-I T05–T07, AUFLAGEN-KERN Plan).
+4. **SEERECHT T04** (UI-BEIPACK ist live), dann T06/T07 (R838; Plan-DoD vorher auf Teilbeleg umstellen, R860).
+5. **TOOL-MESSFENSTER T00** (70-min-A/A-Block, Messfenster frei seit ORT-A-Ende), danach **TOOL-PUSHSPERRE T05** (R848).
+6. **R872** E1 (opus-Anteil nach Paketart) und E2 (Schätzfaktor 0,5) durch `studio-coach`. **UI-HAEPPCHEN-J** Kurzdesign (I-176 + I-139 + I-138, Stufe leicht, R861). E-063 bewerten, Platz für E-073 (R871). ADR-007-Nachtrag zu R868 (Beobachtung).
+7. Pool: ZEITRESERVE-PFLEGE; Wartung (E1) nach Stadtplanung (R865); Messfristen R769 V3 2026-10-24, R750/R755 2026-10-30, E-072/E-073 2026-11-19. Erweiterung 1 bleibt in der Nutzer-Session (R519).
 
 ## Aktuelles Projekt und Phase
 
@@ -219,7 +225,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- ORT-A C11 (Messungen, `ort-a`, `ort-a-k2`), UI-HAEPPCHEN-H P1 (wartet auf Browser-Fenster), TOOL-LOADSNAP; ein `lead-tech`-Controller führt ORT-A und UI-H (R803). Stadtplanung (`stadt-sim`, `stadt-ui`) pausiert.
+- Nichts aktiv. Alle Pakete der Session a5d45446 mit Handoff abgeschlossen (R869).
 
 ## Parallele Sessions
 
@@ -229,10 +235,9 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Seit letzter Session erledigt
 
-- **Vorsession e6dbb809 (R792–R801, 2026-10-21):** TOOL-DASH-SCHLANK gemergt (R795), Stadtplanung C1 bis T08 abgenommen (R796), IDEEN-14 (R797), UI-HAEPPCHEN-G Kurzdesign und Plan OK (R798, R799),
-  ORT-A C11 k2 abgenommen, Fixes k1/k2 zur Messung (R800, R801); endete ohne Ende-Routine.
-- **Heute (R802–R818, 2026-10-22):** HAUSHALT-02 (3,5 GB gelöscht, R804); WIRTSCHAFT-BS-1: Seerecht bauen, I-154/I-151 verworfen (R805), Seerecht-Spec abgenommen (R814); UI-HAEPPCHEN-H Kurzdesign
-  und Plan OK (R807, R808); R810 Tests minimieren und Releases bündeln; UI-G Gate Merge, REL-29 live (R812, R815); Verfassung 1.3 und Handbuch 1.67, ein Push je Tag (R816, R817); UI-H P1 gestartet, TOOL-LOADSNAP (R818).
+- **Session a5d45446 (R859–R871, 2026-10-23):** REL-30 live (R860, R866); TOOL-RUECKKANAL im Release; Daueraufträge R862/R863 (Handbuch 1.72 auf `docs/dauerauftrag`); IDEEN-16
+  (R861), Tiefen-Recherche TIEFE-1 (R864), WIRTSCHAFT-TIEFE (R865); Kurzdesign Ehrenbuch mit Gate OK und Plan (R867, R871); Specs Modus Inselproben und Stadtrecht (R870); ORT-A AK-30/32/37
+  bestanden, k1/k2 in `feat/ort-a` (R871); TOOL-MERGE-APPEND; Prozess-Retro REL-30 und Umsetzung V1/V2 (R868, Handbuch 1.73); N-104 angelegt.
 
 ## Pausierte Pakete
 
@@ -248,9 +253,10 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Budget
 
-Offen (Freigaben dieser Session): ORT-A C11 6 Starts (R802, im Controller-Budget 14 mit UI-G, R803; UI-G fertig), UI-HAEPPCHEN-H 11 (R808), TOOL-LOADSNAP 3 (R818). Verbrauch: Dashboard.
+Alle Freigaben dieser Session verfallen mit Session-Ende; Reste laut Handoffs (ORT-A 4, SEERECHT 13, LEBEN-STRASSE 5, LEBEN-SEE 5, UI-I 8, TOOL-MESSFENSTER 6, TOOL-PUSHSPERRE 3; Ehrenbuch-Umsetzung 16 beantragt) neu erteilen.
 
 ## Offene Entscheide
 
-- Nutzer: **N-99 und N-103 erledigt** (R816, R817); N-101 (Darlehen verwerfen; ohne Antwort gilt Verwerfen); **N-102 offen** (Headless-Chrome des Projekts reflexionsinstrument beenden? Vermerk bei Messungen, R800).
-- L0: keine offenen.
+- Nutzer: **N-104 offen** (Welche Erweiterung nach Erweiterung 1? Empfehlung «Neue Ufer»); **N-102 offen** (Headless-Chrome des Projekts Munica beenden? Vermerk bei Messungen, R800);
+  N-101 (Darlehen verworfen; ohne Antwort gilt Verwerfen).
+- L0: E-063 bewerten (R871).

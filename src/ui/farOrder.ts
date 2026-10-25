@@ -76,13 +76,38 @@ export function farAcceptTooltip(world: World, which: 0 | 1 = 0): string {
   return `Ersetzt den Auftrag. Liefern nur am Kontor ${islandName(world, f.island)}. Der nächste Auftrag entfällt.`;
 }
 
-/** T-04: Text der Auftragskarte bei einem Fernauftrag. */
-export function farOrderText(world: World, o: Order): string {
+export interface FarOrderParts {
+  lead: string;
+  stock: string;
+  short: boolean;
+  late: boolean;
+  /** Tooltip des Lager-Teils: «Fehlt n Gut» bei `short`, sonst leer. */
+  tip: string;
+}
+
+/** T-04: Teile der Auftragskarte bei einem Fernauftrag (eine Quelle, Muster `farOfferParts`). Liest nur die Welt. */
+export function farOrderParts(world: World, o: Order, lanes?: Lanes): FarOrderParts {
   const island = o.island!;
-  return (
-    `Fernauftrag ${islandName(world, island)}: ${o.amount} ${GOODS[o.good].name} · ${o.reward}` +
-    ` · noch ${formatGameTime(o.due - world.tick)} · Lager ${stockOn(world, island, o.good)}/${o.amount}`
-  );
+  const have = stockOn(world, island, o.good);
+  const short = have < o.amount;
+  return {
+    lead:
+      `Fernauftrag ${islandName(world, island)}: ${o.amount} ${GOODS[o.good].name} · ${o.reward}` +
+      ` · noch ${formatGameTime(o.due - world.tick)} · `,
+    stock: `Lager ${have}/${o.amount}`,
+    short,
+    late: farLate(world, { island, amount: o.amount, good: o.good }, o.due - world.tick, lanes),
+    tip: short ? `Fehlt ${o.amount - have} ${GOODS[o.good].name}` : '',
+  };
+}
+
+/** Anhang hinter dem Lager-Teil, wenn Ware aus der Heimat nicht mehr rechtzeitig käme. */
+export const FAR_LATE_SUFFIX = ' · zu spät';
+
+/** T-04: Text der Auftragskarte bei einem Fernauftrag. */
+export function farOrderText(world: World, o: Order, lanes?: Lanes): string {
+  const p = farOrderParts(world, o, lanes);
+  return p.lead + p.stock + (p.late ? FAR_LATE_SUFFIX : '');
 }
 
 /** T-05: Warnzustand, wenn der Fernauftrag kein Kontor auf der Fern-Insel mehr hat. */

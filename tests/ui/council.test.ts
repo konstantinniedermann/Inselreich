@@ -10,6 +10,7 @@ import {
   councilEscapeHandled,
   councilOpenNext,
   councilOpened,
+  councilToggleAllowed,
 } from '../../src/ui/council';
 import { hotkeyAction, hotkeyList } from '../../src/ui/hotkeys';
 
@@ -111,5 +112,49 @@ describe('AK-14/15 Rats-Karte: Taste und Esc-Reihenfolge', () => {
   it('AK-15: Esc wird von der offenen Karte verbraucht, sonst weitergereicht', () => {
     expect(councilEscapeHandled(true)).toBe(true);
     expect(councilEscapeHandled(false)).toBe(false);
+  });
+});
+
+describe('UI-BEIPACK-FERN Umschalt+R nur mit Marke (AK-BF8)', () => {
+  it('BF8 Helfer: ohne Marke false, mit offenem oder gefasstem Beschluss true', () => {
+    const w = createWorld(1);
+    expect(councilToggleAllowed(w)).toBe(false);
+    w.council[2] = 'open';
+    expect(councilToggleAllowed(w)).toBe(true);
+    decree(w, 2, 'A');
+    expect(councilToggleAllowed(w)).toBe(true);
+  });
+  it('BF8 hotkeyAction bleibt rein und liefert weiter council', () => {
+    const mods = { shift: true, ctrl: false, alt: false, meta: false };
+    expect(hotkeyAction('R', mods, false)).toEqual({ kind: 'council' });
+  });
+});
+
+describe('AK-SR-19 Rats-Karte mit drei Karten', () => {
+  it('Stufe 4: Glasrecht, Hofrecht, Seerecht; Stufe 2 und 3 zwei Karten', () => {
+    const w = createWorld(1);
+    w.council[4] = 'open';
+    const cards = councilCards(w).open[0]!.cards;
+    expect(cards.map((c) => c.name)).toEqual(['Glasrecht', 'Hofrecht', 'Seerecht']);
+    expect(cards.map((c) => c.text)).toEqual(
+      (['A', 'B', 'C'] as const).map((s) => COUNCIL[4][s]!.text),
+    );
+    for (const t of [2, 3] as const) {
+      const v = createWorld(1);
+      v.council[t] = 'open';
+      expect(councilCards(v).open[0]!.cards).toHaveLength(2);
+    }
+  });
+  it('Stufe 3 und 4 offen; Beschluss C in der Liste; Hinweis', () => {
+    const w = createWorld(1);
+    w.council[3] = 'open';
+    w.council[4] = 'open';
+    const v = councilCards(w);
+    expect(v.open.map((o) => o.tier)).toEqual([3, 4]);
+    expect(v.open.map((o) => o.cards.length)).toEqual([2, 3]);
+    decree(w, 4, 'C');
+    const d = councilCards(w);
+    expect(d.decided).toContain('Stufe 4: Seerecht');
+    expect(d.note).toBe('Gilt für die ganze Partie, die übrigen Beschlüsse der Stufe verfallen.');
   });
 });
