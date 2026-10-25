@@ -237,8 +237,15 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts aktiv. Session 84d62878: nur Zusatz-Release REL-32 (Nutzerauftrag, keine neue Entwicklung).
-- **ORT-A** (`feat/ort-a` @ `7e2e8d12`, Worktree `.worktrees/ort-a`): T18 abgenommen (R886, drittes opus-Delta-Review OK, Schranke r ≤ 10). **Offen: T19 (AK-43), T20 (main nachmergen), T20b mit `lead-art` (R793 (4)), T21 (AK-49), T22–T26**; Plan-Nachtrag `plan/ort-a` @ `9766cbc8` auf R884 (r ≤ 10) anpassen. Budget-Rest 1 von 6. Worktree `ort-a-vor-k2` erst nach Abnahme entfernen (ohne `--force`). Handoff `.studio/handoffs/2026-10-25-lead-tech-ORT-A.md`.
+Session f8716d75 (R890–R901, Ampel grün): **laufende Leads** (Handoffs unter `.studio/handoffs/2026-10-25-*`):
+
+- **INSELPROBEN** Etappe 2 (`lead-tech`, Budget 26): UI T08–T10 OK, T11/T11b (Bilanz-Hinweis, R900) laufen; T05 grün über R897-Rückfall; T06/T07 offen.
+- **ORT-A** T19–T26 (`lead-tech`, Budget 12): Plan-Nachtrag `plan/ort-a` @ `8c5728e9`, T20 gemergt, T21 läuft; T20b-Urteil `lead-art` wartet auf Load ≤ 4.
+- **I-201** Festanlass (`lead-tech`, Budget 15, R893).
+- **Specs/Kurzdesigns:** I-210 Bittschrift (H3+H4, R899), AUSBAU-LOGIK (R896 (3)), HAFEN (R898), GEBAEUDE-VARIANZ (R901).
+- **Fertig, wartet auf Release-Bündel:** `feat/seerecht` @ `3167969e` (Gate OK, R893), `docs/coach-r886` @ `1c460542` (R892), `design/ideen-18` @ `6f7d0818`, `docs/tiefe-3` @ `1ab3968a`,
+  `design/gruendungsbrief` @ `a5f6918c`, Rechnung `design/i210-bittschrift` @ `d4f935b7`.
+- **Wartet auf Platz:** Fix A1 Schiff-Interpolation (erster freier Test-Controller-Platz, R898), FLAECHE (R896 (5)), Rechnung «Zukaufpreis steigt» (R899), Spec I-214 Gründungsbrief (R901), Stadtrecht, I-197.
 
 ## Parallele Sessions
 
