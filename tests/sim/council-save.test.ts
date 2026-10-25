@@ -108,6 +108,11 @@ describe('AK-9 (R-4) Abweisen', () => {
     (bad.council as Record<string, unknown>)['3'] = 'X';
     expect(() => deserialize(JSON.stringify(bad))).not.toThrow();
     expect(deserialize(JSON.stringify(bad))).toEqual(damaged);
+    for (const key of ['constructor', 'toString', '__proto__']) {
+      const proto = json(createWorld(3));
+      (proto.council as Record<string, unknown>)['2'] = key;
+      expect(deserialize(JSON.stringify(proto))).toEqual(damaged);
+    }
   });
 });
 

@@ -87,8 +87,7 @@ const isTier = (v: unknown): v is CouncilTier => (COUNCIL_TIERS as readonly unkn
 
 /** Gültige Seite der Stufe `tier` (C nur, wo die Tabelle sie führt). */
 export const isCouncilSide = (tier: CouncilTier, side: unknown): side is CouncilSide =>
-  typeof side === 'string' &&
-  (COUNCIL[tier] as Record<string, CouncilDef | undefined>)[side] !== undefined;
+  (side === 'A' || side === 'B' || side === 'C') && Object.hasOwn(COUNCIL[tier], side);
 
 /** Vorhandene Seiten der Stufe in der Reihenfolge A, B, C. */
 export const councilSides = (tier: CouncilTier): CouncilSide[] =>

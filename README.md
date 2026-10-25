@@ -208,8 +208,8 @@ Tooltips von 2× und 4× sagen, wie viel schneller die Spielzeit läuft.
 
 Sobald ein Haus zum ersten Mal die Stufe 2 (Siedler), 3 (Bürger) oder 4 (Kaufleute) erreicht, tagt der Rat: In der Kopfzeile erscheint die Marke **«Rat · n»** (n = offene Beschlüsse), dazu die Meldung «Der Rat tagt: ein Beschluss steht an». Das Spiel läuft weiter, nichts pausiert.
 
-- **Bedienung:** Klick auf die Marke oder `Umschalt` + `R` öffnet die Rats-Karte, `Esc` schliesst sie ohne Wahl. Je offene Stufe stehen zwei Karten nebeneinander. Eine Karte anklicken markiert sie; erst **«Beschluss fassen»** gilt (Schutz vor Fehlklick).
-- **Wirkung:** Der Beschluss gilt für die ganze Partie und alle Inseln, kostet nichts, lässt sich nicht ändern; der andere Beschluss der Stufe verfällt. Gefasste Beschlüsse stehen als Liste in derselben Karte («Stufe 2: Webordnung»), die Marke bleibt als neutrales «Rat» sichtbar. Ein offener Beschluss kann beliebig lange warten.
+- **Bedienung:** Klick auf die Marke oder `Umschalt` + `R` öffnet die Rats-Karte, `Esc` schliesst sie ohne Wahl. Je offene Stufe stehen die Karten nebeneinander (Stufe 2 und 3 zwei, Stufe 4 drei). Eine Karte anklicken markiert sie; erst **«Beschluss fassen»** gilt (Schutz vor Fehlklick).
+- **Wirkung:** Der Beschluss gilt für die ganze Partie und alle Inseln, kostet nichts, lässt sich nicht ändern; die übrigen Beschlüsse der Stufe verfallen. Gefasste Beschlüsse stehen als Liste in derselben Karte («Stufe 2: Webordnung»), die Marke bleibt als neutrales «Rat» sichtbar. Ein offener Beschluss kann beliebig lange warten.
 - **Die sieben Beschlüsse:** Stufe 2 Webordnung (Webereien +25 % schneller) oder Glockenrecht (Kapellen reichen 3 Felder weiter); Stufe 3 Brennrecht (Brennereien +25 % schneller) oder Wohnordnung (Bürgerhäuser fassen 16 statt 15); Stufe 4 Glasrecht (Glashütten +67 % schneller), Hofrecht (Kaufmannshäuser fassen 22 statt 20) oder Seerecht (Schiffe fahren 25 % schneller. Spart ab etwa 80 Kaufleuten ein Schiff auf langen Gewürzrouten). Gilt für die ganze Partie, die übrigen Beschlüsse der Stufe verfallen. Alle Zahlen: [`docs/spielwerte.md`](docs/spielwerte.md#rat-ratsbeschluss).
 
 ### Meisterprüfung

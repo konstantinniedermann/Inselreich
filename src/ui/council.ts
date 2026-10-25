@@ -32,7 +32,7 @@ export const councilToggleAllowed = (world: World): boolean => councilBadge(worl
 /** Marke hervorheben, solange ein Beschluss ansteht. */
 export const councilBadgeActive = (world: World): boolean => openCouncilTiers(world).length > 0;
 
-/** Inhalt des Rats-Fensters: offene Stufen mit zwei Karten, gefasste Beschlüsse als Zeilen. */
+/** Inhalt des Rats-Fensters: offene Stufen mit zwei oder drei Karten, gefasste Beschlüsse als Zeilen. */
 export function councilCards(world: World): CouncilView {
   const open = openCouncilTiers(world).map((tier) => ({
     tier,

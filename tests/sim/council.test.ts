@@ -512,6 +512,10 @@ describe('I-153 Seerecht', () => {
       [3, 'C'],
       [4, 'D'],
       [4, null],
+      [4, 'constructor'],
+      [4, 'toString'],
+      [4, '__proto__'],
+      [2, 'hasOwnProperty'],
     ];
     for (const [t, s] of bad) {
       expect(() => decree(w, t, s)).not.toThrow();

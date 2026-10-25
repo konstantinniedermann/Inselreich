@@ -399,7 +399,7 @@ Kaufleute steigen nicht auf; für sie gibt es kein ‹niedrig›. ‹hoch› loh
 ## Rat (Ratsbeschluss)
 
 Ab dem ersten Haus der Stufe 2, 3 und 4 (auf irgendeiner Insel) wird je ein Beschluss «offen» und bleibt es dauerhaft, auch nach Abriss oder Abstieg. Der Spieler wählt
-einmal pro Stufe eine von zwei Seiten (A: schnellere Kette, B: Form der Stadt); der Beschluss gilt reichsweit bis Partie-Ende, kostet nichts und lässt sich nicht
+einmal pro Stufe eine der Seiten (A: schnellere Kette, B: Form der Stadt; auf Stufe 4 zusätzlich C: Seerecht); der Beschluss gilt reichsweit bis Partie-Ende, kostet nichts und lässt sich nicht
 rückgängig machen. Ein offener Beschluss wirkt nicht und läuft nicht ab. Die Zahlen stehen nur in `src/sim/defs/council.ts` (Änderung nur per Ruling, der Balancing-Test
 bleibt Regressionsschutz); die Lese-Helfer in `src/sim/council.ts` liefern ohne Beschluss genau den Wert aus den Defs.
 
