@@ -262,3 +262,8 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-25 · I-186 Ehrenbuch: zwei niedrige Review-Notizen (niedrig)
 
 - Fundort: `tests/ui/honorCard.test.ts`, `src/ui/app.ts` (`honors()`). Beobachtung: Der Karten-Test mockt `openModal`, Esc und Fokus sind nicht eigens getestet. `honors()` nutzt `honorHints(...)[0]` und hängt an der Reihenfolge Status- vor Tempo-Hinweis. Ursprung: Reviews T05/T07 (I-186). Einschätzung: niedrig, bei Änderung der Hinweisreihenfolge einen Test ergänzen.
+
+## 2026-10-25 · ORT-A: Importzyklus und knapper Test-Timeout (niedrig)
+
+- Fundort: `src/render/ortsrand.ts` ↔ `src/render/roadside.ts`. Beobachtung: gegenseitiger Import, funktioniert in beiden Reihenfolgen, fragil. Ursprung: ORT-A Final-Review (R882). Einschätzung: beim nächsten Render-Paket auflösen.
+- Fundort: Renderer-Test «L4 Deko-Culling». Beobachtung: 4851 ms bei Timeout 5000 ms. Ursprung: ORT-A. Einschätzung: ZEITRESERVE-PFLEGE-Kandidat.

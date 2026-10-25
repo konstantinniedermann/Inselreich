@@ -2359,3 +2359,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: INSELPROBEN (
 Regelbezug: R553, R816, R826, R856, R862, R864, R868 V1, R877, R880 · Kosten bei Irrtum: lokaler Revert vor dem Push.
 
 Entscheider: L0 · Anlass: Berichte lead-tech, lead-design, lead-qa, studio-coach · ADR: ADR-016 (I-186)
+
+## R882 · 2026-10-25 · REL-32b lokal; ORT-A AK-41/AK-07 für Weg-Objekte gelockert
+
+Ruling: (1) **REL-32b** (`.studio/handoffs/2026-10-25-lead-production-REL-32b.md`) abgenommen: 8 Branches (doku-runde, rest-3, tiefe-2, plan-inselproben, plan-i201, design-i197b, UI-HAEPPCHEN-J,
+I-186) lokal auf main `7c7ab4d2`, Konflikte nach Gate, Teilbeleg je Exit 0 (186 Vitest-Tests der Paketdateien). Push frühestens 2026-10-26 nach `make push-check` (R816). (2) **ORT-A** (`feat/ort-a` @
+`1435bd0a`, Delta-Review ZURÜCK wegen AK-41): AK-41 und AK-07 werden **für die Weg-Objekte** auf Radius **r ≤ 7** gelockert, Bedingung ist die lokale Annahmeregel (Los-Maximum unter kollidierenden
+Kandidaten) mit Test über die Probe (Seeds 1–20); Item-Kachel = freie Seitenkachel, Dichte lokal per 5×5-Fenster: ja. Budget +2 Starts; frischer opus-Delta-Review Pflicht; Spec-/Plan-Wortlaut im Branch
+nachführen. Beobachtungen: Zyklus `ortsrand.ts` ↔ `roadside.ts`; Renderer-Test «L4 Deko-Culling» 4851 ms nahe 5000-ms-Timeout.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Stadtplanung C1, LEBEN-STRASSE (warten auf ORT-A)
+Regelbezug: R329, R673, R708, R793, R816, R871 · Kosten bei Irrtum: sichtbares Umspringen von Weg-Objekten bis 7 Kacheln weit; Rückkehr zu r ≤ 3 per Ruling.
+
+Entscheider: L0 · Anlass: Berichte lead-production, lead-tech · ADR: —
