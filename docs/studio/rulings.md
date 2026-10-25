@@ -2153,3 +2153,17 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201 (B4/B5)
 Regelbezug: R896, R899 · Kosten bei Irrtum: Spec-Nachtrag.
 
 Entscheider: L0 · Anlass: Bericht lead-design I-210 · ADR: —
+
+## R904 · 2026-10-25 · Gate Spec I-210 BEDENKEN angenommen; Rechnung Zukaufpreis startet
+
+Ruling: Gate-Bericht `.studio/handoffs/2026-10-25-lead-qa-gate-spec-I-210.md` **BEDENKEN angenommen**. (1) Spec-Nachtrag ohne neue Spielwerte durch dieselbe `lead-design`-Instanz (Rest 1 Start,
+`design-spec-author`): B-1 Toleranz AK-BS-05 mit den echten Bändern, B-2 erste Marke `Sieg-Tick + 600`, B-3 §8-Grundregel korrigieren und die Begründung der Nein-Ware **auf der Karte zeigen** (eigenes AK,
+R896 (0)), B-4 als Restrisiko in der Spec ausweisen, B-6 AK-BS-13 mit Zahl und Fehlerrichtung. Kein neues Gate nötig. (2) **Plan-Auflagen** für den I-210-Plan: B-5 Tickrate vor Zusage messen (72 Läufe,
+< 30 s je Datei, sonst teilen), B-7 Migrationstest mit `SAVE_VERSION - 1`, B-8 AK für F-2 (Proben ohne Bittschrift), B-9 AK-BS-16 robust, B-10 AK-BS-17 als Zusatztest. (3) F-1/F-2/F-3 bleiben wie R903.
+(4) B-4 (Vorbereitung «Ja» mit Fischern dominiert in der stabilen Stadt) hängt an `BUY_RISE = 0` → **Rechnung «Zukaufpreis steigt»** jetzt (`lead-design` mit `design-economy-designer`, Budget 2); Eintrag in
+`docs/beobachtungen.md` mit Playtest-Frage nach Release.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, AUSBAU-LOGIK, Gründungsbrief, Handel
+Regelbezug: R896, R899, R903 · Kosten bei Irrtum: Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa I-210 · ADR: —
