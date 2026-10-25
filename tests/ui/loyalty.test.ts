@@ -98,6 +98,7 @@ describe('I-091 Treue: Texte (AK-TR-17, 18)', () => {
     const rep: StepReport = {
       lost: [],
       contract: { kind: 'excused', good: 'rum', reason: 'stock', island: HOME },
+      petitions: [],
     };
     announceContract([rep], out, w);
     expect(out.show).toHaveBeenCalledTimes(1);

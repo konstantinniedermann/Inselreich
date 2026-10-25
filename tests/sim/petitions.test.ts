@@ -20,7 +20,11 @@ import { needRate, overcrowdCap, petitionCycle, storageCap } from '../../src/sim
 import { petitionRng } from '../../src/sim/petitionRng';
 import { createRng } from '../../src/sim/rng';
 import type { PetitionEffectEntry, World } from '../../src/sim/types';
-import { createWorld } from '../../src/sim/world';
+import { createWorld, home } from '../../src/sim/world';
+import { demolish } from '../../src/sim/build';
+import { answerPetition, PETITION_REASONS, tickPetitions } from '../../src/sim/petitions';
+import { step, type StepReport } from '../../src/sim/tick';
+import { houseNearKontor, placeService, setHouse, village } from './helpers';
 
 describe('AK-BS-09 Wächter', () => {
   it('Zeitfenster passen in die Periode und in die 15 Minuten', () => {
@@ -229,5 +233,245 @@ describe('Leseorte', () => {
     expect(storageCap(w, 0, 'food')).toBe(STORAGE_CAP + 20);
     expect(storageCap(w, 0, 'wood')).toBe(STORAGE_CAP);
     expect(storageCap(w, 1, 'cloth')).toBe(STORAGE_CAP);
+  });
+});
+
+const OPTS = { unlockAll: true, crisisLevel: 'off', petitionsOn: true } as const;
+const zeroStock = (w: World): void => {
+  for (const g of GOOD_IDS) home(w).stock[g] = 0;
+};
+const run = (w: World, n: number): StepReport[] => {
+  const out: StepReport[] = [];
+  for (let i = 0; i < n; i++) out.push(step(w));
+  return out;
+};
+const mark = (w: World, id: PetitionId, amount = 10, anchor?: number): number => {
+  w.petitions.open.push({
+    id,
+    drawnAt: w.tick,
+    amount,
+    ...(anchor === undefined ? {} : { anchor }),
+  });
+  return w.tick;
+};
+
+describe('AK-BS-02 Start und Termine', () => {
+  it('vor Ziel 1 bleibt next null; danach T + 1 + 600, erste Marke genau dort, zweiter Termin +6000', () => {
+    const w = createWorld(3, OPTS);
+    run(w, 2000);
+    expect(w.petitions.next).toBeNull();
+    w.won = true;
+    run(w, 1);
+    const first = w.tick + PETITION_FIRST;
+    expect(w.petitions.next).toBe(first);
+    run(w, PETITION_FIRST - 1);
+    expect(w.petitions.open).toHaveLength(0);
+    run(w, 1);
+    expect(w.tick).toBe(first);
+    expect(w.petitions.open).toHaveLength(1);
+    expect(w.petitions.next).toBe(first + PETITION_PERIOD);
+  });
+  it('kein Kandidat: Termin fällt aus; beim zweiten Termin entsteht glaziers', () => {
+    const { w, houses } = village(1, { unlockAll: true });
+    w.petitions.on = true;
+    w.won = true;
+    w.wonSpice = true;
+    zeroStock(w);
+    run(w, 1);
+    const first = w.petitions.next!;
+    run(w, first - w.tick);
+    expect(w.petitions.open).toHaveLength(0);
+    expect(w.petitions.next).toBe(first + PETITION_PERIOD);
+    run(w, PETITION_PERIOD - 1);
+    zeroStock(w);
+    home(w).stock.glass = 20;
+    setHouse(houses[0]!, 4, 10);
+    run(w, 1);
+    expect(w.petitions.open.map((m) => m.id)).toEqual(['glaziers']);
+    expect(w.petitions.open[0]!.amount).toBe(5);
+  });
+});
+
+describe('AK-BS-06 Ware fehlt', () => {
+  it('Rum 0: Antwort gesperrt, Welt unverändert', () => {
+    const w = createWorld(3, OPTS);
+    home(w).stock.rum = 0;
+    const d = mark(w, 'tavern');
+    const before = JSON.stringify(w);
+    expect(answerPetition(w, d, 'yes')).toEqual({ ok: false, reason: 'Zu wenig Rum (0 / 10)' });
+    expect(JSON.stringify(w)).toBe(before);
+  });
+  it('B4: Stein fehlt, Rum bleibt, danach Nein ok', () => {
+    const { w } = village(1, { unlockAll: true });
+    w.petitions.on = true;
+    const chapel = placeService(w, 'chapel', 20, 20);
+    home(w).stock.rum = 30;
+    home(w).stock.stone = 4;
+    const d = mark(w, 'bell', 0, chapel.id);
+    expect(answerPetition(w, d, 'yes')).toEqual({ ok: false, reason: 'Zu wenig Stein (4 / 10)' });
+    expect(home(w).stock.rum).toBe(30);
+    expect(answerPetition(w, d, 'no').ok).toBe(true);
+  });
+  it('Lager fällt nach dem Ziehen: Ja gesperrt, nach 1200 Schritten gilt Nein', () => {
+    const w = createWorld(3, OPTS);
+    home(w).stock.rum = 0;
+    const d = mark(w, 'tavern');
+    expect(answerPetition(w, d, 'yes').ok).toBe(false);
+    run(w, PETITION_ANSWER);
+    expect(w.petitions.open[0]!.answer).toBe('no');
+  });
+});
+
+describe('AK-BS-07 Kandidaten', () => {
+  it('in 50 Seeds nie unbezahlbare oder unpassende Bitte; ohne Kandidat fällt der Termin aus', () => {
+    for (let seed = 1; seed <= 50; seed++) {
+      const w = createWorld(seed, OPTS);
+      setHouse(houseNearKontor(w), 3, 20);
+      zeroStock(w);
+      w.won = true;
+      w.petitions.next = 1;
+      run(w, 1);
+      const ids = w.petitions.open.map((m) => m.id);
+      for (const bad of ['tavern', 'bell', 'feastDrink', 'spiceSeed', 'weavers'] as const)
+        expect(ids, `${seed} ${bad}`).not.toContain(bad);
+      const v = createWorld(seed, OPTS);
+      setHouse(houseNearKontor(v), 3, 20);
+      zeroStock(v);
+      v.won = true;
+      v.wonSpice = true;
+      v.petitions.next = 1;
+      run(v, 1);
+      expect(v.petitions.open, `${seed}`).toHaveLength(0);
+      expect(v.petitions.next).toBe(1 + PETITION_PERIOD);
+    }
+  });
+});
+
+describe('AK-BS-08 Zwei offene Marken', () => {
+  it('keine dritte, next + 6000, beide getrennt beantwortbar', () => {
+    const w = createWorld(3, OPTS);
+    home(w).stock.cloth = 50;
+    w.won = true;
+    const d1 = mark(w, 'weavers');
+    w.tick += 1;
+    const d2 = mark(w, 'returnees', 0);
+    w.petitions.next = w.tick + 1;
+    run(w, 1);
+    expect(w.petitions.open).toHaveLength(2);
+    expect(w.petitions.next).toBe(w.tick + PETITION_PERIOD);
+    expect(answerPetition(w, d1, 'yes').ok).toBe(true);
+    expect(answerPetition(w, d2, 'no').ok).toBe(true);
+  });
+});
+
+describe('AK-BS-11 Anker', () => {
+  it('vor der Antwort abgerissen: Ja gesperrt, Nein ok', () => {
+    const { w } = village(1, { unlockAll: true });
+    w.petitions.on = true;
+    const chapel = placeService(w, 'chapel', 20, 20);
+    home(w).stock.rum = 30;
+    home(w).stock.stone = 30;
+    const d = mark(w, 'bell', 0, chapel.id);
+    expect(demolish(w, chapel.id).ok).toBe(true);
+    expect(answerPetition(w, d, 'yes')).toEqual({
+      ok: false,
+      reason: 'Kapelle steht nicht mehr',
+    });
+    expect(answerPetition(w, d, 'no').ok).toBe(true);
+  });
+  it('nach Ja abgerissen: bei dueTick lapsed, keine Wirkung, keine Erstattung', () => {
+    const { w } = village(1, { unlockAll: true });
+    w.petitions.on = true;
+    const chapel = placeService(w, 'chapel', 20, 20);
+    home(w).stock.rum = 30;
+    home(w).stock.stone = 30;
+    const d = mark(w, 'bell', 0, chapel.id);
+    expect(answerPetition(w, d, 'yes').ok).toBe(true);
+    expect(home(w).stock.rum).toBe(20);
+    demolish(w, chapel.id);
+    const rum = home(w).stock.rum;
+    const stone = home(w).stock.stone;
+    const reports = run(w, w.petitions.open[0]!.dueTick! - w.tick);
+    const kinds = reports.flatMap((r) => r.petitions.map((e) => e.kind));
+    expect(kinds).toEqual(['lapsed']);
+    expect(w.petitions.effects.filter((e) => e.answer === 'yes')).toEqual([]);
+    expect(home(w).stock.rum).toBe(rum);
+    expect(home(w).stock.stone).toBe(stone);
+  });
+  it('Ja mit stehendem Anker: Wirkung ab dueTick, Dank', () => {
+    const { w } = village(1, { unlockAll: true });
+    w.petitions.on = true;
+    const chapel = placeService(w, 'chapel', 20, 20);
+    home(w).stock.rum = 30;
+    home(w).stock.stone = 30;
+    const d = mark(w, 'bell', 0, chapel.id);
+    answerPetition(w, d, 'yes');
+    const reports = run(w, PETITIONS.bell.delay);
+    expect(reports.flatMap((r) => r.petitions.map((e) => e.kind))).toEqual(['thanks']);
+    expect(w.petitions.open).toHaveLength(0);
+    expect(w.petitions.effects).toEqual([
+      { id: 'bell', answer: 'yes', until: w.tick + PETITIONS.bell.duration, anchor: chapel.id },
+    ]);
+  });
+});
+
+describe('AK-BS-12 Pause und Frist', () => {
+  it('ohne step bleibt die Welt gleich; 1199 offen, 1200 Nein mit Genügsamkeit und Klage', () => {
+    const w = createWorld(3, OPTS);
+    const d = mark(w, 'tavern');
+    const before = JSON.stringify(w);
+    expect(JSON.stringify(w)).toBe(before);
+    run(w, PETITION_ANSWER - 1);
+    expect(w.petitions.open[0]!.answer).toBeUndefined();
+    const r = step(w);
+    expect(r.petitions).toEqual([{ kind: 'timeout', id: 'tavern', drawnAt: d }]);
+    expect(w.petitions.open[0]!.answer).toBe('no');
+    expect(w.petitions.open[0]!.dueTick).toBe(w.tick + PETITIONS.tavern.delay);
+    expect(w.petitions.effects).toEqual([
+      { id: 'tavern', answer: 'no', until: w.tick + FRUGAL_TICKS },
+    ]);
+    const later = run(w, PETITIONS.tavern.delay).flatMap((x) => x.petitions);
+    expect(later.map((e) => e.kind)).toEqual(['lament']);
+    expect(w.petitions.open).toHaveLength(0);
+  });
+});
+
+describe('Antwortgründe', () => {
+  it('aus, unbekannt, doppelt, Unbekannte Antwort, Fristtick', () => {
+    const off = createWorld(3);
+    const d0 = mark(off, 'tavern');
+    expect(answerPetition(off, d0, 'no')).toEqual({ ok: false, reason: PETITION_REASONS.off });
+    expect(PETITION_REASONS.off).toBe('Bittschriften aus');
+    const w = createWorld(3, OPTS);
+    home(w).stock.rum = 50;
+    const d = mark(w, 'tavern');
+    expect(answerPetition(w, d + 1, 'yes')).toEqual({ ok: false, reason: 'Keine offene Bitte' });
+    expect(answerPetition(w, d, 'maybe')).toEqual({ ok: false, reason: 'Unbekannte Antwort' });
+    expect(answerPetition(w, d, 'yes').ok).toBe(true);
+    expect(home(w).stock.rum).toBe(40);
+    expect(answerPetition(w, d, 'yes')).toEqual({ ok: false, reason: 'Schon beantwortet' });
+    expect(home(w).stock.rum).toBe(40);
+    const f = createWorld(3, OPTS);
+    const df = mark(f, 'tavern');
+    run(f, PETITION_ANSWER);
+    expect(answerPetition(f, df, 'yes')).toEqual({ ok: false, reason: 'Schon beantwortet' });
+  });
+  it('tickPetitions ist bei aus ein No-Op', () => {
+    const w = createWorld(3);
+    w.won = true;
+    expect(tickPetitions(w)).toEqual([]);
+    expect(w.petitions).toEqual({ on: false, next: null, open: [], effects: [] });
+  });
+});
+
+describe('AK-BS-16 petitions.ts ohne Spielwerte', () => {
+  const src = readFileSync('src/sim/petitions.ts', 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/.*$/gm, '');
+  it('keine Zahlen, keine Waren-Literale, Import der Defs', () => {
+    expect(src).not.toMatch(/\b(6000|4800|3000|2400|1800|1200)\b/);
+    expect(src).not.toMatch(/0xc2b2ae35|3266489909/i);
+    for (const g of GOOD_IDS) expect(src).not.toContain(`'${g}'`);
+    expect(src).toMatch(/from '\.\/defs\/petitions'/);
   });
 });

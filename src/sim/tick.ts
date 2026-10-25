@@ -1,6 +1,7 @@
 import { tickCrises } from './crises';
 import { tickEconomy } from './economy';
 import { tickOrders } from './orders';
+import { tickPetitions, type PetitionEvent } from './petitions';
 import { tickCouncil } from './council';
 import { citizens, merchants, tickPopulation, tickTaxes } from './population';
 import { tickProduction } from './production';
@@ -33,9 +34,11 @@ export interface StepReport {
   lost: ShipLoss[];
   /** Vertragsereignis dieses Schritts (I-047, R12), sonst `null`. */
   contract: ContractEvent | null;
+  /** Bittschrift-Ereignisse dieses Schritts (I-210); `[]` bei aus. */
+  petitions: PetitionEvent[];
 }
 
-/** Ein Simulationsschritt: Zähler, Produktion, Schiffe, Bevölkerung, Auflage, Ratsbeschluss (öffnet ab Hausstufe 2/3/4), Steuern, Wirtschaft (Unterhalt), Markt, Aufträge, Krisen, Sieg, Freischaltung. */
+/** Ein Simulationsschritt: Zähler, Produktion, Schiffe, Bevölkerung, Auflage, Ratsbeschluss (öffnet ab Hausstufe 2/3/4), Steuern, Wirtschaft (Unterhalt), Markt, Aufträge, Krisen, Bittschriften, Sieg, Freischaltung. */
 export function step(world: World): StepReport {
   world.tick += 1;
   tickProduction(world);
@@ -49,7 +52,8 @@ export function step(world: World): StepReport {
   tickMarket(world);
   const contract = tickOrders(world);
   tickCrises(world);
+  const petitions = tickPetitions(world);
   checkWin(world);
   tickUnlocks(world); // letzter Aufruf: Bitgleichheit, Spec 4.3, ADR-005-Nachtrag
-  return { lost, contract };
+  return { lost, contract, petitions };
 }
