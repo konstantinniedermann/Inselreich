@@ -1,3 +1,4 @@
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { COUNCIL } from '../../src/sim/defs/council';
 import { ROUTE_RESERVE, SHIP, SHIP_TICKS_PER_SEA_TILE } from '../../src/sim/defs/sea';
@@ -76,5 +77,76 @@ describe('I-153 Seerecht Wertewächter', () => {
     expect((cap * 100) / (2 * c * 35)).toBeGreaterThanOrEqual(need);
     expect((cap * 100) / (2 * t * 35)).toBeLessThan(need);
     expect((cap * 100) / (2 * t * 30)).toBeGreaterThanOrEqual(need);
+  });
+});
+
+const KEYWORD = /(?<![a-z])(?:lane|travel|ticks?)|Lane|Travel|Ticks/;
+const FACTOR = /(?<![\w.])(?:8|10)(?![\w.])\s*[*/]|[*/]\s*(?:8|10)(?![\w.])/;
+const READER = /\b(travelTicks|laneTicks)\(/;
+const READER_FILES = ['src/sim/islands.ts', 'src/sim/council.ts', 'src/sim/save.ts'];
+
+/** Ausnahmen vom Faktor-Muster; jeder Eintrag braucht eine Begründung. */
+const ALLOW: { file: string; line: string; why: string }[] = [
+  {
+    file: 'src/ui/time.ts',
+    line: '(perTicks * TICK_MS)) * 10) / 10',
+    why: 'Rundung auf eine Nachkommastelle (* 10) / 10, kein Fahrzeit-Bezug; Schlüsselwort nur über perTicks',
+  },
+];
+
+function factorHit(line: string): boolean {
+  return KEYWORD.test(line) && FACTOR.test(line);
+}
+
+function tsFiles(dir: string): string[] {
+  return readdirSync(dir)
+    .sort()
+    .flatMap((name) => {
+      const path = `${dir}/${name}`;
+      if (statSync(path).isDirectory()) return path === 'src/sim/defs' ? [] : tsFiles(path);
+      return name.endsWith('.ts') ? [path] : [];
+    });
+}
+
+function scan(test: (file: string, line: string) => boolean): string[] {
+  const hits: string[] = [];
+  for (const file of ['src/sim', 'src/render', 'src/ui'].flatMap(tsFiles)) {
+    readFileSync(file, 'utf8')
+      .split('\n')
+      .forEach((line, i) => {
+        if (test(file, line)) hits.push(`${file}:${i + 1}: ${line.trim()}`);
+      });
+  }
+  return hits;
+}
+
+function linesMatching(file: string, re: RegExp): number {
+  return readFileSync(file, 'utf8')
+    .split('\n')
+    .filter((l) => re.test(l)).length;
+}
+
+describe('I-153 Seerecht Fahrzeit-Wächter', () => {
+  it('factorHit trifft Fahrzeit-Faktoren, nicht Dezimalzahlen', () => {
+    expect(factorHit('ship.left = 10 * lane.d')).toBe(true);
+    expect(factorHit('travel * 8')).toBe(true);
+    expect(factorHit('const t = cycleTicks / 10')).toBe(true);
+    expect(factorHit('R(0.2, 0.4, 0.35 * 0.5 * h, 0.8 * 0.5 * h), plane: 0.56')).toBe(false);
+    expect(factorHit('ticks * 100')).toBe(false);
+    expect(factorHit('lane.d * 1000')).toBe(false);
+  });
+
+  it('AK-SR-21 Fahrzeit nur über den Helfer, 8 und 10 nur in den Defs', () => {
+    const factor = scan(
+      (file, line) =>
+        factorHit(line) && !ALLOW.some((a) => a.file === file && line.includes(a.line)),
+    );
+    expect(factor, `Fahrzeit-Faktor ausserhalb der Defs:\n${factor.join('\n')}`).toEqual([]);
+    const readers = scan((file, line) => READER.test(line) && !READER_FILES.includes(file));
+    expect(readers, `Fahrzeit-Leser ausserhalb des Helfers:\n${readers.join('\n')}`).toEqual([]);
+    expect([
+      linesMatching('src/sim/defs/council.ts', /kind: 'seaTileTicks', value: 8\b/),
+      linesMatching('src/sim/defs/sea.ts', /SHIP_TICKS_PER_SEA_TILE\s*=\s*10\b/),
+    ]).toEqual([1, 1]);
   });
 });
