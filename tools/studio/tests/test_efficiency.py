@@ -1276,3 +1276,74 @@ class CacheWriteFirstLoadTest(unittest.TestCase):
         self.assertGreater(new, old)
         self.assertTrue(lines[new].startswith("- Cache-Write 5 min"))
         self.assertIn("nur Info", lines[new])
+
+
+class OpusByKindTest(unittest.TestCase):
+    """E1 (R872): opus-Anteil nach Paketart, Design-Pakete getrennt."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        write(root / "s1.jsonl", [assistant("m1", "claude-opus-4", out=100)])
+        starts = [
+            ("d1", "lead-design", "Persona: lead-design\nPaket: D", "opus", 200),
+            (
+                "d2",
+                "general-purpose",
+                "Persona: qa-code-reviewer\nPaket: D",
+                "sonnet-5",
+                100,
+            ),
+            ("u1", "lead-tech", "Persona: lead-tech\nPaket: U", "opus", 200),
+            ("u2", "tech-ui-engineer", "Paket: U", "sonnet-5", 1000),
+            ("g1", "lead-qa", "Persona: lead-qa\nPaket: G", "opus", 100),
+            ("p1", "lead-tech", "Persona: lead-tech\nPaket: P", "opus", 100),
+            ("c1", "studio-coach", "Paket: C", "opus", 100),
+        ]
+        for name, kind, text, model, out in starts:
+            agent(
+                root,
+                "s1",
+                name,
+                {"agentType": kind},
+                [prompt(text), assistant(f"x{name}", f"claude-{model}", out=out)],
+            )
+        self.data = efficiency.compute(
+            [root / "s1.jsonl"], {}, phases={"s1:p1": "plan-P"}
+        )
+
+    def test_kinds_split(self):
+        kinds = self.data["opus_by_kind"]
+        self.assertEqual(
+            set(kinds), {"L0", "Design", "Plan", "Gate", "Umsetzung", "Sonstige"}
+        )
+        self.assertEqual(kinds["Design"]["instances"], 2)  # Reviewer im Design-Paket
+        self.assertAlmostEqual(kinds["Design"]["share"], 1000 / 1300)
+        self.assertAlmostEqual(kinds["Design"]["cost_share"], 1300 / 7300)
+        self.assertAlmostEqual(kinds["Umsetzung"]["share"], 1000 / 4000)
+        self.assertEqual(kinds["Plan"]["instances"], 1)
+        self.assertEqual(kinds["Gate"]["instances"], 1)
+        self.assertEqual(kinds["Sonstige"]["instances"], 1)
+        self.assertAlmostEqual(kinds["L0"]["share"], 1.0)
+
+    def test_without_design(self):
+        self.assertAlmostEqual(self.data["opus_ohne_design"], 3000 / 6000)
+        self.assertAlmostEqual(self.data["opus_share"], 4000 / 7300)
+
+    def test_rendered_line(self):
+        text = efficiency.render_section(self.data)
+        line = next(x for x in text.splitlines() if "ohne Design-Pakete" in x)
+        self.assertIn("50.0 %", line)
+        self.assertIn("≤ 60 %", line)
+        self.assertIn("R872", line)
+        self.assertIn("Design 76.9 % (2)", text)
+
+    def test_missing_kind_not_measured(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        write(root / "s1.jsonl", [assistant("m1", "claude-opus-4", out=100)])
+        data = efficiency.compute([root / "s1.jsonl"], {})
+        self.assertIsNone(data["opus_by_kind"]["Design"]["share"])
+        self.assertAlmostEqual(data["opus_ohne_design"], 1.0)

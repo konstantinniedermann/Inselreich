@@ -15,6 +15,10 @@ Prüfer `qa-playtester` · ≈ 30 Tools · AK-SR-22 bis AK-SR-24 · blocked-by: 
    3a. **Fernkarte in der Pause (R828 N3):** Stand mit laufendem Fernauftrag bzw. Fernangebot auf eine Insel, deren Rest knapp über 8 × d und unter 10 × d liegt (Weg im Report). In der Pause vor dem Beschluss: Fernkarte/Seekarte zeigt «≈ … Fahrt» mit 10er-Zeit und die Marke «· zu spät»; nach «Beschluss fassen» **ohne Fortsetzen**: «≈ … Fahrt» mit 8er-Zeit, «zu spät» verschwunden, Tooltip der Marke nennt die kürzere Fahrzeit. Screenshots `24-fern-vorher.png`, `24-fern-nachher.png`. Bleibt der alte Text bis zum nächsten Tick stehen: BEDENKEN mit Screenshot (Review Focus 1).
 4. Gegenprobe: Stufe 3 beschliessen rechnet nichts um (Inselkarte gleich).
 
+## Definition of Done
+
+Browser-Check je AK mit Screenshot; ändert keine Datei, daher kein Test- oder Lint-Lauf nötig. Vorab im Baum Teilbeleg grün (T06: `npx tsc --noEmit`, `make lint`, gezielte Tests); kein `make check` (R858, R860).
+
 ## Bericht
 
 Playtest-Report als Schlussbericht: je AK OK/BEDENKEN/ZURÜCK mit Screenshot-Pfad; Konsolenfehler wörtlich.
