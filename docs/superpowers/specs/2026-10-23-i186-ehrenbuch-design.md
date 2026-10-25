@@ -5,7 +5,7 @@ Rangliste TIEFE-1 Rang 1. Grundlage: [I-186 in `docs/ideen.md`](../../ideen.md),
 [`docs/recherche/2026-10-23-tiefe-1.md`](../../recherche/2026-10-23-tiefe-1.md) R1 1.3–1.5 (Frostpunk: Erfolge je
 Schwierigkeit; Dorfromantik und Islanders: Freischaltung trägt das Wiederspiel, Kritik «ein Gesamtziel fehlt»; Q9–Q14).
 Keine Nachrecherche nötig. Übernommen ist nur die Mechanik «dauerhafte Liste von Prüfungen je Schwierigkeit», keine
-Namen oder Inhalte (ADR-006). Plan: offen (`lead-tech`). Gate Spec: BEDENKEN (`lead-qa`), Nachtrag N1–N6
+Namen oder Inhalte (ADR-006). Plan: offen (`lead-tech`)Plan: `docs/superpowers/plans/2026-10-23-i186-ehrenbuch.md`. Gate Spec: BEDENKEN (`lead-qa`), Nachtrag N1–N6
 eingearbeitet, N7–N9 für den Plan (§11). L0 hat D1 a, D2 und D3 angenommen (§10).
 
 ## 1 Spielerzweck (ein Satz)

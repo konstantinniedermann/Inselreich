@@ -254,3 +254,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-25 · HAUSHALT-03: über 150 Worktrees ungemessen (niedrig)
 
 - Fundort: `.worktrees/`. Beobachtung: > 150 Worktrees, viele gemergt; `aufraeumen.json` misst sie nicht. Ursprung: HAUSHALT-03 (R876). Einschätzung: Schwelle und Trockenlauf «gemergte Worktrees» in `aufraeumen.py`, Entfernen nur ohne `--force` per Ruling.
+
+## 2026-10-25 · I-186 Ehrenbuch: zwei niedrige Review-Notizen (niedrig)
+
+- Fundort: `tests/ui/honorCard.test.ts`, `src/ui/app.ts` (`honors()`). Beobachtung: Der Karten-Test mockt `openModal`, Esc und Fokus sind nicht eigens getestet. `honors()` nutzt `honorHints(...)[0]` und hängt an der Reihenfolge Status- vor Tempo-Hinweis. Ursprung: Reviews T05/T07 (I-186). Einschätzung: niedrig, bei Änderung der Hinweisreihenfolge einen Test ergänzen.
