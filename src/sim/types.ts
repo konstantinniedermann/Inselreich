@@ -310,7 +310,7 @@ export interface CouncilDef {
   lever: CouncilLever;
 }
 export interface World {
-  version: 18;
+  version: 19;
   seed: number;
   islands: Island[];
   tick: number;

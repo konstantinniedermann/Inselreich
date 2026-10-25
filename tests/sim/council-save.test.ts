@@ -2,7 +2,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { decree } from '../../src/sim/council';
-import { SAVE_VERSION, deserialize, migrateV16ToV17, serialize } from '../../src/sim/save';
+import {
+  SAVE_VERSION,
+  deserialize,
+  migrateV16ToV17,
+  migrateV18ToV19,
+  serialize,
+} from '../../src/sim/save';
 import type { CouncilState, Tier, World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 import { putBuilding, sortedJson } from './helpers';
@@ -177,5 +183,42 @@ describe('I-153 Seerecht Save', () => {
       expect(() => (r = deserialize(JSON.stringify(raw)))).not.toThrow();
       expect(r).toEqual(BAD);
     }
+  });
+});
+
+describe('I-153 Seerecht Save-Version (F3)', () => {
+  const PRE_SEERECHT_VERSION = 18;
+
+  it('AK-SR-12 SAVE_VERSION ist der Stand vor Seerecht plus 1', () => {
+    expect(SAVE_VERSION).toBe(PRE_SEERECHT_VERSION + 1);
+  });
+
+  it('AK-SR-12 v18-Stand lädt als Version 19, council und ships bleiben gleich', () => {
+    const w = createWorld(3);
+    const raw = json(w);
+    raw.version = PRE_SEERECHT_VERSION;
+    const m = load(JSON.stringify(raw));
+    expect(m.version).toBe(SAVE_VERSION);
+    expect(m.council).toEqual(w.council);
+    expect(m.ships).toEqual(w.ships);
+  });
+
+  it('AK-SR-12 migrateV18ToV19 ändert nur die Version und wirft nie', () => {
+    const raw = { ...json(createWorld(3)), version: 18 };
+    const copy = structuredClone(raw);
+    migrateV18ToV19(raw);
+    expect(raw.version).toBe(19);
+    expect({ ...raw, version: 0 }).toEqual({ ...copy, version: 0 });
+    const empty: Record<string, unknown> = {};
+    expect(() => migrateV18ToV19(empty)).not.toThrow();
+  });
+
+  it('F3 älterer Build weist Seerecht-Stand über die Version ab', () => {
+    const { w } = laneWorld(30);
+    w.council[4] = 'C';
+    const raw = json(w);
+    expect(raw.version).toBe(SAVE_VERSION);
+    raw.version = SAVE_VERSION + 1;
+    expect(deserialize(JSON.stringify(raw))).toEqual({ ok: false, reason: 'Unbekannte Version' });
   });
 });

@@ -54,7 +54,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 18;
+export const SAVE_VERSION = 19;
 
 export type { LoadResult };
 
@@ -942,6 +942,11 @@ function isValidCouncil(raw: Record<string, unknown>): boolean {
   );
 }
 
+/** v18 → v19 (I-153 Seerecht): nur die Versionsnummer; ältere Builds weisen Stände mit Beschluss C über sie ab. Wirft nie. */
+export function migrateV18ToV19(raw: Record<string, unknown>): void {
+  raw.version = 19;
+}
+
 /** v17 → v18 (I-132): `trial` mit Startwerten. Wirft nie. */
 export function migrateV17ToV18(raw: Record<string, unknown>): void {
   raw.trial = { active: null, ticks: 0, e0: 0, passed: [] };
@@ -1035,6 +1040,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 15) migrateV15ToV16(raw);
   if (raw.version === 16) migrateV16ToV17(raw);
   if (raw.version === 17) migrateV17ToV18(raw);
+  if (raw.version === 18) migrateV18ToV19(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

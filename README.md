@@ -314,7 +314,7 @@ Ereignisse zeigt ungelesene Meldungen als (n neu), ab 10 (9+ neu); Aufklappen se
 - **Neue Insel:** Menü → «Neue Insel» fragt zuerst «Neue Insel beginnen?» (Ja / Abbrechen), dann entsteht
   eine neue Insel mit Tempo 1× und der gewählten Krisenstufe. Der Autosave bleibt, bis der nächste ihn
   überschreibt. Die Kartennummer steht im Menü («Karte …»).
-- **Spielstand-Version 18:** Ältere Stände laden weiter und werden über die Migrationskette ergänzt (ab Version 13 kommt dabei die dritte Fremdinsel «Weidenau» ohne Kontor dazu). Ein Stand aus einer neueren Version wird mit Hinweis («Unbekannte Version») abgewiesen; das laufende Spiel bleibt unverändert.
+- **Spielstand-Version 19:** Ältere Stände laden weiter und werden über die Migrationskette ergänzt (ab Version 13 kommt dabei die dritte Fremdinsel «Weidenau» ohne Kontor dazu). Ein Stand aus einer neueren Version wird mit Hinweis («Unbekannte Version») abgewiesen; das laufende Spiel bleibt unverändert.
 - Spielstände vom Stand vor der Seefahrt (Version 8) lassen sich laden: Sie bekommen je Kaufmannshaus 10 Gewürz
   (höchstens 100) im Heimatlager als Übergang und eine einmalige Meldung.
 - Spielstände älterer Versionen (vor M5 bzw. vor M6) lassen sich laden und werden danach im neuen Format
