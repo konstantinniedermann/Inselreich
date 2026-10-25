@@ -214,7 +214,7 @@ Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine 
    - **AUSBAU-LOGIK** (`feat/ausbau-logik` @ `38279658`, T01/T02 abgenommen, Budget 32 frei): T03 (Umsetzer per SendMessage fortsetzbar laut Handoff), T00-Messung, T04 ff.; Fixtures v6/v7 ins Final-Review (R969).
    - **HAFEN L1** frei (R961) — erster freier Controller-Platz; Hinweise T05/T06 (Timeouts) ins Briefing.
    - **I-214** (Plan `plan/i214-gruendungsbrief` @ `a101aac3`, Budget 34) — startbereit. **GEBAEUDE-VARIANZ**, **FLAECHE**, INSELPROBEN T12–T14, ORT-A, Stadtrecht, I-197/I-197b unverändert.
-3. **Testfrei:** **Plan I-215** fertigstellen (`plan/i215-volllast` @ `f61d2013`, Entwurf; offen Vorprüfliste (3) Messung, (4) Index-Abgleich; Handoff `…lead-tech-plan-I-215.md`), dann Gate Plan (P-1–P-9, E-VL-1 ja R969).
+3. **Testfrei:** **Gate Plan I-215** (`plan/i215-volllast` @ `ce3f742d`, fertig, Vorprüfliste 1–5 erfüllt; P-1–P-9 entscheiden, E-VL-1 ja R969; Umsetzung beantragt 16 Starts).
    **«Neue Ufer» NU-1** (`design/neue-ufer`, R966/R970): lead-design sichtet Anhang 01 E-01–E-14, dann Spec-Nachtrag sonnet (Zahlen einsetzen, ≤ 40 KB, Anhang 02), Selbstabnahme, Gate Spec (ADR-010-Nachtrag). IDEEN-20-Folgen: Pitch I-222, Rechnungen I-221/I-223 (R967). Retro-Vorschläge 8361ff82 entscheiden.
 4. **Save-Kette:** Nummern nur per Merge-Reihenfolge (R909): SEERECHT 19 (REL-33), danach je main + 1 (I-210 T16, I-214, GV, HAFEN S3/S4, FLAECHE FL-3, AL Etappe 2, Volllast).
 5. **Erweiterung 2 «Neue Ufer»** (I-194): Designvorschlag frei (R966), Etappen NU-1…NU-4; NU-2 erst nach HAFEN/FLAECHE-Merge.
@@ -243,7 +243,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts aktiv. Session 8361ff82 bei 5 h ≈ 88 % beendet (R959); alle Leads haben gesichert. Ein Hintergrund-Messskript von plan-I-215 (`scratchpad/i215/wait-measure.sh`, ≤ 40 min) kann noch laufen, harmlos. Session 48c8580f bei gelber Ampel (5 h ≈ 65 %) beendet; alle Leads haben übergeben (Handoffs `.studio/handoffs/2026-10-25-*`).
+- Nichts aktiv. Session 8361ff82 bei 5 h ≈ 88 % beendet (R959); alle Leads haben gesichert. Session 48c8580f bei gelber Ampel (5 h ≈ 65 %) beendet; alle Leads haben übergeben (Handoffs `.studio/handoffs/2026-10-25-*`).
 
 ## Parallele Sessions
 
@@ -253,7 +253,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Seit letzter Session erledigt
 
-- **Session 8361ff82 (R959–R970, 2026-10-25):** R959 Dauerauftrag Wellen bei gelb (bis 85 %, Ende ab 90 %); ZEITPIN-D1 Pin 3,5 ms (R968); Gate Spec I-215 + Nachtrag + Kurzprüfung, Spec frei (R960/R963), Plan I-215 Entwurf; Gegenlesen HAFEN OK (R961); COACH-R957 Handbuch 1.78 (R964); TIEFE-5 Rivalen (R965); IDEEN-20 (R967); «Neue Ufer» Brainstorming, Designvorschlag frei, NU-1 Werte und Spec als Zwischenstand (R962/R966/R970); I-210 T02/T03, AUSBAU-LOGIK T01/T02 (R969).
+- **Session 8361ff82 (R959–R970, 2026-10-25):** R959 Dauerauftrag Wellen bei gelb (bis 85 %, Ende ab 90 %); ZEITPIN-D1 Pin 3,5 ms (R968); Gate Spec I-215 + Nachtrag + Kurzprüfung, Spec frei (R960/R963), Plan I-215 fertig (`ce3f742d`); Gegenlesen HAFEN OK (R961); COACH-R957 Handbuch 1.78 (R964); TIEFE-5 Rivalen (R965); IDEEN-20 (R967); «Neue Ufer» Brainstorming, Designvorschlag frei, NU-1 Werte und Spec als Zwischenstand (R962/R966/R970); I-210 T02/T03, AUSBAU-LOGIK T01/T02 (R969).
 - **Session 48c8580f (R922–R956, 2026-10-25):** R922 Dauerauftrag Headless-Chrome; Gates Spec HAFEN/FLAECHE/I-214 + Nachträge + Gegenlesen; Gegenlesen GV/AL; **sechs Pläne** (I-210, AUSBAU-LOGIK, HAFEN, GV, FLAECHE,
   I-214) mit Gate Plan und Nachträgen, alle startbereit (HAFEN nach Gegenlesen); A1-Browser-Beleg + Konfliktmerge; REL-33 gebündelt (Push offen); I-201 abgenommen (R950) + Gate Merge; I-210 T00/T01, AUSBAU T01;
   Art-Brief HAFEN; TIEFE-4, IDEEN-19, Rechnungen Rückfracht und Volllast, Spec Volllast; Handbuch 1.77 (COACH-R920); Kurz-Retro.
