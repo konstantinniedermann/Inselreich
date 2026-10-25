@@ -2092,3 +2092,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (Fah
 Regelbezug: R236, R896 · Kosten bei Irrtum: Spec-Umplanung.
 
 Entscheider: L0 · Anlass: Bericht lead-tech BUG-SCHIFF · ADR: —
+
+## R899 · 2026-10-25 · I-210 Bittschrift: Gegenzug H3 + H4, Spec startet
+
+Ruling: Rechnung `design/i210-bittschrift` @ `d4f935b7` abgenommen: In Ideenform dominiert «Nein» (Zuzug füllt sich selbst, `BUY_RISE = 0` macht jede Warenforderung zu Geld). Entwürfe: **R-A** ja — Spec mit
+H3 («Ja»: befristete Überbelegung +15 % Einwohner für 6000 T mit vollem Mehrverbrauch) + H4 («Nein»: −10 % Bedarf der erbetenen Ware für 1800 T), B10 gestrichen; schlanke Stadt wählt «Nein», Vorratsstadt
+«Ja» — Ursache und Wirkung im Spielbild erklärbar (R896 (0)). **F1** ja — Überbelegung zählt für Siegziele, Ehrenbuch-Lohn ohne Geld prüfen; «nach Ziel 3 mit Krisen aus» ausserhalb Scope. **R-B** ja —
+Welt-Standard aus, neue Partien starten mit «an», Baseline bitgleich, `balance.test.ts` unberührt; Save = main + 1 beim Merge. Spec durch dieselbe Lead-Instanz (Budget-Rest 2). Befund `BUY_RISE = 0` blockiert
+drei Spätspiel-Ideen → Rechnung «Zukaufpreis steigt» als Kandidat für den nächsten freien Design-Platz.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT (Save 19), INSELPROBEN (Save), AUSBAU-LOGIK (Bedarf)
+Regelbezug: R722, R862, R896 · Kosten bei Irrtum: Spec-Umbau vor Plan.
+
+Entscheider: L0 · Anlass: Bericht lead-design I-210 · ADR: —
