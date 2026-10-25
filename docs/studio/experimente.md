@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R878 (9), 2026-10-25): E-066, E-068, E-073; E-063 `behalten`, abgeschlossen (R878 (9)); E-064 Bewertung `behalten` als Entwurf, bis L0 bestätigt. Passiv ohne Platz (wirken sofort, Muster E-059): E-071, E-072, E-074, E-076. Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056; E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R878 (9), 2026-10-25): E-066, E-068, E-073; E-063 `behalten`, abgeschlossen (R878 (9)); E-064 Bewertung `behalten` als Entwurf, bis L0 bestätigt. Passiv ohne Platz (wirken sofort, Muster E-059): E-071, E-072, E-074, E-076, E-077, E-078, E-079 (R957). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056; E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 Offene Messaufträge ohne Platz (R886 (2), Retro [session-47d29586-ende](retros/2026-10-25-session-47d29586-ende.md)), Verantwortlich `studio-coach`:
 
@@ -799,4 +799,40 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Briefing-Standard), `docs/studio/templates/briefing.md` (Pflichtzeilen je Paketart), `docs/studio/CHANGELOG.md`
 - Ruling: R886 (2)
 - Start: 2026-10-25 (Handbuch 1.76; wirkt sofort, Zählung `laufend` erst bei freiem Platz; 3 laufen: E-066, E-068, E-073)
+- Bewertung: –
+
+## E-077 · umgesetzt (R957 V1, läuft passiv ohne Platz wie E-076) · Delta-Review-Wortlaut nach R673 in Persona und Handbuch
+
+- Hypothese: Wenn `lead-tech.md` und STUDIO.md (Final-Review ZURÜCK, R553) «Delta-Review = frischer opus-Start (R673/R774)» statt «Fortsetzung per `SendMessage`» sagen, entfällt der Gate-Befund «Delta-Review per SendMessage» in neuen Plänen (Retro [session-48c8580f-ende](retros/2026-10-25-session-48c8580f-ende.md) B1).
+- Messgrösse: 0 Gate-Plan-Befunde und 0 Plan-Indexe mit «Delta-Review … SendMessage» in den nächsten 4 Gate-Plan-Berichten (Zählung `rg -n "Delta.*SendMessage" .studio/handoffs/ docs/superpowers/plans/`, nur Dateien nach Umsetzung). Ausgang: 3 von 5 Gate-Plan-Berichten mit Befund (48c8580f).
+- Messbarkeit: unverändert; Gate-Berichte und Plan-Indexe bleiben die Quelle, die Regel entfernt keine.
+- Zeitraum: 4 Gate-Plan-Berichte, höchstens bis 2026-11-19.
+- Rückfall: Handbuch 1.77 und Persona lead-tech 1.18 an beiden Stellen (`git show ea7a4ea4:docs/studio/STUDIO.md`, Absatz «Final-Review ZURÜCK»; `git show ea7a4ea4:.claude/agents/lead-tech.md`, Abschluss); Gate-Prüfung R673 bleibt.
+- Dateien: `.claude/agents/lead-tech.md`, `docs/studio/STUDIO.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R957 (V1)
+- Start: 2026-10-25 (Handbuch 1.78, Persona lead-tech 1.19; wirkt sofort, ohne Platz; 3 laufen: E-066, E-068, E-073)
+- Bewertung: –
+
+## E-078 · umgesetzt (R957 V2, läuft passiv ohne Platz wie E-076) · Gate-Vorprüfliste im Plan-Auftrag
+
+- Hypothese: Wenn der Plan-Autor vor «Plan fertig» die fünf wiederkehrenden Gate-Klassen selbst abhakt (Delta-Review frisch; «Last ≤ 4 nötig» in jedem Messtask; Zeit-Tests mit Messwert R392/R905; Index gegen Tasks widerspruchsfrei; jeder angenommene Ruling-Entwurf einem Task zugeordnet), sinkt die Zahl der «hoch/mittel»-Befunde je Gate Plan (Retro [session-48c8580f-ende](retros/2026-10-25-session-48c8580f-ende.md) B2, B3).
+- Messgrösse: im Mittel ≤ 2 «hoch/mittel»-Befunde je Gate-Plan-Bericht über die nächsten 4 Pläne (Einstufung der Berichte). Ausgang 48c8580f: I-210 1 mittel, FLAECHE 4 (2 hoch, 2 mittel), HAFEN 7 (4 hoch), Mittel 4,0.
+- Messbarkeit: unverändert; die Gate-Berichte stufen weiter selbst ein, die Vorprüfliste steht zusätzlich im Plan-Bericht und ist zählbar.
+- Zeitraum: 4 Pläne, höchstens bis 2026-11-19.
+- Rückfall: Pflichtzeile «Gate-Vorprüfliste» aus `templates/briefing.md` und Absatz aus `lead-tech.md` (Stufe voll, Schritt 2) streichen, Version erneut hochzählen.
+- Dateien: `docs/studio/templates/briefing.md`, `.claude/agents/lead-tech.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R957 (V2)
+- Start: 2026-10-25 (Handbuch 1.78, Persona lead-tech 1.19; ohne Platz)
+- Bewertung: –
+
+## E-079 · umgesetzt (R957 V3 zusammen mit V2, läuft passiv ohne Platz wie E-061) · Plan-Nachtrag aus Gate-Auflagen auf sonnet
+
+- Hypothese: Ein Plan-Nachtrag, der nur Gate-Auflagen einarbeitet (mechanisch, danach Gegenlesen `lead-qa`), braucht kein opus (analog E-061); der opus-Anteil der Paketart Plan sinkt, ohne dass das Gegenlesen mehr Rückläufe findet (Retro [session-48c8580f-ende](retros/2026-10-25-session-48c8580f-ende.md) B2, Ampel opus-Anteil rot 80,1 %, E-075 nicht bestätigt mit 78,1 %).
+- Messgrösse: (a) Gegenlesen findet je Nachtrag ≤ 1 unerfüllte Auflage (Ausgang nicht gemessen, erste Beobachtung ist Teil des Experiments); (b) opus-Anteil Plan in `metrics.py --efficiency` («opus-Anteil je Paketart», E-075) ≤ 85 % über 2 Sessions (Ausgang 100 %).
+- Messbarkeit: unverändert; die Paketart Plan bleibt in `efficiency.py` getrennt ausgewiesen, Nachträge auf sonnet erscheinen dort als sonnet-Anteil.
+- Zeitraum: 2 Sessions, höchstens bis 2026-11-19.
+- Rückfall: Einsatz «Plan-Nachtrag aus Gate-Auflagen» aus der Modelltabelle und Kopfzeilen-Liste (STUDIO.md Modellwahl), Pflichtzeile aus `templates/briefing.md` und Satz in `lead-tech.md` (Modell) streichen; Nachträge wieder auf opus. Auflage «Inhaltslücke» (hoch) bleibt von Anfang an auf opus.
+- Dateien: `docs/studio/STUDIO.md` (Modellwahl), `docs/studio/templates/briefing.md`, `.claude/agents/lead-tech.md`, `docs/studio/CHANGELOG.md`
+- Ruling: R957 (V3)
+- Start: 2026-10-25 (Handbuch 1.78; ohne Platz)
 - Bewertung: –

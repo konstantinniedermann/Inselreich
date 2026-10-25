@@ -22,6 +22,20 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-25 · Handbuch 1.78
+
+- Anlass: Kurz-Retro 48c8580f (V1–V3) und Dauerauftrag „5-h-Fenster ausschöpfen“; Auftrag COACH-R957
+- Datenbasis: `docs/studio/retros/2026-10-25-session-48c8580f-ende.md` (Branch `docs/retro-48c8580f`), `docs/studio/metriken/S-2026-10-25-48c8580f.md` (opus-Anteil 80,1 %, Plan 100 %), Gate-Plan-Berichte I-210, FLAECHE, HAFEN
+- Ruling: R957, R959
+- Änderungen: STUDIO.md Umsetzungszyklus, Final-Review ZURÜCK: Wortlaut «Delta-Review = frischer `opus`-Start (R673/R774)» statt `SendMessage`-Fortsetzung (V1, E-077). Modellwahl: Einsatz «Plan-Nachtrag aus Gate-Auflagen» unter `sonnet`, Kopfzeilen-Liste ergänzt (V3, E-079). Limits und Sessiongrösse: Richtwerte R69 in Fassung R959 (neue Starts bis 85 %, ab 85 % nur Angefangenes, ab 90 % Ende-Routine), Ampel gelb stoppt keine Wellen, rot mit 85/90-Stufen. `templates/briefing.md`: Pflichtzeilen Gate-Vorprüfliste im Plan-Paket (V2, E-078) und Plan-Nachtrag auf `sonnet` (V3). Output-Style `projektleiter.md` Zeile «Kapazität» an R959 angeglichen. `experimente.md`: E-077–E-079 neu (passiv ohne Platz). Basis `docs/coach-r920` (1.77)
+
+## 2026-10-25 · Persona lead-tech 1.19
+
+- Anlass: Kurz-Retro 48c8580f, V1–V3; Auftrag COACH-R957
+- Datenbasis: `docs/studio/retros/2026-10-25-session-48c8580f-ende.md` (B1: Gate-Befund «Delta-Review per SendMessage» in 3 von 5 Gate-Plan-Berichten; B2: hoch/mittel-Befunde je Gate Plan)
+- Ruling: R957
+- Änderungen: Abschluss: R553-Wortlaut auf «Delta-Review = frischer opus-Start (R673/R774)» (V1). Stufe voll, Schritt 2: Gate-Vorprüfliste mit fünf Klassen vor «Plan fertig» (V2). Modell: Plan-Nachtrag aus Gate-Auflagen auf `sonnet`, Auflage «Inhaltslücke» (hoch) auf `opus` (V3)
+
 ## 2026-10-25 · Handbuch 1.77
 
 - Anlass: Kurz-Retro f8716d75 (V1–V3) und Dauerauftrag N-102; Auftrag COACH-R920
