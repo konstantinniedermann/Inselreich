@@ -30,7 +30,7 @@ import { PAUSED_UPKEEP_PCT } from '../../src/sim/defs/buildings';
 import { LEVELS } from '../../src/sim/defs/levels';
 import { SERVICE_BUILDING, SERVICE_IDS } from '../../src/sim/population';
 import { sellPrice } from '../../src/sim/trade';
-import type { GoodId } from '../../src/sim/types';
+import type { LevelDef } from '../../src/sim/defs/levels';
 import { ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from '../../src/sim/defs/sea';
 import {
   MONUMENT_GOODS,
@@ -235,31 +235,16 @@ describe('M11 Ausbau-Werte (Spec 3.6)', () => {
     expect(LEVELS.spicefarm).toBeUndefined(); // bewusst ohne Ausbaustufen
     expect(producers).toHaveLength(11);
     expect(Object.keys(LEVELS).sort()).toEqual(producers);
-    const T = (
-      c: number,
-      u: number,
-      m: number,
-      h: number,
-      w: number,
-      s: number,
-      g: GoodId,
-      a: number,
-    ) => ({
-      cycle: c,
-      upkeep: u,
-      cost: { money: m, wood: h, tools: w, stone: s },
-      fee: { good: g, amount: a },
-    });
-    expect(LEVELS.hunter).toEqual([
-      T(30, 7, 25, 1, 1, 0, 'cloth', 2),
-      T(20, 9, 38, 2, 1, 0, 'rum', 2),
+    expect(LEVELS.hunter!.map((l) => [l.cycle, l.upkeep, l.cost.money])).toEqual([
+      [30, 7, 85],
+      [20, 9, 88],
     ]);
-    expect(LEVELS.cattlefarm).toEqual([
-      T(12, 13, 125, 8, 2, 0, 'cloth', 3),
-      T(8, 17, 188, 12, 3, 0, 'rum', 3),
+    expect(LEVELS.cattlefarm!.map((l) => [l.cycle, l.upkeep, l.cost.money])).toEqual([
+      [12, 13, 215],
+      [8, 17, 248],
     ]);
     for (const id of producers) {
-      const [s2, s3] = LEVELS[id]!;
+      const [s2, s3] = LEVELS[id] as [LevelDef, LevelDef];
       for (const n of [
         s2.cycle,
         s2.upkeep,
@@ -270,7 +255,7 @@ describe('M11 Ausbau-Werte (Spec 3.6)', () => {
       ])
         expect(Number.isInteger(n), id).toBe(true);
       expect(s3.cycle, id).toBeLessThan(s2.cycle);
-      expect([s2.fee.good, s3.fee.good], id).toEqual(['cloth', 'rum']);
+      expect(s2.extra === undefined && s3.extra === undefined, id).toBe(id !== 'fisher');
     }
   });
 });

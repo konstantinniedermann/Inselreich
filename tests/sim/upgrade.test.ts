@@ -7,7 +7,7 @@ import { paidCost, upgradeBuilding } from '../../src/sim/upgrade';
 import { demolish } from '../../src/sim/build';
 import { beginCrisis } from '../../src/sim/crises';
 import { FIRE_OUTAGE } from '../../src/sim/defs/timing';
-import { LEVELS, type LevelDef } from '../../src/sim/defs/levels';
+import { LEVELS } from '../../src/sim/defs/levels';
 import { UNLOCKS } from '../../src/sim/defs/unlocks';
 import { cycleOf, upkeepOf, utilization } from '../../src/sim/levels';
 import { goodsBalance } from '../../src/sim/queries';
@@ -40,38 +40,11 @@ const world = (): World => {
 };
 
 describe('M11 Ausbau-Werte (Anhang 01 A.4)', () => {
-  it('LEVELS: neun heutige Betriebe, Werte Anhang 01 A.4, ganzzahlig, Stufe 3 schneller als 2 (Vorstufe AK-P3-01)', () => {
-    const T = (
-      cycle: number,
-      upkeep: number,
-      m: number,
-      h: number,
-      wz: number,
-      s: number,
-      good: GoodId,
-      amount: number,
-    ) => ({
-      cycle,
-      upkeep,
-      cost: { money: m, wood: h, tools: wz, stone: s },
-      fee: { good, amount },
-    });
-    const want: Record<string, [LevelDef, LevelDef]> = {
-      fisher: [T(24, 7, 50, 3, 1, 0, 'cloth', 2), T(16, 9, 75, 4, 2, 0, 'rum', 2)],
-      lumberjack: [T(18, 7, 25, 0, 1, 0, 'cloth', 2), T(12, 9, 38, 0, 1, 0, 'rum', 2)],
-      quarry: [T(36, 13, 75, 5, 2, 0, 'cloth', 2), T(24, 17, 113, 8, 3, 0, 'rum', 2)],
-      sheepfarm: [T(30, 13, 75, 5, 1, 0, 'cloth', 3), T(20, 17, 113, 8, 2, 0, 'rum', 3)],
-      canefarm: [T(30, 13, 75, 5, 1, 0, 'cloth', 3), T(20, 17, 113, 8, 2, 0, 'rum', 3)],
-      weaver: [T(30, 20, 100, 8, 2, 0, 'cloth', 3), T(20, 26, 150, 12, 3, 0, 'rum', 3)],
-      toolmaker: [T(48, 33, 100, 8, 2, 0, 'cloth', 3), T(32, 43, 150, 12, 3, 0, 'rum', 3)],
-      distillery: [T(30, 26, 125, 8, 2, 3, 'cloth', 3), T(20, 34, 188, 12, 3, 4, 'rum', 3)],
-      glassworks: [T(30, 33, 150, 10, 3, 5, 'cloth', 3), T(20, 43, 225, 15, 5, 8, 'rum', 3)],
-    };
-    for (const [id, lv] of Object.entries(want))
-      expect(LEVELS[id as BuildingDefId], id).toEqual(lv);
+  it('LEVELS: elf Betriebe, ganzzahlig, Stufe 3 schneller als 2 (Werte im Detail: levelRules.test.ts)', () => {
+    expect(Object.keys(LEVELS)).toHaveLength(11);
     for (const lv of Object.values(LEVELS)) {
-      expect(lv![1].cycle).toBeLessThan(lv![0].cycle);
-      for (const n of [lv![0].cycle, lv![0].upkeep, lv![1].cycle, lv![1].upkeep])
+      expect(lv![1]!.cycle).toBeLessThan(lv![0]!.cycle);
+      for (const n of [lv![0]!.cycle, lv![0]!.upkeep, lv![1]!.cycle, lv![1]!.upkeep])
         expect(Number.isInteger(n)).toBe(true);
     }
   });
@@ -120,11 +93,12 @@ describe('M11 Ausbau (Spec 3.6)', () => {
     f.state = 'ok';
     no(f.id, 'Zu wenig Geld'); // (6) checkAfford
     w.money = 1000;
-    no(f.id, 'Zu wenig Stoff'); // (7) Gebühr Stufe 2
+    no(f.id, 'Zu wenig Stoff'); // (7) Ware Stufe 2
     home(w).stock.cloth = 2;
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     w.unlocked = ['U0', 'U2', 'U3', 'U4', 'U5'];
-    no(f.id, 'Zu wenig Rum'); // (7) Gebühr Stufe 3
+    home(w).stock.stone = 2;
+    no(f.id, 'Zu wenig Stoff'); // (7) Ware Stufe 3 (Stoff 2, kein Rum mehr)
   });
   it('AK-P3-04 Ausbau bei progress 30: nächster Schritt +1 Nahrung, progress 0', () => {
     const w = world();
@@ -155,20 +129,24 @@ describe('M11 Ausbau (Spec 3.6)', () => {
 });
 
 describe('M11 Ausbau: Abriss, Freischaltung, Brand (Spec 3.6, 4)', () => {
-  it('AK-P3-05 Abriss Fischer Stufe 3: +112 Geld, +6 Holz, +2 Werkzeug; Stoff und Rum unverändert', () => {
+  it('AK-P3-05 Abriss Fischer Stufe 3: +107 Geld, +6 Holz, +2 Werkzeug, +1 Stein; Stoff und Rum unverändert', () => {
     const w = world();
     const f = fisherAt(w);
     w.unlocked = ['U0', 'U2', 'U3', 'U4', 'U5'];
-    home(w).stock.rum = 2;
+    home(w).stock.cloth = 4;
+    home(w).stock.stone = 2;
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
-    expect(paidCost(f)).toEqual({ money: 225, wood: 12, tools: 5, stone: 0 });
+    expect(paidCost(f)).toEqual({ money: 215, wood: 12, tools: 5, stone: 2 });
     const m = w.money,
       s = { ...home(w).stock };
     expect(demolish(w, f.id).ok).toBe(true);
-    expect([w.money - m, home(w).stock.wood - s.wood, home(w).stock.tools - s.tools]).toEqual([
-      112, 6, 2,
-    ]);
+    expect([
+      w.money - m,
+      home(w).stock.wood - s.wood,
+      home(w).stock.tools - s.tools,
+      home(w).stock.stone - s.stone,
+    ]).toEqual([107, 6, 2, 1]);
     expect([home(w).stock.cloth, home(w).stock.rum]).toEqual([s.cloth, s.rum]);
   });
   it('AK-P3-06 Brand: Stufe bleibt; Ausbau während des Ausfalls → „Gebäude brennt"; nach dem Ausfall Stufe 2', () => {
@@ -191,7 +169,7 @@ describe('M11 Ausbau: Abriss, Freischaltung, Brand (Spec 3.6, 4)', () => {
     f.level = 3;
     expect(deriveUnlocks(w)).toEqual(['U0', 'U3', 'U5']);
   });
-  it('RF-5 Ausbau im Sturm und bei noForest: Kosten und Gebühr gebucht, eff und state unberührt', () => {
+  it('RF-5 Ausbau im Sturm und bei noForest: Kosten und Ware gebucht, eff und state unberührt', () => {
     const w = world();
     const f = fisherAt(w);
     w.crisis = { period: 0, kind: 'storm', from: w.tick, until: w.tick + 300 };
@@ -217,7 +195,7 @@ describe('M11 Ausbau: Abriss, Freischaltung, Brand (Spec 3.6, 4)', () => {
       'noForest',
       1000,
       7,
-      0,
+      2, // Holzfäller verlangt keine fachliche Ware: Stoff bleibt
     ]);
   });
 });
@@ -250,5 +228,48 @@ describe('M11 Kette und Auslastung (Spec 10)', () => {
     }
     expect(waited).toBe(true);
     expect(utilization(weaver)).toBeLessThan(1000);
+  });
+});
+
+describe('AK-AL-05 Ausbau bucht Geld, Baustoff und fachliche Ware (Stufe 2/3)', () => {
+  const reich = (): World => {
+    const w = createWorld(3, { unlockAll: true, crisisLevel: 'off' });
+    w.money = 100000;
+    for (const g of Object.keys(home(w).stock) as GoodId[]) home(w).stock[g] = 500;
+    return w;
+  };
+  const betriebAt = (w: World, defId: BuildingDefId): Building => {
+    const b = fisherAt(w);
+    b.defId = defId;
+    return b;
+  };
+  it('Fischer 2 → 3 bucht genau 65 Geld, 4 Holz, 2 Wz, 2 Stein, 2 Stoff; progress, eff, state bleiben', () => {
+    const w = reich();
+    const f = fisherAt(w);
+    f.level = 2;
+    f.progress = 17;
+    f.eff = 4321;
+    const s = { ...home(w).stock };
+    const m = w.money;
+    expect(upgradeBuilding(w, f.id)).toEqual({ ok: true });
+    const st = home(w).stock;
+    expect([
+      m - w.money,
+      s.wood - st.wood,
+      s.tools - st.tools,
+      s.stone - st.stone,
+      s.cloth - st.cloth,
+    ]).toEqual([65, 4, 2, 2, 2]);
+    expect([f.level, f.progress, f.eff, f.state]).toEqual([3, 17, 4321, 'ok']);
+  });
+  const faelle = Object.keys(LEVELS).flatMap((id) => [1, 2].map((von) => [id, von] as const));
+  it.each(faelle)('%s Ausbau von Stufe %i lässt den Rum-Bestand unberührt', (id, von) => {
+    const w = reich();
+    const b = betriebAt(w, id as BuildingDefId);
+    if (von === 2) b.level = 2;
+    const rum = home(w).stock.rum;
+    expect(upgradeBuilding(w, b.id)).toEqual({ ok: true });
+    expect(home(w).stock.rum).toBe(rum);
+    expect(b.level).toBe(von + 1);
   });
 });

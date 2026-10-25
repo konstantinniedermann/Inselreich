@@ -348,7 +348,7 @@ describe('M11 Betriebs-Panel (Spec 7)', () => {
     expect(upgradeView(w, f)).toEqual({
       title: 'Ausbau zu Stufe 2',
       cost: 'Kosten 50 Geld · 3 Holz · 1 Werkzeug',
-      fee: 'Gebühr 2 Stoff',
+      fee: 'Ware 2 Stoff',
       preview: 'Ausstoss 15 → 25 / min · Unterhalt 30 → 42 / min',
       reasons: [],
       ok: true,

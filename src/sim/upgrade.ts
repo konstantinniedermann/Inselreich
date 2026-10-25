@@ -20,15 +20,16 @@ export function upgradeBuilding(world: World, id: number): Result {
   const next = levels[level - 1]!; // Stufe 1 → Index 0 (Stufe 2)
   const afford = checkAfford(world, islandOf(world, b), next.cost);
   if (!afford.ok) return afford;
-  if (islandOf(world, b).stock[next.fee.good] < next.fee.amount)
-    return fail(`Zu wenig ${GOODS[next.fee.good].name}`);
+  const extra = next.extra;
+  if (extra !== undefined && islandOf(world, b).stock[extra.good] < extra.amount)
+    return fail(`Zu wenig ${GOODS[extra.good].name}`);
   pay(world, islandOf(world, b), next.cost);
-  takeStock(islandOf(world, b), next.fee.good, next.fee.amount);
+  if (extra !== undefined) takeStock(islandOf(world, b), extra.good, extra.amount);
   b.level = level === 1 ? 2 : 3; // progress, eff, state bleiben (Spec 3.6)
   return ok;
 }
 
-/** Bisher bezahlte Kosten: Neubau plus Stufenkosten bis zur aktuellen Stufe (ohne Gebühr). */
+/** Bisher bezahlte Kosten: Neubau plus Stufenkosten bis zur aktuellen Stufe (ohne fachliche Ware). */
 export function paidCost(b: Building): Cost {
   const total: Cost = { ...BUILDING_DEFS[b.defId].cost };
   const levels = LEVELS[b.defId] ?? [];

@@ -179,7 +179,7 @@ function addLine(parent: HTMLElement, text: string, field?: string): HTMLElement
 }
 
 export function refundLine(world: World, b: Building): string {
-  const paid = paidCost(b); // Bau- plus Stufenkosten, ohne Gebühr
+  const paid = paidCost(b); // Bau- plus Stufenkosten, ohne fachliche Ware
   return `Rückerstattung: ${refundText(refundCost(paid), effectiveRefund(world, paid))}`;
 }
 
@@ -941,7 +941,7 @@ function updateUpgradeBox(panel: HTMLElement, world: World, b: Building): void {
     ['level-fee', c.kind === 'next' ? c.fee : ''],
   ] as const) {
     const el = setField(box, field, text);
-    if (el) el.hidden = c.kind !== 'next';
+    if (el) el.hidden = c.kind !== 'next' || text === '';
   }
   setList(
     box,

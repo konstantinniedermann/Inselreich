@@ -24,7 +24,7 @@ function upgradeFishers(w: World): void {
     if (w.money - next.cost.money - toolPrice < UPGRADE_RESERVE) continue;
     if (home(w).stock.wood < next.cost.wood) continue;
     if (missing > 0 && !buy(w, 'tools', missing).ok) continue;
-    if (home(w).stock[next.fee.good] - next.fee.amount < FEE_RESERVE) continue;
+    if (next.extra && home(w).stock[next.extra.good] - next.extra.amount < FEE_RESERVE) continue;
     if (upgradeBuilding(w, b.id).ok) return;
   }
 }

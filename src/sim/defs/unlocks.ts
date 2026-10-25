@@ -46,7 +46,7 @@ export const UNLOCKS: readonly UnlockDef[] = [
     lockText: 'Erst mit den ersten Siedlern',
     whenText: 'sobald die ersten Siedler einziehen',
     notice: 'die ersten Siedler sind da',
-    tip: 'Aus Siedlern wird eine Gemeinde, und Händler laufen deinen Hafen an. In der Amtsstube stellst du die Steuer ein; Aufträge am Kontor bringen eine Prämie. Die Rinderfarm braucht viel freie Weide. Betriebe lassen sich jetzt gegen Stoff ausbauen.',
+    tip: 'Aus Siedlern wird eine Gemeinde, und Händler laufen deinen Hafen an. In der Amtsstube stellst du die Steuer ein; Aufträge am Kontor bringen eine Prämie. Die Rinderfarm braucht viel freie Weide. Betriebe lassen sich jetzt ausbauen: Geld, Holz und Werkzeug, dazu Siedler im Arbeitsweg.',
   },
   {
     id: 'U4',
@@ -68,7 +68,7 @@ export const UNLOCKS: readonly UnlockDef[] = [
     lockText: 'Erst mit den ersten Bürgern',
     whenText: 'sobald die ersten Bürger einziehen',
     notice: 'die ersten Bürger sind da',
-    tip: 'Gelernte Hände fertigen Werkzeug: Der Werkzeugmacher arbeitet nur mit einer Schule in Reichweite. In der Amtsstube sperrst du Güter je Stufe. Ausbau Stufe 3 kostet Rum.',
+    tip: 'Gelernte Hände fertigen Werkzeug: Der Werkzeugmacher arbeitet nur mit einer Schule in Reichweite. In der Amtsstube sperrst du Güter je Stufe. Ausbau Stufe 3 ist Steinbau: Stein und Bürger im Arbeitsweg; Brennerei, Glashütte und Werkzeugmacher brauchen eine Feuerwache.',
   },
   {
     id: 'U6',

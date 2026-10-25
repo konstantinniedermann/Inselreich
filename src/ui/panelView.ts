@@ -334,7 +334,7 @@ export function upgradeView(world: World, b: Building): UpgradeView | null {
   return {
     title: `Ausbau zu Stufe ${lvl + 1}`,
     cost: `Kosten ${costLine(next.cost)}`,
-    fee: `Gebühr ${next.fee.amount} ${GOODS[next.fee.good].name}`,
+    fee: next.extra ? `Ware ${next.extra.amount} ${GOODS[next.extra.good].name}` : '',
     preview: `Ausstoss ${out} / min · Unterhalt ${upkeep} / min`,
     reasons: r.ok
       ? []
