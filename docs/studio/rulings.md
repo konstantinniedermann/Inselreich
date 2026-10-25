@@ -1983,3 +1983,15 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Seerecht/Inse
 Regelbezug: R826, R862, R863, R879, R884, R885, R888 · Kosten bei Irrtum: ein Paket wartet eine Welle länger.
 
 Entscheider: L0 · Anlass: Nutzerauftrag «leg los» · ADR: —
+
+## R891 · 2026-10-25 · HAUSHALT-04 abgenommen; TIEFE-3 auf freien Platz
+
+Ruling: (1) **HAUSHALT-04** abgenommen (`.studio/handoffs/2026-10-25-lead-production-HAUSHALT-04.md`): 34 gemergte, saubere Worktrees samt Branches entfernt (202 → 168), `int/rel-32*` gelöscht,
+`.worktrees/integrate` detached auf main; nichts mit `--force`. Weitere Runde nur mit neuer Liste per Ruling. (2) Freier Platz nach R862 an kreative Arbeit: **TIEFE-3** an `lead-design` — Web-Recherche
+zu **neuen Spielmodi und Szenario-Formen** (Abgrenzung: TIEFE-1/-2 deckten Spätspiel und Wiederspielwert; Erweiterung 1 bleibt in der Nutzer-Session, R519), Ergebnis `docs/recherche/`, Budget 2.
+Test-Controller-Plätze bleiben voll (SEERECHT, INSELPROBEN, ORT-A).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: IDEEN-18 (Dubletten meiden)
+Regelbezug: R826, R862, R890 · Kosten bei Irrtum: eine Recherche ohne Folge-Spec.
+
+Entscheider: L0 · Anlass: Bericht lead-production HAUSHALT-04 · ADR: —
