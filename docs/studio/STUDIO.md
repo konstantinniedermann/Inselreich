@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.75 · Stand: 2026-10-25 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.76 · Stand: 2026-10-25 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -115,6 +115,11 @@ Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davo
   liest die erste Angabe mit „Tools“ bzw. „min“).
 - **Kontext nennt nur die Task-Datei und die betroffenen AK-IDs**, nie einen ganzen Plan oder eine
   ganze Spec; `rulings*.md` (beide Dateien) nur per `grep` (E-010, R167, R682).
+- **Plan- und Gate-Leads lesen abschnittsweise (R886 V3):** `rulings*.md`, Handoffs unter
+  `.studio/handoffs/` und Specs nur per `rg -n <R-Nr. oder AK-ID> <datei>` und danach den
+  Zeilenbereich (`offset`/`limit`), nie die ganze Datei; die Kontextzeile nennt Ruling-Nummern,
+  Abschnitte oder Zeilen. Messgrösse: Cache-Write 5 min «übriges Wachstum» ≤ 15 % in 2 von 3
+  Sessions, `lead-tech`-Anteil ≤ 4 % (Ausgang 20,5 % bzw. 5,4 %, Retro 47d29586).
 - **Umsetzer-Briefing (E-017):** nennt die D1-Dateien (README, arc42, ADR, Spec-Verweise) als erlaubt.
 - **Persona-Änderung (R233 (1)):** DoD nennt CHANGELOG-Eintrag (Version = neuester Eintrag) und
   `make studio-test` grün als Pflicht (Teilbeleg, R858).

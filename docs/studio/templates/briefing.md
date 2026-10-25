@@ -23,6 +23,7 @@ Prozessstufe: <leicht|voll>
 5. Definition of Done: <prüfbare Punkte, z. B. Test grün, Teilbeleg grün>
    Teilbeleg statt vollem Lauf (Verfassung §9.2, R858): gezielte Tests der berührten Dateien (`npx vitest run <dateien>`), `npx tsc --noEmit`, `make lint`; bei Werkzeug-Änderung `make studio-test`. Den vollen Lauf (`make push-check`) fährt nur der Integrator vor Merge und Push.
    Pflichtzeilen je Paketart (R375): jedes Paket „Rulings schreibt nur L0: `docs/studio/rulings.md` nicht ändern, Entscheidungsbedarf als Entwurf an L0 im Bericht (R471)“;
+   Plan- und Gate-Lead-Briefing „Rulings, Handoffs und Specs abschnittsweise lesen: `rg -n <R-Nr./AK-ID> <datei>`, dann nur den Zeilenbereich (`offset`/`limit`), nie die ganze Datei (R886 V3)“ — die Kontextzeile nennt Ruling-Nummern, Abschnitte oder Zeilen;
    jedes Paket mit Kontextdatei > 30 KB (README, `docs/ideen.md`, Specs, Plan-Index) „nur den genannten Abschnitt bzw. Zeilenbereich lesen (`offset`/`limit` oder `grep`), nie die ganze Datei (E-057)“ — die Kontextzeile nennt dafür Abschnitt oder Zeilen;
    Lead-Briefing „Arbeiter im Vordergrund starten; jedes Arbeiter-Briefing nennt ‹Melde dein Ergebnis per SendMessage an <Lead-Adresse>, nie an main›“ — die Adresse ist die agentId, die L0 dem Lead unmittelbar nach dem Start nennt, nie der Rollenname (R856, R879 (3));
    jedes Paket „Volltextsuche mit dem Grep-Werkzeug oder `rg <muster> .` (immer mit Pfad), nicht `grep -r`; `grep <muster> <datei>` auf eine genannte Datei bleibt erlaubt (R683)“;
