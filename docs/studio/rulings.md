@@ -2234,3 +2234,20 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-31-Strän
 Regelbezug: R464, R826, R862, R863, R868 V1, R871 · Kosten bei Irrtum: ein verschobener Start, Gate erneut.
 
 Entscheider: L0 · Anlass: Nutzer «mach weiter» · ADR: —
+
+## R874 · 2026-10-25 · Gates Plan I-186, Spec Inselproben, Spec Stadtrecht: BEDENKEN mit Auflagen; Save-Reihenfolge
+
+Ruling: (1) **Gate Plan I-186** (`.studio/handoffs/2026-10-25-lead-qa-gate-I-186.md`): BEDENKEN angenommen. Auflagen **A1** (T07: vier Browser-Schritte lesen `localStorage['inselreich.ehrenbuch']`
+nach Seitenstart, «Los geht's», «Neue Insel», Fortsetzen) und **A2** (Controller-Starts ins Budget; Antrag **19 Starts** genehmigt) vor dem Umsetzungsstart; B3–B6 in den Task-Dateien mitnehmen
+(B4: Diff-Beleg als `git diff main...feat/i186-ehrenbuch -- <Dateien>`), B7 entfällt. Nachtrag durch `lead-tech` ohne Zweitprüfung; Umsetzung nach dem REL-31-Push (R464). (2) **Gate Spec Modus
+Inselproben** (`…-gate-INSELPROBEN.md`): BEDENKEN angenommen, Auflagen 1–4 (Lösbarkeits-AK je Probe 2–5; AK 14 mit definierter Referenz- und mindestens einer Gegenstrategie, Schuldbrief-Werte F7
+gelten erst nach grünem Lauf als Ruling; Tick-Konvention und Reihenfolge `tickChallenge` im Wortlaut; AK 11 gegen `SAVE_VERSION + 1`), niedrige Befunde mitnehmen; Kennungen **AK-IP-nn**; F1–F7 wie
+von `lead-design` empfohlen. Nacharbeit `lead-design` ohne Zweitprüfung, Spec-Grösse ≤ 40 KB (Anhang nutzen). (3) **Gate Spec Stadtrecht** (`…-gate-STADTRECHT.md`): BEDENKEN angenommen; B1–B9
+nacharbeiten (E-C); Kennungen **AK-ST-nn** (E-B). (4) **Save-Reihenfolge (E-A, ersetzt die Nummern aus R870):** Stadtplanung → Inselproben → Seerecht → Stadtrecht; jede Spec formuliert ihre
+Migration **versionsneutral** («main beim Merge + 1»), keine feste Versionsnummer in AK oder Tests. (5) **UI-Reihenfolge (E-D):** Seerecht-UI vor Stadtrecht-UI; `CouncilSide` wird für `charter`
+nicht wiederverwendet.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: SEERECHT, Stadtplanung (Save), `src/ui/councilCard.ts`
+Regelbezug: R417, R464, R553, R870, R871 · Kosten bei Irrtum: Spec-/Plan-Nachtrag erneut, Save-Nummern beim Merge anpassen.
+
+Entscheider: L0 · Anlass: Gate-Berichte lead-qa · ADR: —
