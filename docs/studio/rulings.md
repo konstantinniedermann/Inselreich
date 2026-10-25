@@ -1995,3 +1995,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: IDEEN-18 (Dub
 Regelbezug: R826, R862, R890 · Kosten bei Irrtum: eine Recherche ohne Folge-Spec.
 
 Entscheider: L0 · Anlass: Bericht lead-production HAUSHALT-04 · ADR: —
+
+## R892 · 2026-10-25 · COACH-R886 abgenommen
+
+Ruling: `docs/coach-r886` @ `1c460542` **abgenommen** (Handbuch 1.76: V3 «Plan- und Gate-Leads lesen abschnittsweise» als E-076 passiv; M1–M3 mit Fristen in `experimente.md`; E-065 auf Ist-Stand,
+R878 (9) nachgetragen, laufend genau 3; `.gitignore` `*-e`). Vorlagen-Fix «im Vordergrund» → asynchron nach R868 V2 **bestätigt**. `make studio-test` grün (1074). Merge mit dem nächsten Release-Bündel
+(Doku-Branch, kein Spieleinfluss).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R429, R868, R886 · Kosten bei Irrtum: Doku-Revert.
+
+Entscheider: L0 · Anlass: Bericht studio-coach COACH-R886 · ADR: —
