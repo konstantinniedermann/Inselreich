@@ -2385,3 +2385,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A (Messun
 Regelbezug: R863, R329, N-102 · Kosten bei Irrtum: ein abgebrochener Screenshot-Lauf einer anderen Session, neu startbar.
 
 Entscheider: Nutzer (Auslegung L0) · Anlass: Nutzeranweisung Session-Start · Handbuch: Zeile durch `studio-coach` mit der R920-Umsetzung
+
+## R923 · 2026-10-25 · Welle 1 Session 48c8580f: Gates, Plan I-210, A1-Beleg, Festindex
+
+Ruling: Limit-Ampel grün (5 h 0 %, Woche 58 %), 1-min-Load 3,6. Welle 1 mit 10 Plätzen nach state.md «Fortsetzung»: testfrei **Gate Spec HAFEN**, **Gate Spec I-214**, **Gate Spec FLAECHE** (je `lead-qa`,
+Budget 1), **Gegenlesen GEBAEUDE-VARIANZ + AUSBAU-LOGIK** (`lead-qa`, Budget 1, R916/R918), **Plan I-210** (`lead-tech` opus, Budget 3, R911), **COACH-R920** (`studio-coach`, V1–V3 + Handbuchzeile R922,
+auf Basis `docs/coach-r886`), **TIEFE-4** und **IDEEN-19** (`lead-design`, je Budget 2, R862). Messung zuerst (R920 V1): **A1-Browser-Beleg** (`lead-tech`, Budget 2) nutzt das jetzige Fenster (Last ≤ 4);
+**I-201 Festindex** (`lead-tech`, Budget-Rest 8) als einziger Test-Controller, Benchmark erst nach dem A1-Beleg und bei Last ≤ 4. INSELPROBEN T12–T13 und ORT-A T20c folgen im Nachfüllen nach dem A1-Beleg.
+Release-Bündel: Gate Merge nach A1-Beleg, Push frühestens 2026-10-26 (R816).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette (HAFEN, FLAECHE, GV, I-214 je main + 1 beim Merge, R909)
+Regelbezug: R803, R826, R862, R906, R911, R916, R918, R920 · Kosten bei Irrtum: ein Test-Controller-Platz eine Welle später belegt.
+
+Entscheider: L0 · Anlass: Nutzer «mach weiter mit dem plan» · ADR: —
