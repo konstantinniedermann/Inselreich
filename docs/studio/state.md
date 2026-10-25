@@ -237,7 +237,9 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts aktiv. Session f8716d75 bei roter Ampel beendet; alle Leads haben übergeben (Handoffs `.studio/handoffs/2026-10-25-*`).
+- Session 48c8580f (R922–R943, Stand 21:37): REL-33 im Bündeln (`lead-production`, push-check, Kandidatenlauf; **Push 2026-10-26** auf genau dem gemeldeten Hash). Umsetzung I-201 (Benchmark) und I-210 Phase 1
+  (Budget 28). Gate Plan HAFEN, Plan-Nachträge FLAECHE/GV/AL, Spec I-215 Volllast, I-214-Filter laufen. Wartend auf Test-Controller-Platz: I-214 (34 Starts, R941), AUSBAU-LOGIK (38, R942), GV (55, R942),
+  INSELPROBEN T12–T13, ORT-A T20c; FLAECHE nach Gegenlesen des Nachtrags (56, R940). `design/rueckfracht`, `design/volllast`, Specs/Pläne HAFEN/FLAECHE/GV/AL/I-214/I-210 ins nächste Doku-Bündel.
 
 ## Parallele Sessions
 
