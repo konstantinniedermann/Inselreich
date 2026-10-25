@@ -114,7 +114,7 @@ export interface InspectActions {
   setMonumentBuy(good: MonumentGood, on: boolean): void;
   /** Betrieb mit dem Kontor verbinden; die Ablehnung zeigt der Aufrufer. */
   connect(id: number): void;
-  /** Kapelle: Fest feiern; die Ablehnung zeigt der Aufrufer. */
+  /** Kapelle: Fest der gewählten Art feiern; die Ablehnung zeigt der Aufrufer. */
   holdFeast(id: number, kind: FeastKind): void;
   /** Pfad-Vorschau auf der Karte setzen (`null` löscht sie). */
   previewConnect(tiles: readonly Pos[] | null): void;
@@ -999,7 +999,7 @@ function updateConnect(panel: HTMLElement, world: World, b: Building): void {
   }
 }
 
-/** Kapelle: Knopf „Fest feiern" nachführen; Haus: Zeile, solange ein Fest wirkt. */
+/** Kapelle: die drei Festknöpfe nachführen; Haus: Zeile, solange ein Fest wirkt. */
 function updateFeast(panel: HTMLElement, world: World, b: Building): void {
   if (b.house) {
     const line = houseFeastLine(world, b);
