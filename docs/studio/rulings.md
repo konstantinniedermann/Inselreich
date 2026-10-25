@@ -2433,3 +2433,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A, AUSBAU
 Regelbezug: R919, R924 · Kosten bei Irrtum: Plan-Nachtrag.
 
 Entscheider: L0 · Anlass: Gegenlese-Bericht lead-qa FLAECHE · ADR: —
+
+## R927 · 2026-10-25 · TIEFE-4 E1–E4; I-214 «Plan frei»
+
+Ruling: (1) **TIEFE-4** (`docs/tiefe-4` @ `3e03683d`) abgenommen. **E1** T4-1, T4-3, T4-4 als Auflagen an I-194/I-189 vermerken, wirksam erst mit N-104 «Neue Ufer» **ja** (Eintrag in docs/ideen.md beim nächsten
+`lead-design`-Start); **E2** Wärme als Kreis mit Ware als Ersatz als Vorzugsform für Spec N2 **ja**; **E3** T4-5 und T4-6 parken (T4-6 mit I-115 bis zum Wirtschafts-Entscheid) **ja**; **E4** N-104-Begründung um
+TIEFE-4 ergänzt **ja**. Vorbereitend und testfrei: **Rechnung T4-4 Rückfracht** (R722: dominiert Zukauf, entsteht neuer Überschuss?) an `lead-design` (Budget 2); entscheidet nichts vor N-104. (2) **I-214**
+`design/gruendungsbrief` @ `d1039265` nach Gegenlesen **Plan frei**. **Plan I-214** an `lead-tech` (opus, Budget 3) mit Plan-Notizen N1–N5 (`.studio/handoffs/2026-10-25-lead-qa-gegenlesen-i214.md`); N3: der Plan
+definiert die B5-Aussage messbar, sonst Spec-Nachtrag (nie geänderte Messung); N5: AK-GB-23 ist Merge-Kriterium des zweiten gemergten Pakets; Messfenster für AK-GB-01 vorab («Last ≤ 4 nötig»).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-197b (AK-PB2), INSELPROBEN, Save-Kette; N-104
+Regelbezug: R722, R862, R915, R924 · Kosten bei Irrtum: eine Rechnung ohne Verwendung.
+
+Entscheider: L0 · Anlass: Berichte lead-design TIEFE-4, lead-qa Gegenlesen I-214 · ADR: —

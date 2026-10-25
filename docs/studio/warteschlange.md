@@ -188,7 +188,7 @@ schliesst den Eintrag.
 
 - Frage: Welche Erweiterung folgt auf Erweiterung 1 «Stände und Segel»: «Neue Ufer» (Entdeckung, kalte Nordinsel mit eigener Kette), «Ernte und Frost» (Jahreszeiten), «Gelehrte und Gilden» (Wissen, Gilden) oder die Rivalen (KI-Konkurrenz)?
 - Empfehlung: «Neue Ufer» als Erweiterung 2, «Ernte und Frost» als dritte, Rivalen später.
-- Begründung: Recherche TIEFE-1: Spieler loben neue Regionen mit eigener Produktionskette am stärksten; das Thema hält den ruhigen Aufbau-Ton und baut auf Werft/Flotte der Erweiterung 1 auf; Rivalen wechseln den Ton zum Wettkampf und sind sehr gross. Skizzen: docs/superpowers/specs/2026-10-23-tiefe-1-skizzen.md (Branch docs/tiefe-1).
+- Begründung: Recherche TIEFE-1: Spieler loben neue Regionen mit eigener Produktionskette am stärksten; das Thema hält den ruhigen Aufbau-Ton und baut auf Werft/Flotte der Erweiterung 1 auf; Rivalen wechseln den Ton zum Wettkampf und sind sehr gross. Skizzen: docs/superpowers/specs/2026-10-23-tiefe-1-skizzen.md (Branch docs/tiefe-1). Nachtrag 2026-10-25 (TIEFE-4, Branch docs/tiefe-4): «Neue Ufer» trägt sechs ruhige Mechaniken ohne Würfel (Rückfracht, Ladeliste, Wärmekreis, Landnahme-Leiter u. a.), die auf Werft und Fahrzeiten aufbauen.
 - Kosten des Wartens: Keine: Erweiterung 1 ist selbst offen; Ehrenbuch und Spielmodi laufen unabhängig weiter.
 - Blockiert: Spec-Arbeit an I-194/I-195/I-196
 - Von: lead-design
