@@ -2206,3 +2206,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK 
 Regelbezug: R896, H-R7 · Kosten bei Irrtum: ein Save-Feld mehr.
 
 Entscheider: L0 · Anlass: Bericht lead-art GEBAEUDE-VARIANZ · ADR: —
+
+## R908 · 2026-10-25 · Spec AUSBAU-LOGIK: Entwürfe E1–E9; Gate Spec
+
+Ruling: `design/ausbau-logik` @ `e044acb8` (AK-AL-01–34, 11 Typtabellen, Schnitte AL-1–AL-6) geht ans **Gate Spec**. Entwürfe: **E1** Gebühr wird fachliche Ware **ja**; **E2** Stufe 2 Brennerei +50, Glashütte
++100 **ja**; **E3** Fachkräfte auf allen Inseln Pflicht **ja** (strikte Variante: Fachkräfte wohnen in der Nähe — erklärbar; das Kontor als Ersatz-Fachkraft wäre es nicht), Sperrgrund im UI sichtbar
+(«keine Handwerker im Umkreis 8»); **E4 geändert**: `SAVE_VERSION` = main + 1 beim Merge (nicht fest 19), Migration oder Abweisung mit Hinweis nach Verfassung §3 — «v18 ohne Migration ladbar» nur, wenn ein Test
+das belegt; **E5** gedrosselt mit 50 % Mehrunterhalt **ja**; **E6** «Gleiches bauen» = Summe ohne Rückfall **ja**; **E7** Rum entfällt als Ausbauware **ja**; **E8** Feuerwache-Bedingung entfällt bei Krisen aus
+**ja**; **E9** M-15 in `balance-upgrade.test.ts` ab AL-2 neu messen, Wert per Ruling **ja**. Merkmal-Vorgaben gehen an `lead-art` (Schnittstelle GEBAEUDE-VARIANZ). Abhängigkeit Weidezahlen → FLAECHE.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201 (Ausbau), I-210 (Kostenwaren), FLAECHE, GEBAEUDE-VARIANZ, Zukaufpreis, Save-Kette
+Regelbezug: R896, Verfassung §3 · Kosten bei Irrtum: Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-design AUSBAU-LOGIK · ADR: —
