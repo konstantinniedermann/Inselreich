@@ -295,7 +295,12 @@ export function dropTrial(x: Record<string, unknown>): Record<string, unknown> {
   return out;
 }
 
-/** I-132: äusserster Faltschritt v18 → v17: entfernt `trial`, `version − 1`. Nur für Stände der aktuellen Version. */
+/** I-153: äusserster Faltschritt v19 → v18: nur `version − 1` (Seerecht fügt kein Feld hinzu). */
+export function foldBackSeerecht(x: Record<string, unknown>): Record<string, unknown> {
+  return { ...x, version: (x.version as number) - 1 };
+}
+
+/** I-132: Faltschritt v18 → v17: entfernt `trial`, `version − 1`. Nur für Stände der aktuellen Version. */
 export function foldBackTrial(x: Record<string, unknown>): Record<string, unknown> {
   return { ...dropTrial(x), version: (x.version as number) - 1 };
 }

@@ -296,20 +296,21 @@ export interface Ship {
   homing: boolean;
 }
 export type CouncilTier = 2 | 3 | 4;
-export type CouncilSide = 'A' | 'B';
+export type CouncilSide = 'A' | 'B' | 'C';
 export type CouncilState = null | 'open' | CouncilSide;
 /** Wirksamer Wert, den ein Beschluss überschreibt (Defs bleiben unverändert). */
 export type CouncilLever =
   | { kind: 'cycle'; defId: BuildingDefId; value: number }
   | { kind: 'serviceRadius'; defId: BuildingDefId; value: number }
-  | { kind: 'maxInhabitants'; tier: Tier; value: number };
+  | { kind: 'maxInhabitants'; tier: Tier; value: number }
+  | { kind: 'seaTileTicks'; value: number };
 export interface CouncilDef {
   name: string;
   text: string;
   lever: CouncilLever;
 }
 export interface World {
-  version: 18;
+  version: 19;
   seed: number;
   islands: Island[];
   tick: number;

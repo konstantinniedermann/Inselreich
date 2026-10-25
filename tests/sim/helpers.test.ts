@@ -6,6 +6,7 @@ import {
   fnv1a32,
   foldBackCouncil,
   foldBackTrial,
+  foldBackSeerecht,
   foldBackDeliveries,
   foldBackFarOrders,
   foldBackToV9,
@@ -42,7 +43,9 @@ describe('foldBackFarOrders (Handel 2, A4)', () => {
   /** Aktueller Stand ohne `council` (I-112: dessen Faltschritt liegt davor), Version eins tiefer. */
   const current = (): Record<string, unknown> =>
     foldBackCouncil(
-      foldBackTrial(JSON.parse(serialize(createWorld(3))) as Record<string, unknown>),
+      foldBackTrial(
+        foldBackSeerecht(JSON.parse(serialize(createWorld(3))) as Record<string, unknown>),
+      ),
     );
   /** Stand «eine Version älter», ohne Fernfelder. */
   const plain = (): Record<string, unknown> => {

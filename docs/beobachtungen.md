@@ -254,6 +254,10 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 - Fundort: `src/ui/council.ts:50`. Beobachtung: bei n = 1 «1 Häuser (+1 Plätze)» statt Singular. Ursprung: UI-HAEPPCHEN-J Final-Review. Einschätzung: Trivial-Fix im nächsten UI-Paket an der Datei.
 - Fundort: Karte «Wo war ich?». Beobachtung: Text «N Probleme offen — . springt hin», vermutlich fehlt die Tastenbezeichnung. Ursprung: Playtest UI-HAEPPCHEN-J. Einschätzung: niedrig, Beipack.
 
+## 2026-10-25 · Playtest SEERECHT T07: Seite bei 800 px Fensterbreite zu breit (niedrig)
+
+- Fundort: Playtest SEERECHT T07. Beobachtung: bei 800 px Fensterbreite ist die Seite global 868 px breit, das HUD wird abgeschnitten, der Schliessen-Knopf der Rats-Karte liegt bei 0 px Scroll knapp ausserhalb. Ursprung: nicht Seerecht-spezifisch. Einschätzung: niedrig, Desktop-first (ab 1280 px).
+
 ## 2026-10-25 · Import-Zyklen und Merge-Rückstand (niedrig)
 
 - Fundort: `src/sim/`. Beobachtung: keine Lint-Regel gegen Importzyklen; nur handgeschriebene Strukturtests (I-201 P-11) fangen sie. Ursprung: Gate Plan I-201. Einschätzung: Kandidat für ein Werkzeug-Paket (ESLint `import/no-cycle` wäre neue Abhängigkeit → ADR; Alternative: kleiner eigener Prüfer in `tools/`).

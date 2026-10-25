@@ -672,7 +672,7 @@ function launch(
     (tier, side) => {
       const r = decree(world, tier, side);
       if (r.ok) {
-        showMessage(`Beschluss gefasst: ${COUNCIL[tier][side].name}`);
+        showMessage(`Beschluss gefasst: ${COUNCIL[tier][side]?.name ?? side}`);
         sound.play('build');
       } else showError(friendlyReason(world, r.reason));
       refresh();

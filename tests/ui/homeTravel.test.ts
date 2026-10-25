@@ -43,3 +43,13 @@ describe('I-136 Lane-Cache (AK-F2)', () => {
     expect(n).toBe(2);
   });
 });
+
+describe('AK-SR-17 Heimfahrt mit Seerecht', () => {
+  it('d 30: 300 Ticks, mit Seerecht 240', () => {
+    const w = createWorld(3);
+    const lanes = (): Lane[] => [{ a: 0, b: 1, d: 30, points: [] }];
+    expect(homeTravelTicks(w, 1, lanes)).toBe(300);
+    w.council[4] = 'C';
+    expect(homeTravelTicks(w, 1, lanes)).toBe(240);
+  });
+});

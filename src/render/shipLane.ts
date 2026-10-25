@@ -1,6 +1,7 @@
 // shipLane.ts — Handelsschiffe auf der Fahrlinie (M12 E4, T11): Pose, Tiefe, Mindestgrösse, Treffer.
 // Rein und nur lesend: schreibt nie in `world.ships` (render schreibt nie in die Welt).
-import { laneTicks, type Pt } from '../sim/islands';
+import { seaTileTicks } from '../sim/council';
+import { laneTicksOf, type Pt } from '../sim/islands';
 import { seaRoute } from '../sim/seaRoute';
 import type { Island, Ship, World } from '../sim/types';
 import { worldToScreen, type Camera } from './camera';
@@ -17,15 +18,15 @@ export interface ShipPose {
 /** Ziel-Mindestbreite der GEZEICHNETEN Silhouette (Rumpf + Segel) in CSS-Pixeln; Spec-Grenze 12 (D-144 Regel 3), Reserve für Neigung. */
 export const MIN_SHIP_CSS_PX = 16;
 
-/** Fahrzeit je Paar, je Welt (Schlüssel: `islands`-Array) einmal gerechnet: `laneTicks` rechnet sonst alle Paare je Frame. */
+/** Wirksame Fahrzeit je Paar und Feldwert, je Welt (Schlüssel: `islands`-Array) einmal gerechnet: `laneTicksOf` rechnet sonst alle Paare je Frame. */
 const ticksCache = new WeakMap<readonly Island[], Map<string, number>>();
 
 function cachedTicks(world: World, from: number, to: number): number {
   let per = ticksCache.get(world.islands);
   if (!per) ticksCache.set(world.islands, (per = new Map()));
-  const key = `${from}-${to}`;
+  const key = `${from}-${to}-${seaTileTicks(world)}`;
   let n = per.get(key);
-  if (n === undefined) per.set(key, (n = laneTicks(world.islands, from, to)));
+  if (n === undefined) per.set(key, (n = laneTicksOf(world, from, to)));
   return n;
 }
 
@@ -86,7 +87,7 @@ function islandAt(world: World, x: number, y: number): number | null {
   return null;
 }
 
-/** Pose des Schiffs: liegend (`to` null) am Anker von `port`, sonst `t = 1 − left / laneTicks` auf der Lane. */
+/** Pose des Schiffs: liegend (`to` null) am Anker von `port`, sonst `t = 1 − left / wirksame Fahrzeit` auf der Lane. */
 export function shipPose(world: World, ship: Ship): ShipPose {
   let p: Pt;
   const port = world.islands[ship.port];

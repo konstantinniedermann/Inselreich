@@ -208,10 +208,10 @@ Tooltips von 2× und 4× sagen, wie viel schneller die Spielzeit läuft.
 
 Sobald ein Haus zum ersten Mal die Stufe 2 (Siedler), 3 (Bürger) oder 4 (Kaufleute) erreicht, tagt der Rat: In der Kopfzeile erscheint die Marke **«Rat · n»** (n = offene Beschlüsse), dazu die Meldung «Der Rat tagt: ein Beschluss steht an». Das Spiel läuft weiter, nichts pausiert.
 
-- **Bedienung:** Klick auf die Marke oder `Umschalt` + `R` öffnet die Rats-Karte, `Esc` schliesst sie ohne Wahl. Je offene Stufe stehen zwei Karten nebeneinander. Eine Karte anklicken markiert sie; erst **«Beschluss fassen»** gilt (Schutz vor Fehlklick).
-- **Wirkung:** Der Beschluss gilt für die ganze Partie und alle Inseln, kostet nichts, lässt sich nicht ändern; der andere Beschluss der Stufe verfällt. Gefasste Beschlüsse stehen als Liste in derselben Karte («Stufe 2: Webordnung»), die Marke bleibt als neutrales «Rat» sichtbar. Ein offener Beschluss kann beliebig lange warten.
-- **Vorschau und Nachlesen:** Jede Karte nennt unter ihrem Text die Wirkung auf den heutigen Bestand: «Betrifft jetzt: 3 × Weberei» (alle Inseln), bei den Haus-Beschlüssen «Betrifft jetzt: n Häuser (+m Plätze)», ohne passendes Gebäude «Wirkt noch nicht: … fehlt». Die Chronik der Ruhe-Ansicht führt eine Zeile «Rat: …» («Rat: 1 Beschluss offen», «Rat: Webordnung · Wohnordnung», «Rat: Webordnung — 1 offen»), und im Ereignis-Log steht jeder gefasste Beschluss als «Rat beschliesst: Glockenrecht».
-- **Die sechs Beschlüsse:** Stufe 2 Webordnung (Webereien +25 % schneller) oder Glockenrecht (Kapellen reichen 3 Felder weiter); Stufe 3 Brennrecht (Brennereien +25 % schneller) oder Wohnordnung (Bürgerhäuser fassen 16 statt 15); Stufe 4 Glasrecht (Glashütten +67 % schneller) oder Hofrecht (Kaufmannshäuser fassen 22 statt 20). Alle Zahlen: [`docs/spielwerte.md`](docs/spielwerte.md#rat-ratsbeschluss).
+- **Bedienung:** Klick auf die Marke oder `Umschalt` + `R` öffnet die Rats-Karte, `Esc` schliesst sie ohne Wahl. Je offene Stufe stehen die Karten nebeneinander (Stufe 2 und 3 zwei, Stufe 4 drei). Eine Karte anklicken markiert sie; erst **«Beschluss fassen»** gilt (Schutz vor Fehlklick).
+- **Wirkung:** Der Beschluss gilt für die ganze Partie und alle Inseln, kostet nichts, lässt sich nicht ändern; die übrigen Beschlüsse der Stufe verfallen. Gefasste Beschlüsse stehen als Liste in derselben Karte («Stufe 2: Webordnung»), die Marke bleibt als neutrales «Rat» sichtbar. Ein offener Beschluss kann beliebig lange warten.
+- **Vorschau und Nachlesen:** Jede Karte nennt unter ihrem Text die Wirkung auf den heutigen Bestand: «Betrifft jetzt: 3 × Weberei» (alle Inseln), beim Seerecht «Betrifft jetzt: n Schiffe» (ohne Schiff «Wirkt noch nicht: kein Schiff»), bei den Haus-Beschlüssen «Betrifft jetzt: n Häuser (+m Plätze)», ohne passendes Gebäude «Wirkt noch nicht: … fehlt». Die Chronik der Ruhe-Ansicht führt eine Zeile «Rat: …» («Rat: 1 Beschluss offen», «Rat: Webordnung · Wohnordnung», «Rat: Webordnung — 1 offen»), und im Ereignis-Log steht jeder gefasste Beschluss als «Rat beschliesst: Glockenrecht».
+- **Die sieben Beschlüsse:** Stufe 2 Webordnung (Webereien +25 % schneller) oder Glockenrecht (Kapellen reichen 3 Felder weiter); Stufe 3 Brennrecht (Brennereien +25 % schneller) oder Wohnordnung (Bürgerhäuser fassen 16 statt 15); Stufe 4 Glasrecht (Glashütten +67 % schneller), Hofrecht (Kaufmannshäuser fassen 22 statt 20) oder Seerecht (Schiffe fahren 25 % schneller. Spart ab etwa 80 Kaufleuten ein Schiff auf langen Gewürzrouten). Gilt für die ganze Partie, die übrigen Beschlüsse der Stufe verfallen. Alle Zahlen: [`docs/spielwerte.md`](docs/spielwerte.md#rat-ratsbeschluss).
 
 ### Meisterprüfung
 
@@ -284,7 +284,7 @@ Die Regeln mit allen Zahlen stehen in [`docs/spielwerte.md`](docs/spielwerte.md)
 - Wirtschaft: Produktionsketten, Handel, Handelsaufträge, Seefahrt und Gewürz, Unterhalt, Stilllegen, Abriss
 - Bevölkerung: Stufen, Versorgung, Bedürfnisse, Aufstieg, Steuern
 - Krisen: Krisenstufe, Brand und Feuerwache, Sturm, Boom, Krisenkarte
-- Rat (Ratsbeschluss): die sechs Beschlüsse mit allen Werten
+- Rat (Ratsbeschluss): die sieben Beschlüsse mit allen Werten
 
 Ereignisse zeigt ungelesene Meldungen als (n neu), ab 10 (9+ neu); Aufklappen setzt den Zähler zurück.
 
@@ -314,7 +314,7 @@ Ereignisse zeigt ungelesene Meldungen als (n neu), ab 10 (9+ neu); Aufklappen se
 - **Neue Insel:** Menü → «Neue Insel» fragt zuerst «Neue Insel beginnen?» (Ja / Abbrechen), dann entsteht
   eine neue Insel mit Tempo 1× und der gewählten Krisenstufe. Der Autosave bleibt, bis der nächste ihn
   überschreibt. Die Kartennummer steht im Menü («Karte …»).
-- **Spielstand-Version 18:** Ältere Stände laden weiter und werden über die Migrationskette ergänzt (ab Version 13 kommt dabei die dritte Fremdinsel «Weidenau» ohne Kontor dazu). Ein Stand aus einer neueren Version wird mit Hinweis («Unbekannte Version») abgewiesen; das laufende Spiel bleibt unverändert.
+- **Spielstand-Version 19:** Ältere Stände laden weiter und werden über die Migrationskette ergänzt (ab Version 13 kommt dabei die dritte Fremdinsel «Weidenau» ohne Kontor dazu). Ein Stand aus einer neueren Version wird mit Hinweis («Unbekannte Version») abgewiesen; das laufende Spiel bleibt unverändert.
 - Spielstände vom Stand vor der Seefahrt (Version 8) lassen sich laden: Sie bekommen je Kaufmannshaus 10 Gewürz
   (höchstens 100) im Heimatlager als Übergang und eine einmalige Meldung.
 - Spielstände älterer Versionen (vor M5 bzw. vor M6) lassen sich laden und werden danach im neuen Format
