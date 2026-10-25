@@ -1,0 +1,10 @@
+# T16 Abschluss: Save-Nummer, Final-Review
+
+Controller `lead-tech` (sonnet) · Strang A · Tools ≈ 15 · alle AK · blocked-by T15.
+
+- [ ] **Save-Nummer (R909):** `git merge main` in `feat/i210` (kein Rebase). `rg -n "SAVE_VERSION =" src/sim/save.ts` auf main und Branch vergleichen. Ist main inzwischen weiter (SEERECHT, INSELPROBEN, FLAECHE, STADTRECHT), setzt Umsetzer A per `SendMessage` `SAVE_VERSION = main + 1`, benennt die Migration `migrateV<main>ToV<main+1>` und hängt sie hinter die letzte Migration von main. Danach `npx vitest run tests/sim/petitionsSave.test.ts tests/sim/save.test.ts; echo EXIT=$?`. Die Tests nutzen nur `SAVE_VERSION ± 1` (B-7) und brauchen darum keine Änderung.
+- [ ] **AUSBAU-LOGIK (P-14):** Hat main seit T00 Ketten, Waren oder Ausbauten geändert (`git log --oneline <T00-main-Hash>..main -- src/sim/defs/buildings.ts src/sim/defs/goods.ts src/sim/defs/levels.ts src/sim/defs/tiers.ts`), prüfst du `cost`, `when` und `no` der Bitten gegen die neuen Waren. Die Dominanzdateien laufen einzeln erneut. Rot ist ein Befund an L0 (R553), keine Verstellung.
+- [ ] **AK-BS-23 (P-12):** Ist INSELPROBEN inzwischen in main und der AK noch nicht belegt, folgt er jetzt (Umsetzer A, ein Testfall in `tests/sim/petitions.test.ts`).
+- [ ] **Teilbeleg final** (R810): alle `tests/sim/petitions*.test.ts` einzeln bzw. gruppiert wie in T13, `tests/ui/petition*.test.ts`, Baseline-Liste, `npx tsc --noEmit`, `make lint`, `make zeittests`, `make conflicts`, `make docs-check`, je `; echo EXIT=$?`. Der volle Lauf kommt mit `make push-check` im Release (nicht hier).
+- [ ] **Final-Review** `qa-code-reviewer` mit **`model: opus`** über `feat/i210` gegen Spec und Plan, an `lead-qa`. Das Briefing nennt Spec-Pfad, Plan-Index, AK-Zuordnung, Review Focus und die P-Entscheide. Bei ZURÜCK folgen die Fix-Runde und ein Delta-Review desselben Reviewers per `SendMessage` (R553).
+- [ ] Rulings aus dem Ledger als Entwurf an L0 (nicht in `docs/studio/rulings.md`, R471). Handoff `.studio/handoffs/<datum>-lead-tech-I-210.md` nach Vorlage, Bericht «bereit fürs Gate Merge».
