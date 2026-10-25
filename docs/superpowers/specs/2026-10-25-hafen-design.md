@@ -3,7 +3,7 @@
 Stand 2026-10-25 · Paket `design-hafen` · Meilenstein M14 · Prozessstufe voll · Auftrag R896 (0), Designvorschlag
 lead-design (freigegeben) · Diagnose: Handoff `.studio/handoffs/2026-10-25-lead-tech-BUG-SCHIFF.md` (a)–(c) · Rechnung:
 [anhang-01-rechnung.md](2026-10-25-hafen-design/anhang-01-rechnung.md) · Optik:
-[anhang-02-optik.md](2026-10-25-hafen-design/anhang-02-optik.md) · Stand Code main `70a32032` (Save v18), Seerecht aus
+[anhang-02-optik.md](2026-10-25-hafen-design/anhang-02-optik.md) · Stand Code main `70a32032` (Save v18 damals), Seerecht aus
 `feat/seerecht` (Save v19, nicht gemergt). Alle Zahlen stammen aus dem Designvorschlag oder Anhang 01; Schätzungen sind
 markiert.
 
@@ -204,14 +204,15 @@ grün (AK-HF-22). Die gepinnten Fahrzeit-Tests (Anhang 01 H) werden bewusst neu 
 ## 5 Save und Migration
 
 - **S1:** kein Versionswechsel. `anchor` ist schon gespeichert; alte Stände behalten ihre Anker bis zur Migration in S3.
-- **S3 (A2): `SAVE_VERSION` +1** (main 18, SEERECHT 19 → **20**). Migration statt Abweisen (Empfehlung, E3), in dieser
+- **S3 (A2): `SAVE_VERSION` +1** (= Stand von main beim Merge + 1; heute main 18, SEERECHT 19, danach 20; feste Nummern
+  gelten nur als Beispiel, R909/R913). Migration statt Abweisen (Empfehlung, E3), in dieser
   Reihenfolge (Anhang 01 G):
   1. `isValidShip` (`save.ts:707`) prüft `left` gegen `T_alt` aus dem alten Stand: `10 · d` bzw. `seaTileTicks` des
      alten Rats (Seerecht 8), mit den gespeicherten Ankern.
   2. Anker jeder Fremdinsel mit Kontor II := `dockFor(Kontorposition)`.
   3. `left_neu = clamp(ceil(left_alt · T_neu / T_alt), 1, T_neu)` für Schiffe mit `to ≠ null`; `T_neu` aus R10 mit den
      neuen Ankern (`seaRoute` beim Laden, einmalig ≤ ≈ 75 ms je Stand, Schätzung Anhang 01 I). `to = null`: `left` 0.
-- **S4 (Liegezeit): `SAVE_VERSION` +1** mit `dwell = 0` für alle Schiffe (alte Stände liegen nie mit Route), oder mit S3
+- **S4 (Liegezeit): `SAVE_VERSION` +1 (Stand main beim Merge + 1)** mit `dwell = 0` für alle Schiffe (alte Stände liegen nie mit Route), oder mit S3
   zusammengelegt, wenn derselbe Plan (Tech entscheidet). Prüfung: `dwell` ganzzahlig in 0 … `SHIP_DOCK_TICKS`;
   `dwell > 0` nur bei `to === null` und `route ≠ null`; sonst abgewiesen mit Hinweis, kein Absturz.
 - **K2** ändert nur neue Welten. Der Render-Zustand des Auftragsschiffs (Endtick, beobachtete Annahme) wird nicht
@@ -284,9 +285,9 @@ Je Schnitt ≤ 1 Session (Schätzung). Reihenfolge S1 → S2 → S3 → S4; S5/S
 16. **AK-HF-16 Gleichmass:** Seeds 1–40, jede Lane: `|L/T − 1/k| < 1/(k · T)`. Rot heute (1,2–9,0 Ticks je Kachel).
 17. **AK-HF-17 Notanker:** Inselpaar ohne Wasserweg (synthetisch): Route = Gerade, `T = ceil(|Gerade| · 2.9) ≥ 1`.
 18. **AK-HF-18 Seerecht:** `COUNCIL[4].C.lever.value === 2.32`; mit `'C'` ist `T = ceil(L · 2.32)`; Beschluss während
-    Fahrt rechnet `left` mit `ceil` um, Pose springt höchstens um eine Tickstrecke (AK-SR-15 neu); Beschluss während
+    Fahrt rechnet `left` mit `ceil` um, Pose springt höchstens um eine Tickstrecke (`M14:AK-SR-15` neu, liegt auf `feat/seerecht`, nicht auf main); Beschluss während
     Liegezeit lässt `dwell` unverändert.
-19. **AK-HF-19 AK-SR-7/-8 neu:** Formel `cap × 100 / (2 · ceil(k · L) + 2 · D)`: L 110 ergibt Umlauf 698 / 572 und 7,16
+19. **AK-HF-19 `M14:AK-SR-7`/`M14:AK-SR-8` neu** (auf `feat/seerecht`): Formel `cap × 100 / (2 · ceil(k · L) + 2 · D)`: L 110 ergibt Umlauf 698 / 572 und 7,16
     / 8,74 je Schiff (Gewinnlage), L 90 ergibt 8,59 ohne Seerecht (Nulllage) (Anhang 01 D).
 20. **AK-HF-20 Frist-Invariante:** `600 + 2 · (ceil(2.9 · lMax_B) + 30) ≤ FAR_ORDER_DURATION`; zusätzlich Seeds 1–40
     jede Heimat-Lane einschliesslich Ersatzlagen: `600 + 2 · (T + 30) ≤ 1700`.
@@ -300,7 +301,7 @@ Je Schnitt ≤ 1 Session (Schätzung). Reihenfolge S1 → S2 → S3 → S4; S5/S
 
 23. **AK-HF-23 Ablauf:** Schiff auf Route kommt in Tick t0 an: Lager steigt in t0, `dwell` = 30, `to === null`; in
     t0 + 29 noch `to === null`; in t0 + 30 geladen und `to` gesetzt, `left = T`. Rot heute (Abfahrt in t0).
-24. **AK-HF-24 Umlauf** (AK-E4-03 neu): Rundreise = `2 T + 60` Ticks.
+24. **AK-HF-24 Umlauf** (`M12:AK-E4-03` neu): Rundreise = `2 T + 60` Ticks.
 25. **AK-HF-25 Routenwechsel:** `updateRoute` in `dwell` 15 mit neuer Ladeliste: beim Ablegen wird nach der neuen Liste
     geladen.
 26. **AK-HF-26 `clearRoute`:** in der Liegezeit am Fremdhafen: `dwell` 0, `homing`, Abfahrt Richtung Heimat im nächsten
@@ -317,12 +318,12 @@ Je Schnitt ≤ 1 Session (Schätzung). Reihenfolge S1 → S2 → S3 → S4; S5/S
 
 32. **AK-HF-32 Runde:** Welt mit Schiffen mitten in Fahrt und mitten in der Liegezeit speichern und laden; nach 500
     weiteren Ticks JSON-gleich zur durchgelaufenen Welt.
-33. **AK-HF-33 Migration v18/v19:** Stand mit Kontor II abseits `kontorSite` und fahrendem Schiff: nach dem Laden Anker
+33. **AK-HF-33 Migration vom Vorgängerstand (main beim Merge, heute v18/v19):** Stand mit Kontor II abseits `kontorSite` und fahrendem Schiff: nach dem Laden Anker
     = `dockFor`, `left = clamp(ceil(left_alt · T_neu / T_alt), 1, T_neu)`; `left = T_alt` → `T_neu`, `left = 1` → 1;
     `left > T_alt` im alten Stand wird vor der Umrechnung abgewiesen.
-34. **AK-HF-34 `dwell`:** alter Stand lädt mit `dwell = 0`; `dwell` 31, −1, 1,5 oder `dwell > 0` mit `to ≠ null` wird
+34. **AK-HF-34 `dwell`** (gilt für die Version, die `dwell` einführt, eigene oder die von S3): alter Stand lädt mit `dwell = 0`; `dwell` 31, −1, 1,5 oder `dwell > 0` mit `to ≠ null` wird
     mit Hinweis abgewiesen, kein Absturz.
-35. **AK-HF-35 Abweisung:** unbekannte Version (21 bzw. höher als aktuell) mit Hinweis abgewiesen.
+35. **AK-HF-35 Abweisung:** unbekannte Version (`SAVE_VERSION + 1` und höher, relativ zur aktuellen Konstante) mit Hinweis abgewiesen.
 
 **S5 Render Hafen** (`tests/render/shipLane.test.ts`, `tests/render/dock.test.ts` neu, Fake-Kontext):
 
