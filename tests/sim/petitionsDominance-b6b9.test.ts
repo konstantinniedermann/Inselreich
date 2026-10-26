@@ -8,9 +8,12 @@
  *   Kontor), eine Route brauchte Kontor, Schiff, Umlauf und Ladelogik. Gewürz kommt alle L Ticks in die Heimat
  *   (L = Ladung / Bedarf). Ja: Fremdlager 20, Ladung 15, der Zusatz der Saat (100/pct - 1) kommt an. Nein: Fremdlager 100,
  *   Ladung = Schiffsraum, der Zusatz bleibt im Fremdlager. Vorbedingung Ja: mindestens eine zusätzliche Ladung kam an.
- * - B9 Zusatzmass (R997): Im Fenstermass (bis Wirkungsende + 300) verliert das Ja in der Ja-Lage (Seed 3: -74), die Lage ist
- *   dort mit den Zahlen aus Anhang 01 nicht baubar; der Wertungs-Entscheid liegt bei lead-design. Geprüft wird darum das Zusatzmass
- *   «Lagerwert bei Wirkungsende» (Ja-Lage +494, Nein-Lage -131), `describe` am Dateiende; B9 steht nicht in der Liste BITTEN.
+ * - B9 (R999): Erstwahl ist die Ja-Lage mit Sturm ab Antwort + 2400, hinter der Genügsamkeitsfrist (1800). Gemessen im
+ *   Fenstermass: Ja-Lage +83 (Ja 83412 gegen Nein 83329), Nein-Lage -131; beide Seeds gleich. Befund: Die Rechnung (Branch
+ *   design/pool-b3 §5) erwartete +100 bis +350 und «Ja» ohne Mangel (Rest ≈ 8). Gemessen läuft die Nahrung auch im Ja-Lauf kurz
+ *   leer (shortage food in beiden Läufen), nur kürzer; darum fehlt hier die Vorbedingung «Ja-Lage versorgt», stattdessen
+ *   gilt «der Sturm leert die Nahrung im Nein-Lauf». Das Zusatzmass «Lagerwert bei Wirkungsende» (R997) steht zusätzlich
+ *   am Dateiende (Ja-Lage +785, Nein-Lage -131); es wäre nach R999 nur der Rückfall bei Abstand < +50.
  * - B9 Sturm direkt: Der Lauf setzt `world.crisis` auf einen Sturm ab answerAt + Verzug + 300 mit STORM_DURATION,
  *   in beiden Zweigen gleich, kein Eingriff in `crises.ts`. `incident` meint Krisen ausser diesem Sturm.
  *
@@ -27,7 +30,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { PetitionId } from '../../src/sim/defs/petitions';
 import { duel, PETITION_SEEDS, SCENES, type DuelRun } from './petitionWorlds';
 
-const BITTEN: readonly PetitionId[] = ['spiceSeed', 'woolMarket', 'returnees'];
+const BITTEN: readonly PetitionId[] = ['spiceSeed', 'woolMarket', 'returnees', 'granary'];
 type Result = Record<'yes' | 'no', { yes: DuelRun; no: DuelRun }>;
 
 describe.each(PETITION_SEEDS)('AK-BS-04 B6-B9, Seed %i', (seed) => {
@@ -45,8 +48,8 @@ describe.each(PETITION_SEEDS)('AK-BS-04 B6-B9, Seed %i', (seed) => {
           expect(res[lage]![a].incident, `${lage}/${a} incident`).toBe(false);
         }
     });
-    if (id !== 'returnees')
-      // B8 prüft sie unten zusammen mit dem Engpass der Nein-Lage
+    // B8 prüft sie unten zusammen mit dem Engpass der Nein-Lage, B9 hat den Sturm als gewollten Engpass
+    if (id !== 'returnees' && id !== 'granary')
       it('Vorbedingung: Häuser der Ja-Lage beim Nachspiel versorgt', () => {
         expect(res.yes!.yes.shortage).toEqual([]);
       });
@@ -58,6 +61,10 @@ describe.each(PETITION_SEEDS)('AK-BS-04 B6-B9, Seed %i', (seed) => {
     if (id === 'spiceSeed')
       it('Vorbedingung B6: Nein-Lage mit Engpass im Ja-Lauf', () => {
         expect(res.no!.yes.shortage).toContain('spice');
+      });
+    if (id === 'granary')
+      it('Vorbedingung B9: der Sturm leert in der Ja-Lage im Nein-Lauf die Nahrung', () => {
+        expect(res.yes!.no.shortage).toContain('food');
       });
     if (id === 'returnees')
       it('Vorbedingung B8: die Heimkehrer ziehen ein (mehr Bewohner im Ja-Lauf der Ja-Lage)', () => {
@@ -79,9 +86,7 @@ describe.each(PETITION_SEEDS)('AK-BS-04 B6-B9, Seed %i', (seed) => {
 
 /**
  * B9 Speicherbau mit dem Zusatzmass «Lagerwert bei Wirkungsende» (R997): Geld plus Lager im letzten Tick der Wirkung, vor dem
- * Verfall über der Lagergrenze. Das Fenstermass (bis Wirkungsende + 300) bleibt die dokumentierte Abweichung: dort verliert
- * das Ja in der Ja-Lage (Seed 3: -74), weil der Zusatzraum bei Wirkungsende verfällt und die Genügsamkeit des Nein die
- * Nahrung schont. Der Wertungs-Entscheid liegt bei lead-design; dieser Test hält nur das Zusatzmass fest.
+ * Verfall über der Lagergrenze. Zusatz zum Fenstermass oben (R997), ohne Wertungs-Entscheid.
  */
 describe.each(PETITION_SEEDS)('AK-BS-04 B9 Zusatzmass, Seed %i', (seed) => {
   const res: Partial<Result> = {};

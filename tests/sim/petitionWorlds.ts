@@ -532,6 +532,8 @@ const placeWeavery = (farms: number) => (w: World) => {
 const B9_HOUSE_COUNT = 11;
 const B9_HOUSES = Array<number>(B9_HOUSE_COUNT).fill(15);
 const B9_OVER = 0.1;
+/** Sturm hinter der Genügsamkeitsfrist (R999): Antwort + 2400. */
+const B9_STORM_AFTER = 2400;
 
 /** Bewohner aller Häuser. */
 const people = (w: World): number =>
@@ -585,7 +587,7 @@ const granaryScene = (seed: number, yes: boolean): PetitionScene => {
     },
     yes ? 'B9 Ja: Sturm gesetzt' : 'B9 Nein: Krisen aus',
   );
-  if (yes) scene.stormAt = scene.w.tick + PETITIONS.granary.delay + 300;
+  if (yes) scene.stormAt = scene.w.tick + B9_STORM_AFTER;
   return scene;
 };
 
