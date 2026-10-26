@@ -531,7 +531,11 @@ function withPeakPeople(b: Record<Lage, SceneBuilder>): Record<Lage, SceneBuilde
     (seed) => {
       const scene = build(seed);
       const peak = new WeakMap<World, number>();
-      scene.feed = (w) => peak.set(w, Math.max(peak.get(w) ?? 0, people(w)));
+      const before = scene.feed;
+      scene.feed = (w) => {
+        before?.(w);
+        peak.set(w, Math.max(peak.get(w) ?? 0, people(w)));
+      };
       scene.probe = (w) => peak.get(w) ?? 0;
       return scene;
     };

@@ -13,6 +13,9 @@
  * - B9 Sturm direkt: Der Lauf setzt `world.crisis` auf einen Sturm ab answerAt + Verzug + 300 mit STORM_DURATION,
  *   in beiden Zweigen gleich, kein Eingriff in `crises.ts`. `incident` meint Krisen ausser diesem Sturm.
  *
+ * B7: Die Vorbedingung «Nein-Lage mit Engpass im Ja-Lauf» entfällt, sie steht nicht in Anhang 01 für B7 (nur B1, B2, B3, B8);
+ *   der Mangel der Nein-Lage zeigt sich dort im Wert (Webereien warten auf Wolle), nicht als leeres Lager.
+ *
  * Abweichungen vom Anhang 01:
  * - B9 Ja: `crisisLevel` bleibt 'off' (wie alle Lagen). Mit 'normal' zöge der Krisenstrom alle 600 Ticks eine eigene
  *   Krise, einen «nächsten Termin hinter dem Fenster» gibt es nicht. Der gesetzte Sturm ist die einzige Krise.
@@ -44,8 +47,11 @@ describe.each(PETITION_SEEDS)('AK-BS-04 B6-B9, Seed %i', (seed) => {
     if (id === 'spiceSeed')
       it('Vorbedingung B6: im Fenster kommt eine zusätzliche Ladung in der Heimat an', () => {
         expect(res.yes!.yes.probe).toBeGreaterThan(0);
-        expect(res.yes!.no.probe ?? 0).toBe(0);
-        expect(res.no!.yes.probe ?? 0).toBe(0);
+        expect(res.yes!.no.probe ?? 0).toBe(0); // ohne Saat kein Zusatz
+      });
+    if (id === 'spiceSeed')
+      it('Vorbedingung B6: Nein-Lage mit Engpass im Ja-Lauf', () => {
+        expect(res.no!.yes.shortage).toContain('spice');
       });
     if (id === 'returnees')
       it('Vorbedingung B8: die Heimkehrer ziehen ein (mehr Bewohner im Ja-Lauf der Ja-Lage)', () => {

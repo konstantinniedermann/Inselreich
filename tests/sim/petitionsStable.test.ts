@@ -186,12 +186,16 @@ describe(`AK-BS-05 stabile Stadt, Seed ${SEED}`, () => {
     expect(t!).toBeLessThanOrEqual((s / lNa) * PER_HUNDRED + RAMP);
   });
 
-  // BEFUND (ausserhalb Band, Entscheid Controller, nicht kalibriert): Stoff am Ende 24, Band bei ü 9,7 % bis 23.
-  it.skip('J+F: Stoff am Ende der Überbelegung im Band, kein unversorgtes Haus', () => {
+  // BEFUND: Band Anhang 03 §3 fehlerhaft (Ist 24, Band bei ü 9,7 % 17 bis 23, nicht kalibriert).
+  // Ruling-Entwurf: S - L_St x (duration - RAMP) / 100 mit [-6, +3]; bis zum L0-Ruling skip.
+  it.skip('J+F: Stoff am Ende der Überbelegung im Band', () => {
     const lSt = 18 * TIERS[4].needs.cloth! - over.cloth! * 120 * TIERS[4].needs.cloth!;
     const expected = results.JF!.rampCloth - lSt * (def.duration / PER_HUNDRED);
     expect(results.JF!.clothAtEffectEnd).toBeGreaterThanOrEqual(expected - 6);
     expect(results.JF!.clothAtEffectEnd).toBeLessThanOrEqual(expected + 3);
+  });
+
+  it('J+F: kein unversorgtes Haus im Fenster', () => {
     expect(results.JF!.unmetAny).toBe(false);
   });
 
@@ -201,13 +205,17 @@ describe(`AK-BS-05 stabile Stadt, Seed ${SEED}`, () => {
     expect(d).toBeLessThanOrEqual(MONEY_BAND[1]);
   });
 
-  // BEFUND (ausserhalb Band, Entscheid Controller, nicht kalibriert): gespart 48, Band bis 44,2 (Referenz 432, N 384).
-  it.skip('N: gesparter Stoff gegen die Referenz im Band, Bestand am Ende gleich +0 bis 6', () => {
+  // BEFUND: Band Anhang 03 §3 fehlerhaft (Ist 48 bei Referenz 432 und N 384, Band bis 44,2, nicht kalibriert).
+  // Ruling-Entwurf: gespart [exp - 1, exp + 6] (ganzzahlige Entnahme wirkt in beide Richtungen); bis zum L0-Ruling skip.
+  it.skip('N: gesparter Stoff gegen die Referenz im Band', () => {
     const rate = results.REF!.clothTakenFrugal / (FRUGAL_TICKS / PER_HUNDRED); // Ist-Rate je 100 T
     const saved = results.REF!.clothTakenFrugal - results.N!.clothTakenFrugal;
     const expected = rate * 0.1 * (FRUGAL_TICKS / PER_HUNDRED);
     expect(saved).toBeGreaterThanOrEqual(expected - 6);
     expect(saved).toBeLessThanOrEqual(expected + 1);
+  });
+
+  it('N: Stoffbestand am Ende minus Referenz in [0, 6]', () => {
     const diff = results.N!.clothAtFrugalEnd - results.REF!.clothAtFrugalEnd;
     expect(diff).toBeGreaterThanOrEqual(0);
     expect(diff).toBeLessThanOrEqual(6);
