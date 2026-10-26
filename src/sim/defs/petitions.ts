@@ -56,6 +56,9 @@ export interface PetitionDef {
   lament: string;
 }
 
+/** Ware, deren Anteil an den Festkosten der Festtrunk (B5) erlässt. */
+export const FEAST_VOUCHER_GOOD: GoodId = 'rum';
+
 export const PETITIONS: Readonly<Record<PetitionId, PetitionDef>> = {
   weavers: {
     name: 'Weberfamilien',

@@ -1,3 +1,4 @@
+import { isCouncilSide, seaTileTicks } from './council';
 import { crisisWindow } from './crises';
 import { BUILDING_DEFS } from './defs/buildings';
 import { CRISIS_LEVELS } from './defs/crises';
@@ -25,7 +26,15 @@ import { MONUMENT_GOODS, MONUMENT_STAGES } from './defs/monument';
 import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
 import { EDICTS } from './defs/edicts';
 import { UNLOCK_IDS } from './defs/unlocks';
-import { DEFAULT_WORLD_PETITIONS_ON } from './defs/petitions';
+import {
+  DEFAULT_WORLD_PETITIONS_ON,
+  FRUGAL_TICKS,
+  PETITIONS,
+  PETITION_ANSWER,
+  PETITION_IDS,
+  PETITION_MAX_OPEN,
+  type PetitionId,
+} from './defs/petitions';
 import { TRIAL_DURATION_TICKS, TRIAL_IDS } from './defs/trials';
 import { ISLANDS, ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
 import {
@@ -36,12 +45,14 @@ import {
   type LaneIsland,
   type PlacedIsland,
 } from './islands';
+import { isFeastKind } from './feastEffect';
 import { MAP_H, MAP_W } from './mapgen';
 import { recomputeConnectivity } from './roads';
 import { canRiseTier, taxTarget } from './tax';
 import { deriveUnlocks } from './unlocks';
 import type {
   BuildingState,
+  CouncilTier,
   CrisisKind,
   CrisisLevel,
   GoodId,
@@ -53,7 +64,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 18;
+export const SAVE_VERSION = 20;
 
 export type { LoadResult };
 
@@ -580,9 +591,15 @@ function isValidV6Building(b: unknown): boolean {
   return true;
 }
 
-/** `feastAt` (H-I007) nur an der Kapelle, ganzzahlig, `0 ≤ feastAt ≤ tick`; fehlt = kein Fest (keine Save-Version). */
+/**
+ * `feastAt` (H-I007) nur an der Kapelle, ganzzahlig, `0 ≤ feastAt ≤ tick`; fehlt = kein Fest (keine Save-Version).
+ * `feastKind` (I-201) nur mit `feastAt` und als bekannte Festart; fehlt = Aufstiegsfest.
+ */
 function isValidFeast(b: unknown, tick: unknown): boolean {
-  if (!isObject(b) || b.feastAt === undefined) return true;
+  if (!isObject(b)) return true;
+  if (b.feastKind !== undefined && (b.feastAt === undefined || !isFeastKind(b.feastKind)))
+    return false;
+  if (b.feastAt === undefined) return true;
   return b.defId === 'chapel' && isInt(tick) && isIntBetween(b.feastAt, 0, tick);
 }
 
@@ -705,27 +722,29 @@ function isValidCargo(c: unknown): boolean {
   return sum <= SHIP.capacity;
 }
 
-function isValidShip(s: unknown, islands: Record<string, unknown>[]): boolean {
+function isValidShip(s: unknown, islands: Record<string, unknown>[], tileTicks: number): boolean {
   if (!isObject(s) || !isIntBetween(s.port, 0, islands.length - 1)) return false;
   const port = s.port as number;
   if (s.to !== null) {
     if (!hasKontor(islands, s.to) || s.to === port) return false;
   }
   const maxLeft =
-    s.to === null ? 0 : laneTicks(islands as unknown as LaneIsland[], port, s.to as number);
+    s.to === null
+      ? 0
+      : laneTicks(islands as unknown as LaneIsland[], port, s.to as number, tileTicks);
   if (!isIntBetween(s.left, s.to === null ? 0 : 1, maxLeft)) return false;
   if (!isValidCargo(s.cargo) || !isValidRoute(s.route, islands)) return false;
   return typeof s.homing === 'boolean' && (!s.homing || s.route === null);
 }
 
 /** Felder von Save v9 (M12 Seefahrt): Schiffe, Zähler, drittes Ziel. */
-function isValidV9Fields(raw: Record<string, unknown>): boolean {
+function isValidV9Fields(raw: Record<string, unknown>, tileTicks: number): boolean {
   const { ships, nextShipId } = raw;
   const islands = raw.islands as Record<string, unknown>[];
   if (typeof raw.wonSpice !== 'boolean' || (raw.wonSpice && raw.wonMerchants !== true))
     return false;
   if (!Array.isArray(ships) || ships.length > SHIP_MAX) return false;
-  if (!ships.every((s) => isValidShip(s, islands))) return false;
+  if (!ships.every((s) => isValidShip(s, islands, tileTicks))) return false;
   const ids = ships.map((s) => (s as Record<string, unknown>).id);
   if (!ids.every((id) => isInt(id) && id >= 1) || new Set(ids).size !== ids.length) return false;
   if (!isInt(nextShipId) || nextShipId < 1) return false;
@@ -934,13 +953,26 @@ function isValidCouncil(raw: Record<string, unknown>): boolean {
   if (!isObject(c)) return false;
   const keys = Object.keys(c);
   if (keys.length !== 3 || keys.join() !== '2,3,4') return false;
-  return keys.every((k) => c[k] === null || c[k] === 'open' || c[k] === 'A' || c[k] === 'B');
+  return keys.every(
+    (k) => c[k] === null || c[k] === 'open' || isCouncilSide(Number(k) as CouncilTier, c[k]),
+  );
+}
+
+/** v18 → v19 (I-153 Seerecht): nur die Versionsnummer; ältere Builds weisen Stände mit Beschluss C über sie ab. Wirft nie. */
+export function migrateV18ToV19(raw: Record<string, unknown>): void {
+  raw.version = 19;
 }
 
 /** v17 → v18 (I-132): `trial` mit Startwerten. Wirft nie. */
 export function migrateV17ToV18(raw: Record<string, unknown>): void {
   raw.trial = { active: null, ticks: 0, e0: 0, passed: [] };
   raw.version = 18;
+}
+
+/** v19 → v20 (I-210): `petitions` im Aus-Zustand. Wirft nie. */
+export function migrateV19ToV20(raw: Record<string, unknown>): void {
+  raw.petitions = { on: false, next: null, open: [], effects: [] };
+  raw.version = 20;
 }
 
 const isCount = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0;
@@ -967,6 +999,53 @@ function isValidTrial(raw: Record<string, unknown>): boolean {
   return isValidTrialPassed(t.passed, t.active);
 }
 
+const isPetitionId = (v: unknown): v is PetitionId =>
+  typeof v === 'string' && (PETITION_IDS as readonly string[]).includes(v);
+const isAnswer = (v: unknown): boolean => v === 'yes' || v === 'no';
+const MAX_DELAY = Math.max(...PETITION_IDS.map((id) => PETITIONS[id].delay));
+
+function isValidPetitionMark(m: unknown, tick: number): boolean {
+  if (!isObject(m) || !isPetitionId(m.id)) return false;
+  if (!Number.isInteger(m.drawnAt) || !isCount(m.amount)) return false;
+  const drawnAt = m.drawnAt as number;
+  if (drawnAt > tick || drawnAt < tick - PETITION_ANSWER - MAX_DELAY) return false;
+  if (m.anchor !== undefined && (PETITIONS[m.id].anchor === null || !Number.isInteger(m.anchor)))
+    return false;
+  if (m.answer === undefined) return m.dueTick === undefined && drawnAt + PETITION_ANSWER > tick;
+  const due = m.dueTick;
+  return (
+    isAnswer(m.answer) &&
+    Number.isInteger(due) &&
+    tick < (due as number) &&
+    (due as number) <= tick + MAX_DELAY
+  );
+}
+
+function isValidPetitionEffect(e: unknown, tick: number): boolean {
+  if (!isObject(e) || !isPetitionId(e.id) || !isAnswer(e.answer)) return false;
+  if (e.anchor !== undefined && (PETITIONS[e.id].anchor === null || !Number.isInteger(e.anchor)))
+    return false;
+  const span = e.answer === 'yes' ? PETITIONS[e.id].duration : FRUGAL_TICKS;
+  return (
+    Number.isInteger(e.until) && tick < (e.until as number) && (e.until as number) <= tick + span
+  );
+}
+
+/** I-210 Anhang 04: Bittschrift-Zustand. */
+function isValidPetitions(raw: Record<string, unknown>): boolean {
+  const p = raw.petitions;
+  const tick = raw.tick;
+  if (!isObject(p) || Array.isArray(p) || typeof tick !== 'number') return false;
+  if (typeof p.on !== 'boolean' || !Array.isArray(p.open) || !Array.isArray(p.effects))
+    return false;
+  if (p.next !== null && !(Number.isInteger(p.next) && (p.next as number) > tick)) return false;
+  if (!p.on) return p.next === null && p.open.length === 0 && p.effects.length === 0;
+  if (p.open.length > PETITION_MAX_OPEN || p.effects.length > 2 * PETITION_IDS.length) return false;
+  if (!p.open.every((m) => isValidPetitionMark(m, tick))) return false;
+  const ids = p.open.map((m: { id: string }) => m.id);
+  return new Set(ids).size === ids.length && p.effects.every((e) => isValidPetitionEffect(e, tick));
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { stats } = raw;
@@ -977,13 +1056,15 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidV4Fields(raw)) return false;
   if (!isValidV5Fields(raw)) return false;
   if (!isValidV6Fields(raw)) return false;
-  if (!isValidV9Fields(raw)) return false;
+  if (!isValidCouncil(raw)) return false;
+  const tileTicks = seaTileTicks(raw as unknown as Pick<World, 'council'>);
+  if (!isValidV9Fields(raw, tileTicks)) return false;
   if (!isValidV11Fields(raw)) return false;
   if (!isValidV12Fields(raw)) return false;
   if (!isValidContractFields(raw)) return false;
   if (!isValidFarFields(raw)) return false;
-  if (!isValidCouncil(raw)) return false;
   if (!isValidTrial(raw)) return false;
+  if (!isValidPetitions(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -1003,7 +1084,7 @@ function isWellFormedSafe(raw: Record<string, unknown>): boolean {
 }
 
 /**
- * I-210 (vorgezogen, Migration folgt in T05): Stände ohne `petitions` laden mit ausgeschalteten Bittschriften.
+ * I-210: Stände ohne `petitions` laden mit ausgeschalteten Bittschriften.
  * Der Schlüssel steht wie in `createWorld` vor `buyPct`, damit die Schlüsselfolge (und damit `serialize`) gleich bleibt.
  */
 function fillPetitionsDefault(raw: Record<string, unknown>): void {
@@ -1050,6 +1131,8 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 15) migrateV15ToV16(raw);
   if (raw.version === 16) migrateV16ToV17(raw);
   if (raw.version === 17) migrateV17ToV18(raw);
+  if (raw.version === 18) migrateV18ToV19(raw);
+  if (raw.version === 19) migrateV19ToV20(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

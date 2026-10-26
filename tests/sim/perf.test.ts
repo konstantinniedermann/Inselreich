@@ -25,7 +25,10 @@ import { denseScene, serviceAvailableNaive } from './helpers';
  * freie Kerne); die Flakes bei Last ≥ 8 sind damit nicht nachgestellt (Testsperre bricht dort ab). Naiver Code
  * (11-fach, ≈ 25 ms) bleibt rot (temporär gezeigt).
  */
-const PERF_PIN = 2.5;
+// ZEITPIN-D1 (2026-10-25): Rechner liegt heute bei ca. 2,8 ms (main) bzw. 2,55 ms (integrate/rel-33), best-of-3,
+// Last 1 min <= 3,4 (je 2 saubere Läufe: main 2,763/2,764; Kandidat 2,542/2,526; Läufe bei Last > 4 verworfen).
+// Pin 3,5 = ca. 1,25 x main; der naive Code (18,6 ms) bleibt rot.
+const PERF_PIN = 3.5;
 const STEPS = 1000;
 const ROUNDS = 100;
 const RUNS = 3;

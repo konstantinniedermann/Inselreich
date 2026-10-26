@@ -1,4 +1,5 @@
 import type { IslandKind, IslandTrait } from './defs/sea';
+import type { FeastKind } from './defs/feast';
 import type { ReserveGood, ReserveStep } from './defs/reserve';
 import type { PetitionId } from './defs/petitions';
 
@@ -188,6 +189,8 @@ export interface Building {
   level?: 2 | 3;
   /** Beginn des letzten Fests (Tick); nur an der Kapelle, fehlt = noch nie gefeiert. */
   feastAt?: number;
+  /** Art des letzten Fests; nur zusammen mit `feastAt` an der Kapelle; fehlt = Aufstiegsfest (I-201). */
+  feastKind?: FeastKind;
   house?: HouseState;
 }
 export interface Tile {
@@ -297,20 +300,21 @@ export interface Ship {
   homing: boolean;
 }
 export type CouncilTier = 2 | 3 | 4;
-export type CouncilSide = 'A' | 'B';
+export type CouncilSide = 'A' | 'B' | 'C';
 export type CouncilState = null | 'open' | CouncilSide;
 /** Wirksamer Wert, den ein Beschluss überschreibt (Defs bleiben unverändert). */
 export type CouncilLever =
   | { kind: 'cycle'; defId: BuildingDefId; value: number }
   | { kind: 'serviceRadius'; defId: BuildingDefId; value: number }
-  | { kind: 'maxInhabitants'; tier: Tier; value: number };
+  | { kind: 'maxInhabitants'; tier: Tier; value: number }
+  | { kind: 'seaTileTicks'; value: number };
 export interface CouncilDef {
   name: string;
   text: string;
   lever: CouncilLever;
 }
 export interface World {
-  version: 18;
+  version: 20;
   seed: number;
   islands: Island[];
   tick: number;

@@ -1,4 +1,4 @@
-import { maxInhabitantsOf, openCouncilTiers } from '../sim/council';
+import { councilSides, maxInhabitantsOf, openCouncilTiers } from '../sim/council';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { TIERS } from '../sim/defs/tiers';
 import { COUNCIL, COUNCIL_NOTE, COUNCIL_TIERS } from '../sim/defs/council';
@@ -42,35 +42,40 @@ export const councilBadgeActive = (world: World): boolean => openCouncilTiers(wo
  * Inseln (die Sim kennt keine Baustellen; ein Gebäude in `world.buildings` steht).
  */
 export function councilPreview(world: World, tier: CouncilTier, side: CouncilSide): string {
-  const lever = COUNCIL[tier][side].lever;
+  const lever = COUNCIL[tier][side]!.lever;
   const all = Object.values(world.buildings);
   if (lever.kind === 'maxInhabitants') {
     const n = all.filter((b) => b.house?.tier === lever.tier).length;
     if (n === 0) return `Wirkt noch nicht: Haus (${TIERS[lever.tier].name}) fehlt`;
     const plus = n * (lever.value - maxInhabitantsOf(world, lever.tier));
-    return `Betrifft jetzt: ${n} Häuser (+${plus} Plätze)`;
+    return `Betrifft jetzt: ${n} ${n === 1 ? 'Haus' : 'Häuser'} (+${plus} Plätze)`;
+  }
+  if (lever.kind === 'seaTileTicks') {
+    const n = world.ships.length;
+    return n === 0
+      ? 'Wirkt noch nicht: kein Schiff'
+      : `Betrifft jetzt: ${n} ${n === 1 ? 'Schiff' : 'Schiffe'}`;
   }
   const name = BUILDING_DEFS[lever.defId].name;
   const n = all.filter((b) => b.defId === lever.defId).length;
   return n === 0 ? `Wirkt noch nicht: ${name} fehlt` : `Betrifft jetzt: ${n} × ${name}`;
 }
 
-/** Inhalt des Rats-Fensters: offene Stufen mit zwei Karten, gefasste Beschlüsse als Zeilen. */
+/** Inhalt des Rats-Fensters: offene Stufen mit zwei oder drei Karten, gefasste Beschlüsse als Zeilen. */
 export function councilCards(world: World): CouncilView {
-  const sides: CouncilSide[] = ['A', 'B'];
   const open = openCouncilTiers(world).map((tier) => ({
     tier,
-    cards: sides.map((side) => ({
+    cards: councilSides(tier).map((side) => ({
       side,
-      name: COUNCIL[tier][side].name,
-      text: COUNCIL[tier][side].text,
+      name: COUNCIL[tier][side]!.name,
+      text: COUNCIL[tier][side]!.text,
       preview: councilPreview(world, tier, side),
     })),
   }));
   const decided: string[] = [];
   for (const t of COUNCIL_TIERS) {
     const s = world.council[t];
-    if (s === 'A' || s === 'B') decided.push(`Stufe ${t}: ${COUNCIL[t][s].name}`);
+    if (s !== null && s !== 'open') decided.push(`Stufe ${t}: ${COUNCIL[t][s]!.name}`);
   }
   return { open, decided, note: COUNCIL_NOTE };
 }
@@ -84,13 +89,13 @@ export function councilOpened(
   return COUNCIL_TIERS.filter((t) => prev[t] === null && next[t] === 'open');
 }
 
-/** Stufen, die von `'open'` auf `'A'`/`'B'` wechselten; `prev === null` (Laden) meldet nichts. */
+/** Stufen, die von `'open'` auf eine Seite wechselten; `prev === null` (Laden) meldet nichts. */
 export function councilDecided(
   prev: World['council'] | null,
   next: World['council'],
 ): CouncilTier[] {
   if (prev === null) return [];
-  return COUNCIL_TIERS.filter((t) => prev[t] === 'open' && (next[t] === 'A' || next[t] === 'B'));
+  return COUNCIL_TIERS.filter((t) => prev[t] === 'open' && next[t] !== null && next[t] !== 'open');
 }
 
 /** Ereignis-Log-Einträge für frisch gefasste Beschlüsse, in Stufenfolge; ohne Toast und Ziel. */
@@ -101,7 +106,7 @@ export function councilDecidedEntries(
 ): LogEntry[] {
   return councilDecided(prev, next).map((t) => {
     const side = next[t] as CouncilSide;
-    return { text: `Rat beschliesst: ${COUNCIL[t][side].name}`, toast: null, tick };
+    return { text: `Rat beschliesst: ${COUNCIL[t][side]!.name}`, toast: null, tick };
   });
 }
 
@@ -112,7 +117,7 @@ export function councilChronicleLine(world: World): string | null {
   const names: string[] = [];
   for (const t of COUNCIL_TIERS) {
     const s = world.council[t];
-    if (s === 'A' || s === 'B') names.push(COUNCIL[t][s].name);
+    if (s !== null && s !== 'open') names.push(COUNCIL[t][s]!.name);
   }
   if (names.length === 0)
     return open === 1 ? 'Rat: 1 Beschluss offen' : `Rat: ${open} Beschlüsse offen`;

@@ -173,6 +173,8 @@ export type Tool =
 /** Darstellungs-Zusatz je Frame (Spec 11.1); Animation entsteht nur aus `timeMs` und dem Welt-Zustand. */
 export interface RenderFx {
   timeMs: number;
+  /** Bruchteil des laufenden Sim-Ticks (0 bei Pause); glättet die Schiffsbewegung. */
+  tickFrac?: number;
   /** Krisenwetter bzw. Stimmungswetter (R3). */
   weather?: Weather;
   /** Brennende Betriebe (R3). */
@@ -953,7 +955,7 @@ export function render(
   const env: FrameEnv = { weather, reduce, light, lod: cam.zoom <= LOD_ZOOM, seed: world.seed };
   const frames: IslandFrame[] = [];
   // Handelsschiffe (M12 E4): im Rechteck einer Insel bewegtes Objekt dieser Insel, sonst auf See (Tiefe nach Inseln)
-  const poses = world.ships.map((s) => ({ id: s.id, pose: shipPose(world, s) }));
+  const poses = world.ships.map((s) => ({ id: s.id, pose: shipPose(world, s, fx.tickFrac ?? 0) }));
   const sea = poses
     .filter((p) => p.pose.island === null)
     .sort((a, b) => a.pose.x + a.pose.y - (b.pose.x + b.pose.y) || a.id - b.id);

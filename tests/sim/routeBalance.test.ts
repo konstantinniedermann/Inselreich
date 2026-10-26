@@ -7,7 +7,7 @@ import { laneTicks } from '../../src/sim/islands';
 import { routeBalance } from '../../src/sim/routeBalance';
 import type { GoodId, Route, World } from '../../src/sim/types';
 import { putBuilding } from './helpers';
-import { foundKontor2Literal, seaWorld } from './seaHelpers';
+import { foundKontor2Literal, laneWorld, seaWorld } from './seaHelpers';
 
 type Balances = Map<number, ReturnType<typeof goodsBalance>>;
 
@@ -132,5 +132,28 @@ describe('I-103 routeBalance', () => {
     const r = routeBalance(w, route([], ['food']))!;
     expect(r.goodsPer100).toBeGreaterThan(0);
     expect(r.goodsPer100).toBe((q * GOODS.food.sell * 100) / T);
+  });
+});
+
+describe('I-153 routeBalance unter Seerecht', () => {
+  it('AK-SR-9 Umlauf 700 ohne, 560 mit Seerecht; Warenwert je 100 Ticks im Verhältnis', () => {
+    const { w, island } = laneWorld(35);
+    const r: Route = {
+      a: 0,
+      b: island,
+      ab: [{ good: 'wood', reserve: 0 }],
+      ba: [{ good: 'spice', reserve: 0 }],
+    };
+    const bal = (): Balances =>
+      new Map([
+        [0, balanceWith({ wood: BIG })],
+        [island, balanceWith({ spice: BIG })],
+      ]);
+    const plain = routeBalance(w, r, bal())!;
+    w.council[4] = 'C';
+    const sea = routeBalance(w, r, bal())!;
+    expect(plain.cycleTicks).toBe(700);
+    expect(sea.cycleTicks).toBe(560);
+    expect(sea.goodsPer100).toBeCloseTo((plain.goodsPer100 * 700) / 560, 9);
   });
 });
