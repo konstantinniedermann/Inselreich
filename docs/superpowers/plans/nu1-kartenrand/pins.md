@@ -15,6 +15,7 @@ Bedingung dafür: `dropExpedition` in den drei Faltketten von `helpers.ts` (T02)
 ```bash
 rg -n "'U6'\]|UNLOCK_IDS\)|toHaveLength\(7\)" tests                       # Freischalt-Literale
 rg -n 'wonSpice\s*=\s*true|wonSpice: true' tests                         # Welten mit Ziel 3
+rg -n 'parseSaveVersion' tests tools                                      # Literal-Regex (SAVE_VERSION bleibt Zahl)
 rg -n 'foldBackSeerecht\(' tests                                         # äusserster Faltschritt
 rg -n 'SAVE_VERSION\)\.toBe\(|PRE_SEERECHT_VERSION' tests                 # Versionspins
 rg -n 'BUILDING_IDS\)\.toHaveLength|Object\.keys\(BUILDING_DEFS\)\.at' tests  # Gebäudeliste

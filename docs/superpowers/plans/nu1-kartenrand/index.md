@@ -21,7 +21,7 @@
 
 ## Entscheide und Risiken
 
-Plan-Entscheide P-1 bis P-12 (Entwürfe E-NU-1 bis E-NU-6 an L0) und Risiken: [`entscheide.md`](entscheide.md). AK-Zuordnung, Review Focus, Ruling-Zuordnung und Gate-Vorprüfliste: [`ak-matrix.md`](ak-matrix.md). Pin-Liste 25b: [`pins.md`](pins.md).
+Plan-Entscheide P-1 bis P-12 (Entwürfe E-NU-1 bis E-NU-6 an L0) und Risiken: [`entscheide.md`](entscheide.md). AK-Zuordnung, Review Focus, Ruling-Zuordnung und Gate-Vorprüfliste: [`ak-matrix.md`](ak-matrix.md). Pin-Liste 25b: [`pins.md`](pins.md). Nachbarn: [`nachbarn.md`](nachbarn.md).
 
 ## Dateimatrix (Ownership; nie zwei Umsetzer gleichzeitig an einer Datei)
 
@@ -63,7 +63,7 @@ Reihenfolge: T00 → T01 → T02 → T03 → T04 → T05 → (T06 ‖ T07 → T0
 
 ## Budget (Starts-Antrag, Formel)
 
-Pakete mit eigenem Review T01–T08 = 8 → × 2 = 16 · QA-Check 1 (T10) · Final-Review 1 → 18; + 30 % = 23,4 → **24 Starts**. Geplant 14: Umsetzer A `tech-sim-engineer` 2 (A1 T00–T03, A2 T04–T06 und T09; Übergabe per Ledger wegen Kontext) · Umsetzer B `tech-ui-engineer` 1 (T07, T08, T11 per `SendMessage`) · `qa-code-reviewer` T01–T08 8 · `qa-playtester` T10 1 · Final-Review **`model: opus`** 1 · Delta-Reserve 1 eingeplant; Rest 10 für frische Delta-Reviews (opus) und Umsetzer-Ablösung. T09 und T11 prüft das Final-Review mit (Merge bzw. Doku; AK-33 ist «Review»). **Parallelität 2** (A und B), höchstens 2 gleichzeitige Testläufe.
+Pakete mit eigenem Review T01–T08 = 8 → × 2 = 16 · QA-Check 1 (T10) · Final-Review 1 → 18; + 30 % = 23,4 → **24 Starts**. Geplant 14: Umsetzer A `tech-sim-engineer` 2 (A1 T00–T03, A2 T04–T06 und T09; Übergabe per Ledger wegen Kontext) · Umsetzer B `tech-ui-engineer` 1 (T07, T08, T11 per `SendMessage`) · `qa-code-reviewer` T01–T08 8 · `qa-playtester` T10 1 · Final-Review **`model: opus`** 1 · Delta-Reserve 1 eingeplant; Rest 10 für frische Delta-Reviews (opus) und Umsetzer-Ablösung. T09 hat ein Task-Review (frisch, opus, Reserve; R991); T11 prüft das Final-Review mit (Merge bzw. Doku; AK-33 ist «Review»). **Parallelität 2** (A und B), höchstens 2 gleichzeitige Testläufe.
 
 ## Controller-Briefing und Prüfpflichten
 

@@ -20,7 +20,8 @@ Spec §4; Anhang 02 §8.3, §8.4.
 // types.ts — World (am Ende der Felder; createWorld legt sie in dieser Reihenfolge am Ende an)
 expedition: Expedition | null; seaRevealed: SeaAreaId[]; finds: FindId[];
 // save.ts
-export const SAVE_V_KARTENRAND = /* SAVE_VERSION auf main + 1 */;   // P-7; SAVE_VERSION = SAVE_V_KARTENRAND
+export const SAVE_VERSION = 20;   // Zahlenliteral = main + 1 (P-7); NIE ein Bezeichner (parseSaveVersion, Regex /SAVE_VERSION\s*=\s*(\d+)/)
+export const SAVE_V_KARTENRAND = SAVE_VERSION; // nur Alias für Lesbarkeit; nie Wert von SAVE_VERSION
 // expeditionSave.ts (importiert defs, types, keine Sim-Module ausser rein lesenden Helfern)
 export function isValidKartenrandFields(raw: Record<string, unknown>): boolean; // vor isValidV9Fields (Routen!)
 export function isValidExpeditionField(raw: Record<string, unknown>): boolean;  // nach isValidV9Fields (Schiffe)
@@ -68,7 +69,7 @@ export function foldBackKartenrand(x: Record<string, unknown>): Record<string, u
 
 ## Schritte
 
-- [ ] `git show main:src/sim/save.ts | rg -n "SAVE_VERSION ="` ins Ledger; `SAVE_V_KARTENRAND` = dieser Wert + 1.
+- [ ] `git show main:src/sim/save.ts | rg -n "SAVE_VERSION ="` ins Ledger; `SAVE_VERSION`-Zahlenliteral = dieser Wert + 1; `rg -n "parseSaveVersion" tests tools` ins Ledger, `npx vitest run tests/tools/renderqa.test.ts; echo EXIT=$?` → 0.
 - [ ] Tests schreiben; **Rot:** `npx vitest run tests/sim/expedition-save.test.ts; echo EXIT=$?` → ≠ 0.
 - [ ] Umsetzen (Felder, Konstante, Migration, Prüfungen, Faltung). Danach Pins laut `pins.md` (T02-Zeilen).
 - [ ] **Grün:** derselbe Befehl → 0; `npx vitest run tests/sim/save*.test.ts tests/sim/scenario-saves.test.ts tests/sim/trial-save.test.ts tests/sim/council-save.test.ts tests/sim/farOrder-save.test.ts tests/sim/helpers.test.ts tests/sim/balance-crises.test.ts tests/sim/buyPct.test.ts; echo EXIT=$?` → 0.

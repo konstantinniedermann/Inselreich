@@ -10,9 +10,9 @@ Spec §4 «Version»; Index «Risiken».
 ## Schritte
 
 - [ ] **B in A** (Controller): in `.worktrees/nu1` `git merge --no-edit feat/nu1-ui`; `git log --oneline -3`.
-- [ ] **main holen:** `git merge --no-edit main`. Merge-Stand (Exit 0 = auf main) für `feat/hafen`, `feat/i210`, `feat/volllast`, `feat/ausbau-logik`, FLAECHE, GEBAEUDE-VARIANZ ins Ledger.
-- [ ] **Save-Nummer (P-7):** `git show main:src/sim/save.ts | rg -n "SAVE_VERSION ="` → `SAVE_V_KARTENRAND` = Wert + 1; Literale `World.version` (`types.ts`) und `createWorld` (`world.ts`) gleich setzen. Kettenzeile `migrateKartenrand` steht **nach** allen Kettenschritten von main.
-- [ ] **Faltung:** `foldBackKartenrand` ist der äusserste Faltschritt; ist ein fremder Faltschritt dazugekommen (z. B. HAFEN `foldBackDwell`, I-210, I-215), steht er innen: `foldBackX(foldBackKartenrand(json))`. Gilt in allen Dateien aus `rg -n "foldBackSeerecht\(" tests` und in den Faltketten von `helpers.ts` (`dropExpedition` vor den fremden `drop…`).
+- [ ] **main holen:** `git merge --no-edit main`. Merge-Stand (Exit 0 = auf main) für `feat/hafen`, `feat/i210`, `feat/volllast`, `feat/ausbau-logik`, `feat/i223`, `feat/stadtplanung`, `feat/inselproben`, FLAECHE, GEBAEUDE-VARIANZ ins Ledger ([`nachbarn.md`](nachbarn.md)).
+- [ ] **Save-Nummer (P-7):** `git show main:src/sim/save.ts | rg -n "SAVE_VERSION ="` → `SAVE_VERSION` bleibt **Zahlenliteral** = Wert + 1 (`SAVE_V_KARTENRAND` nur Alias, `rg -n "parseSaveVersion" tests tools`, `renderqa.test.ts` grün); Literale `World.version` (`types.ts`) und `createWorld` (`world.ts`) gleich setzen. Kettenzeile `migrateKartenrand` steht **nach** allen Kettenschritten von main.
+- [ ] **Faltung:** `foldBackKartenrand` ist der äusserste Faltschritt; Regel E-ZE-1 (R987): jüngster Schritt innen, wer später merged, zieht nach; ist ein fremder Faltschritt dazugekommen (HAFEN `foldBackDwell`, I-210, I-215, I-223 `dropTithe`, Stadtplanung `foldBackStadt`, Inselproben `foldBackChallenge`), steht er innen: `foldBackX(foldBackKartenrand(json))`. Gilt in allen Dateien aus `rg -n "foldBackSeerecht\(" tests` und in **allen drei** Kettenköpfen `foldBackToV13/V12/V11` in `tests/sim/helpers.ts`: `dropExpedition` am Zeilenort von `dropTithe`/`dropPetitions`, nie ein Kettenkopf ausgelassen.
 - [ ] **Konflikttabelle** (je Zeile: Stand nach Merge prüfen, Test laufen):
 
 | Datei                                                  | Nachbar                    | Regel nach dem Merge                                                                                                                                                                                                                                                                                                                                                                                                                                |
@@ -29,6 +29,7 @@ Spec §4 «Version»; Index «Risiken».
 - [ ] **Läufe:** `npx vitest run tests/sim/expedition*.test.ts tests/sim/finds*.test.ts tests/sim/save*.test.ts tests/sim/scenario-saves.test.ts tests/sim/balance.test.ts tests/sim/imports.test.ts; echo EXIT=$?` → 0; `git diff main -- tests/sim/balance.test.ts` leer.
 - [ ] **Zeiten nachher:** Befehl aus [`zeiten.md`](zeiten.md) (Last ≤ 4 während des ganzen Laufs), Spalte «Branch» füllen; R905 prüfen (kein neuer Test > 500 ms, Bestand ≤ + 50 %).
 - [ ] Teilbeleg: `npx tsc --noEmit; echo EXIT=$?`, `make lint; echo EXIT=$?`, `make zeittests; echo EXIT=$?`, `make conflicts; echo EXIT=$?`.
+- [ ] **Task-Review (R991):** frischer `qa-code-reviewer` mit `model: opus` aus der Reserve (nicht Fortsetzung, nicht Umsetzer); Fokus `ships.ts`, `save.ts`, Faltketten, `renderqa.test.ts`. Urteil OK vor T10.
 - [ ] Commit `feat: NU-1 Merge-Stand main, Save-Nummer, Faltung (T09)` (bzw. Merge-Commit plus Folge-Commit).
 
 ## Nachzug
