@@ -227,3 +227,69 @@ describe('HAFEN S1 Anker folgt Kontor', () => {
     expect(w.buildings[r.id!]).toBeDefined();
   });
 });
+
+describe('HAFEN S1 Neubau rechnet laufende Fahrten um', () => {
+  /** Fahrzeit Heimat–Insel 1 je Platz (bauen, lesen, abreissen); Plätze dünn, Zeit nach R392. */
+  function extremes(w: World): { far: Spot; near: Spot; tFar: number; tNear: number } {
+    const rows = thinned(sitesOf(w, 1), 6).map((s) => {
+      const r = placeBuilding(w, 'kontor2', s.x, s.y, 1);
+      const t = laneTicks(w.islands, 0, 1);
+      demolish(w, r.id!);
+      return { s, t };
+    });
+    rows.sort((a, b) => b.t - a.t);
+    const far = rows[0]!;
+    const near = rows[rows.length - 1]!;
+    return { far: far.s, near: near.s, tFar: far.t, tNear: near.t };
+  }
+
+  /** Ankerwechsel P (weit) -> Q (nah) mit einem Schiff; liefert die Welt nach dem Bau. */
+  function rebuild(ship: (tFar: number) => Parameters<typeof shipLiteral>[1]) {
+    const w = rich(seaWorld(SEED_D37));
+    const { far, near, tFar, tNear } = extremes(w);
+    expect(tNear).toBeLessThan(tFar);
+    const r = placeBuilding(w, 'kontor2', far.x, far.y, 1);
+    expect(demolish(w, r.id!).ok).toBe(true);
+    const s = shipLiteral(w, ship(tFar));
+    expect(placeBuilding(w, 'kontor2', near.x, near.y, 1).ok).toBe(true);
+    return { w, s, tFar, tNear };
+  }
+
+  it('B1: Heimfahrt mit voller Restzeit bleibt ladbar, left folgt der neuen Fahrzeit', () => {
+    const { w, s, tNear } = rebuild((t) => ({
+      port: 1,
+      to: 0,
+      left: t,
+      route: null,
+      homing: true,
+    }));
+    expect(s.left).toBe(tNear);
+    expect(deserialize(serialize(w)).ok).toBe(true);
+  });
+
+  it('B1: Hinfahrt (to = Insel) wird ebenso umgerechnet und bleibt ladbar', () => {
+    const { w, s, tNear } = rebuild((t) => ({ port: 0, to: 1, left: t }));
+    expect(s.left).toBe(tNear);
+    expect(deserialize(serialize(w)).ok).toBe(true);
+  });
+
+  it('B1: kleinere Restzeit skaliert nur mit dem Verhältnis, mindestens 1', () => {
+    const { w, s, tFar, tNear } = rebuild(() => ({
+      port: 1,
+      to: 0,
+      left: 100,
+      route: null,
+      homing: true,
+    }));
+    expect(s.left).toBe(Math.max(1, Math.ceil((100 * tNear) / tFar)));
+    expect(s.left).toBeLessThanOrEqual(100);
+    expect(deserialize(serialize(w)).ok).toBe(true);
+  });
+
+  it('B1: Schiffe anderer Inseln und liegende Schiffe bleiben unberührt', () => {
+    const { s: other } = rebuild(() => ({ port: 0, to: 2, left: 7 }));
+    expect(other.left).toBe(7);
+    const { s: idle } = rebuild(() => ({ port: 1, to: null, left: 0 }));
+    expect(idle.left).toBe(0);
+  });
+});
