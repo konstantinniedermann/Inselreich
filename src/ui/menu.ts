@@ -1,5 +1,6 @@
 // Menü-Karte (Spec L2): Speichern, Laden, Neue Insel, Karte, Hilfe, Tastenkürzel. Keine Regeln.
 import { CRISIS_LEVELS } from '../sim/defs/crises';
+import { DEFAULT_NEW_GAME_PETITIONS_ON } from '../sim/defs/petitions';
 import type { CrisisLevel } from '../sim/types';
 import { openModal, renderConfirm } from './modal';
 import { CRISIS_LEVEL_IDS, UNLOCK_MODE_IDS, type UnlockMode } from './settings';
@@ -106,7 +107,7 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
   unlockSelect.value = a.unlockMode();
   const petitionBox = document.createElement('input');
   petitionBox.type = 'checkbox';
-  petitionBox.checked = a.petitionsOn?.() ?? true;
+  petitionBox.checked = a.petitionsOn?.() ?? DEFAULT_NEW_GAME_PETITIONS_ON;
   petitionBox.setAttribute('aria-label', 'Bittschriften für die neue Insel');
   const newRow = document.createElement('div');
   const showNew = (): void => {
