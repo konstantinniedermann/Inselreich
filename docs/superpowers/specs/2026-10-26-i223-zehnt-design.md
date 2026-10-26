@@ -190,8 +190,8 @@ Regel 3.
   Werkzeug 37, Übertrag 560 000.
 - **AK-ZE-03 Siedler 90/10** (`tithe.test.ts`): 15 Häuser à 8 Siedler, erfüllt, normal, nur Zehnt Stufe 2, Stein 10, Kasse
   K: nach 100 Aufrufen Kasse K + 756 (mit `Geld`: K + 840), Stein 16, `titheCarry.stone` = 1 440 000; `stats.taxes` = 756.
-- **AK-ZE-04 Steuersatz skaliert** (`tithe.test.ts`): Fall AK-ZE-02 mit Satz hoch: nach 100 Aufrufen 3 Werkzeug mehr,
-  Übertrag 1 488 000; mit Satz niedrig 2 mehr, Übertrag 32 000.
+- **AK-ZE-04 Steuersatz skaliert** (`tithe.test.ts`): Fall AK-ZE-02 mit Satz hoch: nach 100 Aufrufen Werkzeug 23,
+  Übertrag 1 488 000; mit Satz niedrig Werkzeug 22, Übertrag 32 000.
 - **AK-ZE-05 Sperre und Gründe** (`tithe.test.ts`): `setTithe(w, 1, true)` bei Tick T → `ok`, `titheLockedUntil[1]` =
   T + 1800; bei T + 1799 `setTithe(w, 1, false)` → `{ ok: false, reason: 'Sperrzeit' }`, `JSON.stringify(w)` unverändert;
   bei T + 1800 `ok`. Stufe 2 ist bei T + 1 frei. Weiter: Stufe 3 → «Kein Zehnt für Bürger»; Stufe 7, `'x'`, `undefined`
