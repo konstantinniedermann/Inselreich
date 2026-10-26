@@ -145,6 +145,11 @@ describe('Strom und Sperre', () => {
     hall.outageUntil = w.tick + 1000;
     expect(titheFlowText(w, 1)).toBe('Zehnt ruht: Amtsstube wirkt nicht');
   });
+  it('Flow Stufe 2 (Stein)', () => {
+    const { w } = town(0, 15);
+    w.titheOn[2] = true;
+    expect(titheFlowText(w, 2)).toMatch(/^[1-9]\d* \/ min · [1-9]\d*(,\d)? Stein \/ min$/);
+  });
   it('Sperre', () => {
     const { w } = town(12, 0);
     w.titheLockedUntil[1] = w.tick + TITHE_SWITCH_LOCK;
