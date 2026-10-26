@@ -267,10 +267,8 @@ function settleHouses(w: World): void {
 function sceneOf(seed: number, id: PetitionId, spec: HouseSpec, note: string): PetitionScene {
   const w = createWorld(seed, { unlockAll: true, crisisLevel: 'off', petitionsOn: true });
   w.money = BIG_MONEY;
-  if (spec.tier === 4) {
-    w.won = true; // Stufe 4 ist nur nach dem Ziel ladbar; die Bitten sollen aber nur die Marke der Lage ziehen
-    w.petitions.next = NO_DRAW;
-  }
+  if (spec.tier === 4) w.won = true; // Stufe 4 ist nur nach dem Ziel ladbar
+  w.petitions.next = NO_DRAW; // in jeder Lage: die Bitten ziehen nichts ausser der Marke der Lage
   buildTown(w, spec);
   const fed = chainsAt(w, spec.over);
   const stock = home(w).stock;
