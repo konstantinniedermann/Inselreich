@@ -8,7 +8,7 @@
  *   Kontor), eine Route brauchte Kontor, Schiff, Umlauf und Ladelogik. Gewürz kommt alle L Ticks in die Heimat
  *   (L = Ladung / Bedarf). Ja: Fremdlager 20, Ladung 15, der Zusatz der Saat (100/pct - 1) kommt an. Nein: Fremdlager 100,
  *   Ladung = Schiffsraum, der Zusatz bleibt im Fremdlager. Vorbedingung Ja: mindestens eine zusätzliche Ladung kam an.
- * - B9 ist hier noch NICHT geprüft (Lage und Sturm-Mechanik stehen in petitionWorlds.ts, `SCENES.granary`):
+ * - B9 offen (Entscheid L0), hier noch NICHT geprüft (Lage und Sturm-Mechanik stehen in petitionWorlds.ts, `SCENES.granary`):
  *   Die Ja-Lage ist mit den Zahlen aus Anhang 01 nicht baubar (Befund im Bericht an lead-tech), Entscheid steht aus.
  * - B9 Sturm direkt: Der Lauf setzt `world.crisis` auf einen Sturm ab answerAt + Verzug + 300 mit STORM_DURATION,
  *   in beiden Zweigen gleich, kein Eingriff in `crises.ts`. `incident` meint Krisen ausser diesem Sturm.

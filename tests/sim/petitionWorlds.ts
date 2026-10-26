@@ -598,3 +598,47 @@ export const SCENES_B6_B9: Partial<Record<PetitionId, Record<Lage, SceneBuilder>
 };
 
 Object.assign(SCENES, SCENES_B6_B9);
+
+// ---- Stabile Stadt (Anhang 03, AK-BS-05) ----
+
+/** Ziel-ü der Ketten; die Betriebe liefern ganze Raten, das tatsächliche ü liest `measuredOver`. */
+const STABLE_OVER = 0.1;
+const STABLE_HOUSES = [20, 20, 20, 20, 20, 20] as const;
+
+export interface StableTown {
+  w: World;
+  /** Tatsächliches ü je Ware (Betriebe plus Testzufuhr Gewürz). */
+  over: Partial<Record<GoodId, number>>;
+  /** Testzufuhr Gewürz; in jedem Zweig nach jedem step aufrufen. */
+  feed: ((w: World) => void) | undefined;
+}
+
+/**
+ * Anhang 03 §1: 6 Kaufmannshäuser (Stufe 4, 20 Bewohner) mit allen Diensten, Lager 100 je Ware, Krisen aus,
+ * Steuer «normal», alle Ketten auf etwa 110 % (Gewürz per Testzufuhr). Noch ohne Bitte und ohne Einschwingen.
+ */
+export function stableTown(seed: number): StableTown {
+  const w = createWorld(seed, { unlockAll: true, crisisLevel: 'off', petitionsOn: true });
+  w.money = BIG_MONEY;
+  w.won = true; // Stufe 4 ist nur nach dem Ziel ladbar
+  w.petitions.next = NO_DRAW;
+  buildTown(w, { tier: 4, inhabitants: STABLE_HOUSES, over: {}, stock: {} });
+  const fed = chainsAt(w, {
+    food: STABLE_OVER,
+    cloth: STABLE_OVER,
+    rum: STABLE_OVER,
+    glass: STABLE_OVER,
+    spice: STABLE_OVER,
+  });
+  const stock = home(w).stock;
+  for (const g of Object.keys(stock) as GoodId[]) stock[g] = STORAGE_CAP;
+  settleHouses(w);
+  const feed = feedOf(fed);
+  const capped =
+    feed &&
+    ((x: World): void => {
+      feed(x);
+      home(x).stock.spice = Math.min(STORAGE_CAP, home(x).stock.spice);
+    });
+  return { w, over: measuredOver(w, fed), feed: capped };
+}
