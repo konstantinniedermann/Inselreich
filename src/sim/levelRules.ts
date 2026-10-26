@@ -2,9 +2,9 @@ import { distance } from './coverage';
 import { BUILDING_DEFS } from './defs/buildings';
 import { LEVELS, WORKFORCE_RADIUS, type LevelDef, type LevelSite } from './defs/levels';
 import { isProtected } from './fireCover';
-import { countFreeTerrain, countTerrain } from './terrainCount';
+import { countTerrainAround } from './terrainCount';
 import type { Building, Tier, World } from './types';
-import { center, footprint, tilesInRadius } from './world';
+import { center } from './world';
 
 /**
  * Laufende Stufe k als reine Abfrage (Spec R3–R5): liest die Welt, schreibt nichts. Ein `LevelContext` ist
@@ -116,17 +116,9 @@ function terrainSite(
   const isl = world.islands[b.island];
   const def = BUILDING_DEFS[b.defId];
   const { cx, cy } = center(def, b.x, b.y);
+  const own = site.kind === 'freeTerrain' ? { x: b.x, y: b.y, w: def.w, h: def.h } : undefined;
   const have =
-    isl === undefined
-      ? 0
-      : site.kind === 'freeTerrain'
-        ? countFreeTerrain(
-            isl,
-            tilesInRadius(isl, cx, cy, site.radius),
-            site.terrain,
-            footprint(def, b.x, b.y),
-          )
-        : countTerrain(isl, tilesInRadius(isl, cx, cy, site.radius), site.terrain);
+    isl === undefined ? 0 : countTerrainAround(isl, cx, cy, site.radius, site.terrain, own);
   return { ok: have >= site.min, kind: site.kind, have, need: site.min };
 }
 
