@@ -14,7 +14,7 @@
  *   leer (shortage food in beiden Läufen), nur kürzer; darum fehlt hier die Vorbedingung «Ja-Lage versorgt», stattdessen
  *   gilt «der Sturm leert die Nahrung im Nein-Lauf». Das Zusatzmass «Lagerwert bei Wirkungsende» (R997) steht zusätzlich
  *   am Dateiende (Ja-Lage +785, Nein-Lage -131); es wäre nach R999 nur der Rückfall bei Abstand < +50.
- * - B9 Sturm direkt: Der Lauf setzt `world.crisis` auf einen Sturm ab answerAt + Verzug + 300 mit STORM_DURATION,
+ * - B9 Sturm direkt: Der Lauf setzt `world.crisis` auf einen Sturm ab answerAt + 2400 (R999) mit STORM_DURATION,
  *   in beiden Zweigen gleich, kein Eingriff in `crises.ts`. `incident` meint Krisen ausser diesem Sturm.
  *
  * B7: Die Vorbedingung «Nein-Lage mit Engpass im Ja-Lauf» entfällt, sie steht nicht in Anhang 01 für B7 (nur B1, B2, B3, B8);
