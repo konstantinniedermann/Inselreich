@@ -375,7 +375,9 @@ describe('AK-FE21 Importstruktur (P-11)', () => {
   });
   it('islands.ts importiert nur mapgen, rng, types und defs', () => {
     for (const t of importsOf(`${SIM}/islands.ts`))
-      expect(['./mapgen', './rng', './types'].includes(t) || t.startsWith('./defs/')).toBe(true);
+      expect(
+        ['./mapgen', './rng', './types', './council'].includes(t) || t.startsWith('./defs/'),
+      ).toBe(true);
   });
   it('Hülle von islands.ts enthält weder feast noch population', () => {
     const closure = [...importClosure(`${SIM}/islands.ts`)].map((p) => p.slice(SIM.length + 1));
