@@ -204,7 +204,7 @@ drittes Ziel «Gewürzstadt» (vom Studio vorgeschlagen, I-010), Inselwechsel `9
 **Daueraufträge des Nutzers (R863: jede Nutzeranweisung gilt dauerhaft, ausser ausdrücklich nur für die laufende Session; im Zweifel dauerhaft):** **R862** freie Kapazität vorrangig für
 Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine Playtests als Ideen-Input** (Browser-Checks zur Abnahme bleiben, R867), Schweigen des Nutzers = Zustimmung; **R445**;
 **R826** (Deckel 10 bei grüner Limit-Ampel, ≤ 3 Test-Controller, ≤ 2 Browser); **R853/R856** (Arbeiter-Meldungen an den Lead; **L0 sendet jedem Lead direkt nach dem Start seine agentId**, R879);
-**R868 V2** (Starts asynchron, Lead wartet ruhig). **R896** Spielregeln und Ausbau-Bedingungen fachlich erklärbar (Nachvollziehbarkeit und Logik, Gate-Kriterium); Nutzer-Playtests sind Input erster Ordnung, vor dem Pool. **R922** liegengebliebene Headless-Chrome (auch fremder Projekte) bei Störung selbst per `kill <PID>` beenden, nie das sichtbare Chrome, nie laufende eigene Browser-Läufe. **Push-Takt:** höchstens ein Push je Kalendertag (R816); voller Lauf nur `make push-check`.
+**R868 V2** (Starts asynchron, Lead wartet ruhig). **R896** Spielregeln und Ausbau-Bedingungen fachlich erklärbar (Nachvollziehbarkeit und Logik, Gate-Kriterium); Nutzer-Playtests sind Input erster Ordnung, vor dem Pool. **R922** liegengebliebene Headless-Chrome (auch fremder Projekte) bei Störung selbst per `kill <PID>` beenden, nie das sichtbare Chrome, nie laufende eigene Browser-Läufe. **Push-Takt:** höchstens ein Push je Kalendertag (R816); voller Lauf nur `make push-check`. **R959** gelbe Ampel stoppt keine Wellen: neue Starts bis 5 h 85 %, ab 90 % Ende-Routine.
 
 1. **ZEITPIN-D1 zuerst** (`lead-tech`, R954): `tests/sim/perf.test.ts` AK-E0-15a D1 bei Last ≤ 4 auf main und Kandidat messen, neuer Pin mit Reserve per Ruling. Dann Integrator: main in `integrate/rel-33` @ `be94bffe` mergen,
    `make push-check` auf dem neuen Hash, bei Exit 0 main vorspulen und **REL-33 pushen** (erster Push 2026-10-26, R816). Danach **REL-34**: `feat/i201` @ `569602ab` (Gate BEDENKEN angenommen R951: arc42-Konflikt, `feastKinds`-Erlaubnisliste
@@ -245,7 +245,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts aktiv. Session 48c8580f bei gelber Ampel (5 h ≈ 65 %) beendet; alle Leads haben übergeben (Handoffs `.studio/handoffs/2026-10-25-*`).
+- Session 8361ff82 aktiv (R959, Welle 1). Vorher: nichts aktiv. Session 48c8580f bei gelber Ampel (5 h ≈ 65 %) beendet; alle Leads haben übergeben (Handoffs `.studio/handoffs/2026-10-25-*`).
 
 ## Parallele Sessions
 
