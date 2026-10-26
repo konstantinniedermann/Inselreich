@@ -273,6 +273,14 @@ describe('Review Focus', () => {
     expect(home(w).stock.tools).toBeGreaterThan(10);
     expect(home(w).stock.stone).toBeGreaterThan(10);
   });
+  it('3: beide Güter verfallen im selben Aufruf an der Lagergrenze', () => {
+    const { w } = town(12, 15);
+    w.titheOn = { 1: true, 2: true };
+    w.titheCarry = { tools: TITHE_CARRY_DIVISOR - 1, stone: TITHE_CARRY_DIVISOR - 1 };
+    home(w).stock.tools = STORAGE_CAP;
+    home(w).stock.stone = STORAGE_CAP;
+    expect(calls(w, 1)[0]).toEqual({ tools: 1, stone: 1 });
+  });
   it('4: Pionierhaus der Fremdinsel zahlt in die Heimat', () => {
     const { w } = town(0, 0);
     const b = village(1, { unlockAll: true }).houses[0]!;
