@@ -2964,3 +2964,113 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-33, alle 
 Regelbezug: R816, R826, R959, R968 · Kosten bei Irrtum: zwei passive Messgrössen.
 
 Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —
+
+## R972 · 2026-10-26 · Session-Start b73acd32: REL-33-Push zuerst, testfreie Welle
+
+Ruling: Auslegung «mach weiter» als **Fortsetzung des state.md-Plans** — Zweck der Anweisung: Arbeit ohne neue Vorgabe fortführen; Auslegung widerspricht ihm nicht, weil state.md die Reihenfolge festlegt.
+(1) **REL-33** an `production-integrator` (R968): in `integrate/rel-33` @ `be94bffe` mergen `fix/zeitpin-d1` @ `eeb98d88`, `docs/coach-r886` → `docs/coach-r920` → `docs/coach-r957`, `docs/retro-48c8580f`,
+`design/tiefe-5`, `design/ideen-20`, `main` (bis `56f03dea`), `docs/retro-8361ff82`; dann `make push-check`; bei Exit 0 main vorspulen und den geprüften Hash pushen (erster Push 2026-10-26, R816).
+(2) Bis Exit 0 keine Umsetzer und Controller (R464); parallel testfrei: **Gate Plan I-215** (`lead-qa`, Budget 2), **NU-1 Spec-Nachtrag** (`lead-design`, Budget 3 von design-NEUE-UFER).
+(3) L0 committet bis zum Merge-Bericht nichts auf main (R769 V2); dieses Ruling geht danach mit.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-33, I-215, NEUE-UFER
+Regelbezug: R464, R769 V2, R816, R968 · Kosten bei Irrtum: ein verschobener Push um einen Tag.
+
+Entscheider: L0 · Anlass: Session-Start, Nutzer «mach weiter» · ADR: —
+
+## R973 · 2026-10-26 · Freie Plätze: IDEEN-20-Folgen und TIEFE-6
+
+Ruling: Testfrei neben dem REL-33-Push (R464, R826, R862): (1) **IDEEN20-FOLGEN** an eine zweite `lead-design`-Instanz (Budget 3): Pitch I-222 Erbstadt (Baustein Inselproben Schnitt 2), Kosten-Rechnung I-221
+Konzessions-Auktion (Kasse neben Stadtrecht), Rechnung I-223 Zehnt — wie R967; Branch `design/ideen20-folgen` ab main. (2) **TIEFE-6** «Spielmodi und Wiederspielwert» (`general-purpose`, sonnet Recherche): Szenario-,
+Herausforderungs- und Endlos-Modi in Aufbauspielen, Abgrenzung zu TIEFE-1…5; Branch `design/tiefe-6`.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NEUE-UFER (nur lesend), Inselproben, Stadtrecht
+Regelbezug: R464, R826, R862, R967 · Kosten bei Irrtum: zwei Doku-Branches ohne Spieleinfluss.
+
+Entscheider: L0 · Anlass: freie Kapazität · ADR: —
+
+## R974 · 2026-10-26 · Gate Plan I-215: OK mit Auflagen
+
+Ruling: Gate Plan I-215 «Volllast» (`plan/i215-volllast` @ `ce3f742d`) **OK** (lead-qa). **P-1 bis P-9 ja** wie vorgeschlagen; E-VL-1 ja (R969). **Auflagen:** (1) «Hat Zyklus» einheitlich nach T01
+(`produces !== undefined && cycle !== undefined`), P-5-Ausnahme darauf begrenzt — Plan-Korrektur durch `lead-tech` (testfrei, Budget 1, jetzt); (2) T08: bei nicht tabellenlösbarem Konflikt oder > 1 gelöstem Konflikt
+Delta-Review frisch (opus) aus der Reserve vor dem Final-Review; (3) Merge-Reihenfolge **I-201 vor Volllast-T08** (P-6). **Budget Umsetzung 16 Starts, Parallelität 2**, Start nach REL-33-Push (R464),
+Controller-Platz nach R826/R920 V1 gestaffelt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK (`levels.ts`, `economy.ts`, `defs/buildings.ts`), I-210 (`levels.ts`), I-201
+Regelbezug: R464, R826, R909, R969 · Kosten bei Irrtum: eine Plan-Korrektur, ein Delta-Review.
+
+Entscheider: L0 · Anlass: Bericht lead-qa Gate Plan I-215 · ADR: —
+
+## R975 · 2026-10-26 · TIEFE-6 Spielmodi: Empfehlungen
+
+Ruling: Recherche TIEFE-6 (`design/tiefe-6` @ `3f808ba6`, 19 Quellen, davon 9 gelesen) **abgenommen**. **T6-1 ja als Design-Leitplanke:** Meta-Fortschritt schaltet nur Inhalte und Härtestufen frei, nie
+Spielwerte (I-134 bleibt geparkt). **Pool:** T6-2 Partie-Ende-Angebot und T6-3 Monatsprobe als neue Ideen (nach I-186 bzw. Inselproben); T6-4 hebt I-200 «Kleine Insel» im Rang (nach Inselproben Schnitt 1);
+T6-5 Regler mit ehrlicher Wertung geht in K1/K4 (TIEFE-2) auf. Die Pool-Einträge schreibt `lead-design` beim nächsten `docs/ideen.md`-Paket; `design/tiefe-6` geht mit REL-34. Belegstärke begrenzt (Reddit nicht
+abrufbar), darum nur Leitplanke und Rang, keine Spec.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Inselproben, Ehrenbuch, IDEEN20-FOLGEN (I-222)
+Regelbezug: R862, R896 · Kosten bei Irrtum: Pool-Einträge und eine Leitplanke.
+
+Entscheider: L0 · Anlass: Bericht TIEFE-6 · ADR: —
+
+## R976 · 2026-10-26 · NU-1 «Kartenrand»: Entscheide E1–E4, Gate Spec
+
+Ruling: NU-1-Spec (`design/neue-ufer` @ `eb01f632`, `2026-10-25-nu1-kartenrand-design.md` 39 974 B, 36 AK, Anhänge 01/02) zum **Gate Spec** freigegeben. (1) Sichtung E-01…E-14 **ja** (9 übernommen, 5 angepasst).
+(2) Annahmen Erinnerung nach 3000 Ticks und Salt `0xc2b2ae35` **ja**. (3) ADR-010-Nachtrag **ja** im Wortlaut «Expeditions-Karten: eigener Salt, Schlüssel Seed × Gebiet, gezogene Folge als Ergebnis im Save, kein
+Zähler, kein RNG-Zustand»; geschrieben in der Umsetzung (AK-NU1-33). (4) Kartenhaus brennt nicht **ja**. Gate Spec an `lead-qa` (Budget 2, ein Machbarkeits-Gegenleser Save/Determinismus erlaubt). Spec-Grösse:
+jede Ergänzung nach Anhang 02.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN, FLAECHE (NU-2 erst nach deren Merge), Freischalt-Tests (U7)
+Regelbezug: R896, R966, R970, ADR-010 · Kosten bei Irrtum: ein Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-design NU-1 · ADR: ADR-010 (Nachtrag in der Umsetzung)
+
+## R977 · 2026-10-26 · IDEEN-20-Folgen: Erbstadt, Auktion, Zehnt
+
+Ruling: `design/ideen20-folgen` @ `48ec2e8a` **abgenommen** (Rechnungen gerechnet, nicht gemessen; Mengen als Annahmen markiert). (1) **I-222 Erbstadt tragfähig** als Baustein Inselproben Schnitt 2, Start erst
+nach Inselproben P1/P4 sowie I-061 und I-128 auf main; Ziel 50 Bürger, Zeit des Vorgängers als einzige Zahl, Abriss erstattet szenarioweit nichts — **ja**. (2) **I-221 Konzessions-Auktion anpassen — ja:**
+Vorkaufsrecht/Kontorplatz erst mit Inselbesitz (bis dahin Zollpacht, Absatzprivileg), Zollpacht nicht mit Edikt Handel kombinierbar, Gebot +50 % je gehaltenem Recht; eingeplant erst, wenn K5 «Ratsbank» Werte
+hat. (3) **I-223 Zehnt anpassen — ja:** Pioniere 100 % Werkzeug, Siedler 10 % Stein, Kurs 83 % des Zukaufs, 1800 Ticks Umschaltsperre, Warnung mit Kassen-Reichweite (I-168); **Kurzdesign Stufe voll** an
+`lead-design` (opus, Budget 2, jetzt, testfrei). `design/ideen20-folgen` geht mit REL-34.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Inselproben, Stadtrecht, Rivalen K5, I-168
+Regelbezug: R722, R862, R896, R967 · Kosten bei Irrtum: Pool- und Design-Entwürfe ohne Spieleinfluss.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN20-FOLGEN · ADR: —
+
+## R978 · 2026-10-26 · Gate Spec NU-1: BEDENKEN angenommen
+
+Ruling: Gate Spec NU-1 «Kartenrand» **BEDENKEN angenommen** (Handoff `.studio/handoffs/2026-10-26-lead-qa-gate-spec-NEUE-UFER.md`). Auflagen 1–6, 8, 9 als **Spec-Nachtrag nur in Anhang 02** (Spec-Reserve 26 B)
+durch `lead-design` (Fortsetzung, Rest-Budget 2 von design-NEUE-UFER); neue AK fortlaufend ab **AK-NU1-37** in der Reihenfolge der Auflagen; AK-25 wird in AK-25a (bitgleich ohne Freischalt-Pins) und
+AK-25b (Pins wachsen mit `UNLOCK_IDS`, per `rg` gelistet) geteilt. Auflage 1 (Routen-Konstante `ROUTE_GOODS_PER_DIRECTION` in `save.ts`/`ships.ts`, Lagergrenze F7) ist hoch: Wächter-AK Pflicht. Auflage 7 (R553)
+und U7-Pin-Liste als Plan-Risiko an `lead-tech`. Danach Lese-Kurzprüfung der Auflage 1–6 durch `lead-qa`, kein zweites Gate Spec.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN (`ships.ts`), I-210 (Save-Kette), Freischalt-Tests
+Regelbezug: R553, R909, R976 · Kosten bei Irrtum: ein Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-qa Gate Spec NU-1 · ADR: —
+
+## R979 · 2026-10-26 · NU-1 Spec frei; Plan NU-1
+
+Ruling: Kurzprüfung R978 **OK** (lead-qa); Spec NU-1 «Kartenrand» (`design/neue-ufer` @ `00e17e3f`, Anhang 02 §8 @ `8d2f552f`) **frei für den Plan**. **N1:** Spec §7 AK-25 gilt als ersetzt durch AK-25a/b
+(Anhang 02 §8.2); Zusatz in der Spec bei nächster Gelegenheit, im Plan gilt 25a/b. **N2:** AK-NU1-38 wird **Kappung** statt Abweisung — Lager über der Grenze ohne F7 wird beim Laden auf die Grenze gekappt, nicht
+abgewiesen (kein Spielstandverlust, KISS); Plan formuliert den AK entsprechend und testet die Kappung. **Plan NU-1** an `lead-tech` (opus, Tech-Lead beim Plan, Budget 2), testfrei jetzt; Plan-Risiken: R553 (Werte
+gerechnet, Auflage 7), U7-Pin-Liste per `rg`, Überschneidung HAFEN (`ships.ts`), Save-Nummer per Merge-Reihenfolge (R909).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN, I-210, I-215 (Save-Kette)
+Regelbezug: R553, R909, R976, R978 · Kosten bei Irrtum: ein umformulierter AK.
+
+Entscheider: L0 · Anlass: Kurzprüfung lead-qa NU-1 · ADR: —
+
+## R980 · 2026-10-26 · REL-33 live; Umsetzungswelle
+
+Ruling: **REL-33 live** — Push `38b9f9a0..12585b2a`, push-check Exit 0 auf `12585b2a`, CI 40286181608, Pages 40286934369 grün (Handoff `.studio/handoffs/2026-10-26-production-integrator-REL-33.md`). Save v19 live.
+Push für 2026-10-26 verbraucht (R816). **Welle (R826, ≤ 3 Test-Controller):** (1) `lead-tech` **I-210** (Budget 27), (2) `lead-tech` **AUSBAU-LOGIK** (Budget 32), (3) `lead-tech` **HAFEN L1** (Budget 60); testfrei:
+(4) `lead-tech` **Plan NU-1** (R979), (5) `production-integrator` **REL-34 bündeln** in `integrate/rel-34` ab main: `feat/i201` @ `569602ab` mit arc42-Konfliktlösung und Trivial-Fix laut R951, `design/rueckfracht`,
+`design/volllast`, `plan/i215-volllast` @ `cb6c0ffb`, `design/tiefe-6`, `design/ideen20-folgen` (Stand bei Merge) — nur Teilbeleg, **kein push-check** bis ein Test-Platz frei ist. **Messungen (E-080):** Lead meldet
+eine Messung per SendMessage an L0 an, L0 setzt `make messfenster-sperre` und bestätigt; Messungen gestaffelt (R920 V1). I-215 und I-214 warten auf den nächsten freien Test-Platz.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-215 (`levels.ts`), NU-1 (`ships.ts`, HAFEN)
+Regelbezug: R464, R816, R826, R920 V1, R951, R971 · Kosten bei Irrtum: Reihenfolge der Wellen.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-33 · ADR: —
