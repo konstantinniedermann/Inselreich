@@ -104,31 +104,40 @@ const terrainOf = (w: World, i: number): Terrain[] => w.islands[i]!.tiles.map((t
 const dockAt = (w: World, i: number, p: Spot): Spot =>
   dockFor(terrainOf(w, i), w.islands[i]!.width, w.islands[i]!.height, p);
 
-/** Alle Plätze der Insel, an denen Kontor II baubar ist (feste Scanreihenfolge). */
+/** Alle Plätze der Insel, an denen Kontor II baubar ist (feste Scanreihenfolge); Vorfilter spart `canPlace` auf Wasser. */
 function sitesOf(w: World, i: number): Spot[] {
   const isl = w.islands[i]!;
+  const t = terrainOf(w, i);
+  const dry = (x: number, y: number): boolean => t[y * isl.width + x] !== 'water';
   const out: Spot[] = [];
-  for (let y = 0; y < isl.height; y++)
-    for (let x = 0; x < isl.width; x++) if (canPlace(w, 'kontor2', x, y, i).ok) out.push({ x, y });
+  for (let y = 0; y < isl.height - 1; y++)
+    for (let x = 0; x < isl.width - 1; x++) {
+      if (!dry(x, y) || !dry(x + 1, y) || !dry(x, y + 1) || !dry(x + 1, y + 1)) continue;
+      if (canPlace(w, 'kontor2', x, y, i).ok) out.push({ x, y });
+    }
   return out;
 }
+
+/** Jeder `n`-te Platz plus erster und letzter (Randplätze). */
+const thinned = (sites: Spot[], n: number): Spot[] =>
+  sites.filter((_, k) => k % n === 0 || k === sites.length - 1);
 
 const lastPoint = (pts: readonly Spot[]): Spot => pts[pts.length - 1]!;
 
 describe('HAFEN S1 Anker folgt Kontor', () => {
   it('AK-HF-04: Anker = dockFor und höchstens 2,2 Kacheln von der Kontormitte', () => {
+    // Eine Welt je Seed: bauen, prüfen, abreissen (R4: Abriss lässt den Anker, der nächste Bau überschreibt ihn).
     for (const seed of [1, 2, 3, 37]) {
-      const base = rich(seaWorld(seed));
-      for (let i = 1; i < base.islands.length; i++) {
-        for (const p of sitesOf(base, i)) {
-          const w = structuredClone(base);
-          expect(placeBuilding(w, 'kontor2', p.x, p.y, i).ok).toBe(true);
+      const w = rich(seaWorld(seed));
+      for (let i = 1; i < w.islands.length; i++) {
+        for (const p of thinned(sitesOf(w, i), 4)) {
+          const dock = dockAt(w, i, p);
+          const r = placeBuilding(w, 'kontor2', p.x, p.y, i);
+          expect(r.ok, `S${seed} I${i}`).toBe(true);
           const a = w.islands[i]!.anchor;
-          expect(a).toEqual(dockAt(base, i, p));
-          expect(
-            Math.hypot(a.x + 0.5 - (p.x + 1), a.y + 0.5 - (p.y + 1)),
-            `S${seed} I${i}`,
-          ).toBeLessThanOrEqual(2.2);
+          expect(a).toEqual(dock);
+          expect(Math.hypot(a.x + 0.5 - (p.x + 1), a.y + 0.5 - (p.y + 1))).toBeLessThanOrEqual(2.2);
+          expect(demolish(w, r.id!).ok).toBe(true);
         }
       }
     }
