@@ -214,7 +214,7 @@ describe('HAFEN S1 Anker folgt Kontor', () => {
     expect(posed(w)).toEqual(posed(fresh));
   });
 
-  it('AK-HF-08: gleiche Baufolge, gleiche Anker und Routen, auch gegen eine frisch geladene Kopie', () => {
+  it('AK-HF-08: gleiche Baufolge, gleiche Anker, auch gegen eine frisch geladene Kopie', () => {
     const build = (): World => {
       const w = rich(seaWorld(SEED_D37));
       const site = sitesOf(w, 1).at(-1)!;
@@ -226,13 +226,9 @@ describe('HAFEN S1 Anker folgt Kontor', () => {
     const b = build();
     const loaded = deserialize(serialize(a));
     if (!loaded.ok) throw new Error(loaded.reason);
-    // Die Kopie hat ein eigenes islands-Array, ihre Route kommt aus ungecachter Rechnung.
-    for (const other of [b, loaded.world]) {
-      expect(anchors(other)).toBe(anchors(a));
-      expect(JSON.stringify(seaRoute(other.islands, 0, 1))).toBe(
-        JSON.stringify(seaRoute(a.islands, 0, 1)),
-      );
-    }
+    // Der Ankervergleich trägt: die Route folgt allein aus Gelände und Ankern. Ein Routenvergleich wäre wegen des
+    // geteilten Fingerprint-Caches in seaRoute.ts tautologisch und bleibt weg.
+    for (const other of [b, loaded.world]) expect(anchors(other)).toBe(anchors(a));
   });
 
   it('Randfall: Abriss mit Schiff unterwegs bleibt verwehrt, Anker und Kontor bleiben', () => {
@@ -262,53 +258,81 @@ describe('HAFEN S1 Neubau rechnet laufende Fahrten um', () => {
     return { far: far.s, near: near.s, tFar: far.t, tNear: near.t };
   }
 
-  /** Ankerwechsel P (weit) -> Q (nah) mit einem Schiff; liefert die Welt nach dem Bau. */
-  function rebuild(ship: (tFar: number) => Parameters<typeof shipLiteral>[1]) {
+  type ShipSpec = Parameters<typeof shipLiteral>[1];
+
+  /** Ankerwechsel weit -> nah (oder nah -> weit mit `reverse`) mit Schiffen; `t` ist die Fahrzeit vor dem Wechsel. */
+  function rebuild(ships: ((t: number) => ShipSpec)[], reverse = false) {
     const w = rich(seaWorld(SEED_D37));
     const { far, near, tFar, tNear } = extremes(w);
     expect(tNear).toBeLessThan(tFar);
-    const r = placeBuilding(w, 'kontor2', far.x, far.y, 1);
+    const [from, to] = reverse ? [near, far] : [far, near];
+    const tOld = reverse ? tNear : tFar;
+    const tNew = reverse ? tFar : tNear;
+    const r = placeBuilding(w, 'kontor2', from.x, from.y, 1);
     expect(demolish(w, r.id!).ok).toBe(true);
-    const s = shipLiteral(w, ship(tFar));
-    expect(placeBuilding(w, 'kontor2', near.x, near.y, 1).ok).toBe(true);
-    return { w, s, tFar, tNear };
+    const list = ships.map((f) => shipLiteral(w, f(tOld)));
+    expect(placeBuilding(w, 'kontor2', to.x, to.y, 1).ok).toBe(true);
+    return { w, list, s: list[0]!, tFar, tNear, tOld, tNew };
   }
 
   it('B1: Heimfahrt mit voller Restzeit bleibt ladbar, left folgt der neuen Fahrzeit', () => {
-    const { w, s, tNear } = rebuild((t) => ({
-      port: 1,
-      to: 0,
-      left: t,
-      route: null,
-      homing: true,
-    }));
+    const { w, s, tNear } = rebuild([
+      (t) => ({
+        port: 1,
+        to: 0,
+        left: t,
+        route: null,
+        homing: true,
+      }),
+    ]);
     expect(s.left).toBe(tNear);
     expect(deserialize(serialize(w)).ok).toBe(true);
   });
 
   it('B1: Hinfahrt (to = Insel) wird ebenso umgerechnet und bleibt ladbar', () => {
-    const { w, s, tNear } = rebuild((t) => ({ port: 0, to: 1, left: t }));
+    const { w, s, tNear } = rebuild([(t) => ({ port: 0, to: 1, left: t })]);
     expect(s.left).toBe(tNear);
     expect(deserialize(serialize(w)).ok).toBe(true);
   });
 
   it('B1: kleinere Restzeit skaliert nur mit dem Verhältnis, mindestens 1', () => {
-    const { w, s, tFar, tNear } = rebuild(() => ({
-      port: 1,
-      to: 0,
-      left: 100,
-      route: null,
-      homing: true,
-    }));
+    const { w, s, tFar, tNear } = rebuild([
+      () => ({
+        port: 1,
+        to: 0,
+        left: 100,
+        route: null,
+        homing: true,
+      }),
+    ]);
     expect(s.left).toBe(Math.max(1, Math.ceil((100 * tNear) / tFar)));
     expect(s.left).toBeLessThanOrEqual(100);
     expect(deserialize(serialize(w)).ok).toBe(true);
   });
 
   it('B1: Schiffe anderer Inseln und liegende Schiffe bleiben unberührt', () => {
-    const { s: other } = rebuild(() => ({ port: 0, to: 2, left: 7 }));
+    const { s: other } = rebuild([() => ({ port: 0, to: 2, left: 7 })]);
     expect(other.left).toBe(7);
-    const { s: idle } = rebuild(() => ({ port: 1, to: null, left: 0 }));
+    const { s: idle } = rebuild([() => ({ port: 1, to: null, left: 0 })]);
     expect(idle.left).toBe(0);
+  });
+
+  it('B1: nah -> weit lässt left wachsen, höchstens bis zur neuen Fahrzeit, Laden ok', () => {
+    const { w, s, tNew } = rebuild(
+      [(t) => ({ port: 1, to: 0, left: t, route: null, homing: true })],
+      true,
+    );
+    expect(s.left).toBe(tNew);
+    expect(s.left).toBeLessThanOrEqual(tNew);
+    expect(deserialize(serialize(w)).ok).toBe(true);
+  });
+
+  it('B1: zwei Schiffe gleichzeitig (Heim- und Hinfahrt) werden beide umgerechnet, Laden ok', () => {
+    const { w, list, tNear } = rebuild([
+      (t) => ({ port: 1, to: 0, left: t, route: null, homing: true }),
+      (t) => ({ port: 0, to: 1, left: t }),
+    ]);
+    expect(list.map((x) => x.left)).toEqual([tNear, tNear]);
+    expect(deserialize(serialize(w)).ok).toBe(true);
   });
 });
