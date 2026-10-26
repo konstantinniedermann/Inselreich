@@ -15,7 +15,7 @@ heisst nie umgesetzt.
 Höchstens **3** Experimente sind gleichzeitig `laufend` (geprüft von
 `tools/studio/tests/test_docs.py`).
 
-Laufend (R878 (9), 2026-10-25): E-066, E-068, E-073; E-063 `behalten`, abgeschlossen (R878 (9)); E-064 Bewertung `behalten` als Entwurf, bis L0 bestätigt. Passiv ohne Platz (wirken sofort, Muster E-059): E-071, E-072, E-074, E-076, E-077, E-078, E-079 (R957). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056; E-058 (V2) ist eine Vorlagenzeile ohne Platz.
+Laufend (R878 (9), 2026-10-25): E-066, E-068, E-073; E-063 `behalten`, abgeschlossen (R878 (9)); E-064 Bewertung `behalten` als Entwurf, bis L0 bestätigt. Passiv ohne Platz (wirken sofort, Muster E-059): E-071, E-072, E-074, E-076, E-077, E-078, E-079 (R957), E-080, E-081 (R971). Reihenfolge der Wartenden auf einen freien Platz (R375): E-048, E-044, E-056; E-058 (V2) ist eine Vorlagenzeile ohne Platz.
 
 Offene Messaufträge ohne Platz (R886 (2), Retro [session-47d29586-ende](retros/2026-10-25-session-47d29586-ende.md)), Verantwortlich `studio-coach`:
 
@@ -835,4 +835,29 @@ Verlauf und Zwischenstände stehen in den verlinkten Retros; frühere Fassungen 
 - Dateien: `docs/studio/STUDIO.md` (Modellwahl), `docs/studio/templates/briefing.md`, `.claude/agents/lead-tech.md`, `docs/studio/CHANGELOG.md`
 - Ruling: R957 (V3)
 - Start: 2026-10-25 (Handbuch 1.78; ohne Platz)
+- Bewertung: –
+
+## E-080 · vorgeschlagen (R971 angenommen, umgesetzt R984, läuft passiv ohne Platz wie E-071) · Messfenster-Sperre vor jedem Messpaket setzen
+
+- Hypothese: Wenn L0 vor dem Start eines Messpakets `make messfenster-sperre` setzt (und das Briefing «Messvorrang» durch «Sperre gesetzt, Messfenster bis <Uhrzeit>» ersetzt), erreichen Messpakete ihre geforderte Läuferzahl, weil `testlock` parallele Test-Controller mit Exit 3 abweist (Retro [session-8361ff82-ende](retros/2026-10-25-session-8361ff82-ende.md), Vorschlag E-080).
+- Messgrösse: Saubere Messläufe je Stand ≥ geforderte Zahl (z. B. 5 von 5, Last ≤ 4) in 2 von 2 Messpaketen (Ausgang: 2 von 5 in ZEITPIN-D1). Gegenprobe: Anzahl abgewiesener Controller-Starts im Ereignislog (`testlock: ABBRUCH`).
+- Messbarkeit: nicht verschlechtert; die Läuferzahl steht im Paketbericht, die Abweisungen im Ereignislog.
+- Zeitraum: die nächsten 2 Messpakete, höchstens bis 2026-11-19.
+- Rückfall: Briefing-Zeile «Messvorrang» wie bisher (Handbuch 1.78); die Sperre bleibt Werkzeug.
+- Dateien: `docs/studio/templates/briefing.md` (Pflichtzeile Messpaket), `docs/studio/STUDIO.md` (Lastregeln, Absatz «Messfenster-Sperre vor jeder Messung»), `docs/studio/CHANGELOG.md` (Handbuch 1.79, R984). Kein Werkzeugpaket nötig.
+- Ruling: R971
+- Start: 2026-10-25 (R971, L0-Praxis; Handbuch 1.79 ab 2026-10-26, R984; ohne Platz, 3 laufen: E-066, E-068, E-073; frei werdender Platz von E-066 an E-080, R984 (2))
+- Bewertung: –
+- Zwischenstand Session b73acd32 (2026-10-26, Angabe L0 im Auftrag COACH-R971): Sperre vor jeder angemeldeten Messung gesetzt (HAFEN T01, I-210 T03); Läuferzahl je Stand aus den Paketberichten noch nicht ausgewertet, also noch kein Datenpunkt für die Schwelle. M2 der Retro (Sperre bei ZEITPIN-D1?) steht in der nächsten Retro aus.
+
+## E-081 · vorgeschlagen (R971 angenommen vorläufig, umgesetzt R984, läuft passiv ohne Platz wie E-071) · Startgrenze nach Zuwachs statt nach festem Stand (ergänzt R959)
+
+- Hypothese: Wenn L0 vor einer Welle den erwarteten Zuwachs rechnet (Agenten × ≈ 1,8 Punkte, Ausgang aus 8361ff82) und nur startet, solange Stand + Agenten × 1,8 ≤ 88 %, enden weniger Pakete als Zwischenstand, ohne dass das Fenster schlechter genutzt wird (Retro [session-8361ff82-ende](retros/2026-10-25-session-8361ff82-ende.md), Vorschlag E-081).
+- Messgrösse: Pakete mit Zwischenstand je Session ≤ 1 (Ausgang: 3) in 3 Sessions; Gegenprobe Fenster am Session-Ende 85–90 % in 2 von 3 Sessions mit Fensterstart ≥ 60 %. Der Faktor 1,8 wird in der ersten Session nachgemessen (Zuwachs je Agent aus Fensterwerten Start, Welle, Ende) und bei Abweichung angepasst.
+- Messbarkeit: nicht verschlechtert; Zwischenstände stehen in den Sicherungs-Rulings, Fensterwerte in den Session-Rulings.
+- Zeitraum: die nächsten 3 Sessions mit gelbem Start, höchstens bis 2026-11-19.
+- Rückfall: R959 unverändert (Startgrenze 85 %, Ende 90 %), Handbuch zurück auf die Fassung vor dem Experiment.
+- Dateien: `docs/studio/STUDIO.md` (Herunterfahren, Ampel rot), `.claude/output-styles/projektleiter.md` (Zeile «Kapazität»), `docs/studio/CHANGELOG.md` (Handbuch 1.79, R984).
+- Ruling: R971 (vorläufig)
+- Start: 2026-10-25 (R971, L0-Praxis; Handbuch 1.79 ab 2026-10-26, R984; ohne Platz, 3 laufen: E-066, E-068, E-073; frei werdender Platz von E-066 an E-080, R984 (2))
 - Bewertung: –

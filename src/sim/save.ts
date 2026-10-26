@@ -44,6 +44,7 @@ import {
   type LaneIsland,
   type PlacedIsland,
 } from './islands';
+import { isFeastKind } from './feastEffect';
 import { MAP_H, MAP_W } from './mapgen';
 import { recomputeConnectivity } from './roads';
 import { canRiseTier, taxTarget } from './tax';
@@ -589,9 +590,15 @@ function isValidV6Building(b: unknown): boolean {
   return true;
 }
 
-/** `feastAt` (H-I007) nur an der Kapelle, ganzzahlig, `0 ≤ feastAt ≤ tick`; fehlt = kein Fest (keine Save-Version). */
+/**
+ * `feastAt` (H-I007) nur an der Kapelle, ganzzahlig, `0 ≤ feastAt ≤ tick`; fehlt = kein Fest (keine Save-Version).
+ * `feastKind` (I-201) nur mit `feastAt` und als bekannte Festart; fehlt = Aufstiegsfest.
+ */
 function isValidFeast(b: unknown, tick: unknown): boolean {
-  if (!isObject(b) || b.feastAt === undefined) return true;
+  if (!isObject(b)) return true;
+  if (b.feastKind !== undefined && (b.feastAt === undefined || !isFeastKind(b.feastKind)))
+    return false;
+  if (b.feastAt === undefined) return true;
   return b.defId === 'chapel' && isInt(tick) && isIntBetween(b.feastAt, 0, tick);
 }
 

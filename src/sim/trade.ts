@@ -1,4 +1,5 @@
 import { BOOM_PCT } from './defs/crises';
+import { FEAST_KINDS } from './defs/feast';
 import { ISLANDS, PREFER_PCT } from './defs/sea';
 import {
   BUY_CAP,
@@ -11,14 +12,17 @@ import {
 } from './defs/goods';
 import { BUY_RECOVERY_INTERVAL, SELL_RECOVERY_INTERVAL } from './defs/timing';
 import { addStock, takeStock } from './economy';
+import { marketActive } from './feastEffect';
 import { activeEdictDef } from './edicts';
 import { goodLock } from './unlocks';
 import type { GoodId, MonumentGood, Result, World } from './types';
 import { fail, ok } from './types';
-import { islandName } from './islands';
+import { noKontorTrade } from './islands';
 import { islandAt } from './placement';
 import { trialBuyBlock } from './trial';
 import { HOME } from './world';
+
+export { noKontorTrade } from './islands';
 
 /** Ergebnis des Preiskerns: Gesamtpreis, gerundeter Mittelanteil und Anteil nach dem Kauf. */
 export interface BuyQuote {
@@ -78,14 +82,15 @@ export function prefersGood(world: World, island: number, good: GoodId): boolean
 }
 
 /**
- * Erlös für `n` Einheiten auf `island`: Sättigung je Einheit (global), Faktor in %. Boom und Vorliebe stapeln
- * nicht, es gilt der höhere. Ohne Boom und Vorliebe bitgleich zu M5. Rein.
+ * Erlös für `n` Einheiten auf `island`: Sättigung je Einheit (global), Faktor in %. Boom, Vorliebe und Markttag
+ * stapeln nicht, es gilt der höchste. Ohne Boom und Vorliebe bitgleich zu M5. Rein.
  */
 export function sellPrice(world: World, good: GoodId, n: number, island: number = HOME): number {
   const c = world.crisis;
   const boom = c !== null && c.kind === 'boom' && c.good === good ? BOOM_PCT : 100;
   const prefer = prefersGood(world, island, good) ? PREFER_PCT : 100;
-  const m = Math.max(boom, prefer);
+  const market = marketActive(world, island) ? FEAST_KINDS.market.sellPct : 100;
+  const m = Math.max(boom, prefer, market);
   let acc = 0;
   let pct = world.sellPct[good];
   for (let i = 0; i < n; i++) {
@@ -93,14 +98,6 @@ export function sellPrice(world: World, good: GoodId, n: number, island: number 
     pct = Math.max(SELL_FLOOR, pct - SELL_DROP);
   }
   return Math.floor(acc / 10000);
-}
-
-/** Grund „Kein Kontor auf <Name>“ oder `null`: Handel läuft nur über ein Kontor der Insel. */
-export function noKontorTrade(world: World, island: number): string | null {
-  const isl = islandAt(world, island);
-  return isl !== null && isl.kontorId === null
-    ? `Kein Kontor auf ${islandName(world, island)}`
-    : null;
 }
 
 export function buy(world: World, good: GoodId, n: number, island: number = HOME): Result {

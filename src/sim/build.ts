@@ -7,6 +7,7 @@ import { effectiveRefund } from './queries';
 import { recomputeConnectivity } from './roads';
 import type { Building, BuildingDefId, Result, World } from './types';
 import { fail, ok } from './types';
+import { invalidateFeastIndex } from './feastEffect';
 import { paidCost } from './upgrade';
 import { HOME, footprint, home, islandOf, tileAt } from './world';
 
@@ -63,6 +64,7 @@ export function placeBuilding(
     building.house = newHouseState(world);
   }
   world.buildings[id] = building;
+  invalidateFeastIndex(world);
   for (const p of footprint(BUILDING_DEFS[defId], x, y)) tileAt(isl, p.x, p.y)!.buildingId = id;
   if (fromHome) isl.kontorId = id;
   if (defId === 'monument') world.monument = newMonument(id);
@@ -86,6 +88,7 @@ export function demolish(world: World, id: number): Result {
     if (tile) tile.buildingId = null;
   }
   delete world.buildings[id];
+  invalidateFeastIndex(world);
   if (b.defId === 'townhall') world.edict = null;
   if (b.defId === 'monument') world.monument = null;
   if (isFar) {

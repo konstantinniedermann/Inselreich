@@ -937,8 +937,8 @@ function launch(
           }
           refresh();
         },
-        holdFeast: (id) => {
-          const r = holdFeast(world, id);
+        holdFeast: (id, kind) => {
+          const r = holdFeast(world, id, kind);
           if (r.ok) sound.play('build');
           else showError(friendlyReason(world, r.reason));
           refresh();

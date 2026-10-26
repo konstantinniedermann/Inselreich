@@ -32,7 +32,9 @@ describe('M11 Naht Zyklus und Unterhalt (Prüfhilfe AK-P1-14)', () => {
     for (const f of [...paths, 'src/render/errands.ts'])
       expect(read.test(readFileSync(f, 'utf8')), f).toBe(false);
     expect(
-      importsOf('levels').every((m) => m === 'types' || m === 'council' || m.startsWith('defs/')),
+      importsOf('levels').every(
+        (m) => m === 'types' || m === 'council' || m === 'feastEffect' || m.startsWith('defs/'),
+      ),
     ).toBe(true);
     expect(importsOf('council').every((m) => m === 'types' || m.startsWith('defs/'))).toBe(true);
   });

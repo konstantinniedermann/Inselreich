@@ -4,7 +4,8 @@ import { createWorld, home, islandOf } from '../../src/sim/world';
 import { demolish } from '../../src/sim/build';
 import { deserialize, serialize } from '../../src/sim/save';
 import { newHouseState, upgradeStatus } from '../../src/sim/population';
-import { FEAST_COOLDOWN, FEAST_DURATION, FEAST_RUM } from '../../src/sim/defs/timing';
+import { FEAST_COOLDOWN, FEAST_DURATION } from '../../src/sim/defs/timing';
+import { FEAST_KINDS } from '../../src/sim/defs/feast';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { feastActive, feastBlockReason, feastState, holdFeast } from '../../src/sim/feast';
 import type { Building, TaxLevel, Tier, World } from '../../src/sim/types';
@@ -17,6 +18,8 @@ import {
   setAllTax,
   twoIslandWorld,
 } from './helpers';
+
+const FEAST_RUM = FEAST_KINDS.ascension.cost.rum;
 
 let w: World;
 let house: Building;
@@ -290,8 +293,9 @@ describe('Aufbau von feast.ts', () => {
   it('importiert weder unlocks noch population', () => {
     expect(src).not.toMatch(/from '\.\/(unlocks|population)'/);
   });
-  it('greift nur an einer Stelle auf Rum zu', () => {
-    expect(src.match(/'rum'/g)).toHaveLength(1);
+  it('bucht mit genau einem takeStock-Aufruf', () => {
+    const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    expect(code.match(/takeStock\(/g)).toHaveLength(1);
   });
 });
 

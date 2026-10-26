@@ -3074,3 +3074,172 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-215 (`level
 Regelbezug: R464, R816, R826, R920 V1, R951, R971 · Kosten bei Irrtum: Reihenfolge der Wellen.
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-33 · ADR: —
+
+## R981 · 2026-10-26 · Kurzdesign I-223 Zehnt: Entscheide, Gate Spec
+
+Ruling: Kurzdesign I-223 «Zehnt» (`design/ideen20-folgen` @ `7133d8b3`, 23,7 KB, AK-ZE-01…16 plus 4 Browser-Checks) zum **Gate Spec** an `lead-qa` (Budget 1). **L1 ja:** Zehnt-Sperre je Stufe getrennt wie
+`taxLockedUntil`. **L2 ja:** Zehnt nur mit aktiver Amtsstube (ab U3); brennt sie, zahlt die Stufe Geld — Steuer bleibt an einem Ort. **L3:** Migration alter Stände wie bestehende Kette in `save.ts` ist zulässig
+(feste Regel verlangt keine Ladbarkeit, verbietet sie nicht); beschädigte und unbekannte Stände werden mit Hinweis abgewiesen. Balancing-Test unverändert (Standard «Geld» bitgleich). Befund Rechnung Zeile 48
+in `docs/beobachtungen.md`.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette (R909), Inselproben (Auflage), `tests/sim/helpers.ts` (`foldBackToV9`, I-210)
+Regelbezug: R722, R896, R909, R977 · Kosten bei Irrtum: ein Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-I-223 · ADR: —
+
+## R982 · 2026-10-26 · Gate Spec I-223 Zehnt: BEDENKEN angenommen
+
+Ruling: Gate Spec I-223 **BEDENKEN angenommen**, Auflagen 1–8 laut `.studio/handoffs/2026-10-26-lead-qa-gate-spec-I-223.md` verbindlich. Spec-Nachtrag durch `lead-design` (Fortsetzung, Rest-Budget 1): Auflage 1
+(Tech 2 berichtigen: `dropTithe`/Faltschritt vN+1 → vN nach Muster `dropTrial`, Verbraucherliste als Plan-Pflicht), 2–6 und 8 als AK; Auflage 4: Stapelung Boom × Vorliebe beim Verkauf **aus dem Code feststellen**
+und als Testfall aufnehmen; AK-ZE-18 mit Lauf bei Kasse nahe 0. Auflage 7 (Save N+1, kein Literal) bestätigt R909. Danach Lese-Kurzprüfung durch `lead-qa`, kein zweites Gate. L1–L3 (R981) bleiben.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: `tests/sim/helpers.ts` (I-210, NU-1), Save-Kette
+Regelbezug: R722, R909, R981 · Kosten bei Irrtum: ein Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-qa Gate Spec I-223 · ADR: —
+
+## R983 · 2026-10-26 · I-223 Zehnt Spec frei; Plan; Coach E-080/E-081
+
+Ruling: Kurzprüfung R982 **OK** (lead-qa); Spec I-223 «Zehnt» (`design/ideen20-folgen` @ `4c506883`, 29 991 B, AK-ZE-01…27) **frei für den Plan**. **Plan I-223** an `lead-tech` (opus, Tech-Lead beim Plan, Budget 2,
+testfrei; Pflicht: alle 17 Verbraucher der Rückfaltkette aus Tech 2 einzeln grün belegen). Spec an der 30-KB-Grenze: weitere Nachträge nur als Anhang. Zusätzlich testfrei: `studio-coach` trägt **E-080/E-081** (R971) in
+`experimente.md` ein und ersetzt die `lernen.md`-Zeile (R971), da REL-33 gemergt ist.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210/NU-1 (`tests/sim/helpers.ts`), Save-Kette (R909)
+Regelbezug: R909, R971, R982 · Kosten bei Irrtum: ein Plan ohne Umsetzung.
+
+Entscheider: L0 · Anlass: Kurzprüfung lead-qa I-223 · ADR: —
+
+## R984 · 2026-10-26 · E-080/E-081 passiv eingetragen; Handbuch-Nachzug
+
+Ruling: `docs/coach-r971` @ `9a05f9c8` **abgenommen** (E-080/E-081 «passiv ohne Platz» wie E-071, da E-066/E-068/E-073 laufen; lernen.md-Zeile mit E-054 zusammengeführt). (1) Nachzug in Handbuch, Briefing-Vorlage,
+Output-Style `projektleiter.md` und CHANGELOG an `studio-coach` (Fortsetzung, gleicher Branch), Handbuch-Minor laut R429. (2) **E-066** wird in der nächsten Retro bewertet; frei werdender Platz an E-080. Merge mit REL-34.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-34
+Regelbezug: R429, R959, R971 · Kosten bei Irrtum: ein Doku-Nachzug.
+
+Entscheider: L0 · Anlass: Bericht studio-coach COACH-R971 · ADR: —
+
+## R985 · 2026-10-26 · Plan NU-1: Entscheide E-NU-1…6
+
+Ruling: Plan NU-1 «Kartenrand» (`plan/nu1-kartenrand` @ `3a0d4d28`, T00–T11, AK 01–56 und 25a/b zugeordnet) — Entscheide wie empfohlen: **E-NU-1 ja** (`unlockAll`/«Nächste Freischaltung» ohne U7), **E-NU-2 ja**
+(Fundstück-Faktor in `effectiveCycle`, nicht `cycleOf` — keine Kollision mit I-215/I-210/AUSBAU-LOGIK), **E-NU-3 ja** (Wirkung ab Rückkehr-Tick), **E-NU-4 ja** (25b-Pin-Liste in `pins.md`; echter Versionspin
+`council-save.test.ts:193`), **E-NU-5** Vorwarn-Text laut Plan, `lead-design` darf ersetzen, **E-NU-6 ja** (`setRoute` im Wartezustand nur mit Heimat-Ende). Budgetantrag Umsetzung **24 Starts, Parallelität 2** zur
+Kenntnis, Freigabe mit Gate Plan. Nach der `zeiten.md`-Messung: Gate Plan an `lead-qa`.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN (`tickShips`, Konflikttabelle T09), Save-Kette (R909)
+Regelbezug: R909, R976–R979 · Kosten bei Irrtum: Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-NEUE-UFER · ADR: —
+
+## R986 · 2026-10-26 · HAFEN L1 fertig → Gate Merge
+
+Ruling: HAFEN **L1** (`feat/hafen` @ `e0de3115`, T01/T02/D1, Delta-Review opus OK, Teilbeleg grün, A/B 50/50 s, kein Save-Wechsel, `balance.test.ts` unverändert) an **Gate Merge** `lead-qa` (Budget 2: Final-Review
+opus über `main..feat/hafen` plus Urteil; Neu-Pins P-13 in `ship.test.ts`/`defs.test.ts` mitprüfen). Bei OK geht L1 ins Bündel REL-34. HAFEN O (T03, T04) startet erst nach dem Merge auf main; L2 wartet auf
+INSELPROBEN. **E-HF-6** (B6 `createWorld`) entscheidet L0 nach den T06-Messwerten. Frei gewordener Test-Platz: zuerst REL-34 `make push-check` (Integrator) nach dem Gate, damit I-201 und HAFEN L1 lokal auf main
+kommen (Push frühestens 2026-10-27, R816).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1 (`ships.ts`, T09), REL-34
+Regelbezug: R392, R816, R826, R961 · Kosten bei Irrtum: ein Final-Review.
+
+Entscheider: L0 · Anlass: Bericht lead-tech HAFEN L1 · ADR: —
+
+## R987 · 2026-10-26 · Plan I-223 Zehnt: Entscheide, Gate Plan
+
+Ruling: Plan I-223 (`plan/i223-zehnt` @ `d656e6a4`, T00–T08, AK-ZE-01…27 zugeordnet, Vorprüfliste 1–5 erfüllt) an **Gate Plan** `lead-qa` (Budget 2). **E-ZE-1 ja (studioweit):** Faltschritte der Rückfaltkette in
+fester Reihenfolge, jüngster Schritt innen, wer später merged, zieht nach (ergänzt R909). **E-ZE-2 ja** vorbehaltlich Gate: `dropTithe` in alle drei Kettenköpfe `foldBackToV13/V12/V11`, kein Spec-Nachtrag.
+**E-ZE-3 ja:** Bau-Vorschau rechnet mit `moneyTaxes` (Geldanteil), `totalTaxes` bleibt Nennsteuer. Budgetantrag Umsetzung 16 Starts / Parallelität 2 zur Kenntnis, Freigabe mit Gate. Lastspitze während der
+Sperre ist in `docs/beobachtungen.md` (2026-10-26) erfasst.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, NU-1, Inselproben (`tests/sim/helpers.ts`), Save-Kette
+Regelbezug: R909, R981–R983 · Kosten bei Irrtum: Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-I-223 · ADR: —
+
+## R988 · 2026-10-26 · I-210 Zwischenstand: Testlagen B1–B3, Fortsetzung
+
+Ruling: I-210 Zwischenstand (Handoff `.studio/handoffs/2026-10-26-lead-tech-I-210-s3.md`): T03–T05, T09, T10 abgenommen; T06 committet. **Testlagen B1/B2/B3 «Nein» abweichend von Anhang 01 angenommen** (P1 = 60 Bewohner,
+B2 Rum 12, B3 alle Ketten ü = 0 und Glas 26; Werte im Kopf von `petitionWorlds.ts`, Defs und Erwartungen unverändert) — die Lagen prüfen die Dominanzregel, nicht die Anhangzahlen. **Dominanzsignal B3** (Glaser-Bitte)
+in `docs/beobachtungen.md`; `lead-design` prüft die Werte vor dem Gate Merge I-210 (Auflage). Controller-Grenze 6 Starts überschritten: zur Kenntnis, Retro. Fortsetzung durch neue `lead-tech`-Instanz: Delta-Review T06
+mit T07 gebündelt (opus frisch), T07, T08, Rückführung B/C nach `feat/i210`; Phase 2 wartet auf I-201 auf main. Spec liegt auf `design/i210-bittschrift` (Worktree `.worktrees/design-i210`).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1/I-223 (`tests/sim/helpers.ts`), Save-Kette
+Regelbezug: R553, R909, R931, R955 · Kosten bei Irrtum: angepasste Testlagen, eine Wertprüfung.
+
+Entscheider: L0 · Anlass: Zwischenbericht lead-tech I-210 · ADR: —
+
+## R989 · 2026-10-26 · Gate Plan I-223: BEDENKEN angenommen
+
+Ruling: Gate Plan I-223 «Zehnt» **BEDENKEN angenommen** (`.studio/handoffs/2026-10-26-lead-qa-gate-plan-I-223.md`). **E-ZE-2 bestätigt mit Berichtigung:** `dropTithe` in V13/V12 zwingend, in V11 als Schutz und für
+gleiche Form (Whitelist bricht dort nicht). Plan-Nachtrag `lead-tech` (Fortsetzung): Auflage 1 (hoch) T06 ohne `make test`, Zeitmessung nur Tabellendateien, AK-ZE-16 belegt `make push-check` (R810); 2 Sim-Test
+Amtsstube abgerissen/getrennt in T02; 3 Schrittzahl AK-ZE-07 bei > 500 ms mit QA-Zustimmung kürzbar (R905); 4 `nachbarn.md` um `feat/stadtplanung` (eigene v19, `foldBackStadt` als Aussenschritt) und
+`feat/ausbau-logik` (`helpers.ts`); 5 Risiko Kursband R553 mit Rückfall. Kein zweites Gate. **Budget Umsetzung 16 Starts / Parallelität 2**, Start beim nächsten freien Test-Platz.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Stadtplanung, AUSBAU-LOGIK, I-210, NU-1 (`helpers.ts`, `save.ts`)
+Regelbezug: R553, R810, R905, R909, R987 · Kosten bei Irrtum: Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-qa Gate Plan I-223 · ADR: —
+
+## R990 · 2026-10-26 · Gate Merge HAFEN L1: ZURÜCK; REL-34 push-check ohne HAFEN
+
+Ruling: Gate Merge HAFEN L1 **ZURÜCK angenommen** (`.studio/handoffs/2026-10-26-lead-qa-gate-HAFEN-L1.md`). **B1 (blockend):** Neubau Kontor II an näherem Platz während einer Heimfahrt macht den Spielstand unladbar
+(`build.ts` `moveAnchorToDock` gegen `save.ts` `isValidShip`) — Fix TDD mit Rot-Beleg durch `lead-tech` HAFEN (Fortsetzung, Budget 55 frei), N1/N3/N4 mitnehmen, N2 in `docs/beobachtungen.md`. Danach Delta-Review
+frisch (opus) und erneutes Gate (kleines Delta, Rest-Budget `lead-qa` 1). **REL-34:** push-check jetzt ohne HAFEN — Integrator merged zusätzlich `docs/coach-r971` @ `71d53528`, `design/ideen20-folgen` (Kopf),
+`plan/i223-zehnt` @ `02abbe23`, läuft `make push-check` und spult bei Exit 0 **main lokal** vor (kein Push vor 2026-10-27, R816). HAFEN L1 folgt nach OK als Nachtrag ins Bündel.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1 (`ships.ts`, Ladeprüfung), I-223 (Plan auf main)
+Regelbezug: R392, R673, R810, R816, R986 · Kosten bei Irrtum: ein Fix-Zyklus HAFEN.
+
+Entscheider: L0 · Anlass: Bericht lead-qa Gate Merge HAFEN L1 · ADR: —
+
+## R991 · 2026-10-26 · Gate Plan NU-1: BEDENKEN angenommen
+
+Ruling: Gate Plan NU-1 «Kartenrand» **BEDENKEN angenommen** (`.studio/handoffs/2026-10-26-lead-qa-gate-plan-NEUE-UFER.md`). Plan-Nachtrag `lead-tech` (sonnet, Plan-Instanz bei Stufe leicht, Rest-Budget plan-NEUE-UFER):
+**Auflage 1** `SAVE_VERSION` bleibt Zahlenliteral (`tools/render-qa/saveVersion.mjs` liest per Regex; `SAVE_V_KARTENRAND` nur als Kommentar/Alias), `rg parseSaveVersion` in `pins.md`/T09; **Auflage 2** Nachbarn I-223,
+Stadtplanung, Inselproben in T00/T09/Risiko Save-Kette, Faltregel E-ZE-1 (R987), `dropExpedition` in allen drei Kettenköpfen; **Auflage 3 ja:** T09 bekommt einen frischen `qa-code-reviewer` (opus) aus der Reserve.
+Auflagen 4–5 zur Kenntnis. Danach Lese-Kurzprüfung `lead-qa`. **Budget Umsetzung 24 Starts / Parallelität 2**, Start beim nächsten freien Test-Platz nach I-223.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-223, Stadtplanung, Inselproben, HAFEN (`ships.ts`)
+Regelbezug: R909, R979, R987 · Kosten bei Irrtum: Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-qa Gate Plan NU-1 · ADR: —
+
+## R992 · 2026-10-26 · Plan NU-1 frei
+
+Ruling: Kurzprüfung R991 **OK** (lead-qa); Plan NU-1 «Kartenrand» (`plan/nu1-kartenrand` @ `46d3ade8`) **frei für die Umsetzung**, Budget 24 Starts / Parallelität 2. Start beim nächsten freien Test-Platz nach I-223
+(Reihenfolge der Warteliste: I-223, NU-1, I-215, I-214). `plan/nu1-kartenrand` geht mit dem nächsten Bündel.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN, I-223, Stadtplanung (Faltregel R987)
+Regelbezug: R826, R909, R991 · Kosten bei Irrtum: —
+
+Entscheider: L0 · Anlass: Kurzprüfung lead-qa NU-1 · ADR: —
+
+## R993 · 2026-10-26 · Umsetzung I-223 Zehnt startet
+
+Ruling: HAFEN-Controller fertig (Fix B1 `66587556`, erneutes Gate läuft), Test-Platz frei → **Umsetzung I-223 «Zehnt»** an `lead-tech` (Budget 16 / Parallelität 2, Plan `plan/i223-zehnt` @ `02abbe23`, Worktree
+`.worktrees/i223` auf `feat/i223` ab main). Warteliste danach: NU-1, I-215, I-214.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, NU-1, AUSBAU-LOGIK, Stadtplanung (`helpers.ts`, `save.ts`)
+Regelbezug: R826, R987, R989 · Kosten bei Irrtum: —
+
+Entscheider: L0 · Anlass: freier Test-Platz · ADR: —
+
+## R994 · 2026-10-26 · Gate Merge HAFEN L1: OK
+
+Ruling: Gate Merge HAFEN L1 (`feat/hafen` @ `66587556`) **OK** (lead-qa; B1 geschlossen, N1/N3/N4 behoben, N2 bereits in `docs/beobachtungen.md`). HAFEN L1 geht ins Bündel REL-34, **wenn der laufende push-check
+noch nicht begonnen hat**; sonst als erster Merge des nächsten Bündels (push-check morgen vor dem Push). Release-Notiz aus dem Gate-Handoff für state.md. HAFEN O (T03, T04) startet nach L1 auf main.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1 (`ships.ts`), REL-34
+Regelbezug: R810, R816, R990 · Kosten bei Irrtum: ein zusätzlicher voller Lauf.
+
+Entscheider: L0 · Anlass: Bericht lead-qa Gate Merge HAFEN L1 · ADR: —
+
+## R995 · 2026-10-26 · REL-34 lokal auf main
+
+Ruling: REL-34 `integrate/rel-34` @ `c94f489c` (I-201 Festanlass + Trivial-Fix, Rückfracht, Volllast-Spec und -Plan, TIEFE-6, IDEEN-20-Folgen inkl. Zehnt-Spec, Plan I-223, COACH-R971 Handbuch 1.79), push-check **Exit 0**,
+**main lokal vorgespult** (L0-Doku per Patch gesichert und wieder angewendet). **Push 2026-10-27** (R816) nach push-check auf dem dann gebündelten Stand; erster Merge des nächsten Bündels: `feat/hafen` @ `66587556`
+(R994), dazu `design/neue-ufer`, `plan/nu1-kartenrand`. I-201 ist damit auf main: **I-210 Phase 2** (T11, T12, T14) und **I-215 T08** sind freigegeben.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, I-215, I-223 (main holen per Merge)
+Regelbezug: R769 V2, R810, R816, R951 · Kosten bei Irrtum: —
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-34 · ADR: —
