@@ -5,11 +5,16 @@
  * Aufstiegswelle nach dem Muster von I-201 Lage A (Häuser voll belegt, versorgt, Dienste; nichts aus feastWorlds.ts).
  *
  * Abweichungen vom Anhang 01 (Lagen so gebaut, dass die Rangfolge messbar ist; Defs unverändert):
- * - B4 Ja: Stein 80 statt 30 (fünf Aufstiege kosten je 10 Stein, die Glocke 10); Holz, Werkzeug, Glas, Gewürz, Nahrung und
- *   Stoff ausreichend, damit kein Aufstiegsmangel die Welle bremst.
+ * - B4 Ja: Stein 80 statt 30 (fünf Aufstiege kosten je 10 Stein, die Glocke 10). Holz 100, Werkzeug 50, Nahrung und Stoff
+ *   100, Glas und Gewürz je 500 (über STORAGE_CAP 100, direkt gesetzt: die Lage hat dafür keinen Zulauf).
+ * - B5 Ja: Ketten ü 0,60 statt 0,20, Rohr 40 (Kosten 20), Stein 80, Glas und Gewürz je 2000 (über STORAGE_CAP). Das Fenster
+ *   ist 6900 Ticks lang, die Häuser wachsen auf Stufe 4 auf 20 Bewohner; bei ü 0,20 und Glas 500 fehlt es in beiden Läufen
+ *   (Ja verlor mit -1841). Mit ü 0,60 läuft Rum ans Lagerlimit und die Ersparnis des Nein verfällt teilweise; das kippt die
+ *   Richtung zum Ja, ist aber artefaktfrei, weil addStock nur den Zufluss kappt (der Lagerstand wird nie hochgesetzt).
  * - Aufstiegswelle: Die Wartezeit der Häuser beginnt erst nach der Antwort (satisfiedSince in der Zukunft), sonst stiegen
  *   sie vor dem Wirkungsbeginn auf. Am Ende des Fensters sind in beiden Läufen alle Häuser oben; «mehr Häuser im
- *   Fenster» ist darum als «mehr Haus-Ticks auf Stufe 4» geprüft (der Ja-Lauf steigt früher auf).
+ *   Fenster» ist darum als «mehr Haus-Ticks auf Stufe 4» geprüft. Gemessen steigt jedes der 5 Häuser im Ja-Lauf 300 Ticks
+ *   früher auf (riserTicks +1500), nicht nur die 150 der Wartezeit-Differenz.
  * - B5: Das Aufstiegsfest hält der Lauf, sobald die Wirkung läuft (Verzug + 100 Ticks): im Ja-Lauf mit Gutschein in der
  *   Abklingzeit, im Nein-Lauf, sobald die Abklingzeit endet (1800 Ticks nach dem Start-Fest).
  */
@@ -35,6 +40,9 @@ describe.each(PETITION_SEEDS)('AK-BS-04 B4-B5, Seed %i', (seed) => {
     });
     it('Vorbedingung: im Ja-Lauf der Ja-Lage steigen die Häuser früher auf', () => {
       expect(res.yes!.yes.extras!.riserTicks).toBeGreaterThan(res.yes!.no.extras!.riserTicks!);
+    });
+    it('Vorbedingung: Häuser der Ja-Lage beim Nachspiel versorgt', () => {
+      expect(res.yes!.yes.shortage).toEqual([]);
     });
     if (id === 'feastDrink')
       it('Vorbedingung B5: das Gutschein-Fest gelingt, Rum bleibt unverändert', () => {

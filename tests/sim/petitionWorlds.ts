@@ -719,12 +719,12 @@ function bellScene(seed: number, yes: boolean): PetitionScene {
   return scene;
 }
 
-/** B5: das Aufstiegsfest nach dem Verzug; im Ja-Lauf mit Gutschein (Abklingzeit egal), sonst sobald erlaubt. */
 /** B5 läuft 6900 Ticks: die Häuser wachsen auf Stufe 4 auf 20 Bewohner, die Ketten tragen das mit. */
 const B5_OVER = 0.6;
 /** Glas und Gewürz tragen die Stufe-4-Häuser über das ganze Fenster (kein Zulauf in der Lage). */
 const B5_AMPLE = 2000;
 
+/** B5: das Aufstiegsfest nach dem Verzug; im Ja-Lauf mit Gutschein (Abklingzeit egal), sonst sobald erlaubt. */
 function feastDrinkScene(seed: number, yes: boolean): PetitionScene {
   const spec: HouseSpec = yes
     ? {
