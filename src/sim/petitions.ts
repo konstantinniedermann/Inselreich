@@ -1,7 +1,8 @@
 import { serviceRadiusOf } from './council';
 import { BUILDING_DEFS } from './defs/buildings';
-import { GOODS } from './defs/goods';
+import { GOODS, GOOD_IDS } from './defs/goods';
 import {
+  FRUGAL_PCT,
   FRUGAL_TICKS,
   PETITIONS,
   PETITION_ANSWER,
@@ -11,10 +12,13 @@ import {
   PETITION_PERIOD,
   type PetitionDef,
   type PetitionId,
+  type PetitionReward,
   type PetitionWhen,
 } from './defs/petitions';
-import { TIER_IDS } from './defs/tiers';
-import { storageCap } from './petitionEffect';
+import { TIERS, TIER_IDS } from './defs/tiers';
+import { goodsBalance } from './flow';
+import { needRate, storageCap } from './petitionEffect';
+import { houseCap } from './population';
 import { petitionRng } from './petitionRng';
 import {
   fail,
@@ -162,6 +166,16 @@ function declineNow(world: World, m: PetitionMark): void {
   frugal(world, m.id);
 }
 
+/** Sperrgrund für «Ja» (Anker weg, Ware fehlt) in der Reihenfolge der Antwort; null, wenn «Ja» geht. Liest nur. */
+function yesBlock(world: World, m: PetitionMark): string | null {
+  const def = PETITIONS[m.id];
+  if (m.anchor !== undefined && world.buildings[m.anchor] === undefined)
+    return PETITION_REASONS.anchorGone(BUILDING_DEFS[def.anchor!].name);
+  for (const [g, n] of Object.entries(petitionCost(world, m)) as [GoodId, number][])
+    if (stockOf(world)[g] < n) return PETITION_REASONS.lack(g, stockOf(world)[g], n);
+  return null;
+}
+
 export function answerPetition(world: World, drawnAt: number, answer: string): Result {
   const p = world.petitions;
   if (!p.on) return fail(PETITION_REASONS.off);
@@ -169,17 +183,14 @@ export function answerPetition(world: World, drawnAt: number, answer: string): R
   if (m === undefined) return fail(PETITION_REASONS.none);
   if (m.answer !== undefined) return fail(PETITION_REASONS.answered);
   if (answer !== 'yes' && answer !== 'no') return fail(PETITION_REASONS.unknown);
-  const def = PETITIONS[m.id];
   if (answer === 'no') {
     declineNow(world, m);
     return ok;
   }
-  if (m.anchor !== undefined && world.buildings[m.anchor] === undefined)
-    return fail(PETITION_REASONS.anchorGone(BUILDING_DEFS[def.anchor!].name));
-  const cost = petitionCost(world, m);
-  for (const [g, n] of Object.entries(cost) as [GoodId, number][])
-    if (stockOf(world)[g] < n) return fail(PETITION_REASONS.lack(g, stockOf(world)[g], n));
-  for (const [g, n] of Object.entries(cost) as [GoodId, number][]) stockOf(world)[g] -= n;
+  const block = yesBlock(world, m);
+  if (block !== null) return fail(block);
+  for (const [g, n] of Object.entries(petitionCost(world, m)) as [GoodId, number][])
+    stockOf(world)[g] -= n;
   m.answer = 'yes';
   m.dueTick = world.tick + def.delay;
   return ok;
@@ -269,4 +280,157 @@ export function tickPetitions(world: World): PetitionEvent[] {
   closeDue(world, events);
   if (world.tick === p.next) draw(world, events);
   return events;
+}
+
+export interface PetitionReserveLine {
+  good: GoodId;
+  stock: number;
+  /** Netto je 100 Ticks aus `goodsBalance`. */
+  net: number;
+  /** Mehrbedarf je 100 Ticks: Zusatzplätze je passendem Haus × Rate der Stufe. */
+  extra: number;
+  gap: number;
+  /** Ticks, die der Bestand für die Lücke reicht; null ohne Lücke. */
+  reach: number | null;
+}
+
+export interface PetitionPreview {
+  id: PetitionId;
+  drawnAt: number;
+  left: number;
+  cost: Partial<Record<GoodId, number>>;
+  yesBlock: string | null;
+  delay: number;
+  duration: number;
+  extraPlaces: number;
+  reserve: PetitionReserveLine[];
+  producers: {
+    count: number;
+    input: { good: GoodId; stock: number; net: number } | null;
+  } | null;
+  spiceRoute: { foreignStock: number; ships: number } | null;
+  stocks: Partial<Record<GoodId, number>> | null;
+  noGood: GoodId;
+  noSaving: number;
+  nearFull: boolean;
+}
+
+/** Je 100 Ticks (Zeitbasis von `goodsBalance`). */
+const PER = 100;
+
+/** Zusatzplätze, die diese Bitte einem Haus gäbe (gleiche Rundung wie `overcrowdCap`, aber ohne laufende Wirkungen). */
+function extraPlacesOf(world: World, house: Building, reward: PetitionReward): number {
+  if (reward.kind !== 'overcrowd' || !reward.tiers.includes(house.house!.tier)) return 0;
+  const cap = houseCap(world, house.house!);
+  return Math.floor((cap * reward.pct + 50) / PER);
+}
+
+function reserveOf(world: World, reward: PetitionReward): PetitionReserveLine[] {
+  const extra: Partial<Record<GoodId, number>> = {};
+  for (const h of housesAbove(world, 0)) {
+    const places = extraPlacesOf(world, h, reward);
+    if (places === 0) continue;
+    const needs = TIERS[h.house!.tier].needs;
+    for (const g of Object.keys(needs) as GoodId[])
+      extra[g] = (extra[g] ?? 0) + places * needRate(world, HOME, g, needs[g]!);
+  }
+  const bal = goodsBalance(world, HOME);
+  return GOOD_IDS.filter((g) => extra[g] !== undefined).map((good) => {
+    const e = extra[good]!;
+    const net = bal[good].net;
+    const gap = Math.max(0, e - Math.max(0, net));
+    const stock = stockOf(world)[good];
+    return {
+      good,
+      stock,
+      net,
+      extra: e,
+      gap,
+      reach: gap > 0 ? Math.round((stock / gap) * PER) : null,
+    };
+  });
+}
+
+function producersOf(
+  world: World,
+  def: PetitionDef,
+  m: PetitionMark,
+): PetitionPreview['producers'] {
+  const r = def.reward;
+  if (r.kind !== 'cycle') return null;
+  const island = world.buildings[m.anchor ?? -1]?.island ?? HOME;
+  const good = def.cost[0]!.good;
+  return {
+    count: buildingsOf(world, r.building, r.homeOnly).length,
+    input: {
+      good,
+      stock: world.islands[island]!.stock[good],
+      net: goodsBalance(world, island)[good].net,
+    },
+  };
+}
+
+/** Schiffe, deren Route Gewürz zwischen Fremdinsel und Heimat lädt (wie `spiceLoop` in goal3, ohne Plantagenprüfung). */
+function spiceShips(world: World): number {
+  return world.ships.filter((s) => {
+    const r = s.route;
+    if (r === null) return false;
+    const loads = (list: readonly { good: GoodId }[]): boolean =>
+      list.some((x) => x.good === SPICE.good);
+    return (
+      (r.a === HOME && r.b !== HOME && loads(r.ba)) || (r.b === HOME && r.a !== HOME && loads(r.ab))
+    );
+  }).length;
+}
+
+function spiceRouteOf(
+  world: World,
+  def: PetitionDef,
+  m: PetitionMark,
+): PetitionPreview['spiceRoute'] {
+  if (def.anchor !== SPICE.farm) return null;
+  const island = world.buildings[m.anchor ?? -1]?.island ?? HOME;
+  return { foreignStock: world.islands[island]!.stock[SPICE.good], ships: spiceShips(world) };
+}
+
+function stocksOf(world: World, reward: PetitionReward): Partial<Record<GoodId, number>> | null {
+  if (reward.kind !== 'storage') return null;
+  const out: Partial<Record<GoodId, number>> = {};
+  for (const g of reward.goods) out[g] = stockOf(world)[g];
+  return out;
+}
+
+/** Schwelle «Lager fast voll», aus der Speicher-Bitte gelesen. */
+const NEAR_FULL = ((): number => {
+  const w = PETITIONS.granary.when;
+  return w.kind === 'stockAtLeast' ? w.min : 0;
+})();
+
+/** Vorschau der offenen Marke für die Karte (Spec 5.1). Liest nur, bucht nie; null ohne offene Marke. */
+export function petitionPreview(world: World, drawnAt: number): PetitionPreview | null {
+  const m = world.petitions.open.find((x) => x.drawnAt === drawnAt);
+  if (m === undefined) return null;
+  const def = PETITIONS[m.id];
+  const extraPlaces = housesAbove(world, 0).reduce(
+    (n, h) => n + extraPlacesOf(world, h, def.reward),
+    0,
+  );
+  const consumed = goodsBalance(world, HOME)[def.no].consumed;
+  return {
+    id: m.id,
+    drawnAt: m.drawnAt,
+    left: m.drawnAt + PETITION_ANSWER - world.tick,
+    cost: petitionCost(world, m),
+    yesBlock: yesBlock(world, m),
+    delay: def.delay,
+    duration: def.duration,
+    extraPlaces,
+    reserve: def.reward.kind === 'overcrowd' ? reserveOf(world, def.reward) : [],
+    producers: producersOf(world, def, m),
+    spiceRoute: spiceRouteOf(world, def, m),
+    stocks: stocksOf(world, def.reward),
+    noGood: def.no,
+    noSaving: (((consumed * FRUGAL_PCT) / PER) * FRUGAL_TICKS) / PER,
+    nearFull: stockOf(world)[def.no] >= NEAR_FULL,
+  };
 }

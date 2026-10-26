@@ -1,7 +1,6 @@
 import { serviceRadiusOf } from './council';
 import { BUILDING_DEFS } from './defs/buildings';
-import { GOOD_IDS } from './defs/goods';
-import { storageCap } from './petitionEffect';
+import { GOOD_IDS, STORAGE_CAP } from './defs/goods';
 import { TIERS, WIN_CITIZENS, WIN_MERCHANTS, WIN_SPICE_MERCHANTS } from './defs/tiers';
 import { spiceLoop, spiceMerchants } from './goal3';
 import { isProtected, nextCrisisTick } from './crises';
@@ -204,11 +203,10 @@ export function placementZone(
   return { ...c, radius: zone.radius, tiles };
 }
 
-/** Rückerstattung, wie `grantRefund` sie einlagert: Güter auf den freien Lagerplatz gekappt. */
+/** Rückerstattung, wie `grantRefund` sie einlagert: Güter auf den freien Lagerplatz gekappt (bei `STORAGE_CAP` wie `grantRefund`, unabhängig vom Speicherbau). */
 export function effectiveRefund(world: World, cost: Cost): Cost {
   const r = refundCost(cost);
-  const room = (g: GoodId): number =>
-    Math.max(0, storageCap(world, HOME, g) - home(world).stock[g]);
+  const room = (g: GoodId): number => Math.max(0, STORAGE_CAP - home(world).stock[g]);
   return {
     money: r.money,
     wood: Math.min(r.wood, room('wood')),

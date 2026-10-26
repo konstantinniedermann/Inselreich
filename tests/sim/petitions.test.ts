@@ -22,7 +22,12 @@ import { createRng } from '../../src/sim/rng';
 import type { Building, GoodId, PetitionEffectEntry, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
 import { demolish } from '../../src/sim/build';
-import { answerPetition, PETITION_REASONS, tickPetitions } from '../../src/sim/petitions';
+import {
+  answerPetition,
+  PETITION_REASONS,
+  petitionPreview,
+  tickPetitions,
+} from '../../src/sim/petitions';
 import { step, type StepReport } from '../../src/sim/tick';
 import {
   houseNearKontor,
@@ -721,5 +726,80 @@ describe('AK-BS-14 Siegziele', () => {
       step(w);
     }
     expect(w.wonSpice).toBe(true);
+  });
+});
+
+describe('AK-BS-18 Kartenvorschau', () => {
+  /** P1: 4 Häuser Stufe 3 mit 13, 13, 12, 12 Einwohnern, fünf Webereien (Stoff-Netto 0), Stoff 31, Marke B1 mit 10. */
+  function previewWorld(): World {
+    const { w, houses } = village(4);
+    [13, 13, 12, 12].forEach((n, i) => setHouse(houses[i]!, 3, n));
+    const k = w.buildings[home(w).kontorId]!;
+    for (let i = 0; i < 5; i++) putBuilding(w, 0, 'weaver', k.x + 2 + 2 * i, k.y + 4);
+    home(w).stock.cloth = 31;
+    w.tick = 100;
+    w.petitions.open.push({ id: 'weavers', drawnAt: 50, amount: 10 });
+    return w;
+  }
+  it('Kosten, Zusatzplätze, Reserve, Reichweite, Spareffekt', () => {
+    const w = previewWorld();
+    expect(goodsBalance(w).cloth.net).toBeCloseTo(0, 9);
+    const before = JSON.stringify(w);
+    const pv = petitionPreview(w, 50)!;
+    expect(JSON.stringify(w)).toBe(before);
+    expect(pv.cost.cloth).toBe(10);
+    expect(pv.left).toBe(50 + PETITION_ANSWER - 100);
+    expect(pv.extraPlaces).toBe(8);
+    const line = (g: GoodId) => pv.reserve.find((r) => r.good === g)!;
+    expect(line('cloth').extra).toBeCloseTo(1.6, 6);
+    expect(line('food').extra).toBeCloseTo(4.0, 6);
+    expect(line('rum').extra).toBeCloseTo(1.6, 6);
+    expect(line('cloth').gap).toBeCloseTo(1.6, 6);
+    expect(Math.abs(line('cloth').reach! - 1938)).toBeLessThanOrEqual(1);
+    expect(pv.noGood).toBe('cloth');
+    expect(pv.noSaving).toBeCloseTo(18, 6);
+    expect(pv.yesBlock).toBeNull();
+    expect(pv.spiceRoute).toBeNull();
+  });
+  it('kein Engpass: reach null', () => {
+    const w = previewWorld();
+    home(w).stock.food = 50;
+    const k = w.buildings[home(w).kontorId]!;
+    for (let i = 0; i < 4; i++) putBuilding(w, 0, 'weaver', k.x + 2 + 2 * i, k.y + 7);
+    const pv = petitionPreview(w, 50)!;
+    const cloth = pv.reserve.find((r) => r.good === 'cloth')!;
+    expect(cloth.gap).toBe(0);
+    expect(cloth.reach).toBeNull();
+  });
+  it('Stoff 5: yesBlock wie answerPetition', () => {
+    const w = previewWorld();
+    home(w).stock.cloth = 5;
+    const pv = petitionPreview(w, 50)!;
+    expect(pv.yesBlock).toBe('Zu wenig Stoff (5 / 10)');
+    const r = answerPetition(w, 50, 'yes');
+    expect(r.ok).toBe(false);
+    expect(!r.ok && r.reason).toBe(pv.yesBlock);
+  });
+  it('ohne offene Marke null', () => {
+    expect(petitionPreview(previewWorld(), 51)).toBeNull();
+  });
+  it('B9: stocks genau Stoff, Rum, Nahrung; nearFull', () => {
+    const w = previewWorld();
+    w.petitions.open = [{ id: 'granary', drawnAt: 50, amount: 0 }];
+    home(w).stock.food = 95;
+    const pv = petitionPreview(w, 50)!;
+    expect(Object.keys(pv.stocks!).sort()).toEqual(['cloth', 'food', 'rum']);
+    expect(pv.nearFull).toBe(true);
+    expect(pv.reserve).toEqual([]);
+  });
+  it('B6: Gewürzroute; B1: keine', () => {
+    const w = previewWorld();
+    const k = w.buildings[home(w).kontorId]!;
+    const farm = putBuilding(w, 0, 'spicefarm', k.x + 2, k.y + 10);
+    w.petitions.open = [{ id: 'spiceSeed', drawnAt: 50, amount: 0, anchor: farm.id }];
+    const pv = petitionPreview(w, 50)!;
+    expect(pv.spiceRoute).not.toBeNull();
+    expect(pv.spiceRoute!.ships).toBe(0);
+    expect(pv.producers!.count).toBe(1);
   });
 });
