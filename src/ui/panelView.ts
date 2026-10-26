@@ -7,12 +7,9 @@ import { UPKEEP_INTERVAL } from '../sim/economy';
 import { buildingUpkeep, cycleOf, effectiveCycle, upkeepOf, utilization } from '../sim/levels';
 import { isSupplied } from '../sim/population';
 import { missingInputs, reservedInputs } from '../sim/queries';
-import { upgradeBuilding } from '../sim/upgrade';
-import { functionLock } from '../sim/unlocks';
 import type { Building, BuildingDefId, Tier, World } from '../sim/types';
 import { balanceAfterUpgrade, balanceLine } from './balancePreview';
-import { costLine } from './dom';
-import { friendlyReason } from './hints';
+import { checklistView, type ChecklistRow } from './levelChecklist';
 import { goodList, stateInfo } from './texts';
 import { formatGameTime, perMinute, signedNum } from './time';
 
@@ -52,15 +49,15 @@ export type UpgradeCard =
       kind: 'next';
       title: string;
       gains: GainRow[];
-      cost: string;
-      fee: string;
-      reasons: string[];
+      /** Checkliste aus der Sim-Textquelle (`levelChecks`); ✓/✗ je Zeile. */
+      rows: ChecklistRow[];
       ok: boolean;
+      /** Text der ersten ✗-Zeile für den Knopf-Tooltip; null, wenn alles ✓. */
+      tooltip: string | null;
       key: string;
       /** «Bilanz danach: a → b / min» (Unterhalt der nächsten Stufe, Edikt inklusive). */
       balance: string;
     }
-  | { kind: 'locked'; title: string; gains: GainRow[]; lock: string }
   | { kind: 'max'; title: 'Höchste Stufe' };
 
 const round1 = (x: number): number => Math.round(x * 10) / 10;
@@ -252,23 +249,17 @@ export function upgradeGain(world: World, b: Building, to: 2 | 3): GainRow[] {
 }
 
 export function upgradeCard(world: World, b: Building): UpgradeCard | null {
-  if (LEVELS[b.defId] === undefined) return null;
-  const level = b.level ?? 1;
-  if (level >= 3) return { kind: 'max', title: 'Höchste Stufe' };
-  const to = (level + 1) as 2 | 3;
-  const gains = upgradeGain(world, b, to);
-  const lock = functionLock(world, level === 1 ? 'upgrade2' : 'upgrade3');
-  if (lock !== null) return { kind: 'locked', title: `Ausbau zu Stufe ${to}`, gains, lock };
-  const v = upgradeView(world, b);
+  const v = checklistView(world, b);
   if (v === null) return null;
+  if (v.kind === 'max') return { kind: 'max', title: 'Höchste Stufe' };
+  const to = ((b.level ?? 1) + 1) as 2 | 3;
   return {
     kind: 'next',
     title: v.title,
-    gains,
-    cost: v.cost,
-    fee: v.fee,
-    reasons: v.reasons,
-    ok: v.ok,
+    gains: upgradeGain(world, b, to),
+    rows: v.rows,
+    ok: v.canUpgrade,
+    tooltip: v.tooltip,
     key: UPGRADE_KEY_LABEL,
     balance: balanceLine(balanceAfterUpgrade(world, b)),
   };
@@ -300,47 +291,6 @@ export function progressView(world: World, b: Building): { pct: number; label: s
   if (cycleOf(world, b) === undefined) return null;
   const pct = progressPct(world, b);
   return { pct, label: `Fortschritt ${pct} %` };
-}
-
-export interface UpgradeView {
-  title: string;
-  cost: string;
-  fee: string;
-  preview: string;
-  reasons: string[];
-  ok: boolean;
-}
-
-/**
- * Ausbau-Abschnitt des Betriebs-Panels (Spec 7); `null`, wenn der Betrieb nicht ausbaubar oder die Stufe noch
- * nicht freigeschaltet ist. Die Gründe stammen aus einem Probelauf von `upgradeBuilding` auf einer Kopie.
- */
-export function upgradeView(world: World, b: Building): UpgradeView | null {
-  const levels = LEVELS[b.defId];
-  if (levels === undefined) return null;
-  const lvl = b.level ?? 1;
-  if (lvl >= 3)
-    return { title: 'Höchste Stufe', cost: '', fee: '', preview: '', reasons: [], ok: false };
-  if (functionLock(world, lvl === 1 ? 'upgrade2' : 'upgrade3') !== null) return null;
-  const next = levels[lvl - 1]!;
-  const probe = {
-    ...world,
-    islands: world.islands.map((isl) => ({ ...isl, stock: { ...isl.stock } })),
-    buildings: { ...world.buildings, [b.id]: { ...b } },
-  };
-  const r = upgradeBuilding(probe, b.id);
-  const out = `${perMinute(1, cycleOf(world, b) ?? 1)} → ${perMinute(1, effectiveCycle(world, b.island, b.defId, next.cycle))}`;
-  const upkeep = `${perMinute(upkeepOf(b), UPKEEP_INTERVAL)} → ${perMinute(next.upkeep, UPKEEP_INTERVAL)}`;
-  return {
-    title: `Ausbau zu Stufe ${lvl + 1}`,
-    cost: `Kosten ${costLine(next.cost)}`,
-    fee: next.extra ? `Ware ${next.extra.amount} ${GOODS[next.extra.good].name}` : '',
-    preview: `Ausstoss ${out} / min · Unterhalt ${upkeep} / min`,
-    reasons: r.ok
-      ? []
-      : [`✗ ${friendlyReason(world, r.reason, { cost: next.cost, island: b.island })}`],
-    ok: r.ok,
-  };
 }
 
 /** Fortschrittsbalken in Prozent, bezogen auf den Zyklus der Stufe. */

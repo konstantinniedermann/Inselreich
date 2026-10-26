@@ -19,7 +19,7 @@ import {
   upgradeGain,
   type StatKey,
 } from '../../src/ui/panelView';
-import { upgradeView, progressPct } from '../../src/ui/panelView';
+import { progressPct } from '../../src/ui/panelView';
 import { missingInputs, reservedInputs } from '../../src/sim/queries';
 import { isSupplied } from '../../src/sim/population';
 import { functionLock } from '../../src/sim/unlocks';
@@ -255,18 +255,19 @@ describe('AK-PU-10..13 upgradeCard', () => {
     const f = put(w, 'fisher');
     const before = serialize(w);
     const c = upgradeCard(w, f)!;
-    const v = upgradeView(w, f)!;
-    expect(c).toMatchObject({
-      kind: 'next',
-      title: v.title,
-      cost: v.cost,
-      fee: v.fee,
-      reasons: v.reasons,
-      ok: v.ok,
-      key: UPGRADE_KEY_LABEL,
-    });
-    expect(UPGRADE_KEY_LABEL).toBe('Umschalt+U');
     if (c.kind !== 'next') throw new Error('next erwartet');
+    expect(c.title).toBe('Ausbau auf Stufe 2 — Fischerhütte');
+    expect(c.key).toBe(UPGRADE_KEY_LABEL);
+    expect(UPGRADE_KEY_LABEL).toBe('Umschalt+U');
+    expect(c.rows.map((r) => r.id)).toEqual([
+      'knowledge',
+      'workforce',
+      'site',
+      'money',
+      'wood',
+      'tools',
+      'extra',
+    ]);
     expect(c.gains.map((g) => [g.key, g.before, g.after, g.delta])).toEqual([
       ['output', 15, 25, '+10'],
       ['upkeep', 30, 42, '+12'],
@@ -281,29 +282,30 @@ describe('AK-PU-10..13 upgradeCard', () => {
     meetLevel(w, f); // Fachkräfte und Standort der Stufe 2 stehen
     delete f.level;
     const c = upgradeCard(w, f)!;
-    expect(c).toMatchObject({ kind: 'next', reasons: ['✗ Zu wenig Stoff (0 / 2)'], ok: false });
+    if (c.kind !== 'next') throw new Error('next erwartet');
+    expect(c.ok).toBe(false);
+    expect(c.rows.filter((r) => !r.ok).map((r) => r.text)).toEqual(['Zu wenig Stoff (0 / 2)']);
+    expect(c.tooltip).toBe('Zu wenig Stoff (0 / 2)');
     const b = upgradeCard(w, put(w, 'fisher', { outageUntil: 99, state: 'burning' }))!;
     if (b.kind !== 'next') throw new Error('next erwartet');
     expect(b.ok).toBe(false);
-    expect(b.reasons.join(' ')).toContain('brennt');
+    expect(b.rows.map((r) => r.text).join(' ')).toContain('brennt');
   });
-  it('AK-PU-12 gesperrt', () => {
+  it('AK-PU-12 gesperrt: Checkliste mit ✗ in der Wissenszeile, Gewinnzeilen bleiben', () => {
     const w = createWorld(3);
     const c = upgradeCard(w, put(w, 'fisher'))!;
-    expect(c.kind).toBe('locked');
-    if (c.kind !== 'locked') throw new Error('locked erwartet');
-    expect(c.title).toBe('Ausbau zu Stufe 2');
-    expect(c.lock).toBe(functionLock(w, 'upgrade2'));
+    if (c.kind !== 'next') throw new Error('next erwartet');
+    expect(c.title).toBe('Ausbau auf Stufe 2 — Fischerhütte');
+    expect(c.rows[0]).toEqual({ id: 'knowledge', ok: false, text: functionLock(w, 'upgrade2')! });
+    expect(c.ok).toBe(false);
+    expect(c.tooltip).toBe(functionLock(w, 'upgrade2'));
     expect(c.gains.map((g) => g.key)).toEqual(['output', 'upkeep']);
-    expect('cost' in c).toBe(false);
-    expect('fee' in c).toBe(false);
     const w2 = createWorld(3, { unlockAll: true });
     w2.unlocked = w2.unlocked.filter((u) => u !== 'U5' && u !== 'U6');
     const c3 = upgradeCard(w2, put(w2, 'fisher', { level: 2 }))!;
-    expect(c3.kind).toBe('locked');
-    if (c3.kind !== 'locked') throw new Error('locked erwartet');
-    expect(c3.title).toBe('Ausbau zu Stufe 3');
-    expect(c3.lock).toBe(functionLock(w2, 'upgrade3'));
+    if (c3.kind !== 'next') throw new Error('next erwartet');
+    expect(c3.title).toBe('Ausbau auf Stufe 3 — Fischerhütte');
+    expect(c3.rows[0]).toEqual({ id: 'knowledge', ok: false, text: functionLock(w2, 'upgrade3')! });
   });
   it('AK-PU-13 max und null', () => {
     const w = rich();
@@ -356,13 +358,9 @@ describe('AK-15 Ausbau-Karte «Bilanz danach»', () => {
       }
     }
   });
-  it('Höchste Stufe und gesperrte Karte haben keine Zeile', () => {
+  it('Höchste Stufe hat keine Zeile', () => {
     const w = rich(false);
     expect('balance' in upgradeCard(w, put(w, 'fisher', { level: 3 }))!).toBe(false);
-    const w2 = createWorld(3);
-    const c = upgradeCard(w2, put(w2, 'fisher'))!;
-    expect(c.kind).toBe('locked');
-    expect('balance' in c).toBe(false);
   });
 });
 

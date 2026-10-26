@@ -21,7 +21,7 @@ import {
   BUILD_SAME_TITLE,
   UPGRADE_TITLE,
 } from '../../src/ui/inspect';
-import { upgradeView } from '../../src/ui/panelView';
+import { upgradeCard } from '../../src/ui/panelView';
 import { setEdict } from '../../src/sim/edicts';
 import { setPaused } from '../../src/sim/pause';
 import { upgradeBuilding } from '../../src/sim/upgrade';
@@ -336,9 +336,12 @@ describe('M11 Betriebs-Panel (Spec 7)', () => {
     expect(levelText(houses[0]!)).toBeNull();
     expect(levelText(put(w, 'chapel'))).toBeNull();
   });
-  it('AK-UI-04 Ausbau Fischer: vor U3 verborgen, Kosten, Gebühr, Vorschau, ✗-Grund, Stufe 3 „Höchste Stufe"', () => {
+  it('AK-UI-04 Ausbau Fischer: Checkliste statt Sperrkarte, ✗-Grund als Tooltip, Stufe 3 „Höchste Stufe"', () => {
     const w0 = createWorld(3);
-    expect(upgradeView(w0, put(w0, 'fisher'))).toBeNull();
+    const c0 = upgradeCard(w0, put(w0, 'fisher'))!;
+    if (c0.kind !== 'next') throw new Error('next erwartet');
+    expect(c0.ok).toBe(false); // vor U3: Wissenszeile ✗ in der Liste
+    expect(c0.rows[0]).toMatchObject({ id: 'knowledge', ok: false });
     const w = createWorld(3, { unlockAll: true });
     w.money = 1000;
     home(w).stock.cloth = 2;
@@ -348,32 +351,29 @@ describe('M11 Betriebs-Panel (Spec 7)', () => {
     meetLevel(w, f); // Fachkräfte und Standort der Stufe 2 stehen
     delete f.level;
     const before = serialize(w);
-    expect(upgradeView(w, f)).toEqual({
-      title: 'Ausbau zu Stufe 2',
-      cost: 'Kosten 50 Geld · 3 Holz · 1 Werkzeug',
-      fee: 'Ware 2 Stoff',
-      preview: 'Ausstoss 15 → 25 / min · Unterhalt 30 → 42 / min',
-      reasons: [],
-      ok: true,
-    });
-    expect(serialize(w)).toBe(before); // Vorschau ändert die Welt nicht
+    const c = upgradeCard(w, f)!;
+    if (c.kind !== 'next') throw new Error('next erwartet');
+    expect(c.title).toBe('Ausbau auf Stufe 2 — Fischerhütte');
+    expect(c.ok).toBe(true);
+    expect(c.tooltip).toBeNull();
+    expect(c.rows.every((r) => r.ok)).toBe(true);
+    expect(serialize(w)).toBe(before); // Anzeige ändert die Welt nicht
     home(w).stock.cloth = 0;
-    expect(upgradeView(w, f)!.reasons).toEqual(['✗ Zu wenig Stoff (0 / 2)']);
+    const bad = upgradeCard(w, f)!;
+    if (bad.kind !== 'next') throw new Error('next erwartet');
+    expect(bad.tooltip).toBe('Zu wenig Stoff (0 / 2)');
+    expect(bad.rows.filter((r) => !r.ok).map((r) => r.text)).toEqual(['Zu wenig Stoff (0 / 2)']);
     home(w).stock.cloth = 2;
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     meetLevel(w, f); // Fachkräfte-Haus im Umkreis: Stufe 2 läuft
-    expect(upgradeView(w, f)!.preview).toBe('Ausstoss 25 → 37.5 / min · Unterhalt 42 → 54 / min');
     w.unlocked = w.unlocked.filter((u) => u !== 'U5' && u !== 'U6');
-    expect(upgradeView(w, f)).toBeNull(); // Stufe 3 vor U5 verborgen
+    const c3 = upgradeCard(w, f)!;
+    if (c3.kind !== 'next') throw new Error('next erwartet');
+    expect(c3.rows[0]).toMatchObject({ id: 'knowledge', ok: false }); // Stufe 3 vor U5 gesperrt
     const w3 = createWorld(3, { unlockAll: true });
-    const f3 = put(w3, 'fisher', { level: 3 });
-    expect(upgradeView(w3, f3)).toEqual({
+    expect(upgradeCard(w3, put(w3, 'fisher', { level: 3 }))).toEqual({
+      kind: 'max',
       title: 'Höchste Stufe',
-      cost: '',
-      fee: '',
-      preview: '',
-      reasons: [],
-      ok: false,
     });
   });
 });
@@ -603,7 +603,7 @@ describe('M14-E1 Inspektor: Inselvorteil-Zeile (AK-M14E1-29)', () => {
 describe('AK-15 Ausbau-Karte: Gerüst enthält die Zeile «Bilanz danach»', () => {
   afterEach(() => vi.unstubAllGlobals());
   const noActions = new Proxy({}, { get: () => () => {} }) as unknown as InspectActions;
-  it('level-balance ist Textzeile in der Karte, vor den Kosten, ohne neues Bedienelement', () => {
+  it('level-balance ist Textzeile in der Karte, nach der Checkliste, ohne neues Bedienelement', () => {
     const { w, fisher } = uxWorld();
     vi.stubGlobal('document', { createElement: fakeEl, createTextNode: () => fakeEl('#text') });
     const panel = fakeEl('div');
@@ -615,7 +615,7 @@ describe('AK-15 Ausbau-Karte: Gerüst enthält die Zeile «Bilanz danach»', () 
     };
     walk(panel);
     expect(fields).toContain('level-balance');
-    expect(fields.indexOf('level-balance')).toBeLessThan(fields.indexOf('level-cost'));
+    expect(fields.indexOf('level-reasons')).toBeLessThan(fields.indexOf('level-balance'));
     const find = (e: FakeEl): FakeEl | undefined =>
       e.dataset?.field === 'level-balance'
         ? e

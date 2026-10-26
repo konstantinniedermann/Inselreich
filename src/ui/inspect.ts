@@ -76,6 +76,7 @@ import {
   type StatKey,
   type StatTile,
 } from './panelView';
+import { chipView } from './levelChecklist';
 
 export { burningText, diagnosisText, producesText, refundText, stateInfo } from './texts';
 
@@ -775,6 +776,7 @@ function renderBetrieb(
   const levels = LEVELS[b.defId];
   if (levels !== undefined) addLevelChip(row, 'level-chip', 'level', levels.length + 1);
   addToneChip(head, 'state-chip', 'state');
+  addToneChip(head, 'run-chip', 'run');
   addRemedy(head);
   const advantage = traitLine(world, b);
   if (advantage !== null) addLine(panel, advantage, 'island-trait');
@@ -894,11 +896,8 @@ function renderUpgradeBox(panel: HTMLElement, onUpgrade: () => void): void {
   box.appendChild(heading);
   addGainRow(box, 'gain-output');
   addGainRow(box, 'gain-upkeep');
-  addLine(box, '', 'level-lock');
-  addLine(box, '', 'level-balance');
-  addLine(box, '', 'level-cost');
-  addLine(box, '', 'level-fee');
   addList(box, 'reasons', 'level-reasons');
+  addLine(box, '', 'level-balance');
   const btn = node('button', 'btn', 'upgrade');
   btn.type = 'button';
   btn.title = UPGRADE_TITLE;
@@ -933,25 +932,23 @@ function updateUpgradeBox(panel: HTMLElement, world: World, b: Building): void {
     'gain-upkeep',
     gains.find((g) => g.key === 'upkeep'),
   );
-  const lock = setField(box, 'level-lock', c.kind === 'locked' ? c.lock : '');
-  if (lock) lock.hidden = c.kind !== 'locked';
-  for (const [field, text] of [
-    ['level-balance', c.kind === 'next' ? c.balance : ''],
-    ['level-cost', c.kind === 'next' ? c.cost : ''],
-    ['level-fee', c.kind === 'next' ? c.fee : ''],
-  ] as const) {
-    const el = setField(box, field, text);
-    if (el) el.hidden = c.kind !== 'next' || text === '';
-  }
+  const bal = setField(box, 'level-balance', c.kind === 'next' ? c.balance : '');
+  if (bal) bal.hidden = c.kind !== 'next';
   setList(
     box,
     'level-reasons',
-    (c.kind === 'next' ? c.reasons : []).map((text) => ({ ok: false, text })),
+    (c.kind === 'next' ? c.rows : []).map((r) => ({
+      ok: r.ok,
+      text: `${r.ok ? '✓' : '✗'} ${r.text}`,
+    })),
   );
   const btn = box.querySelector<HTMLElement>('[data-field="upgrade"]');
   if (btn) {
     btn.hidden = c.kind !== 'next';
     btn.classList.toggle('unaffordable', c.kind !== 'next' || !c.ok);
+    if (btn instanceof HTMLButtonElement) btn.disabled = c.kind === 'next' && !c.ok;
+    const tip = c.kind === 'next' && c.tooltip !== null ? c.tooltip : UPGRADE_TITLE;
+    if (btn.title !== tip) btn.title = tip;
   }
 }
 
@@ -1052,9 +1049,20 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   }
 }
 
+/** Chip «Läuft wie Stufe k: …» bei gedrosseltem Betrieb (Spec R9); Tooltip nennt alle verletzten Bedingungen. */
+function updateRunChip(panel: HTMLElement, world: World, b: Building): void {
+  const chip = panel.querySelector<HTMLElement>('[data-field="run-chip"]');
+  if (!chip) return;
+  const v = chipView(world, b);
+  chip.hidden = v === null;
+  if (v === null) return;
+  setToneChip(panel, 'run-chip', 'run', { tone: 'warn', text: v.text, label: v.tooltip });
+}
+
 /** Führt Kopf, Kacheln und Balken des Betriebs-Panels nach (nur Texte und Attribute, G-3). */
 function updateBetrieb(panel: HTMLElement, world: World, b: Building): void {
   setToneChip(panel, 'state-chip', 'state', stateChip(world, b));
+  updateRunChip(panel, world, b);
   const pv = pauseButton(b);
   const pauseEl = panel.querySelector<HTMLButtonElement>('[data-field="pause"]');
   if (pv !== null && pauseEl) {
