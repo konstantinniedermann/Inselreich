@@ -32,6 +32,10 @@ export function titheLockText(w: World, tier: TitheTier): string {
 
 const decimal = (n: number): string => String(n).replace('.', ',');
 
+/** Klick auf den schon aktiven Knopf (Zehnt bei `titheOn`, Geld sonst) ändert nichts: kein Dialog, kein Fehler. */
+export const titheClickChangesState = (w: World, tier: TitheTier, on: boolean): boolean =>
+  w.titheOn[tier] !== on;
+
 export function titheFlowText(w: World, tier: TitheTier): string {
   if (!w.titheOn[tier]) return '';
   if (!townhallActive(w)) return `Zehnt ruht: ${townhallReason(w)}`;

@@ -18,6 +18,9 @@ describe('Zehnt-UI Quelltext (I-223 T05)', () => {
       expect(src(f)).not.toMatch(/titheOn\[.*\]\s*=[^=]/);
     }
   });
+  it('app: aktiver Schalter öffnet keinen Dialog', () => {
+    expect(src('app.ts')).toMatch(/!titheClickChangesState\(world, tier, on\)\) return/);
+  });
   it('app: ruft collectTitheLoss und setTithe auf', () => {
     const s = src('app.ts');
     expect(s.match(/collectTitheLoss\(/g)).toHaveLength(1);

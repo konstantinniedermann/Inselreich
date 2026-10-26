@@ -13,6 +13,7 @@ import {
   TITHE_TEXT,
   collectTitheLoss,
   newTitheLossState,
+  titheClickChangesState,
   titheConfirmLines,
   titheFlowText,
   titheLockText,
@@ -156,5 +157,16 @@ describe('Strom und Sperre', () => {
     expect(titheLockText(w, 1)).toBe('wieder änderbar in 3:00');
     w.tick += TITHE_SWITCH_LOCK;
     expect(titheLockText(w, 1)).toBe('');
+  });
+});
+
+describe('T05-Fix: aktiver Schalter', () => {
+  it('Klick auf den schon aktiven Knopf ändert nichts', () => {
+    const { w } = town(12, 0);
+    expect(titheClickChangesState(w, 1, false)).toBe(false);
+    expect(titheClickChangesState(w, 1, true)).toBe(true);
+    w.titheOn[1] = true;
+    expect(titheClickChangesState(w, 1, true)).toBe(false);
+    expect(titheClickChangesState(w, 1, false)).toBe(true);
   });
 });

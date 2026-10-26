@@ -134,7 +134,12 @@ import { bindInput, hintKey, strokeEndNotice, type InputAction, type InputBindin
 import { clearForest, plantForest } from '../sim/forest';
 import { setGoodLock, setTaxLevel, setTierTaxLevel, setTithe, setUpgradeStop } from '../sim/tax';
 import { openTitheConfirm } from './titheDialog';
-import { collectTitheLoss, newTitheLossState, titheConfirmLines } from './titheView';
+import {
+  collectTitheLoss,
+  newTitheLossState,
+  titheClickChangesState,
+  titheConfirmLines,
+} from './titheView';
 import { lockedTierFor } from './taxView';
 import { setEdict } from '../sim/edicts';
 import { decree } from '../sim/council';
@@ -900,6 +905,7 @@ function launch(
         },
         setTithe: (tier, on, opener) => {
           if (tier !== 1 && tier !== 2) return;
+          if (!titheClickChangesState(world, tier, on)) return;
           const apply = (value: boolean): void => {
             const r = setTithe(world, tier, value);
             if (!r.ok) showError(friendlyReason(world, r.reason, { tier }));
