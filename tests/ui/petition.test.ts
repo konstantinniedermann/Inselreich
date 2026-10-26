@@ -127,6 +127,14 @@ describe('Chip', () => {
     w.tick = 50 + PETITION_ANSWER - 1030;
     expect(petitionChip(w)).toEqual({ label: 'Bittschrift 1:43', drawnAt: 50 });
   });
+  it('zwei offene Marken: früheste Frist, Zähler (+1)', () => {
+    const w = previewWorld();
+    w.petitions.open.unshift({ id: 'returnees', drawnAt: 80, amount: 0 });
+    w.tick = 50 + PETITION_ANSWER - 1030;
+    expect(petitionChip(w)).toEqual({ label: 'Bittschrift 1:43 (+1)', drawnAt: 50 });
+    w.petitions.open.find((m) => m.drawnAt === 50)!.answer = 'yes';
+    expect(petitionChip(w)).toEqual({ label: 'Bittschrift 1:46', drawnAt: 80 });
+  });
   it('beantwortete oder fehlende Marke ergibt null', () => {
     const w = previewWorld();
     w.petitions.open[0]!.answer = 'no';

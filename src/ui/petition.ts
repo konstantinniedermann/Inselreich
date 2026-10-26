@@ -138,10 +138,14 @@ export function petitionCardModel(world: World, drawnAt: number): PetitionCardMo
   };
 }
 
-/** Kopf-Chip: erste unbeantwortete Marke. */
+/** Kopf-Chip: unbeantwortete Marke mit der frühesten Frist; «(+1)» bei weiteren offenen. */
 export function petitionChip(world: World): { label: string; drawnAt: number } | null {
-  const m = world.petitions.open.find((x) => x.answer === undefined);
+  const open = world.petitions.open
+    .filter((x) => x.answer === undefined)
+    .sort((a, b) => a.drawnAt - b.drawnAt);
+  const m = open[0];
   if (m === undefined) return null;
   const left = m.drawnAt + PETITION_ANSWER - world.tick;
-  return { label: `Bittschrift ${formatClock(left)}`, drawnAt: m.drawnAt };
+  const more = open.length > 1 ? ` (+${open.length - 1})` : '';
+  return { label: `Bittschrift ${formatClock(left)}${more}`, drawnAt: m.drawnAt };
 }

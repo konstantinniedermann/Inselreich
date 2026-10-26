@@ -1756,9 +1756,12 @@ function launch(
         for (const e of reports.flatMap((r) => r.petitions)) {
           if (e.kind === 'drawn') {
             showMessage(`Bittschrift: ${PETITIONS[e.id].name}`, 'info', true, true);
-            trialCard.setOpen(false);
-            councilCard.setOpen(false);
-            petitionCard.show(e.drawnAt);
+            // Eine gerade gezeigte Karte bleibt; weitere Marken zeigt der Chip-Zähler.
+            if (!petitionCard.isOpen) {
+              trialCard.setOpen(false);
+              councilCard.setOpen(false);
+              petitionCard.show(e.drawnAt);
+            }
           } else if (e.kind === 'timeout') showMessage('Keine Antwort: abgelehnt', 'info');
         }
         for (const text of lossMessages(reports)) showMessage(text, 'warn');
