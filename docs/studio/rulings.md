@@ -3354,3 +3354,18 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle Messpake
 Regelbezug: R190, R816, R971, R984 · Kosten bei Irrtum: zwei passive Messgrössen.
 
 Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —
+
+## R1005 · 2026-10-26 · Auslegung „kleine Session: Merge und ein paar kleinere Themen“
+
+Ruling: Auslegung „mach den merge“ als **Fortsetzung Punkt 1** aus `state.md`: Bündel `integrate/rel-35` ab main mit `feat/hafen` @ `66587556`, `design/neue-ufer` @ `00e17e3f`, `plan/nu1-kartenrand` @ `46d3ade8`,
+`design/pool-b3` @ `ebd291c1`, `docs/retro-b73acd32` @ `cb797aa8`, dann `make push-check`; bei Exit 0 main vorspulen. **Push frühestens 2026-10-27** (REL-33 ging heute live, R816), auf genau dem geprüften Hash. „Ein paar
+kleinere Themen“ als testfreie Punkte aus Fortsetzung 5: (a) `studio-coach` E-066/E-080/E-082/E-083 und Briefing-Zeile E-082 (R1004); (b) `lead-design` Spec-Nachtrag I-210 (R999) und AUSBAU-LOGIK Unterhalt je Minute
+(R998); (c) `lead-production` HAUSHALT-Rest (Mess-Worktrees `i210-t15main`, `i210-base` ohne `--force`; Archiv I-200). Keine Umsetzer und Controller, solange der Push ansteht (R464); Gate Merge I-223/I-210 und
+Umsetzung NU-1/I-215/I-214 bleiben für die nächste Session. Alle testfreien Arbeiten auf eigenen Branches, nie auf main während des push-check (HEAD-Wechsel = Exit 1). „Kleine Session“: 4 Agenten statt Deckel 10 (Nutzerwunsch geht R826 vor, nur diese Session).
+
+Zweck der Anweisung: offenen Merge abschliessen und Kleinkram abbauen, ohne grosse neue Wellen; Auslegung widerspricht ihm nicht, weil nur bereits freigegebene Branches gebündelt und nur testfreie Kleinpakete gestartet werden.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN, NU-1, I-210, AUSBAU-LOGIK (nur Doku)
+Regelbezug: R464, R816, R826, R994, R998, R999, R1004 · Kosten bei Irrtum: ein verschobener Push oder ein zusätzlicher Bündellauf.
+
+Entscheider: L0 · Anlass: Nutzerauftrag Session-Start · ADR: —
