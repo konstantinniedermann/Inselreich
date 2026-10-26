@@ -4,7 +4,7 @@ Stand 2026-10-25 · Paket `design-i210` · Stufe voll · Grundlage: [I-210](../.
 [`2026-10-25-i210-bittschrift-rechnung.md`](2026-10-25-i210-bittschrift-rechnung.md) («Rechnung §n», Zahlen übernommen,
 nicht neu gerechnet) · R899 (H3 + H4, B10 gestrichen; F1 ja; R-B ja) · R896 (0) · Nachtrag Gate Spec R904 · Anhänge
 [01 Lagen](2026-10-25-i210-bittschrift-design/anhang-01-lagen.md), [02 Plan-Auflagen](2026-10-25-i210-bittschrift-design/anhang-02-plan-auflagen.md),
-[03 Messlauf](2026-10-25-i210-bittschrift-design/anhang-03-messlauf.md), [04 Save](2026-10-25-i210-bittschrift-design/anhang-04-save.md), [05 Anzeige](2026-10-25-i210-bittschrift-design/anhang-05-anzeige.md).
+[03 Messlauf](2026-10-25-i210-bittschrift-design/anhang-03-messlauf.md), [04 Save](2026-10-25-i210-bittschrift-design/anhang-04-save.md), [05 Anzeige](2026-10-25-i210-bittschrift-design/anhang-05-anzeige.md), [06 Nachtrag R999](2026-10-25-i210-bittschrift-design/anhang-06-nachtrag-r999.md).
 Übernommen ist nur die Genre-Mechanik «Ereigniskarte mit zwei Antworten, Nachspiel verzögert» (ADR-006).
 
 ## 1 Spielerzweck (ein Satz)
@@ -329,6 +329,9 @@ Regel jeweils in §3, Zahlen aus Rechnung §8:
   Frage nach Release («Sagt eine vorbereitete Stadt noch je Nein?»). **Rückfall:** `OVERCROWD_PCT` löst es nicht (höherer
   Zuzug macht vorbereitetes «Ja» noch stärker); nur ein steigender Zukaufpreis macht den Puffer selbst knapp. Anschluss an
   die laufende L0-Rechnung «Zukaufpreis steigt» (`BUY_RISE`, R899). Kein neuer Wert in dieser Spec.
+- **R-BS-5 Eine knappe Kette macht «Ja» nicht falsch** (B3: 220 je Glas); «Nein» ist besser ab zwei schlanken Ketten.
+  **R-BS-6 B9 wirkt nur gegen Stürme nach der Genügsamkeitsfrist oder durch Verkauf vor Ablauf.** Text und AK-BS-26 bis
+  AK-BS-29: [Anhang 06](2026-10-25-i210-bittschrift-design/anhang-06-nachtrag-r999.md) (R999).
 
 ## 11 Nicht im Scope
 
