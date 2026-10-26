@@ -25,15 +25,10 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return e;
 }
 
-function column(
-  title: string,
-  rows: { cls: string; text: string }[],
-  action: HTMLElement,
-): HTMLElement {
+function column(title: string, rows: { cls: string; text: string }[]): HTMLElement {
   const col = el('div', 'petition-col');
   col.append(el('h3', '', title));
   for (const r of rows) if (r.text !== '') col.append(el('p', r.cls, r.text));
-  col.append(action);
   return col;
 }
 
@@ -61,7 +56,8 @@ export function createPetitionCard(
       onClose();
     });
     head.append(el('h2', '', m.title), close);
-    root.append(head, el('p', 'petition-text', m.text), el('p', 'petition-deadline', m.deadline));
+    const body = el('div', 'petition-body');
+    body.append(el('p', 'petition-text', m.text), el('p', 'petition-deadline', m.deadline));
     const grid = el('div', 'petition-grid');
     let yesAction: HTMLElement;
     if (m.yes.blocked === null) {
@@ -88,27 +84,23 @@ export function createPetitionCard(
       onAnswer(drawnAt, 'no');
     });
     grid.append(
-      column(
-        'Ja',
-        [
-          { cls: 'petition-cost', text: `Kosten: ${m.yes.cost}` },
-          { cls: 'petition-reward', text: `Lohn: ${m.yes.reward}` },
-          ...m.yes.lines.map((text) => ({ cls: 'petition-line', text })),
-        ],
-        yesAction,
-      ),
-      column(
-        'Nein',
-        [
-          { cls: 'petition-effect', text: `Folge: ${m.no.effect}` },
-          { cls: 'petition-near', text: m.no.nearFull ?? '' },
-          { cls: 'petition-line', text: m.no.why },
-          { cls: 'petition-tail', text: m.no.tail },
-        ],
-        no,
-      ),
+      column('Ja', [
+        { cls: 'petition-cost', text: `Kosten: ${m.yes.cost}` },
+        { cls: 'petition-reward', text: `Lohn: ${m.yes.reward}` },
+        ...m.yes.lines.map((text) => ({ cls: 'petition-line', text })),
+      ]),
+      column('Nein', [
+        { cls: 'petition-effect', text: `Folge: ${m.no.effect}` },
+        { cls: 'petition-near', text: m.no.nearFull ?? '' },
+        { cls: 'petition-line', text: m.no.why },
+        { cls: 'petition-tail', text: m.no.tail },
+      ]),
     );
-    root.append(grid);
+    // Knopfleiste ausserhalb des scrollenden Inhalts: «Ja» und «Nein» bleiben ohne Scrollen sichtbar.
+    const actions = el('div', 'petition-actions');
+    actions.append(yesAction, no);
+    body.append(grid);
+    root.append(head, body, actions);
   };
 
   const close = (): void => {
