@@ -1006,7 +1006,8 @@ function isValidPetitionMark(m: unknown, tick: number): boolean {
 
 function isValidPetitionEffect(e: unknown, tick: number): boolean {
   if (!isObject(e) || !isPetitionId(e.id) || !isAnswer(e.answer)) return false;
-  if (e.anchor !== undefined && !Number.isInteger(e.anchor)) return false;
+  if (e.anchor !== undefined && (PETITIONS[e.id].anchor === null || !Number.isInteger(e.anchor)))
+    return false;
   const span = e.answer === 'yes' ? PETITIONS[e.id].duration : FRUGAL_TICKS;
   return (
     Number.isInteger(e.until) && tick < (e.until as number) && (e.until as number) <= tick + span

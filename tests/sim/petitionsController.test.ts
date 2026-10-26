@@ -3,6 +3,11 @@ import { createWorld } from '../../src/sim/world';
 import { startColony } from './controller';
 import { MERCHANT_TICK_LIMIT, newMerchantTrajectory, runMerchants } from './merchantsController';
 
+/**
+ * Belegt: Ziel 2 wird erreicht, obwohl nach Ziel 1 Marken gezogen werden und unbeantwortet verfallen (Marken entstehen
+ * erst nach Ziel 1, `tickPetitions` setzt `next` erst bei `won`). Belegt nicht: Wirkung von «Ja»-Antworten und
+ * den Tempo-Pin; der Controller antwortet nie.
+ */
 describe('AK-BS-17 Controller mit Bittschriften', () => {
   it('zweites Ziel trotz unbeantworteter Marken; mindestens eine Marke wurde gezogen', () => {
     const w = createWorld(3, { petitionsOn: true });

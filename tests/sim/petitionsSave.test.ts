@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { PETITION_ANSWER } from '../../src/sim/defs/petitions';
+import {
+  FRUGAL_TICKS,
+  PETITIONS,
+  PETITION_ANSWER,
+  PETITION_IDS,
+} from '../../src/sim/defs/petitions';
 import { home } from '../../src/sim/world';
 import { createWorld } from '../../src/sim/world';
 import { tickPetitions } from '../../src/sim/petitions';
@@ -115,6 +120,54 @@ describe('AK-BS-15 Abweisung', () => {
     raw.version = SAVE_VERSION + 1;
     expect(deserialize(JSON.stringify(raw))).toEqual({ ok: false, reason: 'Unbekannte Version' });
   });
+});
+
+const MAX_DELAY = Math.max(...PETITION_IDS.map((id) => PETITIONS[id].delay));
+const mutate = (edit: (raw: Record<string, unknown>) => void) => {
+  const raw = JSON.parse(serialize(busyWorld())) as Record<string, unknown>;
+  edit(raw);
+  return deserialize(JSON.stringify(raw)).ok;
+};
+const pet = (raw: Record<string, unknown>): RawSave['petitions'] =>
+  (raw as unknown as RawSave).petitions;
+
+describe('AK-BS-15 Abweisung: Ränder und Formen', () => {
+  const bad: [string, (raw: Record<string, unknown>) => void][] = [
+    ['petitions null', (r) => (r.petitions = null)],
+    ['petitions Text', (r) => (r.petitions = 'x')],
+    ['Marke als Text', (r) => (pet(r).open[1] = 'x' as unknown as Record<string, unknown>)],
+    [
+      'drawnAt knapp zu alt',
+      (r) => (pet(r).open[0]!.drawnAt = TICK - PETITION_ANSWER - MAX_DELAY - 1),
+    ],
+    ['dueTick gleich tick', (r) => (pet(r).open[0]!.dueTick = TICK)],
+    ['dueTick über tick + Verzögerung', (r) => (pet(r).open[0]!.dueTick = TICK + MAX_DELAY + 1)],
+    [
+      'until bei Nein über FRUGAL_TICKS',
+      (r) => (pet(r).effects[1]!.until = TICK + FRUGAL_TICKS + 1),
+    ],
+    ['Anker an Marke ohne Anker', (r) => (pet(r).open[0]!.anchor = 1)],
+    ['Anker an Wirkung ohne Anker', (r) => (pet(r).effects[0]!.anchor = 1)],
+    [
+      'zu viele Wirkungen',
+      (r) =>
+        (pet(r).effects = Array.from(
+          { length: 2 * PETITION_IDS.length + 1 },
+          () => pet(r).effects[0]!,
+        )),
+    ],
+  ];
+  it.each(bad)('%s', (_name, edit) => expect(mutate(edit)).toBe(false));
+
+  const good: [string, (raw: Record<string, unknown>) => void][] = [
+    [
+      'drawnAt genau am Rand',
+      (r) => (pet(r).open[0]!.drawnAt = TICK - PETITION_ANSWER - MAX_DELAY),
+    ],
+    ['dueTick genau tick + Verzögerung', (r) => (pet(r).open[0]!.dueTick = TICK + MAX_DELAY)],
+    ['until bei Nein genau FRUGAL_TICKS', (r) => (pet(r).effects[1]!.until = TICK + FRUGAL_TICKS)],
+  ];
+  it.each(good)('gültig: %s', (_name, edit) => expect(mutate(edit)).toBe(true));
 });
 
 describe('AK-BS-03 Save mitten in der Frist', () => {
