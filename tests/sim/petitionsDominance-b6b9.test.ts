@@ -44,6 +44,9 @@ describe.each(PETITION_SEEDS)('AK-BS-04 B6-B9, Seed %i', (seed) => {
           expect(res[lage]![a].incident, `${lage}/${a} incident`).toBe(false);
         }
     });
+    it('Vorbedingung: Häuser der Ja-Lage beim Nachspiel versorgt', () => {
+      expect(res.yes!.yes.shortage).toEqual([]);
+    });
     if (id === 'spiceSeed')
       it('Vorbedingung B6: im Fenster kommt eine zusätzliche Ladung in der Heimat an', () => {
         expect(res.yes!.yes.probe).toBeGreaterThan(0);
