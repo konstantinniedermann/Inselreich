@@ -14,9 +14,19 @@ import { formatClock, formatGameTime } from './time';
 
 const name = (g: GoodId): string => GOODS[g].name;
 
+/** Bei mehreren passenden Wirkungen zählt die mit dem grössten `until` (bei Gleichstand die erste). */
+function latest(list: readonly PetitionEffectEntry[]): PetitionEffectEntry | undefined {
+  return list.reduce<PetitionEffectEntry | undefined>(
+    (best, x) => (best === undefined || x.until > best.until ? x : best),
+    undefined,
+  );
+}
+
 function effectUntil(world: World, e: PetitionEvent): number | null {
-  const hit = world.petitions.effects.find(
-    (x) => x.id === e.id && x.answer === 'yes' && x.until > e.drawnAt,
+  const hit = latest(
+    world.petitions.effects.filter(
+      (x) => x.id === e.id && x.answer === 'yes' && x.until > e.drawnAt,
+    ),
   );
   return hit?.until ?? null;
 }
@@ -97,11 +107,13 @@ export function effectLines(world: World, b: Building): string[] {
     const base = houseCap(world, b.house);
     const eff = overcrowdCapOf(world, b);
     if (eff > base) {
-      const e = list.find(
-        (x) =>
-          x.answer === 'yes' &&
-          PETITIONS[x.id].reward.kind === 'overcrowd' &&
-          (PETITIONS[x.id].reward as { tiers: readonly number[] }).tiers.includes(b.house!.tier),
+      const e = latest(
+        list.filter(
+          (x) =>
+            x.answer === 'yes' &&
+            PETITIONS[x.id].reward.kind === 'overcrowd' &&
+            (PETITIONS[x.id].reward as { tiers: readonly number[] }).tiers.includes(b.house!.tier),
+        ),
       );
       if (e !== undefined)
         out.push(
@@ -109,8 +121,8 @@ export function effectLines(world: World, b: Building): string[] {
         );
     }
     if (bellActive(world, b)) {
-      const bell = list.find(
-        (x) => x.answer === 'yes' && PETITIONS[x.id].reward.kind === 'upgradeWait',
+      const bell = latest(
+        list.filter((x) => x.answer === 'yes' && PETITIONS[x.id].reward.kind === 'upgradeWait'),
       );
       if (bell !== undefined) out.push(`Glockenweihe bis ${formatClock(bell.until)}`);
     }
@@ -121,21 +133,25 @@ export function effectLines(world: World, b: Building): string[] {
         out.push(`Genügsam: ${name(g)}bedarf −${FRUGAL_PCT} % bis ${formatClock(e.until)}`);
     }
   }
-  const e = list.find((x) => {
-    const r = PETITIONS[x.id].reward;
-    return (
-      x.answer === 'yes' &&
-      r.kind === 'cycle' &&
-      r.building === b.defId &&
-      (!r.homeOnly || b.island === HOME)
-    );
-  });
+  const e = latest(
+    list.filter((x) => {
+      const r = PETITIONS[x.id].reward;
+      return (
+        x.answer === 'yes' &&
+        r.kind === 'cycle' &&
+        r.building === b.defId &&
+        (!r.homeOnly || b.island === HOME)
+      );
+    }),
+  );
   if (e !== undefined) {
     const pct = cyclePct(world, b);
     if (pct < 100) out.push(`Bittschrift: Zyklus ${pct} % bis ${formatClock(e.until)}`);
   }
   if (b.defId === 'kontor' && b.island === HOME) {
-    const s = list.find((x) => x.answer === 'yes' && PETITIONS[x.id].reward.kind === 'storage');
+    const s = latest(
+      list.filter((x) => x.answer === 'yes' && PETITIONS[x.id].reward.kind === 'storage'),
+    );
     if (s !== undefined) {
       const goods = Object.keys(GOODS) as GoodId[];
       const cap = Math.max(...goods.map((g) => storageCapOf(world, g)));

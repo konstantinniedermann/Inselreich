@@ -112,6 +112,29 @@ describe('Panel', () => {
   });
 });
 
+describe('mehrere passende Wirkungen: die mit dem grössten until', () => {
+  it('Panel: zwei Überbelegungen für Stufe 3, die längere zählt', () => {
+    const { w, houses } = village(1);
+    setHouse(houses[0]!, 3, 17);
+    w.tick = 10;
+    w.petitions.effects.push({ id: 'weavers', answer: 'yes', until: UNTIL + 5000 });
+    w.petitions.effects.push({ id: 'tavern', answer: 'yes', until: UNTIL });
+    const lines = effectLines(w, houses[0]!);
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain(`Weberfamilien bis ${formatClock(UNTIL + 5000)}`);
+    w.petitions.effects.reverse();
+    expect(effectLines(w, houses[0]!)[0]).toContain(`bis ${formatClock(UNTIL + 5000)}`);
+  });
+  it('Dank: zwei Wirkungen derselben Bitte, die längere zählt', () => {
+    const { w } = village(1);
+    w.tick = 100;
+    w.petitions.effects.push({ id: 'weavers', answer: 'yes', until: UNTIL });
+    w.petitions.effects.push({ id: 'weavers', answer: 'yes', until: UNTIL + 5000 });
+    const out = petitionLogEntries([{ kind: 'thanks', id: 'weavers', drawnAt: 90 }], w);
+    expect(out[0]!.text).toContain(`bis ${formatClock(UNTIL + 5000)}`);
+  });
+});
+
 describe('Chip', () => {
   it('zwei Wirkungen: Zahl und kürzere Restzeit; keine: null', () => {
     const { w } = village(1);
