@@ -774,6 +774,7 @@ describe('AK-BS-18 Kartenvorschau', () => {
   it('Stoff 5: yesBlock wie answerPetition', () => {
     const w = previewWorld();
     home(w).stock.cloth = 5;
+    w.petitions.on = true;
     const pv = petitionPreview(w, 50)!;
     expect(pv.yesBlock).toBe('Zu wenig Stoff (5 / 10)');
     const r = answerPetition(w, 50, 'yes');
@@ -801,5 +802,15 @@ describe('AK-BS-18 Kartenvorschau', () => {
     expect(pv.spiceRoute).not.toBeNull();
     expect(pv.spiceRoute!.ships).toBe(0);
     expect(pv.producers!.count).toBe(1);
+  });
+  it('B6 mit Plantage auf Insel 1: Fremdbestand der Plantageninsel', () => {
+    const w = twoIslandWorld();
+    const k = w.buildings[w.islands[1]!.kontorId!]!;
+    const farm = putBuilding(w, 1, 'spicefarm', k.x + 2, k.y);
+    w.islands[1]!.stock.spice = 7;
+    w.petitions.open = [{ id: 'spiceSeed', drawnAt: 0, amount: 0, anchor: farm.id }];
+    const pv = petitionPreview(w, 0)!;
+    expect(pv.spiceRoute).toEqual({ foreignStock: 7, ships: 0 });
+    expect(pv.producers!.input!.stock).toBe(7);
   });
 });

@@ -192,7 +192,7 @@ export function answerPetition(world: World, drawnAt: number, answer: string): R
   for (const [g, n] of Object.entries(petitionCost(world, m)) as [GoodId, number][])
     stockOf(world)[g] -= n;
   m.answer = 'yes';
-  m.dueTick = world.tick + def.delay;
+  m.dueTick = world.tick + PETITIONS[m.id].delay;
   return ok;
 }
 
