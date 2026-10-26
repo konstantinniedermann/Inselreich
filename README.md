@@ -217,7 +217,7 @@ Tooltips von 2× und 4× sagen, wie viel schneller die Spielzeit läuft.
 - **Frist:** Du hast 2 min Zeit; ohne Antwort gilt «Nein». Die Frist läuft in der Pause nicht weiter.
 - **Glockenweihe und Festtrunk:** Die Glockenweihe verkürzt im Kreis der Kapelle die Aufstiegsuhr auf 150 T (Haus-Panel: «Glockenweihe bis …»). Der Festtrunk lässt das nächste Fest an der Kapelle ohne Rum und ohne Abklingzeit zu (Festknöpfe: «Festtrunk: ohne Rum, ohne Abklingzeit»).
 - **Laufende Wirkungen** zeigt der Chip der Kopfzeile; die Gebäude-Panels nennen ihre Zeile.
-- **Ein- und ausschalten:** Beim Start und bei «Neue Insel» gibt es das Kästchen «Bittschriften» (Vorbelegung an). Proben und ältere Spielstände laufen ohne Bittschriften.
+- **Ein- und ausschalten:** Das Kästchen «Bittschriften» (Vorbelegung an) steht nur im Dialog «Neue Insel». Ältere Spielstände laufen ohne Bittschriften.
 
 ### Rat
 
