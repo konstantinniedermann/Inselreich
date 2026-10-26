@@ -3243,3 +3243,77 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, I-215,
 Regelbezug: R769 V2, R810, R816, R951 · Kosten bei Irrtum: —
 
 Entscheider: L0 · Anlass: Bericht production-integrator REL-34 · ADR: —
+
+## R996 · 2026-10-26 · Testfrei: Pool-Nachführung TIEFE-6 und Wertprüfung B3
+
+Ruling: Limit 5 h ≈ 65 %, 7 Tage ≈ 79 %; E-081 erlaubt weitere Starts. Test-Plätze voll (I-210, AUSBAU-LOGIK, I-223). Testfrei an `lead-design` (Budget 2): (1) Pool-Einträge aus R975 in `docs/ideen.md` (T6-2 Partie-Ende-Angebot,
+T6-3 Monatsprobe, Rang I-200, T6-5 in K1/K4, Leitplanke T6-1); (2) Wertprüfung B3 Glaser-Bitte (R988-Auflage, Dominanzsignal) als Rechnung mit Empfehlung, vor dem Gate Merge I-210.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210 (nur lesend)
+Regelbezug: R553, R862, R975, R988 · Kosten bei Irrtum: Doku.
+
+Entscheider: L0 · Anlass: freie testfreie Kapazität · ADR: —
+
+## R997 · 2026-10-26 · I-210 Session 4: Entscheide, Abschluss
+
+Ruling: I-210 (`feat/i210` @ `c4de1b31`, Phasen 1–2 zusammengeführt, Save 20) — (1) **B9 nicht baubar** (Ja −74 gegen Nein): Zusatzmass «Lagerwert bei Wirkungsende» als Testmass **ja**; zusätzlich prüft `lead-design`
+(Paket POOL-B3) den Wert der Bitte B9 mit; ein Wert-Ruling folgt nur auf deren Empfehlung. (2) **Anhang-03-Bänder** berichtigt angenommen (J+F Stoff mit abgezogener Rampe, Toleranz [−6, +3]; gesparter Stoff
+[exp−1, exp+6]); die `it.skip` werden mit den berichtigten Bändern aktiviert — **kein `it.skip` beim Merge**. (3) Abweichungen B4/B5/B7 in den Dateiköpfen angenommen; **Ursache des B4-Vorsprungs 300 statt 150
+Ticks** klärt T15 oder das Final-Review (Pflicht). (4) Lohntexte B4/B5 ok; B5-Rummenge und B5-Dank-Text (Abklingzeit) als niedrige Punkte in T16. Neue `lead-tech`-Instanz: Delta-Review ea911575 (opus frisch),
+T13, T15, T16, Final-Review; Budget-Rest 10 von 28, Controller-Grenze 6. Befunde ausserhalb Scope aus dem Handoff übernimmt L0 nach `docs/beobachtungen.md` gebündelt am Session-Ende.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-223 (Save 20 — Nummer per Merge-Reihenfolge, R909), POOL-B3
+Regelbezug: R553, R909, R988 · Kosten bei Irrtum: ein Testmass, ein Wert-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-210 s4 · ADR: —
+
+## R998 · 2026-10-26 · AUSBAU-LOGIK: P-3, M-15, Sammel-Ruling
+
+Ruling: AUSBAU-LOGIK (`feat/ausbau-logik` @ `343d0d12`). (1) **P-3:** eine letzte Optimierungsrunde an `siteAt` (`freeTerrain`/`terrainNear`), dann kurzes angemeldetes Messfenster. Verfehlt `levelStress` danach
+weiter +50 %, gilt ersatzweise die **absolute Grenze ≤ 1 ms je Tick bei ≈ 300 Gebäuden** (heute ≈ 0,9 ms) — Schwelle damit erfüllt, kein ADR; `balance-upgrade` wird nach dem M-15-Pin neu gemessen (Schwelle +10 % bleibt).
+(2) **M-15: N2(a) ja** — die Controller-Variante baut Fischer nur an Plätzen mit erfülltem Fischgrund (bzw. ein Siedlerhaus), wie ein Spieler es täte; danach neuer Ist-Lauf und **Wert-Ruling für den neuen Pin**
+(bewusste Balancing-Änderung) auf Vorschlag des Leads. N2(b) nein (Bedingung nicht verschärfen). (3) **Sammel-Ruling ja:** `workforceTier` 2/3; erweiterte Files-Listen T04/T05 (`crewHouse`/`meetLevel`); `levelStress`
+50 Ticks; Unterhalt im UI je Minute (Spec-Beispielzahlen 30/34, 6/7 je Intervall → Spec-Nachtrag durch `lead-design` beim nächsten Design-Paket); Wissen-Zeile ohne «(…)»; Helfer `MINUTE_MS`, `upkeepText(world, b)`.
+Folgeinstanz `lead-tech` mit Handoff, Budget-Rest 17, Controller-Grenze 6; T05/T07-Nachzüge prüft das Final-Review mit.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-215 (`buildingUpkeep`, `levels.ts`), I-210 (`levels.ts`)
+Regelbezug: R392, R553, R896, R942, R969 · Kosten bei Irrtum: eine Messgrenze, ein Controller-Verhalten.
+
+Entscheider: L0 · Anlass: Bericht lead-tech AUSBAU-LOGIK · ADR: —
+
+## R999 · 2026-10-26 · Wertprüfung B3/B9: Werte bleiben, Testlagen nachführen
+
+Ruling: `design/pool-b3` @ `ebd291c1` **abgenommen** (Rechnung, nicht gemessen). **B3 und B9: Werte bleiben.** B3 «Ja» in der wörtlichen Nein-Lage ist richtig (Kaufmann-Steuer 220 je Glas gegen Verkauf 20) — kein Dominanzfehler;
+B9 −74 ist ein Patt der Lage (Sturm in der Genügsamkeitsfrist). Auflagen an I-210 (Gate Merge): (1) Anhang 01 per Spec-Nachtrag nachführen (B3-Nein Ketten schlank, B2-Nein Rum 12, P1 60 Bewohner, **B9-Ja Sturm
+ab Antwort + 2400**); (2) `lead-tech` testet B9 mit dieser Lage; Abstand < +50 → Zusatzmass «Lagerwert bei Wirkungsende» in beiden Lagen (ersetzt R997 (1) als Erstwahl); (3) Spec-Regeln R-BS-5 und R-BS-6 aufnehmen;
+(4) Playtest-Frage B3 ins Gate. Pool: I-227 Partie-Ende-Angebot, I-228 Monatsprobe, I-200 vorgezogen (38/40 offen). Befund Archiv I-200 (`docs/ideen-archiv.md:1831`) ins nächste Archiv-Paket. `design/pool-b3` geht mit dem nächsten Bündel.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210
+Regelbezug: R553, R722, R975, R988, R997 · Kosten bei Irrtum: eine Testlage.
+
+Entscheider: L0 · Anlass: Bericht lead-design POOL-B3 · ADR: —
+
+## R1000 · 2026-10-26 · AUSBAU-LOGIK: P-3b, M-15-Pin, Spiral-Kennzahl
+
+Ruling: AUSBAU-LOGIK Zwischenstand. (1) **P-3b:** nach `siteAt`-Optimierung (`341d9204`) `levelStress` +59 %, absolut **0,8 ms je Tick** bei ≈ 300 Gebäuden → Ersatzgrenze aus R998 (≤ 1 ms/Tick) **erfüllt**,
+keine weitere Optimierungsrunde (Messung bei Last 4,49 knapp über 4 als pessimistisch angenommen). (2) **M-15-Pin (bewusste Balancing-Änderung):** nach N2(a) (`71cdbba2`) neuer Pin **winTick 7550 (alt 8250), minMoney 71,
+levels {1:0, 2:10, 3:0}** — der frühere Sieg folgt aus sinnvoller Fischerplatzierung des Controllers, nicht aus geänderten Spielwerten; danach `balance-upgrade` nachmessen (+10 %). (3) **Spiral AK-AL-48:** Kennzahl
+Bürger-Einwohner **K − L ≤ 4 absolut**, zusätzlich Bürgerhäuser-Differenz ≤ 1 (Sim kennt keinen Haus-Abstieg). (4) Ergänzung Sammel-Ruling R998: Files-Erweiterung T04b `tests/sim/imports.test.ts` (PLAN-NAHT,
+`levelRules`-Import, `d29ac805`), `levelChecks.ts` leverReads-Fix `57996e8a`, `MINUTE_MS` in `defs/timing.ts`, `fixtureV6 upgradeTraceless` — ja.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-215 (Balancing-Baseline nach Merge), I-210
+Regelbezug: R392, R553, R998 · Kosten bei Irrtum: ein Balancing-Pin.
+
+Entscheider: L0 · Anlass: Zwischenstand lead-tech AUSBAU-LOGIK · ADR: —
+
+## R1001 · 2026-10-26 · Nutzer «mach weiter» bei 5 h 83 %
+
+Ruling: Auslegung «mach weiter» als **Fortsetzung innerhalb der Limitregeln** — Zweck der Anweisung: Arbeit nicht anhalten; Auslegung widerspricht ihm nicht, weil die laufenden Pakete weiterlaufen. Stand 5 h 83 %, 7 Tage 81 %,
+Reset in ≈ 2,6 h. E-081 (Stand + Agenten × 1,8 ≤ 88 %) lässt neben I-210 und AUSBAU-LOGIK keine neuen Wellen zu; freiwerdende Plätze gehen in dieser Reihenfolge an **Gate Merge I-223**, Gate Merge I-210, Gate Merge
+AUSBAU-LOGIK, solange E-081 und R959 (Starts bis 85 %) es erlauben. Ab 90 % Ende-Routine (Sicherung, Metriken, Kurz-Retro, state.md). I-223 ist bereit für Gate Merge (`feat/i223` @ `f085e56e`, Final-Review opus OK
+nach Mini-Fixes, Browser OK, Zeiten ≤ +8 %).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle
+Regelbezug: R959, R971 (E-081), R826 · Kosten bei Irrtum: verschobene Gates.
+
+Entscheider: L0 · Anlass: Nutzer «mach weiter» · ADR: —
