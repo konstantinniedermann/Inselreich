@@ -1,5 +1,4 @@
 import { serviceRadiusOf } from './council';
-import { BUILDING_DEFS } from './defs/buildings';
 import { GOODS } from './defs/goods';
 import { LEVELS, WORKFORCE_RADIUS, type LevelDef } from './defs/levels';
 import { MINUTE_MS, TICK_MS, UPKEEP_INTERVAL } from './defs/timing';
@@ -81,7 +80,7 @@ function workforceLine(world: World, b: Building, level: number): LevelCheck {
 }
 
 function stationText(world: World, b: Building, info: SiteInfo): string {
-  const r = serviceRadiusOf(world, 'firestation') ?? BUILDING_DEFS.firestation.serviceRadius ?? 0;
+  const r = serviceRadiusOf(world, 'firestation') ?? 0;
   if (world.crisisLevel === 'off') return 'Feuerwache: nicht nötig (Krisen aus)';
   return info.ok
     ? `Feuerwache in Reichweite ${r}`
