@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buy, buyPrice } from '../../src/sim/trade';
 import { upgradeBuilding } from '../../src/sim/upgrade';
 import { LEVELS } from '../../src/sim/defs/levels';
+import { siteAt, workforceAt } from '../../src/sim/levelRules';
 import { functionLock } from '../../src/sim/unlocks';
 import type { World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
@@ -17,6 +18,8 @@ function upgradeFishers(w: World): void {
   for (const b of Object.values(w.buildings)) {
     if (b.defId !== 'fisher' || b.level === 3) continue;
     const lv = b.level ?? 1;
+    if (siteAt(w, b, lv + 1)?.ok === false) continue; // Fischgrund nicht erfüllt: der Bot baut dort nicht aus
+    if (!workforceAt(w, b, lv + 1).ok) continue; // keine Fachkräfte im Arbeitsweg
     if (functionLock(w, lv === 1 ? 'upgrade2' : 'upgrade3') !== null) continue;
     const next = LEVELS.fisher![lv - 1]!;
     const missing = Math.max(0, next.cost.tools - home(w).stock.tools);
@@ -32,7 +35,7 @@ function upgradeFishers(w: World): void {
 function variant(): Trajectory & { levels: Record<1 | 2 | 3, number> } {
   const w = createWorld(3); // Krisen aus, Seed 3
   const { layout, t } = startColony(w);
-  runColony(w, layout, t, {}, (x) => {
+  runColony(w, layout, t, { spacedFishers: true }, (x) => {
     upgradeFishers(x);
     return false;
   });
