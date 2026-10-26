@@ -5,7 +5,7 @@ lead-design (freigegeben) · Diagnose: Handoff `.studio/handoffs/2026-10-25-lead
 [anhang-01-rechnung.md](2026-10-25-hafen-design/anhang-01-rechnung.md) · Optik:
 [anhang-02-optik.md](2026-10-25-hafen-design/anhang-02-optik.md) · Stand Code main `70a32032` (Save v18 damals), Seerecht aus
 `feat/seerecht` (Save v19, nicht gemergt). Alle Zahlen stammen aus dem Designvorschlag oder Anhang 01; Schätzungen sind
-markiert.
+markiert. Plan: docs/superpowers/plans/2026-10-25-hafen.md; R25, AK-HF-38 und AK-HF-52 gelten im Wortlaut R943, siehe Plan-Nachtrag `2026-10-25-hafen/N-nachtrag-r945.md` §2.
 
 ## 1 Spielerzweck (ein Satz) und Säule
 
