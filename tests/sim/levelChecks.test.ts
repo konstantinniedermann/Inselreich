@@ -288,6 +288,14 @@ describe('Chip und Tooltip', () => {
       'Läuft wie Stufe 2: Keine Meister im Umkreis 8 (Bürgerhaus nötig, nächstes 11 Felder)',
     );
   });
+  it('nur niedrigeres Haus: Chip nennt «kein Bürgerhaus auf dieser Insel»', () => {
+    const w = emptyWorld();
+    const f = shop(w, 'fisher', 20, 20, 3);
+    houseAt(w, 26, 20, 2);
+    expect(levelChipText(w, f)).toBe(
+      'Läuft wie Stufe 2: Keine Meister im Umkreis 8 (kein Bürgerhaus auf dieser Insel)',
+    );
+  });
   it('kein Chip bei k = g, paused oder brennend', () => {
     const { w, f } = chipWelt();
     houseAt(w, 24, 21, 3);

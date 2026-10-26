@@ -15,6 +15,15 @@ import { islandOf } from './world';
 export type LevelCheckId =
   'knowledge' | 'burning' | 'workforce' | 'site' | 'money' | 'wood' | 'tools' | 'stone' | 'extra';
 
+/**
+ * Richtung von ok/have/need je Zeile:
+ * Geld und Baustoffe (money, wood, tools, stone, extra): ok = have >= need (Kasse bzw. Lager gegen Preis).
+ * Fachkräfte: have = Abstand des nächsten passenden Hauses (0 ohne eines), need = Arbeitsweg; ok = have <= need, ohne Haus ✗.
+ * Standort Gelände (Wald, Gras, Fels): ok = have >= need (gezählte Kacheln gegen Mindestzahl).
+ * Standort Fischgrund: ok = have <= need (andere Hütten gegen erlaubte Zahl).
+ * Standort Feuerwache: have 1 mit Wache, sonst 0; need 1, bei Krisen aus 0.
+ * Wissen: have/need 1 oder 0; Brand: immer ✗, 0 / 0.
+ */
 export interface LevelCheck {
   id: LevelCheckId;
   ok: boolean;
