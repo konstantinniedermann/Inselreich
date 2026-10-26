@@ -58,6 +58,40 @@ describe('AK-BS-15 Rundlauf', () => {
   });
 });
 
+/** B4 und B5 tragen eine Ankerkapelle (`anchor`) in Marke und Wirkung. */
+function anchoredWorld(): World {
+  const w = createWorld(3, { petitionsOn: true });
+  w.tick = TICK;
+  w.petitions.next = TICK + 100;
+  const chapel = Object.values(w.buildings).find((b) => b.defId === 'chapel');
+  const anchor = chapel?.id ?? w.islands[0]!.kontorId!;
+  w.petitions.open = [
+    { id: 'bell', drawnAt: 100, amount: 0, anchor, answer: 'yes', dueTick: TICK + 50 },
+    { id: 'feastDrink', drawnAt: 300, amount: 0, anchor },
+  ];
+  w.petitions.effects = [
+    { id: 'bell', answer: 'yes', until: TICK + 1800, anchor },
+    { id: 'feastDrink', answer: 'yes', until: TICK + 6000, anchor },
+  ];
+  return w;
+}
+
+describe('AK-BS-15 Rundlauf B4 und B5 mit Anker', () => {
+  it('Marken und Wirkungen mit Ankerkapelle bleiben beim Laden gleich', () => {
+    const w = anchoredWorld();
+    const r = load(w);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(serialize(r.world)).toBe(serialize(w));
+    expect(r.world.petitions.open.map((m) => m.anchor)).toEqual(
+      w.petitions.open.map((m) => m.anchor),
+    );
+    expect(r.world.petitions.effects.map((e) => e.anchor)).toEqual(
+      w.petitions.effects.map((e) => e.anchor),
+    );
+  });
+});
+
 describe('AK-BS-15 Migration', () => {
   const oldSave = (): string => {
     const raw = JSON.parse(serialize(createWorld(3))) as Record<string, unknown>;

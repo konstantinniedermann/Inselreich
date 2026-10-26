@@ -193,7 +193,7 @@ describe('I-153 Seerecht Save-Version (F3)', () => {
     expect(SAVE_VERSION).toBe(PRE_SEERECHT_VERSION + 1 + 1);
   });
 
-  it('AK-SR-12 v18-Stand lädt als Version 19, council und ships bleiben gleich', () => {
+  it('AK-SR-12 v18-Stand lädt als aktuelle Version, council und ships bleiben gleich', () => {
     const w = createWorld(3);
     const raw = json(w);
     raw.version = PRE_SEERECHT_VERSION;
