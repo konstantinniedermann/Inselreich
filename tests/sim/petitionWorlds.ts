@@ -360,7 +360,7 @@ function run(scene: PetitionScene, base: World, answer: Lage): DuelRun {
     setStorm(scene, w);
     if (rep.lost.length > 0 || burning(w, allowStorm)) incident = true;
   }
-  const goods = consumedGoods(w);
+  const goods = new Set<GoodId>(consumedGoods(w));
   const before = worth(w);
   const res = answerPetition(w, scene.mark.drawnAt, answer);
   const shortage = new Set<GoodId>();
@@ -372,6 +372,7 @@ function run(scene: PetitionScene, base: World, answer: Lage): DuelRun {
     scene.feed?.(w);
     setStorm(scene, w);
     if (rep.lost.length > 0 || burning(w, allowStorm)) incident = true;
+    for (const g of consumedGoods(w)) goods.add(g); // Aufstiege bringen neue Bedarfswaren
     if (w.tick <= nach) for (const g of goods) if (home(w).stock[g] === 0) shortage.add(g);
     if (w.tick === answerAt + def.delay + def.duration - 1) valueAtEffectEnd = worth(w) - before;
   }
