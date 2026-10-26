@@ -22,6 +22,13 @@ Verlauf aller Versionen des Handbuchs ([STUDIO.md](STUDIO.md)) und der Personas
   `tools/studio/tests/test_docs.py`). Persona ohne Eintrag: Version 1.0.
 - Frühere Fassungen stehen in Git.
 
+## 2026-10-26 · Handbuch 1.79
+
+- Anlass: Kurz-Retro 8361ff82 (E-080, E-081); Auftrag COACH-R971 Fortsetzung
+- Datenbasis: `docs/studio/retros/2026-10-25-session-8361ff82-ende.md` (ZEITPIN-D1 2 von 5 Messläufen; 3 Pakete als Zwischenstand), `docs/studio/metriken/S-2026-10-25-8361ff82.md`
+- Ruling: R971, R984
+- Änderungen: STUDIO.md Lastregeln: Absatz «Messfenster-Sperre vor jeder Messung» (Anmeldung per `SendMessage`, L0 setzt `make messfenster-sperre`, Freigabe nach «Messung fertig»; E-080). Herunterfahren und Ampel rot: neue Starts nur, solange Stand + Agenten × 1,8 ≤ 88 % (E-081, vorläufig, ergänzt R959). `templates/briefing.md`: Messpaket-Pflichtzeile um Anmeldung, «Sperre gesetzt» und «Messung fertig» ergänzt. Output-Style `projektleiter.md` Zeile «Kapazität»: Zuwachsgrenze E-081. `experimente.md`: E-080/E-081 (passiv ohne Platz), `lernen.md`: Zeile E-054 mit «Regel wirkt erst ab Handbuch in main» zusammengeführt
+
 ## 2026-10-25 · Handbuch 1.78
 
 - Anlass: Kurz-Retro 48c8580f (V1–V3) und Dauerauftrag „5-h-Fenster ausschöpfen“; Auftrag COACH-R957
