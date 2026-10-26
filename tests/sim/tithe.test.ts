@@ -1,8 +1,10 @@
 // I-223: Zehnt (T01 Defs, T02 Buchung).
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { demolish } from '../../src/sim/build';
+import { BOOM_PCT } from '../../src/sim/defs/crises';
 import { EDICTS } from '../../src/sim/defs/edicts';
-import { STORAGE_CAP } from '../../src/sim/defs/goods';
+import { GOODS, ORDER_PREMIUM, STORAGE_CAP } from '../../src/sim/defs/goods';
 import {
   TAX_CARRY_DIVISOR,
   TAX_UNIT,
@@ -13,6 +15,10 @@ import {
   TITHE_UNITS_PER_100,
 } from '../../src/sim/defs/tiers';
 import { TITHE_SWITCH_LOCK } from '../../src/sim/defs/timing';
+import { ISLANDS, PREFER_PCT } from '../../src/sim/defs/sea';
+import { deserialize, serialize } from '../../src/sim/save';
+import { setTierTaxLevel, setTithe, titheLocked } from '../../src/sim/tax';
+import { sellPrice } from '../../src/sim/trade';
 import { SERVICE_IDS, tickTaxes, titheSplit } from '../../src/sim/population';
 import { step } from '../../src/sim/tick';
 import type { Building, GoodId, TitheLoss, World } from '../../src/sim/types';
@@ -280,6 +286,189 @@ describe('Review Focus', () => {
     calls(w, 600);
     expect(home(w).stock.tools).toBeGreaterThan(tools);
     expect(w.islands[1]!.stock).toEqual(foreign);
+  });
+});
+
+const snap = (w: World): string => JSON.stringify(w);
+
+describe('AK-ZE-05 Sperre je Stufe', () => {
+  it('Sperrzeit läuft genau TITHE_SWITCH_LOCK Ticks', () => {
+    const { w } = town(12, 15);
+    const t0 = w.tick;
+    expect(setTithe(w, 1, true)).toEqual({ ok: true });
+    expect(w.titheLockedUntil[1]).toBe(t0 + TITHE_SWITCH_LOCK);
+    expect(titheLocked(w, 1)).toBe(true);
+    w.tick = t0 + TITHE_SWITCH_LOCK - 1;
+    const before = snap(w);
+    expect(setTithe(w, 1, false)).toEqual({ ok: false, reason: 'Sperrzeit' });
+    expect(snap(w)).toBe(before);
+    w.tick = t0 + TITHE_SWITCH_LOCK;
+    expect(setTithe(w, 1, false).ok).toBe(true);
+  });
+  it('Stufe 2 ist unabhängig frei', () => {
+    const { w } = town(12, 15);
+    setTithe(w, 1, true);
+    w.tick += 1;
+    expect(setTithe(w, 2, true).ok).toBe(true);
+  });
+  it('Zehnt aus lässt den Übertrag unberührt', () => {
+    const { w } = town(12, 0);
+    setTithe(w, 1, true);
+    calls(w, 10);
+    const carry = { ...w.titheCarry };
+    w.tick += TITHE_SWITCH_LOCK;
+    expect(setTithe(w, 1, false).ok).toBe(true);
+    expect(w.titheCarry).toEqual(carry);
+  });
+});
+
+describe('AK-ZE-05 Gründe', () => {
+  it.each([
+    ['Stufe 3', 3, true, 'Kein Zehnt für Bürger'],
+    ['Stufe 4', 4, true, 'Kein Zehnt für Kaufleute'],
+    ['Stufe 7', 7, true, 'Ungültige Stufe'],
+    ['Stufe x', 'x', true, 'Ungültige Stufe'],
+    ['Stufe undefined', undefined, true, 'Ungültige Stufe'],
+    ['Stufe 1,5', 1.5, true, 'Ungültige Stufe'],
+    ['Stufe NaN', NaN, true, 'Ungültige Stufe'],
+    ['Stufe "1"', '1', true, 'Ungültige Stufe'],
+    ['Wert "ja"', 1, 'ja', 'Ungültiger Wert'],
+    ['Wert 1', 1, 1, 'Ungültiger Wert'],
+    ['Wert null', 1, null, 'Ungültiger Wert'],
+    ['bereits aus', 1, false, 'Geld bereits aktiv'],
+  ])('%s', (_n, tier, on, reason) => {
+    const { w } = town(12, 0);
+    const before = snap(w);
+    expect(() => setTithe(w, tier, on)).not.toThrow();
+    expect(setTithe(w, tier, on)).toEqual({ ok: false, reason });
+    expect(snap(w)).toBe(before);
+  });
+  it('bereits an: Zehnt bereits aktiv', () => {
+    const { w } = town(12, 0);
+    w.titheOn[1] = true;
+    expect(setTithe(w, 1, true)).toEqual({ ok: false, reason: 'Zehnt bereits aktiv' });
+  });
+  it('ohne Amtsstube', () => {
+    const w = village(3, { unlockAll: true }).w;
+    const before = snap(w);
+    expect(setTithe(w, 1, true)).toEqual({ ok: false, reason: 'Braucht eine Amtsstube' });
+    expect(snap(w)).toBe(before);
+  });
+  it('kein Geld- und kein Auflagen-Sperrgrund', () => {
+    const { w } = town(12, 0);
+    w.money = -100;
+    w.trial.active = 'selfSupply';
+    expect(setTithe(w, 1, true).ok).toBe(true);
+  });
+});
+
+describe('AK-ZE-26 Amtsstube wirkt nicht', () => {
+  it.each([
+    ['getrennt', (h: Building) => (h.connected = false)],
+    ['Ausfall', (h: Building) => (h.outageUntil = 1_000_000)],
+  ])('%s', (_n, hurt) => {
+    const { w, hall } = town(12, 0);
+    hurt(hall);
+    const before = snap(w);
+    expect(setTithe(w, 1, true)).toEqual({ ok: false, reason: 'Amtsstube wirkt nicht' });
+    expect(snap(w)).toBe(before);
+  });
+});
+
+describe('Zehnt-Sperre und Steuer-Sperre sind getrennt', () => {
+  it('Zehnt gesperrt, Steuer frei', () => {
+    const { w } = town(12, 0);
+    expect(setTithe(w, 1, true).ok).toBe(true);
+    expect(setTierTaxLevel(w, 1, 'high').ok).toBe(true);
+    expect(setTithe(w, 1, false)).toEqual({ ok: false, reason: 'Sperrzeit' });
+  });
+  it('Steuer gesperrt, Zehnt frei', () => {
+    const { w } = town(0, 15);
+    expect(setTierTaxLevel(w, 2, 'high').ok).toBe(true);
+    expect(setTithe(w, 2, true).ok).toBe(true);
+  });
+});
+
+describe('AK-ZE-07 Determinismus', () => {
+  const run = (w: World, from: number, to: number): void => {
+    for (let t = from; t < to; t++) {
+      if (w.tick === 600) setTithe(w, 1, true);
+      if (w.tick === 900) setTithe(w, 2, true);
+      step(w);
+    }
+  };
+  it('gleicher Lauf, gleicher Stand', () => {
+    const a = town(12, 15).w;
+    const b = town(12, 15).w;
+    run(a, 0, 3000);
+    run(b, 0, 3000);
+    expect(serialize(a)).toBe(serialize(b));
+    expect(a.titheCarry.tools + a.titheCarry.stone).toBeGreaterThanOrEqual(0);
+  });
+  it('Speichern und Laden mitten im Lauf ändert nichts', () => {
+    const full = town(12, 15).w;
+    const part = town(12, 15).w;
+    full.titheOn[1] = true;
+    part.titheOn[1] = true;
+    for (let i = 0; i < 3000; i++) step(full);
+    for (let i = 0; i < 300; i++) step(part);
+    const r = deserialize(serialize(part));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    for (let i = 0; i < 2700; i++) step(r.world);
+    expect(serialize(r.world)).toBe(serialize(full));
+  });
+  it('Sperre überlebt Speichern und Laden', () => {
+    const { w } = town(12, 0);
+    setTithe(w, 1, true);
+    for (let i = 0; i < 300; i++) step(w);
+    const r = deserialize(serialize(w));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(setTithe(r.world, 1, false)).toEqual({ ok: false, reason: 'Sperrzeit' });
+  });
+});
+
+describe('AK-ZE-14 Literal', () => {
+  it.each(['src/sim/tax.ts', 'src/sim/population.ts'])('%s ohne Sperrzeit-Literal', (f) => {
+    const code = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
+    expect(/\b1800\b/.test(code)).toBe(false);
+  });
+});
+
+describe('AK-ZE-15 Kursband', () => {
+  it.each(Object.keys(TITHE_UNITS_PER_100) as (keyof typeof TITHE_UNITS_PER_100)[])('%s', (g) => {
+    const k = 100 / TITHE_UNITS_PER_100[g];
+    const top = Math.max(
+      (GOODS[g].sell * Math.max(BOOM_PCT, PREFER_PCT)) / 100,
+      Math.floor(GOODS[g].buy * ORDER_PREMIUM),
+    );
+    expect(top).toBeLessThan(k);
+    expect(k).toBeLessThan(GOODS[g].buy);
+    expect(k).toBeGreaterThan((GOODS[g].buy * EDICTS.trade.buyFactorPct) / 100);
+  });
+});
+
+describe('AK-ZE-24 Boom und Vorliebe stapeln nicht', () => {
+  it('Tuch: der höhere Faktor gilt', () => {
+    const { w } = town(1, 0);
+    const kind = ISLANDS.find((d) => d.prefers.includes('cloth'))!.kind;
+    const i = w.islands.findIndex((x) => x.kind === kind);
+    const isl = i > 0 ? i : 1;
+    w.islands[isl]!.kind = kind;
+    w.crisis = { period: 0, kind: 'boom', from: w.tick, until: w.tick + 1000, good: 'cloth' };
+    w.sellPct.cloth = 100;
+    expect(sellPrice(w, 'cloth', 1, isl)).toBe(
+      Math.floor((GOODS.cloth.sell * Math.max(BOOM_PCT, PREFER_PCT)) / 100),
+    );
+  });
+  it('Stein im Boom liegt unter dem Zehnt-Kurs', () => {
+    const { w } = town(1, 0);
+    w.crisis = { period: 0, kind: 'boom', from: w.tick, until: w.tick + 1000, good: 'stone' };
+    w.sellPct.stone = 100;
+    const p = sellPrice(w, 'stone', 1);
+    expect(p).toBe(9);
+    expect(p).toBeLessThan(100 / TITHE_UNITS_PER_100.stone);
   });
 });
 
