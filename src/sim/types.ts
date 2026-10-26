@@ -1,4 +1,5 @@
 import type { IslandKind, IslandTrait } from './defs/sea';
+import type { FeastKind } from './defs/feast';
 import type { ReserveGood, ReserveStep } from './defs/reserve';
 
 export type GoodId =
@@ -187,6 +188,8 @@ export interface Building {
   level?: 2 | 3;
   /** Beginn des letzten Fests (Tick); nur an der Kapelle, fehlt = noch nie gefeiert. */
   feastAt?: number;
+  /** Art des letzten Fests; nur zusammen mit `feastAt` an der Kapelle; fehlt = Aufstiegsfest (I-201). */
+  feastKind?: FeastKind;
   house?: HouseState;
 }
 export interface Tile {

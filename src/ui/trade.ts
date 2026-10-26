@@ -10,6 +10,8 @@ import { reserveHolds } from '../sim/queries';
 import { reserveOf } from '../sim/reserve';
 import { activeEdictDef } from '../sim/edicts';
 import { goodUnlocked } from '../sim/unlocks';
+import { FEAST_KINDS } from '../sim/defs/feast';
+import { marketActive } from '../sim/feast';
 import type { GoodId, Result, World } from '../sim/types';
 import type { ReasonCtx } from './hints';
 import { setField } from './dom';
@@ -55,6 +57,11 @@ export function sellTexts(
     price: `${price} Geld`,
     title: `${n} ${GOODS[good].name} verkaufen für ${price} Geld`,
   };
+}
+
+/** Marke im Kopf des Handelsfensters während eines Markttags der Insel, sonst ''. */
+export function marketDayTag(world: World, island: number): string {
+  return marketActive(world, island) ? `Markttag ${FEAST_KINDS.market.sellPct} %` : '';
 }
 
 /** Stückpreis am Kontor mit wirkendem Edikt (Spec U-7). */
@@ -160,7 +167,11 @@ export function renderTrade(
     back.blur();
     actions.back();
   });
-  head.append(title, back);
+  const dayTag = document.createElement('span');
+  dayTag.className = 'chip';
+  dayTag.dataset.field = 'market-day';
+  dayTag.hidden = true;
+  head.append(title, dayTag, back);
 
   const table = cell(panel, 'trade-table');
   const buyHead = cell(table, 'trade-head');
@@ -257,6 +268,9 @@ export function renderTrade(
 /** Aktualisiert Lagerbestände und dämpft Buttons, die sicher scheitern würden (bleiben klickbar). */
 export function updateTrade(panel: HTMLElement, world: World, island: number = HOME): void {
   const stock = world.islands[island]!.stock;
+  const day = marketDayTag(world, island);
+  const dayEl = setField(panel, 'market-day', day);
+  if (dayEl && dayEl.hidden !== (day === '')) dayEl.hidden = day === '';
   for (const good of GOOD_IDS) {
     setField(panel, `stock-${good}`, `Lager ${stock[good]}`);
     setField(panel, `price-${good}`, sellPctText(world, good));

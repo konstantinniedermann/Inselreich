@@ -1,43 +1,37 @@
-import { serviceRadiusOf } from './council';
 import { BUILDING_DEFS } from './defs/buildings';
 import { GOODS } from './defs/goods';
 import { TAX_LEVELS } from './defs/tiers';
-import { FEAST_COOLDOWN, FEAST_DURATION, FEAST_RUM } from './defs/timing';
+import { FEAST_KINDS, type FeastKind } from './defs/feast';
+import { FEAST_COOLDOWN } from './defs/timing';
 import { takeStock } from './economy';
+import {
+  chapelWorks,
+  feastKindOf,
+  feastState,
+  inChapelRadius,
+  invalidateFeastIndex,
+  isFeastKind,
+} from './feastEffect';
+import { noKontorTrade } from './islands';
+import { cycleOf } from './levels';
 import { effectiveTaxLevel } from './townhall';
-import { fail, ok, type Building, type Result, type World } from './types';
-import { center, islandOf } from './world';
+import { fail, ok, type Building, type GoodId, type Result, type World } from './types';
+import { islandOf } from './world';
 
-/** Stand des Fests einer Kapelle: bereit, läuft oder Abklingzeit; `remaining` in Ticks bis zum Phasenende. */
-export type FeastState = { phase: 'ready' | 'active' | 'cooldown'; remaining: number };
-
-/** Phase und Restzeit; `feastAt` fehlt = bereit. Die Uhr läuft auch bei Brand weiter. */
-export function feastState(world: World, chapel: Building): FeastState {
-  if (chapel.feastAt === undefined) return { phase: 'ready', remaining: 0 };
-  const elapsed = world.tick - chapel.feastAt;
-  if (elapsed < FEAST_DURATION) return { phase: 'active', remaining: FEAST_DURATION - elapsed };
-  if (elapsed < FEAST_COOLDOWN) return { phase: 'cooldown', remaining: FEAST_COOLDOWN - elapsed };
-  return { phase: 'ready', remaining: 0 };
+/** Warenprüfung ohne Abbuchung in Schlüsselreihenfolge von `cost`: Grund bei der ersten fehlenden Ware, sonst null. */
+function goodsShortage(world: World, chapel: Building, kind: FeastKind): string | null {
+  const stock = islandOf(world, chapel).stock;
+  for (const [good, need] of Object.entries(FEAST_KINDS[kind].cost) as [GoodId, number][]) {
+    if (stock[good] < need)
+      return `Zu wenig ${GOODS[good].name} (${Math.floor(stock[good])} / ${need})`;
+  }
+  return null;
 }
 
-/** Eine Kapelle wirkt nur, wenn sie angebunden ist und nicht brennt (wie `serviceAvailable`). */
-function chapelWorks(chapel: Building): boolean {
-  return chapel.connected && chapel.outageUntil === undefined;
-}
-
-/** Rum-Prüfung ohne Abbuchung: Grund bei zu geringem Bestand, sonst null. */
-function rumShortage(world: World, chapel: Building): string | null {
-  const rum = islandOf(world, chapel).stock[GOODS.rum.id];
-  if (rum >= FEAST_RUM) return null;
-  return `Zu wenig Rum (${Math.floor(rum)} / ${FEAST_RUM})`;
-}
-
-/** Einziger Rum-Zugriff des Fests: prüft das Lager der Kapellen-Insel und entnimmt `FEAST_RUM`. */
-function spendRum(world: World, chapel: Building): Result {
-  const short = rumShortage(world, chapel);
-  if (short !== null) return fail(short);
-  takeStock(islandOf(world, chapel), 'rum', FEAST_RUM);
-  return ok;
+/** Zieht die Kosten der Art vom Lager der Kapellen-Insel ab; einzige Abbuchung des Fests. */
+function payGoods(world: World, chapel: Building, kind: FeastKind): void {
+  for (const [good, need] of Object.entries(FEAST_KINDS[kind].cost) as [GoodId, number][])
+    takeStock(islandOf(world, chapel), good, need);
 }
 
 /** Spec R7.3: Ein Fest wirkt auf Häuser mit Steuerstufe «normal»; ohne ein solches Haus der Kapellen-Insel im Radius lehnt die Steuer ab. */
@@ -51,48 +45,80 @@ function taxBlock(world: World, chapel: Building): string | null {
   return 'Steuer: Fest wirkt auf kein Haus';
 }
 
-/** Sperrgrund für ein Fest ohne Rumprüfung, sonst null. */
-function feastBlock(world: World, chapel: Building): string | null {
+/** Allgemeine Sperren aller Festarten (Phase, Brand, Anbindung), sonst null. */
+function commonBlock(world: World, chapel: Building): string | null {
   const { phase } = feastState(world, chapel);
   if (phase === 'active') return 'Fest läuft';
   if (phase === 'cooldown') return 'Abklingzeit';
   if (chapel.outageUntil !== undefined) return 'Kapelle brennt';
   if (!chapelWorks(chapel)) return 'Kapelle nicht angebunden';
-  return taxBlock(world, chapel);
+  return null;
 }
 
-/** Sperrgrund für ein Fest an dieser Kapelle (inkl. Rum-Bestand, ohne Abbuchung), sonst null. Rein lesend. */
-export function feastBlockReason(world: World, chapel: Building): string | null {
-  return feastBlock(world, chapel) ?? rumShortage(world, chapel);
+/** Eine andere Kapelle der Insel hat dieselbe Art noch in der Abklingzeit (Brand egal). */
+function islandCooldown(world: World, chapel: Building, kind: FeastKind): boolean {
+  return Object.values(world.buildings).some(
+    (o) =>
+      o.id !== chapel.id &&
+      o.island === chapel.island &&
+      o.feastAt !== undefined &&
+      feastKindOf(o) === kind &&
+      world.tick - o.feastAt < FEAST_COOLDOWN,
+  );
 }
 
-/** Fest an der Kapelle `id`: verbraucht `FEAST_RUM` Rum und setzt `feastAt`. Wirft nie; bei fail bleibt die Welt unverändert. */
-export function holdFeast(world: World, id: number): Result {
+/** Ein Betrieb mit Produktionszyklus im Radius der Kapelle (stillgelegte zählen). */
+function hasWorkshopNearby(world: World, chapel: Building): boolean {
+  return Object.values(world.buildings).some(
+    (b) => cycleOf(world, b) !== undefined && inChapelRadius(world, chapel, b),
+  );
+}
+
+/** Sperre, die nur für die Festart gilt, sonst null. */
+function kindBlock(world: World, chapel: Building, kind: FeastKind): string | null {
+  if (FEAST_KINDS[kind].scope !== 'island') return taxBlock(world, chapel);
+  if (islandCooldown(world, chapel, kind))
+    return `${FEAST_KINDS[kind].name} auf der Insel: Abklingzeit`;
+  if (kind === 'harvest')
+    return hasWorkshopNearby(world, chapel) ? null : 'Kein Betrieb im Umkreis';
+  return noKontorTrade(world, chapel.island);
+}
+
+/** Sperrgrund für ein Fest an dieser Kapelle (inkl. Waren, ohne Abbuchung), sonst null. Rein lesend. */
+export function feastBlockReason(
+  world: World,
+  chapel: Building,
+  kind: string = 'ascension',
+): string | null {
+  if (!isFeastKind(kind)) return 'Unbekannte Festart';
+  return (
+    commonBlock(world, chapel) ??
+    kindBlock(world, chapel, kind) ??
+    goodsShortage(world, chapel, kind)
+  );
+}
+
+/** Fest der Art `kind` an der Kapelle `id`: bucht die Kosten und setzt `feastAt`. Wirft nie; bei fail bleibt die Welt unverändert. */
+export function holdFeast(world: World, id: number, kind: string = 'ascension'): Result {
   const chapel = world.buildings[id];
   if (chapel === undefined || BUILDING_DEFS[chapel.defId].service !== 'faith')
     return fail('Keine Kapelle');
-  const block = feastBlock(world, chapel);
+  const block = feastBlockReason(world, chapel, kind);
   if (block !== null) return fail(block);
-  const paid = spendRum(world, chapel);
-  if (!paid.ok) return paid;
+  const done = kind as FeastKind;
+  payGoods(world, chapel, done);
   chapel.feastAt = world.tick;
+  invalidateFeastIndex(world);
+  if (done === 'ascension') delete chapel.feastKind;
+  else chapel.feastKind = done;
   return ok;
 }
 
-/** Haus auf der Insel der Kapelle (Koordinaten sind inselbezogen) mit Mittelpunktabstand im Dienstradius. */
-function inChapelRadius(world: World, chapel: Building, house: Building): boolean {
-  if (chapel.island !== house.island) return false;
-  const hc = center(BUILDING_DEFS[house.defId], house.x, house.y);
-  const def = BUILDING_DEFS[chapel.defId];
-  const c = center(def, chapel.x, chapel.y);
-  return Math.hypot(hc.cx - c.cx, hc.cy - c.cy) <= (serviceRadiusOf(world, chapel.defId) ?? 0);
-}
-
-/** Wirkt ein Fest auf das Haus: eine laufende, arbeitende Kapelle mit dem Haus im Dienstradius (Id-Reihenfolge, einmal). */
-export function feastActive(world: World, house: Building): boolean {
-  return Object.values(world.buildings).some((b) => {
-    if (b.feastAt === undefined || !chapelWorks(b)) return false;
-    if (feastState(world, b).phase !== 'active') return false;
-    return inChapelRadius(world, b, house);
-  });
-}
+export {
+  feastActive,
+  feastKindOf,
+  feastState,
+  harvestActive,
+  marketActive,
+  type FeastState,
+} from './feastEffect';

@@ -124,10 +124,16 @@ Gebäude, Bäume und Figuren haben Höhe; was weiter vorn steht, verdeckt, was d
   Kapelle, Schule und Feuerwache zeigen ihren Wirkkreis (in der Isometrie eine Ellipse) um die Vorschau
   und den Umriss der schon abgedeckten Fläche; Holzfäller, Jagdhütte, Rinderfarm, Schäferei und Zuckerrohrplantage
   zeigen den Standortkreis (Radius 2, bei Jagdhütte und Rinderfarm 3) mit den passenden Wald- bzw. Graskacheln.
-- **Fest feiern** (ab U4, Rum freigeschaltet): Im Panel einer Kapelle kostet «Fest feiern (10 Rum)» 10 Rum aus dem
-  Lager. Während des Fests (1 Minute Spielzeit) steigen Wohnhäuser im Wirkkreis der Kapelle auf derselben Insel schneller auf; im
-  Haus-Panel steht dann «Fest: schnellerer Aufstieg». Danach sperrt eine Abklingzeit (3 Minuten ab Festbeginn), der Knopf zeigt «Nächstes
-  Fest in m:ss». Ohne Wirkung, wenn im Umkreis auf der Insel der Kapelle kein Haus mit Steuer «normal» wohnt; eine abgelehnte Aktion nennt den Grund.
+- **Feste** (ab U4, Rum freigeschaltet): Im Panel einer Kapelle stehen drei Festarten zur Wahl. Jedes Fest dauert
+  1 Minute Spielzeit, danach sperrt eine Abklingzeit von 3 Minuten ab Festbeginn je Kapelle; der Knopf zeigt «Nächstes
+  Fest in m:ss». Erntefest und Markttag haben zusätzlich eine Abklingzeit je Insel und Art. Sperrgründe stehen am Knopf,
+  eine abgelehnte Aktion nennt den Grund.
+  - **Aufstiegsfest** (10 Rum): Wohnhäuser im Wirkkreis der Kapelle auf derselben Insel steigen schneller auf; im
+    Haus-Panel steht «Fest: schnellerer Aufstieg». Ohne Wirkung, wenn im Umkreis kein Haus mit Steuer «normal» wohnt.
+  - **Erntefest** (10 Rum, 15 Stoff): Betriebe im Wirkkreis arbeiten mit 75 % Zyklus; im Panel steht
+    «Erntefest: Zyklus 75 %».
+  - **Markttag** (10 Rum, 5 Glas): Der Verkaufserlös der Insel beträgt 125 %, kein Stapeln mit Boom oder Vorliebe;
+    im Handelsfenster zeigt eine Marke den Markttag.
 - **Badehaus** (Kategorie «Öffentlich», Taste `J`): 2×2, Baukosten 500 Geld, 30 Holz, 10 Werkzeug, 20 Stein,
   Unterhalt 180 / min, Dienst «Hygiene» im Radius 10 (für Kaufleute). **Glashütte** (Kategorie «Produktion», Taste
   `O`): siehe «Produktionsketten». Beide sind erst nach dem Bürger-Ziel baubar; vorher fehlen sie in der Bauleiste,

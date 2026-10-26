@@ -288,3 +288,8 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-25 · Messvorrang nur per Absprache (mittel)
 
 - Fundort: Studio-Werkzeug (`make messfenster`, TOOL-TESTLOCK). Beobachtung: ZEITPIN-D1 erreichte statt 5 nur 2 saubere Läufe je Stand, weil parallele Test-Controller (I-210, AUSBAU-LOGIK, plan-I-215) die Last auf 10–50 trieben, obwohl das Briefing Messvorrang nannte. Ursprung: ZEITPIN-D1 (R968). Einschätzung: Werkzeug-Kandidat `make messfenster-sperre` (Messpaket belegt eine Sperre, gezielte Tests warten), sonst Retro-Punkt Controller-Staffelung (R920 V1).
+
+## 2026-10-25 · I-201: Spielwerte-Doku und Menü-Karte (niedrig)
+
+- Fundort: `docs/spielwerte.md`. Beobachtung: Festwerte (Kosten, Dauer, 75 %, 125 %) fehlen, Lücke bestand vor I-201. Ursprung: Final-Review I-201. Einschätzung: bei nächster Spielwerte-Runde ergänzen.
+- Fundort: Menü-Karte (`src/ui/`). Beobachtung: nach «Speichern» zeigt sie im selben Öffnen noch «Noch kein Spielstand gespeichert», Laden-Liste erst nach erneutem Öffnen aktuell. Ursprung: Playtest T07 (I-201). Einschätzung: kleiner UI-Fix.

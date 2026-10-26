@@ -529,3 +529,19 @@ export function generateForeignIslands(
   }
   return placed;
 }
+
+/*
+ * Handelssperre ohne Kontor (aus trade.ts verschoben, I-201): eigener Abschnitt am Dateiende.
+ */
+
+/**
+ * Grund „Kein Kontor auf <Name>“ oder `null`: Handel läuft nur über ein Kontor der Insel.
+ * Der Inselzugriff ist gleich `placement.islandAt`; inline, weil `placement` `islands` importiert (Zyklus);
+ * bei Änderung beide nachziehen.
+ */
+export function noKontorTrade(world: World, island: number): string | null {
+  const isl = Number.isInteger(island) ? (world.islands[island] ?? null) : null;
+  return isl !== null && isl.kontorId === null
+    ? `Kein Kontor auf ${islandName(world, island)}`
+    : null;
+}
