@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buy, buyPrice } from '../../src/sim/trade';
 import { upgradeBuilding } from '../../src/sim/upgrade';
 import { LEVELS } from '../../src/sim/defs/levels';
+import { siteAt, workforceAt } from '../../src/sim/levelRules';
 import { functionLock } from '../../src/sim/unlocks';
 import type { World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
@@ -17,6 +18,8 @@ function upgradeFishers(w: World): void {
   for (const b of Object.values(w.buildings)) {
     if (b.defId !== 'fisher' || b.level === 3) continue;
     const lv = b.level ?? 1;
+    if (siteAt(w, b, lv + 1)?.ok === false) continue; // Fischgrund nicht erfüllt: der Bot baut dort nicht aus
+    if (!workforceAt(w, b, lv + 1).ok) continue; // keine Fachkräfte im Arbeitsweg
     if (functionLock(w, lv === 1 ? 'upgrade2' : 'upgrade3') !== null) continue;
     const next = LEVELS.fisher![lv - 1]!;
     const missing = Math.max(0, next.cost.tools - home(w).stock.tools);
@@ -32,7 +35,7 @@ function upgradeFishers(w: World): void {
 function variant(): Trajectory & { levels: Record<1 | 2 | 3, number> } {
   const w = createWorld(3); // Krisen aus, Seed 3
   const { layout, t } = startColony(w);
-  runColony(w, layout, t, {}, (x) => {
+  runColony(w, layout, t, { spacedFishers: true }, (x) => {
     upgradeFishers(x);
     return false;
   });
@@ -41,8 +44,8 @@ function variant(): Trajectory & { levels: Record<1 | 2 | 3, number> } {
   return { ...t, levels };
 }
 
-/** M-15 (Ruling R196: reine Messung, kein Sieg-Limit), gemessen auf 2b43e9d mit `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance-upgrade.test.ts` (Spec 14). */
-const M15 = { winTick: 8250, minMoney: 71, levels: { 1: 0, 2: 11, 3: 0 } };
+/** M-15 (Ruling R196: reine Messung, kein Sieg-Limit), neu gepinnt nach AUSBAU-LOGIK T06 (Ruling R1000, Fischer nur mit erfülltem Fischgrund); ursprünglich gemessen auf 2b43e9d mit `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance-upgrade.test.ts` (Spec 14). */
+const M15 = { winTick: 7550, minMoney: 71, levels: { 1: 0, 2: 10, 3: 0 } };
 
 describe('M11 Balancing Ausbau (Spec 11.4)', () => {
   it('AK-M11B-01 Variante „baut Fischer aus" (R196: reine Messung): greift, siegt, minMoney ≥ 0; M-15 gepinnt', () => {
