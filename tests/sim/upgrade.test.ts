@@ -343,7 +343,7 @@ describe('AUSBAU-LOGIK T05 Ausbau prüft in einer Reihenfolge (R7, N3)', () => {
         (w) => {
           for (const b of Object.values(w.buildings)) if (b.house !== undefined) b.house.tier = 2;
         },
-        'Keine Meister im Umkreis 8 (Bürgerhaus nötig, nächstes 1 Felder)',
+        'Keine Meister im Umkreis 8 (kein Bürgerhaus auf dieser Insel)',
       ],
       [
         'Standort',
@@ -397,8 +397,7 @@ describe('AUSBAU-LOGIK T05 Ausbau prüft in einer Reihenfolge (R7, N3)', () => {
       const r = upgradeBuilding(w, f.id);
       expect([name, r.ok]).toEqual([name, false]);
       const got = r.ok ? '' : r.reason;
-      if (name === 'Fachkräfte') expect(got).toMatch(/^Keine Meister im Umkreis 8/);
-      else expect([name, got]).toEqual([name, reason]);
+      expect([name, got]).toEqual([name, reason]);
       expect(JSON.stringify(w)).toBe(before);
     }
   });
@@ -438,10 +437,9 @@ describe('AUSBAU-LOGIK T05 Ausbau prüft in einer Reihenfolge (R7, N3)', () => {
   });
   it('AK-AL-37 erster Grund gleich bei mehreren verletzten Bedingungen', () => {
     const welten: ((w: World, f: Building) => void)[] = [
-      (w, f) => {
+      (w) => {
         for (const b of Object.values(w.buildings)) if (b.house !== undefined) b.house.tier = 1;
         w.money = 0;
-        void f;
       },
       (w) => {
         putBuilding(w, 0, 'fisher', 22, 20);
