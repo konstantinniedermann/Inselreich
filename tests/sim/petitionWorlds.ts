@@ -7,6 +7,7 @@ import { STORM_DURATION } from '../../src/sim/defs/timing';
 import { STORAGE_CAP } from '../../src/sim/defs/goods';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { goodsBalance } from '../../src/sim/flow';
+import { holdFeast } from '../../src/sim/feast';
 import { answerPetition } from '../../src/sim/petitions';
 import { deserialize, serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
@@ -38,6 +39,8 @@ export interface PetitionScene {
   stormAt?: number;
   /** Zähler der Lage am Ende des Laufs (B6: zusätzliche Ladungen, die in der Heimat ankamen). */
   probe?: (w: World) => number;
+  /** Weitere benannte Zähler der Lage am Ende des Laufs (B4, B5). */
+  extras?: Record<string, (w: World) => number>;
 }
 export type SceneBuilder = (seed: number) => PetitionScene;
 
@@ -48,6 +51,8 @@ export interface DuelRun {
   incident: boolean;
   /** Wert von `scene.probe` am Ende des Laufs. */
   probe?: number;
+  /** Werte von `scene.extras` am Ende des Laufs. */
+  extras?: Record<string, number>;
 }
 
 /** Waren, die Häuser verbrauchen und die eine Kette liefert. */
@@ -373,6 +378,8 @@ function run(scene: PetitionScene, base: World, answer: Lage): DuelRun {
     incident,
   };
   if (scene.probe !== undefined) out.probe = scene.probe(w);
+  if (scene.extras !== undefined)
+    out.extras = Object.fromEntries(Object.entries(scene.extras).map(([k, f]) => [k, f(w)]));
   return out;
 }
 
@@ -646,3 +653,127 @@ export function stableTown(seed: number): StableTown {
     });
   return { w, over: measuredOver(w, fed), feed: capped };
 }
+
+// ---- Lagen B4 und B5 (Anhang 01; Aufstiegswelle nach dem Muster von I-201 Lage A) ----
+
+/** Wartezeit-Beginn der Aufstiegswelle: nach Antwort + 500, damit ohne Wirkung erst später aufgestiegen wird. */
+const WAVE_SINCE = 500;
+/** Fest in B5 beginnt, sobald die Wirkung läuft (Verzug) plus dieser Abstand. */
+const FEAST_AFTER = 100;
+const WAVE_HOUSES = [15, 15, 15, 15, 15] as const;
+const WAVE_STOCK = { glass: 500, spice: 500, food: 100, cloth: 100, wood: 100, tools: 50 } as const;
+
+const chapelOf = (w: World): Building =>
+  Object.values(w.buildings).find((b) => b.defId === 'chapel')!;
+
+/** Aufstiegsbereit: alle Häuser steigen frühestens `WAVE_SINCE` Ticks nach der Antwort auf (Stufe 3 nach 4). */
+function prepareWave(w: World, since: number): void {
+  w.won = true; // Stufe 4 ist nur nach dem Ziel ladbar
+  for (const b of Object.values(w.buildings))
+    if (b.house !== undefined) b.house.satisfiedSince = since;
+}
+
+/** Summe der Haus-Ticks auf Stufe 4: Zähler dafür, wie früh die Welle aufsteigt. */
+function riserTicks(): { feed: (w: World) => void; ticks: (w: World) => number } {
+  const sum = new WeakMap<World, number>();
+  const feed = (w: World): void => {
+    let n = 0;
+    for (const b of Object.values(w.buildings))
+      if (b.house !== undefined && b.house.tier === 4) n++;
+    sum.set(w, (sum.get(w) ?? 0) + n);
+  };
+  return { feed, ticks: (w) => sum.get(w) ?? 0 };
+}
+
+const plateauSpec = (rum: number, cane: number): HouseSpec => ({
+  tier: 4,
+  inhabitants: [20, 20, 20],
+  over: { food: 0, cloth: 0, rum: 0, glass: 0, spice: 0 },
+  stock: { food: 60, cloth: 60, rum, glass: 60, spice: 60, cane },
+});
+
+function bellScene(seed: number, yes: boolean): PetitionScene {
+  const spec: HouseSpec = yes
+    ? {
+        tier: 3,
+        inhabitants: WAVE_HOUSES,
+        over: { food: 0.2, cloth: 0.2, rum: 0.2 },
+        stock: { ...WAVE_STOCK, rum: 30, stone: 30 + 5 * 10 },
+      }
+    : plateauSpec(15, INPUT_STOCK);
+  const scene = sceneOf(
+    seed,
+    'bell',
+    spec,
+    yes ? 'B4 Ja: Aufstiegswelle' : 'B4 Nein: Plateau, Rum 15',
+  );
+  scene.mark.anchor = chapelOf(scene.w).id;
+  if (yes) prepareWave(scene.w, scene.w.tick + WAVE_SINCE);
+  const r = riserTicks();
+  const supply = scene.feed;
+  scene.feed = (w) => {
+    supply?.(w);
+    r.feed(w);
+  };
+  scene.extras = { riserTicks: r.ticks };
+  return scene;
+}
+
+/** B5: das Aufstiegsfest nach dem Verzug; im Ja-Lauf mit Gutschein (Abklingzeit egal), sonst sobald erlaubt. */
+/** B5 läuft 6900 Ticks: die Häuser wachsen auf Stufe 4 auf 20 Bewohner, die Ketten tragen das mit. */
+const B5_OVER = 0.6;
+/** Glas und Gewürz tragen die Stufe-4-Häuser über das ganze Fenster (kein Zulauf in der Lage). */
+const B5_AMPLE = 2000;
+
+function feastDrinkScene(seed: number, yes: boolean): PetitionScene {
+  const spec: HouseSpec = yes
+    ? {
+        tier: 3,
+        inhabitants: WAVE_HOUSES,
+        over: { food: B5_OVER, cloth: B5_OVER, rum: B5_OVER },
+        stock: { ...WAVE_STOCK, glass: B5_AMPLE, spice: B5_AMPLE, rum: 30, stone: 80, cane: 40 },
+      }
+    : plateauSpec(15, 25);
+  const scene = sceneOf(
+    seed,
+    'feastDrink',
+    spec,
+    yes ? 'B5 Ja: Aufstiegswelle' : 'B5 Nein: Plateau, Rohr 25',
+  );
+  const chapel = chapelOf(scene.w);
+  scene.mark.anchor = chapel.id;
+  chapel.feastAt = scene.w.tick; // Fest läuft beim Start, danach Abklingzeit
+  if (yes) prepareWave(scene.w, scene.w.tick + FEAST_AFTER + PETITIONS.feastDrink.delay + 100);
+  const holdFrom = scene.w.tick + PETITIONS.feastDrink.delay + FEAST_AFTER;
+  const state = new WeakMap<World, { held: boolean; rum: number }>();
+  const r = riserTicks();
+  const supply = scene.feed;
+  scene.feed = (w) => {
+    supply?.(w);
+    r.feed(w);
+    const st = state.get(w) ?? { held: false, rum: 0 };
+    state.set(w, st);
+    if (st.held || w.tick < holdFrom) return;
+    const rum = home(w).stock.rum;
+    if (!holdFeast(w, chapel.id, 'ascension').ok) return;
+    st.held = true;
+    st.rum = rum - home(w).stock.rum;
+  };
+  scene.extras = {
+    riserTicks: r.ticks,
+    feastHeld: (w) => (state.get(w)?.held ? 1 : 0),
+    feastRum: (w) => state.get(w)?.rum ?? -1,
+  };
+  return scene;
+}
+
+Object.assign(SCENES, {
+  bell: {
+    yes: (seed: number) => bellScene(seed, true),
+    no: (seed: number) => bellScene(seed, false),
+  },
+  feastDrink: {
+    yes: (seed: number) => feastDrinkScene(seed, true),
+    no: (seed: number) => feastDrinkScene(seed, false),
+  },
+});
