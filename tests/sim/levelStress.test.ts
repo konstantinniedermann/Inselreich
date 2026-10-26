@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { demolish } from '../../src/sim/build';
 import { serialize } from '../../src/sim/save';
 import { step } from '../../src/sim/tick';
 import type { BuildingDefId, World } from '../../src/sim/types';
@@ -7,6 +8,8 @@ import { putBuilding } from './helpers';
 
 const STRESS_TICKS = 50;
 const SHOPS: BuildingDefId[] = ['fisher', 'hunter', 'lumberjack', 'weaver', 'distillery'];
+/** Abriss eines Hauses (Fachkräfte-Wechsel) mitten im Lauf. */
+const DEMOLISH_TICK = STRESS_TICKS / 2;
 const SHOP_TARGET = 60;
 const HOUSE_TARGET = 240;
 
@@ -34,7 +37,10 @@ function stressWorld(): World {
 
 const run = (): { json: string; buildings: number } => {
   const w = stressWorld();
-  for (let i = 0; i < STRESS_TICKS; i++) step(w);
+  for (let i = 0; i < STRESS_TICKS; i++) {
+    if (i === DEMOLISH_TICK) demolish(w, Object.values(w.buildings).find((b) => b.house)!.id);
+    step(w);
+  }
   return { json: serialize(w), buildings: Object.keys(w.buildings).length };
 };
 

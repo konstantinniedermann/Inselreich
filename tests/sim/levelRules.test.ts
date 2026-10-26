@@ -640,6 +640,24 @@ describe('AK-AL-44 k-Wechsel mitten im Zyklus (N4)', () => {
   });
 });
 
+/** Felder von `Building` vor AL-2b (Stand 38279658): kein neues Feld für k. */
+const SAVED_BUILDING_KEYS = [
+  'id',
+  'defId',
+  'x',
+  'y',
+  'connected',
+  'progress',
+  'state',
+  'island',
+  'outageUntil',
+  'paused',
+  'eff',
+  'level',
+  'feastAt',
+  'house',
+];
+
 describe('AK-AL-15/45 Determinismus', () => {
   const scenario = (): World => {
     const w = createWorld(7, { unlockAll: true, crisisLevel: 'normal' });
@@ -677,7 +695,8 @@ describe('AK-AL-15/45 Determinismus', () => {
     expect(serialize(b)).toBe(serialize(a));
     expect(serialize(c)).toBe(serialize(a));
     const raw = JSON.parse(serialize(a)).buildings as Record<string, object>;
-    for (const v of Object.values(raw)) expect(Object.keys(v)).not.toContain('k');
+    for (const v of Object.values(raw))
+      for (const key of Object.keys(v)) expect(SAVED_BUILDING_KEYS, key).toContain(key);
   });
   it('AK-AL-45 crisisLevel-Wechsel: Brennerei g 3 k 2 → 3 → 2', () => {
     const w = emptyWorld('normal');
