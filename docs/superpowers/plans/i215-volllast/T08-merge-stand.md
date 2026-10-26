@@ -4,11 +4,12 @@ Strang A · Persona `tech-sim-engineer` (Fortsetzung per `SendMessage`) · Model
 
 **Ziel:** `feat/volllast` steht auf dem aktuellen main; die Volllast ist in `cycleOf` und `buildingUpkeep` der letzte Faktor; jeder auf main vorhandene Nachbarfaktor hat einen verbindlichen Kombifall; `SAVE_VERSION` = main + 1.
 
-**Testsperre: Last ≤ 4 nötig** (`make messfenster`), sonst `waiting`. **Vorbedingung (P-6):** `git merge-base --is-ancestor feat/i201 main; echo EXIT=$?` → 0. Sonst `waiting` mit Grund «I-201 nicht auf main».
+**Testsperre: Last ≤ 4 nötig** (`make messfenster`), sonst `waiting`. **Vorbedingung (P-6):** `git merge-base --is-ancestor feat/i201 main; echo EXIT=$?` → 0. Sonst `waiting` mit Grund «I-201 nicht auf main». **Merge-Reihenfolge: I-201 vor T08** (R974).
 
 ## Schritte
 
 - [ ] **Merge:** `git merge --no-edit main; echo EXIT=$?` (kein Rebase). Konflikte nach der Tabelle unten lösen; je gelöstem Konflikt eine Zeile ins Ledger (Datei, Symbol, Lösung).
+- [ ] **Delta-Review (R974):** Ist ein Konflikt nicht nach der Tabelle unten lösbar, oder wird mehr als ein Konflikt gelöst, folgt vor dem Final-Review ein Delta-Review, frisch (`model: opus`), aus der Reserve (Budget). Der Controller meldet das mit der Konfliktliste aus dem Ledger.
 - [ ] **Merge-Stand notieren:** je `git merge-base --is-ancestor feat/<paket> main; echo EXIT=$?` für `i201`, `i210`, `ausbau-logik`; `rg -n "SAVE_VERSION =" src/sim/save.ts`.
 - [ ] **Reihenfolge prüfen:** Rumpf von `cycleOf` lesen; die Volllast-Zeile (`overtimeState(…) … overtimeCycle(c)`) ist die letzte Anweisung. Rumpf von `buildingUpkeep`: Stilllegen zuerst, dann `overtimeUpkeep(world, b, base)` mit `base` = Wert nach Stufe und Drossel.
 - [ ] **Kombifälle** in `tests/sim/overtime.test.ts` (je vorhandenes Paket, verbindlich):

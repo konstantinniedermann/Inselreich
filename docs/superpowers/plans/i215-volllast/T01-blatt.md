@@ -15,7 +15,7 @@ Strang A · Persona `tech-sim-engineer` · Modell sonnet · ≈ 40 Tools · bloc
    - `overtimeCycle(c) = Math.max(1, Math.ceil((c * OVERTIME_CYCLE_PCT) / 100))`.
    - `overtimeUpkeep(world, b, u): number` — Phase `overtime` → `ceil(u × OVERTIME_UPKEEP_PCT / 100)`, `rest` → `ceil(u × PAUSED_UPKEEP_PCT / 100)`, sonst `u`. Stilllegen prüft der Aufrufer (T02).
    - `clearExpiredOvertime(world, b): void` — löscht `overtimeAt` bei `d ≥ OVERTIME_TICKS + OVERTIME_REST_TICKS` (Aufruf in T03).
-   - `overtimeBlockReason(world, b): string | null` — Reihenfolge Spec Regel 8 Punkte 2–7, Texte exakt: «Nur Betriebe kennen Volllast», «Volllast läuft», «Ruht», «Stillgelegt: erst anfahren», «Brennt», «Keine Strassenverbindung». «Hat Zyklus» = `BUILDING_DEFS[b.defId].produces !== undefined && BUILDING_DEFS[b.defId].cycle !== undefined` (P-5).
+   - `overtimeBlockReason(world, b): string | null` — Reihenfolge Spec Regel 8 Punkte 2–7, Texte exakt: «Nur Betriebe kennen Volllast», «Volllast läuft», «Ruht», «Stillgelegt: erst anfahren», «Brennt», «Keine Strassenverbindung». «Hat Zyklus» = `BUILDING_DEFS[b.defId].produces !== undefined && BUILDING_DEFS[b.defId].cycle !== undefined` (P-5; die Ausnahme gilt nur für diese Existenzprüfung, nie für den Wert von `cycle`/`upkeep`).
    - `startOvertime(world, id: unknown): Result` — Id-Suche wie `pause.ts` (`typeof id === 'number' && Number.isInteger(id)`, `Object.hasOwn`), sonst `fail('Gebäude nicht gefunden')`; dann `overtimeBlockReason`; Erfolg setzt nur `b.overtimeAt = world.tick`. Wirft nie, kein Geld, keine Ware, kein Zufall.
 4. **`tests/sim/imports.test.ts`:** `overtime.ts` in die Ausnahmeliste des Tests «PLAN-NAHT … lesen cycle/upkeep nie direkt» (Kommentar: nur Existenzprüfung, P-5). Keine andere Änderung.
 
