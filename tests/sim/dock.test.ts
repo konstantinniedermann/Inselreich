@@ -140,6 +140,7 @@ describe('HAFEN S1 Anker folgt Kontor', () => {
       Spot,
       Spot,
     ];
+    expect(dockAt(w, 1, p)).not.toEqual(dockAt(w, 1, q));
     const r = placeBuilding(w, 'kontor2', p.x, p.y, 1);
     const before = { ...w.islands[1]!.anchor };
     expect(demolish(w, r.id!).ok).toBe(true);
@@ -156,6 +157,8 @@ describe('HAFEN S1 Anker folgt Kontor', () => {
   it('AK-HF-06: Seeweg-, Linien- und Fahrzeit-Caches folgen dem neuen Anker', () => {
     const w = rich(seaWorld(SEED_D37));
     const site = sitesOf(w, 1).at(-1)!;
+    const old = { ...w.islands[1]!.anchor };
+    expect(dockAt(w, 1, site)).not.toEqual(old);
     seaRoute(w.islands, 0, 1);
     lanePoints(w, 0, 1);
     laneTicks(w.islands, 0, 1);
