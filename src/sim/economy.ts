@@ -2,9 +2,9 @@ import { SHIP } from './defs/sea';
 import { STORAGE_CAP } from './defs/goods';
 import { UPKEEP_INTERVAL } from './defs/timing';
 import { activeEdictDef } from './edicts';
-import { buildingUpkeep } from './levels';
+import { buildingUpkeep, upkeepOf } from './levels';
 import { buildLevelContext } from './levelRules';
-import type { Cost, GoodId, Island, Result, World } from './types';
+import type { Building, Cost, GoodId, Island, Result, World } from './types';
 import { fail, ok } from './types';
 
 export { UPKEEP_INTERVAL } from './defs/timing';
@@ -59,11 +59,12 @@ export function grantRefund(world: World, isl: Island, cost: Cost): void {
   addStock(isl, 'stone', cost.stone);
 }
 
-/** Unterhalt je 100 Ticks, wirksam: Summe S (Gebäude + Schiffe), mit Edikt upkeepPct < 100 → ⌊S × pct / 100⌋. */
-export function totalUpkeep(world: World): number {
+/** Unterhalt je 100 Ticks, wirksam: Summe S (`nominal`: dieses Gebäude voll auf gebauter Stufe, ohne Drosselung/Pause – nur Vorschau; Gebäude + Schiffe), mit Edikt upkeepPct < 100 → ⌊S × pct / 100⌋. */
+export function totalUpkeep(world: World, nominal?: Building): number {
   let sum = 0;
   const ctx = buildLevelContext(world);
-  for (const b of Object.values(world.buildings)) sum += buildingUpkeep(world, b, ctx);
+  for (const b of Object.values(world.buildings))
+    sum += b === nominal ? upkeepOf(b) : buildingUpkeep(world, b, ctx);
   sum += world.ships.length * SHIP.upkeep;
   const pct = activeEdictDef(world)?.upkeepPct ?? 100;
   return pct < 100 ? Math.floor((sum * pct) / 100) : sum;

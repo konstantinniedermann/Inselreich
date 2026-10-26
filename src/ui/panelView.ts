@@ -4,7 +4,7 @@ import { GOODS } from '../sim/defs/goods';
 import { LEVELS } from '../sim/defs/levels';
 import { TIERS } from '../sim/defs/tiers';
 import { UPKEEP_INTERVAL } from '../sim/economy';
-import { buildingUpkeep, cycleOf, effectiveCycle, upkeepOf, utilization } from '../sim/levels';
+import { buildingUpkeep, cycleOf, effectiveCycle, utilization } from '../sim/levels';
 import { isSupplied } from '../sim/population';
 import { missingInputs, reservedInputs } from '../sim/queries';
 import type { Building, BuildingDefId, Tier, World } from '../sim/types';
@@ -240,7 +240,7 @@ export function upgradeGain(world: World, b: Building, to: 2 | 3): GainRow[] {
     gainRow(
       'upkeep',
       'Unterhalt',
-      perMinute(upkeepOf(b), UPKEEP_INTERVAL),
+      perMinute(buildingUpkeep(world, b), UPKEEP_INTERVAL),
       perMinute(next.upkeep, UPKEEP_INTERVAL),
       ' / min',
     ),

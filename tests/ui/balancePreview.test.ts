@@ -11,6 +11,11 @@ import { step } from '../../src/sim/tick';
 import type { BuildingDefId, GoodId, World } from '../../src/sim/types';
 import { balanceText } from '../../src/ui/hud';
 import { balanceAfterBuild, balanceAfterUpgrade, balanceLine } from '../../src/ui/balancePreview';
+import { buildingUpkeep } from '../../src/sim/levels';
+import { LEVELS } from '../../src/sim/defs/levels';
+import { UPKEEP_INTERVAL } from '../../src/sim/economy';
+import { perMinute } from '../../src/ui/time';
+import { upgradeGain } from '../../src/ui/panelView';
 import { meetLevel, placeTownhall, putBuilding, twoIslandWorld } from '../sim/helpers';
 import { createWorld } from '../../src/sim/world';
 
@@ -171,6 +176,28 @@ describe('balancePreview (I-078, AK-10, AK-14)', () => {
         expect(r.ok, `Schritt ${step} ${JSON.stringify(r)}`).toBe(true);
         expect(p.after, `edikt=${edict} Schritt ${step}`).toBe(bal(w));
       }
+    }
+  });
+
+  it('gesperrter Ausbau (Laufstufe < gebaute Stufe): Bilanz-Delta = Unterhaltszeile (nominal, vom Ist)', () => {
+    for (const edict of [false, true]) {
+      const w = twoIslandWorld();
+      w.won = true;
+      const b = putBuilding(w, 0, 'lumberjack', 3, 3);
+      if (edict) saving(w);
+      const bb = w.buildings[b.id]!;
+      bb.level = 2; // ohne meetLevel: Fachkräfte/Standort fehlen, Stufe 3 wäre gedrosselt
+      const nominal = LEVELS.lumberjack![1]!.upkeep;
+      const actual = buildingUpkeep(w, bb);
+      expect(actual, 'Ausgangslage gedrosselt').toBeLessThan(LEVELS.lumberjack![0]!.upkeep);
+      const p = balanceAfterUpgrade(w, bb);
+      const row = upgradeGain(w, bb, 3).find((r) => r.key === 'upkeep')!;
+      // Karte zeigt Ist -> nominal; die Bilanz verschiebt sich um genau diese Differenz
+      expect(row.before).toBe(perMinute(actual, UPKEEP_INTERVAL));
+      expect(row.after).toBe(perMinute(nominal, UPKEEP_INTERVAL));
+      if (!edict) expect(p.before - p.after).toBe(nominal - actual);
+      else expect(p.before - p.after).toBeGreaterThan(0);
+      expect(row.after).toBeGreaterThan(row.before);
     }
   });
 
