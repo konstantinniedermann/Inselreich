@@ -1839,6 +1839,7 @@ eines davon live ist und neue Reibung zeigt.
 - Bewertung lead-design: Variante für einen zweiten Schnitt der Inselproben (Probe auf kleiner Karte), nicht fürs Grundspiel; der Umbau der Kartenmasse über fünf Dateien ist das Hauptrisiko.
 - Nutzen/Aufwand: Kurzpartie mit anderen Platzentscheidungen · M · ≈ 3 Pakete
 - Entscheid: R878 geparkt als Baustein Inselproben Schnitt 2
+- Stand 2026-10-26: Rang gehoben (R975 T6-4: nach Inselproben Schnitt 1) und im Pool vorgezogen (R999); der Eintrag gilt nicht mehr als geparkt. Der aktive Pool-Eintrag in `docs/ideen.md` steht aus (lead-design, nächstes `docs/ideen.md`-Paket); dieser Archivtext bleibt als Herkunft unverändert.
 
 ### I-203 · geparkt (R878) · Amtszeit der Edikte (Wirkung wächst im Amt)
 
