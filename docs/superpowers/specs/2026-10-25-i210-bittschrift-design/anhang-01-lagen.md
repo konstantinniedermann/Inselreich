@@ -24,8 +24,7 @@ Gehört zu [I-210 Bittschrift](../2026-10-25-i210-bittschrift-design.md) §12, A
 Hinweise für den Plan:
 
 - **P1 = 60 Bewohner (R999):** vier Bürgerhäuser auf Höchstbelegung (4 × 15). Sonst wachsen die Häuser im Fenster
-  von selbst auf 60, und «ü = 0» stimmt nicht mehr. Die Kosten von B2 sind dann ⌈60 / 5⌉ = 12 Rum, von B1 ⌈60 / 6⌉
-  gemäss §4.2. Gilt für B1-Nein, B2-Nein und B8-Nein.
+  von selbst auf 60, und «ü = 0» stimmt nicht mehr. Die Kosten von B2 sind dann ⌈60 / 5⌉ = 12 Rum, B1: Stoff ⌈E / 5⌉ mit E = 60, ebenfalls 12 (§4.2). Gilt für B1-Nein, B2-Nein und B8-Nein.
 - **B9-Ja (R999):** Der Sturm beginnt hinter der Genügsamkeitsfrist des Nein-Zweigs (Spec §3.4); sonst würde der
   Nein-Lauf im Sturm schon sparsamer essen und die Lage nichts mehr zeigen. Vorbedingung: Im Nein-Lauf fällt die
   Nahrung im Sturm auf 0, im Ja-Lauf nicht. Zusatzmass und Rückfall: Anhang 06.
