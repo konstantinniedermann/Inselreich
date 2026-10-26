@@ -23,7 +23,15 @@ import {
 import { LEVELS } from './defs/levels';
 import { RESERVE_GOODS, RESERVE_STEPS } from './defs/reserve';
 import { MONUMENT_GOODS, MONUMENT_STAGES } from './defs/monument';
-import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
+import {
+  TAX_CARRY_DIVISOR,
+  TAX_LEVELS,
+  TIERS,
+  TIER_IDS,
+  TITHE_CARRY_DIVISOR,
+  TITHE_GOODS,
+  TITHE_TIERS,
+} from './defs/tiers';
 import { EDICTS } from './defs/edicts';
 import { UNLOCK_IDS } from './defs/unlocks';
 import { TRIAL_DURATION_TICKS, TRIAL_IDS } from './defs/trials';
@@ -54,7 +62,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 19;
+export const SAVE_VERSION = 20;
 
 export type { LoadResult };
 
@@ -942,6 +950,14 @@ function isValidCouncil(raw: Record<string, unknown>): boolean {
   );
 }
 
+/** v19 → v20 (I-223 Zehnt): drei Felder mit Startwerten (Zehnt aus). Wirft nie. */
+export function migrateV19ToV20(raw: Record<string, unknown>): void {
+  raw.titheOn = Object.fromEntries(TITHE_TIERS.map((t) => [t, false]));
+  raw.titheLockedUntil = Object.fromEntries(TITHE_TIERS.map((t) => [t, 0]));
+  raw.titheCarry = Object.fromEntries(TITHE_GOODS.map((g) => [g, 0]));
+  raw.version = 20;
+}
+
 /** v18 → v19 (I-153 Seerecht): nur die Versionsnummer; ältere Builds weisen Stände mit Beschluss C über sie ab. Wirft nie. */
 export function migrateV18ToV19(raw: Record<string, unknown>): void {
   raw.version = 19;
@@ -977,6 +993,24 @@ function isValidTrial(raw: Record<string, unknown>): boolean {
   return isValidTrialPassed(t.passed, t.active);
 }
 
+/** Genau die Schlüssel `keys`, Werte nach `ok`. */
+function hasExactly(v: unknown, keys: readonly (string | number)[], ok: (x: unknown) => boolean) {
+  if (!isObject(v) || Array.isArray(v)) return false;
+  const own = Object.keys(v);
+  return (
+    own.length === keys.length && keys.every((k) => own.includes(String(k)) && ok(v[String(k)]))
+  );
+}
+
+/** I-223: `titheOn`, `titheLockedUntil`, `titheCarry` mit genau den Stufen- bzw. Gutschlüsseln. */
+function isValidTithe(raw: Record<string, unknown>): boolean {
+  return (
+    hasExactly(raw.titheOn, TITHE_TIERS, (x) => typeof x === 'boolean') &&
+    hasExactly(raw.titheLockedUntil, TITHE_TIERS, (x) => isInt(x) && x >= 0) &&
+    hasExactly(raw.titheCarry, TITHE_GOODS, (x) => isIntBetween(x, 0, TITHE_CARRY_DIVISOR - 1))
+  );
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { stats } = raw;
@@ -995,6 +1029,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidContractFields(raw)) return false;
   if (!isValidFarFields(raw)) return false;
   if (!isValidTrial(raw)) return false;
+  if (!isValidTithe(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -1041,6 +1076,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 16) migrateV16ToV17(raw);
   if (raw.version === 17) migrateV17ToV18(raw);
   if (raw.version === 18) migrateV18ToV19(raw);
+  if (raw.version === 19) migrateV19ToV20(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

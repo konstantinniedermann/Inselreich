@@ -310,7 +310,7 @@ export interface CouncilDef {
   lever: CouncilLever;
 }
 export interface World {
-  version: 19;
+  version: 20;
   seed: number;
   islands: Island[];
   tick: number;
@@ -339,6 +339,12 @@ export interface World {
   taxCarry: number;
   /** Unterhalts-Übertrag, 0 … UPKEEP_INTERVAL − 1 (M11 3.1). */
   upkeepCarry: number;
+  /** Zehnt je Stufe an/aus (I-223); Start aus. */
+  titheOn: Record<TitheTier, boolean>;
+  /** Tick, bis zu dem der Zehnt der Stufe nicht umschaltbar ist (I-223), ≥ 0. */
+  titheLockedUntil: Record<TitheTier, number>;
+  /** Zehnt-Übertrag je Gut, 0 … TITHE_CARRY_DIVISOR − 1 (I-223). */
+  titheCarry: Record<TitheGood, number>;
   /** Schiffe (M12 Seefahrt), höchstens `SHIP_MAX`. */
   ships: Ship[];
   nextShipId: number;
@@ -432,3 +438,10 @@ export interface EdictDef {
   /** null = keine Wirkung. */
   upgradeWait: number | null;
 }
+
+/** Stufen mit Zehnt (I-223): Pioniere, Siedler. */
+export type TitheTier = 1 | 2;
+/** Güter, in denen der Zehnt fällig wird (I-223). */
+export type TitheGood = 'tools' | 'stone';
+/** Ausfall durch den Zehnt je Gut (I-223). */
+export type TitheLoss = Partial<Record<TitheGood, number>>;

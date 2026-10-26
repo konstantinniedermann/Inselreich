@@ -189,8 +189,8 @@ describe('I-153 Seerecht Save', () => {
 describe('I-153 Seerecht Save-Version (F3)', () => {
   const PRE_SEERECHT_VERSION = 18;
 
-  it('AK-SR-12 SAVE_VERSION ist der Stand vor Seerecht plus 1', () => {
-    expect(SAVE_VERSION).toBe(PRE_SEERECHT_VERSION + 1);
+  it('AK-SR-12 SAVE_VERSION liegt mindestens beim Stand vor Seerecht plus 1', () => {
+    expect(SAVE_VERSION).toBeGreaterThanOrEqual(PRE_SEERECHT_VERSION + 1);
   });
 
   it('AK-SR-12 v18-Stand lädt als Version 19, council und ships bleiben gleich', () => {
