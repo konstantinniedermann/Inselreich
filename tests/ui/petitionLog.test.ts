@@ -1,10 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { PETITIONS } from '../../src/sim/defs/petitions';
 import type { PetitionEvent } from '../../src/sim/petitions';
-import { home } from '../../src/sim/world';
+import { createWorld, home, HOME } from '../../src/sim/world';
 import { effectLines, effectsChip, petitionLogEntries } from '../../src/ui/petitionLog';
 import { formatClock } from '../../src/ui/time';
-import { twoIslandWorld, putBuilding, setHouse, village } from '../sim/helpers';
+import {
+  forceGrass,
+  houseNearKontor,
+  placeService,
+  twoIslandWorld,
+  putBuilding,
+  setHouse,
+  village,
+} from '../sim/helpers';
 
 const UNTIL = 19000;
 
@@ -114,5 +122,21 @@ describe('Chip', () => {
     const c = effectsChip(w)!;
     expect(c.label).toBe('Wirkungen 2 · noch 1:00');
     expect(c.title.split('\n')).toHaveLength(2);
+  });
+});
+
+describe('Glockenweihe im Haus-Panel (B4)', () => {
+  it('Haus im Radius der Ankerkapelle: Zeile mit Frist; ausserhalb keine', () => {
+    const w = createWorld(3, { unlockAll: true });
+    const near = houseNearKontor(w);
+    const chapel = placeService(w, 'chapel', near.x + 5, near.y);
+    chapel.connected = true;
+    forceGrass(w, chapel.x + 20, chapel.y);
+    const far = putBuilding(w, HOME, 'house', chapel.x + 20, chapel.y);
+    w.tick = 10;
+    expect(effectLines(w, near)).toEqual([]);
+    w.petitions.effects.push({ id: 'bell', answer: 'yes', until: UNTIL, anchor: chapel.id });
+    expect(effectLines(w, near)).toEqual([`Glockenweihe bis ${formatClock(UNTIL)}`]);
+    expect(effectLines(w, far)).toEqual([]);
   });
 });
