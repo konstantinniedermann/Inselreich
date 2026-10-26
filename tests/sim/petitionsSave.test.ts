@@ -124,6 +124,11 @@ describe('AK-BS-15 Migration', () => {
 });
 
 describe('AK-BS-15 Abweisung', () => {
+  it('Stand der aktuellen Version ohne petitions ist beschädigt, kein stilles Auffüllen', () => {
+    const raw = JSON.parse(serialize(busyWorld())) as Record<string, unknown>;
+    delete raw.petitions;
+    expect(deserialize(JSON.stringify(raw))).toEqual(broken);
+  });
   it('drei offene Marken', () =>
     expect(
       edited((r) => {

@@ -1083,12 +1083,17 @@ function isWellFormedSafe(raw: Record<string, unknown>): boolean {
   }
 }
 
+/** Erste Version, deren Stände `petitions` immer tragen. */
+const PETITIONS_SINCE = 20;
+
 /**
  * I-210: Stände ohne `petitions` laden mit ausgeschalteten Bittschriften.
  * Der Schlüssel steht wie in `createWorld` vor `buyPct`, damit die Schlüsselfolge (und damit `serialize`) gleich bleibt.
  */
 function fillPetitionsDefault(raw: Record<string, unknown>): void {
-  if ('petitions' in raw) return;
+  // Ab Version 20 gehört `petitions` zum Stand; fehlt es dort, ist der Stand beschädigt (isWellFormed weist ihn ab).
+  if ('petitions' in raw || typeof raw.version !== 'number' || raw.version >= PETITIONS_SINCE)
+    return;
   const petitions = { on: DEFAULT_WORLD_PETITIONS_ON, next: null, open: [], effects: [] };
   const keys = Object.keys(raw);
   const at = keys.indexOf('buyPct');
