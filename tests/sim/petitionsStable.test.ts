@@ -3,7 +3,9 @@
  * 110 %, Gewürz per Testzufuhr, Krisen aus. Nach 2000 Ticks Einschwingen gilt B1 (`amount` 24), Zweige aus demselben
  * serialize: J (Ja), J+F (Ja, im Antworttick 2 Fischer), N+F (Nein, dieselben Fischer), N (Nein).
  * Geprüft werden die Bänder aus Anhang 03 §3 als Formel des tatsächlichen ü; ein Wert ausserhalb ist ein Befund an den
- * Controller, keine Kalibrierung. Seed 3 (AK-BS-05 nennt keinen zweiten).
+ * Controller, keine Kalibrierung. Zwei Bänder sind nach R997 berichtigt: J+F Stoff = S - L_St x (duration - RAMP) / 100
+ * mit [-6, +3] (die Rampe läuft nicht mit), N gesparter Stoff [exp - 1, exp + 6] (ganzzahlige Entnahme wirkt je Haus in
+ * beide Richtungen). Seed 3 (AK-BS-05 nennt keinen zweiten).
  * Die Fischer stehen auf Kacheln, die `canPlace` zulässt und die im Versorgungsradius des Kontors liegen; sie gelten
  * als angebunden (Helfer setzen `connected`, ohne Wege).
  * Der Stoffverbrauch wird an den Abbuchungen vom Lager gezählt (nicht aus der Formel).
@@ -186,11 +188,10 @@ describe(`AK-BS-05 stabile Stadt, Seed ${SEED}`, () => {
     expect(t!).toBeLessThanOrEqual((s / lNa) * PER_HUNDRED + RAMP);
   });
 
-  // BEFUND: Band Anhang 03 §3 fehlerhaft (Ist 24, Band bei ü 9,7 % 17 bis 23, nicht kalibriert).
-  // Ruling-Entwurf: S - L_St x (duration - RAMP) / 100 mit [-6, +3]; bis zum L0-Ruling skip.
-  it.skip('J+F: Stoff am Ende der Überbelegung im Band', () => {
+  // Berichtigtes Band (R997): Soll S - L_St x (duration - RAMP) / 100, Toleranz [-6, +3]; die Rampe läuft nicht mit.
+  it('J+F: Stoff am Ende der Überbelegung im Band', () => {
     const lSt = 18 * TIERS[4].needs.cloth! - over.cloth! * 120 * TIERS[4].needs.cloth!;
-    const expected = results.JF!.rampCloth - lSt * (def.duration / PER_HUNDRED);
+    const expected = results.JF!.rampCloth - lSt * ((def.duration - RAMP) / PER_HUNDRED);
     expect(results.JF!.clothAtEffectEnd).toBeGreaterThanOrEqual(expected - 6);
     expect(results.JF!.clothAtEffectEnd).toBeLessThanOrEqual(expected + 3);
   });
@@ -205,14 +206,13 @@ describe(`AK-BS-05 stabile Stadt, Seed ${SEED}`, () => {
     expect(d).toBeLessThanOrEqual(MONEY_BAND[1]);
   });
 
-  // BEFUND: Band Anhang 03 §3 fehlerhaft (Ist 48 bei Referenz 432 und N 384, Band bis 44,2, nicht kalibriert).
-  // Ruling-Entwurf: gespart [exp - 1, exp + 6] (ganzzahlige Entnahme wirkt in beide Richtungen); bis zum L0-Ruling skip.
-  it.skip('N: gesparter Stoff gegen die Referenz im Band', () => {
+  // Berichtigtes Band (R997): gespart [exp - 1, exp + 6]; die ganzzahlige Entnahme wirkt je Haus in beide Richtungen.
+  it('N: gesparter Stoff gegen die Referenz im Band', () => {
     const rate = results.REF!.clothTakenFrugal / (FRUGAL_TICKS / PER_HUNDRED); // Ist-Rate je 100 T
     const saved = results.REF!.clothTakenFrugal - results.N!.clothTakenFrugal;
     const expected = rate * 0.1 * (FRUGAL_TICKS / PER_HUNDRED);
-    expect(saved).toBeGreaterThanOrEqual(expected - 6);
-    expect(saved).toBeLessThanOrEqual(expected + 1);
+    expect(saved).toBeGreaterThanOrEqual(expected - 1);
+    expect(saved).toBeLessThanOrEqual(expected + 6);
   });
 
   it('N: Stoffbestand am Ende minus Referenz in [0, 6]', () => {
