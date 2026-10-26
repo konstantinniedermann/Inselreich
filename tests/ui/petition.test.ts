@@ -48,6 +48,13 @@ describe('AK-BS-24 Warum-Zeile', () => {
       expect(m.no.tail).toBe('Keine weitere Folge');
     });
   }
+  it('Warum-Zeile wiederholt nicht «Genügsam», Satz beginnt gross', () => {
+    for (const id of PETITION_IDS) {
+      const why = petitionCardModel(worldFor(id), 50)!.no.why;
+      expect(why).not.toContain('Genügsam');
+      expect(why).toMatch(/^Warum [^:]+: [A-ZÄÖÜ]/);
+    }
+  });
   it('B5, B7, B8, B9 nennen die Bezugsware', () => {
     expect(petitionCardModel(worldFor('feastDrink'), 50)!.no.why).toMatch(/Zuckerrohr|Rum/);
     expect(petitionCardModel(worldFor('woolMarket'), 50)!.no.why).toContain('Wolle');

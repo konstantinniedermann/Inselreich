@@ -112,6 +112,12 @@ function yesLines(pv: PetitionPreview): string[] {
 }
 
 /** Karte einer offenen, unbeantworteten Marke; `null`, wenn es sie nicht (mehr) gibt. */
+/** Begründung ohne das Vorwort «Genügsam bei Ware: » (die Zeile heisst schon «Warum Ware»), Satz gross. */
+export function reasonText(raw: string): string {
+  const t = raw.replace(/^Genügsam bei [^:]+: /, '');
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
 export function petitionCardModel(world: World, drawnAt: number): PetitionCardModel | null {
   const mark = world.petitions.open.find((m) => m.drawnAt === drawnAt);
   if (mark === undefined || mark.answer !== undefined) return null;
@@ -132,7 +138,7 @@ export function petitionCardModel(world: World, drawnAt: number): PetitionCardMo
     no: {
       effect: `für ${minutes(FRUGAL_TICKS)} −${FRUGAL_PCT} % ${g}bedarf (spart ≈ ${Math.round(pv.noSaving)} ${g})`,
       nearFull: pv.nearFull ? 'Lager fast voll: Ersparnis verfällt teilweise' : null,
-      why: `Warum ${g}: ${def.noReason}`,
+      why: `Warum ${g}: ${reasonText(def.noReason)}`,
       tail: 'Keine weitere Folge',
     },
   };
