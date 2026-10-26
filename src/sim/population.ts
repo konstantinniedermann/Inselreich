@@ -1,10 +1,22 @@
 import { maxInhabitantsOf, serviceRadiusOf } from './council';
 import { BUILDING_DEFS } from './defs/buildings';
-import { TAX_CARRY_DIVISOR, TAX_LEVELS, TAX_UNIT, TIERS, TIER_IDS } from './defs/tiers';
+import {
+  TAX_CARRY_DIVISOR,
+  TAX_LEVELS,
+  TAX_UNIT,
+  TIERS,
+  TIER_IDS,
+  TITHE_CARRY_DIVISOR,
+  TITHE_GOOD,
+  TITHE_GOODS,
+  TITHE_PCT,
+  TITHE_TIERS,
+  TITHE_UNITS_PER_100,
+} from './defs/tiers';
 import { GOODS } from './defs/goods';
 import { UPGRADE_DEFICIT_WAIT_FACTOR } from './defs/timing';
 import { feastActive } from './feast';
-import { checkAfford, pay, takeStock } from './economy';
+import { addStock, checkAfford, pay, takeStock } from './economy';
 import type {
   Building,
   BuildingDefId,
@@ -14,14 +26,17 @@ import type {
   TaxLevel,
   Tier,
   TierDef,
+  TitheGood,
+  TitheLoss,
+  TitheTier,
   World,
 } from './types';
 import { budgetFrom, dampsOn, deficitGood, goodsBalance, upgradeDelta, type Budget } from './flow';
 import { buildCoverage, distance, serviceBuildings, type Coverage } from './coverage';
 import { inSupplyRange } from './supply';
 import { edictUpgradeWait, effectiveTaxPct, growthInterval } from './edicts';
-import { effectiveTaxLevel, goodLockActive, upgradeStopActive } from './townhall';
-import { center, islandOf } from './world';
+import { effectiveTaxLevel, goodLockActive, townhallActive, upgradeStopActive } from './townhall';
+import { center, home, islandOf } from './world';
 
 export { GROWTH_INTERVAL, UPGRADE_WAIT } from './defs/timing';
 
@@ -266,14 +281,66 @@ export function totalTaxes(world: World): number {
   return Math.floor(taxUnits(world) / (TAX_UNIT * 100));
 }
 
-/** Aktualisiert die Steuerstatistik (Nominalwert je 100 Ticks) und bucht je Schritt mit ganzzahligem Übertrag. */
-export function tickTaxes(world: World): void {
-  const units = taxUnits(world);
+/** Aufteilung der Steuer eines Schritts in Geld und Zehnt-Ware (I-223). */
+export interface TitheSplit {
+  /** cₜ je Stufe (Steuereinheiten × Prozent); Stufen 3/4 = uₜ. */
+  money: Record<Tier, number>;
+  /** Σ zₜ je Gut (Einheiten × Prozent), ohne Kurs. */
+  tithe: Record<TitheGood, number>;
+}
+
+/** Zehnt der Stufe wirkt: Schalter an und Amtsstube aktiv. */
+export function titheActive(world: World, tier: TitheTier): boolean {
+  return world.titheOn[tier] && townhallActive(world);
+}
+
+/** Teilt uₜ = Basis × Steuersatz je Stufe in Geld cₜ und Zehnt zₜ; reine Funktion, ganzzahlig. */
+export function titheSplit(world: World): TitheSplit {
+  const base = taxBaseByTier(world);
+  const money = {} as Record<Tier, number>;
+  const tithe = Object.fromEntries(TITHE_GOODS.map((g) => [g, 0])) as Record<TitheGood, number>;
+  for (const t of TIER_IDS) money[t] = base[t] * effectiveTaxPct(world, t);
+  for (const t of TITHE_TIERS) {
+    if (!titheActive(world, t)) continue;
+    const u = money[t];
+    money[t] = Math.floor((u * (100 - TITHE_PCT[t])) / 100);
+    tithe[TITHE_GOOD[t]] += u - money[t];
+  }
+  return { money, tithe };
+}
+
+const sumMoney = (split: TitheSplit): number =>
+  TIER_IDS.reduce((sum, t) => sum + split.money[t], 0);
+
+/** Geldsteuer je 100 Ticks (Nominalwert) nach Abzug des Zehnts. */
+export function moneyTaxes(world: World): number {
+  return Math.floor(sumMoney(titheSplit(world)) / (TAX_UNIT * 100));
+}
+
+/** Bucht die fälligen Zehnt-Stücke je Gut in das Heimatlager; liefert den Verfall über der Lagergrenze. */
+function bookTithe(world: World, tithe: Record<TitheGood, number>): TitheLoss {
+  const loss: TitheLoss = {};
+  for (const g of TITHE_GOODS) {
+    if (tithe[g] <= 0) continue;
+    world.titheCarry[g] += tithe[g] * TITHE_UNITS_PER_100[g];
+    const n = Math.floor(world.titheCarry[g] / TITHE_CARRY_DIVISOR);
+    world.titheCarry[g] -= n * TITHE_CARRY_DIVISOR;
+    const got = addStock(home(world), g, n);
+    if (n - got > 0) loss[g] = n - got;
+  }
+  return loss;
+}
+
+/** Aktualisiert die Steuerstatistik (Nominalwert je 100 Ticks), bucht Geld und Zehnt je Schritt mit ganzzahligem Übertrag. */
+export function tickTaxes(world: World): TitheLoss {
+  const split = titheSplit(world);
+  const units = sumMoney(split);
   world.stats.taxes = Math.floor(units / (TAX_UNIT * 100));
   world.taxCarry += units;
   const n = Math.floor(world.taxCarry / TAX_CARRY_DIVISOR);
   world.money += n;
   world.taxCarry -= n * TAX_CARRY_DIVISOR;
+  return bookTithe(world, split.tithe);
 }
 
 /** Bürger und höher: Einwohner aller Häuser ab Stufe 3 (M8 4.2; ein Aufstieg 3 → 4 senkt die Zahl nie). */
