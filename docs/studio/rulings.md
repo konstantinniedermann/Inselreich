@@ -3369,3 +3369,59 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN, NU-1, 
 Regelbezug: R464, R816, R826, R994, R998, R999, R1004 · Kosten bei Irrtum: ein verschobener Push oder ein zusätzlicher Bündellauf.
 
 Entscheider: L0 · Anlass: Nutzerauftrag Session-Start · ADR: —
+
+## R1006 · 2026-10-26 · REL-35: Konflikt `docs/ideen.md` an lead-production
+
+Ruling: Merge 2 (`design/neue-ufer` @ `00e17e3f`) auf `integrate/rel-35` @ `30478da6` kollidiert in `docs/ideen.md` (Textkonflikt, kein Treiber). Lösung durch eine **eigene `lead-production`-Instanz** (STUDIO.md
+„Merge“: Konflikte an den Production-Lead) im Worktree `.worktrees/integrate`: Merge erneut starten, beide Seiten erhalten (Rangliste aus `feat/hafen`, Entscheid-Zeilen R962/R958/R966 zu I-189/I-194 aus
+`design/neue-ufer`), Merge-Commit. Danach setzt der Integrator Merge 3–5 und `make push-check` fort (R1005). Reihenfolge bleibt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAUSHALT-04 (nur `ideen-archiv.md`/I-200, anderer Branch)
+Regelbezug: R330 (5), R1005 · Kosten bei Irrtum: eine falsch zusammengeführte Doku-Zeile, nachträglich korrigierbar.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-35 · ADR: —
+
+## R1007 · 2026-10-26 · HAUSHALT-04 abgenommen
+
+Ruling: HAUSHALT-04 **abgenommen**: Mess-Worktrees `i210-t15main`, `i210-base` ohne `--force` entfernt; `docs/haushalt-04` @ `a0234f61` (Stand-Zeile I-200 im Archiv) geht als zusätzlicher Merge ins Bündel REL-35.
+I-200 als aktiver Pool-Eintrag (R975/R999 «vorgezogen», fehlt in `docs/ideen.md`) geht an `lead-design` mit dem nächsten Ideen-Paket; Punkt in `state.md` „Fortsetzung“. `out*.txt` bleiben Teil des I-210-Merges (R1001).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-35 (Doku)
+Regelbezug: R975, R999, R1001, R1005 · Kosten bei Irrtum: ein Doku-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-production HAUSHALT-04 · ADR: —
+
+## R1008 · 2026-10-26 · COACH-R1004 abgenommen
+
+Ruling: COACH-R1004 **abgenommen** (`docs/coach-r1004` @ `016a48dc`): E-066 angepasst abgeschlossen, E-080 mit Platz, E-082 (passiv, Frist 2026-11-19) und E-083 (Start nach Bewertung E-080, Frist 2026-12-03)
+eingetragen, Pflichtzeile Startzähler (E-082) in `templates/briefing.md`; kein Handbuch-Minor nötig. `make studio-test` grün. Merge nach main **nach** dem push-check REL-35 (geht mit dem übernächsten Push); die Links auf den
+Retro-Bericht lösen sich, sobald `docs/retro-b73acd32` (in REL-35) auf main ist. Kosmetik (Datum der Übersichtszeile «Laufend») darf beim nächsten Coach-Paket mitgehen.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R1004, R1005 · Kosten bei Irrtum: zwei passive Messgrössen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach COACH-R1004 · ADR: —
+
+## R1009 · 2026-10-26 · Spec-Nachträge I-210 und AUSBAU-LOGIK abgenommen
+
+Ruling: **abgenommen**: `docs/nachtrag-i210` @ `00d64dc5` (ab `design/i210-bittschrift`; Anhang 01 B2/B3/B9, neuer Anhang 06 R-BS-5/-6, AK-BS-26–29, AK-BS-23 mit Hinweis R1000) und `docs/nachtrag-al` @ `d538aa18`
+(ab `feat/ausbau-logik` @ `ba8de2d4`; Unterhalt in der UI je Minute ×6, Sim je Intervall; AK-AL-50/-51). Rulings-Abgleich R998–R1001. Die Nachträge gehen **vor** dem jeweiligen Gate Merge in ihre Basis-Branches
+(Zwischen-Merge im Strang, nur Doku): `docs/nachtrag-i210` → `design/i210-bittschrift`, `docs/nachtrag-al` → `feat/ausbau-logik`; der Spec-Branch `design/i210-bittschrift` geht zusammen mit `feat/i210` nach main (Gate Merge I-210).
+Befund AK-BS-18 («Kosten 10» bei 60 Bewohnern, Formel ergibt 12) → `docs/beobachtungen.md`, Klärung im Gate Merge I-210.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, AUSBAU-LOGIK
+Regelbezug: R998, R999, R1000, R1002 · Kosten bei Irrtum: ein Spec-Abschnitt nachzubessern.
+
+Entscheider: L0 · Anlass: Bericht lead-design NACHTRAG-I210-AL · ADR: —
+
+## R1010 · 2026-10-26 · Kurz-Retro 763c65b8 abgenommen; Session-Ende
+
+Ruling: Retro `docs/retro-763c65b8` @ `298f7a13` **abgenommen** (B1–B3). B1 trifft L0: Die Konflikt-Probe (R330 (5)) vor dem Bündel REL-35 hat L0 nicht angeordnet. **E-084 ja (passiv ohne Platz):** Das Gate-Merge-
+bzw. Bündel-Ruling nennt je Branch das Ergebnis von `git merge-tree` als Pflichtzeile; Messgrösse 0 Integrator-Abbrüche wegen Textkonflikt in 3 Gate-Merge-/Bündel-Rulings, Frist 2026-12-03; Rückfall: Zeile streichen.
+Eintrag in `experimente.md` durch `studio-coach` in der nächsten Session. Kein Experiment zu den roten Ampel-Zeilen (Zuschnitt R1005, kleine Stichprobe); M5/M6 an die nächste Retro. Session-Ende ohne Push (R816); Push
+`898fdd5d` am 2026-10-27.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle Bündel und Gate Merges
+Regelbezug: R330 (5), R816, R1005–R1009 · Kosten bei Irrtum: eine Pflichtzeile je Bündel-Ruling.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —

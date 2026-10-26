@@ -4,11 +4,11 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-26 (Session b73acd32, R972–R1003; live REL-33 `12585b2a`, Save v19 live; REL-34 lokal auf main `c94f489c` (push-check Exit 0), Push 2026-10-27; Verfassung 1.3, Handbuch 1.79)
+Stand: 2026-10-26 (Session 763c65b8, R1005–R1010; live REL-33 `12585b2a`, Save v19 live; **REL-35 lokal auf main `898fdd5d`** (REL-34 + HAFEN L1, push-check Exit 0), Push 2026-10-27; Verfassung 1.3, Handbuch 1.79)
 
 ## Release-Notizen
 
-**REL-34 „Festanlass und Pläne“ (lokal auf main, NICHT live, R995)** — Save v19 (kein Wechsel). `integrate/rel-34` @ `c94f489c`, push-check Exit 0, main vorgespult; Push **2026-10-27** nach push-check auf dem dann gebündelten Stand (zuerst `feat/hafen` @ `66587556` mergen, R994). Inhalt: I-201 Festanlass, Specs/Pläne Volllast, Zehnt, Rückfracht, TIEFE-6, IDEEN-20-Folgen, Handbuch 1.79. Quelle: `.studio/handoffs/2026-10-26-production-integrator-REL-34.md`.
+**REL-35 = REL-34 „Festanlass und Pläne“ + HAFEN L1 (lokal auf main `898fdd5d`, NICHT live, R1005–R1007)** — Save v19 (kein Wechsel). `integrate/rel-35`: `feat/hafen`, `design/neue-ufer` (Konflikt `docs/ideen.md` gelöst, R1006), `plan/nu1-kartenrand`, `design/pool-b3`, `docs/retro-b73acd32`, `docs/haushalt-04`; push-check Exit 0 auf `898fdd5db2387646e213679ad146781fea8a6365` (7:57), main vorgespult. **Push 2026-10-27** per `git push origin 898fdd5d:main` (genau dieser Hash), danach CI und Pages prüfen. Quelle: `.worktrees/integrate/.studio/handoffs/2026-10-26-production-integrator-REL-35.md`. Inhalt REL-34: I-201 Festanlass, Specs/Pläne Volllast, Zehnt, Rückfracht, TIEFE-6, IDEEN-20-Folgen, Handbuch 1.79.
 
 - **Neu:** Festanlass an der Kapelle (Ernte- und Markttag), Festwahl mit Anzeige (I-201). Mit HAFEN L1: Kontor II nur am Meerufer, Schiffe legen an der nächsten Meerkachel an.
 - **Bitte testen:** (1) Fest an der Kapelle wählen, Wirkung im Inspektor; (2) Kontor II an Küste bauen, abreissen, näher neu bauen, während ein Schiff heimfährt, speichern und laden; (3) Kontor II an Binnensee → «Kontor braucht Zugang zum Meer»; (4) alten v19-Stand laden.
@@ -211,11 +211,11 @@ Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine 
 **R826** (Deckel 10 bei grüner Limit-Ampel, ≤ 3 Test-Controller, ≤ 2 Browser); **R853/R856** (Arbeiter-Meldungen an den Lead; **L0 sendet jedem Lead direkt nach dem Start seine agentId**, R879);
 **R868 V2** (Starts asynchron, Lead wartet ruhig). **R896** Spielregeln und Ausbau-Bedingungen fachlich erklärbar (Nachvollziehbarkeit und Logik, Gate-Kriterium); Nutzer-Playtests sind Input erster Ordnung, vor dem Pool. **R922** liegengebliebene Headless-Chrome (auch fremder Projekte) bei Störung selbst per `kill <PID>` beenden, nie das sichtbare Chrome, nie laufende eigene Browser-Läufe. **Push-Takt:** höchstens ein Push je Kalendertag (R816); voller Lauf nur `make push-check`. **R959** gelbe Ampel stoppt keine Wellen: neue Starts bis 5 h 85 %, ab 90 % Ende-Routine.
 
-1. **Push 2026-10-27 zuerst** (Integrator): `feat/hafen` @ `66587556` in ein neues `integrate/rel-35` ab main mergen, dazu `design/neue-ufer`, `plan/nu1-kartenrand` @ `46d3ade8`, `design/pool-b3` @ `ebd291c1`, `docs/retro-b73acd32`; `make push-check`, bei Exit 0 main vorspulen und pushen (REL-34 + HAFEN L1 in einem Push).
-2. **Gates (R1001/R1003):** Gate Merge **I-223** (`feat/i223` @ `f085e56e`, Final-Review opus OK), Merge **vor** I-210 (Save 20 doppelt, R909/E-ZE-1); **I-210** (`feat/i210` @ `7df6518b`) erst nach Spec-Nachtrag R999 (lead-design, sonnet: Anhang 01, R-BS-5/-6), dann Gate Merge, zieht Save nach.
-3. **AUSBAU-LOGIK** Folgeinstanz (R1002): Test-Umbau `balance-upgrade` (siteAt/workforceAt hinter die Geldprüfung) + Messung, Bilanz-Fix stillgelegter Betrieb, Delta-Review opus, Gate Merge. Handoff `.studio/handoffs/2026-10-26-lead-tech-AUSBAU-LOGIK-2.md`.
+1. **Push 2026-10-27 zuerst** (L0 oder Integrator): `git push origin 898fdd5d:main` (geprüfter Hash, R1005); CI `gh run list --branch main --limit 3`, Pages-Lauf prüfen; Release-Notiz REL-35 auf «live». Danach Doku-Branches nach main: `docs/coach-r1004` @ `016a48dc` (R1008) und `docs/retro-763c65b8` @ `298f7a13` (Kurz-Retro, R1010); sie gehen mit dem nächsten Push.
+2. **Gates (R1001/R1003):** Gate Merge **I-223** (`feat/i223` @ `f085e56e`, Final-Review opus OK), Merge **vor** I-210 (Save 20 doppelt, R909/E-ZE-1); **I-210** (`feat/i210` @ `7df6518b`): Spec-Nachtrag fertig (R1009, `docs/nachtrag-i210` @ `00d64dc5` → vor dem Gate in `design/i210-bittschrift` mergen; Spec-Branch geht mit `feat/i210` nach main); AK-BS-18 «Kosten 10» klären (beobachtungen.md); dann Gate Merge, zieht Save nach. `feat/i223` steht inzwischen auf `dc01d114` (Final-Review Mini-Fixes) — Gate auf diesem Kopf.
+3. **AUSBAU-LOGIK** Folgeinstanz (R1002; Spec-Nachtrag Unterhalt je Minute fertig, `docs/nachtrag-al` @ `d538aa18` vor dem Gate in `feat/ausbau-logik` mergen, R1009): Test-Umbau `balance-upgrade` (siteAt/workforceAt hinter die Geldprüfung) + Messung, Bilanz-Fix stillgelegter Betrieb, Delta-Review opus, Gate Merge. Handoff `.studio/handoffs/2026-10-26-lead-tech-AUSBAU-LOGIK-2.md`.
 4. **Umsetzung (≤ 3 Test-Controller, Messungen per E-080):** **NU-1 «Kartenrand»** (Plan frei R992, Budget 24/2), **I-215 Volllast** (Budget 16/2; I-201 auf main erfüllt P-6), **I-214** (Budget 34), **HAFEN O** (T03/T04 nach L1 auf main). GV, FLAECHE, INSELPROBEN T12–T14, ORT-A, Stadtrecht, I-197/I-197b unverändert.
-5. **Testfrei:** studio-coach: E-066 abschliessen, E-080 mit Platz, E-082/E-083 in `experimente.md`, Briefing-Zeile E-082 (R1004); Spec-Nachtrag I-210 (R999); Spec-Nachtrag AUSBAU-LOGIK Unterhalt je Minute (R998); HAUSHALT: Mess-Worktrees `i210-t15main`, `i210-base` entfernen (ohne `--force`), ungetrackte `out*.txt`; Archiv I-200 (`ideen-archiv.md:1831`).
+5. **Testfrei:** `lead-design`: I-200 als aktiver Pool-Eintrag in `docs/ideen.md` zurückführen, Archiv-Vermerk «zurück im Pool» (R1007); studio-coach: Datum der Übersichtszeile «Laufend» in `experimente.md` (Kosmetik, R1008); E-084 in `experimente.md` eintragen (R1010: `git merge-tree`-Ergebnis je Branch als Pflichtzeile im Bündel-/Gate-Merge-Ruling — gilt ab sofort für L0).
 6. **Save-Kette:** main v19; I-223 → v20, dann I-210 → v21 (zieht nach), danach je main + 1 (NU-1, I-215, I-214, HAFEN S3/S4, FLAECHE, AL Etappe 2). `SAVE_VERSION` bleibt Zahlenliteral (R991).
 7. Messfristen R750/R755 2026-10-30, M1 2026-11-02, E-072/E-073/E-080 2026-11-19.
 
@@ -242,7 +242,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Nichts aktiv. Session b73acd32 bei 5 h ≈ 88 % beendet (R1003); alle Leads haben übergeben (Handoffs `.studio/handoffs/2026-10-26-*`).
+- Nichts aktiv. Kleine Session 763c65b8 beendet (R1005–R1010); alle Agenten fertig.
 
 ## Parallele Sessions
 
@@ -252,6 +252,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Seit letzter Session erledigt
 
+- **Session 763c65b8 (R1005–R1009, 2026-10-26, kleine Session auf Nutzerwunsch):** REL-35 gebündelt (REL-34 + HAFEN L1 + Doku), Konflikt `docs/ideen.md` gelöst (R1006), push-check Exit 0, main `898fdd5d`; COACH-R1004 (E-066 abgeschlossen, E-080 mit Platz, E-082/E-083, Briefing-Zeile Startzähler, R1008); Spec-Nachträge I-210 und AUSBAU-LOGIK (R1009); HAUSHALT-04: Mess-Worktrees entfernt, Archiv I-200 (R1007).
 - **Session b73acd32 (R972–R1003, 2026-10-26):** REL-33 live (R980); REL-34 lokal auf main (R995); Gates: Plan I-215 OK (R974), Spec+Plan NU-1 frei (R976–R979, R985, R991–R992), Spec+Plan I-223 frei (R981–R983, R987, R989), HAFEN L1 Merge OK nach ZURÜCK (R990, R994); Umsetzung **I-223 fertig**, **I-210 fertig** (Gate nach Spec-Nachtrag), AUSBAU-LOGIK Final-Review BEDENKEN (R1002); TIEFE-6 (R975), IDEEN-20-Folgen Erbstadt/Auktion/Zehnt (R977), Wertprüfung B3/B9 (R999), E-080/E-081 eingetragen, Handbuch 1.79 (R984).
 - **Session 8361ff82 (R959–R970, 2026-10-25):** R959 Dauerauftrag Wellen bei gelb (bis 85 %, Ende ab 90 %); ZEITPIN-D1 Pin 3,5 ms (R968); Gate Spec I-215 + Nachtrag + Kurzprüfung, Spec frei (R960/R963), Plan I-215 fertig (`ce3f742d`); Gegenlesen HAFEN OK (R961); COACH-R957 Handbuch 1.78 (R964); TIEFE-5 Rivalen (R965); IDEEN-20 (R967); «Neue Ufer» Brainstorming, Designvorschlag frei, NU-1 Werte und Spec als Zwischenstand (R962/R966/R970); I-210 T02/T03, AUSBAU-LOGIK T01/T02 (R969).
 
@@ -269,7 +270,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Budget
 
-Alle Freigaben dieser Session verfallen mit Session-Ende; Reste neu erteilen: I-223 (Gate; Umsetzung 5 von 16 frei), I-210 4 von 28, AUSBAU-LOGIK laut Handoff-2, HAFEN 54 von 60, NU-1 Umsetzung 24, I-215 Umsetzung 16, I-214 34, GV 58, FLAECHE 56, INSELPROBEN 31 von 43, Stadtrecht 25, I-197 4.
+Alle Freigaben dieser Session verfallen mit Session-Ende (Session 763c65b8 hat keine Umsetzungsbudgets verbraucht); Reste neu erteilen: I-223 (Gate; Umsetzung 5 von 16 frei), I-210 4 von 28, AUSBAU-LOGIK laut Handoff-2, HAFEN 54 von 60, NU-1 Umsetzung 24, I-215 Umsetzung 16, I-214 34, GV 58, FLAECHE 56, INSELPROBEN 31 von 43, Stadtrecht 25, I-197 4.
 
 ## Offene Entscheide
 

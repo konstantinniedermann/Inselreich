@@ -317,3 +317,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-26 · I-223 Abschluss: Rest-Befunde (niedrig)
 
 - Fundort: Branch `feat/i223` @ `f085e56e`. Beobachtung: `tierTaxTooltip` rechnet ohne Zehnt; Literale 3/100 in `titheView.ts`/`taxView.ts` statt aus `TAX_CARRY_DIVISOR` abgeleitet; AK-ZE-12 prüft nur < / >; Testtitel «v18 lädt als Version 19» in `council-save.test.ts` veraltet; `dropTithe` wirft TypeError bei Teilstruktur (Testhelfer). Ursprung: I-223 (lead-tech, Final-Review). Einschätzung: Tooltip vor Release prüfen, Rest Aufräum-Häppchen.
+
+## 2026-10-26 · I-210: AK-BS-18 nennt «Kosten 10» bei 60 Bewohnern (niedrig)
+
+- Fundort: Spec I-210 (Branch `design/i210-bittschrift`), AK-BS-18. Beobachtung: Bei vier Bürgerhäusern mit 60 Bewohnern ergibt clamp(⌈60/5⌉) = 12, die AK nennt 10; vermutlich andere Bewohnerzahl gemeint. Ursprung: Spec-Nachtrag I-210 (lead-design, R1009). Einschätzung: im Gate Merge I-210 klären, ggf. AK-Zahl berichtigen.
