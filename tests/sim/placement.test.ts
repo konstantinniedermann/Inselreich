@@ -4,6 +4,8 @@ import { buildLock, canPlace, canPlaceRoad, siteRuleOk } from '../../src/sim/pla
 import { placeBuilding, placeRoad, removeRoad, demolish } from '../../src/sim/build';
 import { BUILDING_IDS } from '../../src/sim/defs/buildings';
 import { TIERS } from '../../src/sim/defs/tiers';
+import { seaMask } from '../../src/sim/mapgen';
+import { adjacentOf } from '../../src/sim/world';
 import { fail } from '../../src/sim/types';
 import { deriveUnlocks, entryOfBuilding } from '../../src/sim/unlocks';
 import type { World } from '../../src/sim/types';
@@ -433,5 +435,35 @@ describe('M12 Seefahrt Platzregeln (T02)', () => {
     );
     home(w).stock.stone = 10;
     expect(checkAfford(w, home(w), cost, 'in der Heimat')).toEqual({ ok: true });
+  });
+});
+
+describe('AK-HF-03 Meerufer', () => {
+  const REASON = 'Kontor braucht Zugang zum Meer';
+
+  it('Binnenwasser-Platz wird abgelehnt, Meerplatz bleibt ok', () => {
+    const sw = seaWorld(1);
+    const isl = sw.islands[1]!;
+    const terrain = isl.tiles.map((t) => t.terrain);
+    const sea = seaMask(terrain, isl.width, isl.height);
+    const inland: { x: number; y: number }[] = [];
+    const shore: { x: number; y: number }[] = [];
+    for (let y = 0; y < isl.height - 1; y++)
+      for (let x = 0; x < isl.width - 1; x++) {
+        if (!siteRuleOk(sw, 'kontor2', x, y, { kind: 'coast' }, 1).ok) continue;
+        const grounded = [0, 1].every((dy) =>
+          [0, 1].every((dx) => terrain[(y + dy) * isl.width + x + dx] !== 'water'),
+        );
+        if (!grounded) continue;
+        const ring = adjacentOf(isl, x, y, 2, 2);
+        const atSea = ring.some((q) => sea[q.y * isl.width + q.x]);
+        (atSea ? shore : inland).push({ x, y });
+      }
+    expect(inland.length).toBe(12);
+    const p = inland[0]!;
+    expect(canPlace(sw, 'kontor2', p.x, p.y, 1)).toEqual(fail(REASON));
+    expect(placeBuilding(sw, 'kontor2', p.x, p.y, 1)).toEqual(fail(REASON));
+    const s = shore.find((q) => canPlace(sw, 'kontor2', q.x, q.y, 1).ok);
+    expect(s).toBeDefined();
   });
 });

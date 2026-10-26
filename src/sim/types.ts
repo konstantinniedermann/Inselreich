@@ -37,6 +37,7 @@ export interface Cost {
 }
 export type SiteRule =
   | { kind: 'coast' } // ≥1 Wasserkachel 4er-angrenzend
+  | { kind: 'seaCoast' } // ≥1 Kantennachbar im Meer (seaMask), Binnensee zählt nicht
   | { kind: 'adjacent'; terrain: Terrain; min: number } // ≥min Kacheln des Terrains 4er-angrenzend
   | { kind: 'radius'; terrain: Terrain; radius: number; min: number; free?: true } // ≥min Kacheln im Radius; `free`: nur unbebaute Kacheln
   | { kind: 'supply' } // im Radius von Kontor oder Markt
