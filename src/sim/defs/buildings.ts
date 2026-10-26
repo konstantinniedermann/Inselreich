@@ -253,7 +253,7 @@ export const BUILDING_DEFS: Record<BuildingDefId, BuildingDef> = {
     upkeep: 10,
     category: 'infrastructure',
     supplyRadius: 8,
-    site: [{ kind: 'coast' }, { kind: 'foreignNoKontor' }],
+    site: [{ kind: 'seaCoast' }, { kind: 'foreignNoKontor' }],
   },
   spicefarm: {
     id: 'spicefarm',
