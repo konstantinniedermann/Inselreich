@@ -44,7 +44,7 @@ export function cycleOf(world: World, b: Building): number | undefined {
   if (base === undefined) return undefined;
   const c = effectiveCycle(world, b.island, b.defId, levelDef(b)?.cycle ?? base);
   const fest = harvestActive(world, b) ? harvestCycle(c) : c;
-  return petitionCycle(world, b.island, b.defId, fest);
+  return Math.min(fest, petitionCycle(world, b.island, b.defId, c));
 }
 /** Unterhalt je 100 Ticks des stehenden Gebäudes. */
 export const upkeepOf = (b: Building): number =>

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { GOOD_IDS, STORAGE_CAP } from '../../src/sim/defs/goods';
 import {
   DEFAULT_NEW_GAME_PETITIONS_ON,
@@ -16,7 +16,20 @@ import {
   PETITION_SALT,
   type PetitionId,
 } from '../../src/sim/defs/petitions';
-import { needRate, overcrowdCap, petitionCycle, storageCap } from '../../src/sim/petitionEffect';
+import {
+  bellActive,
+  needRate,
+  overcrowdCap,
+  petitionCycle,
+  storageCap,
+  voucherAt,
+} from '../../src/sim/petitionEffect';
+import { FEAST_KINDS } from '../../src/sim/defs/feast';
+import { FEAST_DURATION } from '../../src/sim/defs/timing';
+import { TAX_LEVELS } from '../../src/sim/defs/tiers';
+import { feastBlockReason, holdFeast } from '../../src/sim/feast';
+import { inChapelRadius } from '../../src/sim/feastEffect';
+import { upgradeStatus } from '../../src/sim/population';
 import { petitionRng } from '../../src/sim/petitionRng';
 import { createRng } from '../../src/sim/rng';
 import type { Building, GoodId, PetitionEffectEntry, World } from '../../src/sim/types';
@@ -30,6 +43,7 @@ import {
 } from '../../src/sim/petitions';
 import { step, type StepReport } from '../../src/sim/tick';
 import {
+  houseFar,
   houseNearKontor,
   placeService,
   putBuilding,
@@ -188,11 +202,11 @@ describe('Strom', () => {
 });
 
 describe('Blatt petitionEffect', () => {
-  it('importiert nur defs, types und world', () => {
+  it('importiert nur defs, types, world und feastEffect', () => {
     const src = readFileSync('src/sim/petitionEffect.ts', 'utf8');
     const imports = [...src.matchAll(/from '(\.[^']*)'/g)].map((m) => m[1]!);
     expect(imports.length).toBeGreaterThan(0);
-    for (const i of imports) expect(i).toMatch(/^\.\/(defs\/|types|world)/);
+    for (const i of imports) expect(i).toMatch(/^\.\/(defs\/|types|world|feastEffect)/);
   });
 });
 
@@ -812,5 +826,127 @@ describe('AK-BS-18 Kartenvorschau', () => {
     const pv = petitionPreview(w, 0)!;
     expect(pv.spiceRoute).toEqual({ foreignStock: 7, ships: 0 });
     expect(pv.producers!.input!.stock).toBe(7);
+  });
+});
+
+describe('T11 B4/B5 mit dem Fest (I-201)', () => {
+  const NO_DEFICIT = { food: 99, cloth: 99, rum: 99, glass: 99, wood: 99, tools: 99, stone: 99 };
+  let fw: World;
+  let fhouse: Building;
+  let fchapel: Building;
+  const bell = (w0: World, anchor: number, until = w0.tick + PETITIONS.bell.duration): void => {
+    w0.petitions.effects.push({ id: 'bell', answer: 'yes', until, anchor });
+  };
+  const voucher = (w0: World, anchor: number): void => {
+    w0.petitions.effects.push({
+      id: 'feastDrink',
+      answer: 'yes',
+      until: w0.tick + PETITIONS.feastDrink.duration,
+      anchor,
+    });
+  };
+  const waitReason = (b: Building): string | undefined =>
+    upgradeStatus(fw, b, NO_DEFICIT).reasons.find((r) => r.startsWith('Bedürfnisse'));
+  const waited = (b: Building, n: number): void => {
+    b.house!.satisfiedSince = fw.tick - n;
+  };
+  const reasonOf = (r: ReturnType<typeof holdFeast>): string => (r.ok ? '' : r.reason);
+
+  beforeEach(() => {
+    fw = createWorld(3, { unlockAll: true });
+    fhouse = houseNearKontor(fw);
+    fchapel = placeService(fw, 'chapel', fhouse.x + 5, fhouse.y);
+    fw.tick = 1000;
+    home(fw).stock.rum = 30;
+  });
+
+  it('B4: Haus im Radius steigt nach 150 T auf, Normalzeit sonst, nach duration wieder Normalzeit', () => {
+    waited(fhouse, TAX_LEVELS.low.upgradeWait!);
+    expect(waitReason(fhouse)).toBeDefined();
+    bell(fw, fchapel.id);
+    expect(waitReason(fhouse)).toBeUndefined();
+    const far = houseFar(fw);
+    waited(far, TAX_LEVELS.low.upgradeWait!);
+    expect(inChapelRadius(fw, fchapel, far)).toBe(false);
+    expect(waitReason(far)).toBeDefined();
+    fw.tick += PETITIONS.bell.duration;
+    waited(fhouse, TAX_LEVELS.low.upgradeWait!);
+    expect(waitReason(fhouse)).toBeDefined();
+  });
+
+  it('AK-BS-11 Brand: bellActive pausiert, danach wieder true, until unverändert', () => {
+    bell(fw, fchapel.id);
+    const until = fw.petitions.effects[0]!.until;
+    expect(bellActive(fw, fhouse)).toBe(true);
+    fchapel.outageUntil = fw.tick + 100;
+    fchapel.state = 'burning';
+    expect(bellActive(fw, fhouse)).toBe(false);
+    delete fchapel.outageUntil;
+    fchapel.state = 'ok';
+    expect(bellActive(fw, fhouse)).toBe(true);
+    expect(fw.petitions.effects[0]!.until).toBe(until);
+  });
+
+  it('B5: Fest in der Abklingzeit ok ohne Rum, danach Wirkung weg und Abklingzeit sperrt', () => {
+    holdFeast(fw, fchapel.id);
+    fw.tick += FEAST_DURATION + 10;
+    expect(reasonOf(holdFeast(fw, fchapel.id))).toBe('Abklingzeit');
+    voucher(fw, fchapel.id);
+    expect(voucherAt(fw, fchapel.id)).toBe(true);
+    const rum = home(fw).stock.rum;
+    expect(holdFeast(fw, fchapel.id, 'ascension')).toEqual({ ok: true });
+    expect(home(fw).stock.rum).toBe(rum);
+    expect(voucherAt(fw, fchapel.id)).toBe(false);
+    fw.tick += FEAST_DURATION + 10;
+    expect(reasonOf(holdFeast(fw, fchapel.id))).toBe('Abklingzeit');
+  });
+
+  it('B5: feastBlockReason spiegelt den Gutschein', () => {
+    holdFeast(fw, fchapel.id);
+    fw.tick += FEAST_DURATION + 10;
+    expect(feastBlockReason(fw, fchapel)).toBe('Abklingzeit');
+    voucher(fw, fchapel.id);
+    expect(feastBlockReason(fw, fchapel)).toBeNull();
+  });
+
+  it('B5: Erntefest spart nur den Rum, Stoff wird abgebucht', () => {
+    putBuilding(fw, 0, 'weaver', fchapel.x + 2, fchapel.y + 3);
+    home(fw).stock.cloth = 40;
+    holdFeast(fw, fchapel.id);
+    fw.tick += FEAST_DURATION + 10;
+    voucher(fw, fchapel.id);
+    const rum = home(fw).stock.rum;
+    expect(holdFeast(fw, fchapel.id, 'harvest')).toEqual({ ok: true });
+    expect(home(fw).stock.rum).toBe(rum);
+    expect(home(fw).stock.cloth).toBe(40 - FEAST_KINDS.harvest.cost.cloth);
+  });
+
+  it('B5: Inselsperre der Art gilt weiter, der Gutschein bleibt', () => {
+    putBuilding(fw, 0, 'weaver', fchapel.x + 2, fchapel.y + 3);
+    home(fw).stock.cloth = 40;
+    const other = placeService(fw, 'chapel', fchapel.x + 3, fchapel.y);
+    other.feastAt = fw.tick - 10;
+    other.feastKind = 'harvest';
+    voucher(fw, fchapel.id);
+    const r = holdFeast(fw, fchapel.id, 'harvest');
+    expect(r.ok).toBe(false);
+    expect(voucherAt(fw, fchapel.id)).toBe(true);
+  });
+
+  it('AK-BS-10 Erntefest und Taktlohn: kleinerer Zyklus, nicht beide nacheinander', () => {
+    const b = putBuilding(fw, 0, 'weaver', fchapel.x + 2, fchapel.y + 3);
+    home(fw).stock.cloth = 40;
+    expect(holdFeast(fw, fchapel.id, 'harvest')).toEqual({ ok: true });
+    const c = BUILDING_DEFS.weaver.cycle!;
+    expect(cycleOf(fw, b)).toBe(Math.floor((c * FEAST_KINDS.harvest.cyclePct) / 100));
+    fw.petitions.effects = [forever('woolMarket')];
+    expect(cycleOf(fw, b)).toBe(Math.floor((c * FEAST_KINDS.harvest.cyclePct) / 100));
+  });
+
+  it('Bitgleich: ohne Wirkung bleiben bellActive, voucherAt und Sperren unverändert', () => {
+    expect(bellActive(fw, fhouse)).toBe(false);
+    expect(voucherAt(fw, fchapel.id)).toBe(false);
+    expect(holdFeast(fw, fchapel.id)).toEqual({ ok: true });
+    expect(feastBlockReason(fw, fchapel)).toBe('Fest läuft');
   });
 });
