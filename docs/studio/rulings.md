@@ -2542,3 +2542,270 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, I-201 
 Regelbezug: R896, R909, R918, R924 · Kosten bei Irrtum: Plan-Nachtrag.
 
 Entscheider: L0 · Anlass: Bericht lead-tech plan-ausbau-logik · ADR: —
+
+## R936 · 2026-10-25 · Plan FLAECHE fertig; Entwürfe; Gate Plan
+
+Ruling: `plan/flaeche` @ `53651aae` (T00–T18, AK-FL-01–45 zugeordnet, Entwürfe AK-FL-46–55) zum **Gate Plan** an `lead-qa` (Budget 1). Entwürfe: **E-FL-1** FL-3 weist nur Altstände mit Bürger- oder
+Kaufmannshaus ab (dort ist Umrechnen nicht sinnvoll; Verfassung §3: Abweisen mit Hinweis), andere Altstände migrieren **ja** — präzisiert R919 E3; **E-FL-2** AK-FL-46–55 angenommen **ja**; **E-FL-3** AK-GV-22 für das
+Wohnhaus lockern, `facing` bleibt beim Wachsen, Optik-Abnahme `lead-art` in T17, T15 erst nach GV S4 auf main **ja**; **E-FL-4** Rulings während der Umsetzung (Pins, Weidenau, Ensemble-Grenze ≤ 8750) blockieren
+nicht, Werte bis dahin mit Vermerk «Messwert» **ja**. Umsetzungsbudget 56 Starts nach Gate Plan.
+
+Verfassung berührt?: nein (§3 eingehalten) · Überschneidung mit offenen Paketen: AUSBAU-LOGIK, GEBAEUDE-VARIANZ, HAFEN, I-210, ORT-A, Save-Kette
+Regelbezug: R896, R909, R919, R926 · Kosten bei Irrtum: Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-flaeche · ADR: —
+
+## R937 · 2026-10-25 · Rechnung Volllast: Spec I-215 Stufe voll
+
+Ruling: Rechnung `design/volllast` @ `5f24515b` (gerechnet, nicht gemessen) **abgenommen**; Dauer-Volllast in allen 34 Kombinationen schlechter als Normalbetrieb, keine Pflichtstrategie. Entwürfe §13 (1)–(6) **ja**:
+Werte `OVERTIME_CYCLE_PCT` 75, `OVERTIME_UPKEEP_PCT` 150, `OVERTIME_TICKS` 1800, `OVERTIME_REST_TICKS` 1200; Ruhe mit 50 % Unterhalt (`PAUSED_UPKEEP_PCT`, kein Pflichtklick); `ceil` als letzter Faktor in
+`cycleOf`; Knopf gesperrt bei stillgelegt/brennend/ohne Strasse; Save-Feld `overtimeAt`, Version main + 1, Altstand mit Hinweis abgewiesen; Abriss ohne Sonderregel. **Spec I-215 «Volllast»** Stufe voll an `lead-design`
+(Budget 2, Spec-Autor opus) auf demselben Branch.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: `cycleOf` (I-201, I-210, AUSBAU-LOGIK), Save-Kette
+Regelbezug: R722, R896, R909, R928 · Kosten bei Irrtum: eine Spec ohne Umsetzung.
+
+Entscheider: L0 · Anlass: Bericht lead-design RECHNUNG-VOLLLAST · ADR: —
+
+## R938 · 2026-10-25 · Plan GEBAEUDE-VARIANZ fertig; Entwürfe; Gate Plan
+
+Ruling: `plan/gebaeude-varianz` @ `882599e4` (T00–T18, 26 AK) zum **Gate Plan** an `lead-qa` (Budget 1). Entwürfe: **E-GV-1** schrittweise Umstellung, zwei Merge-Einheiten (Wohnhäuser S1–S4; Betriebe/öffentliche
+Bauten S5–S7 nach AUSBAU-LOGIK-Merge) **ja**; **E-GV-2** `facing` als Pflichtfeld (Compiler findet jeden Erzeugungsweg) **ja**; **E-GV-3** FLAECHE FL-3 nach GV Einheit 1, FL-3 passt Haus-Drehungen an 2 × 1 an —
+**ja**, gilt zusammen mit R936 E-FL-3 (AK-GV-22 für Wohnhaus gelockert, im FL-3-Task nachzuziehen). ADR-Nummer erst bei Merge vergeben (ADR-017 doppelt belegt: Festindex/Ortsrand → Vergabe nach Merge-Reihenfolge).
+Umsetzungsbudget 55 Starts nach Gate Plan.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: FLAECHE, AUSBAU-LOGIK, HAFEN (`FACINGS`), INSELPROBEN, Save-Kette
+Regelbezug: R907, R909, R916, R924, R936 · Kosten bei Irrtum: Plan-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-gebaeude-varianz · ADR: —
+
+## R939 · 2026-10-25 · Plan I-214 fertig; Entwürfe; Gate Plan
+
+Ruling: `plan/i214-gruendungsbrief` @ `a101aac3` (T00–T12, A1 gemessen: B1 31/40, B2/B4 40/40 Seeds) zum **Gate Plan** an `lead-qa` (Budget 1). Entwürfe: **E-1** Bezeichner `founding` statt `charter` (STADTRECHT belegt
+`World.charter`) **ja**; **E-2** Save-Prüfung liest für die Obergrenze von `ship.left` den geprüften Brief (wie SEERECHT) **ja**, Spec §6.2 (5) gilt so präzisiert; **E-3** Z3-Controller beschliesst im Rat B/B/A als
+Messbasis **ja** (Bestätigung durch `lead-design` beim nächsten Design-Start, nicht blockierend). A1-Befunde (B2/B4-Filter greifen nie, doppelte Seed-Karten) an `lead-design` zur Kenntnis. Umsetzungsbudget 34 Starts
+nach Gate Plan.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: STADTRECHT, SEERECHT, INSELPROBEN, I-197b, Save-Kette
+Regelbezug: R553, R915, R924, R927 · Kosten bei Irrtum: Umbenennung.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-i214 · ADR: —
+
+## R940 · 2026-10-25 · Gate Plan FLAECHE BEDENKEN angenommen; Plan-Nachtrag
+
+Ruling: Gate-Bericht `.studio/handoffs/2026-10-25-lead-qa-gate-plan-flaeche.md` **BEDENKEN angenommen**. Plan-Nachtrag durch `lead-tech` (opus, Budget 1) mit allen Auflagen: (1) **starke Sperre**: T13 startet erst
+nach GEBAEUDE-VARIANZ Einheit 1 auf main, AK-FL-48 Pflicht in T14; (2) T15 ausarbeiten (Abbildung der gespeicherten Drehung auf 2×1 liegend/stehend und 2×2, erlaubte Drehungen, Tests Hüllentreue und Türseite,
+Ruling-Entwurf AK-GV-22); (3) rotes Balancing nur auf dem Zwischenstand bis T09, nie im Merge-Kandidaten, T06 mit Ersatzbeleg «Zyklen ohne Fläche unverändert»; (4) Delta-Review frischer opus-Start (R774);
+(5)–(6) T00-Liste FL-3 mit `balance*.test.ts`, Mess-Skripte T09, ORT-A-Stand in T03. Danach einmal Gegenlesen `lead-qa`. Umsetzungsbudget 56 Starts erst nach Gegenlesen; FL-1 erst nach ORT-A T26.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: GEBAEUDE-VARIANZ, ORT-A, Save-Kette
+Regelbezug: R774, R936, R938 · Kosten bei Irrtum: FL-3 startet später.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa Plan FLAECHE · ADR: —
+
+## R941 · 2026-10-25 · Gate Plan I-214 BEDENKEN angenommen; Start bei freiem Test-Controller
+
+Ruling: Gate-Bericht `.studio/handoffs/2026-10-25-lead-qa-gate-plan-i214.md` **BEDENKEN angenommen**; Umsetzung frei ohne neues Gate, Auflagen A-1–A-6 ins Controller-Briefing (A-1 T04-Messung hinter T03 bzw.
+eigene Läufe gestoppt; A-2 Delta-Review frischer opus-Start, R673; A-3 Rot-Schritt T12; A-4 Merge-Zeitpunkt `feat/i214-mess` vereinheitlichen; A-5 bei Rot nicht abschwächen, H1; A-6 Test Takt konstant bei
+Abriss/Neubau). Budget 34 Starts / Parallelität 2. **Start erst, wenn ein Test-Controller-Platz frei ist** (derzeit I-201, I-210, REL-33 belegt; Last 32 durch push-check; R826, R920 V1). Testfrei parallel:
+`lead-design` klärt die A1-Befunde (B2/B4-Filter greifen auf heutigen Karten nie; doppelte Seed-Karten 15/16, 30/31, 36/37) und bestätigt E-3 (Rat B/B/A, R939), Budget 1.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: STADTRECHT, INSELPROBEN, HAFEN (Seed-Karten)
+Regelbezug: R553, R673, R826, R939 · Kosten bei Irrtum: I-214 startet eine Welle später.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa Plan I-214 · ADR: —
+
+## R942 · 2026-10-25 · Gate Plan GEBAEUDE-VARIANZ und AUSBAU-LOGIK BEDENKEN angenommen; Plan-Nachträge
+
+Ruling: (1) **GEBAEUDE-VARIANZ** (`.studio/handoffs/2026-10-25-lead-qa-gate-plan-gebaeude-varianz.md`) BEDENKEN angenommen; Auflagen A1–A8 als Plan-Commit durch `lead-tech` (Budget 1); A6: AK-GV-24 als
+verbindlicher Nachzug-Task nach INSELPROBEN-Merge (INSELPROBEN muss nicht vor Einheit 1). (2) **AUSBAU-LOGIK** (`.studio/handoffs/2026-10-25-lead-qa-gate-plan-ausbau-logik.md`) BEDENKEN angenommen; Auflagen 1–6 als
+Plan-Commit durch `lead-tech` (Budget 1), **zusätzlich L0-Auflage**: Delta-Review nach ZURÜCK/BEDENKEN ist frischer opus-Start, nie Fortsetzung per SendMessage (R673, R905, R931) — der Gate-Bericht hat das
+übersehen. Nachträge ohne Zweitprüfung. Umsetzungsbudgets (GV 55, AL 38, plus Controller-Instanzen getrennt) werden beim Start erteilt; **Start erst bei freiem Test-Controller-Platz** (Load 17,9, drei belegt;
+R826, R920 V1). Reihenfolge der Starts nach Abhängigkeit: AUSBAU-LOGIK Etappe 1 vor GV Einheit 2.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: FLAECHE, I-210 (`cycleOf`), INSELPROBEN, Save-Kette
+Regelbezug: R392, R673, R905, R931, R935, R938 · Kosten bei Irrtum: Plan-Commit.
+
+Entscheider: L0 · Anlass: Gate-Berichte lead-qa Plan GV und AL · ADR: —
+
+## R943 · 2026-10-25 · Optik HAFEN und Plan HAFEN; Gate Plan
+
+Ruling: (1) Art-Brief `design/hafen` @ `080557e2` (`anhang-03-art-brief.md`, P1–P10 Pflicht, K1–K5 Kür, keine fremden Assets) **abgenommen**; eine Profilzeichnung mit `heading` statt Spiegelung **ja**. Entwürfe: **(1)**
+liegende Schiffe längsseits zur Kontorkante, ändert R25 und AK-HF-38 **ja**; **(2)** AK-HF-52 in Bildmass (kein Treffer 0,2 · `ISO_W` ausserhalb des Umrisses) **ja**. (2) **Plan HAFEN** `plan/hafen` @ `583de10d`
+(T00–T16, 52 AK, fünf Lieferungen L1/O/L2/L3/L4) zum **Gate Plan** an `lead-qa` (Budget 1), der Art-Brief und die Entwürfe (1)/(2) gehören zur Plan-Basis. Entwürfe **E-HF-1** Rückfall-Leiter AK-HF-12 (Tech-Feinschliff
+ohne Ruling, Spielwert/Rückfall E1 nur per Ruling) **ja**; **E-HF-2** Seed-Spannen 1000 → 200 bei Testzeit > 2× **ja**; **E-HF-3** INSELPROBEN-Pins (Probe 4) als Sammel-Ruling **ja**; **E-HF-4** Optik-Strang im Plan,
+Art-Urteil `lead-art` **ja**; **E-HF-5** Neu-Pins über Anhang 01 H hinaus als Sammel-Ruling **ja**. P-8 (Restfahrzeit-Begrenzung in T07) bestätigt. Umsetzungsbudget 58 Starts nach Gate Plan.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: FLAECHE (Seed-Welten), GEBAEUDE-VARIANZ (`build.ts`), SEERECHT, INSELPROBEN, Save-Kette
+Regelbezug: R913, R924, R925, R933 · Kosten bei Irrtum: Neu-Pinnen der Seed-Welten.
+
+Entscheider: L0 · Anlass: Berichte lead-art Optik HAFEN, lead-tech plan-hafen · ADR: —
+
+## R944 · 2026-10-25 · I-214 Filter-Befunde und E-3
+
+Ruling: Spec-Nachtrag `design/gruendungsbrief` @ `d7e071e4` **abgenommen**. (1) B2/B4-Filter bleiben als Schutzfilter unverändert (`CHARTER_ROUTE_MIN.B4` = 24, `CHARTER_QUARRY_SITES_MIN` = 2), Test mit gesetztem
+Kontext **ja**; (2) E-3 (Z3-Controller Rat B/B/A) mit B5-Auflage (Stufe 4 im B5-Lauf gesperrt) **ja**. Doppelkarten-Beobachtung liegt auf dem Spec-Branch und kommt mit dessen Merge. Plan I-214 startet T04 ohne
+Änderung.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN/INSELPROBEN (Generator)
+Regelbezug: R896, R939, R941 · Kosten bei Irrtum: ein toter Filter im Code.
+
+Entscheider: L0 · Anlass: Bericht lead-design I-214-Filter · ADR: —
+
+## R945 · 2026-10-25 · Gate Plan HAFEN BEDENKEN angenommen; Plan-Nachtrag
+
+Ruling: Gate-Bericht `.studio/handoffs/2026-10-25-lead-qa-gate-plan-hafen.md` **BEDENKEN angenommen**; L1 frei, O und L4 erst nach Plan-Nachtrag. **E-HF-7** Plan-Nachtrag `lead-tech` (opus, Budget 1) mit Auflagen 1–7
+(Art-Brief R943 in T03/T04/T14/T16 inkl. `steg.ts`/`dock.ts`-Klärung; Blindtest AK-HF-51 je frischer `qa-playtester`-Start in T04/T16; Delta-Review frischer opus-Start, R673; R392/R905-Liste der K2-betroffenen Tests mit
+Messwert; T01 Schritt 0 Zeitmessung «Last ≤ 4 nötig»; «Last ≤ 4 nötig» in T02/T07/T09/T12; T05 Messskript ins Repo-Worktree, Meldung vor Implementierung bei Wert nahe 6/120), danach einmal Gegenlesen `lead-qa`.
+**E-HF-6** R392-Ausnahme für K2-betroffene Generator-Tests **ja, nur** für die im Nachtrag einzeln mit Messwert benannten Tests; Bestätigung per Sammel-Ruling beim Merge-Gate L2. Umsetzungsbudget 58 Starts
+beim Start (Folgesession, Test-Controller-Platz).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: FLAECHE (Seed-Welten), Save-Kette
+Regelbezug: R392, R673, R905, R943 · Kosten bei Irrtum: langsamere Testsuite.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa Plan HAFEN · ADR: —
+
+## R946 · 2026-10-25 · Plan AUSBAU-LOGIK startbereit
+
+Ruling: Plan-Nachtrag `plan/ausbau-logik` @ `7c05653a` (Auflagen 1–6 und L0-Auflage Delta-Review frisch) **angenommen**, ohne Zweitprüfung (R942). Budget **38 Starts**, Delta-Reviews aus dem Puffer, Mehrbedarf
+vorab per Antrag. Start beim nächsten freien Test-Controller-Platz vor GEBAEUDE-VARIANZ (Abhängigkeit Etappe 1 → GV Einheit 2).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, I-201, FLAECHE, GV
+Regelbezug: R826, R935, R942 · Kosten bei Irrtum: Budgetantrag.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-ausbau-logik-nachtrag · ADR: —
+
+## R947 · 2026-10-25 · Plan GEBAEUDE-VARIANZ startbereit
+
+Ruling: Plan-Nachtrag `plan/gebaeude-varianz` @ `3312dc84` (A1–A8, T19 Nachzug INSELPROBEN) **angenommen**, ohne Zweitprüfung (R942). Budget **58 Starts** (T19 eingerechnet) **ja**; kommt INSELPROBEN nach Einheit 1,
+briefet L0 den T19-Umsetzer direkt (E-037) **ja**. Start nach AUSBAU-LOGIK beim nächsten freien Test-Controller-Platz; Einheit 1 hat Vorrang, weil FLAECHE T13 darauf wartet.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: FLAECHE, AUSBAU-LOGIK, INSELPROBEN, Save-Kette
+Regelbezug: R826, R938, R942 · Kosten bei Irrtum: 3 Starts.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-gebaeude-varianz-nachtrag · ADR: —
+
+## R948 · 2026-10-25 · Plan-Nachtrag FLAECHE; E-FL-5
+
+Ruling: `plan/flaeche` @ `abb0ae27` (Auflagen 1–6 aus R940) zum einmaligen **Gegenlesen** an `lead-qa` (Budget 1). **E-FL-5** AK-GV-22 für das Wohnhaus lockern (Wortlaut T15) **ja**, fällig vor dem T15-Schritt
+«Wächter»; Abweichung von E-GV-3 **bestätigt**: `FACINGS.house` bleibt {0..3}, die Parzellenform wirkt nur auf die Darstellung (`drawFacing`: 2×1 liegend {0,2}, stehend {1,3}), keine Save-Migration, AK-GV-10/-23
+bleiben gültig. Umsetzungsbudget 56 Starts nach Gegenlesen; FL-1 nach ORT-A T26, FL-3 nach GV Einheit 1.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: GEBAEUDE-VARIANZ, ORT-A
+Regelbezug: R936, R938, R940 · Kosten bei Irrtum: Wächter-Nachzug.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-flaeche-nachtrag · ADR: —
+
+## R949 · 2026-10-25 · Plan FLAECHE «Umsetzung frei»
+
+Ruling: Gegenlesen `.studio/handoffs/2026-10-25-lead-qa-gegenlesen-plan-flaeche.md` **Umsetzung frei** für `plan/flaeche` @ `abb0ae27`; Budget **56 Starts** / Parallelität 2 beim Start. Hinweise in das Controller-Briefing:
+T15-Wächter-Schritt durch R948 freigegeben (Commit nennt R948); `FL_RAW_SLOT_GAP` nur bei gesetztem `VITE_ENSEMBLE` lesen, normale Tests immer 2 (Review-Punkt). Reihenfolge: FL-1 nach ORT-A T26, FL-3 nach GV Einheit 1.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: ORT-A, GEBAEUDE-VARIANZ
+Regelbezug: R940, R948 · Kosten bei Irrtum: —
+
+Entscheider: L0 · Anlass: Gegenlese-Bericht lead-qa Plan FLAECHE · ADR: —
+
+## R950 · 2026-10-25 · I-201 abgenommen trotz Stress-Ziel; Gate Merge; AUSBAU-LOGIK startet
+
+Ruling: (1) `feat/i201` @ `569602ab` (Festindex ADR-017, B/C gemergt, T07/T08, Final-Review opus mit H1 behoben, Delta-Review frisch) **abgenommen**. Benchmark: realistisch +4 % (Ziel ≤ +50 % erfüllt), Stress +223 %
+(≈ 0,4 ms je Tick bei 280 Betrieben, nicht spielrelevant). **Auslegung R921:** Massgeblich ist der realistische Benchmark, der Stress-Test ist Warnsignal; die Vorberechnung von Kapellenmitte und Radius² geht als
+Pool-Eintrag `PERF-FEST-STRESS` in `docs/beobachtungen.md`. Überschreitung der Parallelität 2 (kurz drei gleichzeitig) geht an die Retro. (2) **Gate Merge I-201** an `lead-qa` (Budget 1) fürs nächste Bündel
+REL-34 (SEERECHT-Naht `islands.ts` per Probe-Merge). (3) Frei gewordener Test-Controller-Platz: **AUSBAU-LOGIK** startet (`lead-tech`, Budget 38 / Parallelität 3, R946); bei gelber Ampel sichert der Controller
+den Stand nach dem laufenden Task und übergibt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210 (Phase 2 nach I-201-Merge), SEERECHT, `cycleOf`
+Regelbezug: R392, R826, R921, R946 · Kosten bei Irrtum: späte Stress-Optimierung.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-201 · ADR: ADR-017 (Festindex)
+
+## R951 · 2026-10-25 · Gate Merge I-201 BEDENKEN angenommen
+
+Ruling: Gate-Bericht `.studio/handoffs/2026-10-25-lead-qa-gate-I-201.md` **BEDENKEN angenommen**. `feat/i201` @ `569602ab` kommt **nach dem REL-33-Push** ins Bündel REL-34; der Integrator löst den
+`docs/arc42.md`-Konflikt laut Bericht (rel-33-Zeilen plus drei Festzeilen) und committet die Ein-Zeilen-Erweiterung der Erlaubnisliste in `tests/sim/feastKinds.test.ts` (`'./council'`) separat als Trivial-Fix;
+kein zusätzliches Review (Wächter bleibt gegen `feast.ts`/`population.ts` wirksam). Release-Notiz-Entwurf aus dem Bericht für state.md. Nach dem I-201-Merge startet I-210 Phase 2 (T11, T12, T14).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-33, I-210, AUSBAU-LOGIK
+Regelbezug: R868 V1, R931, R950 · Kosten bei Irrtum: ein roter Test auf main, sofort sichtbar.
+
+Entscheider: L0 · Anlass: Gate-Bericht lead-qa I-201 · ADR: —
+
+## R952 · 2026-10-25 · Spec I-215 Volllast fertig; Save migrieren; Ampel gelb
+
+Ruling: `design/volllast` @ `db9da014` (AK-VL-01–23, Anhänge Texte und Testaufbau) fertig. **E1 ja**, korrigiert R937: Vorgängerstand wird **migriert** (nur `version` steigt), abgewiesen werden `SAVE_VERSION + 1` und
+beschädigte `overtimeAt`; der Spec-Nachtrag (verworfene Variante in AK-VL-17 streichen) läuft zusammen mit dem Gate Spec. **Gate Spec I-215 in der Folgesession** (Ampel gelb). **Limit-Ampel gelb** (5 h 60 %): keine
+neuen Wellen; I-210 und AUSBAU-LOGIK laufen ohne neue parallele Stränge weiter und sichern auf L0-Meldung (spätestens 75 %); REL-33 und HAFEN-Nachtrag werden abgeschlossen.
+
+Verfassung berührt?: nein (§3: ältere Stände dürfen ladbar bleiben) · Überschneidung mit offenen Paketen: `cycleOf`/`levels.ts` (AUSBAU-LOGIK, I-201, I-210), Save-Kette
+Regelbezug: R69, R826, R937 · Kosten bei Irrtum: ein Einzeiler.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-volllast, Limit-Ampel · ADR: —
+
+## R953 · 2026-10-25 · Plan-Nachtrag HAFEN; E-HF-8/9
+
+Ruling: `plan/hafen` @ `07bbb731` (Auflagen 1–8, `N-nachtrag-r945.md`; Steg in `src/render/steg.ts`, `dock.ts` entfällt) fertig. **E-HF-8** verlangsamt K2 die volle Suite um > 30 s, werden die 200-Seed-
+Eigenschaftstests und AK-M14E1-14 gekürzt **ja**; **E-HF-9** Budget 58 → **60** (Blindtests feste Starts) **ja**. Neuer Befund `save.test.ts` «B6 createWorld gesamt» (5 → ≈ 75 ms je Welt): T05 setzt das Budget aus
+einer Messung neu, Bestätigung per Sammel-Ruling (E-HF-6). Gegenlesen `lead-qa` in der Folgesession (Ampel gelb).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: FLAECHE (Seed-Welten), Testsuite-Laufzeit (push-check)
+Regelbezug: R392, R905, R943, R945 · Kosten bei Irrtum: langsamere Suite.
+
+Entscheider: L0 · Anlass: Bericht lead-tech plan-hafen-nachtrag · ADR: —
+
+## R954 · 2026-10-25 · REL-33 Kandidat steht; push-check Exit 1 am Zeit-Pin D1; Vorgehen
+
+Ruling: Kandidat `integrate/rel-33` @ `be94bffe` (7 Merges ohne Konflikt, Playtest OK `.studio/qa/REL-33/`, 4798 von 4799 Tests grün) **inhaltlich abgenommen**. `make push-check` Exit 1 nur am Zeit-Pin
+`tests/sim/perf.test.ts` AK-E0-15a D1 (2,54 ms gegen Pin 2,5); **main selbst reisst den Pin** (2,85/2,87 ms) — keine Regression durch REL-33, der Pin ist auf diesem Rechner zu knapp (vgl. R815, R848). Da R810/R816
+«grün vor Merge nach main und Push» verlangen und `pushgate` Exit 0 auf genau dem Push-Hash prüft: **kein Vorspulen von main jetzt.** Folgesession zuerst Paket **ZEITPIN-D1** (`lead-tech`, Messung bei Last ≤ 4 auf main
+und Kandidat, neuer Pin mit Reserve per Ruling, R392-Logik), danach Integrator: main (mit den Doku-Commits dieser Session) in den Kandidaten mergen, `make push-check` auf dem neuen Hash, bei Exit 0 main vorspulen und
+pushen (erster Push 2026-10-26). Befunde (Hop beim Seerecht-Beschluss, Autosave überschreibt Test-Fixture, `.worktrees/bug-schiff`) nach `docs/beobachtungen.md`. Release-Notiz-Entwurf REL-33 in state.md.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201 (REL-34 nach REL-33), alle Branches mit Zeit-Pins
+Regelbezug: R392, R598 V3, R810, R815, R816, R848 · Kosten bei Irrtum: ein Release-Tag später.
+
+Entscheider: L0 · Anlass: Bericht lead-production REL-33 · ADR: —
+
+## R955 · 2026-10-25 · I-210 T01: Lade-Default vorziehen; helpers.ts
+
+Ruling: (1) Minimaler Lade-Default für `petitions` in `save.ts` (`deserialize` ergänzt das Feld bei Vorgängerständen) wird **in T01 vorgezogen**, damit T01 grün und reviewbar ist; die Versionsanhebung bleibt in T16.
+Der Controller committet den T01-Stand jetzt auf `feat/i210` (Teilbeleg: betroffene Save-Tests, `petitions`, `imports`, `tsc`, `lint`), Review T01 in der Folgesession. (2) Änderung an `tests/sim/helpers.ts` (Faltketten
+V11–V13) **bestätigt** — war schon Auflage 3 aus R931 (Dateimatrix). `perf.test.ts` D1 ist auf main rot (R954), kein I-210-Befund.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Save-Kette, ZEITPIN-D1
+Regelbezug: R909, R931, R954 · Kosten bei Irrtum: ein Default zu früh.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-210 · ADR: —
+
+## R956 · 2026-10-25 · AUSBAU-LOGIK T01 gesichert
+
+Ruling: `feat/ausbau-logik` @ `ff7bc2aa` (T01, Rot-Beleg, Teilbeleg Exit 0) gesichert; Review T01 ist der erste Schritt der Folgesession. `src/ui/buildMenu.ts` (zwei Non-Null-Assertions für `tsc`) in die Dateimatrix
+**nachführen ja**; angepasste Testwerte (`Ware 2 Stoff`) prüft das T01-Review. T00-Zeitmessung im freien Messfenster wiederholen (Last bis 47 durch parallele Test-Controller — Retro-Punkt). Konflikt `cycleOf` mit
+`feat/i201`: wer zweit merged, löst nach Symbol; I-201 merged zuerst (R951).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-201, I-210
+Regelbezug: R392, R920 V1, R946, R951 · Kosten bei Irrtum: —
+
+Entscheider: L0 · Anlass: Bericht lead-tech AUSBAU-LOGIK · ADR: —
+
+## R957 · 2026-10-25 · Kurz-Retro 48c8580f abgenommen; Session-Ende
+
+Ruling: Retro `docs/retro-48c8580f` @ `4110463d` (`docs/studio/retros/2026-10-25-session-48c8580f-ende.md`) **abgenommen**. **V1** R553-Wortlaut in `.claude/agents/lead-tech.md` (Z. 113) und STUDIO.md (Z. 404) auf
+«Delta-Review = frischer opus-Start (R673/R774)» **angenommen** (Messgrösse 0 solche Befunde in den nächsten 4 Gate-Plan-Berichten); **V2** Gate-Vorprüfliste (fünf Klassen) im Plan-Auftrag **angenommen** (Messgrösse
+≤ 2 hoch/mittel-Befunde je Gate Plan über 4 Pläne); **V3** Plan-Nachträge auf sonnet **angenommen zusammen mit V2** (opus-Anteil, E-075 widerlegt 78,1 %). Umsetzung durch `studio-coach` in der Folgesession
+(Handbuch-Minor auf Basis `docs/coach-r920`). Session-Ende bei gelber Ampel (5 h ≈ 65 %): Metriken `docs/studio/metriken/S-2026-10-25-48c8580f.md`; kein Push (REL-33 push-check Exit 1 am Zeit-Pin, R954); state.md nachgeführt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle Plan-Pakete
+Regelbezug: R553, R673, R774, R826, R954 · Kosten bei Irrtum: drei passive Messgrössen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —
+
+## R958 · 2026-10-25 · N-104: Erweiterung 2 = «Neue Ufer»
+
+Ruling: Nutzerentscheid N-104: **Erweiterung 2 ist «Neue Ufer»** (Entdeckung, kalte Nordinsel mit eigener Kette). Damit werden wirksam: TIEFE-4-Auflagen an I-189/I-194 (R927 E1/E2), Rückfracht-Entwürfe E1–E5
+(R933). Spec-Arbeit an I-194/I-195/I-196 ist freigegeben; Start als Design-Paket (`lead-design`, Brainstorming mit L0) in der Folgesession nach den Umsetzungs-Strängen, Reihenfolge gegenüber Erweiterung 1 laut
+deren Stand. «Ernte und Frost» bleibt Kandidat für Erweiterung 3.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Erweiterung 1 (`.worktrees/erweiterung-1`, Nutzer-Session R519), HAFEN (Schiffe, Fahrzeiten)
+Regelbezug: R862, R927, R933 · Kosten bei Irrtum: —
+
+Entscheider: Nutzer · Anlass: Antwort N-104 · ADR: —
