@@ -276,3 +276,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-25 · Anlass für I-183 (niedrig)
 
 - Fundort: INSELPROBEN Schuldbrief-Probe. Beobachtung: erzeugt planmässig «Kasse leer, Nahrung leer» und wäre der natürliche Anlass für I-183. Ursprung: Rechnung Zukaufpreis (R918). Einschätzung: bei der nächsten Ideen-Runde prüfen.
+
+## 2026-10-26 · Minuten-Umrechnung doppelt in sim und ui (niedrig)
+
+- Fundort: `src/sim/levelChecks.ts` (nutzt `MINUTE_MS` aus `src/sim/defs/timing.ts`), `src/ui/time.ts:23` (`perMinute`, Literal 60000). Beobachtung: dieselbe Umrechnung Ticks → je Minute steht zweimal; `src/sim` darf `ui` nicht importieren. Ursprung: AUSBAU-LOGIK T04 (Review). Einschätzung: `ui/time.ts` auf `MINUTE_MS` umstellen oder `perMinute` nach `src/sim` heben; klein, kein Folgeissue.
