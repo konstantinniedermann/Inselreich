@@ -49,6 +49,8 @@ export interface DuelRun {
   value: number;
   shortage: GoodId[];
   incident: boolean;
+  /** Zusatzmass: Wert (Geld plus Lager) im letzten Tick der Wirkung, vor dem Verfall über der Lagergrenze. */
+  valueAtEffectEnd: number;
   /** Wert von `scene.probe` am Ende des Laufs. */
   probe?: number;
   /** Werte von `scene.extras` am Ende des Laufs. */
@@ -364,18 +366,21 @@ function run(scene: PetitionScene, base: World, answer: Lage): DuelRun {
   const shortage = new Set<GoodId>();
   const nach = answerAt + def.delay + def.duration + AFTERMATH;
   const end = answerAt + def.delay + def.duration + WINDOW_TAIL;
+  let valueAtEffectEnd = 0;
   while (w.tick < end) {
     const rep = step(w);
     scene.feed?.(w);
     setStorm(scene, w);
     if (rep.lost.length > 0 || burning(w, allowStorm)) incident = true;
     if (w.tick <= nach) for (const g of goods) if (home(w).stock[g] === 0) shortage.add(g);
+    if (w.tick === answerAt + def.delay + def.duration - 1) valueAtEffectEnd = worth(w) - before;
   }
   const out: DuelRun = {
     ok: res.ok,
     value: worth(w) - before,
     shortage: [...shortage].sort(),
     incident,
+    valueAtEffectEnd,
   };
   if (scene.probe !== undefined) out.probe = scene.probe(w);
   if (scene.extras !== undefined)

@@ -8,8 +8,9 @@
  *   Kontor), eine Route brauchte Kontor, Schiff, Umlauf und Ladelogik. Gewürz kommt alle L Ticks in die Heimat
  *   (L = Ladung / Bedarf). Ja: Fremdlager 20, Ladung 15, der Zusatz der Saat (100/pct - 1) kommt an. Nein: Fremdlager 100,
  *   Ladung = Schiffsraum, der Zusatz bleibt im Fremdlager. Vorbedingung Ja: mindestens eine zusätzliche Ladung kam an.
- * - B9 offen (Entscheid L0), hier noch NICHT geprüft (Lage und Sturm-Mechanik stehen in petitionWorlds.ts, `SCENES.granary`):
- *   Die Ja-Lage ist mit den Zahlen aus Anhang 01 nicht baubar (Befund im Bericht an lead-tech), Entscheid steht aus.
+ * - B9 Zusatzmass (R997): Im Fenstermass (bis Wirkungsende + 300) verliert das Ja in der Ja-Lage (Seed 3: -74), die Lage ist
+ *   dort mit den Zahlen aus Anhang 01 nicht baubar; der Wertungs-Entscheid liegt bei lead-design. Geprüft wird darum das Zusatzmass
+ *   «Lagerwert bei Wirkungsende» (Ja-Lage +494, Nein-Lage -131), `describe` am Dateiende; B9 steht nicht in der Liste BITTEN.
  * - B9 Sturm direkt: Der Lauf setzt `world.crisis` auf einen Sturm ab answerAt + Verzug + 300 mit STORM_DURATION,
  *   in beiden Zweigen gleich, kein Eingriff in `crises.ts`. `incident` meint Krisen ausser diesem Sturm.
  *
@@ -71,5 +72,31 @@ describe.each(PETITION_SEEDS)('AK-BS-04 B6-B9, Seed %i', (seed) => {
     it('Nein-Lage: Nein gewinnt', () => {
       expect(res.no!.no.value).toBeGreaterThan(res.no!.yes.value);
     });
+  });
+});
+
+/**
+ * B9 Speicherbau mit dem Zusatzmass «Lagerwert bei Wirkungsende» (R997): Geld plus Lager im letzten Tick der Wirkung, vor dem
+ * Verfall über der Lagergrenze. Das Fenstermass (bis Wirkungsende + 300) bleibt die dokumentierte Abweichung: dort verliert
+ * das Ja in der Ja-Lage (Seed 3: -74), weil der Zusatzraum bei Wirkungsende verfällt und die Genügsamkeit des Nein die
+ * Nahrung schont. Der Wertungs-Entscheid liegt bei lead-design; dieser Test hält nur das Zusatzmass fest.
+ */
+describe.each(PETITION_SEEDS)('AK-BS-04 B9 Zusatzmass, Seed %i', (seed) => {
+  const res: Partial<Result> = {};
+  beforeAll(() => {
+    for (const lage of ['yes', 'no'] as const) res[lage] = duel(SCENES.granary![lage]!(seed));
+  });
+  it('Vorbedingungen: beide Antworten gehen, kein Zwischenfall ausser dem gesetzten Sturm', () => {
+    for (const lage of ['yes', 'no'] as const)
+      for (const a of ['yes', 'no'] as const) {
+        expect(res[lage]![a].ok, `${lage}/${a} ok`).toBe(true);
+        expect(res[lage]![a].incident, `${lage}/${a} incident`).toBe(false);
+      }
+  });
+  it('Ja-Lage: Ja gewinnt beim Lagerwert zu Wirkungsende', () => {
+    expect(res.yes!.yes.valueAtEffectEnd).toBeGreaterThan(res.yes!.no.valueAtEffectEnd);
+  });
+  it('Nein-Lage: Nein gewinnt beim Lagerwert zu Wirkungsende', () => {
+    expect(res.no!.no.valueAtEffectEnd).toBeGreaterThan(res.no!.yes.valueAtEffectEnd);
   });
 });
