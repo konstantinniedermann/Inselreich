@@ -296,6 +296,7 @@ Leitbefund IDEEN-20: Die stärksten Ideen kommen nicht aus neuen Boni, sondern a
 - Bewertung lead-design: Gibt der Flotte nach der Gewürzstadt einen Zweck und einen Lohn ausser Geld. Die Kritik «Zufallslohn, Klickarbeit» (R3) ist durch Wahl-Karten und die Grenze von einer Expedition zugleich begrenzt. Allein M, als Kern der Erweiterung «Neue Ufer» stärker.
 - Nutzen/Aufwand: Flotte und Spätspiel bekommen Ziel und Geschichte · M · ≈ 3 Pakete
 - Entscheid: R864 Baustein der Erweiterung «Neue Ufer» (I-194, N-104)
+- Auflage TIEFE-4: T4-1/T4-3/T4-4, wirksam mit N-104 Neue Ufer (R927 E1; Branch `docs/tiefe-4`, `docs/recherche/2026-10-25-tiefe-4.md` §3; Rechnung T4-4 auf `design/rueckfracht`)
 
 ### I-190 · eingeplant (R864, Inselproben) · Inselprobe (feste Karte, festes Ziel, Bestzeit)
 
@@ -351,6 +352,7 @@ Leitbefund IDEEN-20: Die stärksten Ideen kommen nicht aus neuen Boni, sondern a
 - Bewertung lead-design: Das Thema, das Spieler an Erweiterungen am meisten loben. Es ruht auf Werft und Flotte der Erweiterung 1 und passt zum ruhigen Ton. Kandidat für die Erweiterung nach «Stände und Segel».
 - Nutzen/Aufwand: neue Spielphase mit neuer Frage («wie versorge ich ein anderes Klima?») · L · ≈ 12–16 Pakete
 - Entscheid: R864 offen: Nutzerentscheid N-104 (Reihenfolge der Erweiterungen), Empfehlung Erweiterung 2
+- Auflage TIEFE-4: T4-1/T4-3/T4-4, wirksam mit N-104 Neue Ufer (R927 E1; Branch `docs/tiefe-4`, `docs/recherche/2026-10-25-tiefe-4.md` §3; Rechnung T4-4 auf `design/rueckfracht`)
 
 ### I-195 · bewertet (N-104) · Erweiterung «Ernte und Frost» (Jahreszeiten)
 
