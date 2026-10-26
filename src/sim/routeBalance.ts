@@ -2,7 +2,7 @@ import type { Coverage } from './coverage';
 import { GOODS } from './defs/goods';
 import { SHIP } from './defs/sea';
 import { goodsBalance } from './flow';
-import { laneTicks } from './islands';
+import { laneTicksOf } from './islands';
 import type { Route, RouteGood, World } from './types';
 
 /** Einheit von `goodsBalance` (Ticks); Umrechnung Netto je 100 Ticks auf die Umlaufzeit. */
@@ -11,7 +11,7 @@ const FLOW_TICKS = 100;
 type Balances = Map<number, ReturnType<typeof goodsBalance>>;
 
 export interface RouteBalance {
-  /** Umlaufzeit a→b→a in Ticks (laneTicks beider Richtungen). */
+  /** Umlaufzeit a→b→a in Ticks (laneTicksOf beider Richtungen, mit Seerecht). */
   cycleTicks: number;
   /** Warenwert (Σ q · GOODS[g].sell) je 100 Ticks, ungerundet. */
   goodsPer100: number;
@@ -56,8 +56,7 @@ export function routeBalance(
   balances: Balances = new Map(),
   cov?: Coverage,
 ): RouteBalance | null {
-  const cycleTicks =
-    laneTicks(world.islands, route.a, route.b) + laneTicks(world.islands, route.b, route.a);
+  const cycleTicks = laneTicksOf(world, route.a, route.b) + laneTicksOf(world, route.b, route.a);
   if (cycleTicks <= 0) return null;
   const value =
     directionValue(route.ab, balanceOf(world, route.a, balances, cov), cycleTicks) +

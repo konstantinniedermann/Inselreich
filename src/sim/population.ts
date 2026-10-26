@@ -4,6 +4,7 @@ import { TAX_CARRY_DIVISOR, TAX_LEVELS, TAX_UNIT, TIERS, TIER_IDS } from './defs
 import { GOODS } from './defs/goods';
 import { UPGRADE_DEFICIT_WAIT_FACTOR } from './defs/timing';
 import { feastActive } from './feast';
+import { bellActive } from './petitionEffect';
 import { checkAfford, pay, takeStock } from './economy';
 import type {
   Building,
@@ -151,7 +152,7 @@ export function upgradeStatus(
       house,
       (g) => !dampsOn(world, b.island, g),
     );
-  const festive = base !== null && feastActive(world, b);
+  const festive = base !== null && (feastActive(world, b) || bellActive(world, b));
   const low = TAX_LEVELS.low.upgradeWait!;
   const edictWait = edictUpgradeWait(world) ?? Infinity;
   const waitBase =

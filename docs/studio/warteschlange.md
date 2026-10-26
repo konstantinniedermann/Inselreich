@@ -184,7 +184,7 @@ schliesst den Eintrag.
 - Von: studio-coach
 - Antwort: Nutzer 2026-10-22: ja (R816; Verfassung 1.3)
 
-## N-104 · offen · 2026-10-23 · Welche Erweiterung nach Erweiterung 1?
+## N-104 · beantwortet · 2026-10-23 · Welche Erweiterung nach Erweiterung 1?
 
 - Frage: Welche Erweiterung folgt auf Erweiterung 1 «Stände und Segel»: «Neue Ufer» (Entdeckung, kalte Nordinsel mit eigener Kette), «Ernte und Frost» (Jahreszeiten), «Gelehrte und Gilden» (Wissen, Gilden) oder die Rivalen (KI-Konkurrenz)?
 - Empfehlung: «Neue Ufer» als Erweiterung 2, «Ernte und Frost» als dritte, Rivalen später.
@@ -192,4 +192,4 @@ schliesst den Eintrag.
 - Kosten des Wartens: Keine: Erweiterung 1 ist selbst offen; Ehrenbuch und Spielmodi laufen unabhängig weiter.
 - Blockiert: Spec-Arbeit an I-194/I-195/I-196
 - Von: lead-design
-- Antwort: –
+- Antwort: Nutzer 2026-10-25: «Neue Ufer» (R958)

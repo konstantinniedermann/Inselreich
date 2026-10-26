@@ -1,6 +1,7 @@
 import { STORAGE_CAP } from './defs/goods';
+import { chapelWorks, inChapelRadius } from './feastEffect';
 import { FRUGAL_PCT, PETITIONS } from './defs/petitions';
-import type { BuildingDefId, GoodId, PetitionEffectEntry, Tier, World } from './types';
+import type { Building, BuildingDefId, GoodId, PetitionEffectEntry, Tier, World } from './types';
 import { HOME } from './world';
 
 /** Blatt: einzige Leseorte der Bittschrift-Wirkungen. Ohne Einträge sofort der Eingabewert. */
@@ -51,4 +52,34 @@ export function storageCap(world: World, island: number, good: GoodId): number {
       plus = Math.max(plus, r.plus);
   }
   return STORAGE_CAP + plus;
+}
+
+/** Glockenweihe (B4): «Ja» läuft, Ankerkapelle steht und arbeitet, das Haus liegt in ihrem Radius. Brand und Trennung pausieren, `until` läuft weiter. */
+export function bellActive(world: World, house: Building): boolean {
+  if (world.petitions.effects.length === 0) return false;
+  return active(world).some((e) => {
+    if (e.answer !== 'yes' || PETITIONS[e.id].reward.kind !== 'upgradeWait') return false;
+    const chapel = world.buildings[e.anchor ?? -1];
+    return chapel !== undefined && chapelWorks(chapel) && inChapelRadius(world, chapel, house);
+  });
+}
+
+const isVoucher = (world: World, e: PetitionEffectEntry, chapelId: number): boolean =>
+  e.answer === 'yes' &&
+  e.anchor === chapelId &&
+  e.until > world.tick &&
+  PETITIONS[e.id].reward.kind === 'feastVoucher';
+
+/** Festtrunk (B5): Läuft eine «Ja»-Wirkung mit dieser Kapelle als Anker? */
+export function voucherAt(world: World, chapelId: number): boolean {
+  return world.petitions.effects.some((e) => isVoucher(world, e, chapelId));
+}
+
+/**
+ * Löst den Festtrunk dieser Kapelle ein: entfernt genau eine Wirkung. Einzige Schreibstelle im Blatt,
+ * aufgerufen nur nach erfolgreichem `holdFeast`.
+ */
+export function useVoucher(world: World, chapelId: number): void {
+  const i = world.petitions.effects.findIndex((e) => isVoucher(world, e, chapelId));
+  if (i >= 0) world.petitions.effects.splice(i, 1);
 }

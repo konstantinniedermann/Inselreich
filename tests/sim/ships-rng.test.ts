@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { laneTicks } from '../../src/sim/islands';
+import { laneTicksOf } from '../../src/sim/islands';
 import { createRng } from '../../src/sim/rng';
 import { setRoute, tickShips } from '../../src/sim/ships';
 import { foundKontor2Literal, seaWorld, shipLiteral } from './seaHelpers';
@@ -11,7 +11,7 @@ vi.mock('../../src/sim/rng', async (importOriginal) => {
 
 vi.mock('../../src/sim/islands', async (importOriginal) => {
   const orig = await importOriginal<typeof import('../../src/sim/islands')>();
-  return { ...orig, laneTicks: vi.fn(orig.laneTicks) };
+  return { ...orig, laneTicksOf: vi.fn(orig.laneTicksOf) };
 });
 
 describe('M12 E4 tickShips Zufall', () => {
@@ -31,7 +31,7 @@ describe('M12 E4 tickShips Zufall', () => {
     expect(createRng).toHaveBeenCalledTimes(0);
   });
 
-  it('laneTicks wird nur bei Abfahrt gerechnet, nie je Tick', () => {
+  it('laneTicksOf wird nur bei Abfahrt gerechnet, nie je Tick', () => {
     const w = seaWorld();
     foundKontor2Literal(w, 1);
     foundKontor2Literal(w, 2);
@@ -50,7 +50,7 @@ describe('M12 E4 tickShips Zufall', () => {
         ba: [{ good: 'tools', reserve: 0 }],
       });
     }
-    vi.mocked(laneTicks).mockClear();
+    vi.mocked(laneTicksOf).mockClear();
     const n = 3000;
     let departures = 0;
     for (let i = 0; i < n; i++) {
@@ -62,7 +62,7 @@ describe('M12 E4 tickShips Zufall', () => {
       });
     }
     expect(departures).toBeGreaterThan(4);
-    expect(laneTicks).toHaveBeenCalledTimes(departures);
+    expect(laneTicksOf).toHaveBeenCalledTimes(departures);
     expect(departures).toBeLessThan((n * 4) / 10);
   });
 });

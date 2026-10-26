@@ -147,6 +147,9 @@ import {
 } from './council';
 import { createCouncilCard } from './councilCard';
 import { createTrialCard } from './trialCard';
+import { createPetitionCard } from './petitionCard';
+import { answerPetition } from '../sim/petitions';
+import { petitionLogEntries } from './petitionLog';
 import { TRIAL_ABORT_MESSAGE, trialChip, trialStartMessage, trialTransition } from './trial';
 import { setMonumentBuy, setMonumentPaused, startMonumentStage } from '../sim/monument';
 import { monumentStageCost, monumentStartedText } from './monumentView';
@@ -344,6 +347,7 @@ function launch(
     createWorld(Date.now() % 100000, {
       crisisLevel: settings.crisisLevel,
       unlockAll: settings.unlockMode === 'all',
+      petitionsOn: settings.petitionsOn,
     });
   // Ehrenbuch (I-186): ein Tracker je Spiel (P-1); der Partie-Merker wird nur bei «Neue Insel» geschrieben (P-2)
   const tracker = createHonorTracker(world);
@@ -542,8 +546,9 @@ function launch(
     crisisLevel: () => settings.crisisLevel,
     unlockMode: () => settings.unlockMode,
     hotkeys: () => hotkeyList(world),
-    newIsland: (crisisLevel, unlockMode) => {
-      settings = { ...settings, crisisLevel, unlockMode };
+    petitionsOn: () => settings.petitionsOn,
+    newIsland: (crisisLevel, unlockMode, petitionsOn = settings.petitionsOn) => {
+      settings = { ...settings, crisisLevel, unlockMode, petitionsOn };
       saveSettings(settings);
       restart(root);
     },
@@ -672,7 +677,7 @@ function launch(
     (tier, side) => {
       const r = decree(world, tier, side);
       if (r.ok) {
-        showMessage(`Beschluss gefasst: ${COUNCIL[tier][side].name}`);
+        showMessage(`Beschluss gefasst: ${COUNCIL[tier][side]?.name ?? side}`);
         sound.play('build');
       } else showError(friendlyReason(world, r.reason));
       refresh();
@@ -704,7 +709,29 @@ function launch(
     () => trialCard.setOpen(false),
   );
 
+  /** Bittschrift-Karte (I-210): öffnet beim Ziehen, bleibt über den Kopf-Chip erreichbar; das Spiel pausiert nicht. */
+  const petitionCard = createPetitionCard(
+    gameEl,
+    (drawnAt, answer) => {
+      const r = answerPetition(world, drawnAt, answer);
+      if (!r.ok) showError(friendlyReason(world, r.reason));
+      else petitionCard.show(null);
+      refresh();
+    },
+    () => petitionCard.show(null),
+  );
+
   const actions: HudActions = {
+    togglePetition: (drawnAt) => {
+      if (petitionCard.shown === drawnAt) {
+        petitionCard.show(null);
+        return;
+      }
+      trialCard.setOpen(false);
+      councilCard.setOpen(false);
+      petitionCard.show(drawnAt);
+      petitionCard.update(world);
+    },
     toggleCouncil: () => {
       trialCard.setOpen(false);
       councilCard.setOpen(councilOpenNext(councilCard.isOpen, 'toggle'));
@@ -918,8 +945,8 @@ function launch(
           }
           refresh();
         },
-        holdFeast: (id) => {
-          const r = holdFeast(world, id);
+        holdFeast: (id, kind) => {
+          const r = holdFeast(world, id, kind);
           if (r.ok) sound.play('build');
           else showError(friendlyReason(world, r.reason));
           refresh();
@@ -1049,6 +1076,7 @@ function launch(
     prevTrial = cloneTrial(world.trial);
     if (trialCard.isOpen && trialChip(world) === null) trialCard.setOpen(false);
     trialCard.update(world);
+    petitionCard.update(world);
     updateNoticeStack(noticeStack, world, state.activeIsland);
     updateEventLog(
       logBox,
@@ -1275,6 +1303,10 @@ function launch(
       return;
     }
     if (a.type === 'cancel') {
+      if (petitionCard.isOpen) {
+        petitionCard.show(null);
+        return;
+      }
       if (trialCard.isOpen) {
         trialCard.setOpen(false); // offene Auflagen-Karte zuerst
         return;
@@ -1721,6 +1753,21 @@ function launch(
             showMessage(honorMessage(added, saved), 'info');
           }
         }
+        const petitionEvents = reports.flatMap((r) => r.petitions);
+        const petitionLogged = petitionLogEntries(petitionEvents, world);
+        if (petitionLogged.length > 0) {
+          state.eventLog = pushLog(state.eventLog, petitionLogged);
+          state.logUnread = nextUnread(state.logUnread, petitionLogged, isEventLogExpanded(logBox));
+          for (const l of petitionLogged) if (l.toast !== null) showMessage(l.text, l.toast);
+        }
+        for (const e of petitionEvents) {
+          // Eine gerade gezeigte Karte bleibt; weitere Marken zeigt der Chip-Zähler.
+          if (e.kind === 'drawn' && !petitionCard.isOpen) {
+            trialCard.setOpen(false);
+            councilCard.setOpen(false);
+            petitionCard.show(e.drawnAt);
+          }
+        }
         for (const text of lossMessages(reports)) showMessage(text, 'warn');
         announceContract(
           reports,
@@ -1847,6 +1894,7 @@ function launch(
       const t0 = performance.now();
       const fx: RenderFx = {
         timeMs: t0,
+        tickFrac: state.speed > 0 ? Math.min(1, acc / TICK_MS) : 0,
         dayNight: settings.dayNight,
         weather,
         reduceMotion: reduce,
@@ -1886,6 +1934,7 @@ function launch(
     cancelAnimationFrame(rafId);
     layers.dispose();
     councilCard.dispose();
+    petitionCard.dispose();
     trialCard.dispose();
     resizeObserver.disconnect();
     dprQuery?.removeEventListener('change', onDprChange);
