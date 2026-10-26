@@ -26,14 +26,14 @@ const inRing = (p: { x: number; y: number }, k: { x: number; y: number }): boole
 
 describe('HAFEN S1 dockFor', () => {
   it('AK-HF-01: nimmt die nächste Meer-Ringkachel, Binnensee nie', () => {
-    // Kontor (1,1): Ring enthält (0,*) und (*,0) als Meer. Binnensee bei (3,2) im Ring, nahe an (2,2).
+    // Kontor (1,1): Binnensee (3,2) liegt im Ring, zählt nicht als Meer.
     const t = island([[3, 2]]);
     const d = dockFor(t, N, N, { x: 1, y: 1 });
     const sea = seaMask(t, N, N);
     expect(sea[2 * N + 3]).toBe(false);
     expect(sea[d.y * N + d.x]).toBe(true);
     expect(inRing(d, { x: 1, y: 1 })).toBe(true);
-    // Mitte (2,2): Meerkacheln (0,1),(0,2),(1,0),(2,0) -> Abstand 5 bei (0,1)? (0,2): 4; (2,0): 4 -> Gleichstand y klein.
+    // (0,2) und (2,0) sind gleich weit; das kleinere y gewinnt.
     expect(d).toEqual({ x: 2, y: 0 });
   });
 
@@ -43,6 +43,17 @@ describe('HAFEN S1 dockFor', () => {
     expect(dockFor(t, N, N, { x: 1, y: 1 })).toEqual({ x: 2, y: 0 });
     // Kontor (5,5): (7,6) und (6,7) gleich weit; kleineres y gewinnt.
     expect(dockFor(t, N, N, { x: 5, y: 5 })).toEqual({ x: 7, y: 6 });
+  });
+
+  it('AK-HF-01: Gleichstand bei gleichem y ergibt kleineres x', () => {
+    // Kontor (3,3): Meerkanäle von oben bis (3,2) und (5,2), beide gleich weit zu (4,4).
+    const t = island([
+      [3, 1],
+      [3, 2],
+      [5, 1],
+      [5, 2],
+    ]);
+    expect(dockFor(t, N, N, { x: 3, y: 3 })).toEqual({ x: 3, y: 2 });
   });
 
   it('AK-HF-02: ohne Meer im Ring Rückfall auf homeAnchor', () => {
