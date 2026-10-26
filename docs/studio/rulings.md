@@ -2821,3 +2821,72 @@ Verfassung berührt?: nein (Handbuch-Richtwerte R69/R826, Nutzeranweisung geht v
 Regelbezug: R66, R69, R826, R863 · Kosten bei Irrtum: Session endet knapp am Limit, Übergabe kleiner.
 
 Entscheider: L0 · Anlass: Nutzerauftrag Session 8361ff82 · ADR: —
+
+## R960 · 2026-10-25 · Gate Spec I-215 BEDENKEN; Spec-Nachtrag läuft
+
+Ruling: Gate Spec I-215 «Volllast» (`design/volllast` @ `db9da014`) **BEDENKEN angenommen**, Auflagen 1–9 laut `.studio/handoffs/2026-10-25-lead-qa-gate-spec-I-215.md`. AK-VL-01–23 bestätigt, Balancing-Test
+unverändert, kein Wert-Ruling. Spec-Nachtrag `design-spec-author` (sonnet) setzt R952 durchgängig um (Auflagen 1–3 hoch) und schärft AK-VL-07/-14/-19/-21; danach Lese-Kurzprüfung Auflagen 1–3 (`lead-qa`), dann Plan
+(`lead-tech`, opus). Konfliktpunkt `levels.ts` (`cycleOf`, `buildingUpkeep`) als Plan-Risiko.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK, I-201, I-210 (`levels.ts`)
+Regelbezug: R417, R937, R952 · Kosten bei Irrtum: eine Nachtragsrunde.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-215 · ADR: —
+
+## R961 · 2026-10-25 · Gegenlesen Plan HAFEN OK; L1 frei
+
+Ruling: Gegenlesen Plan-Nachtrag HAFEN (`plan/hafen` @ `07bbb731`) **OK**, Auflagen 1–8 erfüllt; **L1 frei**, Start sobald ein Test-Controller-Platz frei ist (≤ 3, R826; zurzeit ZEITPIN-D1, I-210, AUSBAU-LOGIK).
+L2 bleibt nach INSELPROBEN/SEERECHT-Merge. Hinweise in die Controller-Briefings T05/T06: Vitest-Timeouts der K2-Zeilen 8 und 9 prüfen (oder Seeds kürzen nach E-HF-8), expliziter Hook-Timeout für `beforeAll` der
+neuen `islandGen`-Tests. E-HF-6 (B6 createWorld) bestätigt L0 erst nach den Messwerten aus T01/T06.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: FLAECHE (Seed-Welten), push-check-Laufzeit
+Regelbezug: R826, R945, R953 · Kosten bei Irrtum: Timeout-Fehler in T05/T06.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-HAFEN-nachtrag · ADR: —
+
+## R962 · 2026-10-25 · «Neue Ufer» Brainstorming F1–F6
+
+Ruling: Empfehlungen von `lead-design` zu I-194 «Neue Ufer» **alle angenommen**: **F1** Freischaltung mit Ziel 3, rechnet mit Flotte 4, unabhängig von Werft/Ziel 4; kommt Erweiterung 1 zuerst, regelt die
+spätere Spec nur die Koexistenz. **F2** vier Etappen, jede allein releasebar: NU-1 Kartenrand, NU-2 Nordinsel, NU-3 Lebensader, NU-4 Zwei Reiche. **F3** drei Seegebiete mit zwei besiedelbaren Küsten (Nordinsel,
+Holzschären) und einem Fundort ohne Land (Wrackfeld); Landnahme-Leiter zweistufig (R927 E1 inhaltlich erfüllt). **F4** Expedition ohne Schiffs- oder Ladungsverlust, eigener seeded Zufallsstrom nur für die
+Wahl-Karten, Proviant aus = Umkehr ohne Lohn, höchstens eine Expedition zugleich, Ende nach dem dritten Gebiet. **F5** acht Fundstücke als kleine Def-Modifikatoren, nie auf Steuer, Zielschwellen oder Heimat-Bilanz
+vor Ziel 3; ohne Expedition bleiben Baseline und `balance.test.ts` bitgleich. **F6** NU-1 rechnet Expeditionsdauer in festen Ticks je Gebiet; Seeweg und Parzellen der Nordinsel erst in der NU-2-Spec nach
+HAFEN-/FLAECHE-Merge. Spec jetzt nur für NU-1.
+
+Verfassung berührt?: nein (Nutzer-Vorbehalt N-104 erledigt) · Überschneidung mit offenen Paketen: HAFEN (Fahrzeit), FLAECHE (Parzellen), Erweiterung 1 (Nutzer-Session R519)
+Regelbezug: R862, R896, R927, R933, R958 · Kosten bei Irrtum: Spec-Nachtrag NU-1.
+
+Entscheider: L0 · Anlass: Brainstorming lead-design design-NEUE-UFER · ADR: —
+
+## R963 · 2026-10-25 · I-215 Spec freigegeben; Plan startet
+
+Ruling: Nachtrag `add15171` auf `design/volllast` erfüllt die Auflagen 1–9 (Kurzprüfung `lead-qa` OK). **Spec I-215 freigegeben**, Plan startet (`lead-tech`, opus, Phase `plan-I-215`). Der Plan führt die
+Wertgrenzen als Risiko, bestätigt AK-VL-19 = 59 und AK-VL-14 in Rot/Grün und legt den Merge-Stand für AK-VL-03 fest (Reihenfolge `cycleOf`). Balancing-Test unverändert, kein Wert-Ruling. Save-Nummer nach R909.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK, I-201, I-210 (`levels.ts`)
+Regelbezug: R909, R952, R960 · Kosten bei Irrtum: —
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-215-kurz · ADR: —
+
+## R964 · 2026-10-25 · COACH-R957 abgenommen; E-075 abgeschlossen; Doku-Branches in REL-33
+
+Ruling: `docs/coach-r957` @ `fdb4ba63` (Handbuch 1.78, lead-tech 1.19, Briefing-Vorlage V2/V3, Output-Style R959, E-077–E-079 passiv; `make studio-test` grün) **abgenommen**. **E-075** abgeschlossen als
+«Messauftrag erledigt, Hypothese nicht bestätigt» (78,1 % gegen ≤ 60 %). Die Ampel-Datei bleibt unverändert; die 85-/90-%-Grenzen aus R959 prüft L0 selbst (keine Werkzeugänderung). Merge-Reihenfolge
+`docs/coach-r886` → `docs/coach-r920` → `docs/coach-r957`, dazu `docs/retro-48c8580f` und `design/tiefe-5`: alle gehen mit dem ZEITPIN-Fix in den REL-33-Kandidaten (`integrate/rel-33`), ein
+`make push-check` für alles (R810).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-33, ZEITPIN-D1
+Regelbezug: R810, R816, R957, R959 · Kosten bei Irrtum: Doku-Merge einen Tag später.
+
+Entscheider: L0 · Anlass: Bericht studio-coach COACH-R957 · ADR: —
+
+## R965 · 2026-10-25 · TIEFE-5 Rivalen: Empfehlungen
+
+Ruling: Recherche TIEFE-5 (`design/tiefe-5` @ `9da59778`, 22 Quellen) **abgenommen**. **E-1 ja:** R-D Handelshaus-Wertung (S) und R-C Konzessions-Auktion mit sichtbarem Rivalen-Gebot (S–M) als Ideen in
+den Pool (Eintrag durch `lead-design` bei der nächsten Pool-Pflege), R-E, R-A, R-B als Rivalen-Bausteine vermerkt. **E-2 ja:** jede Rivalen-Spec hat den Schalter «Rivalen aus/leicht/stark». **E-3 ja:**
+eigener seeded Strom für Rivalen (analog ADR-010), Ziele 1–3 ohne Rivalen bitgleich. **E-4:** R-F (Gegenantrag im Rat) geparkt. Rivalen bleiben Kandidat für eine spätere Erweiterung (nach «Neue Ufer»).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: «Neue Ufer» (eigener Strom für Expeditionen, R962 F4)
+Regelbezug: R862, R896, R962 · Kosten bei Irrtum: zwei Pool-Einträge.
+
+Entscheider: L0 · Anlass: Bericht TIEFE-5 · ADR: —
