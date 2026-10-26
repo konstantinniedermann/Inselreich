@@ -5,6 +5,7 @@ import { ISLANDS } from './defs/sea';
 import { TIERS } from './defs/tiers';
 import type { Coverage } from './coverage';
 import { cycleOf } from './levels';
+import { buildLevelContext, type LevelContext } from './levelRules';
 import { inSupplyRange } from './supply';
 import type { Building, GoodId, HouseState, Tier, World } from './types';
 import { center, HOME } from './world';
@@ -18,9 +19,9 @@ const DEFICIT_EPSILON = 1e-9;
  * Rate eines Betriebs je 100 Ticks (gemeinsame Zählregel von Bilanz und Produktionsanzeige):
  * 0 für Häuser, nicht angebundene, stillgelegte und zyklusfreie Gebäude, sonst 100 / Zyklus.
  */
-export function producedRate(world: World, b: Building): number {
+export function producedRate(world: World, b: Building, ctx?: LevelContext): number {
   if (b.house || !b.connected || b.paused === true) return 0;
-  const cycle = cycleOf(world, b);
+  const cycle = cycleOf(world, b, ctx);
   return cycle === undefined ? 0 : 100 / cycle;
 }
 
@@ -32,6 +33,7 @@ export function goodsBalance(
 ): Record<GoodId, { produced: number; consumed: number; net: number }> {
   const out = {} as Record<GoodId, { produced: number; consumed: number; net: number }>;
   for (const g of GOOD_IDS) out[g] = { produced: 0, consumed: 0, net: 0 };
+  const ctx = buildLevelContext(world);
   for (const b of Object.values(world.buildings)) {
     if (b.island !== island) continue;
     if (b.house) {
@@ -44,7 +46,7 @@ export function goodsBalance(
     }
     if (!b.connected || b.paused === true) continue;
     const def = BUILDING_DEFS[b.defId];
-    const rate = producedRate(world, b);
+    const rate = producedRate(world, b, ctx);
     if (rate === 0) continue;
     if (def.produces) out[def.produces].produced += rate;
     for (const g of def.consumes ?? []) out[g].consumed += rate;
