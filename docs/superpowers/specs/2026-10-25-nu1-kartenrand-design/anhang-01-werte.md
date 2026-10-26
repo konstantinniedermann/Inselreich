@@ -250,26 +250,26 @@ ein Gewürzschiff freispielen.
 | `goods.ts`            | Fund-Lagergrenze Gewürz, Nahrung                | 120                                                                   | `goods.ts:84` (100)                      |
 | unverändert           | `SHIP_MAX`, `SHIP.capacity`, `SHIP.upkeep`      | 4, 50, 15                                                             | `sea.ts:4,8,7`; R962                     |
 
-## 9 Entwürfe an L0 (kein Entscheid)
+## 9 Entwürfe an L0 und Sichtung `lead-design`
 
-- **E-01:** Umweg als immer offene Option mit +2 Abschnitten (6 Nahrung, 600 T)? · Empfehlung: ja, denn so gibt es nie
-  eine Sackgasse, und S bleibt nicht hinter U zurück.
-- **E-02:** Fundstücke erst bei Ankunft; eine Umkehr bringt keins? · Empfehlung: ja, damit es keine Umkehr-Farm gibt.
-- **E-03:** Kartenfolge fest je Seed und Gebiet, nicht je Versuch? · Empfehlung: ja, denn sonst entsteht Reroll-Scumming.
-- **E-04:** Vergabe nach Gebietsliste (n-te R-Wahl ergibt das n-te Stück) statt je Karte? · Empfehlung: ja, sonst sind
-  40–60 % der Stücke unerreichbar.
-- **E-05:** Warten auf die Wahl unbegrenzt, ohne Proviantzehrung, mit Erinnerung nach 3000 T? · Empfehlung: ja.
-- **E-06:** Einziges Gewürzschiff: Warnung mit Zahlen oder Sperre? · Empfehlung: Warnung, weil Auswege bestehen
-  (viertes Schiff, Zukauf).
-- **E-07:** Route merken und nach der Rückkehr fortsetzen? · Empfehlung: ja (Aufwand S, ein Save-Feld).
-- **E-08:** Überlauf bei Heimkehr verfällt wie bei `unloadAtHome`. Bezieht sich «kein Ladungsverlust» (R962) nur auf das
-  Risiko der Fahrt? · Empfehlung: ja, mit Vorwarnung 300 T vorher.
-- **E-09:** Kartenhaus-Abriss während der Fahrt sperren? · Empfehlung: ja.
-- **E-10:** Knopf «Umkehren» (freiwillig, ohne Lohn)? · Empfehlung: ja, das erspart Klicks über U-Ketten.
-- **E-11:** Satzbonus nur kosmetisch? · Empfehlung: ja, kein Prozentstapel.
-- **E-12:** «Eiskiste» braucht eine Lagergrenze je Gut (`STORAGE_CAP` hat 10 Leseorte, Aufwand M). · Empfehlung:
-  behalten, wenn der Plan es trägt, sonst Ersatz «Gewürzplantage −10 %».
-- **E-13:** Proviant nur Nahrung? · Empfehlung: ja.
-- **E-14:** Rundung der Fundstück-Zyklen aufwärts (Wirkung ≤ 10 %)? · Empfehlung: ja.
+Sichtung 2026-10-26 (`lead-design`, Vorschlag an L0, Bestätigung im Gate Spec). Die Spec setzt die Spalte «Sichtung» um;
+Zahlen in [Anhang 02](anhang-02-def-werte.md).
+
+| Nr.  | Entwurf (Kurzform)                                         | Sichtung   | Begründung bzw. Anpassung                                                                                                                        |
+| ---- | ---------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| E-01 | Umweg U immer offen, +2 Abschnitte (6 Nahrung, 600 T)      | übernehmen | Keine Sackgasse; U ist eine Regel für jede Karte, keine Def-Option.                                                                              |
+| E-02 | Fundstücke erst bei geschaffter Fahrt, Umkehr bringt keins | übernehmen | Deckt R962 F4 «Umkehr ohne Lohn» und schliesst die Umkehr-Farm; ersetzt die alte Spec-Regel «gewonnene Stücke bleiben».                          |
+| E-03 | Kartenfolge fest je Seed und Gebiet                        | anpassen   | Folge beim Start gezogen und als Ergebnis in `expedition.cards` gespeichert; der Zähler `expeditionCount` entfällt (ohne Leser, YAGNI).          |
+| E-04 | Fundstück nach Gebietsliste statt je Karte                 | übernehmen | Eine geschaffte Fahrt mit k R-Wahlen bringt die ersten k Stücke der Gebietsliste; Kartenausschluss und Sperre «Schon in der Sammlung» entfallen. |
+| E-05 | Warten unbegrenzt, keine Zehrung, Erinnerung nach 3000 T   | übernehmen | Erinnerung einmal je offener Karte als Meldung; keine Auto-Wahl.                                                                                 |
+| E-06 | Einziges Gewürzschiff: Warnung statt Sperre                | anpassen   | Warnung mit Zahlen (Lager reicht m:ss, Fahrt m:ss) nur, wenn kein anderes Schiff eine Route mit Gewürz fährt; Auslaufen bleibt möglich.          |
+| E-07 | Route merken und nach Rückkehr fortsetzen                  | anpassen   | Aufgegangen in R970 E1 (Wartezustand `boarding`, Route bleibt am Schiff); «Start nur mit freiem Schiff» aus §2 entfällt.                         |
+| E-08 | Überlauf bei Heimkehr verfällt, Vorwarnung 300 T vorher    | übernehmen | Wie R970 E4; Vorwarnung nur, wenn Restladung und Lager zusammen über der Grenze liegen.                                                          |
+| E-09 | Kartenhaus-Abriss während der Expedition sperren           | übernehmen | In jeder Phase «Erst Expedition beenden» (wie Fremdkontor); ersetzt die alte Spec-Regel «Fahrt läuft zu Ende».                                   |
+| E-10 | Knopf «Umkehren» (freiwillig, ohne Lohn)                   | anpassen   | Nur bei offener Karte als zusätzliche Wahl; wirkt wie die Proviant-Umkehr (Heimfahrt nach §2, keine Funde, Gebiet bleibt Nebel).                 |
+| E-11 | Satzbonus nur kosmetisch                                   | anpassen   | Nur Chronik-Meldung «Kartenrand vollständig» und Zeile in der Fundstück-Liste; kein Ehrenbuch, kein Schaukasten (Spec §2, kein Art-Zusatz).      |
+| E-12 | «Eiskiste» braucht Lagergrenze je Gut (Aufwand M)          | übernehmen | Bleibt (einziges Lager-Stück, Abwechslung); hält der Plan den Aufwand für zu gross, folgt ein Spec-Nachtrag mit Ersatz, kein stiller Tausch.     |
+| E-13 | Proviant nur Nahrung                                       | übernehmen | Ein Proviant-Gut, eine Prüfung; 3 je Abschnitt.                                                                                                  |
+| E-14 | Fundstück-Zyklen aufrunden (Wirkung ≤ 10 %)                | übernehmen | `ceil(z × 90 / 100)`, mindestens 1, Fundstück als letzter Faktor; Prüfwert Holzfäller Stufe 3: 12 → 11.                                          |
 
 Landnahme-Leiter 1,0/1,6 gilt erst in NU-2 und ist hier nicht gerechnet.
