@@ -41,12 +41,12 @@
 | R979 N1             | AK-25 ersetzt durch 25a/b                                                                                                   | T06, T09                    |
 | R979 N2             | AK-38 als Kappung beim Laden                                                                                                | T03                         |
 | R909                | Save-Nummer per Merge-Reihenfolge (`SAVE_V_KARTENRAND`)                                                                     | T02, T09                    |
-| E-NU-1 (Entwurf)    | `unlockAll` und «Nächste Freischaltung» ohne `U7` (P-2, P-3)                                                                | T01                         |
-| E-NU-2 (Entwurf)    | Fundstück-Faktor in `effectiveCycle`, F1 ohne Umrechnung laufender Fahrten (P-4)                                            | T03, T09                    |
-| E-NU-3 (Entwurf)    | Wirkbeginn im Rückkehr-Tick für Systeme nach `tickExpedition` (P-5)                                                         | T05, T11                    |
-| E-NU-4 (Entwurf)    | Ruling-Notiz zu den 25b-Pins (`pins.md`)                                                                                    | T01, T02, T06, T09          |
-| E-NU-5 (Entwurf)    | Meldungstext der Vorwarnung Überlauf (Spec §3.11.3 nennt keinen): «Expedition kehrt bald heim: Lager fasst nicht alle Ware» | T07                         |
-| E-NU-6 (Entwurf)    | `setRoute` in `boarding` nur mit Heimat-Ende, sonst «Schiff ist auf Expedition»                                             | T04                         |
+| E-NU-1 (R985)       | `unlockAll` und «Nächste Freischaltung» ohne `U7` (P-2, P-3)                                                                | T01                         |
+| E-NU-2 (R985)       | Fundstück-Faktor in `effectiveCycle`, F1 ohne Umrechnung laufender Fahrten (P-4)                                            | T03, T09                    |
+| E-NU-3 (R985)       | Wirkbeginn im Rückkehr-Tick für Systeme nach `tickExpedition` (P-5)                                                         | T05, T11                    |
+| E-NU-4 (R985)       | Ruling-Notiz zu den 25b-Pins (`pins.md`)                                                                                    | T01, T02, T06, T09          |
+| E-NU-5 (R985)       | Meldungstext der Vorwarnung Überlauf (Spec §3.11.3 nennt keinen): «Expedition kehrt bald heim: Lager fasst nicht alle Ware» | T07                         |
+| E-NU-6 (R985)       | `setRoute` in `boarding` nur mit Heimat-Ende, sonst «Schiff ist auf Expedition»                                             | T04                         |
 
 ## Gate-Vorprüfliste (E-078, R957 V2)
 

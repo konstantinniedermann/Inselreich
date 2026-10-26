@@ -1,6 +1,6 @@
 # NU-1 · Entscheide des Plans und Risiken
 
-Zu [`index.md`](index.md). Entwürfe E-NU-1 … E-NU-6 entscheidet L0 (R471); der Plan setzt sie bis dahin wie beschrieben um.
+Zu [`index.md`](index.md). Entwürfe E-NU-1 … E-NU-6 sind durch **R985** wie empfohlen entschieden (E-NU-5: `lead-design` darf den Text ersetzen).
 
 ## Entscheide (Entwurf für das Gate Plan)
 
