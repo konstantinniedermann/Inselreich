@@ -129,7 +129,8 @@ Reihenfolge in `buildingUpkeep`, erster Treffer gilt, **nicht gestapelt**:
 2. **Gedrosselt** (k < g): `upkeep(k) + ceil((upkeep(g) − upkeep(k)) × THROTTLED_UPKEEP_PCT / 100)`, neue Konstante
    `THROTTLED_UPKEEP_PCT = 50` in `src/sim/defs/buildings.ts` neben `PAUSED_UPKEEP_PCT` (E5, Option B). Bild: «Das grosse
    Boot liegt im Hafen und kostet halb.» Beispiele (Rechnung (d)): Fischer 3 → k 1: 7; Brennerei 3 → k 2: 30; Glashütte 4 →
-   k 2: 44.
+   k 2: 44. Das sind Werte **je Unterhalts-Intervall** (`UPKEEP_INTERVAL` = 100 Ticks = 10 s) in der Sim; die UI zeigt
+   sie **je Minute** (×6, Nachtrag R998, AK-AL-50).
 3. Sonst `upkeep(g)`.
 
 ### R7 Ausbau (`upgradeBuilding`)
@@ -171,7 +172,7 @@ darunter).
 
 ```text
 Ausbau auf Stufe 3 — Fischerhütte
-✓ Wissen: Ausbau Stufe 3 bekannt (erste Bürger)
+✓ Wissen: Ausbau Stufe 3 bekannt
 ✓ Meister im Umkreis 8: Bürgerhaus, nächstes 6 Felder
 ✗ Fischgrund überfischt: 2 andere Fischerhütten im Umkreis 3 (erlaubt 1)
 ✓ Geld 65 (Kasse 812)
@@ -189,7 +190,7 @@ Checkliste, nur «Höchste Stufe erreicht».
 
 **Zustandschip** bei k < g: «Läuft wie Stufe k: <erster verletzter Grund der Stufe k + 1>», z. B. «Läuft wie Stufe 2: Keine
 Meister im Umkreis 8 (Bürgerhaus nötig, nächstes 11 Felder)», «Läuft wie Stufe 2: Keine Feuerwache in Reichweite 8 (Brennofen)».
-Tooltip des Chips: alle verletzten Bedingungen aller Stufen k + 1 … g und der Unterhalt «Unterhalt 7 statt 9 (gedrosselt)».
+Tooltip des Chips: alle verletzten Bedingungen aller Stufen k + 1 … g und der Unterhalt «Unterhalt 42 statt 54 / min (gedrosselt)» (7 statt 9 je Intervall, ×6).
 Bei `paused` oder brennend kein Chip (Stilllegung geht vor, R6).
 
 ## Tabellen je Gebäudetyp
@@ -339,7 +340,7 @@ Lager ausreichend. Neue AK ab AK-AL-35 und Schnitt-Zuordnung: Anhang 02. Neue Da
   gesperrtem `upgrade4` → `ok: false` mit lockText U7. Bauleiste setzt immer Stufe 1.
 - **AK-AL-29 Browser-Check Panel** (Szene S1, ergänzt um S2/S3, Anhang 02 N7): Fischer Stufe 2 mit Nachbar im Abstand 2 und 3 öffnen: Karte «Ausbau auf Stufe 3» zeigt
   die Zeilen aus R9 mit ✓/✗ und Zahlen, Knopf gesperrt mit Fischgrund-Tooltip; nach Abriss des Nachbarn ✓ und Knopf aktiv.
-  Bürgerhaus abreissen: Chip «Läuft wie Stufe …» mit Grund, Tooltip «Unterhalt 6 statt 7 (gedrosselt)» (g 2 → k 1). Screenshot.
+  Bürgerhaus abreissen: Chip «Läuft wie Stufe …» mit Grund, Tooltip «Unterhalt 36 statt 42 / min (gedrosselt)» (g 2 → k 1; 6 statt 7 je Intervall). Screenshot.
 - **AK-AL-30 Browser-Check Gleiches bauen** (Szene S4): Knopf «Gleiches bauen» an Fischer Stufe 3 → Werkzeug «Fischerhütte · Stufe
   3»; Vorschau grün an geeigneter Küste, rot mit Grund neben zwei Fischern; Klick dort baut nichts. `Cmd/Strg`+Klick gleich.
 - **AK-AL-31 Merkmale** (`tests/render/`, `fakeCtx`): Aufsatz je Typ zeichnet für Stufe n alle Zeichenbefehle der Stufe
@@ -417,16 +418,16 @@ Stand R908: E1–E3 und E5–E9 angenommen (E3 strikt, ohne Kontor-Ersatz); E4 g
 
 ## Selbstprüfung Nachvollziehbarkeit (R896 (0))
 
-| Bedingung           | Ursache im Spielbild                               | Wirkung im Spielbild                                                          |
-| ------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Wissen              | erstes Haus Siedler / Bürger / Kaufleute zieht ein | Meldung, Ausbau-Zeile ✓ «Ausbau Stufe n bekannt»                              |
-| Baustoff            | Lager und Kasse                                    | Zeile ✓/✗ mit Lagerzahl; Merkmal zeigt das Verbaute (Stein, Glas, Tuch)       |
-| Fachkräfte          | Wohnhaus passender Stufe in ≤ 8 Feldern            | Zeile mit Abstand des nächsten Hauses; fällt es weg: Chip «Läuft wie Stufe k» |
-| Fischgrund          | andere Fischerhütten in der Nähe                   | Zeile «n andere Fischer im Umkreis r (erlaubt m)»; Nachbar abreissen hebt k   |
-| Wald, Gras, Gebirge | freie Kacheln um den Betrieb, Weg oder Bau darauf  | Zeile «n freie Waldfelder im Umkreis r (nötig m)»; Bau darauf senkt k         |
-| Feuerwache          | grosser Ofen, Kessel, Esse ab Stufe 3              | Zeile «Feuerwache in Reichweite 8»; ohne sie Chip mit Grund                   |
-| Drossel-Unterhalt   | grosser Betrieb steht teilweise still              | Tooltip «Unterhalt 7 statt 9 (gedrosselt)»                                    |
-| Gleiches bauen      | Quellgebäude mit Stufe                             | Werkzeugname mit Stufe, Vorschau grün oder rot mit erstem Grund               |
+| Bedingung           | Ursache im Spielbild                               | Wirkung im Spielbild                                                            |
+| ------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Wissen              | erstes Haus Siedler / Bürger / Kaufleute zieht ein | Meldung, Ausbau-Zeile ✓ «Ausbau Stufe n bekannt»                                |
+| Baustoff            | Lager und Kasse                                    | Zeile ✓/✗ mit Lagerzahl; Merkmal zeigt das Verbaute (Stein, Glas, Tuch)         |
+| Fachkräfte          | Wohnhaus passender Stufe in ≤ 8 Feldern            | Zeile mit Abstand des nächsten Hauses; fällt es weg: Chip «Läuft wie Stufe k»   |
+| Fischgrund          | andere Fischerhütten in der Nähe                   | Zeile «n andere Fischer im Umkreis r (erlaubt m)»; Nachbar abreissen hebt k     |
+| Wald, Gras, Gebirge | freie Kacheln um den Betrieb, Weg oder Bau darauf  | Zeile «n freie Waldfelder im Umkreis r (nötig m)»; Bau darauf senkt k           |
+| Feuerwache          | grosser Ofen, Kessel, Esse ab Stufe 3              | Zeile «Feuerwache in Reichweite 8»; ohne sie Chip mit Grund                     |
+| Drossel-Unterhalt   | grosser Betrieb steht teilweise still              | Tooltip «Unterhalt 42 statt 54 / min (gedrosselt)» (7 statt 9 je Intervall, ×6) |
+| Gleiches bauen      | Quellgebäude mit Stufe                             | Werkzeugname mit Stufe, Vorschau grün oder rot mit erstem Grund                 |
 
 Jede Zeile hat eine Zahl, die der Spieler auf der Karte nachzählen kann; kein Grund ohne sichtbare Ursache.
 

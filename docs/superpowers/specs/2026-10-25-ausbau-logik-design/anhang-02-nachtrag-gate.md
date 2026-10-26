@@ -106,7 +106,7 @@ Arbeitsweg; **S3** Kolonie mit Steinbruch ohne Wohnhaus; **S4** Fischer g 3, fre
 - **AK-AL-41 Zeile Fachkräfte:** Stufe 2 mit Siedlerhaus im Abstand 6 (✓) und 11 (✗, «nächstes 11 Felder»); ohne Haus
   auf der Insel; Haus nur auf einer anderen Insel; Stufe 3 «Meister»/Bürgerhaus, Stufe 4 «Verleger»/Kaufmannshaus (Teil 4).
 - **AK-AL-42 Chip bei Nicht-Fischer:** Brennerei g 3 ohne Feuerwache (`'normal'`): Chip «Läuft wie Stufe 2: Keine
-  Feuerwache in Reichweite 8 (Brennofen)», Tooltip «Unterhalt 30 statt 34 (gedrosselt)». Dieselbe Brennerei `paused` oder
+  Feuerwache in Reichweite 8 (Brennofen)», Tooltip «Unterhalt 180 statt 204 / min (gedrosselt)». Dieselbe Brennerei `paused` oder
   brennend: kein Chip.
 - **AK-AL-43 Höchste Stufe:** Jagdhütte g 3 und Fischer g 4 (Teil 4): Ausbau-Karte ohne Checkliste, nur «Höchste Stufe
   erreicht».
@@ -133,3 +133,26 @@ Arbeitsweg; **S3** Kolonie mit Steinbruch ohne Wohnhaus; **S4** Fischer g 3, fre
   Fällt ein M ≤ 0, Rückfall N6.
 - **AK-AL-29 ergänzt** (Browser, Szenen N7): S2 Brennerei mit und ohne Feuerwache (Zeile, Chip, Tooltip-Unterhalt), S3
   Kolonie ohne Haus («kein Siedlerhaus auf dieser Insel»). AK-AL-30 nutzt S4.
+
+## Nachtrag R998 · Unterhalt je Minute in der UI
+
+Die Sim rechnet Unterhalt **je Intervall** (`UPKEEP_INTERVAL` = 100 Ticks = 10 s, `TICK_MS` = 100); `buildingUpkeep` und
+AK-AL-12 bleiben bei diesen Zahlen. Die UI zeigt, wie Bilanz-Chip und Baumenü, **je Minute** (`MINUTE_MS` = 60 000,
+Faktor 6). Spielwerte unverändert, Änderung nur der Anzeige. Umsetzung: `perMin` in `src/sim/levelChecks.ts`
+(eine Nachkommastelle), `upkeepText(world, b)` in `src/ui/inspect.ts`. Umrechnung der Beispiele der Spec:
+
+| Beispiel (R6)      | je Intervall (Sim) | je Minute (UI)                  |
+| ------------------ | ------------------ | ------------------------------- |
+| Fischer g 3, k 1   | 7 statt 9          | «Unterhalt 42 statt 54 / min»   |
+| Fischer g 2, k 1   | 6 statt 7          | «Unterhalt 36 statt 42 / min»   |
+| Brennerei g 3, k 2 | 30 statt 34        | «Unterhalt 180 statt 204 / min» |
+| Glashütte g 4, k 2 | 44 statt 55        | «Unterhalt 264 statt 330 / min» |
+
+- **AK-AL-50 Unterhalt je Minute** (`tests/sim/levelChecks.test.ts` bzw. `tests/ui/`, DOM-frei): `levelChipDetail` enthält
+  für die vier Beispiele oben genau den Text der Spalte «je Minute»; `upkeepText(world, b)` liefert «Unterhalt n / min» mit
+  n = `buildingUpkeep` × `MINUTE_MS` / (`UPKEEP_INTERVAL` × `TICK_MS`) (hier ×6), ohne Drosselung gleich bei Stufe g;
+  bei `paused` gilt der halbe Unterhalt wie R6 Punkt 1 (Fischer g 3 `paused`: 5 je Intervall = 30 / min). `buildingUpkeep`
+  selbst bleibt je Intervall (AK-AL-12 unverändert). Keine Zahl im Code, nur Verweis auf `UPKEEP_INTERVAL` und
+  `MINUTE_MS` in `src/sim/defs/timing.ts`.
+- **AK-AL-51 Wissen-Zeile ohne Klammer:** Der Text der Wissen-Zeile ist «Wissen: Ausbau Stufe n bekannt» ohne Zusatz
+  in «(…)» (`levelChecks`, Stufe 2 bis 4); im ✗-Fall mit dem `lockText` der Stufe.
