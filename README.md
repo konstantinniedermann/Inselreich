@@ -210,6 +210,17 @@ Tooltips von 2× und 4× sagen, wie viel schneller die Spielzeit läuft.
 - **Pause-Anzeige:** Bei Pause erscheinen ein getönter Kartenrand und das Banner «Pause»; `P` oder `1×` setzt fort.
 - **Wasser** bewegt sich; an der Küste läuft ein Schaumsaum.
 
+### Zehnt
+
+Ab der Amtsstube (erste Siedler) stellst du für Pioniere und für Siedler je ein, ob sie ihre Steuer in Geld oder als Zehnt zahlen (Schalter `Geld | Zehnt` im Amtsstuben-Panel).
+
+- Zehnt der Pioniere: Ihre ganze Steuer kommt als Werkzeug ins Lager, nicht als Geld.
+- Zehnt der Siedler: Ein Zehntel ihrer Steuer kommt als Stein ins Lager.
+- Nach dem Umschalten bleibt der Zehnt 3 Minuten, wie er ist.
+- Ist das Lager voll, verfällt der Rest.
+
+Die Ware kommt etwa 17 % billiger als der Zukauf ins Heimatlager. Vor dem Einschalten zeigt eine Rückfrage, wie sich die Kasse danach entwickelt; bei einer Bilanz im Minus warnt sie vor leerer Kasse (im Minus kannst du nicht bauen und nicht zukaufen). Läuft eine Meisterprüfung, steht dort zusätzlich der Hinweis auf den gesperrten Zukauf. Verfallene Ware meldet das Spiel höchstens einmal je Bilanzintervall.
+
 ### Rat
 
 Sobald ein Haus zum ersten Mal die Stufe 2 (Siedler), 3 (Bürger) oder 4 (Kaufleute) erreicht, tagt der Rat: In der Kopfzeile erscheint die Marke **«Rat · n»** (n = offene Beschlüsse), dazu die Meldung «Der Rat tagt: ein Beschluss steht an». Das Spiel läuft weiter, nichts pausiert.
