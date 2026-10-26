@@ -111,3 +111,9 @@ tickTaxes → tickEconomy → tickMarket → tickOrders → tickCrises → check
   `tickEconomy` (`totalUpkeep`). Ohne Schiffe ist `tickShips` ein leerer Durchlauf; der Referenzlauf der früheren
   Meilensteine bleibt bitgleich (Pins in `tests/sim/`).
 - **Alternative:** Schiffe nach `tickPopulation` (eine Periode Verzug der Lieferung, siehe oben); verworfen.
+
+## Nachtrag I-210 (2026-10-26): `tickPetitions`
+
+- `tickPetitions` läuft nach `tickCrises` und vor `checkWin`; `tickUnlocks` bleibt der letzte Aufruf (Spec I-210 §3.4 «Tick-Platz»). Das Ergebnis gelangt als `StepReport.petitions` zur Oberfläche.
+- **Folge:** Den Sieg aus Tick T sieht die Bittschrift erst in T + 1 (P-6): `checkWin` läuft nach ihr, `world.won` ist im Schritt T für sie noch falsch.
+- Ohne Bittschriften (`petitions.on === false`, Altstände und Proben) tut der Schritt nichts; die Läufe bleiben bitgleich.
