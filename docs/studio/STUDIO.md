@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.78 · Stand: 2026-10-25 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.79 · Stand: 2026-10-26 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -121,6 +121,7 @@ Spec/offen × 2)`, sonst `(keine Tabellenzeile)`), die Schätzzahlen stehen davo
   Abschnitte oder Zeilen. Messgrösse: Cache-Write 5 min «übriges Wachstum» ≤ 15 % in 2 von 3
   Sessions, `lead-tech`-Anteil ≤ 4 % (Ausgang 20,5 % bzw. 5,4 %, Retro 47d29586).
 - **Messfenster einfordern (R920 V1):** Briefing eines Pakets mit Perf- oder Browser-Messung nennt «Last ≤ 4 nötig»; L0 staffelt die Test-Controller nach 1-min-Load (Fensterregel R803, Lastgrenze R329), damit Messungen das Fenster bekommen. Messgrösse: ≤ 60 min bis Messstart, 0 Pakete wegen Last über die Session-Grenze, in 2 Sessions.
+- **Messfenster-Sperre vor jeder Messung (R971, E-080):** Der Messende meldet jede Messung per `SendMessage` an main an; L0 setzt `make messfenster-sperre` und antwortet «Sperre gesetzt, Messfenster bis <Uhrzeit>», erst dann startet die Messung; nach «Messung fertig» löst L0 mit `make messfenster-frei`. «Messvorrang» im Briefing allein reicht nicht. Messgrösse: geforderte Läuferzahl je Stand in 2 von 2 Messpaketen, Frist 2026-11-19.
 - **Spec-Berichte (R920 V2):** Pflichtzeile «Rulings-Abgleich: R<von>–R<bis>» (die geprüfte Ruling-Spanne, per `rg -n`); fehlt sie, gilt der Bericht als unvollständig.
 - **Design-Instanzen (R920 V3):** lesen Kontextdateien abschnittsweise (`rg -n`, dann `offset`/`limit`); ab 150k Kontext übernimmt eine Folgeinstanz mit Übergabe, die laufende wird nicht weiter ausgedehnt.
 - **Dauerauftrag Headless-Chrome (R922, R863):** Liegengebliebene Headless-Chrome-Prozesse, auch aus anderen Projekten oder früheren Sessions, beendet L0 bzw. der zuständige Lead selbst per `kill <PID>`, sobald sie stören (Messfenster, Port, Last); keine Warteschlange, keine Rückfrage. Grenzen: nur Prozesse mit `--headless`, nie das sichtbare Chrome des Nutzers, nie Chrome eigener laufender Browser-Läufe (Heartbeat < 10 min), kein `pkill -f`, gezielt je PID.
@@ -190,7 +191,7 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
 - **Herunterfahren (R69), Verantwortung von L0:** Steigt das 5-h-Fenster, fährt L0 herunter: weniger
   parallel, weniger Starts, zuerst Angefangenes abschliessen (Reviews, Fix-Runden, Merges, R166),
   `state.md` nachführen, Session beenden. Richtwerte (Dauerauftrag R959, ersetzt «60 %» und «80 %»): **neue Starts bis
-  85 %**, ab 85 % nur Angefangenes abschliessen und sichern, **ab 90 % Session-Ende-Routine** (Puffer für die
+  85 %** und nur, solange Stand + Agenten × 1,8 ≤ 88 % (R971, E-081, vorläufig), ab 85 % nur Angefangenes abschliessen und sichern, **ab 90 % Session-Ende-Routine** (Puffer für die
   Übergabe, R66); Wochenfenster über 80 %: Parallelität reduzieren. Kein Downgrade (R71).
 - **Studio-Deckel und Limit-Ampel (R826, R823; ersetzt R698 «6» und «≤ 8» aus R424):** Der Studio-Deckel
   beträgt **10 Agenten gleichzeitig**, davon höchstens **3 Controller mit Testläufen** und **≤ 2 Browser-Läufe**.
@@ -199,7 +200,7 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
   - **Pflicht für L0 bei grün:** den Deckel aktiv voll halten, nach jedem Bericht nachfüllen und jeden Strang
     mit eigenem Agenten bearbeiten (Umsetzung, Pläne, Specs, Gates, Pflege, Ideen; R475, R445).
   - **Gelb:** stoppt keine neuen Wellen (R959); L0 füllt den Deckel weiter wie bei grün. Wochenfenster > 80 %: Parallelität reduzieren (R69).
-  - **Rot (5-h > 80 %):** bis 85 % weiter neue Starts; 85–90 % keine neuen Starts, nur Angefangenes abschliessen und sichern; ab 90 % Session-Ende-Routine (R959, R66).
+  - **Rot (5-h > 80 %):** bis 85 % weiter neue Starts (Zuwachsgrenze E-081); 85–90 % keine neuen Starts, nur Angefangenes abschliessen und sichern; ab 90 % Session-Ende-Routine (R959, R66).
   - **Engpass Rechnerlast:** Zusätzliche Plätze werden mit testfreier Arbeit gefüllt (Plan, Spec, Gate, Pflege, Ideen), nicht leer gelassen.
   - **Fensterregel (R803):** Last ≤ 4 gehört den Messungen (Lastgrenze R329), gezielte Tests laufen bei Last 4–8.
 - **Sessiongrösse (R68, E-010):** Eine Session umfasst etwa einen Abschnitt (Welle bzw. Phase). L0
