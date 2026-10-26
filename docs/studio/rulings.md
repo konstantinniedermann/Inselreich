@@ -3317,3 +3317,40 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle
 Regelbezug: R959, R971 (E-081), R826 · Kosten bei Irrtum: verschobene Gates.
 
 Entscheider: L0 · Anlass: Nutzer «mach weiter» · ADR: —
+
+## R1002 · 2026-10-26 · AUSBAU-LOGIK Final-Review BEDENKEN; Fortsetzung später
+
+Ruling: Final-Review AUSBAU-LOGIK Etappe 1 **BEDENKEN angenommen** (Handoff `.studio/handoffs/2026-10-26-lead-tech-AUSBAU-LOGIK-2.md`). (1) **P-3(a)** `balance-upgrade` +52 % (531 gegen 349 ms): zuerst Test-Umbau
+— `siteAt`/`workforceAt` in `tests/sim/balance-upgrade.test.ts:21-22` hinter die Geldprüfung — und neu messen; greift das nicht, entscheidet L0 eine Ersatzgrenze auf Messwerte hin (Test darf nicht dauerhaft > 500 ms, R905).
+(2) **Bilanz-Fix `ba8de2d4`** ja: «Bilanz danach» rechnet bei stillgelegtem Betrieb den halben Unterhalt, mit Test. (3) Danach Delta-Review frisch (opus), dann Gate Merge. Folgeinstanz `lead-tech` mit
+Handoff (Budget-Rest laut Handoff) **erst, wenn E-081 es zulässt** (jetzt 5 h 84 %: kein Start) — sonst erstes Paket der nächsten Session.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-215 (`economy.ts`, `balancePreview.ts`), I-223 (`balancePreview.ts` `moneyTaxes`)
+Regelbezug: R392, R673, R905, R971, R1000 · Kosten bei Irrtum: eine verschobene Fix-Runde.
+
+Entscheider: L0 · Anlass: Bericht lead-tech AUSBAU-LOGIK · ADR: —
+
+## R1003 · 2026-10-26 · I-210 bereit für Gate Merge; Session-Ende
+
+Ruling: I-210 (`feat/i210` @ `7df6518b`, Save 20, Delta-Reviews OK, Playtest OK, T15 ohne Treffer über 285 Dateien, Baselines bitgleich) **bereit für Gate Merge**. (1) **Spec-Nachtrag R999** (Anhang 01, R-BS-5, R-BS-6)
+durch `lead-design` (sonnet) ist **Vorbedingung** des Gate Merge. (2) **B9 +83** (unter der Rechnung +100 bis +350, über der Schwelle +50) **angenommen**; Zusatzmass «Lagerwert» bleibt als zweiter Test. (3) Save 20 auch bei
+I-223: Merge-Reihenfolge **I-223 vor I-210** (I-223 Gate zuerst, R1001); I-210 zieht nach (R909, E-ZE-1). (4) `dropPetitions` in `tests/sim/helpers.ts` (Abweichung P-10) angenommen. (5) Aufräumen: ungetrackte
+`out*.txt` vor dem Merge löschen; Mess-Worktrees `.worktrees/i210-t15main`, `.worktrees/i210-base` per `git worktree remove` ohne `--force` (nächste Session, HAUSHALT). AK-BS-23 entfällt bis INSELPROBEN (P-12).
+**Session-Ende** bei 5 h 88 %: keine Agenten aktiv; AUSBAU-LOGIK-Fix (R1002), Gates I-223/I-210/AUSBAU-LOGIK und NU-1-Umsetzung sind die ersten Pakete der nächsten Session.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-223 (Save 20, `helpers.ts`)
+Regelbezug: R909, R959, R987, R997, R999 · Kosten bei Irrtum: eine Merge-Reihenfolge.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-210 s5, Limit 88 % · ADR: —
+
+## R1004 · 2026-10-26 · Kurz-Retro b73acd32 abgenommen; Session-Ende
+
+Ruling: Retro `docs/retro-b73acd32` @ `cb797aa8` **abgenommen** (B1–B5). **E-066 angepasst abgeschlossen:** «Folgeinstanz statt Fortsetzung» bleibt Praxis; der Platz geht an **E-080** (läuft ab jetzt mit Platz, R984 (2)).
+**E-082 ja (passiv ohne Platz):** Startzähler für Arbeiter-Starts als Pflichtzeile im Controller-Briefing (Messgrösse: Instanzen mit > 6 Starts = 0 in 2 Sessions, Frist 2026-11-19). **E-083 ja, Start erst nach
+Bewertung von E-080:** Sperre im vitest-Setup prüfen (Werkzeug-Paket; Messgrösse: Fremdläufe im gesperrten Fenster = 0 über 2 Messpakete, Frist 2026-12-03). Einträge in `experimente.md` und die Briefing-Zeile E-082
+macht `studio-coach` in der nächsten Session; `docs/retro-b73acd32` geht mit dem Push 2026-10-27. Session-Ende bei 5 h ≈ 88 %, Metriken `docs/studio/metriken/S-2026-10-26-b73acd32.md`; kein weiterer Push heute (R816).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle Messpakete, alle Controller
+Regelbezug: R190, R816, R971, R984 · Kosten bei Irrtum: zwei passive Messgrössen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —
