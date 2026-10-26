@@ -14,7 +14,9 @@
  * - Aufstiegswelle: Die Wartezeit der Häuser beginnt erst nach der Antwort (satisfiedSince in der Zukunft), sonst stiegen
  *   sie vor dem Wirkungsbeginn auf. Am Ende des Fensters sind in beiden Läufen alle Häuser oben; «mehr Häuser im
  *   Fenster» ist darum als «mehr Haus-Ticks auf Stufe 4» geprüft. Gemessen steigt jedes der 5 Häuser im Ja-Lauf 300 Ticks
- *   früher auf (riserTicks +1500), nicht nur die 150 der Wartezeit-Differenz.
+ *   früher auf (riserTicks +1500, B4: Aufstieg bei Tick 800 gegen 1100). Ursache: Glas und Gewürz der Stufe 4 haben in der
+ *   Lage keine Erzeugung, das Budget der Zielstufe liegt im Defizit, und `UPGRADE_DEFICIT_WAIT_FACTOR` (2) verdoppelt beide
+ *   Wartezeiten: Glocke 2 x 150 gegen normal 2 x 300, der Vorsprung ist 300 statt 150.
  * - B5: Das Aufstiegsfest hält der Lauf, sobald die Wirkung läuft (Verzug + 100 Ticks): im Ja-Lauf mit Gutschein in der
  *   Abklingzeit, im Nein-Lauf, sobald die Abklingzeit endet (1800 Ticks nach dem Start-Fest).
  */
