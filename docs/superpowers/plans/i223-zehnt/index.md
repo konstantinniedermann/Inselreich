@@ -70,4 +70,4 @@ Wörtlich zu übernehmen aus [`briefing.md`](briefing.md) (Delta-Review frisch a
 
 ## Zeit-Tests (R392/R905, vorab gemessen)
 
-Siehe [`zeiten.md`](zeiten.md). Regel R905: neu > 500 ms verboten; schon auf main > 500 ms höchstens + 50 %. Neue Läufe mit 3000 Schritten (AK-ZE-07) und 600 `tickTaxes`-Aufrufen im Blick; Ziel je Test < 500 ms. T06 misst nachher (Last ≤ 4), T08 trägt die Spalte «Branch» nach.
+Siehe [`zeiten.md`](zeiten.md). Regel R905: neu > 500 ms verboten; schon auf main > 500 ms höchstens + 50 %. Neue Läufe mit 3000 Schritten (AK-ZE-07) und 600 `tickTaxes`-Aufrufen im Blick; Ziel je Test < 500 ms. T06 misst nachher nur gezielt (Last ≤ 4), T08 trägt die Spalte «Branch» nach.

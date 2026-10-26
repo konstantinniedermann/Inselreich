@@ -4,17 +4,17 @@ Zurück zum [Index](index.md).
 
 ## AK-Zuordnung (27 AK)
 
-| AK                           | Beleg                                                                          | Task     |
-| ---------------------------- | ------------------------------------------------------------------------------ | -------- |
-| 08, 27                       | `tests/sim/tithe-save.test.ts`                                                 | T01, T06 |
-| 01 (Hashes), 16 (Kette)      | 17 Verbraucher einzeln grün (Liste T01), `seaGolden` ohne Diff                 | T01, T06 |
-| 14                           | `tithe.test.ts`: Werte (T01), Literal `1800` in `tax.ts`/`population.ts` (T03) | T01, T03 |
-| 01, 02–04, 06, 11–13, 22, 25 | `tests/sim/tithe.test.ts` (Exaktwerte Spec, P-9)                               | T02      |
-| 05, 07, 15, 24, 26           | `tests/sim/tithe.test.ts`                                                      | T03      |
-| 09, 10, 21, 23               | `tests/ui/titheView.test.ts`                                                   | T04      |
-| 17–20 (Vorbereitung)         | `tests/ui/tithe-source.test.ts` (Quelltext), Screenshot `t05-panel.png`        | T05      |
-| 16                           | gesamte Suite (`make test` einmal in T06), `balance.test.ts` unverändert       | T06      |
-| 17–20                        | Browser (`.studio/qa/I-223/`)                                                  | T07      |
+| AK                           | Beleg                                                                                                                    | Task     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------- |
+| 08, 27                       | `tests/sim/tithe-save.test.ts`                                                                                           | T01, T06 |
+| 01 (Hashes), 16 (Kette)      | 17 Verbraucher einzeln grün (Liste T01), `seaGolden` ohne Diff                                                           | T01, T06 |
+| 14                           | `tithe.test.ts`: Werte (T01), Literal `1800` in `tax.ts`/`population.ts` (T03)                                           | T01, T03 |
+| 01, 02–04, 06, 11–13, 22, 25 | `tests/sim/tithe.test.ts` (Exaktwerte Spec, P-9)                                                                         | T02      |
+| 05, 07, 15, 24, 26           | `tests/sim/tithe.test.ts`                                                                                                | T03      |
+| 09, 10, 21, 23               | `tests/ui/titheView.test.ts`                                                                                             | T04      |
+| 17–20 (Vorbereitung)         | `tests/ui/tithe-source.test.ts` (Quelltext), Screenshot `t05-panel.png`                                                  | T05      |
+| 16                           | T06 gezielt (17 Verbraucher, Zehnt-Tests, `balance.test.ts`); gesamte Suite per `make push-check` des Integrators (R989) | T06      |
+| 17–20                        | Browser (`.studio/qa/I-223/`)                                                                                            | T07      |
 
 ## Review Focus (Eingaben ohne eigenes AK; Test im genannten Task)
 

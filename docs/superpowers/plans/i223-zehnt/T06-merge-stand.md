@@ -16,20 +16,22 @@ Strang A · Persona `tech-sim-engineer` (Fortsetzung per `SendMessage`) · Model
 - [ ] **Tick-Reihenfolge:** `rg -n "tick[A-Z]\w*\(world\)" src/sim/tick.ts` → `tickTaxes` weiter nach `tickProduction` und `tickPopulation` (AK-ZE-22).
 - [ ] **17 Verbraucher erneut einzeln** (Befehlsschleife aus T01, plus `scenario-saves`/`m5-session` für `scenarios.ts`), Exit je Datei ins Ledger; `git diff main -- tests/sim/seaGolden.test.ts tests/sim/balance.test.ts` leer.
 - [ ] Gezielt: `npx vitest run tests/sim/tithe.test.ts tests/sim/tithe-save.test.ts tests/ui/titheView.test.ts tests/ui/tithe-source.test.ts tests/sim/balance.test.ts; echo EXIT=$?` → 0.
-- [ ] **AK-ZE-16 voller Lauf** (einmal, einzige Ausnahme von «nie voller Lauf je Task»; Last ≤ 4 vor dem Start): `make test; echo EXIT=$?` → 0 (auf main bekannte rote Tests, z. B. `perf.test.ts` AK-E0-15a, im Ledger mit main-Beleg).
-- [ ] **Zeiten (R905):** `npx vitest related --run --maxWorkers=2 --reporter=json --outputFile=<scratch>/times-branch.json <Quelldateien aus zeiten.md>; echo EXIT=$?`; Werte > 200 ms ins Ledger; T08 trägt die Spalte «Branch» in `zeiten.md` ein. Neue Tests > 500 ms oder alte > + 50 % → Befund an den Controller.
+- [ ] **AK-ZE-16 (Auflage 1 Gate Plan, R989, R810):** kein voller Lauf im Paket. Beleg hier: 17 Verbraucher einzeln, gezielte Zehnt-Tests, `balance.test.ts`, Teilbeleg. Die gesamte Suite belegt der Integrator mit `make push-check` im Release; der Controller vermerkt das im Abschlussbericht.
+- [ ] **Zeiten (R905), nur gezielt:** `npx vitest run --maxWorkers=2 --reporter=json --outputFile=<scratch>/times-branch.json <Dateien der Tabelle «Gezielte Läufe» in zeiten.md> tests/sim/tithe.test.ts tests/sim/tithe-save.test.ts tests/ui/titheView.test.ts tests/ui/tithe-source.test.ts; echo EXIT=$?` (kein `vitest related` über `types.ts`, das wäre die ganze Suite). Werte ins Ledger; T08 trägt die Spalte «Branch» nach. Neue Tests > 500 ms oder alte > + 50 % → Befund an den Controller.
 - [ ] Teilbeleg: `npx tsc --noEmit; echo EXIT=$?`, `make lint; echo EXIT=$?`, `make conflicts; echo EXIT=$?`.
 - [ ] Merge-Commit mit Standardtext; Nachzüge als eigener Commit `fix: I-223 Save-Schritt und Faltung nach main-Merge (T06)`.
 
 ## Konflikttabelle (erwartet, Stand Plan main `07cd8183`)
 
-| Datei                                                  | Paket                                               | Auflösung                                       |
-| ------------------------------------------------------ | --------------------------------------------------- | ----------------------------------------------- |
-| `tests/sim/helpers.ts` drei Köpfe                      | I-210, Inselproben, NU-1                            | beide `drop*` behalten, `dropTithe` innen (P-8) |
-| `farOrder-save`, `save-loyalty`, `helpers.test`        | Inselproben, NU-1, Stadtplanung                     | `foldBackTithe` innen                           |
-| `src/sim/save.ts` `SAVE_VERSION`, Kette, Strukturcheck | I-210, Inselproben, NU-1, I-215, HAFEN, FLAECHE, GV | main + 1, Schritt ans Ende                      |
-| `src/sim/tick.ts` `StepReport`, `return`               | I-210, Inselproben, NU-1                            | alle Felder                                     |
-| `src/sim/types.ts`, `world.ts`                         | I-210, Inselproben, NU-1, I-215, HAFEN              | Felder beider Seiten                            |
-| `src/ui/inspect.ts`, `src/ui/app.ts`                   | I-201, AUSBAU-LOGIK, Inselproben, Stadtplanung      | beide Hunks                                     |
+| Datei                                                  | Paket                                                                                                     | Auflösung                                                              |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `tests/sim/helpers.ts` drei Köpfe                      | I-210, Inselproben, NU-1                                                                                  | beide `drop*` behalten, `dropTithe` innen (P-8)                        |
+| `tests/sim/helpers.ts` Aussenschritte                  | Stadtplanung (`foldBackStadt`, v19 → v18), Inselproben (`foldBackChallenge`), NU-1 (`foldBackKartenrand`) | `foldBackTithe` ganz innen, z. B. `foldBackStadt(foldBackTithe(json))` |
+| `tests/sim/helpers.ts` übrige Hunks                    | AUSBAU-LOGIK (Importe, Crew-Scan)                                                                         | beide Hunks, keine Faltung                                             |
+| `farOrder-save`, `save-loyalty`, `helpers.test`        | Inselproben, NU-1, Stadtplanung                                                                           | `foldBackTithe` innen                                                  |
+| `src/sim/save.ts` `SAVE_VERSION`, Kette, Strukturcheck | I-210, Inselproben, NU-1, I-215, HAFEN, FLAECHE, GV, Stadtplanung (eigene v19, `migrateV18ToV19`)         | main + 1, Schritt ans Ende                                             |
+| `src/sim/tick.ts` `StepReport`, `return`               | I-210, Inselproben, NU-1                                                                                  | alle Felder                                                            |
+| `src/sim/types.ts`, `world.ts`                         | I-210, Inselproben, NU-1, I-215, HAFEN                                                                    | Felder beider Seiten                                                   |
+| `src/ui/inspect.ts`, `src/ui/app.ts`                   | I-201, AUSBAU-LOGIK, Inselproben, Stadtplanung                                                            | beide Hunks                                                            |
 
 Merged ein weiteres Paket mit Save-Schritt zwischen T06 und der Integration: T06 erneut (ein Fortsetzen), Integrator merged nicht über Konflikte in `save.ts`/`helpers.ts`.

@@ -10,29 +10,29 @@ Messung 2026-10-26 08:13:26–08:16:37 UTC im Plan-Worktree (main `07cd8183`), T
 
 - `tests/sim/` und `tests/ui/`: **70 Tests > 200 ms**, davon **15 > 500 ms** (Tabelle). Tests unter `tests/render/` sind
   nicht aufgeführt; I-223 ändert dort keinen Code.
-- Regel R905: kein Test neu > 500 ms; Tests der Tabelle höchstens + 50 %. T06 misst nachher mit demselben Befehl (Last ≤ 4
-  während des ganzen Laufs), T08 trägt die Spalte «Branch» nach. Neue Tests: AK-ZE-07 (3000 Schritte), AK-ZE-01/25
+- Regel R905: kein Test neu > 500 ms; Tests der Tabelle höchstens + 50 %. T06 misst nachher nur gezielt (Tabelle «Gezielte Läufe» plus neue Tests, Last ≤ 4), T08 trägt die Spalte «Branch» nach (nur für gemessene Dateien). Neue Tests: AK-ZE-07 (3000 Schritte), AK-ZE-01/25
   (600 `tickTaxes`), AK-ZE-11 (600 Schritte), AK-ZE-22 (100 Schritte); Ziel je Test < 500 ms.
 - Zeit-Tests mit Messwert, die I-223 berührt (Faltkette, Save): `scenario-saves.test.ts` AK-S5-01 (siehe Tabelle) und
   alle Verbraucher der Faltkette unter 500 ms bis auf die Tabellenzeilen.
 - Rohdaten (nicht versioniert): Scratchpad der Plan-Session, `times.json`.
 
-| --- | --- | --- | --- |
-| 6027 | `sim/perf.test.ts` | AK-E0-15a D1: Mittel je Schritt (best-of-3) innerhalb d | |
-| 5522 | `sim/perf.test.ts` | AK-E0-15b D1: Abdeckung per buildCoverage mindestens 5 | |
-| 2895 | `sim/population.test.ts` | AK-E0-12a D1: Abdeckung gleich Referenz über 1000 Schri | |
-| 875 | `sim/scenario-saves.test.ts` | AK-S5-01 jedes Szenario ist ladbar und Version 2 | |
-| 850 | `sim/islands-c.test.ts` | Spanne protokollieren (Seeds 1..300) | |
-| 687 | `sim/connect.test.ts` | matches a reference search on many seeded layouts of ro | |
-| 580 | `sim/scenario-saves.test.ts` | AK-S5-02 AK-B2-04 schreibt je Szenario genau eine Datei | |
-| 568 | `sim/islands-gen.test.ts` | AK-E1-02: Lage, Lücken, Seewege und Rahmen für Seeds 1… | |
-| 561 | `sim/islands-gen.test.ts` | D-139: d zählt nur die Strecke ausserhalb der Inselrech | |
-| 547 | `sim/balance-edicts.test.ts` | PLAN-M13-01 Determinismus: Wohlfahrt arm zweimal und mi | |
-| 527 | `sim/buyPct.test.ts` | Zusatz: Verkauf und Kauf erholen sich je nach eigenem I | |
-| 525 | `sim/balance-merchants.test.ts` | AK-B1-04 Laden beim ersten Kaufmann: gleicher Endzustan | |
-| 515 | `sim/unlock-timeline.test.ts` | AK-BAS-03 off 150/350/550/4150/6750; normal …/5150/7850 | |
-| 509 | `sim/islands-seeds-b.test.ts` | AK-M14E1-12: Seeds (Block ab 501) | |
-| 504 | `sim/balance-edicts.test.ts` | AK-M13E1-19 arm: Sparen und Handel früher, Wohlfahrt ni | |
+| ms (main) | Datei                           | Test                                                    | ms (Branch, T06) |
+| --------- | ------------------------------- | ------------------------------------------------------- | ---------------- |
+| 6027      | `sim/perf.test.ts`              | AK-E0-15a D1: Mittel je Schritt (best-of-3) innerhalb d |                  |
+| 5522      | `sim/perf.test.ts`              | AK-E0-15b D1: Abdeckung per buildCoverage mindestens 5  |                  |
+| 2895      | `sim/population.test.ts`        | AK-E0-12a D1: Abdeckung gleich Referenz über 1000 Schri |                  |
+| 875       | `sim/scenario-saves.test.ts`    | AK-S5-01 jedes Szenario ist ladbar und Version 2        |                  |
+| 850       | `sim/islands-c.test.ts`         | Spanne protokollieren (Seeds 1..300)                    |                  |
+| 687       | `sim/connect.test.ts`           | matches a reference search on many seeded layouts of ro |                  |
+| 580       | `sim/scenario-saves.test.ts`    | AK-S5-02 AK-B2-04 schreibt je Szenario genau eine Datei |                  |
+| 568       | `sim/islands-gen.test.ts`       | AK-E1-02: Lage, Lücken, Seewege und Rahmen für Seeds 1… |                  |
+| 561       | `sim/islands-gen.test.ts`       | D-139: d zählt nur die Strecke ausserhalb der Inselrech |                  |
+| 547       | `sim/balance-edicts.test.ts`    | PLAN-M13-01 Determinismus: Wohlfahrt arm zweimal und mi |                  |
+| 527       | `sim/buyPct.test.ts`            | Zusatz: Verkauf und Kauf erholen sich je nach eigenem I |                  |
+| 525       | `sim/balance-merchants.test.ts` | AK-B1-04 Laden beim ersten Kaufmann: gleicher Endzustan |                  |
+| 515       | `sim/unlock-timeline.test.ts`   | AK-BAS-03 off 150/350/550/4150/6750; normal …/5150/7850 |                  |
+| 509       | `sim/islands-seeds-b.test.ts`   | AK-M14E1-12: Seeds (Block ab 501)                       |                  |
+| 504       | `sim/balance-edicts.test.ts`    | AK-M13E1-19 arm: Sparen und Handel früher, Wohlfahrt ni |                  |
 
 ## Gezielte Läufe der Tasks (Summe und längster Test je Datei, main)
 
