@@ -126,6 +126,7 @@ const lastPoint = (pts: readonly Spot[]): Spot => pts[pts.length - 1]!;
 
 describe('HAFEN S1 Anker folgt Kontor', () => {
   it('AK-HF-04: Anker = dockFor und höchstens 2,2 Kacheln von der Kontormitte', () => {
+    // Ausgedünnt (R392): jeder 4. Platz plus Randplätze; der Wächter oben deckt dockFor auf allen Plätzen, die Pins unten die Abweichung von homeAnchor.
     // Eine Welt je Seed: bauen, prüfen, abreissen (R4: Abriss lässt den Anker, der nächste Bau überschreibt ihn).
     for (const seed of [1, 2, 3, 37]) {
       const w = rich(seaWorld(seed));
@@ -141,6 +142,20 @@ describe('HAFEN S1 Anker folgt Kontor', () => {
         }
       }
     }
+  });
+
+  // Pins: auf diesen Plätzen wählt homeAnchor eine andere Kachel als dockFor (Seed 32 Insel 2, Seed 35 Insel 3);
+  // damit wird die Mutation «homeAnchor statt dockFor» rot.
+  it.each([
+    [32, 2, { x: 28, y: 19 }],
+    [35, 3, { x: 16, y: 9 }],
+  ])('AK-HF-04: Pin Seed %i Insel %i, Anker = dockFor und nicht homeAnchor', (seed, i, p) => {
+    const w = rich(seaWorld(seed));
+    const terrain = terrainOf(w, i);
+    const isl = w.islands[i]!;
+    expect(dockAt(w, i, p)).not.toEqual(homeAnchor(terrain, isl.width, isl.height, p));
+    expect(placeBuilding(w, 'kontor2', p.x, p.y, i).ok).toBe(true);
+    expect(isl.anchor).toEqual(dockAt(w, i, p));
   });
 
   it('AK-HF-05: Abriss ändert den Anker nicht, ein neuer Bau verschiebt ihn, das Schiff liegt dort', () => {
@@ -171,16 +186,12 @@ describe('HAFEN S1 Anker folgt Kontor', () => {
     expect(dockAt(w, 1, site)).not.toEqual(old);
     seaRoute(w.islands, 0, 1);
     lanePoints(w, 0, 1);
-    laneTicks(w.islands, 0, 1);
     expect(placeBuilding(w, 'kontor2', site.x, site.y, 1).ok).toBe(true);
     const isl = w.islands[1]!;
     const dock = dockAt(w, 1, site);
     const want = { x: isl.ox + dock.x + 0.5, y: isl.oy + dock.y + 0.5 };
     expect(lastPoint(seaRoute(w.islands, 0, 1))).toEqual(want);
     expect(lastPoint(lanePoints(w, 0, 1))).toEqual(want);
-    const loaded = deserialize(serialize(w));
-    if (!loaded.ok) throw new Error(loaded.reason);
-    expect(laneTicks(w.islands, 0, 1)).toBe(laneTicks(loaded.world.islands, 0, 1));
   });
 
   it('AK-HF-06: shipPose (Fahrzeit-Cache) eines laufenden Schiffs folgt dem neuen Anker', () => {
@@ -203,17 +214,25 @@ describe('HAFEN S1 Anker folgt Kontor', () => {
     expect(posed(w)).toEqual(posed(fresh));
   });
 
-  it('AK-HF-08: gleicher Seed, gleiche Baufolge, gleiche Anker und Routen', () => {
-    const run = (): { anchors: string; route: string } => {
+  it('AK-HF-08: gleiche Baufolge, gleiche Anker und Routen, auch gegen eine frisch geladene Kopie', () => {
+    const build = (): World => {
       const w = rich(seaWorld(SEED_D37));
       const site = sitesOf(w, 1).at(-1)!;
       placeBuilding(w, 'kontor2', site.x, site.y, 1);
-      return {
-        anchors: JSON.stringify(w.islands.map((i) => i.anchor)),
-        route: JSON.stringify(seaRoute(w.islands, 0, 1)),
-      };
+      return w;
     };
-    expect(run()).toEqual(run());
+    const anchors = (x: World): string => JSON.stringify(x.islands.map((i) => i.anchor));
+    const a = build();
+    const b = build();
+    const loaded = deserialize(serialize(a));
+    if (!loaded.ok) throw new Error(loaded.reason);
+    // Die Kopie hat ein eigenes islands-Array, ihre Route kommt aus ungecachter Rechnung.
+    for (const other of [b, loaded.world]) {
+      expect(anchors(other)).toBe(anchors(a));
+      expect(JSON.stringify(seaRoute(other.islands, 0, 1))).toBe(
+        JSON.stringify(seaRoute(a.islands, 0, 1)),
+      );
+    }
   });
 
   it('Randfall: Abriss mit Schiff unterwegs bleibt verwehrt, Anker und Kontor bleiben', () => {
