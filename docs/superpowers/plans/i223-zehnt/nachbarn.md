@@ -1,0 +1,25 @@
+# Plan I-223 · Nachbarn und Risiken
+
+Zurück zum [Index](index.md). Stand Plan: main `07cd8183`.
+
+## Überschneidungen mit offenen Paketen (per Pfad)
+
+| Pfad                                                                         | Paket (Branch)                                                                                                                                                                     | Art                                                         |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `tests/sim/helpers.ts` (Köpfe `foldBackToV13/V12/V11`, äussere Faltschritte) | I-210 (`feat/i210`: `dropPetitions`), Inselproben (`feat/inselproben`: `dropChallenge`, `foldBackChallenge`), NU-1 (Plan `nu1-kartenrand`: `dropExpedition`, `foldBackKartenrand`) | dieselben drei Zeilen; Ordnung P-8                          |
+| `tests/sim/farOrder-save.test.ts`, `save-loyalty.test.ts`, `helpers.test.ts` | Inselproben, NU-1 (`pins.md`), Stadtplanung (`feat/stadtplanung`)                                                                                                                  | Aussenkette, Ordnung P-8                                    |
+| `src/sim/save.ts` (`SAVE_VERSION`, Kette Z. 1043, Strukturcheck)             | I-210, Inselproben, NU-1, I-215 (`plan/i215-volllast`), I-201 (`integrate/rel-34`), HAFEN, FLAECHE, GEBAEUDE-VARIANZ                                                               | Nummer per Merge (P-7)                                      |
+| `src/sim/tick.ts` (`StepReport`, `step`)                                     | I-210 (`petitions`), Inselproben (`tickChallenge`), NU-1 (`expedition`)                                                                                                            | Feldliste und Rückgabe-Literal                              |
+| `src/sim/types.ts`, `src/sim/world.ts`                                       | I-210, Inselproben, NU-1, I-215, HAFEN                                                                                                                                             | Felder anhängen                                             |
+| `src/sim/population.ts`                                                      | I-210 (`consume`, `overcrowdCap`), Stadtplanung                                                                                                                                    | andere Hunks als `tickTaxes`                                |
+| `src/sim/economy.ts` (nur gelesen: `addStock`)                               | NU-1 (`storageCap`, ≈ Z. 13), I-215/AUSBAU-LOGIK (`buildingUpkeep`)                                                                                                                | kein Edit hier; Signatur von `addStock` in T06 prüfen (P-6) |
+| `src/sim/defs/timing.ts`, `src/sim/defs/tiers.ts`                            | I-201 (`timing.ts`), I-215 (`OVERTIME_*`), Stadtplanung (`tiers.ts`)                                                                                                               | Anhängen                                                    |
+| `src/ui/inspect.ts`, `src/ui/app.ts`                                         | I-201 (REL-34), AUSBAU-LOGIK, Inselproben, Stadtplanung, I-215                                                                                                                     | Steuerzeilen ≈ Z. 630–700, Loop ≈ Z. 1705                   |
+| `README.md`, `docs/arc42.md`                                                 | alle oben                                                                                                                                                                          | Abschnitte anhängen                                         |
+
+## Risiken
+
+- **Faltkette (Auflage 1):** Jedes weitere Paket mit Weltfeld vor I-223 verschiebt die Aussenketten; T06 zieht nach, der Integrator merged nicht über Konflikte in `save.ts`/`helpers.ts`. Neupinnen von `seaGolden` ist ein Fehler.
+- **Kasse ins Minus (Gate-Risiko):** Pionier-Zehnt 100 % + 3 min Sperre; Pflichtwarnung (AK-ZE-09/10) und Browser-Lauf mit Kasse ≈ 50 (AK-ZE-18) decken es.
+- **AK-ZE-22 (b) Aufbau:** Werkzeugmacher kurz vor Fertigung aus vorhandenen Helfern ableiten (`rg -n "toolmaker|progress" tests/sim`); fehlt ein Weg, Befund an Controller statt neuer Helfer in `helpers.ts`.
+- **Testlast:** Rechner oft über Last 4; Wartezeit in T01/T02/T06 einplanen.
