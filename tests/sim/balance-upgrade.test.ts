@@ -44,8 +44,8 @@ function variant(): Trajectory & { levels: Record<1 | 2 | 3, number> } {
   return { ...t, levels };
 }
 
-/** M-15 (Ruling R196: reine Messung, kein Sieg-Limit), gemessen auf 2b43e9d mit `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance-upgrade.test.ts` (Spec 14). */
-const M15 = { winTick: 8250, minMoney: 71, levels: { 1: 0, 2: 11, 3: 0 } };
+/** M-15 (Ruling R196: reine Messung, kein Sieg-Limit), neu gepinnt nach AUSBAU-LOGIK T06 (Ruling R1000, Fischer nur mit erfülltem Fischgrund); ursprünglich gemessen auf 2b43e9d mit `VITE_BALANCE_LOG=1 npx vitest run tests/sim/balance-upgrade.test.ts` (Spec 14). */
+const M15 = { winTick: 7550, minMoney: 71, levels: { 1: 0, 2: 10, 3: 0 } };
 
 describe('M11 Balancing Ausbau (Spec 11.4)', () => {
   it('AK-M11B-01 Variante „baut Fischer aus" (R196: reine Messung): greift, siegt, minMoney ≥ 0; M-15 gepinnt', () => {
