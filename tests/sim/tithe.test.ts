@@ -355,7 +355,23 @@ describe('AK-ZE-05 Gründe', () => {
     ['Wert ungültig ohne Amtsstube', 1, 'ja', 'Ungültiger Wert'],
   ])('%s', (_n, tier, on, reason) => {
     const w = village(3, { unlockAll: true }).w;
+    const before = snap(w);
     expect(setTithe(w, tier, on)).toEqual({ ok: false, reason });
+    expect(snap(w)).toBe(before);
+  });
+  it('ohne Amtsstube schlägt «bereits aus» (Regel 4 vor 5)', () => {
+    const w = village(3, { unlockAll: true }).w;
+    const before = snap(w);
+    expect(setTithe(w, 1, false)).toEqual({ ok: false, reason: 'Braucht eine Amtsstube' });
+    expect(snap(w)).toBe(before);
+  });
+  it('Amtsstube unwirksam schlägt Sperrzeit (Regel 4 vor 6)', () => {
+    const { w, hall } = town(12, 0);
+    expect(setTithe(w, 1, true).ok).toBe(true);
+    hall.connected = false;
+    const before = snap(w);
+    expect(setTithe(w, 1, false)).toEqual({ ok: false, reason: 'Amtsstube wirkt nicht' });
+    expect(snap(w)).toBe(before);
   });
   it('bereits aktiv schlägt Sperrzeit (Regel 5 vor 6)', () => {
     const { w } = town(12, 0);
