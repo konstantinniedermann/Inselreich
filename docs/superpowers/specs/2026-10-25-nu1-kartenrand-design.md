@@ -375,7 +375,7 @@ k/3 · Fundstücke k/8» erst nach `wonSpice`. HUD-Chip nur in Phase `card`.
 ## 7 Abnahmekriterien
 
 (V) = Vitest, (B) = Browser-Check bei 1280 px durch `qa-playtester`, Screenshots `.studio/qa/NU-1/`. Testwelten mit
-gesetztem `wonSpice` und Kartenhaus über Test-Helfer [Tech].
+gesetztem `wonSpice` und Kartenhaus über Test-Helfer [Tech]. AK-25a/b, 37–56: Anhang 02 §8.
 
 **Kartenhaus** (`tests/sim/expedition.test.ts`):
 
@@ -513,4 +513,4 @@ SIM vor UI; ART parallel. Teilung SIM-a (Defs, Aktionen, Tick, Ziehung) / SIM-b 
 · E3 Namen (Kartenhaus, Gebiete, Fundstücke, «Unbekanntes Gewässer»): ja · E4 Routenladung beim Anlegen nach
 Heimkehr-Regel: ja · E5 Gebiet erst bei der Rückkehr aufdecken: ja.
 
-**Entscheid L0 offen:** keiner. Stichworte der Hinweis-Waren und Meldungstexte sind Setzungen der Spec.
+**Entscheid L0 offen:** keiner. Stichworte und Meldungstexte: Setzung Spec.
