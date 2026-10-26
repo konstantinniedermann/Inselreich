@@ -115,13 +115,13 @@ describe('M13-E1 Betrieb stilllegen (AK-M13STL-01…08)', () => {
     const tm = put(w, 'toolmaker');
     f.paused = true;
     tm.paused = true;
-    expect([buildingUpkeep(f), buildingUpkeep(tm)]).toEqual([3, 13]);
+    expect([buildingUpkeep(w, f), buildingUpkeep(w, tm)]).toEqual([3, 13]);
     delete f.paused;
-    expect(buildingUpkeep(f)).toBe(5);
+    expect(buildingUpkeep(w, f)).toBe(5);
     glass.level = 2;
-    expect(buildingUpkeep(glass)).toBe(17);
+    expect(buildingUpkeep(w, glass)).toBe(17);
     glass.level = 3;
-    expect(buildingUpkeep(glass)).toBe(22);
+    expect(buildingUpkeep(w, glass)).toBe(22);
   });
 
   it('AK-M13STL-05 Bilanz zählt Stilllegung nicht, Kette läuft leer', () => {
@@ -155,7 +155,7 @@ describe('M13-E1 Betrieb stilllegen (AK-M13STL-01…08)', () => {
     beginCrisis(w, 0, { kind: 'fire', tile });
     expect([f.state, f.paused]).toEqual(['burning', true]);
     const until = f.outageUntil!;
-    expect(buildingUpkeep(f)).toBe(3);
+    expect(buildingUpkeep(w, f)).toBe(3);
     for (; w.tick < until;) step(w);
     expect(f.outageUntil).toBeUndefined();
     expect([f.state, f.paused]).toEqual(['paused', true]);

@@ -29,6 +29,7 @@ import type { BuildingDefId, CouncilTier, World } from '../../src/sim/types';
 import {
   houseNearKontor,
   placeService,
+  crewHouse,
   putBuilding,
   setHouse,
   twoIslandWorld,
@@ -232,7 +233,7 @@ describe('AK-5 Stufentakt', () => {
     ['glassworks', 4, 18, 12],
   ];
   it.each(rows)('%s: Ausbaustufen 2 und 3 proportional (R-3)', (defId, tier, lvl2, lvl3) => {
-    const w = createWorld(3);
+    const w = createWorld(3, { crisisLevel: 'off' }); // Stufe 3 braucht sonst eine Feuerwache
     const b = putBuilding(w, 0, defId, 4, 4);
     expect(LEVELS[defId]![0]!.cycle).toBe(30);
     expect(LEVELS[defId]![1]!.cycle).toBe(20);
@@ -241,6 +242,7 @@ describe('AK-5 Stufentakt', () => {
       [3, lvl3],
     ] as const) {
       b.level = level;
+      if (level === 2) crewHouse(w, b, 3); // Fachkräfte für Stufe 2 und 3
       decreed(w, tier, 'A');
       expect(cycleOf(w, b)).toBe(expected);
       decreed(w, tier, 'B');
@@ -260,6 +262,7 @@ describe('AK-5 Stufentakt', () => {
     w.islands[1]!.kind = 'B';
     const b = putBuilding(w, 1, 'glassworks', 4, 4);
     b.level = 2;
+    crewHouse(w, b, 2);
     decreed(w, 4, 'A');
     expect(cycleOf(w, b)).toBe(Math.floor((18 * TRAIT_CYCLE_PCT) / 100));
     expect(cycleOf(w, b)).toBe(9);

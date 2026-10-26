@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { meetLevel } from '../sim/helpers';
 import { describe, expect, it } from 'vitest';
 import {
   TILE_LAYOUT,
@@ -176,7 +177,9 @@ describe('AK-PU-06..09 Kacheln', () => {
       { key: 'utilization', label: 'Auslastung', value: '100 %', sub: null },
       { key: 'upkeep', label: 'Unterhalt', value: '30 / min', sub: 'Geld' },
     ]);
-    const t2 = statTiles(w, put(w, 'fisher', { level: 2 }));
+    const f2 = put(w, 'fisher', { level: 2 });
+    meetLevel(w, f2); // Fachkräfte-Haus im Umkreis: Stufe 2 läuft
+    const t2 = statTiles(w, f2);
     expect(t2[0]).toMatchObject({ value: '25 / min', sub: 'Nahrung · alle 3 s' });
     expect(t2[2]).toMatchObject({ value: '42 / min' });
     expect(statTiles(w, put(w, 'fisher', { eff: 94_208 }))[1]!.value).toBe('36 %');
@@ -358,7 +361,9 @@ describe('AK-15 Ausbau-Karte «Bilanz danach»', () => {
 describe('AK-PU-14 upgradeGain Rundung', () => {
   const w = createWorld(3, { unlockAll: true });
   it('Fischer 2 -> 3', () => {
-    const g = upgradeGain(w, put(w, 'fisher', { level: 2 }), 3);
+    const f2 = put(w, 'fisher', { level: 2 });
+    meetLevel(w, f2);
+    const g = upgradeGain(w, f2, 3);
     expect(g[0]).toMatchObject({ key: 'output', before: 25, after: 37.5, delta: '+12.5' });
     expect(g[1]).toMatchObject({ key: 'upkeep', before: 42, after: 54, delta: '+12' });
   });
@@ -460,7 +465,7 @@ describe('AK-UT-14 Kacheln stillgelegt', () => {
       expect(tile.sub).toBeNull();
     }
     expect(t.find((x) => x.key === 'upkeep')!.value).toBe(
-      `${perMinute(buildingUpkeep(wv), UPKEEP_INTERVAL)} / min`,
+      `${perMinute(buildingUpkeep(w, wv), UPKEEP_INTERVAL)} / min`,
     );
   });
 });
@@ -490,11 +495,11 @@ describe('M13-E1 Stilllegen im Panel (AK-M13STL-09)', () => {
   it('AK-M13STL-09 Kachel «Unterhalt» zeigt den wirksamen Unterhalt', () => {
     const g = put(w, 'glassworks');
     const tile = (): string => statTiles(w, g).find((t) => t.key === 'upkeep')!.value;
-    expect(tile()).toBe(`${perMinute(buildingUpkeep(g), UPKEEP_INTERVAL)} / min`);
+    expect(tile()).toBe(`${perMinute(buildingUpkeep(w, g), UPKEEP_INTERVAL)} / min`);
     const run = tile();
     expect(setPaused(w, g.id, true).ok).toBe(true);
     expect(tile()).not.toBe(run);
-    expect(tile()).toBe(`${perMinute(buildingUpkeep(g), UPKEEP_INTERVAL)} / min`);
+    expect(tile()).toBe(`${perMinute(buildingUpkeep(w, g), UPKEEP_INTERVAL)} / min`);
   });
 });
 

@@ -188,7 +188,7 @@ export function statTiles(world: World, b: Building): StatTile[] {
   tiles.push({
     key: 'upkeep',
     label: TILE_LAYOUT.upkeep.label,
-    value: `${perMinute(buildingUpkeep(b), UPKEEP_INTERVAL)} / min`,
+    value: `${perMinute(buildingUpkeep(world, b), UPKEEP_INTERVAL)} / min`,
     sub: 'Geld',
   });
   return tiles;

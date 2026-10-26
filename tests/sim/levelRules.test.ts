@@ -6,6 +6,14 @@ import {
   WORKFORCE_RADIUS,
   type LevelSite,
 } from '../../src/sim/defs/levels';
+import { demolish } from '../../src/sim/build';
+import { ISLANDS } from '../../src/sim/defs/sea';
+import { buildingUpkeep, cycleOf, effectiveCycle } from '../../src/sim/levels';
+import { levelChipDetail, levelChipText } from '../../src/sim/levelChecks';
+import { recomputeConnectivity } from '../../src/sim/roads';
+import { tickProduction } from '../../src/sim/production';
+import { deserialize, serialize } from '../../src/sim/save';
+import { step } from '../../src/sim/tick';
 import { runningLevel, siteAt, workforceAt } from '../../src/sim/levelRules';
 import type {
   Building,
@@ -487,5 +495,199 @@ describe('AK-AL-46 Struktur: keine Spielzahl in levelRules.ts', () => {
       .replace(/\/\/.*$/gm, '');
     const literals = [...code.matchAll(/(?<![\w.])\d+(?:\.\d+)?(?![\w])/g)].map((m) => m[0]);
     for (const n of literals) expect(['0', '1', '2', '100'], n).toContain(n);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// AL-2b (T04): k wirkt auf Zyklus und Unterhalt (AK-AL-10 … 17, 44, 45)
+// ---------------------------------------------------------------------------------------------
+
+const fisherG = (w: World, level: 2 | 3, x = 20, y = 20): Building =>
+  shop(w, 'fisher', x, y, level);
+const runTicks = (w: World, n: number): void => {
+  for (let i = 0; i < n; i++) step(w);
+};
+
+describe('AK-AL-10 Zyklus folgt k, nicht g', () => {
+  it('Fischer g 3: k 1 … 3 gibt 40/24/16, level bleibt 3', () => {
+    const w = emptyWorld();
+    const f = fisherG(w, 3);
+    expect(cycleOf(w, f)).toBe(40);
+    const h = houseAt(w, 24, 25, 2);
+    expect(cycleOf(w, f)).toBe(24);
+    h.house!.tier = 3;
+    expect(cycleOf(w, f)).toBe(16);
+    expect(f.level).toBe(3);
+  });
+});
+
+describe('AK-AL-11 Insel- und Ratsvorteil auf dem Zyklus von k', () => {
+  const glassIsland = (): World => {
+    const w = twoIslandWorld();
+    w.crisisLevel = 'off';
+    w.islands[1]!.kind = ISLANDS.find((d) => d.traits.includes('mountainRich'))!.kind;
+    return w;
+  };
+  it('Glashütte g 3, k 2 auf Glas-Vorteilsinsel, ohne und mit Rat', () => {
+    const w = glassIsland();
+    const g = shop(w, 'glassworks', 4, 4, 3, 1);
+    houseAt(w, 8, 4, 2, 1);
+    expect(runningLevel(w, g)).toBe(2);
+    expect(cycleOf(w, g)).toBe(effectiveCycle(w, 1, 'glassworks', 30));
+    w.council[4] = 'A';
+    expect(cycleOf(w, g)).toBe(effectiveCycle(w, 1, 'glassworks', 30));
+    expect(cycleOf(w, g)).toBeLessThan(effectiveCycle(w, 1, 'glassworks', 99));
+  });
+});
+
+describe('AK-AL-12/13 Unterhalt-Drossel', () => {
+  it('Fischer g 3, k 1 → 7; Brennerei g 3, k 2 → 30; k = g → 9 / 34', () => {
+    const w = emptyWorld('off');
+    const f = fisherG(w, 3);
+    expect(buildingUpkeep(w, f)).toBe(7);
+    const d = shop(w, 'distillery', 30, 30, 3);
+    houseAt(w, 34, 30, 2);
+    expect(runningLevel(w, d)).toBe(2);
+    expect(buildingUpkeep(w, d)).toBe(30);
+    houseAt(w, 25, 26, 3);
+    expect(buildingUpkeep(w, d)).toBe(34);
+    expect(buildingUpkeep(w, f)).toBe(9);
+  });
+  it('paused zahlt halb von u(g), kein Chip; brennend zahlt Drossel', () => {
+    const w = emptyWorld('off');
+    const f = fisherG(w, 3);
+    f.paused = true;
+    expect(buildingUpkeep(w, f)).toBe(5);
+    expect(levelChipText(w, f)).toBeNull();
+    delete f.paused;
+    f.outageUntil = 99;
+    expect(buildingUpkeep(w, f)).toBe(7);
+  });
+});
+
+describe('Chip-Tooltip: Unterhaltszeile', () => {
+  it('Fischer g 3, k 1: Unterhalt 42 statt 54 (gedrosselt) je Minute', () => {
+    const w = emptyWorld('off');
+    const f = fisherG(w, 3);
+    expect(levelChipDetail(w, f).at(-1)).toBe('Unterhalt 42 statt 54 (gedrosselt)');
+  });
+});
+
+describe('AK-AL-14/16/17 k folgt den Bauten', () => {
+  it('Bürgerhaus abgerissen: k 3 → 2; brennend hält k, im Abriss-Tick sofort k 2', () => {
+    const w = emptyWorld();
+    const f = fisherG(w, 3);
+    const h = houseAt(w, 24, 25, 3);
+    expect(runningLevel(w, f)).toBe(3);
+    h.outageUntil = 50;
+    expect(runningLevel(w, f)).toBe(3);
+    delete w.buildings[h.id];
+    houseAt(w, 24, 25, 2);
+    expect(runningLevel(w, f)).toBe(2);
+  });
+  it('house.tier 3 → 2 des einzigen Bürgerhauses: Chiptext, level bleibt 3', () => {
+    const w = emptyWorld();
+    const f = fisherG(w, 3);
+    const h = houseAt(w, 24, 25, 3);
+    h.house!.tier = 2;
+    expect(runningLevel(w, f)).toBe(2);
+    expect(levelChipText(w, f)).toMatch(/^Läuft wie Stufe 2: Keine Meister im Umkreis 8/);
+    expect(f.level).toBe(3);
+  });
+  it('Nachbarhütten B (2) und C (3) zu A g 3: A k 2, B k 1; Abriss C → A k 3', () => {
+    const w = emptyWorld();
+    houseAt(w, 24, 25, 3);
+    const a = fisherG(w, 3, 20, 20);
+    const b = putBuilding(w, 0, 'fisher', 22, 20);
+    const c = putBuilding(w, 0, 'fisher', 23, 20);
+    expect(runningLevel(w, a)).toBe(2);
+    expect(runningLevel(w, b)).toBe(1);
+    expect(levelChipText(w, b)).toBeNull();
+    delete w.buildings[c.id];
+    expect(runningLevel(w, a)).toBe(3);
+    expect(LEVEL_RECHECK_TICKS).toBeGreaterThan(0);
+  });
+});
+
+describe('AK-AL-44 k-Wechsel mitten im Zyklus (N4)', () => {
+  it('k 1 → 3 bei progress 30: nächster Schritt 1 Einheit, progress 0, dann 16 Schritte', () => {
+    const w = emptyWorld();
+    const f = fisherG(w, 3);
+    f.progress = 29;
+    const fish = (): number => home(w).stock.food;
+    const before = fish();
+    tickProduction(w);
+    expect([fish() - before, f.progress]).toEqual([0, 30]);
+    houseAt(w, 24, 25, 3);
+    tickProduction(w);
+    expect([fish() - before, f.progress]).toEqual([1, 0]);
+    for (let i = 0; i < 15; i++) tickProduction(w);
+    expect(fish() - before).toBe(1);
+    tickProduction(w);
+    expect(fish() - before).toBe(2);
+  });
+  it('k 3 → 1 bei progress 10: keine Einheit bis progress 40', () => {
+    const w = emptyWorld();
+    const f = fisherG(w, 3);
+    const h = houseAt(w, 24, 25, 3);
+    f.progress = 10;
+    const before = home(w).stock.food;
+    delete w.buildings[h.id];
+    for (let i = 0; i < 29; i++) tickProduction(w);
+    expect([f.progress, home(w).stock.food - before]).toEqual([39, 0]);
+    tickProduction(w);
+    expect([f.progress, home(w).stock.food - before]).toEqual([0, 1]);
+  });
+});
+
+describe('AK-AL-15/45 Determinismus', () => {
+  const scenario = (): World => {
+    const w = createWorld(7, { unlockAll: true, crisisLevel: 'normal' });
+    const f = putBuilding(w, 0, 'fisher', 40, 40);
+    f.level = 3;
+    putBuilding(w, 0, 'distillery', 50, 40).level = 3;
+    houseAt(w, 44, 44, 3);
+    recomputeConnectivity(w); // Anbindung wie nach dem Laden, damit beide Seiten gleich starten
+    return w;
+  };
+  const act = (w: World, t: number): void => {
+    if (t === 400) demolish(w, Object.values(w.buildings).find((b) => b.house !== undefined)!.id);
+    if (t === 700) w.crisisLevel = 'off';
+    if (t === 1000) w.crisisLevel = 'normal';
+  };
+  const levels = (w: World): number[] => Object.values(w.buildings).map((b) => runningLevel(w, b));
+  it('zwei Läufe gleich; Save/Load mitten im Lauf gleich, je Tick gleiches k', () => {
+    const a = scenario();
+    const b = scenario();
+    let c = scenario();
+    for (let t = 0; t < 1800; t++) {
+      act(a, t);
+      act(b, t);
+      act(c, t);
+      step(a);
+      step(b);
+      step(c);
+      if (t === 299) {
+        const r = deserialize(serialize(c));
+        if (!r.ok) throw new Error('load');
+        c = r.world;
+      }
+      if (t >= 300) expect(levels(c)).toEqual(levels(a));
+    }
+    expect(serialize(b)).toBe(serialize(a));
+    expect(serialize(c)).toBe(serialize(a));
+    const raw = JSON.parse(serialize(a)).buildings as Record<string, object>;
+    for (const v of Object.values(raw)) expect(Object.keys(v)).not.toContain('k');
+  });
+  it('AK-AL-45 crisisLevel-Wechsel: Brennerei g 3 k 2 → 3 → 2', () => {
+    const w = emptyWorld('normal');
+    const d = shop(w, 'distillery', 20, 20, 3);
+    crew(w, 3);
+    expect(runningLevel(w, d)).toBe(2);
+    w.crisisLevel = 'off';
+    runTicks(w, LEVEL_RECHECK_TICKS);
+    expect(runningLevel(w, d)).toBe(3);
+    w.crisisLevel = 'normal';
+    expect(runningLevel(w, d)).toBe(2);
   });
 });

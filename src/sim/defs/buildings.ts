@@ -301,3 +301,5 @@ export const ROAD_COST = 5;
 export const ROAD_COST_OBJ: Cost = { money: ROAD_COST, wood: 0, tools: 0, stone: 0 };
 /** Unterhalt eines stillgelegten Betriebs in Prozent (I-035, Spec §8 S4). */
 export const PAUSED_UPKEEP_PCT = 50;
+/** Anteil der Unterhaltsdifferenz u(g) − u(k), den ein gedrosselter Betrieb (k < g) zusätzlich zu u(k) zahlt, in Prozent (AUSBAU-LOGIK R6). */
+export const THROTTLED_UPKEEP_PCT = 50;

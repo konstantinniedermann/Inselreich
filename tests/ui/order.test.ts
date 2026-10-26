@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { meetLevel } from '../sim/helpers';
 import { FakeElement, fakeDocument } from './fakeDom';
 import type { ContractEvent, Order } from '../../src/sim/types';
 import type { StepReport } from '../../src/sim/tick';
@@ -375,12 +376,16 @@ describe('UI-AUFRAEUM-4 T01 Erzeugungs-Cache (AK-1 bis AK-4)', () => {
   it('AK-3 Ausbau in der Pause (b.level ändert den Zyklus, Zahl, Ids und Listen bleiben)', () => {
     const w = offerWorld();
     addProducer(w, 'lumberjack', HOME);
+    const producer = last(w);
+    producer.level = 2;
+    meetLevel(w, producer); // Fachkräfte und Wald schon vor der Messung, damit der Ausbau in der Pause Stufe 2 erreicht
+    delete producer.level;
     w.tick += 1;
     const perMin = (): number =>
       perMinute(goodsBalance(w, HOME).wood.produced, GOODS_BALANCE_TICKS);
     const base = perMin();
     expect(orderCardText(w)).toContain(`Erzeugung ${base} / min`);
-    last(w).level = 2;
+    producer.level = 2;
     expect(perMin()).toBeGreaterThan(base);
     expect(orderCardText(w)).toContain(`Erzeugung ${perMin()} / min`);
   });

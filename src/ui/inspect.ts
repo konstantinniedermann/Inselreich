@@ -956,8 +956,8 @@ function updateUpgradeBox(panel: HTMLElement, world: World, b: Building): void {
 }
 
 /** Unterhaltszeile des stehenden Betriebs (Stufe berücksichtigt). */
-export function upkeepText(b: Building): string {
-  return `Unterhalt ${perMinute(buildingUpkeep(b), UPKEEP_INTERVAL)} / min`;
+export function upkeepText(world: World, b: Building): string {
+  return `Unterhalt ${perMinute(buildingUpkeep(world, b), UPKEEP_INTERVAL)} / min`;
 }
 
 /** Setzt Anbinden-Knopf und Grundzeile; führt die Vorschau nach, solange der Knopf überfahren ist. */
@@ -1032,7 +1032,7 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   }
   if (isKontor(b.defId)) updateShipSection(panel, world);
   setField(panel, 'refund', refundLine(world, b));
-  if (b.defId === 'townhall') setField(panel, 'upkeep', upkeepText(b));
+  if (b.defId === 'townhall') setField(panel, 'upkeep', upkeepText(world, b));
   if (!b.house && !isKontor(b.defId) && b.defId !== 'townhall' && b.defId !== 'monument')
     updateBetrieb(panel, world, b);
   updateUpgradeBox(panel, world, b);

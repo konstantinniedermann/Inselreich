@@ -14,7 +14,7 @@ import { cycleOf } from '../../src/sim/levels';
 import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 import { foundKontor2Literal } from './seaHelpers';
-import { putBuilding } from './helpers';
+import { meetLevel, putBuilding } from './helpers';
 
 const HEIMAT = 0;
 const MOEWEN = 1;
@@ -39,7 +39,10 @@ function traitWorld(): World {
 function farm(w: World, island: number, defId: BuildingDefId, slot = 0, level?: 2 | 3): Building {
   const k = w.buildings[w.islands[island]!.kontorId!]!;
   const b = putBuilding(w, island, defId, k.x + 4 + slot * 3, k.y);
-  if (level !== undefined) b.level = level;
+  if (level !== undefined) {
+    b.level = level;
+    meetLevel(w, b); // Fachkräfte und Standort, damit der Betrieb auf seiner Stufe läuft
+  }
   return b;
 }
 
@@ -146,24 +149,25 @@ describe('M14-E1 cycleOf je Insel (AK-03, AK-07)', () => {
   });
 
   it('AK-M14E1-07: Heimat unveränderte Zyklen auf allen Stufen', () => {
-    const w = traitWorld();
     for (const def of Object.values(BUILDING_DEFS)) {
       if (def.cycle === undefined) continue;
       const levels = LEVELS[def.id];
       for (const level of [undefined, 2, 3] as const) {
+        const w = traitWorld();
         const expected =
           level === undefined ? def.cycle : (levels?.[level - 2]?.cycle ?? def.cycle);
         const b: Building = {
           id: -1,
           defId: def.id,
-          x: 0,
-          y: 0,
+          x: 30,
+          y: 30,
           connected: true,
           progress: 0,
           state: 'ok',
           island: HEIMAT,
           ...(level === undefined ? {} : { level }),
         };
+        meetLevel(w, b);
         expect(cycleOf(w, b), `${def.id} Stufe ${level ?? 1}`).toBe(expected);
       }
     }
@@ -210,6 +214,7 @@ describe('M14-E1 Ausstoss und Verbrauch (AK-04 … AK-10)', () => {
     w.islands[FELS]!.stock.rum = 10;
     expect(upgradeBuilding(w, b.id).ok).toBe(true);
     expect(upgradeBuilding(w, b.id).ok).toBe(true);
+    meetLevel(w, b);
     expect(cycleOf(w, b)).toBe(12);
     w.islands[FELS]!.stock.stone = 0;
     run(w, 600);
@@ -284,7 +289,10 @@ describe('M14-E1 Abriss, Neubau, Ausbau auf der Felsbucht (QA-B10)', () => {
       const before = snapshot(w, island);
       expect(upgradeBuilding(w, b.id).ok).toBe(true);
       results.push(delta(before, snapshot(w, island)));
-      if (island === FELS) expect(cycleOf(w, b)).toBe(18);
+      if (island === FELS) {
+        meetLevel(w, b);
+        expect(cycleOf(w, b)).toBe(18);
+      }
     }
     expect(results[0]).toEqual(results[1]);
   });

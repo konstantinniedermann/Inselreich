@@ -54,7 +54,7 @@ describe('Betriebsrangliste (I-062, AK-5 bis AK-7)', () => {
     const other = put(w, 0, 'weaver'); // 15
     const rows = upkeepRanking(w);
     expect(rows.map((r) => r.id)).toEqual([other.id, paused.id]);
-    expect(rows[1]).toMatchObject({ upkeep: buildingUpkeep(paused), paused: true });
+    expect(rows[1]).toMatchObject({ upkeep: buildingUpkeep(w, paused), paused: true });
     expect(rows[1]!.upkeep).toBeGreaterThan(0);
     expect(rows[0]!.paused).toBe(false);
   });
@@ -133,8 +133,8 @@ describe('Betriebsrangliste (I-062, AK-5 bis AK-7)', () => {
       const c = put(w, 1, 'toolmaker');
       const s = upkeepSummary(w);
       expect(s.islands).toEqual([
-        { island: 1, count: 1, upkeep: buildingUpkeep(c) },
-        { island: 0, count: 2, upkeep: buildingUpkeep(a) + buildingUpkeep(b) },
+        { island: 1, count: 1, upkeep: buildingUpkeep(w, c) },
+        { island: 0, count: 2, upkeep: buildingUpkeep(w, a) + buildingUpkeep(w, b) },
       ]);
       const tie = twoIslandWorld();
       put(tie, 1, 'fisher');
@@ -156,12 +156,12 @@ describe('Betriebsrangliste (I-062, AK-5 bis AK-7)', () => {
       expect(s2.islands.find((i) => i.island === 1)).toEqual({
         island: 1,
         count: 2,
-        upkeep: buildingUpkeep(p) + buildingUpkeep(f1),
+        upkeep: buildingUpkeep(w, p) + buildingUpkeep(w, f1),
       });
       expect(s2.islands.find((i) => i.island === 0)).toEqual({
         island: 0,
         count: 1,
-        upkeep: buildingUpkeep(f0),
+        upkeep: buildingUpkeep(w, f0),
       });
     });
 

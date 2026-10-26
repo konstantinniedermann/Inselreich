@@ -1,7 +1,8 @@
 import { placeBuilding, placeRoad } from '../../src/sim/build';
 import { newHouseState } from '../../src/sim/population';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { center, createWorld, footprint, idx, home } from '../../src/sim/world';
+import { LEVELS } from '../../src/sim/defs/levels';
+import { center, createWorld, footprint, idx, home, tilesInRadius } from '../../src/sim/world';
 import { GOOD_IDS } from '../../src/sim/defs/goods';
 import { TIER_IDS } from '../../src/sim/defs/tiers';
 import { taxTarget } from '../../src/sim/tax';
@@ -729,4 +730,57 @@ export function denseScene(opts: { toolmakers?: boolean } = {}): World {
     for (let j = 0; j < 8; j++) add(DENSE_SERVICES[k++ % 3]!, 1 + 8 * i, 1 + 8 * j);
   if (opts.toolmakers) for (let i = 0; i < 4; i++) add('toolmaker', 2 + 16 * i, 2);
   return w;
+}
+
+const CREW_SCAN = 6;
+/**
+ * Fachkräfte-Haus (Stufe `tier`, Standard 3) auf der freien Kachel nahe `b`, die zuerst gefunden wird
+ * (feste Suchreihenfolge), damit ein Betrieb mit `level` > 1 in Tests auf seiner Stufe läuft (AUSBAU-LOGIK).
+ */
+export function crewHouse(world: World, b: Building, tier: Tier = 3): Building {
+  const isl = world.islands[b.island]!;
+  for (let r = 1; r <= CREW_SCAN; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        const x = b.x + dx;
+        const y = b.y + dy;
+        if (x < 0 || y < 0 || x >= isl.width || y >= isl.height) continue;
+        if (isl.tiles[idx(isl, x, y)]!.buildingId !== null) continue;
+        const h = putBuilding(world, b.island, 'house', x, y);
+        h.house!.tier = tier;
+        return h;
+      }
+    }
+  }
+  throw new Error('kein freier Platz für das Fachkräfte-Haus');
+}
+
+/**
+ * Bringt `b` auf seine gebaute Stufe `b.level`: Fachkräfte-Haus, Gelände nach Standortregel der Stufen
+ * 2 … g und bei Feuerwachen-Regel `crisisLevel` 'off' (AUSBAU-LOGIK). Reihenfolge: erst das Haus,
+ * danach das Gelände, damit das Haus keine Standortkachel überschreibt.
+ */
+export function meetLevel(world: World, b: Building): void {
+  const g = b.level ?? 1;
+  crewHouse(world, b, Math.min(g, 3) as Tier);
+  const isl = world.islands[b.island]!;
+  const def = BUILDING_DEFS[b.defId];
+  const { cx, cy } = center(def, b.x, b.y);
+  const own = new Set(footprint(def, b.x, b.y).map((p) => idx(isl, p.x, p.y)));
+  for (let j = 2; j <= g; j++) {
+    const site = LEVELS[b.defId]?.[j - 2]?.site;
+    if (site === undefined || site.kind === 'fisherSpacing') continue;
+    if (site.kind === 'fireStation') {
+      world.crisisLevel = 'off';
+      continue;
+    }
+    let have = 0;
+    for (const t of tilesInRadius(isl, cx, cy, site.radius)) {
+      if (have >= site.min) break;
+      const tile = isl.tiles[idx(isl, t.x, t.y)]!;
+      if (tile.buildingId !== null || tile.road || own.has(idx(isl, t.x, t.y))) continue;
+      tile.terrain = site.terrain;
+      have++;
+    }
+  }
 }

@@ -1,14 +1,18 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 // R1 läuft vor T07/T09: Stufentabelle gemockt (Fischer Stufe 2: Zyklus 24, Anhang 01 A.4).
-vi.mock('../../src/sim/defs/levels', () => {
-  const lv = (cycle: number) => ({
+vi.mock('../../src/sim/defs/levels', async (orig) => {
+  const lv = (cycle: number, workforceTier: number) => ({
     cycle,
     upkeep: 1,
     cost: {},
     fee: { good: 'tools', amount: 1 },
+    workforceTier,
   });
-  return { LEVELS: { fisher: [lv(24), lv(16)] } };
+  return {
+    ...(await orig<typeof import('../../src/sim/defs/levels')>()),
+    LEVELS: { fisher: [lv(24, 2), lv(16, 3)] },
+  };
 });
 
 import { centerOn, type Camera, type TileRange } from '../../src/render/camera';
@@ -18,6 +22,7 @@ import { resetTreeCache, setCanvasFactory } from '../../src/render/trees';
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { home, center, createWorld } from '../../src/sim/world';
 import type { Building, BuildingDefId, BuildingState, World } from '../../src/sim/types';
+import { crewHouse } from '../sim/helpers';
 import { fakeCtx } from './fakeCtx';
 
 const VIEW = { w: 1280, h: 720 };
@@ -63,7 +68,9 @@ describe('M11 Fortschrittsring (Spec 8)', () => {
   });
   it('AK-RND-04 ringFraction: Fischer progress 20 → 0,5; Stufe 2 progress 12 → 0,5; höchstens 0,99999', () => {
     expect(ringFraction(w, mk('fisher', { progress: 20 }), 0)).toBe(0.5);
-    expect(ringFraction(w, mk('fisher', { progress: 12, level: 2 }), 0)).toBe(0.5);
+    const f2 = mk('fisher', { progress: 12, level: 2 });
+    crewHouse(w, f2, 2); // Fachkräfte im Umkreis: Stufe 2 läuft
+    expect(ringFraction(w, f2, 0)).toBe(0.5);
     expect(ringFraction(w, mk('fisher', { progress: 39 }), 1)).toBe(0.99999);
     expect(ringFraction(w, mk('fisher', { progress: 10 }), 0.5)).toBeCloseTo(10.5 / 40, 12);
     expect(ringFraction(w, mk('chapel', { progress: 10 }), 0.5)).toBe(0);

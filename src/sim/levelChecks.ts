@@ -2,6 +2,8 @@ import { serviceRadiusOf } from './council';
 import { BUILDING_DEFS } from './defs/buildings';
 import { GOODS } from './defs/goods';
 import { LEVELS, WORKFORCE_RADIUS, type LevelDef } from './defs/levels';
+import { MINUTE_MS, TICK_MS, UPKEEP_INTERVAL } from './defs/timing';
+import { buildingUpkeep, upkeepOf } from './levels';
 import { runningLevel, siteAt, workforceAt, type SiteInfo } from './levelRules';
 import type { Building, BuildingDefId, GoodId, Tier, World } from './types';
 import { functionLock } from './unlocks';
@@ -185,11 +187,18 @@ export function levelChipText(world: World, b: Building): string | null {
   return first === undefined ? null : `Läuft wie Stufe ${k}: ${first}`;
 }
 
-/** Tooltip des Chips: alle verletzten Dauerzeilen der Stufen k + 1 … g. Unterhaltszeile ergänzt T04. */
+/** Unterhalt je Minute wie im Panel (eine Nachkommastelle). */
+const perMin = (amount: number): number =>
+  Math.round(((amount * MINUTE_MS) / (UPKEEP_INTERVAL * TICK_MS)) * 10) / 10;
+
+/** Tooltip des Chips: alle verletzten Dauerzeilen der Stufen k + 1 … g, dann die Unterhaltszeile. */
 export function levelChipDetail(world: World, b: Building): string[] {
   if (!showsChip(world, b)) return [];
   const out: string[] = [];
   for (let j = runningLevel(world, b) + 1; j <= (b.level ?? 1); j++)
     out.push(...violated(world, b, j));
+  out.push(
+    `Unterhalt ${perMin(buildingUpkeep(world, b))} statt ${perMin(upkeepOf(b))} (gedrosselt)`,
+  );
   return out;
 }

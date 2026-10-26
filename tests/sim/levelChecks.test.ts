@@ -313,6 +313,7 @@ describe('Chip und Tooltip', () => {
     expect(levelChipDetail(w, f)).toEqual([
       'Keine Handwerker im Umkreis 8 (kein Siedlerhaus auf dieser Insel)',
       'Keine Meister im Umkreis 8 (kein Bürgerhaus auf dieser Insel)',
+      'Unterhalt 42 statt 54 (gedrosselt)',
     ]);
   });
   it('Detail leer ohne Chip', () => {

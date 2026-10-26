@@ -37,7 +37,7 @@ import { setHouse, uxWorld } from './worlds';
 import { home, createWorld } from '../../src/sim/world';
 import { taxEffect } from '../../src/ui/guide';
 import { SCENARIOS } from '../sim/scenarios';
-import { putBuilding } from '../sim/helpers';
+import { meetLevel, putBuilding } from '../sim/helpers';
 import { foundKontor2Literal } from '../sim/seaHelpers';
 import { setGoodLock } from '../../src/sim/tax';
 import { placeTownhall, setAllTax, setHouse as setHouseTo, village } from '../sim/helpers';
@@ -358,6 +358,7 @@ describe('M11 Betriebs-Panel (Spec 7)', () => {
     expect(upgradeView(w, f)!.reasons).toEqual(['✗ Zu wenig Stoff']);
     home(w).stock.cloth = 2;
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
+    meetLevel(w, f); // Fachkräfte-Haus im Umkreis: Stufe 2 läuft
     expect(upgradeView(w, f)!.preview).toBe('Ausstoss 25 → 37.5 / min · Unterhalt 42 → 54 / min');
     w.unlocked = w.unlocked.filter((u) => u !== 'U5' && u !== 'U6');
     expect(upgradeView(w, f)).toBeNull(); // Stufe 3 vor U5 verborgen
@@ -492,9 +493,9 @@ describe('M13-E1 upkeepText stillgelegt (AK-M13STL-09)', () => {
       island: 0,
     };
     w.buildings[g.id] = g;
-    expect(upkeepText(g)).toBe('Unterhalt 150 / min');
+    expect(upkeepText(w, g)).toBe('Unterhalt 150 / min');
     expect(setPaused(w, g.id, true).ok).toBe(true);
-    expect(upkeepText(g)).toBe('Unterhalt 78 / min');
+    expect(upkeepText(w, g)).toBe('Unterhalt 78 / min');
   });
 });
 

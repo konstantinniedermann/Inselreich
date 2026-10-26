@@ -13,6 +13,7 @@ import { cycleOf, upkeepOf, utilization } from '../../src/sim/levels';
 import { goodsBalance } from '../../src/sim/queries';
 import { deriveUnlocks, unlockText } from '../../src/sim/unlocks';
 import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
+import { meetLevel } from './helpers';
 
 /** Angebundener Fischer, direkt eingefügt (Muster production.test.ts:15); Kachel trägt die Id für demolish. */
 function fisherAt(w: World, x = 0, y = 0): Building {
@@ -63,6 +64,7 @@ describe('M11 Ausbau (Spec 3.6)', () => {
       s.tools - home(w).stock.tools,
       s.cloth - home(w).stock.cloth,
     ]).toEqual([950, 3, 1, 2]);
+    meetLevel(w, f); // Fachkräfte-Haus im Umkreis: Stufe 2 läuft
     expect([f.level, cycleOf(w, f), upkeepOf(f)]).toEqual([2, 24, 7]);
     expect(goodsBalance(w).food.produced).toBeCloseTo(100 / 24, 9);
     expect(totalUpkeep(w) - up).toBe(2);
@@ -107,6 +109,7 @@ describe('M11 Ausbau (Spec 3.6)', () => {
     home(w).stock.food = 0;
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     expect(f.progress).toBe(30); // progress bleibt beim Ausbau
+    meetLevel(w, f);
     step(w);
     expect([home(w).stock.food, f.progress]).toEqual([1, 0]);
   });
