@@ -10,6 +10,7 @@ import type {
   World,
 } from '../../src/sim/types';
 import { createWorld, home, idx } from '../../src/sim/world';
+import { upgradeBuilding } from '../../src/sim/upgrade';
 import { putBuilding, twoIslandWorld } from './helpers';
 
 /** Heimat leer räumen: alles Wasser ausser Gebäuden; gebaut wird nur, was der Test setzt. */
@@ -320,5 +321,44 @@ describe('Chip und Tooltip', () => {
     const w = emptyWorld();
     const f = shop(w, 'fisher', 20, 20);
     expect(levelChipDetail(w, f)).toEqual([]);
+  });
+});
+
+describe('AK-AL-24 Vergleich: jede Zeile gleich dem Grund des Ausbaus', () => {
+  function okWelt() {
+    const w = emptyWorld();
+    const f = shop(w, 'fisher', 20, 20, 2);
+    shop(w, 'fisher', 21, 20);
+    houseAt(w, 26, 20, 3);
+    return { w, f };
+  }
+  const stoerungen: [string, (w: World, f: Building) => void][] = [
+    ['knowledge', (w) => (w.unlocked = ['U0', 'U2', 'U3'])],
+    ['burning', (_w, f) => (f.outageUntil = 99)],
+    [
+      'workforce',
+      (w) => {
+        for (const b of Object.values(w.buildings)) if (b.house !== undefined) b.house.tier = 2;
+      },
+    ],
+    ['site', (w) => void shop(w, 'fisher', 22, 20)],
+    ['money', (w) => (w.money = 10)],
+    ['wood', (w) => (home(w).stock.wood = 0)],
+    ['tools', (w) => (home(w).stock.tools = 0)],
+    ['stone', (w) => (home(w).stock.stone = 0)],
+    ['extra', (w) => (home(w).stock.cloth = 1)],
+  ];
+  it.each(stoerungen)('nur Zeile %s ✗: Ausbau scheitert mit genau diesem Text', (id, setze) => {
+    const { w, f } = okWelt();
+    setze(w, f);
+    const bad = levelChecks(w, f, 3).filter((c) => !c.ok);
+    expect(bad.map((c) => c.id)).toEqual([id]);
+    expect(upgradeBuilding(w, f.id)).toEqual({ ok: false, reason: bad[0]!.text });
+  });
+  it('alle Zeilen ✓: Ausbau gelingt', () => {
+    const { w, f } = okWelt();
+    expect(levelChecks(w, f, 3).every((c) => c.ok)).toBe(true);
+    expect(upgradeBuilding(w, f.id)).toEqual({ ok: true });
+    expect(f.level).toBe(3);
   });
 });

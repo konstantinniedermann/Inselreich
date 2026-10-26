@@ -75,6 +75,15 @@ function snapshot(w: World, island: number): Record<string, number> {
 const delta = (a: Record<string, number>, b: Record<string, number>): Record<string, number> =>
   Object.fromEntries(Object.keys(a).map((k) => [k, b[k]! - a[k]!]));
 
+/** Erfüllt Fachkräfte und Standort der nächsten Stufe (Ausbau prüft sie seit AUSBAU-LOGIK T05). */
+function readyForNext(w: World, b: Building): void {
+  const g = b.level ?? 1;
+  b.level = (g + 1) as 2 | 3;
+  meetLevel(w, b);
+  if (g === 1) delete b.level;
+  else b.level = g as 2 | 3;
+}
+
 describe('M14-E1 Defs (AK-01, AK-02)', () => {
   it('AK-M14E1-01: Trait-Defs, Felsbucht, Beschriftungen', () => {
     expect(TRAIT_CYCLE_PCT).toBe(50);
@@ -212,7 +221,9 @@ describe('M14-E1 Ausstoss und Verbrauch (AK-04 … AK-10)', () => {
     const b = farm(w, FELS, 'quarry');
     w.islands[FELS]!.stock.cloth = 10;
     w.islands[FELS]!.stock.rum = 10;
+    readyForNext(w, b);
     expect(upgradeBuilding(w, b.id).ok).toBe(true);
+    readyForNext(w, b);
     expect(upgradeBuilding(w, b.id).ok).toBe(true);
     meetLevel(w, b);
     expect(cycleOf(w, b)).toBe(12);
@@ -286,6 +297,7 @@ describe('M14-E1 Abriss, Neubau, Ausbau auf der Felsbucht (QA-B10)', () => {
       const p = firstSite(w, island, 'quarry');
       const b = w.buildings[placeBuilding(w, 'quarry', p.x, p.y, island).id!]!;
       w.islands[island]!.stock.cloth = 10;
+      readyForNext(w, b);
       const before = snapshot(w, island);
       expect(upgradeBuilding(w, b.id).ok).toBe(true);
       results.push(delta(before, snapshot(w, island)));

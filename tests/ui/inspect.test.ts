@@ -344,6 +344,9 @@ describe('M11 Betriebs-Panel (Spec 7)', () => {
     home(w).stock.cloth = 2;
     home(w).stock.rum = 2;
     const f = put(w, 'fisher');
+    f.level = 2;
+    meetLevel(w, f); // Fachkräfte und Standort der Stufe 2 stehen
+    delete f.level;
     const before = serialize(w);
     expect(upgradeView(w, f)).toEqual({
       title: 'Ausbau zu Stufe 2',
@@ -355,7 +358,7 @@ describe('M11 Betriebs-Panel (Spec 7)', () => {
     });
     expect(serialize(w)).toBe(before); // Vorschau ändert die Welt nicht
     home(w).stock.cloth = 0;
-    expect(upgradeView(w, f)!.reasons).toEqual(['✗ Zu wenig Stoff']);
+    expect(upgradeView(w, f)!.reasons).toEqual(['✗ Zu wenig Stoff (0 / 2)']);
     home(w).stock.cloth = 2;
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     meetLevel(w, f); // Fachkräfte-Haus im Umkreis: Stufe 2 läuft

@@ -11,7 +11,7 @@ import { step } from '../../src/sim/tick';
 import type { BuildingDefId, GoodId, World } from '../../src/sim/types';
 import { balanceText } from '../../src/ui/hud';
 import { balanceAfterBuild, balanceAfterUpgrade, balanceLine } from '../../src/ui/balancePreview';
-import { placeTownhall, putBuilding, twoIslandWorld } from '../sim/helpers';
+import { meetLevel, placeTownhall, putBuilding, twoIslandWorld } from '../sim/helpers';
 import { createWorld } from '../../src/sim/world';
 
 const bal = (w: World): number => totalTaxes(w) - totalUpkeep(w);
@@ -160,6 +160,11 @@ describe('balancePreview (I-078, AK-10, AK-14)', () => {
       for (const step of [1, 2]) {
         w.money = 1_000_000;
         for (const g of Object.keys(home(w).stock) as GoodId[]) home(w).stock[g] = 100;
+        const bb = w.buildings[b.id]!;
+        bb.level = (step + 1) as 2 | 3;
+        meetLevel(w, bb); // Fachkräfte und Standort der Zielstufe
+        if (step === 1) delete bb.level;
+        else bb.level = 2;
         const p = balanceAfterUpgrade(w, w.buildings[b.id]!);
         expect(p.before).toBe(bal(w));
         const r = upgradeBuilding(w, b.id);

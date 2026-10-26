@@ -276,8 +276,12 @@ describe('AK-PU-10..13 upgradeCard', () => {
   it('AK-PU-11 Gründe', () => {
     const w = rich();
     home(w).stock.cloth = 0;
-    const c = upgradeCard(w, put(w, 'fisher'))!;
-    expect(c).toMatchObject({ kind: 'next', reasons: ['✗ Zu wenig Stoff'], ok: false });
+    const f = put(w, 'fisher');
+    f.level = 2;
+    meetLevel(w, f); // Fachkräfte und Standort der Stufe 2 stehen
+    delete f.level;
+    const c = upgradeCard(w, f)!;
+    expect(c).toMatchObject({ kind: 'next', reasons: ['✗ Zu wenig Stoff (0 / 2)'], ok: false });
     const b = upgradeCard(w, put(w, 'fisher', { outageUntil: 99, state: 'burning' }))!;
     if (b.kind !== 'next') throw new Error('next erwartet');
     expect(b.ok).toBe(false);
@@ -337,6 +341,10 @@ describe('AK-15 Ausbau-Karte «Bilanz danach»', () => {
       const w = rich(edict);
       const f = put(w, 'fisher');
       for (const level of [1, 2]) {
+        f.level = (level + 1) as 2 | 3;
+        meetLevel(w, f); // Fachkräfte und Standort der Zielstufe
+        if (level === 1) delete f.level;
+        else f.level = 2;
         const c = upgradeCard(w, f)!;
         if (c.kind !== 'next') throw new Error('next erwartet');
         const before = balance(w);

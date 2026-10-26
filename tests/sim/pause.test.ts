@@ -15,7 +15,14 @@ import { step } from '../../src/sim/tick';
 import { paidCost, upgradeBuilding } from '../../src/sim/upgrade';
 import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
-import { forceRect, houseNearKontor, placeService, placeTownhall, putBuilding } from './helpers';
+import {
+  forceRect,
+  houseNearKontor,
+  meetLevel,
+  placeService,
+  placeTownhall,
+  putBuilding,
+} from './helpers';
 
 /** Zeile im Welt-Raster: Betriebe roh, angebunden, weit weg vom Kontor. */
 let slot = 0;
@@ -33,6 +40,15 @@ const run = (w: World, n: number): void => {
   }
 };
 const reason = (r: { ok: boolean; reason?: string }): string | undefined => r.reason;
+
+/** Erfüllt Fachkräfte und Standort der nächsten Stufe (Ausbau prüft sie seit AUSBAU-LOGIK T05). */
+function readyForNext(w: World, b: Building): void {
+  const g = b.level ?? 1;
+  b.level = (g + 1) as 2 | 3;
+  meetLevel(w, b);
+  if (g === 1) delete b.level;
+  else b.level = g as 2 | 3;
+}
 
 describe('M13-E1 Betrieb stilllegen (AK-M13STL-01…08)', () => {
   it('AK-M13STL-01 Ablauf: still, doppelt, anfahren, doppelt', () => {
@@ -167,6 +183,7 @@ describe('M13-E1 Betrieb stilllegen (AK-M13STL-01…08)', () => {
     expect(setPaused(w, f.id, true).ok).toBe(true);
     w.money = 100_000;
     for (const g of Object.keys(home(w).stock) as GoodId[]) home(w).stock[g] = 100;
+    readyForNext(w, f);
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     expect([f.level, f.paused]).toEqual([2, true]);
     const refund = refundCost(paidCost(f)).money;

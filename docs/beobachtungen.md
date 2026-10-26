@@ -280,3 +280,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-26 · Minuten-Umrechnung doppelt in sim und ui (niedrig)
 
 - Fundort: `src/sim/levelChecks.ts` (nutzt `MINUTE_MS` aus `src/sim/defs/timing.ts`), `src/ui/time.ts:23` (`perMinute`, Literal 60000). Beobachtung: dieselbe Umrechnung Ticks → je Minute steht zweimal; `src/sim` darf `ui` nicht importieren. Ursprung: AUSBAU-LOGIK T04 (Review). Einschätzung: `ui/time.ts` auf `MINUTE_MS` umstellen oder `perMinute` nach `src/sim` heben; klein, kein Folgeissue.
+
+## 2026-10-26 · REASON_TABLE kennt «Zu wenig X (have / need)» nicht (mittel)
+
+- Fundort: `src/ui/hints.ts` (`REASON_TABLE`, Muster `^Zu wenig (\S+)$` und `^Zu wenig Geld$`, Prüfung `'Zu wenig Stein'` in Z. 418). Beobachtung: `upgradeBuilding` liefert seit T05 Baustoffgründe mit Zahlen («Zu wenig Stein (0 / 2)»); die Tabelle trifft sie nicht, die freundliche Fassung entfällt. `tests/ui/hints.test.ts` (AK-UI-04) streicht das Zahlenende vor dem Abgleich. Ursprung: AUSBAU-LOGIK T05. Einschätzung: in T07 (UI) Muster erweitern und den Test-Workaround entfernen.
