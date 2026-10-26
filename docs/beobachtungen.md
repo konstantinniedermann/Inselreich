@@ -284,3 +284,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-25 · FIX-SCHIFF-A1: Picking und Karte ohne Sub-Tick-Bruchteil (niedrig)
 
 - Fundort: `shipAt` (`src/render/shipLane.ts`, genutzt von `src/ui/input.ts`, `src/ui/app.ts`) und `src/render/seaMap.ts`. Beobachtung: rufen `shipPose` mit `frac` 0; die gezeichnete Pose läuft bis zu einen Tick (kleiner als 1/Lane-Ticks) voraus. Ursprung: FIX-SCHIFF-A1. Einschätzung: kaum sichtbar, nur bei Treffer-Toleranz knapp; bei Bedarf `tickFrac` durchreichen.
+
+## 2026-10-25 · Messvorrang nur per Absprache (mittel)
+
+- Fundort: Studio-Werkzeug (`make messfenster`, TOOL-TESTLOCK). Beobachtung: ZEITPIN-D1 erreichte statt 5 nur 2 saubere Läufe je Stand, weil parallele Test-Controller (I-210, AUSBAU-LOGIK, plan-I-215) die Last auf 10–50 trieben, obwohl das Briefing Messvorrang nannte. Ursprung: ZEITPIN-D1 (R968). Einschätzung: Werkzeug-Kandidat `make messfenster-sperre` (Messpaket belegt eine Sperre, gezielte Tests warten), sonst Retro-Punkt Controller-Staffelung (R920 V1).

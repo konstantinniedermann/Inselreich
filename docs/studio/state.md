@@ -4,7 +4,7 @@
 Session-Ende nach (STUDIO.md, „Session-Start und -Ende"). Nur aktueller Stand, keine Historie —
 Historie steht in [rulings.md](rulings.md), Git und im Dashboard-Archiv.
 
-Stand: 2026-10-25 (Session 48c8580f, R922–R956; live REL-32 `38b9f9a0`, Save v18 live; REL-33 Kandidat `be94bffe` nicht gepusht; Verfassung 1.3, Handbuch 1.75 auf main, 1.77 im Kandidaten)
+Stand: 2026-10-25 (Session 8361ff82, R959–R970; live REL-32 `38b9f9a0`, Save v18 live; REL-33 Kandidat `be94bffe` nicht gepusht, Pin-Fix bereit; Verfassung 1.3, Handbuch 1.75 auf main, 1.78 auf `docs/coach-r957`)
 
 ## Release-Notizen
 
@@ -206,20 +206,18 @@ Spieltiefe, neue Spielmodi und Erweiterungen, Web-Recherche erwünscht, **keine 
 **R826** (Deckel 10 bei grüner Limit-Ampel, ≤ 3 Test-Controller, ≤ 2 Browser); **R853/R856** (Arbeiter-Meldungen an den Lead; **L0 sendet jedem Lead direkt nach dem Start seine agentId**, R879);
 **R868 V2** (Starts asynchron, Lead wartet ruhig). **R896** Spielregeln und Ausbau-Bedingungen fachlich erklärbar (Nachvollziehbarkeit und Logik, Gate-Kriterium); Nutzer-Playtests sind Input erster Ordnung, vor dem Pool. **R922** liegengebliebene Headless-Chrome (auch fremder Projekte) bei Störung selbst per `kill <PID>` beenden, nie das sichtbare Chrome, nie laufende eigene Browser-Läufe. **Push-Takt:** höchstens ein Push je Kalendertag (R816); voller Lauf nur `make push-check`. **R959** gelbe Ampel stoppt keine Wellen: neue Starts bis 5 h 85 %, ab 90 % Ende-Routine.
 
-1. **ZEITPIN-D1 zuerst** (`lead-tech`, R954): `tests/sim/perf.test.ts` AK-E0-15a D1 bei Last ≤ 4 auf main und Kandidat messen, neuer Pin mit Reserve per Ruling. Dann Integrator: main in `integrate/rel-33` @ `be94bffe` mergen,
-   `make push-check` auf dem neuen Hash, bei Exit 0 main vorspulen und **REL-33 pushen** (erster Push 2026-10-26, R816). Danach **REL-34**: `feat/i201` @ `569602ab` (Gate BEDENKEN angenommen R951: arc42-Konflikt, `feastKinds`-Erlaubnisliste
-   `'./council'`), Doku-Branches `design/rueckfracht` @ `86097053`, `design/volllast` (Rechnung+Spec @ `db9da014`), Specs/Pläne (s. 3).
-2. **Umsetzung, ≤ 3 Test-Controller, Messungen nur in `make messfenster` (Last ≤ 4), Controller staffeln (R920 V1):**
-   - **I-210** (`feat/i210` @ `fc4f21b9`, Budget 27 frei): Review T01, dann T02/T03, Strang B; Phase 2 nach I-201-Merge. Handoff `.studio/handoffs/2026-10-25-lead-tech-I-210.md`.
-   - **AUSBAU-LOGIK** (`feat/ausbau-logik` @ `ff7bc2aa`, Budget 37 frei): Review T01, T00-Zeitmessung neu, dann T02 ff. Handoff `.studio/handoffs/2026-10-25-lead-tech-AUSBAU-LOGIK.md`.
-   - **I-214** (Plan `plan/i214-gruendungsbrief` @ `a101aac3`, Budget 34, Auflagen A-1–A-6 R941, Filter R944) — startbereit.
-   - **GEBAEUDE-VARIANZ** (Plan `plan/gebaeude-varianz` @ `3312dc84`, Budget 58, R947) — nach AUSBAU-LOGIK-Start; Einheit 1 hat Vorrang (FLAECHE T13 wartet).
-   - **FLAECHE** (Plan `plan/flaeche` @ `abb0ae27`, Budget 56, R949) — FL-1 nach ORT-A T26, FL-3 nach GV Einheit 1.
-   - **HAFEN** (Plan `plan/hafen` @ `07bbb731`, Budget 60, R953) — erst **Gegenlesen** `lead-qa` des Nachtrags; L1 sofort danach, L2 nach INSELPROBEN/SEERECHT-Merge.
-   - INSELPROBEN T12–T14 + Final-Review, ORT-A T20c/T19/T23/T20b-2/T24–T26 (unverändert aus Vorsession), Stadtrecht, I-197/I-197b.
-3. **Testfrei:** Retro-Umsetzung R957 (V1–V3, `studio-coach`) vor neuen Plänen; Gate Spec **I-215 Volllast** (`design/volllast` @ `db9da014`, Save migrieren R952, Spec-Nachtrag AK-VL-17), danach Plan; Retro-Vorschläge 48c8580f annehmen/umsetzen; Pool-Eintrag PERF-FEST-STRESS (R950).
+1. **REL-33 pushen zuerst** (Integrator, R968): in `integrate/rel-33` @ `be94bffe` mergen: `fix/zeitpin-d1` @ `eeb98d88` (Pin 3,5 ms), `docs/coach-r886` → `docs/coach-r920` → `docs/coach-r957`, `docs/retro-48c8580f`,
+   `design/tiefe-5`, `design/ideen-20`, danach main (Doku-Commits R959–R970) und `docs/retro-8361ff82` (R971); `make push-check` auf dem neuen Hash, bei Exit 0 main vorspulen und **pushen (2026-10-26, R816)**.
+   Danach **REL-34**: `feat/i201` @ `569602ab` (Gate BEDENKEN R951), `design/rueckfracht` @ `86097053`, `design/volllast` @ `add15171` (Spec frei R963).
+2. **Umsetzung, ≤ 3 Test-Controller, Messungen nur bei Last ≤ 4, Controller staffeln (R920 V1; Messvorrang reicht nicht per Absprache, Beobachtung 2026-10-25):**
+   - **I-210** (`feat/i210` @ `af16ee3a`, Budget 27 frei): Review T03, Wand-an-Wand-Messung, dann weiter; Phase 2 nach I-201-Merge. Handoff `.studio/handoffs/2026-10-25-lead-tech-I-210.md`.
+   - **AUSBAU-LOGIK** (`feat/ausbau-logik` @ `38279658`, T01/T02 abgenommen, Budget 32 frei): T03 (Umsetzer per SendMessage fortsetzbar laut Handoff), T00-Messung, T04 ff.; Fixtures v6/v7 ins Final-Review (R969).
+   - **HAFEN L1** frei (R961) — erster freier Controller-Platz; Hinweise T05/T06 (Timeouts) ins Briefing.
+   - **I-214** (Plan `plan/i214-gruendungsbrief` @ `a101aac3`, Budget 34) — startbereit. **GEBAEUDE-VARIANZ**, **FLAECHE**, INSELPROBEN T12–T14, ORT-A, Stadtrecht, I-197/I-197b unverändert.
+3. **Testfrei:** **Gate Plan I-215** (`plan/i215-volllast` @ `ce3f742d`, fertig, Vorprüfliste 1–5 erfüllt; P-1–P-9 entscheiden, E-VL-1 ja R969; Umsetzung beantragt 16 Starts).
+   **«Neue Ufer» NU-1** (`design/neue-ufer`, R966/R970): lead-design sichtet Anhang 01 E-01–E-14, dann Spec-Nachtrag sonnet (Zahlen einsetzen, ≤ 40 KB, Anhang 02), Selbstabnahme, Gate Spec (ADR-010-Nachtrag). IDEEN-20-Folgen: Pitch I-222, Rechnungen I-221/I-223 (R967). E-080/E-081 (R971) nach REL-33-Merge in experimente.md eintragen (studio-coach); E-080: vor jedem Messpaket `make messfenster-sperre`.
 4. **Save-Kette:** Nummern nur per Merge-Reihenfolge (R909): SEERECHT 19 (REL-33), danach je main + 1 (I-210 T16, I-214, GV, HAFEN S3/S4, FLAECHE FL-3, AL Etappe 2, Volllast).
-5. **Erweiterung 2 «Neue Ufer»** (R958): Design-Paket I-194/I-195/I-196 mit TIEFE-4- und Rückfracht-Auflagen (R927, R933), nach den Umsetzungs-Strängen.
+5. **Erweiterung 2 «Neue Ufer»** (I-194): Designvorschlag frei (R966), Etappen NU-1…NU-4; NU-2 erst nach HAFEN/FLAECHE-Merge.
 6. Messfristen R750/R755 2026-10-30, M1 2026-11-02, E-072/E-073 2026-11-19.
 
 ## Aktuelles Projekt und Phase
@@ -245,7 +243,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Laufend
 
-- Session 8361ff82 aktiv (R959, Welle 1). Vorher: nichts aktiv. Session 48c8580f bei gelber Ampel (5 h ≈ 65 %) beendet; alle Leads haben übergeben (Handoffs `.studio/handoffs/2026-10-25-*`).
+- Nichts aktiv. Session 8361ff82 bei 5 h ≈ 88 % beendet (R959); alle Leads haben gesichert. Session 48c8580f bei gelber Ampel (5 h ≈ 65 %) beendet; alle Leads haben übergeben (Handoffs `.studio/handoffs/2026-10-25-*`).
 
 ## Parallele Sessions
 
@@ -255,6 +253,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Seit letzter Session erledigt
 
+- **Session 8361ff82 (R959–R970, 2026-10-25):** R959 Dauerauftrag Wellen bei gelb (bis 85 %, Ende ab 90 %); ZEITPIN-D1 Pin 3,5 ms (R968); Gate Spec I-215 + Nachtrag + Kurzprüfung, Spec frei (R960/R963), Plan I-215 fertig (`ce3f742d`); Gegenlesen HAFEN OK (R961); COACH-R957 Handbuch 1.78 (R964); TIEFE-5 Rivalen (R965); IDEEN-20 (R967); «Neue Ufer» Brainstorming, Designvorschlag frei, NU-1 Werte und Spec als Zwischenstand (R962/R966/R970); I-210 T02/T03, AUSBAU-LOGIK T01/T02 (R969).
 - **Session 48c8580f (R922–R956, 2026-10-25):** R922 Dauerauftrag Headless-Chrome; Gates Spec HAFEN/FLAECHE/I-214 + Nachträge + Gegenlesen; Gegenlesen GV/AL; **sechs Pläne** (I-210, AUSBAU-LOGIK, HAFEN, GV, FLAECHE,
   I-214) mit Gate Plan und Nachträgen, alle startbereit (HAFEN nach Gegenlesen); A1-Browser-Beleg + Konfliktmerge; REL-33 gebündelt (Push offen); I-201 abgenommen (R950) + Gate Merge; I-210 T00/T01, AUSBAU T01;
   Art-Brief HAFEN; TIEFE-4, IDEEN-19, Rechnungen Rückfracht und Volllast, Spec Volllast; Handbuch 1.77 (COACH-R920); Kurz-Retro.
@@ -273,7 +272,7 @@ main` beim Release, `CI` mit `cancel-in-progress`.
 
 ## Budget
 
-Alle Freigaben dieser Session verfallen mit Session-Ende; Reste neu erteilen: I-210 27, AUSBAU-LOGIK 37, I-214 34, GV 58, FLAECHE 56, HAFEN 60, INSELPROBEN 31 von 43, ORT-A laut Handoff, Stadtrecht 25, I-197 4.
+Alle Freigaben dieser Session verfallen mit Session-Ende; Reste neu erteilen: I-210 27, AUSBAU-LOGIK 32, I-214 34, GV 58, FLAECHE 56, HAFEN 60, INSELPROBEN 31 von 43, ORT-A laut Handoff, Stadtrecht 25, I-197 4, I-215 Umsetzung beantragt 16 (Parallelität 2), design-NEUE-UFER 1 von 4.
 
 ## Offene Entscheide
 

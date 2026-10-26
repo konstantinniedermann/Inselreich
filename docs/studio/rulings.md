@@ -2890,3 +2890,77 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: «Neue Ufer»
 Regelbezug: R862, R896, R962 · Kosten bei Irrtum: zwei Pool-Einträge.
 
 Entscheider: L0 · Anlass: Bericht TIEFE-5 · ADR: —
+
+## R966 · 2026-10-25 · Gate Brainstorming «Neue Ufer» OK
+
+Ruling: Designvorschlag I-194 «Neue Ufer» (`design/neue-ufer` @ `464a6ef5`, `docs/superpowers/specs/2026-10-25-neue-ufer-design.md`) **freigegeben** (Gate Brainstorming). Etappen NU-1 Kartenrand, NU-2
+Nordinsel, NU-3 Lebensader, NU-4 Zwei Reiche (≈ 12–15 Pakete, je Etappe Save main + 1 nach R909). Recherche-Zusatz angenommen: jedes Fundstück wirkt schon in NU-1, 2–3 Wahl-Karten je Fahrt. **NU-a ja**
+(Namen «Kartenhaus», «Hüttenleute», «Nordbürger», «Holzschären», «Wrackfeld»); **NU-b ja** (Nordküste nach NU-1 sichtbar als «vereist, noch keine Landung möglich»); **NU-c ja** (Controller-Lauf «Zwei
+Reiche» erst mit NU-4). Spec NU-1 und Werte-Rechnung (Anhang 01) laufen; danach Gate Spec.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: HAFEN, FLAECHE (NU-2), Erweiterung 1 (Nutzer-Session R519)
+Regelbezug: R862, R896, R958, R962 · Kosten bei Irrtum: Spec-Nachtrag.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-NEUE-UFER · ADR: —
+
+## R967 · 2026-10-25 · IDEEN-20 Runden-Ruling
+
+Ruling: IDEEN-20 (`design/ideen-20` @ `327cde3c`, enthält IDEEN-18/19 und R928-Nachführung) **abgenommen**. Entscheide wie in der Rangliste: **I-222** Erbstadt → Pitch als Baustein Inselproben Schnitt 2
+(nach Inselproben, I-061, I-128); **I-221** Konzessions-Auktion → Kosten-Rechnung (Kasse neben Stadtrecht), dann Baustein Rivalen; **I-223** Zehnt → Rechnung, dann Kurzdesign; **I-220** geparkt (erster
+Rivalen-Baustein, nach «Neue Ufer»); **I-224** geparkt (Baustein I-195); **I-225** geparkt bis Tagesinsel live (mit I-209); **I-226** verworfen (dominante Wahl im Frühspiel). «Wette» nicht eingetragen (bestraft
+den besseren Lauf, Inselproben §13). Nur `design/ideen-20` wird gemergt (mit REL-33, R964); `design/ideen-18`/`-19` gelten damit als mitgemergt. Konflikte in `docs/ideen.md` mit `design/i210-bittschrift`
+und `design/gruendungsbrief` löst der Zweitmergende nach Abschnitt.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Rivalen (Erweiterung 1, K5 Ratsbank), Inselproben
+Regelbezug: R862, R928, R965 · Kosten bei Irrtum: Pool-Einträge.
+
+Entscheider: L0 · Anlass: Bericht lead-design IDEEN-20 · ADR: —
+
+## R968 · 2026-10-25 · ZEITPIN-D1: Pin 3,5 ms
+
+Ruling: Zeit-Pin `tests/sim/perf.test.ts` AK-E0-15a D1 von 2,5 auf **3,5 ms** (`fix/zeitpin-d1` @ `eeb98d88`) **angenommen**: main 2,76 ms, Kandidat 2,53 ms (je 2 saubere Läufe bei Last ≤ 4; 5 Läufe
+nicht erreicht wegen paralleler Controller, Befund trotzdem eindeutig); naiver Code 18,6 ms bleibt rot. 4,5 ms (R392 1,5-fach) verworfen, weil kleinere Regressionen später auffielen. Folgesession zuerst
+Integrator: `fix/zeitpin-d1` und die Doku-Branches aus R964/R967 in `integrate/rel-33`, main hineinmergen, `make push-check`, bei Exit 0 main vorspulen und REL-33 pushen (2026-10-26, R816). Befund
+«Messvorrang nur per Absprache» → `docs/beobachtungen.md`.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-33, alle Branches mit Zeit-Pins
+Regelbezug: R392, R815, R848, R954 · Kosten bei Irrtum: Regression bis +25 % unbemerkt.
+
+Entscheider: L0 · Anlass: Bericht lead-tech ZEITPIN-D1 · ADR: —
+
+## R969 · 2026-10-25 · Sicherung I-210, AUSBAU-LOGIK, Plan I-215
+
+Ruling: (1) **I-210** `feat/i210` @ `af16ee3a` gesichert; offen Review T03 und Wand-an-Wand-Messung (Folge-Lead nach Handoff). (2) **AUSBAU-LOGIK** `feat/ausbau-logik` @ `38279658`, T01/T02 abgenommen;
+`workforceTier` 2/3 (Stufe 4 = 4 in T11) gemäss Spec R3/AK-AL-03 **bestätigt**; neu erzeugte Fixtures `save-v6.json`/`save-v7.json` (nur `money`, `stock.cloth`) **prüft das Final-Review**; T00-Messung im
+nächsten freien Messfenster. (3) **Plan I-215** `plan/i215-volllast` @ `f61d2013` als **Entwurf** gesichert; offen Gate-Vorprüfliste (3) Messung und (4) Index-Abgleich, dann Gate Plan. **E-VL-1 ja**: wer
+nach Volllast merged (I-210, AUSBAU-LOGIK), setzt seinen Faktor vor die Volllast-Zeile und ergänzt den Kombifall (Auflage im jeweiligen Gate Merge). P-1–P-9 entscheidet L0 mit dem Gate Plan.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: `levels.ts` (`cycleOf`, `buildingUpkeep`) I-201/I-210/AUSBAU-LOGIK/I-215
+Regelbezug: R392, R909, R959, R963 · Kosten bei Irrtum: Merge-Nacharbeit in `levels.ts`.
+
+Entscheider: L0 · Anlass: Berichte lead-tech I-210, AUSBAU-LOGIK, plan-I-215 · ADR: —
+
+## R970 · 2026-10-25 · «Neue Ufer» NU-1 Zwischenstand; Spec-Entscheide E1–E5
+
+Ruling: `design/neue-ufer` gesichert (Designvorschlag `464a6ef5`, Pool `27279b2a`, Anhang 01 Werte NU-1 `d9747112` Zwischenstand «trägt», Spec NU-1 `e2f2e727` Zwischenstand, 33 AK). **E1 ja**
+(Routenschiff wartet bis zum nächsten Heimat-Anlegen); **E2: Migration**, nicht Abweisen — gegen die Empfehlung, weil das Studio jeden Save-Wechsel seit v9 migriert (zuletzt R952) und der neue Zustand
+leer startet (Nebel zu, keine Expedition), also billig; Abweisen nur für `SAVE_VERSION + 1` und beschädigte Felder. **E3 ja** (Namen), **E4 ja** (Routenladung nach Heimkehr-Regel, Überlauf verfällt mit
+Meldung), **E5 ja** (Aufdecken erst bei Rückkehr). Anhang 01 E-01–E-14 sichtet `lead-design` in der Folgesession vor dem Spec-Nachtrag (sonnet, E-061: einsetzen, kürzen auf ≤ 40 KB bzw. Anhang ≤ 25 KB,
+Anhang 02 für Zahlen); dann Selbstabnahme und Gate Spec. Gate-Hinweise: ADR-010-Nachtrag (Zähler und gezogene Kartenfolge im Save), Kartenhaus nicht brennbar.
+
+Verfassung berührt?: nein (§3: ältere Stände dürfen ladbar bleiben) · Überschneidung mit offenen Paketen: Save-Kette (R909), HAFEN
+Regelbezug: R909, R952, R962, R966, E-061 · Kosten bei Irrtum: eine Migration mehr.
+
+Entscheider: L0 · Anlass: Bericht lead-design design-NEUE-UFER · ADR: —
+
+## R971 · 2026-10-25 · Kurz-Retro 8361ff82 abgenommen; Session-Ende
+
+Ruling: Retro `docs/retro-8361ff82` @ `5f8d0ac3` **abgenommen**. **E-080 ja:** vor jedem Messpaket setzt L0 die Messfenster-Sperre (`make messfenster-sperre`) statt nur «Messvorrang» ins Briefing zu
+schreiben (Schwelle: Läuferzahl in 2 von 2 Messpaketen, Frist 2026-11-19). **E-081 ja, vorläufig:** neue Starts nur, solange Stand + Agenten × 1,8 ≤ 88 % (ergänzt R959; Schwelle ≤ 1 Zwischenstand je Session
+über 3 Sessions, Rückfall R959 unverändert). **M2** (Sperre bei ZEITPIN-D1 gesetzt?) in der nächsten Retro. Einträge E-080/E-081 in `experimente.md` und die `lernen.md`-Ersetzung macht `studio-coach` nach
+dem REL-33-Merge. `docs/retro-8361ff82` geht mit in REL-33. Session-Ende bei 5 h ≈ 88 %: Metriken `docs/studio/metriken/S-2026-10-25-8361ff82.md`; kein Push heute (R816).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-33, alle Messpakete
+Regelbezug: R816, R826, R959, R968 · Kosten bei Irrtum: zwei passive Messgrössen.
+
+Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —
