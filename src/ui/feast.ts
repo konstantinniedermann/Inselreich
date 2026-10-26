@@ -8,6 +8,8 @@ import {
   feastState,
   harvestActive,
 } from '../sim/feast';
+import { FEAST_VOUCHER_GOOD } from '../sim/defs/petitions';
+import { voucherAt } from '../sim/petitionEffect';
 import { goodUnlocked } from '../sim/unlocks';
 import type { Building, GoodId, World } from '../sim/types';
 import { formatClock } from './time';
@@ -24,9 +26,12 @@ export interface FeastButtonView {
   reason: string | null;
 }
 
+const VOUCHER_NOTE = 'Festtrunk: ohne Rum, ohne Abklingzeit';
+
 /** Preis einer Festart als Text, z. B. «10 Rum, 15 Stoff» (Schlüsselreihenfolge von `cost`). */
-export function feastCostText(kind: FeastKind): string {
+export function feastCostText(kind: FeastKind, withoutVoucherGood = false): string {
   return (Object.entries(FEAST_KINDS[kind].cost) as [GoodId, number][])
+    .filter(([good]) => !(withoutVoucherGood && good === FEAST_VOUCHER_GOOD))
     .map(([good, n]) => `${n} ${GOODS[good].name}`)
     .join(', ');
 }
@@ -35,12 +40,17 @@ export function feastCostText(kind: FeastKind): string {
 export function feastButtons(world: World, b: Building): FeastButtonView[] | null {
   if (BUILDING_DEFS[b.defId].service !== 'faith') return null;
   if (!goodUnlocked(world, 'rum')) return null;
+  const voucher = voucherAt(world, b.id);
   const ready = feastState(world, b).phase === 'ready';
   return FEAST_KIND_IDS.map((kind) => {
     const block = feastBlockReason(world, b, kind);
     return {
       kind,
-      label: `${FEAST_KINDS[kind].name} · ${feastCostText(kind)}`,
+      label: voucher
+        ? [FEAST_KINDS[kind].name, feastCostText(kind, true), VOUCHER_NOTE]
+            .filter((x) => x !== '')
+            .join(' · ')
+        : `${FEAST_KINDS[kind].name} · ${feastCostText(kind)}`,
       disabled: block !== null,
       title: block ?? '',
       reason: ready ? block : null,

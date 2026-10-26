@@ -6,6 +6,7 @@ import {
   PETITION_IDS,
   type PetitionId,
 } from '../../src/sim/defs/petitions';
+import { TAX_LEVELS } from '../../src/sim/defs/tiers';
 import { GOODS } from '../../src/sim/defs/goods';
 import { home } from '../../src/sim/world';
 import type { World } from '../../src/sim/types';
@@ -74,6 +75,16 @@ describe('AK-BS-25 Schiffsraum-Hinweis nur bei B6', () => {
 });
 
 describe('AK-BS-18 Texte (P1)', () => {
+  it('Lohn B4 nennt die Zahl der Aufstiegsuhr, B5 Frist und Abklingzeit', () => {
+    const b4 = petitionCardModel(worldFor('bell'), 50)!.yes.reward;
+    expect(b4).toBe(
+      `in 1 min für 3 min: Aufstiegsuhr ${TAX_LEVELS.low.upgradeWait} T im Kapellenkreis (wie Aufstiegsfest)`,
+    );
+    const b5 = petitionCardModel(worldFor('feastDrink'), 50)!.yes.reward;
+    expect(b5).toBe(
+      'in 1 min, höchstens 10 min: nächstes Fest an der Kapelle ohne Rum und ohne Abklingzeit',
+    );
+  });
   it('Kosten, Lohn, Stoffzeile, Spareffekt', () => {
     const m = petitionCardModel(previewWorld(), 50)!;
     expect(m.yes.cost).toBe('jetzt −10 Stoff');

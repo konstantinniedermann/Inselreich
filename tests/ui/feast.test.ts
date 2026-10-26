@@ -207,3 +207,26 @@ describe('houseFeastLine', () => {
     expect(houseFeastLine(w, house)).toBeNull();
   });
 });
+
+describe('Festtrunk (B5) an den Festknöpfen', () => {
+  it('Gutschein: Knöpfe tragen den Hinweis und keinen Rum; nach dem Fest weg', () => {
+    const { w, chapel } = setup();
+    rich(w);
+    putBuilding(w, HOME, 'quarry', chapel.x, chapel.y + 3);
+    chapel.connected = true;
+    w.petitions.effects.push({
+      id: 'feastDrink',
+      answer: 'yes',
+      until: w.tick + 6000,
+      anchor: chapel.id,
+    });
+    const v = feastButtons(w, chapel)!;
+    expect(v.map((x) => x.label)).toEqual([
+      'Aufstiegsfest · Festtrunk: ohne Rum, ohne Abklingzeit',
+      'Erntefest · 15 Stoff · Festtrunk: ohne Rum, ohne Abklingzeit',
+      'Markttag · 5 Glas · Festtrunk: ohne Rum, ohne Abklingzeit',
+    ]);
+    expect(holdFeast(w, chapel.id, 'ascension').ok).toBe(true);
+    expect(feastButtons(w, chapel)!.some((x) => x.label.includes('Festtrunk'))).toBe(false);
+  });
+});

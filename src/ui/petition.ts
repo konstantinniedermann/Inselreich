@@ -2,7 +2,7 @@
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { TICK_MS } from '../sim/defs/timing';
-import { TIERS } from '../sim/defs/tiers';
+import { TAX_LEVELS, TIERS } from '../sim/defs/tiers';
 import {
   FRUGAL_PCT,
   FRUGAL_TICKS,
@@ -71,9 +71,9 @@ function rewardText(def: PetitionDef, pv: PetitionPreview): string {
     case 'storage':
       return `${span}: Lager ${STORAGE_CAP + r.plus} für ${r.goods.map(name).join(', ')}`;
     case 'upgradeWait':
-      return `${span}: kürzere Aufstiegsuhr im Kapellenkreis`;
+      return `${span}: Aufstiegsuhr ${TAX_LEVELS.low.upgradeWait} T im Kapellenkreis (wie Aufstiegsfest)`;
     case 'feastVoucher':
-      return `${when}: das nächste Fest braucht keinen Rum`;
+      return `${when}, höchstens ${minutes(def.duration)}: nächstes Fest an der Kapelle ohne Rum und ohne Abklingzeit`;
   }
 }
 

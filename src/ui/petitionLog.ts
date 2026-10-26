@@ -4,7 +4,7 @@ import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
 import { FRUGAL_PCT, PETITIONS, type PetitionDef } from '../sim/defs/petitions';
 import { TIERS } from '../sim/defs/tiers';
-import { overcrowdCap, petitionCycle, storageCap } from '../sim/petitionEffect';
+import { bellActive, overcrowdCap, petitionCycle, storageCap } from '../sim/petitionEffect';
 import { petitionCost, type PetitionEvent } from '../sim/petitions';
 import { houseCap } from '../sim/population';
 import type { Building, GoodId, PetitionEffectEntry, World } from '../sim/types';
@@ -104,6 +104,12 @@ export function effectLines(world: World, b: Building): string[] {
         out.push(
           `${b.house.inhabitants} / ${base} (${PETITIONS[e.id].name} bis ${formatClock(e.until)})`,
         );
+    }
+    if (bellActive(world, b)) {
+      const bell = list.find(
+        (x) => x.answer === 'yes' && PETITIONS[x.id].reward.kind === 'upgradeWait',
+      );
+      if (bell !== undefined) out.push(`Glockenweihe bis ${formatClock(bell.until)}`);
     }
     const needs = TIERS[b.house.tier].needs;
     for (const e of list) {
