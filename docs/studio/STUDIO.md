@@ -1,6 +1,6 @@
 # Studio-Handbuch Inselreich
 
-Version: 1.77 · Stand: 2026-10-25 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
+Version: 1.78 · Stand: 2026-10-25 · Änderungen nur über den Verbesserungsprozess (siehe unten), Verlauf in [CHANGELOG.md](CHANGELOG.md)
 
 Verbindliche Betriebsanleitung für alle Agenten des Studios; Rangfolge und Regeln des Nutzers in
 der [Verfassung](VERFASSUNG.md) (§1). Dieses Handbuch regelt, **wie** das Team arbeitet, und ändert
@@ -150,11 +150,11 @@ roster.md) — sonst erbt der Agent das Modell der Session.
 Modellstufen zentral hier (R10); Aliase statt fester Modell-IDs. Die Wahl richtet sich nach der
 Aufgabe (R71).
 
-| Stufe  | Alias    | Einsatz                                                                                                                                                                                                                               |
-| ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| stark  | `opus`   | Design-Lead, Tech-Lead beim Plan, Spec-Autor, Lizenzprüfung, Final-Review, Delta-Review frisch, Meilenstein-Retro                                                                                                                     |
-| mittel | `sonnet` | Controller in der Umsetzung, `lead-qa`-Gate-Urteile, `lead-production`, Task-Reviews, Kurz-Retro, Umsetzung, Recherche, Spec-Nachtrag und Kurzdesign Stufe leicht (E-061), Plan-Instanz bei Stufe leicht und Werkzeug-Paketen (E-054) |
-| klein  | `haiku`  | mechanische Prüfungen (Formatierung, Links, Listen abgleichen)                                                                                                                                                                        |
+| Stufe  | Alias    | Einsatz                                                                                                                                                                                                                                                                        |
+| ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| stark  | `opus`   | Design-Lead, Tech-Lead beim Plan, Spec-Autor, Lizenzprüfung, Final-Review, Delta-Review frisch, Meilenstein-Retro                                                                                                                                                              |
+| mittel | `sonnet` | Controller in der Umsetzung, `lead-qa`-Gate-Urteile, `lead-production`, Task-Reviews, Kurz-Retro, Umsetzung, Recherche, Spec-Nachtrag und Kurzdesign Stufe leicht (E-061), Plan-Instanz bei Stufe leicht und Werkzeug-Paketen (E-054), Plan-Nachtrag aus Gate-Auflagen (E-079) |
+| klein  | `haiku`  | mechanische Prüfungen (Formatierung, Links, Listen abgleichen)                                                                                                                                                                                                                 |
 
 Ein näher rückendes Nutzungslimit ist nie ein Grund für ein schwächeres Modell; L0 fährt
 stattdessen herunter (R69, R71).
@@ -176,7 +176,8 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
   `(Final-Review)`, `(Delta-Review frisch)` (neuer Start nach BEDENKEN oder ZURÜCK, R774; danach Anlass, z. B. `(Delta-Review frisch nach ZURÜCK)`), `(Meilenstein-Retro)`
 - `sonnet`: `Modell: sonnet (Controller in der Umsetzung)`, `(lead-qa-Gate-Urteile)`,
   `(lead-production)`, `(Task-Reviews)`, `(Kurz-Retro)`, `(Umsetzung)`, `(Recherche)`,
-  `(Spec-Nachtrag und Kurzdesign Stufe leicht)`, `(Plan-Instanz bei Stufe leicht und Werkzeug-Paketen)`
+  `(Spec-Nachtrag und Kurzdesign Stufe leicht)`, `(Plan-Instanz bei Stufe leicht und Werkzeug-Paketen)`,
+  `(Plan-Nachtrag aus Gate-Auflagen)`
 - `haiku`: `Modell: haiku (mechanische Prüfungen (Formatierung, Links, Listen abgleichen))`; die Kopfzeile
   ist für `haiku` nie erzwungen, weil es die unterste Stufe ist.
 
@@ -188,16 +189,17 @@ sind genau diese Bezeichnungen; nach dem Präfix darf Text folgen (z. B. `(Final
   [verbesserung.md](verbesserung.md#limit-sensor).
 - **Herunterfahren (R69), Verantwortung von L0:** Steigt das 5-h-Fenster, fährt L0 herunter: weniger
   parallel, weniger Starts, zuerst Angefangenes abschliessen (Reviews, Fix-Runden, Merges, R166),
-  `state.md` nachführen, Session beenden. Richtwerte: ab etwa 60 % keine neuen Wellen, ab etwa
-  80 % Session-Ende-Routine; Wochenfenster über 80 %: Parallelität reduzieren. Kein Downgrade (R71).
+  `state.md` nachführen, Session beenden. Richtwerte (Dauerauftrag R959, ersetzt «60 %» und «80 %»): **neue Starts bis
+  85 %**, ab 85 % nur Angefangenes abschliessen und sichern, **ab 90 % Session-Ende-Routine** (Puffer für die
+  Übergabe, R66); Wochenfenster über 80 %: Parallelität reduzieren. Kein Downgrade (R71).
 - **Studio-Deckel und Limit-Ampel (R826, R823; ersetzt R698 «6» und «≤ 8» aus R424):** Der Studio-Deckel
   beträgt **10 Agenten gleichzeitig**, davon höchstens **3 Controller mit Testläufen** und **≤ 2 Browser-Läufe**.
-  Die Stufen der Ampel (`.studio/limits.json`) konkretisieren die Richtwerte von R69 (60 % und 80 %), sie widersprechen ihnen nicht:
+  Die Stufen der Ampel (`.studio/limits.json`) bleiben als Anzeige; was L0 je Stufe tut, regeln die Richtwerte von R69 in der Fassung R959:
   **grün** (5-h-Fenster < 60 % und Woche < 80 %) · **gelb** (5-h 60–80 % oder Woche > 80 %) · **rot** (5-h > 80 %).
   - **Pflicht für L0 bei grün:** den Deckel aktiv voll halten, nach jedem Bericht nachfüllen und jeden Strang
     mit eigenem Agenten bearbeiten (Umsetzung, Pläne, Specs, Gates, Pflege, Ideen; R475, R445).
-  - **Gelb:** keine neuen Wellen, Angefangenes abschliessen (Wochenfenster > 80 %: zusätzlich Parallelität reduzieren, R69).
-  - **Rot:** Session-Ende-Routine.
+  - **Gelb:** stoppt keine neuen Wellen (R959); L0 füllt den Deckel weiter wie bei grün. Wochenfenster > 80 %: Parallelität reduzieren (R69).
+  - **Rot (5-h > 80 %):** bis 85 % weiter neue Starts; 85–90 % keine neuen Starts, nur Angefangenes abschliessen und sichern; ab 90 % Session-Ende-Routine (R959, R66).
   - **Engpass Rechnerlast:** Zusätzliche Plätze werden mit testfreier Arbeit gefüllt (Plan, Spec, Gate, Pflege, Ideen), nicht leer gelassen.
   - **Fensterregel (R803):** Last ≤ 4 gehört den Messungen (Lastgrenze R329), gezielte Tests laufen bei Last 4–8.
 - **Sessiongrösse (R68, E-010):** Eine Session umfasst etwa einen Abschnitt (Welle bzw. Phase). L0
@@ -410,8 +412,8 @@ Regeln dazu:
   `.studio/qa/<id>/stand.md` mindestens alle 30 min, nicht erst nach einem Teil.
   **Fix-Runde nach ZURÜCK (R330 (4)):** Eine Fix-Runde nach Gate ZURÜCK startet in derselben Session, sofern
   Budget und Wanduhr-Limit es erlauben; sonst Eintrag in `state.md` und Start in der nächsten Session.
-  **Final-Review ZURÜCK (R553):** Nach ZURÜCK und Fix-Runde ist ein Delta-Review desselben `opus`-Reviewers
-  (`SendMessage`-Fortsetzung, kein neuer Start; `git diff <final-review-commit>..HEAD`) Pflicht, bevor der Bericht an L0 geht.
+  **Final-Review ZURÜCK (R553, Wortlaut R957 V1):** Nach ZURÜCK und Fix-Runde ist ein Delta-Review Pflicht, bevor der Bericht an L0 geht:
+  Delta-Review = frischer `opus`-Start (R673/R774), nie Fortsetzung desselben Reviewers per `SendMessage`; Umfang `git diff <final-review-commit>..HEAD`.
   **Release mit einem Häppchen (R249 (1)):** Hat das Häppchen ein `opus`-Final-Review und einen
   Browser-Check auf demselben Stand, prüft das Release-Review nur das Delta seit dem Final-Review
   (`git diff <final-review-commit> <kandidat> -- src/ tests/`, Teilbeleg, `make check-ci-perf`;

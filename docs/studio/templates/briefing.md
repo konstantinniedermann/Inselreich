@@ -38,7 +38,8 @@ Prozessstufe: <leicht|voll>
    jedes Paket mit `.ts`-Änderung „schnelle Make-Prüfungen ohne Testlauf: `npx tsc --noEmit`, `make lint`, `make zeittests`, `make conflicts` Exit 0 (Vitest prüft keine Typen, R398, R410)“;
    jedes Paket mit neuen Tests „Rot-Beleg: je neuem Testfall die rote Ausgabe vor dem Fix im Task-Bericht; Commit-Reihenfolge allein genügt nicht (R395, R410)“;
    „Entfällt eine Vorbedingung, nennt die Abnahme die Fehlerrichtung und belegt, dass das abhängige Gate erfüllbar bleibt (R395)“;
-   Plan-Paket „Format nach E-010: Index plus Task-Dateien ≤ 10 KB (R417)“;
+   Plan-Paket „Format nach E-010: Index plus Task-Dateien ≤ 10 KB (R417)“ und „Gate-Vorprüfliste vor ‹Plan fertig› im Bericht abhaken, je mit Fundstelle: (1) Delta-Review = frischer opus-Start (R673/R774); (2) ‹Last ≤ 4 nötig› in jedem Messtask; (3) Zeit-Tests mit Messwert (R392/R905); (4) Index gegen Tasks widerspruchsfrei; (5) jeder angenommene Ruling-Entwurf einem Task zugeordnet (R957 V2, E-078)“;
+   Plan-Nachtrag aus Gate-Auflagen „`sonnet` (Persona-Standard); Auflage ‹Inhaltslücke› (hoch) → `opus (Tech-Lead beim Plan)` (R957 V3, E-079)“;
    jedes Paket mit Doku-Commit „`make docs-check` Exit 0 vor dem Commit (Übergang bis TOOL-PRETTIER-HOOK, R417)“;
    Integrator-Briefing „`make check` und `make check-ci-perf` je mit Exit-Code im Bericht (R459, E-058)“; `make push-check` Exit 1 bei ruhiger Startlast ist Substanz, kein erneuter Lauf; „höchstens n Läufe“ gilt nur für Exit 2 (R598 V3); bis zum Merge-Bericht committet L0 nichts auf main (R769 V2); Arbeitsort „Worktree `.worktrees/integrate`, nie der Hauptcheckout; bei Widerspruch gilt die Persona und du meldest; anderer Hash als im Ruling nur nach Meldung pushen (R565 V2, E-063)“;
    jedes Paket mit Plan „Prüfschritte des Plans (z. B. Task-Reviews) nicht zur Budgetersparnis streichen — Mehrbedarf melden“;
