@@ -18,6 +18,7 @@ const DEFAULTS = {
   reduceMotion: 'auto' as const,
   crisisLevel: 'normal' as const,
   unlockMode: 'stepwise' as const,
+  petitionsOn: true,
 };
 
 describe('parseSettings (AK-U2-05)', () => {
@@ -204,6 +205,7 @@ describe('M7-U1 Einstellungen (AK-U1-01, AK-U1-01b, RF-3a)', () => {
       reduceMotion: 'on',
       crisisLevel: 'mild',
       unlockMode: 'all',
+      petitionsOn: false,
       zukunft: 1,
     };
     expect(JSON.parse(serializeSettings(parseSettings(JSON.stringify(all))))).toEqual(all);

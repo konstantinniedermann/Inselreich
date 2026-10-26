@@ -1,4 +1,5 @@
 import { DEFAULT_NEW_GAME_CRISIS_LEVEL } from '../sim/defs/crises';
+import { DEFAULT_NEW_GAME_PETITIONS_ON } from '../sim/defs/petitions';
 import { fail, ok, type CrisisLevel, type Result } from '../sim/types';
 
 /** Krisenstufen in der Reihenfolge der Auswahl. */
@@ -25,6 +26,8 @@ export interface Settings {
   crisisLevel: CrisisLevel;
   /** Freischaltung für „Neue Insel“ (M10): Schritt für Schritt oder alles frei. */
   unlockMode: UnlockMode;
+  /** Bittschriften für „Neu“ und „Neue Insel“ (I-210); das laufende Spiel behält seine Wahl. */
+  petitionsOn: boolean;
   /** Fremde Felder des gemeinsamen Formats (M7: master, music, …); unverändert zurückgeschrieben. */
   extra?: Record<string, unknown>;
 }
@@ -40,6 +43,7 @@ const KNOWN_KEYS: readonly string[] = [
   'reduceMotion',
   'crisisLevel',
   'unlockMode',
+  'petitionsOn',
   'volume',
 ];
 
@@ -54,6 +58,7 @@ export const DEFAULT_SETTINGS: Readonly<Settings> = {
   reduceMotion: 'auto',
   crisisLevel: DEFAULT_NEW_GAME_CRISIS_LEVEL,
   unlockMode: 'stepwise',
+  petitionsOn: DEFAULT_NEW_GAME_PETITIONS_ON,
 };
 
 /** Zahl -> auf 0…1 geklemmt; alles andere (Text, NaN, ±Infinity, fehlend) -> Standard. */
@@ -93,6 +98,7 @@ export function parseSettings(json: string | null): Settings {
     unlockMode: UNLOCK_MODE_IDS.includes(o.unlockMode as UnlockMode)
       ? (o.unlockMode as UnlockMode)
       : DEFAULT_SETTINGS.unlockMode,
+    petitionsOn: typeof o.petitionsOn === 'boolean' ? o.petitionsOn : DEFAULT_SETTINGS.petitionsOn,
   };
   if (Object.keys(extra).length > 0) settings.extra = extra;
   return settings;

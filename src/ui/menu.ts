@@ -42,7 +42,9 @@ export interface MenuActions {
   load(slot: Slot): void;
   crisisLevel(): CrisisLevel;
   unlockMode(): UnlockMode;
-  newIsland(level: CrisisLevel, unlockMode: UnlockMode): void;
+  /** Vorbelegung des Kästchens «Bittschriften» (I-210); fehlt sie, gilt «an». */
+  petitionsOn?(): boolean;
+  newIsland(level: CrisisLevel, unlockMode: UnlockMode, petitionsOn?: boolean): void;
   /** Tastenliste für das Menü (nur Freigeschaltetes, `hotkeyList(world)`). */
   hotkeys(): { key: string; label: string }[];
   seed(): number;
@@ -102,13 +104,22 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
   unlockSelect.setAttribute('aria-label', 'Freischaltung für die neue Insel');
   for (const id of UNLOCK_MODE_IDS) unlockSelect.append(new Option(UNLOCK_MODE_LABELS[id], id));
   unlockSelect.value = a.unlockMode();
+  const petitionBox = document.createElement('input');
+  petitionBox.type = 'checkbox';
+  petitionBox.checked = a.petitionsOn?.() ?? true;
+  petitionBox.setAttribute('aria-label', 'Bittschriften für die neue Insel');
   const newRow = document.createElement('div');
   const showNew = (): void => {
     const start = btn('Neue Insel', () =>
       renderConfirm(
         newRow,
         newIslandPrompt(hasAutosave(a.listSaves())),
-        () => a.newIsland(select.value as CrisisLevel, unlockSelect.value as UnlockMode),
+        () =>
+          a.newIsland(
+            select.value as CrisisLevel,
+            unlockSelect.value as UnlockMode,
+            petitionBox.checked,
+          ),
         () => {
           showNew();
           newRow.querySelector('button')?.focus();
@@ -124,6 +135,9 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
   const unlockLabel = document.createElement('label');
   unlockLabel.className = 'menu-field';
   unlockLabel.append('Freischaltung: ', unlockSelect);
+  const petitionLabel = document.createElement('label');
+  petitionLabel.className = 'menu-field';
+  petitionLabel.append(petitionBox, ' Bittschriften (Bewohner bitten um Waren)');
   const honors = a.honors();
   const honorBox = document.createElement('div');
   honorBox.className = 'menu-honors';
@@ -135,7 +149,7 @@ export function openMenu(host: HTMLElement, a: MenuActions, opener: HTMLElement)
       Object.assign(document.createElement('p'), { className: 'note', textContent: honors.note }),
     );
   honorBox.append(btn('Ehrenbuch', (b) => a.openHonors(b)));
-  newBox.append(crisisLabel, unlockLabel, newRow, honorBox);
+  newBox.append(crisisLabel, unlockLabel, petitionLabel, newRow, honorBox);
   // Karte, Hilfe, Tastenkürzel, Schliessen
   const seed = Object.assign(document.createElement('p'), { textContent: `Karte ${a.seed()}` });
   const guide = btn('Hilfe', (b) => a.openGuide(b));
