@@ -29,7 +29,7 @@ describe('Händlerschiff', () => {
     const expected = ties.reduce((a, b) => (b.x < a.x ? b : a));
     expect(shipTile(world)).toEqual(expected);
   });
-  it('AK-ISO-11 Gleichstand (kx + 2, ky + 1) und (kx + 1, ky + 2) → (kx + 1, ky + 2), deterministisch', () => {
+  it('AK-ISO-11 (ersetzt durch HAFEN S1 R6): Gleichstand-Regel D-18 entfällt, der Heimatanker entscheidet, deterministisch', () => {
     const world = createWorld(1);
     world.order = order;
     const k = world.buildings[home(world).kontorId]!;
@@ -39,8 +39,8 @@ describe('Händlerschiff', () => {
       [k.x + 1, k.y + 2],
     ] as const)
       home(world).tiles[y * home(world).width + x]!.terrain = 'water';
-    expect(shipTile(world)).toEqual({ x: k.x + 1, y: k.y + 2 });
-    expect(shipTile(world)).toEqual({ x: k.x + 1, y: k.y + 2 });
+    expect(shipTile(world)).toEqual(home(world).anchor);
+    expect(shipTile(world)).toEqual(shipTile(world));
   });
 
   it('ISO §5 shipShadow: konvexes Polygon im Kachelraum um die Kachel, nach (+3, +1) versetzt, gleiche Orientierung wie die Baumschatten', () => {
@@ -136,5 +136,23 @@ describe('Händlerschiff', () => {
       drawShip(ctx, { x: 0, y: 0, zoom: 0.25 }, { x: 5, y: 5 }, 0);
       expect(log.saves).toBe(log.restores);
     });
+  });
+});
+
+describe('AK-HF-07 Heimat-Anlegestelle', () => {
+  it('Seeds 1–40: mit Auftrag liegt das Schiff am Heimatanker, ohne Auftrag null', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const world = createWorld(seed);
+      world.order = null;
+      expect(shipTile(world), `Seed ${seed} ohne Auftrag`).toBeNull();
+      world.order = order;
+      expect(shipTile(world), `Seed ${seed}`).toEqual(home(world).anchor);
+    }
+  });
+  it('folgt einem verschobenen Heimatanker', () => {
+    const world = createWorld(1);
+    world.order = order;
+    home(world).anchor = { x: 3, y: 4 };
+    expect(shipTile(world)).toEqual({ x: 3, y: 4 });
   });
 });
