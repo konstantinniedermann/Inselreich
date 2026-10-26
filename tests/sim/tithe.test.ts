@@ -336,6 +336,8 @@ describe('AK-ZE-05 Gründe', () => {
     ['Wert 1', 1, 1, 'Ungültiger Wert'],
     ['Wert null', 1, null, 'Ungültiger Wert'],
     ['bereits aus', 1, false, 'Geld bereits aktiv'],
+    ['Stufe 3 und Wert ungültig', 3, 'ja', 'Kein Zehnt für Bürger'],
+    ['Stufe ungültig und Wert ungültig', 7, 'ja', 'Ungültige Stufe'],
   ])('%s', (_n, tier, on, reason) => {
     const { w } = town(12, 0);
     const before = snap(w);
@@ -346,6 +348,18 @@ describe('AK-ZE-05 Gründe', () => {
   it('bereits an: Zehnt bereits aktiv', () => {
     const { w } = town(12, 0);
     w.titheOn[1] = true;
+    expect(setTithe(w, 1, true)).toEqual({ ok: false, reason: 'Zehnt bereits aktiv' });
+  });
+  it.each([
+    ['Stufe 3 ohne Amtsstube', 3, true, 'Kein Zehnt für Bürger'],
+    ['Wert ungültig ohne Amtsstube', 1, 'ja', 'Ungültiger Wert'],
+  ])('%s', (_n, tier, on, reason) => {
+    const w = village(3, { unlockAll: true }).w;
+    expect(setTithe(w, tier, on)).toEqual({ ok: false, reason });
+  });
+  it('bereits aktiv schlägt Sperrzeit (Regel 5 vor 6)', () => {
+    const { w } = town(12, 0);
+    setTithe(w, 1, true);
     expect(setTithe(w, 1, true)).toEqual({ ok: false, reason: 'Zehnt bereits aktiv' });
   });
   it('ohne Amtsstube', () => {
@@ -397,13 +411,18 @@ describe('AK-ZE-07 Determinismus', () => {
       step(w);
     }
   };
-  it('gleicher Lauf, gleicher Stand', () => {
+  it('gleicher Lauf, gleicher Stand, Schalter greifen', () => {
     const a = town(12, 15).w;
     const b = town(12, 15).w;
+    const start = { ...home(a).stock };
     run(a, 0, 3000);
     run(b, 0, 3000);
     expect(serialize(a)).toBe(serialize(b));
-    expect(a.titheCarry.tools + a.titheCarry.stone).toBeGreaterThanOrEqual(0);
+    expect(a.titheOn).toEqual({ 1: true, 2: true });
+    expect(a.titheLockedUntil[1]).toBe(600 + TITHE_SWITCH_LOCK);
+    expect(a.titheLockedUntil[2]).toBe(900 + TITHE_SWITCH_LOCK);
+    for (const g of ['tools', 'stone'] as const)
+      expect(a.titheCarry[g] > 0 || home(a).stock[g] > start[g]).toBe(true);
   });
   it('Speichern und Laden mitten im Lauf ändert nichts', () => {
     const full = town(12, 15).w;
@@ -431,7 +450,10 @@ describe('AK-ZE-07 Determinismus', () => {
 
 describe('AK-ZE-14 Literal', () => {
   it.each(['src/sim/tax.ts', 'src/sim/population.ts'])('%s ohne Sperrzeit-Literal', (f) => {
-    const code = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
+    const code = readFileSync(new URL(`../../${f}`, import.meta.url).pathname, 'utf8').replace(
+      /\/\*[\s\S]*?\*\/|\/\/.*$/gm,
+      '',
+    );
     expect(/\b1800\b/.test(code)).toBe(false);
   });
 });

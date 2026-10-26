@@ -92,7 +92,7 @@ describe('AK-ZE-08 Version', () => {
 
 describe('AK-ZE-27 Quellscan', () => {
   it('kein Versionsliteral in dieser Datei', () => {
-    const lines = readFileSync('tests/sim/tithe-save.test.ts', 'utf8').split('\n');
+    const lines = readFileSync(new URL(import.meta.url).pathname, 'utf8').split('\n');
     const own = lines.filter((l) => !l.includes('/version:') && !l.includes('toBe\\('));
     expect(own.some((l) => /version:\s*\d/.test(l))).toBe(false);
     expect(own.filter((l) => /version/.test(l)).some((l) => /toBe\(\d+\)/.test(l))).toBe(false);
