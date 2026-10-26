@@ -1,4 +1,5 @@
 import type { BuildingDefId, GoodId, Tier } from '../types';
+import { FEAST_KINDS } from './feast';
 
 /** I-210 Bittschrift, Spec §4. Alle Werte der Bitten stehen hier und nirgends sonst. */
 export const DEFAULT_WORLD_PETITIONS_ON = false;
@@ -137,7 +138,7 @@ export const PETITIONS: Readonly<Record<PetitionId, PetitionDef>> = {
     no: 'rum',
     noReason:
       'Genügsam bei Rum: Aus Rohr wird Rum; wer das Rohr gibt, spart den Rum des nächsten Fests, wer nicht gibt, spart den Rum selbst.',
-    thanks: 'Der Festtrunk ist gebrannt, die Kapelle dankt: das nächste Fest braucht keinen Rum.',
+    thanks: `Der Festtrunk ist gebrannt, die Kapelle dankt: das nächste Aufstiegsfest spart ${FEAST_KINDS.ascension.cost.rum} Rum und darf auch in der Abklingzeit gehalten werden.`,
     lament: 'Die Kapelle brennt keinen Festtrunk. In der Stadt wird sparsamer mit Rum umgegangen.',
   },
   spiceSeed: {

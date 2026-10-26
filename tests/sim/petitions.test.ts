@@ -177,6 +177,11 @@ describe('AK-BS-16 Defs gegen Tabelle (Spec 4.1, 4.2)', () => {
       expect(d.lament.length).toBeGreaterThan(0);
     });
   }
+  it('Dank des Festtrunks nennt die Rummenge des Aufstiegsfests und die Abklingzeit (B5)', () => {
+    const t = PETITIONS.feastDrink.thanks;
+    expect(t).toContain(`${FEAST_KINDS.ascension.cost.rum} Rum`);
+    expect(t).toContain('Abklingzeit');
+  });
   it('Nein-Grund nennt die Ware bei B5, B7, B8, B9 (AK-BS-24)', () => {
     expect(PETITIONS.feastDrink.noReason).toContain('Rum');
     expect(PETITIONS.woolMarket.noReason).toContain('Stoff');
