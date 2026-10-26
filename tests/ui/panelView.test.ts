@@ -311,7 +311,7 @@ describe('AK-PU-10..13 upgradeCard', () => {
     const w = rich();
     expect(upgradeCard(w, put(w, 'fisher', { level: 3 }))).toEqual({
       kind: 'max',
-      title: 'Höchste Stufe',
+      title: 'Höchste Stufe erreicht',
     });
     expect(upgradeCard(w, put(w, 'chapel'))).toBeNull();
     expect(upgradeCard(w, put(w, 'spicefarm'))).toBeNull();

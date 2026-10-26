@@ -373,7 +373,7 @@ describe('M11 Betriebs-Panel (Spec 7)', () => {
     const w3 = createWorld(3, { unlockAll: true });
     expect(upgradeCard(w3, put(w3, 'fisher', { level: 3 }))).toEqual({
       kind: 'max',
-      title: 'Höchste Stufe',
+      title: 'Höchste Stufe erreicht',
     });
   });
 });

@@ -58,7 +58,7 @@ export type UpgradeCard =
       /** «Bilanz danach: a → b / min» (Unterhalt der nächsten Stufe, Edikt inklusive). */
       balance: string;
     }
-  | { kind: 'max'; title: 'Höchste Stufe' };
+  | { kind: 'max'; title: 'Höchste Stufe erreicht' };
 
 const round1 = (x: number): number => Math.round(x * 10) / 10;
 
@@ -251,7 +251,7 @@ export function upgradeGain(world: World, b: Building, to: 2 | 3): GainRow[] {
 export function upgradeCard(world: World, b: Building): UpgradeCard | null {
   const v = checklistView(world, b);
   if (v === null) return null;
-  if (v.kind === 'max') return { kind: 'max', title: 'Höchste Stufe' };
+  if (v.kind === 'max') return { kind: 'max', title: v.text };
   const to = ((b.level ?? 1) + 1) as 2 | 3;
   return {
     kind: 'next',
