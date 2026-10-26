@@ -29,6 +29,7 @@ describe('Händlerschiff', () => {
     const expected = ties.reduce((a, b) => (b.x < a.x ? b : a));
     expect(shipTile(world)).toEqual(expected);
   });
+  // Neu-Pin: Auf den Seeds 1–40 weicht der Heimatanker nur bei Seed 20 und 38 vom alten Feld (D-18) ab (2/40).
   it('AK-ISO-11 (ersetzt durch HAFEN S1 R6): Gleichstand-Regel D-18 entfällt, der Heimatanker entscheidet, deterministisch', () => {
     const world = createWorld(1);
     world.order = order;
