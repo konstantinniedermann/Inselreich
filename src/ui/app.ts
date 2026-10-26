@@ -149,7 +149,7 @@ import { createCouncilCard } from './councilCard';
 import { createTrialCard } from './trialCard';
 import { createPetitionCard } from './petitionCard';
 import { answerPetition } from '../sim/petitions';
-import { PETITIONS } from '../sim/defs/petitions';
+import { petitionLogEntries } from './petitionLog';
 import { TRIAL_ABORT_MESSAGE, trialChip, trialStartMessage, trialTransition } from './trial';
 import { setMonumentBuy, setMonumentPaused, startMonumentStage } from '../sim/monument';
 import { monumentStageCost, monumentStartedText } from './monumentView';
@@ -1753,16 +1753,20 @@ function launch(
             showMessage(honorMessage(added, saved), 'info');
           }
         }
-        for (const e of reports.flatMap((r) => r.petitions)) {
-          if (e.kind === 'drawn') {
-            showMessage(`Bittschrift: ${PETITIONS[e.id].name}`, 'info', true, true);
-            // Eine gerade gezeigte Karte bleibt; weitere Marken zeigt der Chip-Zähler.
-            if (!petitionCard.isOpen) {
-              trialCard.setOpen(false);
-              councilCard.setOpen(false);
-              petitionCard.show(e.drawnAt);
-            }
-          } else if (e.kind === 'timeout') showMessage('Keine Antwort: abgelehnt', 'info');
+        const petitionEvents = reports.flatMap((r) => r.petitions);
+        const petitionLogged = petitionLogEntries(petitionEvents, world);
+        if (petitionLogged.length > 0) {
+          state.eventLog = pushLog(state.eventLog, petitionLogged);
+          state.logUnread = nextUnread(state.logUnread, petitionLogged, isEventLogExpanded(logBox));
+          for (const l of petitionLogged) if (l.toast !== null) showMessage(l.text, l.toast);
+        }
+        for (const e of petitionEvents) {
+          // Eine gerade gezeigte Karte bleibt; weitere Marken zeigt der Chip-Zähler.
+          if (e.kind === 'drawn' && !petitionCard.isOpen) {
+            trialCard.setOpen(false);
+            councilCard.setOpen(false);
+            petitionCard.show(e.drawnAt);
+          }
         }
         for (const text of lossMessages(reports)) showMessage(text, 'warn');
         announceContract(

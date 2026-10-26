@@ -2,6 +2,7 @@ import { HOME } from '../sim/world';
 import { monumentChip } from './monumentView';
 import { trialChip } from './trial';
 import { petitionChip } from './petition';
+import { effectsChip } from './petitionLog';
 import { islandName } from '../sim/islands';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, GOOD_IDS, STORAGE_CAP } from '../sim/defs/goods';
@@ -367,6 +368,7 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
       '<span class="pop-chips"></span><button type="button" class="chip goal-chip" data-field="goal"></button>' +
       '<button class="btn council-badge" data-field="council-badge" type="button" hidden></button>' +
       '<button class="btn petition-chip" data-field="petition-chip" type="button" hidden></button>' +
+      '<span class="chip effects-chip" data-field="effects-chip" hidden></span>' +
       '<span class="hud-money" data-field="money"></span>' +
       '<span class="hud-tax" hidden><button class="btn" data-field="tax" type="button"></button></span>' +
       '<span class="hud-islands" hidden><button class="btn" data-field="islands" type="button" aria-haspopup="true" aria-expanded="false">Inseln</button>' +
@@ -476,6 +478,13 @@ export function updateHud(header: HTMLElement, state: GameState, actions: HudAct
     if (pchipEl.hidden !== (pchip === null)) pchipEl.hidden = pchip === null;
     const at = pchip === null ? '' : String(pchip.drawnAt);
     if ((pchipEl.dataset.drawnAt ?? '') !== at) pchipEl.dataset.drawnAt = at;
+  }
+  const fx = effectsChip(world);
+  const fxEl = setField(header, 'effects-chip', fx?.label ?? '');
+  if (fxEl) {
+    if (fxEl.hidden !== (fx === null)) fxEl.hidden = fx === null;
+    const tip = fx?.title ?? '';
+    if (fxEl.title !== tip) fxEl.title = tip;
   }
   updateMoney(header, world);
   const island = state.activeIsland;
