@@ -35,6 +35,9 @@ function endedText(def: PetitionDef, e: PetitionEvent): string {
       .join(', ');
     return lost === '' ? 'Der Speicher ist abgebaut' : `Der Speicher ist abgebaut, ${lost}`;
   }
+  // Anhang 05 «Vorbei»: Die Familien ziehen weiter (erster Satz der Klage, sofern er das sagt).
+  const first = def.lament.split('. ')[0] ?? '';
+  if (def.reward.kind === 'overcrowd' && first.includes('ziehen weiter')) return first;
   return `${def.name}: Wirkung ist abgelaufen`;
 }
 

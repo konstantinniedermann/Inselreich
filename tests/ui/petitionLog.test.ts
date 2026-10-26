@@ -31,7 +31,7 @@ describe('AK-BS-20-Log Chronik B1', () => {
     expect(out[0]!.text).toBe('Bittschrift Weberfamilien: Bitte um 10 Stoff');
     expect(out[1]!.text).toContain('Die Weberfamilien ziehen ein und danken');
     expect(out[1]!.text).toContain(`bis ${formatClock(UNTIL)}`);
-    expect(out[2]!.text).toBe('Weberfamilien: Wirkung ist abgelaufen');
+    expect(out[2]!.text).toBe('Die Weberfamilien ziehen weiter');
     expect(out.every((e) => e.tick === 100)).toBe(true);
   });
   it('B8 ohne Kosten: Bitte um Aufnahme', () => {
