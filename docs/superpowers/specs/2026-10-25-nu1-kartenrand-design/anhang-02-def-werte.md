@@ -166,3 +166,87 @@ Holzschären: R-Summen 10/6/12/8/12; beste Dreier 12 + 12 + 10 = 34; 34 + 15 = *
 Dreier 10 + 10 + 8 = 28; 28 + 21 = **49**. Alle ≤ 50. Wächter: Für jede Teilmenge der Pool-Karten in Fahrtgrösse ist
 die Summe aus R-Waren und Proviant ≤ `SHIP.capacity`. Die Wahl liegt damit in der Zusammensetzung, nicht in einer
 unmöglichen Ladung. Die Folge wird erst beim Start gezogen; die Packansicht zeigt davor nur die Hinweis-Waren (Spec §5.2).
+
+## 8 Nachtrag Gate Spec (R978)
+
+Ergänzt Spec §7 (und §3.9, §4); neue Kriterien ab AK-NU1-37, Format wie Spec §7. Auflage 7 (Wertgrenzen) und die
+Pin-Liste zu `U7` liegen bei `lead-tech`. Zeilenangaben: Stand `eb01f632`, [Tech] prüft. Korrektur Auflage 9: AK-13 und
+AK-30 sind in der Spec berichtigt (kein Umbruch im Code-Text, «Obergrenzen» benannt).
+
+### 8.1 Auflage 1: Hebel F2 und F7 (Setzung `lead-design`)
+
+- **F2** wirkt über einen Helfer «Güter je Richtung» mit Weltbezug [Tech: Name]: 2 ohne F2, 3 mit F2. Jede Stelle, die
+  heute `ROUTE_GOODS_PER_DIRECTION` liest (`save.ts:690`, `ships.ts:81–82`), nutzt den Helfer. Die Ladeprüfung prüft
+  `finds` **vor** den Routen, sonst wäre ein gültiger Stand mit 3 Gütern «Beschädigter Spielstand».
+- **F7** wirkt über einen Helfer «Lagergrenze je Insel und Gut» [Tech: Name]: 120 für Gewürz und Nahrung mit F7, sonst 100.
+  Alle Kappungen nutzen ihn (`economy.ts:13`, `trade.ts:127`, `ships.ts:153`, `queries.ts:209`).
+- Ausserhalb von `src/sim/defs/` und den zwei Helfern liest kein Modul in `src/sim` `STORAGE_CAP` oder
+  `ROUTE_GOODS_PER_DIRECTION` direkt.
+
+37. **AK-NU1-37 (V, `tests/sim/finds-save.test.ts`)** Round-Trip mit F2 und einer Route mit 3 Gütern je Richtung: tief
+    gleich, kein Abweisen; ohne F2 wird dieselbe Route mit «Höchstens 2 Güter je Richtung» abgelehnt.
+38. **AK-NU1-38 (V, `tests/sim/finds-save.test.ts`)** Round-Trip mit F7 und 120 Gewürz und Nahrung im Lager: tief gleich;
+    ohne F7 ist ein Lager über 100 ein beschädigter Stand.
+39. **AK-NU1-39 (V, `tests/sim/finds-storage.test.ts`)** Kappung, Entladen am Kontor und Rückkehr der Expedition
+    (`unloadAtHome`) mit Grenze 120 für Gewürz und Nahrung (mit F7) bzw. 100 (ohne, und für alle anderen Güter), je Gut.
+40. **AK-NU1-40 (V, Wächter, Quelltext-Prüfung)** Ausser `src/sim/defs/` und den zwei Helfern kommt in keiner Datei
+    unter `src/sim` der Name `STORAGE_CAP` oder `ROUTE_GOODS_PER_DIRECTION` vor (Trefferliste bei Stand `eb01f632`:
+    `save.ts`, `ships.ts`, `economy.ts`, `trade.ts`, `queries.ts`).
+
+### 8.2 Auflage 2: Baseline (ersetzt AK-25)
+
+- **AK-NU1-25a (V)** `balance*.test.ts`, `seaGolden.test.ts` und die Auftrags-, Krisen- und Inselpins (Seeds 1–3) laufen
+  ohne Änderung an Erwartungen grün und bitgleich; der Controller ruft keine Expeditions-Aktion (Quelltext-Prüfung
+  `tests/sim/controller.ts`).
+- **AK-NU1-25b (V)** Pins, die mechanisch mit `UNLOCK_IDS` und neuen Weltfeldern wachsen (u. a. Literallisten in
+  `unlocks.test.ts`, `e0Pins`/`e1Pins`, `scenario-saves`, `save-contract`, Versionspin in `trial-save.test.ts`, Welten mit
+  `wonSpice` wie `goal3`, `honors`, `monument`), listet der Plan per `rg` und pinnt sie mit Ruling-Notiz neu; Welten mit
+  `wonSpice` werden mit `U7` erwartet.
+
+### 8.3 Auflage 3: Migration (ergänzt AK-23)
+
+41. **AK-NU1-41 (V, `tests/sim/expedition-save.test.ts`)** Das Fixture «`SAVE_VERSION − 1`» entsteht aus einer frischen
+    Serialisierung (neue Felder entfernen, Version senken), nie als gespeichertes Literal. Zwei Fälle: alter Stand mit
+    `wonSpice true` lädt mit `U7`, mit `wonSpice false` ohne; beide mit `expedition null`, leerem `seaRevealed` und `finds`.
+42. **AK-NU1-42 (V)** Ladeprüfung: `wonSpice true` ⇒ `U7` in `unlocked`; fehlt es, «Beschädigter Spielstand».
+
+### 8.4 Auflage 4: Ladeprüfung schärfen (ergänzt AK-24 und Spec §4)
+
+Regeln: (a) `finds` ist je aufgedecktem Gebiet ein Präfix der Gebietsliste (auch leer); die Gesamtreihenfolge folgt der
+Aufdeck-Reihenfolge von `seaRevealed`. (b) In Phase `leg` gilt `leg ≤ sections + extra`. (c) `cargo` wird in der Reihenfolge
+von `GOOD_IDS` gespeichert, damit der Welt-Hash (AK-22) nicht von der Einfügereihenfolge abhängt. (d) `cards` gehören zum
+Pool des Gebiets. Je Regel ein Fall in `tests/sim/expedition-save.test.ts`, Ergebnis jeweils abgewiesen oder (c) gleicher Hash:
+
+43. **AK-NU1-43 (V)** (a) `finds` mit Lücke, falscher Gebietsliste oder vertauschter Gebietsreihenfolge: abgewiesen.
+44. **AK-NU1-44 (V)** (b) `leg` über `sections + extra` in Phase `leg`: abgewiesen.
+45. **AK-NU1-45 (V)** (c) Zwei Welten mit derselben Ladung in verschiedener Einfügereihenfolge ergeben nach dem Speichern
+    denselben Text und Hash.
+46. **AK-NU1-46 (V)** (d) `cards` mit Karte eines anderen Gebiets: abgewiesen.
+
+### 8.5 Auflage 5: Browser (ergänzt AK-31)
+
+Alle (B) bei 1280 px, Screenshots `.studio/qa/NU-1/`.
+
+47. **AK-NU1-47 (B)** Speichern und Laden bei offener Karte (`storage.ts`): Karte wieder offen, gleiche Sperren.
+48. **AK-NU1-48 (B)** Wartezustand: Knopf «Abbrechen» gibt die Ladung zurück; nach dem Auslaufen fehlt der Knopf.
+49. **AK-NU1-49 (B)** Während einer Expedition zeigt der Abriss-Knopf des Kartenhauses «Erst Expedition beenden».
+50. **AK-NU1-50 (B)** Spielpause: Wahl am Kartendialog ist erlaubt, es läuft nichts weiter (Tickzähler und Marke stehen).
+51. **AK-NU1-51 (B)** `Esc` schliesst den Kartendialog ohne Wahl; Karte bleibt offen, HUD-Chip bleibt.
+
+### 8.6 Auflage 6: Randfälle (ergänzt Spec §6)
+
+52. **AK-NU1-52 (V, `tests/sim/expedition.test.ts`)** (a) `cancelExpedition` bei vollem Heimatlager: Ladung bis
+    `STORAGE_CAP` bzw. der Grenze je Gut zurück, Rest verfällt, Meldung im Ergebnis.
+53. **AK-NU1-53 (V)** (b) Entladen bei `boarding` mit Überlauf: Rest verfällt mit `ShipLoss`-Meldung, Phase `leg` im selben Tick.
+54. **AK-NU1-54 (V)** (c) Ein `homing`-Schiff und ein Fall-(b)-Schiff mit nur Gewürz an Bord legen an und entladen alles
+    (Liste `keep` entfällt), Phase `leg`.
+55. **AK-NU1-55 (V)** (d) Speichern in `boarding` nach `clearRoute`: Round-Trip tief gleich, Schiff `homing`, Fahrt beginnt
+    bei Ankunft.
+
+### 8.7 Auflage 8: Erklärbarkeit (Setzung `lead-design`, ergänzt AK-28)
+
+Der Kartendialog zeigt zusätzlich «Proviant reicht noch für n Abschnitte» (n = Nahrung ÷ 3, abgerundet) und bei der
+R-Option den Hinweis «Fund nur, wenn die Fahrt zu Ende geht».
+
+56. **AK-NU1-56 (V, `tests/ui/expeditionView.test.ts`)** Das Kartenmodell trägt beide Texte wörtlich; n folgt der Nahrung an
+    Bord (z. B. 7 Nahrung → «2 Abschnitte»); der Hinweis steht nur an R-Optionen.

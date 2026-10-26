@@ -415,8 +415,7 @@ gesetztem `wonSpice` und Kartenhaus über Test-Helfer [Tech].
 11. **AK-NU1-11 (V)** Ladung mit 2 Nahrung: `startExpedition` liefert Grund Nr. 11, Welt JSON-gleich; mit 3 Nahrung ok.
 12. **AK-NU1-12 (V)** Höchstens eine Expedition; nach drittem aufgedeckten Gebiet «Alle Gebiete aufgedeckt», auch mit
     neuem Kartenhaus.
-13. **AK-NU1-13 (V)** Abriss des Kartenhauses in `boarding`, `leg`, `card` und `back`: je `fail('Erst Expedition
-beenden')`, Welt unverändert; ohne Expedition erlaubt, danach Start «Kein Kartenhaus».
+13. **AK-NU1-13 (V)** Abriss des Kartenhauses in `boarding`, `leg`, `card` und `back`: je «Erst Expedition beenden», Welt unverändert; ohne Expedition erlaubt, danach Start «Kein Kartenhaus».
 14. **AK-NU1-14 (V)** Am Expeditionsschiff liefern `retireShip`, `setRoute`, `updateRoute` «Schiff ist auf
     Expedition»; `clearRoute` unterwegs → nach Rückkehr frei in der Heimat (`route null`, nicht `homing`).
 15. **AK-NU1-15 (V)** Brand, Sturm und Boom während der Fahrt (erzwungene Krise): `world.expedition` tickweise gleich
@@ -471,7 +470,7 @@ beenden')`, Welt unverändert; ohne Expedition erlaubt, danach Start «Kein Kart
 **Werte und Browser**:
 
 30. **AK-NU1-30 (V, Wächter über die Defs)** Je Gebiet: Dauer ohne Umweg = 3,0 / 3,5 / 4,5 min (alle in 3–5 min); der
-    Bedarf für alle R-Optionen des Pools plus vollen Proviant ist > 50 (57 / 63 / 61); der sichere Weg ist ≤ 50 (32 / 36 /
+    Bedarf für alle R-Optionen des Pools plus vollen Proviant ist > 50 (57 / 63 / 61, Obergrenzen); der sichere Weg ist ≤ 50 (32 / 36 /
     43); jede mögliche Ziehung lässt alle R zugleich mit vollem Proviant in 50 Plätzen zu (höchstens 48 / 49 / 49, Anhang 02 §7).
 31. **AK-NU1-31 (B)** Ablauf: Kartenhaus bauen, Packansicht (Balken, Hinweis-Waren, Warnung beim einzigen Gewürzschiff),
     Auslaufen, Kartendialog mit gesperrter Option und Grund, Wahl, Rückkehr; Seekarte zeigt Nebel, Marke, danach
