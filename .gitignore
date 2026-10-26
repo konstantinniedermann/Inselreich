@@ -12,3 +12,6 @@ NOTES.local.md
 .worktrees/
 .vitest/
 __pycache__/
+
+# BSD-`sed -i` ohne Suffix legt <datei>-e an (R877, R886)
+*-e

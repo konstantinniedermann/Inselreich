@@ -254,6 +254,10 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 - Fundort: `src/ui/council.ts:50`. Beobachtung: bei n = 1 «1 Häuser (+1 Plätze)» statt Singular. Ursprung: UI-HAEPPCHEN-J Final-Review. Einschätzung: Trivial-Fix im nächsten UI-Paket an der Datei.
 - Fundort: Karte «Wo war ich?». Beobachtung: Text «N Probleme offen — . springt hin», vermutlich fehlt die Tastenbezeichnung. Ursprung: Playtest UI-HAEPPCHEN-J. Einschätzung: niedrig, Beipack.
 
+## 2026-10-25 · Playtest SEERECHT T07: Seite bei 800 px Fensterbreite zu breit (niedrig)
+
+- Fundort: Playtest SEERECHT T07. Beobachtung: bei 800 px Fensterbreite ist die Seite global 868 px breit, das HUD wird abgeschnitten, der Schliessen-Knopf der Rats-Karte liegt bei 0 px Scroll knapp ausserhalb. Ursprung: nicht Seerecht-spezifisch. Einschätzung: niedrig, Desktop-first (ab 1280 px).
+
 ## 2026-10-25 · Import-Zyklen und Merge-Rückstand (niedrig)
 
 - Fundort: `src/sim/`. Beobachtung: keine Lint-Regel gegen Importzyklen; nur handgeschriebene Strukturtests (I-201 P-11) fangen sie. Ursprung: Gate Plan I-201. Einschätzung: Kandidat für ein Werkzeug-Paket (ESLint `import/no-cycle` wäre neue Abhängigkeit → ADR; Alternative: kleiner eigener Prüfer in `tools/`).
@@ -276,3 +280,32 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-25 · Anlass für I-183 (niedrig)
 
 - Fundort: INSELPROBEN Schuldbrief-Probe. Beobachtung: erzeugt planmässig «Kasse leer, Nahrung leer» und wäre der natürliche Anlass für I-183. Ursprung: Rechnung Zukaufpreis (R918). Einschätzung: bei der nächsten Ideen-Runde prüfen.
+
+## 2026-10-25 · FIX-SCHIFF-A1: Picking und Karte ohne Sub-Tick-Bruchteil (niedrig)
+
+- Fundort: `shipAt` (`src/render/shipLane.ts`, genutzt von `src/ui/input.ts`, `src/ui/app.ts`) und `src/render/seaMap.ts`. Beobachtung: rufen `shipPose` mit `frac` 0; die gezeichnete Pose läuft bis zu einen Tick (kleiner als 1/Lane-Ticks) voraus. Ursprung: FIX-SCHIFF-A1. Einschätzung: kaum sichtbar, nur bei Treffer-Toleranz knapp; bei Bedarf `tickFrac` durchreichen.
+
+## 2026-10-25 · Messvorrang nur per Absprache (mittel)
+
+- Fundort: Studio-Werkzeug (`make messfenster`, TOOL-TESTLOCK). Beobachtung: ZEITPIN-D1 erreichte statt 5 nur 2 saubere Läufe je Stand, weil parallele Test-Controller (I-210, AUSBAU-LOGIK, plan-I-215) die Last auf 10–50 trieben, obwohl das Briefing Messvorrang nannte. Ursprung: ZEITPIN-D1 (R968). Einschätzung: Werkzeug-Kandidat `make messfenster-sperre` (Messpaket belegt eine Sperre, gezielte Tests warten), sonst Retro-Punkt Controller-Staffelung (R920 V1).
+
+## 2026-10-25 · I-201: Spielwerte-Doku und Menü-Karte (niedrig)
+
+- Fundort: `docs/spielwerte.md`. Beobachtung: Festwerte (Kosten, Dauer, 75 %, 125 %) fehlen, Lücke bestand vor I-201. Ursprung: Final-Review I-201. Einschätzung: bei nächster Spielwerte-Runde ergänzen.
+- Fundort: Menü-Karte (`src/ui/`). Beobachtung: nach «Speichern» zeigt sie im selben Öffnen noch «Noch kein Spielstand gespeichert», Laden-Liste erst nach erneutem Öffnen aktuell. Ursprung: Playtest T07 (I-201). Einschätzung: kleiner UI-Fix.
+
+## 2026-10-26 · Rechnung I-223: Kasse < 0 lässt die Probe nicht scheitern (niedrig)
+
+- Fundort: `docs/superpowers/specs/2026-10-26-i223-zehnt-rechnung.md` Zeile 48 (Branch `design/ideen20-folgen`), Code `src/sim/trial.ts:36`. Beobachtung: Die Rechnung sagt, Kasse < 0 lasse die Probe scheitern; tatsächlich sperrt Kasse < 0 nur den Start einer Auflage. Ursprung: Kurzdesign I-223 (lead-design). Einschätzung: Doku-Korrektur der Rechnung; die Pflichtwarnung im Kurzdesign bleibt mit Begründung «kein Bauen, kein Zukauf».
+
+## 2026-10-26 · Messfenster-Sperre bremst direkte vitest-Läufe nicht (mittel)
+
+- Fundort: `tools/messfenster/lock.ts`, Umsetzer-Läufe per `npx vitest`. Beobachtung: Während der L0-Sperre «plan-I-223 zeiten» liefen in `.worktrees/ausbau-logik` eine hängende Probe `tests/sim/zz.test.ts` (19 min, 100 % CPU, R233 (4) verletzt) und ein `vitest related` ohne `--maxWorkers`; Last 20–33. Die Sperre greift nur über Make-Ziele, nicht bei direktem `npx vitest`. Ursprung: L0, Session b73acd32 (E-080-Messpunkt). Einschätzung: Werkzeug-Kandidat (Sperre im vitest-Setup prüfen) oder Briefing-Pflicht; an die Retro.
+
+## 2026-10-26 · I-210: Glaser-Bitte (B3) kippt in der wörtlichen Nein-Lage zugunsten von Ja (mittel)
+
+- Fundort: `tests/sim/petitionWorlds.ts` (Branch `feat/i210-mess`), Anhang 01 der Spec I-210. Beobachtung: Mit den wörtlichen Lagen aus Anhang 01 ergibt B3 «Nein» +6511 für Ja, B2 «Nein» kippt knapp (28149 gegen 27539); die Tests nutzen angepasste Lagen (P1 = 60 Bewohner, Rum 12, Glas 26). Ursprung: I-210 T06 (lead-tech, R553). Einschätzung: Dominanzsignal für die Glaser-Bitte; Wertprüfung durch lead-design vor dem Merge von I-210.
+
+## 2026-10-26 · HAFEN L1: Render-Caches nach Kontor-II-Wechsel nicht invalidiert (niedrig)
+
+- Fundort: `src/render/decor.ts:977-1022` (`seaContext`), `src/render/fauna.ts:470-490` (`routeFar`), Branch `feat/hafen`. Beobachtung: Caches nehmen feste Inseln an (Kommentar veraltet) und werden nach einem Anker-Wechsel durch Kontor II nicht verworfen; nur Darstellung. Ursprung: Gate Merge HAFEN L1 (N2). Einschätzung: in HAFEN S5 oder als Häppchen mitnehmen.

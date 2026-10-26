@@ -1,6 +1,7 @@
 import { petitionCycle } from './petitionEffect';
 import { councilCycle } from './council';
 import { BUILDING_DEFS, PAUSED_UPKEEP_PCT } from './defs/buildings';
+import { harvestActive, harvestCycle } from './feastEffect';
 import { LEVELS, type LevelDef } from './defs/levels';
 import { ISLANDS, TRAIT_BUILDINGS, TRAIT_CYCLE_PCT, type IslandTrait } from './defs/sea';
 import { EFF_MAX, EFF_WINDOW } from './defs/timing';
@@ -41,12 +42,9 @@ export const effectiveCycle = (
 export function cycleOf(world: World, b: Building): number | undefined {
   const base = BUILDING_DEFS[b.defId].cycle;
   if (base === undefined) return undefined;
-  return petitionCycle(
-    world,
-    b.island,
-    b.defId,
-    effectiveCycle(world, b.island, b.defId, levelDef(b)?.cycle ?? base),
-  );
+  const c = effectiveCycle(world, b.island, b.defId, levelDef(b)?.cycle ?? base);
+  const fest = harvestActive(world, b) ? harvestCycle(c) : c;
+  return petitionCycle(world, b.island, b.defId, fest);
 }
 /** Unterhalt je 100 Ticks des stehenden Gebäudes. */
 export const upkeepOf = (b: Building): number =>
