@@ -142,6 +142,7 @@ describe('HAFEN S1 Anker folgt Kontor', () => {
     ];
     expect(dockAt(w, 1, p)).not.toEqual(dockAt(w, 1, q));
     const r = placeBuilding(w, 'kontor2', p.x, p.y, 1);
+    expect(r.ok).toBe(true);
     const before = { ...w.islands[1]!.anchor };
     expect(demolish(w, r.id!).ok).toBe(true);
     expect(w.islands[1]!.anchor).toEqual(before);
@@ -171,6 +172,26 @@ describe('HAFEN S1 Anker folgt Kontor', () => {
     const loaded = deserialize(serialize(w));
     if (!loaded.ok) throw new Error(loaded.reason);
     expect(laneTicks(w.islands, 0, 1)).toBe(laneTicks(loaded.world.islands, 0, 1));
+  });
+
+  it('AK-HF-06: shipPose (Fahrzeit-Cache) eines laufenden Schiffs folgt dem neuen Anker', () => {
+    const w = rich(seaWorld(SEED_D37));
+    const site = sitesOf(w, 1).at(-1)!;
+    const total = laneTicks(w.islands, 0, 1);
+    const ship = shipLiteral(w, { port: 0, to: 1, left: 1 });
+    const posed = (x: World): Spot => {
+      const p = shipPose(x, ship);
+      return { x: p.x, y: p.y };
+    };
+    const before = posed(w);
+    expect(total).toBeGreaterThan(1);
+    expect(placeBuilding(w, 'kontor2', site.x, site.y, 1).ok).toBe(true);
+    const loaded = deserialize(serialize(w));
+    if (!loaded.ok) throw new Error(loaded.reason);
+    const fresh = loaded.world;
+    fresh.ships = w.ships.map((s) => ({ ...s }));
+    expect(posed(w)).not.toEqual(before);
+    expect(posed(w)).toEqual(posed(fresh));
   });
 
   it('AK-HF-08: gleicher Seed, gleiche Baufolge, gleiche Anker und Routen', () => {
