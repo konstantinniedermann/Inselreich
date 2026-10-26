@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { dockFor, homeAnchor } from '../../src/sim/islands';
+import { demolish, placeBuilding } from '../../src/sim/build';
+import { dockFor, homeAnchor, laneTicks } from '../../src/sim/islands';
 import { seaMask } from '../../src/sim/mapgen';
-import { siteRuleOk } from '../../src/sim/placement';
+import { canPlace, siteRuleOk } from '../../src/sim/placement';
+import { deserialize, serialize } from '../../src/sim/save';
+import { seaRoute } from '../../src/sim/seaRoute';
+import { lanePoints, shipPose } from '../../src/render/shipLane';
 import type { Terrain, World } from '../../src/sim/types';
-import { seaWorld } from './seaHelpers';
+import { home } from '../../src/sim/world';
+import { SEED_D37 } from './seePins';
+import { seaWorld, shipLiteral } from './seaHelpers';
 
 const N = 8;
 
@@ -82,5 +88,109 @@ describe('HAFEN S1 dockFor', () => {
           }
       }
     }
+  });
+});
+
+type Spot = { x: number; y: number };
+
+/** Reich genug für Kontor II (nur im Test). */
+function rich(w: World): World {
+  w.money = 1e9;
+  for (const g of Object.keys(home(w).stock)) (home(w).stock as Record<string, number>)[g] = 1e6;
+  return w;
+}
+
+const terrainOf = (w: World, i: number): Terrain[] => w.islands[i]!.tiles.map((t) => t.terrain);
+const dockAt = (w: World, i: number, p: Spot): Spot =>
+  dockFor(terrainOf(w, i), w.islands[i]!.width, w.islands[i]!.height, p);
+
+/** Alle Plätze der Insel, an denen Kontor II baubar ist (feste Scanreihenfolge). */
+function sitesOf(w: World, i: number): Spot[] {
+  const isl = w.islands[i]!;
+  const out: Spot[] = [];
+  for (let y = 0; y < isl.height; y++)
+    for (let x = 0; x < isl.width; x++) if (canPlace(w, 'kontor2', x, y, i).ok) out.push({ x, y });
+  return out;
+}
+
+const lastPoint = (pts: readonly Spot[]): Spot => pts[pts.length - 1]!;
+
+describe('HAFEN S1 Anker folgt Kontor', () => {
+  it('AK-HF-04: Anker = dockFor und höchstens 2,2 Kacheln von der Kontormitte', () => {
+    for (const seed of [1, 2, 3, 37]) {
+      const base = rich(seaWorld(seed));
+      for (let i = 1; i < base.islands.length; i++) {
+        for (const p of sitesOf(base, i)) {
+          const w = structuredClone(base);
+          expect(placeBuilding(w, 'kontor2', p.x, p.y, i).ok).toBe(true);
+          const a = w.islands[i]!.anchor;
+          expect(a).toEqual(dockAt(base, i, p));
+          expect(
+            Math.hypot(a.x + 0.5 - (p.x + 1), a.y + 0.5 - (p.y + 1)),
+            `S${seed} I${i}`,
+          ).toBeLessThanOrEqual(2.2);
+        }
+      }
+    }
+  });
+
+  it('AK-HF-05: Abriss ändert den Anker nicht, ein neuer Bau verschiebt ihn, das Schiff liegt dort', () => {
+    const w = rich(seaWorld(SEED_D37));
+    const [p, q] = sitesOf(w, 1).filter((s, k, all) => k === 0 || k === all.length - 1) as [
+      Spot,
+      Spot,
+    ];
+    const r = placeBuilding(w, 'kontor2', p.x, p.y, 1);
+    const before = { ...w.islands[1]!.anchor };
+    expect(demolish(w, r.id!).ok).toBe(true);
+    expect(w.islands[1]!.anchor).toEqual(before);
+    expect(placeBuilding(w, 'kontor2', q.x, q.y, 1).ok).toBe(true);
+    const anchor = w.islands[1]!.anchor;
+    expect(anchor).toEqual(dockAt(w, 1, q));
+    const ship = shipLiteral(w, { port: 1 });
+    const pose = shipPose(w, ship);
+    const isl = w.islands[1]!;
+    expect(pose).toMatchObject({ x: isl.ox + anchor.x + 0.5, y: isl.oy + anchor.y + 0.5 });
+  });
+
+  it('AK-HF-06: Seeweg-, Linien- und Fahrzeit-Caches folgen dem neuen Anker', () => {
+    const w = rich(seaWorld(SEED_D37));
+    const site = sitesOf(w, 1).at(-1)!;
+    seaRoute(w.islands, 0, 1);
+    lanePoints(w, 0, 1);
+    laneTicks(w.islands, 0, 1);
+    expect(placeBuilding(w, 'kontor2', site.x, site.y, 1).ok).toBe(true);
+    const isl = w.islands[1]!;
+    const dock = dockAt(w, 1, site);
+    const want = { x: isl.ox + dock.x + 0.5, y: isl.oy + dock.y + 0.5 };
+    expect(lastPoint(seaRoute(w.islands, 0, 1))).toEqual(want);
+    expect(lastPoint(lanePoints(w, 0, 1))).toEqual(want);
+    const loaded = deserialize(serialize(w));
+    if (!loaded.ok) throw new Error(loaded.reason);
+    expect(laneTicks(w.islands, 0, 1)).toBe(laneTicks(loaded.world.islands, 0, 1));
+  });
+
+  it('AK-HF-08: gleicher Seed, gleiche Baufolge, gleiche Anker und Routen', () => {
+    const run = (): { anchors: string; route: string } => {
+      const w = rich(seaWorld(SEED_D37));
+      const site = sitesOf(w, 1).at(-1)!;
+      placeBuilding(w, 'kontor2', site.x, site.y, 1);
+      return {
+        anchors: JSON.stringify(w.islands.map((i) => i.anchor)),
+        route: JSON.stringify(seaRoute(w.islands, 0, 1)),
+      };
+    };
+    expect(run()).toEqual(run());
+  });
+
+  it('Randfall: Abriss mit Schiff unterwegs bleibt verwehrt, Anker und Kontor bleiben', () => {
+    const w = rich(seaWorld(SEED_D37));
+    const site = sitesOf(w, 1)[0]!;
+    const r = placeBuilding(w, 'kontor2', site.x, site.y, 1);
+    const anchor = { ...w.islands[1]!.anchor };
+    shipLiteral(w, { port: 0, to: 1, left: 5 });
+    expect(demolish(w, r.id!)).toEqual({ ok: false, reason: 'Erst Route auflösen' });
+    expect(w.islands[1]!.anchor).toEqual(anchor);
+    expect(w.buildings[r.id!]).toBeDefined();
   });
 });

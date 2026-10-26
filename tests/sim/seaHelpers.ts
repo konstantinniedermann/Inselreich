@@ -1,6 +1,6 @@
 // Gemeinsame Testwelt für die Seefahrt-Stränge (M12 T02, P-10). Nur Tests, schreibt keine Saves.
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
-import { generateForeignIslands, laneTicks, type Pt } from '../../src/sim/islands';
+import { dockFor, generateForeignIslands, laneTicks, type Pt } from '../../src/sim/islands';
 import { SHIP_TICKS_PER_SEA_TILE } from '../../src/sim/defs/sea';
 import { recomputeConnectivity } from '../../src/sim/roads';
 import type { Building, Ship, World } from '../../src/sim/types';
@@ -36,6 +36,14 @@ export function foundKontor2Literal(w: World, island: number): Building {
   for (const p of footprint(BUILDING_DEFS.kontor2, site.x, site.y))
     tileAt(isl, p.x, p.y)!.buildingId = id;
   isl.kontorId = id;
+  // Spiegelt R3 aus placeBuilding: Anker an die Anlegestelle, neues Inselarray (Caches fallen).
+  isl.anchor = dockFor(
+    isl.tiles.map((t) => t.terrain),
+    isl.width,
+    isl.height,
+    site,
+  );
+  w.islands = w.islands.slice();
   recomputeConnectivity(w);
   return building;
 }

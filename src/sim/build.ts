@@ -1,11 +1,12 @@
 import { BUILDING_DEFS, ROAD_COST_OBJ } from './defs/buildings';
 import { grantRefund, pay, refundCost } from './economy';
+import { dockFor } from './islands';
 import { newMonument } from './monument';
 import { newHouseState } from './population';
 import { affordBuild, canPlace, canPlaceRoad, islandAt } from './placement';
 import { effectiveRefund } from './queries';
 import { recomputeConnectivity } from './roads';
-import type { Building, BuildingDefId, Result, World } from './types';
+import type { Building, BuildingDefId, Island, Result, World } from './types';
 import { fail, ok } from './types';
 import { paidCost } from './upgrade';
 import { HOME, footprint, home, islandOf, tileAt } from './world';
@@ -31,6 +32,17 @@ export function removeRoad(world: World, x: number, y: number, island: number = 
   grantRefund(world, isl, refundCost(ROAD_COST_OBJ));
   recomputeConnectivity(world);
   return ok;
+}
+
+/** R3: Der Anker der Insel folgt dem neuen Kontor; neues `islands`-Array lässt Seeweg-, Linien- und UI-Caches fallen. */
+function moveAnchorToDock(world: World, isl: Island, x: number, y: number): void {
+  isl.anchor = dockFor(
+    isl.tiles.map((t) => t.terrain),
+    isl.width,
+    isl.height,
+    { x, y },
+  );
+  world.islands = world.islands.slice();
 }
 
 export function placeBuilding(
@@ -64,7 +76,10 @@ export function placeBuilding(
   }
   world.buildings[id] = building;
   for (const p of footprint(BUILDING_DEFS[defId], x, y)) tileAt(isl, p.x, p.y)!.buildingId = id;
-  if (fromHome) isl.kontorId = id;
+  if (fromHome) {
+    isl.kontorId = id;
+    moveAnchorToDock(world, isl, x, y);
+  }
   if (defId === 'monument') world.monument = newMonument(id);
   recomputeConnectivity(world);
   return { ok: true, id };

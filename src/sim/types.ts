@@ -406,7 +406,7 @@ export interface Island {
   /** Lage der Insel im Archipel in Kacheln (Heimat 0/0; Fremdinseln können negativ sein). */
   ox: number;
   oy: number;
-  /** Ankerkachel für den Seeweg, innerhalb der Insel. */
+  /** Ankerkachel für den Seeweg, innerhalb der Insel; veränderlich: `placeBuilding` setzt sie beim Bau von Kontor II auf `dockFor`. */
   anchor: { x: number; y: number };
   /** Sperrbestand je Reserve-Gut (I-049); immer vollständig. */
   reserve: Record<ReserveGood, ReserveStep>;
