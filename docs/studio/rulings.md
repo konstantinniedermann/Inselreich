@@ -3542,3 +3542,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210-SYNC, I
 Regelbezug: R1002, R1019, R1020, E-084 · Kosten bei Irrtum: ein Revert-Merge auf lokalem main.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-AUSBAU-LOGIK · ADR: —
+
+## R1022 · 2026-10-28 · AUSBAU-LOGIK auf main; Beobachtungen-Auswertung und HAUSHALT-05 Pflicht
+
+Ruling: Integrator-Merge `8b7d80d2` (AUSBAU-LOGIK Etappe 1) auf lokalem main abgenommen (Teilbeleg grün, 926 Tests). **Beobachtungen: 36 offene Einträge > 30** (Marke 2026-10-25) → Auswertung `BEOB-19` an `lead-production` (Skill `beobachtungen-auswerten`) ist
+Pflichtpaket (R287/R288); bis zu ihrem Ende startet L0 keine **neue** Funktionsarbeit (laufende NU-1, I-215, I-210-SYNC, NU-2 laufen weiter; I-223-NACH, I-214, HAFEN O warten). **Aufräumen fällig** (rulings.md 282 Rulings/332 KB > 150/200 KB, R685) → `HAUSHALT-05` an
+`lead-production`: Rulings-Archiv nach dem bisherigen Schema, nur der vordere Teil wird verschoben (L0 hängt weiter am Ende an).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle (beobachtungen.md hat Merge-Treiber `beob-append`)
+Regelbezug: R287, R288, R685, R1018 · Kosten bei Irrtum: eine verzögerte Funktionswelle.
+
+Entscheider: L0 · Anlass: Zählung offene Beobachtungen, `aufraeumen.py --check` · ADR: —
