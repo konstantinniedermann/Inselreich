@@ -3425,3 +3425,36 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle Bündel 
 Regelbezug: R330 (5), R816, R1005–R1009 · Kosten bei Irrtum: eine Pflichtzeile je Bündel-Ruling.
 
 Entscheider: L0 · Anlass: Bericht studio-coach Kurz-Retro · ADR: —
+
+## R1011 · 2026-10-28 · REL-35 gepusht; Welle 1 der Session 7c94dd6a
+
+Ruling: Push `12585b2a..898fdd5d` (geprüfter Hash, push-check Exit 0 vom 2026-10-26, R1005) ausgeführt; Push-Takt 2026-10-28 damit verbraucht (R816). CI/Pages prüft L0. Welle 1 (Limit-Ampel grün, Last 2,1):
+Test-Controller (≤ 3, R826): (1) `lead-tech` I-223-SYNC (main in `feat/i223` mergen, siehe R1012), (2) `lead-tech` AUSBAU-LOGIK-3 (Handoff AL-2 Punkte 1–6, Spec-Nachtrag `docs/nachtrag-al` @ `d538aa18` einmergen, Delta-Review opus), (3) `lead-tech` NU-1 Umsetzung (Budget 24/2). Testfrei:
+`lead-design` I-210-KLAER (R1013) + I-200 zurück in den Pool (R1007), `studio-coach` COACH-R1010 (E-084 eintragen, Kosmetik `experimente.md`, R1008), `studio-process-coach` Prozess-Aussensicht REL-35, `lead-design` TIEFE-7 (R862). I-215 und I-214 warten auf den nächsten freien Test-Platz (Reihenfolge I-215, I-214).
+Doku-Branches `docs/coach-r1004` (merge-tree konfliktfrei) und `docs/retro-763c65b8` (konfliktfrei) gehen mit dem nächsten Bündel.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210 wartet auf I-223 (R909)
+Regelbezug: R816, R826, R862, R1005, R1007–R1010 · Kosten bei Irrtum: ein Controller-Platz falsch belegt.
+
+Entscheider: L0 · Anlass: Session-Start 7c94dd6a, Nutzer «mach weiter» · ADR: —
+
+## R1012 · 2026-10-28 · I-223: Sync vor Gate Merge
+
+Ruling: `git merge-tree` main (`04dc6024`) ← `feat/i223` @ `dc01d114`: **KONFLIKT** (nur `docs/arc42.md`; `README.md`, `src/sim/types.ts` automatisch). Vor dem Gate Merge mergt `lead-tech` main in `feat/i223` (Merge, kein Rebase), löst arc42 (beide Inhalte behalten),
+prüft SAVE_VERSION 20 gegen main 19 und fährt gezielte Tests der Hotspots (save, types, tick, population, inspect, titheView) plus `tsc`/`lint`/`zeittests`/`conflicts`. Danach Gate Merge an `lead-qa` (Final-Review opus OK liegt vor, R1001). Der Tooltip-Befund
+`tierTaxTooltip` ohne Zehnt (beobachtungen.md) wird im Sync behoben, wenn er in Minuten ohne neuen Testaufwand geht; sonst Häppchen.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210 (Save v21 nach I-223)
+Regelbezug: E-084 (R1010), R909, R987, R1001 · Kosten bei Irrtum: ein Sync-Lauf.
+
+Entscheider: L0 · Anlass: merge-tree-Probe (E-084) · ADR: —
+
+## R1013 · 2026-10-28 · I-210: AK-BS-18 klären, Nachtrag einmergen
+
+Ruling: `lead-design` (sonnet, Spec-Nachtrag Stufe leicht) berichtigt AK-BS-18 so, dass die Zahl zur Formel clamp(⌈Bewohner/5⌉) passt (Bewohnerzahl oder Kosten anpassen, Formel bleibt), mergt `docs/nachtrag-i210` @ `00d64dc5` in `design/i210-bittschrift`
+und meldet den Kopf. Auslegung: die Formel ist die Quelle, die AK das Beispiel. Gate Merge I-210 nach I-223 auf main; I-210 zieht dann Save auf v21 nach (R909).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210
+Regelbezug: R909, R1009 · Kosten bei Irrtum: eine AK-Zahl.
+
+Entscheider: L0 · Anlass: beobachtungen.md 2026-10-26 (AK-BS-18) · ADR: —
