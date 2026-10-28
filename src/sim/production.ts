@@ -3,7 +3,7 @@ import { STORM_TICK_DIVISOR } from './defs/crises';
 import { EFF_MAX, EFF_WINDOW } from './defs/timing';
 import { addStock, takeStock } from './economy';
 import { cycleOf } from './levels';
-import { buildLevelContext, type LevelContext } from './levelRules';
+import { levelContextIfNeeded, type LevelContext } from './levelRules';
 import { siteRuleOk } from './placement';
 import { reserveOf } from './reserve';
 import { serviceAvailable } from './population';
@@ -24,7 +24,7 @@ const forestOk = (world: World, b: Building): boolean =>
   );
 
 /** Ein Schritt eines Betriebs (Prüfreihenfolge Anhang 01 D); true, wenn progress in diesem Schritt gestiegen ist. */
-function advance(world: World, b: Building, ctx: LevelContext): boolean {
+function advance(world: World, b: Building, ctx?: LevelContext): boolean {
   const def = BUILDING_DEFS[b.defId];
   const cycle = cycleOf(world, b, ctx);
   if (!def.produces || cycle === undefined) return false;
@@ -81,7 +81,7 @@ function advance(world: World, b: Building, ctx: LevelContext): boolean {
  * Auslastung `eff` (gleitender Mittelwert über EFF_WINDOW Schritte, Spec 3.5).
  */
 export function tickProduction(world: World): void {
-  const ctx = buildLevelContext(world); // einmal je Schritt gesammelt, nur für diesen Aufruf
+  const ctx = levelContextIfNeeded(world); // einmal je Schritt gesammelt, nur für diesen Aufruf
   for (const b of Object.values(world.buildings)) {
     if (!BUILDING_DEFS[b.defId].produces) continue; // Häuser, Dienste, Markt: nie eff
     const advanced = advance(world, b, ctx);

@@ -5,7 +5,7 @@ import { ISLANDS } from './defs/sea';
 import { TIERS } from './defs/tiers';
 import type { Coverage } from './coverage';
 import { cycleOf } from './levels';
-import { buildLevelContext, type LevelContext } from './levelRules';
+import { levelContextIfNeeded, type LevelContext } from './levelRules';
 import { inSupplyRange } from './supply';
 import type { Building, GoodId, HouseState, Tier, World } from './types';
 import { center, HOME } from './world';
@@ -33,7 +33,7 @@ export function goodsBalance(
 ): Record<GoodId, { produced: number; consumed: number; net: number }> {
   const out = {} as Record<GoodId, { produced: number; consumed: number; net: number }>;
   for (const g of GOOD_IDS) out[g] = { produced: 0, consumed: 0, net: 0 };
-  const ctx = buildLevelContext(world);
+  const ctx = levelContextIfNeeded(world);
   for (const b of Object.values(world.buildings)) {
     if (b.island !== island) continue;
     if (b.house) {

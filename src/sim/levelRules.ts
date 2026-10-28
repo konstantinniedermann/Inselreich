@@ -43,6 +43,13 @@ const push = <K>(m: Map<K, Building[]>, key: K, b: Building): void => {
   else list.push(b);
 };
 
+/** Kontext nur, wenn ein Betrieb ausgebaut ist; sonst `undefined` (Stufe 1 braucht keine Abfrage, der Raster-Aufbau wäre vergeudet). */
+export function levelContextIfNeeded(world: World): LevelContext | undefined {
+  for (const b of Object.values(world.buildings))
+    if (b.level !== undefined) return buildLevelContext(world);
+  return undefined;
+}
+
 /** Sammelt Häuser, Wachen und Fischer einmal (Reihenfolge der Gebäude-IDs). */
 export function buildLevelContext(world: World): LevelContext {
   const ctx: LevelContext = { houses: new Map(), stations: new Map(), fishers: new Map() };

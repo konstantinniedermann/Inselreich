@@ -3,7 +3,7 @@ import { STORAGE_CAP } from './defs/goods';
 import { UPKEEP_INTERVAL } from './defs/timing';
 import { activeEdictDef } from './edicts';
 import { buildingUpkeep, upkeepOf } from './levels';
-import { buildLevelContext } from './levelRules';
+import { levelContextIfNeeded } from './levelRules';
 import type { Building, Cost, GoodId, Island, Result, World } from './types';
 import { fail, ok } from './types';
 
@@ -62,7 +62,7 @@ export function grantRefund(world: World, isl: Island, cost: Cost): void {
 /** Unterhalt je 100 Ticks, wirksam: Summe S (`nominal`: dieses Gebäude voll auf gebauter Stufe, ohne Drosselung, aber stillgelegt weiter halb – nur Vorschau; Gebäude + Schiffe), mit Edikt upkeepPct < 100 → ⌊S × pct / 100⌋. */
 export function totalUpkeep(world: World, nominal?: Building): number {
   let sum = 0;
-  const ctx = buildLevelContext(world);
+  const ctx = levelContextIfNeeded(world);
   for (const b of Object.values(world.buildings))
     sum += b === nominal && b.paused !== true ? upkeepOf(b) : buildingUpkeep(world, b, ctx);
   sum += world.ships.length * SHIP.upkeep;
