@@ -3730,3 +3730,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MF2-WT (
 Regelbezug: R107, R129, R810, E-084 · Kosten bei Irrtum: Hook-Timeouts bleiben bis zum nächsten Release.
 
 Entscheider: L0 · Anlass: Cross-Session-Nachricht anno-clone #2 · ADR: —
+
+## R1040 · 2026-10-28 · Unterbruch, Messlauf abgebrochen, Folgeinstanzen
+
+Ruling: Zwischen etwa 16:40 und 18:40 lief nichts weiter. Die Leads NU-1 (Instanz 3), I-215 (Instanz 2) und ORT-A (Instanz 2) sind ohne Handoff beendet. `perf.mjs` (T19 ORT-A) hing 2 h 27 min in Seed 14. Der Fixture-Lauf brach mit Exit 3 ab, weil die Warteschleife von L0 zwischen den beiden Läufen eine eigene Sperre gesetzt hatte. L0 hat `perf.mjs` (PIDs 94779/94782/94785) und das zugehörige Headless-Chrome (PID 97054, `--headless` geprüft, R922) mit `kill <PID>` beendet. Danach war die Sperre frei.
+(1) **Messfenster für den Rest der Session:** L0 setzt keine Sperren mehr von Hand. Jedes Messwerkzeug (`make messfenster`, `perf.mjs`, Breitlauf über die Testsperre) nimmt die Sperre selbst. Bei Exit 3 wartet der Lead 2 min und versucht es erneut, ohne zu drängeln. Vorrang hat, wer zuerst fertig ist; bei Gleichstand gilt NU-1 → I-215 → ORT-A. Neben einem fremden Messfenster laufen keine breiten vitest-Läufe.
+(2) **Folgeinstanzen:** ORT-A Instanz 3 (2 von 8 Starts verbraucht), NU-1 Instanz 4 (12 von 24 übrig), I-215 Instanz 3 (7 von 16 verbraucht; in `.worktrees/i215` liegt eine nicht committete Fix-Runde von Arbeiter A: `cycleAtLevel`/`nominalUpkeep`/`throttledUpkeep`). Grundlage sind Git-Stand und Handoffs; jede Instanz schreibt beim Abschluss oder Pausieren einen Handoff.
+(3) **AK-43 ORT-A (vorläufig):** Seed 7, 1920×1080, DPR 2: renderMedian A 18,5 ms gegenüber B 22,4–22,6 ms, also +4 ms bei einer Grenze von +0,2 ms. Der ORT-A-Lead klärt zuerst den Hänger (Zeitlimit je Seed) und dann die Ursache des Mehraufwands. Ob er einen Fix oder eine Ersatzgrenze vorschlägt, entscheidet L0 im Gate. FL-1 bleibt bis T26 blockiert.
+(4) **Save-Nummer:** NU-1 und I-215 führen beide v22. Wer zuerst auf main kommt, behält 22; der zweite zieht nach (R1030).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MF2-WT (Befund Sperrkollision geht in den Plan, Auflage 5 R1027)
+Regelbezug: R922, R1027, R1030, R1035, E-080 · Kosten bei Irrtum: weitere Messkollisionen, 1 bis 2 Starts.
+
+Entscheider: L0 · Anlass: Session-Unterbruch, hängender Messlauf · ADR: —
