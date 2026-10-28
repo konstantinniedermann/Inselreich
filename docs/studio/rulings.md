@@ -3646,3 +3646,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1, I-215 (
 Regelbezug: R392, R909, R987, R1013, R1020, E-084 · Kosten bei Irrtum: ein lastempfindlicher Test im push-check.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I-210-SYNC (zweiter Sync) · ADR: —
+
+## R1032 · 2026-10-28 · Gate Merge I-210: OK
+
+Ruling: Gate Merge `feat/i210` @ `15dc0848` (Bittschrift, Save v21) **OK** (lead-qa, Handoff `.studio/handoffs/2026-10-28-lead-qa-gate-I-210.md`). `git merge-tree` main (`dd8d3322`) ← `feat/i210` @ `15dc0848`: konfliktfrei (E-084). Integrator mergt lokal auf `integrate/rel-36`, kein Push.
+Entwürfe: (1) `petitionsHarmless` in zwei Dateien teilen, Frist 15 s, Kommentar auf Messwert — **ja**, als Häppchen **I-210-NACH** vor REL-36 (zusammen mit den I-210-Resten aus BEOB-19 Kandidat 3, soweit trivial); (2) Playtest-Frage B3 (R999 (4)) bleibt bei L0 bis zum nächsten Nutzer-Playtest-Input.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1, I-215 (Save ab v22)
+Regelbezug: R392, R905, R999, R1031, E-084 · Kosten bei Irrtum: ein Revert-Merge auf lokalem main.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-210 · ADR: —
