@@ -3666,3 +3666,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
 Regelbezug: R1014, R1015, R1024, E-084 · Kosten bei Irrtum: ein Revert-Merge auf lokalem main.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-I-223-NACH · ADR: —
+
+## R1034 · 2026-10-28 · ORT-A wieder aufnehmen (Pfad zu FLAECHE und NU-2)
+
+Ruling: FLAECHE FL-1 ist an ORT-A T26 gebunden (R940), NU-2 an FL-2 (R1026). Deshalb nimmt **ORT-A** den dritten Test-Platz vor TOOL-MF2-WT: Folgeinstanz `lead-tech` (Restbudget 6 von 12, +2 Reserve = 8) ab Handoff `.studio/handoffs/2026-10-25-lead-tech-ORT-A.md` («Stand 2026-10-25»):
+main (Save v21, I-223/AL/I-210) per Merge holen, AK-49 auf aktuelle SAVE_VERSION, T19 (Messung, Last ≤ 4), T20b-Restpunkte laut lead-art-Handoff (Sackgassen-Lappen, falls nicht durch T21 erledigt — Browser-Abnahme), T23, T24/T25 Rater (zwei getrennte `qa-playtester`-Starts, ≤ 2 Browser-Läufe studioweit),
+T26 Final-Review opus. TOOL-MF2-WT startet auf dem nächsten freien Platz. Worktree `ort-a-vor-k2` bleibt bis zur Abnahme.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: FLAECHE, NU-2, GEBAEUDE-VARIANZ
+Regelbezug: R793 (4), R826, R884, R886, R940, R1026 · Kosten bei Irrtum: TOOL-MF2-WT startet später.
+
+Entscheider: L0 · Anlass: Abhängigkeitskette NU-2 ← FL-2 ← ORT-A T26 · ADR: —
