@@ -3553,3 +3553,12 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle (beobach
 Regelbezug: R287, R288, R685, R1018 · Kosten bei Irrtum: eine verzögerte Funktionswelle.
 
 Entscheider: L0 · Anlass: Zählung offene Beobachtungen, `aufraeumen.py --check` · ADR: —
+
+## R1023 · 2026-10-28 · HAUSHALT-05 abgenommen
+
+Ruling: `docs/haushalt-05` @ `a5cddac5` **abgenommen** (R740–R904 ins Archiv, rulings.md 118 Rulings/128 KB; studio-test grün; merge-tree gegen main konfliktfrei). Geht mit dem nächsten Bündel; bis dahin hängt L0 nur am Dateiende an. Befund `aufraeumen.py --root` in beobachtungen.md.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R685, R1022 · Kosten bei Irrtum: ein Doku-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-production HAUSHALT-05 · ADR: —

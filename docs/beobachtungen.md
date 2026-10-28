@@ -337,3 +337,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-28 · AUSBAU-LOGIK-3: Restpunkte nach Delta-Review (niedrig)
 
 - Fundort: Branch `feat/ausbau-logik` @ `3ccdc554`. Beobachtung: (1) `tests/ui/hints.test.ts` ~Z.527 Workaround «(n / m)»: sauber nur mit Änderung in `src/ui/hints.ts` (`REASON_TABLE` bzw. `friendlyReason` müssen das Suffix tolerieren), AK-UI-04 bleibt abgeschwächt. (2) `src/ui/panelView.ts:245` wiederholt die Halb-Formel aus `levels.ts:61`; Helfer in `levels.ts` exportieren. (3) `arc42.md:499` `buildingUpkeep(world, b, ctx)` ohne `?`. (4) Commit-Präfix `perf:` fehlt in der Konvention. (5) `tests/tools/testlock.test.ts` («zwei parallele Läufe auf toter Sperre») schlug einmal im vollen Lauf unter Last fehl, einzeln 26/26 grün; bei Wiederholung untersuchen. Ursprung: Handoff AUSBAU-LOGIK-2, Delta-Review AUSBAU-LOGIK-3. Einschätzung: alle niedrig, keine Issues.
+
+## 2026-10-28 · `aufraeumen.py --check` misst im Worktree den Hauptcheckout (niedrig)
+
+- Fundort: `tools/studio/aufraeumen.py`. Beobachtung: Ohne `--root` nimmt `--check` immer den Hauptcheckout; im Worktree meldet es deshalb «fällig», obwohl der Branch die Schwelle schon einhält. Ursprung: HAUSHALT-05 (lead-production). Einschätzung: Werkzeug-Häppchen (Standard = `git rev-parse --show-toplevel`).
