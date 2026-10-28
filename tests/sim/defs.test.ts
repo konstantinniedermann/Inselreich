@@ -334,7 +334,8 @@ describe('M12 Seefahrt Werte (T02)', () => {
       cost: { money: 800, wood: 20, tools: 8, stone: 10 },
       upkeep: 10,
       supplyRadius: 8,
-      site: [...BUILDING_DEFS.kontor.site, { kind: 'foreignNoKontor' }],
+      // HAFEN AK-HF-03: Meerufer statt irgendeiner Wasserkachel (Binnensee zählt nicht).
+      site: [{ kind: 'seaCoast' }, { kind: 'foreignNoKontor' }],
     });
   });
   it('AK-E2-09 Schiff und Routen', () => {

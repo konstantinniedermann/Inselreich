@@ -207,6 +207,7 @@ Tooltips von 2× und 4× sagen, wie viel schneller die Spielzeit läuft.
   stillstehende Betriebe bleiben dunkel, Stillstand ist also auch nachts zu sehen. Die Tönung steht bei
   Pause still und lässt sich in den Einstellungen abschalten.
 - **Händlerschiff:** Solange ein Handelsauftrag läuft, liegt ein Schiff am Kontor.
+- **Seehandel, Kontor II:** Ein Kontor auf einer fernen Insel braucht Zugang zum Meer (Binnenseen zählen nicht); sonst meldet der Bau «Kontor braucht Zugang zum Meer». Das Schiff legt am gebauten Kontor an: Mit dem Bau rückt der Anlegeplatz der Insel an das Kontor.
 - **Pause-Anzeige:** Bei Pause erscheinen ein getönter Kartenrand und das Banner «Pause»; `P` oder `1×` setzt fort.
 - **Wasser** bewegt sich; an der Küste läuft ein Schaumsaum.
 

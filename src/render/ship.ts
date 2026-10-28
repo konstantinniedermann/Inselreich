@@ -1,5 +1,4 @@
-import { BUILDING_DEFS } from '../sim/defs/buildings';
-import { home, adjacentOf, tileAt, type Pos } from '../sim/world';
+import { home, type Pos } from '../sim/world';
 import type { World } from '../sim/types';
 import { worldToScreen, type Camera } from './camera';
 import { ISO_H, ISO_W, project, type Pt } from './iso';
@@ -50,16 +49,11 @@ export function shipShadow(tile: Pos): Pt[] {
   return pts;
 }
 
-/** Kachel des Händlerschiffs: vorderes Wasserfeld am Kontor (grösstes x + y, bei Gleichstand kleineres x, D-18); null ohne Auftrag oder Wasser. */
+/** Kachel des Händlerschiffs: Anker der Heimatinsel (Anlegestelle am Kontor, R6); null ohne Auftrag. */
 export function shipTile(world: World): Pos | null {
   if (world.order === null) return null;
-  const k = world.buildings[home(world).kontorId];
-  if (!k) return null;
-  const def = BUILDING_DEFS[k.defId];
-  const water = adjacentOf(home(world), k.x, k.y, def.w, def.h)
-    .filter((p) => tileAt(home(world), p.x, p.y)?.terrain === 'water')
-    .sort((a, b) => b.x + b.y - (a.x + a.y) || a.x - b.x);
-  return water[0] ?? null;
+  const { x, y } = home(world).anchor;
+  return { x, y };
 }
 
 /** Zeichnet das Schiff mit leichtem Schaukeln (nur aus `timeMs`) an der Rautenmitte von `tile`; `scale` ≥ 1 vergrössert es (Mindestgrösse bei kleinem Zoom, T11). */
