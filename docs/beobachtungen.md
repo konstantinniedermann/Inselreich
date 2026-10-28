@@ -345,3 +345,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-28 · `aufraeumen.py --check` misst im Worktree den Hauptcheckout (niedrig)
 
 - Fundort: `tools/studio/aufraeumen.py`. Beobachtung: Ohne `--root` nimmt `--check` immer den Hauptcheckout; im Worktree meldet es deshalb «fällig», obwohl der Branch die Schwelle schon einhält. Ursprung: HAUSHALT-05 (lead-production). Einschätzung: Werkzeug-Häppchen (Standard = `git rev-parse --show-toplevel`).
+
+## 2026-10-28 · I-210-SYNC: Testlagen Bittschrift nach AUSBAU-LOGIK (niedrig)
+
+- Fundort: `tests/sim/petitionWorlds.ts` (feat/i210). Beobachtung: `stableTown` ruft kein `ensureCrew` auf; mit Seed 7 liefen 7 ausgebaute Betriebe auf Stufe 1 (heute nur Seed 3 genutzt, `petitionsStable.test.ts:164-165` fängt einen Seed-Wechsel ab). `sceneOf` prüft nicht, ob `ensureCrew` gewirkt hat: ein Guard `runningLevel === level` je ausgebautem Betrieb würde stille Drosselung bei späteren AL-Regeln melden. Ursprung: Delta-Review I-210-SYNC. Einschätzung: bei nächster Berührung der Lagen mitnehmen.
