@@ -39,6 +39,7 @@ export interface Cost {
 }
 export type SiteRule =
   | { kind: 'coast' } // ≥1 Wasserkachel 4er-angrenzend
+  | { kind: 'seaCoast' } // ≥1 Kantennachbar im Meer (seaMask), Binnensee zählt nicht
   | { kind: 'adjacent'; terrain: Terrain; min: number } // ≥min Kacheln des Terrains 4er-angrenzend
   | { kind: 'radius'; terrain: Terrain; radius: number; min: number; free?: true } // ≥min Kacheln im Radius; `free`: nur unbebaute Kacheln
   | { kind: 'supply' } // im Radius von Kontor oder Markt
@@ -314,7 +315,7 @@ export interface CouncilDef {
   lever: CouncilLever;
 }
 export interface World {
-  version: 20;
+  version: 21;
   seed: number;
   islands: Island[];
   tick: number;
@@ -343,6 +344,12 @@ export interface World {
   taxCarry: number;
   /** Unterhalts-Übertrag, 0 … UPKEEP_INTERVAL − 1 (M11 3.1). */
   upkeepCarry: number;
+  /** Zehnt je Stufe an/aus (I-223); Start aus. */
+  titheOn: Record<TitheTier, boolean>;
+  /** Tick, bis zu dem der Zehnt der Stufe nicht umschaltbar ist (I-223), ≥ 0. */
+  titheLockedUntil: Record<TitheTier, number>;
+  /** Zehnt-Übertrag je Gut, 0 … TITHE_CARRY_DIVISOR − 1 (I-223). */
+  titheCarry: Record<TitheGood, number>;
   /** Schiffe (M12 Seefahrt), höchstens `SHIP_MAX`. */
   ships: Ship[];
   nextShipId: number;
@@ -436,7 +443,7 @@ export interface Island {
   /** Lage der Insel im Archipel in Kacheln (Heimat 0/0; Fremdinseln können negativ sein). */
   ox: number;
   oy: number;
-  /** Ankerkachel für den Seeweg, innerhalb der Insel. */
+  /** Ankerkachel für den Seeweg, innerhalb der Insel; veränderlich: `placeBuilding` setzt sie beim Bau von Kontor II auf `dockFor`. */
   anchor: { x: number; y: number };
   /** Sperrbestand je Reserve-Gut (I-049); immer vollständig. */
   reserve: Record<ReserveGood, ReserveStep>;
@@ -463,3 +470,10 @@ export interface EdictDef {
   /** null = keine Wirkung. */
   upgradeWait: number | null;
 }
+
+/** Stufen mit Zehnt (I-223): Pioniere, Siedler. */
+export type TitheTier = 1 | 2;
+/** Güter, in denen der Zehnt fällig wird (I-223). */
+export type TitheGood = 'tools' | 'stone';
+/** Ausfall durch den Zehnt je Gut (I-223). */
+export type TitheLoss = Partial<Record<TitheGood, number>>;

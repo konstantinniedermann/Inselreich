@@ -1,11 +1,12 @@
 import { BUILDING_DEFS, ROAD_COST_OBJ } from './defs/buildings';
 import { grantRefund, pay, refundCost } from './economy';
+import { dockFor, laneTicksOf } from './islands';
 import { newMonument } from './monument';
 import { newHouseState } from './population';
 import { affordBuild, canPlace, canPlaceRoad, islandAt } from './placement';
 import { effectiveRefund } from './queries';
 import { recomputeConnectivity } from './roads';
-import type { Building, BuildingDefId, Result, World } from './types';
+import type { Building, BuildingDefId, Island, Result, Ship, World } from './types';
 import { fail, ok } from './types';
 import { invalidateFeastIndex } from './feastEffect';
 import { paidCost } from './upgrade';
@@ -32,6 +33,30 @@ export function removeRoad(world: World, x: number, y: number, island: number = 
   grantRefund(world, isl, refundCost(ROAD_COST_OBJ));
   recomputeConnectivity(world);
   return ok;
+}
+
+/** Schiffe, die auf der Insel `island` starten oder dorthin fahren. */
+const sailingTo = (world: World, island: number): Ship[] =>
+  world.ships.filter((s) => s.to !== null && (s.port === island || s.to === island));
+
+/** R3: Der Anker der Insel folgt dem neuen Kontor; neues `islands`-Array lässt Seeweg-, Linien- und UI-Caches fallen.
+ * Fahrende Schiffe behalten ihren Fahrtanteil: `left` wird auf die neue Fahrzeit umgerechnet (wie `rescaleVoyages`), sonst lehnt das Laden es ab. */
+function moveAnchorToDock(world: World, isl: Island, island: number, x: number, y: number): void {
+  const fleet = sailingTo(world, island).map((s) => ({
+    ship: s,
+    alt: laneTicksOf(world, s.port, s.to!),
+  }));
+  isl.anchor = dockFor(
+    isl.tiles.map((t) => t.terrain),
+    isl.width,
+    isl.height,
+    { x, y },
+  );
+  world.islands = world.islands.slice();
+  for (const { ship, alt } of fleet) {
+    const neu = laneTicksOf(world, ship.port, ship.to!);
+    ship.left = Math.min(neu, Math.max(1, Math.ceil((ship.left * neu) / alt)));
+  }
 }
 
 export function placeBuilding(
@@ -66,7 +91,10 @@ export function placeBuilding(
   world.buildings[id] = building;
   invalidateFeastIndex(world);
   for (const p of footprint(BUILDING_DEFS[defId], x, y)) tileAt(isl, p.x, p.y)!.buildingId = id;
-  if (fromHome) isl.kontorId = id;
+  if (fromHome) {
+    isl.kontorId = id;
+    moveAnchorToDock(world, isl, island, x, y);
+  }
   if (defId === 'monument') world.monument = newMonument(id);
   recomputeConnectivity(world);
   return { ok: true, id };

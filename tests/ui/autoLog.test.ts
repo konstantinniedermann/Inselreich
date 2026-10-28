@@ -159,6 +159,7 @@ describe('AK-UD-05b Vertragsereignisse', () => {
     lost: [],
     contract,
     petitions: [],
+    titheLost: {},
   });
 
   it('delivered: info, Text wie contractNotice, zählt als neu', () => {

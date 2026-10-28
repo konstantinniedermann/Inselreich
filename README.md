@@ -207,8 +207,20 @@ Tooltips von 2× und 4× sagen, wie viel schneller die Spielzeit läuft.
   stillstehende Betriebe bleiben dunkel, Stillstand ist also auch nachts zu sehen. Die Tönung steht bei
   Pause still und lässt sich in den Einstellungen abschalten.
 - **Händlerschiff:** Solange ein Handelsauftrag läuft, liegt ein Schiff am Kontor.
+- **Seehandel, Kontor II:** Ein Kontor auf einer fernen Insel braucht Zugang zum Meer (Binnenseen zählen nicht); sonst meldet der Bau «Kontor braucht Zugang zum Meer». Das Schiff legt am gebauten Kontor an: Mit dem Bau rückt der Anlegeplatz der Insel an das Kontor.
 - **Pause-Anzeige:** Bei Pause erscheinen ein getönter Kartenrand und das Banner «Pause»; `P` oder `1×` setzt fort.
 - **Wasser** bewegt sich; an der Küste läuft ein Schaumsaum.
+
+### Zehnt
+
+Ab der Amtsstube (erste Siedler) stellst du für Pioniere und für Siedler je ein, ob sie ihre Steuer in Geld oder als Zehnt zahlen (Schalter `Geld | Zehnt` im Amtsstuben-Panel).
+
+- Zehnt der Pioniere: Ihre ganze Steuer kommt als Werkzeug ins Lager, nicht als Geld.
+- Zehnt der Siedler: Ein Zehntel ihrer Steuer kommt als Stein ins Lager.
+- Nach dem Umschalten bleibt der Zehnt 3 Minuten, wie er ist.
+- Ist das Lager voll, verfällt der Rest.
+
+Die Ware kommt etwa 17 % billiger als der Zukauf ins Heimatlager. Vor dem Einschalten zeigt eine Rückfrage, wie sich die Kasse danach entwickelt; bei einer Bilanz im Minus warnt sie vor leerer Kasse (im Minus kannst du nicht bauen und nicht zukaufen). Läuft eine Meisterprüfung, steht dort zusätzlich der Hinweis auf den gesperrten Zukauf. Verfallene Ware meldet das Spiel höchstens einmal je Bilanzintervall.
 
 ### Bittschriften
 

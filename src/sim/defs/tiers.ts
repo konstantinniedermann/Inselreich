@@ -1,4 +1,4 @@
-import type { TaxLevel, TaxLevelDef, Tier, TierDef } from '../types';
+import type { TaxLevel, TaxLevelDef, TitheGood, TitheTier, Tier, TierDef } from '../types';
 import { UPGRADE_WAIT, UPKEEP_INTERVAL } from './timing';
 
 /** Ganzzahlige Steuereinheit: ein erfülltes Haus zahlt `TAX_UNIT`, ein unerfülltes 1 (Anhang 01 A.1). */
@@ -7,6 +7,22 @@ export const TAX_UNIT = 2;
 export const UNSATISFIED_TAX_FACTOR = 1 / TAX_UNIT;
 /** Teiler des Steuer-Übertrags: Einheiten × Prozent je Geldstück (Anhang 01 A.1). */
 export const TAX_CARRY_DIVISOR = UPKEEP_INTERVAL * 100 * TAX_UNIT;
+
+/** Zehnt-Gut je Stufe (I-223): Pioniere zahlen Werkzeug, Siedler Stein. */
+export const TITHE_GOOD = { 1: 'tools', 2: 'stone' } as const satisfies Record<
+  TitheTier,
+  TitheGood
+>;
+/** Zehnt-Anteil je Stufe in Prozent der Steuer (I-223). */
+export const TITHE_PCT: Record<TitheTier, number> = { 1: 100, 2: 10 };
+/** Gutseinheiten je 100 Steuereinheiten (I-223). */
+export const TITHE_UNITS_PER_100: Record<TitheGood, number> = { tools: 3, stone: 8 };
+/** Teiler des Zehnt-Übertrags: Steuer-Teiler × 100 (I-223). */
+export const TITHE_CARRY_DIVISOR = TAX_CARRY_DIVISOR * 100;
+/** Stufen mit Zehnt, aufsteigend (I-223). */
+export const TITHE_TIERS: readonly TitheTier[] = [1, 2];
+/** Zehnt-Güter, in fester Reihenfolge (I-223). */
+export const TITHE_GOODS: readonly TitheGood[] = ['tools', 'stone'];
 
 export const TIERS: Record<Tier, TierDef> = {
   1: {

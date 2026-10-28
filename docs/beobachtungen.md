@@ -309,3 +309,15 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-26 · HAFEN L1: Render-Caches nach Kontor-II-Wechsel nicht invalidiert (niedrig)
 
 - Fundort: `src/render/decor.ts:977-1022` (`seaContext`), `src/render/fauna.ts:470-490` (`routeFar`), Branch `feat/hafen`. Beobachtung: Caches nehmen feste Inseln an (Kommentar veraltet) und werden nach einem Anker-Wechsel durch Kontor II nicht verworfen; nur Darstellung. Ursprung: Gate Merge HAFEN L1 (N2). Einschätzung: in HAFEN S5 oder als Häppchen mitnehmen.
+
+## 2026-10-26 · I-210 Abschluss: Rest-Befunde (niedrig)
+
+- Fundort: Branch `feat/i210` @ `7df6518b`. Beobachtung: `effectiveRefund`/`grantRefund` kappen während des Speicherbaus bei 100 statt 120; `spiceShips` (`src/sim/petitions.ts`) dupliziert `goal3.spiceSource`; `activeEffects` (`src/ui/petitionLog.ts`) dupliziert `active()`; Artikel «Die» hart in Texten (`petitionLog.ts:63`); Chip-Klick öffnet nur die früheste Marke; Karte ragt bei 390 px aus dem Fenster (Desktop-first, nur Hinweis). Ursprung: I-210 Sessions 3–5 (lead-tech). Einschätzung: Aufräum-Häppchen nach dem Merge; Kappung 100/120 vor einem Release mit Speicherbau prüfen.
+
+## 2026-10-26 · I-223 Abschluss: Rest-Befunde (niedrig)
+
+- Fundort: Branch `feat/i223` @ `f085e56e`. Beobachtung: `tierTaxTooltip` rechnet ohne Zehnt; Literale 3/100 in `titheView.ts`/`taxView.ts` statt aus `TAX_CARRY_DIVISOR` abgeleitet; AK-ZE-12 prüft nur < / >; Testtitel «v18 lädt als Version 19» in `council-save.test.ts` veraltet; `dropTithe` wirft TypeError bei Teilstruktur (Testhelfer). Ursprung: I-223 (lead-tech, Final-Review). Einschätzung: Tooltip vor Release prüfen, Rest Aufräum-Häppchen.
+
+## 2026-10-26 · I-210: AK-BS-18 nennt «Kosten 10» bei 60 Bewohnern (niedrig)
+
+- Fundort: Spec I-210 (Branch `design/i210-bittschrift`), AK-BS-18. Beobachtung: Bei vier Bürgerhäusern mit 60 Bewohnern ergibt clamp(⌈60/5⌉) = 12, die AK nennt 10; vermutlich andere Bewohnerzahl gemeint. Ursprung: Spec-Nachtrag I-210 (lead-design, R1009). Einschätzung: im Gate Merge I-210 klären, ggf. AK-Zahl berichtigen.

@@ -112,6 +112,27 @@ describe('AK-BS-15 Migration', () => {
     }
     expect(serialize(r.world)).toBe(serialize(ref));
   });
+  it('v19-Stand läuft über Zehnt (v20) und Bittschrift (v21) und gleicht einer frischen Welt', () => {
+    const raw = JSON.parse(serialize(createWorld(3))) as Record<string, unknown>;
+    for (const k of ['petitions', 'titheOn', 'titheLockedUntil', 'titheCarry']) delete raw[k];
+    raw.version = 19;
+    const r = deserialize(JSON.stringify(raw));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.world.version).toBe(21);
+    expect(serialize(r.world)).toBe(serialize(createWorld(3)));
+  });
+  it('v20-Stand mit Zehnt behält ihn, Bittschriften aus', () => {
+    const raw = JSON.parse(serialize(createWorld(3))) as Record<string, unknown>;
+    delete raw.petitions;
+    raw.version = 20;
+    (raw.titheOn as Record<string, boolean>)['1'] = true;
+    const r = deserialize(JSON.stringify(raw));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.world.titheOn[1]).toBe(true);
+    expect(r.world.petitions.on).toBe(false);
+  });
   it('mit won zieht der migrierte Stand nie', () => {
     const raw = JSON.parse(oldSave()) as Record<string, unknown>;
     raw.won = true;
@@ -127,6 +148,11 @@ describe('AK-BS-15 Abweisung', () => {
   it('Stand der aktuellen Version ohne petitions ist beschädigt, kein stilles Auffüllen', () => {
     const raw = JSON.parse(serialize(busyWorld())) as Record<string, unknown>;
     delete raw.petitions;
+    expect(deserialize(JSON.stringify(raw))).toEqual(broken);
+  });
+  it('Stand der aktuellen Version ohne Zehnt-Felder ist beschädigt', () => {
+    const raw = JSON.parse(serialize(busyWorld())) as Record<string, unknown>;
+    delete raw.titheOn;
     expect(deserialize(JSON.stringify(raw))).toEqual(broken);
   });
   it('drei offene Marken', () =>

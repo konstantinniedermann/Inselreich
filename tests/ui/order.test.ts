@@ -468,6 +468,7 @@ describe('I-047 Stammkunde: Meldungen (AK-SK-28)', () => {
       lost: [],
       contract,
       petitions: [],
+      titheLost: {},
     });
     announceContract([rep(null), rep(delivered)], out, w);
     expect(out.show).toHaveBeenCalledTimes(1);

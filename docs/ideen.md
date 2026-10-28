@@ -80,6 +80,17 @@ Leitbefund IDEEN-20: Die stärksten Ideen kommen nicht aus neuen Boni, sondern a
 (I-222: eine Stadt, deren Fehler man erbt). Beide geben dem Mittel- und Spätspiel eine Entscheidung mit Preis, ohne die Baseline zu berühren. Die Mittelspiel-Ideen mit Waren- oder Zeitpreis
 (I-223, I-224) stehen und fallen mit einem Kurs, der erst gerechnet werden muss; ohne Rechnung kippen sie in Rabatt oder Leerlauf.
 
+## Nachführung TIEFE-6 (R975)
+
+Recherche `docs/superpowers/specs/2026-10-26-tiefe-6-spielmodi.md` §3, abgenommen mit R975; Pflege R996. Belegstärke begrenzt, darum Leitplanke, Rang und zwei Ideen, keine Spec.
+
+- **Leitplanke T6-1 «Härte statt Zahlen»:** Meta-Fortschritt schaltet nur Inhalte und Härtestufen frei, nie Spielwerte. Gilt für jede Idee mit Fortschritt über Partien (I-186, I-209, I-227, I-228); I-134 «Vermächtnis» bleibt geparkt (Archiv).
+- **T6-2 und T6-3** als neue Ideen I-227 und I-228 (unten).
+- **T6-4:** I-200 «Kleine Insel» (geparkt, Archiv) rückt im Rang vor: Baustein direkt nach Inselproben **Schnitt 1** statt Schnitt 2, vor I-228. Der Archiv-Eintrag wird beim nächsten Archiv-Paket nachgeführt.
+- **T6-5** «Regler mit ehrlicher Wertung» geht in I-209 Seegang (K1, Stufenlogik) und I-197b Partiebrief (K4, Träger des Regelcodes) auf; keine eigene ID.
+- **Reihenfolge Modi (TIEFE-6 [E]):** Inselproben (I-190–I-192) → I-227 → I-209 mit T6-5 → I-200 → I-228.
+- Pool danach 38 von 40 offen.
+
 ## Ideen
 
 ### I-061 · eingeplant (R529, Stadtplanung) · Marktplatz-Reichweite über Wege
@@ -295,7 +306,7 @@ Leitbefund IDEEN-20: Die stärksten Ideen kommen nicht aus neuen Boni, sondern a
 - Doppelung: I-038 (geparkt, Erkundungsfahrt deckt eine schon erzeugte Insel auf), I-036 (geparkt, Wrackbergung), Erweiterung 1 §10 (Erkundung und Nebel ausdrücklich nicht im Umfang). Beleg: `rg -n -i "Expedition" docs/ideen.md docs/ideen-archiv.md` → 0 Treffer; I-038 und I-036 über `rg -n "^### I-0(36|38)" docs/ideen-archiv.md`; Erweiterung 1 Z. 282.
 - Bewertung lead-design: Gibt der Flotte nach der Gewürzstadt einen Zweck und einen Lohn ausser Geld. Die Kritik «Zufallslohn, Klickarbeit» (R3) ist durch Wahl-Karten und die Grenze von einer Expedition zugleich begrenzt. Allein M, als Kern der Erweiterung «Neue Ufer» stärker.
 - Nutzen/Aufwand: Flotte und Spätspiel bekommen Ziel und Geschichte · M · ≈ 3 Pakete
-- Entscheid: R864 Baustein der Erweiterung «Neue Ufer» (I-194, N-104)
+- Entscheid: R864 Baustein der Erweiterung «Neue Ufer» (I-194, N-104); R962 Kern der Etappe NU-1 «Kartenrand» (Expedition ohne Verlust, Ladeliste T4-1)
 - Auflage TIEFE-4: T4-1/T4-3/T4-4, wirksam mit N-104 Neue Ufer (R927 E1; Branch `docs/tiefe-4`, `docs/recherche/2026-10-25-tiefe-4.md` §3; Rechnung T4-4 auf `design/rueckfracht`)
 
 ### I-190 · eingeplant (R864, Inselproben) · Inselprobe (feste Karte, festes Ziel, Bestzeit)
@@ -340,7 +351,7 @@ Leitbefund IDEEN-20: Die stärksten Ideen kommen nicht aus neuen Boni, sondern a
 - Nutzen/Aufwand: frühe, harte Entscheidungen bei jedem Neustart · M · ≈ 3 Pakete plus je Szenario eine Rechnung
 - Entscheid: R864 eingeplant: Teil «Modus Inselproben» (ein Szenario als Prüfling)
 
-### I-194 · bewertet (N-104) · Erweiterung «Neue Ufer» (Entdeckung und kalte Insel)
+### I-194 · eingeplant (R958, R966) · Erweiterung «Neue Ufer» (Entdeckung und kalte Insel)
 
 - Bereich: Inhalt · Säule: Insel besiedeln (Archipel) · Quelle: TIEFE-1 Recherche R3 «neue Region mit eigener Kette» (meistgelobt), «Sammeln und Erkunden» · Herkunft: vom Studio vorgeschlagen · Gruppe: **Erweiterung**
 - Spielerwirkung: „Der Spieler deckt per Expedition den Nebel hinter dem Kartenrand auf, findet eine kalte Nordinsel, deren Siedler Wärme brauchen, und baut dort eine zweite kleine Stadt mit eigener Kette."
@@ -351,7 +362,7 @@ Leitbefund IDEEN-20: Die stärksten Ideen kommen nicht aus neuen Boni, sondern a
 - Doppelung: I-038 (geparkt, Erkundungsfahrt), I-036 (geparkt, Wrack), I-189 (Baustein), Erweiterung 1 §10 (Erkundung, Nebel, neue Inseln ausdrücklich ausgeschlossen, also kein Doppel). Beleg: `rg -n -i "Expedition|Nebel|Klima" docs/ideen.md docs/ideen-archiv.md` → 0 Treffer; I-038 über «Erkund».
 - Bewertung lead-design: Das Thema, das Spieler an Erweiterungen am meisten loben. Es ruht auf Werft und Flotte der Erweiterung 1 und passt zum ruhigen Ton. Kandidat für die Erweiterung nach «Stände und Segel».
 - Nutzen/Aufwand: neue Spielphase mit neuer Frage («wie versorge ich ein anderes Klima?») · L · ≈ 12–16 Pakete
-- Entscheid: R864 offen: Nutzerentscheid N-104 (Reihenfolge der Erweiterungen), Empfehlung Erweiterung 2
+- Entscheid: R958 Erweiterung 2 (Nutzerentscheid N-104); R966 Designvorschlag `docs/superpowers/specs/2026-10-25-neue-ufer-design.md` (NU-1 bis NU-4) freigegeben, Spec NU-1 «Kartenrand»
 - Auflage TIEFE-4: T4-1/T4-3/T4-4, wirksam mit N-104 Neue Ufer (R927 E1; Branch `docs/tiefe-4`, `docs/recherche/2026-10-25-tiefe-4.md` §3; Rechnung T4-4 auf `design/rueckfracht`)
 
 ### I-195 · bewertet (N-104) · Erweiterung «Ernte und Frost» (Jahreszeiten)
@@ -390,7 +401,7 @@ Leitbefund IDEEN-20: Die stärksten Ideen kommen nicht aus neuen Boni, sondern a
 - Doppelung: I-190/I-191 setzen feste Nummern bzw. das Datum; die Spec Inselproben schliesst Änderungen an «Neue Insel» ausdrücklich aus (§13, `design/modus-inselproben`). Keine freie Eingabe im Pool oder Archiv.
 - Bewertung lead-design: kleinster Weg zu Wiederspielwert mit Vergleich, auch ohne die Proben nützlich. Dateinähe zu den Inselproben (`menu.ts`, `app.ts`): nach deren UI-Task bauen.
 - Nutzen/Aufwand: dieselbe Karte mit anderem Ziel, Teilen unter Spielern · S · ≈ 40 Tools
-- Entscheid: R878 eingeplant: Kurzdesign `design/i197-i201` (Gate Spec BEDENKEN eingearbeitet), Plan `plan/i197-kartennummer` Gate Plan OK; K4 «Partiebrief» als I-197b (R881)
+- Entscheid: R878 eingeplant: Kurzdesign `design/i197-i201` (Gate Spec BEDENKEN eingearbeitet), Plan `plan/i197-kartennummer` Gate Plan OK; K4 «Partiebrief» als I-197b (R881); R975: T6-5 «Regler mit ehrlicher Wertung» geht in I-197b auf (Regelcode trägt den Reglerstand, Ehrenbuch kennzeichnet die Partie)
 
 ### I-201 · eingeplant (R878, Plan R881) · Festanlass (drei Arten Fest, zweite Zutat)
 
@@ -415,7 +426,7 @@ Leitbefund IDEEN-20: Die stärksten Ideen kommen nicht aus neuen Boni, sondern a
 - Doppelung: I-198 (zusammengefasst hierher), I-192 Knappe Zeiten (feste Szenario-Startlage, eingeplant Inselproben; Seegang ist frei kombinierbar mit jeder Karte), I-133 (verworfen), I-193 Bewährung (geparkt, Endlos, bleibt getrennt), Krisenstufe (live, bleibt eigener Regler).
 - Bewertung lead-design: stärkster Wiederspiel-Hebel ohne neuen Inhalt: alle Regeln sind Faktoren auf vorhandene Werte. Vor dem Kurzdesign eine Lösbarkeitsrechnung je Stufe (`design-economy-designer`), Wiederverwendung der Startbedingungs-Schalter aus Inselproben.
 - Nutzen/Aufwand: zweite bis fünfte Partie mit eigenem Ziel · M · ≈ 3 Pakete (Defs und Sim-Schalter, Neue-Insel-UI, Ablage und Ehrenbuch-Anschluss) plus Rechnung
-- Entscheid: R893 eingeplant: Lösbarkeitsrechnung je Stufe nach Inselproben-Merge, dann Spec (Stufe voll)
+- Entscheid: R893 eingeplant: Lösbarkeitsrechnung je Stufe nach Inselproben-Merge, dann Spec (Stufe voll); R975: nimmt T6-5 auf (Regler «Frei» mit Kennzeichnung im Ehrenbuch, Meisterstücke nur auf Standard und Seegang-Stufen); Leitplanke T6-1
 
 ### I-210 · eingeplant (R893, Plan R923) · Bittschrift (Bitte mit zwei Antworten und spätem Nachspiel)
 
@@ -543,3 +554,29 @@ Leitbefund IDEEN-20: Die stärksten Ideen kommen nicht aus neuen Boni, sondern a
 - Bewertung lead-design: echter Zeit-Preis, aber er ändert das Grundgefühl «sofort gebaut» und streut einen Sonderfall durch alle Gebäudeabfragen. Der Nutzen ist ein Rabatt, den man im Frühspiel immer nimmt (Material knapp, Zeit billig): Entartung «immer Sparbau» vor Minute 15.
 - Nutzen/Aufwand: Material gegen Zeit · M · ≈ 3 Pakete plus Querschnitt-Review
 - Entscheid: offen (IDEEN-20), Empfehlung verwerfen (Entartung im Frühspiel, Querschnitt-Risiko ohne passendes Erlebnis)
+
+### I-227 · bewertet · Partie-Ende-Angebot «Nächste Insel»
+
+- Bereich: Bedienung · Säule: Insel besiedeln · Quelle: TIEFE-6 T6-2 (`docs/superpowers/specs/2026-10-26-tiefe-6-spielmodi.md` §3, Belege [Q13], [Q14]); R975; Genre-Mechanik «Lauf endet mit Anschlussangebot»
+- Spielerwirkung: „Der Spieler sieht am Ende einer Partie (Sieg oder Scheitern) bis zu drei konkrete Angebote, etwa eine offene Meisterstück-Zeile, die nächste Seegang-Stufe oder die Tagesinsel, und startet mit einem Klick die nächste."
+- Mechanik: Abschlussbild in `src/ui/` liest vorhandene Zustände (Ehrenbuch-Ablage, Inselproben-Liste, später Seegang-Stufe); jedes Angebot startet «Neue Insel» mit vorbelegten Optionen. Keine Sim-Regel, kein Spielwert, kein Save-Feld; Leitplanke T6-1.
+- Grösse: S · Risiko: keins (UI liest nur)
+- Raster: Spass 2 · Passung 2 · Aufwand 3 · Risiko 3 = 12 (lead-design)
+- Randfälle: keine offenen Angebote → nur «Neue Insel» wie heute; Angebot zu einem noch nicht live gegangenen Modus erscheint nicht.
+- Doppelung: geprüft `rg -n -i "partie-ende|nächste insel|abschlussbild" docs/ideen.md docs/ideen-archiv.md`: nur I-134 «Vermächtnis für die nächste Insel» (geparkt, Startbonus, gegen T6-1) und die Kamera-Taste «nächste Insel», keine Doppelung; I-186 Ehrenbuch legt ab, bietet aber keinen Folgeschritt; I-197 betrifft den Start; Chronik bleibt Rückblick.
+- Bewertung lead-design: wandelt «Ende» in «noch eine» ohne neuen Inhalt; Wert wächst mit jedem Modus. Erst nach I-186 und der Inselproben-UI (`menu.ts`), sonst leere Angebote.
+- Nutzen/Aufwand: Anschluss an die nächste Partie · S · ≈ 1 Häppchen (≈ 50 Tools)
+- Entscheid: R975 in den Pool (nach I-186 und Inselproben); Einplanung offen
+
+### I-228 · bewertet · Monatsprobe (Regelvariante des Monats)
+
+- Bereich: Inhalt · Säule: Insel besiedeln · Quelle: TIEFE-6 T6-3 (`docs/superpowers/specs/2026-10-26-tiefe-6-spielmodi.md` §3, Belege [Q9], [Q15]); R975; Genre-Mechanik «monatliche Herausforderung»
+- Spielerwirkung: „Der Spieler öffnet das Spiel am Monatsersten und spielt die Regelvariante des Monats auf fester Karte, Bestzeit lokal."
+- Mechanik: Auf dem Probenrahmen (I-190/I-191): Monat aus dem Datum wählt Karte und **eine** Regelabwandlung aus einer Def-Liste (`src/sim/defs/`), z. B. Seegang-Regeln aus I-209; verpasste Monate kosten nichts. Kein Server.
+- Grösse: S–M · Risiko: Baseline unberührt; Save nur über den Probenrahmen (v19); jede Abwandlung braucht eine Lösbarkeitsrechnung (Controller-Lauf)
+- Raster: Spass 2 · Passung 2 · Aufwand 2 · Risiko 2 = 10 (lead-design)
+- Randfälle: Datum zurückgestellt → gleiche Probe wie im gewählten Monat, keine Wertung über Geräte; Abwandlung, die eine Kette sperrt, muss lösbar bleiben.
+- Doppelung: geprüft `rg -n -i "monat|monthly" docs/ideen.md docs/ideen-archiv.md`: I-191 Tagesinsel (täglich, ohne Regelabwandlung), I-190 feste Probe, I-225 Tageslos (Wahl aus zwei Bedingungen, Empfehlung parken), I-197b Partiebrief (spielergemacht).
+- Bewertung lead-design: Rückkehrgrund mit wenig Druck; teilt die Abwandlungs-Tabelle mit I-209 und I-225, darum nach Seegang. Letzter Schritt der Modus-Reihenfolge.
+- Nutzen/Aufwand: Rückkehr mit Abwechslung · S–M · ≈ 2 Pakete plus Lösbarkeitsrechnung
+- Entscheid: R975 in den Pool (nach Inselproben live und I-209); Einplanung offen

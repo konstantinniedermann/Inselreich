@@ -123,6 +123,26 @@ export function homeAnchor(terrain: Terrain[], w: number, h: number, kontor: Pt)
   return best;
 }
 
+/** Anlegestelle am 2×2-Kontor bei `kontor`: Meerkachel im 8er-Ring (12 Kacheln), kleinster quadr. Abstand zu (x+1, y+1); Gleichstand y, dann x; sonst homeAnchor. */
+export function dockFor(terrain: Terrain[], w: number, h: number, kontor: Pt): Pt {
+  const sea = seaMask(terrain, w, h);
+  let best: Pt | null = null;
+  let bestDist = Infinity;
+  for (let y = kontor.y - 1; y <= kontor.y + 2; y++)
+    for (let x = kontor.x - 1; x <= kontor.x + 2; x++) {
+      if (x < 0 || y < 0 || x >= w || y >= h || !sea[y * w + x]) continue;
+      if (x >= kontor.x && x <= kontor.x + 1 && y >= kontor.y && y <= kontor.y + 1) continue;
+      const dx = x - (kontor.x + 1);
+      const dy = y - (kontor.y + 1);
+      const dist = dx * dx + dy * dy;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = { x, y };
+      }
+    }
+  return best ?? homeAnchor(terrain, w, h, kontor);
+}
+
 function hasAnchor(terrain: Terrain[], w: number, h: number): boolean {
   const sea = seaMask(terrain, w, h);
   for (let y = 0; y < h; y++)

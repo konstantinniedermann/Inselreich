@@ -97,6 +97,7 @@ describe('I-091 Treue: Texte (AK-TR-17, 18)', () => {
     const out = { show: vi.fn(), play: vi.fn() };
     const rep: StepReport = {
       lost: [],
+      titheLost: {},
       contract: { kind: 'excused', good: 'rum', reason: 'stock', island: HOME },
       petitions: [],
     };

@@ -14,33 +14,25 @@ describe('Händlerschiff', () => {
     world.order = null;
     expect(shipTile(world)).toBeNull();
   });
-  it('AK-ISO-11 createWorld(1): Schiff auf dem Wasserfeld am Kontor mit dem grössten x + y', () => {
-    const world = createWorld(1);
-    world.order = order;
-    const k = world.buildings[home(world).kontorId];
-    if (!k) throw new Error('Kontor fehlt');
-    const def = BUILDING_DEFS[k.defId];
-    const water = adjacentOf(home(world), k.x, k.y, def.w, def.h).filter(
-      (p) => tileAt(home(world), p.x, p.y)?.terrain === 'water',
-    );
-    expect(water.length).toBeGreaterThan(0);
-    const best = Math.max(...water.map((p) => p.x + p.y));
-    const ties = water.filter((p) => p.x + p.y === best);
-    const expected = ties.reduce((a, b) => (b.x < a.x ? b : a));
-    expect(shipTile(world)).toEqual(expected);
-  });
-  it('AK-ISO-11 Gleichstand (kx + 2, ky + 1) und (kx + 1, ky + 2) → (kx + 1, ky + 2), deterministisch', () => {
+  // Neu-Pin (HAFEN S1 R3, E4/R913): shipTile liest den Heimatanker; der alte Pin «grösstes x + y» (D-18) gilt nicht mehr.
+  // Auf den Seeds 1–40 weicht der Anker nur bei Seed 20 und 38 vom alten Feld ab (2/40).
+  it('AK-ISO-11 (neu, HAFEN S1 R3, E4/R913) createWorld(1): Schiff am Heimatanker, und der ist Wasser am Kontor', () => {
     const world = createWorld(1);
     world.order = order;
     const k = world.buildings[home(world).kontorId]!;
+    const def = BUILDING_DEFS[k.defId];
+    const tile = shipTile(world)!;
+    expect(tile).toEqual(home(world).anchor);
+    expect(tileAt(home(world), tile.x, tile.y)?.terrain).toBe('water');
+    expect(adjacentOf(home(world), k.x, k.y, def.w, def.h)).toContainEqual(tile);
+  });
+  // Neu-Pin (HAFEN S1 R3, E4/R913): die Gleichstand-Regel D-18 entfällt; das Gelände um das Kontor entscheidet nicht mehr.
+  it('AK-ISO-11 (neu, HAFEN S1 R3, E4/R913) Gelände ändert shipTile nicht, nur der Heimatanker', () => {
+    const world = createWorld(1);
+    world.order = order;
+    const before = shipTile(world);
     for (const t of home(world).tiles) t.terrain = 'grass';
-    for (const [x, y] of [
-      [k.x + 2, k.y + 1],
-      [k.x + 1, k.y + 2],
-    ] as const)
-      home(world).tiles[y * home(world).width + x]!.terrain = 'water';
-    expect(shipTile(world)).toEqual({ x: k.x + 1, y: k.y + 2 });
-    expect(shipTile(world)).toEqual({ x: k.x + 1, y: k.y + 2 });
+    expect(shipTile(world)).toEqual(before);
   });
 
   it('ISO §5 shipShadow: konvexes Polygon im Kachelraum um die Kachel, nach (+3, +1) versetzt, gleiche Orientierung wie die Baumschatten', () => {
@@ -136,5 +128,23 @@ describe('Händlerschiff', () => {
       drawShip(ctx, { x: 0, y: 0, zoom: 0.25 }, { x: 5, y: 5 }, 0);
       expect(log.saves).toBe(log.restores);
     });
+  });
+});
+
+describe('AK-HF-07 Heimat-Anlegestelle', () => {
+  it('Seeds 1–40: mit Auftrag liegt das Schiff am Heimatanker, ohne Auftrag null', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const world = createWorld(seed);
+      world.order = null;
+      expect(shipTile(world), `Seed ${seed} ohne Auftrag`).toBeNull();
+      world.order = order;
+      expect(shipTile(world), `Seed ${seed}`).toEqual(home(world).anchor);
+    }
+  });
+  it('folgt einem verschobenen Heimatanker', () => {
+    const world = createWorld(1);
+    world.order = order;
+    home(world).anchor = { x: 3, y: 4 };
+    expect(shipTile(world)).toEqual({ x: 3, y: 4 });
   });
 });

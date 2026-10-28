@@ -23,7 +23,15 @@ import {
 import { LEVELS } from './defs/levels';
 import { RESERVE_GOODS, RESERVE_STEPS } from './defs/reserve';
 import { MONUMENT_GOODS, MONUMENT_STAGES } from './defs/monument';
-import { TAX_CARRY_DIVISOR, TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
+import {
+  TAX_CARRY_DIVISOR,
+  TAX_LEVELS,
+  TIERS,
+  TIER_IDS,
+  TITHE_CARRY_DIVISOR,
+  TITHE_GOODS,
+  TITHE_TIERS,
+} from './defs/tiers';
 import { EDICTS } from './defs/edicts';
 import { UNLOCK_IDS } from './defs/unlocks';
 import {
@@ -64,7 +72,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 20;
+export const SAVE_VERSION = 21;
 
 export type { LoadResult };
 
@@ -958,6 +966,14 @@ function isValidCouncil(raw: Record<string, unknown>): boolean {
   );
 }
 
+/** v19 → v20 (I-223 Zehnt): drei Felder mit Startwerten (Zehnt aus). Wirft nie. */
+export function migrateV19ToV20(raw: Record<string, unknown>): void {
+  raw.titheOn = Object.fromEntries(TITHE_TIERS.map((t) => [t, false]));
+  raw.titheLockedUntil = Object.fromEntries(TITHE_TIERS.map((t) => [t, 0]));
+  raw.titheCarry = Object.fromEntries(TITHE_GOODS.map((g) => [g, 0]));
+  raw.version = 20;
+}
+
 /** v18 → v19 (I-153 Seerecht): nur die Versionsnummer; ältere Builds weisen Stände mit Beschluss C über sie ab. Wirft nie. */
 export function migrateV18ToV19(raw: Record<string, unknown>): void {
   raw.version = 19;
@@ -969,10 +985,10 @@ export function migrateV17ToV18(raw: Record<string, unknown>): void {
   raw.version = 18;
 }
 
-/** v19 → v20 (I-210): `petitions` im Aus-Zustand. Wirft nie. */
-export function migrateV19ToV20(raw: Record<string, unknown>): void {
+/** v20 → v21 (I-210): `petitions` im Aus-Zustand. Wirft nie. */
+export function migrateV20ToV21(raw: Record<string, unknown>): void {
   raw.petitions = { on: false, next: null, open: [], effects: [] };
-  raw.version = 20;
+  raw.version = 21;
 }
 
 const isCount = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0;
@@ -1046,6 +1062,24 @@ function isValidPetitions(raw: Record<string, unknown>): boolean {
   return new Set(ids).size === ids.length && p.effects.every((e) => isValidPetitionEffect(e, tick));
 }
 
+/** Genau die Schlüssel `keys`, Werte nach `ok`. */
+function hasExactly(v: unknown, keys: readonly (string | number)[], ok: (x: unknown) => boolean) {
+  if (!isObject(v) || Array.isArray(v)) return false;
+  const own = Object.keys(v);
+  return (
+    own.length === keys.length && keys.every((k) => own.includes(String(k)) && ok(v[String(k)]))
+  );
+}
+
+/** I-223: `titheOn`, `titheLockedUntil`, `titheCarry` mit genau den Stufen- bzw. Gutschlüsseln. */
+function isValidTithe(raw: Record<string, unknown>): boolean {
+  return (
+    hasExactly(raw.titheOn, TITHE_TIERS, (x) => typeof x === 'boolean') &&
+    hasExactly(raw.titheLockedUntil, TITHE_TIERS, (x) => isInt(x) && x >= 0) &&
+    hasExactly(raw.titheCarry, TITHE_GOODS, (x) => isIntBetween(x, 0, TITHE_CARRY_DIVISOR - 1))
+  );
+}
+
 /** Strukturprüfung der Felder, auf die das Spiel direkt zugreift. */
 function isWellFormed(raw: Record<string, unknown>): boolean {
   const { stats } = raw;
@@ -1065,6 +1099,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidFarFields(raw)) return false;
   if (!isValidTrial(raw)) return false;
   if (!isValidPetitions(raw)) return false;
+  if (!isValidTithe(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
   return (
@@ -1084,14 +1119,14 @@ function isWellFormedSafe(raw: Record<string, unknown>): boolean {
 }
 
 /** Erste Version, deren Stände `petitions` immer tragen. */
-const PETITIONS_SINCE = 20;
+const PETITIONS_SINCE = 21;
 
 /**
  * I-210: Stände ohne `petitions` laden mit ausgeschalteten Bittschriften.
  * Der Schlüssel steht wie in `createWorld` vor `buyPct`, damit die Schlüsselfolge (und damit `serialize`) gleich bleibt.
  */
 function fillPetitionsDefault(raw: Record<string, unknown>): void {
-  // Ab Version 20 gehört `petitions` zum Stand; fehlt es dort, ist der Stand beschädigt (isWellFormed weist ihn ab).
+  // Ab Version 21 gehört `petitions` zum Stand; fehlt es dort, ist der Stand beschädigt (isWellFormed weist ihn ab).
   if ('petitions' in raw || typeof raw.version !== 'number' || raw.version >= PETITIONS_SINCE)
     return;
   const petitions = { on: DEFAULT_WORLD_PETITIONS_ON, next: null, open: [], effects: [] };
@@ -1138,6 +1173,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 17) migrateV17ToV18(raw);
   if (raw.version === 18) migrateV18ToV19(raw);
   if (raw.version === 19) migrateV19ToV20(raw);
+  if (raw.version === 20) migrateV20ToV21(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

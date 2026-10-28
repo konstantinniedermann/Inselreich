@@ -295,6 +295,32 @@ export function dropTrial(x: Record<string, unknown>): Record<string, unknown> {
   return out;
 }
 
+const TITHE_FOLD_ERROR = 'dropTithe: Zehnt nicht rückfaltbar';
+
+/** Entfernt die drei Zehnt-Felder ohne Umordnen und ohne die Version zu ändern (I-223); nur bei Startwerten. */
+export function dropTithe(x: Record<string, unknown>): Record<string, unknown> {
+  if (!('titheOn' in x)) return x;
+  const on = Object.values(x.titheOn as Record<string, boolean>);
+  const locked = Object.values(x.titheLockedUntil as Record<string, number>);
+  const carry = Object.values(x.titheCarry as Record<string, number>);
+  const start = on.every((v) => v === false) && [...locked, ...carry].every((v) => v === 0);
+  if (!start) throw new Error(TITHE_FOLD_ERROR);
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(x))
+    if (k !== 'titheOn' && k !== 'titheLockedUntil' && k !== 'titheCarry') out[k] = x[k];
+  return out;
+}
+
+/** I-223: äusserster Faltschritt v20 → v19: entfernt die Zehnt-Felder, `version − 1`. */
+export function foldBackTithe(x: Record<string, unknown>): Record<string, unknown> {
+  return { ...dropTithe(x), version: (x.version as number) - 1 };
+}
+
+/** I-210: äusserster Faltschritt v21 → v20: entfernt `petitions`, `version − 1`. */
+export function foldBackPetitions(x: Record<string, unknown>): Record<string, unknown> {
+  return { ...dropPetitions(x), version: (x.version as number) - 1 };
+}
+
 /** I-153: äusserster Faltschritt v19 → v18: nur `version − 1` (Seerecht fügt kein Feld hinzu). */
 export function foldBackSeerecht(x: Record<string, unknown>): Record<string, unknown> {
   return { ...x, version: (x.version as number) - 1 };
@@ -369,7 +395,7 @@ export function foldBackFarOrders(x: Record<string, unknown>): Record<string, un
  * über `foldBackFarOrders`.
  */
 export function foldBackToV13(input: Record<string, unknown>): Record<string, unknown> {
-  const x = foldBackFarOrders(dropCouncil(dropTrial(dropPetitions(input))));
+  const x = foldBackFarOrders(dropCouncil(dropTrial(dropTithe(dropPetitions(input)))));
   const allowed: readonly string[] = [...V13_WORLD_KEYS, 'contract', 'contractOffer'];
   for (const k of Object.keys(x))
     if (!allowed.includes(k)) throw new Error(`foldBackToV13: unbekannter Schlüssel ${k}`);
@@ -429,7 +455,7 @@ function assertUntouchedC(x: Record<string, unknown>, c: Record<string, unknown>
  * `V12_ISLAND_KEYS` entfallen auf den Inseln 0 bis 2 ohne Umordnen.
  */
 export function foldBackToV12(input: Record<string, unknown>): Record<string, unknown> {
-  const f = foldBackFarOrders(dropCouncil(dropTrial(dropPetitions(input))));
+  const f = foldBackFarOrders(dropCouncil(dropTrial(dropTithe(dropPetitions(input)))));
   const x = (f.version as number) >= 14 ? dropContractFields(f) : f;
   const worldKeys: readonly string[] = V12_WORLD_KEYS;
   for (const k of Object.keys(x))
@@ -459,7 +485,7 @@ function dropIslandC(x: Record<string, unknown>): Record<string, unknown> {
  * Umordnen, `monument`/`monumentDone` müssen neutral sein; `version 11`. Denkmal → Fehler im Test.
  */
 export function foldBackToV11(input: Record<string, unknown>): Record<string, unknown> {
-  const f = foldBackFarOrders(dropCouncil(dropTrial(dropPetitions(input))));
+  const f = foldBackFarOrders(dropCouncil(dropTrial(dropTithe(dropPetitions(input)))));
   const v13 = (f.version as number) >= 14 ? dropContractFields(f) : f;
   const v12 = v13.version === 13 ? dropIslandC(v13) : v13;
   if (v12.monument !== null || v12.monumentDone !== false) throw new Error(MONUMENT_FOLD_ERROR);
