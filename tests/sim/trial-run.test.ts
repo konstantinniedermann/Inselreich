@@ -85,15 +85,15 @@ describe("K'-arm Seed 3", () => {
           const s = home(w).stock;
           s.spice = Math.min(STORAGE_CAP, s.spice + SOLL_AMOUNT);
           s.stone = Math.min(STORAGE_CAP, s.stone + SOLL_AMOUNT);
+          min = Math.min(min, trialPopulation(w)); // nur Log: Stichprobe im Sollzufuhr-Takt statt in jedem Tick
         }
         step(w);
-        min = Math.min(min, trialPopulation(w));
       }
     };
     run(TRIAL_DURATION_TICKS - 1);
     expect(w.trial.active).toBe('selfSupply');
     run(1);
-    log('AK-6 Seed 3', { minEinwohner: min, e0: w.trial.e0 });
+    log('AK-6 Seed 3', { minEinwohnerStichprobe: min, e0: w.trial.e0 });
     expect(w.trial.passed[0]).toEqual({ id: 'selfSupply', tick: start + TRIAL_DURATION_TICKS });
   }, 10_000); // Messwert 0,33 s, Faktor 30
 });
