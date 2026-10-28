@@ -3677,3 +3677,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: FLAECHE, NU-2
 Regelbezug: R793 (4), R826, R884, R886, R940, R1026 · Kosten bei Irrtum: TOOL-MF2-WT startet später.
 
 Entscheider: L0 · Anlass: Abhängigkeitskette NU-2 ← FL-2 ← ORT-A T26 · ADR: —
+
+## R1035 · 2026-10-28 · I-210-NACH: Messung ungültig, Abnahme über push-check
+
+Ruling: `feat/i210-nach` @ `71b11e3b` (Teilung `petitionsHarmless` A/B, Frist je 15 s, Review OK) fachlich **abgenommen**. Die Messung lief trotz Messfenster-Sperre bei Last 8–60 (Messfenster stoppt fremde breite Läufe nicht — Befund für TOOL-MF2-WT und die Retro) und ist ungültig.
+Zeitbeleg: Gate-Wert 4,2 s (Last ~5,5) gilt vorläufig; die endgültige Zeit liefert der `make push-check` des REL-36-Bündels bei Startlast ≤ 4. Gate Merge I-210-NACH läuft mit dem Bündel. Überschreitet A/B dort 7,5 s (halbe Frist), wird vor dem Push nachgeschärft.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-36, TOOL-MF2-WT
+Regelbezug: R392, R1032, E-080 · Kosten bei Irrtum: ein lastempfindlicher Test im push-check.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-210-NACH · ADR: —
