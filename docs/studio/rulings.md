@@ -3594,3 +3594,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1, FLAECHE
 Regelbezug: R896, R962, R966, R970, R976–R979, R992 · Kosten bei Irrtum: eine Nachtrag-Runde.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-NU-2 · ADR: —
+
+## R1027 · 2026-10-28 · Gate Plan TOOL-MF2-WT: frei mit Auflagen
+
+Ruling: Plan `plan/tool-mf2-wt` @ `5e252df6` **frei** (lead-qa BEDENKEN niedrig, Handoff `.studio/handoffs/2026-10-28-lead-qa-gate-plan-TOOL-MF2-WT.md`). Auflagen 1–5 an den Umsetzer ohne Delta-Review: Review je Strang am Strangende über den Branch-Diff; Muster `[|]{7}( |$)` statt `\|{7}`;
+Final-Review `lead-tech`-Start auf opus; T02-Echtlauf erst nach `lock.ts status` (keine fremde Messung); Testklassen tragen «Messfenster»/«Aufraeumen» im Namen. Index-Entwürfe E1–E3 angenommen. Budget 7 Starts / Parallelität 2; Start auf dem nächsten freien Test-Platz (Reihenfolge: I-223-NACH, FLAECHE, TOOL-MF2-WT).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine (nur `tools/`, Makefile)
+Regelbezug: R1023–R1025, E-078 · Kosten bei Irrtum: ein Werkzeug-Fix.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-TOOL-MF2-WT · ADR: —
