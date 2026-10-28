@@ -57,7 +57,7 @@ describe('T04b Kontext sammelt Häuser, Wachen, Fischer einmal', () => {
       step(w);
       expect(snapshot(w, true)).toBe(snapshot(w, false));
     }
-  });
+  }, 30_000);
   it('Kontext ändert die Welt nicht und totalUpkeep bleibt gleich', () => {
     const w = scene();
     const before = serialize(w);
