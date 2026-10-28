@@ -321,3 +321,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-26 · I-210: AK-BS-18 nennt «Kosten 10» bei 60 Bewohnern (niedrig)
 
 - Fundort: Spec I-210 (Branch `design/i210-bittschrift`), AK-BS-18. Beobachtung: Bei vier Bürgerhäusern mit 60 Bewohnern ergibt clamp(⌈60/5⌉) = 12, die AK nennt 10; vermutlich andere Bewohnerzahl gemeint. Ursprung: Spec-Nachtrag I-210 (lead-design, R1009). Einschätzung: im Gate Merge I-210 klären, ggf. AK-Zahl berichtigen.
+
+## 2026-10-28 · AUSBAU-LOGIK: Kommentar und Äquivalenz-Test `levelContextIfNeeded` (niedrig)
+
+- Fundort: Branch `feat/ausbau-logik` @ `55dbd3c8`, `src/sim/production.ts:84`, `src/sim/levelRules.ts`. Beobachtung: Kommentar «nur bei Ausbau» ungenau (Kontext fehlt nur, wenn kein Gebäude ein `level` hat); kein Äquivalenz-Test für `levelContextIfNeeded` ohne ausgebauten Betrieb. Ursprung: Gate Merge AUSBAU-LOGIK (lead-qa). Einschätzung: Aufräum-Häppchen, kein Blocker.

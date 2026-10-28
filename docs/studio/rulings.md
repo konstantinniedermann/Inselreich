@@ -3532,3 +3532,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1, I-215 (
 Regelbezug: R909, R987, R1019, E-084 · Kosten bei Irrtum: ein Sync-Lauf.
 
 Entscheider: L0 · Anlass: Bericht lead-tech AUSBAU-LOGIK-3 (Nachtrag), merge-tree-Proben · ADR: —
+
+## R1021 · 2026-10-28 · Gate Merge AUSBAU-LOGIK Etappe 1: OK
+
+Ruling: Gate Merge `feat/ausbau-logik` @ `55dbd3c8` **OK** (lead-qa; kein weiterer Delta-Review nötig: `levelContextIfNeeded` verhaltensgleich, Fix `moneyTaxes` mit Rot-Beleg; Handoff `.studio/handoffs/2026-10-28-lead-qa-gate-AUSBAU-LOGIK.md`). `git merge-tree` main (`29660b8a`) ← `feat/ausbau-logik` @ `55dbd3c8`: konfliktfrei (E-084).
+Integrator mergt lokal auf `integrate/rel-36` (vorher main per `--ff-only` nachziehen), Teilbeleg, main vorspulen; kein Push. Zwei niedrige Befunde in `beobachtungen.md` (Aufräum-Häppchen).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210-SYNC, I-215 (economy/levels)
+Regelbezug: R1002, R1019, R1020, E-084 · Kosten bei Irrtum: ein Revert-Merge auf lokalem main.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-AUSBAU-LOGIK · ADR: —
