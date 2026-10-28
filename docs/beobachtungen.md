@@ -321,3 +321,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-26 · I-210: AK-BS-18 nennt «Kosten 10» bei 60 Bewohnern (niedrig)
 
 - Fundort: Spec I-210 (Branch `design/i210-bittschrift`), AK-BS-18. Beobachtung: Bei vier Bürgerhäusern mit 60 Bewohnern ergibt clamp(⌈60/5⌉) = 12, die AK nennt 10; vermutlich andere Bewohnerzahl gemeint. Ursprung: Spec-Nachtrag I-210 (lead-design, R1009). Einschätzung: im Gate Merge I-210 klären, ggf. AK-Zahl berichtigen.
+
+## 2026-10-28 · I-210-SYNC: Rest-Befunde (niedrig)
+
+- Fundort: Branch `feat/i210` @ Sync-Merge. Beobachtung: `bookTithe` (`population.ts` ~331) nutzt `addStock` mit Standard `STORAGE_CAP` statt `storageCap(world, HOME, g)`; heute folgenlos, weil die B9-Lagerwirkung nur cloth/rum/food betrifft. Ausserdem `arc42` Abschnitt «Save v19 … ist 19» veraltet und die Save-Abschnitte stehen in der Reihenfolge v20, v21, v19, v18. Ursprung: Delta-Review I-210-SYNC. Einschätzung: bei nächster Berührung von Zehnt oder arc42 mitnehmen.
