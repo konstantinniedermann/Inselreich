@@ -3500,3 +3500,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1 (keine �
 Regelbezug: R862, R933, IDEEN-20 · Kosten bei Irrtum: zwei Pool-Plätze.
 
 Entscheider: L0 · Anlass: Bericht lead-design TIEFE-7 · ADR: —
+
+## R1018 · 2026-10-28 · I-223 auf main; COACH-R1016 abgenommen; Reihenfolge Test-Plätze
+
+Ruling: Integrator-Merge `bf62980a` (I-223, Save v20) auf lokalem main abgenommen (Teilbeleg grün, 766 Tests; Kandidat `integrate/rel-36`). COACH-R1016 abgenommen (`docs/coach-r1016` @ `056de549`, Handbuch 1.80, E-085 passiv; ersetzt `docs/coach-r1010`/`-r1004` im Bündel).
+merge-tree `docs/i200-pool` ← `design/tiefe-7`: KONFLIKT (`docs/ideen.md`) → `lead-design` mergt `docs/i200-pool` in `design/tiefe-7` (E-084). Test-Plätze voll (AUSBAU-LOGIK-3, NU-1, I-215); nächster freier Platz: **I-210-SYNC** (main in `feat/i210`, Save v21, Nachtrag `design/i210-bittschrift` @ `d94af2ed`), danach **I-223-NACH** (Tooltip AK-ZE-28 + Aufräumen), dann I-214, HAFEN O.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, NU-1, I-215 (Save-Kette ab v20)
+Regelbezug: R826, R909, R1014–R1017, E-084 · Kosten bei Irrtum: Reihenfolge eines Test-Platzes.
+
+Entscheider: L0 · Anlass: Berichte production-integrator MERGE-I-223, studio-coach COACH-R1016 · ADR: —
