@@ -3814,3 +3814,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-215 (Save 2
 Regelbezug: R905, R979, R1030, R1040 (4), E-084 · Kosten bei Irrtum: langsamerer push-check.
 
 Entscheider: L0 · Anlass: Bericht lead-tech NU-1 Instanz 4 · ADR: —
+
+## R1047 · 2026-10-28 · Nutzerauftrag: Session-Ende bis 20:40, Push und Release REL-36 als letzter Schritt
+
+Ruling: Nutzerauftrag 19:45: «schliess die Session nach maximal 55 min, als letztes mach den Push und Release». Das gilt nur für diese Session. Der zweite Push am selben Tag ist eine **einmalige Ausnahme von R816/N-103 per Nutzerauftrag**; R816 gilt sonst unverändert.
+**Umfang REL-36 = main wie heute** (I-223 Zehnt mit Tooltip I-223-NACH, AUSBAU-LOGIK Etappe 1, I-210 Bittschrift, Save v21 mit Migration v19→v20→v21, dazu L0-Doku). Die Branch-Liste im REL-36-Handoff (Doku-, Coach- und Werkzeug-Branches, i210-nach, hook-tempo, messwache) passt nicht mehr in 55 min samt Gate und Probe-Merges. Sie wird ohne Abstriche zu **REL-37** und ist der erste Schritt der nächsten Session.
+Ablauf: (1) Leads von NU-1, I-215 und ORT-A beenden laufende Messungen höchstens bis 20:05, danach keine neuen Test- oder Messläufe, Handoff bis 20:10. (2) Ende-Routine (Kurz-Retro, Metriken, state.md, lernen.md) bis etwa 20:15 auf main. (3) `make push-check` auf dem letzten Hash durch production-integrator, Push nur bei Exit 0 und genau dieses Hashes, danach CI und Pages prüfen. Ist push-check rot oder nicht bis 20:35 fertig, wird nicht gepusht. Der Befund geht an den Nutzer, und die Session endet trotzdem.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle laufenden (pausieren)
+Regelbezug: R816, R863, R959, R1035 · Kosten bei Irrtum: REL-36 ohne Werkzeug-Fixes; die kommen mit REL-37.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
