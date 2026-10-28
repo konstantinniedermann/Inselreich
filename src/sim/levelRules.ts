@@ -149,9 +149,10 @@ export function siteAt(
 
 /** Fachkräfte der Stufe `level` halten (mit Kontext über das Raster, sonst über `workforceAt`). */
 const crewOk = (world: World, b: Building, level: number, ctx?: LevelContext): boolean =>
-  ctx === undefined
+  defOf(b, level) === undefined ||
+  (ctx === undefined
     ? workforceAt(world, b, level).ok
-    : crewNear(ctx, b, defOf(b, level)?.workforceTier ?? 1) || defOf(b, level) === undefined;
+    : crewNear(ctx, b, defOf(b, level)?.workforceTier ?? 1));
 
 /** Grösstes j ≤ gebaute Stufe, dessen Fachkräfte und Standort halten; Stufe 1 gilt immer. */
 export function runningLevel(world: World, b: Building, ctx?: LevelContext): number {
