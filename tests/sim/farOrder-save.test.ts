@@ -9,6 +9,7 @@ import type { World } from '../../src/sim/types';
 import { createWorld } from '../../src/sim/world';
 import {
   foldBackSeerecht,
+  foldBackPetitions,
   foldBackTithe,
   foldBackCouncil,
   foldBackTrial,
@@ -64,7 +65,9 @@ describe('AK-H2-21 Version und Migration', () => {
   it('Vorversion ohne Felder lädt verlustfrei und läuft 10 Perioden bitgleich', () => {
     const w = createWorld(3, { unlockAll: true });
     const raw = foldBackDeliveries(
-      foldBackCouncil(foldBackTrial(foldBackSeerecht(foldBackTithe(JSON.parse(serialize(w)))))),
+      foldBackCouncil(
+        foldBackTrial(foldBackSeerecht(foldBackTithe(foldBackPetitions(JSON.parse(serialize(w)))))),
+      ),
     );
     delete raw.farOffer;
     delete raw.farSkip;

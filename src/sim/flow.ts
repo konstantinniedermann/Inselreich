@@ -8,6 +8,7 @@ import { cycleOf } from './levels';
 import { levelContextIfNeeded, type LevelContext } from './levelRules';
 import { inSupplyRange } from './supply';
 import type { Building, GoodId, HouseState, Tier, World } from './types';
+import { needRate } from './petitionEffect';
 import { center, HOME } from './world';
 
 /** Netto je Gut über 100 Ticks; fehlt ein Gut, zählt 0 (Spec 3.2). */
@@ -41,7 +42,7 @@ export function goodsBalance(
       if (!inSupplyRange(world, island, c.cx, c.cy, cov?.supply[island])) continue;
       const needs = TIERS[b.house.tier].needs;
       for (const g of Object.keys(needs) as GoodId[])
-        out[g].consumed += b.house.inhabitants * needs[g]!;
+        out[g].consumed += b.house.inhabitants * needRate(world, island, g, needs[g]!);
       continue;
     }
     if (!b.connected || b.paused === true) continue;

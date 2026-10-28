@@ -54,6 +54,7 @@ import type { IconId } from './icons';
 import { iconChip } from './messages';
 import { tierPath } from './hud';
 import { toolForBuilding } from './pipette';
+import { effectLines } from './petitionLog';
 import { formatGameTime, perMinute } from './time';
 import { needsConnection } from '../sim/roads';
 import { connectView } from './connect';
@@ -1106,6 +1107,7 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   updateUpgradeBox(panel, world, b);
   updateConnect(panel, world, b);
   updateFeast(panel, world, b);
+  updateEffects(panel, world, b);
   const remedyEl = panel.querySelector<HTMLElement>('[data-field="remedy"]');
   if (remedyEl) {
     const text = remedyText(world, b);
@@ -1118,6 +1120,28 @@ export function updateInspect(panel: HTMLElement, world: World, id: number): voi
   if (def.fireProtection === true) {
     setField(panel, 'fire-covers', `Schützt ${protectedCount(world, b)} brennbare Gebäude`);
   }
+}
+
+/** Zeilen der laufenden Bittschrift-Wirkungen (I-210); der Block entsteht beim ersten Bedarf und bleibt sonst verborgen. */
+function updateEffects(panel: HTMLElement, world: World, b: Building): void {
+  const lines = effectLines(world, b);
+  let box = panel.querySelector<HTMLElement>('[data-field="petition-effects"]');
+  if (box === null) {
+    if (lines.length === 0) return;
+    box = node('div', 'petition-effects', 'petition-effects');
+    panel.appendChild(box);
+  }
+  const sig = lines.join('\n');
+  if (box.dataset.sig === sig) return;
+  box.dataset.sig = sig;
+  box.hidden = lines.length === 0;
+  box.replaceChildren(
+    ...lines.map((text) => {
+      const p = document.createElement('p');
+      p.textContent = text;
+      return p;
+    }),
+  );
 }
 
 /** Chip «Läuft wie Stufe k: …» bei gedrosseltem Betrieb (Spec R9); Tooltip nennt alle verletzten Bedingungen. */

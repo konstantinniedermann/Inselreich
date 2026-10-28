@@ -198,7 +198,7 @@ describe('M12 E4 step und Schiffe', () => {
 
   it('AK-E4-09 step liefert die Verluste', () => {
     const world = seaWorld();
-    expect(step(world)).toEqual({ lost: [], contract: null, titheLost: {} });
+    expect(step(world)).toEqual({ lost: [], contract: null, petitions: [], titheLost: {} });
     home(world).stock.spice = 70;
     const s = shipLiteral(world, { cargo: { spice: 40 }, homing: true });
     expect(step(world).lost).toEqual([{ ship: s.id, good: 'spice', n: 10 }]);

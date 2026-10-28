@@ -330,6 +330,10 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 - Fundort: Spec I-210 (Branch `design/i210-bittschrift`), AK-BS-18. Beobachtung: Bei vier Bürgerhäusern mit 60 Bewohnern ergibt clamp(⌈60/5⌉) = 12, die AK nennt 10; vermutlich andere Bewohnerzahl gemeint. Ursprung: Spec-Nachtrag I-210 (lead-design, R1009). Einschätzung: im Gate Merge I-210 klären, ggf. AK-Zahl berichtigen.
 
+## 2026-10-28 · I-210-SYNC: Rest-Befunde (niedrig)
+
+- Fundort: Branch `feat/i210` @ Sync-Merge. Beobachtung: `bookTithe` (`population.ts` ~331) nutzt `addStock` mit Standard `STORAGE_CAP` statt `storageCap(world, HOME, g)`; heute folgenlos, weil die B9-Lagerwirkung nur cloth/rum/food betrifft. Ausserdem `arc42` Abschnitt «Save v19 … ist 19» veraltet und die Save-Abschnitte stehen in der Reihenfolge v20, v21, v19, v18. Ursprung: Delta-Review I-210-SYNC. Einschätzung: bei nächster Berührung von Zehnt oder arc42 mitnehmen.
+
 ## 2026-10-28 · AUSBAU-LOGIK: Kommentar und Äquivalenz-Test `levelContextIfNeeded` (niedrig)
 
 - Fundort: Branch `feat/ausbau-logik` @ `55dbd3c8`, `src/sim/production.ts:84`, `src/sim/levelRules.ts`. Beobachtung: Kommentar «nur bei Ausbau» ungenau (Kontext fehlt nur, wenn kein Gebäude ein `level` hat); kein Äquivalenz-Test für `levelContextIfNeeded` ohne ausgebauten Betrieb. Ursprung: Gate Merge AUSBAU-LOGIK (lead-qa). Einschätzung: Aufräum-Häppchen, kein Blocker.
@@ -341,3 +345,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-28 · `aufraeumen.py --check` misst im Worktree den Hauptcheckout (niedrig)
 
 - Fundort: `tools/studio/aufraeumen.py`. Beobachtung: Ohne `--root` nimmt `--check` immer den Hauptcheckout; im Worktree meldet es deshalb «fällig», obwohl der Branch die Schwelle schon einhält. Ursprung: HAUSHALT-05 (lead-production). Einschätzung: Werkzeug-Häppchen (Standard = `git rev-parse --show-toplevel`).
+
+## 2026-10-28 · I-210-SYNC: Testlagen Bittschrift nach AUSBAU-LOGIK (niedrig)
+
+- Fundort: `tests/sim/petitionWorlds.ts` (feat/i210). Beobachtung: `stableTown` ruft kein `ensureCrew` auf; mit Seed 7 liefen 7 ausgebaute Betriebe auf Stufe 1 (heute nur Seed 3 genutzt, `petitionsStable.test.ts:164-165` fängt einen Seed-Wechsel ab). `sceneOf` prüft nicht, ob `ensureCrew` gewirkt hat: ein Guard `runningLevel === level` je ausgebautem Betrieb würde stille Drosselung bei späteren AL-Regeln melden. Ursprung: Delta-Review I-210-SYNC. Einschätzung: bei nächster Berührung der Lagen mitnehmen.

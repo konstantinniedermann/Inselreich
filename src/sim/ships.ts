@@ -1,5 +1,6 @@
 import { ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
-import { GOOD_IDS, STORAGE_CAP } from './defs/goods';
+import { GOOD_IDS } from './defs/goods';
+import { storageCap } from './petitionEffect';
 import { checkAfford, pay } from './economy';
 import { islandName, laneTicksOf } from './islands';
 import { fail, ok } from './types';
@@ -150,7 +151,7 @@ function unload(world: World, ship: Ship, keep: readonly GoodId[]): void {
   for (const good of GOOD_IDS) {
     const have = ship.cargo[good] ?? 0;
     if (have === 0 || keep.includes(good)) continue;
-    const n = Math.min(have, Math.max(0, STORAGE_CAP - stock[good]));
+    const n = Math.min(have, Math.max(0, storageCap(world, ship.port, good) - stock[good]));
     stock[good] += n;
     if (have - n > 0) ship.cargo[good] = have - n;
     else delete ship.cargo[good];

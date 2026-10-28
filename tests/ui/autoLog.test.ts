@@ -158,6 +158,7 @@ describe('AK-UD-05b Vertragsereignisse', () => {
   const rep = (contract: ContractEvent | null): StepReport => ({
     lost: [],
     contract,
+    petitions: [],
     titheLost: {},
   });
 

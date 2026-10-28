@@ -203,7 +203,7 @@ export function placementZone(
   return { ...c, radius: zone.radius, tiles };
 }
 
-/** Rückerstattung, wie `grantRefund` sie einlagert: Güter auf den freien Lagerplatz gekappt. */
+/** Rückerstattung, wie `grantRefund` sie einlagert: Güter auf den freien Lagerplatz gekappt (bei `STORAGE_CAP` wie `grantRefund`, unabhängig vom Speicherbau). */
 export function effectiveRefund(world: World, cost: Cost): Cost {
   const r = refundCost(cost);
   const room = (g: GoodId): number => Math.max(0, STORAGE_CAP - home(world).stock[g]);

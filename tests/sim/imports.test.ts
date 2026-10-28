@@ -36,6 +36,7 @@ describe('M11 Naht Zyklus und Unterhalt (Prüfhilfe AK-P1-14)', () => {
         (m) =>
           m === 'types' ||
           m === 'council' ||
+          m === 'petitionEffect' ||
           m === 'levelRules' ||
           m === 'feastEffect' ||
           m.startsWith('defs/'),

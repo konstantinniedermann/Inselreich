@@ -9,6 +9,7 @@ import type { World } from '../../src/sim/types';
 import { HOME, createWorld } from '../../src/sim/world';
 import {
   foldBackSeerecht,
+  foldBackPetitions,
   foldBackTithe,
   foldBackCouncil,
   foldBackTrial,
@@ -56,20 +57,24 @@ describe('AK-TR-13a Roundtrip', () => {
 describe('AK-TR-14 Migration', () => {
   const oldRaw = (): Record<string, unknown> =>
     foldBackDeliveries(
-      foldBackCouncil(foldBackTrial(foldBackSeerecht(foldBackTithe(json(withContract(3)))))),
+      foldBackCouncil(
+        foldBackTrial(foldBackSeerecht(foldBackTithe(foldBackPetitions(json(withContract(3)))))),
+      ),
     );
 
   it('14a: migrateV15ToV16 setzt deliveries 0 am Schlüsselende, null bleibt, wirft nie', () => {
     const raw = oldRaw();
-    expect(raw.version).toBe(SAVE_VERSION - 5);
+    expect(raw.version).toBe(SAVE_VERSION - 6);
     migrateV15ToV16(raw);
     const c = raw.contract as Record<string, unknown>;
     expect(c.deliveries).toBe(0);
-    expect(raw.version).toBe(SAVE_VERSION - 4);
+    expect(raw.version).toBe(SAVE_VERSION - 5);
     expect(Object.keys(c)).toEqual(['good', 'amount', 'price', 'island', 'deliveries']);
     expect(() => migrateV15ToV16(raw)).not.toThrow();
     const none = foldBackDeliveries(
-      foldBackCouncil(foldBackTrial(foldBackSeerecht(foldBackTithe(json(createWorld(3)))))),
+      foldBackCouncil(
+        foldBackTrial(foldBackSeerecht(foldBackTithe(foldBackPetitions(json(createWorld(3)))))),
+      ),
     );
     migrateV15ToV16(none);
     expect(none.contract).toBeNull();
@@ -138,7 +143,9 @@ describe('AK-TR-15 Validierung', () => {
 it.skipIf(!process.env.FIXTURE_OUT)('schreibt save-v14-contract.json', () => {
   const w = withContract(0);
   const x = foldBackFarOrders(
-    foldBackDeliveries(foldBackCouncil(foldBackTrial(foldBackSeerecht(foldBackTithe(json(w)))))),
+    foldBackDeliveries(
+      foldBackCouncil(foldBackTrial(foldBackSeerecht(foldBackTithe(foldBackPetitions(json(w)))))),
+    ),
   );
   expect(x.version).toBe(14);
   const out = process.env.FIXTURE_OUT!;

@@ -37,7 +37,8 @@ describe('AK-ZE-08/27 Migration', () => {
     delete raw.titheOn;
     delete raw.titheLockedUntil;
     delete raw.titheCarry;
-    raw.version = SAVE_VERSION - 1;
+    delete raw.petitions; // v19 kennt auch die Bittschrift (v21, I-210) noch nicht
+    raw.version = SAVE_VERSION - 2;
     const r = deserialize(JSON.stringify(raw));
     expect(r.ok).toBe(true);
     if (!r.ok) return;

@@ -1,6 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { GOODS } from './defs/goods';
 import { TAX_LEVELS } from './defs/tiers';
+import { FEAST_VOUCHER_GOOD } from './defs/petitions';
 import { FEAST_KINDS, type FeastKind } from './defs/feast';
 import { FEAST_COOLDOWN } from './defs/timing';
 import { takeStock } from './economy';
@@ -12,16 +13,23 @@ import {
   invalidateFeastIndex,
   isFeastKind,
 } from './feastEffect';
+import { useVoucher, voucherAt } from './petitionEffect';
 import { noKontorTrade } from './islands';
 import { cycleOf } from './levels';
 import { effectiveTaxLevel } from './townhall';
 import { fail, ok, type Building, type GoodId, type Result, type World } from './types';
 import { islandOf } from './world';
 
+/** Kosten der Art in Schlüsselreihenfolge; mit Festtrunk (B5) entfällt der Rum-Anteil. */
+function costOf(world: World, chapel: Building, kind: FeastKind): [GoodId, number][] {
+  const all = Object.entries(FEAST_KINDS[kind].cost) as [GoodId, number][];
+  return voucherAt(world, chapel.id) ? all.filter(([good]) => good !== FEAST_VOUCHER_GOOD) : all;
+}
+
 /** Warenprüfung ohne Abbuchung in Schlüsselreihenfolge von `cost`: Grund bei der ersten fehlenden Ware, sonst null. */
 function goodsShortage(world: World, chapel: Building, kind: FeastKind): string | null {
   const stock = islandOf(world, chapel).stock;
-  for (const [good, need] of Object.entries(FEAST_KINDS[kind].cost) as [GoodId, number][]) {
+  for (const [good, need] of costOf(world, chapel, kind)) {
     if (stock[good] < need)
       return `Zu wenig ${GOODS[good].name} (${Math.floor(stock[good])} / ${need})`;
   }
@@ -30,7 +38,7 @@ function goodsShortage(world: World, chapel: Building, kind: FeastKind): string 
 
 /** Zieht die Kosten der Art vom Lager der Kapellen-Insel ab; einzige Abbuchung des Fests. */
 function payGoods(world: World, chapel: Building, kind: FeastKind): void {
-  for (const [good, need] of Object.entries(FEAST_KINDS[kind].cost) as [GoodId, number][])
+  for (const [good, need] of costOf(world, chapel, kind))
     takeStock(islandOf(world, chapel), good, need);
 }
 
@@ -49,7 +57,7 @@ function taxBlock(world: World, chapel: Building): string | null {
 function commonBlock(world: World, chapel: Building): string | null {
   const { phase } = feastState(world, chapel);
   if (phase === 'active') return 'Fest läuft';
-  if (phase === 'cooldown') return 'Abklingzeit';
+  if (phase === 'cooldown' && !voucherAt(world, chapel.id)) return 'Abklingzeit';
   if (chapel.outageUntil !== undefined) return 'Kapelle brennt';
   if (!chapelWorks(chapel)) return 'Kapelle nicht angebunden';
   return null;
@@ -107,6 +115,7 @@ export function holdFeast(world: World, id: number, kind: string = 'ascension'):
   if (block !== null) return fail(block);
   const done = kind as FeastKind;
   payGoods(world, chapel, done);
+  useVoucher(world, id);
   chapel.feastAt = world.tick;
   invalidateFeastIndex(world);
   if (done === 'ascension') delete chapel.feastKind;

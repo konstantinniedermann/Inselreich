@@ -8,6 +8,7 @@ import { siteRuleOk } from './placement';
 import { reserveOf } from './reserve';
 import { serviceAvailable } from './population';
 import type { Building, World } from './types';
+import { storageCap } from './petitionEffect';
 import { islandOf } from './world';
 
 /** Sturm wirkt (nach der Vorwarnung): Schritte `from … until` (Spec 6). */
@@ -66,7 +67,12 @@ function advance(world: World, b: Building, ctx?: LevelContext): boolean {
   b.progress += 1;
   if (b.state !== 'storageFull') b.state = 'ok';
   if (b.progress >= cycle) {
-    const accepted = addStock(islandOf(world, b), def.produces, 1);
+    const accepted = addStock(
+      islandOf(world, b),
+      def.produces,
+      1,
+      storageCap(world, b.island, def.produces),
+    );
     b.state = accepted === 1 ? 'ok' : 'storageFull';
     b.progress = 0;
   }

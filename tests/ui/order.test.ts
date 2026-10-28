@@ -472,6 +472,7 @@ describe('I-047 Stammkunde: Meldungen (AK-SK-28)', () => {
     const rep = (contract: ContractEvent | null): StepReport => ({
       lost: [],
       contract,
+      petitions: [],
       titheLost: {},
     });
     announceContract([rep(null), rep(delivered)], out, w);

@@ -34,6 +34,15 @@ import {
 } from './defs/tiers';
 import { EDICTS } from './defs/edicts';
 import { UNLOCK_IDS } from './defs/unlocks';
+import {
+  DEFAULT_WORLD_PETITIONS_ON,
+  FRUGAL_TICKS,
+  PETITIONS,
+  PETITION_ANSWER,
+  PETITION_IDS,
+  PETITION_MAX_OPEN,
+  type PetitionId,
+} from './defs/petitions';
 import { TRIAL_DURATION_TICKS, TRIAL_IDS } from './defs/trials';
 import { ISLANDS, ROUTE_GOODS_PER_DIRECTION, ROUTE_RESERVE, SHIP, SHIP_MAX } from './defs/sea';
 import {
@@ -63,7 +72,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 20;
+export const SAVE_VERSION = 21;
 
 export type { LoadResult };
 
@@ -976,6 +985,12 @@ export function migrateV17ToV18(raw: Record<string, unknown>): void {
   raw.version = 18;
 }
 
+/** v20 → v21 (I-210): `petitions` im Aus-Zustand. Wirft nie. */
+export function migrateV20ToV21(raw: Record<string, unknown>): void {
+  raw.petitions = { on: false, next: null, open: [], effects: [] };
+  raw.version = 21;
+}
+
 const isCount = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0;
 const isTrialId = (v: unknown): boolean =>
   typeof v === 'string' && (TRIAL_IDS as readonly string[]).includes(v);
@@ -998,6 +1013,53 @@ function isValidTrial(raw: Record<string, unknown>): boolean {
   if (!isCount(t.e0)) return false;
   if (t.active === null ? t.ticks !== 0 : t.e0 <= 0) return false;
   return isValidTrialPassed(t.passed, t.active);
+}
+
+const isPetitionId = (v: unknown): v is PetitionId =>
+  typeof v === 'string' && (PETITION_IDS as readonly string[]).includes(v);
+const isAnswer = (v: unknown): boolean => v === 'yes' || v === 'no';
+const MAX_DELAY = Math.max(...PETITION_IDS.map((id) => PETITIONS[id].delay));
+
+function isValidPetitionMark(m: unknown, tick: number): boolean {
+  if (!isObject(m) || !isPetitionId(m.id)) return false;
+  if (!Number.isInteger(m.drawnAt) || !isCount(m.amount)) return false;
+  const drawnAt = m.drawnAt as number;
+  if (drawnAt > tick || drawnAt < tick - PETITION_ANSWER - MAX_DELAY) return false;
+  if (m.anchor !== undefined && (PETITIONS[m.id].anchor === null || !Number.isInteger(m.anchor)))
+    return false;
+  if (m.answer === undefined) return m.dueTick === undefined && drawnAt + PETITION_ANSWER > tick;
+  const due = m.dueTick;
+  return (
+    isAnswer(m.answer) &&
+    Number.isInteger(due) &&
+    tick < (due as number) &&
+    (due as number) <= tick + MAX_DELAY
+  );
+}
+
+function isValidPetitionEffect(e: unknown, tick: number): boolean {
+  if (!isObject(e) || !isPetitionId(e.id) || !isAnswer(e.answer)) return false;
+  if (e.anchor !== undefined && (PETITIONS[e.id].anchor === null || !Number.isInteger(e.anchor)))
+    return false;
+  const span = e.answer === 'yes' ? PETITIONS[e.id].duration : FRUGAL_TICKS;
+  return (
+    Number.isInteger(e.until) && tick < (e.until as number) && (e.until as number) <= tick + span
+  );
+}
+
+/** I-210 Anhang 04: Bittschrift-Zustand. */
+function isValidPetitions(raw: Record<string, unknown>): boolean {
+  const p = raw.petitions;
+  const tick = raw.tick;
+  if (!isObject(p) || Array.isArray(p) || typeof tick !== 'number') return false;
+  if (typeof p.on !== 'boolean' || !Array.isArray(p.open) || !Array.isArray(p.effects))
+    return false;
+  if (p.next !== null && !(Number.isInteger(p.next) && (p.next as number) > tick)) return false;
+  if (!p.on) return p.next === null && p.open.length === 0 && p.effects.length === 0;
+  if (p.open.length > PETITION_MAX_OPEN || p.effects.length > 2 * PETITION_IDS.length) return false;
+  if (!p.open.every((m) => isValidPetitionMark(m, tick))) return false;
+  const ids = p.open.map((m: { id: string }) => m.id);
+  return new Set(ids).size === ids.length && p.effects.every((e) => isValidPetitionEffect(e, tick));
 }
 
 /** Genau die Schlüssel `keys`, Werte nach `ok`. */
@@ -1036,6 +1098,7 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidContractFields(raw)) return false;
   if (!isValidFarFields(raw)) return false;
   if (!isValidTrial(raw)) return false;
+  if (!isValidPetitions(raw)) return false;
   if (!isValidTithe(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
@@ -1055,6 +1118,31 @@ function isWellFormedSafe(raw: Record<string, unknown>): boolean {
   }
 }
 
+/** Erste Version, deren Stände `petitions` immer tragen. */
+const PETITIONS_SINCE = 21;
+
+/**
+ * I-210: Stände ohne `petitions` laden mit ausgeschalteten Bittschriften.
+ * Der Schlüssel steht wie in `createWorld` vor `buyPct`, damit die Schlüsselfolge (und damit `serialize`) gleich bleibt.
+ */
+function fillPetitionsDefault(raw: Record<string, unknown>): void {
+  // Ab Version 21 gehört `petitions` zum Stand; fehlt es dort, ist der Stand beschädigt (isWellFormed weist ihn ab).
+  if ('petitions' in raw || typeof raw.version !== 'number' || raw.version >= PETITIONS_SINCE)
+    return;
+  const petitions = { on: DEFAULT_WORLD_PETITIONS_ON, next: null, open: [], effects: [] };
+  const keys = Object.keys(raw);
+  const at = keys.indexOf('buyPct');
+  if (at < 0) {
+    raw.petitions = petitions;
+    return;
+  }
+  const tail = keys.slice(at);
+  const saved = tail.map((k) => raw[k]);
+  for (const k of tail) delete raw[k];
+  raw.petitions = petitions;
+  tail.forEach((k, i) => (raw[k] = saved[i]));
+}
+
 /** Liest einen Spielstand; wirft nie, sondern meldet den Grund. */
 export function deserialize(json: string): LoadResult {
   let raw: unknown;
@@ -1064,6 +1152,7 @@ export function deserialize(json: string): LoadResult {
     return { ok: false, reason: 'Ungültiges Format' };
   }
   if (!isObject(raw)) return { ok: false, reason: 'Ungültiges Format' };
+  fillPetitionsDefault(raw);
   if (raw.version === 1) migrateV1ToV2(raw);
   if (raw.version === 2) migrateV2ToV3(raw);
   if (raw.version === 3) migrateV3ToV4(raw);
@@ -1084,6 +1173,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 17) migrateV17ToV18(raw);
   if (raw.version === 18) migrateV18ToV19(raw);
   if (raw.version === 19) migrateV19ToV20(raw);
+  if (raw.version === 20) migrateV20ToV21(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

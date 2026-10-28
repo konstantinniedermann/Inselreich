@@ -222,6 +222,15 @@ Ab der Amtsstube (erste Siedler) stellst du für Pioniere und für Siedler je ei
 
 Die Ware kommt etwa 17 % billiger als der Zukauf ins Heimatlager. Vor dem Einschalten zeigt eine Rückfrage, wie sich die Kasse danach entwickelt; bei einer Bilanz im Minus warnt sie vor leerer Kasse (im Minus kannst du nicht bauen und nicht zukaufen). Läuft eine Meisterprüfung, steht dort zusätzlich der Hinweis auf den gesperrten Zukauf. Verfallene Ware meldet das Spiel höchstens einmal je Bilanzintervall.
 
+### Bittschriften
+
+- **Wann sie kommen:** Sobald ein Ziel erreicht ist, tritt 1 min später die erste Bittschrift der Bewohner auf; danach kommt alle 10 min eine neue. Sie erscheint als Karte mit Chip «Bittschrift» in der Kopfzeile.
+- **Ja und Nein:** Mit «Ja» gibst du die erbetene Ware ab und bekommst nach einer Wartezeit eine Wirkung für eine Frist. Beispiel B1 «Weberfamilien»: Du gibst 10 Stoff, die Häuser dürfen später mit mehr Einwohnern besetzt werden. Mit «Nein» bleibt die Ware im Lager, und die Gemeinde spart genügsam an einer Ware (z. B. Stoffbedarf −10 %). Die Karte nennt Kosten, Lohn und Folgen beider Antworten, auch eine Warnung bei knappem Lager.
+- **Frist:** Du hast 2 min Zeit; ohne Antwort gilt «Nein». Die Frist läuft in der Pause nicht weiter.
+- **Glockenweihe und Festtrunk:** Die Glockenweihe verkürzt im Kreis der Kapelle die Aufstiegsuhr auf 150 T (Haus-Panel: «Glockenweihe bis …»). Der Festtrunk lässt das nächste Fest an der Kapelle ohne Rum und ohne Abklingzeit zu (Festknöpfe: «Festtrunk: ohne Rum, ohne Abklingzeit»).
+- **Laufende Wirkungen** zeigt der Chip der Kopfzeile; die Gebäude-Panels nennen ihre Zeile.
+- **Ein- und ausschalten:** Das Kästchen «Bittschriften» (Vorbelegung an) steht nur im Dialog «Neue Insel». Ältere Spielstände laufen ohne Bittschriften.
+
 ### Rat
 
 Sobald ein Haus zum ersten Mal die Stufe 2 (Siedler), 3 (Bürger) oder 4 (Kaufleute) erreicht, tagt der Rat: In der Kopfzeile erscheint die Marke **«Rat · n»** (n = offene Beschlüsse), dazu die Meldung «Der Rat tagt: ein Beschluss steht an». Das Spiel läuft weiter, nichts pausiert.
@@ -332,7 +341,7 @@ Ereignisse zeigt ungelesene Meldungen als (n neu), ab 10 (9+ neu); Aufklappen se
 - **Neue Insel:** Menü → «Neue Insel» fragt zuerst «Neue Insel beginnen?» (Ja / Abbrechen), dann entsteht
   eine neue Insel mit Tempo 1× und der gewählten Krisenstufe. Der Autosave bleibt, bis der nächste ihn
   überschreibt. Die Kartennummer steht im Menü («Karte …»).
-- **Spielstand-Version 19:** Ältere Stände laden weiter und werden über die Migrationskette ergänzt (ab Version 13 kommt dabei die dritte Fremdinsel «Weidenau» ohne Kontor dazu). Ein Stand aus einer neueren Version wird mit Hinweis («Unbekannte Version») abgewiesen; das laufende Spiel bleibt unverändert.
+- **Spielstand-Version 21:** Ältere Stände laden weiter und werden über die Migrationskette ergänzt (ab Version 13 kommt dabei die dritte Fremdinsel «Weidenau» ohne Kontor dazu). Ein Stand aus einer neueren Version wird mit Hinweis («Unbekannte Version») abgewiesen; das laufende Spiel bleibt unverändert.
 - Spielstände vom Stand vor der Seefahrt (Version 8) lassen sich laden: Sie bekommen je Kaufmannshaus 10 Gewürz
   (höchstens 100) im Heimatlager als Übergang und eine einmalige Meldung.
 - Spielstände älterer Versionen (vor M5 bzw. vor M6) lassen sich laden und werden danach im neuen Format
