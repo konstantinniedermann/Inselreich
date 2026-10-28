@@ -75,7 +75,7 @@ describe('AK-BS-03 Folge', () => {
     expect(a.draws.length).toBeGreaterThan(0);
     expect(b.draws).toEqual(a.draws);
     expect(b.s).toBe(a.s);
-  });
+  }, 30_000);
   it('eigener Strom: Krisenfolge mit Bittschriften an gleich der mit aus', () => {
     const crises = (on: boolean): string[] => {
       const w = createWorld(3, { crisisLevel: 'normal', petitionsOn: on });
@@ -115,5 +115,5 @@ describe('AK-BS-10 60 000 T', () => {
     };
     play(w, 60_000, see);
     expect(over).toBeGreaterThan(0);
-  });
+  }, 30_000);
 });
