@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BUILDING_DEFS, BUILDING_IDS } from '../../src/sim/defs/buildings';
-import { TAX_LEVELS } from '../../src/sim/defs/tiers';
-import { TICK_MS, UPKEEP_INTERVAL } from '../../src/sim/defs/timing';
+import { TAX_CARRY_DIVISOR, TAX_LEVELS } from '../../src/sim/defs/tiers';
+import { MINUTE_MS, TICK_MS, UPKEEP_INTERVAL } from '../../src/sim/defs/timing';
 import { crisisView } from '../../src/sim/queries';
 import { step } from '../../src/sim/tick';
 import type { TaxLevel } from '../../src/sim/types';
@@ -11,7 +11,13 @@ import { logLine } from '../../src/ui/crisisLog';
 import { nextStep, taxEffect } from '../../src/ui/guide';
 import { orderCardText } from '../../src/ui/order';
 import { burningText, producesText } from '../../src/ui/texts';
-import { formatClock, formatGameTime, perMinute, signedNum } from '../../src/ui/time';
+import {
+  formatClock,
+  formatGameTime,
+  perMinute,
+  signedNum,
+  taxUnitsPerMinute,
+} from '../../src/ui/time';
 import { SCENARIOS } from '../sim/scenarios';
 
 const ticksFor = (seconds: number): number => (seconds * 1000) / TICK_MS;
@@ -77,3 +83,15 @@ it.each(Object.entries(SCENARIOS))(
     noTick(texts);
   },
 );
+
+describe('I-223-NACH taxUnitsPerMinute', () => {
+  it('Geld je Minute aus Steuereinheiten, abgerundet, über TAX_CARRY_DIVISOR', () => {
+    expect(taxUnitsPerMinute(0)).toBe(0);
+    for (const u of [1, 33, 6667, 20000, 123457]) {
+      expect(taxUnitsPerMinute(u)).toBe(
+        Math.floor((u * (MINUTE_MS / TICK_MS)) / TAX_CARRY_DIVISOR),
+      );
+    }
+    expect(taxUnitsPerMinute(20000)).toBe(600);
+  });
+});

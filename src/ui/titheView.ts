@@ -6,19 +6,19 @@ import {
   TITHE_GOOD,
   TITHE_UNITS_PER_100,
 } from '../sim/defs/tiers';
-import { UPKEEP_INTERVAL } from '../sim/defs/timing';
+import { MINUTE_MS, TICK_MS, TITHE_SWITCH_LOCK, UPKEEP_INTERVAL } from '../sim/defs/timing';
 import { moneyTaxes, titheSplit } from '../sim/population';
 import type { StepReport } from '../sim/tick';
 import { townhallActive, townhallReason } from '../sim/townhall';
 import type { TitheGood, TitheTier, World } from '../sim/types';
 import { cashReach } from './cashReach';
-import { formatGameTime, perMinute, signedNum } from './time';
+import { formatGameTime, perMinute, signedNum, taxUnitsPerMinute } from './time';
 
 export const TITHE_TEXT: Record<TitheTier, string> = {
   1: 'Zehnt der Pioniere: Ihre ganze Steuer kommt als Werkzeug ins Lager, nicht als Geld.',
   2: 'Zehnt der Siedler: Ein Zehntel ihrer Steuer kommt als Stein ins Lager.',
 };
-export const TITHE_LOCK_NOTE = 'Nach dem Umschalten bleibt der Zehnt 3 Minuten, wie er ist.';
+export const TITHE_LOCK_NOTE = `Nach dem Umschalten bleibt der Zehnt ${(TITHE_SWITCH_LOCK * TICK_MS) / MINUTE_MS} Minuten, wie er ist.`;
 export const TITHE_OVERFLOW_NOTE = 'Ist das Lager voll, verfällt der Rest.';
 
 export const titheTooltip = (tier: TitheTier): string =>
@@ -41,7 +41,7 @@ export function titheFlowText(w: World, tier: TitheTier): string {
   if (!townhallActive(w)) return `Zehnt ruht: ${townhallReason(w)}`;
   const split = titheSplit(w);
   const g = TITHE_GOOD[tier];
-  const geld = Math.floor((split.money[tier] * 3) / 100);
+  const geld = taxUnitsPerMinute(split.money[tier]);
   const ware =
     Math.floor(((split.tithe[g] * 600 * TITHE_UNITS_PER_100[g]) / TITHE_CARRY_DIVISOR) * 10) / 10;
   return `${geld} / min · ${decimal(ware)} ${GOODS[g].name} / min`;

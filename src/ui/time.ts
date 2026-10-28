@@ -1,4 +1,5 @@
-import { TICK_MS } from '../sim/defs/timing';
+import { TAX_CARRY_DIVISOR } from '../sim/defs/tiers';
+import { MINUTE_MS, TICK_MS } from '../sim/defs/timing';
 
 /** Einheit von `goodsBalance` (Bilanz je 100 Ticks); Darstellungskonstante, kein Spielwert. */
 export const GOODS_BALANCE_TICKS = 100;
@@ -30,3 +31,7 @@ export function signedNum(n: number): string {
   if (n < 0) return `−${-n}`;
   return '±0';
 }
+
+/** Geld je Minute Spielzeit aus Steuereinheiten (Einheiten × Prozent je Tick), abgerundet. */
+export const taxUnitsPerMinute = (units: number): number =>
+  Math.floor((units * (MINUTE_MS / TICK_MS)) / TAX_CARRY_DIVISOR);
