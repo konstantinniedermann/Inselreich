@@ -17,7 +17,15 @@ import { PAUSED_UPKEEP_PCT } from '../../src/sim/defs/buildings';
 import { UPKEEP_INTERVAL } from '../../src/sim/economy';
 import { perMinute } from '../../src/ui/time';
 import { upgradeGain } from '../../src/ui/panelView';
-import { meetLevel, placeTownhall, putBuilding, twoIslandWorld } from '../sim/helpers';
+import {
+  meetLevel,
+  placeTownhall,
+  putBuilding,
+  setHouse,
+  twoIslandWorld,
+  village,
+} from '../sim/helpers';
+import { SERVICE_IDS, moneyTaxes } from '../../src/sim/population';
 import { createWorld } from '../../src/sim/world';
 
 const bal = (w: World): number => totalTaxes(w) - totalUpkeep(w);
@@ -223,6 +231,25 @@ describe('balancePreview (I-078, AK-10, AK-14)', () => {
     const row = upgradeGain(w, b, 2).find((r) => r.key === 'upkeep')!;
     expect(row.before).toBe(perMinute(half(u1), UPKEEP_INTERVAL));
     expect(row.after).toBe(perMinute(half(u2), UPKEEP_INTERVAL));
+  });
+
+  it('Zehnt an: before und after nutzen dieselbe Steuerbasis (moneyTaxes), Delta kommt nur vom Unterhalt', () => {
+    const { w, houses } = village(15, { unlockAll: true });
+    placeTownhall(w);
+    houses.forEach((h) => {
+      setHouse(h, 2, TIERS[2].maxInhabitants);
+      h.house!.supplied = true;
+      for (const g of Object.keys(home(w).stock) as GoodId[]) h.house!.satisfied[g] = true;
+      for (const sv of SERVICE_IDS) h.house!.services[sv] = true;
+    });
+    w.won = true;
+    w.titheOn[2] = true;
+    expect(totalTaxes(w)).toBeGreaterThan(moneyTaxes(w)); // Zehnt wirkt wirklich
+    const b = putBuilding(w, 0, 'fisher', 3, 3);
+    const p = balanceAfterUpgrade(w, b);
+    const u2 = LEVELS.fisher![0]!.upkeep;
+    expect(p.before).toBe(moneyTaxes(w) - totalUpkeep(w));
+    expect(p.before - p.after).toBe(u2 - upkeepOf(b));
   });
 
   it('kein Neurechnen je Frame: balanceAfterBuild rechnet nur auf Aufruf (reine Funktion, gleiche Zahl)', () => {
