@@ -132,7 +132,14 @@ import {
 } from './demolishConfirm';
 import { bindInput, hintKey, strokeEndNotice, type InputAction, type InputBinding } from './input';
 import { clearForest, plantForest } from '../sim/forest';
-import { setGoodLock, setTaxLevel, setTierTaxLevel, setUpgradeStop } from '../sim/tax';
+import { setGoodLock, setTaxLevel, setTierTaxLevel, setTithe, setUpgradeStop } from '../sim/tax';
+import { openTitheConfirm } from './titheDialog';
+import {
+  collectTitheLoss,
+  newTitheLossState,
+  titheClickChangesState,
+  titheConfirmLines,
+} from './titheView';
 import { lockedTierFor } from './taxView';
 import { setEdict } from '../sim/edicts';
 import { decree } from '../sim/council';
@@ -895,6 +902,18 @@ function launch(
           const r = setTierTaxLevel(world, tier, level);
           if (!r.ok) showError(friendlyReason(world, r.reason, { tier }));
           refresh();
+        },
+        setTithe: (tier, on, opener) => {
+          if (tier !== 1 && tier !== 2) return;
+          if (!titheClickChangesState(world, tier, on)) return;
+          const apply = (value: boolean): void => {
+            const r = setTithe(world, tier, value);
+            if (!r.ok) showError(friendlyReason(world, r.reason, { tier }));
+            refresh();
+          };
+          if (on)
+            openTitheConfirm(gameEl, titheConfirmLines(world, tier), opener, () => apply(true));
+          else apply(false);
         },
         setGoodLock: (tier, good, locked) => {
           const r = setGoodLock(world, tier, good, locked);
@@ -1697,6 +1716,7 @@ function launch(
   }
   let disposed = false;
   let rafId = 0;
+  const titheLoss = newTitheLossState();
   const loop = (now: number): void => {
     if (disposed) return;
     try {
@@ -1708,7 +1728,10 @@ function launch(
         acc += dt * state.speed;
         let ticks = 0;
         while (acc >= TICK_MS && ticks < MAX_TICKS_PER_FRAME) {
-          reports.push(step(world));
+          const rep = step(world);
+          reports.push(rep);
+          for (const text of collectTitheLoss(titheLoss, rep, world.tick))
+            showMessage(text, 'warn');
           for (const id of tracker.observe(world, run))
             honorHits.push({ id, seed: world.seed, tick: world.tick, crisis: world.crisisLevel });
           acc -= TICK_MS;

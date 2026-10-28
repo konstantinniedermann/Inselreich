@@ -155,7 +155,11 @@ describe('AK-UD-05b Vertragsereignisse', () => {
   };
   const broken = (reason?: 'stock' | 'kontor'): ContractEvent =>
     ({ kind: 'broken', good: 'rum', reason, penalty: 135, island: 0 }) as ContractEvent;
-  const rep = (contract: ContractEvent | null): StepReport => ({ lost: [], contract });
+  const rep = (contract: ContractEvent | null): StepReport => ({
+    lost: [],
+    contract,
+    titheLost: {},
+  });
 
   it('delivered: info, Text wie contractNotice, zählt als neu', () => {
     const w = farWorld(3, []);

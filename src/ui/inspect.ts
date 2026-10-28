@@ -5,7 +5,7 @@ import { phaseAt, type Phase } from '../render/daynight';
 import { maxInhabitantsOf } from '../sim/council';
 import { BUILDING_DEFS } from '../sim/defs/buildings';
 import { GOODS, STORAGE_CAP } from '../sim/defs/goods';
-import { TAX_LEVELS, TIERS, TIER_IDS } from '../sim/defs/tiers';
+import { TAX_LEVELS, TIERS, TIER_IDS, TITHE_GOOD, TITHE_TIERS } from '../sim/defs/tiers';
 import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, upgradeStatus } from '../sim/population';
@@ -14,7 +14,7 @@ import { buildingUpkeep, cycleOf, utilization } from '../sim/levels';
 import { paidCost } from '../sim/upgrade';
 import { effectiveRefund, goalView, houseDiagnosis } from '../sim/queries';
 import { growthInterval } from '../sim/edicts';
-import { townhallActive } from '../sim/townhall';
+import { townhallActive, townhallReason } from '../sim/townhall';
 import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { upgradeDeficit } from '../sim/flow';
 import { buildEdictSection, updateEdictSection } from './edictSection';
@@ -30,6 +30,7 @@ import type {
   MonumentGood,
   TaxLevel,
   Tier,
+  TitheTier,
   World,
 } from '../sim/types';
 import { councilChronicleLine } from './council';
@@ -43,6 +44,7 @@ import {
   tierTaxPerMinute,
   tierTaxTooltip,
 } from './taxView';
+import { titheFlowText, titheLockText, titheTooltip } from './titheView';
 import { taxTarget } from '../sim/tax';
 import { friendlyReason } from './hints';
 import { traitLine } from './islandCard';
@@ -100,6 +102,8 @@ export interface InspectActions {
   setTax(level: TaxLevel): void;
   /** Amtsstube: Regler einer Bevölkerungsstufe setzen; die Ablehnung zeigt der Aufrufer. */
   setTierTax(tier: Tier, level: TaxLevel): void;
+  /** Amtsstube: Zehnt einer Stufe ein-/ausschalten (Einschalten fragt vorher nach); die Ablehnung zeigt der Aufrufer. */
+  setTithe(tier: Tier, on: boolean, opener: HTMLElement): void;
   setGoodLock(tier: Tier, good: GoodId, locked: boolean): void;
   setUpgradeStop(tier: Tier, stopped: boolean): void;
   /** Betrieb stilllegen oder anfahren; die Ablehnung zeigt der Aufrufer. */
@@ -637,13 +641,42 @@ function renderTownhall(panel: HTMLElement, actions: InspectActions): void {
     const min = document.createElement('span');
     min.className = 'tax-min';
     min.dataset.field = `tax-min-${t}`;
-    grid.append(min);
+    const hasTithe = Object.hasOwn(TITHE_GOOD, t);
+    // Mit Zehnt-Schalter bekommt die Steuerzeile eine eigene Zeile (der Text ist länger als die Spalte)
+    if (hasTithe) min.style.gridColumn = '1 / -1';
+    else grid.append(min);
     const lock = document.createElement('span');
     lock.className = 'tax-lock';
     lock.dataset.field = `tax-lock-${t}`;
     lock.hidden = true;
     lock.style.gridColumn = '1 / -1';
     grid.append(lock);
+    if (hasTithe) {
+      const row = document.createElement('div');
+      row.className = 'tithe-row';
+      const lab = document.createElement('span');
+      lab.className = 'tax-tier';
+      lab.textContent = 'Zahlung';
+      row.append(lab);
+      for (const on of [false, true]) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn';
+        btn.textContent = on ? 'Zehnt' : 'Geld';
+        btn.dataset.titheTier = String(t);
+        btn.dataset.titheOn = on ? '1' : '0';
+        btn.setAttribute('aria-pressed', 'false');
+        btn.addEventListener('click', () => actions.setTithe(t, on, btn));
+        row.append(btn);
+      }
+      grid.append(row, min);
+      const tl = document.createElement('span');
+      tl.className = 'tax-lock';
+      tl.dataset.field = `tithe-lock-${t}`;
+      tl.hidden = true;
+      tl.style.gridColumn = '1 / -1';
+      grid.append(tl);
+    }
   }
   panel.append(grid);
   addLine(panel, '', 'tax-effect');
@@ -687,11 +720,31 @@ function updateTownhall(panel: HTMLElement, world: World): void {
     if (btn.title !== tip) btn.title = tip;
   }
   for (const t of TIER_IDS) {
-    setField(panel, `tax-min-${t}`, `${tierTaxPerMinute(world, t)} / min`);
+    const flow = Object.hasOwn(TITHE_GOOD, t) ? titheFlowText(world, t as TitheTier) : '';
+    setField(panel, `tax-min-${t}`, flow !== '' ? flow : `${tierTaxPerMinute(world, t)} / min`);
     const lockEl = panel.querySelector<HTMLElement>(`[data-field="tax-lock-${t}"]`);
     const text = taxLockText(world, t);
     if (lockEl) lockEl.hidden = text === '';
     setField(panel, `tax-lock-${t}`, text);
+  }
+  for (const btn of panel.querySelectorAll<HTMLButtonElement>('[data-tithe-tier]')) {
+    const t = Number(btn.dataset.titheTier) as TitheTier;
+    const on = btn.dataset.titheOn === '1';
+    const lockText = titheLockText(world, t);
+    const state = world.titheOn[t] === on;
+    btn.classList.toggle('active', state);
+    const pressed = String(state);
+    if (btn.getAttribute('aria-pressed') !== pressed) btn.setAttribute('aria-pressed', pressed);
+    const disabled = lockText !== '' || !active;
+    if (btn.disabled !== disabled) btn.disabled = disabled;
+    const tip = lockText !== '' ? 'Sperrzeit' : !active ? townhallReason(world) : titheTooltip(t);
+    if (btn.title !== tip) btn.title = tip;
+  }
+  for (const t of TITHE_TIERS) {
+    const el = panel.querySelector<HTMLElement>(`[data-field="tithe-lock-${t}"]`);
+    const text = titheLockText(world, t);
+    if (el) el.hidden = text === '';
+    setField(panel, `tithe-lock-${t}`, text);
   }
   setField(panel, 'tax-effect', taxStatusLine(world));
   const edictEl = panel.querySelector<HTMLElement>('[data-field="edict"]');

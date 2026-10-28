@@ -62,3 +62,5 @@ export const FEAST_DURATION = 600;
 export const FEAST_COOLDOWN = 1800;
 /** Sperre nach Erlass, Wechsel oder Aufheben eines Edikts (5 min bei 1×). */
 export const EDICT_LOCK = 3000;
+/** Sperre nach dem Umschalten des Zehnts einer Stufe (3 min bei 1×), I-223. */
+export const TITHE_SWITCH_LOCK = 1800;

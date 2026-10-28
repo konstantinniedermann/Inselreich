@@ -1,11 +1,11 @@
 import { TIERS } from '../sim/defs/tiers';
 import { totalUpkeep } from '../sim/economy';
-import { houseCap, newHouseState, totalTaxes } from '../sim/population';
+import { houseCap, moneyTaxes, newHouseState } from '../sim/population';
 import type { GoodId, Building, BuildingDefId, HouseState, World } from '../sim/types';
 import { balanceText } from './hud';
 
 /**
- * Bilanz-Vorschau (I-078): Nominalwerte je 100 Ticks (Steuern − Unterhalt), inselübergreifend wie die Kopfzeile.
+ * Bilanz-Vorschau (I-078): Nominalwerte je 100 Ticks (Geldanteil der Steuer (I-223: ohne Zehnt) − Unterhalt), inselübergreifend wie die Kopfzeile.
  * `afterMax` gibt es nur beim Wohnhaus (Steuer bei voller Belegung, „bis zu“).
  */
 export interface BalancePreview {
@@ -17,7 +17,7 @@ export interface BalancePreview {
 /** Schlüssel des Probe-Gebäudes; kollidiert nie mit einer echten Id. */
 const PROBE_ID = Number.MAX_SAFE_INTEGER;
 
-const balanceOf = (w: World): number => totalTaxes(w) - totalUpkeep(w);
+const balanceOf = (w: World): number => moneyTaxes(w) - totalUpkeep(w);
 
 /** Flache Probe-Welt mit einem Zusatz-Gebäude; die echte Welt (Gebäudetabelle, Häuser) bleibt unberührt. */
 function withProbe(world: World, probe: Building): World {

@@ -1,17 +1,17 @@
 import { GOOD_IDS } from './defs/goods';
-import { TAX_LEVELS, TIERS, TIER_IDS } from './defs/tiers';
-import { TAX_SWITCH_LOCK } from './defs/timing';
+import { TAX_LEVELS, TIERS, TIER_IDS, TITHE_GOOD } from './defs/tiers';
+import { TAX_SWITCH_LOCK, TITHE_SWITCH_LOCK } from './defs/timing';
 import { townhallActive, townhallReason } from './townhall';
 import { functionLock } from './unlocks';
 import { fail, ok } from './types';
-import type { GoodId, Tier, Result, TaxLevel, World } from './types';
+import type { GoodId, Tier, Result, TaxLevel, TitheTier, World } from './types';
 
 /** Der Regler der Bevölkerungsstufe ist noch gesperrt. */
 export function taxLocked(world: World, tier: Tier): boolean {
   return world.tick < world.taxLockedUntil[tier];
 }
 
-const asTier = (n: number): Tier | null => (n === 1 || n === 2 || n === 3 || n === 4 ? n : null);
+const asTier = (n: unknown): Tier | null => (n === 1 || n === 2 || n === 3 || n === 4 ? n : null);
 
 /** Nur Stufen mit Aufstieg dürfen «niedrig» (Spec R4). */
 export const canRiseTier = (tier: Tier): boolean => TIERS[tier].upgradeCost !== null;
@@ -41,6 +41,29 @@ export function setTierTaxLevel(world: World, tier: number, level: string): Resu
   if (world.taxLevels[t] === level) return fail('Stufe bereits aktiv');
   if (taxLocked(world, t)) return fail('Sperrzeit');
   lockTier(world, t, level as TaxLevel);
+  return ok;
+}
+
+/** Der Zehnt der Stufe ist noch gesperrt (I-223). */
+export function titheLocked(world: World, tier: TitheTier): boolean {
+  return world.tick < world.titheLockedUntil[tier];
+}
+
+/**
+ * Schaltet den Zehnt einer Stufe um (I-223); wirkt ab dem nächsten Tick, kostet nichts.
+ * Prüfreihenfolge Spec R6, erster Treffer gewinnt; bei `fail` keine Änderung.
+ */
+export function setTithe(world: World, tier: unknown, on: unknown): Result {
+  const t = asTier(tier);
+  if (t === null) return fail('Ungültige Stufe');
+  if (!Object.hasOwn(TITHE_GOOD, t)) return fail(`Kein Zehnt für ${TIERS[t].name}`);
+  if (typeof on !== 'boolean') return fail('Ungültiger Wert');
+  if (!townhallActive(world)) return fail(townhallReason(world));
+  const ti = t as TitheTier;
+  if (world.titheOn[ti] === on) return fail(on ? 'Zehnt bereits aktiv' : 'Geld bereits aktiv');
+  if (titheLocked(world, ti)) return fail('Sperrzeit');
+  world.titheOn[ti] = on;
+  world.titheLockedUntil[ti] = world.tick + TITHE_SWITCH_LOCK;
   return ok;
 }
 

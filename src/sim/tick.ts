@@ -11,7 +11,7 @@ import { tickTrial } from './trial';
 import { tickUnlocks } from './unlocks';
 import { WIN_CITIZENS, WIN_MERCHANTS, WIN_SPICE_MERCHANTS } from './defs/tiers';
 import { spiceLoop, spiceMerchants } from './goal3';
-import type { ContractEvent, World } from './types';
+import type { ContractEvent, TitheLoss, World } from './types';
 
 /**
  * Setzt erst `won` (genug Bürger+), dann `wonMerchants` (genug Kaufleute, nur nach `won`), dann `wonSpice`
@@ -33,9 +33,11 @@ export interface StepReport {
   lost: ShipLoss[];
   /** Vertragsereignis dieses Schritts (I-047, R12), sonst `null`. */
   contract: ContractEvent | null;
+  /** Zehnt-Ware über der Lagergrenze in diesem Schritt (I-223); nie im Save. */
+  titheLost: TitheLoss;
 }
 
-/** Ein Simulationsschritt: Zähler, Produktion, Schiffe, Bevölkerung, Auflage, Ratsbeschluss (öffnet ab Hausstufe 2/3/4), Steuern, Wirtschaft (Unterhalt), Markt, Aufträge, Krisen, Sieg, Freischaltung. */
+/** Ein Simulationsschritt: Zähler, Produktion, Schiffe, Bevölkerung, Auflage, Ratsbeschluss (öffnet ab Hausstufe 2/3/4), Steuern und Zehnt, Wirtschaft (Unterhalt), Markt, Aufträge, Krisen, Sieg, Freischaltung. */
 export function step(world: World): StepReport {
   world.tick += 1;
   tickProduction(world);
@@ -43,7 +45,7 @@ export function step(world: World): StepReport {
   tickPopulation(world);
   tickTrial(world);
   tickCouncil(world);
-  tickTaxes(world);
+  const titheLost = tickTaxes(world);
   tickEconomy(world);
   tickMonument(world);
   tickMarket(world);
@@ -51,5 +53,5 @@ export function step(world: World): StepReport {
   tickCrises(world);
   checkWin(world);
   tickUnlocks(world); // letzter Aufruf: Bitgleichheit, Spec 4.3, ADR-005-Nachtrag
-  return { lost, contract };
+  return { lost, contract, titheLost };
 }

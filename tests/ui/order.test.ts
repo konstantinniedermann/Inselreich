@@ -464,7 +464,11 @@ describe('I-047 Stammkunde: Meldungen (AK-SK-28)', () => {
 
   it('Klang-Spy: announceContract', () => {
     const out = { show: vi.fn(), play: vi.fn() };
-    const rep = (contract: ContractEvent | null): StepReport => ({ lost: [], contract });
+    const rep = (contract: ContractEvent | null): StepReport => ({
+      lost: [],
+      contract,
+      titheLost: {},
+    });
     announceContract([rep(null), rep(delivered)], out, w);
     expect(out.show).toHaveBeenCalledTimes(1);
     expect(out.show).toHaveBeenCalledWith('Stammkunde: 5 Rum geliefert, +135', 'info');
