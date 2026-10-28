@@ -3776,3 +3776,19 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-223 (Zehnt,
 Regelbezug: R862, R1017, R975 · Kosten bei Irrtum: drei Pool-Plätze.
 
 Entscheider: L0 · Anlass: Bericht lead-design TIEFE-8 · ADR: —
+
+## R1044 · 2026-10-28 · Prozess-Retro Stillstand: V1–V5 angenommen, Nachtrag R1040
+
+Ruling: Der Bericht `docs/retro-stillstand` @ `6054c900` (studio-process-coach) ist abgenommen. Ursache im Ablauf: Alle warteten nur auf ein Ereignis, und niemand hatte eine Uhr. Es ist der dritte Stillstand von etwa 2 h in 7 Tagen. Das Messfenster ist nicht zu klein (≤ 30 % belegt).
+V1 ja: Das E-080-Protokoll mit Sperre von Hand durch L0 entfällt. R1040 (1) gilt dauerhaft: Jedes Werkzeug nimmt die Sperre selbst und wiederholt bei Exit 2/3. Das Wanduhr-Limit ist Pflichtzeile im Briefing von Paketen mit Messung. E-080 gilt als «zurückgenommen».
+V2 ja, als E-086: `make messwache` meldet zusätzlich «Studio still» (über 20 min kein Heartbeat bei offenen Paketen) und ersetzt die Prüfung nach R853 (2) von Hand. R853 (3) entfällt. Umsetzung auf `tool/messwache` durch denselben Lead (Budgetrest 3 von 6), Gate mit dem REL-36-Bündel.
+V3 ja, als E-087: Vor jeder Folgeinstanz versucht L0 einmal, den alten Lead per SendMessage wiederzubeleben (heute 2 Lead-Starts zu viel).
+V4 ja, als E-088: Wer auf das Messfenster wartet, zieht testfreie Tasks vor (Review, Doku, Handoff).
+V5 ja, als E-089: Sperr-Events ins Log, Messausgaben mit Startzeit und Lauf-ID; das wird Auflage 6 an TOOL-MF2-WT (R1027).
+Handbuch und experimente.md setzt studio-coach um (COACH-R1044, auf Basis `docs/coach-r1016`); die endgültigen E-Nummern vergibt der Coach.
+**Nachtrag R1040:** Die L0-Sperre bestand vor dem hängenden Lauf, nicht zwischen den Läufen. `perf-fixture.txt` stammt von 15:13:08Z; der Fixture-Schritt lief nie.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MESSWACHE, TOOL-MF2-WT, COACH-R1016
+Regelbezug: R853, R868, R1027, R1040–R1042, E-080 · Kosten bei Irrtum: weitere Stillstände.
+
+Entscheider: L0 · Anlass: Bericht studio-process-coach PROZESS-STILLSTAND · ADR: —
