@@ -672,7 +672,7 @@ function launch(
     (tier, side) => {
       const r = decree(world, tier, side);
       if (r.ok) {
-        showMessage(`Beschluss gefasst: ${COUNCIL[tier][side].name}`);
+        showMessage(`Beschluss gefasst: ${COUNCIL[tier][side]?.name ?? side}`);
         sound.play('build');
       } else showError(friendlyReason(world, r.reason));
       refresh();
@@ -918,8 +918,8 @@ function launch(
           }
           refresh();
         },
-        holdFeast: (id) => {
-          const r = holdFeast(world, id);
+        holdFeast: (id, kind) => {
+          const r = holdFeast(world, id, kind);
           if (r.ok) sound.play('build');
           else showError(friendlyReason(world, r.reason));
           refresh();
@@ -1847,6 +1847,7 @@ function launch(
       const t0 = performance.now();
       const fx: RenderFx = {
         timeMs: t0,
+        tickFrac: state.speed > 0 ? Math.min(1, acc / TICK_MS) : 0,
         dayNight: settings.dayNight,
         weather,
         reduceMotion: reduce,

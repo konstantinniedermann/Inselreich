@@ -7,12 +7,14 @@ import { buildLock, functionLock } from './unlocks';
 import { checkAfford } from './economy';
 import { countFreeTerrain, countTerrain } from './terrainCount';
 import { islandName } from './islands';
+import { seaMask } from './mapgen';
 import {
   adjacentOf,
   center,
   footprint,
   HOME,
   home,
+  idx,
   inBounds,
   isLand,
   tileAt,
@@ -65,6 +67,15 @@ export function siteRuleOk(
       return countTerrain(isl, adjacentOf(isl, x, y, def.w, def.h), 'water') >= 1
         ? ok
         : fail(adjacentReason('water'));
+    case 'seaCoast': {
+      const sea = seaMask(
+        isl.tiles.map((t) => t.terrain),
+        isl.width,
+        isl.height,
+      );
+      const atSea = adjacentOf(isl, x, y, def.w, def.h).some((p) => sea[idx(isl, p.x, p.y)]);
+      return atSea ? ok : fail(NO_SEA_ACCESS);
+    }
     case 'adjacent':
       return countTerrain(isl, adjacentOf(isl, x, y, def.w, def.h), rule.terrain) >= rule.min
         ? ok
@@ -105,6 +116,7 @@ export function canPlaceRoad(world: World, x: number, y: number, island: number 
 
 export { buildLock } from './unlocks';
 
+const NO_SEA_ACCESS = 'Kontor braucht Zugang zum Meer';
 const NO_KONTOR = 'Erst ein Kontor auf dieser Insel';
 const NO_SEAFARING = 'Seefahrt mit den Kaufleuten';
 

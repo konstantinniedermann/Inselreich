@@ -1,4 +1,5 @@
 import { createRng } from './rng';
+import { seaTileTicks } from './council';
 import { BUILDING_DEFS } from './defs/buildings';
 import {
   ARCHIPEL_SPAN_MAX,
@@ -70,16 +71,33 @@ export function islandName(world: World, i: number): string {
   return ISLANDS.find((d) => d.kind === kind)?.name ?? HOME_NAME;
 }
 
-export const travelTicks = (d: number): number => SHIP_TICKS_PER_SEA_TILE * d;
+export const travelTicks = (d: number, perTile: number = SHIP_TICKS_PER_SEA_TILE): number =>
+  perTile * d;
 
 /** Fahrzeit zwischen zwei Inseln in Ticks (Lane `{min, max}`); `a === b` → 0. */
-export function laneTicks(islands: readonly LaneIsland[], a: number, b: number): number {
+export function laneTicks(
+  islands: readonly LaneIsland[],
+  a: number,
+  b: number,
+  perTile: number = SHIP_TICKS_PER_SEA_TILE,
+): number {
   if (a === b) return 0;
   const lo = Math.min(a, b);
   const hi = Math.max(a, b);
   const lane = seaLanes(islands).find((l) => l.a === lo && l.b === hi);
-  return lane === undefined ? 0 : travelTicks(lane.d);
+  return lane === undefined ? 0 : travelTicks(lane.d, perTile);
 }
+
+/** Fahrzeit über `d` Seefelder in Ticks unter dem Ratsbeschluss. */
+export const travelTicksOf = (world: Pick<World, 'council'>, d: number): number =>
+  travelTicks(d, seaTileTicks(world));
+
+/** Fahrzeit zwischen zwei Inseln in Ticks unter dem Ratsbeschluss. */
+export const laneTicksOf = (
+  world: Pick<World, 'islands' | 'council'>,
+  a: number,
+  b: number,
+): number => laneTicks(world.islands, a, b, seaTileTicks(world));
 
 // ---------- Anker ----------
 
@@ -103,6 +121,26 @@ export function homeAnchor(terrain: Terrain[], w: number, h: number, kontor: Pt)
       }
     }
   return best;
+}
+
+/** Anlegestelle am 2×2-Kontor bei `kontor`: Meerkachel im 8er-Ring (12 Kacheln), kleinster quadr. Abstand zu (x+1, y+1); Gleichstand y, dann x; sonst homeAnchor. */
+export function dockFor(terrain: Terrain[], w: number, h: number, kontor: Pt): Pt {
+  const sea = seaMask(terrain, w, h);
+  let best: Pt | null = null;
+  let bestDist = Infinity;
+  for (let y = kontor.y - 1; y <= kontor.y + 2; y++)
+    for (let x = kontor.x - 1; x <= kontor.x + 2; x++) {
+      if (x < 0 || y < 0 || x >= w || y >= h || !sea[y * w + x]) continue;
+      if (x >= kontor.x && x <= kontor.x + 1 && y >= kontor.y && y <= kontor.y + 1) continue;
+      const dx = x - (kontor.x + 1);
+      const dy = y - (kontor.y + 1);
+      const dist = dx * dx + dy * dy;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = { x, y };
+      }
+    }
+  return best ?? homeAnchor(terrain, w, h, kontor);
 }
 
 function hasAnchor(terrain: Terrain[], w: number, h: number): boolean {
@@ -510,4 +548,20 @@ export function generateForeignIslands(
     placed.push(place(home, [home, ...placed], shape, def, rng, opts));
   }
   return placed;
+}
+
+/*
+ * Handelssperre ohne Kontor (aus trade.ts verschoben, I-201): eigener Abschnitt am Dateiende.
+ */
+
+/**
+ * Grund „Kein Kontor auf <Name>“ oder `null`: Handel läuft nur über ein Kontor der Insel.
+ * Der Inselzugriff ist gleich `placement.islandAt`; inline, weil `placement` `islands` importiert (Zyklus);
+ * bei Änderung beide nachziehen.
+ */
+export function noKontorTrade(world: World, island: number): string | null {
+  const isl = Number.isInteger(island) ? (world.islands[island] ?? null) : null;
+  return isl !== null && isl.kontorId === null
+    ? `Kein Kontor auf ${islandName(world, island)}`
+    : null;
 }

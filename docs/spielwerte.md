@@ -426,7 +426,7 @@ Kaufleute steigen nicht auf; für sie gibt es kein ‹niedrig›. ‹hoch› loh
 ## Rat (Ratsbeschluss)
 
 Ab dem ersten Haus der Stufe 2, 3 und 4 (auf irgendeiner Insel) wird je ein Beschluss «offen» und bleibt es dauerhaft, auch nach Abriss oder Abstieg. Der Spieler wählt
-einmal pro Stufe eine von zwei Seiten (A: schnellere Kette, B: Form der Stadt); der Beschluss gilt reichsweit bis Partie-Ende, kostet nichts und lässt sich nicht
+einmal pro Stufe eine der Seiten (A: schnellere Kette, B: Form der Stadt; auf Stufe 4 zusätzlich C: Seerecht); der Beschluss gilt reichsweit bis Partie-Ende, kostet nichts und lässt sich nicht
 rückgängig machen. Ein offener Beschluss wirkt nicht und läuft nicht ab. Die Zahlen stehen nur in `src/sim/defs/council.ts` (Änderung nur per Ruling, der Balancing-Test
 bleibt Regressionsschutz); die Lese-Helfer in `src/sim/council.ts` liefern ohne Beschluss genau den Wert aus den Defs.
 
@@ -438,6 +438,9 @@ bleibt Regressionsschutz); die Lese-Helfer in `src/sim/council.ts` liefern ohne 
 | 3                | B     | Wohnordnung  | Bürgerhäuser fassen 16 statt 15 Bürger                 | 15 → 16   |
 | 4                | A     | Glasrecht    | Glashütten +67 % schneller (Takt `glassworks`)         | 50 → 30   |
 | 4                | B     | Hofrecht     | Kaufmannshäuser fassen 22 statt 20 Kaufleute           | 20 → 22   |
+| 4                | C     | Seerecht     | Schiffe fahren 25 % schneller (Hebel `seaTileTicks`)   | 10 → 8    |
+
+**Seerecht (Stufe 4, Seite C):** Der Hebel `seaTileTicks` steht in `src/sim/defs/council.ts` (Wert 8), der Ausgangswert `SHIP_TICKS_PER_SEA_TILE` (10) in `src/sim/defs/sea.ts`. Er ersetzt die Ticks je Seefeld in jeder Fahrzeit (Anzeige, Rechnung, Schiffe unterwegs). Prüfwert Erweiterung 1 (R805): `tests/sim/seerecht.test.ts` (AK-SR-8) hält die Gewinnlage. Fällt der Wächter oder die Balancing-Prüfung, gibt es ein Werte-Ruling; Wert 9 ist verworfen, Wert 7 wird dann geprüft.
 
 **Anteiliger Stufentakt (R711 R-3):** Ausgebaute Betriebe nehmen den neuen Takt anteilig: `floor(Stufentakt × neuer Grundtakt ÷ 50)`, mindestens 1 (Weberei Stufe 30 → 24).
 Die Reihenfolge ist Beschluss, dann Inselvorteil, beide abgerundet. Das Glockenrecht gilt auch für die Festreichweite der Kapelle.

@@ -65,6 +65,8 @@ export function siteText(rule: SiteRule): string {
   switch (rule.kind) {
     case 'coast':
       return 'Küste (Wasser angrenzend)';
+    case 'seaCoast':
+      return 'Meerufer (Meer angrenzend)';
     case 'adjacent':
       return `${TERRAIN_NAMES[rule.terrain]} angrenzend${rule.min > 1 ? ` (mind. ${rule.min})` : ''}`;
     case 'radius':

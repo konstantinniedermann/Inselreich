@@ -1,3 +1,4 @@
+import { isCouncilSide, seaTileTicks } from './council';
 import { crisisWindow } from './crises';
 import { BUILDING_DEFS } from './defs/buildings';
 import { CRISIS_LEVELS } from './defs/crises';
@@ -35,12 +36,14 @@ import {
   type LaneIsland,
   type PlacedIsland,
 } from './islands';
+import { isFeastKind } from './feastEffect';
 import { MAP_H, MAP_W } from './mapgen';
 import { recomputeConnectivity } from './roads';
 import { canRiseTier, taxTarget } from './tax';
 import { deriveUnlocks } from './unlocks';
 import type {
   BuildingState,
+  CouncilTier,
   CrisisKind,
   CrisisLevel,
   GoodId,
@@ -52,7 +55,7 @@ import type {
   World,
 } from './types';
 
-export const SAVE_VERSION = 18;
+export const SAVE_VERSION = 19;
 
 export type { LoadResult };
 
@@ -579,9 +582,15 @@ function isValidV6Building(b: unknown): boolean {
   return true;
 }
 
-/** `feastAt` (H-I007) nur an der Kapelle, ganzzahlig, `0 ≤ feastAt ≤ tick`; fehlt = kein Fest (keine Save-Version). */
+/**
+ * `feastAt` (H-I007) nur an der Kapelle, ganzzahlig, `0 ≤ feastAt ≤ tick`; fehlt = kein Fest (keine Save-Version).
+ * `feastKind` (I-201) nur mit `feastAt` und als bekannte Festart; fehlt = Aufstiegsfest.
+ */
 function isValidFeast(b: unknown, tick: unknown): boolean {
-  if (!isObject(b) || b.feastAt === undefined) return true;
+  if (!isObject(b)) return true;
+  if (b.feastKind !== undefined && (b.feastAt === undefined || !isFeastKind(b.feastKind)))
+    return false;
+  if (b.feastAt === undefined) return true;
   return b.defId === 'chapel' && isInt(tick) && isIntBetween(b.feastAt, 0, tick);
 }
 
@@ -704,27 +713,29 @@ function isValidCargo(c: unknown): boolean {
   return sum <= SHIP.capacity;
 }
 
-function isValidShip(s: unknown, islands: Record<string, unknown>[]): boolean {
+function isValidShip(s: unknown, islands: Record<string, unknown>[], tileTicks: number): boolean {
   if (!isObject(s) || !isIntBetween(s.port, 0, islands.length - 1)) return false;
   const port = s.port as number;
   if (s.to !== null) {
     if (!hasKontor(islands, s.to) || s.to === port) return false;
   }
   const maxLeft =
-    s.to === null ? 0 : laneTicks(islands as unknown as LaneIsland[], port, s.to as number);
+    s.to === null
+      ? 0
+      : laneTicks(islands as unknown as LaneIsland[], port, s.to as number, tileTicks);
   if (!isIntBetween(s.left, s.to === null ? 0 : 1, maxLeft)) return false;
   if (!isValidCargo(s.cargo) || !isValidRoute(s.route, islands)) return false;
   return typeof s.homing === 'boolean' && (!s.homing || s.route === null);
 }
 
 /** Felder von Save v9 (M12 Seefahrt): Schiffe, Zähler, drittes Ziel. */
-function isValidV9Fields(raw: Record<string, unknown>): boolean {
+function isValidV9Fields(raw: Record<string, unknown>, tileTicks: number): boolean {
   const { ships, nextShipId } = raw;
   const islands = raw.islands as Record<string, unknown>[];
   if (typeof raw.wonSpice !== 'boolean' || (raw.wonSpice && raw.wonMerchants !== true))
     return false;
   if (!Array.isArray(ships) || ships.length > SHIP_MAX) return false;
-  if (!ships.every((s) => isValidShip(s, islands))) return false;
+  if (!ships.every((s) => isValidShip(s, islands, tileTicks))) return false;
   const ids = ships.map((s) => (s as Record<string, unknown>).id);
   if (!ids.every((id) => isInt(id) && id >= 1) || new Set(ids).size !== ids.length) return false;
   if (!isInt(nextShipId) || nextShipId < 1) return false;
@@ -933,7 +944,14 @@ function isValidCouncil(raw: Record<string, unknown>): boolean {
   if (!isObject(c)) return false;
   const keys = Object.keys(c);
   if (keys.length !== 3 || keys.join() !== '2,3,4') return false;
-  return keys.every((k) => c[k] === null || c[k] === 'open' || c[k] === 'A' || c[k] === 'B');
+  return keys.every(
+    (k) => c[k] === null || c[k] === 'open' || isCouncilSide(Number(k) as CouncilTier, c[k]),
+  );
+}
+
+/** v18 → v19 (I-153 Seerecht): nur die Versionsnummer; ältere Builds weisen Stände mit Beschluss C über sie ab. Wirft nie. */
+export function migrateV18ToV19(raw: Record<string, unknown>): void {
+  raw.version = 19;
 }
 
 /** v17 → v18 (I-132): `trial` mit Startwerten. Wirft nie. */
@@ -976,12 +994,13 @@ function isWellFormed(raw: Record<string, unknown>): boolean {
   if (!isValidV4Fields(raw)) return false;
   if (!isValidV5Fields(raw)) return false;
   if (!isValidV6Fields(raw)) return false;
-  if (!isValidV9Fields(raw)) return false;
+  if (!isValidCouncil(raw)) return false;
+  const tileTicks = seaTileTicks(raw as unknown as Pick<World, 'council'>);
+  if (!isValidV9Fields(raw, tileTicks)) return false;
   if (!isValidV11Fields(raw)) return false;
   if (!isValidV12Fields(raw)) return false;
   if (!isValidContractFields(raw)) return false;
   if (!isValidFarFields(raw)) return false;
-  if (!isValidCouncil(raw)) return false;
   if (!isValidTrial(raw)) return false;
   if (!isObject(stats) || typeof stats.taxes !== 'number' || typeof stats.upkeep !== 'number')
     return false;
@@ -1028,6 +1047,7 @@ export function deserialize(json: string): LoadResult {
   if (raw.version === 15) migrateV15ToV16(raw);
   if (raw.version === 16) migrateV16ToV17(raw);
   if (raw.version === 17) migrateV17ToV18(raw);
+  if (raw.version === 18) migrateV18ToV19(raw);
   if (raw.version !== SAVE_VERSION) return { ok: false, reason: 'Unbekannte Version' };
   if (!isWellFormedSafe(raw)) return { ok: false, reason: 'Beschädigter Spielstand' };
   const world = raw as unknown as World;

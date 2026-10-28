@@ -10,7 +10,7 @@ import { isProtected } from '../sim/crises';
 import { UPKEEP_INTERVAL, refundCost } from '../sim/economy';
 import { SERVICE_BUILDING, upgradeStatus } from '../sim/population';
 import { LEVELS } from '../sim/defs/levels';
-import { buildingUpkeep, utilization } from '../sim/levels';
+import { buildingUpkeep, cycleOf, utilization } from '../sim/levels';
 import { paidCost } from '../sim/upgrade';
 import { effectiveRefund, goalView, houseDiagnosis } from '../sim/queries';
 import { growthInterval } from '../sim/edicts';
@@ -19,7 +19,8 @@ import { functionLock, goodUnlocked } from '../sim/unlocks';
 import { upgradeDeficit } from '../sim/flow';
 import { buildEdictSection, updateEdictSection } from './edictSection';
 import { buildMonumentSection, updateMonumentSection } from './monumentSection';
-import { feastView, houseFeastLine } from './feast';
+import { FEAST_KIND_IDS, type FeastKind } from '../sim/defs/feast';
+import { feastButtons, feastStatusLine, harvestLine, houseFeastLine } from './feast';
 import { glassStoneHint } from './hints';
 import type {
   Building,
@@ -114,8 +115,8 @@ export interface InspectActions {
   setMonumentBuy(good: MonumentGood, on: boolean): void;
   /** Betrieb mit dem Kontor verbinden; die Ablehnung zeigt der Aufrufer. */
   connect(id: number): void;
-  /** Kapelle: Fest feiern; die Ablehnung zeigt der Aufrufer. */
-  holdFeast(id: number): void;
+  /** Kapelle: Fest der gewählten Art feiern; die Ablehnung zeigt der Aufrufer. */
+  holdFeast(id: number, kind: FeastKind): void;
   /** Pfad-Vorschau auf der Karte setzen (`null` löscht sie). */
   previewConnect(tiles: readonly Pos[] | null): void;
   /** Kontor-Panel: Schiffe kaufen und Routen anlegen (M12 E4). */
@@ -800,6 +801,7 @@ function renderBetrieb(
     stats.appendChild(bar);
   }
   if (def.flammable === true) addLine(stats, '', 'fire-protection');
+  if (cycleOf(world, b) !== undefined) addLine(stats, '', 'harvest').hidden = true;
   if (def.fireProtection === true) addLine(stats, '', 'fire-covers');
   if (levels !== undefined) renderUpgradeBox(panel, onUpgrade);
 }
@@ -855,7 +857,9 @@ export function renderInspect(
         () => actions.upgrade(id),
         (paused) => actions.setPaused(id, paused),
       );
-    if (def.service === 'faith') addButton(buttons, '', () => actions.holdFeast(id), 'feast');
+    if (def.service === 'faith')
+      for (const kind of FEAST_KIND_IDS)
+        addButton(buttons, '', () => actions.holdFeast(id, kind), `feast-${kind}`);
     if (needsConnection(b.defId)) addConnectButton(buttons, id, actions);
     if (buildSameShown(b.defId)) addBuildSame(buttons, b.defId, actions);
     addButton(buttons, DEMOLISH_LABEL, () => actions.demolish(id), 'demolish', DEMOLISH_HINT);
@@ -868,9 +872,12 @@ export function renderInspect(
     reason.hidden = true;
   }
   if (def.service === 'faith') {
-    const hint = addLine(panel, '', 'feast-reason');
-    hint.classList.add('negative');
-    hint.hidden = true;
+    addLine(panel, '', 'feast-status').hidden = true;
+    for (const kind of FEAST_KIND_IDS) {
+      const hint = addLine(panel, '', `feast-reason-${kind}`);
+      hint.classList.add('negative');
+      hint.hidden = true;
+    }
   }
   if (b.defId !== 'kontor') addLine(panel, '', 'refund');
   updateInspect(panel, world, id);
@@ -989,7 +996,7 @@ function updateConnect(panel: HTMLElement, world: World, b: Building): void {
   }
 }
 
-/** Kapelle: Knopf „Fest feiern" nachführen; Haus: Zeile, solange ein Fest wirkt. */
+/** Kapelle: die drei Festknöpfe nachführen; Haus: Zeile, solange ein Fest wirkt. */
 function updateFeast(panel: HTMLElement, world: World, b: Building): void {
   if (b.house) {
     const line = houseFeastLine(world, b);
@@ -1000,19 +1007,30 @@ function updateFeast(panel: HTMLElement, world: World, b: Building): void {
     }
     return;
   }
-  const btn = panel.querySelector<HTMLButtonElement>('button[data-field="feast"]');
-  if (!btn) return;
-  const v = feastView(world, b);
-  btn.hidden = v === null;
-  if (v) {
-    btn.textContent = v.label;
-    btn.disabled = v.disabled;
-    btn.title = v.reason ?? '';
+  const views = feastButtons(world, b);
+  const status = feastStatusLine(world, b);
+  const statusEl = panel.querySelector<HTMLElement>('[data-field="feast-status"]');
+  if (statusEl) {
+    if (statusEl.hidden !== (status === null)) statusEl.hidden = status === null;
+    if (statusEl.textContent !== (status ?? '')) statusEl.textContent = status ?? '';
   }
-  const hint = panel.querySelector<HTMLElement>('[data-field="feast-reason"]');
-  if (hint) {
-    hint.hidden = v?.reason == null;
-    hint.textContent = v?.reason ?? '';
+  for (const kind of FEAST_KIND_IDS) {
+    const v = views?.find((x) => x.kind === kind) ?? null;
+    const btn = panel.querySelector<HTMLButtonElement>(`button[data-field="feast-${kind}"]`);
+    if (btn) {
+      if (btn.hidden !== (v === null)) btn.hidden = v === null;
+      if (v) {
+        if (btn.textContent !== v.label) btn.textContent = v.label;
+        if (btn.disabled !== v.disabled) btn.disabled = v.disabled;
+        if (btn.title !== v.title) btn.title = v.title;
+      }
+    }
+    const hint = panel.querySelector<HTMLElement>(`[data-field="feast-reason-${kind}"]`);
+    if (hint) {
+      const text = v?.reason ?? null;
+      if (hint.hidden !== (text === null)) hint.hidden = text === null;
+      if (hint.textContent !== (text ?? '')) hint.textContent = text ?? '';
+    }
   }
 }
 
@@ -1070,6 +1088,12 @@ function updateBetrieb(panel: HTMLElement, world: World, b: Building): void {
     if (pauseEl.title !== pv.title) pauseEl.title = pv.title;
     const flag = String(b.paused === true);
     if (pauseEl.dataset.paused !== flag) pauseEl.dataset.paused = flag;
+  }
+  const harvest = harvestLine(world, b);
+  const harvestEl = panel.querySelector<HTMLElement>('[data-field="harvest"]');
+  if (harvestEl) {
+    if (harvestEl.hidden !== (harvest === null)) harvestEl.hidden = harvest === null;
+    if (harvestEl.textContent !== (harvest ?? '')) harvestEl.textContent = harvest ?? '';
   }
   setField(panel, 'level', levelText(b) ?? '');
   setPips(panel, 'level-chip', 'level', levelPips(b));

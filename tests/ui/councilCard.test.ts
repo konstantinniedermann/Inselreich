@@ -42,6 +42,27 @@ describe('I-112 Rats-Karte: dispose', () => {
     card.update(w); // nach dispose wirkungslos
     expect(host.children).toHaveLength(0);
   });
+
+  it('AK-SR-19 Stufe 4: Option C wählen, update ohne Änderung, Beschluss fassen', () => {
+    const host = new Node('div');
+    const onDecree = vi.fn();
+    const card = createCouncilCard(host as unknown as HTMLElement, onDecree, () => {});
+    const w = createWorld(1);
+    w.council[4] = 'open';
+    card.update(w);
+    card.setOpen(true);
+    const root = host.children[0] as Node;
+    const options = root.descendants().filter((n) => n.className === 'council-option');
+    expect(options).toHaveLength(3);
+    const c = options.find((n) => n.dataset['side'] === 'C')!;
+    c.fire('click');
+    card.update(w);
+    root
+      .descendants()
+      .find((n) => n.className.includes('council-go'))!
+      .fire('click');
+    expect(onDecree).toHaveBeenCalledWith(4, 'C');
+  });
 });
 
 describe('I-138 Rats-Karte: Vorschau', () => {

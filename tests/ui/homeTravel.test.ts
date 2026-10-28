@@ -42,4 +42,27 @@ describe('I-136 Lane-Cache (AK-F2)', () => {
     homeTravelTicks(createWorld(4), 1, lanes);
     expect(n).toBe(2);
   });
+  it('rechnet neu, sobald die Welt eine neue Inselliste bekommt (Kontor II verschiebt den Anker)', () => {
+    let n = 0;
+    const lanes = createLaneCache((w) => {
+      n++;
+      return seaLanes(w.islands);
+    });
+    const w = createWorld(3);
+    homeTravelTicks(w, 1, lanes);
+    w.islands = w.islands.slice();
+    homeTravelTicks(w, 1, lanes);
+    homeTravelTicks(w, 1, lanes);
+    expect(n).toBe(2);
+  });
+});
+
+describe('AK-SR-17 Heimfahrt mit Seerecht', () => {
+  it('d 30: 300 Ticks, mit Seerecht 240', () => {
+    const w = createWorld(3);
+    const lanes = (): Lane[] => [{ a: 0, b: 1, d: 30, points: [] }];
+    expect(homeTravelTicks(w, 1, lanes)).toBe(300);
+    w.council[4] = 'C';
+    expect(homeTravelTicks(w, 1, lanes)).toBe(240);
+  });
 });

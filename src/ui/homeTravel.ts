@@ -1,17 +1,17 @@
 // homeTravel.ts — Fahrzeit Heimat–Insel (I-136), geteilt von Inselkarte und Fernkarte. DOM-frei, liest nur die Welt.
 import { HOME } from '../sim/world';
-import { seaLanes, travelTicks, type Lane } from '../sim/islands';
-import type { World } from '../sim/types';
+import { seaLanes, travelTicksOf, type Lane } from '../sim/islands';
+import type { Island, World } from '../sim/types';
 
 /** Lane-Provider; injizierbar, damit Tests die Berechnungen zählen können. */
 export type Lanes = (world: World) => Lane[];
 
-/** Cache je Welt-Objekt: `compute` läuft je Welt einmal. */
+/** Cache je Inselliste (`world.islands`): `compute` läuft je Inselliste einmal; Kontor II ersetzt das Array. */
 export function createLaneCache(compute: Lanes = (w) => seaLanes(w.islands)): Lanes {
-  const cache = new WeakMap<World, Lane[]>();
+  const cache = new WeakMap<readonly Island[], Lane[]>();
   return (world) => {
-    let all = cache.get(world);
-    if (!all) cache.set(world, (all = compute(world)));
+    let all = cache.get(world.islands);
+    if (!all) cache.set(world.islands, (all = compute(world)));
     return all;
   };
 }
@@ -32,5 +32,5 @@ export function homeTravelTicks(
   lanes: Lanes = laneCache,
 ): number | null {
   const lane = homeLane(world, island, lanes);
-  return lane === null ? null : travelTicks(lane.d);
+  return lane === null ? null : travelTicksOf(world, lane.d);
 }

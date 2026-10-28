@@ -1,4 +1,5 @@
 import type { IslandKind, IslandTrait } from './defs/sea';
+import type { FeastKind } from './defs/feast';
 import type { ReserveGood, ReserveStep } from './defs/reserve';
 
 export type GoodId =
@@ -37,6 +38,7 @@ export interface Cost {
 }
 export type SiteRule =
   | { kind: 'coast' } // ≥1 Wasserkachel 4er-angrenzend
+  | { kind: 'seaCoast' } // ≥1 Kantennachbar im Meer (seaMask), Binnensee zählt nicht
   | { kind: 'adjacent'; terrain: Terrain; min: number } // ≥min Kacheln des Terrains 4er-angrenzend
   | { kind: 'radius'; terrain: Terrain; radius: number; min: number; free?: true } // ≥min Kacheln im Radius; `free`: nur unbebaute Kacheln
   | { kind: 'supply' } // im Radius von Kontor oder Markt
@@ -187,6 +189,8 @@ export interface Building {
   level?: 2 | 3;
   /** Beginn des letzten Fests (Tick); nur an der Kapelle, fehlt = noch nie gefeiert. */
   feastAt?: number;
+  /** Art des letzten Fests; nur zusammen mit `feastAt` an der Kapelle; fehlt = Aufstiegsfest (I-201). */
+  feastKind?: FeastKind;
   house?: HouseState;
 }
 export interface Tile {
@@ -296,20 +300,21 @@ export interface Ship {
   homing: boolean;
 }
 export type CouncilTier = 2 | 3 | 4;
-export type CouncilSide = 'A' | 'B';
+export type CouncilSide = 'A' | 'B' | 'C';
 export type CouncilState = null | 'open' | CouncilSide;
 /** Wirksamer Wert, den ein Beschluss überschreibt (Defs bleiben unverändert). */
 export type CouncilLever =
   | { kind: 'cycle'; defId: BuildingDefId; value: number }
   | { kind: 'serviceRadius'; defId: BuildingDefId; value: number }
-  | { kind: 'maxInhabitants'; tier: Tier; value: number };
+  | { kind: 'maxInhabitants'; tier: Tier; value: number }
+  | { kind: 'seaTileTicks'; value: number };
 export interface CouncilDef {
   name: string;
   text: string;
   lever: CouncilLever;
 }
 export interface World {
-  version: 18;
+  version: 19;
   seed: number;
   islands: Island[];
   tick: number;
@@ -404,7 +409,7 @@ export interface Island {
   /** Lage der Insel im Archipel in Kacheln (Heimat 0/0; Fremdinseln können negativ sein). */
   ox: number;
   oy: number;
-  /** Ankerkachel für den Seeweg, innerhalb der Insel. */
+  /** Ankerkachel für den Seeweg, innerhalb der Insel; veränderlich: `placeBuilding` setzt sie beim Bau von Kontor II auf `dockFor`. */
   anchor: { x: number; y: number };
   /** Sperrbestand je Reserve-Gut (I-049); immer vollständig. */
   reserve: Record<ReserveGood, ReserveStep>;

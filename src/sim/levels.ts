@@ -1,5 +1,6 @@
 import { councilCycle } from './council';
 import { BUILDING_DEFS, PAUSED_UPKEEP_PCT, THROTTLED_UPKEEP_PCT } from './defs/buildings';
+import { harvestActive, harvestCycle } from './feastEffect';
 import { LEVELS, type LevelDef } from './defs/levels';
 import { ISLANDS, TRAIT_BUILDINGS, TRAIT_CYCLE_PCT, type IslandTrait } from './defs/sea';
 import { EFF_MAX, EFF_WINDOW } from './defs/timing';
@@ -49,7 +50,8 @@ export const effectiveCycle = (
 /** Zyklus (Ticks) des Betriebs auf laufender Stufe k; `undefined` ohne Zyklus. Einziger Leseort (Spec 3.1, R1.8). */
 export function cycleOf(world: World, b: Building, ctx?: LevelContext): number | undefined {
   if (BUILDING_DEFS[b.defId].cycle === undefined) return undefined;
-  return effectiveCycle(world, b.island, b.defId, levelCycle(b, kOf(world, b, ctx))!);
+  const c = effectiveCycle(world, b.island, b.defId, levelCycle(b, kOf(world, b, ctx))!);
+  return harvestActive(world, b) ? harvestCycle(c) : c;
 }
 /** Unterhalt u(g) je 100 Ticks der gebauten Stufe. */
 export const upkeepOf = (b: Building): number => levelUpkeep(b, b.level ?? 1);
