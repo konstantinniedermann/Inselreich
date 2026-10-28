@@ -3583,3 +3583,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
 Regelbezug: R519, R685, R1023, R1024 · Kosten bei Irrtum: eine Schwelle.
 
 Entscheider: L0 · Anlass: Bericht lead-production AUFRAEUM-05 · ADR: —
+
+## R1026 · 2026-10-28 · Gate Spec NU-2: BEDENKEN; Entscheide; Spec-Nachtrag
+
+Ruling: Gate Spec NU-2 (`design/nu2` @ `d76ed325`) **BEDENKEN angenommen** (Handoff `.studio/handoffs/2026-10-28-lead-qa-gate-spec-NU-2.md`). Entscheide nach lead-qa-Votum: **E-02 ja mit Auflage** (Plan NU-2 startet erst, wenn NU-1 **und** FL-2 auf main sind; Tests nach FL-2-Merge schärfen);
+**E-N2-01, -02, -05, -06, -07 ja**; **E-N2-03 ja mit Auflage** (Ersatzlagen-Quote verbindlich, B3); **E-N2-04 ja** («Herdhaus» global); A01 E-03…E-08, E-10 ja; **A01 E-09 geändert** (Faktor-Reihenfolge entscheidet der Plan nach FL-2 R3, AK-N2-11 pinnt Einzelwerte); **A01 E-01 gestrichen**; Anhang 01 bleibt, Kopfzeile «Spec gilt».
+**Spec-Nachtrag** durch `lead-design` (sonnet, Stufe leicht) zu B1–B9 auf `design/nu2`; danach Kurzprüfung `lead-qa`. FLAECHE (Plan vorhanden, Budget 56) rückt damit in der Test-Warteliste hinter I-223-NACH vor TOOL-MESSFENSTER-2, weil sie NU-2 freischaltet.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1, FLAECHE, AUSBAU-LOGIK Etappe 2
+Regelbezug: R896, R962, R966, R970, R976–R979, R992 · Kosten bei Irrtum: eine Nachtrag-Runde.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-NU-2 · ADR: —
