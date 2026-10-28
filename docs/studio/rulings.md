@@ -3614,3 +3614,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1, FLAECHE
 Regelbezug: R1026, R920 V2 · Kosten bei Irrtum: ein AK im Plan nachziehen.
 
 Entscheider: L0 · Anlass: Kurzprüfung lead-qa gate-NU-2 · ADR: —
+
+## R1029 · 2026-10-28 · NU-1 Zwischenstand; Kartenhaus-Platzhalter; Folgeinstanz
+
+Ruling: NU-1 T01–T03 auf `feat/nu1` @ `a1a37fb8` (Teilbelege grün, Balancing-Diff leer). **Kartenhaus-Platzhalter angenommen:** enge Test-Ausnahmen für `maphouse` (Sprite/Klang) bis NU1-ART; NU1-ART erweitert Referenz-Hash, Fixtures und Zoom-2-Speicherschranke bewusst (eigene Begründung im Bericht).
+SAVE_VERSION zieht beim Merge nach (main 20, I-210 → 21, NU-1 dann 22, E-ZE-1). **Folgeinstanz NU-1** (Restbudget 18): zuerst frischer Delta-Review opus T02, Task-Review T03 (inkl. der drei Dateilisten-Abweichungen), dann T04 ff.; Rot-Beleg ab T04 je Testfall vor der Implementierung (R395).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210 (Save 21), I-215
+Regelbezug: R395, R909, R987, R992 · Kosten bei Irrtum: Test-Ausnahmen bleiben zu lange.
+
+Entscheider: L0 · Anlass: Bericht lead-tech NU-1 (Instanz 1) · ADR: —
