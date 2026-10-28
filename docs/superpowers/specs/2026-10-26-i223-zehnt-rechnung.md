@@ -45,7 +45,7 @@ negativ? Dominiert der Zehnt, ist er nutzlos, ergibt er eine Verkaufs-Pumpe oder
 | Sperre Steuerstufe               | 300 Ticks                                          | `src/sim/defs/timing.ts:8`                           |
 | Edikt Handel                     | Zukauf 80 %, ab `won`                              | `src/sim/defs/edicts.ts:20,38`                       |
 | Auftragsprämie; Boom; Vorliebe   | ⌊0,75 × Zukauf⌋; 150 %; 130 %                      | `goods.ts:73`, `defs/crises.ts:18`, `defs/sea.ts:35` |
-| Kasse < 0 lässt Probe scheitern  | `money < 0`                                        | `src/sim/trial.ts:36`                                |
+| Kasse < 0 sperrt nur den Start   | `money < 0`                                        | `src/sim/trial.ts:36`                                |
 
 Ein Betrieb liefert 1 Stück je Takt (`src/sim/production.ts:68`), der Unterhalt gilt je 100 Ticks. Daraus folgt:
 Holzfäller 20 Holz/min für 30 Geld/min, Steinbruch 10 Stein/min für 60, Werkzeugmacher 7,5/min für 150 plus 7,5 Holz.
@@ -114,7 +114,7 @@ sich auf 52 Werkzeug (F) bzw. 120 Stein (M) fest. Das ist eine Ausbauwelle, aber
 
 ## Prüfung auf dominante Wahl (R722) und Entartungen
 
-- **E1 Zehnt immer:** Kasse F −420/min, Probe scheitert bei Kasse < 0; über 100 Stück verfällt; Betrieb ab u ≥ 32/46 % billiger → nein.
+- **E1 Zehnt immer:** Kasse F −420/min, Kasse < 0 sperrt nur den Start der Probe (`trialStartBlock`, `TRIAL_REASONS.debt`); über 100 Stück verfällt; Betrieb ab u ≥ 32/46 % billiger → nein.
 - **E2 Zehnt nie:** Ideenform Holz: ja (Holzfäller immer billiger); Stein 100 %: ja. Vorschlag: lohnt bei Wellen und ohne Bergplatz → Ideenform ja.
 - **E3 Verkaufs-Pumpe:** Werkzeug k 33,3 gegen Verkauf 15, Boom 22,5; Stein 12,5 gegen 6 / 9; Auftrag Stein 11 < 12,5; Werkzeug ohne Auftrag → nein.
 - **E4 Ersetzt den Holzfäller:** nie: 1,5–3,1 Geld/Holz gegen 8,33. Vorschlag nimmt Holz ganz heraus → nein.
