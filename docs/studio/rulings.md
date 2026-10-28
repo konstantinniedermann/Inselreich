@@ -3635,3 +3635,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210-SYNC, N
 Regelbezug: R909, R974, R987, R1029 · Kosten bei Irrtum: eine Save-Nummer nachziehen.
 
 Entscheider: L0 · Anlass: Handoff lead-tech I-215 (Instanz 1) · ADR: —
+
+## R1031 · 2026-10-28 · I-210-SYNC fertig; Gate Merge I-210
+
+Ruling: I-210-SYNC abgenommen: `feat/i210` @ `15dc0848` (main inkl. AUSBAU-LOGIK, Save **v21**, Delta-Review opus OK). Entwurf angenommen: Testlagen `petitionWorlds.ts` nach AUSBAU-LOGIK nachgeführt (Standort ausgebauter Betriebe), ohne Wert- oder Schwellenänderung.
+`petitionsHarmless` mit 30-s-Frist **vorläufig**; das Gate prüft gegen R392 (neuer Test > 500 ms) und die push-check-Zeitreserve und schlägt ggf. Teilung/Kürzung vor. `git merge-tree` main (`b026dd3a`) ← `feat/i210` @ `15dc0848`: konfliktfrei (E-084). Gate Merge an `lead-qa`.
+Nächste Save-Nummern: NU-1/I-215 ab v22 (wer später merged, zieht nach).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1, I-215 (Save)
+Regelbezug: R392, R909, R987, R1013, R1020, E-084 · Kosten bei Irrtum: ein lastempfindlicher Test im push-check.
+
+Entscheider: L0 · Anlass: Bericht lead-tech I-210-SYNC (zweiter Sync) · ADR: —
