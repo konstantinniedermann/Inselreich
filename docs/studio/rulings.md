@@ -3803,3 +3803,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MF2-WT, 
 Regelbezug: R1004, R1027, R1035, R1044 · Kosten bei Irrtum: keine Messbasis für E-083.
 
 Entscheider: L0 · Anlass: Bericht studio-coach COACH-R1044 · ADR: —
+
+## R1046 · 2026-10-28 · NU-1 merge-reif bis auf T10, Entwürfe, Zeitfrage AK-E0-15a
+
+Ruling: `feat/nu1` @ `da2e7ec0` (Save 22). Breitlauf unter Testsperre: 5831 Tests, 0 rot, main `36bfad1b` 5498, 0 rot. tsc, lint, conflicts und Balancing unverändert. Final-Review opus BEDENKEN, behoben (`freeShipAtHome` ohne Expeditionsschiff); Delta 1 ZURÜCK, behoben; Delta 2 auf `217abf3a` OK. T11 erledigt. Starts 17 von 24.
+Entwürfe angenommen: (1) Lagen mit Überbestand setzen ihn nach dem Laden über `petitionWorlds.snapshot`; die Kappung beim Laden (R979 N2) bleibt. (2) Neuer Helfer `storageWithPlus` in `petitionEffect.ts`, die Wächter-Whitelist bleibt unverändert. (3) Der HAFEN-`dwell`-Haken und AK-NU1-05 entfallen, bis HAFEN gemergt ist; dann kommen sie als Auflage an HAFEN.
+**Offen vor Gate Merge:** (a) T10 Browser-Check (qa-playtester, headless) durch den NU-1-Lead. (b) Zeitfrage `sim/perf.test.ts` AK-E0-15a (9,3 s gegen 6,1 s, gemessen unter Last 5,8 und 8,4, nicht belastbar): ein paarweiser Lauf main gegen Branch, je 3×, bei Last ≤ 4 unter eigener Sperre. Liegt der Median über +15 % oder reisst er die Zeitreserve von push-check, sucht der Lead vor dem Gate die Ursache. Sonst wird es mit Beleg abgenommen. Das Gate Merge folgt danach (lead-qa, E-084). NU-1 merged vor I-215 und behält v22.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-215 (Save 22 → 23), HAFEN (dwell-Haken)
+Regelbezug: R905, R979, R1030, R1040 (4), E-084 · Kosten bei Irrtum: langsamerer push-check.
+
+Entscheider: L0 · Anlass: Bericht lead-tech NU-1 Instanz 4 · ADR: —
