@@ -1,12 +1,14 @@
 import { BUILDING_DEFS } from '../../src/sim/defs/buildings';
 import { GOODS } from '../../src/sim/defs/goods';
-import { LEVELS } from '../../src/sim/defs/levels';
+import { LEVELS, WORKFORCE_RADIUS } from '../../src/sim/defs/levels';
 import { PETITIONS, type PetitionId } from '../../src/sim/defs/petitions';
 import { SHIP } from '../../src/sim/defs/sea';
 import { STORM_DURATION } from '../../src/sim/defs/timing';
 import { STORAGE_CAP } from '../../src/sim/defs/goods';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { goodsBalance } from '../../src/sim/flow';
+import { inSupplyRange } from '../../src/sim/supply';
+import { workforceAt } from '../../src/sim/levelRules';
 import { holdFeast } from '../../src/sim/feast';
 import { answerPetition } from '../../src/sim/petitions';
 import { deserialize, serialize } from '../../src/sim/save';
@@ -154,32 +156,126 @@ export function pickBundles(chain: Chain, target: number): Bundle[] {
   return picked;
 }
 
-/** Erste freie Stelle im Fabrikfeld unter dem Kontor, mit einer Kachel Abstand; fest und ohne Zufall. */
-function freeSpot(w: World, wd: number, ht: number): { x: number; y: number } {
+/** Abstand um ein ausgebautes Rinderfarm-Gehöft, der frei bleibt (Standortregel: freies Gras im Umkreis). */
+const GRAZING = 2;
+/** Fachkräfte-Häuser einer Lage stehen höchstens so weit von ihrem Betrieb (Arbeitsweg minus Spielraum). */
+const CREW_REACH = WORKFORCE_RADIUS - 0.1;
+const REACH_TILES = Math.ceil(CREW_REACH);
+
+/** Liegt das Rechteck im Weideraum eines ausgebauten Rinderfarm-Gehöfts? */
+function inGrazing(w: World, x: number, y: number, wd: number, ht: number): boolean {
+  for (const o of Object.values(w.buildings)) {
+    if (o.defId !== 'cattlefarm' || o.level === undefined) continue;
+    const d = BUILDING_DEFS[o.defId];
+    const apart =
+      x + wd <= o.x - GRAZING ||
+      x >= o.x + d.w + GRAZING ||
+      y + ht <= o.y - GRAZING ||
+      y >= o.y + d.h + GRAZING;
+    if (!apart) return true;
+  }
+  return false;
+}
+
+/** Häuser, die einem Betrieb der Stufe `level` Fachkräfte stellen. */
+const crewHouses = (w: World, defId: BuildingDefId, level: 1 | 2 | 3): Building[] => {
+  const tier = LEVELS[defId]![level - 2]!.workforceTier;
+  return Object.values(w.buildings).filter((b) => b.house !== undefined && b.house.tier >= tier);
+};
+
+/**
+ * Erste freie Stelle, mit `margin` Kacheln Abstand; fest und ohne Zufall. Ohne `crew` im Fabrikfeld unter dem
+ * Kontor, mit `crew` auf der ganzen Insel, aber im Arbeitsweg eines der Häuser.
+ */
+function freeSpot(
+  w: World,
+  wd: number,
+  ht: number,
+  margin = 1,
+  crew: Building[] = [],
+): { x: number; y: number } | undefined {
   const isl = home(w);
   const k = w.buildings[isl.kontorId]!;
-  for (let y = k.y + FIELD_DY; y + ht < isl.height - 1; y++) {
-    for (let x = FIELD_X0; x + wd < isl.width - 1; x++) {
+  const y0 = crew.length > 0 ? margin : k.y + FIELD_DY;
+  for (let y = y0; y + ht + margin < isl.height; y++) {
+    for (let x = Math.max(FIELD_X0, margin); x + wd + margin < isl.width; x++) {
+      if (inGrazing(w, x, y, wd, ht)) continue;
+      if (
+        crew.length > 0 &&
+        !crew.some(
+          (h) => Math.hypot(x + wd / 2 - (h.x + 0.5), y + ht / 2 - (h.y + 0.5)) <= CREW_REACH,
+        )
+      )
+        continue;
       let free = true;
-      for (let yy = y - 1; yy <= y + ht && free; yy++)
-        for (let xx = x - 1; xx <= x + wd && free; xx++) {
+      for (let yy = y - margin; yy < y + ht + margin && free; yy++)
+        for (let xx = x - margin; xx < x + wd + margin && free; xx++) {
           const t = isl.tiles[idx(isl, xx, yy)]!;
           if (t.buildingId !== null || t.terrain === 'forest') free = false;
         }
       if (free) return { x, y };
     }
   }
-  throw new Error('Fabrikfeld voll');
+  return undefined;
+}
+
+/** Gras im Weideraum, damit die Standortregel nur an Abstand und Bebauung hängt, nicht am Zufallsgelände. */
+function carveGrazing(w: World, b: Building): void {
+  const isl = home(w);
+  const d = BUILDING_DEFS[b.defId];
+  for (let y = b.y - GRAZING; y < b.y + d.h + GRAZING; y++)
+    for (let x = b.x - GRAZING; x < b.x + d.w + GRAZING; x++) {
+      const t = isl.tiles[idx(isl, x, y)]!;
+      if (t.buildingId === null) t.terrain = 'grass';
+    }
 }
 
 function placeProducer(w: World, defId: BuildingDefId, level: 1 | 2 | 3): Building {
   const d = BUILDING_DEFS[defId];
   const wide = defId === 'lumberjack' ? d.w + 1 : d.w; // rechts daneben eine Waldkachel (Standortregel)
-  const { x, y } = freeSpot(w, wide, d.h);
+  const grazing = defId === 'cattlefarm' && level > 1;
+  const margin = grazing ? GRAZING : 1;
+  // Ausgebaut: wo ein Haus passender Stufe im Arbeitsweg steht, sonst im Fabrikfeld (dann ergänzt `ensureCrew`)
+  const near = level > 1 ? freeSpot(w, wide, d.h, margin, crewHouses(w, defId, level)) : undefined;
+  const { x, y } = near ?? freeSpot(w, wide, d.h, margin)!;
   const b = putBuilding(w, HOME, defId, x, y);
   if (defId === 'lumberjack') home(w).tiles[idx(home(w), x + 1, y)]!.terrain = 'forest';
   if (level > 1) b.level = level as 2 | 3;
+  if (grazing) carveGrazing(w, b);
   return b;
+}
+
+/** Nächste freie Kachel für ein Haus im Arbeitsweg von `b`; Reihenfolge fest nach Abstand, y, x. */
+function crewSpot(w: World, b: Building): { x: number; y: number } {
+  const isl = home(w);
+  const found: { x: number; y: number; d: number }[] = [];
+  for (let y = b.y - REACH_TILES; y <= b.y + REACH_TILES; y++)
+    for (let x = b.x - REACH_TILES; x <= b.x + REACH_TILES; x++) {
+      if (x < 0 || y < 0 || x >= isl.width || y >= isl.height) continue;
+      const t = isl.tiles[idx(isl, x, y)]!;
+      if (t.buildingId !== null || t.road || t.terrain === 'forest') continue;
+      if (inGrazing(w, x, y, 1, 1) || inSupplyRange(w, HOME, x + 0.5, y + 0.5)) continue;
+      const c = BUILDING_DEFS[b.defId];
+      const d = Math.hypot(x + 0.5 - (b.x + c.w / 2), y + 0.5 - (b.y + c.h / 2));
+      if (d <= CREW_REACH) found.push({ x, y, d });
+    }
+  found.sort((a, z) => a.d - z.d || a.y - z.y || a.x - z.x);
+  const spot = found[0];
+  if (spot === undefined) throw new Error('Kein Platz für ein Fachkräfte-Haus');
+  return spot;
+}
+
+/**
+ * Jeder ausgebaute Betrieb hält seine Stufe nur mit einem Haus passender Stufe im Arbeitsweg (AUSBAU-LOGIK).
+ * Fehlt eines, kommt ein Haus daneben, ausserhalb der Versorgung: es bleibt bei einem Bewohner ohne Verbrauch
+ * und ändert Bedarf und Wachstum der Lage nicht.
+ */
+function ensureCrew(w: World, tier: Tier): void {
+  for (const b of Object.values(w.buildings)) {
+    if (b.level === undefined || workforceAt(w, b, b.level).ok) continue;
+    const { x, y } = crewSpot(w, b);
+    setHouse(putBuilding(w, HOME, 'house', x, y), tier, 0);
+  }
 }
 
 /** Bedarf der versorgten Häuser je Ware und 100 Ticks. */
@@ -290,6 +386,7 @@ function sceneOf(seed: number, id: PetitionId, spec: HouseSpec, note: string): P
   buildTown(w, spec);
   const fed = chainsAt(w, spec.over);
   spec.setup?.(w);
+  ensureCrew(w, spec.tier);
   const stock = home(w).stock;
   for (const g of Object.keys(stock) as GoodId[]) stock[g] = 0;
   for (const g of ['wool', 'cane', 'stone', 'wood'] as const) stock[g] = INPUT_STOCK;
