@@ -3719,3 +3719,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-2
 Regelbezug: R1028, R1037, ADR-002 · Kosten bei Irrtum: eine Plan-Auflage.
 
 Entscheider: L0 · Anlass: Kurzprüfung lead-qa gate-NU-3 · ADR: —
+
+## R1039 · 2026-10-28 · TOOL-HOOK-TEMPO aus Parallel-Session übernommen
+
+Ruling: Übergabe der Parallel-Session «anno-clone #2»: `tool/hook-tempo` @ `20b2a704` (Hook liest Vorfälle aus `.studio/incidents.json`, Hintergrund-Refresh ≤ 2 min; SessionStart startet Dashboard vor dem Kontext; Timeout bleibt 5 s; kein Spieleinfluss, Save unverändert). Belege der Session: alle Hook-Ereignisse ≤ 0,17 s,
+`make studio-test` 1086 OK, `studio-lint` 0, qa-code-reviewer OK. `git merge-tree` main (`7c8e8f51`) ← `tool/hook-tempo`: konfliktfrei (E-084); gegen `docs/coach-r1016` siehe Bündel-Probe. **Gate Merge mit dem REL-36-Bündel** durch `lead-qa` (eigenes Urteil, nicht nur die Fremd-Abnahme).
+Parallelität (R129): Die Session #2 arbeitet nur auf eigenen Branches, fasst main und `rulings.md` nicht an; L0 dieser Session bleibt Merge-Eigentümer. Eintrag unter «Parallele Sessions» in state.md.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MF2-WT (tools/studio), COACH-R1016 (STUDIO.md)
+Regelbezug: R107, R129, R810, E-084 · Kosten bei Irrtum: Hook-Timeouts bleiben bis zum nächsten Release.
+
+Entscheider: L0 · Anlass: Cross-Session-Nachricht anno-clone #2 · ADR: —
