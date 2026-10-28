@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { TITHE_SWITCH_LOCK, UPKEEP_INTERVAL } from '../../src/sim/defs/timing';
 import { TIERS } from '../../src/sim/defs/tiers';
 import { SERVICE_IDS, tickTaxes, totalTaxes } from '../../src/sim/population';
@@ -168,5 +168,22 @@ describe('T05-Fix: aktiver Schalter', () => {
     w.titheOn[1] = true;
     expect(titheClickChangesState(w, 1, true)).toBe(false);
     expect(titheClickChangesState(w, 1, false)).toBe(true);
+  });
+});
+
+describe('I-223-NACH Werte aus Defs statt Literal', () => {
+  it('TITHE_LOCK_NOTE nennt die Sperrzeit aus TITHE_SWITCH_LOCK', async () => {
+    vi.resetModules();
+    vi.doMock('../../src/sim/defs/timing', async (orig) => ({
+      ...(await orig<typeof import('../../src/sim/defs/timing')>()),
+      TITHE_SWITCH_LOCK: 3000,
+    }));
+    try {
+      const m = await import('../../src/ui/titheView');
+      expect(m.TITHE_LOCK_NOTE).toBe('Nach dem Umschalten bleibt der Zehnt 5 Minuten, wie er ist.');
+    } finally {
+      vi.doUnmock('../../src/sim/defs/timing');
+      vi.resetModules();
+    }
   });
 });

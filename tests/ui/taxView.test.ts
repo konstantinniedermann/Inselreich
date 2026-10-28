@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { TAX_LEVELS, TIERS, TIER_IDS } from '../../src/sim/defs/tiers';
+import { GOODS } from '../../src/sim/defs/goods';
+import { TAX_LEVELS, TIERS, TIER_IDS, TITHE_GOOD, TITHE_PCT } from '../../src/sim/defs/tiers';
 import { taxChangeSet } from '../../src/sim/tax';
-import { taxPct } from '../../src/sim/townhall';
+import { taxPct, townhallActive, townhallReason } from '../../src/sim/townhall';
 import { createWorld } from '../../src/sim/world';
 import type { Building, GoodId, TaxLevel, Tier, World } from '../../src/sim/types';
 import { taxEffect } from '../../src/ui/guide';
@@ -107,6 +108,60 @@ describe('AK-T28 tierTaxTooltip (Anhang 01 C)', () => {
   ];
   it.each(rows)('Stufe %i %s', (tier, level, want) => {
     expect(tierTaxTooltip(createWorld(3), tier, level)).toBe(want);
+  });
+});
+
+describe('AK-ZE-28 Stufen-Tooltip nennt den Zehnt', () => {
+  const nominal = (w: World, tier: Tier): string => tierTaxTooltip(w, tier, w.taxLevels[tier]);
+  const plain = (tier: Tier): string => tierTaxTooltip(createWorld(3), tier, 'normal');
+  const split = (tier: 1 | 2): string =>
+    TITHE_PCT[tier] >= 100
+      ? `alles als ${GOODS[TITHE_GOOD[tier]].name}, kein Geld`
+      : `${100 - TITHE_PCT[tier]} % Geld, ${TITHE_PCT[tier]} % als ${GOODS[TITHE_GOOD[tier]].name}`;
+
+  it('(a) Zehnt aus: kein «Zehnt», Text wie ohne Amtsstube', () => {
+    const w = hallWorld();
+    expect(nominal(w, 1)).not.toContain('Zehnt');
+    expect(nominal(w, 1)).toBe(tierTaxTooltip(createWorld(3), 1, 'normal'));
+  });
+  it('(b) Pioniere an: alles als Werkzeug, Nennsatz bleibt', () => {
+    const w = hallWorld();
+    w.titheOn[1] = true;
+    const t = nominal(w, 1);
+    expect(t).toContain('alles als Werkzeug, kein Geld');
+    expect(t).toContain(`Zehnt: ${split(1)}`);
+    expect(t.startsWith(plain(1).split(' · ')[0]!)).toBe(true);
+    expect(t.endsWith(plain(1).split(' · ').slice(1).join(' · '))).toBe(true);
+  });
+  it('(c) Siedler an: 90 % Geld, 10 % als Stein', () => {
+    const w = hallWorld();
+    w.titheOn[2] = true;
+    const t = nominal(w, 2);
+    expect(t).toContain('90 % Geld, 10 % als Stein');
+    expect(t).toContain(`Zehnt: ${split(2)}`);
+    expect(t.startsWith(plain(2).split(' · ')[0]!)).toBe(true);
+  });
+  it('(d) Amtsstube fällt aus: Zehnt ruht mit Grund', () => {
+    const w = hallWorld();
+    w.titheOn[1] = true;
+    for (const b of Object.values(w.buildings))
+      if (b.defId === 'townhall') b.outageUntil = w.tick + 500;
+    expect(townhallActive(w)).toBe(false);
+    const t = nominal(w, 1);
+    expect(t).toContain('Zehnt ruht');
+    expect(t).toContain(townhallReason(w));
+    expect(t).not.toContain('alles als');
+  });
+  it('(e) Bürger und Kaufleute: nie «Zehnt»', () => {
+    const w = hallWorld();
+    w.titheOn[1] = true;
+    w.titheOn[2] = true;
+    for (const tier of [3, 4] as const) expect(nominal(w, tier)).not.toContain('Zehnt');
+  });
+  it('Sperrtext hat Vorrang', () => {
+    const w = hallWorld();
+    w.titheOn[1] = true;
+    expect(tierTaxTooltip(w, 4, 'low')).toBe('Kaufleute steigen nicht auf');
   });
 });
 

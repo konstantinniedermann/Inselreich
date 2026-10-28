@@ -18,8 +18,9 @@ import { TITHE_SWITCH_LOCK } from '../../src/sim/defs/timing';
 import { ISLANDS, PREFER_PCT } from '../../src/sim/defs/sea';
 import { deserialize, serialize } from '../../src/sim/save';
 import { setTierTaxLevel, setTithe, titheLocked } from '../../src/sim/tax';
+import { effectiveTaxPct } from '../../src/sim/edicts';
 import { sellPrice } from '../../src/sim/trade';
-import { SERVICE_IDS, tickTaxes, titheSplit } from '../../src/sim/population';
+import { SERVICE_IDS, taxBaseByTier, tickTaxes, titheSplit } from '../../src/sim/population';
 import { step } from '../../src/sim/tick';
 import type { Building, GoodId, TitheLoss, World } from '../../src/sim/types';
 import { home } from '../../src/sim/world';
@@ -164,8 +165,14 @@ describe('AK-ZE-12 Stufenwechsel eines Hauses', () => {
     setHouse(houses[0]!, 2, TIERS[2].maxInhabitants);
     fulfil(houses[0]!, w);
     const after = titheSplit(w);
-    expect(after.tithe.tools).toBeLessThan(before.tithe.tools);
-    expect(after.money[2]).toBeGreaterThan(before.money[2]);
+    // 12 gleiche Pionierhäuser: nach dem Wechsel zahlen 11 Zehnt, das 12. zahlt als Siedler Geld.
+    expect(before.tithe.tools % 12).toBe(0);
+    expect(after.tithe.tools).toBe((before.tithe.tools / 12) * 11);
+    expect(after.money[1]).toBe(0);
+    expect(before.money[2]).toBe(0);
+    expect(after.money[2]).toBe(taxBaseByTier(w)[2] * effectiveTaxPct(w, 2));
+    expect(after.money[2]).toBeGreaterThan(0);
+    expect(after.tithe.stone).toBe(0);
   });
 });
 

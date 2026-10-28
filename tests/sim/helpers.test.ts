@@ -151,6 +151,22 @@ describe('dropTithe', () => {
     });
     expect(() => dropTithe(x)).toThrow(TITHE_ERROR);
   });
+  it.each([
+    ['titheLockedUntil fehlt', 'titheLockedUntil'],
+    ['titheCarry fehlt', 'titheCarry'],
+  ])('Teilstruktur: %s wirft den Fehler, keinen TypeError', (_n, key) => {
+    const x = startState();
+    delete x[key];
+    expect(() => dropTithe(x)).toThrow(TITHE_ERROR);
+  });
+  it('Teilstruktur: titheOn ist null oder kein Objekt → wirft den Fehler', () => {
+    for (const bad of [null, 5, 'x']) {
+      const x = tithed((y) => {
+        y.titheOn = bad;
+      });
+      expect(() => dropTithe(x)).toThrow(TITHE_ERROR);
+    }
+  });
   it('ohne Schlüssel dasselbe Objekt', () => {
     const x = dropTithe(startState());
     expect(dropTithe(x)).toBe(x);
