@@ -301,10 +301,14 @@ const TITHE_FOLD_ERROR = 'dropTithe: Zehnt nicht rückfaltbar';
 /** Entfernt die drei Zehnt-Felder ohne Umordnen und ohne die Version zu ändern (I-223); nur bei Startwerten. */
 export function dropTithe(x: Record<string, unknown>): Record<string, unknown> {
   if (!('titheOn' in x)) return x;
-  const on = Object.values(x.titheOn as Record<string, boolean>);
-  const locked = Object.values(x.titheLockedUntil as Record<string, number>);
-  const carry = Object.values(x.titheCarry as Record<string, number>);
-  const start = on.every((v) => v === false) && [...locked, ...carry].every((v) => v === 0);
+  const vals = (k: string): unknown[] => {
+    const v = x[k];
+    if (typeof v !== 'object' || v === null) throw new Error(TITHE_FOLD_ERROR);
+    return Object.values(v);
+  };
+  const on = vals('titheOn');
+  const rest = [...vals('titheLockedUntil'), ...vals('titheCarry')];
+  const start = on.every((v) => v === false) && rest.every((v) => v === 0);
   if (!start) throw new Error(TITHE_FOLD_ERROR);
   const out: Record<string, unknown> = {};
   for (const k of Object.keys(x))
