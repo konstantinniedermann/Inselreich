@@ -3604,3 +3604,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine (nur `t
 Regelbezug: R1023–R1025, E-078 · Kosten bei Irrtum: ein Werkzeug-Fix.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-plan-TOOL-MF2-WT · ADR: —
+
+## R1028 · 2026-10-28 · Spec NU-2 frei
+
+Ruling: Kurzprüfung Spec-Nachtrag NU-2 (`design/nu2` @ `615778dd`) **OK** (lead-qa; B1–B9 und R1026-Auflagen umgesetzt). **Spec NU-2 frei.** `design/nu2` geht mit dem nächsten Bündel nach main. Plan NU-2 startet erst, wenn NU-1 und FL-2 auf main sind (E-02).
+Niedrige Reste (Anhang 01 behält «Feuerhaus» mit Kopfzeile; Landung bei Pause ohne eigenen AK) übernimmt der Plan.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1, FLAECHE
+Regelbezug: R1026, R920 V2 · Kosten bei Irrtum: ein AK im Plan nachziehen.
+
+Entscheider: L0 · Anlass: Kurzprüfung lead-qa gate-NU-2 · ADR: —
