@@ -3573,3 +3573,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK 
 Regelbezug: R287, R288, R1022, Verfassung §6 · Kosten bei Irrtum: ein Paket zu viel.
 
 Entscheider: L0 · Anlass: Bericht lead-production BEOB-19 · ADR: —
+
+## R1025 · 2026-10-28 · AUFRAEUM-05 abgenommen; Schwelle gemergte Worktrees
+
+Ruling: `docs/aufraeum-05` @ `167147c2` **abgenommen** (Festwerte Handel/Feste aus `src/sim/defs/` belegt, arc42 `buildingUpkeep(world, b, ctx?)`). Entwurf angenommen: `aufraeumen.json` erhält `worktreesMergedMax: 50`, `aufraeumen.py --check` zählt Worktrees mit in main gemergtem Branch (heute 235 Worktrees,
+241/303 Branches gemergt); Entfernen nur in einer HAUSHALT-Runde, `git worktree remove` ohne `--force`, nie Branches löschen, nie `.worktrees/erweiterung-1` (R519). Umsetzung als Werkzeug-Paket **TOOL-AUFRAEUM-WT** (zusammen mit dem `--root`-Befund aus R1023) auf einem freien Platz.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R519, R685, R1023, R1024 · Kosten bei Irrtum: eine Schwelle.
+
+Entscheider: L0 · Anlass: Bericht lead-production AUFRAEUM-05 · ADR: —
