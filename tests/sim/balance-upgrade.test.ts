@@ -18,14 +18,14 @@ function upgradeFishers(w: World): void {
   for (const b of Object.values(w.buildings)) {
     if (b.defId !== 'fisher' || b.level === 3) continue;
     const lv = b.level ?? 1;
-    if (siteAt(w, b, lv + 1)?.ok === false) continue; // Fischgrund nicht erfüllt: der Bot baut dort nicht aus
-    if (!workforceAt(w, b, lv + 1).ok) continue; // keine Fachkräfte im Arbeitsweg
     if (functionLock(w, lv === 1 ? 'upgrade2' : 'upgrade3') !== null) continue;
     const next = LEVELS.fisher![lv - 1]!;
     const missing = Math.max(0, next.cost.tools - home(w).stock.tools);
     const toolPrice = missing > 0 ? buyPrice(w, 'tools', missing) : 0;
     if (w.money - next.cost.money - toolPrice < UPGRADE_RESERVE) continue;
     if (home(w).stock.wood < next.cost.wood) continue;
+    if (siteAt(w, b, lv + 1)?.ok === false) continue; // Fischgrund nicht erfüllt: der Bot baut dort nicht aus
+    if (!workforceAt(w, b, lv + 1).ok) continue; // keine Fachkräfte im Arbeitsweg
     if (missing > 0 && !buy(w, 'tools', missing).ok) continue;
     if (next.extra && home(w).stock[next.extra.good] - next.extra.amount < FEE_RESERVE) continue;
     if (upgradeBuilding(w, b.id).ok) return;
