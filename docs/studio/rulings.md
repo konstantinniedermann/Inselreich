@@ -3687,3 +3687,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-36, TOOL-
 Regelbezug: R392, R1032, E-080 · Kosten bei Irrtum: ein lastempfindlicher Test im push-check.
 
 Entscheider: L0 · Anlass: Bericht lead-tech I-210-NACH · ADR: —
+
+## R1036 · 2026-10-28 · NU-1 Instanz 2: Entwürfe; Folgeinstanz 3
+
+Ruling: NU-1 T03–T06 auf `feat/nu1`, T07 auf `feat/nu1-ui` (Handoff `.studio/handoffs/2026-10-28-lead-tech-NU-1-i2.md`). Entwürfe **angenommen**: T04 Import-Naht `finds` für `levels`/`council`; T05 Ankunftstick zählt als erster Abschnitts-Tick (`left` 299, Satz in arc42 in T11); T07 `SEA_MAP_PAD = FOG_STRIP`, optionaler `cap`-Parameter;
+Rot-Belege T04/T05 nur auf Dateiebene als begründete Abweichung (Funktionen fehlten) — ab T08 je Testfall. **T02-Delta-Review:** wird mit dem T09-Review zusammengelegt, **sofern dieser ein frischer opus-Start ist** und die T02-Fixes `05e37983` ausdrücklich prüft (R673 bleibt erfüllt).
+Pin-Kommentare `// NU-1 25b (E-NU-4)`: **nicht** in > 20 Dateien nachtragen; stattdessen eine Sammelliste der Pin-Änderungen T01–T05 in der Plan-Doku (T11). Folgeinstanz 3 (Restbudget 12).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-215, ORT-A (Save, scenario-saves)
+Regelbezug: R395, R673, R1029 · Kosten bei Irrtum: ein Review-Start.
+
+Entscheider: L0 · Anlass: Handoff lead-tech NU-1 Instanz 2 · ADR: —
