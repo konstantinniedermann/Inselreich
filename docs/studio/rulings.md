@@ -3562,3 +3562,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
 Regelbezug: R685, R1022 · Kosten bei Irrtum: ein Doku-Merge.
 
 Entscheider: L0 · Anlass: Bericht lead-production HAUSHALT-05 · ADR: —
+
+## R1024 · 2026-10-28 · BEOB-19 abgenommen; Paket-Kandidaten
+
+Ruling: `docs/beob-19` @ `b1050af4` **abgenommen** (34 Einträge ausgewertet: 14 erledigt, 12 abgehakt, 8 eingeplant; Marke 2026-10-28; Konfliktrest `|||||||` entfernt). Pflichtsperre R1022 aufgehoben, Funktionsarbeit wieder frei. Kandidaten: (4) **I-223-NACH** Paket (inkl. Rechnungs-Korrektur «Kasse < 0»,
+nächster Test-Platz); (5) **TOOL-MESSFENSTER-2** Paket (inkl. Prüfer für Marker `|||||||` in `make conflicts`), Test-Platz nach I-223-NACH; (6) UI-HAEPPCHEN-K an AUSBAU-LOGIK Etappe 2 (T07); (7) **AUFRAEUM-05** Paket jetzt (testfrei) — ohne Änderung an `../CLAUDE.md` (gemeinsames Setup, gehört dem Nutzer):
+`perf:` wird nicht eingeführt, Commits nutzen die bestehenden Präfixe; (1)–(3) erledigen sich in ihren Strängen; (8) bleibt Pool-Anlass. **Vorfall niedrig:** BEOB-19 hat den gemergten Alt-Branch `docs/beob-19` gelöscht und neu angelegt (kein Inhaltsverlust, da in main) — Branches werden nie gelöscht; an die Kurz-Retro.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK Etappe 2, I-210-SYNC (I-210-NACH)
+Regelbezug: R287, R288, R1022, Verfassung §6 · Kosten bei Irrtum: ein Paket zu viel.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-19 · ADR: —
