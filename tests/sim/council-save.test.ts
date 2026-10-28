@@ -1,4 +1,4 @@
-// I-112 T02: Save-Feld `council`, SAVE_VERSION 17, Migration v16 → v17 (AK 9, Ruling R711 R-4).
+// I-112 T02: Save-Feld `council`, Migration v16 → v17 (AK 9, R711 R-4); I-153 Seerecht v18 → v19 (F3). SAVE_VERSION wird nur als Untergrenze gepinnt.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { decree } from '../../src/sim/council';
