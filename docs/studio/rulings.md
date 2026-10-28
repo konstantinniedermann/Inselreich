@@ -3469,3 +3469,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, NU-1 (
 Regelbezug: R810, R816, R909, R1012, E-084 · Kosten bei Irrtum: ein Revert-Merge auf lokalem main.
 
 Entscheider: L0 · Anlass: Bericht lead-qa Gate Merge I-223 · ADR: —
+
+## R1015 · 2026-10-28 · Zehnt-Tooltip-Text angenommen; Coach R1010 abgenommen
+
+Ruling: Nachtrag `docs/i223-nach` @ `fea2ef30` (Zehnt-Teil im Stufen-Steuer-Tooltip, AK-ZE-28) **angenommen**; Umsetzung als Häppchen I-223-NACH durch `lead-tech` nach dem Merge von I-223 auf main, vor REL-36, zusammen mit den vier Aufräum-Punkten aus R1014. COACH-R1010 abgenommen
+(`docs/coach-r1010` @ `775f3911`, E-084 eingetragen, ersetzt `docs/coach-r1004` im nächsten Bündel). Beide Branches gehen mit dem nächsten Bündel.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-223 (Merge), REL-36
+Regelbezug: R896, R1010, R1014 · Kosten bei Irrtum: ein Tooltip-Text.
+
+Entscheider: L0 · Anlass: Berichte lead-design design-I-223-NACH, studio-coach COACH-R1010 · ADR: —
