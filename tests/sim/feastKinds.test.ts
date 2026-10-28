@@ -16,11 +16,13 @@ import { deserialize, serialize } from '../../src/sim/save';
 import { HOME, createWorld, home, islandOf } from '../../src/sim/world';
 import type { Building, World } from '../../src/sim/types';
 import { placeBuilding, placeRoad } from '../../src/sim/build';
+import { recomputeConnectivity } from '../../src/sim/roads';
 import {
   forceGrass,
   forceRect,
   houseNearKontor,
   placeService,
+  meetLevel,
   placeTownhall,
   putBuilding,
   setAllTax,
@@ -411,11 +413,13 @@ function startFeast(c: Building, kind: Kind): void {
 describe('AK-FE7 Erntefest verkürzt cycleOf', () => {
   beforeEach(() => {
     shop.level = 3;
+    meetLevel(w, shop);
   });
   it('15 während active, 20 danach, 20 ausserhalb des Radius', () => {
     expect(cycleOf(w, shop)).toBe(20);
     const far = putBuilding(w, 0, 'weaver', chapel.x, chapel.y + 14);
     far.level = 3;
+    meetLevel(w, far);
     expect(holdFeast(w, chapel.id, 'harvest').ok).toBe(true);
     expect(cycleOf(w, shop)).toBe(15);
     expect(cycleOf(w, far)).toBe(20);
@@ -462,6 +466,7 @@ describe('AK-FE7 Erntefest verkürzt cycleOf', () => {
 describe('AK-FE8 überlappende Erntefeste', () => {
   it('wirken nicht doppelt', () => {
     shop.level = 3;
+    meetLevel(w, shop);
     const k2 = placeService(w, 'chapel', chapel.x, chapel.y + 3);
     chapel.connected = true;
     startFeast(chapel, 'harvest');
@@ -474,6 +479,7 @@ describe('AK-FE9 Produktion im Erntefest', () => {
   it('fertigt nach dem verkürzten Zyklus', () => {
     w.crisisLevel = 'off';
     shop.level = 3;
+    meetLevel(w, shop);
     shop.progress = 17;
     Object.assign(stockOf(w, chapel), { wool: 90, cloth: 0 });
     startFeast(chapel, 'harvest');
@@ -484,6 +490,7 @@ describe('AK-FE9 Produktion im Erntefest', () => {
   it('Ausstoss über 600 Ticks etwa 40 (gezählt an den Zyklusenden, Verbrauch der Häuser egal)', () => {
     w.crisisLevel = 'off';
     shop.level = 3;
+    meetLevel(w, shop);
     startFeast(chapel, 'harvest');
     let made = 0;
     for (let i = 0; i < FEAST_DURATION; i++) {
@@ -555,6 +562,7 @@ describe('AK-FE10 Markttag in sellPrice', () => {
 describe('AK-FE11 Aufstiegs- und Erntefest nebeneinander', () => {
   it('Haus im Radius von K1 und Betrieb im Radius von K2', () => {
     shop.level = 3;
+    meetLevel(w, shop);
     const house =
       w.buildings[
         Object.keys(w.buildings)
@@ -574,6 +582,7 @@ describe('AK-FE11 Aufstiegs- und Erntefest nebeneinander', () => {
 describe('AK-FE12 Aufstiegsfest nach Erntefest', () => {
   it('löscht feastKind, Betrieb wieder 20', () => {
     shop.level = 3;
+    meetLevel(w, shop);
     startFeast(chapel, 'harvest');
     w.tick = chapel.feastAt! + FEAST_COOLDOWN;
     expect(holdFeast(w, chapel.id, 'ascension').ok).toBe(true);
@@ -589,7 +598,9 @@ describe('Review Focus 2 bis 4 Inselgrenzen und Kapellenzustand', () => {
     const a = putBuilding(t, 0, 'weaver', 8, 5);
     const b = putBuilding(t, 1, 'weaver', 8, 5);
     a.level = 3;
+    meetLevel(t, a);
     b.level = 3;
+    meetLevel(t, b);
     c.feastAt = t.tick;
     c.feastKind = 'harvest';
     expect(cycleOf(t, a)).toBe(15);
@@ -661,6 +672,7 @@ describe('AK-FE13 Spielstand mit feastKind', () => {
   });
   it('alter Stand ohne feastKind: Aufstiegsfest, Zyklus ungekürzt', () => {
     shop.level = 3;
+    meetLevel(w, shop);
     const house = houseNearKontor(w);
     const back = loaded(edit((b) => (b.feastAt = 1000)));
     const c = back.buildings[chapel.id]!;
@@ -705,6 +717,7 @@ describe('AK-FE13 Spielstand mit feastKind', () => {
   });
   it('Review Focus 1: ausdrückliches feastKind ascension', () => {
     shop.level = 3;
+    meetLevel(w, shop);
     const house = houseNearKontor(w);
     const back = loaded(
       edit((b) => {
@@ -746,7 +759,10 @@ describe('AK-FE14 Determinismus je Festart', () => {
     const s1 = placeWorkshop(t, k.x + 8, k.y + 2);
     const s2 = placeWorkshop(t, k.x + 3, k.y + 2);
     s1.level = 3;
+    meetLevel(t, s1);
     s2.level = 3;
+    meetLevel(t, s2);
+    recomputeConnectivity(t); // das Fachkräfte-Haus ist neu: Anbindung wie nach dem Laden
     t.tick = 1000;
     Object.assign(stockOf(t, c), { wool: 90, rum: 90, cloth: 90, glass: 90 });
     expect(holdFeast(t, c.id, kind).ok).toBe(true);

@@ -9,7 +9,7 @@ import { step } from '../../src/sim/tick';
 import { sell } from '../../src/sim/trade';
 import type { Building, BuildingDefId, GoodId, Tier, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
-import { forceRect, putBuilding, setHouse } from './helpers';
+import { forceRect, meetLevel, putBuilding, setHouse } from './helpers';
 
 export type FeastLage = 'A' | 'B' | 'C' | 'C2';
 export type FeastRun = 'none' | FeastKind;
@@ -127,7 +127,10 @@ const LAYOUTS: Record<FeastLage, Layout> = {
 
 function putSpec(w: World, spec: Spec, x: number, y: number): Building {
   const b = putBuilding(w, 0, spec.defId, x, y);
-  if (spec.level !== undefined) b.level = spec.level;
+  if (spec.level !== undefined) {
+    b.level = spec.level;
+    meetLevel(w, b); // Ausbau-Bedingungen (Fachkräfte, Standort) erfüllt, sonst läuft der Betrieb auf Stufe 1
+  }
   return b;
 }
 

@@ -27,7 +27,7 @@ export function upkeepRanking(world: World): UpkeepRow[] {
   const rows: UpkeepRow[] = [];
   for (const b of Object.values(world.buildings)) {
     if (b.house) continue;
-    const upkeep = buildingUpkeep(b);
+    const upkeep = buildingUpkeep(world, b);
     if (upkeep === 0) continue; // Kontor u. Ä.: kein Beitrag, nur Rauschen in der Liste
     rows.push({
       id: b.id,

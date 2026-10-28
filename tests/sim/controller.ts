@@ -283,14 +283,28 @@ function buildChain(
   good: Need,
   layout: Layout,
   needed: (w: World) => number = (x) => producersNeeded(x, good),
+  fisherSlots: readonly Slot[] = layout.fishers,
 ): boolean {
   const { producer, raw } = CHAINS[good];
-  const producerSlots = producer === 'fisher' ? layout.fishers : layout.farms;
+  const producerSlots = producer === 'fisher' ? fisherSlots : layout.farms;
   while (count(w, producer) < needed(w)) {
     if (raw && count(w, raw) <= count(w, producer) && !build(w, raw, layout.farms)) return false;
     if (!build(w, producer, producerSlots)) return false;
   }
   return true;
+}
+
+/**
+ * Varianten-Zweig `spacedFishers` (AUSBAU-LOGIK T06 N2a): Fischer zuerst paarweise mit Lücke von zwei
+ * Kacheln (Fischgrund Stufe 2: höchstens ein anderer Fischer im Umkreis 2), danach die übrigen Plätze.
+ */
+function spacedFisherSlots(layout: Layout): Slot[] {
+  const ys = layout.fishers.map(([, y]) => y);
+  const top = Math.min(...ys);
+  const spaced = layout.fishers.filter(([, y]) => (y - top) % 4 < 2);
+  const [x] = layout.fishers[0]!;
+  const otherBank: Slot[] = [-5, -4].map((dy) => [x - 2, top + 7 + dy] as const);
+  return [...spaced, ...otherBank, ...layout.fishers.filter((s) => !spaced.includes(s))];
 }
 
 /**
@@ -306,7 +320,8 @@ export function control(w: World, layout: Layout, opts: ColonyOptions): void {
   while (count(w, 'lumberjack') < LUMBERJACKS)
     if (!build(w, 'lumberjack', layout.lumberjacks)) return;
   // 3. Nahrung für alle Häuser bei Vollbelegung
-  if (!buildChain(w, 'food', layout)) return;
+  const fisherSlots = opts.spacedFishers === true ? spacedFisherSlots(layout) : layout.fishers;
+  if (!buildChain(w, 'food', layout, undefined, fisherSlots)) return;
   // 4. Siedler: Kapelle, dann Stoffkette
   if (anyPlan(2) && count(w, 'chapel') === 0 && !build(w, 'chapel', [layout.chapel])) return;
   if (
@@ -334,6 +349,8 @@ export function control(w: World, layout: Layout, opts: ColonyOptions): void {
 export interface ColonyOptions {
   /** Krisen-Lauf normal: eine Feuerwache, sobald die Kapelle steht, auf layout.fireStation (Spec 15). */
   fireStation?: boolean;
+  /** Varianten-Zweig (Ausbau-Messung): Fischer so setzen, dass der Fischgrund der Stufe 2 erfüllbar bleibt. */
+  spacedFishers?: boolean;
   /** Versatz der Entscheidungs-Ticks im Intervall, Robustheitsachse des Gate-Ensembles. */
   phase?: number;
 }

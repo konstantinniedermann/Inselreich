@@ -32,6 +32,7 @@ import {
   houseFar,
   putBuilding,
   placeService,
+  meetLevel,
   placeTownhall,
   setHouse,
   village,
@@ -355,6 +356,7 @@ describe('M11 Mouse-over Betrieb (Spec 7)', () => {
       return b;
     };
     const f = put('fisher', k.x + 4, k.y - 6, { level: 2 });
+    meetLevel(w, f); // Fachkräfte-Haus im Umkreis: Stufe 2 läuft
     expect(hoverInfo(w, f, 0, none)!.title).toBe('Fischerhütte, Stufe 2 · Auslastung 100 %');
     expect(hoverInfo(w, f, 0, none)!.lines[0]).toBe('arbeitet — 25 Nahrung / min');
     const half = put('fisher', k.x + 6, k.y - 6, { eff: 128_000 });
@@ -489,7 +491,10 @@ describe('M14-E1 Hover Inselstärken', () => {
     const at = (island: number, defId: BuildingDefId, slot: number, level?: 2 | 3): Building => {
       const k = w.buildings[w.islands[island]!.kontorId ?? home(w).kontorId]!;
       const b = putBuilding(w, island, defId, k.x + 4 + slot * 3, k.y);
-      if (level !== undefined) b.level = level;
+      if (level !== undefined) {
+        b.level = level;
+        meetLevel(w, b);
+      }
       return b;
     };
     const quarry = at(2, 'quarry', 0);

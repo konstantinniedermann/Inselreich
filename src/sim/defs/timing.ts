@@ -1,5 +1,7 @@
 /** Echtzeit-Dauer eines Ticks bei Geschwindigkeit 1× (Millisekunden). */
 export const TICK_MS = 100;
+/** Millisekunden je Spielminute (Umrechnung der Unterhaltsanzeige je Minute). */
+export const MINUTE_MS = 60000;
 /** Raten je 100 Ticks; Teiler des Unterhalts-Übertrags; Takt des Tons `coin`. */
 export const UPKEEP_INTERVAL = 100;
 /** Alle 50 Ticks wächst oder schrumpft ein Haus um einen Einwohner. */

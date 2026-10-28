@@ -27,8 +27,17 @@ import { buy, sell } from '../../src/sim/trade';
 import { triggeredUnlocks } from '../../src/sim/unlocks';
 import { upgradeBuilding } from '../../src/sim/upgrade';
 import { center, createWorld, home, idx, islandOf, tileAt } from '../../src/sim/world';
-import type { World } from '../../src/sim/types';
-import { houseFar, putBuilding, setHouse, twoIslandWorld } from './helpers';
+import type { Building, World } from '../../src/sim/types';
+import { houseFar, meetLevel, putBuilding, setHouse, twoIslandWorld } from './helpers';
+
+/** Erfüllt Fachkräfte und Standort der nächsten Stufe (Ausbau prüft sie seit AUSBAU-LOGIK T05). */
+function readyForNext(w: World, b: Building): void {
+  const g = b.level ?? 1;
+  b.level = (g + 1) as 2 | 3;
+  meetLevel(w, b);
+  if (g === 1) delete b.level;
+  else b.level = g as 2 | 3;
+}
 
 describe('M12 E0 Helfer', () => {
   it('PLAN-H1 home/islandOf liefern Raster, Lager und Kontor der Heimat', () => {
@@ -169,6 +178,7 @@ describe('M12 E0 Inselbezug', () => {
       w.islands[1]!.stock[g] = 50;
     }
     w.money = 1000;
+    readyForNext(w, b);
     const before0 = snap(w, 0);
     const before1 = snap(w, 1);
     expect(upgradeBuilding(w, b.id).ok).toBe(true);

@@ -10,7 +10,7 @@ import { progressPct } from '../../src/ui/panelView';
 import { tooltipLines } from '../../src/ui/buildMenu';
 import { hoverInfo } from '../../src/ui/hover';
 import { perMinute } from '../../src/ui/time';
-import { forceGrass } from '../sim/helpers';
+import { forceGrass, meetLevel } from '../sim/helpers';
 
 vi.mock('../../src/sim/defs/levels', async (orig) => {
   const real = await orig<typeof import('../../src/sim/defs/levels')>();
@@ -44,7 +44,7 @@ describe('M11 Zugriffsersatz cycleOf/upkeepOf (Spec 7)', () => {
   it('AK-UI-10 Vorlauf: ohne level bitgleich zu den Defs (jedes Gebäude)', () => {
     for (const def of Object.values(BUILDING_DEFS)) {
       const b = mk(def.id);
-      expect(upkeepText(b), def.id).toBe(
+      expect(upkeepText(w, b), def.id).toBe(
         `Unterhalt ${perMinute(def.upkeep, UPKEEP_INTERVAL)} / min`,
       );
       if (!def.produces || def.cycle === undefined) continue;
@@ -54,17 +54,20 @@ describe('M11 Zugriffsersatz cycleOf/upkeepOf (Spec 7)', () => {
     }
   });
   it('AK-UI-10 Vorlauf: Fischer Stufe 2 und 3 (alle 3 s / 2 s, 42 / 54 je min, Balken 50 %)', () => {
+    const lw = createWorld(3); // eigene Welt: die Fachkräfte-Häuser bleiben lokal
     const f2 = mk('fisher', { level: 2, progress: 12 });
-    expect(producesText(BUILDING_DEFS.fisher, false, cycleOf(w, f2)!)).toBe(
+    meetLevel(lw, f2);
+    expect(producesText(BUILDING_DEFS.fisher, false, cycleOf(lw, f2)!)).toBe(
       'Erzeugt Nahrung alle 3 s',
     );
-    expect(upkeepText(f2)).toBe('Unterhalt 42 / min');
-    expect(progressPct(w, f2)).toBe(50);
+    expect(upkeepText(lw, f2)).toBe('Unterhalt 42 / min');
+    expect(progressPct(lw, f2)).toBe(50);
     const f3 = mk('fisher', { level: 3 });
-    expect(producesText(BUILDING_DEFS.fisher, false, cycleOf(w, f3)!)).toBe(
+    meetLevel(lw, f3);
+    expect(producesText(BUILDING_DEFS.fisher, false, cycleOf(lw, f3)!)).toBe(
       'Erzeugt Nahrung alle 2 s',
     );
-    expect(upkeepText(f3)).toBe('Unterhalt 54 / min');
+    expect(upkeepText(lw, f3)).toBe('Unterhalt 54 / min');
     expect(tooltipLines({ kind: 'build', defId: 'fisher' })).toContain('Erzeugt: Nahrung 15 / min');
   });
   it('AK-UI-10 Vorlauf: Mouse-over Fischer Stufe 2 „arbeitet — 25 Nahrung / min"', () => {
@@ -74,6 +77,7 @@ describe('M11 Zugriffsersatz cycleOf/upkeepOf (Spec 7)', () => {
     w.buildings[b.id] = b;
     forceGrass(w, b.x, b.y);
     home(w).tiles[idx(home(w), b.x, b.y)]!.buildingId = b.id;
+    meetLevel(w, b);
     const none = { ship: false, animal: null };
     expect(hoverInfo(w, b, 0, none)!.lines[0]).toBe('arbeitet — 25 Nahrung / min');
   });

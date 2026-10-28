@@ -1,13 +1,23 @@
 import { councilCycle } from './council';
-import { BUILDING_DEFS, PAUSED_UPKEEP_PCT } from './defs/buildings';
+import { BUILDING_DEFS, PAUSED_UPKEEP_PCT, THROTTLED_UPKEEP_PCT } from './defs/buildings';
 import { harvestActive, harvestCycle } from './feastEffect';
 import { LEVELS, type LevelDef } from './defs/levels';
 import { ISLANDS, TRAIT_BUILDINGS, TRAIT_CYCLE_PCT, type IslandTrait } from './defs/sea';
 import { EFF_MAX, EFF_WINDOW } from './defs/timing';
+import { runningLevel, type LevelContext } from './levelRules';
 import type { Building, BuildingDefId, World } from './types';
 
-const levelDef = (b: Building): LevelDef | undefined =>
-  b.level === undefined ? undefined : LEVELS[b.defId]?.[b.level - 2];
+const levelDefAt = (b: Building, level: number): LevelDef | undefined =>
+  LEVELS[b.defId]?.[level - 2];
+/** Laufende Stufe k; Betriebe ohne Ausbau laufen immer auf Stufe 1 (keine Abfrage). */
+const kOf = (world: World, b: Building, ctx?: LevelContext): number =>
+  b.level === undefined ? 1 : runningLevel(world, b, ctx);
+/** Grundzyklus der Stufe `k` (Stufe 1: Def). */
+const levelCycle = (b: Building, k: number): number | undefined =>
+  levelDefAt(b, k)?.cycle ?? BUILDING_DEFS[b.defId].cycle;
+/** Unterhalt u(k) je 100 Ticks der Stufe `k` (Stufe 1: Def). */
+const levelUpkeep = (b: Building, k: number): number =>
+  levelDefAt(b, k)?.upkeep ?? BUILDING_DEFS[b.defId].upkeep;
 /** Trait der Insel, der den Zyklus von `defId` verkürzt (erster in Def-Reihenfolge); Heimat nie (Spec R1.2, R1.6). */
 export function traitOf(
   world: World,
@@ -37,19 +47,23 @@ export const effectiveCycle = (
   defId: BuildingDefId,
   cycle: number,
 ): number => islandCycle(world, island, defId, councilCycle(world, defId, cycle));
-/** Zyklus (Ticks) des stehenden Betriebs; `undefined` ohne Zyklus. Einziger Leseort (Spec 3.1, R1.8). */
-export function cycleOf(world: World, b: Building): number | undefined {
-  const base = BUILDING_DEFS[b.defId].cycle;
-  if (base === undefined) return undefined;
-  const c = effectiveCycle(world, b.island, b.defId, levelDef(b)?.cycle ?? base);
+/** Zyklus (Ticks) des Betriebs auf laufender Stufe k; `undefined` ohne Zyklus. Einziger Leseort (Spec 3.1, R1.8). */
+export function cycleOf(world: World, b: Building, ctx?: LevelContext): number | undefined {
+  if (BUILDING_DEFS[b.defId].cycle === undefined) return undefined;
+  const c = effectiveCycle(world, b.island, b.defId, levelCycle(b, kOf(world, b, ctx))!);
   return harvestActive(world, b) ? harvestCycle(c) : c;
 }
-/** Unterhalt je 100 Ticks des stehenden Gebäudes. */
-export const upkeepOf = (b: Building): number =>
-  levelDef(b)?.upkeep ?? BUILDING_DEFS[b.defId].upkeep;
-/** Unterhalt je 100 Ticks, wirksam: stillgelegt halb, aufgerundet (Spec S4). Einziger Leseort für die Summe. */
-export const buildingUpkeep = (b: Building): number =>
-  b.paused === true ? Math.ceil((upkeepOf(b) * PAUSED_UPKEEP_PCT) / 100) : upkeepOf(b);
+/** Unterhalt u(g) je 100 Ticks der gebauten Stufe. */
+export const upkeepOf = (b: Building): number => levelUpkeep(b, b.level ?? 1);
+/** Unterhalt je 100 Ticks, wirksam: stillgelegt halb von u(g), aufgerundet (Spec S4); gedrosselt (k < g) u(k) + Anteil der Differenz (R6). Einziger Leseort für die Summe. */
+export function buildingUpkeep(world: World, b: Building, ctx?: LevelContext): number {
+  const g = upkeepOf(b);
+  if (b.paused === true) return Math.ceil((g * PAUSED_UPKEEP_PCT) / 100);
+  const k = kOf(world, b, ctx);
+  if (k >= (b.level ?? 1)) return g;
+  const low = levelUpkeep(b, k);
+  return low + Math.ceil(((g - low) * THROTTLED_UPKEEP_PCT) / 100);
+}
 /** Auslastung in Promille 0 … 1000; `null` ohne `produces` (Spec 3.5). */
 export const utilization = (b: Building): number | null =>
   BUILDING_DEFS[b.defId].produces === undefined

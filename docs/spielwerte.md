@@ -111,7 +111,7 @@ Im Panel der Amtsstube erlässt du **ein** Edikt zur Zeit. Es wirkt nur, solange
   Weg zum Kontor über freie Kacheln; vorhandene Wegstücke werden mitbenutzt. Die Kosten sind n × 5 Geld, es
   wird nie nur ein Teil gebaut. Fehlt der Pfad oder das Geld, ist der Knopf blass und eine Zeile nennt den
   Grund. Beim Überfahren (oder Fokussieren) zeigt die Karte den geplanten Weg als helle Rauten.
-- **Info-Panel:** Das Info-Panel eines Betriebs hat drei Teile. Oben stehen Name, Stufe («Stufe 1» bis «Stufe 3» mit Punkten) und der Zustand als farbig umrandeter Chip (✓ läuft, ! wartet, ✗ steht, z. B. «In Betrieb», «Wartet auf Wolle», «Lager voll», «Nicht an Kontor angebunden») samt Abhilfe. Darunter zeigen Kacheln Ausstoss und Verbrauch je Minute, Auslastung und Unterhalt, dazu der Fortschritt. Unten steht die Ausbau-Karte mit dem Gewinn des nächsten Ausbaus (Ausstoss und Unterhalt, vorher → nachher), Kosten, Gebühr und dem Knopf «Ausbauen» (Tastenkürzel `Umschalt` + `U`); falls es nicht geht, nennt sie den Grund. Vor der Freischaltung nennt die Karte, wann der Ausbau möglich wird. Das Wohnhaus zeigt Stufe, Versorgung, Einwohner, Bedarfe und die Aufstiegs-Karte im gleichen Aufbau. Der Knopf «Gleiches bauen» wählt den Gebäudetyp als Bauwerkzeug (wie `Cmd`/`Strg` + Klick; nicht beim Kontor). Das Mouse-over nennt Stufe
+- **Info-Panel:** Das Info-Panel eines Betriebs hat drei Teile. Oben stehen Name, Stufe («Stufe 1» bis «Stufe 3» mit Punkten) und der Zustand als farbig umrandeter Chip (✓ läuft, ! wartet, ✗ steht, z. B. «In Betrieb», «Wartet auf Wolle», «Lager voll», «Nicht an Kontor angebunden») samt Abhilfe. Darunter zeigen Kacheln Ausstoss und Verbrauch je Minute, Auslastung und Unterhalt, dazu der Fortschritt. Unten steht die Ausbau-Karte mit dem Gewinn des nächsten Ausbaus (Ausstoss und Unterhalt, vorher → nachher), Kosten und dem Knopf «Ausbauen» (Tastenkürzel `Umschalt` + `U`). Darüber steht eine Checkliste der Bedingungen (Wissen, Baustoffe, Fachkräfte im Arbeitsweg von 8 Kacheln, Standort je Betriebstyp), jede Zeile mit ✓ oder ✗; am gesperrten Knopf nennt der Tooltip die erste unerfüllte Bedingung. Sind Fachkräfte oder Standort später nicht mehr erfüllt, zeigt der Betrieb den Chip «Läuft wie Stufe k» (Tooltip: die verletzten Bedingungen) und zahlt weniger als den vollen Unterhalt der gebauten Stufe, verliert die Stufe aber nicht. Vor der Freischaltung nennt die Karte, wann der Ausbau möglich wird. Das Wohnhaus zeigt Stufe, Versorgung, Einwohner, Bedarfe und die Aufstiegs-Karte im gleichen Aufbau. Der Knopf «Gleiches bauen» wählt den Gebäudetyp als Bauwerkzeug (wie `Cmd`/`Strg` + Klick; nicht beim Kontor). Das Mouse-over nennt Stufe
   und Auslastung.
 
 ### Produktionsketten
@@ -136,10 +136,37 @@ Werkzeug gibt es am Kontor zu kaufen oder vom **Werkzeugmacher** (2×2, Baukoste
 Leerlauf, und Werkzeug zu verkaufen bringt weniger, als es kostet. Bauland sind Sand, Gras und Wald
 ohne Gebäude oder Weg; Gebirge und Wasser sind unbebaubar.
 
-**Ausbau:** Die meisten Betriebe lassen sich ausbauen. Stufe 2 (ab Freischaltung U3) kostet Geld, Holz und
-Werkzeug sowie 2–3 Stoff als Gebühr, Stufe 3 (ab U5) kostet mehr und 2–3 Rum als Gebühr. Brennerei und Glashütte brauchen dafür auch Stein (Stufe 2: 3 bzw. 5, Stufe 3: 4 bzw. 8). Der Zyklus sinkt auf etwa
-× 0,6 bzw. × 0,4, der Unterhalt steigt (Fischerhütte: 30 → 42 → 54 / min). Baue die Kette gemeinsam aus, sonst
-wartet der nächste Betrieb auf Ware. Ein Abriss erstattet die Hälfte von Bau- und Stufenkosten, die Gebühr nicht.
+**Ausbau:** Die meisten Betriebe lassen sich ausbauen (Werte in `src/sim/defs/levels.ts`). Stufe 2 gibt es ab
+Freischaltung U3, Stufe 3 ab U5. Ein Ausbau braucht vier Arten von Bedingungen, die die Ausbau-Karte als
+Checkliste zeigt:
+
+1. **Wissen:** die Stufe ist freigeschaltet.
+2. **Baustoffe:** Geld, Holz, Werkzeug und Stein (Brennerei und Glashütte brauchen Stein schon für Stufe 2:
+   3 bzw. 5; Stufe 3: 6 bzw. 10). Nur die Fischerhütte verlangt zusätzlich eine fachliche Ware: 2 Stoff für das
+   Netz (Stufe 2 und 3), nicht erstattet.
+3. **Fachkräfte:** ein Haus der passenden Stufe (Stufe 2: Siedler, Stufe 3: Bürger) im Arbeitsweg von 8 Kacheln.
+4. **Standort** (je Typ, Stufe 2 / Stufe 3):
+
+| Betrieb                              | Standortregel                      | Stufe 2 | Stufe 3 |
+| ------------------------------------ | ---------------------------------- | ------- | ------- |
+| Fischerhütte                         | höchstens 1 andere Hütte im Radius | 2       | 3       |
+| Jäger                                | freie Waldkacheln im Radius 3      | 14      | 18      |
+| Holzfäller                           | freie Waldkacheln im Radius 2      | 4       | 6       |
+| Rinderfarm                           | freie Grasland-Kacheln im Radius 3 | 18      | 20      |
+| Schaf- und Zuckerrohrfarm            | freie Grasland-Kacheln im Radius 3 | 8       | 12      |
+| Steinbruch                           | Gebirgskacheln im Radius 2         | 3       | 4       |
+| Weberei                              | keine                              | -       | -       |
+| Werkzeugmacher, Brennerei, Glashütte | Feuerwache in Reichweite           | -       | ja      |
+
+**Läuft wie Stufe k:** Die Bedingungen Fachkräfte und Standort gelten dauernd. Sind sie verletzt, ist die
+Stufe nicht verloren; der Betrieb läuft wie die höchste Stufe k, deren Bedingungen erfüllt sind (Chip «Läuft
+wie Stufe k», der Tooltip nennt die verletzten Bedingungen). Der Unterhalt ist dann der Unterhalt von Stufe k
+plus 50 % der Differenz zur gebauten Stufe, aufgerundet (`THROTTLED_UPKEEP_PCT`). Eine Änderung wirkt
+spätestens nach 10 Ticks. Am gesperrten Knopf «Ausbauen» nennt der Tooltip die erste unerfüllte Bedingung.
+
+Der Zyklus sinkt auf etwa × 0,6 bzw. × 0,4, der Unterhalt steigt (Fischerhütte: 30 → 42 → 54 / min). Baue die
+Kette gemeinsam aus, sonst wartet der nächste Betrieb auf Ware. Ein Abriss erstattet die Hälfte von Bau- und
+Stufenkosten, die fachliche Ware nicht.
 
 **Freie Kacheln:** «Frei» heisst ohne Gebäude und ohne Weg; die Kacheln unter dem eigenen Grundriss zählen nicht.
 Holzfäller und Jagdhütte prüfen das laufend: Ist der Wald im Umkreis abgeholzt oder zugebaut, steht der Betrieb still

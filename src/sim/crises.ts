@@ -1,4 +1,4 @@
-import { serviceRadiusOf } from './council';
+import { isProtected } from './fireCover';
 import { BUILDING_DEFS } from './defs/buildings';
 import { CRISIS_LEVELS, CRISIS_SALT, CRISIS_WEIGHTS, FIRE_HIT_RADIUS } from './defs/crises';
 import {
@@ -11,7 +11,9 @@ import {
 import { maxHouseTier, orderPool } from './orders';
 import { createRng } from './rng';
 import type { Building, Crisis, CrisisKind, GoodId, Tier, World } from './types';
-import { center, HOME } from './world';
+import { HOME } from './world';
+
+export { isProtected } from './fireCover';
 
 /** Krisen (Spec M6 4, 10): Ziehung je Periode, Krisenschritt, Brandfolgen. Rein bis auf beginCrisis/tickCrises. */
 
@@ -170,17 +172,6 @@ export function fireTarget(
     }
   }
   return best;
-}
-
-/** Geschützt: eine angebundene Wache (`fireProtection`) mit Mittenabstand ≤ ihrem `serviceRadius`. */
-export function isProtected(world: World, b: Building): boolean {
-  const c = center(BUILDING_DEFS[b.defId], b.x, b.y);
-  return Object.values(world.buildings).some((s) => {
-    const def = BUILDING_DEFS[s.defId];
-    if (def.fireProtection !== true || !s.connected || s.island !== b.island) return false;
-    const sc = center(def, s.x, s.y);
-    return Math.hypot(sc.cx - c.cx, sc.cy - c.cy) <= (serviceRadiusOf(world, s.defId) ?? 0);
-  });
 }
 
 /** Brandfolgen (Spec 5.2–5.4): löschen oder Gebühr (auch ins Minus), Fortschritt 0, Ausfall bis `until`. */

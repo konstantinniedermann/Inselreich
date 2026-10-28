@@ -5,6 +5,7 @@ import { ISLANDS } from './defs/sea';
 import { inSupplyRange } from './supply';
 import { buildLock, functionLock } from './unlocks';
 import { checkAfford } from './economy';
+import { countFreeTerrain, countTerrain } from './terrainCount';
 import { islandName } from './islands';
 import { seaMask } from './mapgen';
 import {
@@ -38,9 +39,6 @@ function checkGround(isl: Island, x: number, y: number, w: number, h: number): R
   return ok;
 }
 
-const countTerrain = (isl: Island, tiles: Pos[], terrain: Terrain): number =>
-  tiles.filter((p) => tileAt(isl, p.x, p.y)?.terrain === terrain).length;
-
 function adjacentReason(terrain: Terrain): string {
   return terrain === 'water' ? 'Braucht Wasser angrenzend' : 'Braucht Gebirge angrenzend';
 }
@@ -49,15 +47,6 @@ function radiusReason(terrain: Terrain, free: boolean): string {
   if (terrain === 'forest')
     return free ? 'Zu wenig freier Wald in der Nähe' : 'Zu wenig Wald in der Nähe';
   return free ? 'Zu wenig freie Weide in der Nähe' : 'Zu wenig Weide in der Nähe';
-}
-
-/** Zählt nur Kacheln des Geländes, die unbebaut, ohne Weg und ausserhalb des eigenen Grundrisses sind. */
-function countFreeTerrain(isl: Island, tiles: Pos[], terrain: Terrain, own: Pos[]): number {
-  return tiles.filter((p) => {
-    const t = tileAt(isl, p.x, p.y);
-    if (t === undefined || t.terrain !== terrain || t.buildingId !== null || t.road) return false;
-    return !own.some((o) => o.x === p.x && o.y === p.y);
-  }).length;
 }
 
 /** Prüft eine Standortregel für `defId` mit Grundriss ab (x, y); ohne Wurf, Grund im Ergebnis. */
