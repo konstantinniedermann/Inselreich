@@ -241,7 +241,10 @@ export function upgradeGain(world: World, b: Building, to: 2 | 3): GainRow[] {
       'upkeep',
       'Unterhalt',
       perMinute(buildingUpkeep(world, b), UPKEEP_INTERVAL),
-      perMinute(next.upkeep, UPKEEP_INTERVAL),
+      perMinute(
+        b.paused === true ? Math.ceil((next.upkeep * PAUSED_UPKEEP_PCT) / 100) : next.upkeep,
+        UPKEEP_INTERVAL,
+      ),
       ' / min',
     ),
   );

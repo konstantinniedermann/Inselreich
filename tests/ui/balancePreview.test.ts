@@ -213,6 +213,18 @@ describe('balancePreview (I-078, AK-10, AK-14)', () => {
     expect(p.before - p.after).toBe(half(u2) - half(u1));
   });
 
+  it('stillgelegter Betrieb: Unterhaltszeile der Karte zeigt half(u1) -> half(u2), passend zur Bilanz', () => {
+    const w = twoIslandWorld();
+    w.won = true;
+    const b = putBuilding(w, 0, 'fisher', 3, 3);
+    b.paused = true;
+    const half = (u: number): number => Math.ceil((u * PAUSED_UPKEEP_PCT) / 100);
+    const [u1, u2] = [upkeepOf(b), LEVELS.fisher![0]!.upkeep];
+    const row = upgradeGain(w, b, 2).find((r) => r.key === 'upkeep')!;
+    expect(row.before).toBe(perMinute(half(u1), UPKEEP_INTERVAL));
+    expect(row.after).toBe(perMinute(half(u2), UPKEEP_INTERVAL));
+  });
+
   it('kein Neurechnen je Frame: balanceAfterBuild rechnet nur auf Aufruf (reine Funktion, gleiche Zahl)', () => {
     const w = createWorld(3, { unlockAll: true });
     expect(balanceAfterBuild(w, 'fisher')).toEqual(balanceAfterBuild(w, 'fisher'));
