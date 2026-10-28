@@ -3521,3 +3521,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-36 (push-
 Regelbezug: R392, R1000, R1002 · Kosten bei Irrtum: ein Testfall um ~50 ms zu langsam im push-check.
 
 Entscheider: L0 · Anlass: Bericht lead-tech AUSBAU-LOGIK-3 · ADR: —
+
+## R1020 · 2026-10-28 · AUSBAU-LOGIK R1019 erfüllt; Sync vor Gate; I-210-SYNC
+
+Ruling: Auflage R1019 erfüllt (`feat/ausbau-logik` @ `3f49c5b6`: balance-upgrade M-15 Median 372 ms ≤ 400, trial-run AK-6 433–438 ms < 450; Fix `levelContextIfNeeded` nur mit sonnet-Task-Review → Gate Merge prüft, ob ein Delta-Review opus nötig ist).
+merge-tree main (`bd82da6d`) ← `feat/ausbau-logik`: KONFLIKT (`docs/arc42.md`) → Sync durch AUSBAU-LOGIK-3 vor dem Gate. merge-tree main ← `feat/i210` @ `7df6518b`: KONFLIKT in 13 Dateien (README, arc42, population, save, tick, world, sieben Tests) —
+erwartbar wegen I-223/Save v20; **I-210-SYNC** (Budget 6/2) startet auf dem nächsten freien Test-Platz nach dem AL-Sync: main mergen, Save auf v21 (Faltregel E-ZE-1), `design/i210-bittschrift` @ `d94af2ed` (konfliktfrei) einmergen, Delta-Review opus über den Sync.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1, I-215 (Save-Kette)
+Regelbezug: R909, R987, R1019, E-084 · Kosten bei Irrtum: ein Sync-Lauf.
+
+Entscheider: L0 · Anlass: Bericht lead-tech AUSBAU-LOGIK-3 (Nachtrag), merge-tree-Proben · ADR: —
