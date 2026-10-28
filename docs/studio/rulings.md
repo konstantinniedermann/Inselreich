@@ -3510,3 +3510,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, NU-1, 
 Regelbezug: R826, R909, R1014–R1017, E-084 · Kosten bei Irrtum: Reihenfolge eines Test-Platzes.
 
 Entscheider: L0 · Anlass: Berichte production-integrator MERGE-I-223, studio-coach COACH-R1016 · ADR: —
+
+## R1019 · 2026-10-28 · AUSBAU-LOGIK: Ersatzgrenze P-3(a)
+
+Ruling: Der Test-Umbau verfehlt +10 % (balance-upgrade M-15 +65 %, AK-BAS-05 +34 %, trial-run AK-6 +30 %, Messung Last 3,9). **Ersatzgrenze (R1002):** Für `balance-upgrade` gilt statt der relativen Schwelle die absolute Grenze ≤ 400 ms je Testfall (Median aus 3 Läufen),
+weil die Mehrkosten die Ausbau-Prüfung selbst sind (0,8 ms/Tick, R1000). Für `trial-run` AK-6 gilt R392 unverändert (kein Test > 500 ms): **Auflage vor dem Gate Merge** — AK-6 so kürzen oder teilen, dass alle 3 Läufe < 450 ms liegen (Reserve für push-check),
+ohne Assertion oder Band zu schwächen; dann Gate Merge an `lead-qa`. Abgelehnt: 520-ms-Grenze für trial-run (würde push-check-Zeitreserve reissen).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: REL-36 (push-check)
+Regelbezug: R392, R1000, R1002 · Kosten bei Irrtum: ein Testfall um ~50 ms zu langsam im push-check.
+
+Entscheider: L0 · Anlass: Bericht lead-tech AUSBAU-LOGIK-3 · ADR: —
