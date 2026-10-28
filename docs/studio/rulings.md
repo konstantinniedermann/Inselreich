@@ -3532,3 +3532,65 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1, I-215 (
 Regelbezug: R909, R987, R1019, E-084 · Kosten bei Irrtum: ein Sync-Lauf.
 
 Entscheider: L0 · Anlass: Bericht lead-tech AUSBAU-LOGIK-3 (Nachtrag), merge-tree-Proben · ADR: —
+
+## R1021 · 2026-10-28 · Gate Merge AUSBAU-LOGIK Etappe 1: OK
+
+Ruling: Gate Merge `feat/ausbau-logik` @ `55dbd3c8` **OK** (lead-qa; kein weiterer Delta-Review nötig: `levelContextIfNeeded` verhaltensgleich, Fix `moneyTaxes` mit Rot-Beleg; Handoff `.studio/handoffs/2026-10-28-lead-qa-gate-AUSBAU-LOGIK.md`). `git merge-tree` main (`29660b8a`) ← `feat/ausbau-logik` @ `55dbd3c8`: konfliktfrei (E-084).
+Integrator mergt lokal auf `integrate/rel-36` (vorher main per `--ff-only` nachziehen), Teilbeleg, main vorspulen; kein Push. Zwei niedrige Befunde in `beobachtungen.md` (Aufräum-Häppchen).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210-SYNC, I-215 (economy/levels)
+Regelbezug: R1002, R1019, R1020, E-084 · Kosten bei Irrtum: ein Revert-Merge auf lokalem main.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-AUSBAU-LOGIK · ADR: —
+
+## R1022 · 2026-10-28 · AUSBAU-LOGIK auf main; Beobachtungen-Auswertung und HAUSHALT-05 Pflicht
+
+Ruling: Integrator-Merge `8b7d80d2` (AUSBAU-LOGIK Etappe 1) auf lokalem main abgenommen (Teilbeleg grün, 926 Tests). **Beobachtungen: 36 offene Einträge > 30** (Marke 2026-10-25) → Auswertung `BEOB-19` an `lead-production` (Skill `beobachtungen-auswerten`) ist
+Pflichtpaket (R287/R288); bis zu ihrem Ende startet L0 keine **neue** Funktionsarbeit (laufende NU-1, I-215, I-210-SYNC, NU-2 laufen weiter; I-223-NACH, I-214, HAFEN O warten). **Aufräumen fällig** (rulings.md 282 Rulings/332 KB > 150/200 KB, R685) → `HAUSHALT-05` an
+`lead-production`: Rulings-Archiv nach dem bisherigen Schema, nur der vordere Teil wird verschoben (L0 hängt weiter am Ende an).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle (beobachtungen.md hat Merge-Treiber `beob-append`)
+Regelbezug: R287, R288, R685, R1018 · Kosten bei Irrtum: eine verzögerte Funktionswelle.
+
+Entscheider: L0 · Anlass: Zählung offene Beobachtungen, `aufraeumen.py --check` · ADR: —
+
+## R1023 · 2026-10-28 · HAUSHALT-05 abgenommen
+
+Ruling: `docs/haushalt-05` @ `a5cddac5` **abgenommen** (R740–R904 ins Archiv, rulings.md 118 Rulings/128 KB; studio-test grün; merge-tree gegen main konfliktfrei). Geht mit dem nächsten Bündel; bis dahin hängt L0 nur am Dateiende an. Befund `aufraeumen.py --root` in beobachtungen.md.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R685, R1022 · Kosten bei Irrtum: ein Doku-Merge.
+
+Entscheider: L0 · Anlass: Bericht lead-production HAUSHALT-05 · ADR: —
+
+## R1024 · 2026-10-28 · BEOB-19 abgenommen; Paket-Kandidaten
+
+Ruling: `docs/beob-19` @ `b1050af4` **abgenommen** (34 Einträge ausgewertet: 14 erledigt, 12 abgehakt, 8 eingeplant; Marke 2026-10-28; Konfliktrest `|||||||` entfernt). Pflichtsperre R1022 aufgehoben, Funktionsarbeit wieder frei. Kandidaten: (4) **I-223-NACH** Paket (inkl. Rechnungs-Korrektur «Kasse < 0»,
+nächster Test-Platz); (5) **TOOL-MESSFENSTER-2** Paket (inkl. Prüfer für Marker `|||||||` in `make conflicts`), Test-Platz nach I-223-NACH; (6) UI-HAEPPCHEN-K an AUSBAU-LOGIK Etappe 2 (T07); (7) **AUFRAEUM-05** Paket jetzt (testfrei) — ohne Änderung an `../CLAUDE.md` (gemeinsames Setup, gehört dem Nutzer):
+`perf:` wird nicht eingeführt, Commits nutzen die bestehenden Präfixe; (1)–(3) erledigen sich in ihren Strängen; (8) bleibt Pool-Anlass. **Vorfall niedrig:** BEOB-19 hat den gemergten Alt-Branch `docs/beob-19` gelöscht und neu angelegt (kein Inhaltsverlust, da in main) — Branches werden nie gelöscht; an die Kurz-Retro.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: AUSBAU-LOGIK Etappe 2, I-210-SYNC (I-210-NACH)
+Regelbezug: R287, R288, R1022, Verfassung §6 · Kosten bei Irrtum: ein Paket zu viel.
+
+Entscheider: L0 · Anlass: Bericht lead-production BEOB-19 · ADR: —
+
+## R1025 · 2026-10-28 · AUFRAEUM-05 abgenommen; Schwelle gemergte Worktrees
+
+Ruling: `docs/aufraeum-05` @ `167147c2` **abgenommen** (Festwerte Handel/Feste aus `src/sim/defs/` belegt, arc42 `buildingUpkeep(world, b, ctx?)`). Entwurf angenommen: `aufraeumen.json` erhält `worktreesMergedMax: 50`, `aufraeumen.py --check` zählt Worktrees mit in main gemergtem Branch (heute 235 Worktrees,
+241/303 Branches gemergt); Entfernen nur in einer HAUSHALT-Runde, `git worktree remove` ohne `--force`, nie Branches löschen, nie `.worktrees/erweiterung-1` (R519). Umsetzung als Werkzeug-Paket **TOOL-AUFRAEUM-WT** (zusammen mit dem `--root`-Befund aus R1023) auf einem freien Platz.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R519, R685, R1023, R1024 · Kosten bei Irrtum: eine Schwelle.
+
+Entscheider: L0 · Anlass: Bericht lead-production AUFRAEUM-05 · ADR: —
+
+## R1026 · 2026-10-28 · Gate Spec NU-2: BEDENKEN; Entscheide; Spec-Nachtrag
+
+Ruling: Gate Spec NU-2 (`design/nu2` @ `d76ed325`) **BEDENKEN angenommen** (Handoff `.studio/handoffs/2026-10-28-lead-qa-gate-spec-NU-2.md`). Entscheide nach lead-qa-Votum: **E-02 ja mit Auflage** (Plan NU-2 startet erst, wenn NU-1 **und** FL-2 auf main sind; Tests nach FL-2-Merge schärfen);
+**E-N2-01, -02, -05, -06, -07 ja**; **E-N2-03 ja mit Auflage** (Ersatzlagen-Quote verbindlich, B3); **E-N2-04 ja** («Herdhaus» global); A01 E-03…E-08, E-10 ja; **A01 E-09 geändert** (Faktor-Reihenfolge entscheidet der Plan nach FL-2 R3, AK-N2-11 pinnt Einzelwerte); **A01 E-01 gestrichen**; Anhang 01 bleibt, Kopfzeile «Spec gilt».
+**Spec-Nachtrag** durch `lead-design` (sonnet, Stufe leicht) zu B1–B9 auf `design/nu2`; danach Kurzprüfung `lead-qa`. FLAECHE (Plan vorhanden, Budget 56) rückt damit in der Test-Warteliste hinter I-223-NACH vor TOOL-MESSFENSTER-2, weil sie NU-2 freischaltet.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1, FLAECHE, AUSBAU-LOGIK Etappe 2
+Regelbezug: R896, R962, R966, R970, R976–R979, R992 · Kosten bei Irrtum: eine Nachtrag-Runde.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-NU-2 · ADR: —

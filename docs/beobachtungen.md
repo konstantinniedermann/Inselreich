@@ -281,6 +281,14 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 
 - Fundort: INSELPROBEN Schuldbrief-Probe. Beobachtung: erzeugt planmässig «Kasse leer, Nahrung leer» und wäre der natürliche Anlass für I-183. Ursprung: Rechnung Zukaufpreis (R918). Einschätzung: bei der nächsten Ideen-Runde prüfen.
 
+## 2026-10-26 · Minuten-Umrechnung doppelt in sim und ui (niedrig)
+
+- Fundort: `src/sim/levelChecks.ts` (nutzt `MINUTE_MS` aus `src/sim/defs/timing.ts`), `src/ui/time.ts:23` (`perMinute`, Literal 60000). Beobachtung: dieselbe Umrechnung Ticks → je Minute steht zweimal; `src/sim` darf `ui` nicht importieren. Ursprung: AUSBAU-LOGIK T04 (Review). Einschätzung: `ui/time.ts` auf `MINUTE_MS` umstellen oder `perMinute` nach `src/sim` heben; klein, kein Folgeissue.
+
+## 2026-10-26 · REASON_TABLE kennt «Zu wenig X (have / need)» nicht (mittel)
+
+- Fundort: `src/ui/hints.ts` (`REASON_TABLE`, Muster `^Zu wenig (\S+)$` und `^Zu wenig Geld$`, Prüfung `'Zu wenig Stein'` in Z. 418). Beobachtung: `upgradeBuilding` liefert seit T05 Baustoffgründe mit Zahlen («Zu wenig Stein (0 / 2)»); die Tabelle trifft sie nicht, die freundliche Fassung entfällt. `tests/ui/hints.test.ts` (AK-UI-04) streicht das Zahlenende vor dem Abgleich. Ursprung: AUSBAU-LOGIK T05. Einschätzung: in T07 (UI) Muster erweitern und den Test-Workaround entfernen.
+
 ## 2026-10-25 · FIX-SCHIFF-A1: Picking und Karte ohne Sub-Tick-Bruchteil (niedrig)
 
 - Fundort: `shipAt` (`src/render/shipLane.ts`, genutzt von `src/ui/input.ts`, `src/ui/app.ts`) und `src/render/seaMap.ts`. Beobachtung: rufen `shipPose` mit `frac` 0; die gezeichnete Pose läuft bis zu einen Tick (kleiner als 1/Lane-Ticks) voraus. Ursprung: FIX-SCHIFF-A1. Einschätzung: kaum sichtbar, nur bei Treffer-Toleranz knapp; bei Bedarf `tickFrac` durchreichen.
@@ -325,3 +333,15 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-28 · I-210-SYNC: Rest-Befunde (niedrig)
 
 - Fundort: Branch `feat/i210` @ Sync-Merge. Beobachtung: `bookTithe` (`population.ts` ~331) nutzt `addStock` mit Standard `STORAGE_CAP` statt `storageCap(world, HOME, g)`; heute folgenlos, weil die B9-Lagerwirkung nur cloth/rum/food betrifft. Ausserdem `arc42` Abschnitt «Save v19 … ist 19» veraltet und die Save-Abschnitte stehen in der Reihenfolge v20, v21, v19, v18. Ursprung: Delta-Review I-210-SYNC. Einschätzung: bei nächster Berührung von Zehnt oder arc42 mitnehmen.
+
+## 2026-10-28 · AUSBAU-LOGIK: Kommentar und Äquivalenz-Test `levelContextIfNeeded` (niedrig)
+
+- Fundort: Branch `feat/ausbau-logik` @ `55dbd3c8`, `src/sim/production.ts:84`, `src/sim/levelRules.ts`. Beobachtung: Kommentar «nur bei Ausbau» ungenau (Kontext fehlt nur, wenn kein Gebäude ein `level` hat); kein Äquivalenz-Test für `levelContextIfNeeded` ohne ausgebauten Betrieb. Ursprung: Gate Merge AUSBAU-LOGIK (lead-qa). Einschätzung: Aufräum-Häppchen, kein Blocker.
+
+## 2026-10-28 · AUSBAU-LOGIK-3: Restpunkte nach Delta-Review (niedrig)
+
+- Fundort: Branch `feat/ausbau-logik` @ `3ccdc554`. Beobachtung: (1) `tests/ui/hints.test.ts` ~Z.527 Workaround «(n / m)»: sauber nur mit Änderung in `src/ui/hints.ts` (`REASON_TABLE` bzw. `friendlyReason` müssen das Suffix tolerieren), AK-UI-04 bleibt abgeschwächt. (2) `src/ui/panelView.ts:245` wiederholt die Halb-Formel aus `levels.ts:61`; Helfer in `levels.ts` exportieren. (3) `arc42.md:499` `buildingUpkeep(world, b, ctx)` ohne `?`. (4) Commit-Präfix `perf:` fehlt in der Konvention. (5) `tests/tools/testlock.test.ts` («zwei parallele Läufe auf toter Sperre») schlug einmal im vollen Lauf unter Last fehl, einzeln 26/26 grün; bei Wiederholung untersuchen. Ursprung: Handoff AUSBAU-LOGIK-2, Delta-Review AUSBAU-LOGIK-3. Einschätzung: alle niedrig, keine Issues.
+
+## 2026-10-28 · `aufraeumen.py --check` misst im Worktree den Hauptcheckout (niedrig)
+
+- Fundort: `tools/studio/aufraeumen.py`. Beobachtung: Ohne `--root` nimmt `--check` immer den Hauptcheckout; im Worktree meldet es deshalb «fällig», obwohl der Branch die Schwelle schon einhält. Ursprung: HAUSHALT-05 (lead-production). Einschätzung: Werkzeug-Häppchen (Standard = `git rev-parse --show-toplevel`).

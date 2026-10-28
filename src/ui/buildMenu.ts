@@ -119,7 +119,7 @@ export function cycleLines(defId: BuildingDefId, world?: World): Record<string, 
     out['Erzeugt'] = `Erzeugt: ${GOODS[def.produces].name} ${perInterval(cyc(def.cycle))}`;
     const lv = LEVELS[def.id];
     if (lv) {
-      const rates = [def.cycle, lv[0].cycle, lv[1].cycle].map((c) => num(perMinute(1, cyc(c))));
+      const rates = [def.cycle, lv[0]!.cycle, lv[1]!.cycle].map((c) => num(perMinute(1, cyc(c))));
       out['Ausstoss je Stufe'] = `Ausstoss je Stufe: ${rates.join(' · ')} / min`;
     }
   }

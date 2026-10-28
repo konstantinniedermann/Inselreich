@@ -80,7 +80,8 @@ export function balanceAfterUpgrade(world: World, b: Building): BalancePreview {
   const before = balanceOf(world);
   const next: Building = { ...b, level: (b.level ?? 1) === 1 ? 2 : 3 };
   const w: World = { ...world, buildings: { ...world.buildings, [b.id]: next } };
-  return { before, after: balanceOf(w) };
+  // Nominalwirkung: die Zielstufe läuft voll (keine Drosselung der Vorschau-Stufe), Unterhaltszeile und Delta stimmen überein.
+  return { before, after: moneyTaxes(w) - totalUpkeep(w, next) };
 }
 
 /** `+120 / min` -> `+120`: gleiche Funktion wie der Bilanz-Chip (`balanceText`), kein zweiter Formatierer. */

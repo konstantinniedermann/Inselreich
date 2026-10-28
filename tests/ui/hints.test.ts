@@ -43,6 +43,7 @@ import {
   setAllTax,
   setHouse as setSimHouse,
   village,
+  meetLevel,
 } from '../sim/helpers';
 import { houseDiagnosis } from '../../src/sim/queries';
 import { perfBudget } from '../helpers/perfBudget';
@@ -513,11 +514,17 @@ describe('M11 Ausbau-Gründe (Spec 3.6)', () => {
       upgradeBuilding(w, add('fisher', { outageUntil: w.tick + 200 })), // Gebäude brennt
     ].map((r) => (r.ok ? '' : r.reason));
     home(w).stock.cloth = 0;
-    const r = upgradeBuilding(w, add('fisher'));
+    const last = add('fisher', { x: 20, y: 20 });
+    const lastB = w.buildings[last]!;
+    lastB.level = 2;
+    meetLevel(w, lastB); // Fachkräfte und Standort der Stufe 2 stehen
+    delete lastB.level;
+    const r = upgradeBuilding(w, last);
     reasons.push(r.ok ? '' : r.reason); // Zu wenig Stoff
     for (const x of reasons)
       expect(
-        REASON_TABLE.some((row) => row.pattern.test(x)),
+        // Baustoffzeilen tragen seit T05 «(have / need)»; die Tabelle kennt nur den Kopf (Beobachtung, T07)
+        REASON_TABLE.some((row) => row.pattern.test(x.replace(/ \(\d+ \/ \d+\)$/, ''))),
         x,
       ).toBe(true);
     expect(

@@ -524,6 +524,16 @@ button.chip {
 .pv-chip[data-tone='bad'] {
   border-left-color: var(--tone-bad);
 }
+.pv-chip[hidden] {
+  display: none;
+}
+/* Gedrosselt-Chip «Läuft wie Stufe k»: langer Text darf umbrechen, Tooltip mit Zeilenumbrüchen */
+.pv-chip[data-field='run-chip'] {
+  align-items: flex-start;
+  font-weight: 400;
+  font-size: 14px;
+  white-space: pre-line;
+}
 .pv-symbol {
   min-width: 1em;
   text-align: center;

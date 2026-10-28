@@ -25,7 +25,7 @@ describe('M10 Importrichtung src/sim (Entscheid B9)', () => {
 });
 
 describe('M11 Naht Zyklus und Unterhalt (Prüfhilfe AK-P1-14)', () => {
-  it('PLAN-NAHT src/sim (ausser den Lese-Helfern levels.ts und council.ts, defs/) und render/errands.ts lesen cycle/upkeep nie direkt', () => {
+  it('PLAN-NAHT src/sim (ausser den Lese-Helfern levels.ts und council.ts, defs/; levels.ts darf levelRules importieren) und render/errands.ts lesen cycle/upkeep nie direkt', () => {
     const read = /\b(def|BUILDING_DEFS\[[^\]]+\])\.(cycle|upkeep)\b/;
     const readers = ['levels', 'council'];
     const paths = files.filter((m) => !readers.includes(m)).map((m) => `${SIM}/${m}.ts`);
@@ -37,6 +37,7 @@ describe('M11 Naht Zyklus und Unterhalt (Prüfhilfe AK-P1-14)', () => {
           m === 'types' ||
           m === 'council' ||
           m === 'petitionEffect' ||
+          m === 'levelRules' ||
           m === 'feastEffect' ||
           m.startsWith('defs/'),
       ),
@@ -48,6 +49,23 @@ describe('M11 Naht Zyklus und Unterhalt (Prüfhilfe AK-P1-14)', () => {
     expect(importsOf('flow')).not.toContain('queries');
     expect(readFileSync(`${SIM}/queries.ts`, 'utf8')).toMatch(
       /export \{[^}]*goodsBalance[^}]*\} from '\.\/flow'/,
+    );
+  });
+});
+
+describe('AL-2a Blattmodule der laufenden Stufe (AUSBAU-LOGIK T02)', () => {
+  const only = (m: string, allowed: string[]): boolean =>
+    importsOf(m).every((x) => x.startsWith('defs/') || allowed.includes(x));
+  it('terrainCount, fireCover und levelRules importieren nur erlaubte Module', () => {
+    expect(only('terrainCount', ['world', 'types'])).toBe(true);
+    expect(only('fireCover', ['council', 'world', 'types'])).toBe(true);
+    expect(
+      only('levelRules', ['types', 'world', 'coverage', 'council', 'terrainCount', 'fireCover']),
+    ).toBe(true);
+  });
+  it('crises re-exportiert isProtected aus fireCover', () => {
+    expect(readFileSync(`${SIM}/crises.ts`, 'utf8')).toMatch(
+      /export \{ isProtected \} from '\.\/fireCover'/,
     );
   });
 });

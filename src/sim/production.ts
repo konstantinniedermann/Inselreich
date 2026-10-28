@@ -3,6 +3,7 @@ import { STORM_TICK_DIVISOR } from './defs/crises';
 import { EFF_MAX, EFF_WINDOW } from './defs/timing';
 import { addStock, takeStock } from './economy';
 import { cycleOf } from './levels';
+import { levelContextIfNeeded, type LevelContext } from './levelRules';
 import { siteRuleOk } from './placement';
 import { reserveOf } from './reserve';
 import { serviceAvailable } from './population';
@@ -24,9 +25,9 @@ const forestOk = (world: World, b: Building): boolean =>
   );
 
 /** Ein Schritt eines Betriebs (Prüfreihenfolge Anhang 01 D); true, wenn progress in diesem Schritt gestiegen ist. */
-function advance(world: World, b: Building): boolean {
+function advance(world: World, b: Building, ctx?: LevelContext): boolean {
   const def = BUILDING_DEFS[b.defId];
-  const cycle = cycleOf(world, b);
+  const cycle = cycleOf(world, b, ctx);
   if (!def.produces || cycle === undefined) return false;
   if (b.outageUntil !== undefined) {
     b.state = 'burning'; // Ausfall hat Vorrang (Spec 10.1)
@@ -86,9 +87,10 @@ function advance(world: World, b: Building): boolean {
  * Auslastung `eff` (gleitender Mittelwert über EFF_WINDOW Schritte, Spec 3.5).
  */
 export function tickProduction(world: World): void {
+  const ctx = levelContextIfNeeded(world); // einmal je Schritt gesammelt, nur für diesen Aufruf
   for (const b of Object.values(world.buildings)) {
     if (!BUILDING_DEFS[b.defId].produces) continue; // Häuser, Dienste, Markt: nie eff
-    const advanced = advance(world, b);
+    const advanced = advance(world, b, ctx);
     const target = advanced && b.state === 'ok' ? EFF_MAX : 0; // storageFull zählt 0
     const eff = b.eff ?? EFF_WINDOW * EFF_MAX;
     b.eff = eff - Math.floor(eff / EFF_WINDOW) + target;

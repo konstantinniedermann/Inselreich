@@ -15,7 +15,14 @@ import { step } from '../../src/sim/tick';
 import { paidCost, upgradeBuilding } from '../../src/sim/upgrade';
 import type { Building, BuildingDefId, GoodId, World } from '../../src/sim/types';
 import { createWorld, home } from '../../src/sim/world';
-import { forceRect, houseNearKontor, placeService, placeTownhall, putBuilding } from './helpers';
+import {
+  forceRect,
+  houseNearKontor,
+  meetLevel,
+  placeService,
+  placeTownhall,
+  putBuilding,
+} from './helpers';
 
 /** Zeile im Welt-Raster: Betriebe roh, angebunden, weit weg vom Kontor. */
 let slot = 0;
@@ -33,6 +40,15 @@ const run = (w: World, n: number): void => {
   }
 };
 const reason = (r: { ok: boolean; reason?: string }): string | undefined => r.reason;
+
+/** Erfüllt Fachkräfte und Standort der nächsten Stufe (Ausbau prüft sie seit AUSBAU-LOGIK T05). */
+function readyForNext(w: World, b: Building): void {
+  const g = b.level ?? 1;
+  b.level = (g + 1) as 2 | 3;
+  meetLevel(w, b);
+  if (g === 1) delete b.level;
+  else b.level = g as 2 | 3;
+}
 
 describe('M13-E1 Betrieb stilllegen (AK-M13STL-01…08)', () => {
   it('AK-M13STL-01 Ablauf: still, doppelt, anfahren, doppelt', () => {
@@ -115,13 +131,13 @@ describe('M13-E1 Betrieb stilllegen (AK-M13STL-01…08)', () => {
     const tm = put(w, 'toolmaker');
     f.paused = true;
     tm.paused = true;
-    expect([buildingUpkeep(f), buildingUpkeep(tm)]).toEqual([3, 13]);
+    expect([buildingUpkeep(w, f), buildingUpkeep(w, tm)]).toEqual([3, 13]);
     delete f.paused;
-    expect(buildingUpkeep(f)).toBe(5);
+    expect(buildingUpkeep(w, f)).toBe(5);
     glass.level = 2;
-    expect(buildingUpkeep(glass)).toBe(17);
+    expect(buildingUpkeep(w, glass)).toBe(17);
     glass.level = 3;
-    expect(buildingUpkeep(glass)).toBe(22);
+    expect(buildingUpkeep(w, glass)).toBe(22);
   });
 
   it('AK-M13STL-05 Bilanz zählt Stilllegung nicht, Kette läuft leer', () => {
@@ -155,7 +171,7 @@ describe('M13-E1 Betrieb stilllegen (AK-M13STL-01…08)', () => {
     beginCrisis(w, 0, { kind: 'fire', tile });
     expect([f.state, f.paused]).toEqual(['burning', true]);
     const until = f.outageUntil!;
-    expect(buildingUpkeep(f)).toBe(3);
+    expect(buildingUpkeep(w, f)).toBe(3);
     for (; w.tick < until;) step(w);
     expect(f.outageUntil).toBeUndefined();
     expect([f.state, f.paused]).toEqual(['paused', true]);
@@ -167,6 +183,7 @@ describe('M13-E1 Betrieb stilllegen (AK-M13STL-01…08)', () => {
     expect(setPaused(w, f.id, true).ok).toBe(true);
     w.money = 100_000;
     for (const g of Object.keys(home(w).stock) as GoodId[]) home(w).stock[g] = 100;
+    readyForNext(w, f);
     expect(upgradeBuilding(w, f.id).ok).toBe(true);
     expect([f.level, f.paused]).toEqual([2, true]);
     const refund = refundCost(paidCost(f)).money;

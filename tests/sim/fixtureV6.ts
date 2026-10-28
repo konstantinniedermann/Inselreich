@@ -11,7 +11,8 @@ import { buy } from '../../src/sim/trade';
 import { upgradeBuilding } from '../../src/sim/upgrade';
 import type { Layout, Trajectory } from './controller';
 import { runColony, startColony, type ColonyOptions } from './controller';
-import type { Result, World } from '../../src/sim/types';
+import type { Building, Result, World } from '../../src/sim/types';
+import { meetLevel } from './helpers';
 import { adjacentOf, buildingsOfType, createWorld, idx, home } from '../../src/sim/world';
 
 export const NORMAL: ColonyOptions = { fireStation: true };
@@ -61,6 +62,24 @@ function placeConnectedTownhall(w: World): void {
   throw new Error('T00: keine angebundene Stelle für die Amtsstube');
 }
 
+/**
+ * Ausbau seit AUSBAU-LOGIK T05 verlangt ein Fachkräfte-Haus. Haus und Gelände stehen nur für den Aufruf: danach sind
+ * Kacheln, Gebäudeliste und Id-Zähler wieder wie auf dem v6-Code, die Fixture-Welt bleibt identisch.
+ */
+function upgradeTraceless(w: World, b: Building): Result {
+  const tiles = structuredClone(home(w).tiles);
+  const nextId = w.nextBuildingId;
+  const houseIds = new Set(Object.keys(w.buildings));
+  b.level = 2;
+  meetLevel(w, b); // Haus und Standortgelände der Stufe 2
+  delete b.level;
+  const r = upgradeBuilding(w, b.id);
+  for (const id of Object.keys(w.buildings)) if (!houseIds.has(id)) delete w.buildings[Number(id)];
+  home(w).tiles = tiles;
+  w.nextBuildingId = nextId;
+  return r;
+}
+
 /** Stand save-v6.json: Lauf „normal" bei Tick 3000 (Brand und Auftrag aktiv), dann Aktionen ohne `step`. */
 export function fixtureV6Run(): { w: World; layout: Layout; t: Trajectory } {
   const run = normalRunTo(3000);
@@ -73,7 +92,7 @@ export function fixtureV6Run(): { w: World; layout: Layout; t: Trajectory } {
   must(setUpgradeStop(w, 1, true), 'setUpgradeStop');
   const lumber = buildingsOfType(w, 'lumberjack')[0];
   if (!lumber) throw new Error('T00: kein Holzfäller');
-  must(upgradeBuilding(w, lumber.id), 'upgradeBuilding');
+  must(upgradeTraceless(w, lumber), 'upgradeBuilding');
   for (const g of GOOD_IDS)
     if (g !== 'glass' && g !== 'spice' && home(w).stock[g] === 0) must(buy(w, g, 3), `buy ${g}`);
   return run;
