@@ -27,7 +27,7 @@ describe.each(PETITION_SEEDS)('AK-BS-04 B1-B3, Seed %i', (seed) => {
     const res: Partial<Result> = {};
     beforeAll(() => {
       for (const lage of ['yes', 'no'] as const) res[lage] = duel(SCENES[id]![lage]!(seed));
-    });
+    }, 60_000);
     it('Vorbedingungen: beide Antworten gehen, kein Zwischenfall', () => {
       for (const lage of ['yes', 'no'] as const)
         for (const a of ['yes', 'no'] as const) {

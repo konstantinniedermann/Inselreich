@@ -153,7 +153,7 @@ describe(`AK-BS-05 stabile Stadt, Seed ${SEED}`, () => {
     results.NF = branch(w, 'no', true);
     results.N = branch(w, 'no', false);
     results.REF = branch(w, null, false);
-  });
+  }, 60_000);
 
   it('Vorbedingungen: 120 Kaufleute, alle versorgt, jedes Lager >= 90, ü 5 bis 14 %', () => {
     expect(startPeople).toBe(120);

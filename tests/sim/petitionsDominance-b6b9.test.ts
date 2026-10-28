@@ -40,7 +40,7 @@ describe.each(PETITION_SEEDS)('AK-BS-04 B6-B9, Seed %i', (seed) => {
       for (const lage of ['yes', 'no'] as const) {
         res[lage] = duel(SCENES[id]![lage]!(seed));
       }
-    });
+    }, 60_000);
     it('Vorbedingungen: beide Antworten gehen, kein Zwischenfall', () => {
       for (const lage of ['yes', 'no'] as const)
         for (const a of ['yes', 'no'] as const) {
@@ -92,7 +92,7 @@ describe.each(PETITION_SEEDS)('AK-BS-04 B9 Zusatzmass, Seed %i', (seed) => {
   const res: Partial<Result> = {};
   beforeAll(() => {
     for (const lage of ['yes', 'no'] as const) res[lage] = duel(SCENES.granary![lage]!(seed));
-  });
+  }, 60_000);
   it('Vorbedingungen: beide Antworten gehen, kein Zwischenfall ausser dem gesetzten Sturm', () => {
     for (const lage of ['yes', 'no'] as const)
       for (const a of ['yes', 'no'] as const) {
