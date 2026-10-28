@@ -3766,3 +3766,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MF2-WT (
 Regelbezug: R1041, E-084, R826 · Kosten bei Irrtum: Hänger bleiben unentdeckt.
 
 Entscheider: L0 · Anlass: Bericht lead-tech TOOL-MESSWACHE · ADR: —
+
+## R1043 · 2026-10-28 · TIEFE-8 Spielmodi, Entscheide E1–E6
+
+Ruling: TIEFE-8 (`design/tiefe-8` @ `4aa4b5d5`, docs/design/tiefe-8-spielmodi.md) ist abgenommen. Die Quellenlage ist dünn; das ist so vermerkt. E1 ja: T8-A «Pachtbrief» kommt in den Pool. Auflage vor jeder Spec: Eine Rechnung von design-economy-designer zeigt, dass jeder Korb lösbar bleibt und wie er mit dem Zehnt (I-223) zusammenwirkt. E2 ja: T8-B «Lagekarten» kommt als Leitplanke und Idee in den Pool; es gibt eine gemeinsame Tabelle für alle Startabwandlungen, und Grundgebäude werden nie zufällig gesperrt. E3 ja: I-225 geht in T8-B auf. E4 ja: T8-C «Gezeiten» kommt ohne Pitch in den Pool. E5 ja: T8-D wird nur ein Vermerk an K2, T8-E bekommt keinen Eintrag. E6 ja: I-220 und I-224 kommen als geparkt ins Archiv; beide waren schon als «parken» bewertet. Der Pool bleibt bei 40/40.
+Umsetzung der Pool-Änderungen durch `lead-design` auf `design/tiefe-8`. Der Branch geht nach `design/tiefe-7` mit dem nächsten Doku-Bündel nach main.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-223 (Zehnt, auf main), Inselproben/Tagesinsel (I-209)
+Regelbezug: R862, R1017, R975 · Kosten bei Irrtum: drei Pool-Plätze.
+
+Entscheider: L0 · Anlass: Bericht lead-design TIEFE-8 · ADR: —
