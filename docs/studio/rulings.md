@@ -3709,3 +3709,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-2, NU-4, I
 Regelbezug: R896, R933, R1017, R1026 · Kosten bei Irrtum: eine Nachtrag-Runde.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-NU-3 · ADR: —
+
+## R1038 · 2026-10-28 · Spec NU-3 frei
+
+Ruling: Kurzprüfung Spec-Nachtrag NU-3 (`design/nu3` @ `aad0d6a0`) **OK** (lead-qa; B1–B7 und R1037 umgesetzt). **Spec NU-3 frei.** `design/nu3` (enthält `design/nu2`) geht mit dem nächsten Bündel; `design/tiefe-7` @ `54e8fbd1` (Küstenbrief archiviert). Plan-Hinweis an den Plan NU-3:
+Werkzeug-Schwelle für die Aufstiegsdauer als reine Sim-Funktion, nie UI-Warnung/Merker lesen (Determinismus beim Laden). Plan NU-3 erst nach NU-2 (R1037).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-2
+Regelbezug: R1028, R1037, ADR-002 · Kosten bei Irrtum: eine Plan-Auflage.
+
+Entscheider: L0 · Anlass: Kurzprüfung lead-qa gate-NU-3 · ADR: —
