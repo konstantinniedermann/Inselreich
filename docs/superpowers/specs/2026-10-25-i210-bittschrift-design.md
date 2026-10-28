@@ -412,7 +412,7 @@ wonTick + 6600` (wie AK-BS-07); ist dort ein Kandidat bezahlbar, entsteht die Ma
 - **AK-BS-17 Controller (echter Test oder gestrichen, Plan entscheidet, Anhang 02 B-10):** Balancing-Controller mit `petitionsOn: true` erreicht Ziel 1 bis
   `WIN_TICK_LIMIT`; Kaufleute-Controller erreicht Ziel 2 bis `MERCHANT_TICK_LIMIT` (beide antworten nie, also nur
   Genügsamkeit).
-- **AK-BS-18 Karte (UI-Helfer):** `petitionPreview` für B1 in P1-Lage (4 Bürgerhäuser, Stoff 31, netto 0): Kosten 10,
+- **AK-BS-18 Karte (UI-Helfer):** `petitionPreview` für B1 in P1-Lage (4 Bürgerhäuser, 60 Bewohner, Stoff 31, netto 0): Kosten clamp(⌈60 / 5⌉, 10, 40) = 12,
   Zusatzplätze 8, Mehrbedarf Stoff 1,6, Nahrung 4,0, Rum 1,6; Reichweite Stoff 31 ÷ 1,6 × 100 ≈ 1938 T; Ersparnis «Nein» 18.
   Die Abfrage ändert die Welt nicht.
 - **AK-BS-23 Inselproben (F-2, R904):** Eine Welt aus dem Proben-Start hat `petitions.on === false`, auch wenn das Kästchen
