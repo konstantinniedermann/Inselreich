@@ -3698,3 +3698,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-215, ORT-A 
 Regelbezug: R395, R673, R1029 · Kosten bei Irrtum: ein Review-Start.
 
 Entscheider: L0 · Anlass: Handoff lead-tech NU-1 Instanz 2 · ADR: —
+
+## R1037 · 2026-10-28 · Gate Spec NU-3: BEDENKEN; Entscheide; Spec-Nachtrag
+
+Ruling: Gate Spec NU-3 (`design/nu3` @ `5e9259a9`) **BEDENKEN angenommen** (Handoff `.studio/handoffs/2026-10-28-lead-qa-gate-spec-NU-3.md`). Entscheide nach lead-qa-Votum: **A01 E-06 ja** (Licht der Kaufleute nach NU-3 vorziehen, Auflage B4: Lampenöl-Verbrauch in Bilanz und Mangelanzeige);
+**Küstenbrief verworfen und archiviert** (R933 E1 gilt ohne Ausnahme; TIEFE-7 c aus den Vermerken ins Archiv); **Eisgang nicht aufgenommen**, Merkposten NU-4; A01 E-01…E-04, E-09, E-10 ja; **A01 E-05 geändert** (Zusage «kein Verkaufskreis» nur ohne Markttag; Preise bleiben); E-N3-01…08 ja (E-N3-03 mit B6, E-N3-04 mit B1).
+**Spec-Nachtrag** `lead-design` (sonnet) zu B1–B7 auf `design/nu3`, dann Kurzprüfung `lead-qa`. B8 (Werkzeug-Verkauf Nordkontor mit Markttag+Edikt) als Prüfpunkt an den Plan NU-2. Plan NU-3 erst nach NU-2.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-2, NU-4, I-049-Projektion
+Regelbezug: R896, R933, R1017, R1026 · Kosten bei Irrtum: eine Nachtrag-Runde.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-NU-3 · ADR: —
