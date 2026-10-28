@@ -3458,3 +3458,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210
 Regelbezug: R909, R1009 · Kosten bei Irrtum: eine AK-Zahl.
 
 Entscheider: L0 · Anlass: beobachtungen.md 2026-10-26 (AK-BS-18) · ADR: —
+
+## R1014 · 2026-10-28 · Gate Merge I-223: Merge frei (BEDENKEN niedrig)
+
+Ruling: Gate Merge `feat/i223` @ `d3b8a4d8` **frei** (lead-qa BEDENKEN niedrig, nicht blockierend; Handoff `.studio/handoffs/2026-10-28-lead-qa-gate-I-223.md`). `git merge-tree` main (`2628ceb1`) ← `feat/i223` @ `d3b8a4d8`: konfliktfrei (E-084).
+Integrator mergt nach den laufenden Messungen (NU-1, AUSBAU-LOGIK-3) auf neuem Kandidaten `integrate/rel-36` ab lokalem main, Teilbeleg inkl. der Sync-Läufe (tick, population, inspect, `make zeittests`, `make conflicts`), danach main vorspulen; kein Push (Takt 2026-10-28 verbraucht). AK-ZE-16 per `make push-check` beim Bündel.
+`tierTaxTooltip` und die vier Aufräum-Punkte: Häppchen I-223-NACH (Textentscheid `lead-design`, Umsetzung später, vor dem Release REL-36). I-210 zieht danach Save auf v21 nach (R909).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210, NU-1 (Save-Kette)
+Regelbezug: R810, R816, R909, R1012, E-084 · Kosten bei Irrtum: ein Revert-Merge auf lokalem main.
+
+Entscheider: L0 · Anlass: Bericht lead-qa Gate Merge I-223 · ADR: —
