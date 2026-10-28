@@ -3825,3 +3825,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: alle laufende
 Regelbezug: R816, R863, R959, R1035 · Kosten bei Irrtum: REL-36 ohne Werkzeug-Fixes; die kommen mit REL-37.
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R1048 · 2026-10-28 · REL-36: push-check rot (Zeitreserve), Fix, E-090 angenommen
+
+Ruling: `make push-check` auf `84429f8f` hatte Exit 1. Alle 5487 Tests waren grün; rot war nur der Zeitreserve-Check (Faktor 3). Ohne CI-Reserve waren `petitionsRuns` «Ja auf jede Bitte» (2272 ms), «gleicher Seed» (1300 ms) und `levelContext` T04b (1071 ms), jeweils bei Timeout 5000 ms. Zeitbeleg I-210: `petitionsHarmless` (a) 3994 ms und (b) 3858 ms bei 30 s Timeout, mit Reserve (R1035 erfüllt).
+Fix `fix/rel36-zeitreserve` @ `d22b6da7` ist nach L0-Prüfung des Diffs abgenommen: nur ein Timeout von 30 000 ms als drittes Argument von `it` bei den drei Tests, so wie `tools/zeitreserve/README.md` es als Abhilfe nennt. Assertions und `src/` sind unverändert. Gezielter Lauf grün, tsc, eslint und prettier Exit 0. Gate Merge als Ein-Paket-Kurzgate durch L0, weil es nur Testkonfiguration betrifft. Es folgen der Merge nach main und push-check auf dem neuen Kopf. Push nur bei Exit 0 (R1047).
+**E-090 angenommen** (Kurz-Retro `docs/retro-7c94dd6a` @ `0eadf918`), passiv ohne Platz: Abgenommene Doku-, Coach- und Design-Branches merged L0 gleich nach der Abnahme lokal auf main. Schwelle: am Session-Ende höchstens 2 nicht gemergt, Bündel-Ruling bis Push höchstens 30 min, Messung über 3 Sessions, Frist 2026-12-03. Das gilt ab der nächsten Session; der REL-37-Rückstau wird als Erstes abgebaut.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210-NACH (gleiche Datei-Familie, anderer Test)
+Regelbezug: R1035, R1047, R815, R392 · Kosten bei Irrtum: zu hohe Timeouts verdecken echte Verlangsamung; der Zeitreserve-Check misst weiter die lokale Dauer.
+
+Entscheider: L0 · Anlass: Bericht production-integrator REL-36, lead-tech REL36-ZEITRESERVE, studio-coach RETRO-7c94dd6a · ADR: —
