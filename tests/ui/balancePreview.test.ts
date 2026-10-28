@@ -11,8 +11,9 @@ import { step } from '../../src/sim/tick';
 import type { BuildingDefId, GoodId, World } from '../../src/sim/types';
 import { balanceText } from '../../src/ui/hud';
 import { balanceAfterBuild, balanceAfterUpgrade, balanceLine } from '../../src/ui/balancePreview';
-import { buildingUpkeep } from '../../src/sim/levels';
+import { buildingUpkeep, upkeepOf } from '../../src/sim/levels';
 import { LEVELS } from '../../src/sim/defs/levels';
+import { PAUSED_UPKEEP_PCT } from '../../src/sim/defs/buildings';
 import { UPKEEP_INTERVAL } from '../../src/sim/economy';
 import { perMinute } from '../../src/ui/time';
 import { upgradeGain } from '../../src/ui/panelView';
@@ -199,6 +200,17 @@ describe('balancePreview (I-078, AK-10, AK-14)', () => {
       else expect(p.before - p.after).toBeGreaterThan(0);
       expect(row.after).toBeGreaterThan(row.before);
     }
+  });
+
+  it('stillgelegter Betrieb: Bilanz danach setzt den halben Unterhalt der Zielstufe an (Pause bleibt, nur Drosselung ist nominal)', () => {
+    const w = twoIslandWorld();
+    w.won = true;
+    const b = putBuilding(w, 0, 'fisher', 3, 3);
+    b.paused = true;
+    const half = (u: number): number => Math.ceil((u * PAUSED_UPKEEP_PCT) / 100);
+    const p = balanceAfterUpgrade(w, b);
+    const [u1, u2] = [upkeepOf(b), LEVELS.fisher![0]!.upkeep]; // Stufe 1 -> 2
+    expect(p.before - p.after).toBe(half(u2) - half(u1));
   });
 
   it('kein Neurechnen je Frame: balanceAfterBuild rechnet nur auf Aufruf (reine Funktion, gleiche Zahl)', () => {
