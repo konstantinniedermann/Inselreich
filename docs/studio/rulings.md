@@ -3479,3 +3479,24 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-223 (Merge)
 Regelbezug: R896, R1010, R1014 · Kosten bei Irrtum: ein Tooltip-Text.
 
 Entscheider: L0 · Anlass: Berichte lead-design design-I-223-NACH, studio-coach COACH-R1010 · ADR: —
+
+## R1016 · 2026-10-28 · REL-35 live; Prozess-Retro REL-35 V1/V2
+
+Ruling: **REL-35 live**: Push `12585b2a..898fdd5d`, CI 40697470158 grün, Pages 40698756357 grün. Prozess-Retro `docs/prozess-rel-35` @ `a8759eb9` abgenommen. **V1 angenommen (Handbuch-Minor):** Übergaben nennen nicht «Push <Datum>», sondern «Push fällig `<Hash>`, frühestens
+<Datum>, erster Schritt der nächsten Session»; Messgrösse Session-Start bis Push ≤ 15 min in 3 von 3 Fällen. **V2 als Experiment E-085 angenommen** (Platz nach `experimente.md`, sonst passiv): steht in der Session noch ein Bündel an, geht der Tages-Push ans Session-Ende mit
+dem jüngsten geprüften Hash; R816 unverändert; Messgrösse 0 Stände, die auf einen späteren Tag warten, obwohl ihre Session danach ≥ 30 min lief; Frist 2026-12-03. Kein zeitgesteuerter Push ohne Session (Verfassung §6, Aufsicht). Umsetzung durch `studio-coach`.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: Ende-Routine dieser Session
+Regelbezug: R816, R817, R1005 · Kosten bei Irrtum: eine Formulierung in state.md, ein Experiment.
+
+Entscheider: L0 · Anlass: Bericht studio-process-coach PROZESS-REL-35 · ADR: —
+
+## R1017 · 2026-10-28 · TIEFE-7 Folgen (E1–E6)
+
+Ruling: TIEFE-7 (`design/tiefe-7` @ `818683d6`) abgenommen. E1 ja: d «Aufbruch» als Pool-Idee (nach I-222 Erbstadt). E2 ja: b «Eisgang» als Prüfpunkt in die NU-3-Spec, keine I-ID. E3 ja: a «Fundstück-Fassung» als Pool-Idee, Einplanung nach NU-1 live, NU-1 bleibt
+unverändert. E4/E5: c und e geparkt (c braucht eigenes Ruling zu R933 E1 bei NU-3-Spec). E6 ja: I-226 verwerfen und archivieren, damit der Pool-Deckel 40 hält. Umsetzung der Pool-Änderungen durch `lead-design` auf `design/tiefe-7`.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1 (keine Änderung), NU-2 (keine)
+Regelbezug: R862, R933, IDEEN-20 · Kosten bei Irrtum: zwei Pool-Plätze.
+
+Entscheider: L0 · Anlass: Bericht lead-design TIEFE-7 · ADR: —
