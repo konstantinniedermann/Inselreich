@@ -3656,3 +3656,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: NU-1, I-215 (
 Regelbezug: R392, R905, R999, R1031, E-084 · Kosten bei Irrtum: ein Revert-Merge auf lokalem main.
 
 Entscheider: L0 · Anlass: Bericht lead-qa gate-I-210 · ADR: —
+
+## R1033 · 2026-10-28 · Gate Merge I-223-NACH: OK
+
+Ruling: Gate Merge `feat/i223-nach` @ `10829a6e` **OK** (lead-qa; AK-ZE-28 fünf Fälle mit Rot-Beleg `cac92272`; Handoff `.studio/handoffs/2026-10-28-lead-qa-gate-I-223-NACH.md`). `git merge-tree` main (`2bf32e16`) ← `feat/i223-nach` @ `10829a6e`: konfliktfrei (E-084). Integrator mergt lokal, kein Push.
+`tierTaxTooltip`-Beobachtung damit erledigt; Literal `600` in `titheFlowText` als Beobachtung niedrig. `docs/i223-nach` ist in `feat/i223-nach` enthalten (nicht separat bündeln).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: keine
+Regelbezug: R1014, R1015, R1024, E-084 · Kosten bei Irrtum: ein Revert-Merge auf lokalem main.
+
+Entscheider: L0 · Anlass: Bericht lead-qa gate-I-223-NACH · ADR: —

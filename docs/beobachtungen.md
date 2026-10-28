@@ -349,3 +349,7 @@ frühere Abschnitt „Offen“ der Auswertung vom 2026-09-30 ist darin aufgegang
 ## 2026-10-28 · I-210-SYNC: Testlagen Bittschrift nach AUSBAU-LOGIK (niedrig)
 
 - Fundort: `tests/sim/petitionWorlds.ts` (feat/i210). Beobachtung: `stableTown` ruft kein `ensureCrew` auf; mit Seed 7 liefen 7 ausgebaute Betriebe auf Stufe 1 (heute nur Seed 3 genutzt, `petitionsStable.test.ts:164-165` fängt einen Seed-Wechsel ab). `sceneOf` prüft nicht, ob `ensureCrew` gewirkt hat: ein Guard `runningLevel === level` je ausgebautem Betrieb würde stille Drosselung bei späteren AL-Regeln melden. Ursprung: Delta-Review I-210-SYNC. Einschätzung: bei nächster Berührung der Lagen mitnehmen.
+
+## 2026-10-28 · I-223-NACH: Literal `600` in `titheFlowText` (niedrig)
+
+- Fundort: `src/ui/titheView.ts` (`titheFlowText`), Branch `feat/i223-nach` @ `10829a6e`. Beobachtung: Anzeige-Rechnung der Warenmenge nutzt das Literal `600` statt einer abgeleiteten Konstante. Ursprung: Gate Merge I-223-NACH (lead-qa). Einschätzung: Aufräum-Häppchen.
