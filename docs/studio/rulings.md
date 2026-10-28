@@ -3624,3 +3624,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210 (Save 2
 Regelbezug: R395, R909, R987, R992 · Kosten bei Irrtum: Test-Ausnahmen bleiben zu lange.
 
 Entscheider: L0 · Anlass: Bericht lead-tech NU-1 (Instanz 1) · ADR: —
+
+## R1030 · 2026-10-28 · I-215 Zwischenstand; Folgeinstanz; Save-Reihenfolge
+
+Ruling: I-215 T00–T03, T05 OK (Handoff `.studio/handoffs/2026-10-28-lead-tech-I-215.md`). **E-VL-2 angenommen** (Merge von main vor T04 vorgezogen, T08 nur noch B-Merge/Abgleich/Messung). Spec-Anhang 01 B/D-Beispiele werden in T07 berichtigt. **Save-Reihenfolge:** I-210 (Gate nahe) → v21;
+I-215 und NU-1 setzen vorläufig «main + 1» und ziehen beim Merge nach E-ZE-1 nach (wer später merged, zieht nach); die Literale 21 auf `feat/i215` sind vorläufig. Folgeinstanz I-215 (Restbudget 10): zuerst frischer Review opus der Merge-Auflösung `6f8fe658` (R974 Auflage 2), T04 von Umsetzer A abnehmen, dann B-Merge, T08, T06, T07, Final-Review.
+Prozessbefund (Rot-Läufe trotz Messfenster) an die Kurz-Retro; TOOL-MF2-WT T02 adressiert ihn teilweise.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: I-210-SYNC, NU-1
+Regelbezug: R909, R974, R987, R1029 · Kosten bei Irrtum: eine Save-Nummer nachziehen.
+
+Entscheider: L0 · Anlass: Handoff lead-tech I-215 (Instanz 1) · ADR: —
