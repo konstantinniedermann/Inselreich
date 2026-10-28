@@ -3792,3 +3792,14 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MESSWACH
 Regelbezug: R853, R868, R1027, R1040–R1042, E-080 · Kosten bei Irrtum: weitere Stillstände.
 
 Entscheider: L0 · Anlass: Bericht studio-process-coach PROZESS-STILLSTAND · ADR: —
+
+## R1045 · 2026-10-28 · COACH-R1044 abgenommen, E-083 passiv in TOOL-MF2-WT
+
+Ruling: `docs/coach-r1044` @ `ab336bd4` (Handbuch 1.81) ist abgenommen. Inhalt: E-086 «Studio still» läuft auf dem Platz von E-080. E-087 Wiederbeleben und E-088 Wartezeit füllen laufen passiv. E-089 Sperr-Events und Lauf-ID ist eine Werkzeug-Auflage an TOOL-MF2-WT. E-080 ist zurückgenommen. Die Briefing-Vorlage hat jetzt eine Messpaket-Zeile und die Zeile «testfreien Task vorziehen». Der Branch geht mit dem REL-36-Bündel nach `docs/coach-r1016`.
+E-083 (Sperre im vitest-Setup prüfen): Die Startbedingung ist erfüllt, weil E-080 bewertet ist. Es wird **passiv ohne Platz** geführt, denn als Werkzeugschutz wirkt es ab dem Merge (Muster E-059), und als Auflage 7 von TOOL-MF2-WT (R1027) umgesetzt. Grund: R1035 (Last 8–60 trotz Sperre) zeigt, dass fremde Breitläufe im Fenster der Hauptstörer sind.
+Übergang bis REL-36: L0 prüft die Heartbeats bei jedem Alarm oder Weckruf von Hand; die Wache läuft vom Worktree `tool-messwache` aus. state.md (Zeilen zu E-080) passt L0 in der Ende-Routine an.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MF2-WT, TOOL-MESSWACHE
+Regelbezug: R1004, R1027, R1035, R1044 · Kosten bei Irrtum: keine Messbasis für E-083.
+
+Entscheider: L0 · Anlass: Bericht studio-coach COACH-R1044 · ADR: —
