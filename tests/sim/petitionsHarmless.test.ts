@@ -61,7 +61,8 @@ function play(json: string, on: boolean): Run {
   return run;
 }
 
-describe('AK-BS-13 Nein ist harmlos', () => {
+// Zwei Läufe zu 3,9 s (Last ~5): die Vorgabe von 5 s reicht bei Rechnerlast nicht.
+describe('AK-BS-13 Nein ist harmlos', { timeout: 30_000 }, () => {
   it('(a) versorgte Welt: Einwohner je Tick gleich, Geld >= Referenz, Krisenfolge gleich', () => {
     const w = suppliedWorld();
     for (const g of GOOD_IDS) expect(goodsBalance(w)[g].net, g).toBeGreaterThanOrEqual(0);
