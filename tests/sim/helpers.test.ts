@@ -7,6 +7,8 @@ import {
   foldBackCouncil,
   foldBackTrial,
   foldBackSeerecht,
+  foldBackTithe,
+  dropTithe,
   foldBackDeliveries,
   foldBackFarOrders,
   foldBackToV9,
@@ -44,7 +46,9 @@ describe('foldBackFarOrders (Handel 2, A4)', () => {
   const current = (): Record<string, unknown> =>
     foldBackCouncil(
       foldBackTrial(
-        foldBackSeerecht(JSON.parse(serialize(createWorld(3))) as Record<string, unknown>),
+        foldBackSeerecht(
+          foldBackTithe(JSON.parse(serialize(createWorld(3))) as Record<string, unknown>),
+        ),
       ),
     );
   /** Stand «eine Version älter», ohne Fernfelder. */
@@ -115,5 +119,47 @@ describe('foldBackDeliveries (I-091)', () => {
     const out = foldBackDeliveries(x);
     expect(out.version).toBe((x.version as number) - 1);
     expect(JSON.stringify({ ...out, version: x.version })).toBe(JSON.stringify(x));
+  });
+});
+
+describe('dropTithe', () => {
+  const TITHE_ERROR = 'dropTithe: Zehnt nicht rückfaltbar';
+  const startState = (): Record<string, unknown> => jsonOf(3);
+  const tithed = (mutate: (x: Record<string, unknown>) => void): Record<string, unknown> => {
+    const x = startState();
+    mutate(x);
+    return x;
+  };
+  const on = (x: Record<string, unknown>): void => {
+    (x.titheOn as Record<string, boolean>)[1] = true;
+  };
+
+  it('Startwerte: drei Schlüssel weg, übrige Reihenfolge gleich', () => {
+    const x = startState();
+    const out = dropTithe(x);
+    const rest = Object.keys(x).filter(
+      (k) => k !== 'titheOn' && k !== 'titheLockedUntil' && k !== 'titheCarry',
+    );
+    expect(Object.keys(out)).toEqual(rest);
+  });
+  it('titheOn[1] = true → wirft', () => {
+    expect(() => dropTithe(tithed(on))).toThrow(TITHE_ERROR);
+  });
+  it('titheCarry.stone = 1 → wirft', () => {
+    const x = tithed((y) => {
+      (y.titheCarry as Record<string, number>).stone = 1;
+    });
+    expect(() => dropTithe(x)).toThrow(TITHE_ERROR);
+  });
+  it('ohne Schlüssel dasselbe Objekt', () => {
+    const x = dropTithe(startState());
+    expect(dropTithe(x)).toBe(x);
+  });
+  it.each([
+    ['foldBackToV13', foldBackToV13],
+    ['foldBackToV12', foldBackToV12],
+    ['foldBackToV11', foldBackToV11],
+  ])('%s wirft bei titheOn[1] = true', (_n, chain) => {
+    expect(() => chain(tithed(on))).toThrow(TITHE_ERROR);
   });
 });

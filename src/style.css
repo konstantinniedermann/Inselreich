@@ -668,6 +668,27 @@ button.chip {
   font-size: 0.85em;
   text-align: center;
 }
+.tithe-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 4.6em) repeat(2, minmax(0, 1fr));
+  gap: 3px;
+  align-items: center;
+}
+.tithe-row .btn {
+  padding: 6px 1px;
+  min-width: 0;
+  font-size: 0.85em;
+  text-align: center;
+}
+.card--tithe {
+  max-width: 28em;
+}
+.tithe-confirm-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
 .tax-tier {
   font-size: 0.85em;
   overflow-wrap: anywhere;

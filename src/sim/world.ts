@@ -1,7 +1,7 @@
 import { BUILDING_DEFS } from './defs/buildings';
 import { DEFAULT_WORLD_CRISIS_LEVEL } from './defs/crises';
 import { GOOD_IDS, START_MONEY, START_STOCK } from './defs/goods';
-import { DEFAULT_TAX_LEVEL, TIER_IDS } from './defs/tiers';
+import { DEFAULT_TAX_LEVEL, TIER_IDS, TITHE_GOODS, TITHE_TIERS } from './defs/tiers';
 import { UNLOCK_IDS } from './defs/unlocks';
 import { generateForeignIslands, homeAnchor } from './islands';
 import { generateMap, MAP_H, MAP_W } from './mapgen';
@@ -15,6 +15,8 @@ import type {
   TaxLevel,
   Tier,
   Tile,
+  TitheGood,
+  TitheTier,
   World,
 } from './types';
 
@@ -119,7 +121,7 @@ export function createWorld(
     reserve: { wood: 0, stone: 0 },
   };
   const world: World = {
-    version: 19,
+    version: 20,
     seed: seedUsed,
     islands: [homeIsland, ...foreignIslands(seedUsed, homeIsland)],
     tick: 0,
@@ -157,6 +159,12 @@ export function createWorld(
     farSkip: null,
     council: { 2: null, 3: null, 4: null },
     trial: { active: null, ticks: 0, e0: 0, passed: [] },
+    titheOn: Object.fromEntries(TITHE_TIERS.map((t) => [t, false])) as Record<TitheTier, boolean>,
+    titheLockedUntil: Object.fromEntries(TITHE_TIERS.map((t) => [t, 0])) as Record<
+      TitheTier,
+      number
+    >,
+    titheCarry: Object.fromEntries(TITHE_GOODS.map((g) => [g, 0])) as Record<TitheGood, number>,
   };
   world.buildings[1] = {
     id: 1,
