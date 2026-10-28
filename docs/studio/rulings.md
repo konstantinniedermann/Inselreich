@@ -3743,3 +3743,16 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MF2-WT (
 Regelbezug: R922, R1027, R1030, R1035, E-080 · Kosten bei Irrtum: weitere Messkollisionen, 1 bis 2 Starts.
 
 Entscheider: L0 · Anlass: Session-Unterbruch, hängender Messlauf · ADR: —
+
+## R1041 · 2026-10-28 · Ursache Hänger, Paket TOOL-MESSWACHE
+
+Ruling (Nutzerauftrag «geh dem nach und verbesser das für die Zukunft», Dauerauftrag R863): Ursache des Stillstands von etwa 2 h:
+(a) **Werkzeug:** `tools/render-qa/lib.mjs` `send()` (CDP) wartet ohne Zeitlimit. Bei geschlossenem WebSocket oder abgestürztem Chrome wird nichts abgelehnt. `ev()` nutzt `awaitPromise: true`, und das Seiten-Promise erledigt sich in diesem Fall nie. `perf.mjs` wartet je Seed ohne Deckel auf das Kind (`child.once('exit')`). Ein einziger hängender CDP-Aufruf in Seed 14 hielt so den Lauf und die Messsperre fest, denn die Sperre gilt, solange der PID lebt. Damit waren alle wartenden Leads blockiert.
+(b) **Ablauf:** Alle Leads warteten auf dasselbe Fenster, und L0 hatte keinen Wecker, weil keine Benachrichtigung kam. Zwischen den beiden ORT-A-Läufen nahm die Warteschleife von L0 die Sperre (R1040). Die Heartbeat-Prüfung R853 greift nur, wenn L0 aktiv ist.
+**Massnahmen:** (1) Sofort: L0 lässt bei jedem Warten auf Messungen eine Wache im Hintergrund laufen. Sie meldet einen Mess- oder Testprozess, der länger als 40 min läuft, und eine Sperre, die über ihr Ende hinaus belegt ist. (2) Paket **TOOL-MESSWACHE** (lead-tech, Budget 6/2), Inhalt: Zeitlimit und Ablehnung bei Close/Crash in `send()`; Gesamtdeckel je Seed in `perf.mjs` (Kind-Prozessgruppe nach Deckel beenden, Exit-Code ≠ 0, Meldung); `messsperre`: eine abgelaufene Sperre mit lebendem PID meldet «überfällig» mit PID und Laufzeit. Fremde Prozesse beendet weiterhin niemand automatisch. Ausserdem ein wiederverwendbares Wacheskript unter `tools/studio/` (statt Scratchpad) mit Selbsttest. Kein Spieleinfluss. Die Selbsttests laufen mit `node --test` ohne Chrome und ohne breiten vitest, deshalb zählt das Paket nicht gegen den Deckel von 3 Test-Controllern (R826). Ein Chrome-Nachweis erst, wenn kein fremdes Messfenster läuft. (3) Handbuch: Pflicht zur L0-Wache beim Warten auf Messungen. Das übernimmt studio-coach mit der Kurz-Retro.
+Überschneidung: TOOL-MF2-WT (Messfenster und Worktrees, Plan frei R1027). TOOL-MESSWACHE kommt zuerst; MF2-WT baut darauf auf (`tools/render-qa/messsperre.mjs` wird nur vom zuerst laufenden Paket angefasst).
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MF2-WT, ORT-A (perf.mjs-Läufe)
+Regelbezug: R853, R922, R1027, R1040, R863 · Kosten bei Irrtum: weitere Stillstände von Stunden.
+
+Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
