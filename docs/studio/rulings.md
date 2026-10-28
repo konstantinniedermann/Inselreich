@@ -3756,3 +3756,13 @@ Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MF2-WT, 
 Regelbezug: R853, R922, R1027, R1040, R863 · Kosten bei Irrtum: weitere Stillstände von Stunden.
 
 Entscheider: L0 · Anlass: Nutzerauftrag · ADR: —
+
+## R1042 · 2026-10-28 · TOOL-MESSWACHE umgesetzt, Auflagen
+
+Ruling: `tool/messwache` @ `8c510272` ist umgesetzt, Review OK, die Ursache aus R1041 ist bestätigt. Dazu kommt: `lock.ts` übernimmt eine überfällige Sperre mit lebendem PID nach 5 min Karenz; der Text sagt jetzt «überfällig». Belege: `node --test` 19, `make studio-test` 1089, lint, tsc und conflicts alle Exit 0. Starts 3 von 6.
+Auflagen vor dem Gate Merge (mit dem REL-36-Bündel, lead-qa, E-084): (1) `make node-test` in `make check` aufnehmen, sofern die Laufzeit unter 30 s liegt. Sonst kommt ein Eintrag in beobachtungen.md, und CI bleibt unverändert. (2) Chrome-Nachweis: `perf.mjs --seed-timeout 0.1` einmal als Einzelseed und einmal als Seedliste, Exit 124 erwartet, sobald `make messfenster` frei meldet. (3) Die beiden Review-Hinweise aus dem Handoff erledigen oder begründet zurückstellen. Danach ersetzt `make messwache` die Scratchpad-Wache von L0.
+
+Verfassung berührt?: nein · Überschneidung mit offenen Paketen: TOOL-MF2-WT (baut auf messwache auf), ORT-A (perf-Läufe)
+Regelbezug: R1041, E-084, R826 · Kosten bei Irrtum: Hänger bleiben unentdeckt.
+
+Entscheider: L0 · Anlass: Bericht lead-tech TOOL-MESSWACHE · ADR: —
